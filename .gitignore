@@ -1,0 +1,51 @@
+# General
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Visual Studio / .NET
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+packages/
+_ReSharper.*/
+*.generated.cs
+TestResults/
+
+# Node.js / Angular
+node_modules/
+dist/
+tmp/
+out-tsc/
+bazel-out/
+test-results/
+.angular/
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+clients/mobile-flutter/build/
+clients/mobile-flutter/ios/.generated/
+clients/mobile-flutter/ios/Flutter/Generated.xcconfig
+clients/mobile-flutter/ios/Flutter/flutter_export_environment.sh
+clients/mobile-flutter/android/.gradle
+clients/mobile-flutter/android/local.properties
+
+# Docker service logs
+*.log

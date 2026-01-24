@@ -1,0 +1,31 @@
+// Angular Material Theming
+@use '@angular/material' as mat;
+
+// Tailwind Imports (Must be before styles that use them, but often after imports)
+// Note: Tailwind base (preflight) might conflict with Material. 
+// We usually keep tailwind components/utilities.
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+    height: 100%;
+    // Material 3 Theme Configuration
+    @include mat.theme((color: (primary: mat.$azure-palette,
+                tertiary: mat.$blue-palette,
+            ),
+            typography: Roboto,
+            density: 0,
+        ));
+}
+
+body {
+    height: 100%;
+    margin: 0;
+
+    // Theme Integration
+    color-scheme: light;
+    background-color: var(--mat-sys-surface);
+    color: var(--mat-sys-on-surface);
+    font: var(--mat-sys-body-medium);
+}

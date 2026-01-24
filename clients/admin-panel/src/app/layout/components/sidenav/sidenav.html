@@ -1,0 +1,37 @@
+<div class="h-full flex flex-col bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700">
+
+    <!-- Logo Area (visible only when sidenav is open/permanent) -->
+    <div class="h-16 flex items-center px-6 border-b border-gray-100 dark:border-gray-800">
+        <div
+            class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold mr-3 shadow-sm">
+            EP
+        </div>
+        <span class="font-bold text-gray-800 dark:text-white tracking-tight">Admin Console</span>
+    </div>
+
+    <!-- Navigation List -->
+    <mat-nav-list class="pt-4 px-3 space-y-1">
+
+        @for (item of menuItems(); track item.label) {
+        <a mat-list-item [routerLink]="item.route"
+            routerLinkActive="!bg-primary-50 !text-primary-700 dark:!bg-gray-800 dark:!text-primary-400"
+            class="!rounded-lg !mx-0 !transition-all duration-200 hover:!bg-gray-50 dark:hover:!bg-gray-800 text-gray-600 dark:text-gray-400">
+
+            <mat-icon matListItemIcon class="!mr-4">{{ item.icon }}</mat-icon>
+            <span matListItemTitle class="font-medium text-sm">{{ item.label }}</span>
+        </a>
+        }
+
+    </mat-nav-list>
+
+    <span class="flex-1"></span>
+
+    <!-- Footer Area -->
+    <div class="p-4 border-t border-gray-100 dark:border-gray-800">
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 text-center">
+            <p class="text-xs text-gray-500 mb-2">Need help?</p>
+            <button class="text-xs font-bold text-primary-600 hover:text-primary-700 hover:underline">Docs</button>
+        </div>
+    </div>
+
+</div>

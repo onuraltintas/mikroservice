@@ -1,0 +1,162 @@
+Using launch settings from /home/onur/Desktop/mikroservice/services/coaching-service/Coaching.API/Properties/launchSettings.json...
+Building...
+🎉 Coaching API Started! http://localhost:5000
+dbug: Microsoft.Extensions.Hosting.Internal.Host[1]
+      Hosting starting
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5010
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/onur/Desktop/mikroservice/services/coaching-service/Coaching.API
+dbug: Microsoft.Extensions.Hosting.Internal.Host[2]
+      Hosting started
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://localhost:5010/api/Assignments - application/json 494
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'Coaching.API.Controllers.AssignmentsController.CreateAssignment (Coaching.API)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "CreateAssignment", controller = "Assignments"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[Coaching.Application.Commands.CreateAssignment.CreateAssignmentResponse]] CreateAssignment(Coaching.Application.Commands.CreateAssignment.CreateAssignmentCommand, System.Threading.CancellationToken) on controller Coaching.API.Controllers.AssignmentsController (Coaching.API).
+info: Coaching.API.Controllers.AssignmentsController[0]
+      Creating assignment: Matematik Türev Ödevi for teacher: 11111111-1111-1111-1111-111111111111
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10400]
+      Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (33ms) [Parameters=[@p0='a953b7de-1a38-4d89-be16-235aceea54eb', @p1='2026-01-20T20:37:01.5368584Z' (DbType = DateTime), @p2=NULL, @p3='Türev alma kuralları ilk 50 soru', @p4='2026-02-01T23:59:59.0000000Z' (DbType = DateTime), @p5='60' (Nullable = true), @p6='33333333-3333-3333-3333-333333333333' (Nullable = true), @p7='100' (Nullable = true), @p8='50' (Nullable = true), @p9='Active' (Nullable = false), @p10='Matematik', @p11='12' (Nullable = true), @p12='11111111-1111-1111-1111-111111111111', @p13='Matematik Türev Ödevi' (Nullable = false), @p14='Individual' (Nullable = false), @p15='2026-01-20T20:37:01.5379636Z' (Nullable = true) (DbType = DateTime), @p16=NULL, @p17='0', @p18='76ca1386-15ac-4894-94d2-9d96f55160ab', @p19='a953b7de-1a38-4d89-be16-235aceea54eb', @p20='2026-01-20T20:37:01.5379497Z' (DbType = DateTime), @p21=NULL, @p22=NULL (DbType = Decimal), @p23='Assigned' (Nullable = false), @p24='22222222-2222-2222-2222-222222222222', @p25=NULL, @p26=NULL (DbType = DateTime), @p27=NULL, @p28=NULL (DbType = DateTime), @p29=NULL], CommandType='Text', CommandTimeout='30']
+      INSERT INTO coaching.assignments (id, created_at, "CreatedBy", description, due_date, estimated_duration_minutes, institution_id, max_score, passing_score, status, subject, target_grade_level, teacher_id, title, type, updated_at, "UpdatedBy", "Version")
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16, @p17);
+      INSERT INTO coaching.assignment_students (id, assignment_id, created_at, "CreatedBy", score, status, student_id, student_note, submitted_at, teacher_feedback, "UpdatedAt", "UpdatedBy")
+      VALUES (@p18, @p19, @p20, @p21, @p22, @p23, @p24, @p25, @p26, @p27, @p28, @p29);
+info: Coaching.API.Controllers.AssignmentsController[0]
+      Assignment created successfully: a953b7de-1a38-4d89-be16-235aceea54eb
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing CreatedAtActionResult, writing value of type 'Coaching.Application.Commands.CreateAssignment.CreateAssignmentResponse'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action Coaching.API.Controllers.AssignmentsController.CreateAssignment (Coaching.API) in 804.4102ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'Coaching.API.Controllers.AssignmentsController.CreateAssignment (Coaching.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5010/api/Assignments - 201 - application/json;+charset=utf-8 844.5845ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://localhost:5010/api/Assignments/teacher/11111111-1111-1111-1111-111111111111 - - -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'Coaching.API.Controllers.AssignmentsController.GetTeacherAssignments (Coaching.API)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "GetTeacherAssignments", controller = "Assignments"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetTeacherAssignments(System.Guid, System.Threading.CancellationToken) on controller Coaching.API.Controllers.AssignmentsController (Coaching.API).
+info: Coaching.API.Controllers.AssignmentsController[0]
+      Getting assignments for teacher: 11111111-1111-1111-1111-111111111111
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (4ms) [Parameters=[@__teacherId_0='11111111-1111-1111-1111-111111111111'], CommandType='Text', CommandTimeout='30']
+      SELECT a.id, a.created_at, a."CreatedBy", a.description, a.due_date, a.estimated_duration_minutes, a.institution_id, a.max_score, a.passing_score, a.status, a.subject, a.target_grade_level, a.teacher_id, a.title, a.type, a.updated_at, a."UpdatedBy", a."Version", a0.id, a0.assignment_id, a0.created_at, a0."CreatedBy", a0.score, a0.status, a0.student_id, a0.student_note, a0.submitted_at, a0.teacher_feedback, a0."UpdatedAt", a0."UpdatedBy"
+      FROM coaching.assignments AS a
+      LEFT JOIN coaching.assignment_students AS a0 ON a.id = a0.assignment_id
+      WHERE a.teacher_id = @__teacherId_0
+      ORDER BY a.created_at DESC, a.id
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type 'Coaching.Application.Queries.GetTeacherAssignments.TeacherAssignmentListResponse'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action Coaching.API.Controllers.AssignmentsController.GetTeacherAssignments (Coaching.API) in 265.2907ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'Coaching.API.Controllers.AssignmentsController.GetTeacherAssignments (Coaching.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://localhost:5010/api/Assignments/teacher/11111111-1111-1111-1111-111111111111 - 200 - application/json;+charset=utf-8 286.3095ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://localhost:5010/api/Assignments/a953b7de-1a38-4d89-be16-235aceea54eb/submit - application/json 194
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'Coaching.API.Controllers.AssignmentsController.SubmitAssignment (Coaching.API)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "SubmitAssignment", controller = "Assignments"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[Coaching.Application.Commands.SubmitAssignment.SubmitAssignmentResponse]] SubmitAssignment(System.Guid, Coaching.Application.Commands.SubmitAssignment.SubmitAssignmentCommand, System.Threading.CancellationToken) on controller Coaching.API.Controllers.AssignmentsController (Coaching.API).
+info: Coaching.API.Controllers.AssignmentsController[0]
+      Submitting assignment: a953b7de-1a38-4d89-be16-235aceea54eb for student: 22222222-2222-2222-2222-222222222222
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__id_0='a953b7de-1a38-4d89-be16-235aceea54eb'], CommandType='Text', CommandTimeout='30']
+      SELECT a1.id, a1.created_at, a1."CreatedBy", a1.description, a1.due_date, a1.estimated_duration_minutes, a1.institution_id, a1.max_score, a1.passing_score, a1.status, a1.subject, a1.target_grade_level, a1.teacher_id, a1.title, a1.type, a1.updated_at, a1."UpdatedBy", a1."Version", a0.id, a0.assignment_id, a0.created_at, a0."CreatedBy", a0.score, a0.status, a0.student_id, a0.student_note, a0.submitted_at, a0.teacher_feedback, a0."UpdatedAt", a0."UpdatedBy"
+      FROM (
+          SELECT a.id, a.created_at, a."CreatedBy", a.description, a.due_date, a.estimated_duration_minutes, a.institution_id, a.max_score, a.passing_score, a.status, a.subject, a.target_grade_level, a.teacher_id, a.title, a.type, a.updated_at, a."UpdatedBy", a."Version"
+          FROM coaching.assignments AS a
+          WHERE a.id = @__id_0
+          LIMIT 1
+      ) AS a1
+      LEFT JOIN coaching.assignment_students AS a0 ON a1.id = a0.assignment_id
+      ORDER BY a1.id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p3='76ca1386-15ac-4894-94d2-9d96f55160ab', @p0='Submitted' (Nullable = false), @p1='50 soruyu tamamladım hocam, zorlandım biraz.', @p2='2026-01-20T20:37:20.4966456Z' (Nullable = true) (DbType = DateTime), @p21='a953b7de-1a38-4d89-be16-235aceea54eb', @p4='2026-01-20T20:37:01.5368580Z' (DbType = DateTime), @p5=NULL, @p6='Türev alma kuralları ilk 50 soru', @p7='2026-02-01T23:59:59.0000000Z' (DbType = DateTime), @p8='60' (Nullable = true), @p9='33333333-3333-3333-3333-333333333333' (Nullable = true), @p10='100.00' (Nullable = true), @p11='50.00' (Nullable = true), @p12='Active' (Nullable = false), @p13='Matematik', @p14='12' (Nullable = true), @p15='11111111-1111-1111-1111-111111111111', @p16='Matematik Türev Ödevi' (Nullable = false), @p17='Individual' (Nullable = false), @p18='2026-01-20T20:37:20.4966772Z' (Nullable = true) (DbType = DateTime), @p19=NULL, @p20='0'], CommandType='Text', CommandTimeout='30']
+      UPDATE coaching.assignment_students SET status = @p0, student_note = @p1, submitted_at = @p2
+      WHERE id = @p3;
+      UPDATE coaching.assignments SET created_at = @p4, "CreatedBy" = @p5, description = @p6, due_date = @p7, estimated_duration_minutes = @p8, institution_id = @p9, max_score = @p10, passing_score = @p11, status = @p12, subject = @p13, target_grade_level = @p14, teacher_id = @p15, title = @p16, type = @p17, updated_at = @p18, "UpdatedBy" = @p19, "Version" = @p20
+      WHERE id = @p21;
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type 'Coaching.Application.Commands.SubmitAssignment.SubmitAssignmentResponse'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action Coaching.API.Controllers.AssignmentsController.SubmitAssignment (Coaching.API) in 64.8444ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'Coaching.API.Controllers.AssignmentsController.SubmitAssignment (Coaching.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5010/api/Assignments/a953b7de-1a38-4d89-be16-235aceea54eb/submit - 200 - application/json;+charset=utf-8 71.8836ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://localhost:5010/api/Assignments/a953b7de-1a38-4d89-be16-235aceea54eb/grade - application/json 231
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'Coaching.API.Controllers.AssignmentsController.GradeAssignment (Coaching.API)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "GradeAssignment", controller = "Assignments"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[Coaching.Application.Commands.GradeAssignment.GradeAssignmentResponse]] GradeAssignment(System.Guid, Coaching.Application.Commands.GradeAssignment.GradeAssignmentCommand, System.Threading.CancellationToken) on controller Coaching.API.Controllers.AssignmentsController (Coaching.API).
+info: Coaching.API.Controllers.AssignmentsController[0]
+      Grading assignment: a953b7de-1a38-4d89-be16-235aceea54eb for student: 22222222-2222-2222-2222-222222222222
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__id_0='a953b7de-1a38-4d89-be16-235aceea54eb'], CommandType='Text', CommandTimeout='30']
+      SELECT a1.id, a1.created_at, a1."CreatedBy", a1.description, a1.due_date, a1.estimated_duration_minutes, a1.institution_id, a1.max_score, a1.passing_score, a1.status, a1.subject, a1.target_grade_level, a1.teacher_id, a1.title, a1.type, a1.updated_at, a1."UpdatedBy", a1."Version", a0.id, a0.assignment_id, a0.created_at, a0."CreatedBy", a0.score, a0.status, a0.student_id, a0.student_note, a0.submitted_at, a0.teacher_feedback, a0."UpdatedAt", a0."UpdatedBy"
+      FROM (
+          SELECT a.id, a.created_at, a."CreatedBy", a.description, a.due_date, a.estimated_duration_minutes, a.institution_id, a.max_score, a.passing_score, a.status, a.subject, a.target_grade_level, a.teacher_id, a.title, a.type, a.updated_at, a."UpdatedBy", a."Version"
+          FROM coaching.assignments AS a
+          WHERE a.id = @__id_0
+          LIMIT 1
+      ) AS a1
+      LEFT JOIN coaching.assignment_students AS a0 ON a1.id = a0.assignment_id
+      ORDER BY a1.id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p3='76ca1386-15ac-4894-94d2-9d96f55160ab', @p0='85' (Nullable = true), @p1='Graded' (Nullable = false), @p2='Güzel çalışma, son sorularda dikkat hatası yapmışsın.', @p21='a953b7de-1a38-4d89-be16-235aceea54eb', @p4='2026-01-20T20:37:01.5368580Z' (DbType = DateTime), @p5=NULL, @p6='Türev alma kuralları ilk 50 soru', @p7='2026-02-01T23:59:59.0000000Z' (DbType = DateTime), @p8='60' (Nullable = true), @p9='33333333-3333-3333-3333-333333333333' (Nullable = true), @p10='100.00' (Nullable = true), @p11='50.00' (Nullable = true), @p12='Active' (Nullable = false), @p13='Matematik', @p14='12' (Nullable = true), @p15='11111111-1111-1111-1111-111111111111', @p16='Matematik Türev Ödevi' (Nullable = false), @p17='Individual' (Nullable = false), @p18='2026-01-20T20:37:34.3240992Z' (Nullable = true) (DbType = DateTime), @p19=NULL, @p20='0'], CommandType='Text', CommandTimeout='30']
+      UPDATE coaching.assignment_students SET score = @p0, status = @p1, teacher_feedback = @p2
+      WHERE id = @p3;
+      UPDATE coaching.assignments SET created_at = @p4, "CreatedBy" = @p5, description = @p6, due_date = @p7, estimated_duration_minutes = @p8, institution_id = @p9, max_score = @p10, passing_score = @p11, status = @p12, subject = @p13, target_grade_level = @p14, teacher_id = @p15, title = @p16, type = @p17, updated_at = @p18, "UpdatedBy" = @p19, "Version" = @p20
+      WHERE id = @p21;
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type 'Coaching.Application.Commands.GradeAssignment.GradeAssignmentResponse'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action Coaching.API.Controllers.AssignmentsController.GradeAssignment (Coaching.API) in 16.0044ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'Coaching.API.Controllers.AssignmentsController.GradeAssignment (Coaching.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5010/api/Assignments/a953b7de-1a38-4d89-be16-235aceea54eb/grade - 200 - application/json;+charset=utf-8 19.3226ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://localhost:5010/api/Assignments/student/22222222-2222-2222-2222-222222222222 - - -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'Coaching.API.Controllers.AssignmentsController.GetStudentAssignments (Coaching.API)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "GetStudentAssignments", controller = "Assignments"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetStudentAssignments(System.Guid, System.Threading.CancellationToken) on controller Coaching.API.Controllers.AssignmentsController (Coaching.API).
+info: Coaching.API.Controllers.AssignmentsController[0]
+      Getting assignments for student: 22222222-2222-2222-2222-222222222222
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__studentId_0='22222222-2222-2222-2222-222222222222'], CommandType='Text', CommandTimeout='30']
+      SELECT a.id, a.created_at, a."CreatedBy", a.description, a.due_date, a.estimated_duration_minutes, a.institution_id, a.max_score, a.passing_score, a.status, a.subject, a.target_grade_level, a.teacher_id, a.title, a.type, a.updated_at, a."UpdatedBy", a."Version", a1.id, a1.assignment_id, a1.created_at, a1."CreatedBy", a1.score, a1.status, a1.student_id, a1.student_note, a1.submitted_at, a1.teacher_feedback, a1."UpdatedAt", a1."UpdatedBy"
+      FROM coaching.assignments AS a
+      LEFT JOIN coaching.assignment_students AS a1 ON a.id = a1.assignment_id
+      WHERE EXISTS (
+          SELECT 1
+          FROM coaching.assignment_students AS a0
+          WHERE a.id = a0.assignment_id AND a0.student_id = @__studentId_0)
+      ORDER BY a.created_at DESC, a.id
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type 'Coaching.Application.Queries.GetStudentAssignments.StudentAssignmentListResponse'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action Coaching.API.Controllers.AssignmentsController.GetStudentAssignments (Coaching.API) in 70.1913ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'Coaching.API.Controllers.AssignmentsController.GetStudentAssignments (Coaching.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://localhost:5010/api/Assignments/student/22222222-2222-2222-2222-222222222222 - 200 - application/json;+charset=utf-8 76.2062ms
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+dbug: Microsoft.Extensions.Hosting.Internal.Host[3]
+      Hosting stopping
+dbug: Microsoft.Extensions.Hosting.Internal.Host[4]
+      Hosting stopped

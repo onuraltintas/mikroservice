@@ -1,0 +1,27 @@
+<mat-sidenav-container class="h-screen w-full bg-gray-50 dark:bg-gray-900" autosize>
+
+    <!-- Sidenav (Drawer) -->
+    <mat-sidenav #sidenav [mode]="sidenavMode()" [opened]="isSidenavOpen()" class="w-72 !border-r-0 shadow-xl z-20">
+        <app-sidenav></app-sidenav>
+    </mat-sidenav>
+
+    <!-- Main Content Area -->
+    <mat-sidenav-content class="flex flex-col min-h-screen">
+
+        <!-- Top Toolbar -->
+        <app-toolbar (menuToggle)="toggleSidenav()"></app-toolbar>
+
+        <!-- Page Content (Router Outlet) -->
+        <main class="flex-1 p-6 overflow-x-hidden overflow-y-auto">
+            <div class="max-w-7xl mx-auto">
+                <!-- Breadcrumbs or Page Title could go here -->
+
+                <!-- Feature Content -->
+                <router-outlet></router-outlet>
+
+            </div>
+        </main>
+
+    </mat-sidenav-content>
+
+</mat-sidenav-container>
