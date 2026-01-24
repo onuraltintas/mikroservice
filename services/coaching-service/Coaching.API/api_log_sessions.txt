@@ -1,0 +1,114 @@
+Using launch settings from /home/onur/Desktop/mikroservice/services/coaching-service/Coaching.API/Properties/launchSettings.json...
+Building...
+🎉 Coaching API Started! http://localhost:5000
+dbug: Microsoft.Extensions.Hosting.Internal.Host[1]
+      Hosting starting
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5010
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/onur/Desktop/mikroservice/services/coaching-service/Coaching.API
+dbug: Microsoft.Extensions.Hosting.Internal.Host[2]
+      Hosting started
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://localhost:5010/api/Sessions - application/json 295
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'Coaching.API.Controllers.SessionsController.CreateSession (Coaching.API)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "CreateSession", controller = "Sessions"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[Coaching.Application.Commands.CreateSession.CreateSessionResponse]] CreateSession(Coaching.Application.Commands.CreateSession.CreateSessionCommand, System.Threading.CancellationToken) on controller Coaching.API.Controllers.SessionsController (Coaching.API).
+info: Coaching.API.Controllers.SessionsController[0]
+      Scheduling session for student: 22222222-2222-2222-2222-222222222222 with teacher: 11111111-1111-1111-1111-111111111111
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10400]
+      Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (34ms) [Parameters=[@p0='cdab35c6-2be3-4e28-a721-19403aee74a7', @p1='2026-01-20T20:45:14.0946267Z' (DbType = DateTime), @p2=NULL, @p3=NULL, @p4='45', @p5=NULL (DbType = Guid), @p6=NULL, @p7='2026-01-21T14:00:00.0000000Z' (DbType = DateTime), @p8='OneOnOne' (Nullable = false), @p9='Scheduled' (Nullable = false), @p10='11111111-1111-1111-1111-111111111111', @p11='Ödev kontrolü yapılacak', @p12='Haftalık Değerlendirme' (Nullable = false), @p13='2026-01-20T20:45:14.0951569Z' (Nullable = true) (DbType = DateTime), @p14=NULL, @p15='0', @p16='1ac6f3fb-3b9e-4395-81a4-dbb7dc9507d1', @p17='Present' (Nullable = false), @p18='2026-01-20T20:45:14.0950600Z' (DbType = DateTime), @p19=NULL, @p20=NULL (DbType = DateTime), @p21=NULL (DbType = DateTime), @p22='cdab35c6-2be3-4e28-a721-19403aee74a7', @p23='22222222-2222-2222-2222-222222222222', @p24=NULL, @p25=NULL, @p26=NULL (DbType = DateTime), @p27=NULL], CommandType='Text', CommandTimeout='30']
+      INSERT INTO coaching.coaching_sessions (id, created_at, "CreatedBy", description, duration_minutes, institution_id, meeting_link, scheduled_date, session_type, status, teacher_id, teacher_notes, title, updated_at, "UpdatedBy", "Version")
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15);
+      INSERT INTO coaching.session_attendances (id, attendance_status, created_at, "CreatedBy", joined_at, left_at, session_id, student_id, student_note, teacher_note, "UpdatedAt", "UpdatedBy")
+      VALUES (@p16, @p17, @p18, @p19, @p20, @p21, @p22, @p23, @p24, @p25, @p26, @p27);
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing CreatedAtActionResult, writing value of type 'Coaching.Application.Commands.CreateSession.CreateSessionResponse'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action Coaching.API.Controllers.SessionsController.CreateSession (Coaching.API) in 834.0774ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'Coaching.API.Controllers.SessionsController.CreateSession (Coaching.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5010/api/Sessions - 201 - application/json;+charset=utf-8 877.1630ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://localhost:5010/api/Sessions/teacher/11111111-1111-1111-1111-111111111111 - - -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'Coaching.API.Controllers.SessionsController.GetTeacherSessions (Coaching.API)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "GetTeacherSessions", controller = "Sessions"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetTeacherSessions(System.Guid, System.Threading.CancellationToken) on controller Coaching.API.Controllers.SessionsController (Coaching.API).
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (4ms) [Parameters=[@__teacherId_0='11111111-1111-1111-1111-111111111111'], CommandType='Text', CommandTimeout='30']
+      SELECT c.id, c.created_at, c."CreatedBy", c.description, c.duration_minutes, c.institution_id, c.meeting_link, c.scheduled_date, c.session_type, c.status, c.teacher_id, c.teacher_notes, c.title, c.updated_at, c."UpdatedBy", c."Version", s.id, s.attendance_status, s.created_at, s."CreatedBy", s.joined_at, s.left_at, s.session_id, s.student_id, s.student_note, s.teacher_note, s."UpdatedAt", s."UpdatedBy"
+      FROM coaching.coaching_sessions AS c
+      LEFT JOIN coaching.session_attendances AS s ON c.id = s.session_id
+      WHERE c.teacher_id = @__teacherId_0
+      ORDER BY c.scheduled_date DESC, c.id
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[Coaching.Application.Queries.GetSessions.SessionDto, Coaching.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action Coaching.API.Controllers.SessionsController.GetTeacherSessions (Coaching.API) in 268.8523ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'Coaching.API.Controllers.SessionsController.GetTeacherSessions (Coaching.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://localhost:5010/api/Sessions/teacher/11111111-1111-1111-1111-111111111111 - 200 - application/json;+charset=utf-8 289.2269ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://localhost:5010/api/Sessions/cdab35c6-2be3-4e28-a721-19403aee74a7/attendance - application/json 145
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'Coaching.API.Controllers.SessionsController.UpdateAttendance (Coaching.API)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "UpdateAttendance", controller = "Sessions"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] UpdateAttendance(System.Guid, Coaching.Application.Commands.UpdateSessionAttendance.UpdateSessionAttendanceCommand, System.Threading.CancellationToken) on controller Coaching.API.Controllers.SessionsController (Coaching.API).
+info: Coaching.API.Controllers.SessionsController[0]
+      Updating attendance for session: cdab35c6-2be3-4e28-a721-19403aee74a7
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__id_0='cdab35c6-2be3-4e28-a721-19403aee74a7'], CommandType='Text', CommandTimeout='30']
+      SELECT c0.id, c0.created_at, c0."CreatedBy", c0.description, c0.duration_minutes, c0.institution_id, c0.meeting_link, c0.scheduled_date, c0.session_type, c0.status, c0.teacher_id, c0.teacher_notes, c0.title, c0.updated_at, c0."UpdatedBy", c0."Version", s.id, s.attendance_status, s.created_at, s."CreatedBy", s.joined_at, s.left_at, s.session_id, s.student_id, s.student_note, s.teacher_note, s."UpdatedAt", s."UpdatedBy"
+      FROM (
+          SELECT c.id, c.created_at, c."CreatedBy", c.description, c.duration_minutes, c.institution_id, c.meeting_link, c.scheduled_date, c.session_type, c.status, c.teacher_id, c.teacher_notes, c.title, c.updated_at, c."UpdatedBy", c."Version"
+          FROM coaching.coaching_sessions AS c
+          WHERE c.id = @__id_0
+          LIMIT 1
+      ) AS c0
+      LEFT JOIN coaching.session_attendances AS s ON c0.id = s.session_id
+      ORDER BY c0.id
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p15='cdab35c6-2be3-4e28-a721-19403aee74a7', @p0='2026-01-20T20:45:14.0946260Z' (DbType = DateTime), @p1=NULL, @p2=NULL, @p3='45', @p4=NULL (DbType = Guid), @p5=NULL, @p6='2026-01-21T14:00:00.0000000Z' (DbType = DateTime), @p7='OneOnOne' (Nullable = false), @p8='Completed' (Nullable = false), @p9='11111111-1111-1111-1111-111111111111', @p10='Ödev kontrolü yapılacak', @p11='Haftalık Değerlendirme' (Nullable = false), @p12='2026-01-20T20:45:36.7874445Z' (Nullable = true) (DbType = DateTime), @p13=NULL, @p14='0', @p17='1ac6f3fb-3b9e-4395-81a4-dbb7dc9507d1', @p16='Öğrenci vaktinde geldi, verimli geçti.'], CommandType='Text', CommandTimeout='30']
+      UPDATE coaching.coaching_sessions SET created_at = @p0, "CreatedBy" = @p1, description = @p2, duration_minutes = @p3, institution_id = @p4, meeting_link = @p5, scheduled_date = @p6, session_type = @p7, status = @p8, teacher_id = @p9, teacher_notes = @p10, title = @p11, updated_at = @p12, "UpdatedBy" = @p13, "Version" = @p14
+      WHERE id = @p15;
+      UPDATE coaching.session_attendances SET teacher_note = @p16
+      WHERE id = @p17;
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type '<>f__AnonymousType2`1[[System.String, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action Coaching.API.Controllers.SessionsController.UpdateAttendance (Coaching.API) in 83.894ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'Coaching.API.Controllers.SessionsController.UpdateAttendance (Coaching.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5010/api/Sessions/cdab35c6-2be3-4e28-a721-19403aee74a7/attendance - 200 - application/json;+charset=utf-8 91.5418ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://localhost:5010/api/Sessions/teacher/11111111-1111-1111-1111-111111111111 - - -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'Coaching.API.Controllers.SessionsController.GetTeacherSessions (Coaching.API)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "GetTeacherSessions", controller = "Sessions"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetTeacherSessions(System.Guid, System.Threading.CancellationToken) on controller Coaching.API.Controllers.SessionsController (Coaching.API).
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__teacherId_0='11111111-1111-1111-1111-111111111111'], CommandType='Text', CommandTimeout='30']
+      SELECT c.id, c.created_at, c."CreatedBy", c.description, c.duration_minutes, c.institution_id, c.meeting_link, c.scheduled_date, c.session_type, c.status, c.teacher_id, c.teacher_notes, c.title, c.updated_at, c."UpdatedBy", c."Version", s.id, s.attendance_status, s.created_at, s."CreatedBy", s.joined_at, s.left_at, s.session_id, s.student_id, s.student_note, s.teacher_note, s."UpdatedAt", s."UpdatedBy"
+      FROM coaching.coaching_sessions AS c
+      LEFT JOIN coaching.session_attendances AS s ON c.id = s.session_id
+      WHERE c.teacher_id = @__teacherId_0
+      ORDER BY c.scheduled_date DESC, c.id
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[Coaching.Application.Queries.GetSessions.SessionDto, Coaching.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action Coaching.API.Controllers.SessionsController.GetTeacherSessions (Coaching.API) in 4.2521ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'Coaching.API.Controllers.SessionsController.GetTeacherSessions (Coaching.API)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://localhost:5010/api/Sessions/teacher/11111111-1111-1111-1111-111111111111 - 200 - application/json;+charset=utf-8 4.9578ms

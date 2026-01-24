@@ -1,0 +1,196 @@
+version: '3.8'
+
+# Development Infrastructure - PostgreSQL, Redis, RabbitMQ, Keycloak, Elasticsearch
+# NOTE: Run with: docker-compose --env-file ../../.env -f docker-compose.infra.yml up
+services:
+  # ============================================
+  # PostgreSQL - Main Database
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: eduplatform-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_MULTIPLE_DATABASES: identity_db,speedreading_db,coaching_db,blog_db,content_db,exam_db,analytics_db,notification_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts/create-databases.sh:/docker-entrypoint-initdb.d/create-databases.sh
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U eduplatform" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eduplatform-network
+
+  # ============================================
+  # PgAdmin - Database Management UI
+  # ============================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: eduplatform-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@eduplatform.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - eduplatform-network
+
+  # ============================================
+  # Redis - Caching & Session Management
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: eduplatform-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli -a $REDIS_PASSWORD ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eduplatform-network
+
+  # ============================================
+  # RabbitMQ - Message Broker
+  # ============================================
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: eduplatform-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672" # AMQP
+      - "15672:15672" # Management UI
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - eduplatform-network
+
+  # ============================================
+  # Keycloak - Identity & Access Management
+  # ============================================
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: eduplatform-keycloak
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/identity_db
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KC_HEALTH_ENABLED: true
+    command: start-dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - eduplatform-network
+
+  # ============================================
+  # Elasticsearch - Logging & Search
+  # ============================================
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: eduplatform-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - eduplatform-network
+
+  # ============================================
+  # Kibana - Log Visualization
+  # ============================================
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: eduplatform-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - eduplatform-network
+
+  # ============================================
+  # Seq - Structured Log Server (Lightweight alternative)
+  # ============================================
+  seq:
+    image: datalust/seq:latest
+    container_name: eduplatform-seq
+    environment:
+      - ACCEPT_EULA=Y
+    volumes:
+      - seq_data:/data
+    ports:
+      - "5341:80" # UI
+      - "5342:5341" # Ingestion
+    networks:
+      - eduplatform-network
+
+  # ============================================
+  # MailPit - Fake SMTP Server (Development)
+  # ============================================
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: eduplatform-mailpit
+    restart: unless-stopped
+    volumes:
+      - mailpit_data:/data
+    ports:
+      - "8025:8025" # Web UI
+      - "1025:1025" # SMTP Port
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    networks:
+      - eduplatform-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  elasticsearch_data:
+  seq_data:
+  mailpit_data:
+
+
+networks:
+  eduplatform-network:
+    driver: bridge

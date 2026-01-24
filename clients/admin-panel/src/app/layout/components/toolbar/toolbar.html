@@ -1,0 +1,54 @@
+<mat-toolbar
+  class="!bg-white dark:!bg-gray-900 !text-gray-800 dark:!text-white border-b border-gray-200 dark:border-gray-700 !px-6 shadow-sm z-10 relative">
+
+  <!-- Mobile Menu Button -->
+  <button mat-icon-button (click)="menuToggle.emit()" class="mr-2 !text-gray-600 dark:!text-gray-300 md:hidden">
+    <mat-icon>menu</mat-icon>
+  </button>
+
+  <!-- Title / Brand -->
+  <a routerLink="/"
+    class="font-bold text-lg tracking-wide text-primary-600 hover:text-primary-700 no-underline cursor-pointer">
+    EduPlatform
+  </a>
+
+  <span class="spacer flex-1"></span>
+
+  <!-- Right Actions -->
+  <div class="flex items-center gap-2">
+    <!-- Notifications (Example) -->
+    <button mat-icon-button class="!text-gray-500">
+      <mat-icon>notifications_none</mat-icon>
+    </button>
+
+    <!-- User Profile Dropdown -->
+    <button mat-button [matMenuTriggerFor]="userMenu"
+      class="!flex !items-center !px-2 !min-w-0 !rounded-full hover:!bg-gray-100 dark:hover:!bg-gray-800 transition-colors">
+      <div class="flex items-center gap-2">
+        <div
+          class="w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-sm">
+          A
+        </div>
+        <span class="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-200">Admin User</span>
+        <mat-icon class="!w-4 !h-4 !text-sm flex items-center justify-center !text-gray-400">expand_more</mat-icon>
+      </div>
+    </button>
+
+    <mat-menu #userMenu="matMenu" xPosition="before" class="mt-2">
+      <button mat-menu-item>
+        <mat-icon>account_circle</mat-icon>
+        <span>Profile</span>
+      </button>
+      <button mat-menu-item>
+        <mat-icon>settings</mat-icon>
+        <span>Settings</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item class="!text-red-500">
+        <mat-icon class="!text-red-500">logout</mat-icon>
+        <span>Sign Out</span>
+      </button>
+    </mat-menu>
+  </div>
+
+</mat-toolbar>
