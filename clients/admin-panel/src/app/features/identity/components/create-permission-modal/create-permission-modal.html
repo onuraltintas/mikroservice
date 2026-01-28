@@ -1,0 +1,112 @@
+<div class="fixed inset-0 z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <!-- Backdrop (Static) -->
+    <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" (click)="onCancel()"></div>
+
+    <!-- Modal Position Container -->
+    <div class="fixed inset-0 z-[101] overflow-y-auto">
+        <div class="flex min-h-full items-start justify-center p-4 text-center sm:p-12">
+
+            <!-- Modal Panel -->
+            <div
+                class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white dark:bg-gray-900 text-left shadow-2xl transition-all border border-gray-100 dark:border-gray-700 bg-opacity-100 dark:bg-opacity-100">
+
+                <!-- Header -->
+                <div
+                    class="bg-gradient-to-r from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-800 p-6 border-b border-gray-100 dark:border-gray-700">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-center gap-4">
+                            <div
+                                class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Yeni İzin Oluştur</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Sisteme yeni bir yetki tanımı
+                                    ekleyin.</p>
+                            </div>
+                        </div>
+                        <button (click)="onCancel()" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                            <span class="sr-only">Kapat</span>
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="p-6 space-y-5">
+                    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                        <div class="space-y-4">
+                            <!-- Helper Text -->
+                            <div
+                                class="bg-blue-50/50 dark:bg-blue-900/10 rounded-lg p-3 text-xs text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-900/20 mb-4">
+                                <p><strong>İpucu:</strong> İzin anahtarları genellikle
+                                    <code>Permissions.ModulAdi.Islem</code> formatında olur.</p>
+                            </div>
+
+                            <!-- Key Input -->
+                            <div class="group">
+                                <label for="key"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 ml-0.5">Anahtar
+                                    (Key)</label>
+                                <input type="text" id="key" formControlName="key"
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white p-2.5 transition-colors"
+                                    placeholder="Örn: Permissions.Products.Create">
+                                <p *ngIf="form.get('key')?.touched && form.get('key')?.errors?.['required']"
+                                    class="mt-1 text-xs text-red-500 ml-0.5">Bu alan zorunludur.</p>
+                            </div>
+
+                            <!-- Group Input -->
+                            <div class="group">
+                                <label for="group"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 ml-0.5">Grup</label>
+                                <input type="text" id="group" formControlName="group"
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white p-2.5 transition-colors"
+                                    placeholder="Örn: Products">
+                                <p *ngIf="form.get('group')?.touched && form.get('group')?.errors?.['required']"
+                                    class="mt-1 text-xs text-red-500 ml-0.5">Bu alan zorunludur.</p>
+                            </div>
+
+                            <!-- Description Input -->
+                            <div class="group">
+                                <label for="description"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 ml-0.5">Açıklama</label>
+                                <textarea id="description" formControlName="description" rows="3"
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white p-2.5 transition-colors resize-none"
+                                    placeholder="İzin hakkında kısa açıklama..."></textarea>
+                                <p *ngIf="form.get('description')?.touched && form.get('description')?.errors?.['required']"
+                                    class="mt-1 text-xs text-red-500 ml-0.5">Bu alan zorunludur.</p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Footer -->
+                <div
+                    class="bg-gray-50 dark:bg-gray-800/50 px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
+                    <button type="button" (click)="onCancel()"
+                        class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                        İptal
+                    </button>
+                    <button type="button" (click)="onSubmit()" [disabled]="form.invalid || loading()"
+                        class="rounded-lg px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center">
+                        <svg *ngIf="loading()" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        {{ loading() ? 'Kaydediliyor...' : 'Oluştur' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

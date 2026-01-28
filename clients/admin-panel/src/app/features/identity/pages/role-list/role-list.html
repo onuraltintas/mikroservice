@@ -20,25 +20,25 @@
         <!-- Search -->
         <div class="relative w-full sm:w-64">
             <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
-                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                    fill="currentColor">
+                <svg class="h-5 w-5 text-gray-500 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd"
                         d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
                         clip-rule="evenodd" />
                 </svg>
             </div>
             <input type="text" [ngModel]="searchTerm()" (input)="onSearch($event)"
-                class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white pl-10 focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2"
+                class="block w-full rounded-lg border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white pl-10 focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 shadow-sm transition-colors"
                 placeholder="Rol adı veya açıklama ara...">
         </div>
 
         <!-- Status Filter -->
         <div class="w-full sm:w-48">
             <select (change)="onStatusChange($event)"
-                class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white py-2 pl-3 pr-10 text-base focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm">
-                <option value="all">Tüm Durumlar</option>
-                <option value="active">Aktif</option>
-                <option value="passive">Pasif</option>
+                class="block w-full rounded-lg border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white py-2.5 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 shadow-sm cursor-pointer transition-colors">
+                <option value="all" class="font-medium text-gray-500">Tüm Durumlar</option>
+                <option value="active" class="text-green-600 font-medium">Aktif</option>
+                <option value="passive" class="text-red-600 font-medium">Pasif</option>
             </select>
         </div>
     </div>
@@ -84,7 +84,7 @@
                             </tr>
                             }
                             } @else {
-                            @for (role of filteredRoles(); track role.id) {
+                            @for (role of paginatedRoles(); track role.id) {
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
                                 <td
                                     class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">
@@ -143,6 +143,19 @@
                                                     Düzenle
                                                 </button>
 
+
+                                                <button (click)="openPermissionsModal(role)"
+                                                    class="flex w-full px-4 py-2 text-sm text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center"
+                                                    role="menuitem" tabindex="-1">
+                                                    <svg class="mr-3 h-4 w-4 text-indigo-500" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                                    </svg>
+                                                    İzinleri Yönet
+                                                </button>
+
                                                 @if (!role.isDeleted && !role.isSystemRole) {
                                                 <button (click)="deleteRole(role)"
                                                     class="flex w-full px-4 py-2 text-sm text-yellow-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center"
@@ -189,7 +202,7 @@
                                 </td>
                             </tr>
                             }
-                            @if (filteredRoles().length === 0) {
+                            @if (paginatedRoles().length === 0) {
                             <tr>
                                 <td colspan="4" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                                     <div class="flex flex-col items-center justify-center">
@@ -207,6 +220,81 @@
                             }
                         </tbody>
                     </table>
+
+                    <!-- Footer: Pagination & Page Size -->
+                    <div class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-lg">
+                        <!-- Main Footer Row: Info & Pagination -->
+                        <div class="flex items-center justify-between px-4 py-4 sm:px-6">
+                            <div class="flex flex-1 items-center justify-between flex-wrap gap-4">
+                                <!-- Record Info -->
+                                <p class="text-sm text-gray-700 dark:text-gray-400">
+                                    Toplam <span class="font-medium text-gray-900 dark:text-white">{{ totalCount()
+                                        }}</span> kayıt
+                                    @if (totalPages > 1) {
+                                    <span class="ml-1">(<span class="font-medium">{{ currentPage() }}</span> / {{
+                                        totalPages }} sayfa)</span>
+                                    }
+                                </p>
+
+                                <!-- Pagination Buttons -->
+                                @if (totalPages > 1) {
+                                <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm"
+                                    aria-label="Pagination">
+                                    <button (click)="changePage(currentPage() - 1)" [disabled]="currentPage() === 1"
+                                        class="relative inline-flex items-center rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-2 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors">
+                                        <span class="sr-only">Önceki</span>
+                                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                            fill="currentColor">
+                                            <path fill-rule="evenodd"
+                                                d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+
+                                    @for (page of pagesArray; track $index) {
+                                    @if (page === '...') {
+                                    <span
+                                        class="relative inline-flex items-center border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">...</span>
+                                    } @else {
+                                    <button (click)="changePage(+$any(page))"
+                                        class="relative inline-flex items-center border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-50 dark:hover:bg-gray-600"
+                                        [ngClass]="{'bg-blue-50 text-blue-600 border-blue-500 z-10 dark:bg-blue-900/20': page === currentPage()}">
+                                        {{ page }}
+                                    </button>
+                                    }
+                                    }
+
+                                    <button (click)="changePage(currentPage() + 1)"
+                                        [disabled]="currentPage() === totalPages"
+                                        class="relative inline-flex items-center rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-2 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors">
+                                        <span class="sr-only">Sonraki</span>
+                                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                            fill="currentColor">
+                                            <path fill-rule="evenodd"
+                                                d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </nav>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Page Size Selector (Bottom Row) -->
+                        <div
+                            class="px-4 py-3 sm:px-6 bg-gray-50/50 dark:bg-gray-900/10 border-t border-gray-100 dark:border-gray-700/50 flex justify-center items-center">
+                            <div class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                                <span>Sayfa başına kayıt:</span>
+                                <select (change)="onPageSizeChange($event)" [value]="pageSize()"
+                                    class="block rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white py-1 pl-2 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 transition-colors">
+                                    <option [value]="10">10</option>
+                                    <option [value]="25">25</option>
+                                    <option [value]="50">50</option>
+                                    <option [value]="100">100</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -218,5 +306,10 @@
 
     @if (showEditModal() && roleToEdit()) {
     <app-edit-role-modal [role]="roleToEdit()!" (close)="onEditModalClose($event)"></app-edit-role-modal>
+    }
+
+    @if (showPermissionsModal() && roleForPermissions()) {
+    <app-role-permissions-modal [role]="roleForPermissions()!"
+        (close)="onPermissionsModalClose($event)"></app-role-permissions-modal>
     }
 </div>

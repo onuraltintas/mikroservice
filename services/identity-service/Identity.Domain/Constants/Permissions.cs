@@ -21,6 +21,14 @@ public static class Permissions
         public const string Delete = "Permissions.Roles.Delete";
         public const string ManagePermissions = "Permissions.Roles.ManagePermissions";
     }
+
+    public static class PermissionManagement
+    {
+        public const string View = "Permissions.Permissions.View";
+        public const string Create = "Permissions.Permissions.Create";
+        public const string Edit = "Permissions.Permissions.Edit";
+        public const string Delete = "Permissions.Permissions.Delete";
+    }
     
     // Helper to get all permissions
     public static List<string> GetAll()
@@ -42,6 +50,12 @@ public static class Permissions
         permissions.Add(Roles.Edit);
         permissions.Add(Roles.Delete);
         permissions.Add(Roles.ManagePermissions);
+
+        // Permissions
+        permissions.Add(PermissionManagement.View);
+        permissions.Add(PermissionManagement.Create);
+        permissions.Add(PermissionManagement.Edit);
+        permissions.Add(PermissionManagement.Delete);
 
         return permissions;
     }

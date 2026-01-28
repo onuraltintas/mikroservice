@@ -9,78 +9,114 @@ import { ToasterService } from '../../../../core/services/toaster.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <!-- Backdrop (Modern Glass Effect) -->
+    <div class="fixed inset-0 z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+      <!-- Backdrop (Static) -->
       <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" (click)="closeModal()"></div>
 
-      <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-        <div class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-          
-          <div class="bg-white dark:bg-gray-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white" id="modal-title">
-                Kullanıcı Düzenle
-            </h3>
+      <!-- Modal Position Container -->
+      <div class="fixed inset-0 z-[101] overflow-y-auto">
+        <div class="flex min-h-full items-start justify-center p-4 text-center sm:p-12">
             
-            <form [formGroup]="form" class="mt-4 space-y-4">
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Ad</label>
-                  <input type="text" formControlName="firstName" 
-                    [class.border-red-500]="f['firstName'].invalid && f['firstName'].touched"
-                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-50 dark:placeholder-gray-400">
-                  @if (f['firstName'].invalid && f['firstName'].touched) {
-                    <div class="mt-1 space-y-1">
-                        @if (f['firstName'].errors?.['required']) { <p class="text-[11px] text-red-500">• Ad alanı zorunludur.</p> }
-                        @if (f['firstName'].errors?.['minlength']) { <p class="text-[11px] text-red-500">• En az 2 karakter olmalıdır.</p> }
+            <!-- Modal Panel -->
+            <div class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white dark:bg-gray-900 text-left shadow-2xl transition-all border border-gray-100 dark:border-gray-700 bg-opacity-100 dark:bg-opacity-100">
+                
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-indigo-50 to-white dark:from-indigo-900/20 dark:to-gray-800 p-6 border-b border-gray-100 dark:border-gray-700">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Kullanıcı Düzenle</h3>
+                                <div class="mt-1 flex items-center gap-2">
+                                     <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-400/20">{{ user()?.email }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button (click)="closeModal()" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                            <span class="sr-only">Kapat</span>
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
-                  }
                 </div>
 
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Soyad</label>
-                  <input type="text" formControlName="lastName" 
-                    [class.border-red-500]="f['lastName'].invalid && f['lastName'].touched"
-                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-50 dark:placeholder-gray-400">
-                  @if (f['lastName'].invalid && f['lastName'].touched) {
-                    <div class="mt-1 space-y-1">
-                        @if (f['lastName'].errors?.['required']) { <p class="text-[11px] text-red-500">• Soyad alanı zorunludur.</p> }
-                        @if (f['lastName'].errors?.['minlength']) { <p class="text-[11px] text-red-500">• En az 2 karakter olmalıdır.</p> }
-                    </div>
-                  }
+                <!-- Body -->
+                <div class="p-6 space-y-5">
+                    <form [formGroup]="form">
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="group">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 ml-0.5">Ad</label>
+                                    <input type="text" formControlName="firstName" 
+                                        [class.border-red-500]="f['firstName'].invalid && f['firstName'].touched"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white p-2.5 transition-colors">
+                                    @if (f['firstName'].invalid && f['firstName'].touched) {
+                                        <p class="mt-1 text-xs text-red-500 ml-0.5">En az 2 karakter gereklidir.</p>
+                                    }
+                                </div>
+                                <div class="group">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 ml-0.5">Soyad</label>
+                                    <input type="text" formControlName="lastName" 
+                                        [class.border-red-500]="f['lastName'].invalid && f['lastName'].touched"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white p-2.5 transition-colors">
+                                    @if (f['lastName'].invalid && f['lastName'].touched) {
+                                        <p class="mt-1 text-xs text-red-500 ml-0.5">En az 2 karakter gereklidir.</p>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="group">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 ml-0.5">Telefon Numarası</label>
+                                <div class="relative">
+                                    <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
+                                        <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                                        </svg>
+                                    </div>
+                                    <input type="text" formControlName="phoneNumber" 
+                                        [class.border-red-500]="f['phoneNumber'].invalid && f['phoneNumber'].touched"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5 pl-10 dark:bg-gray-800 dark:border-gray-600 dark:text-white transition-colors" placeholder="+90 5xx xxx xx xx">
+                                </div>
+                                @if (f['phoneNumber'].invalid && f['phoneNumber'].touched) {
+                                    <p class="mt-1 text-xs text-red-500 ml-0.5">Geçerli bir telefon numarası girin.</p>
+                                }
+                            </div>
+                        </div>
+                    </form>
+
+                    @if (error()) {
+                        <div class="p-4 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-xl border border-red-100 dark:border-red-800 flex items-start gap-3">
+                            <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            <span class="text-sm font-medium">{{ error() }}</span>
+                        </div>
+                    }
                 </div>
-              </div>
 
-              <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 opacity-60">E-Posta (Değiştirilemez)</label>
-                <input type="email" [value]="user()?.email" disabled class="mt-1 block w-full rounded-md border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 shadow-sm sm:text-sm p-2 bg-gray-100 cursor-not-allowed">
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Telefon Numarası</label>
-                <input type="text" formControlName="phoneNumber" placeholder="05XX XXX XX XX" 
-                  [class.border-red-500]="f['phoneNumber'].invalid && f['phoneNumber'].touched"
-                  class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-50 dark:placeholder-gray-400">
-                @if (f['phoneNumber'].invalid && f['phoneNumber'].touched) {
-                  <p class="mt-1 text-[11px] text-red-500">• Geçerli bir telefon numarası girin.</p>
-                }
-              </div>
-            </form>
-
-            @if (error()) {
-                <div class="mt-3 p-3 bg-red-100 text-red-700 rounded-md text-sm border border-red-200 fade-in">
-                    <div class="font-bold mb-1">Hata</div>
-                    {{ error() }}
+                <!-- Footer -->
+                <div class="bg-gray-50 dark:bg-gray-800/50 px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
+                    <button type="button" (click)="closeModal()"
+                        class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        İptal
+                    </button>
+                    <button type="button" (click)="save()" [disabled]="loading() || !form.dirty"
+                        class="rounded-lg px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center">
+                        @if(loading()) {
+                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Kaydediliyor...
+                        } @else {
+                            Değişiklikleri Kaydet
+                        }
+                    </button>
                 </div>
-            }
-          </div>
-
-          <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-            <button type="button" (click)="save()" [disabled]="loading() || !form.dirty" 
-                class="inline-flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 transition-all active:scale-95">
-                {{ loading() ? 'Kaydediliyor...' : 'Güncelle' }}
-            </button>
-            <button type="button" (click)="closeModal()" class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white dark:bg-gray-600 dark:text-gray-200 px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">İptal</button>
-          </div>
+            </div>
         </div>
       </div>
     </div>
