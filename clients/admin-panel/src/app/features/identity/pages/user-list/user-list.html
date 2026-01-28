@@ -1,0 +1,404 @@
+<div class="px-4 sm:px-6 lg:px-8 py-8 animate-fade-in-up">
+    <!-- Header -->
+    <div class="sm:flex sm:items-center">
+        <div class="sm:flex-auto">
+            <h1 class="text-xl font-semibold text-gray-900 dark:text-white">Kullanıcılar</h1>
+            <p class="mt-2 text-sm text-gray-700 dark:text-gray-400">Tüm sistem kullanıcılarını yönetin, rolleri
+                düzenleyin veya hesapları pasif duruma getirin.</p>
+        </div>
+        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+            <button type="button" (click)="openCreateModal()"
+                class="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto transition-colors duration-200">
+                Kullanıcı Ekle
+            </button>
+        </div>
+    </div>
+
+    <!-- Search & Filter -->
+    <!-- Search & Filter -->
+    <div class="mt-8 flex flex-col md:flex-row gap-4 mb-4 items-end md:items-center flex-wrap">
+        <!-- Search -->
+        <div class="relative w-full sm:w-64">
+            <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
+                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                    fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                        clip-rule="evenodd" />
+                </svg>
+            </div>
+            <input type="text" [ngModel]="searchTerm()" (input)="onSearch($event)"
+                class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white pl-10 focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2"
+                placeholder="İsim veya e-posta ile ara...">
+        </div>
+
+        <!-- Role Filter -->
+        <select (change)="onRoleChange($event)"
+            class="block w-full sm:w-48 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white py-2 pl-3 pr-10 text-base focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm">
+            @for (role of roleOptions(); track role.value) {
+            <option [value]="role.value">{{ role.label }}</option>
+            }
+        </select>
+
+        <!-- Status Filter -->
+        <select (change)="onStatusChange($event)"
+            class="block w-full sm:w-48 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white py-2 pl-3 pr-10 text-base focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm">
+            @for (status of statuses; track status.label) {
+            <option [value]="status.value">{{ status.label }}</option>
+            }
+        </select>
+    </div>
+
+    <!-- Table -->
+    <div class="mt-4 flex flex-col">
+        <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8 min-h-[450px]">
+                <div
+                    class="shadow ring-1 ring-black ring-opacity-5 md:rounded-lg bg-white dark:bg-gray-800 overflow-visible">
+                    <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th scope="col"
+                                    class="py-3.5 pl-4 pr-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-300 sm:pl-6">
+                                    E-Posta</th>
+                                <th scope="col"
+                                    class="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-300">
+                                    İsim Soyisim</th>
+                                <th scope="col"
+                                    class="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-300">
+                                    Rol</th>
+                                <th scope="col"
+                                    class="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-300">
+                                    Durum</th>
+                                <th scope="col"
+                                    class="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-300">
+                                    Son Giriş</th>
+                                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                                    <span class="sr-only">İşlemler</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                            <!-- Loading State -->
+                            @if (loading()) {
+                            @for (i of [1,2,3,4,5]; track i) {
+                            <tr class="animate-pulse">
+                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
+                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48"></div>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm">
+                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm">
+                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm">
+                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-12"></div>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm">
+                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                                </td>
+                                <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                </td>
+                            </tr>
+                            }
+                            } @else {
+                            @for (user of users(); track user.email) {
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+                                <td
+                                    class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">
+                                    <div class="flex items-center space-x-2">
+                                        <span>{{ user.email }}</span>
+                                        @if (user.emailConfirmed) {
+                                        <svg class="h-4 w-4 text-green-500" xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 20 20" fill="currentColor" title="Doğrulandı">
+                                            <path fill-rule="evenodd"
+                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                        } @else {
+                                        <svg class="h-4 w-4 text-red-500" xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 20 20" fill="currentColor" title="Doğrulanmadı">
+                                            <path fill-rule="evenodd"
+                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                    {{ user.fullName }}
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                    <div class="flex flex-wrap gap-1">
+                                        @for (roleName of user.roles; track roleName) {
+                                        <span
+                                            class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 shadow-sm"
+                                            [ngClass]="{
+                                                            'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300': roleName === 'Student',
+                                                            'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300': roleName === 'Teacher',
+                                                            'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300': roleName === 'InstitutionAdmin' || roleName === 'InstitutionOwner',
+                                                            'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300': roleName === 'SystemAdmin',
+                                                            'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300': roleName === 'Parent'
+                                                          }">
+                                            {{ roleName }}
+                                        </span>
+                                        }
+                                        @if (!user.roles || user.roles.length === 0) {
+                                        <span class="text-gray-400 italic text-xs">Rol atanmadı</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                                        [ngClass]="user.isActive ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-600'">
+                                        {{ user.isActive ? 'Aktif' : 'Pasif' }}
+                                    </span>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                    {{ user.lastLoginAt ? (user.lastLoginAt | date:'dd.MM.yyyy HH:mm') : '-' }}
+                                </td>
+                                <td
+                                    class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                    <div class="inline-block text-left">
+                                        <button (click)="toggleMenu(user.userId, $event)" type="button"
+                                            class="flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                                            id="menu-button" aria-expanded="false" aria-haspopup="true">
+                                            <span class="sr-only">Menüyü aç</span>
+                                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"
+                                                aria-hidden="true">
+                                                <path
+                                                    d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 14a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
+                                            </svg>
+                                        </button>
+
+                                        @if (openMenuId() === user.userId) {
+                                        <div class="absolute right-0 z-50 mt-2 w-64 origin-top-right rounded-md bg-white dark:bg-gray-800 shadow-2xl ring-1 ring-black ring-opacity-10 focus:outline-none"
+                                            role="menu" aria-orientation="vertical" aria-labelledby="menu-button"
+                                            tabindex="-1">
+                                            <div class="py-1.5" role="none">
+                                                <button (click)="openDetailsModal(user.userId)"
+                                                    class="flex w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 items-center transition-colors"
+                                                    role="menuitem" tabindex="-1">
+                                                    <svg class="mr-4 h-5 w-5 text-blue-500/70" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                    </svg>
+                                                    Detay
+                                                </button>
+
+                                                <button (click)="editUser(user)"
+                                                    class="flex w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 items-center transition-colors"
+                                                    role="menuitem" tabindex="-1">
+                                                    <svg class="mr-4 h-5 w-5 text-gray-400" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M15.5 3.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 7.5-7.5z" />
+                                                    </svg>
+                                                    Düzenle
+                                                </button>
+
+                                                <button (click)="openRoleModal(user)"
+                                                    class="flex w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 items-center transition-colors border-t border-gray-50 dark:border-gray-700/50"
+                                                    role="menuitem" tabindex="-1">
+                                                    <svg class="mr-4 h-5 w-5 text-indigo-500/70" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                                    </svg>
+                                                    Rol Yönetimi
+                                                </button>
+
+                                                <button (click)="openPasswordModal(user)"
+                                                    class="flex w-full px-4 py-3 text-sm text-yellow-500 hover:bg-gray-100 dark:hover:bg-gray-700 items-center transition-colors"
+                                                    role="menuitem" tabindex="-1">
+                                                    <svg class="mr-4 h-5 w-5 text-yellow-500/70" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                                    </svg>
+                                                    Şifre Değiştir
+                                                </button>
+
+                                                @if(user.isActive) {
+                                                <button (click)="deleteUser(user.userId)"
+                                                    class="flex w-full px-4 py-3 text-sm text-yellow-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center transition-colors"
+                                                    role="menuitem" tabindex="-1">
+                                                    <svg class="mr-4 h-5 w-5 text-yellow-400" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                    </svg>
+                                                    Pasif Yap
+                                                </button>
+                                                } @else {
+                                                <button (click)="activateUser(user.userId)"
+                                                    class="flex w-full px-4 py-3 text-sm text-green-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center transition-colors"
+                                                    role="menuitem" tabindex="-1">
+                                                    <svg class="mr-4 h-5 w-5 text-green-400" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    Aktif Yap
+                                                </button>
+                                                }
+
+                                                @if (!user.emailConfirmed) {
+                                                <button (click)="confirmUserEmail(user.userId)"
+                                                    class="flex w-full px-4 py-3 text-sm text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center border-t border-gray-100 dark:border-gray-700 transition-colors"
+                                                    role="menuitem" tabindex="-1">
+                                                    <svg class="mr-4 h-5 w-5 text-blue-400" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    E-Posta Doğrula
+                                                </button>
+                                                }
+
+                                                <button (click)="permanentDeleteUser(user.userId)"
+                                                    class="flex w-full px-4 py-3 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center border-t border-gray-100 dark:border-gray-700 transition-colors"
+                                                    role="menuitem" tabindex="-1">
+                                                    <svg class="mr-4 h-5 w-5 text-red-400" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                    Kalıcı Sil
+                                                </button>
+                                            </div>
+                                        </div>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                            }
+                            <!-- Extra space for short lists to avoid menu clipping -->
+                            @if (users().length > 0 && users().length < 3) { <tr>
+                                <td colspan="5" class="py-24"></td>
+                                </tr>
+                                }
+                                @if (users().length === 0) {
+                                <tr>
+                                    <td colspan="5" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                        Kayıt bulunamadı.
+                                    </td>
+                                </tr>
+                                }
+                                }
+                        </tbody>
+                    </table>
+
+                    <!-- Footer: Pagination & Page Size (Attached to Table) -->
+                    <div class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                        <!-- Main Footer Row: Info & Pagination -->
+                        <div class="flex items-center justify-between px-4 py-4 sm:px-6">
+                            <div class="flex flex-1 items-center justify-between flex-wrap gap-4">
+                                <!-- Record Info -->
+                                <p class="text-sm text-gray-700 dark:text-gray-400">
+                                    Toplam <span class="font-medium text-gray-900 dark:text-white">{{ totalCount()
+                                        }}</span> kayıt
+                                    @if (totalPages > 1) {
+                                    <span class="ml-1">(<span class="font-medium">{{ currentPage() }}</span> / {{
+                                        totalPages }} sayfa)</span>
+                                    }
+                                </p>
+
+                                <!-- Pagination Buttons -->
+                                @if (totalPages > 1) {
+                                <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm"
+                                    aria-label="Pagination">
+                                    <button (click)="changePage(currentPage() - 1)" [disabled]="currentPage() === 1"
+                                        class="relative inline-flex items-center rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-2 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors">
+                                        <span class="sr-only">Önceki</span>
+                                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                            fill="currentColor">
+                                            <path fill-rule="evenodd"
+                                                d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+
+                                    @for (page of pagesArray; track $index) {
+                                    @if (page === '...') {
+                                    <span
+                                        class="relative inline-flex items-center border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">...</span>
+                                    } @else {
+                                    <button (click)="changePage(+$any(page))"
+                                        class="relative inline-flex items-center border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-50 dark:hover:bg-gray-600"
+                                        [ngClass]="{'bg-blue-50 text-blue-600 border-blue-500 z-10 dark:bg-blue-900/20': page === currentPage()}">
+                                        {{ page }}
+                                    </button>
+                                    }
+                                    }
+
+                                    <button (click)="changePage(currentPage() + 1)"
+                                        [disabled]="currentPage() === totalPages"
+                                        class="relative inline-flex items-center rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-2 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors">
+                                        <span class="sr-only">Sonraki</span>
+                                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                            fill="currentColor">
+                                            <path fill-rule="evenodd"
+                                                d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </nav>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Page Size Selector (Bottom Row) -->
+                        <div
+                            class="px-4 py-3 sm:px-6 bg-gray-50/50 dark:bg-gray-900/10 border-t border-gray-100 dark:border-gray-700/50 flex justify-center items-center">
+                            <div class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                                <span>Sayfa başına kayıt:</span>
+                                <select (change)="onPageSizeChange($event)" [value]="pageSize()"
+                                    class="block rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white py-1 pl-2 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 transition-colors">
+                                    <option [value]="10">10</option>
+                                    <option [value]="25">25</option>
+                                    <option [value]="50">50</option>
+                                    <option [value]="100">100</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (showCreateModal()) {
+    <app-create-user-modal (close)="onModalClose($event)"></app-create-user-modal>
+    }
+
+    @if (showEditModal() && userToEdit()) {
+    <app-edit-user-modal [userData]="userToEdit()!" (close)="onEditModalClose($event)"></app-edit-user-modal>
+    }
+
+    @if (showPasswordModal() && userForPasswordChange()) {
+    <app-change-password-modal [userData]="userForPasswordChange"
+        (close)="onPasswordModalClose($event)"></app-change-password-modal>
+    }
+
+    @if (showDetailsModal() && selectedUserId()) {
+    <app-user-details-modal [userId]="selectedUserId()!" (close)="onDetailsModalClose()"></app-user-details-modal>
+    }
+
+    @if (showRoleModal() && userForRoleManagement()) {
+    <app-role-management-modal [userData]="userForRoleManagement()!"
+        (close)="onRoleModalClose($event)"></app-role-management-modal>
+    }
+</div>

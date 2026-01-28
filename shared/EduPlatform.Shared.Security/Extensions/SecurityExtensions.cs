@@ -13,6 +13,12 @@ public static class SecurityExtensions
     {
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
+
+        var secretKey = configuration["JWT_SECRET"] ?? configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT_SECRET is not configured.");
+        var issuer = configuration["JWT_ISSUER"] ?? configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT_ISSUER is not configured.");
+        var audience = configuration["JWT_AUDIENCE"] ?? configuration["Jwt:Audience"] ?? throw new InvalidOperationException("JWT_AUDIENCE is not configured.");
+        var key = System.Text.Encoding.UTF8.GetBytes(secretKey);
 
         services.AddAuthentication(options =>
         {
@@ -21,23 +27,28 @@ public static class SecurityExtensions
         })
         .AddJwtBearer(options =>
         {
-            var keycloakUrl = configuration["Keycloak:BaseUrl"];
-            var realm = configuration["Keycloak:Realm"];
-            
-            // Internal Docker URL for Authority (back-channel)
-            options.Authority = $"{keycloakUrl}/realms/{realm}";
-            
-            // Ensure that the token was issued by Keycloak
-            options.RequireHttpsMetadata = false; // For dev environment
+            options.RequireHttpsMetadata = false;
+            options.SaveToken = true;
             options.TokenValidationParameters = new TokenValidationParameters
             {
-                ValidateAudience = false, // Keycloak tokens might have 'account' as audience
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
                 ValidateIssuer = true,
-                ValidIssuer = $"{keycloakUrl}/realms/{realm}",
-                ValidateLifetime = true
+                ValidIssuer = issuer,
+                ValidateAudience = true,
+                ValidAudience = audience,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero,
+                RoleClaimType = System.Security.Claims.ClaimTypes.Role, // Ensure roles are mapped correctly
             };
         });
 
+        return services;
+    }
+    public static IServiceCollection AddCustomAuthorization(this IServiceCollection services)
+    {
+        services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationPolicyProvider, Authorization.PermissionPolicyProvider>();
+        services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, Authorization.PermissionAuthorizationHandler>();
         return services;
     }
 }

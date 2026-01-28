@@ -1,7 +1,9 @@
-using Identity.Application.Commands.RegisterInstitution;
-using Identity.Application.Commands.RegisterTeacher;
+using EduPlatform.Shared.Kernel.Results;
+using Identity.Application.Commands.Login;
+using Identity.Application.Commands.RefreshToken;
 using Identity.Application.Commands.RegisterStudent;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.API.Controllers;
@@ -17,59 +19,64 @@ public class AuthController : ControllerBase
         _mediator = mediator;
     }
 
-    /// <summary>
-    /// Yeni bir kurum kaydı oluşturur (Kurum + Yönetici).
-    /// </summary>
-    /// <param name="command">Kayıt bilgileri</param>
-    /// <returns>Oluşturulan kurum ID'si</returns>
-    [HttpPost("register-institution")]
-    [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> RegisterInstitution([FromBody] RegisterInstitutionCommand command)
+    [HttpPost("login")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Login([FromBody] LoginCommand command)
     {
-        var result = await _mediator.Send(command);
-        
-        if (result.IsSuccess)
+        try 
         {
-            return Ok(new { InstitutionId = result.Value });
+            var result = await _mediator.Send(command);
+            if (result.IsFailure)
+            {
+                return BadRequest(result.Error);
+            }
+            return Ok(result.Value);
         }
-
-        return BadRequest(new { Error = result.Error });
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.ToString());
+        }
     }
 
-    /// <summary>
-    /// Yeni bir bağımsız öğretmen kaydı oluşturur.
-    /// </summary>
-    [HttpPost("register-teacher")]
-    [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> RegisterTeacher([FromBody] RegisterTeacherCommand command)
-    {
-        var result = await _mediator.Send(command);
-        
-        if (result.IsSuccess)
-        {
-            return Ok(new { TeacherId = result.Value });
-        }
-
-        return BadRequest(new { Error = result.Error });
-    }
-
-    /// <summary>
-    /// Yeni bir bağımsız öğrenci kaydı oluşturur.
-    /// </summary>
-    [HttpPost("register-student")]
-    [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [HttpPost("register/student")]
+    [AllowAnonymous]
     public async Task<IActionResult> RegisterStudent([FromBody] RegisterStudentCommand command)
     {
         var result = await _mediator.Send(command);
-        
-        if (result.IsSuccess)
+        if (result.IsFailure)
         {
-            return Ok(new { StudentId = result.Value });
+            return BadRequest(result.Error);
+        }
+        return Ok(new { UserId = result.Value }); // 201 Created dönebiliriz
+    }
+
+    [HttpPost("refresh-token")]
+    [AllowAnonymous]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenCommand command)
+    {
+         var result = await _mediator.Send(command);
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Error);
+        }
+        return Ok(result.Value);
+    }
+
+    [HttpPost("google-login")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+    {
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
+        var command = new Identity.Application.Commands.GoogleLogin.GoogleLoginCommand(request.IdToken, ipAddress);
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Error);
         }
 
-        return BadRequest(new { Error = result.Error });
+        return Ok(result.Value);
     }
 }
+
+public record GoogleLoginRequest(string IdToken);

@@ -26,30 +26,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Keycloak Identity Provider
-  keycloak:
-    image: quay.io/keycloak/keycloak:23.0.0
-    container_name: keycloak
-    command: start-dev
-    environment:
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak_db
-      KC_DB_USERNAME: ${POSTGRES_USER}
-      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
-      KC_HOSTNAME_URL: http://${KEYCLOAK_HOST}:${KEYCLOAK_PORT}
-      KC_HOSTNAME_STRICT: "false"
-      KC_HOSTNAME_STRICT_HTTPS: "false"
-      KC_HTTP_ENABLED: "true"
-    ports:
-      - "${KEYCLOAK_PORT}:8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - edu-network
-
   # RabbitMQ Message Broker
   rabbitmq:
     image: rabbitmq:3.12-management-alpine
@@ -114,12 +90,6 @@ services:
       - RabbitMQ__Username=${RABBITMQ_DEFAULT_USER}
       - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS}
       - Redis__ConnectionString=redis:6379,password=${REDIS_PASSWORD}
-      - Keycloak__BaseUrl=http://keycloak:8080
-      - Keycloak__Realm=${KEYCLOAK_REALM}
-      - Keycloak__AdminUsername=${KEYCLOAK_ADMIN}
-      - Keycloak__AdminPassword=${KEYCLOAK_ADMIN_PASSWORD}
-      - Jwt__Authority=http://keycloak:8080/realms/${KEYCLOAK_REALM}
-      - Jwt__Audience=${JWT_AUDIENCE}
     ports:
       - "5001:8080"
     depends_on:
@@ -127,8 +97,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-      keycloak:
-        condition: service_started
     networks:
       - edu-network
 
@@ -144,8 +112,6 @@ services:
       - RabbitMQ__Host=rabbitmq
       - RabbitMQ__Username=${RABBITMQ_DEFAULT_USER}
       - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS}
-      - Jwt__Authority=http://keycloak:8080/realms/${KEYCLOAK_REALM}
-      - Jwt__Audience=${JWT_AUDIENCE}
     ports:
       - "5002:8080"
     depends_on:
@@ -155,6 +121,33 @@ services:
         condition: service_healthy
       identity-service:
         condition: service_started
+    networks:
+      - edu-network
+
+  # Notification Service
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    container_name: notification-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB_NOTIFICATION};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Username=${RABBITMQ_DEFAULT_USER}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS}
+      - Email__Host=mailcatcher
+      - Email__Port=1025
+      - Email__From=${SMTP_FROM_EMAIL}
+      - Email__Username=
+      - Email__Password=
+    ports:
+      - "5003:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - edu-network
 

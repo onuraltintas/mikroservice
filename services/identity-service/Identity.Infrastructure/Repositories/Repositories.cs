@@ -3,6 +3,10 @@ using Identity.Domain.Entities;
 using Identity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
+using Identity.Application.Queries.GetAllUsers;
+using Identity.Application.Queries.GetUserProfile;
+using Identity.Domain.Enums;
+
 namespace Identity.Infrastructure.Repositories;
 
 public class UserRepository : IUserRepository
@@ -22,19 +26,82 @@ public class UserRepository : IUserRepository
     public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         return await _context.Users
-            .Include(u => u.Roles) // Need roles for logic
+            .Include(u => u.Roles)
+                .ThenInclude(ur => ur.Role)
+                    .ThenInclude(r => r.Permissions)
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
     }
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
     {
         return await _context.Users
+            .Include(u => u.Roles)
+                .ThenInclude(ur => ur.Role)
+                    .ThenInclude(r => r.Permissions)
             .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
     }
 
     public void Delete(User user)
     {
         _context.Users.Remove(user);
+    }
+
+    public async Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
+    {
+        return await _context.Users
+            .Include(u => u.RefreshTokens)
+            .Include(u => u.Roles)
+            .FirstOrDefaultAsync(u => u.RefreshTokens.Any(rt => rt.Token == refreshToken), cancellationToken);
+    }
+
+    public async Task<PagedList<UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, CancellationToken cancellationToken)
+    {
+        var query = _context.Users.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            searchTerm = searchTerm.ToLower();
+            query = query.Where(u => u.Email.ToLower().Contains(searchTerm));
+        }
+
+        if (isActive.HasValue)
+        {
+            query = query.Where(u => u.IsActive == isActive.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(role))
+        {
+            query = query.Where(u => u.Roles.Any(r => r.Role.Name == role));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var users = await query
+            .OrderByDescending(u => u.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Include(u => u.Roles)
+            .ThenInclude(ur => ur.Role)
+            .ToListAsync(cancellationToken);
+
+        var dtos = users.Select(u => new UserProfileDto
+        {
+            UserId = u.Id,
+            Email = u.Email,
+            Role = u.Roles.FirstOrDefault()?.Role?.Name ?? "Unknown",
+            FirstName = u.FirstName,
+            LastName = u.LastName,
+            FullName = (string.IsNullOrWhiteSpace(u.FirstName) && string.IsNullOrWhiteSpace(u.LastName)) 
+                ? "-" 
+                : $"{u.FirstName} {u.LastName}".Trim(),
+            IsActive = u.IsActive,
+            EmailConfirmed = u.EmailConfirmed,
+            PhoneNumber = u.PhoneNumber,
+            LastLoginAt = u.LastLoginAt,
+            Roles = u.Roles.Select(ur => ur.Role.Name).ToList()
+        }).ToList();
+
+        return new PagedList<UserProfileDto>(dtos, totalCount, page, pageSize);
     }
 }
 
@@ -172,5 +239,42 @@ public class InvitationRepository : IInvitationRepository
             .Where(i => i.InviterId == inviterId)
             .OrderByDescending(i => i.CreatedAt)
             .ToListAsync(cancellationToken);
+    }
+}
+
+public class RoleRepository : IRoleRepository
+{
+    private readonly IdentityDbContext _context;
+
+    public RoleRepository(IdentityDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Role?> GetByNameAsync(string roleName, CancellationToken cancellationToken)
+    {
+        return await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName, cancellationToken);
+    }
+
+    public async Task<Role?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return await _context.Roles.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+    }
+
+    public async Task<IEnumerable<Role>> GetAllAsync(CancellationToken cancellationToken)
+    {
+        return await _context.Roles
+            .OrderBy(r => r.Name)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task AddAsync(Role role, CancellationToken cancellationToken)
+    {
+        await _context.Roles.AddAsync(role, cancellationToken);
+    }
+
+    public void Delete(Role role)
+    {
+        _context.Roles.Remove(role);
     }
 }

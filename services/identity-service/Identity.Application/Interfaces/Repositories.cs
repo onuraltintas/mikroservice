@@ -1,6 +1,10 @@
 using EduPlatform.Shared.Kernel.Primitives;
 using Identity.Domain.Entities;
 
+using Identity.Application.Queries.GetAllUsers;
+using Identity.Application.Queries.GetUserProfile;
+using Identity.Domain.Enums;
+
 namespace Identity.Application.Interfaces;
 
 public interface IUserRepository
@@ -9,6 +13,17 @@ public interface IUserRepository
     Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken);
     void Delete(User user);
+    Task<PagedList<UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, CancellationToken cancellationToken);
+    Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
+}
+
+public interface IRoleRepository
+{
+    Task<Role?> GetByNameAsync(string roleName, CancellationToken cancellationToken);
+    Task<Role?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<IEnumerable<Role>> GetAllAsync(CancellationToken cancellationToken);
+    Task AddAsync(Role role, CancellationToken cancellationToken);
+    void Delete(Role role);
 }
 
 public interface IInstitutionRepository

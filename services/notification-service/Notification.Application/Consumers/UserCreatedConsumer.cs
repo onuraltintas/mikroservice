@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Contracts.Events.Identity;
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using Notification.Application.Interfaces;
 
 namespace Notification.Application.Consumers;
@@ -8,40 +9,47 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
 {
     private readonly IEmailService _emailService;
     private readonly INotificationService _notificationService;
+    private readonly INotificationDbContext _dbContext;
 
-    public UserCreatedConsumer(IEmailService emailService, INotificationService notificationService)
+    public UserCreatedConsumer(IEmailService emailService, INotificationService notificationService, INotificationDbContext dbContext)
     {
         _emailService = emailService;
         _notificationService = notificationService;
+        _dbContext = dbContext;
     }
 
     public async Task Consume(ConsumeContext<UserCreatedEvent> context)
     {
         var message = context.Message;
         
-        var subject = $"Welcome to EduPlatform, {message.FirstName}!";
-        var body = $@"
-            <html>
-            <body>
-                <h1>Welcome to EduPlatform!</h1>
-                <p>Hello {message.FirstName} {message.LastName},</p>
-                <p>Your account has been created successfully as a <strong>{message.Role}</strong>.</p>
-                
-                <div style='background-color: #f4f4f4; padding: 15px; border-radius: 5px; margin: 20px 0;'>
-                    <p>Since your account was created by an administrator, here is your temporary password:</p>
-                    <h2 style='color: #2c3e50;'>{message.TemporaryPassword}</h2>
-                </div>
+        // 1. Retrieve Template dynamically from Database
+        var template = await _dbContext.EmailTemplates
+            .AsNoTracking() // Performans için
+            .FirstOrDefaultAsync(t => t.TemplateName == "Auth_Welcome" && t.IsActive);
 
-                <p>Please login and change your password immediately.</p>
-                
-                <p>
-                    <a href='http://localhost:3000/login' style='background-color: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>
-                        Login to EduPlatform
-                    </a>
-                </p>
-            </body>
-            </html>
-        ";
+        string subject;
+        string body;
+
+        if (template != null)
+        {
+            // 2. Apply Template (Dynamic)
+            subject = template.Subject
+                .Replace("{{FirstName}}", message.FirstName ?? "")
+                .Replace("{{LastName}}", message.LastName ?? "");
+
+            body = template.Body
+                .Replace("{{FirstName}}", message.FirstName ?? "")
+                .Replace("{{LastName}}", message.LastName ?? "")
+                .Replace("{{Role}}", message.Role ?? "")
+                .Replace("{{TemporaryPassword}}", message.TemporaryPassword ?? "")
+                .Replace("{{Email}}", message.Email ?? "");
+        }
+        else
+        {
+            // Fallback (Safe Mode)
+            subject = $"Welcome to EduPlatform, {message.FirstName}!";
+            body = $"<h1>Welcome {message.FirstName}!</h1><p>Your account is ready.</p><p>Pass: {message.TemporaryPassword}</p>";
+        }
 
         // In Parallel
         var emailTask = _emailService.SendEmailAsync(message.Email, subject, body);

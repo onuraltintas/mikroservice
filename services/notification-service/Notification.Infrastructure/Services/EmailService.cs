@@ -19,20 +19,37 @@ public class EmailService : IEmailService
     public async Task SendEmailAsync(string to, string subject, string body, CancellationToken cancellationToken = default)
     {
         var email = new MimeMessage();
-        email.From.Add(MailboxAddress.Parse(_configuration["Email:From"] ?? "no-reply@eduplatform.com"));
+        
+        var fromEmail = _configuration["SMTP_FROM_EMAIL"] ?? _configuration["Email:From"] ?? "no-reply@eduplatform.com";
+        var fromName = _configuration["SMTP_FROM_NAME"] ?? _configuration["Email:FromName"] ?? "EduPlatform";
+        email.From.Add(new MailboxAddress(fromName, fromEmail));
         email.To.Add(MailboxAddress.Parse(to));
         email.Subject = subject;
         email.Body = new TextPart(TextFormat.Html) { Text = body };
 
         using var smtp = new SmtpClient();
         
-        var host = _configuration["Email:Host"] ?? "localhost";
-        var port = int.Parse(_configuration["Email:Port"] ?? "1025");
+        var host = _configuration["SMTP_HOST"] ?? _configuration["Email:Host"] ?? "localhost";
+        var portStr = _configuration["SMTP_PORT"] ?? _configuration["Email:Port"] ?? "1025";
+        var port = int.Parse(portStr);
+        var username = _configuration["SMTP_USERNAME"] ?? _configuration["Email:Username"];
+        var password = _configuration["SMTP_PASSWORD"] ?? _configuration["Email:Password"];
+
+        // SSL/TLS için port 465, StartTLS için port 587
+        SecureSocketOptions secureOption = port switch
+        {
+            465 => SecureSocketOptions.SslOnConnect,
+            587 => SecureSocketOptions.StartTls,
+            _ => SecureSocketOptions.Auto
+        };
+
+        await smtp.ConnectAsync(host, port, secureOption, cancellationToken);
         
-        // MailPit (Dev) typically doesn't use SSL/TLS on port 1025
-        await smtp.ConnectAsync(host, port, SecureSocketOptions.None, cancellationToken);
-        
-        // Auth logic can be added here if needed
+        // Authenticate if credentials provided
+        if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+        {
+            await smtp.AuthenticateAsync(username, password, cancellationToken);
+        }
         
         await smtp.SendAsync(email, cancellationToken);
         await smtp.DisconnectAsync(true, cancellationToken);

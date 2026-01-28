@@ -33,11 +33,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.CreatedAt)
             .HasDefaultValueSql("NOW()");
 
-        // Relationships
-        builder.HasMany(u => u.Roles)
-            .WithOne(r => r.User)
-            .HasForeignKey(r => r.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+        // Relationships are configured in individual entity configurations or navigation side
+        // builder.HasMany(u => u.Roles)... handled in UserRoleConfiguration
 
         builder.HasOne(u => u.StudentProfile)
             .WithOne(s => s.User)
@@ -53,19 +50,4 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     }
 }
 
-public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
-{
-    public void Configure(EntityTypeBuilder<UserRole> builder)
-    {
-        builder.ToTable("user_roles");
 
-        builder.HasKey(r => r.Id);
-
-        builder.Property(r => r.Role)
-            .HasConversion<string>()
-            .HasMaxLength(50);
-
-        builder.HasIndex(r => new { r.UserId, r.Role })
-            .IsUnique();
-    }
-}

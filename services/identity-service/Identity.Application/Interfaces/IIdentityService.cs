@@ -5,38 +5,66 @@ namespace Identity.Application.Interfaces;
 public interface IIdentityService
 {
     /// <summary>
-    /// Keycloak üzerinde yeni bir kullanıcı oluşturur.
+    /// Creates a new user in the system.
     /// </summary>
-    /// <returns>Oluşturulan kullanıcının ID'si (Guid)</returns>
+    /// <returns>The ID of the created user (Guid)</returns>
     Task<Result<Guid>> RegisterUserAsync(string email, string password, string firstName, string lastName, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Kullanıcıyı Keycloak'tan siler (Rollback senaryoları için).
+    /// Deletes a user from the system.
     /// </summary>
     Task<Result> DeleteUserAsync(Guid userId, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Kullanıcıyı pasife çeker (Login olamaz).
+    /// Deactivates a user (Prevents login).
     /// </summary>
     Task<Result> DeactivateUserAsync(Guid userId, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Kullanıcıyı aktifleştirir.
+    /// Activates a user.
     /// </summary>
     Task<Result> ActivateUserAsync(Guid userId, CancellationToken cancellationToken);
     
     /// <summary>
-    /// Kullanıcıya rol atar
+    /// Assigns a role to a user.
     /// </summary>
     Task<Result> AssignRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Geçici şifre ile kullanıcı oluşturur. İlk girişte şifre değişikliği zorunludur.
+    /// Creates a user with a temporary password. Password change is required on first login.
     /// </summary>
-    /// <returns>UserId ve Geçici Şifre</returns>
+    /// <returns>UserId and Temporary Password</returns>
     Task<Result<(Guid UserId, string TemporaryPassword)>> RegisterUserWithTemporaryPasswordAsync(
         string email, 
         string firstName, 
         string lastName, 
         CancellationToken cancellationToken);
+
+    Task<Result<(Guid UserId, string TemporaryPassword)>> RegisterUserWithRoleAsync(
+        string email, 
+        string firstName, 
+        string lastName, 
+        string roleName,
+        string? phoneNumber,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Resets/Changes the user's password.
+    /// </summary>
+    Task<Result> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Removes a role from a user.
+    /// </summary>
+    Task<Result> RemoveRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Gets all available role names.
+    /// </summary>
+    Task<Result<IEnumerable<string>>> GetAvailableRolesAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Updates user details.
+    /// </summary>
+    Task<Result> UpdateUserAsync(Guid userId, string firstName, string lastName, CancellationToken cancellationToken);
 }

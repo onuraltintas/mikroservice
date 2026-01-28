@@ -1,0 +1,143 @@
+<div class="min-h-screen w-full flex bg-white dark:bg-gray-900">
+
+    <!-- Left Side: Visual & Inspiration (Desktop Only) -->
+    <div
+        class="hidden lg:flex w-5/12 bg-gradient-to-br from-blue-600 to-indigo-800 relative overflow-hidden p-12 flex-col justify-between text-white">
+
+        <!-- Decoration -->
+        <div class="absolute top-0 left-0 w-full h-full opacity-10">
+            <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <path d="M0 0 L100 0 L100 100 L0 100 Z" fill="none" stroke="currentColor" stroke-width="0.5"
+                    stroke-dasharray="2,2" />
+                <circle cx="20" cy="20" r="10" fill="currentColor" />
+                <circle cx="80" cy="80" r="20" fill="currentColor" />
+            </svg>
+        </div>
+
+        <div class="relative z-10">
+            <div class="flex items-center gap-2 mb-8 opacity-80">
+                <mat-icon>school</mat-icon>
+                <span class="font-bold tracking-wider">EduPlatform</span>
+            </div>
+            <h1 class="text-5xl font-bold leading-tight mb-6">
+                Öğrenme<br>Yolculuğuna<br>Başla.
+            </h1>
+            <p class="text-blue-100 text-lg max-w-md">
+                Binlerce ders materyaline, interaktif sınavlara ve kişiselleştirilmiş çalışma programlarına anında
+                erişim sağla.
+            </p>
+        </div>
+
+        <div class="relative z-10 p-6 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
+            <div class="flex items-center gap-4 mb-4">
+                <img src="https://i.pravatar.cc/150?u=student" class="w-12 h-12 rounded-full border-2 border-white">
+                <div>
+                    <div class="font-bold">Ayşe Yılmaz</div>
+                    <div class="text-xs text-blue-200">9. Sınıf Öğrencisi</div>
+                </div>
+            </div>
+            <p class="text-sm italic opacity-90">
+                "EduPlatform sayesinde ders notlarımı düzenlemek ve eksiklerimi görmek çok kolaylaştı. Kesinlikle
+                tavsiye ediyorum!"
+            </p>
+        </div>
+    </div>
+
+    <!-- Right Side: Form -->
+    <div class="w-full lg:w-7/12 overflow-y-auto h-screen flex flex-col">
+
+        <!-- Mobile Header (Visible only on small screens) -->
+        <div class="lg:hidden p-6 bg-blue-600 text-white flex items-center justify-between sticky top-0 z-20 shadow-md">
+            <div class="flex items-center gap-2">
+                <mat-icon>school</mat-icon>
+                <span class="font-bold">Öğrenci Kaydı</span>
+            </div>
+            <a routerLink="/auth/register" class="text-white/80 hover:text-white">
+                <mat-icon>close</mat-icon>
+            </a>
+        </div>
+
+        <div class="flex-1 flex items-center justify-center p-6 sm:p-12 lg:p-24">
+            <div class="w-full max-w-md">
+
+                <!-- Back Button (Desktop) -->
+                <a routerLink="/auth/register"
+                    class="hidden lg:inline-flex items-center text-gray-400 hover:text-blue-600 mb-8 transition-colors text-sm font-medium">
+                    <mat-icon class="!w-4 !h-4 !text-[16px] mr-1">arrow_back</mat-icon>
+                    Geri Dön
+                </a>
+
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Hesap Oluştur 🚀</h2>
+                    <p class="text-gray-500">
+                        Zaten hesabın var mı?
+                        <a routerLink="/auth/login" class="text-blue-600 font-bold hover:underline">Giriş Yap</a>
+                    </p>
+                </div>
+
+                <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+
+                    <div class="grid grid-cols-2 gap-5">
+                        <mat-form-field appearance="outline" class="w-full">
+                            <mat-label>Ad</mat-label>
+                            <input matInput formControlName="firstName" placeholder="Adın">
+                            <mat-error>Ad gerekli</mat-error>
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" class="w-full">
+                            <mat-label>Soyad</mat-label>
+                            <input matInput formControlName="lastName" placeholder="Soyadın">
+                            <mat-error>Soyad gerekli</mat-error>
+                        </mat-form-field>
+                    </div>
+
+                    <mat-form-field appearance="outline" class="w-full">
+                        <mat-label>E-posta Adresi</mat-label>
+                        <input matInput type="email" formControlName="email" placeholder="ornek@email.com">
+                        <mat-icon matPrefix class="text-gray-400 mr-2">email</mat-icon>
+                        <mat-error *ngIf="form.get('email')?.hasError('required')">E-posta adresi zorunludur</mat-error>
+                        <mat-error *ngIf="form.get('email')?.hasError('email')">Geçerli bir e-posta adresi
+                            giriniz</mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="w-full">
+                        <mat-label>Şifre Oluştur</mat-label>
+                        <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="password">
+                        <mat-icon matPrefix class="text-gray-400 mr-2">lock</mat-icon>
+                        <button mat-icon-button matSuffix (click)="togglePassword($event)" type="button">
+                            <mat-icon>{{hidePassword() ? 'visibility_off' : 'visibility'}}</mat-icon>
+                        </button>
+
+                        <mat-error *ngIf="form.get('password')?.hasError('required')">Şifre zorunludur</mat-error>
+                        <mat-error *ngIf="form.get('password')?.hasError('passwordStrength')"
+                            class="!text-[11px] !leading-3 block mt-1">
+                            En az 8 karakter; büyük harf, küçük harf, rakam ve sembol içermelidir.
+                        </mat-error>
+                    </mat-form-field>
+
+                    <div *ngIf="errorMessage()"
+                        class="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl text-sm flex items-start gap-3">
+                        <mat-icon class="text-red-500">error_outline</mat-icon>
+                        <span>{{ errorMessage() }}</span>
+                    </div>
+
+                    <button mat-flat-button color="primary" type="submit"
+                        class="!py-6 !text-lg !rounded-xl w-full !bg-blue-600 !shadow-lg !shadow-blue-200 hover:!shadow-blue-300 transition-all mt-4"
+                        [disabled]="form.invalid || isLoading()">
+                        <div class="flex items-center justify-center gap-2">
+                            <mat-spinner *ngIf="isLoading()" diameter="24" class="!stroke-white"></mat-spinner>
+                            <span *ngIf="!isLoading()">Kayıt İşlemini Tamamla</span>
+                            <mat-icon *ngIf="!isLoading()">arrow_forward</mat-icon>
+                        </div>
+                    </button>
+
+                    <p class="text-xs text-center text-gray-400 mt-4">
+                        Kayıt olarak <a href="#" class="text-blue-600 hover:underline">Kullanım Koşulları</a>'nı ve <a
+                            href="#" class="text-blue-600 hover:underline">Gizlilik Politikası</a>'nı kabul etmiş
+                        olursun.
+                    </p>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>

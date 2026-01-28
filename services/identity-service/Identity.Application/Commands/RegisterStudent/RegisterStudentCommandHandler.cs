@@ -3,6 +3,8 @@ using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using MediatR;
+using MassTransit;
+using EduPlatform.Shared.Contracts.Events.Identity;
 
 namespace Identity.Application.Commands.RegisterStudent;
 
@@ -12,17 +14,20 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
     private readonly IUserRepository _userRepository;
     private readonly IStudentRepository _studentRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IPublishEndpoint _publishEndpoint;
 
     public RegisterStudentCommandHandler(
         IIdentityService identityService,
         IUserRepository userRepository,
         IStudentRepository studentRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IPublishEndpoint publishEndpoint)
     {
         _identityService = identityService;
         _userRepository = userRepository;
         _studentRepository = studentRepository;
         _unitOfWork = unitOfWork;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<Result<Guid>> Handle(RegisterStudentCommand request, CancellationToken cancellationToken)
@@ -47,7 +52,7 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
                     existingUser.Activate();
                     await _unitOfWork.SaveChangesAsync(cancellationToken);
             
-                    // Reactivate in Keycloak (This will enable user AND set emailVerified=true)
+                    // Reactivate in System (This will enable user AND set emailVerified=true)
                     await _identityService.ActivateUserAsync(existingUser.Id, cancellationToken);
             
                     return Result.Success(existingUser.Id);
@@ -59,18 +64,40 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
 
         var userId = identityResult.Value;
 
-        var user = User.Create(userId, request.Email);
-        if (request.Phone != null) user.SetPhoneNumber(request.Phone);
-        
-        user.AddRole(new UserRole(userId, Identity.Domain.Enums.UserRole.Student));
+        // Assign Role
+        var roleResult = await _identityService.AssignRoleAsync(userId, Identity.Domain.Enums.UserRole.Student.ToString(), cancellationToken);
+        if (roleResult.IsFailure)
+        {
+             await _identityService.DeleteUserAsync(userId, cancellationToken);
+             return Result.Failure<Guid>(roleResult.Error);
+        }
 
+        // Create Student Profile
         var student = StudentProfile.Create(userId, request.FirstName, request.LastName, null, null);
 
         try
         {
-            await _userRepository.AddAsync(user, cancellationToken);
+            // Update Phone if provided (Fetching user needed or IdentityService update)
+            if (request.Phone != null)
+            {
+                var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+                if (user != null) user.SetPhoneNumber(request.Phone);
+            }
+
+            // await _userRepository.AddAsync(user, cancellationToken); // REMOVED: User already exists
             await _studentRepository.AddAsync(student, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Publish Event for Notification Service
+            await _publishEndpoint.Publish(new UserCreatedEvent(
+                userId,
+                request.Email,
+                request.FirstName,
+                request.LastName,
+                "Student",
+                "********", 
+                DateTime.UtcNow
+            ), cancellationToken);
 
             return Result.Success(student.Id);
         }

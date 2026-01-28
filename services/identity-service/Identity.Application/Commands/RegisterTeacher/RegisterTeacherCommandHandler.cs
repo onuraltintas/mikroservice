@@ -41,17 +41,23 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
 
         var userId = identityResult.Value;
 
-        var user = User.Create(userId, request.Email);
-        if (request.Phone != null) user.SetPhoneNumber(request.Phone);
-        
-        user.AddRole(new UserRole(userId, Identity.Domain.Enums.UserRole.Teacher));
+        // Assign Role
+        await _identityService.AssignRoleAsync(userId, Identity.Domain.Enums.UserRole.Teacher.ToString(), cancellationToken);
+
+        // Update Phone if needed
+        if (request.Phone != null)
+        {
+            var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+            if (user != null) user.SetPhoneNumber(request.Phone);
+        }
 
         // Independent Teacher
         var teacher = TeacherProfile.Create(userId, request.FirstName, request.LastName, null, true);
 
         try
         {
-            await _userRepository.AddAsync(user, cancellationToken);
+            // await _userRepository.AddAsync(user, cancellationToken); // Removed
+            await _teacherRepository.AddAsync(teacher, cancellationToken);
             await _teacherRepository.AddAsync(teacher, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 

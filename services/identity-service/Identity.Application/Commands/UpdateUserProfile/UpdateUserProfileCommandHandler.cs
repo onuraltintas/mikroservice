@@ -58,9 +58,9 @@ public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfile
         }
 
         // 2. Update Profile Specifics
-        var userRole = user.Roles.FirstOrDefault()?.Role;
+        var userRoles = user.Roles.Select(r => r.Role.Name).ToList();
 
-        if (userRole == Identity.Domain.Enums.UserRole.Teacher)
+        if (userRoles.Contains(Identity.Domain.Enums.UserRole.Teacher.ToString()))
         {
             var teacher = await _teacherRepository.GetByUserIdAsync(userId, cancellationToken);
             if (teacher != null)
@@ -80,7 +80,7 @@ public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfile
                 }
             }
         }
-        else if (userRole == Identity.Domain.Enums.UserRole.Student)
+        else if (userRoles.Contains(Identity.Domain.Enums.UserRole.Student.ToString()))
         {
             var student = await _studentRepository.GetByUserIdAsync(userId, cancellationToken);
             if (student != null)

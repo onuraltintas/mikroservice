@@ -64,8 +64,13 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
         
         var (studentUserId, temporaryPassword) = identityResult.Value;
 
-        var user = User.Create(studentUserId, request.Email, request.FirstName, request.LastName);
-        user.AddRole(new UserRole(studentUserId, Identity.Domain.Enums.UserRole.Student));
+        // Assign Role
+        var roleResult = await _identityService.AssignRoleAsync(studentUserId, Identity.Domain.Enums.UserRole.Student.ToString(), cancellationToken);
+        if (roleResult.IsFailure)
+        {
+             await _identityService.DeleteUserAsync(studentUserId, cancellationToken);
+             return Result.Failure<CreateStudentResult>(roleResult.Error);
+        }
 
         // Create Student Profile attached to institution
         var student = StudentProfile.Create(
@@ -79,7 +84,7 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
 
         try
         {
-            await _userRepository.AddAsync(user, cancellationToken);
+            // await _userRepository.AddAsync(user, cancellationToken); // REMOVED
             await _studentRepository.AddAsync(student, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             

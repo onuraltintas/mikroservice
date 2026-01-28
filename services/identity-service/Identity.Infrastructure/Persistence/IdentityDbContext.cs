@@ -1,6 +1,8 @@
 using Identity.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
+using Serilog;
+using EduPlatform.Shared.Kernel.Primitives;
 
 namespace Identity.Infrastructure.Persistence;
 
@@ -14,7 +16,9 @@ public class IdentityDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<Role> Roles => Set<Role>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
+    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<Institution> Institutions => Set<Institution>();
     public DbSet<InstitutionAdmin> InstitutionAdmins => Set<InstitutionAdmin>();
     public DbSet<StudentProfile> StudentProfiles => Set<StudentProfile>();
@@ -22,6 +26,8 @@ public class IdentityDbContext : DbContext
     public DbSet<ParentProfile> ParentProfiles => Set<ParentProfile>();
     public DbSet<TeacherStudentAssignment> TeacherStudentAssignments => Set<TeacherStudentAssignment>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<UserLogin> UserLogins => Set<UserLogin>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,9 +40,8 @@ public class IdentityDbContext : DbContext
         modelBuilder.HasDefaultSchema("identity");
     }
 
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        // Auto-set UpdatedAt for modified entities
         foreach (var entry in ChangeTracker.Entries())
         {
             if (entry.State == EntityState.Modified)
@@ -46,9 +51,19 @@ public class IdentityDbContext : DbContext
                 {
                     updatedAtProperty.SetValue(entry.Entity, DateTime.UtcNow);
                 }
+
+                if (entry.Entity is AggregateRoot aggregate)
+                {
+                    var versionProperty = entry.Entity.GetType().GetProperty("Version");
+                    if (versionProperty != null && versionProperty.CanWrite)
+                    {
+                        var currentVersion = (int)(versionProperty.GetValue(entry.Entity) ?? 0);
+                        versionProperty.SetValue(entry.Entity, currentVersion + 1);
+                    }
+                }
             }
         }
 
-        return base.SaveChangesAsync(cancellationToken);
+        return await base.SaveChangesAsync(cancellationToken);
     }
 }

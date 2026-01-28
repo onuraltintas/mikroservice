@@ -51,7 +51,13 @@ builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddApplication();
 
 // Add Controllers
-builder.Services.AddControllers();
+// Add Controllers
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 
 // Add Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -92,6 +98,7 @@ builder.Services.AddSwaggerGen(options =>
 
 // Authentication & Authorization (Centralized)
 builder.Services.AddCustomAuthentication(builder.Configuration);
+builder.Services.AddCustomAuthorization();
 
 // Add Health Checks
 builder.Services.AddHealthChecks()
@@ -156,16 +163,27 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
     
-    try
-    {
-        Log.Information("Applying database migrations...");
-        await dbContext.Database.MigrateAsync();
-        Log.Information("Database migrations applied successfully");
-    }
-    catch (Exception ex)
-    {
-        Log.Warning(ex, "Database migration failed - database might not be running");
-    }
+        try
+        {
+            Log.Information("Applying database migrations...");
+            await dbContext.Database.MigrateAsync();
+            Log.Information("Database migrations applied successfully");
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Database migration skipped or failed - checking if seeding is possible");
+        }
+
+        // Seed Users (Independent of migration success to allow recovery in dev)
+        try 
+        {
+            await Identity.Infrastructure.Seed.IdentitySeeder.SeedAsync(scope.ServiceProvider);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Seeding failed");
+        }
+
 }
 
 Log.Information("Identity API starting on {Urls}", builder.Configuration["ASPNETCORE_URLS"] ?? "http://localhost:5000");
