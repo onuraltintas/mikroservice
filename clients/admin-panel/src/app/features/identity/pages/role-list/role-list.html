@@ -1,0 +1,222 @@
+<div class="px-4 sm:px-6 lg:px-8 py-8 animate-fade-in-up">
+    <!-- Header -->
+    <div class="sm:flex sm:items-center">
+        <div class="sm:flex-auto">
+            <h1 class="text-xl font-semibold text-gray-900 dark:text-white">Roller</h1>
+            <p class="mt-2 text-sm text-gray-700 dark:text-gray-400">
+                Sistemdeki rolleri yönetin. Yeni roller ekleyebilir, mevcutları düzenleyebilir veya silebilirsiniz.
+            </p>
+        </div>
+        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+            <button type="button" (click)="openCreateModal()"
+                class="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto transition-colors duration-200">
+                Rol Ekle
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="mt-6 flex flex-col md:flex-row gap-4">
+        <!-- Search -->
+        <div class="relative w-full sm:w-64">
+            <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
+                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                    fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                        clip-rule="evenodd" />
+                </svg>
+            </div>
+            <input type="text" [ngModel]="searchTerm()" (input)="onSearch($event)"
+                class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white pl-10 focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2"
+                placeholder="Rol adı veya açıklama ara...">
+        </div>
+
+        <!-- Status Filter -->
+        <div class="w-full sm:w-48">
+            <select (change)="onStatusChange($event)"
+                class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white py-2 pl-3 pr-10 text-base focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm">
+                <option value="all">Tüm Durumlar</option>
+                <option value="active">Aktif</option>
+                <option value="passive">Pasif</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="mt-8 flex flex-col">
+        <div class="-my-2 -mx-4 overflow-visible sm:-mx-6 lg:-mx-8">
+            <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8 min-h-[450px]">
+                <div
+                    class="shadow ring-1 ring-black ring-opacity-5 md:rounded-lg bg-white dark:bg-gray-800 overflow-visible">
+                    <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th scope="col"
+                                    class="py-3.5 pl-4 pr-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-300 sm:pl-6">
+                                    Rol Adı</th>
+                                <th scope="col"
+                                    class="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-300">
+                                    Açıklama</th>
+                                <th scope="col"
+                                    class="px-3 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-300">
+                                    Durum</th>
+                                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                                    <span class="sr-only">İşlemler</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                            @if (loading()) {
+                            @for (i of [1,2,3]; track i) {
+                            <tr class="animate-pulse">
+                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
+                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm">
+                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-64"></div>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm">
+                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                                </td>
+                                <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                </td>
+                            </tr>
+                            }
+                            } @else {
+                            @for (role of filteredRoles(); track role.id) {
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+                                <td
+                                    class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">
+                                    <div class="flex items-center space-x-2">
+                                        <span>{{ role.name }}</span>
+                                        @if (role.isSystemRole) {
+                                        <span
+                                            class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                                            Sistem
+                                        </span>
+                                        }
+                                    </div>
+                                </td>
+                                <td
+                                    class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-xs truncate">
+                                    {{ role.description }}
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                    @if (role.isDeleted) {
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300">
+                                        Pasif
+                                    </span>
+                                    } @else {
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
+                                        Aktif
+                                    </span>
+                                    }
+                                </td>
+                                <td
+                                    class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                    <div class="inline-block text-left">
+                                        <button (click)="toggleMenu(role.id, $event)" type="button"
+                                            class="flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none">
+                                            <span class="sr-only">Menüyü aç</span>
+                                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path
+                                                    d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 14a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
+                                            </svg>
+                                        </button>
+
+                                        @if (openMenuId() === role.id) {
+                                        <div class="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                                            role="menu" tabindex="-1">
+                                            <div class="py-1" role="none">
+                                                <button (click)="editRole(role)"
+                                                    class="flex w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 items-center"
+                                                    role="menuitem" tabindex="-1">
+                                                    <svg class="mr-3 h-4 w-4 text-gray-400" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M15.5 3.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 7.5-7.5z" />
+                                                    </svg>
+                                                    Düzenle
+                                                </button>
+
+                                                @if (!role.isDeleted && !role.isSystemRole) {
+                                                <button (click)="deleteRole(role)"
+                                                    class="flex w-full px-4 py-2 text-sm text-yellow-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center"
+                                                    role="menuitem" tabindex="-1">
+                                                    <svg class="mr-3 h-4 w-4 text-yellow-500" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                    </svg>
+                                                    Pasife Al
+                                                </button>
+                                                }
+
+                                                @if (role.isDeleted) {
+                                                <button (click)="restoreRole(role)"
+                                                    class="flex w-full px-4 py-2 text-sm text-green-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center border-t border-gray-100 dark:border-gray-700"
+                                                    role="menuitem" tabindex="-1">
+                                                    <svg class="mr-3 h-4 w-4 text-green-500" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                    </svg>
+                                                    Aktif Yap
+                                                </button>
+
+                                                <button (click)="permanentDeleteRole(role)"
+                                                    class="flex w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center"
+                                                    role="menuitem" tabindex="-1">
+                                                    <svg class="mr-3 h-4 w-4 text-red-500" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                    Kalıcı Sil
+                                                </button>
+                                                }
+                                            </div>
+                                        </div>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                            }
+                            @if (filteredRoles().length === 0) {
+                            <tr>
+                                <td colspan="4" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <svg class="h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                        <span class="text-base font-medium">Sonuç bulunamadı</span>
+                                        <p class="text-sm text-gray-500 mt-1">Arama kriterlerinize uygun rol yok.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (showCreateModal()) {
+    <app-create-role-modal (close)="onCreateModalClose($event)"></app-create-role-modal>
+    }
+
+    @if (showEditModal() && roleToEdit()) {
+    <app-edit-role-modal [role]="roleToEdit()!" (close)="onEditModalClose($event)"></app-edit-role-modal>
+    }
+</div>

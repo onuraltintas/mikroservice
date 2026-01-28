@@ -65,8 +65,13 @@ public class CreateTeacherCommandHandler : IRequestHandler<CreateTeacherCommand,
         
         var (teacherUserId, temporaryPassword) = identityResult.Value;
 
-        var user = User.Create(teacherUserId, request.Email, request.FirstName, request.LastName);
-        user.AddRole(new UserRole(teacherUserId, Identity.Domain.Enums.UserRole.Teacher));
+        // Assign Role
+        var roleResult = await _identityService.AssignRoleAsync(teacherUserId, Identity.Domain.Enums.UserRole.Teacher.ToString(), cancellationToken);
+        if (roleResult.IsFailure)
+        {
+             await _identityService.DeleteUserAsync(teacherUserId, cancellationToken);
+             return Result.Failure<CreateTeacherResult>(roleResult.Error);
+        }
 
         // Create Profile (Not Independent)
         var teacher = TeacherProfile.Create(teacherUserId, request.FirstName, request.LastName, null, isIndependent: false);
@@ -79,7 +84,8 @@ public class CreateTeacherCommandHandler : IRequestHandler<CreateTeacherCommand,
 
         try
         {
-            await _userRepository.AddAsync(user, cancellationToken);
+            // await _userRepository.AddAsync(user, cancellationToken); // REMOVED
+            await _teacherRepository.AddAsync(teacher, cancellationToken);
             await _teacherRepository.AddAsync(teacher, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             

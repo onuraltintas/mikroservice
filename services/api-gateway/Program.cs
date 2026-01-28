@@ -32,9 +32,23 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
+// CORS Setup
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 var app = builder.Build();
 
 app.UseSerilogRequestLogging();
+
+app.UseCors("AllowFrontend");
 
 app.UseRateLimiter();
 

@@ -1,0 +1,183 @@
+<div
+    class="min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+
+    <!-- Background Decoration (Global) -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-400/10 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-400/10 rounded-full blur-[120px]">
+        </div>
+    </div>
+
+    <!-- MAIN CARD CONTAINER (Centered box containing both blue side and form side) -->
+    <div
+        class="w-full max-w-[1100px] h-auto min-h-[600px] bg-white dark:bg-gray-800 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col lg:flex-row relative z-10 border border-gray-100 dark:border-gray-700">
+
+        <!-- LEFT SIDE: BLUE BRANDING (Now part of the card) -->
+        <div class="hidden lg:flex w-1/2 relative bg-blue-600 flex-col justify-between p-12 overflow-hidden">
+
+            <!-- Abstract Background inside the card -->
+            <div class="absolute inset-0">
+                <div
+                    class="absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-blue-500 rounded-full blur-[100px] opacity-60">
+                </div>
+                <div
+                    class="absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-indigo-600 rounded-full blur-[100px] opacity-60">
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-600/90 to-blue-800/90 backdrop-blur-sm"></div>
+                <div class="absolute inset-0 opacity-10"
+                    style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 24px 24px;">
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="relative z-10 h-full flex flex-col justify-between">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-lg flex items-center justify-center shadow-md ring-1 ring-white/30">
+                        <mat-icon class="!text-white">school</mat-icon>
+                    </div>
+                    <span class="text-xl font-bold text-white tracking-wide">EduPlatform</span>
+                </div>
+
+                <div>
+                    <h2 class="text-4xl font-extrabold text-white leading-tight mb-4">
+                        Eğitimin Geleceğini <br>
+                        <span class="text-blue-200">Birlikte Şekillendirelim.</span>
+                    </h2>
+                    <p class="text-blue-100/90 text-lg">
+                        Tüm okul süreçlerinizi tek bir modern platformda birleştirin.
+                    </p>
+                </div>
+
+                <!-- TESTIMONIAL CARD -->
+                <div class="relative mt-8">
+                    <div
+                        class="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 shadow-xl relative top-4 right-[-20px] lg:right-auto lg:left-0 w-[110%] lg:w-auto transform lg:translate-x-4">
+                        <div class="flex items-center gap-3 mb-3">
+                            <img src="https://i.pravatar.cc/150?img=32" alt="User"
+                                class="w-10 h-10 rounded-full border-2 border-white/30">
+                            <div>
+                                <h5 class="text-white font-bold text-sm">Zeynep Yılmaz</h5>
+                                <p class="text-blue-200 text-xs">Okul Müdürü</p>
+                            </div>
+                            <div class="ml-auto flex text-yellow-400">
+                                <mat-icon class="!w-4 !h-4 !text-[16px]">star</mat-icon>
+                                <mat-icon class="!w-4 !h-4 !text-[16px]">star</mat-icon>
+                                <mat-icon class="!w-4 !h-4 !text-[16px]">star</mat-icon>
+                                <mat-icon class="!w-4 !h-4 !text-[16px]">star</mat-icon>
+                                <mat-icon class="!w-4 !h-4 !text-[16px]">star</mat-icon>
+                            </div>
+                        </div>
+                        <p class="text-white/90 text-sm italic">
+                            "EduPlatform ile verimliliğimiz %40 arttı. Öğretmenlerimiz ve velilerimiz sisteme hayran
+                            kaldı."
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE: LOGIN FORM -->
+        <div
+            class="w-full lg:w-1/2 bg-white dark:bg-gray-800 p-6 sm:p-8 md:p-12 lg:p-16 flex flex-col justify-center relative">
+
+            <div class="flex lg:hidden items-center gap-2 mb-8 text-blue-600">
+                <mat-icon>school</mat-icon>
+                <span class="text-xl font-bold text-gray-900 dark:text-white">EduPlatform</span>
+            </div>
+
+            <div class="mb-8">
+                <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Hoş Geldiniz 👋</h3>
+                <p class="text-gray-500 dark:text-gray-400">Lütfen hesabınıza giriş yapın.</p>
+            </div>
+
+            <form (submit)="onSubmit($event)" class="flex flex-col gap-6">
+
+                <!-- Email -->
+                <div class="group">
+                    <label
+                        class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2 ml-1">E-Posta</label>
+                    <div class="relative">
+                        <input type="email" [(ngModel)]="email" name="email"
+                            class="w-full px-5 py-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all pl-12 text-lg text-gray-900 dark:text-white font-medium"
+                            placeholder="mail@okul.com" required>
+                        <mat-icon
+                            class="absolute left-4 top-4 text-gray-400 group-hover:text-blue-500 transition-colors transform scale-110">email</mat-icon>
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="group">
+                    <div class="flex justify-between items-center mb-2 ml-1">
+                        <label class="block text-base font-medium text-gray-700 dark:text-gray-300">Şifre</label>
+                    </div>
+                    <div class="relative">
+                        <input [type]="hidePassword() ? 'password' : 'text'" [(ngModel)]="password" name="password"
+                            class="w-full px-5 py-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all pl-12 pr-12 text-lg text-gray-900 dark:text-white font-medium"
+                            placeholder="••••••••" required>
+                        <mat-icon
+                            class="absolute left-4 top-4 text-gray-400 group-hover:text-blue-500 transition-colors transform scale-110">lock</mat-icon>
+                        <button type="button" (click)="togglePasswordVisibility()"
+                            class="absolute right-4 top-4 text-gray-400 hover:text-gray-600 cursor-pointer transform scale-110">
+                            <mat-icon>{{hidePassword() ? 'visibility_off' : 'visibility'}}</mat-icon>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="flex items-center justify-between px-1">
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                        <div class="relative w-5 h-5 flex items-center justify-center">
+                            <input type="checkbox" [(ngModel)]="rememberMe" name="rememberMe" class="peer sr-only">
+                            <div
+                                class="absolute inset-0 w-full h-full border-2 border-gray-300 dark:border-gray-600 rounded-md peer-checked:border-blue-600 transition-all bg-white dark:bg-gray-800">
+                            </div>
+                            <div
+                                class="absolute inset-0 flex items-center justify-center opacity-0 peer-checked:opacity-100 transition-opacity">
+                                <mat-icon
+                                    class="text-blue-600 text-[18px] font-bold w-full h-full flex items-center justify-center">check</mat-icon>
+                            </div>
+                        </div>
+                        <span
+                            class="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors">Beni
+                            Hatırla</span>
+                    </label>
+
+                    <a href="#" class="text-sm font-semibold text-blue-600 hover:text-blue-700">Şifremi Unuttum?</a>
+                </div>
+
+                <button mat-flat-button color="primary" type="submit" [disabled]="isLoading() || !email || !password"
+                    class="!py-4 !rounded-xl !text-lg !font-bold w-full shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all mt-2">
+                    <div class="flex items-center justify-center gap-2">
+                        <mat-spinner *ngIf="isLoading()" diameter="24" color="accent" class="mr-2"></mat-spinner>
+                        <span *ngIf="!isLoading()">Giriş Yap</span>
+                    </div>
+                </button>
+
+                <div class="flex items-center gap-4 my-2">
+                    <div class="h-px bg-gray-200 dark:bg-gray-700 flex-1"></div>
+                    <span class="text-xs text-gray-400 font-medium uppercase">veya</span>
+                    <div class="h-px bg-gray-200 dark:bg-gray-700 flex-1"></div>
+                </div>
+
+                <div class="w-full flex justify-center overflow-x-hidden">
+                    <asl-google-signin-button type="standard" size="large" [width]="320"></asl-google-signin-button>
+                </div>
+
+            </form>
+
+            <div *ngIf="errorMessage()"
+                class="mt-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 text-red-600 dark:text-red-400 flex items-center gap-3 animate-pulse">
+                <mat-icon>error_outline</mat-icon>
+                <span class="text-sm font-medium">{{ errorMessage() }}</span>
+            </div>
+
+            <div class="mt-auto pt-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                Hesabınız yok mu?
+                <a routerLink="/auth/register" class="font-bold text-blue-600 hover:text-blue-700 cursor-pointer">Kayıt
+                    Olun</a>
+            </div>
+
+        </div>
+    </div>
+</div>

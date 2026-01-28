@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Identity.Application.Interfaces;
-using Identity.Infrastructure.Services;
 
 namespace Identity.Infrastructure;
 
@@ -49,8 +48,10 @@ public static class DependencyInjection
         // Add repositories here when created
         // services.AddScoped<IUserRepository, UserRepository>();
 
-        // Add HttpClient for Keycloak
-        services.AddHttpClient<IIdentityService, KeycloakIdentityService>();
+        // Services
+        services.AddScoped<IIdentityService, Services.LocalIdentityService>();
+        services.AddScoped<ITokenService, Services.TokenService>();
+        services.AddScoped<IGoogleAuthService, Services.GoogleAuthService>();
 
         // Repositories
         services.AddScoped<IUserRepository,Repositories.UserRepository>();
@@ -58,6 +59,7 @@ public static class DependencyInjection
         services.AddScoped<ITeacherRepository, Repositories.TeacherRepository>();
         services.AddScoped<IStudentRepository, Repositories.StudentRepository>();
         services.AddScoped<IInvitationRepository, Repositories.InvitationRepository>();
+        services.AddScoped<IRoleRepository, Repositories.RoleRepository>();
         services.AddScoped<IUnitOfWork, Repositories.UnitOfWork>();
 
         return services;

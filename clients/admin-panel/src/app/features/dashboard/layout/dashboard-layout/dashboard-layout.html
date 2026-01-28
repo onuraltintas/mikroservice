@@ -1,0 +1,37 @@
+<div class="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden font-sans">
+
+    <!-- Mobile Sidebar Backdrop -->
+    <div *ngIf="layoutService.isMobileSidebarOpen()" (click)="layoutService.closeMobileSidebar()"
+        class="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 transition-opacity md:hidden" aria-hidden="true">
+    </div>
+
+    <!-- Sidebar (Desktop & Mobile) -->
+    <!-- Mobile: Off-canvas slide-in -->
+    <!-- Desktop: Static but collapsible -->
+    <aside
+        class="fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-lg md:shadow-none"
+        [class.translate-x-0]="layoutService.isMobileSidebarOpen()"
+        [class.-translate-x-full]="!layoutService.isMobileSidebarOpen()"
+        [class.w-64]="!layoutService.isSidebarCollapsed()" [class.w-20]="layoutService.isSidebarCollapsed()">
+
+        <app-sidebar class="h-full block"></app-sidebar>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div class="flex flex-col flex-1 w-0 overflow-hidden transition-all duration-300">
+
+        <!-- Header -->
+        <header
+            class="relative z-10 flex-shrink-0 flex h-16 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <app-header class="w-full"></app-header>
+        </header>
+
+        <!-- Dynamic Content Area -->
+        <main class="flex-1 relative overflow-y-auto focus:outline-none scroll-smooth p-0">
+            <!-- Breadcrumbs or top spacing could go here -->
+            <div class="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto min-h-full">
+                <router-outlet></router-outlet>
+            </div>
+        </main>
+    </div>
+</div>

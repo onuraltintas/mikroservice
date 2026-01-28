@@ -41,14 +41,20 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
             LastName = user.LastName ?? "Unknown",
             FullName = $"{user.FirstName} {user.LastName}",
             PhoneNumber = user.PhoneNumber,
-            // Assume single role for simplicity in MVP, or pick primary
-            Role = user.Roles.FirstOrDefault()?.Role.ToString() ?? "Unknown" 
+            LastLoginAt = user.LastLoginAt,
+            Role = user.Roles.FirstOrDefault()?.Role?.Name ?? "Unknown",
+            Roles = user.Roles.Select(r => r.Role?.Name ?? "Unknown").ToList(),
+            Permissions = user.Roles
+                .SelectMany(r => r.Role?.Permissions ?? new List<RolePermission>())
+                .Select(p => p.Permission)
+                .Distinct()
+                .ToList()
         };
 
         // Determine Role and Fetch Details
-        var userRole = user.Roles.FirstOrDefault()?.Role;
+        var userRoles = user.Roles.Select(r => r.Role.Name).ToList();
 
-        if (userRole == Identity.Domain.Enums.UserRole.Teacher)
+        if (userRoles.Contains(Identity.Domain.Enums.UserRole.Teacher.ToString()))
         {
             var teacher = await _teacherRepository.GetByUserIdAsync(request.UserId, cancellationToken);
             if (teacher != null)
@@ -64,7 +70,7 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
                 };
             }
         }
-        else if (userRole == Identity.Domain.Enums.UserRole.Student)
+        else if (userRoles.Contains(Identity.Domain.Enums.UserRole.Student.ToString()))
         {
             var student = await _studentRepository.GetByUserIdAsync(request.UserId, cancellationToken);
             if (student != null)
@@ -82,8 +88,8 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
                 };
             }
         }
-        else if (userRole == Identity.Domain.Enums.UserRole.InstitutionAdmin || 
-                 userRole == Identity.Domain.Enums.UserRole.InstitutionOwner)
+        else if (userRoles.Contains(Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString()) || 
+                 userRoles.Contains(Identity.Domain.Enums.UserRole.InstitutionOwner.ToString()))
         {
             // For admins, maybe fetch Institution details
             var institutionId = await _institutionRepository.GetInstitutionIdByAdminIdAsync(request.UserId, cancellationToken);

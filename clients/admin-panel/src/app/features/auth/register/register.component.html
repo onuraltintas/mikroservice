@@ -1,0 +1,146 @@
+<div
+    class="min-h-screen w-full relative flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
+
+    <!-- Background Decoration -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/20 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-400/20 rounded-full blur-[120px]">
+        </div>
+    </div>
+
+    <div class="relative z-10 w-full max-w-7xl mx-auto">
+
+        <!-- Header Section -->
+        <div class="text-center mb-16">
+            <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-6">
+                <span class="block">EduPlatform'a</span>
+                <span
+                    class="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 animate-gradient">Hoş
+                    Geldiniz</span>
+            </h1>
+            <p class="mt-4 max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-400">
+                Eğitim yolculuğunuza başlamak için size en uygun rolü seçin.
+            </p>
+        </div>
+
+        <!-- Cards Container -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 px-4 md:px-0">
+
+            <!-- Student Card -->
+            <a routerLink="/auth/register/student"
+                class="group relative bg-white dark:bg-gray-800 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-500 transform hover:-translate-y-2 border border-blue-50 dark:border-gray-700 overflow-hidden cursor-pointer text-decoration-none">
+                <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <svg class="w-32 h-32 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z" />
+                    </svg>
+                </div>
+
+                <div class="relative z-10">
+                    <div
+                        class="w-20 h-20 rounded-2xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500">
+                        <mat-icon class="!w-10 !h-10 !text-[40px]">school</mat-icon>
+                    </div>
+
+                    <h3
+                        class="text-3xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 transition-colors">
+                        Öğrenci</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed h-20">
+                        Ders notlarına ulaş, sınavlara hazırlan ve başarılarını takip et. Senin için özel hazırlanmış
+                        içerikler burada.
+                    </p>
+
+                    <div
+                        class="flex items-center text-blue-600 font-bold group-hover:translate-x-2 transition-transform">
+                        <span>Hemen Başla</span>
+                        <mat-icon class="ml-2">arrow_forward</mat-icon>
+                    </div>
+                </div>
+                <div
+                    class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-blue-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left">
+                </div>
+            </a>
+
+            <!-- Teacher Card -->
+            <a routerLink="/auth/register/teacher"
+                class="group relative bg-white dark:bg-gray-800 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-500 transform hover:-translate-y-2 border border-purple-50 dark:border-gray-700 overflow-hidden cursor-pointer text-decoration-none">
+                <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <svg class="w-32 h-32 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z" />
+                    </svg>
+                </div>
+
+                <div class="relative z-10">
+                    <div
+                        class="w-20 h-20 rounded-2xl bg-purple-50 dark:bg-purple-900/30 text-purple-600 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500">
+                        <mat-icon class="!w-10 !h-10 !text-[40px]">cast_for_education</mat-icon>
+                    </div>
+
+                    <h3
+                        class="text-3xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-purple-600 transition-colors">
+                        Öğretmen</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed h-20">
+                        Sınıfını dijitalleştir, ödevleri yönet ve öğrencilerinin gelişimini analiz et. Modern eğitimin
+                        gücü elinde.
+                    </p>
+
+                    <div
+                        class="flex items-center text-purple-600 font-bold group-hover:translate-x-2 transition-transform">
+                        <span>Hesap Oluştur</span>
+                        <mat-icon class="ml-2">arrow_forward</mat-icon>
+                    </div>
+                </div>
+                <div
+                    class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-purple-400 to-purple-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left">
+                </div>
+            </a>
+
+            <!-- Institution Card -->
+            <a routerLink="/auth/register/institution"
+                class="group relative bg-white dark:bg-gray-800 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl hover:shadow-orange-500/20 transition-all duration-500 transform hover:-translate-y-2 border border-orange-50 dark:border-gray-700 overflow-hidden cursor-pointer text-decoration-none">
+                <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <svg class="w-32 h-32 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z" />
+                    </svg>
+                </div>
+
+                <div class="relative z-10">
+                    <div
+                        class="w-20 h-20 rounded-2xl bg-orange-50 dark:bg-orange-900/30 text-orange-600 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500">
+                        <mat-icon class="!w-10 !h-10 !text-[40px]">domain</mat-icon>
+                    </div>
+
+                    <h3
+                        class="text-3xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-orange-600 transition-colors">
+                        Kurum</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed h-20">
+                        Okul yönetimini tek bir platformda topla. Kayıtlar, raporlar ve personel yönetimi artık çok
+                        kolay.
+                    </p>
+
+                    <div
+                        class="flex items-center text-orange-600 font-bold group-hover:translate-x-2 transition-transform">
+                        <span>Kurumsal Başvuru</span>
+                        <mat-icon class="ml-2">arrow_forward</mat-icon>
+                    </div>
+                </div>
+                <div
+                    class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 to-orange-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left">
+                </div>
+            </a>
+
+        </div>
+
+        <!-- Footer / Login Link -->
+        <div class="mt-20 text-center">
+            <p class="text-gray-500 dark:text-gray-400 mb-2">Zaten bir hesabınız var mı?</p>
+            <a routerLink="/auth/login"
+                class="inline-flex items-center px-8 py-3 rounded-full bg-white dark:bg-gray-800 border-2 border-transparent hover:border-blue-500 text-gray-900 dark:text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300">
+                <span>Giriş Yap</span>
+                <mat-icon class="ml-2 text-blue-500">login</mat-icon>
+            </a>
+        </div>
+
+    </div>
+</div>

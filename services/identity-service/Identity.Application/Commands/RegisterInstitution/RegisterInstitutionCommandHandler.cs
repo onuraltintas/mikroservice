@@ -43,11 +43,17 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
         var userId = identityResult.Value;
 
         // 2. Create Domain Entities
-        var user = User.Create(userId, request.Email, request.FirstName, request.LastName);
-        if (request.Phone != null) user.SetPhoneNumber(request.Phone);
-        
-        user.AddRole(new Identity.Domain.Entities.UserRole(userId, Identity.Domain.Enums.UserRole.InstitutionAdmin));
-        user.AddRole(new Identity.Domain.Entities.UserRole(userId, Identity.Domain.Enums.UserRole.InstitutionOwner));
+        // 2. Assign Roles
+        await _identityService.AssignRoleAsync(userId, Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(), cancellationToken);
+        await _identityService.AssignRoleAsync(userId, Identity.Domain.Enums.UserRole.InstitutionOwner.ToString(), cancellationToken);
+
+        // 3. Create Domain Entities
+        // Update Phone if needed
+        if (request.Phone != null)
+        {
+            var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+            if (user != null) user.SetPhoneNumber(request.Phone);
+        }
 
         var institution = Institution.Create(
             request.InstitutionName,
@@ -60,10 +66,12 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
             institution.Id,
             InstitutionAdminRole.Owner);
 
-        // 3. Save to Database (Transactional)
+        // 4. Save to Database (Transactional)
         try
         {
-            await _userRepository.AddAsync(user, cancellationToken);
+            // await _userRepository.AddAsync(user, cancellationToken); // Removed
+            await _institutionRepository.AddAsync(institution, cancellationToken);
+            await _institutionRepository.AddAdminAsync(admin, cancellationToken);
             await _institutionRepository.AddAsync(institution, cancellationToken);
             await _institutionRepository.AddAdminAsync(admin, cancellationToken);
 

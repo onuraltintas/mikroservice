@@ -1,16 +1,8 @@
-// Angular Material Theming
 @use '@angular/material' as mat;
-
-// Tailwind Imports (Must be before styles that use them, but often after imports)
-// Note: Tailwind base (preflight) might conflict with Material. 
-// We usually keep tailwind components/utilities.
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 html {
     height: 100%;
-    // Material 3 Theme Configuration
+    // LIGHT THEME (Default)
     @include mat.theme((color: (primary: mat.$azure-palette,
                 tertiary: mat.$blue-palette,
             ),
@@ -23,9 +15,42 @@ body {
     height: 100%;
     margin: 0;
 
-    // Theme Integration
+    // Default to Light Scheme
     color-scheme: light;
     background-color: var(--mat-sys-surface);
     color: var(--mat-sys-on-surface);
     font: var(--mat-sys-body-medium);
+}
+
+// DARK MODE SUPPORT check (System Preference)
+@media (prefers-color-scheme: dark) {
+    html {
+        @include mat.theme((color: (primary: mat.$azure-palette,
+                    tertiary: mat.$blue-palette,
+                    theme-type: dark),
+                typography: Roboto,
+                density: 0,
+            ));
+    }
+
+    body {
+        color-scheme: dark;
+        // Variables update automatically with mat.theme include
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.4s ease-out forwards;
 }

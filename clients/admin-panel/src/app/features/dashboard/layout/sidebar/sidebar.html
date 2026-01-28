@@ -1,0 +1,102 @@
+<div [class.w-72]="!layoutService.isSidebarCollapsed()" [class.w-20]="layoutService.isSidebarCollapsed()"
+    class="flex flex-col h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out relative group shadow-sm hover:shadow-md z-30">
+
+    <!-- Collapse Toggle Button (Desktop) -->
+    <button (click)="layoutService.toggleSidebar()"
+        class="hidden md:flex absolute -right-3 top-20 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-full p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 shadow-lg items-center justify-center w-6 h-6 z-50 transition-transform duration-300 transform hover:scale-110 focus:outline-none"
+        [class.rotate-180]="layoutService.isSidebarCollapsed()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+    </button>
+
+    <!-- Logo Area -->
+    <div class="flex items-center h-16 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 overflow-hidden relative flex-shrink-0"
+        [class.justify-center]="!layoutService.isSidebarCollapsed()"
+        [class.justify-center]="layoutService.isSidebarCollapsed()">
+        <span *ngIf="!layoutService.isSidebarCollapsed()"
+            class="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight whitespace-nowrap animate-in fade-in transition-opacity duration-200">
+            EduPlatform
+        </span>
+        <span *ngIf="layoutService.isSidebarCollapsed()"
+            class="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight animate-in fade-in transition-opacity duration-200">
+            EP
+        </span>
+    </div>
+
+    <!-- Navigation -->
+    <nav
+        class="flex-1 px-3 py-4 space-y-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700">
+        @for (item of menuItems(); track item.label) {
+
+        <!-- Standard Link (No Children) -->
+        @if (!item.children) {
+        <a [routerLink]="item.route" routerLinkActive="bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"
+            class="group flex items-center px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 relative mb-1"
+            [class.justify-center]="layoutService.isSidebarCollapsed()">
+
+            <span class="flex-shrink-0 h-6 w-6 transition-colors duration-200 group-hover:scale-110 transform"
+                [innerHTML]="item.iconHtml"></span>
+
+            <span *ngIf="!layoutService.isSidebarCollapsed()"
+                class="ml-3 truncate animate-in fade-in slide-in-from-left-2 duration-200">
+                {{ item.label }}
+            </span>
+
+            <!-- Tooltip for collapsed mode -->
+            <div *ngIf="layoutService.isSidebarCollapsed()"
+                class="absolute left-full top-0 ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                {{ item.label }}
+            </div>
+        </a>
+        } @else {
+        <!-- Parent Menu Item (Has Children) -->
+        <div class="relative mb-1">
+            <button (click)="toggleSubmenu(item.label)"
+                class="w-full group flex items-center px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 relative focus:outline-none"
+                [class.bg-gray-50]="isExpanded(item.label) && !layoutService.isSidebarCollapsed()"
+                [class.dark:bg-gray-800]="isExpanded(item.label) && !layoutService.isSidebarCollapsed()"
+                [class.justify-center]="layoutService.isSidebarCollapsed()">
+
+                <span class="flex-shrink-0 h-6 w-6 transition-colors duration-200 group-hover:scale-110 transform"
+                    [innerHTML]="item.iconHtml"></span>
+
+                @if (!layoutService.isSidebarCollapsed()) {
+                <span class="ml-3 flex-1 text-left truncate animate-in fade-in slide-in-from-left-2 duration-200">
+                    {{ item.label }}
+                </span>
+                <!-- Chevron Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-200 ml-auto"
+                    [class.rotate-90]="isExpanded(item.label)" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+                }
+
+                <!-- Tooltip for collapsed mode -->
+                <div *ngIf="layoutService.isSidebarCollapsed()"
+                    class="absolute left-full top-0 ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                    {{ item.label }} (Genişlet)
+                </div>
+            </button>
+
+            <!-- Submenu (Children) -->
+            @if (isExpanded(item.label) && !layoutService.isSidebarCollapsed()) {
+            <div class="mt-1 space-y-1 pl-10 pr-2 animate-in slide-in-from-top-2 fade-in duration-200 origin-top">
+                @for (child of item.children; track child.label) {
+                <a [routerLink]="child.route"
+                    routerLinkActive="text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/10 font-semibold"
+                    class="group flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-md hover:text-blue-600 dark:hover:text-blue-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200">
+
+                    <span class="flex-shrink-0 h-4 w-4 mr-2 transition-transform group-hover:scale-110"
+                        [innerHTML]="child.iconHtml"></span>
+
+                    <span class="truncate">{{ child.label }}</span>
+                </a>
+                }
+            </div>
+            }
+        </div>
+        }
+        }
+    </nav>
+</div>

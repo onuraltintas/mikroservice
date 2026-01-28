@@ -1,20 +1,32 @@
 using Microsoft.EntityFrameworkCore;
 using Notification.Domain.Entities;
 
+using Notification.Application.Interfaces;
+
 namespace Notification.Infrastructure.Persistence;
 
-public class NotificationDbContext : DbContext
+public class NotificationDbContext : DbContext, INotificationDbContext
 {
     public NotificationDbContext(DbContextOptions<NotificationDbContext> options) : base(options)
     {
     }
 
     public DbSet<NotificationItem> Notifications { get; set; }
+    public DbSet<EmailTemplate> EmailTemplates { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
+        // Notification Item
         modelBuilder.Entity<NotificationItem>().HasKey(x => x.Id);
         modelBuilder.Entity<NotificationItem>().Property(x => x.UserId).IsRequired();
-        base.OnModelCreating(modelBuilder);
+
+        // Email Template
+        modelBuilder.Entity<EmailTemplate>().HasKey(x => x.Id);
+        modelBuilder.Entity<EmailTemplate>().HasIndex(x => x.TemplateName).IsUnique();
+
+        // Seed data is now handled by NotificationDbContextSeeder via external files.
+        // See: Infrastructure/Seed/seeds.json
     }
 }

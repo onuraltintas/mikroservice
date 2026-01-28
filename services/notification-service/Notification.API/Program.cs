@@ -13,7 +13,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services
 builder.Services.AddControllers();
 builder.Services.AddDbContext<NotificationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
+
+// Register INotificationDbContext for Application layer access
+builder.Services.AddScoped<INotificationDbContext>(provider => 
+    provider.GetRequiredService<NotificationDbContext>());
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<INotificationService, Notification.API.Services.NotificationManager>();
@@ -25,14 +30,19 @@ builder.Services.AddSignalR();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = builder.Configuration["Jwt:Authority"];
+        var secretKey = builder.Configuration["Jwt:Secret"] ?? "super_secret_key_for_development_must_be_changed_in_prod_12345";
+        var key = System.Text.Encoding.UTF8.GetBytes(secretKey);
+
         options.RequireHttpsMetadata = false;
-        options.Audience = builder.Configuration["Jwt:Audience"];
-        
+        options.SaveToken = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = false,
-            ValidateAudience = false // For now
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = false, 
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
         };
 
         options.Events = new JwtBearerEvents
@@ -94,6 +104,10 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
     db.Database.Migrate();
+
+    // Run custom file-based seeder
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    await NotificationDbContextSeeder.SeedAsync(db, logger);
 }
 
 app.Run();

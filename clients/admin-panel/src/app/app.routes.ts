@@ -1,26 +1,34 @@
 import { Routes } from '@angular/router';
-import { MainLayoutComponent } from './layout/main-layout/main-layout';
+import { authGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
+    // Auth Routes
     {
-        path: '',
-        component: MainLayoutComponent,
+        path: 'auth',
+        loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES)
+    },
+
+    // Dashboard Routes (Protected by AuthGuard)
+    {
+        path: 'dashboard',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/dashboard/layout/dashboard-layout/dashboard-layout').then(m => m.DashboardLayoutComponent),
         children: [
             {
                 path: '',
-                redirectTo: 'dashboard',
-                pathMatch: 'full'
-            },
-            {
-                path: 'dashboard',
-                loadComponent: () => import('./features/dashboard/dashboard')
-                    .then(m => m.DashboardComponent)
-            },
-            // Other feature routes will go here (Identity, Coaching, Settings)
+                loadChildren: () => import('./features/dashboard/dashboard.routes').then(m => m.DASHBOARD_ROUTES)
+            }
         ]
     },
 
-    // 404 Route
+    // Default Redirect
+    {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+    },
+
+    // 404 Redirect
     {
         path: '**',
         redirectTo: 'dashboard'
