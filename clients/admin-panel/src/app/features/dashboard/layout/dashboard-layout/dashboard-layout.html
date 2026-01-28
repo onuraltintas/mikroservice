@@ -12,7 +12,7 @@
         class="fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-lg md:shadow-none"
         [class.translate-x-0]="layoutService.isMobileSidebarOpen()"
         [class.-translate-x-full]="!layoutService.isMobileSidebarOpen()"
-        [class.w-64]="!layoutService.isSidebarCollapsed()" [class.w-20]="layoutService.isSidebarCollapsed()">
+        [class.w-72]="!layoutService.isSidebarCollapsed()" [class.w-20]="layoutService.isSidebarCollapsed()">
 
         <app-sidebar class="h-full block"></app-sidebar>
     </aside>
@@ -22,7 +22,7 @@
 
         <!-- Header -->
         <header
-            class="relative z-10 flex-shrink-0 flex h-16 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            class="relative z-10 flex-shrink-0 flex h-20 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
             <app-header class="w-full"></app-header>
         </header>
 
