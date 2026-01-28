@@ -4,7 +4,9 @@ using Identity.Application.Commands.CreateRole;
 using Identity.Application.Commands.DeleteRole;
 using Identity.Application.Commands.UpdateRole;
 using Identity.Application.Commands.RestoreRole;
+using Identity.Application.Commands.UpdateRolePermissions;
 using Identity.Application.Queries.GetRoles;
+using Identity.Application.Queries.GetRolePermissions;
 using Identity.Domain.Constants;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -85,5 +87,32 @@ public class RolesController : ControllerBase
         return BadRequest(result.Error);
     }
 
+    /// <summary>
+    /// Gets permissions assigned to a role.
+    /// </summary>
+    [HttpGet("{id:guid}/permissions")]
+    [HasPermission(Permissions.Roles.View)]
+    public async Task<IActionResult> GetRolePermissions(Guid id)
+    {
+        var result = await _mediator.Send(new GetRolePermissionsQuery(id));
+        if (result.IsSuccess) return Ok(result.Value);
+        return BadRequest(result.Error);
+    }
+
+    /// <summary>
+    /// Updates permissions for a role.
+    /// </summary>
+    [HttpPut("{id:guid}/permissions")]
+    [HasPermission(Permissions.Roles.Edit)]
+    public async Task<IActionResult> UpdateRolePermissions(Guid id, [FromBody] UpdateRolePermissionsRequest request)
+    {
+        var command = new UpdateRolePermissionsCommand(id, request.Permissions);
+        var result = await _mediator.Send(command);
+        if (result.IsSuccess) return NoContent();
+        return BadRequest(result.Error);
+    }
+
     public record UpdateRoleRequest(string Name, string Description);
+    public record UpdateRolePermissionsRequest(List<string> Permissions);
 }
+

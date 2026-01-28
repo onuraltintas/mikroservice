@@ -1,0 +1,103 @@
+<div class="fixed inset-0 z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <!-- Backdrop (Static) -->
+    <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" (click)="onCancel()"></div>
+
+    <!-- Modal Position Container -->
+    <div class="fixed inset-0 z-[101] overflow-y-auto">
+        <div class="flex min-h-full items-start justify-center p-4 text-center sm:p-12">
+
+            <!-- Modal Panel -->
+            <div
+                class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white dark:bg-gray-900 text-left shadow-2xl transition-all border border-gray-100 dark:border-gray-700 bg-opacity-100 dark:bg-opacity-100">
+
+                <!-- Header -->
+                <div
+                    class="bg-gradient-to-r from-indigo-50 to-white dark:from-indigo-900/20 dark:to-gray-800 p-6 border-b border-gray-100 dark:border-gray-700">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-center gap-4">
+                            <div
+                                class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">İzni Düzenle</h3>
+
+                                <div *ngIf="permission" class="flex items-center gap-2 mt-1">
+                                    <span
+                                        class="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600">{{
+                                        permission.key }}</span>
+                                    @if(permission.isSystem) {
+                                    <span
+                                        class="inline-flex items-center rounded-md bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-400/30">Sistem</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <button (click)="onCancel()" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                            <span class="sr-only">Kapat</span>
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="p-6 space-y-5">
+                    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                        <div class="space-y-4">
+
+                            <!-- Group Input -->
+                            <div class="group">
+                                <label for="group"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 ml-0.5">Grup</label>
+                                <input type="text" id="group" formControlName="group"
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white p-2.5 transition-colors"
+                                    placeholder="Örn: Products">
+                                <p *ngIf="form.get('group')?.touched && form.get('group')?.errors?.['required']"
+                                    class="mt-1 text-xs text-red-500 ml-0.5">Bu alan zorunludur.</p>
+                            </div>
+
+                            <!-- Description Input -->
+                            <div class="group">
+                                <label for="description"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 ml-0.5">Açıklama</label>
+                                <textarea id="description" formControlName="description" rows="3"
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white p-2.5 transition-colors resize-none"
+                                    placeholder="İzin hakkında kısa açıklama..."></textarea>
+                                <p *ngIf="form.get('description')?.touched && form.get('description')?.errors?.['required']"
+                                    class="mt-1 text-xs text-red-500 ml-0.5">Bu alan zorunludur.</p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Footer -->
+                <div
+                    class="bg-gray-50 dark:bg-gray-800/50 px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
+                    <button type="button" (click)="onCancel()"
+                        class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        İptal
+                    </button>
+                    <button type="button" (click)="onSubmit()" [disabled]="form.invalid || loading()"
+                        class="rounded-lg px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center">
+                        <svg *ngIf="loading()" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        {{ loading() ? 'Kaydediliyor...' : 'Kaydet' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

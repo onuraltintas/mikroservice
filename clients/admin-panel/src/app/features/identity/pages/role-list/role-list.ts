@@ -4,12 +4,13 @@ import { IdentityService, RoleDto } from '../../../../core/services/identity.ser
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { CreateRoleModalComponent } from '../../components/create-role-modal/create-role-modal';
 import { EditRoleModalComponent } from '../../components/edit-role-modal/edit-role-modal';
+import { RolePermissionsModalComponent } from '../../components/role-permissions-modal/role-permissions-modal';
 import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'app-role-list',
     standalone: true,
-    imports: [CommonModule, FormsModule, CreateRoleModalComponent, EditRoleModalComponent],
+    imports: [CommonModule, FormsModule, CreateRoleModalComponent, EditRoleModalComponent, RolePermissionsModalComponent],
     templateUrl: './role-list.html',
     styleUrls: ['./role-list.scss']
 })
@@ -18,12 +19,15 @@ export class RoleListComponent {
     private toaster = inject(ToasterService);
     private platformId = inject(PLATFORM_ID);
 
+    // State
     roles = signal<RoleDto[]>([]);
     loading = signal(false);
 
-    // Filters
+    // Filters & Pagination
     searchTerm = signal('');
     statusFilter = signal<'all' | 'active' | 'passive'>('all');
+    currentPage = signal(1);
+    pageSize = signal(10);
 
     filteredRoles = computed(() => {
         let result = this.roles();
@@ -46,9 +50,40 @@ export class RoleListComponent {
         return result;
     });
 
+    paginatedRoles = computed(() => {
+        const roles = this.filteredRoles();
+        const start = (this.currentPage() - 1) * this.pageSize();
+        const end = start + this.pageSize();
+        return roles.slice(start, end);
+    });
+
+    totalCount = computed(() => this.filteredRoles().length);
+
+    get totalPages() {
+        return Math.ceil(this.totalCount() / this.pageSize());
+    }
+
+    get pagesArray() {
+        const total = this.totalPages;
+        const current = this.currentPage();
+        const delta = 2;
+
+        let pages = [];
+        for (let i = 1; i <= total; i++) {
+            if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
+                pages.push(i);
+            } else if (pages[pages.length - 1] !== '...') {
+                pages.push('...');
+            }
+        }
+        return pages;
+    }
+
     showCreateModal = signal(false);
     showEditModal = signal(false);
+    showPermissionsModal = signal(false);
     roleToEdit = signal<RoleDto | null>(null);
+    roleForPermissions = signal<RoleDto | null>(null);
 
     openMenuId = signal<string | null>(null);
 
@@ -61,11 +96,24 @@ export class RoleListComponent {
     onSearch(event: Event) {
         const target = event.target as HTMLInputElement;
         this.searchTerm.set(target.value);
+        this.currentPage.set(1);
     }
 
     onStatusChange(event: Event) {
         const target = event.target as HTMLSelectElement;
         this.statusFilter.set(target.value as 'all' | 'active' | 'passive');
+        this.currentPage.set(1);
+    }
+
+    onPageSizeChange(event: Event) {
+        const target = event.target as HTMLSelectElement;
+        this.pageSize.set(Number(target.value));
+        this.currentPage.set(1);
+    }
+
+    changePage(page: number) {
+        if (page < 1 || page > this.totalPages) return;
+        this.currentPage.set(page);
     }
 
     loadRoles() {
@@ -105,6 +153,17 @@ export class RoleListComponent {
         if (saved) {
             this.loadRoles();
         }
+    }
+
+    openPermissionsModal(role: RoleDto) {
+        this.roleForPermissions.set(role);
+        this.showPermissionsModal.set(true);
+        this.openMenuId.set(null);
+    }
+
+    onPermissionsModalClose(saved: boolean) {
+        this.showPermissionsModal.set(false);
+        this.roleForPermissions.set(null);
     }
 
     toggleMenu(roleId: string, event: Event) {

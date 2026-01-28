@@ -261,6 +261,13 @@ public class RoleRepository : IRoleRepository
         return await _context.Roles.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
     }
 
+    public async Task<Role?> GetByIdWithPermissionsAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return await _context.Roles
+            .Include(r => r.Permissions)
+            .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+    }
+
     public async Task<IEnumerable<Role>> GetAllAsync(CancellationToken cancellationToken)
     {
         return await _context.Roles
@@ -277,4 +284,15 @@ public class RoleRepository : IRoleRepository
     {
         _context.Roles.Remove(role);
     }
+
+    public void AddRolePermission(RolePermission permission)
+    {
+        _context.RolePermissions.Add(permission);
+    }
+
+    public void RemoveRolePermission(RolePermission permission)
+    {
+        _context.RolePermissions.Remove(permission);
+    }
 }
+

@@ -41,8 +41,29 @@ public static class IdentitySeeder
             // Re-fetch roles to get Ids
             var dbRoles = await context.Roles.ToListAsync();
 
-            // 1.1 Seed Permissions
+            // 1.1 Seed Permissions Table
             var allPermissions = Identity.Domain.Constants.Permissions.GetAll();
+            var existingDbPermissions = await context.Permissions.Select(p => p.Key).ToListAsync();
+            var newDbPermissions = allPermissions.Except(existingDbPermissions).ToList();
+
+            if (newDbPermissions.Any())
+            {
+                logger.LogInformation($"Seeding {newDbPermissions.Count} new permissions into Permissions table...");
+                foreach (var permKey in newDbPermissions)
+                {
+                    // Parse Group from Key (e.g. Permissions.Users.View -> Group: Users)
+                    var parts = permKey.Split('.');
+                    var group = parts.Length > 2 ? parts[1] : "General";
+                    var description = $"System permission for {permKey}";
+
+                    var newPerm = Permission.Create(permKey, description, group, isSystem: true);
+                    context.Permissions.Add(newPerm);
+                }
+                await context.SaveChangesAsync();
+                logger.LogInformation("✅ Permissions table seeded.");
+            }
+
+            // 1.2 Seed Role Permissions
             var institutionPermissions = new List<string> 
             { 
                 Identity.Domain.Constants.Permissions.Users.View,

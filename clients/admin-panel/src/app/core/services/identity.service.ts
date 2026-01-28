@@ -79,6 +79,32 @@ export interface UpdateRoleRequest {
     description: string;
 }
 
+export interface RolePermissionsDto {
+    roleId: string;
+    roleName: string;
+    assignedPermissions: string[];
+}
+
+export interface PermissionDto {
+    id: string;
+    key: string;
+    description: string;
+    group: string;
+    isSystem: boolean;
+    isDeleted: boolean;
+}
+
+export interface CreatePermissionRequest {
+    key: string;
+    description: string;
+    group: string;
+}
+
+export interface UpdatePermissionRequest {
+    description: string;
+    group: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -172,5 +198,37 @@ export class IdentityService {
 
     removeRole(userId: string, roleName: string) {
         return this.http.delete(`${this.baseUrl}/${userId}/roles/${roleName}`);
+    }
+
+    // Permission Methods
+    getPermissions() {
+        return this.http.get<PermissionDto[]>(`${environment.apiUrl}/permissions`);
+    }
+
+    createPermission(permission: CreatePermissionRequest) {
+        return this.http.post<string>(`${environment.apiUrl}/permissions`, permission);
+    }
+
+    updatePermission(id: string, permission: UpdatePermissionRequest) {
+        return this.http.put(`${environment.apiUrl}/permissions/${id}`, permission);
+    }
+
+    deletePermission(id: string, permanent: boolean = false) {
+        return this.http.delete(`${environment.apiUrl}/permissions/${id}`, {
+            params: { permanent: permanent.toString() }
+        });
+    }
+
+    restorePermission(id: string) {
+        return this.http.put(`${environment.apiUrl}/permissions/${id}/restore`, {});
+    }
+
+    // Role Permission Methods
+    getRolePermissions(roleId: string) {
+        return this.http.get<RolePermissionsDto>(`${this.rolesUrl}/${roleId}/permissions`);
+    }
+
+    updateRolePermissions(roleId: string, permissions: string[]) {
+        return this.http.put(`${this.rolesUrl}/${roleId}/permissions`, { permissions });
     }
 }

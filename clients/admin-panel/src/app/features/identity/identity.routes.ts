@@ -12,5 +12,9 @@ export const IDENTITY_ROUTES: Routes = [
     {
         path: 'roles',
         loadComponent: () => import('./pages/role-list/role-list').then(m => m.RoleListComponent)
+    },
+    {
+        path: 'permissions',
+        loadComponent: () => import('./pages/permission-list/permission-list').then(m => m.PermissionListComponent)
     }
 ];

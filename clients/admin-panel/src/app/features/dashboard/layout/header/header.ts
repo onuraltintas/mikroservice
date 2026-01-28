@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { LayoutService } from '../../services/layout.service';
+import { DarkModeService } from '../../../../core/services/dark-mode.service';
 
 @Component({
   selector: 'app-header',
@@ -12,30 +13,17 @@ import { LayoutService } from '../../services/layout.service';
   templateUrl: './header.html',
   styleUrls: ['./header.scss']
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent {
   private authService = inject(AuthService);
   private toaster = inject(ToasterService);
-  private platformId = inject(PLATFORM_ID);
   layoutService = inject(LayoutService);
+  darkModeService = inject(DarkModeService);
 
-  isDarkMode = signal(false);
   showUserMenu = signal(false);
   user = this.authService.userProfile;
 
-  ngOnInit() {
-    if (isPlatformBrowser(this.platformId)) {
-      // Check local storage or system preference
-      if (localStorage.getItem('theme') === 'dark' ||
-        (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        this.setDark(true);
-      } else {
-        this.setDark(false);
-      }
-    }
-  }
-
   toggleTheme() {
-    this.setDark(!this.isDarkMode());
+    this.darkModeService.toggle();
   }
 
   toggleUserMenu() {
@@ -62,19 +50,6 @@ export class HeaderComponent implements OnInit {
 
     if (confirmed) {
       this.authService.logout();
-    }
-  }
-
-  private setDark(val: boolean) {
-    this.isDarkMode.set(val);
-    if (isPlatformBrowser(this.platformId)) {
-      if (val) {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-      }
     }
   }
 }

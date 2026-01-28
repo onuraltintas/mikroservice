@@ -1,64 +1,101 @@
-<div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" aria-hidden="true"
-            (click)="onCancel()">
-        </div>
+<div class="fixed inset-0 z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <!-- Backdrop (Static) -->
+    <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" (click)="onCancel()"></div>
 
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+    <!-- Modal Position Container -->
+    <div class="fixed inset-0 z-[101] overflow-y-auto">
+        <div class="flex min-h-full items-start justify-center p-4 text-center sm:p-12">
 
-        <div
-            class="relative inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div class="sm:flex sm:items-start">
-                    <div
-                        class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-                        <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M15.5 3.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 7.5-7.5z" />
-                        </svg>
-                    </div>
-                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">Rolü
-                            Düzenle</h3>
-                        <div *ngIf="role.isSystemRole"
-                            class="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 text-xs rounded border border-yellow-200 dark:border-yellow-800">
-                            Bu bir sistem rolüdür. Rol adı değiştirilemez.
-                        </div>
-                        <div class="mt-4">
-                            <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
-                                <div>
-                                    <label for="name"
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Rol
-                                        Adı</label>
-                                    <input type="text" id="name" formControlName="name"
-                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3 disabled:opacity-60 disabled:bg-gray-100 dark:disabled:bg-gray-800">
-                                    <p *ngIf="form.get('name')?.touched && form.get('name')?.errors?.['required']"
-                                        class="mt-1 text-sm text-red-600">Rol adı zorunludur.</p>
+            <!-- Modal Panel -->
+            <div
+                class="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white dark:bg-gray-900 text-left shadow-2xl transition-all border border-gray-100 dark:border-gray-700 bg-opacity-100 dark:bg-opacity-100">
+
+                <!-- Header -->
+                <div
+                    class="bg-gradient-to-r from-indigo-50 to-white dark:from-indigo-900/20 dark:to-gray-800 p-6 border-b border-gray-100 dark:border-gray-700">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-center gap-4">
+                            <div
+                                class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Rolü Düzenle</h3>
+
+                                <div *ngIf="role.isSystemRole"
+                                    class="mt-2 inline-flex items-center gap-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 text-xs rounded border border-yellow-200 dark:border-yellow-800">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                    Bu bir sistem rolüdür. Rol adı değiştirilemez.
                                 </div>
-
-                                <div>
-                                    <label for="description"
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Açıklama</label>
-                                    <textarea id="description" formControlName="description" rows="3"
-                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2 px-3"></textarea>
-                                    <p *ngIf="form.get('description')?.touched && form.get('description')?.errors?.['required']"
-                                        class="mt-1 text-sm text-red-600">Açıklama zorunludur.</p>
-                                </div>
-                            </form>
+                            </div>
                         </div>
+                        <button (click)="onCancel()" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                            <span class="sr-only">Kapat</span>
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
-            </div>
-            <div class="bg-gray-50 dark:bg-gray-700/50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button type="button" (click)="onSubmit()" [disabled]="form.invalid || loading()"
-                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50">
-                    {{ loading() ? 'Kaydediliyor...' : 'Kaydet' }}
-                </button>
-                <button type="button" (click)="onCancel()"
-                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                    İptal
-                </button>
+
+                <!-- Body -->
+                <div class="p-6 space-y-5">
+                    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                        <div class="space-y-4">
+
+                            <!-- Role Name Input -->
+                            <div class="group">
+                                <label for="name"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 ml-0.5">Rol
+                                    Adı</label>
+                                <input type="text" id="name" formControlName="name"
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white p-2.5 transition-colors disabled:opacity-60 disabled:bg-gray-100 dark:disabled:bg-gray-800">
+                                <p *ngIf="form.get('name')?.touched && form.get('name')?.errors?.['required']"
+                                    class="mt-1 text-xs text-red-500 ml-0.5">Rol adı zorunludur.</p>
+                            </div>
+
+                            <!-- Description Input -->
+                            <div class="group">
+                                <label for="description"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 ml-0.5">Açıklama</label>
+                                <textarea id="description" formControlName="description" rows="3"
+                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white p-2.5 transition-colors resize-none"
+                                    placeholder="Rol hakkında kısa açıklama..."></textarea>
+                                <p *ngIf="form.get('description')?.touched && form.get('description')?.errors?.['required']"
+                                    class="mt-1 text-xs text-red-500 ml-0.5">Açıklama zorunludur.</p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Footer -->
+                <div
+                    class="bg-gray-50 dark:bg-gray-800/50 px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
+                    <button type="button" (click)="onCancel()"
+                        class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        İptal
+                    </button>
+                    <button type="button" (click)="onSubmit()" [disabled]="form.invalid || loading()"
+                        class="rounded-lg px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center">
+                        <svg *ngIf="loading()" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        {{ loading() ? 'Kaydediliyor...' : 'Kaydet' }}
+                    </button>
+                </div>
             </div>
         </div>
     </div>

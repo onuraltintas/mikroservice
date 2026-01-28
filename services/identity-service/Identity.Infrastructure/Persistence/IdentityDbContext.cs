@@ -28,6 +28,7 @@ public class IdentityDbContext : DbContext
     public DbSet<Invitation> Invitations => Set<Invitation>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<UserLogin> UserLogins => Set<UserLogin>();
+    public DbSet<Permission> Permissions => Set<Permission>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
