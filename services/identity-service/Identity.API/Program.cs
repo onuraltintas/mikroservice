@@ -42,6 +42,13 @@ builder.Services.AddMediatorWithBehaviors(typeof(Identity.Application.Dependency
 // Add MassTransit (for Publishing Events)
 builder.Services.AddMassTransit(x =>
 {
+    // Outbox Pattern Configuration
+    x.AddEntityFrameworkOutbox<IdentityDbContext>(o =>
+    {
+        o.UsePostgres();
+        o.UseBusOutbox();
+    });
+
     x.UsingRabbitMq((context, cfg) =>
     {
         var rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST") 

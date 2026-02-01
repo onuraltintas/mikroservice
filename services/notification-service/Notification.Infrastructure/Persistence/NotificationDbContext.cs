@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Notification.Domain.Entities;
 
 using Notification.Application.Interfaces;
+using MassTransit;
 
 namespace Notification.Infrastructure.Persistence;
 
@@ -32,5 +33,10 @@ public class NotificationDbContext : DbContext, INotificationDbContext
 
         // Seed data is now handled by NotificationDbContextSeeder via external files.
         // See: Infrastructure/Seed/seeds.json
+
+        // MassTransit Outbox Pattern
+        modelBuilder.AddInboxStateEntity();
+        modelBuilder.AddOutboxMessageEntity();
+        modelBuilder.AddOutboxStateEntity();
     }
 }

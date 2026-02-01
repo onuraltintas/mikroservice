@@ -6,6 +6,9 @@ using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
+using Identity.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+
 namespace Identity.Infrastructure.Services;
 
 public class LocalIdentityService : IIdentityService
@@ -16,6 +19,7 @@ public class LocalIdentityService : IIdentityService
     private readonly ILogger<LocalIdentityService> _logger;
     private readonly ITokenService _tokenService; // JWT generation
     private readonly IRoleRepository _roleRepository;
+    private readonly IdentityDbContext _context;
 
     public LocalIdentityService(
         IUserRepository userRepository,
@@ -23,7 +27,8 @@ public class LocalIdentityService : IIdentityService
         IUnitOfWork unitOfWork,
         ILogger<LocalIdentityService> logger,
         ITokenService tokenService,
-        IRoleRepository roleRepository)
+        IRoleRepository roleRepository,
+        IdentityDbContext context)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
@@ -31,6 +36,7 @@ public class LocalIdentityService : IIdentityService
         _logger = logger;
         _tokenService = tokenService;
         _roleRepository = roleRepository;
+        _context = context;
     }
 
     public async Task<Result<Guid>> RegisterUserAsync(string email, string password, string firstName, string lastName, CancellationToken cancellationToken)
@@ -238,6 +244,58 @@ public class LocalIdentityService : IIdentityService
         catch (Exception ex)
         {
             return Result.Failure<IEnumerable<string>>(new Error("GetRoles.Exception", ex.Message));
+        }
+    }
+
+    public async Task<Result> SaveRefreshTokenAsync(Guid userId, RefreshToken refreshToken, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Critical fix for Concurrency Exception:
+            // Instead of loading the User and adding the token to its collection (which checks User version),
+            // we directly insert the RefreshToken into its own table.
+            // This bypasses the User entity version check entirely.
+            _context.ChangeTracker.Clear();
+
+            // Verify userId consistency (Safe-guard)
+            if (refreshToken.UserId != userId)
+            {
+                return Result.Failure(new Error("Token.Mismatch", "Token user ID mismatch."));
+            }
+
+            await _context.RefreshTokens.AddAsync(refreshToken, cancellationToken);
+            
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+             return Result.Failure(new Error("SaveRefreshToken.Exception", ex.Message));
+        }
+    }
+
+    public async Task<Result> RevokeRefreshTokenAsync(string token, string ipAddress, string reason, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var refreshToken = await _context.RefreshTokens
+                .FirstOrDefaultAsync(rt => rt.Token == token, cancellationToken);
+                
+            if (refreshToken == null) return Result.Failure(new Error("Token.NotFound", "Refresh token not found."));
+            
+            // Allow revoking already revoked tokens? Idempotency is good.
+            // But if it's already revoked, we just return success.
+            if (refreshToken.IsActive)
+            {
+                 refreshToken.Revoke(ipAddress, reason);
+                 await _unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+            
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(new Error("RevokeToken.Exception", ex.Message));
         }
     }
 }

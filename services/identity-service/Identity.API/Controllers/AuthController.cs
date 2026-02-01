@@ -1,6 +1,7 @@
 using EduPlatform.Shared.Kernel.Results;
 using Identity.Application.Commands.Login;
 using Identity.Application.Commands.RefreshToken;
+using Identity.Application.Commands.RevokeToken;
 using Identity.Application.Commands.RegisterStudent;
 using Identity.Application.Commands.RegisterTeacher;
 using Identity.Application.Commands.RegisterInstitution;
@@ -172,8 +173,24 @@ public class AuthController : ControllerBase
         }
         return Ok();
     }
+    [HttpPost("revoke-token")]
+    [AllowAnonymous]
+    public async Task<IActionResult> RevokeToken([FromBody] RevokeTokenRequest request)
+    {
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
+        // If token is empty, try to get from cookie? For now body is enough.
+        var command = new RevokeTokenCommand(request.Token, ipAddress);
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Error);
+        }
+
+        return Ok();
+    }
 }
 
-
 public record GoogleLoginRequest(string IdToken);
+public record RevokeTokenRequest(string Token);
 
