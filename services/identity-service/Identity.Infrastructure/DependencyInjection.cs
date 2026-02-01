@@ -16,9 +16,18 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Add DbContext
-        var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? "Host=localhost;Port=5432;Database=identity_db;Username=eduplatform;Password=eduplatform_secret_2024";
+        // Add DbContext - Build connection string from environment variables
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            var host = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
+            var port = Environment.GetEnvironmentVariable("POSTGRES_PORT") ?? "5432";
+            var database = Environment.GetEnvironmentVariable("POSTGRES_DB_IDENTITY") ?? "identity_db";
+            var username = Environment.GetEnvironmentVariable("POSTGRES_USER") ?? "eduplatform";
+            var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "eduplatform_secret";
+            connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password}";
+        }
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
         dataSourceBuilder.EnableDynamicJson();

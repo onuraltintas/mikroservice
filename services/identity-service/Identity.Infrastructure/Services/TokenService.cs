@@ -22,13 +22,20 @@ public class TokenService : ITokenService
     {
         try 
         {
-            var secretKey = _configuration["JWT_SECRET"] 
+            // Check environment variables first, then fallback to configuration
+            var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") 
+                            ?? _configuration["JWT_SECRET"] 
                             ?? throw new InvalidOperationException("JWT_SECRET is not configured.");
             
-            var issuer = _configuration["JWT_ISSUER"] ?? throw new InvalidOperationException("JWT_ISSUER is not configured.");
-            var audience = _configuration["JWT_AUDIENCE"] ?? throw new InvalidOperationException("JWT_AUDIENCE is not configured.");
-            var expiryMinutesStr = _configuration["JWT_EXPIRY_MINUTES"] 
-                                   ?? throw new InvalidOperationException("JWT_EXPIRY_MINUTES is not configured.");
+            var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") 
+                        ?? _configuration["JWT_ISSUER"] 
+                        ?? throw new InvalidOperationException("JWT_ISSUER is not configured.");
+            var audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") 
+                          ?? _configuration["JWT_AUDIENCE"] 
+                          ?? throw new InvalidOperationException("JWT_AUDIENCE is not configured.");
+            var expiryMinutesStr = Environment.GetEnvironmentVariable("JWT_EXPIRY_MINUTES") 
+                                  ?? _configuration["JWT_EXPIRY_MINUTES"]
+                                  ?? throw new InvalidOperationException("JWT_EXPIRY_MINUTES is not configured.");
             int.TryParse(expiryMinutesStr, out var expiryMinutes);
             if (expiryMinutes == 0) expiryMinutes = 30; // Safety fallback for parse error
 
@@ -46,7 +53,8 @@ public class TokenService : ITokenService
             {
                 foreach (var userRole in user.Roles)
                 {
-                    if (userRole.Role != null)
+                    // Skip deleted roles
+                    if (userRole.Role != null && !userRole.Role.IsDeleted)
                     {
                         claims.Add(new Claim(ClaimTypes.Role, userRole.Role.Name));
 
@@ -81,8 +89,9 @@ public class TokenService : ITokenService
 
     public RefreshToken GenerateRefreshToken(Guid userId, string ipAddress)
     {
-        var expiryDaysStr = _configuration["JWT_REFRESH_TOKEN_EXPIRY_DAYS"] 
-                            ?? throw new InvalidOperationException("JWT_REFRESH_TOKEN_EXPIRY_DAYS is not configured.");
+        var expiryDaysStr = Environment.GetEnvironmentVariable("JWT_REFRESH_TOKEN_EXPIRY_DAYS")
+                            ?? _configuration["JWT_REFRESH_TOKEN_EXPIRY_DAYS"]
+                            ?? "7"; // Default 7 days
         
         if (!int.TryParse(expiryDaysStr, out var expiryDays)) expiryDays = 7;
         

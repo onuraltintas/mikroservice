@@ -3,6 +3,7 @@ using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Identity.Application.Commands.Login;
 
@@ -12,17 +13,20 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
     private readonly IPasswordHasher _passwordHasher;
     private readonly ITokenService _tokenService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly Microsoft.Extensions.Logging.ILogger<LoginCommandHandler> _logger;
 
     public LoginCommandHandler(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
         ITokenService tokenService,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        Microsoft.Extensions.Logging.ILogger<LoginCommandHandler> logger)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     public async Task<Result<LoginResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -71,7 +75,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         catch (Exception ex)
         {
              // Log but don't fail login if DB recording fails in dev
-             Console.WriteLine($"Login recording failed: {ex.Message}");
+             _logger.LogError(ex, "Login recording failed");
         }
 
         return Result.Success(new LoginResponse(accessToken, refreshToken.Token));

@@ -32,7 +32,8 @@ public enum UserRole
     Parent = 3,
     InstitutionAdmin = 4,
     InstitutionOwner = 5,
-    SystemAdmin = 6
+    SystemAdmin = 6,
+    Editor = 7
 }
 
 /// <summary>

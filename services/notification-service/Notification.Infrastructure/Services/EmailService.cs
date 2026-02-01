@@ -20,8 +20,11 @@ public class EmailService : IEmailService
     {
         var email = new MimeMessage();
         
-        var fromEmail = _configuration["SMTP_FROM_EMAIL"] ?? _configuration["Email:From"] ?? "no-reply@eduplatform.com";
-        var fromName = _configuration["SMTP_FROM_NAME"] ?? _configuration["Email:FromName"] ?? "EduPlatform";
+        // Check environment variables first for security
+        var fromEmail = Environment.GetEnvironmentVariable("SMTP_FROM_EMAIL") 
+                        ?? _configuration["SMTP_FROM_EMAIL"] ?? _configuration["Email:From"] ?? "no-reply@eduplatform.com";
+        var fromName = Environment.GetEnvironmentVariable("SMTP_FROM_NAME") 
+                      ?? _configuration["SMTP_FROM_NAME"] ?? _configuration["Email:FromName"] ?? "EduPlatform";
         email.From.Add(new MailboxAddress(fromName, fromEmail));
         email.To.Add(MailboxAddress.Parse(to));
         email.Subject = subject;
@@ -29,11 +32,15 @@ public class EmailService : IEmailService
 
         using var smtp = new SmtpClient();
         
-        var host = _configuration["SMTP_HOST"] ?? _configuration["Email:Host"] ?? "localhost";
-        var portStr = _configuration["SMTP_PORT"] ?? _configuration["Email:Port"] ?? "1025";
+        var host = Environment.GetEnvironmentVariable("SMTP_HOST") 
+                   ?? _configuration["SMTP_HOST"] ?? _configuration["Email:Host"] ?? "localhost";
+        var portStr = Environment.GetEnvironmentVariable("SMTP_PORT") 
+                     ?? _configuration["SMTP_PORT"] ?? _configuration["Email:Port"] ?? "1025";
         var port = int.Parse(portStr);
-        var username = _configuration["SMTP_USERNAME"] ?? _configuration["Email:Username"];
-        var password = _configuration["SMTP_PASSWORD"] ?? _configuration["Email:Password"];
+        var username = Environment.GetEnvironmentVariable("SMTP_USERNAME") 
+                       ?? _configuration["SMTP_USERNAME"] ?? _configuration["Email:Username"];
+        var password = Environment.GetEnvironmentVariable("SMTP_PASSWORD") 
+                       ?? _configuration["SMTP_PASSWORD"] ?? _configuration["Email:Password"];
 
         // SSL/TLS için port 465, StartTLS için port 587
         SecureSocketOptions secureOption = port switch

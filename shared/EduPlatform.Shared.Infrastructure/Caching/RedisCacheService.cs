@@ -70,8 +70,19 @@ public static class RedisConfiguration
 {
     public static IServiceCollection AddRedisCache(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("Redis") 
-            ?? "localhost:6379,password=redis_secret_2024";
+        // Build connection string from environment variables for security
+        var connectionString = configuration.GetConnectionString("Redis");
+        
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            var host = Environment.GetEnvironmentVariable("REDIS_HOST") ?? "localhost";
+            var port = Environment.GetEnvironmentVariable("REDIS_PORT") ?? "6379";
+            var password = Environment.GetEnvironmentVariable("REDIS_PASSWORD");
+            
+            connectionString = string.IsNullOrEmpty(password) 
+                ? $"{host}:{port}" 
+                : $"{host}:{port},password={password}";
+        }
 
         services.AddStackExchangeRedisCache(options =>
         {
