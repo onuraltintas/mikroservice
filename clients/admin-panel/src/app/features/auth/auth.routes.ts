@@ -2,6 +2,10 @@ import { Routes } from '@angular/router';
 
 export const AUTH_ROUTES: Routes = [
     {
+        path: 'support',
+        loadComponent: () => import('./support/support.component').then(m => m.SupportComponent)
+    },
+    {
         path: '',
         redirectTo: '/auth/login',
         pathMatch: 'full'
@@ -25,5 +29,21 @@ export const AUTH_ROUTES: Routes = [
     {
         path: 'register/institution',
         loadComponent: () => import('./register/institution/institution-register.component').then(m => m.InstitutionRegisterComponent)
+    },
+    {
+        path: 'register/parent',
+        loadComponent: () => import('./register/parent/parent-register.component').then(m => m.ParentRegisterComponent)
+    },
+    {
+        path: 'confirm-email',
+        loadComponent: () => import('./confirm-email/confirm-email.component').then(m => m.ConfirmEmailComponent)
+    },
+    {
+        path: 'forgot-password',
+        loadComponent: () => import('./forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
+    },
+    {
+        path: 'reset-password',
+        loadComponent: () => import('./reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
     }
 ];

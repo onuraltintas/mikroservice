@@ -1,10 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
 import { ToasterService } from '../../../../core/services/toaster.service';
-import { strongPasswordValidator } from '../../../../core/validators/password.validator';
+import { HttpClient } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { passwordMatchValidator, strongPasswordValidator } from '../../../../core/validators/password.validator';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
@@ -37,8 +37,9 @@ export class StudentRegisterComponent {
         firstName: ['', Validators.required],
         lastName: ['', Validators.required],
         email: ['', [Validators.required, Validators.email]],
-        password: ['', [Validators.required, strongPasswordValidator()]]
-    });
+        password: ['', [Validators.required, strongPasswordValidator()]],
+        confirmPassword: ['', Validators.required]
+    }, { validators: passwordMatchValidator });
 
     async onSubmit() {
         if (this.form.invalid) return;
@@ -58,7 +59,7 @@ export class StudentRegisterComponent {
 
         this.http.post(`${environment.apiUrl}/auth/register-student`, payload).subscribe({
             next: () => {
-                this.toaster.success('Öğrenci kaydınız başarıyla oluşturuldu.', 'Giriş Yap');
+                this.toaster.success('Kayıt işleminiz başarıyla tamamlandı. E-posta adresinizi doğrulamak için size gönderdiğimiz onay linkine tıklayın.', 'Doğrulama Gerekli');
                 this.router.navigate(['/auth/login'], { queryParams: { registered: 'true', role: 'student' } });
             },
             error: (err) => {

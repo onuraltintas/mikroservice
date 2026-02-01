@@ -5,6 +5,9 @@ import { AuthService } from '../../../../core/auth/auth.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { LayoutService } from '../../services/layout.service';
 import { DarkModeService } from '../../../../core/services/dark-mode.service';
+import { NotificationService } from '../../../../core/services/notification.service';
+import { formatDistanceToNow } from 'date-fns';
+import { tr } from 'date-fns/locale';
 
 @Component({
   selector: 'app-header',
@@ -18,6 +21,9 @@ export class HeaderComponent {
   private toaster = inject(ToasterService);
   layoutService = inject(LayoutService);
   darkModeService = inject(DarkModeService);
+  notificationService = inject(NotificationService);
+
+  showNotificationMenu = signal(false);
 
   showUserMenu = signal(false);
   user = this.authService.userProfile;
@@ -37,6 +43,38 @@ export class HeaderComponent {
     if (!target.closest('.user-menu-container')) {
       this.showUserMenu.set(false);
     }
+    if (!target.closest('.notification-container')) {
+      this.showNotificationMenu.set(false);
+    }
+  }
+
+  get unreadCount() {
+    return this.notificationService.unreadCount();
+  }
+
+  get notifications() {
+    return this.notificationService.notifications().slice(0, 5);
+  }
+
+  formatTime(date: Date) {
+    return formatDistanceToNow(new Date(date), { addSuffix: true, locale: tr });
+  }
+
+  toggleNotificationMenu() {
+    this.showNotificationMenu.update(v => !v);
+  }
+
+  markAsRead(id: string, event: Event) {
+    event.stopPropagation();
+    this.notificationService.markAsRead(id).subscribe(() => {
+      this.notificationService.fetchNotifications();
+    });
+  }
+
+  markAllAsRead() {
+    this.notificationService.markAllAsRead().subscribe(() => {
+      this.notificationService.fetchNotifications();
+    });
   }
 
   async logout() {

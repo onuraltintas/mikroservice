@@ -16,10 +16,64 @@
 
   <!-- Right Actions -->
   <div class="flex items-center gap-2">
-    <!-- Notifications (Example) -->
-    <button mat-icon-button class="!text-gray-500">
-      <mat-icon>notifications_none</mat-icon>
+    <!-- Notifications -->
+    <button mat-icon-button [matMenuTriggerFor]="notificationMenu" class="!text-gray-500">
+      <mat-icon [matBadge]="unreadCount" [matBadgeHidden]="unreadCount === 0" matBadgeColor="warn" matBadgeSize="small">
+        notifications_none
+      </mat-icon>
     </button>
+
+    <mat-menu #notificationMenu="matMenu" xPosition="before" class="!mt-2 !rounded-2xl !min-w-[320px] !max-w-[400px]">
+      <div class="px-4 py-3 border-b flex items-center justify-between border-gray-100 dark:border-gray-800">
+        <span class="font-bold text-gray-900 dark:text-white">Bildirimler</span>
+        <button *ngIf="unreadCount > 0" mat-button color="primary" class="!text-xs !h-auto !p-0"
+          (click)="markAllAsRead()">
+          Tümünü Okundu İşaretle
+        </button>
+      </div>
+
+      <div class="max-h-[400px] overflow-y-auto">
+        <div *ngIf="notifications.length === 0" class="px-6 py-10 text-center text-gray-400">
+          <mat-icon class="!w-12 !h-12 !text-[48px] mb-2 opacity-20">notifications_off</mat-icon>
+          <p class="text-sm">Henüz bildiriminiz yok</p>
+        </div>
+
+        <button mat-menu-item *ngFor="let n of notifications" [class.bg-blue-50]="!n.isRead"
+          [class.dark:bg-blue-900]="!n.isRead"
+          class="!h-auto !py-3 !px-4 border-b border-gray-50 dark:border-gray-800 last:border-0 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-colors">
+          <div class="flex gap-3 items-start">
+            <div [ngClass]="{
+              'bg-blue-100 text-blue-600': n.type === 'SupportRequest',
+              'bg-orange-100 text-orange-600': n.type === 'System',
+              'bg-green-100 text-green-600': n.type === 'Info'
+            }" class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
+              <mat-icon class="!w-5 !h-5 !text-[20px]">{{ n.type === 'SupportRequest' ? 'support_agent' : 'info'
+                }}</mat-icon>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[14px] font-bold text-gray-900 dark:text-white line-clamp-1 mb-0.5">{{ n.title }}</p>
+              <p class="text-[13px] text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed mb-1">{{ n.message }}
+              </p>
+              <span class="text-[11px] text-gray-400 flex items-center gap-1">
+                <mat-icon class="!w-3 !h-3 !text-[12px]">schedule</mat-icon>
+                {{ formatTime(n.createdAt) }}
+              </span>
+            </div>
+            <button *ngIf="!n.isRead" mat-icon-button (click)="markAsRead(n.id, $event)"
+              class="!w-6 !h-6 !text-blue-500 shrink-0">
+              <mat-icon class="!w-4 !h-4 !text-[16px]">done</mat-icon>
+            </button>
+          </div>
+        </button>
+      </div>
+
+      <div class="p-2 border-t border-gray-100 dark:border-gray-800 text-center">
+        <button mat-button class="w-full !text-gray-500 hover:!text-primary-600 !text-xs"
+          routerLink="/dashboard/notifications">
+          Tüm Bildirimleri Gör
+        </button>
+      </div>
+    </mat-menu>
 
     <!-- User Profile Dropdown -->
     <button mat-button [matMenuTriggerFor]="userMenu"
@@ -27,26 +81,32 @@
       <div class="flex items-center gap-2">
         <div
           class="w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-sm">
-          A
+          {{ getInitial() }}
         </div>
-        <span class="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-200">Admin User</span>
+        <span class="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-200">
+          {{ userProfile?.firstName }} {{ userProfile?.lastName }}
+        </span>
         <mat-icon class="!w-4 !h-4 !text-sm flex items-center justify-center !text-gray-400">expand_more</mat-icon>
       </div>
     </button>
 
     <mat-menu #userMenu="matMenu" xPosition="before" class="mt-2">
+      <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+        <p class="text-xs text-gray-400 mb-0.5">Olarak giriş yapıldı:</p>
+        <p class="text-sm font-bold text-gray-900 dark:text-white truncate">{{ userProfile?.email }}</p>
+      </div>
       <button mat-menu-item>
         <mat-icon>account_circle</mat-icon>
-        <span>Profile</span>
+        <span>Profilim</span>
       </button>
       <button mat-menu-item>
         <mat-icon>settings</mat-icon>
-        <span>Settings</span>
+        <span>Ayarlar</span>
       </button>
       <mat-divider></mat-divider>
-      <button mat-menu-item class="!text-red-500">
+      <button mat-menu-item class="!text-red-500" (click)="onLogout()">
         <mat-icon class="!text-red-500">logout</mat-icon>
-        <span>Sign Out</span>
+        <span>Çıkış Yap</span>
       </button>
     </mat-menu>
   </div>

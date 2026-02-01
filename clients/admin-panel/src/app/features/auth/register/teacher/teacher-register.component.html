@@ -37,7 +37,7 @@
     </div>
 
     <!-- Right Side: Form -->
-    <div class="w-full lg:w-7/12 overflow-y-auto h-screen flex flex-col">
+    <div class="w-full lg:w-7/12 overflow-y-auto h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors">
 
         <!-- Mobile Header -->
         <div
@@ -63,9 +63,10 @@
 
                 <div class="mb-8">
                     <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Öğretmen Hesabı 🎓</h2>
-                    <p class="text-gray-500">
+                    <p class="text-gray-500 dark:text-gray-400">
                         Zaten hesabınız var mı?
-                        <a routerLink="/auth/login" class="text-purple-600 font-bold hover:underline">Giriş Yap</a>
+                        <a routerLink="/auth/login"
+                            class="text-purple-600 dark:text-purple-500 font-bold hover:underline">Giriş Yap</a>
                     </p>
                 </div>
 
@@ -133,8 +134,22 @@
                         </mat-error>
                     </mat-form-field>
 
+                    <mat-form-field appearance="outline" class="w-full">
+                        <mat-label>Şifreyi Onayla</mat-label>
+                        <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="confirmPassword">
+                        <mat-icon matPrefix class="text-gray-400 mr-2">lock_outline</mat-icon>
+                        <button mat-icon-button matSuffix (click)="togglePassword($event)" type="button">
+                            <mat-icon>{{hidePassword() ? 'visibility_off' : 'visibility'}}</mat-icon>
+                        </button>
+
+                        <mat-error *ngIf="form.get('confirmPassword')?.hasError('required')">Şifre onayı
+                            zorunludur</mat-error>
+                        <mat-error *ngIf="form.get('confirmPassword')?.hasError('passwordMismatch')">Şifreler
+                            eşleşmiyor</mat-error>
+                    </mat-form-field>
+
                     <div *ngIf="errorMessage()"
-                        class="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl text-sm flex items-start gap-3">
+                        class="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 p-4 rounded-xl text-sm flex items-start gap-3">
                         <mat-icon class="text-red-500">error_outline</mat-icon>
                         <span>{{ errorMessage() }}</span>
                     </div>

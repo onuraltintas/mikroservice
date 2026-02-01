@@ -13,6 +13,7 @@ public class NotificationDbContext : DbContext, INotificationDbContext
 
     public DbSet<NotificationItem> Notifications { get; set; }
     public DbSet<EmailTemplate> EmailTemplates { get; set; }
+    public DbSet<SupportRequest> SupportRequests { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,6 +26,9 @@ public class NotificationDbContext : DbContext, INotificationDbContext
         // Email Template
         modelBuilder.Entity<EmailTemplate>().HasKey(x => x.Id);
         modelBuilder.Entity<EmailTemplate>().HasIndex(x => x.TemplateName).IsUnique();
+
+        // Support Request
+        modelBuilder.Entity<SupportRequest>().HasKey(x => x.Id);
 
         // Seed data is now handled by NotificationDbContextSeeder via external files.
         // See: Infrastructure/Seed/seeds.json

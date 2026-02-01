@@ -143,7 +143,8 @@
                             Hatırla</span>
                     </label>
 
-                    <a href="#" class="text-sm font-semibold text-blue-600 hover:text-blue-700">Şifremi Unuttum?</a>
+                    <a routerLink="/auth/forgot-password"
+                        class="text-sm font-semibold text-blue-600 hover:text-blue-700">Şifremi Unuttum?</a>
                 </div>
 
                 <button mat-flat-button color="primary" type="submit" [disabled]="isLoading() || !email || !password"
@@ -160,16 +161,35 @@
                     <div class="h-px bg-gray-200 dark:bg-gray-700 flex-1"></div>
                 </div>
 
-                <div class="w-full flex justify-center overflow-x-hidden">
+                <div class="w-full flex justify-center overflow-x-hidden google-btn-wrapper">
                     <asl-google-signin-button type="standard" size="large" [width]="320"></asl-google-signin-button>
                 </div>
 
             </form>
 
             <div *ngIf="errorMessage()"
-                class="mt-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 text-red-600 dark:text-red-400 flex items-center gap-3 animate-pulse">
-                <mat-icon>error_outline</mat-icon>
-                <span class="text-sm font-medium">{{ errorMessage() }}</span>
+                class="mt-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 text-red-600 dark:text-red-400 flex flex-col gap-2 relative overflow-hidden">
+                <div class="flex items-center gap-3">
+                    <mat-icon>error_outline</mat-icon>
+                    <span class="text-sm font-medium">{{ errorMessage() }}</span>
+                </div>
+                <!-- Resend Verification Link -->
+                <div *ngIf="showResendLink()" class="pl-9 mt-1">
+                    <button type="button" (click)="resendVerification()" [disabled]="resendingEmail()"
+                        class="text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2">
+                        <mat-spinner *ngIf="resendingEmail()" diameter="16"></mat-spinner>
+                        <span>Tekrar doğrulama e-postası gönder</span>
+                    </button>
+                </div>
+
+                <!-- Support Link for Inactive Users -->
+                <div *ngIf="showSupportLink()" class="pl-9 mt-1">
+                    <button type="button" (click)="navigateToSupport()"
+                        class="text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2 bg-transparent border-none p-0 cursor-pointer">
+                        <span>Yardım ve Destek Al</span>
+                        <mat-icon class="!w-4 !h-4 !text-[16px]">open_in_new</mat-icon>
+                    </button>
+                </div>
             </div>
 
             <div class="mt-auto pt-8 text-center text-sm text-gray-500 dark:text-gray-400">

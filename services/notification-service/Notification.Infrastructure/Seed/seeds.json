@@ -12,5 +12,33 @@
         "Category": "Coaching",
         "Subject": "Yeni Bir Kurs Atandı: {{CourseName}}",
         "HtmlFile": "Templates/Coaching/Coaching_NewCourse.html"
+    },
+    {
+        "Id": "33333333-3333-3333-3333-333333333333",
+        "TemplateName": "Auth_VerifyEmail",
+        "Category": "Auth",
+        "Subject": "E-posta Adresinizi Doğrulayın",
+        "HtmlFile": "Templates/Auth/Auth_VerifyEmail.html"
+    },
+    {
+        "Id": "44444444-4444-4444-4444-444444444444",
+        "TemplateName": "Auth_DirectCreate",
+        "Category": "Auth",
+        "Subject": "EduPlatform Hesabınız Oluşturuldu! 🔑",
+        "HtmlFile": "Templates/Auth/Auth_DirectCreate.html"
+    },
+    {
+        "Id": "55555555-5555-5555-5555-555555555555",
+        "TemplateName": "Auth_SupportReceived",
+        "Category": "Auth",
+        "Subject": "Destek Talebiniz Alındı ✅",
+        "HtmlFile": "Templates/Auth/Auth_SupportReceived.html"
+    },
+    {
+        "Id": "66666666-6666-6666-6666-666666666666",
+        "TemplateName": "Auth_ForgotPassword",
+        "Category": "Auth",
+        "Subject": "Şifre Sıfırlama Talebi 🔐",
+        "HtmlFile": "Templates/Auth/Auth_ForgotPassword.html"
     }
 ]

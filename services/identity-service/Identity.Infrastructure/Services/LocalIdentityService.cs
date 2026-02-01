@@ -179,6 +179,7 @@ public class LocalIdentityService : IIdentityService
         // 3. Create User
         var userId = Guid.NewGuid();
         var user = User.Create(userId, email, firstName, lastName);
+        user.ConfirmEmail();
         
         if (!string.IsNullOrEmpty(phoneNumber))
         {

@@ -77,26 +77,24 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
 
         try
         {
-            // Update Phone if provided (Fetching user needed or IdentityService update)
-            if (request.Phone != null)
+            var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+            if (user != null) 
             {
-                var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-                if (user != null) user.SetPhoneNumber(request.Phone);
+                if (request.Phone != null) user.SetPhoneNumber(request.Phone);
+                user.GenerateEmailVerificationToken();
             }
 
             // await _userRepository.AddAsync(user, cancellationToken); // REMOVED: User already exists
             await _studentRepository.AddAsync(student, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            // Publish Event for Notification Service
-            await _publishEndpoint.Publish(new UserCreatedEvent(
+            // Publish Event for Notification Service (Verification)
+            await _publishEndpoint.Publish(new UserRegisteredEvent(
                 userId,
                 request.Email,
                 request.FirstName,
                 request.LastName,
-                "Student",
-                "********", 
-                DateTime.UtcNow
+                user?.EmailVerificationToken ?? ""
             ), cancellationToken);
 
             return Result.Success(student.Id);

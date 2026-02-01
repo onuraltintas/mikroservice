@@ -136,11 +136,12 @@ services:
       - RabbitMQ__Host=rabbitmq
       - RabbitMQ__Username=${RABBITMQ_DEFAULT_USER}
       - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS}
-      - Email__Host=mailcatcher
-      - Email__Port=1025
+      - Email__Host=${SMTP_HOST}
+      - Email__Port=${SMTP_PORT}
       - Email__From=${SMTP_FROM_EMAIL}
-      - Email__Username=
-      - Email__Password=
+      - Email__Username=${SMTP_USERNAME}
+      - Email__Password=${SMTP_PASSWORD}
+      - Email__FromName=${SMTP_FROM_NAME}
     ports:
       - "5003:8080"
     depends_on:

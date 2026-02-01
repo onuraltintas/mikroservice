@@ -13,5 +13,9 @@ export const DASHBOARD_ROUTES: Routes = [
     {
         path: 'identity',
         loadChildren: () => import('../identity/identity.routes').then(m => m.IDENTITY_ROUTES)
+    },
+    {
+        path: 'notifications',
+        loadChildren: () => import('../notifications/notifications.routes').then(m => m.NOTIFICATION_ROUTES)
     }
 ];

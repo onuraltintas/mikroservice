@@ -3,6 +3,8 @@ using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using MediatR;
+using MassTransit;
+using EduPlatform.Shared.Contracts.Events.Identity;
 
 namespace Identity.Application.Commands.RegisterInstitution;
 
@@ -12,17 +14,20 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
     private readonly IUserRepository _userRepository;
     private readonly IInstitutionRepository _institutionRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IPublishEndpoint _publishEndpoint;
 
     public RegisterInstitutionCommandHandler(
         IIdentityService identityService,
         IUserRepository userRepository,
         IInstitutionRepository institutionRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IPublishEndpoint publishEndpoint)
     {
         _identityService = identityService;
         _userRepository = userRepository;
         _institutionRepository = institutionRepository;
         _unitOfWork = unitOfWork;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<Result<Guid>> Handle(RegisterInstitutionCommand request, CancellationToken cancellationToken)
@@ -49,10 +54,11 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
 
         // 3. Create Domain Entities
         // Update Phone if needed
-        if (request.Phone != null)
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        if (user != null) 
         {
-            var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-            if (user != null) user.SetPhoneNumber(request.Phone);
+            if (request.Phone != null) user.SetPhoneNumber(request.Phone);
+            user.GenerateEmailVerificationToken();
         }
 
         var institution = Institution.Create(
@@ -72,10 +78,17 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
             // await _userRepository.AddAsync(user, cancellationToken); // Removed
             await _institutionRepository.AddAsync(institution, cancellationToken);
             await _institutionRepository.AddAdminAsync(admin, cancellationToken);
-            await _institutionRepository.AddAsync(institution, cancellationToken);
-            await _institutionRepository.AddAdminAsync(admin, cancellationToken);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Publish Event for Notification Service (Verification)
+            await _publishEndpoint.Publish(new UserRegisteredEvent(
+                userId,
+                request.Email,
+                request.FirstName,
+                request.LastName,
+                user?.EmailVerificationToken ?? ""
+            ), cancellationToken);
 
             return Result.Success(institution.Id);
         }

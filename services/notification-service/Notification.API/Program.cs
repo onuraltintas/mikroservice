@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Notification.API.Hubs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.SignalR;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +24,11 @@ builder.Services.AddScoped<INotificationDbContext>(provider =>
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<INotificationService, Notification.API.Services.NotificationManager>();
+builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
+builder.Services.AddHttpClient<Notification.Application.Interfaces.IIdentityInternalService, Notification.Infrastructure.ExternalServices.IdentityInternalService>();
+
+// MediatR
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Notification.Application.Interfaces.INotificationDbContext).Assembly));
 
 // SignalR
 builder.Services.AddSignalR();
@@ -42,7 +49,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuer = false, 
             ValidateAudience = false,
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
+            ClockSkew = TimeSpan.Zero,
+            NameClaimType = "sub",
+            RoleClaimType = ClaimTypes.Role
         };
 
         options.Events = new JwtBearerEvents
@@ -66,7 +75,11 @@ builder.Services.AddAuthorization();
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<InvitationCreatedConsumer>();
+    x.AddConsumer<UserRegisteredConsumer>();
+    x.AddConsumer<UserEmailConfirmedConsumer>();
     x.AddConsumer<UserCreatedConsumer>();
+    x.AddConsumer<SendNotificationConsumer>();
+    x.AddConsumer<UserForgotPasswordConsumer>();
 
     x.UsingRabbitMq((context, cfg) =>
     {
@@ -76,16 +89,34 @@ builder.Services.AddMassTransit(x =>
             h.Password(builder.Configuration["RabbitMQ:Password"] ?? "guest");
         });
 
-        // Queue name: invitation-created
         cfg.ReceiveEndpoint("invitation-created", e =>
         {
             e.ConfigureConsumer<InvitationCreatedConsumer>(context);
         });
 
-        // Queue name: user-created
+        cfg.ReceiveEndpoint("user-registered", e =>
+        {
+            e.ConfigureConsumer<UserRegisteredConsumer>(context);
+        });
+
+        cfg.ReceiveEndpoint("user-email-confirmed", e =>
+        {
+            e.ConfigureConsumer<UserEmailConfirmedConsumer>(context);
+        });
+
         cfg.ReceiveEndpoint("user-created", e =>
         {
             e.ConfigureConsumer<UserCreatedConsumer>(context);
+        });
+
+        cfg.ReceiveEndpoint("send-notification", e =>
+        {
+            e.ConfigureConsumer<SendNotificationConsumer>(context);
+        });
+
+        cfg.ReceiveEndpoint("user-forgot-password", e =>
+        {
+            e.ConfigureConsumer<UserForgotPasswordConsumer>(context);
         });
     });
 });
@@ -111,3 +142,13 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+public partial class Program { }
+
+public class CustomUserIdProvider : IUserIdProvider
+{
+    public string? GetUserId(HubConnectionContext connection)
+    {
+        return connection.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+            ?? connection.User?.FindFirst("sub")?.Value;
+    }
+}

@@ -59,28 +59,6 @@ namespace Notification.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("EmailTemplates");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            Body = "<div style='font-family: Arial;'><h1>EduPlatform</h1><p>Merhaba <strong>{{FirstName}} {{LastName}}</strong>,</p><p>Hesabınız <strong>{{Role}}</strong> rolüyle oluşturuldu.</p><p>Şifreniz: <b>{{TemporaryPassword}}</b></p><br><a href='http://localhost:4200/auth/login'>Giriş Yap</a></div>",
-                            Category = "Auth",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            Subject = "Hoş Geldiniz, {{FirstName}}! 🚀",
-                            TemplateName = "Auth_Welcome"
-                        },
-                        new
-                        {
-                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
-                            Body = "<div style='font-family: Arial;'><h2>Yeni Kurs Bildirimi</h2><p>Merhaba {{FirstName}},</p><p>Koçunuz size yeni bir kurs atadı: <strong>{{CourseName}}</strong>.</p></div>",
-                            Category = "Coaching",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            Subject = "Yeni Bir Kurs Atandı: {{CourseName}}",
-                            TemplateName = "Coaching_NewCourse"
-                        });
                 });
 
             modelBuilder.Entity("Notification.Domain.Entities.NotificationItem", b =>
@@ -116,6 +94,58 @@ namespace Notification.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("Notification.Domain.Entities.SupportRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AdminNote")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsProcessed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SupportRequests");
                 });
 #pragma warning restore 612, 618
         }

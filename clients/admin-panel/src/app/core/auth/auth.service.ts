@@ -163,6 +163,23 @@ export class AuthService {
         return false;
     }
 
+    async confirmEmail(userId: string, token: string): Promise<any> {
+        return firstValueFrom(
+            this.httpClient.post<any>(`${environment.apiUrl}/auth/confirm-email`, {
+                userId,
+                token
+            })
+        );
+    }
+
+    async resendVerificationEmail(email: string): Promise<any> {
+        return firstValueFrom(
+            this.httpClient.post<any>(`${environment.apiUrl}/auth/resend-verification-email`, {
+                email
+            })
+        );
+    }
+
     logout() {
         this.oauthService.logOut();
         if (isPlatformBrowser(this.platformId)) {

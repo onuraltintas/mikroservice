@@ -6,3 +6,15 @@
     display: block;
     width: 100%;
 }
+
+.google-btn-wrapper {
+    ::ng-deep {
+        asl-google-signin-button {
+            display: flex;
+            justify-content: center;
+            transform: scale(1.2); // Google butonu standart 40px'tir, 1.2 scale ile tam 48px olur
+            transform-origin: center;
+            margin: 10px 0;
+        }
+    }
+}

@@ -231,4 +231,13 @@ export class IdentityService {
     updateRolePermissions(roleId: string, permissions: string[]) {
         return this.http.put(`${this.rolesUrl}/${roleId}/permissions`, { permissions });
     }
+
+    // Password Reset Methods
+    forgotPassword(email: string) {
+        return this.http.post(`${environment.apiUrl}/auth/forgot-password`, { email });
+    }
+
+    resetPassword(email: string, token: string, newPassword: string) {
+        return this.http.post(`${environment.apiUrl}/auth/reset-password`, { email, token, newPassword });
+    }
 }

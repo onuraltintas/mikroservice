@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Destek Talebiniz Alındı</title>
+    <style>
+        body {
+            font-family: 'Outfit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #334155;
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+        }
+
+        .wrapper {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #f8fafc;
+            padding: 40px 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 24px;
+            overflow: hidden;
+            shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            padding: 40px;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .icon-box {
+            background: rgba(255, 255, 255, 0.1);
+            width: 64px;
+            height: 64px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 32px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 16px;
+        }
+
+        .description {
+            font-size: 16px;
+            color: #64748b;
+            margin-bottom: 32px;
+        }
+
+        .ticket-info {
+            background-color: #f1f5f9;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .info-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .info-value {
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        .footer {
+            padding: 32px;
+            text-align: center;
+            background-color: #f8fafc;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <div class="icon-box">✉️</div>
+                <h1 style="margin: 0; font-size: 28px; font-weight: 700;">EduPlatform Destek</h1>
+            </div>
+
+            <div class="content">
+                <div class="title">Merhaba {{FirstName}},</div>
+                <div class="description">
+                    Destek talebiniz başarıyla bize ulaştı. Ekibimiz sorununuzu incelemeye başladı. En kısa sürede
+                    (genellikle 24 saat içinde) size bu e-posta adresi üzerinden dönüş yapacağız.
+                </div>
+
+                <div class="ticket-info">
+                    <div
+                        style="font-weight: 700; margin-bottom: 16px; color: #1e293b; font-size: 14px; text-transform: uppercase;">
+                        Talep Özeti</div>
+                    <div class="info-row">
+                        <span class="info-label">Konu:</span>
+                        <span class="info-value">{{Subject}}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Tarih:</span>
+                        <span class="info-value">{{Date}}</span>
+                    </div>
+                </div>
+
+                <p style="font-size: 14px; color: #94a3b8; margin-top: 24px;">
+                    Bu otomatik bir e-postadır, lütfen bu adrese yanıt vermeyiniz. Yeni bir bilgi iletmek isterseniz
+                    destek ekibimiz size ulaştığında yanıtlayabilirsiniz.
+                </p>
+            </div>
+
+            <div class="footer">
+                <div style="font-weight: 600; margin-bottom: 8px;">EduPlatform Yönetim Sistemi</div>
+                &copy; 2026 EduPlatform INC.
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -21,6 +21,7 @@ export class SidenavComponent {
 
   menuItems = signal<MenuItem[]>([
     { icon: 'dashboard', label: 'Dashboard', route: '/dashboard' },
+    { icon: 'notifications', label: 'Notifications', route: '/dashboard/notifications' },
     { icon: 'people', label: 'Identity', route: '/identity' },
     { icon: 'school', label: 'Coaching', route: '/coaching' },
     { icon: 'settings', label: 'Settings', route: '/settings' },
