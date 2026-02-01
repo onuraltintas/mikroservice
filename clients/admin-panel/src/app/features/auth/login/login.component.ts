@@ -52,7 +52,6 @@ export class LoginComponent {
     constructor() {
         // Listen for Google Login
         this.socialAuthService.authState.subscribe((user) => {
-            console.log('Google User:', user);
             if (user && user.idToken) {
                 this.handleGoogleLogin(user.idToken);
             }
@@ -128,7 +127,6 @@ export class LoginComponent {
     }
 
     navigateToSupport() {
-        console.log('Navigating to support page...');
         this.router.navigate(['/auth/support']);
     }
 }

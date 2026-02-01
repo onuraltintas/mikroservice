@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Notification.Application.Commands.SubmitSupportRequest;
 using Notification.Application.Interfaces;
 
@@ -9,11 +10,13 @@ public class IdentityInternalService : IIdentityInternalService
 {
     private readonly HttpClient _httpClient;
     private readonly string _baseUrl;
+    private readonly ILogger<IdentityInternalService> _logger;
 
-    public IdentityInternalService(HttpClient httpClient, IConfiguration configuration)
+    public IdentityInternalService(HttpClient httpClient, IConfiguration configuration, ILogger<IdentityInternalService> logger)
     {
         _httpClient = httpClient;
         _baseUrl = configuration["Services:IdentityService"] ?? "http://localhost:5001";
+        _logger = logger;
     }
 
     public async Task ForwardSupportRequestAsync(SubmitSupportRequestCommand request, Guid supportRequestId)
@@ -35,7 +38,7 @@ public class IdentityInternalService : IIdentityInternalService
         catch (Exception ex)
         {
             // Log error but don't fail the main process
-            Console.WriteLine($"Error forwarding support request to Identity Service: {ex.Message}");
+            _logger.LogError(ex, "Error forwarding support request to Identity Service");
         }
     }
 }

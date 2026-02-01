@@ -26,16 +26,28 @@ public static class IdentitySeeder
             logger.LogInformation("🌱 Seeding Starting...");
 
             // 1. Seed Roles (Dynamic)
-            if (!await context.Roles.AnyAsync())
-            {
-                logger.LogInformation("Creating default roles...");
-                var roles = Enum.GetValues<Identity.Domain.Enums.UserRole>()
-                    .Select(r => Role.Create(r.ToString(), $"Default role for {r}", isSystemRole: true))
-                    .ToList();
+            // 1. Seed Roles (Dynamic Update)
+            logger.LogInformation("Checking for new roles...");
+            var existingRoles = await context.Roles.ToDictionaryAsync(r => r.Name);
+            var enumRoles = Enum.GetValues<Identity.Domain.Enums.UserRole>();
+            var newRolesAdded = false;
 
-                await context.Roles.AddRangeAsync(roles);
+            foreach (var r in enumRoles)
+            {
+                var roleName = r.ToString();
+                if (!existingRoles.ContainsKey(roleName))
+                {
+                    logger.LogInformation($"Adding new role: {roleName}");
+                    var newRole = Role.Create(roleName, $"Default role for {roleName}", isSystemRole: true);
+                    await context.Roles.AddAsync(newRole);
+                    newRolesAdded = true;
+                }
+            }
+
+            if (newRolesAdded)
+            {
                 await context.SaveChangesAsync();
-                logger.LogInformation("✅ Roles created.");
+                logger.LogInformation("✅ New roles added.");
             }
             
             // Re-fetch roles to get Ids
@@ -117,9 +129,19 @@ public static class IdentitySeeder
 
             logger.LogInformation("⚡ No users found. Starting seed process...");
 
-            // Get Passwords from Env
-            var adminPass = configuration["TEST_ADMIN_PASSWORD"] ?? "VForVan_40!";
-            var defaultPass = configuration["TEST_DEFAULT_PASSWORD"] ?? "VForVan_40!";
+            // Get Passwords from Env (Must be set in .env)
+            var adminPass = Environment.GetEnvironmentVariable("TEST_ADMIN_PASSWORD") 
+                           ?? configuration["TEST_ADMIN_PASSWORD"];
+            
+            var defaultPass = Environment.GetEnvironmentVariable("TEST_DEFAULT_PASSWORD") 
+                           ?? configuration["TEST_DEFAULT_PASSWORD"];
+
+            if (string.IsNullOrEmpty(adminPass) || string.IsNullOrEmpty(defaultPass))
+            {
+                // Safety check: Don't seed if passwords are missing
+                logger.LogWarning("⚠️ TEST_ADMIN_PASSWORD or TEST_DEFAULT_PASSWORD not found in environment. Skipping user seeding.");
+                return;
+            }
 
             // 3. Define Users to Seed
             var usersToSeed = new[]

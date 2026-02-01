@@ -8,6 +8,14 @@ using Identity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using MassTransit;
+using DotNetEnv;
+
+// Load .env file from solution root
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", ".env");
+if (File.Exists(envPath))
+{
+    Env.Load(envPath);
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,10 +44,17 @@ builder.Services.AddMassTransit(x =>
 {
     x.UsingRabbitMq((context, cfg) =>
     {
-        cfg.Host(builder.Configuration["RabbitMQ:Host"], "/", h =>
+        var rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST") 
+                         ?? builder.Configuration["RabbitMQ:Host"] ?? "localhost";
+        var rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_DEFAULT_USER") 
+                         ?? builder.Configuration["RabbitMQ:Username"] ?? "guest";
+        var rabbitPass = Environment.GetEnvironmentVariable("RABBITMQ_DEFAULT_PASS") 
+                         ?? builder.Configuration["RabbitMQ:Password"] ?? "guest";
+        
+        cfg.Host(rabbitHost, "/", h =>
         {
-            h.Username(builder.Configuration["RabbitMQ:Username"] ?? "");
-            h.Password(builder.Configuration["RabbitMQ:Password"] ?? "");
+            h.Username(rabbitUser);
+            h.Password(rabbitPass);
         });
     });
 });

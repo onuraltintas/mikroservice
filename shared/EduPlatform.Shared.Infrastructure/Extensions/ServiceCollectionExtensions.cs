@@ -58,7 +58,18 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var redisConnection = configuration.GetConnectionString("Redis") ?? "localhost:6379";
+        // Build Redis connection from environment variables for security
+        var redisConnection = configuration.GetConnectionString("Redis");
+        if (string.IsNullOrEmpty(redisConnection))
+        {
+            var host = Environment.GetEnvironmentVariable("REDIS_HOST") ?? "localhost";
+            var port = Environment.GetEnvironmentVariable("REDIS_PORT") ?? "6379";
+            var password = Environment.GetEnvironmentVariable("REDIS_PASSWORD");
+            
+            redisConnection = string.IsNullOrEmpty(password) 
+                ? $"{host}:{port}" 
+                : $"{host}:{port},password={password}";
+        }
         
         services.AddHealthChecks()
             .AddRedis(redisConnection, name: "redis", tags: new[] { "infrastructure", "cache" })
