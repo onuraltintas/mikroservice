@@ -1,33 +1,170 @@
-<div style='font-family:"Segoe UI",Helvetica,Arial,sans-serif;background-color:#f3f4f6;padding:40px 0'>
-    <div
-        style='max-width:600px;margin:0 auto;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,0.05)'>
-        <div style='background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);padding:40px 20px;text-align:center'>
-            <h1 style='color:#ffffff;margin:0;font-size:28px;font-weight:700'>EduPlatform</h1>
-        </div>
-        <div style='padding:40px 30px;color:#374151'>
-            <h2 style='color:#111827;font-size:22px;margin-top:0'>Merhaba {{FirstName}}! 👋</h2>
-            <p style='font-size:16px;line-height:24px'>Aramıza hoş geldiniz! Hesabınız <strong>{{Role}}</strong>
-                yetkisiyle başarıyla oluşturuldu.</p>
+<!DOCTYPE html>
+<html lang="tr">
 
-            <div
-                style='background-color:#f0f9ff;border-left:4px solid #0ea5e9;padding:15px;margin:25px 0;border-radius:4px'>
-                <div style='font-size:12px;text-transform:uppercase;color:#0369a1;font-weight:700'>Geçici Şifreniz</div>
-                <div style='font-size:20px;color:#0c4a6e;font-weight:700;margin-top:5px;font-family:monospace'>
-                    {{TemporaryPassword}}</div>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hoş Geldiniz</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0fdf4;
+            font-family: 'Outfit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .wrapper {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #f0fdf4;
+            padding: 40px 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            padding: 60px 40px;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .icon-celebration {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .content {
+            padding: 50px 40px;
+            color: #1e293b;
+        }
+
+        .welcome-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #064e3b;
+            text-align: center;
+        }
+
+        .description {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #374151;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        .feature-box {
+            background-color: #f9fafb;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+            border: 1px solid #f3f4f6;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .feature-icon {
+            margin-right: 12px;
+            margin-top: 2px;
+        }
+
+        .btn-container {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 16px 48px;
+            background-color: #059669;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.2);
+            transition: transform 0.2s ease;
+        }
+
+        .footer {
+            padding: 40px;
+            background-color: #f8fafc;
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        @media screen and (max-width: 600px) {
+            .container {
+                margin: 0 16px;
+            }
+
+            .content {
+                padding: 40px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <div class="icon-celebration">🎉</div>
+                <h1 style="margin: 0; font-size: 32px; font-weight: 700;">Hoş Geldin!</h1>
             </div>
 
-            <p style='font-size:16px;line-height:24px'>Güvenliğiniz için lütfen ilk girişinizde şifrenizi değiştirin.
-            </p>
+            <div class="content">
+                <div class="welcome-title">Harika bir başlangıç, {{FirstName}}!</div>
+                <div class="description">
+                    E-posta adresin doğrulandı. Artık EduPlatform dünyasının bir parçasısın. Senin için hazırladığımız
+                    araçları keşfetmeye hazırsın.
+                </div>
 
-            <div style='text-align:center;margin-top:35px'>
-                <a href='http://localhost:4200/auth/login'
-                    style='background-color:#2563eb;color:#ffffff;padding:14px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block'>Giriş
-                    Yap</a>
+                <div class="feature-box">
+                    <div
+                        style="font-weight: 700; margin-bottom: 16px; color: #064e3b; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Seni Neler Bekliyor?</div>
+
+                    <div style="margin-bottom: 12px; font-size: 15px;">🚀 <strong>Kişiselleştirilmiş Panelin:</strong>
+                        Performansını anlık takip et.</div>
+                    <div style="margin-bottom: 12px; font-size: 15px;">📚 <strong>Zengin Kütüphane:</strong> Binlerce
+                        eğitim materyaline ulaş.</div>
+                    <div style="margin-bottom: 0; font-size: 15px;">📈 <strong>Akıllı Analizler:</strong> Eksiklerini
+                        yapay zeka ile belirle.</div>
+                </div>
+
+                <div class="btn-container">
+                    <a href="http://localhost:4200/auth/login" class="button">Panele Git ⚡</a>
+                </div>
+
+                <div class="description" style="margin-top: 32px; font-size: 14px; color: #6b7280;">
+                    Herhangi bir sorun yaşarsan destek ekibimiz yanınızda. Başarılar dileriz!
+                </div>
             </div>
-        </div>
-        <div
-            style='background-color:#f9fafb;padding:20px;text-align:center;font-size:12px;color:#9ca3af;border-top:1px solid #e5e7eb'>
-            &copy; 2026 EduPlatform. Tüm hakları saklıdır.
+
+            <div class="footer">
+                <div style="font-weight: 600; margin-bottom: 8px;">EduPlatform</div>
+                <div>&copy; 2026 EduPlatform INC.</div>
+            </div>
         </div>
     </div>
-</div>
+</body>
+
+</html>

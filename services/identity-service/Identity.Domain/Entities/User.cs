@@ -16,6 +16,12 @@ public class User : AggregateRoot
     public byte[] PasswordSalt { get; private set; } = Array.Empty<byte>();
 
     public bool EmailConfirmed { get; private set; }
+    public string? EmailVerificationToken { get; private set; }
+    public DateTime? EmailVerificationTokenExpiresAt { get; private set; }
+
+    public string? PasswordResetToken { get; private set; }
+    public DateTime? PasswordResetTokenExpiresAt { get; private set; }
+
     public string? PhoneNumber { get; private set; }
     public bool PhoneConfirmed { get; private set; }
     public bool IsActive { get; private set; } = true;
@@ -90,6 +96,29 @@ public class User : AggregateRoot
     public void ConfirmEmail()
     {
         EmailConfirmed = true;
+        EmailVerificationToken = null;
+        EmailVerificationTokenExpiresAt = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void GenerateEmailVerificationToken()
+    {
+        EmailVerificationToken = Guid.NewGuid().ToString("N");
+        EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddHours(24);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void GeneratePasswordResetToken()
+    {
+        PasswordResetToken = Guid.NewGuid().ToString("N");
+        PasswordResetTokenExpiresAt = DateTime.UtcNow.AddHours(2); // Short lived
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void ClearPasswordResetToken()
+    {
+        PasswordResetToken = null;
+        PasswordResetTokenExpiresAt = null;
         UpdatedAt = DateTime.UtcNow;
     }
 

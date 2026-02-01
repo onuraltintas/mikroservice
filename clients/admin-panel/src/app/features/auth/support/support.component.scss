@@ -1,0 +1,60 @@
+:host {
+    display: block;
+}
+
+.custom-accordion {
+    ::ng-deep {
+        .mat-expansion-panel {
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1) !important;
+            transition: all 0.3s ease;
+
+            &:hover {
+                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+                transform: translateY(-2px);
+            }
+
+            .mat-expansion-panel-header-title {
+                font-size: 1.05rem;
+            }
+        }
+
+        .mat-expansion-panel-spacing {
+            margin: 0 0 12px 0 !important;
+        }
+
+        .mat-expansion-indicator::after {
+            color: #2563eb;
+        }
+    }
+}
+
+mat-form-field {
+    ::ng-deep {
+
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+            border-color: rgba(226, 232, 240, 0.8) !important;
+        }
+
+        .mat-mdc-form-field-focus-track {
+            background-color: #2563eb !important;
+        }
+    }
+}
+
+.animate-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

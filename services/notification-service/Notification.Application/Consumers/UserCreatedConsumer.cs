@@ -25,7 +25,7 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
         // 1. Retrieve Template dynamically from Database
         var template = await _dbContext.EmailTemplates
             .AsNoTracking() // Performans için
-            .FirstOrDefaultAsync(t => t.TemplateName == "Auth_Welcome" && t.IsActive);
+            .FirstOrDefaultAsync(t => t.TemplateName == "Auth_DirectCreate" && t.IsActive);
 
         string subject;
         string body;

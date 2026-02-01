@@ -6,5 +6,6 @@ namespace Notification.Application.Interfaces;
 public interface INotificationDbContext
 {
     DbSet<EmailTemplate> EmailTemplates { get; }
+    DbSet<SupportRequest> SupportRequests { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

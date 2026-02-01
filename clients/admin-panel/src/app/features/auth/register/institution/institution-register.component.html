@@ -40,7 +40,7 @@
     </div>
 
     <!-- Right Side: Form -->
-    <div class="w-full lg:w-7/12 overflow-y-auto h-screen flex flex-col">
+    <div class="w-full lg:w-7/12 overflow-y-auto h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors">
 
         <!-- Mobile Header -->
         <div
@@ -54,30 +54,33 @@
             </a>
         </div>
 
-        <div class="flex-1 flex items-center justify-center p-6 sm:p-12 lg:p-24">
+        <!-- Reduced top padding (p-6 lg:pt-8) to pull content up -->
+        <div class="flex-1 flex items-start justify-center p-6 lg:pt-8">
             <div class="w-full max-w-md">
 
                 <!-- Back Button -->
                 <a routerLink="/auth/register"
-                    class="hidden lg:inline-flex items-center text-gray-400 hover:text-orange-600 mb-8 transition-colors text-sm font-medium">
+                    class="hidden lg:inline-flex items-center text-gray-400 hover:text-orange-600 mb-6 transition-colors text-sm font-medium">
                     <mat-icon class="!w-4 !h-4 !text-[16px] mr-1">arrow_back</mat-icon>
                     Geri Dön
                 </a>
 
-                <div class="mb-8">
+                <div class="mb-6">
                     <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Kurumsal Üyelik 🏢</h2>
-                    <p class="text-gray-500">
+                    <p class="text-gray-500 dark:text-gray-400">
                         Zaten hesabınız var mı?
-                        <a routerLink="/auth/login" class="text-orange-600 font-bold hover:underline">Giriş Yap</a>
+                        <a routerLink="/auth/login"
+                            class="text-orange-600 dark:text-orange-500 font-bold hover:underline">Giriş Yap</a>
                     </p>
                 </div>
 
-                <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+                <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
 
                     <!-- Institution Info -->
-                    <div class="p-4 bg-orange-50 rounded-xl border border-orange-100 mb-2">
+                    <div
+                        class="p-4 bg-orange-50 dark:bg-orange-950/20 rounded-xl border border-orange-100 dark:border-orange-900/30">
                         <h3
-                            class="text-sm font-bold text-orange-800 mb-3 uppercase tracking-wider flex items-center gap-2">
+                            class="text-xs font-bold text-orange-800 dark:text-orange-400 mb-3 uppercase tracking-wider flex items-center gap-2">
                             <mat-icon class="!w-4 !h-4 !text-[16px]">business</mat-icon> Kurum Bilgileri
                         </h3>
                         <div class="flex flex-col gap-4">
@@ -96,30 +99,25 @@
                     </div>
 
                     <!-- Manager Info -->
-                    <div>
-                        <h3 class="text-sm font-bold text-gray-500 mb-3 uppercase tracking-wider ml-1">Yönetici
-                            Bilgileri</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <mat-form-field appearance="outline" class="w-full">
-                                <mat-label>Ad</mat-label>
-                                <input matInput formControlName="firstName">
-                                <mat-error>Gerekli</mat-error>
-                            </mat-form-field>
-                            <mat-form-field appearance="outline" class="w-full">
-                                <mat-label>Soyad</mat-label>
-                                <input matInput formControlName="lastName">
-                                <mat-error>Gerekli</mat-error>
-                            </mat-form-field>
-                        </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <mat-form-field appearance="outline" class="w-full">
+                            <mat-label>Yönetici Adı</mat-label>
+                            <input matInput formControlName="firstName">
+                            <mat-error>Gerekli</mat-error>
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" class="w-full">
+                            <mat-label>Soyadı</mat-label>
+                            <input matInput formControlName="lastName">
+                            <mat-error>Gerekli</mat-error>
+                        </mat-form-field>
                     </div>
 
                     <mat-form-field appearance="outline" class="w-full">
                         <mat-label>Kurumsal E-posta</mat-label>
-                        <input matInput type="email" formControlName="email" placeholder="yonetim@okuladi.com">
+                        <input matInput type="email" formControlName="email">
                         <mat-icon matPrefix class="text-gray-400 mr-2">email</mat-icon>
-                        <mat-error *ngIf="form.get('email')?.hasError('required')">E-posta adresi zorunludur</mat-error>
-                        <mat-error *ngIf="form.get('email')?.hasError('email')">Geçerli bir e-posta adresi
-                            giriniz</mat-error>
+                        <mat-error *ngIf="form.get('email')?.hasError('required')">E-posta zorunludur</mat-error>
+                        <mat-error *ngIf="form.get('email')?.hasError('email')">Geçerli bir e-posta giriniz</mat-error>
                     </mat-form-field>
 
                     <mat-form-field appearance="outline" class="w-full">
@@ -129,29 +127,35 @@
                         <button mat-icon-button matSuffix (click)="togglePassword($event)" type="button">
                             <mat-icon>{{hidePassword() ? 'visibility_off' : 'visibility'}}</mat-icon>
                         </button>
-                        <mat-error *ngIf="form.get('password')?.hasError('required')">Şifre zorunludur</mat-error>
-                        <mat-error *ngIf="form.get('password')?.hasError('passwordStrength')"
-                            class="!text-[11px] !leading-3 block mt-1">
-                            En az 8 karakter; büyük harf, küçük harf, rakam ve sembol içermelidir.
-                        </mat-error>
+                        <mat-error *ngIf="form.get('password')?.hasError('required')">Gerekli</mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="w-full">
+                        <mat-label>Onayla</mat-label>
+                        <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="confirmPassword">
+                        <mat-icon matPrefix class="text-gray-400 mr-2">lock_outline</mat-icon>
+                        <button mat-icon-button matSuffix (click)="togglePassword($event)" type="button">
+                            <mat-icon>{{hidePassword() ? 'visibility_off' : 'visibility'}}</mat-icon>
+                        </button>
+                        <mat-error
+                            *ngIf="form.get('confirmPassword')?.hasError('passwordMismatch')">Eşleşmiyor</mat-error>
                     </mat-form-field>
 
                     <div *ngIf="errorMessage()"
-                        class="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl text-sm flex items-start gap-3">
+                        class="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 text-red-600 p-4 rounded-xl text-sm flex items-start gap-3">
                         <mat-icon class="text-red-500">error_outline</mat-icon>
                         <span>{{ errorMessage() }}</span>
                     </div>
 
                     <button mat-flat-button color="primary" type="submit"
-                        class="!py-6 !text-lg !rounded-xl w-full !bg-orange-600 !shadow-lg !shadow-orange-200 hover:!shadow-orange-300 transition-all mt-4"
+                        class="!py-6 !text-lg !rounded-xl w-full !bg-orange-600 !shadow-lg !shadow-orange-100 hover:!shadow-orange-200 transition-all mt-4"
                         [disabled]="form.invalid || isLoading()">
                         <div class="flex items-center justify-center gap-2">
                             <mat-spinner *ngIf="isLoading()" diameter="24" class="!stroke-white"></mat-spinner>
-                            <span *ngIf="!isLoading()">Kurum Kaydını Tamamla</span>
+                            <span *ngIf="!isLoading()">Kaydı Tamamla</span>
                             <mat-icon *ngIf="!isLoading()">arrow_forward</mat-icon>
                         </div>
                     </button>
-
                 </form>
 
             </div>

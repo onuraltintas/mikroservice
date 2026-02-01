@@ -24,7 +24,7 @@
         </div>
 
         <!-- Cards Container -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 px-4 md:px-0">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-4 md:px-0">
 
             <!-- Student Card -->
             <a routerLink="/auth/register/student"
@@ -57,6 +57,40 @@
                 </div>
                 <div
                     class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-blue-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left">
+                </div>
+            </a>
+
+            <!-- Parent Card -->
+            <a routerLink="/auth/register/parent"
+                class="group relative bg-white dark:bg-gray-800 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl hover:shadow-teal-500/20 transition-all duration-500 transform hover:-translate-y-2 border border-teal-50 dark:border-gray-700 overflow-hidden cursor-pointer text-decoration-none">
+                <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <svg class="w-32 h-32 text-teal-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M16 4c0-1.11-.89-2-2-2s-2 .89-2 2 .89 2 2 2 2-.89 2-2zM5 4c0-1.11-.89-2-2-2S1 .89 1 4s.89 2 2 2 2-.89 2-2zm7 3H2C.9 7 0 7.9 0 9v6h2v-6h1v11h2v-5h1v5h2V9h1v6h2V9c0-1.1-.9-2-2-2z" />
+                    </svg>
+                </div>
+
+                <div class="relative z-10">
+                    <div
+                        class="w-20 h-20 rounded-2xl bg-teal-50 dark:bg-teal-900/30 text-teal-600 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500">
+                        <mat-icon class="!w-10 !h-10 !text-[40px]">family_restroom</mat-icon>
+                    </div>
+
+                    <h3
+                        class="text-3xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-teal-600 transition-colors">
+                        Veli</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed h-20">
+                        Çocuğunun gelişimini takip et, öğretmenlerle iletişim kur ve eğitim sürecine aktif destek ol.
+                    </p>
+
+                    <div
+                        class="flex items-center text-teal-600 font-bold group-hover:translate-x-2 transition-transform">
+                        <span>Aramıza Katıl</span>
+                        <mat-icon class="ml-2">arrow_forward</mat-icon>
+                    </div>
+                </div>
+                <div
+                    class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-teal-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left">
                 </div>
             </a>
 

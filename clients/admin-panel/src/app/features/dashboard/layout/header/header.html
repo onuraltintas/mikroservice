@@ -51,18 +51,96 @@
         </button>
 
         <!-- Notifications -->
-        <button
-            class="p-2.5 rounded-xl text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all duration-200 relative group">
-            <span class="sr-only">Bildirimler</span>
-            <span
-                class="absolute top-2 right-2 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-900 animate-pulse"></span>
-            <svg class="h-5 w-5 transform group-hover:scale-110 transition-transform duration-200"
-                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-        </button>
+        <div class="relative notification-container">
+            <button (click)="toggleNotificationMenu()"
+                class="p-2.5 rounded-xl text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all duration-200 relative group">
+                <span class="sr-only">Bildirimler</span>
+                <span *ngIf="unreadCount > 0"
+                    class="absolute top-2 right-2 block h-4 min-w-4 px-1 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-900 animate-pulse text-[10px] text-white font-bold flex items-center justify-center">
+                    {{ unreadCount }}
+                </span>
+                <svg class="h-5 w-5 transform group-hover:scale-110 transition-transform duration-200"
+                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+            </button>
+
+            <!-- Notification Dropdown -->
+            <div *ngIf="showNotificationMenu()"
+                class="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl shadow-2xl bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 focus:outline-none z-50 animate-in fade-in slide-in-from-top-2 overflow-hidden">
+                <div
+                    class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-900/50">
+                    <h3 class="text-sm font-bold text-gray-900 dark:text-white">Bildirimler</h3>
+                    <button *ngIf="unreadCount > 0" (click)="markAllAsRead()"
+                        class="text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:underline">
+                        Tümünü Okundu İşaretle
+                    </button>
+                </div>
+
+                <div class="max-h-[400px] overflow-y-auto">
+                    <div *ngIf="notifications.length === 0" class="py-12 text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Henüz bildiriminiz yok.</p>
+                    </div>
+
+                    <div *ngFor="let n of notifications"
+                        class="p-4 border-b border-gray-50 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex gap-4 items-start relative group"
+                        [class.bg-indigo-50/30]="!n.isRead" [class.dark:bg-indigo-900/10]="!n.isRead">
+
+                        <div [ngClass]="{
+                            'bg-blue-100 text-blue-600': n.type === 'SupportRequest',
+                            'bg-orange-100 text-orange-600': n.type === 'System',
+                            'bg-green-100 text-green-600': n.type === 'Info'
+                          }" class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
+                            <svg *ngIf="n.type === 'SupportRequest'" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path
+                                    d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                            </svg>
+                            <svg *ngIf="n.type !== 'SupportRequest'" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                            </svg>
+                        </div>
+
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-sm font-bold text-gray-900 dark:text-white truncate pr-6">{{ n.title }}</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mt-1">{{ n.message }}</p>
+                            <p class="text-[10px] text-gray-400 mt-2 flex items-center">
+                                <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round"
+                                        stroke-linejoin="round" stroke-width="2" />
+                                </svg>
+                                {{ formatTime(n.createdAt) }}
+                            </p>
+                        </div>
+
+                        <button *ngIf="!n.isRead" (click)="markAsRead(n.id, $event)"
+                            class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 p-1 rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400 transition-all">
+                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="2" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700">
+                    <a [routerLink]="['/dashboard/notifications']" (click)="showNotificationMenu.set(false)"
+                        class="block w-full text-center py-2 text-xs font-bold text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition-colors">
+                        Tüm Bildirimleri Gör
+                    </a>
+                </div>
+            </div>
+        </div>
 
         <!-- Divider -->
         <div class="hidden md:block h-8 w-px bg-gray-200 dark:bg-gray-700 mx-2"></div>

@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -21,6 +21,7 @@ import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-
     imports: [
         CommonModule,
         FormsModule,
+        RouterLink,
         MatCardModule,
         MatButtonModule,
         MatIconModule,
@@ -38,6 +39,9 @@ export class LoginComponent {
 
     isLoading = signal(false);
     errorMessage = signal<string | null>(null);
+    showResendLink = signal(false);
+    showSupportLink = signal(false);
+    resendingEmail = signal(false);
 
     // Password Flow Properties
     email = '';
@@ -81,10 +85,36 @@ export class LoginComponent {
             // rememberMe bilgisini de gönderiyoruz
             await this.authService.loginWithPassword(this.email, this.password, this.rememberMe);
             this.toaster.success('Giriş başarılı! Yönlendiriliyorsunuz.');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Login error:', error);
-            this.errorMessage.set('Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
+
+            const errorCode = error.error?.code;
+
+            if (errorCode === 'Auth.EmailNotConfirmed') {
+                this.errorMessage.set('Lütfen e-posta adresinizi doğrulayın.');
+                this.showResendLink.set(true);
+            } else if (errorCode === 'Auth.UserInactive') {
+                this.errorMessage.set('Hesabınız şu anda pasif durumdadır.');
+                this.showSupportLink.set(true);
+            } else {
+                this.errorMessage.set(error.error?.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
+            }
             this.isLoading.set(false);
+        }
+    }
+
+    async resendVerification() {
+        if (!this.email) return;
+
+        this.resendingEmail.set(true);
+        try {
+            await this.authService.resendVerificationEmail(this.email);
+            this.toaster.success('Doğrulama e-postası tekrar gönderildi. Lütfen gelen kutunuzu kontrol edin.');
+            this.showResendLink.set(false);
+        } catch (error: any) {
+            this.toaster.error(error.error?.message || 'E-posta gönderilemedi.');
+        } finally {
+            this.resendingEmail.set(false);
         }
     }
 
@@ -95,5 +125,10 @@ export class LoginComponent {
 
     togglePasswordVisibility() {
         this.hidePassword.update(v => !v);
+    }
+
+    navigateToSupport() {
+        console.log('Navigating to support page...');
+        this.router.navigate(['/auth/support']);
     }
 }

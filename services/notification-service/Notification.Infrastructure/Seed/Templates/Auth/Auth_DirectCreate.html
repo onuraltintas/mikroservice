@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hesabınız Oluşturuldu</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+            font-family: 'Outfit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .wrapper {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #f8fafc;
+            padding: 40px 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            padding: 60px 40px;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .icon-box {
+            font-size: 40px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            width: 80px;
+            height: 80px;
+            line-height: 80px;
+            border-radius: 20px;
+            margin: 0 auto 24px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .content {
+            padding: 50px 40px;
+            color: #1e293b;
+        }
+
+        .title {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #1e1b4b;
+            text-align: center;
+        }
+
+        .description {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        .credentials-card {
+            background-color: #f1f5f9;
+            border-radius: 20px;
+            padding: 30px;
+            margin: 32px 0;
+            border: 1px dashed #cbd5e1;
+        }
+
+        .credential-item {
+            margin-bottom: 20px;
+        }
+
+        .credential-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .credential-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .security-note {
+            background-color: #fff7ed;
+            border-left: 4px solid #f97316;
+            padding: 16px;
+            border-radius: 8px;
+            color: #9a3412;
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        .btn-container {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 18px 50px;
+            background-color: #4f46e5;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+        }
+
+        .footer {
+            padding: 40px;
+            background-color: #f8fafc;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        @media screen and (max-width: 600px) {
+            .container {
+                margin: 0 16px;
+            }
+
+            .content {
+                padding: 40px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <div class="icon-box">🔑</div>
+                <h1 style="margin: 0; font-size: 30px; font-weight: 700;">EduPlatform</h1>
+            </div>
+
+            <div class="content">
+                <div class="title">Hesabınız Hazır!</div>
+                <div class="description">
+                    Merhaba <strong>{{FirstName}} {{LastName}}</strong>, yöneticiniz sizin için bir EduPlatform hesabı
+                    oluşturdu. Aramıza katıldığınız için mutluyuz!
+                </div>
+
+                <div class="credentials-card">
+                    <div class="credential-item">
+                        <div class="credential-label">Kullanıcı Adı / E-posta</div>
+                        <div class="credential-value">{{Email}}</div>
+                    </div>
+                    <div class="credential-item" style="margin-bottom: 0;">
+                        <div class="credential-label">Geçici Şifre</div>
+                        <div class="credential-value">{{TemporaryPassword}}</div>
+                    </div>
+                </div>
+
+                <div class="security-note">
+                    🛡️ <strong>Önemli:</strong> Güvenliğiniz için lütfen ilk girişinizden sonra şifrenizi paneli
+                    üzerinden güncelleyin.
+                </div>
+
+                <div class="btn-container">
+                    <a href="http://localhost:4200/auth/login" class="button">Sisteme Giriş Yap 🚀</a>
+                </div>
+            </div>
+
+            <div class="footer">
+                <div style="font-weight: 600; margin-bottom: 8px; color: #64748b;">EduPlatform Yönetim Sistemi</div>
+                <div>Bu e-posta otomatik olarak gönderilmiştir. Lütfen yanıtlamayınız.</div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

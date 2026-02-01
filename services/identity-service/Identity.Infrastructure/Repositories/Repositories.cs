@@ -103,6 +103,13 @@ public class UserRepository : IUserRepository
 
         return new PagedList<UserProfileDto>(dtos, totalCount, page, pageSize);
     }
+
+    public async Task<List<User>> GetUsersByRolesAsync(List<string> roleNames, CancellationToken cancellationToken)
+    {
+        return await _context.Users
+            .Where(u => u.Roles.Any(r => roleNames.Contains(r.Role.Name)))
+            .ToListAsync(cancellationToken);
+    }
 }
 
 public class InstitutionRepository : IInstitutionRepository
@@ -207,6 +214,30 @@ public class StudentRepository : IStudentRepository
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
     }
 }
+
+public class ParentRepository : IParentRepository
+{
+    private readonly IdentityDbContext _context;
+    public ParentRepository(IdentityDbContext context) => _context = context;
+
+    public async Task AddAsync(ParentProfile parent, CancellationToken cancellationToken)
+    {
+        await _context.ParentProfiles.AddAsync(parent, cancellationToken);
+    }
+
+    public async Task<ParentProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        return await _context.ParentProfiles
+            .FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+    }
+
+    public async Task<ParentProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return await _context.ParentProfiles
+            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+    }
+}
+
 
 public class InvitationRepository : IInvitationRepository
 {

@@ -15,6 +15,7 @@ public interface IUserRepository
     void Delete(User user);
     Task<PagedList<UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, CancellationToken cancellationToken);
     Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
+    Task<List<User>> GetUsersByRolesAsync(List<string> roleNames, CancellationToken cancellationToken);
 }
 
 public interface IRoleRepository

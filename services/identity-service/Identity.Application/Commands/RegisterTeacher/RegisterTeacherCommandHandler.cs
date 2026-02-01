@@ -3,6 +3,8 @@ using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using MediatR;
+using MassTransit;
+using EduPlatform.Shared.Contracts.Events.Identity;
 
 namespace Identity.Application.Commands.RegisterTeacher;
 
@@ -12,17 +14,20 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
     private readonly IUserRepository _userRepository;
     private readonly ITeacherRepository _teacherRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IPublishEndpoint _publishEndpoint;
 
     public RegisterTeacherCommandHandler(
         IIdentityService identityService,
         IUserRepository userRepository,
         ITeacherRepository teacherRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IPublishEndpoint publishEndpoint)
     {
         _identityService = identityService;
         _userRepository = userRepository;
         _teacherRepository = teacherRepository;
         _unitOfWork = unitOfWork;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<Result<Guid>> Handle(RegisterTeacherCommand request, CancellationToken cancellationToken)
@@ -45,10 +50,11 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
         await _identityService.AssignRoleAsync(userId, Identity.Domain.Enums.UserRole.Teacher.ToString(), cancellationToken);
 
         // Update Phone if needed
-        if (request.Phone != null)
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        if (user != null) 
         {
-            var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-            if (user != null) user.SetPhoneNumber(request.Phone);
+            if (request.Phone != null) user.SetPhoneNumber(request.Phone);
+            user.GenerateEmailVerificationToken();
         }
 
         // Independent Teacher
@@ -58,8 +64,16 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
         {
             // await _userRepository.AddAsync(user, cancellationToken); // Removed
             await _teacherRepository.AddAsync(teacher, cancellationToken);
-            await _teacherRepository.AddAsync(teacher, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Publish Event for Notification Service (Verification)
+            await _publishEndpoint.Publish(new UserRegisteredEvent(
+                userId,
+                request.Email,
+                request.FirstName,
+                request.LastName,
+                user?.EmailVerificationToken ?? ""
+            ), cancellationToken);
 
             return Result.Success(teacher.Id);
         }
@@ -70,3 +84,4 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
         }
     }
 }
+

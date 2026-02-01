@@ -43,10 +43,21 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         // 3. Check Active Status
         if (!user.IsActive)
         {
-             return Result.Failure<LoginResponse>(new Error("Auth.UserInactive", "hesabınız pasif durumdadır."));
+             return Result.Failure<LoginResponse>(new Error("Auth.UserInactive", "Hesabınız pasif durumdadır."));
         }
 
-        // 4. Generate Tokens
+        // 4. Check Email Confirmation
+        var isAdmin = user.Roles.Any(r => 
+            r.Role.Name == "SystemAdmin" || 
+            r.Role.Name == "InstitutionAdmin" || 
+            r.Role.Name == "InstitutionOwner");
+
+        if (!user.EmailConfirmed && !isAdmin)
+        {
+            return Result.Failure<LoginResponse>(new Error("Auth.EmailNotConfirmed", "Lütfen e-posta adresinizi doğrulayın."));
+        }
+
+        // 5. Generate Tokens
         var accessToken = _tokenService.GenerateAccessToken(user);
         
         var refreshToken = _tokenService.GenerateRefreshToken(user.Id, "0.0.0.0"); 
