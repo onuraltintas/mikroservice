@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using Serilog;
 using EduPlatform.Shared.Kernel.Primitives;
+using MassTransit;
 
 namespace Identity.Infrastructure.Persistence;
 
@@ -39,6 +40,11 @@ public class IdentityDbContext : DbContext
 
         // Set default schema
         modelBuilder.HasDefaultSchema("identity");
+
+        // MassTransit Outbox Pattern
+        modelBuilder.AddInboxStateEntity();
+        modelBuilder.AddOutboxMessageEntity();
+        modelBuilder.AddOutboxStateEntity();
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

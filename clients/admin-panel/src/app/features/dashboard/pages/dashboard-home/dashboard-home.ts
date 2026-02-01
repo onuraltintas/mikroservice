@@ -2,6 +2,7 @@ import { Component, inject, signal, PLATFORM_ID, OnInit } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { IdentityService } from '../../../../core/services/identity.service';
+import { AuthService } from '../../../../core/auth/auth.service';
 
 interface DashboardStats {
   totalUsers: number;
@@ -24,6 +25,7 @@ interface DashboardStats {
 })
 export class DashboardHomeComponent implements OnInit {
   private identityService = inject(IdentityService);
+  private authService = inject(AuthService);
   private platformId = inject(PLATFORM_ID);
 
   loading = signal(true);
@@ -41,7 +43,14 @@ export class DashboardHomeComponent implements OnInit {
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
-      this.loadStats();
+      const user = this.authService.userProfile();
+      // Only load stats if user has Admin privileges
+      if (user?.role === 'Admin' || user?.role === 'SystemAdmin' || user?.roles?.includes('Admin') || user?.roles?.includes('SystemAdmin')) {
+        this.loadStats();
+      } else {
+        console.log('Skipping dashboard stats for non-admin user.');
+        this.loading.set(false);
+      }
     }
   }
 
@@ -55,7 +64,7 @@ export class DashboardHomeComponent implements OnInit {
       ]);
 
       const users = usersResult?.items || [];
-      const activeUsers = users.filter(u => u.isActive).length;
+      const activeUsers = users.filter((u: any) => u.isActive).length;
       const rolesData = roles || [];
       const permsData = permissions || [];
 
@@ -63,12 +72,12 @@ export class DashboardHomeComponent implements OnInit {
         totalUsers: users.length,
         activeUsers: activeUsers,
         inactiveUsers: users.length - activeUsers,
-        totalRoles: rolesData.filter(r => !r.isDeleted).length,
-        systemRoles: rolesData.filter(r => r.isSystemRole && !r.isDeleted).length,
-        customRoles: rolesData.filter(r => !r.isSystemRole && !r.isDeleted).length,
-        totalPermissions: permsData.filter(p => !p.isDeleted).length,
-        systemPermissions: permsData.filter(p => p.isSystem && !p.isDeleted).length,
-        customPermissions: permsData.filter(p => !p.isSystem && !p.isDeleted).length
+        totalRoles: rolesData.filter((r: any) => !r.isDeleted).length,
+        systemRoles: rolesData.filter((r: any) => r.isSystemRole && !r.isDeleted).length,
+        customRoles: rolesData.filter((r: any) => !r.isSystemRole && !r.isDeleted).length,
+        totalPermissions: permsData.filter((p: any) => !p.isDeleted).length,
+        systemPermissions: permsData.filter((p: any) => p.isSystem && !p.isDeleted).length,
+        customPermissions: permsData.filter((p: any) => !p.isSystem && !p.isDeleted).length
       });
     } catch (error) {
       console.error('Error loading dashboard stats:', error);

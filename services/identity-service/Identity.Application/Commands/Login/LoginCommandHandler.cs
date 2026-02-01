@@ -13,6 +13,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
     private readonly IPasswordHasher _passwordHasher;
     private readonly ITokenService _tokenService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IIdentityService _identityService;
     private readonly Microsoft.Extensions.Logging.ILogger<LoginCommandHandler> _logger;
 
     public LoginCommandHandler(
@@ -20,12 +21,14 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         IPasswordHasher passwordHasher,
         ITokenService tokenService,
         IUnitOfWork unitOfWork,
+        IIdentityService identityService,
         Microsoft.Extensions.Logging.ILogger<LoginCommandHandler> logger)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
         _unitOfWork = unitOfWork;
+        _identityService = identityService;
         _logger = logger;
     }
 
@@ -64,18 +67,29 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         // 5. Generate Tokens
         var accessToken = _tokenService.GenerateAccessToken(user);
         
-        var refreshToken = _tokenService.GenerateRefreshToken(user.Id, "0.0.0.0"); 
+        var ipAddress = "0.0.0.0"; // Should be passed in command but defaulting here
+        var refreshToken = _tokenService.GenerateRefreshToken(user.Id, ipAddress); 
         
+        // 6. Save Refresh Token (Securely bypassing concurrency checks on User)
+        var saveTokenResult = await _identityService.SaveRefreshTokenAsync(user.Id, refreshToken, cancellationToken);
+        if (saveTokenResult.IsFailure)
+        {
+            _logger.LogError("Failed to save refresh token: {Error}", saveTokenResult.Error.Description);
+            // We could return failure here, but usually we proceed with what we have? 
+            // Better to fail if token cannot be saved.
+            return Result.Failure<LoginResponse>(saveTokenResult.Error);
+        }
+
+        // 7. Record Login Stats (Best effort)
         try 
         {
-            user.AddRefreshToken(refreshToken);
             user.RecordLogin();
             await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
         catch (Exception ex)
         {
-             // Log but don't fail login if DB recording fails in dev
-             _logger.LogError(ex, "Login recording failed");
+             // Log but don't fail login if DB recording fails
+             _logger.LogError(ex, "Login stats recording failed");
         }
 
         return Result.Success(new LoginResponse(accessToken, refreshToken.Token));

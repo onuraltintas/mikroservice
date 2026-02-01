@@ -1,4 +1,5 @@
 import { Injectable, computed, inject, signal, PLATFORM_ID } from '@angular/core';
+import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { isPlatformBrowser } from '@angular/common';
 import { OAuthService, AuthConfig } from 'angular-oauth2-oidc';
 import { authConfig } from './auth.config';
@@ -23,6 +24,7 @@ export interface UserProfile {
 })
 export class AuthService {
     private oauthService = inject(OAuthService);
+    private authService = inject(SocialAuthService); // Inject social service
     private router = inject(Router);
     private platformId = inject(PLATFORM_ID);
 
@@ -180,7 +182,27 @@ export class AuthService {
         );
     }
 
-    logout() {
+    async logout() {
+        // Attempt to revoke token on backend
+        try {
+            // Also sign out from Google to prevent auto-login
+            await this.authService.signOut();
+        } catch (e) {
+            // Ignore if not logged in with Google
+        }
+
+        try {
+            if (isPlatformBrowser(this.platformId)) {
+                // Usually we revoke the Refresh Token
+                const refreshToken = localStorage.getItem('refresh_token');
+                if (refreshToken) {
+                    await firstValueFrom(this.httpClient.post(`${environment.apiUrl}/auth/revoke-token`, { token: refreshToken })); // Fixed endpoint URL
+                }
+            }
+        } catch (e) {
+            console.warn('Token revocation failed:', e);
+        }
+
         this.oauthService.logOut();
         if (isPlatformBrowser(this.platformId)) {
             localStorage.removeItem('access_token');

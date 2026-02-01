@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using DotNetEnv;
+using EduPlatform.Shared.Infrastructure.Resiliency;
 
 // Load .env file from solution root
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", ".env");
@@ -46,7 +47,8 @@ builder.Services.AddScoped<INotificationDbContext>(provider =>
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<INotificationService, Notification.API.Services.NotificationManager>();
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
-builder.Services.AddHttpClient<Notification.Application.Interfaces.IIdentityInternalService, Notification.Infrastructure.ExternalServices.IdentityInternalService>();
+builder.Services.AddHttpClient<Notification.Application.Interfaces.IIdentityInternalService, Notification.Infrastructure.ExternalServices.IdentityInternalService>()
+    .AddResiliency();
 
 // MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Notification.Application.Interfaces.INotificationDbContext).Assembly));
@@ -58,7 +60,9 @@ builder.Services.AddSignalR();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        var secretKey = builder.Configuration["Jwt:Secret"] ?? "super_secret_key_for_development_must_be_changed_in_prod_12345";
+        var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET")
+                        ?? builder.Configuration["Jwt:Secret"] 
+                        ?? "super_secret_key_for_development_must_be_changed_in_prod_12345";
         var key = System.Text.Encoding.UTF8.GetBytes(secretKey);
 
         options.RequireHttpsMetadata = false;
@@ -70,7 +74,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuer = false, 
             ValidateAudience = false,
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero,
+            ClockSkew = TimeSpan.FromMinutes(5),
             NameClaimType = "sub",
             RoleClaimType = ClaimTypes.Role
         };
@@ -101,6 +105,13 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<UserCreatedConsumer>();
     x.AddConsumer<SendNotificationConsumer>();
     x.AddConsumer<UserForgotPasswordConsumer>();
+    
+    // Outbox Pattern Configuration
+    x.AddEntityFrameworkOutbox<NotificationDbContext>(o =>
+    {
+        o.UsePostgres();
+        o.UseBusOutbox();
+    });
 
     x.UsingRabbitMq((context, cfg) =>
     {

@@ -34,11 +34,12 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
     {
+        var normalizedEmail = email.ToLowerInvariant();
         return await _context.Users
             .Include(u => u.Roles)
                 .ThenInclude(ur => ur.Role)
                     .ThenInclude(r => r.Permissions)
-            .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail, cancellationToken);
     }
 
     public void Delete(User user)

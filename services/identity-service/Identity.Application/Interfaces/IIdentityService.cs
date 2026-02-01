@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Kernel.Results;
+using Identity.Domain.Entities;
 
 namespace Identity.Application.Interfaces;
 
@@ -66,5 +67,15 @@ public interface IIdentityService
     /// <summary>
     /// Updates user details.
     /// </summary>
+    /// <summary>
+    /// Saves a refresh token for the user, handling concurrency issues.
+    /// </summary>
+    Task<Result> SaveRefreshTokenAsync(Guid userId, RefreshToken refreshToken, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Revokes a refresh token.
+    /// </summary>
+    Task<Result> RevokeRefreshTokenAsync(string token, string ipAddress, string reason, CancellationToken cancellationToken);
+
     Task<Result> UpdateUserAsync(Guid userId, string firstName, string lastName, CancellationToken cancellationToken);
 }
