@@ -21,7 +21,7 @@ var builder = WebApplication.CreateBuilder(args);
 // ============================================
 // Serilog Configuration (Centralized)
 // ============================================
-builder.ConfigureSerilog("Coaching.API");
+builder.Host.UseCustomSerilog();
 
 // ============================================
 // Services

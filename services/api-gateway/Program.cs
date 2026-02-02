@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using DotNetEnv;
 
+using EduPlatform.Shared.Infrastructure.Logging;
+
 // Load .env file from solution root
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", ".env");
 if (File.Exists(envPath))
@@ -12,14 +14,10 @@ if (File.Exists(envPath))
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Serilog Setup
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
-    .CreateBootstrapLogger();
 
-builder.Host.UseSerilog((ctx, lc) => lc
-    .WriteTo.Console()
-    .ReadFrom.Configuration(ctx.Configuration));
+// Serilog Setup
+// Log.Logger is bootstrapping, we can keep it for startup errors if we want, but Main Setup is UseCustomSerilog
+builder.Host.UseCustomSerilog();
 
 // Add Env Vars support for overwriting config
 builder.Configuration.AddEnvironmentVariables();

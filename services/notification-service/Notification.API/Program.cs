@@ -1,3 +1,4 @@
+using EduPlatform.Shared.Infrastructure.Logging;
 using MassTransit;
 using Notification.Application.Consumers;
 using Notification.Application.Interfaces;
@@ -12,6 +13,7 @@ using System.Security.Claims;
 using DotNetEnv;
 using EduPlatform.Shared.Infrastructure.Resiliency;
 
+
 // Load .env file from solution root
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", ".env");
 if (File.Exists(envPath))
@@ -20,6 +22,9 @@ if (File.Exists(envPath))
 }
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Serilog Configuration (Centralized)
+builder.Host.UseCustomSerilog();
 
 // Add services
 builder.Services.AddControllers();

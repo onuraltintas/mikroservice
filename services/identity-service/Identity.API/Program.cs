@@ -22,7 +22,7 @@ var builder = WebApplication.CreateBuilder(args);
 // ============================================
 // Serilog Configuration (Centralized)
 // ============================================
-builder.ConfigureSerilog("Identity.API");
+builder.Host.UseCustomSerilog();
 
 // ============================================
 // Services

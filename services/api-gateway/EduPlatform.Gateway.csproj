@@ -13,4 +13,9 @@
     <PackageReference Include="Yarp.ReverseProxy" Version="2.3.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\shared\EduPlatform.Shared.Infrastructure\EduPlatform.Shared.Infrastructure.csproj" />
+
+  </ItemGroup>
+
 </Project>
