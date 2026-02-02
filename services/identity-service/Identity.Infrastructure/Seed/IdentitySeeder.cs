@@ -25,7 +25,6 @@ public static class IdentitySeeder
         {
             logger.LogInformation("🌱 Seeding Starting...");
 
-            // 1. Seed Roles (Dynamic)
             // 1. Seed Roles (Dynamic Update)
             logger.LogInformation("Checking for new roles...");
             var existingRoles = await context.Roles.ToDictionaryAsync(r => r.Name);
@@ -117,13 +116,61 @@ public static class IdentitySeeder
             await context.SaveChangesAsync();
             logger.LogInformation("✅ Permissions seeded for SystemAdmin/Institution roles.");
 
+            // 1.3 Seed System Configurations (UPSERT LOGIC)
+            var defaultConfigs = new List<SystemConfiguration>
+            {
+                SystemConfiguration.Create("system.maintenancemode", "false", "Sistemi GENEL bakım moduna alır. Aktifken hiçbir servis çalışmaz.", Identity.Domain.Enums.ConfigurationDataType.Boolean, "System", true),
+                SystemConfiguration.Create("auth.tokenlifetime", "60", "Access token ömrü (Dakika).", Identity.Domain.Enums.ConfigurationDataType.Number, "Auth", false),
+                SystemConfiguration.Create("auth.allowregistration", "true", "Yeni kullanıcı kaydına izin verilsin mi?", Identity.Domain.Enums.ConfigurationDataType.Boolean, "Auth", true),
+                SystemConfiguration.Create("notification.emailenabled", "true", "E-posta bildirimlerini aktif/pasif yapar.", Identity.Domain.Enums.ConfigurationDataType.Boolean, "Notification", true)
+            };
+
+            // Per-Service Maintenance Modes (Automated for core services)
+            var serviceNames = new[] { "identity", "blog", "exam", "coaching", "content", "search", "student", "notification" };
+            foreach (var service in serviceNames)
+            {
+                var key = $"maintenance.{service}";
+                defaultConfigs.Add(SystemConfiguration.Create(
+                    key, 
+                    "false", 
+                    $"{service.ToUpper()} servisini bakım moduna alır.", 
+                    Identity.Domain.Enums.ConfigurationDataType.Boolean, 
+                    "Maintenance", 
+                    true));
+            }
+
+            foreach (var config in defaultConfigs)
+            {
+                var existingConfig = await context.Configurations
+                    .FirstOrDefaultAsync(c => c.Key.ToLower() == config.Key.ToLower());
+
+                if (existingConfig == null)
+                {
+                    await context.Configurations.AddAsync(config);
+                    logger.LogInformation("➕ Seeding NEW configuration: {Key}", config.Key);
+                }
+                else
+                {
+                    // SYNC METADATA: Update metadata to match defined default.
+                    // This fixes issues where config exists but has wrong Group or Description.
+                    existingConfig.UpdateMetadata(config.Description, config.Group, config.DataType);
+                    // Ensure IsPublic is correct too
+                    existingConfig.UpdateValue(existingConfig.Value, config.IsPublic); // Value stays same, IsPublic synced
+                    
+                    logger.LogInformation("🔄 Synced metadata for configuration: {Key}", config.Key);
+                }
+            }
+            await context.SaveChangesAsync();
+            logger.LogInformation("✅ System and Service-specific configurations seeded & synced.");
+
+
             // 2. Check if admin user exists in DB
             var adminEmail = "admin@edu.com";
             var existingUser = await userRepository.GetByEmailAsync(adminEmail, CancellationToken.None);
 
             if (existingUser != null)
             {
-                logger.LogInformation("✅ Database already seeded.");
+                logger.LogInformation("✅ Database already seeded (Users exist).");
                 return;
             }
 

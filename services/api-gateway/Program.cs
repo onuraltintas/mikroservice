@@ -2,8 +2,8 @@ using Serilog;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using DotNetEnv;
-
 using EduPlatform.Shared.Infrastructure.Logging;
+using EduPlatform.Shared.Security.Extensions;
 
 // Load .env file from solution root
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", ".env");
@@ -21,6 +21,14 @@ builder.Host.UseCustomSerilog();
 
 // Add Env Vars support for overwriting config
 builder.Configuration.AddEnvironmentVariables();
+
+// Redis Setup for Maintenance Mode
+var redisPassword = Environment.GetEnvironmentVariable("REDIS_PASSWORD") ?? "EduPlatform123!";
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = $"localhost:6379,password={redisPassword},abortConnect=false";
+    options.InstanceName = "EduPlatform:"; // Key prefix
+});
 
 // YARP Setup
 builder.Services.AddReverseProxy()
@@ -50,16 +58,35 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Add Authentication
+builder.Services.AddCustomAuthentication(builder.Configuration);
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 app.UseSerilogRequestLogging();
 
 app.UseCors("AllowFrontend");
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.UseRateLimiter();
 
-app.MapReverseProxy();
+
+app.MapReverseProxy(proxyPipeline =>
+{
+    proxyPipeline.UseMiddleware<EduPlatform.Gateway.Middlewares.MaintenanceMiddleware>();
+});
 
 app.MapGet("/", () => "EduPlatform API Gateway Running 🚀");
+
+app.MapGet("/api/gateway/services", (IConfiguration configuration) =>
+{
+    var clusters = configuration.GetSection("ReverseProxy:Clusters").GetChildren()
+        .Select(c => c.Key.Replace("-cluster", ""))
+        .ToList();
+    return Results.Ok(clusters);
+});
 
 app.Run();

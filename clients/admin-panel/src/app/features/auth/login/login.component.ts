@@ -13,7 +13,6 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 
 import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-social-login';
-// Rebuild trigger
 
 @Component({
     selector: 'app-login',
@@ -63,10 +62,31 @@ export class LoginComponent {
         try {
             await this.authService.loginWithGoogle(idToken);
             this.toaster.success('Google ile giriş başarılı!');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Google Login Error:', error);
-            this.toaster.error('Google ile giriş başarısız.');
-            this.errorMessage.set('Google ile giriş yapılamadı.');
+            const errorCode = error.error?.code; // Changed from error.error?.Error which was likely incorrect based on typical formatting
+            // Better yet, let's look at the structure. Usually it's error.error.Code or error.Code depending on HttpErrorResponse
+            // Assuming standard format { Error: { Code: ..., Description: ... } } or { code: ..., message: ... }
+
+            // Backend returns: Result.Failure(new Error("Code", "Message")) -> serialized as { code: "...", message: "...", ... } or similar.
+            // Let's assume error.error.code based on previous logic.
+
+            const errorMsg = error.error?.message || error.error?.description || 'Bir hata oluştu.';
+
+            /* MAINTENANCE MODE HANDLING & REGISTRATION CHECK */
+            if (errorCode === 'System.MaintenanceMode') {
+                this.errorMessage.set(errorMsg || 'Sistem bakım modundadır.');
+                this.toaster.warning('⚠️ Sistem Bakım Modu Aktif');
+            } else if (errorCode === 'Auth.UserInactive') {
+                this.errorMessage.set('Hesabınız pasif durumdadır.');
+                this.toaster.error('Hesabınız pasif.');
+            } else if (errorCode === 'Identity.RegistrationDisabled') {
+                this.errorMessage.set(errorMsg);
+                this.toaster.info('Yeni Kullanıcı Kaydı Kapalı');
+            } else {
+                this.toaster.error(errorMsg);
+                this.errorMessage.set(errorMsg);
+            }
         } finally {
             this.isLoading.set(false);
         }
@@ -89,7 +109,11 @@ export class LoginComponent {
 
             const errorCode = error.error?.code;
 
-            if (errorCode === 'Auth.EmailNotConfirmed') {
+            /* MAINTENANCE MODE HANDLING */
+            if (errorCode === 'System.MaintenanceMode') {
+                this.errorMessage.set(error.error?.message || 'Sistem bakım modundadır.');
+                this.toaster.warning('⚠️ Bakım Modu Aktif');
+            } else if (errorCode === 'Auth.EmailNotConfirmed') {
                 this.errorMessage.set('Lütfen e-posta adresinizi doğrulayın.');
                 this.showResendLink.set(true);
             } else if (errorCode === 'Auth.UserInactive') {

@@ -15,6 +15,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
     private readonly IUnitOfWork _unitOfWork;
     private readonly IIdentityService _identityService;
     private readonly IStudentRepository _studentRepository;
+    private readonly IConfigurationService _configurationService;
     private readonly ILogger<GoogleLoginCommandHandler> _logger;
 
     public GoogleLoginCommandHandler(
@@ -24,6 +25,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         IUnitOfWork unitOfWork,
         IIdentityService identityService,
         IStudentRepository studentRepository,
+        IConfigurationService configurationService,
         ILogger<GoogleLoginCommandHandler> logger)
     {
         _googleAuthService = googleAuthService;
@@ -32,6 +34,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         _unitOfWork = unitOfWork;
         _identityService = identityService;
         _studentRepository = studentRepository;
+        _configurationService = configurationService;
         _logger = logger;
     }
 
@@ -50,6 +53,14 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         
         if (user == null)
         {
+            // NEW USER REGISTRATION CHECK
+            var allowRegistration = await _configurationService.GetConfigurationValueAsync("auth.allowregistration", cancellationToken);
+            if (!string.Equals(allowRegistration, "true", StringComparison.OrdinalIgnoreCase))
+            {
+                 _logger.LogWarning("Google Login Blocked: Registration is disabled and user {Email} does not exist.", googleUser.Email);
+                 return Result.Failure<LoginResponse>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları kapalıdır. Mevcut bir hesabınız yoksa giriş yapamazsınız."));
+            }
+
             // 2b. Auto-Register User
             _logger.LogInformation("Google Login: Registering new user {Email}", googleUser.Email);
 
@@ -138,6 +149,24 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                  _logger.LogError("Google Login Critical: User lookup failed at end of flow for {Email}", googleUser.Email);
                  return Result.Failure<LoginResponse>(new Error("Auth.UserCreationFailed", "Could not retrieve user."));
              }
+        }
+
+        // MAINTENANCE MODE CHECK (Google users can be logged in now, check roles)
+        var isAdmin = user.Roles.Any(r => 
+            r.Role.Name == "SystemAdmin" || 
+            r.Role.Name == "InstitutionAdmin" || 
+            r.Role.Name == "InstitutionOwner");
+
+        if (!isAdmin)
+        {
+            var globalMaintenance = await _configurationService.GetConfigurationValueAsync("system.maintenancemode", cancellationToken);
+            var identityMaintenance = await _configurationService.GetConfigurationValueAsync("maintenance.identity", cancellationToken);
+
+            if (string.Equals(globalMaintenance, "true", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(identityMaintenance, "true", StringComparison.OrdinalIgnoreCase))
+            {
+                 return Result.Failure<LoginResponse>(new Error("System.MaintenanceMode", "Sistem şu anda bakım modundadır. Lütfen daha sonra tekrar deneyiniz."));
+            }
         }
 
         // 3. Generate Tokens

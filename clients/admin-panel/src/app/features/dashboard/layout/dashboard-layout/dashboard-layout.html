@@ -1,37 +1,57 @@
-<div class="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden font-sans">
+<div class="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden font-sans flex-col">
 
-    <!-- Mobile Sidebar Backdrop -->
-    <div *ngIf="layoutService.isMobileSidebarOpen()" (click)="layoutService.closeMobileSidebar()"
-        class="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 transition-opacity md:hidden" aria-hidden="true">
+    <!-- Maintenance Mode Banner -->
+    <div *ngIf="inMaintenanceMode" class="bg-gradient-to-r from-red-600 to-rose-600 px-4 py-3 shadow-md relative z-50">
+        <div class="flex items-center justify-center gap-3">
+            <span class="flex p-1 rounded-lg bg-red-800 bg-opacity-30">
+                <svg class="h-6 w-6 text-white animate-pulse" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+            </span>
+            <div class="flex flex-col sm:flex-row items-center gap-1 sm:gap-4 text-center">
+                <p class="font-bold text-white text-sm sm:text-base tracking-wide">
+                    ⚠️ SİSTEM GENEL BAKIM MODUNDA
+                </p>
+                <p class="text-red-100 text-xs sm:text-sm font-medium hidden sm:block">
+                    (Normal kullanıcı girişleri kapalıdır. Yönetici olarak işlem yapabilirsiniz.)
+                </p>
+            </div>
+        </div>
     </div>
 
-    <!-- Sidebar (Desktop & Mobile) -->
-    <!-- Mobile: Off-canvas slide-in -->
-    <!-- Desktop: Static but collapsible -->
-    <aside
-        class="fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-lg md:shadow-none"
-        [class.translate-x-0]="layoutService.isMobileSidebarOpen()"
-        [class.-translate-x-full]="!layoutService.isMobileSidebarOpen()"
-        [class.w-72]="!layoutService.isSidebarCollapsed()" [class.w-20]="layoutService.isSidebarCollapsed()">
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Mobile Sidebar Backdrop -->
+        <div *ngIf="layoutService.isMobileSidebarOpen()" (click)="layoutService.closeMobileSidebar()"
+            class="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 transition-opacity md:hidden" aria-hidden="true">
+        </div>
 
-        <app-sidebar class="h-full block"></app-sidebar>
-    </aside>
+        <!-- Sidebar (Desktop & Mobile) -->
+        <aside
+            class="fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-lg md:shadow-none"
+            [class.translate-x-0]="layoutService.isMobileSidebarOpen()"
+            [class.-translate-x-full]="!layoutService.isMobileSidebarOpen()"
+            [class.w-72]="!layoutService.isSidebarCollapsed()" [class.w-20]="layoutService.isSidebarCollapsed()">
 
-    <!-- Main Content Wrapper -->
-    <div class="flex flex-col flex-1 w-0 overflow-hidden transition-all duration-300">
+            <app-sidebar class="h-full block"></app-sidebar>
+        </aside>
 
-        <!-- Header -->
-        <header
-            class="relative z-10 flex-shrink-0 flex h-20 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-            <app-header class="w-full"></app-header>
-        </header>
+        <!-- Main Content Wrapper -->
+        <div class="flex flex-col flex-1 w-0 overflow-hidden transition-all duration-300">
 
-        <!-- Dynamic Content Area -->
-        <main class="flex-1 relative overflow-y-auto focus:outline-none scroll-smooth p-0">
-            <!-- Breadcrumbs or top spacing could go here -->
-            <div class="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto min-h-full">
-                <router-outlet></router-outlet>
-            </div>
-        </main>
+            <!-- Header -->
+            <header
+                class="relative z-10 flex-shrink-0 flex h-20 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+                <app-header class="w-full"></app-header>
+            </header>
+
+            <!-- Dynamic Content Area -->
+            <main class="flex-1 relative overflow-y-auto focus:outline-none scroll-smooth p-0">
+                <div class="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto min-h-full">
+                    <router-outlet></router-outlet>
+                </div>
+            </main>
+        </div>
     </div>
 </div>

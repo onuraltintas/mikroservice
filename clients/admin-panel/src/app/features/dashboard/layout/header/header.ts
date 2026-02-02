@@ -6,8 +6,10 @@ import { ToasterService } from '../../../../core/services/toaster.service';
 import { LayoutService } from '../../services/layout.service';
 import { DarkModeService } from '../../../../core/services/dark-mode.service';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { ConfigurationService } from '../../../../core/services/settings/configuration.service';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
+import { catchError, of, forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-header',
@@ -16,17 +18,38 @@ import { tr } from 'date-fns/locale';
   templateUrl: './header.html',
   styleUrls: ['./header.scss']
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit {
   private authService = inject(AuthService);
   private toaster = inject(ToasterService);
+  private configService = inject(ConfigurationService);
   layoutService = inject(LayoutService);
   darkModeService = inject(DarkModeService);
   notificationService = inject(NotificationService);
 
   showNotificationMenu = signal(false);
+  isMaintenanceMode = signal(false);
 
   showUserMenu = signal(false);
   user = this.authService.userProfile;
+
+  ngOnInit() {
+    this.checkMaintenanceStatus();
+  }
+
+  checkMaintenanceStatus() {
+    // Check BOTH System Global Maintenance AND Identity Service Maintenance
+    forkJoin({
+      system: this.configService.getConfigurationValue('system.maintenancemode').pipe(catchError(() => of('false'))),
+      identity: this.configService.getConfigurationValue('maintenance.identity').pipe(catchError(() => of('false')))
+    }).subscribe({
+      next: (results) => {
+        const sysVal = results.system?.replace(/"/g, '').trim().toLowerCase() === 'true';
+        const idVal = results.identity?.replace(/"/g, '').trim().toLowerCase() === 'true';
+        this.isMaintenanceMode.set(sysVal || idVal);
+      },
+      error: () => this.isMaintenanceMode.set(false)
+    });
+  }
 
   toggleTheme() {
     this.darkModeService.toggle();
