@@ -127,10 +127,15 @@ services:
   # Seq - Structured Log Server (Lightweight alternative)
   # ============================================
   seq:
-    image: datalust/seq:latest
+    image: datalust/seq:2024.3
     container_name: eduplatform-seq
     environment:
       - ACCEPT_EULA=Y
+      # Retention Policies (Disk Yönetimi)
+      - SEQ_CACHE_SYSTEMRAMTARGET=256000000 # 256MB RAM cache limit
+      # NOT: Retention policies are configured via Seq UI or API
+      # Default: Keep all logs indefinitely
+      # Recommended: Configure via http://localhost:5341 -> Settings -> Retention
     volumes:
       - seq_data:/data
     ports:
@@ -138,6 +143,16 @@ services:
       - "5342:5341" # Ingestion
     networks:
       - eduplatform-network
+    # Resource limits (optional but recommended)
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:80/api" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ============================================
   # MailPit - Fake SMTP Server (Development)

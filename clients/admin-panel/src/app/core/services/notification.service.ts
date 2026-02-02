@@ -51,6 +51,7 @@ export class NotificationService implements OnDestroy {
                 accessTokenFactory: () => token
             })
             .withAutomaticReconnect()
+            .configureLogging(signalR.LogLevel.Error)
             .build();
 
         this.hubConnection.start()
