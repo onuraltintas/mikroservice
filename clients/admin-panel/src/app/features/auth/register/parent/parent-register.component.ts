@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ToasterService } from '../../../../core/services/toaster.service';
@@ -13,6 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { environment } from '../../../../../environments/environment.development';
+import { ConfigurationService } from '../../../../core/services/settings/configuration.service';
 
 @Component({
     selector: 'app-parent-register',
@@ -23,11 +24,12 @@ import { environment } from '../../../../../environments/environment.development
     ],
     templateUrl: './parent-register.component.html'
 })
-export class ParentRegisterComponent {
+export class ParentRegisterComponent implements OnInit {
     private fb = inject(FormBuilder);
     private http = inject(HttpClient);
     private router = inject(Router);
     private toaster = inject(ToasterService);
+    private configService = inject(ConfigurationService);
 
     isLoading = signal(false);
     errorMessage = signal<string | null>(null);
@@ -41,6 +43,19 @@ export class ParentRegisterComponent {
         confirmPassword: ['', Validators.required],
         phoneNumber: ['', [Validators.required, Validators.pattern('^[0-9]{10,11}$')]]
     }, { validators: passwordMatchValidator });
+
+    ngOnInit() {
+        this.configService.getPublicConfigurationValue('auth.allowregistration')
+            .subscribe({
+                next: (val) => {
+                    const allowed = val?.replace(/"/g, '').trim().toLowerCase() === 'true';
+                    if (!allowed) {
+                        this.toaster.warning('Yeni kullanıcı kayıtları şu an kapalıdır.');
+                        this.router.navigate(['/auth/register']);
+                    }
+                }
+            });
+    }
 
     async onSubmit() {
         if (this.form.invalid) return;

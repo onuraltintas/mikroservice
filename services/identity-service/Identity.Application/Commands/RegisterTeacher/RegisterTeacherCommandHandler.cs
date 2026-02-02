@@ -15,23 +15,33 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
     private readonly ITeacherRepository _teacherRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly IConfigurationService _configurationService;
 
     public RegisterTeacherCommandHandler(
         IIdentityService identityService,
         IUserRepository userRepository,
         ITeacherRepository teacherRepository,
         IUnitOfWork unitOfWork,
-        IPublishEndpoint publishEndpoint)
+        IPublishEndpoint publishEndpoint,
+        IConfigurationService configurationService)
     {
         _identityService = identityService;
         _userRepository = userRepository;
         _teacherRepository = teacherRepository;
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
+        _configurationService = configurationService;
     }
 
     public async Task<Result<Guid>> Handle(RegisterTeacherCommand request, CancellationToken cancellationToken)
     {
+        // Global Registration Switch Check
+        var allowRegistration = await _configurationService.GetConfigurationValueAsync("auth.allowregistration", cancellationToken);
+        if (!string.Equals(allowRegistration, "true", StringComparison.OrdinalIgnoreCase))
+        {
+            return Result.Failure<Guid>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları sistem yöneticisi tarafından geçici olarak durdurulmuştur."));
+        }
+
         var identityResult = await _identityService.RegisterUserAsync(
             request.Email,
             request.Password,
@@ -84,4 +94,3 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
         }
     }
 }
-

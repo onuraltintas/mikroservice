@@ -14,23 +14,33 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
     private readonly IParentRepository _parentRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly IConfigurationService _configurationService;
 
     public RegisterParentCommandHandler(
         IIdentityService identityService,
         IUserRepository userRepository,
         IParentRepository parentRepository,
         IUnitOfWork unitOfWork,
-        IPublishEndpoint publishEndpoint)
+        IPublishEndpoint publishEndpoint,
+        IConfigurationService configurationService)
     {
         _identityService = identityService;
         _userRepository = userRepository;
         _parentRepository = parentRepository;
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
+        _configurationService = configurationService;
     }
 
     public async Task<Result<Guid>> Handle(RegisterParentCommand request, CancellationToken cancellationToken)
     {
+        // Global Registration Switch Check
+        var allowRegistration = await _configurationService.GetConfigurationValueAsync("auth.allowregistration", cancellationToken);
+        if (!string.Equals(allowRegistration, "true", StringComparison.OrdinalIgnoreCase))
+        {
+            return Result.Failure<Guid>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları sistem yöneticisi tarafından geçici olarak durdurulmuştur."));
+        }
+
         var identityResult = await _identityService.RegisterUserAsync(
             request.Email,
             request.Password,

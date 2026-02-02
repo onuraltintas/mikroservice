@@ -12,17 +12,23 @@ namespace Identity.Infrastructure.Services;
 public class TokenService : ITokenService
 {
     private readonly IConfiguration _configuration;
+    private readonly IConfigurationService _configService;
 
-    public TokenService(IConfiguration configuration)
+    public TokenService(IConfiguration configuration, IConfigurationService configService)
     {
         _configuration = configuration;
+        _configService = configService;
     }
 
     public string GenerateAccessToken(User user)
     {
         try 
         {
-            // Check environment variables first, then fallback to configuration
+            // 1. Try to get dynamic configuration from Redis/DB
+            var dynamicExpiryStr = _configService.GetConfigurationValueAsync("Auth.TokenLifetime", CancellationToken.None).GetAwaiter().GetResult();
+            int.TryParse(dynamicExpiryStr, out var dynamicExpiry);
+
+            // 2. Fallback to Environment Variables or appsettings
             var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") 
                             ?? _configuration["JWT_SECRET"] 
                             ?? throw new InvalidOperationException("JWT_SECRET is not configured.");
@@ -33,11 +39,20 @@ public class TokenService : ITokenService
             var audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") 
                           ?? _configuration["JWT_AUDIENCE"] 
                           ?? throw new InvalidOperationException("JWT_AUDIENCE is not configured.");
-            var expiryMinutesStr = Environment.GetEnvironmentVariable("JWT_EXPIRY_MINUTES") 
-                                  ?? _configuration["JWT_EXPIRY_MINUTES"]
-                                  ?? throw new InvalidOperationException("JWT_EXPIRY_MINUTES is not configured.");
-            int.TryParse(expiryMinutesStr, out var expiryMinutes);
-            if (expiryMinutes == 0) expiryMinutes = 30; // Safety fallback for parse error
+            
+            int expiryMinutes;
+            if (dynamicExpiry > 0)
+            {
+                expiryMinutes = dynamicExpiry;
+            }
+            else 
+            {
+                var expiryMinutesStr = Environment.GetEnvironmentVariable("JWT_EXPIRY_MINUTES") 
+                                      ?? _configuration["JWT_EXPIRY_MINUTES"]
+                                      ?? "30";
+                int.TryParse(expiryMinutesStr, out expiryMinutes);
+                if (expiryMinutes == 0) expiryMinutes = 30;
+            }
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);

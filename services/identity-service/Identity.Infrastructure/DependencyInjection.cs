@@ -62,6 +62,7 @@ public static class DependencyInjection
         services.AddScoped<ITokenService, Services.TokenService>();
         services.AddScoped<IGoogleAuthService, Services.GoogleAuthService>();
         services.AddScoped<ISystemLogService, Services.Logs.SystemLogService>();
+        services.AddScoped<IConfigurationService, Services.ConfigurationService>();
 
         // Repositories
         services.AddScoped<IUserRepository,Repositories.UserRepository>();

@@ -15,23 +15,33 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
     private readonly IStudentRepository _studentRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly IConfigurationService _configurationService;
 
     public RegisterStudentCommandHandler(
         IIdentityService identityService,
         IUserRepository userRepository,
         IStudentRepository studentRepository,
         IUnitOfWork unitOfWork,
-        IPublishEndpoint publishEndpoint)
+        IPublishEndpoint publishEndpoint,
+        IConfigurationService configurationService)
     {
         _identityService = identityService;
         _userRepository = userRepository;
         _studentRepository = studentRepository;
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
+        _configurationService = configurationService;
     }
 
     public async Task<Result<Guid>> Handle(RegisterStudentCommand request, CancellationToken cancellationToken)
     {
+        // Global Registration Switch Check
+        var allowRegistration = await _configurationService.GetConfigurationValueAsync("auth.allowregistration", cancellationToken);
+        if (!string.Equals(allowRegistration, "true", StringComparison.OrdinalIgnoreCase))
+        {
+            return Result.Failure<Guid>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları sistem yöneticisi tarafından geçici olarak durdurulmuştur."));
+        }
+
         var identityResult = await _identityService.RegisterUserAsync(
             request.Email,
             request.Password,

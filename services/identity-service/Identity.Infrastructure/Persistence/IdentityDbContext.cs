@@ -30,6 +30,7 @@ public class IdentityDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<UserLogin> UserLogins => Set<UserLogin>();
     public DbSet<Permission> Permissions => Set<Permission>();
+    public DbSet<SystemConfiguration> Configurations => Set<SystemConfiguration>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

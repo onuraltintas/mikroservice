@@ -27,5 +27,10 @@ export const DASHBOARD_ROUTES: Routes = [
         path: 'settings/log-retention',
         loadComponent: () => import('../settings/pages/log-retention/log-retention.component').then(m => m.LogRetentionComponent),
         data: { title: 'Log Saklama Ayarları' }
+    },
+    {
+        path: 'settings/configurations',
+        loadComponent: () => import('../settings/pages/configurations/configurations.component').then(m => m.ConfigurationsComponent),
+        data: { title: 'Sistem Ayarları' }
     }
 ];

@@ -15,23 +15,33 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
     private readonly IInstitutionRepository _institutionRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly IConfigurationService _configurationService;
 
     public RegisterInstitutionCommandHandler(
         IIdentityService identityService,
         IUserRepository userRepository,
         IInstitutionRepository institutionRepository,
         IUnitOfWork unitOfWork,
-        IPublishEndpoint publishEndpoint)
+        IPublishEndpoint publishEndpoint,
+        IConfigurationService configurationService)
     {
         _identityService = identityService;
         _userRepository = userRepository;
         _institutionRepository = institutionRepository;
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
+        _configurationService = configurationService;
     }
 
     public async Task<Result<Guid>> Handle(RegisterInstitutionCommand request, CancellationToken cancellationToken)
     {
+        // Global Registration Switch Check
+        var allowRegistration = await _configurationService.GetConfigurationValueAsync("auth.allowregistration", cancellationToken);
+        if (!string.Equals(allowRegistration, "true", StringComparison.OrdinalIgnoreCase))
+        {
+            return Result.Failure<Guid>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları sistem yöneticisi tarafından geçici olarak durdurulmuştur."));
+        }
+
         // 1. Create User in Keycloak
         var identityResult = await _identityService.RegisterUserAsync(
             request.Email,

@@ -14,6 +14,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
     private readonly ITokenService _tokenService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IIdentityService _identityService;
+    private readonly IConfigurationService _configurationService;
     private readonly Microsoft.Extensions.Logging.ILogger<LoginCommandHandler> _logger;
 
     public LoginCommandHandler(
@@ -22,6 +23,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         ITokenService tokenService,
         IUnitOfWork unitOfWork,
         IIdentityService identityService,
+        IConfigurationService configurationService,
         Microsoft.Extensions.Logging.ILogger<LoginCommandHandler> logger)
     {
         _userRepository = userRepository;
@@ -29,6 +31,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         _tokenService = tokenService;
         _unitOfWork = unitOfWork;
         _identityService = identityService;
+        _configurationService = configurationService;
         _logger = logger;
     }
 
@@ -53,7 +56,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
              return Result.Failure<LoginResponse>(new Error("Auth.UserInactive", "Hesabınız pasif durumdadır."));
         }
 
-        // 4. Check Email Confirmation
+        // 4. Check Email Confirmation & IsAdmin Check
         var isAdmin = user.Roles.Any(r => 
             r.Role.Name == "SystemAdmin" || 
             r.Role.Name == "InstitutionAdmin" || 
@@ -63,24 +66,37 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         {
             return Result.Failure<LoginResponse>(new Error("Auth.EmailNotConfirmed", "Lütfen e-posta adresinizi doğrulayın."));
         }
+        
+        // 5. MAINTENANCE MODE CHECK
+        // Check if System is in Maintenance Mode (Global or Identity Service)
+        // Admin users (SystemAdmin, InstitutionOwner) are exempt.
+        if (!isAdmin)
+        {
+            var globalMaintenance = await _configurationService.GetConfigurationValueAsync("system.maintenancemode", cancellationToken);
+            var identityMaintenance = await _configurationService.GetConfigurationValueAsync("maintenance.identity", cancellationToken);
 
-        // 5. Generate Tokens
+            if (string.Equals(globalMaintenance, "true", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(identityMaintenance, "true", StringComparison.OrdinalIgnoreCase))
+            {
+                return Result.Failure<LoginResponse>(new Error("System.MaintenanceMode", "Sistem şu anda bakım modundadır. Lütfen daha sonra tekrar deneyiniz."));
+            }
+        }
+
+        // 6. Generate Tokens
         var accessToken = _tokenService.GenerateAccessToken(user);
         
         var ipAddress = "0.0.0.0"; // Should be passed in command but defaulting here
         var refreshToken = _tokenService.GenerateRefreshToken(user.Id, ipAddress); 
         
-        // 6. Save Refresh Token (Securely bypassing concurrency checks on User)
+        // 7. Save Refresh Token (Securely bypassing concurrency checks on User)
         var saveTokenResult = await _identityService.SaveRefreshTokenAsync(user.Id, refreshToken, cancellationToken);
         if (saveTokenResult.IsFailure)
         {
             _logger.LogError("Failed to save refresh token: {Error}", saveTokenResult.Error.Description);
-            // We could return failure here, but usually we proceed with what we have? 
-            // Better to fail if token cannot be saved.
             return Result.Failure<LoginResponse>(saveTokenResult.Error);
         }
 
-        // 7. Record Login Stats (Best effort)
+        // 8. Record Login Stats (Best effort)
         try 
         {
             user.RecordLogin();
@@ -88,7 +104,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         }
         catch (Exception ex)
         {
-             // Log but don't fail login if DB recording fails
              _logger.LogError(ex, "Login stats recording failed");
         }
 

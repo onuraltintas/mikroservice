@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { HttpClient } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -13,6 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { environment } from '../../../../../environments/environment.development';
+import { ConfigurationService } from '../../../../core/services/settings/configuration.service';
 
 @Component({
     selector: 'app-student-register',
@@ -23,11 +24,12 @@ import { environment } from '../../../../../environments/environment.development
     ],
     templateUrl: './student-register.component.html'
 })
-export class StudentRegisterComponent {
+export class StudentRegisterComponent implements OnInit {
     private fb = inject(FormBuilder);
     private http = inject(HttpClient);
     private router = inject(Router);
     private toaster = inject(ToasterService);
+    private configService = inject(ConfigurationService);
 
     isLoading = signal(false);
     errorMessage = signal<string | null>(null);
@@ -40,6 +42,22 @@ export class StudentRegisterComponent {
         password: ['', [Validators.required, strongPasswordValidator()]],
         confirmPassword: ['', Validators.required]
     }, { validators: passwordMatchValidator });
+
+    ngOnInit() {
+        this.configService.getPublicConfigurationValue('auth.allowregistration')
+            .subscribe({
+                next: (val) => {
+                    const allowed = val?.replace(/"/g, '').trim().toLowerCase() === 'true';
+                    if (!allowed) {
+                        this.toaster.warning('Yeni kullanıcı kayıtları şu an kapalıdır.');
+                        this.router.navigate(['/auth/register']);
+                    }
+                },
+                error: () => {
+                    // Fallback: If config fails, assume allowed (or log error)
+                }
+            });
+    }
 
     async onSubmit() {
         if (this.form.invalid) return;
