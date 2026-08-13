@@ -1,6 +1,9 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 using Coaching.API.Controllers;
+using EduPlatform.Shared.Security.Extensions;
 using Identity.API.Controllers;
 using Notification.API.Controllers;
 using Xunit;
@@ -51,5 +54,20 @@ public class SecurityMetadataTests
         action.Should().NotBeNull();
         action!.GetCustomAttributes(typeof(AllowAnonymousAttribute), inherit: true).Should().BeEmpty();
         action.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true).Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task CustomAuthorization_MustRequireAuthenticatedUsersByDefault()
+    {
+        var services = new ServiceCollection();
+        services.AddCustomAuthorization();
+
+        await using var provider = services.BuildServiceProvider();
+        var policyProvider = provider.GetRequiredService<IAuthorizationPolicyProvider>();
+        var fallbackPolicy = await policyProvider.GetFallbackPolicyAsync();
+
+        fallbackPolicy.Should().NotBeNull();
+        fallbackPolicy!.Requirements.Should().ContainSingle(requirement =>
+            requirement is DenyAnonymousAuthorizationRequirement);
     }
 }
