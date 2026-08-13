@@ -1,5 +1,6 @@
 using Coaching.Application.Interfaces;
 using Coaching.Domain.Entities;
+using Coaching.Application.Authorization;
 
 using MediatR;
 
@@ -9,15 +10,38 @@ public class CreateGoalCommandHandler : IRequestHandler<CreateGoalCommand, Creat
 {
     private readonly IAcademicGoalRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _identityAuthorizationClient;
 
-    public CreateGoalCommandHandler(IAcademicGoalRepository repository, IUnitOfWork unitOfWork)
+    public CreateGoalCommandHandler(
+        IAcademicGoalRepository repository,
+        IUnitOfWork unitOfWork,
+        ICoachingAccessPolicy accessPolicy,
+        ICoachingIdentityAuthorizationClient identityAuthorizationClient)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
+        _accessPolicy = accessPolicy;
+        _identityAuthorizationClient = identityAuthorizationClient;
     }
 
     public async Task<CreateGoalResponse> Handle(CreateGoalCommand command, CancellationToken cancellationToken)
     {
+        if (command.TeacherId.HasValue)
+        {
+            _accessPolicy.RequireTeacher(command.TeacherId.Value);
+            await _identityAuthorizationClient.AuthorizeTeacherTargetsAsync(
+                command.TeacherId.Value,
+                new[] { command.StudentId },
+                null,
+                _accessPolicy.IsSystemAdministrator,
+                cancellationToken);
+        }
+        else
+        {
+            _accessPolicy.RequireStudent(command.StudentId);
+        }
+
         var goal = AcademicGoal.Create(
             command.StudentId,
             command.Title,

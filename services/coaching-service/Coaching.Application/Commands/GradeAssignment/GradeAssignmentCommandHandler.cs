@@ -1,4 +1,5 @@
 using Coaching.Application.Interfaces;
+using Coaching.Application.Authorization;
 
 using MediatR;
 
@@ -11,13 +12,16 @@ public class GradeAssignmentCommandHandler : IRequestHandler<GradeAssignmentComm
 {
     private readonly IAssignmentRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICoachingAccessPolicy _accessPolicy;
 
     public GradeAssignmentCommandHandler(
         IAssignmentRepository repository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ICoachingAccessPolicy accessPolicy)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
+        _accessPolicy = accessPolicy;
     }
 
     public async Task<GradeAssignmentResponse> Handle(
@@ -29,6 +33,8 @@ public class GradeAssignmentCommandHandler : IRequestHandler<GradeAssignmentComm
         
         if (assignment == null)
             throw new InvalidOperationException($"Assignment {command.AssignmentId} not found");
+
+        _accessPolicy.RequireTeacher(assignment.TeacherId);
 
         // Grade assignment (domain logic)
         assignment.GradeAssignment(

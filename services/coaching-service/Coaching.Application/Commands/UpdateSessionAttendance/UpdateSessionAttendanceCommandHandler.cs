@@ -1,5 +1,6 @@
 using Coaching.Application.Interfaces;
 using Coaching.Domain.Enums;
+using Coaching.Application.Authorization;
 using MediatR;
 
 namespace Coaching.Application.Commands.UpdateSessionAttendance;
@@ -8,13 +9,16 @@ public class UpdateSessionAttendanceCommandHandler : IRequestHandler<UpdateSessi
 {
     private readonly ICoachingSessionRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICoachingAccessPolicy _accessPolicy;
 
     public UpdateSessionAttendanceCommandHandler(
         ICoachingSessionRepository repository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ICoachingAccessPolicy accessPolicy)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
+        _accessPolicy = accessPolicy;
     }
 
     public async Task Handle(
@@ -25,6 +29,8 @@ public class UpdateSessionAttendanceCommandHandler : IRequestHandler<UpdateSessi
 
         if (session == null)
             throw new InvalidOperationException($"Session {command.SessionId} not found");
+
+        _accessPolicy.RequireTeacher(session.TeacherId);
 
         // Assuming single student session for now (MVP)
         var attendance = session.Attendances.FirstOrDefault();

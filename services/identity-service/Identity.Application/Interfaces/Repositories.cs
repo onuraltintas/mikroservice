@@ -37,7 +37,15 @@ public interface IInstitutionRepository
     Task<Guid?> GetInstitutionIdByAdminIdAsync(Guid adminUserId, CancellationToken cancellationToken);
     Task<Guid?> GetPrimaryInstitutionIdByUserIdAsync(Guid userId, CancellationToken cancellationToken);
     Task<bool> IsUserInInstitutionAsync(Guid userId, Guid institutionId, CancellationToken cancellationToken);
+    Task<CoachingTeacherAuthorization?> AuthorizeCoachingTeacherTargetsAsync(
+        Guid teacherUserId,
+        IReadOnlyCollection<Guid> studentUserIds,
+        Guid? requestedInstitutionId,
+        bool isSystemAdministrator,
+        CancellationToken cancellationToken);
 }
+
+public sealed record CoachingTeacherAuthorization(Guid? InstitutionId);
 
 public interface IUnitOfWork
 {

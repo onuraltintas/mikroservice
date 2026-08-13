@@ -44,8 +44,14 @@ public class GlobalExceptionHandler : IExceptionHandler
                 break;
 
             case BusinessRuleException businessRuleException:
-                problemDetails.Status = StatusCodes.Status400BadRequest;
-                problemDetails.Title = "Business Rule Violation";
+                var isAuthorizationFailure = businessRuleException.Code.StartsWith(
+                    "Authorization.", StringComparison.OrdinalIgnoreCase);
+                problemDetails.Status = isAuthorizationFailure
+                    ? StatusCodes.Status403Forbidden
+                    : StatusCodes.Status400BadRequest;
+                problemDetails.Title = isAuthorizationFailure
+                    ? "Forbidden"
+                    : "Business Rule Violation";
                 problemDetails.Detail = businessRuleException.Message;
                 problemDetails.Extensions["code"] = businessRuleException.Code;
                 break;

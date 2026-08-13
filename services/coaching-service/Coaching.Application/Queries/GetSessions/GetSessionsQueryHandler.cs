@@ -1,4 +1,5 @@
 using Coaching.Application.Interfaces;
+using Coaching.Application.Authorization;
 using MediatR;
 
 namespace Coaching.Application.Queries.GetSessions;
@@ -8,16 +9,21 @@ public class GetSessionsQueryHandler :
     IRequestHandler<GetUpcomingSessionsQuery, List<SessionDto>>
 {
     private readonly ICoachingSessionRepository _repository;
+    private readonly ICoachingAccessPolicy _accessPolicy;
 
-    public GetSessionsQueryHandler(ICoachingSessionRepository repository)
+    public GetSessionsQueryHandler(
+        ICoachingSessionRepository repository,
+        ICoachingAccessPolicy accessPolicy)
     {
         _repository = repository;
+        _accessPolicy = accessPolicy;
     }
 
     public async Task<List<SessionDto>> Handle(
         GetTeacherSessionsQuery query,
         CancellationToken cancellationToken)
     {
+        _accessPolicy.RequireTeacher(query.TeacherId);
         var sessions = await _repository.GetByTeacherIdAsync(query.TeacherId, cancellationToken);
         return MapToDto(sessions);
     }
@@ -26,7 +32,12 @@ public class GetSessionsQueryHandler :
         GetUpcomingSessionsQuery query,
         CancellationToken cancellationToken)
     {
-        var sessions = await _repository.GetUpcomingSessionsAsync(query.FromDate, cancellationToken);
+        var sessions = _accessPolicy.IsSystemAdministrator
+            ? await _repository.GetUpcomingSessionsAsync(query.FromDate, cancellationToken)
+            : await _repository.GetUpcomingSessionsByTeacherIdAsync(
+                _accessPolicy.RequireCurrentTeacher(),
+                query.FromDate,
+                cancellationToken);
         return MapToDto(sessions);
     }
 

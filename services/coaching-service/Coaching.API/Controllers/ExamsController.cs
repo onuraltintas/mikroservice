@@ -6,6 +6,7 @@ using Coaching.Application.Queries.GetExamResults;
 
 using MediatR;
 using Coaching.Application.Commands.DeleteExam;
+using EduPlatform.Shared.Kernel.Exceptions;
 
 namespace Coaching.API.Controllers;
 
@@ -46,6 +47,14 @@ public class ExamsController : ControllerBase
             var result = await _mediator.Send(command, cancellationToken);
             return CreatedAtAction(nameof(GetStudentResults), new { studentId = Guid.Empty }, result);
         }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (EduPlatform.Shared.Kernel.Exceptions.ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating exam");
@@ -78,6 +87,18 @@ public class ExamsController : ControllerBase
         {
             return BadRequest(new { error = ex.Message });
         }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex)
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
+        }
+        catch (EduPlatform.Shared.Kernel.Exceptions.ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error adding exam result");
@@ -103,6 +124,10 @@ public class ExamsController : ControllerBase
         catch (InvalidOperationException ex)
         {
             return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
         }
         catch (Exception ex)
         {

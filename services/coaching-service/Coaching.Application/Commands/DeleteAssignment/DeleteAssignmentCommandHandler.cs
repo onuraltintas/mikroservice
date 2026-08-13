@@ -1,4 +1,5 @@
 using Coaching.Application.Interfaces;
+using Coaching.Application.Authorization;
 
 using MediatR;
 
@@ -8,11 +9,16 @@ public class DeleteAssignmentCommandHandler : IRequestHandler<DeleteAssignmentCo
 {
     private readonly IAssignmentRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICoachingAccessPolicy _accessPolicy;
 
-    public DeleteAssignmentCommandHandler(IAssignmentRepository repository, IUnitOfWork unitOfWork)
+    public DeleteAssignmentCommandHandler(
+        IAssignmentRepository repository,
+        IUnitOfWork unitOfWork,
+        ICoachingAccessPolicy accessPolicy)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
+        _accessPolicy = accessPolicy;
     }
 
     public async Task Handle(DeleteAssignmentCommand command, CancellationToken cancellationToken)
@@ -21,6 +27,8 @@ public class DeleteAssignmentCommandHandler : IRequestHandler<DeleteAssignmentCo
         
         if (assignment == null)
             throw new InvalidOperationException($"Assignment {command.AssignmentId} not found");
+
+        _accessPolicy.RequireTeacher(assignment.TeacherId);
 
         // Hard Delete
         await _repository.DeleteAsync(assignment, cancellationToken);

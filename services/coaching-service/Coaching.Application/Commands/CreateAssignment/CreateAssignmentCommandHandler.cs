@@ -1,6 +1,7 @@
 using Coaching.Domain.Entities;
 using Coaching.Domain.Enums;
 using Coaching.Application.Interfaces;
+using Coaching.Application.Authorization;
 
 using MediatR;
 
@@ -13,17 +14,31 @@ public class CreateAssignmentCommandHandler : IRequestHandler<CreateAssignmentCo
 {
     private readonly IAssignmentRepository _assignmentRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _identityAuthorizationClient;
 
     public CreateAssignmentCommandHandler(
         IAssignmentRepository assignmentRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ICoachingAccessPolicy accessPolicy,
+        ICoachingIdentityAuthorizationClient identityAuthorizationClient)
     {
         _assignmentRepository = assignmentRepository;
         _unitOfWork = unitOfWork;
+        _accessPolicy = accessPolicy;
+        _identityAuthorizationClient = identityAuthorizationClient;
     }
 
     public async Task<CreateAssignmentResponse> Handle(CreateAssignmentCommand request, CancellationToken cancellationToken)
     {
+        _accessPolicy.RequireTeacher(request.TeacherId);
+        var institutionId = await _identityAuthorizationClient.AuthorizeTeacherTargetsAsync(
+            request.TeacherId,
+            request.StudentIds,
+            request.InstitutionId,
+            _accessPolicy.IsSystemAdministrator,
+            cancellationToken);
+
         // Parse AssignmentType
         var assignmentType = Enum.Parse<AssignmentType>(request.AssignmentType, ignoreCase: true);
 
@@ -33,7 +48,7 @@ public class CreateAssignmentCommandHandler : IRequestHandler<CreateAssignmentCo
             title: request.Title,
             dueDate: request.DueDate,
             type: assignmentType,
-            institutionId: request.InstitutionId
+            institutionId: institutionId
         );
 
         // Set optional details

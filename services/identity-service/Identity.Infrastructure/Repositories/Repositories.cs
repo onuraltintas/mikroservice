@@ -238,6 +238,105 @@ public class InstitutionRepository : IInstitutionRepository
                    s.ParentId == userId && s.InstitutionId == institutionId && s.IsActive,
                    cancellationToken);
     }
+
+    public async Task<CoachingTeacherAuthorization?> AuthorizeCoachingTeacherTargetsAsync(
+        Guid teacherUserId,
+        IReadOnlyCollection<Guid> studentUserIds,
+        Guid? requestedInstitutionId,
+        bool isSystemAdministrator,
+        CancellationToken cancellationToken)
+    {
+        var teacher = await _context.TeacherProfiles
+            .AsNoTracking()
+            .Include(profile => profile.User)
+                .ThenInclude(user => user.Roles)
+                    .ThenInclude(userRole => userRole.Role)
+            .Include(profile => profile.Institution)
+            .FirstOrDefaultAsync(profile =>
+                profile.UserId == teacherUserId
+                && profile.IsActive
+                && profile.User.IsActive
+                && profile.User.Roles.Any(userRole =>
+                    userRole.Role.Name == "Teacher" && !userRole.Role.IsDeleted)
+                && (!profile.InstitutionId.HasValue
+                    || (profile.Institution != null && profile.Institution.IsActive)),
+                cancellationToken);
+
+        if (teacher == null)
+        {
+            return null;
+        }
+
+        if (!isSystemAdministrator
+            && requestedInstitutionId.HasValue
+            && teacher!.InstitutionId != requestedInstitutionId)
+        {
+            return null;
+        }
+
+        var institutionId = requestedInstitutionId ?? teacher!.InstitutionId;
+
+        if (isSystemAdministrator && requestedInstitutionId.HasValue)
+        {
+            var activeInstitution = await _context.Institutions
+                .AsNoTracking()
+                .AnyAsync(institution =>
+                    institution.Id == requestedInstitutionId.Value && institution.IsActive,
+                    cancellationToken);
+
+            if (!activeInstitution)
+            {
+                return null;
+            }
+        }
+
+        var distinctStudentUserIds = studentUserIds.Distinct().ToArray();
+        if (distinctStudentUserIds.Length == 0)
+        {
+            return new CoachingTeacherAuthorization(institutionId);
+        }
+
+        var students = await _context.StudentProfiles
+            .AsNoTracking()
+            .Include(profile => profile.User)
+            .Include(profile => profile.Institution)
+            .Where(profile =>
+                distinctStudentUserIds.Contains(profile.UserId)
+                && profile.IsActive
+                && profile.User.IsActive
+                && profile.InstitutionId == institutionId
+                && (!profile.InstitutionId.HasValue
+                    || (profile.Institution != null && profile.Institution.IsActive)))
+            .Select(profile => new { profile.UserId, profile.Id })
+            .ToListAsync(cancellationToken);
+
+        if (students.Count != distinctStudentUserIds.Length)
+        {
+            return null;
+        }
+
+        if (!isSystemAdministrator)
+        {
+            var studentProfileIds = students.Select(student => student.Id).ToArray();
+            var assignedStudentProfileIds = await _context.TeacherStudentAssignments
+                .AsNoTracking()
+                .Where(assignment =>
+                    assignment.TeacherId == teacher!.Id
+                    && assignment.IsActive
+                    && studentProfileIds.Contains(assignment.StudentId)
+                    && assignment.InstitutionId == institutionId)
+                .Select(assignment => assignment.StudentId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            if (assignedStudentProfileIds.Count != studentProfileIds.Length)
+            {
+                return null;
+            }
+        }
+
+        return new CoachingTeacherAuthorization(institutionId);
+    }
 }
 
 public class UnitOfWork : IUnitOfWork

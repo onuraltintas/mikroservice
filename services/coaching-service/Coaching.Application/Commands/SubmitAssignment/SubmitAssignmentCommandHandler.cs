@@ -1,4 +1,5 @@
 using Coaching.Application.Interfaces;
+using Coaching.Application.Authorization;
 
 using MediatR;
 
@@ -11,13 +12,16 @@ public class SubmitAssignmentCommandHandler : IRequestHandler<SubmitAssignmentCo
 {
     private readonly IAssignmentRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICoachingAccessPolicy _accessPolicy;
 
     public SubmitAssignmentCommandHandler(
         IAssignmentRepository repository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ICoachingAccessPolicy accessPolicy)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
+        _accessPolicy = accessPolicy;
     }
 
     public async Task<SubmitAssignmentResponse> Handle(
@@ -29,6 +33,8 @@ public class SubmitAssignmentCommandHandler : IRequestHandler<SubmitAssignmentCo
         
         if (assignment == null)
             throw new InvalidOperationException($"Assignment {command.AssignmentId} not found");
+
+        _accessPolicy.RequireStudent(command.StudentId);
 
         // Submit assignment (domain logic)
         assignment.SubmitAssignment(command.StudentId, command.StudentNote);

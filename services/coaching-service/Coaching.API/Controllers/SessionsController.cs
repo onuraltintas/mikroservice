@@ -5,6 +5,7 @@ using Coaching.Application.Commands.UpdateSessionAttendance;
 using Coaching.Application.Queries.GetSessions;
 using MediatR;
 using Coaching.Application.Commands.DeleteSession;
+using EduPlatform.Shared.Kernel.Exceptions;
 
 namespace Coaching.API.Controllers;
 
@@ -46,6 +47,14 @@ public class SessionsController : ControllerBase
             var result = await _mediator.Send(command, cancellationToken);
             return CreatedAtAction(nameof(GetTeacherSessions), new { teacherId = command.TeacherId }, result);
         }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating session");
@@ -78,6 +87,14 @@ public class SessionsController : ControllerBase
         {
             return NotFound(new { error = ex.Message });
         }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating attendance");
@@ -104,6 +121,10 @@ public class SessionsController : ControllerBase
         {
             return NotFound(new { error = ex.Message });
         }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error cancelling session: {SessionId}", id);
@@ -129,6 +150,10 @@ public class SessionsController : ControllerBase
         catch (InvalidOperationException ex)
         {
             return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
         }
         catch (Exception ex)
         {

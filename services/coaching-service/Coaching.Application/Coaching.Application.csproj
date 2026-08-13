@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\shared\EduPlatform.Shared.Contracts\EduPlatform.Shared.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\shared\EduPlatform.Shared.Security\EduPlatform.Shared.Security.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

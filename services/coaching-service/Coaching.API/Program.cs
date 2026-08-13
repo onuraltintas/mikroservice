@@ -3,6 +3,7 @@ using Coaching.Infrastructure;
 using EduPlatform.Shared.Infrastructure.Extensions;
 using EduPlatform.Shared.Infrastructure.Logging;
 using EduPlatform.Shared.Security.Extensions;
+using EduPlatform.Shared.Security.Services;
 using Serilog;
 using MassTransit;
 using Coaching.Infrastructure.Data;
@@ -38,6 +39,7 @@ builder.Services.AddSharedInfrastructure(
 // Authentication & authorization
 builder.Services.AddCustomAuthentication(builder.Configuration);
 builder.Services.AddGlobalAuthorization();
+InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
 
 // Add Mediator Behaviors (Validation, Logging)
 builder.Services.AddMediatorWithBehaviors(typeof(Coaching.Application.DependencyInjection).Assembly);

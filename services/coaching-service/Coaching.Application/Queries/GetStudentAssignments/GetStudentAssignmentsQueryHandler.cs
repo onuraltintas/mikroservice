@@ -1,5 +1,6 @@
 using Coaching.Application.Interfaces;
 using Coaching.Domain.Enums;
+using Coaching.Application.Authorization;
 
 using MediatR;
 
@@ -8,16 +9,21 @@ namespace Coaching.Application.Queries.GetStudentAssignments;
 public class GetStudentAssignmentsQueryHandler : IRequestHandler<GetStudentAssignmentsQuery, StudentAssignmentListResponse>
 {
     private readonly IAssignmentRepository _repository;
+    private readonly ICoachingAccessPolicy _accessPolicy;
 
-    public GetStudentAssignmentsQueryHandler(IAssignmentRepository repository)
+    public GetStudentAssignmentsQueryHandler(
+        IAssignmentRepository repository,
+        ICoachingAccessPolicy accessPolicy)
     {
         _repository = repository;
+        _accessPolicy = accessPolicy;
     }
 
     public async Task<StudentAssignmentListResponse> Handle(
         GetStudentAssignmentsQuery query,
         CancellationToken cancellationToken)
     {
+        _accessPolicy.RequireStudent(query.StudentId);
         var assignments = await _repository.GetByStudentIdAsync(query.StudentId, cancellationToken);
 
         var dtos = assignments.Select(a =>

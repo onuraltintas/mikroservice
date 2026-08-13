@@ -30,6 +30,7 @@ public interface ICoachingSessionRepository
     Task<CoachingSession?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<List<CoachingSession>> GetByTeacherIdAsync(Guid teacherId, CancellationToken cancellationToken = default);
     Task<List<CoachingSession>> GetUpcomingSessionsAsync(DateTime from, CancellationToken cancellationToken = default);
+    Task<List<CoachingSession>> GetUpcomingSessionsByTeacherIdAsync(Guid teacherId, DateTime from, CancellationToken cancellationToken = default);
     Task<CoachingSession> AddAsync(CoachingSession session, CancellationToken cancellationToken = default);
     Task UpdateAsync(CoachingSession session, CancellationToken cancellationToken = default);
     Task DeleteAsync(CoachingSession session, CancellationToken cancellationToken = default);

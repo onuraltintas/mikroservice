@@ -1,5 +1,6 @@
 using Coaching.Application.Interfaces;
 using Coaching.Domain.Entities;
+using Coaching.Application.Authorization;
 
 using MediatR;
 
@@ -9,11 +10,19 @@ public class AddExamResultCommandHandler : IRequestHandler<AddExamResultCommand>
 {
     private readonly IExamRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _identityAuthorizationClient;
 
-    public AddExamResultCommandHandler(IExamRepository repository, IUnitOfWork unitOfWork)
+    public AddExamResultCommandHandler(
+        IExamRepository repository,
+        IUnitOfWork unitOfWork,
+        ICoachingAccessPolicy accessPolicy,
+        ICoachingIdentityAuthorizationClient identityAuthorizationClient)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
+        _accessPolicy = accessPolicy;
+        _identityAuthorizationClient = identityAuthorizationClient;
     }
 
     public async Task Handle(AddExamResultCommand command, CancellationToken cancellationToken)
@@ -22,6 +31,28 @@ public class AddExamResultCommandHandler : IRequestHandler<AddExamResultCommand>
         
         if (exam == null)
             throw new InvalidOperationException($"Exam {command.ExamId} not found");
+
+        _accessPolicy.RequireTeacher(exam.CreatedByTeacherId);
+        await _identityAuthorizationClient.AuthorizeTeacherTargetsAsync(
+            exam.CreatedByTeacherId,
+            new[] { command.StudentId },
+            exam.InstitutionId,
+            _accessPolicy.IsSystemAdministrator,
+            cancellationToken);
+
+        if (command.Score < 0)
+        {
+            throw new EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException(
+                "Exam.ScoreInvalid",
+                "Sınav sonucu negatif olamaz.");
+        }
+
+        if (command.Score > exam.MaxScore)
+        {
+            throw new EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException(
+                "Exam.ScoreExceeded",
+                "Sınav sonucu maksimum puanı aşamaz.");
+        }
 
         var result = ExamResult.Create(command.ExamId, command.StudentId, command.Score);
         

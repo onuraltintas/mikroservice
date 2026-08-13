@@ -35,7 +35,9 @@ public class CreateAssignmentCommandValidator : AbstractValidator<CreateAssignme
             .WithMessage("Passing score cannot exceed max score");
 
         RuleFor(x => x.StudentIds)
-            .NotEmpty().WithMessage("At least one student must be assigned");
+            .NotEmpty().WithMessage("At least one student must be assigned")
+            .Must(ids => ids.Count <= 100).WithMessage("At most 100 students may be assigned")
+            .Must(ids => ids.Distinct().Count() == ids.Count).WithMessage("Student IDs must be unique");
     }
 
     private bool BeValidAssignmentType(string type)

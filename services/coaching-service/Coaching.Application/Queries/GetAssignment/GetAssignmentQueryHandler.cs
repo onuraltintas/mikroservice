@@ -1,4 +1,5 @@
 using Coaching.Application.Interfaces;
+using Coaching.Application.Authorization;
 
 using MediatR;
 
@@ -10,10 +11,14 @@ namespace Coaching.Application.Queries.GetAssignment;
 public class GetAssignmentQueryHandler : IRequestHandler<GetAssignmentQuery, AssignmentResponse?>
 {
     private readonly IAssignmentRepository _repository;
+    private readonly ICoachingAccessPolicy _accessPolicy;
 
-    public GetAssignmentQueryHandler(IAssignmentRepository repository)
+    public GetAssignmentQueryHandler(
+        IAssignmentRepository repository,
+        ICoachingAccessPolicy accessPolicy)
     {
         _repository = repository;
+        _accessPolicy = accessPolicy;
     }
 
     public async Task<AssignmentResponse?> Handle(GetAssignmentQuery query, CancellationToken cancellationToken)
@@ -22,6 +27,18 @@ public class GetAssignmentQueryHandler : IRequestHandler<GetAssignmentQuery, Ass
 
         if (assignment == null)
             return null;
+
+        _accessPolicy.RequireTeacherOrAssignedStudent(
+            assignment.TeacherId,
+            assignment.AssignedStudents.Select(student => student.StudentId));
+
+        var currentUserId = _accessPolicy.CurrentUserId;
+        var visibleStudents = !_accessPolicy.IsCurrentTeacher(assignment.TeacherId)
+            && currentUserId.HasValue
+            && _accessPolicy.IsCurrentStudent(currentUserId.Value)
+            ? assignment.AssignedStudents.Where(student =>
+                student.StudentId == currentUserId.Value)
+            : assignment.AssignedStudents;
 
         return new AssignmentResponse(
             Id: assignment.Id,
@@ -37,7 +54,7 @@ public class GetAssignmentQueryHandler : IRequestHandler<GetAssignmentQuery, Ass
             MaxScore: assignment.MaxScore,
             PassingScore: assignment.PassingScore,
             Status: assignment.Status.ToString(),
-            AssignedStudents: assignment.AssignedStudents.Select(s => new AssignedStudentDto(
+            AssignedStudents: visibleStudents.Select(s => new AssignedStudentDto(
                 StudentId: s.StudentId,
                 SubmittedAt: s.SubmittedAt,
                 Score: s.Score,
@@ -47,4 +64,5 @@ public class GetAssignmentQueryHandler : IRequestHandler<GetAssignmentQuery, Ass
             CreatedAt: assignment.CreatedAt
         );
     }
+
 }

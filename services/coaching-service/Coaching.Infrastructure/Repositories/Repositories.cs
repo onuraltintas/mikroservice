@@ -154,6 +154,20 @@ public class CoachingSessionRepository : ICoachingSessionRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<List<CoachingSession>> GetUpcomingSessionsByTeacherIdAsync(
+        Guid teacherId,
+        DateTime from,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.CoachingSessions
+            .Include(s => s.Attendances)
+            .Where(s => s.TeacherId == teacherId &&
+                        s.ScheduledDate >= from &&
+                        s.Status == Domain.Enums.SessionStatus.Scheduled)
+            .OrderBy(s => s.ScheduledDate)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<CoachingSession> AddAsync(CoachingSession session, CancellationToken cancellationToken = default)
     {
         await _context.CoachingSessions.AddAsync(session, cancellationToken);

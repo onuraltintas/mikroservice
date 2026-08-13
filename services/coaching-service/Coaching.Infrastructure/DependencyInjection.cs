@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Coaching.Application.Interfaces;
 using Coaching.Infrastructure.Data;
 using Coaching.Infrastructure.Repositories;
+using Coaching.Infrastructure.ExternalServices;
 
 namespace Coaching.Infrastructure;
 
@@ -54,6 +55,10 @@ public static class DependencyInjection
 
         // Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddHttpClient<ICoachingIdentityAuthorizationClient, IdentityAuthorizationClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
+        });
 
         return services;
     }

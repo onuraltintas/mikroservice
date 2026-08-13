@@ -1,4 +1,5 @@
 using Coaching.Application.Interfaces;
+using Coaching.Application.Authorization;
 
 using MediatR;
 
@@ -8,11 +9,16 @@ public class UpdateGoalProgressCommandHandler : IRequestHandler<UpdateGoalProgre
 {
     private readonly IAcademicGoalRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICoachingAccessPolicy _accessPolicy;
 
-    public UpdateGoalProgressCommandHandler(IAcademicGoalRepository repository, IUnitOfWork unitOfWork)
+    public UpdateGoalProgressCommandHandler(
+        IAcademicGoalRepository repository,
+        IUnitOfWork unitOfWork,
+        ICoachingAccessPolicy accessPolicy)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
+        _accessPolicy = accessPolicy;
     }
 
     public async Task Handle(UpdateGoalProgressCommand command, CancellationToken cancellationToken)
@@ -21,6 +27,8 @@ public class UpdateGoalProgressCommandHandler : IRequestHandler<UpdateGoalProgre
         
         if (goal == null)
             throw new InvalidOperationException($"Goal {command.GoalId} not found");
+
+        _accessPolicy.RequireStudent(goal.StudentId);
 
         goal.UpdateProgress(command.Progress);
 

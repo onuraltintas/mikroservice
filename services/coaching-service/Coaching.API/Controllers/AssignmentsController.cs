@@ -9,6 +9,7 @@ using Coaching.Application.Queries.GetAssignment;
 using Coaching.Application.Queries.GetTeacherAssignments;
 using Coaching.Application.Queries.GetStudentAssignments;
 using MediatR;
+using EduPlatform.Shared.Kernel.Exceptions;
 
 namespace Coaching.API.Controllers;
 
@@ -60,6 +61,14 @@ public class AssignmentsController : ControllerBase
                 new { id = result.AssignmentId },
                 result);
         }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating assignment: {Title}", command.Title);
@@ -92,6 +101,14 @@ public class AssignmentsController : ControllerBase
         catch (InvalidOperationException ex)
         {
             return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
         }
         catch (Exception ex)
         {
@@ -126,6 +143,14 @@ public class AssignmentsController : ControllerBase
         {
             return NotFound(new { error = ex.Message });
         }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error grading assignment: {AssignmentId}", id);
@@ -152,6 +177,10 @@ public class AssignmentsController : ControllerBase
         {
             return NotFound(new { error = ex.Message });
         }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error cancelling assignment: {AssignmentId}", id);
@@ -177,6 +206,10 @@ public class AssignmentsController : ControllerBase
         catch (InvalidOperationException ex)
         {
             return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
         }
         catch (Exception ex)
         {

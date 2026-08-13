@@ -121,6 +121,8 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_ISSUER=${JWT_ISSUER}
       - JWT_AUDIENCE=${JWT_AUDIENCE}
+      - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY}
+      - Services__IdentityService=http://identity-service:8080
     depends_on:
       postgres:
         condition: service_healthy

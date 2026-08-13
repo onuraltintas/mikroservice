@@ -6,6 +6,7 @@ using Coaching.Application.Queries.GetGoals;
 
 using MediatR;
 using Coaching.Application.Commands.DeleteGoal;
+using EduPlatform.Shared.Kernel.Exceptions;
 
 namespace Coaching.API.Controllers;
 
@@ -46,6 +47,14 @@ public class GoalsController : ControllerBase
             var result = await _mediator.Send(command, cancellationToken);
             return CreatedAtAction(nameof(GetStudentGoals), new { studentId = command.StudentId }, result);
         }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating goal");
@@ -78,6 +87,14 @@ public class GoalsController : ControllerBase
         {
             return NotFound(new { error = ex.Message });
         }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating progress");
@@ -103,6 +120,10 @@ public class GoalsController : ControllerBase
         catch (InvalidOperationException ex)
         {
             return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
         }
         catch (Exception ex)
         {
