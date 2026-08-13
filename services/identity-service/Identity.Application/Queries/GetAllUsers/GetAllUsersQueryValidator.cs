@@ -7,10 +7,10 @@ public sealed class GetAllUsersQueryValidator : AbstractValidator<GetAllUsersQue
     public GetAllUsersQueryValidator()
     {
         RuleFor(x => x.PageNumber)
-            .GreaterThanOrEqualTo(1);
+            .InclusiveBetween(1, GetAllUsersQuery.MaxPageNumber);
 
         RuleFor(x => x.PageSize)
-            .InclusiveBetween(1, 100);
+            .InclusiveBetween(1, GetAllUsersQuery.MaxPageSize);
 
         RuleFor(x => x.SearchTerm)
             .MaximumLength(100)

@@ -48,6 +48,7 @@ public interface ITeacherRepository
 {
     Task AddAsync(TeacherProfile teacher, CancellationToken cancellationToken);
     Task<TeacherProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken);
+    Task<TeacherProfile?> GetByUserIdAsync(Guid userId, Guid? institutionId, CancellationToken cancellationToken);
     Task<TeacherProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     Task AddStudentAssignmentAsync(TeacherStudentAssignment assignment, CancellationToken cancellationToken);
     Task<TeacherStudentAssignment?> GetAssignmentAsync(Guid teacherId, Guid studentId, CancellationToken cancellationToken);
@@ -57,6 +58,7 @@ public interface IStudentRepository
 {
     Task AddAsync(StudentProfile student, CancellationToken cancellationToken);
     Task<StudentProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken);
+    Task<StudentProfile?> GetByUserIdAsync(Guid userId, Guid? institutionId, CancellationToken cancellationToken);
     Task<StudentProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 }
 

@@ -39,6 +39,7 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
                 Error.Unauthorized("Oturum açılmış kullanıcı bulunamadı."));
         }
 
+        Guid? institutionScope = null;
         if (currentUserId != request.UserId)
         {
             var institutionId = await _institutionRepository
@@ -52,6 +53,8 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
             {
                 return Result.Failure<UserProfileDto>(scope.Error);
             }
+
+            institutionScope = scope.Value.IsGlobal ? null : scope.Value.InstitutionId;
 
             if (!scope.Value.IsGlobal && !await _institutionRepository.IsUserInInstitutionAsync(
                     request.UserId,
@@ -92,7 +95,10 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
 
         if (userRoles.Contains(Identity.Domain.Enums.UserRole.Teacher.ToString()))
         {
-            var teacher = await _teacherRepository.GetByUserIdAsync(request.UserId, cancellationToken);
+            var teacher = await _teacherRepository.GetByUserIdAsync(
+                request.UserId,
+                institutionScope,
+                cancellationToken);
             if (teacher != null)
             {
                 profile.FullName = teacher.FullName; // Use profile name as it might be fresher
@@ -106,9 +112,12 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
                 };
             }
         }
-        else if (userRoles.Contains(Identity.Domain.Enums.UserRole.Student.ToString()))
+        if (userRoles.Contains(Identity.Domain.Enums.UserRole.Student.ToString()))
         {
-            var student = await _studentRepository.GetByUserIdAsync(request.UserId, cancellationToken);
+            var student = await _studentRepository.GetByUserIdAsync(
+                request.UserId,
+                institutionScope,
+                cancellationToken);
             if (student != null)
             {
                 profile.FullName = student.FullName;

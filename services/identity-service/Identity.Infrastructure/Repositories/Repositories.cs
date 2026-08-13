@@ -57,6 +57,16 @@ public class UserRepository : IUserRepository
 
     public async Task<PagedList<UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken)
     {
+        if (page is < 1 or > GetAllUsersQuery.MaxPageNumber)
+        {
+            throw new ArgumentOutOfRangeException(nameof(page));
+        }
+
+        if (pageSize is < 1 or > GetAllUsersQuery.MaxPageSize)
+        {
+            throw new ArgumentOutOfRangeException(nameof(pageSize));
+        }
+
         var query = _context.Users
             .AsNoTracking()
             .AsQueryable();
@@ -168,6 +178,8 @@ public class InstitutionRepository : IInstitutionRepository
         var adminInstitutionId = await _context.InstitutionAdmins
             .AsNoTracking()
             .Where(a => a.UserId == userId && a.IsActive)
+            .OrderBy(a => a.CreatedAt)
+            .ThenBy(a => a.Id)
             .Select(a => (Guid?)a.InstitutionId)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -179,6 +191,8 @@ public class InstitutionRepository : IInstitutionRepository
         var teacherInstitutionId = await _context.TeacherProfiles
             .AsNoTracking()
             .Where(t => t.UserId == userId && t.IsActive && t.InstitutionId.HasValue)
+            .OrderBy(t => t.CreatedAt)
+            .ThenBy(t => t.Id)
             .Select(t => t.InstitutionId)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -190,6 +204,8 @@ public class InstitutionRepository : IInstitutionRepository
         var studentInstitutionId = await _context.StudentProfiles
             .AsNoTracking()
             .Where(s => s.UserId == userId && s.IsActive && s.InstitutionId.HasValue)
+            .OrderBy(s => s.CreatedAt)
+            .ThenBy(s => s.Id)
             .Select(s => s.InstitutionId)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -201,6 +217,8 @@ public class InstitutionRepository : IInstitutionRepository
         return await _context.StudentProfiles
             .AsNoTracking()
             .Where(s => s.ParentId == userId && s.IsActive && s.InstitutionId.HasValue)
+            .OrderBy(s => s.CreatedAt)
+            .ThenBy(s => s.Id)
             .Select(s => s.InstitutionId)
             .FirstOrDefaultAsync(cancellationToken);
     }
@@ -247,11 +265,23 @@ public class TeacherRepository : ITeacherRepository
         await _context.TeacherProfiles.AddAsync(teacher, cancellationToken);
     }
     
-    public async Task<TeacherProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken)
+    public Task<TeacherProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken)
     {
-        return await _context.TeacherProfiles
+        return GetByUserIdAsync(userId, null, cancellationToken);
+    }
+
+    public async Task<TeacherProfile?> GetByUserIdAsync(Guid userId, Guid? institutionId, CancellationToken cancellationToken)
+    {
+        IQueryable<TeacherProfile> query = _context.TeacherProfiles
             .Include(t => t.Institution)
-            .FirstOrDefaultAsync(t => t.UserId == userId, cancellationToken);
+            .Where(t => t.UserId == userId && t.IsActive);
+
+        if (institutionId.HasValue)
+        {
+            query = query.Where(t => t.InstitutionId == institutionId.Value);
+        }
+
+        return await query.FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<TeacherProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -283,11 +313,23 @@ public class StudentRepository : IStudentRepository
         await _context.StudentProfiles.AddAsync(student, cancellationToken);
     }
     
-    public async Task<StudentProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken)
+    public Task<StudentProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken)
     {
-        return await _context.StudentProfiles
+        return GetByUserIdAsync(userId, null, cancellationToken);
+    }
+
+    public async Task<StudentProfile?> GetByUserIdAsync(Guid userId, Guid? institutionId, CancellationToken cancellationToken)
+    {
+        IQueryable<StudentProfile> query = _context.StudentProfiles
             .Include(s => s.Institution)
-            .FirstOrDefaultAsync(s => s.UserId == userId, cancellationToken);
+            .Where(s => s.UserId == userId && s.IsActive);
+
+        if (institutionId.HasValue)
+        {
+            query = query.Where(s => s.InstitutionId == institutionId.Value);
+        }
+
+        return await query.FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<StudentProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken)

@@ -5,7 +5,16 @@ using MediatR;
 
 namespace Identity.Application.Queries.GetAllUsers;
 
-public record GetAllUsersQuery(int PageNumber = 1, int PageSize = 25, string? SearchTerm = null, string? Role = null, bool? IsActive = null) : IRequest<Result<PagedList<UserProfileDto>>>;
+public record GetAllUsersQuery(
+    int PageNumber = 1,
+    int PageSize = 25,
+    string? SearchTerm = null,
+    string? Role = null,
+    bool? IsActive = null) : IRequest<Result<PagedList<UserProfileDto>>>
+{
+    public const int MaxPageNumber = 1_000;
+    public const int MaxPageSize = 100;
+}
 
 public class PagedList<T>
 {

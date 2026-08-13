@@ -54,4 +54,14 @@ public class InstitutionAccessScopeTests
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(error => error.PropertyName == nameof(GetAllUsersQuery.PageSize));
     }
+
+    [Fact]
+    public void GetAllUsersQuery_ShouldCapPageNumber()
+    {
+        var validator = new GetAllUsersQueryValidator();
+        var result = validator.Validate(new GetAllUsersQuery(PageNumber: GetAllUsersQuery.MaxPageNumber + 1, PageSize: 10));
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == nameof(GetAllUsersQuery.PageNumber));
+    }
 }
