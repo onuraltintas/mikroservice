@@ -10,7 +10,10 @@ namespace EduPlatform.Shared.Security.Extensions;
 
 public static class SecurityExtensions
 {
-    public static IServiceCollection AddCustomAuthentication(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddCustomAuthentication(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        Action<JwtBearerOptions>? configureOptions = null)
     {
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -42,6 +45,8 @@ public static class SecurityExtensions
                 ClockSkew = TimeSpan.Zero,
                 RoleClaimType = System.Security.Claims.ClaimTypes.Role, // Ensure roles are mapped correctly
             };
+
+            configureOptions?.Invoke(options);
         });
 
         return services;

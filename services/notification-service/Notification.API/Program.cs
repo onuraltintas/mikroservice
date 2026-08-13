@@ -7,7 +7,6 @@ using Notification.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Notification.API.Hubs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using DotNetEnv;
@@ -63,28 +62,8 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Notif
 builder.Services.AddSignalR();
 
 // Authentication
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+builder.Services.AddCustomAuthentication(builder.Configuration, options =>
     {
-        var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET")
-                        ?? builder.Configuration["Jwt:Secret"] 
-                        ?? "super_secret_key_for_development_must_be_changed_in_prod_12345";
-        var key = System.Text.Encoding.UTF8.GetBytes(secretKey);
-
-        options.RequireHttpsMetadata = false;
-        options.SaveToken = true;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = false, 
-            ValidateAudience = false,
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.FromMinutes(5),
-            NameClaimType = "sub",
-            RoleClaimType = ClaimTypes.Role
-        };
-
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
