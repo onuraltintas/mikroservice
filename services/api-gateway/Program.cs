@@ -60,7 +60,7 @@ builder.Services.AddCors(options =>
 
 // Add Authentication
 builder.Services.AddCustomAuthentication(builder.Configuration);
-builder.Services.AddAuthorization();
+builder.Services.AddGlobalAuthorization();
 
 var app = builder.Build();
 

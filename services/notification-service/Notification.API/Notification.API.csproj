@@ -23,6 +23,7 @@
     <ProjectReference Include="..\Notification.Application\Notification.Application.csproj" />
     <ProjectReference Include="..\Notification.Infrastructure\Notification.Infrastructure.csproj" />
     <ProjectReference Include="..\..\..\shared\EduPlatform.Shared.Infrastructure\EduPlatform.Shared.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\shared\EduPlatform.Shared.Security\EduPlatform.Shared.Security.csproj" />
   </ItemGroup>
 
 </Project>

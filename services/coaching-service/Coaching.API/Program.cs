@@ -35,6 +35,10 @@ builder.Services.AddSharedInfrastructure(
     builder.Configuration, 
     typeof(Coaching.Application.DependencyInjection).Assembly);
 
+// Authentication & authorization
+builder.Services.AddCustomAuthentication(builder.Configuration);
+builder.Services.AddGlobalAuthorization();
+
 // Add Mediator Behaviors (Validation, Logging)
 builder.Services.AddMediatorWithBehaviors(typeof(Coaching.Application.DependencyInjection).Assembly);
 

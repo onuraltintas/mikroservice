@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using DotNetEnv;
 using EduPlatform.Shared.Infrastructure.Resiliency;
+using EduPlatform.Shared.Security.Extensions;
 
 
 // Load .env file from solution root
@@ -99,7 +100,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddGlobalAuthorization();
 
 // MassTransit Config
 builder.Services.AddMassTransit(x =>

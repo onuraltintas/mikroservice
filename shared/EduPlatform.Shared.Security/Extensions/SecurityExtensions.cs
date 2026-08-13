@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Security.Interfaces;
 using EduPlatform.Shared.Security.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,8 +46,21 @@ public static class SecurityExtensions
 
         return services;
     }
+    public static IServiceCollection AddGlobalAuthorization(this IServiceCollection services)
+    {
+        services.AddAuthorization(options =>
+        {
+            options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
+        });
+
+        return services;
+    }
+
     public static IServiceCollection AddCustomAuthorization(this IServiceCollection services)
     {
+        services.AddGlobalAuthorization();
         services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationPolicyProvider, Authorization.PermissionPolicyProvider>();
         services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, Authorization.PermissionAuthorizationHandler>();
         return services;
