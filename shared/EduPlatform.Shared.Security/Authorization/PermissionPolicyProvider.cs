@@ -21,7 +21,8 @@ public class PermissionPolicyProvider : IAuthorizationPolicyProvider
     {
         if (policyName.StartsWith("Permissions", StringComparison.OrdinalIgnoreCase))
         {
-            var policy = new AuthorizationPolicyBuilder();
+            var policy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser();
             policy.AddRequirements(new PermissionRequirement(policyName));
             return Task.FromResult<AuthorizationPolicy?>(policy.Build());
         }

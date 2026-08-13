@@ -20,6 +20,7 @@ public class RegisterStudentCommandValidator : AbstractValidator<RegisterStudent
 
         RuleFor(x => x.Password)
             .NotEmpty().WithMessage("Şifre alanı zorunludur.")
+            .MaximumLength(128).WithMessage("Şifre en fazla 128 karakter olabilir.")
             .MinimumLength(8).WithMessage("Şifre en az 8 karakter olmalıdır.")
             .Matches("[A-Z]").WithMessage("Şifre en az bir büyük harf içermelidir.")
             .Matches("[a-z]").WithMessage("Şifre en az bir küçük harf içermelidir.")

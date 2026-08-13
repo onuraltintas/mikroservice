@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
 using Notification.Application.Commands.SubmitSupportRequest;
 
@@ -18,6 +19,9 @@ public class SupportController : ControllerBase
     }
 
     [HttpPost("submit")]
+    [RequestSizeLimit(32_768)]
+    [RequestTimeout(milliseconds: 10_000)]
+    [AllowAnonymous]
     public async Task<IActionResult> Submit([FromBody] SubmitSupportRequestCommand command)
     {
         var result = await _mediator.Send(command);
@@ -31,6 +35,7 @@ public class SupportController : ControllerBase
     }
 
     [HttpPost("reply")]
+    [Authorize]
     public async Task<IActionResult> Reply([FromBody] Notification.Application.Commands.ReplyToSupportRequest.ReplyToSupportRequestCommand command)
     {
         var result = await _mediator.Send(command);

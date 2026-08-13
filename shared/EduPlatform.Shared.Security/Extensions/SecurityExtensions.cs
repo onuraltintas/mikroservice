@@ -22,6 +22,10 @@ public static class SecurityExtensions
         var secretKey = configuration["JWT_SECRET"] ?? configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT_SECRET is not configured.");
         var issuer = configuration["JWT_ISSUER"] ?? configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT_ISSUER is not configured.");
         var audience = configuration["JWT_AUDIENCE"] ?? configuration["Jwt:Audience"] ?? throw new InvalidOperationException("JWT_AUDIENCE is not configured.");
+        if (System.Text.Encoding.UTF8.GetByteCount(secretKey) < 32)
+        {
+            throw new InvalidOperationException("JWT_SECRET must be at least 32 bytes long.");
+        }
         var key = System.Text.Encoding.UTF8.GetBytes(secretKey);
 
         services.AddAuthentication(options =>
@@ -31,7 +35,7 @@ public static class SecurityExtensions
         })
         .AddJwtBearer(options =>
         {
-            options.RequireHttpsMetadata = false;
+            options.RequireHttpsMetadata = configuration.GetValue("Jwt:RequireHttpsMetadata", true);
             options.SaveToken = true;
             options.TokenValidationParameters = new TokenValidationParameters
             {

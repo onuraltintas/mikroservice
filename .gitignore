@@ -9,6 +9,7 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+*.env.backup
 
 # Visual Studio / .NET
 .vs/

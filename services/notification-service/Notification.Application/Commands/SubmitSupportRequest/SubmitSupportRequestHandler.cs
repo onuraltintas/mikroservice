@@ -40,7 +40,7 @@ public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestC
         await SendAcknowledgmentEmail(request, cancellationToken);
 
         // Forward to Identity service to notify admins
-        await _identityService.ForwardSupportRequestAsync(request, supportRequest.Id);
+        await _identityService.ForwardSupportRequestAsync(request, supportRequest.Id, cancellationToken);
 
         return Result.Success(supportRequest.Id);
     }

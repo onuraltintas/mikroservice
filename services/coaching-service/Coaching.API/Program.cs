@@ -52,10 +52,12 @@ builder.Services.AddMassTransit(x =>
     {
         var rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST") 
                          ?? builder.Configuration["RabbitMQ:Host"] ?? "localhost";
-        var rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_DEFAULT_USER") 
-                         ?? builder.Configuration["RabbitMQ:Username"] ?? "guest";
-        var rabbitPass = Environment.GetEnvironmentVariable("RABBITMQ_DEFAULT_PASS") 
-                         ?? builder.Configuration["RabbitMQ:Password"] ?? "guest";
+        var rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_DEFAULT_USER")
+                         ?? builder.Configuration["RabbitMQ:Username"]
+                         ?? throw new InvalidOperationException("RabbitMQ username is not configured.");
+        var rabbitPass = Environment.GetEnvironmentVariable("RABBITMQ_DEFAULT_PASS")
+                         ?? builder.Configuration["RabbitMQ:Password"]
+                         ?? throw new InvalidOperationException("RabbitMQ password is not configured.");
         
         cfg.Host(rabbitHost, "/", h =>
         {
@@ -114,9 +116,6 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Authentication & Authorization (Centralized)
-builder.Services.AddCustomAuthentication(builder.Configuration);
-
 // Add Health Checks
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<CoachingDbContext>("database");
@@ -165,9 +164,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // Health Checks
-app.MapHealthChecks("/health");
-app.MapHealthChecks("/health/ready");
-app.MapHealthChecks("/health/live");
+app.MapHealthChecks("/health").AllowAnonymous();
+app.MapHealthChecks("/health/ready").AllowAnonymous();
+app.MapHealthChecks("/health/live").AllowAnonymous();
 
 // Controllers
 app.MapControllers();

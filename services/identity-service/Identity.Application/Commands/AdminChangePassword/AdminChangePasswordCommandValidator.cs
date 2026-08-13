@@ -11,6 +11,7 @@ public class AdminChangePasswordCommandValidator : AbstractValidator<AdminChange
 
         RuleFor(x => x.NewPassword)
             .NotEmpty().WithMessage("Şifre boş olamaz.")
+            .MaximumLength(128).WithMessage("Şifre en fazla 128 karakter olabilir.")
             .MinimumLength(8).WithMessage("Şifre en az 8 karakter olmalıdır.")
             .Matches(@"[A-Z]").WithMessage("Şifre en az bir büyük harf içermelidir.")
             .Matches(@"[a-z]").WithMessage("Şifre en az bir küçük harf içermelidir.")

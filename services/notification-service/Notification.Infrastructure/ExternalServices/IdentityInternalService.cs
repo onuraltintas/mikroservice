@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using EduPlatform.Shared.Security.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Notification.Application.Commands.SubmitSupportRequest;
@@ -10,16 +11,19 @@ public class IdentityInternalService : IIdentityInternalService
 {
     private readonly HttpClient _httpClient;
     private readonly string _baseUrl;
+    private readonly string? _serviceApiKey;
     private readonly ILogger<IdentityInternalService> _logger;
 
     public IdentityInternalService(HttpClient httpClient, IConfiguration configuration, ILogger<IdentityInternalService> logger)
     {
         _httpClient = httpClient;
         _baseUrl = configuration["Services:IdentityService"] ?? "http://localhost:5001";
+        _serviceApiKey = configuration["INTERNAL_SERVICE_API_KEY"]
+            ?? configuration["Internal:ServiceApiKey"];
         _logger = logger;
     }
 
-    public async Task ForwardSupportRequestAsync(SubmitSupportRequestCommand request, Guid supportRequestId)
+    public async Task ForwardSupportRequestAsync(SubmitSupportRequestCommand request, Guid supportRequestId, CancellationToken cancellationToken = default)
     {
         var command = new
         {
@@ -33,7 +37,22 @@ public class IdentityInternalService : IIdentityInternalService
 
         try
         {
-            await _httpClient.PostAsJsonAsync($"{_baseUrl}/api/internal/notification/forward-support", command);
+            if (string.IsNullOrWhiteSpace(_serviceApiKey))
+            {
+                _logger.LogError("Internal service API key is not configured; support request {SupportRequestId} was not forwarded.", supportRequestId);
+                return;
+            }
+
+            using var requestMessage = new HttpRequestMessage(
+                HttpMethod.Post,
+                $"{_baseUrl}/api/internal/notification/forward-support")
+            {
+                Content = JsonContent.Create(command)
+            };
+            requestMessage.Headers.Add(InternalServiceAuthentication.HeaderName, _serviceApiKey);
+
+            using var response = await _httpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            response.EnsureSuccessStatusCode();
         }
         catch (Exception ex)
         {

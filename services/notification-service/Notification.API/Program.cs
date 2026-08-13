@@ -11,7 +11,10 @@ using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using DotNetEnv;
 using EduPlatform.Shared.Infrastructure.Resiliency;
+using EduPlatform.Shared.Infrastructure.Extensions;
 using EduPlatform.Shared.Security.Extensions;
+using EduPlatform.Shared.Security.Services;
+using FluentValidation;
 
 
 // Load .env file from solution root
@@ -23,8 +26,11 @@ if (File.Exists(envPath))
 
 var builder = WebApplication.CreateBuilder(args);
 
+InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
+
 // Serilog Configuration (Centralized)
 builder.Host.UseCustomSerilog();
+builder.Services.AddGlobalExceptionHandler();
 
 // Add services
 builder.Services.AddControllers();
@@ -37,7 +43,9 @@ if (string.IsNullOrEmpty(connectionString))
     var port = Environment.GetEnvironmentVariable("POSTGRES_PORT") ?? "5432";
     var database = Environment.GetEnvironmentVariable("POSTGRES_DB_NOTIFICATION") ?? "notification_db";
     var username = Environment.GetEnvironmentVariable("POSTGRES_USER") ?? "eduplatform";
-    var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "eduplatform_secret";
+    var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD")
+        ?? builder.Configuration["POSTGRES_PASSWORD"]
+        ?? throw new InvalidOperationException("POSTGRES_PASSWORD is not configured.");
     connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password}";
 }
 
@@ -53,10 +61,15 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<INotificationService, Notification.API.Services.NotificationManager>();
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 builder.Services.AddHttpClient<Notification.Application.Interfaces.IIdentityInternalService, Notification.Infrastructure.ExternalServices.IdentityInternalService>()
+    .ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(10))
     .AddResiliency();
 
 // MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Notification.Application.Interfaces.INotificationDbContext).Assembly));
+builder.Services.AddMediatorWithBehaviors(typeof(Notification.Application.Interfaces.INotificationDbContext).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(Notification.Application.Commands.SubmitSupportRequest.SubmitSupportRequestCommand).Assembly);
+
+builder.Services.AddRequestTimeouts();
 
 // SignalR
 builder.Services.AddSignalR();
@@ -102,10 +115,12 @@ builder.Services.AddMassTransit(x =>
     {
         var rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST") 
                          ?? builder.Configuration["RabbitMQ:Host"] ?? "localhost";
-        var rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_DEFAULT_USER") 
-                         ?? builder.Configuration["RabbitMQ:Username"] ?? "guest";
-        var rabbitPass = Environment.GetEnvironmentVariable("RABBITMQ_DEFAULT_PASS") 
-                         ?? builder.Configuration["RabbitMQ:Password"] ?? "guest";
+        var rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_DEFAULT_USER")
+                         ?? builder.Configuration["RabbitMQ:Username"]
+                         ?? throw new InvalidOperationException("RabbitMQ username is not configured.");
+        var rabbitPass = Environment.GetEnvironmentVariable("RABBITMQ_DEFAULT_PASS")
+                         ?? builder.Configuration["RabbitMQ:Password"]
+                         ?? throw new InvalidOperationException("RabbitMQ password is not configured.");
         
         cfg.Host(rabbitHost, "/", h =>
         {
@@ -147,10 +162,12 @@ builder.Services.AddMassTransit(x =>
 
 var app = builder.Build();
 
+app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRequestTimeouts();
 
-app.MapGet("/", () => "Notification Service Runnning");
+app.MapGet("/", () => "Notification Service Runnning").AllowAnonymous();
 app.MapHub<NotificationHub>("/hubs/notifications");
 app.MapControllers();
 

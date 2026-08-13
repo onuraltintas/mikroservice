@@ -23,10 +23,14 @@ builder.Host.UseCustomSerilog();
 builder.Configuration.AddEnvironmentVariables();
 
 // Redis Setup for Maintenance Mode
-var redisPassword = Environment.GetEnvironmentVariable("REDIS_PASSWORD") ?? "EduPlatform123!";
+var redisHost = Environment.GetEnvironmentVariable("REDIS_HOST") ?? "localhost";
+var redisPort = Environment.GetEnvironmentVariable("REDIS_PORT") ?? "6379";
+var redisPassword = Environment.GetEnvironmentVariable("REDIS_PASSWORD");
 builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.Configuration = $"localhost:6379,password={redisPassword},abortConnect=false";
+    options.Configuration = string.IsNullOrWhiteSpace(redisPassword)
+        ? $"{redisHost}:{redisPort},abortConnect=false"
+        : $"{redisHost}:{redisPort},password={redisPassword},abortConnect=false";
     options.InstanceName = "EduPlatform:"; // Key prefix
 });
 
@@ -37,12 +41,28 @@ builder.Services.AddReverseProxy()
 // Rate Limiting Setup
 builder.Services.AddRateLimiter(options =>
 {
-    options.AddFixedWindowLimiter("fixed-window", opt =>
+    options.AddPolicy("fixed-window", context =>
     {
-        opt.PermitLimit = 100;
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
-        opt.QueueLimit = 5;
+        var partitionKey = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 30,
+            Window = TimeSpan.FromMinutes(1),
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = 0
+        });
+    });
+
+    options.AddPolicy("support-submit", context =>
+    {
+        var partitionKey = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromMinutes(1),
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = 0
+        });
     });
 });
 
@@ -79,7 +99,7 @@ app.MapReverseProxy(proxyPipeline =>
     proxyPipeline.UseMiddleware<EduPlatform.Gateway.Middlewares.MaintenanceMiddleware>();
 });
 
-app.MapGet("/", () => "EduPlatform API Gateway Running 🚀");
+app.MapGet("/", () => "EduPlatform API Gateway Running 🚀").AllowAnonymous();
 
 app.MapGet("/api/gateway/services", (IConfiguration configuration) =>
 {
@@ -87,6 +107,6 @@ app.MapGet("/api/gateway/services", (IConfiguration configuration) =>
         .Select(c => c.Key.Replace("-cluster", ""))
         .ToList();
     return Results.Ok(clusters);
-});
+}).AllowAnonymous();
 
 app.Run();

@@ -1,4 +1,5 @@
 using FluentAssertions;
+using EduPlatform.Shared.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,9 +48,28 @@ public class SecurityMetadataTests
     }
 
     [Fact]
-    public void InternalNotificationEndpoint_MustNotAllowAnonymousAccess()
+    public void InternalNotificationEndpoint_MustUseServiceAuthentication()
     {
         var action = typeof(InternalNotificationController).GetMethod(nameof(InternalNotificationController.ForwardSupport));
+
+        action.Should().NotBeNull();
+        action!.GetCustomAttributes(typeof(AllowAnonymousAttribute), inherit: true).Should().NotBeEmpty();
+        action.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void PublicSupportSubmit_MustAllowAnonymousAccess()
+    {
+        var action = typeof(SupportController).GetMethod(nameof(SupportController.Submit));
+
+        action.Should().NotBeNull();
+        action!.GetCustomAttributes(typeof(AllowAnonymousAttribute), inherit: true).Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void SupportReply_MustRemainAuthenticated()
+    {
+        var action = typeof(SupportController).GetMethod(nameof(SupportController.Reply));
 
         action.Should().NotBeNull();
         action!.GetCustomAttributes(typeof(AllowAnonymousAttribute), inherit: true).Should().BeEmpty();
@@ -69,5 +89,30 @@ public class SecurityMetadataTests
         fallbackPolicy.Should().NotBeNull();
         fallbackPolicy!.Requirements.Should().ContainSingle(requirement =>
             requirement is DenyAnonymousAuthorizationRequirement);
+    }
+
+    [Fact]
+    public async Task PermissionPolicies_MustRequireAuthenticatedUsers()
+    {
+        var services = new ServiceCollection();
+        services.AddCustomAuthorization();
+
+        await using var provider = services.BuildServiceProvider();
+        var policyProvider = provider.GetRequiredService<IAuthorizationPolicyProvider>();
+        var policy = await policyProvider.GetPolicyAsync("Permissions.Users.View");
+
+        policy.Should().NotBeNull();
+        policy!.Requirements.Should().Contain(requirement =>
+            requirement is DenyAnonymousAuthorizationRequirement);
+    }
+
+    [Fact]
+    public void SharedMediatorBehaviors_MustUseMediatRPipeline()
+    {
+        var services = new ServiceCollection();
+        services.AddMediatorWithBehaviors();
+
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(MediatR.IPipelineBehavior<,>));
     }
 }

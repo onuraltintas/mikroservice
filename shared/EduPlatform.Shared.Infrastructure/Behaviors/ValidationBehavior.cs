@@ -1,6 +1,6 @@
 using EduPlatform.Shared.Kernel.Exceptions;
 using FluentValidation;
-using Mediator;
+using MediatR;
 
 namespace EduPlatform.Shared.Infrastructure.Behaviors;
 
@@ -8,7 +8,7 @@ namespace EduPlatform.Shared.Infrastructure.Behaviors;
 /// Validation behavior - validates requests using FluentValidation
 /// </summary>
 public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IMessage
+    where TRequest : notnull
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
 
@@ -17,14 +17,14 @@ public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<
         _validators = validators;
     }
 
-    public async ValueTask<TResponse> Handle(
+    public async Task<TResponse> Handle(
         TRequest request,
-        MessageHandlerDelegate<TRequest, TResponse> next,
+        RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
         if (!_validators.Any())
         {
-            return await next(request, cancellationToken);
+            return await next(cancellationToken);
         }
 
         var context = new ValidationContext<TRequest>(request);
@@ -48,6 +48,6 @@ public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<
             throw new Kernel.Exceptions.ValidationException(errors);
         }
 
-        return await next(request, cancellationToken);
+        return await next(cancellationToken);
     }
 }

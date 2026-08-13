@@ -50,6 +50,12 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             return Result.Failure<LoginResponse>(new Error("Auth.InvalidCredentials", "E-posta veya şifre hatalı."));
         }
 
+        if (_passwordHasher.NeedsRehash(user.PasswordHash, user.PasswordSalt))
+        {
+            _passwordHasher.CreatePasswordHash(request.Password, out var passwordHash, out var passwordSalt);
+            user.SetPassword(passwordHash, passwordSalt);
+        }
+
         // 3. Check Active Status
         if (!user.IsActive)
         {

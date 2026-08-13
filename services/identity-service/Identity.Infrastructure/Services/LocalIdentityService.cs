@@ -251,11 +251,9 @@ public class LocalIdentityService : IIdentityService
     {
         try
         {
-            // Critical fix for Concurrency Exception:
-            // Instead of loading the User and adding the token to its collection (which checks User version),
-            // we directly insert the RefreshToken into its own table.
-            // This bypasses the User entity version check entirely.
-            _context.ChangeTracker.Clear();
+            // Insert the token directly into its own table so the User aggregate is not
+            // updated. Keep the current unit-of-work tracker intact: the login handler
+            // may have a password migration or login timestamp pending on the User.
 
             // Verify userId consistency (Safe-guard)
             if (refreshToken.UserId != userId)

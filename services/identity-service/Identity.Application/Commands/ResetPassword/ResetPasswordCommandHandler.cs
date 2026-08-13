@@ -46,6 +46,10 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
         {
             return Result.Failure(new Error("ResetPassword.WeakPassword", "Şifre en az 8 karakter olmalıdır."));
         }
+        if (password.Length > 128)
+        {
+            return Result.Failure(new Error("ResetPassword.WeakPassword", "Şifre en fazla 128 karakter olabilir."));
+        }
         if (!password.Any(char.IsUpper))
         {
             return Result.Failure(new Error("ResetPassword.WeakPassword", "Şifre en az bir büyük harf içermelidir."));

@@ -13,6 +13,7 @@ using Identity.Application.Commands.ResetPassword;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Identity.API.Controllers;
 
@@ -29,21 +30,15 @@ public class AuthController : ControllerBase
 
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Login([FromBody] LoginCommand command)
     {
-        try 
+        var result = await _mediator.Send(command);
+        if (result.IsFailure)
         {
-            var result = await _mediator.Send(command);
-            if (result.IsFailure)
-            {
-                return BadRequest(result.Error);
-            }
-            return Ok(result.Value);
+            return BadRequest(result.Error);
         }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ex.ToString());
-        }
+        return Ok(result.Value);
     }
 
     [HttpPost("register/student")]
@@ -114,6 +109,11 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailCommand command)
     {
+        if (string.IsNullOrWhiteSpace(command.Token))
+        {
+            return BadRequest(new { Error = "E-posta doğrulama token'ı zorunludur." });
+        }
+
         var result = await _mediator.Send(command);
         if (result.IsFailure)
         {

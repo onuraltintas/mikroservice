@@ -6,20 +6,58 @@ namespace EduPlatform.Shared.Security.Services;
 
 public class PasswordHasher : IPasswordHasher
 {
+    private const int SaltSize = 32;
+    private const int HashSize = 32;
+    private const int Iterations = 600_000;
+
     public void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
     {
-        using var hmac = new HMACSHA512();
-        passwordSalt = hmac.Key;
-        passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+        ArgumentNullException.ThrowIfNull(password);
+
+        passwordSalt = RandomNumberGenerator.GetBytes(SaltSize);
+        passwordHash = Rfc2898DeriveBytes.Pbkdf2(
+            password,
+            passwordSalt,
+            Iterations,
+            HashAlgorithmName.SHA512,
+            HashSize);
     }
 
     public bool VerifyPasswordHash(string password, byte[] storedHash, byte[] storedSalt)
     {
-        if (storedHash.Length != 64) throw new ArgumentException("Invalid length of password hash (64 bytes expected).", nameof(storedHash));
-        if (storedSalt.Length != 128) throw new ArgumentException("Invalid length of password salt (128 bytes expected).", nameof(storedSalt));
+        ArgumentNullException.ThrowIfNull(password);
+        ArgumentNullException.ThrowIfNull(storedHash);
+        ArgumentNullException.ThrowIfNull(storedSalt);
 
-        using var hmac = new HMACSHA512(storedSalt);
-        var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-        return computedHash.SequenceEqual(storedHash);
+        if (storedHash.Length == HashSize && storedSalt.Length == SaltSize)
+        {
+            var computedHash = Rfc2898DeriveBytes.Pbkdf2(
+                password,
+                storedSalt,
+                Iterations,
+                HashAlgorithmName.SHA512,
+                HashSize);
+
+            return CryptographicOperations.FixedTimeEquals(computedHash, storedHash);
+        }
+
+        // Compatibility path for existing accounts. Successful legacy logins
+        // are rehashed by the login handler using the current parameters.
+        if (storedHash.Length == 64 && storedSalt.Length == 128)
+        {
+            using var legacyHmac = new HMACSHA512(storedSalt);
+            var computedHash = legacyHmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return CryptographicOperations.FixedTimeEquals(computedHash, storedHash);
+        }
+
+        return false;
+    }
+
+    public bool NeedsRehash(byte[] storedHash, byte[] storedSalt)
+    {
+        ArgumentNullException.ThrowIfNull(storedHash);
+        ArgumentNullException.ThrowIfNull(storedSalt);
+
+        return storedHash.Length != HashSize || storedSalt.Length != SaltSize;
     }
 }

@@ -99,9 +99,9 @@ npm run start
 | Servis | URL | Port |
 |--------|-----|------|
 | API Gateway | http://localhost:5000 | 5000 |
-| Identity Service | http://localhost:5001 | 5001 |
-| Coaching Service | http://localhost:5002 | 5002 |
-| Notification Service | http://localhost:5003 | 5003 |
+| Identity / Coaching / Notification | Gateway üzerinden erişilir | İç ağ |
+
+Docker Compose kullanımında mikroservis portları host'a açılmaz; dış istemciler yalnızca API Gateway'e bağlanır. Servisleri ayrı ayrı `dotnet run` ile başlatırken ilgili `launchSettings.json` portları kullanılabilir.
 
 ### Frontend:
 | Uygulama | URL | Port |

@@ -2,7 +2,7 @@
 
 ## Single Source of Truth
 
-Bu projede **tek bir `.env` dosyası** kullanılır: `/mikroservice/.env`
+Bu projede **tek bir `.env` dosyası** kullanılır: repo kökündeki `.env`
 
 ## Neden?
 
@@ -13,13 +13,12 @@ Bu projede **tek bir `.env` dosyası** kullanılır: `/mikroservice/.env`
 
 ## Docker Compose Kullanımı
 
-`infrastructure/docker/.env` dosyası **symbolic link** ile root `.env`'e işaret eder:
-
-```bash
-infrastructure/docker/.env -> ../../.env
-```
-
-Docker Compose otomatik olarak bu dosyayı okur.
+Kök `docker-compose.yml` dosyası `.env` dosyasını otomatik olarak okur. Başlangıç şablonu
+`.env.example` dosyasındadır. `JWT_SECRET`, `JWT_ISSUER`, `JWT_AUDIENCE` ve
+`INTERNAL_SERVICE_API_KEY` tüm ilgili servislerde aynı olmalıdır.
+Bu anahtar en az 32 UTF-8 byte uzunluğunda, rastgele üretilmiş bir değer olmalıdır.
+Compose dağıtımında dış istemciler yalnızca API Gateway'e bağlanır; mikroservis portları
+host'a bind edilmez.
 
 ## Yapılandırma
 
@@ -44,8 +43,7 @@ cp .env.example .env
 ### 3. Docker Compose Başlat
 
 ```bash
-cd infrastructure/docker
-docker-compose -f docker-compose.infra.yml up -d
+docker compose up -d
 ```
 
 ## Database Listesi
@@ -71,13 +69,7 @@ Aşağıdaki veritabanları otomatik oluşturulur:
 ### Docker Compose .env okumuyor
 
 ```bash
-# Symlink'i kontrol et
-ls -la infrastructure/docker/.env
-
-# Yeniden oluştur
-cd infrastructure/docker
-rm .env
-ln -sf ../../.env .env
+docker compose --env-file .env config --quiet
 ```
 
 ### Değişiklikler uygulanmıyor

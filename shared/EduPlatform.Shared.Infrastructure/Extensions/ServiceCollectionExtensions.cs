@@ -43,10 +43,8 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         params Assembly[] assemblies)
     {
-        // Mediator.SourceGenerator handles registration automatically
-        // Just register behaviors
-        services.AddScoped(typeof(Mediator.IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
-        services.AddScoped(typeof(Mediator.IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        services.AddScoped(typeof(MediatR.IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+        services.AddScoped(typeof(MediatR.IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
         return services;
     }

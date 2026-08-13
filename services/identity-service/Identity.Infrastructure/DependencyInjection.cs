@@ -25,7 +25,9 @@ public static class DependencyInjection
             var port = Environment.GetEnvironmentVariable("POSTGRES_PORT") ?? "5432";
             var database = Environment.GetEnvironmentVariable("POSTGRES_DB_IDENTITY") ?? "identity_db";
             var username = Environment.GetEnvironmentVariable("POSTGRES_USER") ?? "eduplatform";
-            var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "eduplatform_secret";
+            var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD")
+                ?? configuration["POSTGRES_PASSWORD"]
+                ?? throw new InvalidOperationException("POSTGRES_PASSWORD is not configured.");
             connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password}";
         }
 

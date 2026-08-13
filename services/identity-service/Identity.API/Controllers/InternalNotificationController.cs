@@ -2,6 +2,7 @@ using Identity.Application.Commands.Notification.ForwardSupportRequest;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Identity.API;
 
 namespace Identity.API.Controllers;
 
@@ -17,7 +18,9 @@ public class InternalNotificationController : ControllerBase
     }
 
     [HttpPost("forward-support")]
-    [Authorize]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    [RequestSizeLimit(32_768)]
     public async Task<IActionResult> ForwardSupport([FromBody] ForwardSupportRequestCommand command)
     {
         var result = await _mediator.Send(command);
