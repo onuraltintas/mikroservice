@@ -17,7 +17,7 @@ public class InternalNotificationController : ControllerBase
     }
 
     [HttpPost("forward-support")]
-    [AllowAnonymous] // In a real app, this would be restricted to internal network or have a secret key
+    [Authorize]
     public async Task<IActionResult> ForwardSupport([FromBody] ForwardSupportRequestCommand command)
     {
         var result = await _mediator.Send(command);

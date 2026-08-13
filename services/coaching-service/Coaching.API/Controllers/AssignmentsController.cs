@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Coaching.Application.Commands.CreateAssignment;
 using Coaching.Application.Commands.SubmitAssignment;
@@ -15,6 +16,7 @@ namespace Coaching.API.Controllers;
 /// Assignments Management API
 /// </summary>
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 [Produces("application/json")]
 public class AssignmentsController : ControllerBase

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Coaching.Application.Commands.CreateExam;
 using Coaching.Application.Commands.AddExamResult;
@@ -12,6 +13,7 @@ namespace Coaching.API.Controllers;
 /// Exams Management API
 /// </summary>
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 [Produces("application/json")]
 public class ExamsController : ControllerBase

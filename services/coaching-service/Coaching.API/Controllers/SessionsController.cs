@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Coaching.Application.Commands.CreateSession;
 using Coaching.Application.Commands.UpdateSessionAttendance;
@@ -11,6 +12,7 @@ namespace Coaching.API.Controllers;
 /// Coaching Sessions Management API
 /// </summary>
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 [Produces("application/json")]
 public class SessionsController : ControllerBase

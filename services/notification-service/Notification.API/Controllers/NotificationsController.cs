@@ -96,6 +96,7 @@ public class NotificationsController : ControllerBase
 
     // TEST ONLY ENDPOINT
     [HttpGet("test-all")]
+    [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> GetAllNotifications()
     {
          var notifications = await _dbContext.Notifications

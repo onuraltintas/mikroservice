@@ -1,10 +1,12 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Notification.Application.Commands.SubmitSupportRequest;
 
 namespace Notification.API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class SupportController : ControllerBase
 {
