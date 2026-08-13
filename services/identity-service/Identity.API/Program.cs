@@ -6,11 +6,9 @@ using Identity.Application;
 using Identity.Application.Interfaces;
 using Identity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.RateLimiting;
 using Serilog;
 using MassTransit;
 using DotNetEnv;
-using System.Threading.RateLimiting;
 using EduPlatform.Shared.Security.Services;
 
 // Load .env file from solution root
@@ -128,21 +126,6 @@ builder.Services.AddCustomAuthentication(builder.Configuration);
 builder.Services.AddCustomAuthorization();
 InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
 
-builder.Services.AddRateLimiter(options =>
-{
-    options.AddPolicy("auth", context =>
-    {
-        var partitionKey = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-        return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
-        {
-            PermitLimit = 30,
-            Window = TimeSpan.FromMinutes(1),
-            QueueLimit = 0,
-            QueueProcessingOrder = QueueProcessingOrder.OldestFirst
-        });
-    });
-});
-
 // Add Health Checks
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<IdentityDbContext>("database");
@@ -189,7 +172,6 @@ app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseRateLimiter();
 
 // Health Checks
 app.MapHealthChecks("/health").AllowAnonymous();

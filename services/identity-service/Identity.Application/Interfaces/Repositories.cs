@@ -13,7 +13,7 @@ public interface IUserRepository
     Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken);
     void Delete(User user);
-    Task<PagedList<UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, CancellationToken cancellationToken);
+    Task<PagedList<UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken);
     Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
     Task<List<User>> GetUsersByRolesAsync(List<string> roleNames, CancellationToken cancellationToken);
 }
@@ -35,6 +35,8 @@ public interface IInstitutionRepository
     Task AddAsync(Institution institution, CancellationToken cancellationToken);
     Task AddAdminAsync(InstitutionAdmin admin, CancellationToken cancellationToken);
     Task<Guid?> GetInstitutionIdByAdminIdAsync(Guid adminUserId, CancellationToken cancellationToken);
+    Task<Guid?> GetPrimaryInstitutionIdByUserIdAsync(Guid userId, CancellationToken cancellationToken);
+    Task<bool> IsUserInInstitutionAsync(Guid userId, Guid institutionId, CancellationToken cancellationToken);
 }
 
 public interface IUnitOfWork

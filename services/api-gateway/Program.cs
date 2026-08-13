@@ -101,6 +101,8 @@ app.MapReverseProxy(proxyPipeline =>
 
 app.MapGet("/", () => "EduPlatform API Gateway Running 🚀").AllowAnonymous();
 
+app.MapGet("/health", () => Results.Ok("Healthy")).AllowAnonymous();
+
 app.MapGet("/api/gateway/services", (IConfiguration configuration) =>
 {
     var clusters = configuration.GetSection("ReverseProxy:Clusters").GetChildren()

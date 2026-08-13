@@ -55,14 +55,37 @@ public class UserRepository : IUserRepository
             .FirstOrDefaultAsync(u => u.RefreshTokens.Any(rt => rt.Token == refreshToken), cancellationToken);
     }
 
-    public async Task<PagedList<UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, CancellationToken cancellationToken)
+    public async Task<PagedList<UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken)
     {
-        var query = _context.Users.AsQueryable();
+        var query = _context.Users
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (institutionId.HasValue)
+        {
+            var scopedInstitutionId = institutionId.Value;
+            query = query.Where(u =>
+                _context.InstitutionAdmins.Any(a =>
+                    a.UserId == u.Id &&
+                    a.InstitutionId == scopedInstitutionId &&
+                    a.IsActive) ||
+                _context.TeacherProfiles.Any(t =>
+                    t.UserId == u.Id &&
+                    t.InstitutionId == scopedInstitutionId &&
+                    t.IsActive) ||
+                _context.StudentProfiles.Any(s =>
+                    s.UserId == u.Id &&
+                    s.InstitutionId == scopedInstitutionId &&
+                    s.IsActive) ||
+                _context.StudentProfiles.Any(s =>
+                    s.ParentId == u.Id &&
+                    s.InstitutionId == scopedInstitutionId &&
+                    s.IsActive));
+        }
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
-            searchTerm = searchTerm.ToLower();
-            query = query.Where(u => u.Email.ToLower().Contains(searchTerm));
+            query = query.Where(u => EF.Functions.ILike(u.Email, $"%{searchTerm}%"));
         }
 
         if (isActive.HasValue)
@@ -135,8 +158,67 @@ public class InstitutionRepository : IInstitutionRepository
     public async Task<Guid?> GetInstitutionIdByAdminIdAsync(Guid adminUserId, CancellationToken cancellationToken)
     {
         var admin = await _context.InstitutionAdmins
-            .FirstOrDefaultAsync(a => a.UserId == adminUserId, cancellationToken);
+            .AsNoTracking()
+            .FirstOrDefaultAsync(a => a.UserId == adminUserId && a.IsActive, cancellationToken);
         return admin?.InstitutionId;
+    }
+
+    public async Task<Guid?> GetPrimaryInstitutionIdByUserIdAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var adminInstitutionId = await _context.InstitutionAdmins
+            .AsNoTracking()
+            .Where(a => a.UserId == userId && a.IsActive)
+            .Select(a => (Guid?)a.InstitutionId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (adminInstitutionId.HasValue)
+        {
+            return adminInstitutionId;
+        }
+
+        var teacherInstitutionId = await _context.TeacherProfiles
+            .AsNoTracking()
+            .Where(t => t.UserId == userId && t.IsActive && t.InstitutionId.HasValue)
+            .Select(t => t.InstitutionId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (teacherInstitutionId.HasValue)
+        {
+            return teacherInstitutionId;
+        }
+
+        var studentInstitutionId = await _context.StudentProfiles
+            .AsNoTracking()
+            .Where(s => s.UserId == userId && s.IsActive && s.InstitutionId.HasValue)
+            .Select(s => s.InstitutionId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (studentInstitutionId.HasValue)
+        {
+            return studentInstitutionId;
+        }
+
+        return await _context.StudentProfiles
+            .AsNoTracking()
+            .Where(s => s.ParentId == userId && s.IsActive && s.InstitutionId.HasValue)
+            .Select(s => s.InstitutionId)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<bool> IsUserInInstitutionAsync(Guid userId, Guid institutionId, CancellationToken cancellationToken)
+    {
+        return await _context.InstitutionAdmins.AnyAsync(a =>
+                   a.UserId == userId && a.InstitutionId == institutionId && a.IsActive,
+                   cancellationToken)
+            || await _context.TeacherProfiles.AnyAsync(t =>
+                   t.UserId == userId && t.InstitutionId == institutionId && t.IsActive,
+                   cancellationToken)
+            || await _context.StudentProfiles.AnyAsync(s =>
+                   s.UserId == userId && s.InstitutionId == institutionId && s.IsActive,
+                   cancellationToken)
+            || await _context.StudentProfiles.AnyAsync(s =>
+                   s.ParentId == userId && s.InstitutionId == institutionId && s.IsActive,
+                   cancellationToken);
     }
 }
 

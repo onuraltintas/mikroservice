@@ -19,7 +19,7 @@ echo ""
 echo "🔧 .NET Servisleri başlatılıyor..."
 
 # Identity Service
-echo "  → Identity Service başlatılıyor (Port: 5001)..."
+echo "  → Identity Service başlatılıyor (iç servis)..."
 cd /home/onur/Projects/mikroservice/services/identity-service/Identity.API
 dotnet run &
 IDENTITY_PID=$!
@@ -27,7 +27,7 @@ IDENTITY_PID=$!
 sleep 3
 
 # Coaching Service
-echo "  → Coaching Service başlatılıyor (Port: 5002)..."
+echo "  → Coaching Service başlatılıyor (iç servis)..."
 cd /home/onur/Projects/mikroservice/services/coaching-service/Coaching.API
 dotnet run &
 COACHING_PID=$!
@@ -35,7 +35,7 @@ COACHING_PID=$!
 sleep 3
 
 # Notification Service
-echo "  → Notification Service başlatılıyor (Port: 5003)..."
+echo "  → Notification Service başlatılıyor (iç servis)..."
 cd /home/onur/Projects/mikroservice/services/notification-service/Notification.API
 dotnet run &
 NOTIFICATION_PID=$!
@@ -67,15 +67,13 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 echo "📍 Servis URL'leri:"
 echo "   • API Gateway:         http://localhost:5000"
-echo "   • Identity Service:    http://localhost:5001"
-echo "   • Coaching Service:    http://localhost:5002"
-echo "   • Notification Service: http://localhost:5003"
+echo "   • Identity / Coaching / Notification: Gateway üzerinden (iç servis)"
 echo "   • Angular Frontend:    http://localhost:4200"
 echo ""
 echo "📍 Altyapı URL'leri:"
-echo "   • RabbitMQ Management: http://localhost:15672 (eduplatform/rabbitmq_secret_2024)"
+echo "   • RabbitMQ Management: http://localhost:15672 (credentials: .env)"
 echo "   • MailCatcher Web UI:  http://localhost:1080"
-echo "   • PostgreSQL:          localhost:5433 (eduplatform/eduplatform_secret_2024)"
+echo "   • PostgreSQL:          localhost:${POSTGRES_PORT:-5432} (credentials: .env)"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""

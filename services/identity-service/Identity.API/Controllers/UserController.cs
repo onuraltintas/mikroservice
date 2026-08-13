@@ -47,6 +47,12 @@ public class UserController : ControllerBase
         if (result.IsSuccess)
             return Ok(result.Value);
 
+        if (result.Error.Code == "Error.Unauthorized")
+            return Unauthorized();
+
+        if (result.Error.Code == "Error.Forbidden")
+            return Forbid();
+
         return BadRequest(new { Error = result.Error });
     }
 
@@ -88,6 +94,12 @@ public class UserController : ControllerBase
         if (result.IsSuccess)
             return Ok(result.Value);
 
+        if (result.Error.Code == "Error.Unauthorized")
+            return Unauthorized();
+
+        if (result.Error.Code == "Error.Forbidden")
+            return Forbid();
+
         return BadRequest(new { Error = result.Error });
     }
 
@@ -116,6 +128,12 @@ public class UserController : ControllerBase
 
         if (result.IsSuccess)
             return Ok(result.Value);
+
+        if (result.Error.Code == "Error.Unauthorized")
+            return Unauthorized();
+
+        if (result.Error.Code == "Error.Forbidden")
+            return Forbid();
 
         return BadRequest(new { Error = result.Error });
     }

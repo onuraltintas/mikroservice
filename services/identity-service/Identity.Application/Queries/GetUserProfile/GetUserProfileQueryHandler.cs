@@ -1,5 +1,7 @@
 using EduPlatform.Shared.Kernel.Exceptions;
 using EduPlatform.Shared.Kernel.Results;
+using EduPlatform.Shared.Security.Interfaces;
+using Identity.Application.Authorization;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using MediatR;
@@ -12,21 +14,55 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
     private readonly ITeacherRepository _teacherRepository;
     private readonly IStudentRepository _studentRepository;
     private readonly IInstitutionRepository _institutionRepository;
+    private readonly ICurrentUserService _currentUserService;
 
     public GetUserProfileQueryHandler(
         IUserRepository userRepository,
         ITeacherRepository teacherRepository,
         IStudentRepository studentRepository,
-        IInstitutionRepository institutionRepository)
+        IInstitutionRepository institutionRepository,
+        ICurrentUserService currentUserService)
     {
         _userRepository = userRepository;
         _teacherRepository = teacherRepository;
         _studentRepository = studentRepository;
         _institutionRepository = institutionRepository;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<UserProfileDto>> Handle(GetUserProfileQuery request, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.UserId;
+        if (currentUserId is null)
+        {
+            return Result.Failure<UserProfileDto>(
+                Error.Unauthorized("Oturum açılmış kullanıcı bulunamadı."));
+        }
+
+        if (currentUserId != request.UserId)
+        {
+            var institutionId = await _institutionRepository
+                .GetPrimaryInstitutionIdByUserIdAsync(currentUserId.Value, cancellationToken);
+            var scope = InstitutionAccessScopeResolver.Resolve(
+                currentUserId,
+                _currentUserService.Roles,
+                institutionId);
+
+            if (scope.IsFailure)
+            {
+                return Result.Failure<UserProfileDto>(scope.Error);
+            }
+
+            if (!scope.Value.IsGlobal && !await _institutionRepository.IsUserInInstitutionAsync(
+                    request.UserId,
+                    scope.Value.InstitutionId!.Value,
+                    cancellationToken))
+            {
+                return Result.Failure<UserProfileDto>(
+                    Error.Forbidden("Bu kullanıcı aynı kurum kapsamında değil."));
+            }
+        }
+
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user == null)
         {
