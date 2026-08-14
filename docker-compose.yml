@@ -81,7 +81,6 @@ services:
     build:
       context: .
       dockerfile: services/identity-service/Dockerfile
-    container_name: identity-service
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB_IDENTITY};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
@@ -109,7 +108,6 @@ services:
     build:
       context: .
       dockerfile: services/coaching-service/Dockerfile
-    container_name: coaching-service
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB_COACHING};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
@@ -139,7 +137,6 @@ services:
     build:
       context: .
       dockerfile: services/notification-service/Dockerfile
-    container_name: notification-service
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB_NOTIFICATION};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
@@ -173,7 +170,6 @@ services:
     build:
       context: .
       dockerfile: services/api-gateway/Dockerfile
-    container_name: api-gateway
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ReverseProxy__Clusters__identity-cluster__Destinations__destination1__Address=http://identity-service:8080
@@ -185,6 +181,9 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - ForwardedHeaders__ForwardLimit=${FORWARDED_HEADERS_FORWARD_LIMIT:-1}
+      - ForwardedHeaders__KnownProxies=${FORWARDED_HEADERS_KNOWN_PROXIES:-}
+      - ForwardedHeaders__KnownNetworks=${FORWARDED_HEADERS_KNOWN_NETWORKS:-}
     ports:
       - "${GATEWAY_PORT}:8080"
     depends_on:

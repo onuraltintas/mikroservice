@@ -1,7 +1,9 @@
 using Serilog;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.HttpOverrides;
 using System.Threading.RateLimiting;
 using DotNetEnv;
+using EduPlatform.Gateway;
 using EduPlatform.Shared.Infrastructure.Logging;
 using EduPlatform.Shared.Security.Extensions;
 using StackExchange.Redis;
@@ -57,9 +59,21 @@ builder.Services.AddSingleton<Lazy<IConnectionMultiplexer>>(services =>
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
+// Only explicitly configured ingress proxies may provide the client IP used by rate limiting.
+var forwardedHeadersOptions = TrustedProxyConfiguration.Create(builder.Configuration);
+
 // Rate Limiting Setup
 builder.Services.AddRateLimiter(options =>
 {
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.Headers.RetryAfter = "60";
+        await context.HttpContext.Response.WriteAsJsonAsync(
+            new { error = "Rate limit exceeded." },
+            cancellationToken);
+    };
+
     options.AddPolicy("fixed-window", context =>
     {
         var partitionKey = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
@@ -103,6 +117,8 @@ builder.Services.AddGlobalAuthorization();
 
 var app = builder.Build();
 
+app.UseForwardedHeaders(forwardedHeadersOptions);
+
 app.UseSerilogRequestLogging();
 
 app.UseCors("AllowFrontend");
@@ -110,8 +126,9 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseRateLimiter();
+// Redis is the shared limiter. The endpoint metadata limiter is the local fallback.
 app.UseMiddleware<EduPlatform.Gateway.Middlewares.DistributedRateLimitingMiddleware>();
+app.UseRateLimiter();
 
 
 app.MapReverseProxy(proxyPipeline =>

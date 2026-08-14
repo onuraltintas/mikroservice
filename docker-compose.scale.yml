@@ -1,0 +1,5 @@
+services:
+  # The edge/load-balancer is external in a scaled deployment. Keep replicas
+  # internal so they can share the same Redis rate-limit state.
+  api-gateway:
+    ports: !reset []

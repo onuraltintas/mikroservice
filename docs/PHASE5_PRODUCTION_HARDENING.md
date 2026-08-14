@@ -38,10 +38,42 @@ kullanır. Her route için aşağıdaki smoke senaryoları release öncesi çal�
 | Gateway replica sayısı artırılır | Redis anahtarı ortak olduğu için kota replica başına çoğalmaz |
 | Güvenilir reverse proxy arkasında çalışma | Proxy zinciri ve gerçek istemci IP'si açıkça yapılandırılmadan `RemoteIpAddress` limiter anahtarı olarak kullanılmaz |
 
+Gateway, `X-Forwarded-For` ve `X-Forwarded-Proto` başlıklarını varsayılan olarak
+işlemez. Reverse proxy kullanılıyorsa yalnızca proxy tarafından kontrol edilen
+adresleri `.env`/deployment secret içinde açıkça tanımlayın:
+
+```text
+FORWARDED_HEADERS_FORWARD_LIMIT=1
+FORWARDED_HEADERS_KNOWN_PROXIES=10.0.0.10,10.0.0.11
+FORWARDED_HEADERS_KNOWN_NETWORKS=10.42.0.0/16
+```
+
+Bu listeler boş bırakıldığında istemcinin gönderdiği forwarded header'lar yok
+sayılır ve rate-limit anahtarı doğrudan TCP peer adresinden üretilir. Trusted
+ingress, istemcinin gönderdiği `X-Forwarded-For` ve `X-Forwarded-Proto` değerlerini
+üstüne yazmalı veya strip etmelidir; yalnızca proxy adresini listelemek, kötü
+yapılandırılmış bir proxy'nin istemci zincirini taşıması halinde spoofing'i
+engellemez. Listeye internet istemcilerinin, `/0` ağlarının veya kontrol edilmeyen
+ağların eklenmesi güvenlik açığıdır.
+
 Redis tamamen kullanılamazsa yerel limiter yalnızca process kapsamındadır; bu,
 erişilebilirlik için fail-open/fallback davranışıdır ve kalıcı kötüye kullanım
 koruması değildir. Üretimde Redis geri geldiğinde dağıtık limiter otomatik olarak
 yeniden devreye girer.
+
+Compose dosyasında uygulama servisleri için sabit `container_name` kullanılmaz.
+Gateway replica smoke testi, host portunu her replica'ya bind etmemek için override
+dosyasıyla çalıştırılmalıdır:
+
+```powershell
+docker compose --env-file .env -f docker-compose.yml -f docker-compose.scale.yml `
+  up -d --scale api-gateway=2
+```
+
+Bu profilde Gateway yalnızca Compose iç ağında dinler; edge/load-balancer dışarıda
+olmalıdır. Kalıcı yatay ölçekleme ve gerçek istemci IP'si için production
+ortamında Kubernetes/başka bir orkestratör ile Redis'in ortak kullanıldığı bir
+dağıtım tercih edilmelidir.
 
 ## 3. JWT iptal (revocation) kararı
 
