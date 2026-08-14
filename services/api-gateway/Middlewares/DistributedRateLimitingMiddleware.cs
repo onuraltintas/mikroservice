@@ -17,12 +17,12 @@ public sealed class DistributedRateLimitingMiddleware
         """;
 
     private readonly RequestDelegate _next;
-    private readonly IConnectionMultiplexer _redis;
+    private readonly Lazy<IConnectionMultiplexer> _redis;
     private readonly ILogger<DistributedRateLimitingMiddleware> _logger;
 
     public DistributedRateLimitingMiddleware(
         RequestDelegate next,
-        IConnectionMultiplexer redis,
+        Lazy<IConnectionMultiplexer> redis,
         ILogger<DistributedRateLimitingMiddleware> logger)
     {
         _next = next;
@@ -44,7 +44,7 @@ public sealed class DistributedRateLimitingMiddleware
 
         try
         {
-            var database = _redis.GetDatabase();
+            var database = _redis.Value.GetDatabase();
             var countResult = await database.ScriptEvaluateAsync(
                 IncrementScript,
                 new RedisKey[] { key },

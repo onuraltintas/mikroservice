@@ -1,0 +1,103 @@
+# Faz 5 — Üretim Sertleştirme ve Doğrulama Runbook'u
+
+Bu doküman, tenant/rol kontrollerinin gerçek EF sorguları ile doğrulanmasını,
+Redis kesintisindeki davranışı ve JWT/secret rotasyonunu tanımlar.
+
+## 1. EF tenant/rol matrisi
+
+`tests/Integration/Identity.API.IntegrationTests/CoachingStudentReadRepositoryTests.cs`
+şu durumları gerçek PostgreSQL üzerinde doğrular:
+
+- Veli yalnızca aktif çocuklarının verisini görür.
+- Kurum yöneticisi yalnızca kendi aktif kurumundaki aktif öğrencileri görür.
+- Öğretmen yalnızca aynı kurumda atanmış öğrencileri görür.
+- Pasif kullanıcı, aktif profili ve ataması olsa bile reddedilir.
+- Farklı kurum, pasif kullanıcı ve pasif profil verileri sonuçtan çıkarılır.
+
+Çalıştırma:
+
+```powershell
+docker version
+dotnet test tests/Integration/Identity.API.IntegrationTests/Identity.API.IntegrationTests.csproj `
+  -c Release --filter FullyQualifiedName~CoachingStudentReadRepositoryTests
+```
+
+Testcontainers PostgreSQL kullandığı için CI runner'da Docker daemon zorunludur.
+Docker yoksa derleme yapılabilir; entegrasyon testleri geçerli bir sonuç üretmez.
+
+## 2. Redis rate-limit kabul kriterleri
+
+Gateway'deki dağıtık limiter, Redis üzerinde atomik `INCR + PEXPIRE` Lua script'i
+kullanır. Her route için aşağıdaki smoke senaryoları release öncesi çalıştırılmalıdır:
+
+| Senaryo | Beklenen davranış |
+| --- | --- |
+| Redis sağlıklı, aynı IP'den 31 auth isteği | İlk 30 istek route'a ulaşır, 31. istek `429` olur |
+| Redis sağlıklı, aynı IP'den 11 support submit isteği | İlk 10 istek route'a ulaşır, 11. istek `429` olur |
+| Redis kesilirken yeni auth isteği | Middleware hata loglar; process düşmez, yerel ASP.NET limiter devreye girer |
+| Gateway replica sayısı artırılır | Redis anahtarı ortak olduğu için kota replica başına çoğalmaz |
+| Güvenilir reverse proxy arkasında çalışma | Proxy zinciri ve gerçek istemci IP'si açıkça yapılandırılmadan `RemoteIpAddress` limiter anahtarı olarak kullanılmaz |
+
+Redis tamamen kullanılamazsa yerel limiter yalnızca process kapsamındadır; bu,
+erişilebilirlik için fail-open/fallback davranışıdır ve kalıcı kötüye kullanım
+koruması değildir. Üretimde Redis geri geldiğinde dağıtık limiter otomatik olarak
+yeniden devreye girer.
+
+## 3. JWT iptal (revocation) kararı
+
+Mevcut erişim token'ları HMAC-SHA256 ile imzalanır ve `jti` içerir. Refresh token'ları
+veritabanında tutulup döndürülür/revoke edilir. Erişim token'ı için tüm servislerde
+her istekte veritabanı sorgusu yapılmadığından, kullanıcı pasifleştirme sonrası
+token'ın kalan kısa ömrü boyunca kullanılabilmesi beklenen mevcut davranıştır.
+
+Üretim geçişi:
+
+1. `JWT_EXPIRY_MINUTES` değerini 15 dakika veya daha düşükte sabitleyin; dinamik
+   `Auth.TokenLifetime` ayarı ile response'taki `ExpiresInMinutes` değerini aynı
+   sözleşmede tutun.
+2. Logout, password reset, rol değişikliği ve kullanıcı pasifleştirmesinde refresh
+   token ailesini revoke edin.
+3. Anında iptal zorunluysa kullanıcıya monotonic `TokenVersion` (veya
+   `SecurityStamp`) ekleyin. Token'a `ver` claim'i yazın; değişiklikte değeri artırın.
+4. Gateway/servisler için `auth:user:{userId}:ver` Redis kaydı ekleyin. JWT
+   doğrulamasından sonra claim ile Redis değeri eşleşmiyorsa `401` verin.
+5. Redis doğrulaması yapılamıyorsa yalnızca kimlik/rol değişikliği gibi ayrıcalıklı
+   endpoint'lerde fail-closed politika uygulayın; normal public health endpoint'leri
+   bu kontrolün dışında bırakın.
+6. Tekil logout veya şüpheli token için `auth:revoked:jti:{jti}` anahtarı kullanın;
+   TTL token'ın `exp` süresini geçmemelidir.
+
+Bu adımların tamamı uygulanmadan `jti` claim'ini varmış gibi yorumlayıp kısmi bir
+revocation kontrolü eklenmemelidir; aksi durumda servisler farklı güvenlik
+politikaları uygular.
+
+## 4. JWT ve internal service key rotasyonu
+
+- JWT anahtarlarını `kid` ile anahtar halkasına taşıyın: yeni anahtar imzalama için
+  aktif, önceki anahtar yalnızca kısa overlap süresinde doğrulama için tutulur.
+- Rotasyon sırası: yeni anahtarı tüm doğrulayıcılara dağıtın → doğrulayıcıların
+  hazır olduğunu gözlemleyin → Identity'nin yeni anahtarla imzalamasını açın →
+  overlap süresi bitince eski anahtarı kaldırın.
+- `JWT_SECRET` ve `INTERNAL_SERVICE_API_KEY` en az 32 rastgele byte olmalı; bilinen
+  placeholder değerleri production ortamında reddedilmelidir.
+- DB, RabbitMQ, Redis ve SMTP parolaları da aynı bakım penceresinde döndürülmeli;
+  servisler yeniden başlatılmadan eski değerler iptal edilmemelidir.
+- Gerçek credential içeren `.env`, `.env.backup` ve log dosyaları repoya
+  alınmamalıdır. Yalnızca açıkça placeholder içeren örnek dosyalar istisnadır.
+  Geçmiş commit'lerde gerçek credential bulunduğu doğrulanırsa değerleri önce
+  rotate edin; history purge işlemi için ayrıca onay ve yedekleme gerekir.
+
+## 5. CI release kapıları
+
+```powershell
+dotnet build services/identity-service/Identity.API/Identity.API.csproj -c Release
+dotnet build services/coaching-service/Coaching.API/Coaching.API.csproj -c Release
+dotnet build services/api-gateway/EduPlatform.Gateway.csproj -c Release
+dotnet build services/notification-service/Notification.API/Notification.API.csproj -c Release
+dotnet test tests/Integration/Identity.API.IntegrationTests/Identity.API.IntegrationTests.csproj -c Release
+git diff --check
+```
+
+Docker tabanlı entegrasyonlar ayrı bir CI job'ında çalıştırılmalı; Docker olmayan
+geliştirici makinelerinde yalnızca derleme ve container dışı test sonucu başarılı
+sayılmalıdır.

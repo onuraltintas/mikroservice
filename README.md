@@ -9,7 +9,6 @@
 - ✅ Docker 28.5.1
 - ✅ Node.js v20.20.0
 - ✅ PostgreSQL 16
-- ✅ Keycloak 23.0.0
 - ✅ RabbitMQ 3.12
 - ✅ Redis 7.2
 - ✅ Angular 21
@@ -36,7 +35,7 @@ mikroservice/
 
 ## 🚀 Hızlı Başlangıç
 
-### 1️⃣ Sadece Altyapıyı Başlat (PostgreSQL, Keycloak, RabbitMQ, Redis)
+### 1️⃣ Sadece Altyapıyı Başlat (PostgreSQL, RabbitMQ, Redis, MailCatcher)
 
 ```bash
 ./start-infra.sh
@@ -58,7 +57,7 @@ docker compose up -d
 
 #### Docker Altyapısı:
 ```bash
-docker compose up -d postgres redis rabbitmq keycloak mailcatcher
+docker compose up -d postgres redis rabbitmq mailcatcher
 ```
 
 #### Identity Service:
@@ -111,11 +110,10 @@ Docker Compose kullanımında mikroservis portları host'a açılmaz; dış iste
 ### Altyapı Servisleri:
 | Servis | URL | Kullanıcı Adı | Şifre |
 |--------|-----|---------------|-------|
-| Keycloak Admin | http://localhost:8080 | admin | admin |
-| RabbitMQ Management | http://localhost:15672 | eduplatform | rabbitmq_secret_2024 |
+| RabbitMQ Management | http://localhost:15672 | `${RABBITMQ_DEFAULT_USER}` | `${RABBITMQ_DEFAULT_PASS}` |
 | MailCatcher Web UI | http://localhost:1080 | - | - |
-| PostgreSQL | localhost:5433 | eduplatform | eduplatform_secret_2024 |
-| Redis | localhost:6379 | - | redis_secret_2024 |
+| PostgreSQL | localhost:5433 | `${POSTGRES_USER}` | `${POSTGRES_PASSWORD}` |
+| Redis | localhost:6379 | - | `${REDIS_PASSWORD}` |
 
 ---
 
@@ -126,7 +124,6 @@ Aşağıdaki veritabanları otomatik oluşturuldu:
 - `identity_db` - Identity Service
 - `coaching_db` - Coaching Service
 - `notification_db` - Notification Service
-- `keycloak_db` - Keycloak
 
 ### Veritabanına Bağlanma:
 
@@ -243,10 +240,10 @@ cat .env | grep POSTGRES
 
 - [Proje Yapısı](PROJECT_STRUCTURE.md)
 - [Mimari Rapor](ARCHITECTURE_REPORT.md)
-- [Keycloak Kurulumu](KEYCLOAK_SETUP.md)
 - [Environment Konfigürasyonu](ENV_CONFIG.md)
 - [Test Stratejisi](TESTING_STRATEGY.md)
 - [Uygulama Planı](IMPLEMENTATION_PLAN.md)
+- [Faz 5 Üretim Sertleştirme Runbook'u](docs/PHASE5_PRODUCTION_HARDENING.md)
 
 ---
 
@@ -255,7 +252,6 @@ cat .env | grep POSTGRES
 ⚠️ **ÖNEMLİ:**
 - `.env` dosyası GIT'e push edilmemeli
 - Production ortamında güçlü şifreler kullanın
-- Keycloak admin şifresini mutlaka değiştirin
 - Secret Manager kullanın (Azure Key Vault, AWS Secrets Manager)
 
 ---

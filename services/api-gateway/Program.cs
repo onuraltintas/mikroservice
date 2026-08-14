@@ -34,14 +34,23 @@ builder.Services.AddStackExchangeRedisCache(options =>
         : $"{redisHost}:{redisPort},password={redisPassword},abortConnect=false";
     options.InstanceName = "EduPlatform:"; // Key prefix
 });
+var redisOptions = ConfigurationOptions.Parse(
+    string.IsNullOrWhiteSpace(redisPassword)
+        ? $"{redisHost}:{redisPort}"
+        : $"{redisHost}:{redisPort},password={redisPassword}");
+redisOptions.AbortOnConnectFail = false;
+redisOptions.ConnectTimeout = 1000;
+redisOptions.ConnectRetry = 1;
+
+// Register the actual multiplexer with DI so it is disposed during host shutdown.
+// The lazy resolver keeps health and non-rate-limited routes independent of Redis startup.
 builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+    ConnectionMultiplexer.Connect(redisOptions));
+builder.Services.AddSingleton<Lazy<IConnectionMultiplexer>>(services =>
 {
-    var options = ConfigurationOptions.Parse(
-        string.IsNullOrWhiteSpace(redisPassword)
-            ? $"{redisHost}:{redisPort}"
-            : $"{redisHost}:{redisPort},password={redisPassword}");
-    options.AbortOnConnectFail = false;
-    return ConnectionMultiplexer.Connect(options);
+    return new Lazy<IConnectionMultiplexer>(
+        () => services.GetRequiredService<IConnectionMultiplexer>(),
+        LazyThreadSafetyMode.PublicationOnly);
 });
 
 // YARP Setup
