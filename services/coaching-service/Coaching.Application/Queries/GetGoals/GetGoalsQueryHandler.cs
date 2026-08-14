@@ -9,20 +9,27 @@ public class GetGoalsQueryHandler : IRequestHandler<GetStudentGoalsQuery, List<G
 {
     private readonly IAcademicGoalRepository _repository;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _identityAuthorizationClient;
 
     public GetGoalsQueryHandler(
         IAcademicGoalRepository repository,
-        ICoachingAccessPolicy accessPolicy)
+        ICoachingAccessPolicy accessPolicy,
+        ICoachingIdentityAuthorizationClient identityAuthorizationClient)
     {
         _repository = repository;
         _accessPolicy = accessPolicy;
+        _identityAuthorizationClient = identityAuthorizationClient;
     }
 
     public async Task<List<GoalDto>> Handle(
         GetStudentGoalsQuery query,
         CancellationToken cancellationToken)
     {
-        _accessPolicy.RequireStudent(query.StudentId);
+        await CoachingStudentReadAuthorization.RequireAsync(
+            _accessPolicy,
+            _identityAuthorizationClient,
+            new[] { query.StudentId },
+            cancellationToken);
         var goals = await _repository.GetByStudentIdAsync(query.StudentId, cancellationToken);
         
         return goals.Select(g => new GoalDto(

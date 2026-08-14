@@ -41,6 +41,32 @@ public sealed class InternalCoachingController : ControllerBase
             ? Forbid()
             : Ok(new CoachingAuthorizationResponse(authorization.InstitutionId));
     }
+
+    [HttpPost("authorize-student-read")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    [RequestSizeLimit(16_384)]
+    public async Task<IActionResult> AuthorizeStudentRead(
+        [FromBody] CoachingStudentReadRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.ViewerUserId == Guid.Empty
+            || request.StudentIds is null
+            || request.StudentIds.Count == 0
+            || request.StudentIds.Count > MaxStudentTargets)
+        {
+            return BadRequest("Student read target count is invalid.");
+        }
+
+        var authorization = await _institutionRepository.AuthorizeCoachingStudentReadAsync(
+            request.ViewerUserId,
+            request.StudentIds,
+            cancellationToken);
+
+        return authorization is null
+            ? Forbid()
+            : Ok(new CoachingStudentReadResponse(authorization.AllowedStudentUserIds));
+    }
 }
 
 public sealed record CoachingAuthorizationRequest(
@@ -50,3 +76,10 @@ public sealed record CoachingAuthorizationRequest(
     bool IsSystemAdministrator);
 
 public sealed record CoachingAuthorizationResponse(Guid? InstitutionId);
+
+public sealed record CoachingStudentReadRequest(
+    Guid ViewerUserId,
+    IReadOnlyCollection<Guid> StudentIds);
+
+public sealed record CoachingStudentReadResponse(
+    IReadOnlyCollection<Guid> AllowedStudentUserIds);

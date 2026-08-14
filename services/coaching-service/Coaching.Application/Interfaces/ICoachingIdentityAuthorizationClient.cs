@@ -8,4 +8,9 @@ public interface ICoachingIdentityAuthorizationClient
         Guid? requestedInstitutionId,
         bool isSystemAdministrator,
         CancellationToken cancellationToken);
+
+    Task<IReadOnlyCollection<Guid>> AuthorizeStudentReadAsync(
+        Guid viewerUserId,
+        IReadOnlyCollection<Guid> studentIds,
+        CancellationToken cancellationToken);
 }

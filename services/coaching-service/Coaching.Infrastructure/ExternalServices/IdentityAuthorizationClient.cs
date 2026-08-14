@@ -90,5 +90,83 @@ public sealed class IdentityAuthorizationClient : ICoachingIdentityAuthorization
         }
     }
 
+    public async Task<IReadOnlyCollection<Guid>> AuthorizeStudentReadAsync(
+        Guid viewerUserId,
+        IReadOnlyCollection<Guid> studentIds,
+        CancellationToken cancellationToken)
+    {
+        if (viewerUserId == Guid.Empty)
+        {
+            throw new BusinessRuleException(
+                "Authorization.Forbidden",
+                "Oturum açılmış kullanıcı bulunamadı.");
+        }
+
+        if (studentIds.Count == 0 || studentIds.Count > 100)
+        {
+            throw new BusinessRuleException(
+                "Authorization.Forbidden",
+                "Öğrenci erişim kapsamı geçersiz.");
+        }
+
+        if (string.IsNullOrWhiteSpace(_serviceApiKey))
+        {
+            throw new InvalidOperationException("Internal service API key is not configured.");
+        }
+
+        var payload = new
+        {
+            ViewerUserId = viewerUserId,
+            StudentIds = studentIds
+        };
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"{_baseUrl}/api/internal/coaching/authorize-student-read")
+        {
+            Content = JsonContent.Create(payload)
+        };
+        request.Headers.Add(InternalServiceAuthentication.HeaderName, _serviceApiKey);
+
+        try
+        {
+            using var response = await _httpClient.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken);
+
+            if (response.StatusCode is System.Net.HttpStatusCode.Forbidden or
+                System.Net.HttpStatusCode.Unauthorized)
+            {
+                throw new BusinessRuleException(
+                    "Authorization.Forbidden",
+                    "Öğrenci verisine erişim yetkiniz yok.");
+            }
+
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<StudentReadAuthorizationResponse>(
+                cancellationToken: cancellationToken);
+            if (result is null)
+            {
+                throw new InvalidOperationException("Identity student authorization response was empty.");
+            }
+
+            return result.AllowedStudentUserIds ?? Array.Empty<Guid>();
+        }
+        catch (BusinessRuleException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            _logger.LogError(
+                ex,
+                "Identity student read authorization failed for viewer {ViewerUserId}",
+                viewerUserId);
+            throw new InvalidOperationException("Identity authorization service is unavailable.", ex);
+        }
+    }
+
     private sealed record AuthorizationResponse(Guid? InstitutionId);
+    private sealed record StudentReadAuthorizationResponse(Guid[]? AllowedStudentUserIds);
 }

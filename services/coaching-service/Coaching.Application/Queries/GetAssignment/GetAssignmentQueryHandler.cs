@@ -1,5 +1,6 @@
 using Coaching.Application.Interfaces;
 using Coaching.Application.Authorization;
+using EduPlatform.Shared.Kernel.Exceptions;
 
 using MediatR;
 
@@ -12,13 +13,16 @@ public class GetAssignmentQueryHandler : IRequestHandler<GetAssignmentQuery, Ass
 {
     private readonly IAssignmentRepository _repository;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _identityAuthorizationClient;
 
     public GetAssignmentQueryHandler(
         IAssignmentRepository repository,
-        ICoachingAccessPolicy accessPolicy)
+        ICoachingAccessPolicy accessPolicy,
+        ICoachingIdentityAuthorizationClient identityAuthorizationClient)
     {
         _repository = repository;
         _accessPolicy = accessPolicy;
+        _identityAuthorizationClient = identityAuthorizationClient;
     }
 
     public async Task<AssignmentResponse?> Handle(GetAssignmentQuery query, CancellationToken cancellationToken)
@@ -28,17 +32,21 @@ public class GetAssignmentQueryHandler : IRequestHandler<GetAssignmentQuery, Ass
         if (assignment == null)
             return null;
 
-        _accessPolicy.RequireTeacherOrAssignedStudent(
-            assignment.TeacherId,
-            assignment.AssignedStudents.Select(student => student.StudentId));
+        var allowedStudentIds = await CoachingStudentReadAuthorization.RequireAsync(
+            _accessPolicy,
+            _identityAuthorizationClient,
+            assignment.AssignedStudents.Select(student => student.StudentId).ToArray(),
+            cancellationToken);
 
-        var currentUserId = _accessPolicy.CurrentUserId;
-        var visibleStudents = !_accessPolicy.IsCurrentTeacher(assignment.TeacherId)
-            && currentUserId.HasValue
-            && _accessPolicy.IsCurrentStudent(currentUserId.Value)
-            ? assignment.AssignedStudents.Where(student =>
-                student.StudentId == currentUserId.Value)
-            : assignment.AssignedStudents;
+        var visibleStudents = assignment.AssignedStudents.Where(student =>
+            allowedStudentIds.Contains(student.StudentId));
+
+        if (!visibleStudents.Any())
+        {
+            throw new BusinessRuleException(
+                "Authorization.Forbidden",
+                "Bu assignment verisine erişim yetkiniz yok.");
+        }
 
         return new AssignmentResponse(
             Id: assignment.Id,

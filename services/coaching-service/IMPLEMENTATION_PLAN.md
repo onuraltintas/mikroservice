@@ -471,12 +471,23 @@ Student:
 Parent:
   - View child's assignments
   - View child's exam results
-  - View child reports
+  - View child goals/progress
+  - Assignment details expose only the child rows
 
 InstitutionAdmin:
-  - View all teachers/students in institution
-  - Send institution-wide notifications
-  - View institution reports
+  - View active students' assignments, exam results and goals within an active institution
+  - Assignment details are filtered to the institution-scoped students
+  - Institution-wide aggregate reports and notifications remain a separate read/reporting phase
+
+InstitutionOwner:
+  - Same institution-scoped read permissions as InstitutionAdmin
+  - Write/grade permissions are not inherited from read access
+
+Authorization boundary:
+  - Coaching delegates student-read scope checks to Identity through the service-key protected
+    `/api/internal/coaching/authorize-student-read` endpoint.
+  - Identity verifies active user/profile/institution state, parent-child relation, active institution
+    membership, or active teacher-student assignment before returning allowed student IDs.
 ```
 
 ---

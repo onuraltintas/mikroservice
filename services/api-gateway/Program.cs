@@ -4,6 +4,7 @@ using System.Threading.RateLimiting;
 using DotNetEnv;
 using EduPlatform.Shared.Infrastructure.Logging;
 using EduPlatform.Shared.Security.Extensions;
+using StackExchange.Redis;
 
 // Load .env file from solution root
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", ".env");
@@ -32,6 +33,15 @@ builder.Services.AddStackExchangeRedisCache(options =>
         ? $"{redisHost}:{redisPort},abortConnect=false"
         : $"{redisHost}:{redisPort},password={redisPassword},abortConnect=false";
     options.InstanceName = "EduPlatform:"; // Key prefix
+});
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+{
+    var options = ConfigurationOptions.Parse(
+        string.IsNullOrWhiteSpace(redisPassword)
+            ? $"{redisHost}:{redisPort}"
+            : $"{redisHost}:{redisPort},password={redisPassword}");
+    options.AbortOnConnectFail = false;
+    return ConnectionMultiplexer.Connect(options);
 });
 
 // YARP Setup
@@ -92,6 +102,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseRateLimiter();
+app.UseMiddleware<EduPlatform.Gateway.Middlewares.DistributedRateLimitingMiddleware>();
 
 
 app.MapReverseProxy(proxyPipeline =>

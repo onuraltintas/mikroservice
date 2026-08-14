@@ -43,9 +43,14 @@ public interface IInstitutionRepository
         Guid? requestedInstitutionId,
         bool isSystemAdministrator,
         CancellationToken cancellationToken);
+    Task<CoachingStudentReadAuthorization?> AuthorizeCoachingStudentReadAsync(
+        Guid viewerUserId,
+        IReadOnlyCollection<Guid> studentUserIds,
+        CancellationToken cancellationToken);
 }
 
 public sealed record CoachingTeacherAuthorization(Guid? InstitutionId);
+public sealed record CoachingStudentReadAuthorization(IReadOnlyCollection<Guid> AllowedStudentUserIds);
 
 public interface IUnitOfWork
 {

@@ -10,20 +10,27 @@ public class GetStudentAssignmentsQueryHandler : IRequestHandler<GetStudentAssig
 {
     private readonly IAssignmentRepository _repository;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _identityAuthorizationClient;
 
     public GetStudentAssignmentsQueryHandler(
         IAssignmentRepository repository,
-        ICoachingAccessPolicy accessPolicy)
+        ICoachingAccessPolicy accessPolicy,
+        ICoachingIdentityAuthorizationClient identityAuthorizationClient)
     {
         _repository = repository;
         _accessPolicy = accessPolicy;
+        _identityAuthorizationClient = identityAuthorizationClient;
     }
 
     public async Task<StudentAssignmentListResponse> Handle(
         GetStudentAssignmentsQuery query,
         CancellationToken cancellationToken)
     {
-        _accessPolicy.RequireStudent(query.StudentId);
+        await CoachingStudentReadAuthorization.RequireAsync(
+            _accessPolicy,
+            _identityAuthorizationClient,
+            new[] { query.StudentId },
+            cancellationToken);
         var assignments = await _repository.GetByStudentIdAsync(query.StudentId, cancellationToken);
 
         var dtos = assignments.Select(a =>

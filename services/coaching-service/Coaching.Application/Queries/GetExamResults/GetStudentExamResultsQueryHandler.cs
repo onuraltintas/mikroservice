@@ -9,20 +9,27 @@ public class GetStudentExamResultsQueryHandler : IRequestHandler<GetStudentExamR
 {
     private readonly IExamRepository _repository;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _identityAuthorizationClient;
 
     public GetStudentExamResultsQueryHandler(
         IExamRepository repository,
-        ICoachingAccessPolicy accessPolicy)
+        ICoachingAccessPolicy accessPolicy,
+        ICoachingIdentityAuthorizationClient identityAuthorizationClient)
     {
         _repository = repository;
         _accessPolicy = accessPolicy;
+        _identityAuthorizationClient = identityAuthorizationClient;
     }
 
     public async Task<List<ExamResultDto>> Handle(
         GetStudentExamResultsQuery query,
         CancellationToken cancellationToken)
     {
-        _accessPolicy.RequireStudent(query.StudentId);
+        await CoachingStudentReadAuthorization.RequireAsync(
+            _accessPolicy,
+            _identityAuthorizationClient,
+            new[] { query.StudentId },
+            cancellationToken);
         var exams = await _repository.GetByStudentIdAsync(query.StudentId, cancellationToken);
         
         var results = new List<ExamResultDto>();
