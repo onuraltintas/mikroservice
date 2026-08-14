@@ -244,6 +244,7 @@ cat .env | grep POSTGRES
 - [Test Stratejisi](TESTING_STRATEGY.md)
 - [Uygulama Planı](IMPLEMENTATION_PLAN.md)
 - [Faz 5 Üretim Sertleştirme Runbook'u](docs/PHASE5_PRODUCTION_HARDENING.md)
+- [Faz 6 Performans ve Gözlemlenebilirlik Runbook'u](docs/PHASE6_PERFORMANCE_OBSERVABILITY.md)
 
 ---
 
