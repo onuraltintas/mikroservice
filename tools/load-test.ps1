@@ -72,6 +72,7 @@ $workerResults = @(
         $latencies = @()
         $statusCodes = @{}
         $errors = @()
+        $webSession = $null
 
         while ([DateTime]::UtcNow -lt $using:deadline) {
             $started = [DateTime]::UtcNow
@@ -89,6 +90,12 @@ $workerResults = @(
                 if ($workerMethod -eq "POST") {
                     $requestParameters.Body = $using:Body
                     $requestParameters.ContentType = $using:ContentType
+                }
+                if ($null -eq $webSession) {
+                    $requestParameters.SessionVariable = "webSession"
+                }
+                else {
+                    $requestParameters.WebSession = $webSession
                 }
 
                 $response = Invoke-WebRequest @requestParameters
