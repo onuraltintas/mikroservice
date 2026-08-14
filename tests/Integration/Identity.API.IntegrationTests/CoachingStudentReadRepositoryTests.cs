@@ -4,6 +4,7 @@ using Identity.Domain.Enums;
 using Identity.Infrastructure.Persistence;
 using Identity.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Shared.IntegrationTests.Fixtures;
 using Xunit;
 using DomainUserRole = Identity.Domain.Entities.UserRole;
@@ -20,6 +21,7 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
 {
     private readonly PostgresFixture _postgresFixture;
     private IdentityDbContext? _dbContext;
+    private NpgsqlDataSource? _dataSource;
 
     public CoachingStudentReadRepositoryTests(PostgresFixture postgresFixture)
     {
@@ -28,8 +30,12 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
+        _dataSource = new NpgsqlDataSourceBuilder(_postgresFixture.ConnectionString)
+            .EnableDynamicJson()
+            .Build();
+
         var options = new DbContextOptionsBuilder<IdentityDbContext>()
-            .UseNpgsql(_postgresFixture.ConnectionString)
+            .UseNpgsql(_dataSource)
             .Options;
 
         _dbContext = new IdentityDbContext(options);
@@ -48,13 +54,30 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        if (_dbContext is null)
+        try
         {
-            return;
+            if (_dbContext != null)
+            {
+                await _dbContext.Database.EnsureDeletedAsync();
+            }
         }
-
-        await _dbContext.Database.EnsureDeletedAsync();
-        await _dbContext.DisposeAsync();
+        finally
+        {
+            try
+            {
+                if (_dbContext != null)
+                {
+                    await _dbContext.DisposeAsync();
+                }
+            }
+            finally
+            {
+                if (_dataSource != null)
+                {
+                    await _dataSource.DisposeAsync();
+                }
+            }
+        }
     }
 
     [Fact]

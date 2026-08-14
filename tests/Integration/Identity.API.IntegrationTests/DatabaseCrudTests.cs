@@ -3,6 +3,7 @@ using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using Identity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Shared.IntegrationTests.Fixtures;
 using Xunit;
 using Xunit.Abstractions;
@@ -19,6 +20,7 @@ public class DatabaseCrudTests : IAsyncLifetime
     private readonly PostgresFixture _postgresFixture;
     private readonly ITestOutputHelper _output;
     private IdentityDbContext? _dbContext;
+    private NpgsqlDataSource? _dataSource;
 
     public DatabaseCrudTests(PostgresFixture postgresFixture, ITestOutputHelper output)
     {
@@ -31,8 +33,12 @@ public class DatabaseCrudTests : IAsyncLifetime
         _output.WriteLine($"PostgreSQL Connection String: {_postgresFixture.ConnectionString}");
 
         // Create DbContext with test database
+        _dataSource = new NpgsqlDataSourceBuilder(_postgresFixture.ConnectionString)
+            .EnableDynamicJson()
+            .Build();
+
         var options = new DbContextOptionsBuilder<IdentityDbContext>()
-            .UseNpgsql(_postgresFixture.ConnectionString)
+            .UseNpgsql(_dataSource)
             .EnableSensitiveDataLogging()
             .Options;
 
@@ -50,6 +56,11 @@ public class DatabaseCrudTests : IAsyncLifetime
         {
             await _dbContext.Database.EnsureDeletedAsync();
             await _dbContext.DisposeAsync();
+        }
+
+        if (_dataSource != null)
+        {
+            await _dataSource.DisposeAsync();
         }
     }
 
@@ -191,7 +202,7 @@ public class DatabaseCrudTests : IAsyncLifetime
         // Act & Assert
         // Create two separate contexts simulating concurrent access
         var options = new DbContextOptionsBuilder<IdentityDbContext>()
-            .UseNpgsql(_postgresFixture.ConnectionString)
+            .UseNpgsql(_dataSource!)
             .Options;
 
         await using var context1 = new IdentityDbContext(options);

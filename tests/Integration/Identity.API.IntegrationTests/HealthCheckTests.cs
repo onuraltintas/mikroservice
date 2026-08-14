@@ -40,7 +40,7 @@ public class HealthCheckTests
         _postgresFixture.ConnectionString.Should().Contain("Database=", "connection string should contain database");
     }
 
-    [Fact]
+    [GatewayFact]
     public async Task RunningApiGateway_ShouldBeHealthy()
     {
         // Docker Compose exposes only the API Gateway. Service ports remain internal.
@@ -68,12 +68,11 @@ public class HealthCheckTests
             _output.WriteLine($"Error: {ex.Message}");
             _output.WriteLine("This test requires the API Gateway to be running (docker compose up)");
             
-            // Skip test if service is not running
-            throw new SkipException($"API Gateway is not running on {gatewayUrl}. Start with 'docker compose up' to run this test.");
+            throw;
         }
     }
 
-    [Fact]
+    [GatewayFact]
     public async Task RunningApiGateway_ShouldExposeGatewayEndpoint()
     {
         // Arrange
@@ -95,15 +94,26 @@ public class HealthCheckTests
         catch (HttpRequestException)
         {
             _output.WriteLine($"Note: API Gateway not running on {gatewayUrl}");
-            throw new SkipException($"API Gateway is not running. Start with 'docker compose up' to run this test.");
+            throw;
         }
     }
 }
 
 /// <summary>
-/// Custom exception to skip tests when dependencies are not available
+/// Runs Gateway smoke tests only when the external Gateway process is enabled.
+/// Set RUN_GATEWAY_HEALTH_TESTS=true for a compose-backed smoke run.
 /// </summary>
-public class SkipException : Exception
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+public sealed class GatewayFactAttribute : FactAttribute
 {
-    public SkipException(string message) : base(message) { }
+    public GatewayFactAttribute()
+    {
+        if (!string.Equals(
+                Environment.GetEnvironmentVariable("RUN_GATEWAY_HEALTH_TESTS"),
+                "true",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            Skip = "API Gateway smoke tests require a running Gateway; set RUN_GATEWAY_HEALTH_TESTS=true to enable them.";
+        }
+    }
 }
