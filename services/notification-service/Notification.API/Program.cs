@@ -31,6 +31,7 @@ InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
 
 // Serilog Configuration (Centralized)
 builder.Host.UseCustomSerilog();
+builder.Services.AddPersistentDataProtection(builder.Configuration, "EduPlatform.Notification", builder.Environment.IsProduction());
 builder.Services.AddGlobalExceptionHandler();
 
 // Add services

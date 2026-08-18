@@ -21,6 +21,7 @@ public class UserEmailConfirmedConsumer : IConsumer<UserEmailConfirmedEvent>
     public async Task Consume(ConsumeContext<UserEmailConfirmedEvent> context)
     {
         var message = context.Message;
+        var email = message.Email ?? throw new InvalidOperationException("UserEmailConfirmedEvent.Email is required.");
         
         var template = await _dbContext.EmailTemplates
             .AsNoTracking()
@@ -46,7 +47,7 @@ public class UserEmailConfirmedConsumer : IConsumer<UserEmailConfirmedEvent>
             body = $"<h1>Hoş Geldin {message.FirstName}!</h1><p>E-posta adresin başarıyla doğrulandı. Artık sistemi kullanmaya başlayabilirsin.</p>";
         }
 
-        var emailTask = _emailService.SendEmailAsync(message.Email, subject, body);
+        var emailTask = _emailService.SendEmailAsync(email, subject, body);
         var notificationTask = _notificationService.SendNotificationAsync(
             message.UserId, 
             "E-posta Doğrulandı!", 

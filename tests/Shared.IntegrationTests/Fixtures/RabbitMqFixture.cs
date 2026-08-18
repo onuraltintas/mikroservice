@@ -14,7 +14,7 @@ public class RabbitMqFixture : IAsyncLifetime
     public RabbitMqFixture()
     {
         _container = new RabbitMqBuilder()
-            .WithImage("rabbitmq:3.12-management-alpine")
+            .WithImage("rabbitmq:4.3.4-management-alpine")
             .WithUsername("test_user")
             .WithPassword("test_password")
             .WithCleanUp(true)

@@ -318,7 +318,7 @@ min_pool_size = 10
 # docker-compose.yml
 services:
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:4.3.4-management-alpine
     ports:
       - "5672:5672"
       - "15672:15672"

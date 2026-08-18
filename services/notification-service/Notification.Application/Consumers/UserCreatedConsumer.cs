@@ -21,6 +21,7 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
     public async Task Consume(ConsumeContext<UserCreatedEvent> context)
     {
         var message = context.Message;
+        var email = message.Email ?? throw new InvalidOperationException("UserCreatedEvent.Email is required.");
         
         // 1. Retrieve Template dynamically from Database
         var template = await _dbContext.EmailTemplates
@@ -52,7 +53,7 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
         }
 
         // In Parallel
-        var emailTask = _emailService.SendEmailAsync(message.Email, subject, body);
+        var emailTask = _emailService.SendEmailAsync(email, subject, body);
         var notificationTask = _notificationService.SendNotificationAsync(
             message.UserId, 
             "Welcome to EduPlatform!", 

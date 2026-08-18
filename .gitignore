@@ -10,6 +10,9 @@ Thumbs.db
 .env.local
 .env.*.local
 *.env.backup
+secrets/
+*.pfx
+*.p12
 
 # Visual Studio / .NET
 .vs/

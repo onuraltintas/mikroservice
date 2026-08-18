@@ -6,6 +6,7 @@ using DotNetEnv;
 using EduPlatform.Gateway;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using EduPlatform.Shared.Infrastructure.Logging;
+using EduPlatform.Shared.Infrastructure.Extensions;
 using EduPlatform.Shared.Security.Extensions;
 using StackExchange.Redis;
 
@@ -22,6 +23,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Serilog Setup
 // Log.Logger is bootstrapping, we can keep it for startup errors if we want, but Main Setup is UseCustomSerilog
 builder.Host.UseCustomSerilog();
+builder.Services.AddPersistentDataProtection(builder.Configuration, "EduPlatform.Gateway", builder.Environment.IsProduction());
 
 // Add Env Vars support for overwriting config
 builder.Configuration.AddEnvironmentVariables();

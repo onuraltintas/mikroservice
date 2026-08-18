@@ -23,6 +23,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Serilog Configuration (Centralized)
 // ============================================
 builder.Host.UseCustomSerilog();
+builder.Services.AddPersistentDataProtection(builder.Configuration, "EduPlatform.Coaching", builder.Environment.IsProduction());
 
 // ============================================
 // Services

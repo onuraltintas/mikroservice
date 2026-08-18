@@ -9,7 +9,7 @@
 - ✅ Docker 28.5.1
 - ✅ Node.js v20.20.0
 - ✅ PostgreSQL 16
-- ✅ RabbitMQ 3.12
+- ✅ RabbitMQ 4.3.4
 - ✅ Redis 7.2
 - ✅ Angular 21
 

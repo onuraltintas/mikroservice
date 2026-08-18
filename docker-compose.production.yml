@@ -1,0 +1,66 @@
+# Production overlay. This file intentionally forces the application services
+# into Production mode. Provide DATAPROTECTION_CERTIFICATE_HOST_PATH and
+# DATAPROTECTION_CERTIFICATE_PASSWORD through the deployment secret manager,
+# and replace the development SMTP values with a real SMTP provider.
+# The certificate file is intentionally not stored in this repository.
+secrets:
+  dataprotection_certificate:
+    file: ${DATAPROTECTION_CERTIFICATE_HOST_PATH:?DATAPROTECTION_CERTIFICATE_HOST_PATH must point to the production PFX/PKCS12 file}
+
+services:
+  # Internal infrastructure is reachable only over the Compose network in
+  # production. The Gateway is the only public application entry point.
+  postgres:
+    ports: !reset []
+
+  redis:
+    ports: !reset []
+
+  rabbitmq:
+    ports: !reset []
+
+  mailcatcher:
+    profiles: ["development"]
+    ports: !reset []
+
+  identity-service:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
+      DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?DATAPROTECTION_CERTIFICATE_PASSWORD must be set}
+    secrets:
+      - source: dataprotection_certificate
+        target: eduplatform-dataprotection.pfx
+
+  coaching-service:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
+      DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?DATAPROTECTION_CERTIFICATE_PASSWORD must be set}
+    secrets:
+      - source: dataprotection_certificate
+        target: eduplatform-dataprotection.pfx
+
+  notification-service:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Email__Host: ${SMTP_HOST:?SMTP_HOST must be set to a production SMTP host}
+      Email__Port: ${SMTP_PORT:?SMTP_PORT must be set to a production SMTP port}
+      Email__From: ${SMTP_FROM_EMAIL:?SMTP_FROM_EMAIL must be set}
+      Email__Username: ${SMTP_USERNAME:-}
+      Email__Password: ${SMTP_PASSWORD:-}
+      Email__FromName: ${SMTP_FROM_NAME:-EduPlatform}
+      DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
+      DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?DATAPROTECTION_CERTIFICATE_PASSWORD must be set}
+    secrets:
+      - source: dataprotection_certificate
+        target: eduplatform-dataprotection.pfx
+
+  api-gateway:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
+      DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?DATAPROTECTION_CERTIFICATE_PASSWORD must be set}
+    secrets:
+      - source: dataprotection_certificate
+        target: eduplatform-dataprotection.pfx

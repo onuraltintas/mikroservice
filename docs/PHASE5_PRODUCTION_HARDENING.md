@@ -129,7 +129,46 @@ politikaları uygular.
   Geçmiş commit'lerde gerçek credential bulunduğu doğrulanırsa değerleri önce
   rotate edin; history purge işlemi için ayrıca onay ve yedekleme gerekir.
 
-## 5. CI release kapıları
+## 5. Data Protection ve RabbitMQ geçişi
+
+- Servislerin Data Protection key ring'leri Compose named volume'larında
+  kalıcıdır. Bu, container yeniden oluşturulduğunda cookie/SignalR/antiforgery
+  anahtarlarının kaybolmasını önler; tek başına at-rest şifreleme değildir.
+- Production'da her servise aynı deployment'a ait, private key içeren bir
+  X.509/PKCS#12 sertifikası secret olarak mount edin ve
+  `DATAPROTECTION_CERTIFICATE_PATH` ile
+  `DATAPROTECTION_CERTIFICATE_PASSWORD` değerlerini verin. Uygulama Production
+  ortamında sertifika yoksa fail-fast kapanır; warning'i bastırmak için sahte
+  veya repoya alınmış sertifika kullanılmamalıdır.
+- Hazır Compose overlay'i bu mount'u yapar ve dört uygulama servisini zorunlu
+  olarak `ASPNETCORE_ENVIRONMENT=Production` ile başlatır. PostgreSQL, Redis,
+  RabbitMQ ve MailCatcher portlarını host'a açmaz; dış trafik yalnız Gateway
+  üzerinden gelmelidir. Secret manager'dan host path ve parolayı vererek
+  çalıştırın:
+
+  ```powershell
+  docker compose --env-file .env -f docker-compose.yml -f docker-compose.production.yml up -d
+  ```
+
+  `DATAPROTECTION_CERTIFICATE_HOST_PATH` yalnız deployment makinesinde bulunan
+  PFX/PKCS#12 dosyasını göstermelidir; `secrets/` altındaki dosyalar repoya
+  alınmaz.
+- Production overlay'i gerçek SMTP ayarlarını da bekler. `.env.example` içindeki
+  `SMTP_HOST=mailcatcher` yalnız geliştirme içindir; production `.env` dosyasında
+  `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM_EMAIL` ve gerekiyorsa SMTP kullanıcı adı/
+  parolasını gerçek sağlayıcıyla değiştirin. MailCatcher production profilinde
+  başlatılmaz.
+- RabbitMQ tek node için sabit `rabbit@rabbitmq` node adı kullanır. Mevcut
+  `rabbitmq_data` volume'u eski container-id tabanlı node adıyla oluşturulduysa
+  bu geçiş queue/message metadata'sını otomatik taşımaz. Production geçişinden
+  önce `rabbitmqctl export_definitions`/yedek alın, yeni node'u ayrı bir
+  cutover ortamında doğrulayın ve gerekiyorsa kontrollü import/mesaj replay
+  uygulayın. Volume silerek migration yapılmamalıdır.
+- RabbitMQ 4.x'te legacy management metrics collector kapalı, Prometheus
+  plugin'i açıktır. Uzun süreli grafik ve alerting için Prometheus/Grafana
+  collector'ı RabbitMQ'nun iç ağdaki `15692` endpoint'inden scrape etmelidir.
+
+## 6. CI release kapıları
 
 ```powershell
 dotnet build services/identity-service/Identity.API/Identity.API.csproj -c Release

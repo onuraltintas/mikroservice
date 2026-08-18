@@ -27,16 +27,19 @@ services:
 
   # RabbitMQ Message Broker
   rabbitmq:
-    image: rabbitmq:3.12-management-alpine
+    image: rabbitmq:4.3.4-management-alpine
     container_name: rabbitmq
+    hostname: rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_NODENAME: rabbit@rabbitmq
     ports:
       - "${RABBITMQ_PORT}:5672"
       - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+      - ./infrastructure/docker/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     networks:
       - edu-network
     healthcheck:
@@ -98,6 +101,11 @@ services:
       - JWT_PREVIOUS_SECRETS=${JWT_PREVIOUS_SECRETS:-}
       - JWT_PREVIOUS_KEY_IDS=${JWT_PREVIOUS_KEY_IDS:-}
       - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY}
+      - DataProtection__KeysPath=/var/lib/eduplatform/data-protection-keys
+      - DataProtection__CertificatePath=${DATAPROTECTION_CERTIFICATE_PATH:-}
+      - DataProtection__CertificatePassword=${DATAPROTECTION_CERTIFICATE_PASSWORD:-}
+    volumes:
+      - identity_data_protection:/var/lib/eduplatform/data-protection-keys
     depends_on:
       postgres:
         condition: service_healthy
@@ -128,6 +136,11 @@ services:
       - JWT_PREVIOUS_KEY_IDS=${JWT_PREVIOUS_KEY_IDS:-}
       - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY}
       - Services__IdentityService=http://identity-service:8080
+      - DataProtection__KeysPath=/var/lib/eduplatform/data-protection-keys
+      - DataProtection__CertificatePath=${DATAPROTECTION_CERTIFICATE_PATH:-}
+      - DataProtection__CertificatePassword=${DATAPROTECTION_CERTIFICATE_PASSWORD:-}
+    volumes:
+      - coaching_data_protection:/var/lib/eduplatform/data-protection-keys
     depends_on:
       postgres:
         condition: service_healthy
@@ -163,6 +176,11 @@ services:
       - Email__Username=${SMTP_USERNAME}
       - Email__Password=${SMTP_PASSWORD}
       - Email__FromName=${SMTP_FROM_NAME}
+      - DataProtection__KeysPath=/var/lib/eduplatform/data-protection-keys
+      - DataProtection__CertificatePath=${DATAPROTECTION_CERTIFICATE_PATH:-}
+      - DataProtection__CertificatePassword=${DATAPROTECTION_CERTIFICATE_PASSWORD:-}
+    volumes:
+      - notification_data_protection:/var/lib/eduplatform/data-protection-keys
     # Notification is reachable through the gateway; keep the service internal.
     depends_on:
       postgres:
@@ -196,6 +214,11 @@ services:
       - ForwardedHeaders__ForwardLimit=${FORWARDED_HEADERS_FORWARD_LIMIT:-1}
       - ForwardedHeaders__KnownProxies=${FORWARDED_HEADERS_KNOWN_PROXIES:-}
       - ForwardedHeaders__KnownNetworks=${FORWARDED_HEADERS_KNOWN_NETWORKS:-}
+      - DataProtection__KeysPath=/var/lib/eduplatform/data-protection-keys
+      - DataProtection__CertificatePath=${DATAPROTECTION_CERTIFICATE_PATH:-}
+      - DataProtection__CertificatePassword=${DATAPROTECTION_CERTIFICATE_PASSWORD:-}
+    volumes:
+      - gateway_data_protection:/var/lib/eduplatform/data-protection-keys
     ports:
       - "${GATEWAY_PORT}:8080"
     depends_on:
@@ -212,6 +235,10 @@ volumes:
   postgres_data:
   rabbitmq_data:
   redis_data:
+  identity_data_protection:
+  coaching_data_protection:
+  notification_data_protection:
+  gateway_data_protection:
 
 
 networks:

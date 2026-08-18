@@ -186,7 +186,7 @@ public static class IdentitySeeder
             if (string.IsNullOrEmpty(adminPass) || string.IsNullOrEmpty(defaultPass))
             {
                 // Safety check: Don't seed if passwords are missing
-                logger.LogWarning("⚠️ TEST_ADMIN_PASSWORD or TEST_DEFAULT_PASSWORD not found in environment. Skipping user seeding.");
+                logger.LogInformation("TEST_ADMIN_PASSWORD and TEST_DEFAULT_PASSWORD are not configured; demo user seeding is skipped.");
                 return;
             }
 
