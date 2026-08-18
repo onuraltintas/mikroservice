@@ -12,6 +12,7 @@ using System.Security.Claims;
 using DotNetEnv;
 using EduPlatform.Shared.Infrastructure.Resiliency;
 using EduPlatform.Shared.Infrastructure.Extensions;
+using EduPlatform.Shared.Infrastructure.Middleware;
 using EduPlatform.Shared.Security.Extensions;
 using EduPlatform.Shared.Security.Services;
 using FluentValidation;
@@ -62,7 +63,8 @@ builder.Services.AddScoped<INotificationService, Notification.API.Services.Notif
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 builder.Services.AddHttpClient<Notification.Application.Interfaces.IIdentityInternalService, Notification.Infrastructure.ExternalServices.IdentityInternalService>()
     .ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(10))
-    .AddResiliency();
+    .AddResiliency()
+    .AddCorrelationIdPropagation();
 
 // MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Notification.Application.Interfaces.INotificationDbContext).Assembly));
@@ -162,6 +164,7 @@ builder.Services.AddMassTransit(x =>
 
 var app = builder.Build();
 
+app.UseRequestLogging();
 app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();

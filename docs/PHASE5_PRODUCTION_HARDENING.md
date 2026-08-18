@@ -105,13 +105,23 @@ politikaları uygular.
 
 ## 4. JWT ve internal service key rotasyonu
 
-- JWT anahtarlarını `kid` ile anahtar halkasına taşıyın: yeni anahtar imzalama için
-  aktif, önceki anahtar yalnızca kısa overlap süresinde doğrulama için tutulur.
-- Rotasyon sırası: yeni anahtarı tüm doğrulayıcılara dağıtın → doğrulayıcıların
-  hazır olduğunu gözlemleyin → Identity'nin yeni anahtarla imzalamasını açın →
-  overlap süresi bitince eski anahtarı kaldırın.
+- JWT anahtar halkası `JWT_SECRET` (aktif) ve isteğe bağlı
+  `JWT_PREVIOUS_SECRETS` (virgülle ayrılmış, validation-only) değerlerinden
+  oluşur. `JWT_KEY_ID` ve `JWT_PREVIOUS_KEY_IDS` verilirse token header'ına
+  `kid` yazılır ve bilinmeyen key id'ler fail-closed reddedilir. Aktif key id
+  kullanılırken overlap'teki her eski secret için karşılık gelen bir
+  `JWT_PREVIOUS_KEY_IDS` değeri verilmelidir; böylece eski `kid` taşıyan token'lar
+  yanlışlıkla geçersizleşmez.
+- Rotasyon sırası: yeni secret'ı tüm doğrulayıcılara `JWT_PREVIOUS_SECRETS` veya
+  aktif değer olarak dağıtın → doğrulayıcıların hazır olduğunu gözlemleyin →
+  Identity'de yeni secret'ı `JWT_SECRET` ve yeni `JWT_KEY_ID` yapın → en uzun
+  access-token ömrü (ve güvenli bir saat payı) geçince eski secret'ı halkadan
+  kaldırın. Eski secret yalnızca overlap süresinde tutulmalıdır.
 - `JWT_SECRET` ve `INTERNAL_SERVICE_API_KEY` en az 32 rastgele byte olmalı; bilinen
   placeholder değerleri production ortamında reddedilmelidir.
+- `ASPNETCORE_ENVIRONMENT=Production` olmalıdır; Compose bunu `.env` içindeki
+  `ENVIRONMENT` değerinden alır. Örnek dosyadaki `replace-with-*` değerleri
+  production başlangıcında bilinçli olarak fail-fast olur.
 - DB, RabbitMQ, Redis ve SMTP parolaları da aynı bakım penceresinde döndürülmeli;
   servisler yeniden başlatılmadan eski değerler iptal edilmemelidir.
 - Gerçek credential içeren `.env`, `.env.backup` ve log dosyaları repoya

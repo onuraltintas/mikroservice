@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using System.Threading.RateLimiting;
 using DotNetEnv;
 using EduPlatform.Gateway;
+using EduPlatform.Shared.Infrastructure.Middleware;
 using EduPlatform.Shared.Infrastructure.Logging;
 using EduPlatform.Shared.Security.Extensions;
 using StackExchange.Redis;
@@ -119,6 +120,7 @@ var app = builder.Build();
 
 app.UseForwardedHeaders(forwardedHeadersOptions);
 
+app.UseCorrelationId();
 app.UseSerilogRequestLogging();
 
 app.UseCors("AllowFrontend");

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using EduPlatform.Shared.Infrastructure.Middleware;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Json;
@@ -55,6 +56,7 @@ public static class SerilogConfiguration
     /// </summary>
     public static void UseRequestLogging(this WebApplication app)
     {
+        app.UseCorrelationId();
         app.UseSerilogRequestLogging(options =>
         {
             options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
@@ -62,6 +64,9 @@ public static class SerilogConfiguration
             {
                 diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
                 diagnosticContext.Set("UserAgent", httpContext.Request.Headers["User-Agent"].ToString());
+                diagnosticContext.Set(
+                    CorrelationIdMiddleware.HeaderName,
+                    httpContext.TraceIdentifier);
                 
                 if (httpContext.User.Identity?.IsAuthenticated == true)
                 {

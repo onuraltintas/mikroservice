@@ -69,6 +69,23 @@ public class InternalServiceAuthenticationTests
         action.Should().Throw<InvalidOperationException>();
     }
 
+    [Fact]
+    public void ProductionPlaceholderKey_ShouldFailStartupValidation()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ASPNETCORE_ENVIRONMENT"] = "Production",
+                ["INTERNAL_SERVICE_API_KEY"] = "replace-with-a-long-random-service-key"
+            })
+            .Build();
+
+        var action = () => InternalServiceAuthentication.ValidateConfiguration(configuration);
+
+        action.Should().Throw<InvalidOperationException>()
+            .WithMessage("*placeholder*Production*");
+    }
+
     private static IConfiguration CreateConfiguration(string? key)
     {
         return new ConfigurationBuilder()

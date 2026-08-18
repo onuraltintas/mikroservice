@@ -17,6 +17,10 @@ Kök `docker-compose.yml` dosyası `.env` dosyasını otomatik olarak okur. Baş
 `.env.example` dosyasındadır. `JWT_SECRET`, `JWT_ISSUER`, `JWT_AUDIENCE` ve
 `INTERNAL_SERVICE_API_KEY` tüm ilgili servislerde aynı olmalıdır.
 Bu anahtar en az 32 UTF-8 byte uzunluğunda, rastgele üretilmiş bir değer olmalıdır.
+JWT rotasyonunda yeni değer `JWT_SECRET`, overlap süresince eski değerler
+`JWT_PREVIOUS_SECRETS` olarak virgülle ayrılmış şekilde verilir; `JWT_KEY_ID` ve
+`JWT_PREVIOUS_KEY_IDS` isteğe bağlı `kid` eşlemesidir. Üretimde placeholder değerler
+fail-fast reddedilir.
 Compose dağıtımında dış istemciler yalnızca API Gateway'e bağlanır; mikroservis portları
 host'a bind edilmez.
 

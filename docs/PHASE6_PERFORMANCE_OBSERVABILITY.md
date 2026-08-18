@@ -134,6 +134,10 @@ maskeler.
 - Identity ve Coaching'de DB tabanlı `/health`, `/health/ready` ve `/health/live`
   endpoint'leri bulunur. Gateway health endpoint'i şu anda yalnızca process
   canlılığını gösterir; upstream bağımlılıklarını temsil etmez.
+- Gateway ve tüm uygulama servisleri ortak `CorrelationIdMiddleware` kullanır.
+  Güvenli karakter kümesine uyan `X-Correlation-ID` korunur; eksik veya şüpheli
+  değerler yerine yeni bir GUID üretilir. Değer response header'ına,
+  `HttpContext.TraceIdentifier`'a ve Serilog `CorrelationId` property'sine yazılır.
 - OpenTelemetry trace/metric export'u, Prometheus/Grafana dashboard'ları ve
   merkezi alert kuralları henüz ortak bir sözleşme olarak eklenmemiştir.
 
@@ -147,9 +151,11 @@ tek bir extension ile etkinleştirilmelidir:
 2. Collector'dan Prometheus/Grafana veya OpenTelemetry uyumlu ücretsiz bir
    backend'e yönlendirin. Geliştirme ortamında collector yerine Aspire
    Dashboard kullanılabilir.
-3. W3C trace context ve güvenli bir `X-Request-Id` propagasyonu uygulayın.
-   Trace, user ID veya e-posta gibi PII alanlarını log attribute'u yapmayın;
-   secret, token ve request body loglamayın.
+3. Mevcut korelasyon middleware'ini W3C trace context ile tamamlayın veya
+   collector propagator'ı ile aynı ID'yi eşleyin. `X-Correlation-ID` yalnızca
+   güvenli karakterler ve sınırlı uzunlukla kabul edilir; trace, user ID veya
+   e-posta gibi PII alanlarını log attribute'u yapmayın. Secret, token ve request
+   body loglamayın.
 4. `/health/live` yalnız process canlılığını; `/health/ready` DB, Redis,
    RabbitMQ ve gerekli upstream bağımlılıklarını ifade etsin. Gateway readiness
    kontrolü downstream timeout ile sınırlı olmalıdır.

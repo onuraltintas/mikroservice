@@ -1,3 +1,4 @@
+using EduPlatform.Shared.Security.Configuration;
 using EduPlatform.Shared.Security.Interfaces;
 using EduPlatform.Shared.Security.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -19,14 +20,11 @@ public static class SecurityExtensions
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
 
-        var secretKey = configuration["JWT_SECRET"] ?? configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT_SECRET is not configured.");
+        var keyRing = JwtKeyRing.FromConfiguration(configuration);
         var issuer = configuration["JWT_ISSUER"] ?? configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT_ISSUER is not configured.");
         var audience = configuration["JWT_AUDIENCE"] ?? configuration["Jwt:Audience"] ?? throw new InvalidOperationException("JWT_AUDIENCE is not configured.");
-        if (System.Text.Encoding.UTF8.GetByteCount(secretKey) < 32)
-        {
-            throw new InvalidOperationException("JWT_SECRET must be at least 32 bytes long.");
-        }
-        var key = System.Text.Encoding.UTF8.GetBytes(secretKey);
+        var validationKeys = keyRing.CreateSecurityKeys();
+        var activeKey = validationKeys[0];
 
         services.AddAuthentication(options =>
         {
@@ -40,7 +38,12 @@ public static class SecurityExtensions
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(key),
+                IssuerSigningKey = activeKey,
+                ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha256 },
+                IssuerSigningKeyResolver = (_, _, keyId, _) =>
+                    string.IsNullOrWhiteSpace(keyId)
+                        ? validationKeys
+                        : validationKeys.Where(key => string.Equals(key.KeyId, keyId, StringComparison.Ordinal)).ToArray(),
                 ValidateIssuer = true,
                 ValidIssuer = issuer,
                 ValidateAudience = true,

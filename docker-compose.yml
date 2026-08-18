@@ -82,7 +82,7 @@ services:
       context: .
       dockerfile: services/identity-service/Dockerfile
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT:?ENVIRONMENT must be set to Development or Production}
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB_IDENTITY};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       - RabbitMQ__Host=rabbitmq
       - RabbitMQ__Username=${RABBITMQ_DEFAULT_USER}
@@ -94,6 +94,9 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_ISSUER=${JWT_ISSUER}
       - JWT_AUDIENCE=${JWT_AUDIENCE}
+      - JWT_KEY_ID=${JWT_KEY_ID:-}
+      - JWT_PREVIOUS_SECRETS=${JWT_PREVIOUS_SECRETS:-}
+      - JWT_PREVIOUS_KEY_IDS=${JWT_PREVIOUS_KEY_IDS:-}
       - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY}
     depends_on:
       postgres:
@@ -109,7 +112,7 @@ services:
       context: .
       dockerfile: services/coaching-service/Dockerfile
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT:?ENVIRONMENT must be set to Development or Production}
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB_COACHING};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       - RabbitMQ__Host=rabbitmq
       - RabbitMQ__Username=${RABBITMQ_DEFAULT_USER}
@@ -120,6 +123,9 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_ISSUER=${JWT_ISSUER}
       - JWT_AUDIENCE=${JWT_AUDIENCE}
+      - JWT_KEY_ID=${JWT_KEY_ID:-}
+      - JWT_PREVIOUS_SECRETS=${JWT_PREVIOUS_SECRETS:-}
+      - JWT_PREVIOUS_KEY_IDS=${JWT_PREVIOUS_KEY_IDS:-}
       - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY}
       - Services__IdentityService=http://identity-service:8080
     depends_on:
@@ -138,7 +144,7 @@ services:
       context: .
       dockerfile: services/notification-service/Dockerfile
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT:?ENVIRONMENT must be set to Development or Production}
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB_NOTIFICATION};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       - RabbitMQ__Host=rabbitmq
       - RabbitMQ__Username=${RABBITMQ_DEFAULT_USER}
@@ -147,6 +153,9 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_ISSUER=${JWT_ISSUER}
       - JWT_AUDIENCE=${JWT_AUDIENCE}
+      - JWT_KEY_ID=${JWT_KEY_ID:-}
+      - JWT_PREVIOUS_SECRETS=${JWT_PREVIOUS_SECRETS:-}
+      - JWT_PREVIOUS_KEY_IDS=${JWT_PREVIOUS_KEY_IDS:-}
       - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY}
       - Email__Host=${SMTP_HOST}
       - Email__Port=${SMTP_PORT}
@@ -171,13 +180,16 @@ services:
       context: .
       dockerfile: services/api-gateway/Dockerfile
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT:?ENVIRONMENT must be set to Development or Production}
       - ReverseProxy__Clusters__identity-cluster__Destinations__destination1__Address=http://identity-service:8080
       - ReverseProxy__Clusters__coaching-cluster__Destinations__destination1__Address=http://coaching-service:8080
       - ReverseProxy__Clusters__notification-cluster__Destinations__destination1__Address=http://notification-service:8080
       - JWT_SECRET=${JWT_SECRET}
       - JWT_ISSUER=${JWT_ISSUER}
       - JWT_AUDIENCE=${JWT_AUDIENCE}
+      - JWT_KEY_ID=${JWT_KEY_ID:-}
+      - JWT_PREVIOUS_SECRETS=${JWT_PREVIOUS_SECRETS:-}
+      - JWT_PREVIOUS_KEY_IDS=${JWT_PREVIOUS_KEY_IDS:-}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD}

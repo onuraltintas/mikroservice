@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using EduPlatform.Shared.Security.Configuration;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using Microsoft.Extensions.Configuration;
@@ -29,15 +30,13 @@ public class TokenService : ITokenService
             int.TryParse(dynamicExpiryStr, out var dynamicExpiry);
 
             // 2. Fallback to Environment Variables or appsettings
-            var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") 
-                            ?? _configuration["JWT_SECRET"] 
-                            ?? throw new InvalidOperationException("JWT_SECRET is not configured.");
+            var keyRing = JwtKeyRing.FromConfiguration(_configuration);
             
-            var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") 
-                        ?? _configuration["JWT_ISSUER"] 
+            var issuer = _configuration["JWT_ISSUER"]
+                        ?? _configuration["Jwt:Issuer"]
                         ?? throw new InvalidOperationException("JWT_ISSUER is not configured.");
-            var audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") 
-                          ?? _configuration["JWT_AUDIENCE"] 
+            var audience = _configuration["JWT_AUDIENCE"]
+                          ?? _configuration["Jwt:Audience"]
                           ?? throw new InvalidOperationException("JWT_AUDIENCE is not configured.");
             
             int expiryMinutes;
@@ -54,7 +53,10 @@ public class TokenService : ITokenService
                 if (expiryMinutes == 0) expiryMinutes = 30;
             }
 
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyRing.ActiveSecret))
+            {
+                KeyId = keyRing.ActiveKeyId
+            };
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new List<Claim>
@@ -94,11 +96,16 @@ public class TokenService : ITokenService
                 expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
                 signingCredentials: credentials);
 
+            if (!string.IsNullOrWhiteSpace(keyRing.ActiveKeyId))
+            {
+                token.Header["kid"] = keyRing.ActiveKeyId;
+            }
+
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
         catch (Exception ex)
         {
-            throw new Exception($"JWT Generation Failed: {ex.Message} - Stack: {ex.StackTrace}", ex);
+            throw new InvalidOperationException("JWT generation failed.", ex);
         }
     }
 

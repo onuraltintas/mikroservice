@@ -5,6 +5,7 @@ using Coaching.Application.Interfaces;
 using Coaching.Infrastructure.Data;
 using Coaching.Infrastructure.Repositories;
 using Coaching.Infrastructure.ExternalServices;
+using EduPlatform.Shared.Infrastructure.Middleware;
 
 namespace Coaching.Infrastructure;
 
@@ -58,7 +59,7 @@ public static class DependencyInjection
         services.AddHttpClient<ICoachingIdentityAuthorizationClient, IdentityAuthorizationClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);
-        });
+        }).AddCorrelationIdPropagation();
 
         return services;
     }

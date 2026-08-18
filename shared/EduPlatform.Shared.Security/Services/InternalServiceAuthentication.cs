@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using EduPlatform.Shared.Security.Configuration;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 
@@ -19,12 +20,7 @@ public static class InternalServiceAuthentication
         var configuredKey = configuration["INTERNAL_SERVICE_API_KEY"]
             ?? configuration["Internal:ServiceApiKey"];
 
-        if (string.IsNullOrWhiteSpace(configuredKey)
-            || Encoding.UTF8.GetByteCount(configuredKey) < MinimumKeyLength)
-        {
-            throw new InvalidOperationException(
-                $"{HeaderName} must be configured with at least {MinimumKeyLength} UTF-8 bytes.");
-        }
+        SecretConfigurationValidation.Validate(configuredKey, HeaderName, configuration);
     }
 
     public static bool IsValid(HttpRequest request, IConfiguration configuration)
