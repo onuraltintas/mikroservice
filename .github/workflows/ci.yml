@@ -1,0 +1,305 @@
+name: EduPlatform CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: 9.0.x
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  source-safety:
+    name: Source safety checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Reject private keys and common cloud key formats
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git grep -n -I -E -- '-----BEGIN ([A-Z0-9 ]+ )?PRIVATE KEY-----|AKIA[0-9A-Z]{16}' -- .; then
+            echo "Potential credential material found in tracked files."
+            exit 1
+          fi
+
+      - name: Validate JSON and base Compose configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          for path in Path('.').rglob('*.json'):
+              if any(part in {'bin', 'obj', '.git'} for part in path.parts):
+                  continue
+              # Angular's tsconfig files are JSONC (they intentionally contain
+              # comments); Angular's compiler validates them in its own build.
+              if path.name.startswith('tsconfig'):
+                  continue
+              json.loads(path.read_text(encoding='utf-8-sig'))
+          print('JSON configuration files are valid.')
+          PY
+          docker compose --env-file .env.example config --quiet
+
+  dotnet:
+    name: Build (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: identity
+            project: services/identity-service/Identity.API/Identity.API.csproj
+          - name: coaching
+            project: services/coaching-service/Coaching.API/Coaching.API.csproj
+          - name: notification
+            project: services/notification-service/Notification.API/Notification.API.csproj
+          - name: gateway
+            project: services/api-gateway/EduPlatform.Gateway.csproj
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore "${{ matrix.project }}" --locked-mode false
+
+      - name: Build with warnings as errors
+        run: dotnet build "${{ matrix.project }}" --configuration Release --no-restore --warnaserror
+
+  tests:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    needs: [source-safety, dotnet]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore test project
+        run: dotnet restore tests/Integration/Identity.API.IntegrationTests/Identity.API.IntegrationTests.csproj
+
+      - name: Run Docker-backed integration tests
+        env:
+          RUN_GATEWAY_HEALTH_TESTS: false
+        run: >-
+          dotnet test tests/Integration/Identity.API.IntegrationTests/Identity.API.IntegrationTests.csproj
+          --configuration Release --no-restore --logger "trx;LogFileName=integration-tests.trx"
+          --collect:"XPlat Code Coverage"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: tests/Integration/Identity.API.IntegrationTests/TestResults/
+          if-no-files-found: warn
+
+  gateway-smoke:
+    name: Gateway health smoke
+    runs-on: ubuntu-latest
+    needs: [source-safety, dotnet]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore and build Gateway
+        run: |
+          dotnet restore services/api-gateway/EduPlatform.Gateway.csproj
+          dotnet build services/api-gateway/EduPlatform.Gateway.csproj --configuration Release --no-restore --warnaserror
+
+      - name: Restore smoke test project
+        run: dotnet restore tests/Integration/Identity.API.IntegrationTests/Identity.API.IntegrationTests.csproj
+
+      - name: Start Gateway
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: http://127.0.0.1:5000
+          ENVIRONMENT: Development
+          JWT_SECRET: ci-gateway-secret-0123456789-abcdefghijklmnopqrstuvwxyz
+          JWT_ISSUER: eduplatform.identity
+          JWT_AUDIENCE: eduplatform.api
+          JWT_KEY_ID: ci
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
+          REDIS_PASSWORD: ci-redis-password-012345678901234567
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet run --project services/api-gateway/EduPlatform.Gateway.csproj \
+            --configuration Release --no-build --no-restore > "$RUNNER_TEMP/gateway.log" 2>&1 &
+          gateway_pid=$!
+          echo "$gateway_pid" > "$RUNNER_TEMP/gateway.pid"
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:5000/health > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/gateway.log"
+          exit 1
+
+      - name: Run Gateway health tests
+        env:
+          RUN_GATEWAY_HEALTH_TESTS: true
+        run: >-
+          dotnet test tests/Integration/Identity.API.IntegrationTests/Identity.API.IntegrationTests.csproj
+          --configuration Release --no-restore
+          --filter FullyQualifiedName~HealthCheckTests
+
+      - name: Stop Gateway
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f "$RUNNER_TEMP/gateway.pid" ]]; then
+            kill "$(cat "$RUNNER_TEMP/gateway.pid")" || true
+          fi
+          if [[ -f "$RUNNER_TEMP/gateway.log" ]]; then
+            cat "$RUNNER_TEMP/gateway.log"
+          fi
+
+  compose:
+    name: Compose configuration
+    runs-on: ubuntu-latest
+    needs: [source-safety]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate development and scale configurations
+        run: |
+          docker compose --env-file .env.example config --quiet
+          docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.scale.yml config --quiet
+
+      - name: Validate production and observability overlays
+        env:
+          DATAPROTECTION_CERTIFICATE_HOST_PATH: ${{ runner.temp }}/dataprotection-ci.pfx
+          DATAPROTECTION_CERTIFICATE_PASSWORD: ci-config-only
+          GRAFANA_ADMIN_PASSWORD: ci-config-only
+        run: |
+          docker compose --env-file .env.example \
+            -f docker-compose.yml \
+            -f docker-compose.production.yml \
+            -f docker-compose.observability.yml config --quiet
+
+      - name: Validate monitoring configuration files
+        run: |
+          docker run --rm --entrypoint /bin/promtool \
+            -v "$PWD/monitoring/prometheus:/etc/prometheus:ro" \
+            prom/prometheus:v3.5.0 check config /etc/prometheus/prometheus.yml
+          docker run --rm --entrypoint /bin/promtool \
+            -v "$PWD/monitoring/prometheus:/etc/prometheus:ro" \
+            prom/prometheus:v3.5.0 check rules /etc/prometheus/rules/eduplatform.yml
+          docker run --rm --entrypoint /bin/amtool \
+            -v "$PWD/monitoring/alertmanager:/etc/alertmanager:ro" \
+            prom/alertmanager:v0.28.1 check-config /etc/alertmanager/alertmanager.yml
+          docker run --rm \
+            -v "$PWD/monitoring/otel:/etc/otelcol-contrib:ro" \
+            otel/opentelemetry-collector-contrib:0.133.0 \
+            validate --config=/etc/otelcol-contrib/otel-collector.yml
+          docker run --rm \
+            -v "$PWD/monitoring/tempo:/etc/tempo:ro" \
+            grafana/tempo:2.8.2 \
+            --config.file=/etc/tempo/tempo.yml --config.verify=true
+          docker run --rm \
+            -v "$PWD/monitoring/blackbox:/etc/blackbox:ro" \
+            prom/blackbox-exporter:v0.27.0 \
+            --config.file=/etc/blackbox/blackbox.yml --config.check
+
+  vulnerabilities:
+    name: NuGet vulnerability scan
+    runs-on: ubuntu-latest
+    needs: [source-safety]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore all application projects
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r project; do
+            dotnet restore "$project"
+          done < <(find services shared -name '*.csproj' -print)
+
+      - name: Fail on vulnerable NuGet packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          projects=(
+            services/identity-service/Identity.API/Identity.API.csproj
+            services/coaching-service/Coaching.API/Coaching.API.csproj
+            services/notification-service/Notification.API/Notification.API.csproj
+            services/api-gateway/EduPlatform.Gateway.csproj
+          )
+          for project in "${projects[@]}"; do
+            report="${RUNNER_TEMP}/$(basename "$project").json"
+            dotnet list "$project" package --vulnerable --include-transitive --format json > "$report"
+            vulnerable=$(jq '[.projects[].frameworks[]?.topLevelPackages[]?, .projects[].frameworks[]?.transitivePackages[]? | select((.vulnerabilities // []) | length > 0)] | length' "$report")
+            if [[ "$vulnerable" != "0" ]]; then
+              cat "$report"
+              echo "Vulnerable NuGet packages found in $project."
+              exit 1
+            fi
+          done
+
+  container-build:
+    name: Container build (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    needs: [dotnet, tests, gateway-smoke, compose, vulnerabilities]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: identity
+            dockerfile: services/identity-service/Dockerfile
+          - name: coaching
+            dockerfile: services/coaching-service/Dockerfile
+          - name: notification
+            dockerfile: services/notification-service/Dockerfile
+          - name: gateway
+            dockerfile: services/api-gateway/Dockerfile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: false
+          tags: eduplatform-ci-${{ matrix.name }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

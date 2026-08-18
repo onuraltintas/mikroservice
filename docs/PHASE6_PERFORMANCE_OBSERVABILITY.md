@@ -138,19 +138,22 @@ maskeler.
   Güvenli karakter kümesine uyan `X-Correlation-ID` korunur; eksik veya şüpheli
   değerler yerine yeni bir GUID üretilir. Değer response header'ına,
   `HttpContext.TraceIdentifier`'a ve Serilog `CorrelationId` property'sine yazılır.
-- OpenTelemetry trace/metric export'u, Prometheus/Grafana dashboard'ları ve
-  merkezi alert kuralları henüz ortak bir sözleşme olarak eklenmemiştir.
+- OpenTelemetry trace/metric export'u shared extension ile ortaklaştırılmıştır;
+  Prometheus/Grafana/Tempo/Alertmanager bileşenleri ayrı
+  `docker-compose.observability.yml` overlay'iyle açılır. Kurulum ve alarm
+  eşikleri için [CI/CD ve production monitoring runbook'una](CI_CD_AND_PRODUCTION_MONITORING.md)
+  bakın.
 
 ## 5. Önerilen ücretsiz üretim standardı
 
-Yeni gözlemlenebilirlik kodu servis servis kopyalanmamalı; `shared` altında
-tek bir extension ile etkinleştirilmelidir:
+Yeni gözlemlenebilirlik kodu servis servis kopyalanmamalı; `shared` altındaki
+`OpenTelemetryExtensions` ile etkinleştirilmelidir:
 
-1. OpenTelemetry SDK ile ASP.NET Core, `HttpClient`, EF Core ve RabbitMQ
-   Activity'lerini toplayın; OTLP exporter ile seçilen collector'a gönderin.
-2. Collector'dan Prometheus/Grafana veya OpenTelemetry uyumlu ücretsiz bir
-   backend'e yönlendirin. Geliştirme ortamında collector yerine Aspire
-   Dashboard kullanılabilir.
+1. Shared extension ASP.NET Core, `HttpClient` ve .NET Runtime metriklerini
+   toplar; OTLP exporter ile seçilen collector'a gönderir. EF Core ve RabbitMQ
+   için exporter/collector sinyalleri ayrıca izlenir.
+2. Collector'dan Prometheus/Grafana ve Tempo'ya yönlendirin. Geliştirme
+   ortamında tüm stack `docker-compose.observability.yml` ile açılabilir.
 3. Mevcut korelasyon middleware'ini W3C trace context ile tamamlayın veya
    collector propagator'ı ile aynı ID'yi eşleyin. `X-Correlation-ID` yalnızca
    güvenli karakterler ve sınırlı uzunlukla kabul edilir; trace, user ID veya
@@ -161,6 +164,8 @@ tek bir extension ile etkinleştirilmelidir:
    kontrolü downstream timeout ile sınırlı olmalıdır.
 5. İlk alert seti: 5xx oranı, p95/p99, readiness failure, Redis fallback,
    RabbitMQ backlog/dead-letter, DB pool saturation ve 401/429 anomalisidir.
+   Uygulanmış Prometheus kuralları ve başlangıç eşikleri için
+   `docs/CI_CD_AND_PRODUCTION_MONITORING.md` dosyasını kullanın.
 
 Bu standardın kabul kriteri; her servis için aynı trace ID'nin gateway →
 downstream → DB/message loglarında bulunması ve bir isteğin tek dashboard'dan

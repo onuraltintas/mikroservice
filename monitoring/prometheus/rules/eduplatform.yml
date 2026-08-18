@@ -1,0 +1,83 @@
+groups:
+  - name: eduplatform-availability
+    rules:
+      - alert: EduPlatformTelemetryTargetDown
+        expr: up{job=~"eduplatform-otel|rabbitmq|postgres|redis"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Telemetry target is down"
+          description: "{{ $labels.job }} target {{ $labels.instance }} has been unavailable for more than two minutes."
+
+      - alert: EduPlatformReadinessFailed
+        expr: probe_success{job="eduplatform-health"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "EduPlatform readiness check failed"
+          description: "Readiness probe {{ $labels.instance }} is failing."
+
+  - name: eduplatform-application
+    rules:
+      - alert: EduPlatformHighServerErrorRate
+        expr: |
+          (
+            sum(rate(http_server_request_duration_seconds_count{http_response_status_code=~"5.."}[5m]))
+            /
+            clamp_min(sum(rate(http_server_request_duration_seconds_count[5m])), 1)
+          ) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "HTTP 5xx rate is above 1%"
+          description: "The five-minute server error ratio is {{ $value | humanizePercentage }}."
+
+      - alert: EduPlatformHighRequestLatency
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(http_server_request_duration_seconds_bucket[5m]))
+          ) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "HTTP p95 latency is above 500 ms"
+          description: "The five-minute p95 server request latency is {{ $value }} seconds."
+
+      - alert: EduPlatformAuthAbuseSpike
+        expr: sum(rate(http_server_request_duration_seconds_count{http_response_status_code=~"401|429"}[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Authentication or rate-limit responses increased"
+          description: "401/429 responses are above five requests per second; check abuse and client regressions."
+
+  - name: eduplatform-infrastructure
+    rules:
+      - alert: EduPlatformRabbitQueueBacklog
+        expr: sum(rabbitmq_queue_messages_ready) > 1000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RabbitMQ ready message backlog is growing"
+          description: "RabbitMQ has {{ $value }} ready messages across queues."
+
+      - alert: EduPlatformRedisMemoryPressure
+        expr: |
+          (
+            redis_memory_used_bytes / redis_memory_max_bytes > 0.8
+          )
+          and
+          on(instance) (redis_memory_max_bytes > 0)
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis memory usage is above 80%"
+          description: "Redis memory usage is {{ $value | humanizePercentage }}."

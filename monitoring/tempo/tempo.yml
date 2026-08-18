@@ -1,0 +1,40 @@
+server:
+  http_listen_port: 3200
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+ingester:
+  max_block_duration: 5m
+
+querier:
+  frontend_worker:
+    # Monolithic Tempo keeps the query frontend in the same process.
+    frontend_address: 127.0.0.1:9095
+
+compactor:
+  compaction:
+    block_retention: 168h
+
+storage:
+  trace:
+    backend: local
+    wal:
+      path: /var/tempo/wal
+    local:
+      path: /var/tempo/traces
+
+metrics_generator:
+  storage:
+    path: /var/tempo/generator/wal
+
+overrides:
+  defaults:
+    metrics_generator:
+      processors: []

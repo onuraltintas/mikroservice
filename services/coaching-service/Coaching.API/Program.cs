@@ -2,6 +2,7 @@ using Coaching.Application;
 using Coaching.Infrastructure;
 using EduPlatform.Shared.Infrastructure.Extensions;
 using EduPlatform.Shared.Infrastructure.Logging;
+using EduPlatform.Shared.Infrastructure.Observability;
 using EduPlatform.Shared.Security.Extensions;
 using EduPlatform.Shared.Security.Services;
 using Serilog;
@@ -24,6 +25,7 @@ var builder = WebApplication.CreateBuilder(args);
 // ============================================
 builder.Host.UseCustomSerilog();
 builder.Services.AddPersistentDataProtection(builder.Configuration, "EduPlatform.Coaching", builder.Environment.IsProduction());
+builder.Services.AddEduPlatformOpenTelemetry(builder.Configuration, builder.Environment, "EduPlatform.Coaching");
 
 // ============================================
 // Services

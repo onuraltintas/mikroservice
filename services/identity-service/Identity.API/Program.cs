@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Infrastructure.Extensions;
 using EduPlatform.Shared.Infrastructure.Logging;
+using EduPlatform.Shared.Infrastructure.Observability;
 using EduPlatform.Shared.Security.Extensions;
 using Identity.Infrastructure;
 using Identity.Application;
@@ -25,6 +26,7 @@ var builder = WebApplication.CreateBuilder(args);
 // ============================================
 builder.Host.UseCustomSerilog();
 builder.Services.AddPersistentDataProtection(builder.Configuration, "EduPlatform.Identity", builder.Environment.IsProduction());
+builder.Services.AddEduPlatformOpenTelemetry(builder.Configuration, builder.Environment, "EduPlatform.Identity");
 
 // ============================================
 // Services

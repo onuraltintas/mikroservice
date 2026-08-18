@@ -189,6 +189,23 @@ docker compose restart
 docker compose down -v
 ```
 
+### CI/CD ve gözlemlenebilirlik
+
+Ücretsiz OSS monitoring stack'ini (OpenTelemetry, Prometheus, Grafana,
+Alertmanager, Tempo) geliştirmede ayrı overlay ile açabilirsiniz:
+
+```bash
+docker compose --env-file .env \
+  -f docker-compose.yml \
+  -f docker-compose.observability.yml up -d --build
+```
+
+Grafana `http://localhost:3000`, Prometheus `http://localhost:9090` ve
+Alertmanager `http://localhost:9093` adreslerinde yalnızca localhost'a açık
+olur. Ayrıntılı CI kapıları, alarm eşikleri ve production kullanım şekli için
+[CI/CD ve Production Monitoring](docs/CI_CD_AND_PRODUCTION_MONITORING.md)
+runbook'una bakın.
+
 ---
 
 ## 🐛 Sorun Giderme
@@ -245,6 +262,7 @@ cat .env | grep POSTGRES
 - [Uygulama Planı](IMPLEMENTATION_PLAN.md)
 - [Faz 5 Üretim Sertleştirme Runbook'u](docs/PHASE5_PRODUCTION_HARDENING.md)
 - [Faz 6 Performans ve Gözlemlenebilirlik Runbook'u](docs/PHASE6_PERFORMANCE_OBSERVABILITY.md)
+- [CI/CD ve Production Monitoring](docs/CI_CD_AND_PRODUCTION_MONITORING.md)
 
 ---
 

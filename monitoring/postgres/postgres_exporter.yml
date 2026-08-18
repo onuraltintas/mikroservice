@@ -1,0 +1,3 @@
+# The exporter uses DATA_SOURCE_NAME for its connection. No custom query
+# authentication modules are required by EduPlatform.
+auth_modules: {}

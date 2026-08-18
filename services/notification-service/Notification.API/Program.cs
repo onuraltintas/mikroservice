@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Infrastructure.Logging;
+using EduPlatform.Shared.Infrastructure.Observability;
 using MassTransit;
 using Notification.Application.Consumers;
 using Notification.Application.Interfaces;
@@ -32,6 +33,7 @@ InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
 // Serilog Configuration (Centralized)
 builder.Host.UseCustomSerilog();
 builder.Services.AddPersistentDataProtection(builder.Configuration, "EduPlatform.Notification", builder.Environment.IsProduction());
+builder.Services.AddEduPlatformOpenTelemetry(builder.Configuration, builder.Environment, "EduPlatform.Notification");
 builder.Services.AddGlobalExceptionHandler();
 
 // Add services
@@ -54,6 +56,9 @@ if (string.IsNullOrEmpty(connectionString))
 builder.Services.AddDbContext<NotificationDbContext>(options =>
     options.UseNpgsql(connectionString)
            .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
+
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<NotificationDbContext>("database");
 
 // Register INotificationDbContext for Application layer access
 builder.Services.AddScoped<INotificationDbContext>(provider => 
@@ -172,6 +177,9 @@ app.UseAuthorization();
 app.UseRequestTimeouts();
 
 app.MapGet("/", () => "Notification Service Runnning").AllowAnonymous();
+app.MapHealthChecks("/health").AllowAnonymous();
+app.MapHealthChecks("/health/ready").AllowAnonymous();
+app.MapHealthChecks("/health/live").AllowAnonymous();
 app.MapHub<NotificationHub>("/hubs/notifications");
 app.MapControllers();
 
