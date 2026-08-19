@@ -3,6 +3,8 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { IdentityService } from '../../../../core/services/identity.service';
 import { AuthService } from '../../../../core/auth/auth.service';
+import { ADMIN_PERMISSIONS } from '../../../../core/auth/permissions';
+import { firstValueFrom } from 'rxjs';
 
 interface DashboardStats {
   totalUsers: number;
@@ -45,7 +47,7 @@ export class DashboardHomeComponent implements OnInit {
     if (isPlatformBrowser(this.platformId)) {
       const user = this.authService.userProfile();
       // Only load stats if user has Admin privileges
-      if (user?.role === 'Admin' || user?.role === 'SystemAdmin' || user?.roles?.includes('Admin') || user?.roles?.includes('SystemAdmin')) {
+      if (user?.permissions?.includes(ADMIN_PERMISSIONS.usersView)) {
         this.loadStats();
       } else {
         console.log('Skipping dashboard stats for non-admin user.');
@@ -57,21 +59,28 @@ export class DashboardHomeComponent implements OnInit {
   async loadStats() {
     this.loading.set(true);
     try {
-      const [usersResult, roles, permissions] = await Promise.all([
-        this.identityService.getAllUsers(1, 1000, '').toPromise(),
-        this.identityService.getAllRoles().toPromise(),
-        this.identityService.getPermissions().toPromise()
+      const canViewUsers = this.authService.hasPermission(ADMIN_PERMISSIONS.usersView);
+      const canViewRoles = this.authService.hasPermission(ADMIN_PERMISSIONS.rolesView);
+      const canViewPermissions = this.authService.hasPermission(ADMIN_PERMISSIONS.permissionView);
+      const [usersResponse, rolesResponse, permissionsResponse] = await Promise.allSettled([
+        canViewUsers ? firstValueFrom(this.identityService.getUserSummary()) : Promise.resolve(null),
+        canViewRoles ? firstValueFrom(this.identityService.getAllRoles()) : Promise.resolve(null),
+        canViewPermissions ? firstValueFrom(this.identityService.getPermissions()) : Promise.resolve(null)
       ]);
 
-      const users = usersResult?.items || [];
-      const activeUsers = users.filter((u: any) => u.isActive).length;
+      const usersResult = usersResponse.status === 'fulfilled' ? usersResponse.value : null;
+      const roles = rolesResponse.status === 'fulfilled' ? rolesResponse.value : null;
+      const permissions = permissionsResponse.status === 'fulfilled' ? permissionsResponse.value : null;
+
+      const totalUsers = usersResult?.totalUsers ?? 0;
+      const activeUsers = usersResult?.activeUsers ?? 0;
       const rolesData = roles || [];
       const permsData = permissions || [];
 
       this.stats.set({
-        totalUsers: users.length,
+        totalUsers,
         activeUsers: activeUsers,
-        inactiveUsers: users.length - activeUsers,
+        inactiveUsers: usersResult?.inactiveUsers ?? 0,
         totalRoles: rolesData.filter((r: any) => !r.isDeleted).length,
         systemRoles: rolesData.filter((r: any) => r.isSystemRole && !r.isDeleted).length,
         customRoles: rolesData.filter((r: any) => !r.isSystemRole && !r.isDeleted).length,

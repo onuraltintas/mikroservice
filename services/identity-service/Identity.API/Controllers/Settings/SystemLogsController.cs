@@ -1,14 +1,16 @@
 using Identity.Application.DTOs.Logs;
 using Identity.Application.Interfaces;
+using Identity.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using EduPlatform.Shared.Security.Authorization;
 
 namespace Identity.API.Controllers.Settings;
 
 [ApiController]
 [ApiVersion(1.0)]
 [Route("api/system-logs")]
-[Authorize(Roles = "Admin, SystemAdmin")] // Restrict to admins
+[HasPermission(Permissions.Operations.View)]
 public class SystemLogsController : ControllerBase
 {
     private readonly ISystemLogService _systemLogService;
@@ -65,6 +67,7 @@ public class SystemLogsController : ControllerBase
     }
 
     [HttpPost("retention-policies")]
+    [Authorize(Roles = "SystemAdmin")]
     public async Task<ActionResult<RetentionPolicyDto>> CreateRetentionPolicy([FromBody] CreateRetentionPolicyRequest request, CancellationToken cancellationToken)
     {
         try
@@ -81,6 +84,7 @@ public class SystemLogsController : ControllerBase
     }
 
     [HttpDelete("retention-policies/{id}")]
+    [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> DeleteRetentionPolicy(string id, CancellationToken cancellationToken)
     {
         try

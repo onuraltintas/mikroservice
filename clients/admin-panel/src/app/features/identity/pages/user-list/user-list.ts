@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, PLATFORM_ID, HostListener } from '@angular/core';
+import { Component, computed, inject, signal, effect, PLATFORM_ID, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IdentityService, UserDto } from '../../../../core/services/identity.service';
@@ -8,6 +8,7 @@ import { EditUserModalComponent } from '../../components/edit-user-modal/edit-us
 import { ChangePasswordModalComponent } from '../../components/change-password-modal/change-password-modal';
 import { UserDetailsModalComponent } from '../../components/user-details-modal/user-details-modal';
 import { RoleManagementModalComponent } from '../../components/role-management-modal/role-management-modal';
+import { AuthService } from '../../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-user-list',
@@ -20,6 +21,8 @@ export class UserListComponent {
   private identityService = inject(IdentityService);
   private toaster = inject(ToasterService);
   private platformId = inject(PLATFORM_ID);
+  private authService = inject(AuthService);
+  canManage = computed(() => this.authService.userProfile()?.roles.includes('SystemAdmin') ?? false);
 
   // State
   users = signal<UserDto[]>([]);

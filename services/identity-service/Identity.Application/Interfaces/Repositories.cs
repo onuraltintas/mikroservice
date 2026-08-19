@@ -3,6 +3,7 @@ using Identity.Domain.Entities;
 
 using Identity.Application.Queries.GetAllUsers;
 using Identity.Application.Queries.GetUserProfile;
+using Identity.Application.DTOs.Institutions;
 using Identity.Domain.Enums;
 
 namespace Identity.Application.Interfaces;
@@ -14,6 +15,7 @@ public interface IUserRepository
     Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken);
     void Delete(User user);
     Task<PagedList<UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken);
+    Task<UserSummaryDto> GetSummaryAsync(Guid? institutionId, CancellationToken cancellationToken);
     Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
     Task<List<User>> GetUsersByRolesAsync(List<string> roleNames, CancellationToken cancellationToken);
 }
@@ -34,6 +36,12 @@ public interface IInstitutionRepository
 {
     Task AddAsync(Institution institution, CancellationToken cancellationToken);
     Task AddAdminAsync(InstitutionAdmin admin, CancellationToken cancellationToken);
+    Task<PagedList<InstitutionDto>> GetAllAsync(int page, int pageSize, string? searchTerm, bool? isActive, Guid? institutionId, CancellationToken cancellationToken);
+    Task<InstitutionDto?> GetDtoByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<Institution?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<bool> HasAdminAsync(Guid institutionId, Guid userId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<InstitutionAdminDto>> GetAdminsAsync(Guid institutionId, CancellationToken cancellationToken);
+    Task<InstitutionAdmin?> GetAdminAsync(Guid institutionId, Guid userId, CancellationToken cancellationToken);
     Task<Guid?> GetInstitutionIdByAdminIdAsync(Guid adminUserId, CancellationToken cancellationToken);
     Task<Guid?> GetPrimaryInstitutionIdByUserIdAsync(Guid userId, CancellationToken cancellationToken);
     Task<bool> IsUserInInstitutionAsync(Guid userId, Guid institutionId, CancellationToken cancellationToken);

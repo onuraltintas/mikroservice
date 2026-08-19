@@ -26,3 +26,31 @@ export const authGuard: CanActivateFn = async (route, state) => {
     router.navigate(['/auth/login'], { queryParams: { returnUrl: state.url } });
     return false;
 };
+
+/**
+ * Permission guard for management routes.  SSR is intentionally allowed to
+ * render the shell; the browser performs the real token/permission check
+ * after hydration, just like authGuard.
+ */
+export const permissionGuard: CanActivateFn = async (route, state) => {
+    const authService = inject(AuthService);
+    const router = inject(Router);
+    const platformId = inject(PLATFORM_ID);
+    const requiredPermission = route.data?.['permission'] as string | undefined;
+
+    if (!requiredPermission || isPlatformServer(platformId)) {
+        return true;
+    }
+
+    if (!(await authService.waitForAuth())) {
+        router.navigate(['/auth/login'], { queryParams: { returnUrl: state.url } });
+        return false;
+    }
+
+    if (authService.hasPermission(requiredPermission)) {
+        return true;
+    }
+
+    router.navigate(['/dashboard'], { queryParams: { forbidden: 'true' } });
+    return false;
+};

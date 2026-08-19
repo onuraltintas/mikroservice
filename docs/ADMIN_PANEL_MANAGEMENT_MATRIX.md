@@ -1,0 +1,91 @@
+# Admin Panel Yönetim Matrisi
+
+Bu belge, Angular admin panelinin hangi platform yeteneklerini dinamik olarak
+yönettiğini ve hangi alanların özellikle panel dışında bırakıldığını tanımlar.
+Sunucu tarafındaki permission policy her zaman son otoritedir; paneldeki menü ve
+route guard'ları yalnızca kullanıcı deneyimi ve erken yönlendirme sağlar.
+
+## Yönetim kapsamı
+
+| Bounded context | Panel yeteneği | API yüzeyi | Yetki |
+| --- | --- | --- | --- |
+| Identity | Kullanıcı listeleme ve ayrıntı (aktif tenant scope'u) | `/api/users` | `Permissions.Users.View` |
+| Identity | Kullanıcı oluşturma, düzenleme, pasifleştirme/aktifleştirme, rol, e-posta ve parola yönetimi | `/api/users` | `SystemAdmin` + ilgili `Permissions.Users.*` |
+| Identity | Rol ve permission CRUD'u, role-permission eşlemesi | `/api/roles`, `/api/permissions` | `Permissions.Roles.*`, `Permissions.Permissions.*` |
+| Identity | Kurum listeleme/detay ve yönetici listesi (SystemAdmin global, diğer yöneticiler yalnız aktif kendi tenant'ı) | `/api/institutions` | `Permissions.Institutions.View` |
+| Identity | Kurum oluşturma, aktiflik ve lisans/kapasite yönetimi | `/api/institutions` | `SystemAdmin` + `Permissions.Institutions.Manage` |
+| Identity | Kendi tenant'ının iletişim bilgileri ve kurum yöneticileri | `/api/institutions` | Aktif tenant yöneticisi + `Permissions.Institutions.Manage` |
+| Identity | Sistem ayarları, log ve retention yönetimi | `/api/configurations`, `/api/system-logs` | `Permissions.Operations.View` ve mevcut SystemAdmin mutasyon politikaları |
+| Notification | Destek talebi listeleme, filtreleme, notlandırma, işlenmiş işareti ve yanıt | `/api/support/requests`, `/api/support/reply` | `Permissions.Support.View/Reply` |
+| Notification | E-posta şablonu listeleme, oluşturma, konu/gövde/aktiflik güncelleme | `/api/email-templates` | `Permissions.Notifications.Templates` |
+| Notification | Kullanıcının kendi bildirimleri | `/api/notifications` | Oturum sahibi |
+| Coaching | Kullanıcıların assignment/exam/session/goal akışları ve tenant/rol kontrolleri | `/api/assignments`, `/api/exams`, `/api/sessions`, `/api/goals` | Teacher/Student/SystemAdmin domain policy'leri |
+| Coaching | Global, bounded ve PII'siz operasyon özeti | `/api/coaching-admin/overview` | Yalnız `SystemAdmin` + `Permissions.Coaching.View` |
+
+## Coaching neden doğrudan CRUD değil?
+
+Koçluk kayıtları öğrenci notu, geri bildirim, sınav sonucu ve katılım bilgisi
+içerir. Bunları genel bir admin CRUD ekranına açmak tenant ve eğitim verisi
+mahremiyeti açısından güvenli bir varsayılan değildir. Bu nedenle:
+
+- Öğretmen/öğrenci yazma ve okuma işlemleri mevcut domain policy'leriyle sınırlıdır.
+- SystemAdmin paneli yalnız sayısal özet ve sınırlı son ödev listesini görür; öğrenci
+  PII'si ve not detayları dönmez.
+- İleride idari override gerekirse ayrı `Manage` command'ları, tenant scope,
+  audit actor/reason ve iki aşamalı onay ile eklenmelidir; mevcut genel endpoint'lere
+  bypass eklenmemelidir.
+
+## Bilerek panel dışında kalan sınırlar
+
+Bunlar eksik CRUD olarak değerlendirilmez; farklı bir güvenlik ve işletim sınırıdır:
+
+- PostgreSQL/Redis/RabbitMQ veritabanı tabloları ve migration çalıştırma.
+- JWT, SMTP, database, Redis ve service API key secret'ları.
+- Docker/Kubernetes replica, network, ingress/TLS ve deploy/rollback işlemleri.
+- Prometheus/Grafana/Tempo/Alertmanager kural ve credential'ları.
+- Henüz repository'de bounded context'i bulunmayan Blog, Content, Analytics,
+  Billing veya Search modülleri.
+
+Bu alanlar CI/CD, secret manager, migration job ve observability runbook'larıyla
+yönetilir. Admin paneline secret veya altyapı yazma yetkisi vermek, platform
+admininin JWT'si ele geçirildiğinde blast radius'u gereksiz şekilde büyütür.
+
+## Yetkilendirme ve işletim kuralları
+
+1. Permission anahtarları `shared/EduPlatform.Shared.Contracts/PlatformPermissions.cs`
+   içinde tek sözleşmedir; Identity seed'i bunları permission tablosuna ekler.
+2. Frontend `permissionGuard` ve sidebar filtreleri token'daki permission claim'ini
+   kullanır; backend `[HasPermission]`/`[Authorize]` kontrolü olmadan hiçbir işlem
+   güvenli kabul edilmez.
+3. Yeni permission atandıktan veya kaldırıldıktan sonra mevcut JWT claim'i
+   değişmeyeceği için kullanıcı yeniden giriş yapmalı ya da refresh token ile yeni
+   access token almalıdır.
+4. Support submit anonim kalır; body limiti, validator, idempotency key ve gateway
+   + service rate limit'i birlikte uygulanır.
+5. Coaching admin endpoint'i SystemAdmin rolüyle ek fail-closed kontrol taşır;
+   yalnız permission claim'ine güvenerek global öğrenci verisi açılmaz.
+6. SystemAdmin rolü oluşturma/atama yalnızca mevcut SystemAdmin tarafından yapılır;
+   kurum yöneticisi kullanıcı ekranında salt-okunur tenant görünümüne sahiptir.
+7. Kurum mutation'ları handler seviyesinde de scope kontrolü yapar; controller
+   metadata'sı tek başına tenant izolasyonu olarak kabul edilmez.
+
+## Tamamlanma doğrulaması
+
+- Identity, Notification ve Coaching Release build'leri `--warnaserror` ile temiz.
+- Admin metadata ve InMemory handler testleri integration test projesinde çalışır.
+- Angular unit testleri, SSR production build'i ve route lazy-load derlemesi CI'de
+  kapıdır.
+- Compose Gateway route'ları `docker compose ... config --quiet` ile doğrulanır.
+- Production öncesi gerçek kullanıcı verisiyle değil, disposable tenant ve staging
+  smoke/E2E akışlarıyla doğrulama yapılır.
+
+## Gelecek planı
+
+Yeni bir bounded context eklendiğinde şu sırayı izleyin:
+
+1. Domain owner ve tenant scope'u belirle.
+2. Query/command DTO ve permission anahtarlarını Shared.Contracts'a ekle.
+3. Backend policy + validation + audit + pagination yaz.
+4. Gateway route ve API contract testini ekle.
+5. Panel service, lazy route, permission guard ve erişilebilir tablo/form ekle.
+6. Unit, integration, E2E ve load smoke kanıtlarını aldıktan sonra menüye ekle.

@@ -72,7 +72,7 @@ builder.Services.AddSharedInfrastructure(
 
 // Authentication & authorization
 builder.Services.AddCustomAuthentication(builder.Configuration);
-builder.Services.AddGlobalAuthorization();
+builder.Services.AddCustomAuthorization();
 InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
 
 // Add Mediator Behaviors (Validation, Logging)

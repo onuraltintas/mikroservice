@@ -203,6 +203,11 @@ docker compose --env-file .env \
   -f docker-compose.observability.yml up -d --build
 ```
 
+Admin panelinin hangi platform alanlarını yönettiği, hangi alanların bilinçli
+olarak CI/CD veya secret manager sınırında kaldığı için
+[Admin Panel Yönetim Matrisi](docs/ADMIN_PANEL_MANAGEMENT_MATRIX.md) belgesinde
+tanımlıdır.
+
 Grafana `http://localhost:3000`, Prometheus `http://localhost:9090` ve
 Alertmanager `http://localhost:9093` adreslerinde yalnızca localhost'a açık
 olur. Ayrıntılı CI kapıları, alarm eşikleri ve production kullanım şekli için

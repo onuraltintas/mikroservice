@@ -168,7 +168,7 @@ builder.Services.AddCustomAuthentication(builder.Configuration, options =>
         };
     });
 
-builder.Services.AddGlobalAuthorization();
+builder.Services.AddCustomAuthorization();
 
 // MassTransit Config
 builder.Services.AddMassTransit(x =>

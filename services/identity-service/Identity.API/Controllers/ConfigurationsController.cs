@@ -1,14 +1,16 @@
 using Identity.Application.DTOs.Settings;
 using Identity.Application.Interfaces;
+using Identity.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using EduPlatform.Shared.Security.Authorization;
 
 namespace Identity.API.Controllers;
 
-[Authorize]
 [ApiController]
 [ApiVersion(1.0)]
 [Route("api/[controller]")]
+[HasPermission(Permissions.Operations.View)]
 public class ConfigurationsController : ControllerBase
 {
     private readonly IConfigurationService _configurationService;

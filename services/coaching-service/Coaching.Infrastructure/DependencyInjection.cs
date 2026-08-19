@@ -53,6 +53,7 @@ public static class DependencyInjection
         services.AddScoped<IExamRepository, ExamRepository>();
         services.AddScoped<ICoachingSessionRepository, CoachingSessionRepository>();
         services.AddScoped<IAcademicGoalRepository, AcademicGoalRepository>();
+        services.AddScoped<ICoachingAdminRepository, CoachingAdminRepository>();
 
         // Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();

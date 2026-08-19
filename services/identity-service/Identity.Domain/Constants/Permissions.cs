@@ -1,3 +1,5 @@
+using EduPlatform.Shared.Contracts.Authorization;
+
 namespace Identity.Domain.Constants;
 
 public static class Permissions
@@ -29,6 +31,34 @@ public static class Permissions
         public const string Edit = "Permissions.Permissions.Edit";
         public const string Delete = "Permissions.Permissions.Delete";
     }
+
+    public static class Institutions
+    {
+        public const string View = PlatformPermissions.Institutions.View;
+        public const string Manage = PlatformPermissions.Institutions.Manage;
+    }
+
+    public static class Coaching
+    {
+        public const string View = PlatformPermissions.Coaching.View;
+        public const string Manage = PlatformPermissions.Coaching.Manage;
+    }
+
+    public static class Support
+    {
+        public const string View = PlatformPermissions.Support.View;
+        public const string Reply = PlatformPermissions.Support.Reply;
+    }
+
+    public static class Notifications
+    {
+        public const string Templates = PlatformPermissions.Notifications.Templates;
+    }
+
+    public static class Operations
+    {
+        public const string View = PlatformPermissions.Operations.View;
+    }
     
     // Helper to get all permissions
     public static List<string> GetAll()
@@ -56,6 +86,8 @@ public static class Permissions
         permissions.Add(PermissionManagement.Create);
         permissions.Add(PermissionManagement.Edit);
         permissions.Add(PermissionManagement.Delete);
+
+        permissions.AddRange(PlatformPermissions.GetAll());
 
         return permissions;
     }

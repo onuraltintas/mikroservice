@@ -20,6 +20,7 @@ public class LocalIdentityService : IIdentityService
     private readonly ITokenService _tokenService; // JWT generation
     private readonly IRoleRepository _roleRepository;
     private readonly IdentityDbContext _context;
+    private readonly ICurrentUserService _currentUserService;
 
     public LocalIdentityService(
         IUserRepository userRepository,
@@ -28,7 +29,8 @@ public class LocalIdentityService : IIdentityService
         ILogger<LocalIdentityService> logger,
         ITokenService tokenService,
         IRoleRepository roleRepository,
-        IdentityDbContext context)
+        IdentityDbContext context,
+        ICurrentUserService currentUserService)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
@@ -37,6 +39,7 @@ public class LocalIdentityService : IIdentityService
         _tokenService = tokenService;
         _roleRepository = roleRepository;
         _context = context;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<Guid>> RegisterUserAsync(string email, string password, string firstName, string lastName, CancellationToken cancellationToken)
@@ -84,6 +87,14 @@ public class LocalIdentityService : IIdentityService
     {
         try
         {
+            if (string.Equals(roleName, Identity.Domain.Enums.UserRole.SystemAdmin.ToString(), StringComparison.OrdinalIgnoreCase)
+                && !_currentUserService.Roles.Any(role =>
+                    string.Equals(role, Identity.Domain.Enums.UserRole.SystemAdmin.ToString(), StringComparison.OrdinalIgnoreCase)))
+            {
+                return Result.Failure(Error.Forbidden(
+                    "SystemAdmin rolü yalnızca mevcut bir SystemAdmin tarafından atanabilir."));
+            }
+
             _logger.LogInformation("Attempting to assign role {RoleName} to user {UserId}", roleName, userId);
 
             var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
@@ -174,6 +185,14 @@ public class LocalIdentityService : IIdentityService
         string? phoneNumber,
         CancellationToken cancellationToken)
     {
+        if (string.Equals(roleName, Identity.Domain.Enums.UserRole.SystemAdmin.ToString(), StringComparison.OrdinalIgnoreCase)
+            && !_currentUserService.Roles.Any(role =>
+                string.Equals(role, Identity.Domain.Enums.UserRole.SystemAdmin.ToString(), StringComparison.OrdinalIgnoreCase)))
+        {
+            return Result.Failure<(Guid, string)>(Error.Forbidden(
+                "SystemAdmin kullanıcısı yalnızca mevcut bir SystemAdmin tarafından oluşturulabilir."));
+        }
+
         // 1. Check User Existence
         var existingUser = await _userRepository.GetByEmailAsync(email, cancellationToken);
         if (existingUser != null) return Result.Failure<(Guid, string)>(new Error("Identity.UserExists", "User with this email already exists."));

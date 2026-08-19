@@ -231,3 +231,86 @@ public class AcademicGoalRepository : IAcademicGoalRepository
         return Task.CompletedTask;
     }
 }
+
+public sealed class CoachingAdminRepository : ICoachingAdminRepository
+{
+    private readonly CoachingDbContext _context;
+
+    public CoachingAdminRepository(CoachingDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<CoachingAdminOverviewDto> GetOverviewAsync(
+        int recentLimit,
+        CancellationToken cancellationToken = default)
+    {
+        var totalAssignments = await _context.Assignments.CountAsync(cancellationToken);
+        var activeAssignments = await _context.Assignments
+            .CountAsync(item => item.Status == Domain.Enums.AssignmentStatus.Active, cancellationToken);
+        var completedAssignments = await _context.Assignments
+            .CountAsync(item => item.Status == Domain.Enums.AssignmentStatus.Completed, cancellationToken);
+        var cancelledAssignments = await _context.Assignments
+            .CountAsync(item => item.Status == Domain.Enums.AssignmentStatus.Cancelled, cancellationToken);
+        var totalAssignmentStudents = await _context.AssignmentStudents.CountAsync(cancellationToken);
+        var submittedAssignmentStudents = await _context.AssignmentStudents
+            .CountAsync(item => item.Status == Domain.Enums.StudentAssignmentStatus.Submitted
+                || item.Status == Domain.Enums.StudentAssignmentStatus.Graded,
+                cancellationToken);
+        var totalExams = await _context.Exams.CountAsync(cancellationToken);
+        var totalExamResults = await _context.ExamResults.CountAsync(cancellationToken);
+        var totalSessions = await _context.CoachingSessions.CountAsync(cancellationToken);
+        var upcomingSessions = await _context.CoachingSessions
+            .CountAsync(item => item.Status == Domain.Enums.SessionStatus.Scheduled
+                && item.ScheduledDate >= DateTime.UtcNow,
+                cancellationToken);
+        var totalGoals = await _context.AcademicGoals.CountAsync(cancellationToken);
+        var completedGoals = await _context.AcademicGoals
+            .CountAsync(item => item.IsCompleted, cancellationToken);
+
+        var recentAssignments = await _context.Assignments
+            .AsNoTracking()
+            .OrderByDescending(item => item.CreatedAt)
+            .ThenByDescending(item => item.Id)
+            .Take(recentLimit)
+            .Select(item => new
+            {
+                item.Id,
+                item.TeacherId,
+                item.InstitutionId,
+                item.Title,
+                item.Status,
+                item.DueDate,
+                item.CreatedAt,
+                StudentCount = item.AssignedStudents.Count,
+                SubmittedStudentCount = item.AssignedStudents.Count(student =>
+                    student.Status == Domain.Enums.StudentAssignmentStatus.Submitted
+                    || student.Status == Domain.Enums.StudentAssignmentStatus.Graded)
+            })
+            .ToListAsync(cancellationToken);
+
+        return new CoachingAdminOverviewDto(
+            totalAssignments,
+            activeAssignments,
+            completedAssignments,
+            cancelledAssignments,
+            totalAssignmentStudents,
+            submittedAssignmentStudents,
+            totalExams,
+            totalExamResults,
+            totalSessions,
+            upcomingSessions,
+            totalGoals,
+            completedGoals,
+            recentAssignments.Select(item => new CoachingAdminAssignmentDto(
+                item.Id,
+                item.TeacherId,
+                item.InstitutionId,
+                item.Title,
+                item.Status.ToString(),
+                item.DueDate,
+                item.StudentCount,
+                item.SubmittedStudentCount,
+                item.CreatedAt)).ToList());
+    }
+}

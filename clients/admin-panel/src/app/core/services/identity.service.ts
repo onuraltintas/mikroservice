@@ -116,14 +116,18 @@ export class IdentityService {
 
     getAllUsers(page: number, pageSize: number, search: string = '', role?: string, isActive?: boolean) {
         let params = new HttpParams()
-            .set('pageNumber', page)
+            .set('page', page)
             .set('pageSize', pageSize);
 
-        if (search) params = params.set('searchTerm', search);
+        if (search) params = params.set('search', search);
         if (role) params = params.set('role', role);
         if (isActive !== undefined && isActive !== null) params = params.set('isActive', isActive);
 
         return this.http.get<PagedResult<UserDto>>(this.baseUrl, { params });
+    }
+
+    getUserSummary() {
+        return this.http.get<{ totalUsers: number; activeUsers: number; inactiveUsers: number }>(`${this.baseUrl}/summary`);
     }
 
     createUser(user: CreateUserRequest) {

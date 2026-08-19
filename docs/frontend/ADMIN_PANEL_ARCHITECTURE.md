@@ -143,6 +143,14 @@ export class SessionService {
 - [ ] Identity API entegrasyonu (Kayıt olma, giriş yapma).
 - [ ] SSR Hydration testleri.
 
+### Phase 5: Dinamik yönetim (tamamlandı)
+
+- [x] Server-issued permission claim'lerine bağlı functional route guard ve menü.
+- [x] Identity kurum yaşam döngüsü yönetimi.
+- [x] Notification destek inbox ve e-posta şablonu yönetimi.
+- [x] SystemAdmin için salt-okunur Coaching operasyon özeti.
+- [x] Yönetim kapsamı ve güvenlik sınırları: `docs/ADMIN_PANEL_MANAGEMENT_MATRIX.md`.
+
 ---
 
 ## 📱 7. Mobile Responsiveness (Responsive Stratejisi)

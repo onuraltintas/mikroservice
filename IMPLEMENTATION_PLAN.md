@@ -26,6 +26,7 @@ daha yüksek kapasiteye geçebilen bir platformdur.
 | OpenTelemetry/Prometheus/Grafana/Tempo | ✅ | monitoring config validation |
 | Angular SSR/auth guards | ✅ | 7 unit test + 22-route prerender |
 | Frontend CI security gate | ✅ | locked npm ci, npm audit, test, SSR build |
+| Dinamik admin panel yönetimi | ✅ | permission guard, kurum/support/template yönetimi, Coaching SystemAdmin özeti |
 
 ## P1 paketleri
 
@@ -72,6 +73,20 @@ daha yüksek kapasiteye geçebilen bir platformdur.
 - Angular testleri, production browser/SSR build'i ve `npm audit` CI'de zorunlu.
 - Admin panel bağımlılıkları lock dosyasına sabitlenmiştir; kritik/high audit
   açıkları sıfır olmalıdır.
+
+### P1.5 Admin panel yönetim kapsamı — tamamlandı
+
+- Menü ve lazy route'lar server-issued permission claim'leriyle görünür ve
+  erişilebilir hale getirildi; role adına göre hard-code görünürlük kaldırıldı.
+- Identity kurum yaşam döngüsü, Notification destek gelen kutusu/yanıtı ve e-posta
+  şablonu yönetimi API + panel üzerinden tamamlandı.
+- Coaching için global admin salt-okunur bounded operasyon özeti eklendi; öğrenci
+  notu/PII içeren genel CRUD özellikle açılmadı.
+- Yönetilebilir alanlar ile secret/deploy/database/observability sınırları
+  [admin panel matrisinde](docs/ADMIN_PANEL_MANAGEMENT_MATRIX.md) yazılı hale getirildi.
+- SystemAdmin rolü ve kullanıcı mutation'ları aktör bazlı korunuyor; kurum işlemleri
+  aktif tenant scope'u ile fail-closed uygulanıyor ve koçluk özetleri SQL projection
+  ile bounded çalışıyor.
 
 ## Sıradaki geliştirme sırası
 

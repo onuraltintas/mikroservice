@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 using Identity.Application.Queries.GetAllUsers;
 using Identity.Application.Queries.GetUserProfile;
+using Identity.Application.DTOs.Institutions;
 using Identity.Domain.Enums;
 
 namespace Identity.Infrastructure.Repositories;
@@ -145,6 +146,30 @@ public class UserRepository : IUserRepository
         return new PagedList<UserProfileDto>(dtos, totalCount, page, pageSize);
     }
 
+    public async Task<UserSummaryDto> GetSummaryAsync(
+        Guid? institutionId,
+        CancellationToken cancellationToken)
+    {
+        var query = _context.Users.AsNoTracking().AsQueryable();
+        if (institutionId.HasValue)
+        {
+            var scopedInstitutionId = institutionId.Value;
+            query = query.Where(u =>
+                _context.InstitutionAdmins.Any(a =>
+                    a.UserId == u.Id && a.InstitutionId == scopedInstitutionId && a.IsActive && a.Institution.IsActive) ||
+                _context.TeacherProfiles.Any(t =>
+                    t.UserId == u.Id && t.InstitutionId == scopedInstitutionId && t.IsActive && t.Institution != null && t.Institution.IsActive) ||
+                _context.StudentProfiles.Any(s =>
+                    s.UserId == u.Id && s.InstitutionId == scopedInstitutionId && s.IsActive && s.Institution != null && s.Institution.IsActive) ||
+                _context.StudentProfiles.Any(s =>
+                    s.ParentId == u.Id && s.InstitutionId == scopedInstitutionId && s.IsActive && s.Institution != null && s.Institution.IsActive));
+        }
+
+        var totalUsers = await query.CountAsync(cancellationToken);
+        var activeUsers = await query.CountAsync(user => user.IsActive, cancellationToken);
+        return new UserSummaryDto(totalUsers, activeUsers, totalUsers - activeUsers);
+    }
+
     public async Task<List<User>> GetUsersByRolesAsync(List<string> roleNames, CancellationToken cancellationToken)
     {
         return await _context.Users
@@ -174,6 +199,136 @@ public class InstitutionRepository : IInstitutionRepository
     public async Task AddAdminAsync(InstitutionAdmin admin, CancellationToken cancellationToken)
     {
         await _context.InstitutionAdmins.AddAsync(admin, cancellationToken);
+    }
+
+    public async Task<PagedList<InstitutionDto>> GetAllAsync(
+        int page,
+        int pageSize,
+        string? searchTerm,
+        bool? isActive,
+        Guid? institutionId,
+        CancellationToken cancellationToken)
+    {
+        var query = _context.Institutions.AsNoTracking().AsQueryable();
+
+        if (institutionId.HasValue)
+        {
+            query = query.Where(institution => institution.Id == institutionId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var normalizedSearch = searchTerm.Trim();
+            var pattern = $"%{normalizedSearch.ToLowerInvariant()}%";
+            query = query.Where(institution =>
+                EF.Functions.Like(institution.Name.ToLower(), pattern)
+                || (institution.City != null && EF.Functions.Like(institution.City.ToLower(), pattern))
+                || (institution.Email != null && EF.Functions.Like(institution.Email.ToLower(), pattern)));
+        }
+
+        if (isActive.HasValue)
+        {
+            query = query.Where(institution => institution.IsActive == isActive.Value);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var institutions = await query
+            .OrderByDescending(institution => institution.CreatedAt)
+            .ThenBy(institution => institution.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(institution => new InstitutionDto(
+                institution.Id,
+                institution.Name,
+                institution.Type,
+                institution.LogoUrl,
+                institution.Address,
+                institution.City,
+                institution.District,
+                institution.Phone,
+                institution.Email,
+                institution.Website,
+                institution.LicenseType,
+                institution.MaxStudents,
+                institution.MaxTeachers,
+                institution.SubscriptionStartDate,
+                institution.SubscriptionEndDate,
+                institution.IsActive,
+                institution.Students.Count(student => student.IsActive),
+                institution.Teachers.Count(teacher => teacher.IsActive),
+                institution.Admins.Count(admin => admin.IsActive)))
+            .ToListAsync(cancellationToken);
+
+        return new PagedList<InstitutionDto>(institutions, totalCount, page, pageSize);
+    }
+
+    public Task<Institution?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return _context.Institutions.FirstOrDefaultAsync(institution => institution.Id == id, cancellationToken);
+    }
+
+    public Task<InstitutionDto?> GetDtoByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return _context.Institutions
+            .AsNoTracking()
+            .Where(institution => institution.Id == id)
+            .Select(institution => new InstitutionDto(
+                institution.Id,
+                institution.Name,
+                institution.Type,
+                institution.LogoUrl,
+                institution.Address,
+                institution.City,
+                institution.District,
+                institution.Phone,
+                institution.Email,
+                institution.Website,
+                institution.LicenseType,
+                institution.MaxStudents,
+                institution.MaxTeachers,
+                institution.SubscriptionStartDate,
+                institution.SubscriptionEndDate,
+                institution.IsActive,
+                institution.Students.Count(student => student.IsActive),
+                institution.Teachers.Count(teacher => teacher.IsActive),
+                institution.Admins.Count(admin => admin.IsActive)))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public Task<bool> HasAdminAsync(Guid institutionId, Guid userId, CancellationToken cancellationToken)
+    {
+        return _context.InstitutionAdmins.AnyAsync(admin =>
+            admin.InstitutionId == institutionId && admin.UserId == userId && admin.IsActive,
+            cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<InstitutionAdminDto>> GetAdminsAsync(
+        Guid institutionId,
+        CancellationToken cancellationToken)
+    {
+        return await _context.InstitutionAdmins
+            .AsNoTracking()
+            .Where(admin => admin.InstitutionId == institutionId)
+            .OrderByDescending(admin => admin.IsActive)
+            .ThenBy(admin => admin.User.Email)
+            .Select(admin => new InstitutionAdminDto(
+                admin.UserId,
+                admin.User.Email,
+                admin.User.FirstName,
+                admin.User.LastName,
+                admin.Role,
+                admin.IsActive))
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<InstitutionAdmin?> GetAdminAsync(
+        Guid institutionId,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        return _context.InstitutionAdmins.FirstOrDefaultAsync(
+            admin => admin.InstitutionId == institutionId && admin.UserId == userId,
+            cancellationToken);
     }
 
     public async Task<Guid?> GetInstitutionIdByAdminIdAsync(Guid adminUserId, CancellationToken cancellationToken)

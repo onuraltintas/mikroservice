@@ -78,9 +78,24 @@ public static class IdentitySeeder
             var institutionPermissions = new List<string> 
             { 
                 Identity.Domain.Constants.Permissions.Users.View,
+                Identity.Domain.Constants.Permissions.Institutions.View,
+                Identity.Domain.Constants.Permissions.Institutions.Manage
+            };
+
+            // Coaching admin overview is a global, read-only operational view and
+            // is intentionally restricted to SystemAdmin. Remove the keys from
+            // older institution role rows during the additive seed migration so
+            // stale tokens cannot expose a misleading panel entry.
+            var institutionRolePermissionsToRemove = new HashSet<string>(StringComparer.Ordinal)
+            {
+                Identity.Domain.Constants.Permissions.Coaching.View,
+                Identity.Domain.Constants.Permissions.Coaching.Manage,
                 Identity.Domain.Constants.Permissions.Users.Create,
                 Identity.Domain.Constants.Permissions.Users.Edit,
-                Identity.Domain.Constants.Permissions.Users.Delete
+                Identity.Domain.Constants.Permissions.Users.Delete,
+                Identity.Domain.Constants.Permissions.Users.ChangePassword,
+                Identity.Domain.Constants.Permissions.Users.Activate,
+                Identity.Domain.Constants.Permissions.Users.ConfirmEmail
             };
             
             var rolePermissionsMap = new Dictionary<string, List<string>>
@@ -110,6 +125,15 @@ public static class IdentitySeeder
                         {
                             context.RolePermissions.Add(new RolePermission(role.Id, p));
                         }
+                    }
+
+                    if (roleName != Identity.Domain.Enums.UserRole.SystemAdmin.ToString())
+                    {
+                        var stalePermissions = await context.RolePermissions
+                            .Where(permission => permission.RoleId == role.Id
+                                && institutionRolePermissionsToRemove.Contains(permission.Permission))
+                            .ToListAsync();
+                        context.RolePermissions.RemoveRange(stalePermissions);
                     }
                 }
             }

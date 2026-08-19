@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { permissionGuard } from '../../core/auth/auth.guard';
+import { ADMIN_PERMISSIONS } from '../../core/auth/permissions';
 
 export const DASHBOARD_ROUTES: Routes = [
     {
@@ -12,7 +14,14 @@ export const DASHBOARD_ROUTES: Routes = [
     },
     {
         path: 'identity',
+        canActivateChild: [permissionGuard],
         loadChildren: () => import('../identity/identity.routes').then(m => m.IDENTITY_ROUTES)
+    },
+    {
+        path: 'coaching',
+        canActivate: [permissionGuard],
+        data: { permission: ADMIN_PERMISSIONS.coachingView },
+        loadComponent: () => import('./pages/coaching-overview').then(m => m.CoachingOverviewComponent)
     },
     {
         path: 'notifications',
@@ -20,17 +29,20 @@ export const DASHBOARD_ROUTES: Routes = [
     },
     {
         path: 'settings/logs',
+        canActivate: [permissionGuard],
         loadComponent: () => import('../settings/pages/logs/logs.component').then(m => m.SystemLogsComponent),
-        data: { title: 'System Logs' }
+        data: { title: 'System Logs', permission: ADMIN_PERMISSIONS.operationsView }
     },
     {
         path: 'settings/log-retention',
+        canActivate: [permissionGuard],
         loadComponent: () => import('../settings/pages/log-retention/log-retention.component').then(m => m.LogRetentionComponent),
-        data: { title: 'Log Saklama Ayarları' }
+        data: { title: 'Log Saklama Ayarları', permission: ADMIN_PERMISSIONS.operationsView }
     },
     {
         path: 'settings/configurations',
+        canActivate: [permissionGuard],
         loadComponent: () => import('../settings/pages/configurations/configurations.component').then(m => m.ConfigurationsComponent),
-        data: { title: 'Sistem Ayarları' }
+        data: { title: 'Sistem Ayarları', permission: ADMIN_PERMISSIONS.operationsView }
     }
 ];

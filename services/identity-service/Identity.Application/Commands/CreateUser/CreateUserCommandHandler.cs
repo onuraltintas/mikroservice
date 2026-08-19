@@ -7,6 +7,7 @@ using MassTransit;
 using EduPlatform.Shared.Contracts.Events.Identity;
 using Identity.Domain.Enums;
 using EduPlatform.Shared.Kernel.Primitives;
+using EduPlatform.Shared.Security.Interfaces;
 
 namespace Identity.Application.Commands.CreateUser;
 
@@ -20,6 +21,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly Microsoft.Extensions.Logging.ILogger<CreateUserCommandHandler> _logger;
+    private readonly ICurrentUserService _currentUserService;
 
     public CreateUserCommandHandler(
         IIdentityService identityService,
@@ -29,7 +31,8 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         IInstitutionRepository institutionRepository,
         IUnitOfWork unitOfWork,
         IPublishEndpoint publishEndpoint,
-        Microsoft.Extensions.Logging.ILogger<CreateUserCommandHandler> logger)
+        Microsoft.Extensions.Logging.ILogger<CreateUserCommandHandler> logger,
+        ICurrentUserService currentUserService)
     {
         _identityService = identityService;
         _userRepository = userRepository;
@@ -39,6 +42,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
         _logger = logger;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<CreateUserResponse>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
@@ -47,6 +51,14 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         if (!Enum.TryParse<Identity.Domain.Enums.UserRole>(request.Role, true, out var userRole))
         {
             return Result.Failure<CreateUserResponse>(new Error("Validation.InvalidRole", $"Role '{request.Role}' is invalid."));
+        }
+
+        if (userRole == Identity.Domain.Enums.UserRole.SystemAdmin
+            && !_currentUserService.Roles.Any(role =>
+                string.Equals(role, Identity.Domain.Enums.UserRole.SystemAdmin.ToString(), StringComparison.OrdinalIgnoreCase)))
+        {
+            return Result.Failure<CreateUserResponse>(Error.Forbidden(
+                "SystemAdmin kullanıcısı yalnızca mevcut bir SystemAdmin tarafından oluşturulabilir."));
         }
 
         // 1. Check local DB uniqueness

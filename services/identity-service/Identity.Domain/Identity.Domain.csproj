@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\shared\EduPlatform.Shared.Kernel\EduPlatform.Shared.Kernel.csproj" />
+    <ProjectReference Include="..\..\..\shared\EduPlatform.Shared.Contracts\EduPlatform.Shared.Contracts.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

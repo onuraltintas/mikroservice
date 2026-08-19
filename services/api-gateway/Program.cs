@@ -153,6 +153,6 @@ app.MapGet("/api/gateway/services", (IConfiguration configuration) =>
         .Select(c => c.Key.Replace("-cluster", ""))
         .ToList();
     return Results.Ok(clusters);
-}).AllowAnonymous();
+}).RequireAuthorization();
 
 app.Run();

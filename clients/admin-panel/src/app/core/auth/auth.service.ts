@@ -19,6 +19,15 @@ export interface UserProfile {
     permissions: string[];
 }
 
+/**
+ * Frontend visibility is derived from the same permission keys enforced by
+ * the APIs.  The server remains authoritative; this helper only prevents
+ * links/routes that the current token cannot use from being rendered.
+ */
+export function hasRequiredPermission(user: UserProfile | null, permission: string): boolean {
+    return !!user && user.permissions.includes(permission);
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -257,8 +266,7 @@ export class AuthService {
     }
 
     hasPermission(permission: string): boolean {
-        const user = this.userProfile();
-        return user?.permissions?.includes(permission) ?? false;
+        return hasRequiredPermission(this.userProfile(), permission);
     }
 
     private parseJwt(token: string) {

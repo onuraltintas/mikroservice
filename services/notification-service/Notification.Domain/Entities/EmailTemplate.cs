@@ -20,4 +20,26 @@ public class EmailTemplate
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
+
+    public static EmailTemplate Create(string templateName, string category, string subject, string body)
+    {
+        return new EmailTemplate
+        {
+            TemplateName = templateName,
+            Category = category,
+            Subject = subject,
+            Body = body,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
+
+    public void Update(string category, string subject, string body, bool isActive)
+    {
+        Category = category;
+        Subject = subject;
+        Body = body;
+        IsActive = isActive;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

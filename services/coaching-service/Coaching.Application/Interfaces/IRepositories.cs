@@ -45,6 +45,39 @@ public interface IAcademicGoalRepository
     Task DeleteAsync(AcademicGoal goal, CancellationToken cancellationToken = default);
 }
 
+public interface ICoachingAdminRepository
+{
+    Task<CoachingAdminOverviewDto> GetOverviewAsync(
+        int recentLimit,
+        CancellationToken cancellationToken = default);
+}
+
+public sealed record CoachingAdminOverviewDto(
+    int TotalAssignments,
+    int ActiveAssignments,
+    int CompletedAssignments,
+    int CancelledAssignments,
+    int TotalAssignmentStudents,
+    int SubmittedAssignmentStudents,
+    int TotalExams,
+    int TotalExamResults,
+    int TotalSessions,
+    int UpcomingSessions,
+    int TotalGoals,
+    int CompletedGoals,
+    IReadOnlyList<CoachingAdminAssignmentDto> RecentAssignments);
+
+public sealed record CoachingAdminAssignmentDto(
+    Guid Id,
+    Guid TeacherId,
+    Guid? InstitutionId,
+    string Title,
+    string Status,
+    DateTime DueDate,
+    int StudentCount,
+    int SubmittedStudentCount,
+    DateTime CreatedAt);
+
 /// <summary>
 /// Unit of Work for transaction management
 /// </summary>

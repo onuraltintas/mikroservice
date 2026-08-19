@@ -2,6 +2,7 @@ using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
 using Identity.Application.Queries.GetUserProfile;
+using Identity.Application.Queries.GetAllUsers;
 using Identity.Application.Commands.ActivateUser;
 using Identity.Application.Commands.ConfirmEmail;
 using Identity.Application.Commands.DeleteUser;
@@ -139,11 +140,31 @@ public class UserController : ControllerBase
         return BadRequest(new { Error = result.Error });
     }
 
+    [HttpGet("summary")]
+    [HasPermission(Permissions.Users.View)]
+    public async Task<IActionResult> GetSummary(CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetUserSummaryQuery(), cancellationToken);
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value);
+        }
+
+        if (result.Error.Code == "Error.Unauthorized")
+            return Unauthorized();
+
+        if (result.Error.Code == "Error.Forbidden")
+            return Forbid();
+
+        return BadRequest(new { Error = result.Error });
+    }
+
     /// <summary>
     /// Creates a new user.
     /// </summary>
     [HttpPost]
     [HasPermission(Permissions.Users.Create)]
+    [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> CreateUser([FromBody] Identity.Application.Commands.CreateUser.CreateUserCommand command)
     {
         var result = await _mediator.Send(command);
@@ -159,6 +180,7 @@ public class UserController : ControllerBase
     /// </summary>
     [HttpDelete("{id:guid}")]
     [HasPermission(Permissions.Users.Delete)]
+    [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> DeleteUser(Guid id, [FromQuery] bool permanent = false)
     {
         var result = await _mediator.Send(new DeleteUserCommand(id, permanent));
@@ -171,6 +193,7 @@ public class UserController : ControllerBase
     /// </summary>
     [HttpPost("{id:guid}/activate")]
     [HasPermission(Permissions.Users.Activate)]
+    [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> ActivateUser(Guid id)
     {
         var result = await _mediator.Send(new ActivateUserCommand(id));
@@ -183,6 +206,7 @@ public class UserController : ControllerBase
     /// </summary>
     [HttpPost("{id:guid}/confirm-email")]
     [HasPermission(Permissions.Users.ConfirmEmail)]
+    [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> ConfirmEmail(Guid id)
     {
         var result = await _mediator.Send(new ConfirmEmailCommand(id));
@@ -232,6 +256,7 @@ public class UserController : ControllerBase
     /// </summary>
     [HttpPost("{id:guid}/change-password")]
     [HasPermission(Permissions.Users.ChangePassword)]
+    [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> ChangePassword(Guid id, [FromBody] ChangePasswordRequest request)
     {
         var command = new Identity.Application.Commands.AdminChangePassword.AdminChangePasswordCommand(id, request.Password);
@@ -250,6 +275,7 @@ public class UserController : ControllerBase
     /// </summary>
     [HttpPut("{id:guid}")]
     [HasPermission(Permissions.Users.Edit)]
+    [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest request)
     {
         var command = new Identity.Application.Commands.UpdateUser.UpdateUserCommand(
@@ -271,6 +297,7 @@ public class UserController : ControllerBase
     /// </summary>
     [HttpPost("{id:guid}/roles")]
     [HasPermission(Permissions.Users.Edit)]
+    [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> AssignRole(Guid id, [FromBody] RoleRequest request, CancellationToken cancellationToken)
     {
         var identityService = HttpContext.RequestServices.GetRequiredService<IIdentityService>();
@@ -284,6 +311,7 @@ public class UserController : ControllerBase
     /// </summary>
     [HttpDelete("{id:guid}/roles/{roleName}")]
     [HasPermission(Permissions.Users.Edit)]
+    [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> RemoveRole(Guid id, string roleName, CancellationToken cancellationToken)
     {
         var identityService = HttpContext.RequestServices.GetRequiredService<IIdentityService>();
