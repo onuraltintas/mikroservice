@@ -101,6 +101,7 @@ public sealed class SystemAdminMfaLoginTests
         public Result<MfaSetupPayload> ReadSetupToken(string token) => throw new NotSupportedException();
         public string ProtectSecret(string secret) => throw new NotSupportedException();
         public string UnprotectSecret(string protectedSecret) => throw new NotSupportedException();
+        public long? FindMatchingTimeStep(string protectedSecret, string code) => throw new NotSupportedException();
         public IReadOnlyList<string> GenerateRecoveryCodes() => throw new NotSupportedException();
         public string HashRecoveryCode(string recoveryCode) => throw new NotSupportedException();
     }

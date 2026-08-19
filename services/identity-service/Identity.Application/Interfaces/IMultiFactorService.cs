@@ -10,6 +10,7 @@ public interface IMultiFactorService
     Result<MfaSetupPayload> ReadSetupToken(string token);
     string ProtectSecret(string secret);
     string UnprotectSecret(string protectedSecret);
+    long? FindMatchingTimeStep(string protectedSecret, string code);
     IReadOnlyList<string> GenerateRecoveryCodes();
     string HashRecoveryCode(string recoveryCode);
 }

@@ -57,6 +57,19 @@ public sealed class MultiFactorService : IMultiFactorService
 
     public string UnprotectSecret(string protectedSecret) => _secretProtector.Unprotect(protectedSecret);
 
+    public long? FindMatchingTimeStep(string protectedSecret, string code)
+    {
+        try
+        {
+            var secret = TotpService.DecodeSecret(UnprotectSecret(protectedSecret));
+            return TotpService.FindMatchingTimeStep(secret, code, _timeProvider.GetUtcNow());
+        }
+        catch (Exception exception) when (exception is CryptographicException or FormatException)
+        {
+            return null;
+        }
+    }
+
     public IReadOnlyList<string> GenerateRecoveryCodes()
     {
         var codes = new HashSet<string>(StringComparer.Ordinal);
