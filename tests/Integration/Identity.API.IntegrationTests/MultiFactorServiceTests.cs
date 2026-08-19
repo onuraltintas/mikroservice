@@ -65,6 +65,18 @@ public sealed class MultiFactorServiceTests
             .Should().Be(service.HashRecoveryCode(codes[0]));
     }
 
+    [Fact]
+    public void VerifyTotp_ShouldDecryptSecretAndReturnAcceptedTimeStep()
+    {
+        var service = CreateService(Now);
+        var secret = TotpService.GenerateSecret();
+        var protectedSecret = service.ProtectSecret(secret);
+        var code = TotpService.GenerateCode(TotpService.DecodeSecret(secret), Now);
+
+        service.FindMatchingTimeStep(protectedSecret, code).Should().Be(Now.ToUnixTimeSeconds() / 30);
+        service.FindMatchingTimeStep(protectedSecret, "000000").Should().BeNull();
+    }
+
     private static MultiFactorService CreateService(DateTimeOffset now) =>
         CreateService(new TestTimeProvider(now));
 
