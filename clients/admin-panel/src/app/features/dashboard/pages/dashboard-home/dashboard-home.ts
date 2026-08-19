@@ -31,6 +31,8 @@ export class DashboardHomeComponent implements OnInit {
   private platformId = inject(PLATFORM_ID);
 
   loading = signal(true);
+  can = (permission: string) => this.authService.hasPermission(permission);
+  readonly permissions = ADMIN_PERMISSIONS;
   stats = signal<DashboardStats>({
     totalUsers: 0,
     activeUsers: 0,
@@ -50,7 +52,6 @@ export class DashboardHomeComponent implements OnInit {
       if (user?.permissions?.includes(ADMIN_PERMISSIONS.usersView)) {
         this.loadStats();
       } else {
-        console.log('Skipping dashboard stats for non-admin user.');
         this.loading.set(false);
       }
     }

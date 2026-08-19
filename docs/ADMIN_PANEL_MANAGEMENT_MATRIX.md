@@ -16,6 +16,7 @@ route guard'ları yalnızca kullanıcı deneyimi ve erken yönlendirme sağlar.
 | Identity | Kurum oluşturma, aktiflik ve lisans/kapasite yönetimi | `/api/institutions` | `SystemAdmin` + `Permissions.Institutions.Manage` |
 | Identity | Kendi tenant'ının iletişim bilgileri ve kurum yöneticileri | `/api/institutions` | Aktif tenant yöneticisi + `Permissions.Institutions.Manage` |
 | Identity | Secret içermeyen feature flag ve sistem ayarları, log ve retention yönetimi | `/api/configurations`, `/api/system-logs` | `Permissions.Operations.View` ve mevcut SystemAdmin mutasyon politikaları |
+| Identity / Notification / Coaching | Servis-lokal, append-only yönetici denetim kayıtlarını filtreleme ve sayfalama | `/api/admin-audit/{service}` | Yalnız `SystemAdmin` + `Permissions.Operations.View` |
 | Notification | Destek talebi listeleme, filtreleme, notlandırma, işlenmiş işareti ve yanıt | `/api/support/requests`, `/api/support/reply` | `Permissions.Support.View/Reply` |
 | Notification | E-posta şablonu listeleme, oluşturma, konu/gövde/aktiflik güncelleme | `/api/email-templates` | `Permissions.Notifications.Templates` |
 | Notification | Kullanıcının kendi bildirimleri | `/api/notifications` | Oturum sahibi |
@@ -76,6 +77,11 @@ secret kaydı oluşturma da fail-closed olarak reddedilir.
 8. Notification SignalR bağlantısı oturum sahibine bağlıdır. Logout veya kullanıcı
    değişiminde eski bağlantı durdurulur, istemci bildirim state'i temizlenir ve
    reconnect her çağrıda güncel access token'ı alır.
+9. Kullanıcı, kurum, destek ve audit listeleri bounded server-side pagination
+   kullanır; panel hiçbir liste için ilk 100 kaydı tam sonuç olarak varsaymaz.
+10. Yazma düğmeleri yalnız sayfa görüntüleme iznine göre değil, karşılık gelen
+    `Create/Edit/Delete/Activate/Reply/ManagePermissions` iznine ve endpoint'in
+    gerektirdiği role göre gösterilir. Sunucu policy'si yine nihai otoritedir.
 
 ## Tamamlanma doğrulaması
 

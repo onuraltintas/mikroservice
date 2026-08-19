@@ -271,7 +271,7 @@
         </h2>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <a [routerLink]="['/dashboard/identity/users']" [queryParams]="{action: 'create'}"
+            @if (can(permissions.usersCreate)) { <a [routerLink]="['/dashboard/identity/users']" [queryParams]="{action: 'create'}"
                 class="flex items-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md transition-all group">
                 <div class="p-2.5 bg-blue-100 dark:bg-blue-900/40 rounded-lg group-hover:bg-blue-500 transition-colors">
                     <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 group-hover:text-white transition-colors"
@@ -281,9 +281,9 @@
                     </svg>
                 </div>
                 <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Yeni Kullanıcı</span>
-            </a>
+            </a> }
 
-            <a [routerLink]="['/dashboard/identity/roles']" [queryParams]="{action: 'create'}"
+            @if (can(permissions.rolesCreate)) { <a [routerLink]="['/dashboard/identity/roles']" [queryParams]="{action: 'create'}"
                 class="flex items-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 hover:shadow-md transition-all group">
                 <div
                     class="p-2.5 bg-purple-100 dark:bg-purple-900/40 rounded-lg group-hover:bg-purple-500 transition-colors">
@@ -294,9 +294,9 @@
                     </svg>
                 </div>
                 <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Yeni Rol</span>
-            </a>
+            </a> }
 
-            <a [routerLink]="['/dashboard/identity/permissions']" [queryParams]="{action: 'create'}"
+            @if (can(permissions.permissionCreate)) { <a [routerLink]="['/dashboard/identity/permissions']" [queryParams]="{action: 'create'}"
                 class="flex items-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-600 hover:shadow-md transition-all group">
                 <div
                     class="p-2.5 bg-amber-100 dark:bg-amber-900/40 rounded-lg group-hover:bg-amber-500 transition-colors">
@@ -307,7 +307,7 @@
                     </svg>
                 </div>
                 <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Yeni İzin</span>
-            </a>
+            </a> }
 
             <a [routerLink]="['/dashboard/identity/profile']"
                 class="flex items-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-md transition-all group">
