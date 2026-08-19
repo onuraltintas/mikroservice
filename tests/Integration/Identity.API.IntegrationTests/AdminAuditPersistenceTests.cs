@@ -3,7 +3,11 @@ using EduPlatform.Shared.Infrastructure.Middleware;
 using FluentAssertions;
 using Identity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 using Notification.Infrastructure.Persistence;
+using IdentityAdminAuditController = Identity.API.Controllers.AdminAuditController;
+using NotificationAdminAuditController = Notification.API.Controllers.AdminAuditController;
+using CoachingAdminAuditController = Coaching.API.Controllers.AdminAuditController;
 
 namespace Identity.API.IntegrationTests;
 
@@ -38,6 +42,20 @@ public sealed class AdminAuditPersistenceTests
         await AssertAppendOnlyAsync<CoachingDbContext>(options => new CoachingDbContext(options));
     }
 
+    [Fact]
+    public async Task EveryAuditEndpoint_ShouldFilterOrderAndPaginateItsLocalStore()
+    {
+        await AssertReadAsync<IdentityDbContext>(
+            options => new IdentityDbContext(options),
+            context => new IdentityAdminAuditController(context).GetAsync);
+        await AssertReadAsync<NotificationDbContext>(
+            options => new NotificationDbContext(options),
+            context => new NotificationAdminAuditController(context).GetAsync);
+        await AssertReadAsync<CoachingDbContext>(
+            options => new CoachingDbContext(options),
+            context => new CoachingAdminAuditController(context).GetAsync);
+    }
+
     private static async Task AssertAppendOnlyAsync<TContext>(
         Func<DbContextOptions<TContext>, TContext> createContext)
         where TContext : DbContext
@@ -58,6 +76,42 @@ public sealed class AdminAuditPersistenceTests
         context.Remove(record);
         var deletion = () => context.SaveChangesAsync();
         await deletion.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    private static async Task AssertReadAsync<TContext>(
+        Func<DbContextOptions<TContext>, TContext> createContext,
+        Func<TContext, Func<AdminAuditQueryParameters, CancellationToken, Task<ActionResult<AdminAuditPage>>>> createEndpoint)
+        where TContext : DbContext
+    {
+        var options = new DbContextOptionsBuilder<TContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        await using var context = createContext(options);
+        var olderMatch = CreateRecord() with
+        {
+            OccurredAt = DateTimeOffset.UtcNow.AddMinutes(-2),
+            Path = "/api/users/older"
+        };
+        var newestMatch = CreateRecord() with
+        {
+            OccurredAt = DateTimeOffset.UtcNow,
+            Path = "/api/users/newest"
+        };
+        var excluded = CreateRecord() with { Path = "/api/roles" };
+        context.AddRange(olderMatch, newestMatch, excluded);
+        await context.SaveChangesAsync();
+
+        var result = await createEndpoint(context)(new AdminAuditQueryParameters
+        {
+            Page = 1,
+            PageSize = 1,
+            Search = "/api/users"
+        }, CancellationToken.None);
+
+        var page = result.Result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeOfType<AdminAuditPage>().Subject;
+        page.TotalCount.Should().Be(2);
+        page.Items.Should().ContainSingle().Which.Id.Should().Be(newestMatch.Id);
     }
 
     private static AdminAuditRecord CreateRecord() => new(
