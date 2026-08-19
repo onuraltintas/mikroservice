@@ -8,6 +8,7 @@ using Identity.Application.Queries.GetPermissions;
 using Identity.Domain.Constants;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Identity.API.Controllers;
 
@@ -40,6 +41,7 @@ public class PermissionsController : ControllerBase
     /// </summary>
     [HttpPost]
     [HasPermission(Permissions.PermissionManagement.Create)]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> CreatePermission([FromBody] CreatePermissionRequest request)
     {
         var command = new CreatePermissionCommand(request.Key, request.Description, request.Group);
@@ -53,6 +55,7 @@ public class PermissionsController : ControllerBase
     /// </summary>
     [HttpPut("{id:guid}")]
     [HasPermission(Permissions.PermissionManagement.Edit)]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> UpdatePermission(Guid id, [FromBody] UpdatePermissionRequest request)
     {
         var command = new UpdatePermissionCommand(id, request.Description, request.Group);
@@ -66,6 +69,7 @@ public class PermissionsController : ControllerBase
     /// </summary>
     [HttpDelete("{id:guid}")]
     [HasPermission(Permissions.PermissionManagement.Delete)]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> DeletePermission(Guid id, [FromQuery] bool permanent = false)
     {
         var command = new DeletePermissionCommand(id, permanent);

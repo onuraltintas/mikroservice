@@ -46,6 +46,7 @@ public class ConfigurationsController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<ActionResult<ConfigurationDto>> Create(CreateConfigurationRequest request, CancellationToken cancellationToken)
     {
         var config = await _configurationService.CreateConfigurationAsync(request, cancellationToken);
@@ -54,6 +55,7 @@ public class ConfigurationsController : ControllerBase
 
     [HttpPut("{key}")]
     [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> Update(string key, UpdateConfigurationRequest request, CancellationToken cancellationToken)
     {
         await _configurationService.UpdateConfigurationAsync(key, request, cancellationToken);
@@ -62,6 +64,7 @@ public class ConfigurationsController : ControllerBase
 
     [HttpDelete("{key}")]
     [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> Delete(string key, CancellationToken cancellationToken)
     {
         await _configurationService.DeleteConfigurationAsync(key, cancellationToken);

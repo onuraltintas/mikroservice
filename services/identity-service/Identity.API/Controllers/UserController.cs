@@ -164,6 +164,7 @@ public class UserController : ControllerBase
     /// </summary>
     [HttpPost]
     [HasPermission(Permissions.Users.Create)]
+    [Authorize(Policy = "MfaRequired")]
     [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> CreateUser([FromBody] Identity.Application.Commands.CreateUser.CreateUserCommand command)
     {
@@ -180,6 +181,7 @@ public class UserController : ControllerBase
     /// </summary>
     [HttpDelete("{id:guid}")]
     [HasPermission(Permissions.Users.Delete)]
+    [Authorize(Policy = "MfaRequired")]
     [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> DeleteUser(Guid id, [FromQuery] bool permanent = false)
     {
@@ -256,6 +258,7 @@ public class UserController : ControllerBase
     /// </summary>
     [HttpPost("{id:guid}/change-password")]
     [HasPermission(Permissions.Users.ChangePassword)]
+    [Authorize(Policy = "MfaRequired")]
     [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> ChangePassword(Guid id, [FromBody] ChangePasswordRequest request)
     {
@@ -276,6 +279,7 @@ public class UserController : ControllerBase
     [HttpPut("{id:guid}")]
     [HasPermission(Permissions.Users.Edit)]
     [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest request)
     {
         var command = new Identity.Application.Commands.UpdateUser.UpdateUserCommand(
@@ -298,6 +302,7 @@ public class UserController : ControllerBase
     [HttpPost("{id:guid}/roles")]
     [HasPermission(Permissions.Users.Edit)]
     [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> AssignRole(Guid id, [FromBody] RoleRequest request, CancellationToken cancellationToken)
     {
         var identityService = HttpContext.RequestServices.GetRequiredService<IIdentityService>();
@@ -312,6 +317,7 @@ public class UserController : ControllerBase
     [HttpDelete("{id:guid}/roles/{roleName}")]
     [HasPermission(Permissions.Users.Edit)]
     [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> RemoveRole(Guid id, string roleName, CancellationToken cancellationToken)
     {
         var identityService = HttpContext.RequestServices.GetRequiredService<IIdentityService>();

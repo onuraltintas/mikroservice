@@ -1,6 +1,9 @@
 using FluentAssertions;
 using Identity.API.Controllers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
+using EduPlatform.Shared.Security.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Identity.API.IntegrationTests;
 
@@ -35,5 +38,23 @@ public sealed class SystemAdminStepUpPolicyTests
         action!.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
             .Cast<AuthorizeAttribute>()
             .Should().Contain(attribute => attribute.Policy == "MfaRequired");
+    }
+
+    [Fact]
+    public async Task MfaPolicy_ShouldRequireAuthenticatedMfaClaim()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddCustomAuthorization();
+        await using var provider = services.BuildServiceProvider();
+        var policyProvider = provider.GetRequiredService<IAuthorizationPolicyProvider>();
+
+        var policy = await policyProvider.GetPolicyAsync("MfaRequired");
+
+        policy.Should().NotBeNull();
+        policy!.Requirements.OfType<ClaimsAuthorizationRequirement>()
+            .Should().ContainSingle(claims =>
+                claims.ClaimType == "amr"
+                && claims.AllowedValues!.Contains("mfa"));
     }
 }

@@ -73,6 +73,12 @@ public static class SecurityExtensions
     public static IServiceCollection AddCustomAuthorization(this IServiceCollection services)
     {
         services.AddGlobalAuthorization();
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("MfaRequired", policy => policy
+                .RequireAuthenticatedUser()
+                .RequireClaim("amr", "mfa"));
+        });
         services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationPolicyProvider, Authorization.PermissionPolicyProvider>();
         services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, Authorization.PermissionAuthorizationHandler>();
         return services;

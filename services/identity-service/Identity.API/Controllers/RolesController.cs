@@ -10,6 +10,7 @@ using Identity.Application.Queries.GetRolePermissions;
 using Identity.Domain.Constants;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Identity.API.Controllers;
 
@@ -42,6 +43,7 @@ public class RolesController : ControllerBase
     /// </summary>
     [HttpPost]
     [HasPermission(Permissions.Roles.Create)]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> CreateRole([FromBody] CreateRoleCommand command)
     {
         var result = await _mediator.Send(command);
@@ -54,6 +56,7 @@ public class RolesController : ControllerBase
     /// </summary>
     [HttpPut("{id:guid}")]
     [HasPermission(Permissions.Roles.Edit)]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> UpdateRole(Guid id, [FromBody] UpdateRoleRequest request)
     {
         var command = new UpdateRoleCommand(id, request.Name, request.Description);
@@ -67,6 +70,7 @@ public class RolesController : ControllerBase
     /// </summary>
     [HttpDelete("{id:guid}")]
     [HasPermission(Permissions.Roles.Delete)]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> DeleteRole(Guid id, [FromQuery] bool permanent = false)
     {
         var command = new DeleteRoleCommand(id, permanent);
@@ -105,6 +109,7 @@ public class RolesController : ControllerBase
     /// </summary>
     [HttpPut("{id:guid}/permissions")]
     [HasPermission(Permissions.Roles.ManagePermissions)]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> UpdateRolePermissions(Guid id, [FromBody] UpdateRolePermissionsRequest request)
     {
         var command = new UpdateRolePermissionsCommand(id, request.Permissions);
