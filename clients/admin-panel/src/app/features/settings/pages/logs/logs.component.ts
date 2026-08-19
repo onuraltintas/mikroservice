@@ -1,5 +1,5 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal, OnInit, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SystemLogService, LogEntry, LogFilterRequest } from '../../../../core/services/settings/system-log.service';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
@@ -200,6 +200,7 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 })
 export class SystemLogsComponent implements OnInit {
   private logService = inject(SystemLogService);
+  private platformId = inject(PLATFORM_ID);
 
   logs = signal<LogEntry[]>([]);
   totalCount = signal<number>(0);
@@ -218,6 +219,10 @@ export class SystemLogsComponent implements OnInit {
   private searchSubject = new Subject<string>();
 
   ngOnInit() {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
     this.searchSubject.pipe(
       debounceTime(500),
       distinctUntilChanged()

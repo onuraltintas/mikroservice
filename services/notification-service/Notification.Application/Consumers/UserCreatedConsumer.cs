@@ -7,13 +7,13 @@ namespace Notification.Application.Consumers;
 
 public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
 {
-    private readonly IEmailService _emailService;
+    private readonly IEmailDeliveryQueue _emailDeliveryQueue;
     private readonly INotificationService _notificationService;
     private readonly INotificationDbContext _dbContext;
 
-    public UserCreatedConsumer(IEmailService emailService, INotificationService notificationService, INotificationDbContext dbContext)
+    public UserCreatedConsumer(IEmailDeliveryQueue emailDeliveryQueue, INotificationService notificationService, INotificationDbContext dbContext)
     {
-        _emailService = emailService;
+        _emailDeliveryQueue = emailDeliveryQueue;
         _notificationService = notificationService;
         _dbContext = dbContext;
     }
@@ -52,15 +52,19 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
             body = $"<h1>Welcome {message.FirstName}!</h1><p>Your account is ready.</p><p>Pass: {message.TemporaryPassword}</p>";
         }
 
-        // In Parallel
-        var emailTask = _emailService.SendEmailAsync(email, subject, body);
-        var notificationTask = _notificationService.SendNotificationAsync(
+        var messageId = context.MessageId ?? throw new InvalidOperationException("UserCreatedEvent.MessageId is required.");
+        await _emailDeliveryQueue.QueueAsync(
+            messageId,
+            nameof(UserCreatedConsumer),
+            email,
+            subject,
+            body,
+            context.CancellationToken);
+        await _notificationService.SendNotificationAsync(
             message.UserId, 
             "Welcome to EduPlatform!", 
             "Your account has been created successfully.", 
-            "Account"
-        );
-
-        await Task.WhenAll(emailTask, notificationTask);
+            "Account",
+            sourceMessageId: messageId);
     }
 }

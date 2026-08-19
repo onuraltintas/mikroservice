@@ -18,12 +18,32 @@ public class NotificationManager : INotificationService
         _hubContext = hubContext;
     }
 
-    public async Task SendNotificationAsync(Guid userId, string title, string message, string type, string? relatedEntityId = null)
+    public async Task SendNotificationAsync(
+        Guid userId,
+        string title,
+        string message,
+        string type,
+        string? relatedEntityId = null,
+        Guid? sourceMessageId = null)
     {
         // 1. Persist to DB
-        var notification = NotificationItem.Create(userId, title, message, type, relatedEntityId);
-        _dbContext.Notifications.Add(notification);
-        await _dbContext.SaveChangesAsync();
+        var notification = sourceMessageId.HasValue
+            ? await _dbContext.Notifications
+                .SingleOrDefaultAsync(x => x.Id == sourceMessageId.Value && x.UserId == userId)
+            : null;
+
+        if (notification is null)
+        {
+            notification = NotificationItem.Create(
+                userId,
+                title,
+                message,
+                type,
+                relatedEntityId,
+                sourceMessageId);
+            _dbContext.Notifications.Add(notification);
+            await _dbContext.SaveChangesAsync();
+        }
 
         // 2. Send via SignalR
         // We assume userId matches the JWT 'sub' claim or whatever UserIdentifier is mapped to.

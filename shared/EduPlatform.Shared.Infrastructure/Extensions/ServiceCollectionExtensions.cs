@@ -1,7 +1,10 @@
 using EduPlatform.Shared.Infrastructure.Behaviors;
 using EduPlatform.Shared.Infrastructure.Caching;
 using EduPlatform.Shared.Infrastructure.Messaging;
+using Asp.Versioning;
 using FluentValidation;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
@@ -83,6 +86,61 @@ public static class ServiceCollectionExtensions
     {
         services.AddExceptionHandler<Middleware.GlobalExceptionHandler>();
         services.AddProblemDetails();
+        return services;
+    }
+
+    /// <summary>
+    /// Applies the shared HTTP API error contract to MVC model validation.
+    /// </summary>
+    public static IMvcBuilder AddEduPlatformApiConventions(this IMvcBuilder builder)
+    {
+        builder.ConfigureApiBehaviorOptions(options =>
+        {
+            options.InvalidModelStateResponseFactory = context =>
+            {
+                var problemDetails = new ValidationProblemDetails(context.ModelState)
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = "Validation Error",
+                    Type = "https://eduplatform.dev/problems/validation-error",
+                    Instance = context.HttpContext.Request.Path
+                };
+
+                problemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+
+                return new BadRequestObjectResult(problemDetails)
+                {
+                    ContentTypes = { "application/problem+json" }
+                };
+            };
+        });
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds the non-breaking v1 API version contract shared by HTTP services.
+    /// Existing routes remain valid without a version; clients may opt into
+    /// header or query-string version selection during migration.
+    /// </summary>
+    public static IServiceCollection AddEduPlatformApiVersioning(this IServiceCollection services)
+    {
+        services.AddApiVersioning(options =>
+        {
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+            options.AssumeDefaultVersionWhenUnspecified = true;
+            options.ReportApiVersions = true;
+            options.ApiVersionReader = ApiVersionReader.Combine(
+                new HeaderApiVersionReader("X-Api-Version"),
+                new QueryStringApiVersionReader("api-version"));
+        })
+        .AddMvc()
+        .AddApiExplorer(options =>
+        {
+            options.GroupNameFormat = "'v'VVV";
+            options.SubstituteApiVersionInUrl = true;
+        });
+
         return services;
     }
 }

@@ -6,12 +6,12 @@ namespace Notification.Application.Consumers;
 
 public class InvitationCreatedConsumer : IConsumer<InvitationCreatedEvent>
 {
-    private readonly IEmailService _emailService;
+    private readonly IEmailDeliveryQueue _emailDeliveryQueue;
     private readonly INotificationService _notificationService;
 
-    public InvitationCreatedConsumer(IEmailService emailService, INotificationService notificationService)
+    public InvitationCreatedConsumer(IEmailDeliveryQueue emailDeliveryQueue, INotificationService notificationService)
     {
-        _emailService = emailService;
+        _emailDeliveryQueue = emailDeliveryQueue;
         _notificationService = notificationService;
     }
 
@@ -39,20 +39,24 @@ public class InvitationCreatedConsumer : IConsumer<InvitationCreatedEvent>
             </html>
         ";
 
-        var tasks = new List<Task>();
-        tasks.Add(_emailService.SendEmailAsync(message.InviteeEmail, subject, body));
+        var messageId = context.MessageId ?? throw new InvalidOperationException("InvitationCreatedEvent.MessageId is required.");
+        await _emailDeliveryQueue.QueueAsync(
+            messageId,
+            nameof(InvitationCreatedConsumer),
+            message.InviteeEmail,
+            subject,
+            body,
+            context.CancellationToken);
 
         if (message.InviteeId.HasValue)
         {
-            tasks.Add(_notificationService.SendNotificationAsync(
+            await _notificationService.SendNotificationAsync(
                 message.InviteeId.Value, 
                 "You have a new invitation", 
                 $"Invited by {message.InviterEmail}", 
                 "Invitation", 
-                message.InvitationId.ToString()
-            ));
+                message.InvitationId.ToString(),
+                messageId);
         }
-
-        await Task.WhenAll(tasks);
     }
 }

@@ -17,7 +17,7 @@ namespace Notification.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.1")
+                .HasAnnotation("ProductVersion", "9.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -190,6 +190,70 @@ namespace Notification.Infrastructure.Migrations
                     b.ToTable("OutboxState");
                 });
 
+            modelBuilder.Entity("Notification.Domain.Entities.EmailDelivery", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ConsumerType")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("LeaseToken")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("LeaseUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Recipient")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<DateTime?>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(998)
+                        .HasColumnType("character varying(998)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MessageId", "ConsumerType")
+                        .IsUnique();
+
+                    b.HasIndex("Status", "LeaseUntil", "CreatedAt");
+
+                    b.HasIndex("Status", "NextAttemptAt", "CreatedAt");
+
+                    b.ToTable("EmailDeliveries");
+                });
+
             modelBuilder.Entity("Notification.Domain.Entities.EmailTemplate", b =>
                 {
                     b.Property<Guid>("Id")
@@ -261,6 +325,8 @@ namespace Notification.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId", "CreatedAt", "Id");
+
                     b.ToTable("Notifications");
                 });
 
@@ -282,6 +348,10 @@ namespace Notification.Infrastructure.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -312,6 +382,9 @@ namespace Notification.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email", "IdempotencyKey")
+                        .IsUnique();
 
                     b.ToTable("SupportRequests");
                 });

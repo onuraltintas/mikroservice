@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Identity.API.Controllers;
 
 [ApiController]
+[ApiVersion(1.0)]
 [Route("api/invitations")]
 [Authorize]
 public class InvitationsController : ControllerBase

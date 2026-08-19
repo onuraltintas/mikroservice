@@ -6,6 +6,7 @@ using Identity.API;
 namespace Identity.API.Controllers;
 
 [ApiController]
+[ApiVersion(1.0)]
 [Route("api/internal/coaching")]
 public sealed class InternalCoachingController : ControllerBase
 {

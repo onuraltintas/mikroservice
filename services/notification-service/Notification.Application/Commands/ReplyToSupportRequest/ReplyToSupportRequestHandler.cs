@@ -2,18 +2,20 @@ using EduPlatform.Shared.Kernel.Results;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Notification.Application.Interfaces;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Notification.Application.Commands.ReplyToSupportRequest;
 
 public class ReplyToSupportRequestHandler : IRequestHandler<ReplyToSupportRequestCommand, Result>
 {
     private readonly INotificationDbContext _context;
-    private readonly IEmailService _emailService;
+    private readonly IEmailDeliveryQueue _emailDeliveryQueue;
 
-    public ReplyToSupportRequestHandler(INotificationDbContext context, IEmailService emailService)
+    public ReplyToSupportRequestHandler(INotificationDbContext context, IEmailDeliveryQueue emailDeliveryQueue)
     {
         _context = context;
-        _emailService = emailService;
+        _emailDeliveryQueue = emailDeliveryQueue;
     }
 
     public async Task<Result> Handle(ReplyToSupportRequestCommand request, CancellationToken cancellationToken)
@@ -53,12 +55,25 @@ public class ReplyToSupportRequestHandler : IRequestHandler<ReplyToSupportReques
                 </body>
             </html>";
 
-        await _emailService.SendEmailAsync(supportRequest.Email, subject, body, cancellationToken);
+        await _emailDeliveryQueue.QueueAsync(
+            CreateMessageId(supportRequest.Id, request.ReplyMessage),
+            "SupportReply",
+            supportRequest.Email,
+            subject,
+            body,
+            cancellationToken);
 
         // 2. Mark as Processed
         supportRequest.Process(request.ReplyMessage);
         await _context.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
+    }
+
+    private static Guid CreateMessageId(Guid supportRequestId, string replyMessage)
+    {
+        var payload = Encoding.UTF8.GetBytes($"{supportRequestId:N}:{replyMessage}");
+        var hash = SHA256.HashData(payload);
+        return new Guid(hash.AsSpan(0, 16));
     }
 }

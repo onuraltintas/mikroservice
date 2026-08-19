@@ -4,7 +4,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../auth/auth.service';
 import * as signalR from '@microsoft/signalr';
-import { Observable, BehaviorSubject, from } from 'rxjs';
+import { Observable } from 'rxjs';
 
 export interface Notification {
     id: string;
@@ -59,17 +59,27 @@ export class NotificationService implements OnDestroy {
             .catch(err => console.error('SignalR Error: ', err));
 
         this.hubConnection.on('ReceiveNotification', (notification: Notification) => {
-            this._notifications.update(prev => [notification, ...prev]);
-            this._unreadCount.update(count => count + 1);
+            const alreadyReceived = this._notifications().some(existing => existing.id === notification.id);
+            if (!alreadyReceived) {
+                this._notifications.update(prev => [notification, ...prev]);
+                this._unreadCount.update(count => count + 1);
+            }
         });
     }
 
     fetchNotifications() {
         if (!this.authService.isAuthenticated()) return;
 
-        this.http.get<Notification[]>(this.apiUrl).subscribe(notifications => {
+        this.http.get<Notification[]>(`${this.apiUrl}?pageNumber=1&pageSize=100`, {
+            observe: 'response'
+        }).subscribe(response => {
+            const notifications = response.body ?? [];
             this._notifications.set(notifications);
-            this._unreadCount.set(notifications.filter(n => !n.isRead).length);
+            const unreadHeader = response.headers.get('X-Unread-Count');
+            const unreadCount = unreadHeader === null
+                ? notifications.filter(n => !n.isRead).length
+                : Number.parseInt(unreadHeader, 10);
+            this._unreadCount.set(Number.isFinite(unreadCount) ? unreadCount : 0);
         });
     }
 

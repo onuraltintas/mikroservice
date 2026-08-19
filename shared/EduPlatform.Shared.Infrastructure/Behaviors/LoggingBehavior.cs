@@ -33,7 +33,7 @@ public sealed class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
 
         try
         {
-            var response = await next(cancellationToken);
+            var response = await next();
             
             stopwatch.Stop();
             

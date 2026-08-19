@@ -17,10 +17,10 @@
   <!-- Right Actions -->
   <div class="flex items-center gap-2">
     <!-- Notifications -->
-    <button mat-icon-button [matMenuTriggerFor]="notificationMenu" class="!text-gray-500">
-      <mat-icon [matBadge]="unreadCount" [matBadgeHidden]="unreadCount === 0" matBadgeColor="warn" matBadgeSize="small">
-        notifications_none
-      </mat-icon>
+    <button mat-icon-button [matMenuTriggerFor]="notificationMenu" class="!text-gray-500"
+      [matBadge]="unreadCount" [matBadgeHidden]="unreadCount === 0" matBadgeColor="warn" matBadgeSize="small"
+      aria-label="Bildirimler">
+      <mat-icon>notifications_none</mat-icon>
     </button>
 
     <mat-menu #notificationMenu="matMenu" xPosition="before" class="!mt-2 !rounded-2xl !min-w-[320px] !max-w-[400px]">

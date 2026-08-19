@@ -51,6 +51,36 @@ jobs:
           PY
           docker compose --env-file .env.example config --quiet
 
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+    needs: [source-safety]
+    defaults:
+      run:
+        working-directory: clients/admin-panel
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: clients/admin-panel/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Fail on vulnerable npm packages
+        run: npm audit --audit-level=high
+
+      - name: Run frontend unit tests
+        run: npm test -- --watch=false --progress=false
+
+      - name: Build browser and SSR bundles
+        run: npm run build
+
   dotnet:
     name: Build (${{ matrix.name }})
     runs-on: ubuntu-latest
@@ -112,6 +142,64 @@ jobs:
           name: integration-test-results
           path: tests/Integration/Identity.API.IntegrationTests/TestResults/
           if-no-files-found: warn
+
+  migration-drift:
+    name: EF migration drift
+    runs-on: ubuntu-latest
+    needs: [source-safety]
+    env:
+      ASPNETCORE_ENVIRONMENT: Development
+      POSTGRES_PASSWORD: ci-postgres-password-012345678901234567890123
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: eduplatform
+      POSTGRES_DB_IDENTITY: identity_db
+      POSTGRES_DB_COACHING: coaching_db
+      POSTGRES_DB_NOTIFICATION: notification_db
+      INTERNAL_SERVICE_API_KEY: ci-internal-service-key-012345678901234567890123
+      JWT_SECRET: ci-jwt-secret-012345678901234567890123456789
+      JWT_ISSUER: eduplatform.identity
+      JWT_AUDIENCE: eduplatform.api
+      JWT_KEY_ID: ci
+      RABBITMQ_DEFAULT_USER: ci
+      RABBITMQ_DEFAULT_PASS: ci-rabbit-password-012345678901234567
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install EF CLI
+        shell: bash
+        run: dotnet tool install --tool-path "$RUNNER_TEMP/dotnet-tools" dotnet-ef --version 9.0.2
+
+      - name: Restore application projects
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet restore services/identity-service/Identity.API/Identity.API.csproj
+          dotnet restore services/coaching-service/Coaching.API/Coaching.API.csproj
+          dotnet restore services/notification-service/Notification.API/Notification.API.csproj
+
+      - name: Fail when EF models have unapplied changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          ef="$RUNNER_TEMP/dotnet-tools/dotnet-ef"
+          "$ef" migrations has-pending-model-changes \
+            --project services/identity-service/Identity.Infrastructure/Identity.Infrastructure.csproj \
+            --startup-project services/identity-service/Identity.API/Identity.API.csproj \
+            --configuration Release
+          "$ef" migrations has-pending-model-changes \
+            --project services/coaching-service/Coaching.Infrastructure/Coaching.Infrastructure.csproj \
+            --startup-project services/coaching-service/Coaching.API/Coaching.API.csproj \
+            --configuration Release
+          "$ef" migrations has-pending-model-changes \
+            --project services/notification-service/Notification.Infrastructure/Notification.Infrastructure.csproj \
+            --startup-project services/notification-service/Notification.API/Notification.API.csproj \
+            --configuration Release
 
   gateway-smoke:
     name: Gateway health smoke
@@ -274,7 +362,7 @@ jobs:
   container-build:
     name: Container build (${{ matrix.name }})
     runs-on: ubuntu-latest
-    needs: [dotnet, tests, gateway-smoke, compose, vulnerabilities]
+    needs: [dotnet, tests, migration-drift, gateway-smoke, compose, vulnerabilities, frontend]
     strategy:
       fail-fast: false
       matrix:

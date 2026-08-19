@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
 
@@ -19,6 +19,9 @@ export class SupportService {
     private apiUrl = `${environment.apiUrl}/support`;
 
     submitRequest(request: SupportRequest): Observable<string> {
-        return this.http.post<string>(`${this.apiUrl}/submit`, request);
+        const idempotencyKey = globalThis.crypto.randomUUID();
+        return this.http.post<string>(`${this.apiUrl}/submit`, request, {
+            headers: new HttpHeaders({ 'Idempotency-Key': idempotencyKey })
+        });
     }
 }

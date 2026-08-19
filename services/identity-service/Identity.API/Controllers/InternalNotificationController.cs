@@ -7,6 +7,7 @@ using Identity.API;
 namespace Identity.API.Controllers;
 
 [ApiController]
+[ApiVersion(1.0)]
 [Route("api/internal/notification")]
 public class InternalNotificationController : ControllerBase
 {

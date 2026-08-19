@@ -1,5 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, signal, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IdentityService, UserProfileDto } from '../../../../core/services/identity.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
@@ -19,6 +19,7 @@ export class ProfileSettingsComponent implements OnInit {
     private identityService = inject(IdentityService);
     private toaster = inject(ToasterService);
     private authService = inject(AuthService);
+    private platformId = inject(PLATFORM_ID);
 
     profileForm!: FormGroup;
     passwordForm!: FormGroup;
@@ -30,6 +31,12 @@ export class ProfileSettingsComponent implements OnInit {
 
     ngOnInit() {
         this.initForms();
+
+        if (!isPlatformBrowser(this.platformId)) {
+            this.loading.set(false);
+            return;
+        }
+
         this.loadProfile();
     }
 

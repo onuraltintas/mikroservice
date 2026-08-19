@@ -7,6 +7,7 @@ using Notification.Application.Commands.SubmitSupportRequest;
 namespace Notification.API.Controllers;
 
 [ApiController]
+[ApiVersion(1.0)]
 [Authorize]
 [Route("api/[controller]")]
 public class SupportController : ControllerBase
@@ -24,6 +25,10 @@ public class SupportController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> Submit([FromBody] SubmitSupportRequestCommand command)
     {
+        command = command with
+        {
+            IdempotencyKey = Request.Headers["Idempotency-Key"].ToString()
+        };
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)

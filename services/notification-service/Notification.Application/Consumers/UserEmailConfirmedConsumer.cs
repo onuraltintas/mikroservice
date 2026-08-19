@@ -7,13 +7,13 @@ namespace Notification.Application.Consumers;
 
 public class UserEmailConfirmedConsumer : IConsumer<UserEmailConfirmedEvent>
 {
-    private readonly IEmailService _emailService;
+    private readonly IEmailDeliveryQueue _emailDeliveryQueue;
     private readonly INotificationService _notificationService;
     private readonly INotificationDbContext _dbContext;
 
-    public UserEmailConfirmedConsumer(IEmailService emailService, INotificationService notificationService, INotificationDbContext dbContext)
+    public UserEmailConfirmedConsumer(IEmailDeliveryQueue emailDeliveryQueue, INotificationService notificationService, INotificationDbContext dbContext)
     {
-        _emailService = emailService;
+        _emailDeliveryQueue = emailDeliveryQueue;
         _notificationService = notificationService;
         _dbContext = dbContext;
     }
@@ -47,14 +47,19 @@ public class UserEmailConfirmedConsumer : IConsumer<UserEmailConfirmedEvent>
             body = $"<h1>Hoş Geldin {message.FirstName}!</h1><p>E-posta adresin başarıyla doğrulandı. Artık sistemi kullanmaya başlayabilirsin.</p>";
         }
 
-        var emailTask = _emailService.SendEmailAsync(email, subject, body);
-        var notificationTask = _notificationService.SendNotificationAsync(
+        var messageId = context.MessageId ?? throw new InvalidOperationException("UserEmailConfirmedEvent.MessageId is required.");
+        await _emailDeliveryQueue.QueueAsync(
+            messageId,
+            nameof(UserEmailConfirmedConsumer),
+            email,
+            subject,
+            body,
+            context.CancellationToken);
+        await _notificationService.SendNotificationAsync(
             message.UserId, 
             "E-posta Doğrulandı!", 
             "E-posta adresiniz başarıyla doğrulandı. Aramıza hoş geldiniz!", 
-            "Account"
-        );
-
-        await Task.WhenAll(emailTask, notificationTask);
+            "Account",
+            sourceMessageId: messageId);
     }
 }

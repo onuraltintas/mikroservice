@@ -1,7 +1,7 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, PLATFORM_ID } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ConfigurationService } from '../../../core/services/settings/configuration.service';
 import { catchError, of } from 'rxjs';
 
@@ -14,11 +14,17 @@ import { catchError, of } from 'rxjs';
 })
 export class RegisterComponent implements OnInit {
     private configService = inject(ConfigurationService);
+    private platformId = inject(PLATFORM_ID);
 
     isRegistrationAllowed = signal(true); // Default assumed true until checked
     isLoading = signal(true);
 
     ngOnInit() {
+        if (!isPlatformBrowser(this.platformId)) {
+            this.isLoading.set(false);
+            return;
+        }
+
         this.configService.getPublicConfigurationValue('auth.allowregistration')
             .pipe(catchError(() => of('true'))) // Fallback to true if config fails to minimize disruption
             .subscribe(val => {

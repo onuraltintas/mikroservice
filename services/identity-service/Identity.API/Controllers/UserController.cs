@@ -14,6 +14,7 @@ using EduPlatform.Shared.Security.Authorization;
 namespace Identity.API.Controllers;
 
 [ApiController]
+[ApiVersion(1.0)]
 [Route("api/users")]
 public class UserController : ControllerBase
 {

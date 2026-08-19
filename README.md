@@ -168,6 +168,9 @@ npm run build
 
 # Test çalıştır
 npm run test
+
+# Security audit (high/critical açık bırakma)
+npm audit --audit-level=high
 ```
 
 ### Docker
@@ -205,6 +208,12 @@ Alertmanager `http://localhost:9093` adreslerinde yalnızca localhost'a açık
 olur. Ayrıntılı CI kapıları, alarm eşikleri ve production kullanım şekli için
 [CI/CD ve Production Monitoring](docs/CI_CD_AND_PRODUCTION_MONITORING.md)
 runbook'una bakın.
+
+HTTP hata formatı, v1 versioning ve pagination kuralları
+[API Contracts](docs/API_CONTRACTS.md); RabbitMQ/EF inbox-outbox, retry ve
+dead-letter davranışı [Event Reliability](docs/EVENT_RELIABILITY.md)
+belgesinde tanımlıdır. Güncel geliştirme sırası ve production go/no-go koşulları
+[`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) dosyasındadır.
 
 ---
 

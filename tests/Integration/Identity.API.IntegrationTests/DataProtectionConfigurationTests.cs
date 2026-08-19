@@ -36,4 +36,41 @@ public sealed class DataProtectionConfigurationTests
             }
         }
     }
+
+    [Fact]
+    public void ProductionWithoutSharedKeyPath_ShouldFailClosed()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ASPNETCORE_ENVIRONMENT"] = "Production"
+            })
+            .Build();
+
+        var services = new ServiceCollection();
+
+        var action = () => services.AddPersistentDataProtection(configuration, "EduPlatform.Test");
+
+        action.Should().Throw<InvalidOperationException>()
+            .WithMessage("*DataProtection:KeysPath*shared*persistent key ring*");
+    }
+
+    [Fact]
+    public void EmptyAspNetCoreEnvironment_ShouldFallBackToProductionEnvironment()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ASPNETCORE_ENVIRONMENT"] = string.Empty,
+                ["ENVIRONMENT"] = "Production"
+            })
+            .Build();
+
+        var services = new ServiceCollection();
+
+        var action = () => services.AddPersistentDataProtection(configuration, "EduPlatform.Test");
+
+        action.Should().Throw<InvalidOperationException>()
+            .WithMessage("*DataProtection:KeysPath*shared*persistent key ring*");
+    }
 }

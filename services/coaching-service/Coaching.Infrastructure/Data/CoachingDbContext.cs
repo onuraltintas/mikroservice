@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Coaching.Domain.Entities;
+using MassTransit;
 using System.Reflection;
 
 namespace Coaching.Infrastructure.Data;
@@ -31,6 +32,12 @@ public class CoachingDbContext : DbContext
 
         // Schema
         modelBuilder.HasDefaultSchema("coaching");
+
+        // MassTransit inbox/outbox tables keep database changes and published
+        // events in the same transaction and make consumer delivery idempotent.
+        modelBuilder.AddInboxStateEntity();
+        modelBuilder.AddOutboxMessageEntity();
+        modelBuilder.AddOutboxStateEntity();
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

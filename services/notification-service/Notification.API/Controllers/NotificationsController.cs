@@ -7,9 +7,13 @@ using System.Security.Claims;
 namespace Notification.API.Controllers;
 
 [ApiController]
+[ApiVersion(1.0)]
 [Route("api/[controller]")]
 public class NotificationsController : ControllerBase
 {
+    private const int MaxPageNumber = 1_000;
+    private const int MaxPageSize = 100;
+
     private readonly NotificationDbContext _dbContext;
 
     public NotificationsController(NotificationDbContext dbContext)
@@ -19,17 +23,43 @@ public class NotificationsController : ControllerBase
 
     [HttpGet]
     [Authorize]
-    public async Task<IActionResult> GetMyNotifications()
+    public async Task<IActionResult> GetMyNotifications(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 25,
+        CancellationToken cancellationToken = default)
     {
+        if (pageNumber is < 1 or > MaxPageNumber || pageSize is < 1 or > MaxPageSize)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Validation Error",
+                detail: $"pageNumber must be between 1 and {MaxPageNumber}; pageSize must be between 1 and {MaxPageSize}.",
+                type: "https://eduplatform.dev/problems/validation-error",
+                instance: HttpContext.Request.Path);
+        }
+
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
         if (userIdClaim == null) return Unauthorized();
 
         if (!Guid.TryParse(userIdClaim.Value, out var userId)) return BadRequest("Invalid User Id");
 
-        var notifications = await _dbContext.Notifications
-            .Where(n => n.UserId == userId)
+        var query = _dbContext.Notifications
+            .AsNoTracking()
+            .Where(n => n.UserId == userId);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var unreadCount = await query.CountAsync(n => !n.IsRead, cancellationToken);
+        var notifications = await query
             .OrderByDescending(n => n.CreatedAt)
-            .ToListAsync();
+            .ThenByDescending(n => n.Id)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        Response.Headers.Append("X-Total-Count", totalCount.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        Response.Headers.Append("X-Unread-Count", unreadCount.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        Response.Headers.Append("X-Page-Number", pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        Response.Headers.Append("X-Page-Size", pageSize.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
         return Ok(notifications);
     }

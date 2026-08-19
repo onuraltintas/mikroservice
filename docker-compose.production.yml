@@ -28,18 +28,52 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
       DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?DATAPROTECTION_CERTIFICATE_PASSWORD must be set}
+    depends_on:
+      identity-migrations:
+        condition: service_completed_successfully
     secrets:
       - source: dataprotection_certificate
         target: eduplatform-dataprotection.pfx
+
+  identity-migrations:
+    build:
+      context: .
+      dockerfile: services/identity-service/Dockerfile
+    command: ["--migrate-only"]
+    restart: "no"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB_IDENTITY};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   coaching-service:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
       DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?DATAPROTECTION_CERTIFICATE_PASSWORD must be set}
+    depends_on:
+      coaching-migrations:
+        condition: service_completed_successfully
     secrets:
       - source: dataprotection_certificate
         target: eduplatform-dataprotection.pfx
+
+  # Apply the Coaching schema once before web replicas start. The command
+  # exits after EF migrations and never starts RabbitMQ consumers or HTTP.
+  coaching-migrations:
+    build:
+      context: .
+      dockerfile: services/coaching-service/Dockerfile
+    command: ["--migrate-only"]
+    restart: "no"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB_COACHING};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   notification-service:
     environment:
@@ -52,9 +86,25 @@ services:
       Email__FromName: ${SMTP_FROM_NAME:-EduPlatform}
       DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
       DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?DATAPROTECTION_CERTIFICATE_PASSWORD must be set}
+    depends_on:
+      notification-migrations:
+        condition: service_completed_successfully
     secrets:
       - source: dataprotection_certificate
         target: eduplatform-dataprotection.pfx
+
+  notification-migrations:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    command: ["--migrate-only"]
+    restart: "no"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB_NOTIFICATION};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   api-gateway:
     environment:

@@ -20,6 +20,24 @@ public static class DataProtectionExtensions
         bool requireEncryption = false)
     {
         var configuredPath = configuration["DataProtection:KeysPath"];
+        var environment = new[]
+        {
+            configuration["ASPNETCORE_ENVIRONMENT"],
+            configuration["DOTNET_ENVIRONMENT"],
+            configuration["ENVIRONMENT"]
+        }.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+        var isProductionEnvironment = string.Equals(
+            environment,
+            Environments.Production,
+            StringComparison.OrdinalIgnoreCase);
+        requireEncryption |= isProductionEnvironment;
+
+        if (requireEncryption && string.IsNullOrWhiteSpace(configuredPath))
+        {
+            throw new InvalidOperationException(
+                $"DataProtection:KeysPath is required in Production for {applicationName}; replicas must use a shared persistent key ring.");
+        }
+
         var keyPath = string.IsNullOrWhiteSpace(configuredPath)
             ? Path.Combine(AppContext.BaseDirectory, "data-protection-keys")
             : configuredPath;
@@ -32,12 +50,6 @@ public static class DataProtectionExtensions
 
         var certificatePath = configuration["DataProtection:CertificatePath"];
         var certificatePassword = configuration["DataProtection:CertificatePassword"];
-        var isProductionEnvironment = string.Equals(
-            configuration["ASPNETCORE_ENVIRONMENT"] ?? configuration["DOTNET_ENVIRONMENT"] ?? configuration["ENVIRONMENT"],
-            Environments.Production,
-            StringComparison.OrdinalIgnoreCase);
-        requireEncryption |= isProductionEnvironment;
-
         if (string.IsNullOrWhiteSpace(certificatePath))
         {
             if (requireEncryption)

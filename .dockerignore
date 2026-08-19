@@ -1,0 +1,20 @@
+# Keep build contexts small and prevent local secrets/artifacts entering images.
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+.build-temp
+.npm-temp
+**/bin
+**/obj
+**/node_modules
+**/dist
+clients
+docs
+monitoring
+tests
+tools
+infrastructure
+*.user
+*.suo

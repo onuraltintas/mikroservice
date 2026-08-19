@@ -134,6 +134,11 @@ politikaları uygular.
 - Servislerin Data Protection key ring'leri Compose named volume'larında
   kalıcıdır. Bu, container yeniden oluşturulduğunda cookie/SignalR/antiforgery
   anahtarlarının kaybolmasını önler; tek başına at-rest şifreleme değildir.
+  Production'da `DataProtection:KeysPath` zorunludur ve her replica'nın aynı
+  persistent/shared key ring'i görmesi gerekir. Aynı PFX sertifikasını mount
+  etmek tek başına key ring paylaşımı sağlamaz; Kubernetes'te ortak PVC veya
+  eşdeğer bir paylaşımlı repository kullanılmalıdır. Uygulama key path yoksa
+  production startup'ında fail-fast kapanır.
 - Production'da her servise aynı deployment'a ait, private key içeren bir
   X.509/PKCS#12 sertifikası secret olarak mount edin ve
   `DATAPROTECTION_CERTIFICATE_PATH` ile

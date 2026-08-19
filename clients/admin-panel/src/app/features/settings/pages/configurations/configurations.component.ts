@@ -1,5 +1,5 @@
-import { Component, inject, signal, OnInit, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal, OnInit, computed, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfigurationService, Configuration, ConfigurationDataType } from '../../../../core/services/settings/configuration.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
@@ -287,6 +287,7 @@ import { ToasterService } from '../../../../core/services/toaster.service';
 export class ConfigurationsComponent implements OnInit {
     private configService = inject(ConfigurationService);
     private toaster = inject(ToasterService);
+    private platformId = inject(PLATFORM_ID);
 
     configs = signal<Configuration[]>([]);
     discoveryServices = signal<string[]>([]);
@@ -359,6 +360,10 @@ export class ConfigurationsComponent implements OnInit {
     });
 
     ngOnInit() {
+        if (!isPlatformBrowser(this.platformId)) {
+            return;
+        }
+
         this.loadConfigs();
         this.loadDiscoveryServices();
     }

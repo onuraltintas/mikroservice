@@ -20,6 +20,7 @@ import { catchError, of, forkJoin } from 'rxjs';
 })
 export class HeaderComponent implements OnInit {
   private authService = inject(AuthService);
+  private platformId = inject(PLATFORM_ID);
   private toaster = inject(ToasterService);
   private configService = inject(ConfigurationService);
   layoutService = inject(LayoutService);
@@ -33,6 +34,10 @@ export class HeaderComponent implements OnInit {
   user = this.authService.userProfile;
 
   ngOnInit() {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
     this.checkMaintenanceStatus();
   }
 

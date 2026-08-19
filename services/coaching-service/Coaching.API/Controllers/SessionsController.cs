@@ -13,6 +13,7 @@ namespace Coaching.API.Controllers;
 /// Coaching Sessions Management API
 /// </summary>
 [ApiController]
+[ApiVersion(1.0)]
 [Authorize]
 [Route("api/[controller]")]
 [Produces("application/json")]

@@ -1,9 +1,9 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, PLATFORM_ID } from '@angular/core';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { HttpClient } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { passwordMatchValidator, strongPasswordValidator } from '../../../../core/validators/password.validator';
 
 import { MatCardModule } from '@angular/material/card';
@@ -30,6 +30,7 @@ export class StudentRegisterComponent implements OnInit {
     private router = inject(Router);
     private toaster = inject(ToasterService);
     private configService = inject(ConfigurationService);
+    private platformId = inject(PLATFORM_ID);
 
     isLoading = signal(false);
     errorMessage = signal<string | null>(null);
@@ -44,6 +45,10 @@ export class StudentRegisterComponent implements OnInit {
     }, { validators: passwordMatchValidator });
 
     ngOnInit() {
+        if (!isPlatformBrowser(this.platformId)) {
+            return;
+        }
+
         this.configService.getPublicConfigurationValue('auth.allowregistration')
             .subscribe({
                 next: (val) => {

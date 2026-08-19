@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Identity.API.Controllers.Settings;
 
 [ApiController]
+[ApiVersion(1.0)]
 [Route("api/system-logs")]
 [Authorize(Roles = "Admin, SystemAdmin")] // Restrict to admins
 public class SystemLogsController : ControllerBase

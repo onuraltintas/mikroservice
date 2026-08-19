@@ -23,7 +23,7 @@ public class HealthCheckTests
     }
 
     [Fact]
-    public async Task PostgresContainer_ShouldBeAccessible()
+    public void PostgresContainer_ShouldBeAccessible()
     {
         // Arrange
         _output.WriteLine($"PostgreSQL Connection String: {_postgresFixture.ConnectionString}");

@@ -1,5 +1,5 @@
-import { Component, OnInit, inject, Inject, ChangeDetectorRef, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, Inject, ChangeDetectorRef, signal, computed, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
@@ -51,6 +51,7 @@ export class NotificationListComponent implements OnInit {
     toaster = inject(ToasterService);
     dialog = inject(MatDialog);
     private cdr = inject(ChangeDetectorRef);
+    private platformId = inject(PLATFORM_ID);
 
     displayedColumns: string[] = ['select', 'status', 'content', 'date', 'actions'];
     selection = new SelectionModel<Notification>(true, []);
@@ -120,6 +121,10 @@ export class NotificationListComponent implements OnInit {
     });
 
     ngOnInit() {
+        if (!isPlatformBrowser(this.platformId)) {
+            return;
+        }
+
         this.notificationService.fetchNotifications();
     }
 

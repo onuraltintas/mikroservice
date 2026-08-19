@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Identity.API.Controllers;
 
 [ApiController]
+[ApiVersion(1.0)]
 [Route("api/teachers")]
 [Authorize]
 public class TeachersController : ControllerBase

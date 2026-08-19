@@ -7,12 +7,12 @@ namespace Notification.Application.Consumers;
 
 public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
 {
-    private readonly IEmailService _emailService;
+    private readonly IEmailDeliveryQueue _emailDeliveryQueue;
     private readonly INotificationDbContext _dbContext;
 
-    public UserRegisteredConsumer(IEmailService emailService, INotificationDbContext dbContext)
+    public UserRegisteredConsumer(IEmailDeliveryQueue emailDeliveryQueue, INotificationDbContext dbContext)
     {
-        _emailService = emailService;
+        _emailDeliveryQueue = emailDeliveryQueue;
         _dbContext = dbContext;
     }
 
@@ -47,6 +47,13 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
             body = $"<h1>Merhaba {message.FirstName}!</h1><p>Lütfen e-posta adresinizi doğrulamak için tıklayın: <a href='{verificationLink}'>Doğrula</a></p>";
         }
 
-        await _emailService.SendEmailAsync(message.Email, subject, body);
+        var messageId = context.MessageId ?? throw new InvalidOperationException("UserRegisteredEvent.MessageId is required.");
+        await _emailDeliveryQueue.QueueAsync(
+            messageId,
+            nameof(UserRegisteredConsumer),
+            message.Email,
+            subject,
+            body,
+            context.CancellationToken);
     }
 }

@@ -7,12 +7,12 @@ namespace Notification.Application.Consumers;
 
 public class UserForgotPasswordConsumer : IConsumer<UserForgotPasswordEvent>
 {
-    private readonly IEmailService _emailService;
+    private readonly IEmailDeliveryQueue _emailDeliveryQueue;
     private readonly INotificationDbContext _dbContext;
 
-    public UserForgotPasswordConsumer(IEmailService emailService, INotificationDbContext dbContext)
+    public UserForgotPasswordConsumer(IEmailDeliveryQueue emailDeliveryQueue, INotificationDbContext dbContext)
     {
-        _emailService = emailService;
+        _emailDeliveryQueue = emailDeliveryQueue;
         _dbContext = dbContext;
     }
 
@@ -59,6 +59,13 @@ public class UserForgotPasswordConsumer : IConsumer<UserForgotPasswordEvent>
                 </div>";
         }
 
-        await _emailService.SendEmailAsync(message.Email, subject, body);
+        var messageId = context.MessageId ?? throw new InvalidOperationException("UserForgotPasswordEvent.MessageId is required.");
+        await _emailDeliveryQueue.QueueAsync(
+            messageId,
+            nameof(UserForgotPasswordConsumer),
+            message.Email,
+            subject,
+            body,
+            context.CancellationToken);
     }
 }

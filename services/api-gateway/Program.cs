@@ -109,10 +109,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:4200")
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+          policy.WithOrigins("http://localhost:4200")
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .WithExposedHeaders("X-Total-Count", "X-Unread-Count", "X-Page-Number", "X-Page-Size")
+                .AllowCredentials();
     });
 });
 

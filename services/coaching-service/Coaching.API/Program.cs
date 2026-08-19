@@ -19,6 +19,37 @@ if (File.Exists(envPath))
 }
 
 var builder = WebApplication.CreateBuilder(args);
+var migrationOnly = args.Any(argument =>
+    string.Equals(argument, "--migrate-only", StringComparison.OrdinalIgnoreCase));
+
+// Production deployments run migrations in a dedicated one-shot container.
+// Keeping this mode separate from the web host avoids every replica racing to
+// migrate the database during a rolling deployment.
+if (migrationOnly)
+{
+    var migrationConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    if (string.IsNullOrEmpty(migrationConnectionString))
+    {
+        var host = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
+        var port = Environment.GetEnvironmentVariable("POSTGRES_PORT") ?? "5432";
+        var database = Environment.GetEnvironmentVariable("POSTGRES_DB_COACHING") ?? "coaching_db";
+        var username = Environment.GetEnvironmentVariable("POSTGRES_USER") ?? "eduplatform";
+        var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD")
+            ?? builder.Configuration["POSTGRES_PASSWORD"]
+            ?? throw new InvalidOperationException("POSTGRES_PASSWORD is not configured.");
+        migrationConnectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password}";
+    }
+
+    builder.Services.AddDbContext<CoachingDbContext>(options =>
+        options.UseNpgsql(migrationConnectionString, npgsqlOptions =>
+            npgsqlOptions.MigrationsHistoryTable("__ef_migrations_history", "coaching")));
+
+    await using var migrationApp = builder.Build();
+    await using var migrationScope = migrationApp.Services.CreateAsyncScope();
+    var migrationDb = migrationScope.ServiceProvider.GetRequiredService<CoachingDbContext>();
+    await migrationDb.Database.MigrateAsync();
+    return;
+}
 
 // ============================================
 // Serilog Configuration (Centralized)
@@ -53,6 +84,19 @@ builder.Services.AddMassTransit(x =>
     // Add all consumers from Application assembly
     x.AddConsumers(typeof(Coaching.Application.DependencyInjection).Assembly);
 
+    x.AddEntityFrameworkOutbox<CoachingDbContext>(o =>
+    {
+        o.UsePostgres();
+        o.UseBusOutbox();
+    });
+
+    x.AddConfigureEndpointsCallback((context, _, endpointConfigurator) =>
+    {
+        endpointConfigurator.UseMessageRetry(retry =>
+            retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+        endpointConfigurator.UseEntityFrameworkOutbox<CoachingDbContext>(context);
+    });
+
     x.UsingRabbitMq((context, cfg) =>
     {
         var rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST") 
@@ -82,7 +126,9 @@ builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddApplication();
 
 // Add Controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddEduPlatformApiConventions();
+builder.Services.AddEduPlatformApiVersioning();
 
 // Add Swagger
 builder.Services.AddEndpointsApiExplorer();

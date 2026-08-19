@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Identity.API.Controllers;
 
 [ApiController]
+[ApiVersion(1.0)]
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {

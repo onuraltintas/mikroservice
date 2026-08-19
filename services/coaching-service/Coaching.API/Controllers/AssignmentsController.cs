@@ -17,6 +17,7 @@ namespace Coaching.API.Controllers;
 /// Assignments Management API
 /// </summary>
 [ApiController]
+[ApiVersion(1.0)]
 [Authorize]
 [Route("api/[controller]")]
 [Produces("application/json")]

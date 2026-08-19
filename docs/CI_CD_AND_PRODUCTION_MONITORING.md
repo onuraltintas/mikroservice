@@ -23,18 +23,29 @@ Kapılar sırasıyla:
 
 1. Tracked dosyalarda private key ve yaygın cloud key formatı taraması.
 2. JSON ve Docker Compose base/scale/production/observability yapı doğrulaması.
-3. Dört .NET 9 servisi için restore ve `Release --warnaserror` build.
-4. Docker-backed integration test suite ve coverage artifact'i.
-5. Ayrı Gateway process'i ile gerçek `/health` smoke testi.
-6. Tüm uygulama projelerinde NuGet vulnerability taraması.
-7. Monitoring Compose, Prometheus/Alertmanager/OTel/Tempo/Blackbox config doğrulaması.
-8. Dört Docker image'ının push edilmeden reproducible build edilmesi.
+3. Angular admin paneli için locked `npm ci`, yüksek önem seviyesinde npm audit,
+   unit test ve browser/SSR production build.
+4. Dört .NET 9 servisi için restore ve `Release --warnaserror` build.
+5. Docker-backed integration test suite ve coverage artifact'i.
+6. Ayrı Gateway process'i ile gerçek `/health` smoke testi.
+7. Identity, Coaching ve Notification EF modellerinde unapplied migration drift
+   kontrolü.
+8. Tüm uygulama projelerinde NuGet vulnerability taraması.
+9. Monitoring Compose, Prometheus/Alertmanager/OTel/Tempo/Blackbox config doğrulaması.
+10. Dört Docker image'ının push edilmeden reproducible build edilmesi.
 
 Bu workflow dış bir registry'ye veya production cluster'a otomatik deploy etmez.
 Registry, imaj adlandırma, Kubernetes/VM hedefi ve rollback politikası
 belirlenmeden source-derived image'ı dışarı göndermek güvenli değildir. Hedef
 ortam netleştiğinde aynı son gate'in arkasına manuel onaylı publish/deploy job'ı
 eklenmelidir.
+
+Frontend job'ı Angular build'inin yalnızca TypeScript derlemesini değil, SSR
+prerender akışını da çalıştırır. Browser-only auth ve dashboard çağrıları SSR'de
+çalıştırılmadığı için build logunda yetkisiz API çağrıları veya `uncaughtException`
+görülmemelidir. `npm audit` çıktısının sıfır yüksek/critical açık göstermesi
+release ön koşuludur; Angular'ın upstream deprecation uyarıları ayrı bir
+bakım maddesi olarak takip edilir.
 
 ## Monitoring bileşenleri
 
@@ -118,6 +129,7 @@ kesinleştirilmelidir:
 | HTTP 5xx | 5 dakika boyunca > %1 | Son deploy'u ve exception loglarını incele |
 | HTTP p95 | 10 dakika boyunca > 500 ms | DB/Redis/Rabbit doygunluğu ve trace incele |
 | RabbitMQ ready backlog | 10 dakika boyunca > 1.000 | Consumer lag ve dead-letter kontrolü |
+| Email delivery `Failed` veya yaşlanan `Pending` | 5 dakika | SMTP/provider, worker lease ve kontrollü replay incele |
 | Redis memory | 10 dakika boyunca > %80 | Key TTL/eviction ve kapasite kontrolü |
 | Telemetry target down | 2 dakika | Collector/exporter/servis health kontrolü |
 

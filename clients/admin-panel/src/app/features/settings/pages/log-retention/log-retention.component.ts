@@ -1,5 +1,5 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal, OnInit, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SystemLogService, RetentionPolicy, CreateRetentionPolicyRequest } from '../../../../core/services/settings/system-log.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
@@ -128,6 +128,7 @@ import { ToasterService } from '../../../../core/services/toaster.service';
 export class LogRetentionComponent implements OnInit {
     private logService = inject(SystemLogService);
     private toaster = inject(ToasterService);
+    private platformId = inject(PLATFORM_ID);
 
     retentionPolicies = signal<RetentionPolicy[]>([]);
     seqUrl = 'http://localhost:5341';
@@ -137,6 +138,10 @@ export class LogRetentionComponent implements OnInit {
     creatingPolicy = false;
 
     ngOnInit() {
+        if (!isPlatformBrowser(this.platformId)) {
+            return;
+        }
+
         this.loadRetentionPolicies();
         this.loadSeqUrl();
     }

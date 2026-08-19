@@ -16,7 +16,7 @@ public class ValidationBehaviorTests
             new[] { new LoginCommandValidator() });
         var command = new LoginCommand("user@example.com", new string('a', 129));
         var handlerCalled = false;
-        RequestHandlerDelegate<Result<LoginResponse>> next = _ =>
+        RequestHandlerDelegate<Result<LoginResponse>> next = () =>
         {
             handlerCalled = true;
             return Task.FromResult(Result.Success(new LoginResponse("access", "refresh")));
@@ -35,7 +35,7 @@ public class ValidationBehaviorTests
             new[] { new ChangePasswordCommandValidator() });
         var command = new ChangePasswordCommand("Current123!", new string('a', 129));
         var handlerCalled = false;
-        RequestHandlerDelegate<Result> next = _ =>
+        RequestHandlerDelegate<Result> next = () =>
         {
             handlerCalled = true;
             return Task.FromResult(Result.Success());

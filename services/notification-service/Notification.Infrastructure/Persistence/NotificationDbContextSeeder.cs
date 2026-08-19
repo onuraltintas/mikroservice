@@ -69,6 +69,7 @@ public static class NotificationDbContextSeeder
 
                 // Upsert logic
                 var existingTemplate = await context.EmailTemplates
+                    .OrderBy(t => t.Id)
                     .FirstOrDefaultAsync(t => t.Id == item.Id || t.TemplateName == item.TemplateName);
 
                 if (existingTemplate == null)

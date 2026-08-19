@@ -9,7 +9,8 @@ public record SubmitSupportRequestCommand(
     string LastName,
     string Email,
     string Subject,
-    string Message) : IRequest<Result<Guid>>;
+    string Message,
+    string? IdempotencyKey = null) : IRequest<Result<Guid>>;
 
 public sealed class SubmitSupportRequestCommandValidator : AbstractValidator<SubmitSupportRequestCommand>
 {
@@ -20,5 +21,9 @@ public sealed class SubmitSupportRequestCommandValidator : AbstractValidator<Sub
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(255);
         RuleFor(x => x.Subject).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Message).NotEmpty().MinimumLength(10).MaximumLength(2000);
+        RuleFor(x => x.IdempotencyKey)
+            .NotEmpty()
+            .Length(16, 128)
+            .Matches("^[A-Za-z0-9._~-]+$");
     }
 }

@@ -9,35 +9,60 @@ namespace Notification.Application.Commands.SubmitSupportRequest;
 public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestCommand, Result<Guid>>
 {
     private readonly INotificationDbContext _dbContext;
-    private readonly IEmailService _emailService;
+    private readonly IEmailDeliveryQueue _emailDeliveryQueue;
     private readonly IIdentityInternalService _identityService;
 
     public SubmitSupportRequestHandler(
         INotificationDbContext dbContext, 
-        IEmailService emailService,
+        IEmailDeliveryQueue emailDeliveryQueue,
         IIdentityInternalService identityService)
     {
         _dbContext = dbContext;
-        _emailService = emailService;
+        _emailDeliveryQueue = emailDeliveryQueue;
         _identityService = identityService;
     }
 
     public async Task<Result<Guid>> Handle(SubmitSupportRequestCommand request, CancellationToken cancellationToken)
     {
+        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+        var idempotencyKey = request.IdempotencyKey!.Trim();
+        var existingRequest = await FindExistingAsync(normalizedEmail, idempotencyKey, cancellationToken);
+        if (existingRequest is not null)
+        {
+            return Result.Success(existingRequest.Id);
+        }
+
         var supportRequest = new SupportRequest(
             Guid.NewGuid(),
             request.FirstName,
             request.LastName,
-            request.Email,
+            normalizedEmail,
             request.Subject,
-            request.Message
+            request.Message,
+            idempotencyKey
         );
 
         _dbContext.SupportRequests.Add(supportRequest);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // A concurrent retry may win the unique (email, key) insert. If
+            // the row is now visible, return its original result and do not
+            // send a second acknowledgement or admin notification.
+            existingRequest = await FindExistingAsync(normalizedEmail, idempotencyKey, cancellationToken);
+            if (existingRequest is null)
+            {
+                throw;
+            }
+
+            return Result.Success(existingRequest.Id);
+        }
 
         // Send acknowledgment email to user
-        await SendAcknowledgmentEmail(request, cancellationToken);
+        await QueueAcknowledgmentEmail(request, supportRequest.Id, cancellationToken);
 
         // Forward to Identity service to notify admins
         await _identityService.ForwardSupportRequestAsync(request, supportRequest.Id, cancellationToken);
@@ -45,7 +70,22 @@ public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestC
         return Result.Success(supportRequest.Id);
     }
 
-    private async Task SendAcknowledgmentEmail(SubmitSupportRequestCommand request, CancellationToken cancellationToken)
+    private Task<SupportRequest?> FindExistingAsync(
+        string email,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
+    {
+        return _dbContext.SupportRequests
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                x => x.Email == email && x.IdempotencyKey == idempotencyKey,
+                cancellationToken);
+    }
+
+    private async Task QueueAcknowledgmentEmail(
+        SubmitSupportRequestCommand request,
+        Guid messageId,
+        CancellationToken cancellationToken)
     {
         var template = await _dbContext.EmailTemplates
             .AsNoTracking()
@@ -74,6 +114,12 @@ public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestC
                       <p><strong>Konu:</strong> {request.Subject}</p>";
         }
 
-        await _emailService.SendEmailAsync(request.Email, subject, body, cancellationToken);
+        await _emailDeliveryQueue.QueueAsync(
+            messageId,
+            "SupportAcknowledgement",
+            request.Email,
+            subject,
+            body,
+            cancellationToken);
     }
 }

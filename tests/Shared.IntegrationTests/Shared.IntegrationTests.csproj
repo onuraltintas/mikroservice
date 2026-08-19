@@ -27,7 +27,7 @@
     <PackageReference Include="Respawn" Version="6.2.1" />
     
     <!-- MassTransit Testing -->
-    <PackageReference Include="MassTransit.TestFramework" Version="8.3.4" />
+    <PackageReference Include="MassTransit.TestFramework" Version="8.3.6" />
     
     <!-- HTTP Mocking -->
     <PackageReference Include="WireMock.Net" Version="1.5.54" />

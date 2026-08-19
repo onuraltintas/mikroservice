@@ -7,6 +7,7 @@ namespace Identity.API.Controllers;
 
 [Authorize]
 [ApiController]
+[ApiVersion(1.0)]
 [Route("api/[controller]")]
 public class ConfigurationsController : ControllerBase
 {

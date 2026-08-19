@@ -27,6 +27,35 @@ if (File.Exists(envPath))
 }
 
 var builder = WebApplication.CreateBuilder(args);
+var migrationOnly = args.Any(argument =>
+    string.Equals(argument, "--migrate-only", StringComparison.OrdinalIgnoreCase));
+
+// Production deployments run migrations in a dedicated one-shot container.
+// The web host only performs automatic migrations in Development.
+if (migrationOnly)
+{
+    var migrationConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    if (string.IsNullOrEmpty(migrationConnectionString))
+    {
+        var host = Environment.GetEnvironmentVariable("POSTGRES_HOST") ?? "localhost";
+        var port = Environment.GetEnvironmentVariable("POSTGRES_PORT") ?? "5432";
+        var database = Environment.GetEnvironmentVariable("POSTGRES_DB_NOTIFICATION") ?? "notification_db";
+        var username = Environment.GetEnvironmentVariable("POSTGRES_USER") ?? "eduplatform";
+        var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD")
+            ?? builder.Configuration["POSTGRES_PASSWORD"]
+            ?? throw new InvalidOperationException("POSTGRES_PASSWORD is not configured.");
+        migrationConnectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password}";
+    }
+
+    builder.Services.AddDbContext<NotificationDbContext>(options =>
+        options.UseNpgsql(migrationConnectionString));
+
+    await using var migrationApp = builder.Build();
+    await using var migrationScope = migrationApp.Services.CreateAsyncScope();
+    var migrationDb = migrationScope.ServiceProvider.GetRequiredService<NotificationDbContext>();
+    await migrationDb.Database.MigrateAsync();
+    return;
+}
 
 InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
 
@@ -37,7 +66,45 @@ builder.Services.AddEduPlatformOpenTelemetry(builder.Configuration, builder.Envi
 builder.Services.AddGlobalExceptionHandler();
 
 // Add services
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddEduPlatformApiConventions();
+builder.Services.AddEduPlatformApiVersioning();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "EduPlatform Notification API",
+        Version = "v1",
+        Description = "Notification and support communication service"
+    });
+
+    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "JWT Authorization header using the Bearer scheme."
+    });
+
+    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 // Build connection string from environment variables
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -54,8 +121,7 @@ if (string.IsNullOrEmpty(connectionString))
 }
 
 builder.Services.AddDbContext<NotificationDbContext>(options =>
-    options.UseNpgsql(connectionString)
-           .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
+    options.UseNpgsql(connectionString));
 
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<NotificationDbContext>("database");
@@ -65,7 +131,9 @@ builder.Services.AddScoped<INotificationDbContext>(provider =>
     provider.GetRequiredService<NotificationDbContext>());
 
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IEmailDeliveryQueue, EmailDeliveryQueue>();
 builder.Services.AddScoped<INotificationService, Notification.API.Services.NotificationManager>();
+builder.Services.AddHostedService<EmailDeliveryWorker>();
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 builder.Services.AddHttpClient<Notification.Application.Interfaces.IIdentityInternalService, Notification.Infrastructure.ExternalServices.IdentityInternalService>()
     .ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(10))
@@ -138,31 +206,49 @@ builder.Services.AddMassTransit(x =>
 
         cfg.ReceiveEndpoint("invitation-created", e =>
         {
+            e.UseMessageRetry(retry =>
+                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
             e.ConfigureConsumer<InvitationCreatedConsumer>(context);
         });
 
         cfg.ReceiveEndpoint("user-registered", e =>
         {
+            e.UseMessageRetry(retry =>
+                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
             e.ConfigureConsumer<UserRegisteredConsumer>(context);
         });
 
         cfg.ReceiveEndpoint("user-email-confirmed", e =>
         {
+            e.UseMessageRetry(retry =>
+                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
             e.ConfigureConsumer<UserEmailConfirmedConsumer>(context);
         });
 
         cfg.ReceiveEndpoint("user-created", e =>
         {
+            e.UseMessageRetry(retry =>
+                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
             e.ConfigureConsumer<UserCreatedConsumer>(context);
         });
 
         cfg.ReceiveEndpoint("send-notification", e =>
         {
+            e.UseMessageRetry(retry =>
+                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
             e.ConfigureConsumer<SendNotificationConsumer>(context);
         });
 
         cfg.ReceiveEndpoint("user-forgot-password", e =>
         {
+            e.UseMessageRetry(retry =>
+                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
             e.ConfigureConsumer<UserForgotPasswordConsumer>(context);
         });
     });
@@ -176,6 +262,16 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseRequestTimeouts();
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Notification API v1");
+        options.RoutePrefix = string.Empty;
+    });
+}
+
 app.MapGet("/", () => "Notification Service Runnning").AllowAnonymous();
 app.MapHealthChecks("/health").AllowAnonymous();
 app.MapHealthChecks("/health/ready").AllowAnonymous();
@@ -183,11 +279,12 @@ app.MapHealthChecks("/health/live").AllowAnonymous();
 app.MapHub<NotificationHub>("/hubs/notifications");
 app.MapControllers();
 
-// Auto-migrate
-using (var scope = app.Services.CreateScope())
+// Development migration and seed. Production uses notification-migrations.
+if (app.Environment.IsDevelopment())
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
-    db.Database.Migrate();
+    await db.Database.MigrateAsync();
 
     // Run custom file-based seeder
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();

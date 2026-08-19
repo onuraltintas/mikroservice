@@ -22,6 +22,7 @@ public class SendNotificationConsumer : IConsumer<SendNotificationEvent>
             message.Title,
             message.Message,
             message.Type,
-            message.RelatedEntityId);
+            message.RelatedEntityId,
+            sourceMessageId: context.MessageId);
     }
 }

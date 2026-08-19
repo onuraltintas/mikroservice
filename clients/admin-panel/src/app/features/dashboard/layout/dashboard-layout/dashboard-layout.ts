@@ -1,8 +1,8 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, PLATFORM_ID } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar';
 import { HeaderComponent } from '../header/header';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { LayoutService } from '../../services/layout.service';
 import { ConfigurationService } from '../../../../core/services/settings/configuration.service';
 import { catchError, of, forkJoin } from 'rxjs';
@@ -17,11 +17,16 @@ import { catchError, of, forkJoin } from 'rxjs';
 export class DashboardLayoutComponent implements OnInit, OnDestroy {
   layoutService = inject(LayoutService);
   private configService = inject(ConfigurationService);
+  private platformId = inject(PLATFORM_ID);
 
   inMaintenanceMode = false;
   private intervalId: any;
 
   ngOnInit() {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
     this.checkMaintenanceMode();
     // Poll every 10 seconds
     this.intervalId = setInterval(() => this.checkMaintenanceMode(), 10000);

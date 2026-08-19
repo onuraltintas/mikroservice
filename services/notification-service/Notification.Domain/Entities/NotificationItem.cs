@@ -13,11 +13,17 @@ public class NotificationItem
 
     public NotificationItem() { }
 
-    public static NotificationItem Create(Guid userId, string title, string message, string type, string? relatedEntityId = null)
-    {
+    public static NotificationItem Create(
+        Guid userId,
+        string title,
+        string message,
+        string type,
+        string? relatedEntityId = null,
+        Guid? id = null)
+        {
         return new NotificationItem
         {
-            Id = Guid.NewGuid(),
+            Id = id ?? Guid.NewGuid(),
             UserId = userId,
             Title = title,
             Message = message,

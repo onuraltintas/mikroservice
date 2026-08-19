@@ -1,172 +1,144 @@
-# 🚀 Uygulama Planı - Eğitim Platformu
-## Adım Adım Mikroservis Geliştirme
+# EduPlatform uygulama planı
 
----
+Bu plan, mevcut repository durumunu ve production'a çıkmadan önce kalan işleri
+tek bir yerde tutar. Hedef, ilk aşamada yaklaşık 100.000 kayıtlı kullanıcıyı
+taşıyabilen; replica, cache, queue ve database katmanları yatay büyütüldüğünde
+daha yüksek kapasiteye geçebilen bir platformdur.
 
-## 📋 Genel Bakış
+> Production deploy henüz yapılmayacaktır. Önce development → staging kapıları,
+> veri/olay sözleşmeleri, yük testi, backup/restore ve operasyon runbook'ları
+> tamamlanacaktır.
 
+## Mevcut durum
+
+| Alan | Durum | Doğrulama |
+| --- | --- | --- |
+| Identity, Coaching, Notification, Gateway | ✅ | .NET 9 Release build, warnings-as-errors |
+| PostgreSQL, Redis, RabbitMQ Compose | ✅ | Compose base/scale/production config |
+| JWT rotation, trusted proxy, service key | ✅ | security/config tests |
+| Tenant/role/active-state scope | ✅ | Docker-backed EF matrix tests |
+| Distributed gateway rate limit | ✅ | Redis atomic script + local fallback |
+| Common ProblemDetails + traceId | ✅ | API contract tests |
+| API v1 compatibility | ✅ | shared Asp.Versioning options + controller metadata |
+| Pagination bounds | ✅ | Identity and Notification tests |
+| EF inbox/outbox | ✅ | Identity/Coaching/Notification one-shot migration jobs |
+| Retry-safe email/SignalR delivery | ✅ | Atomic `EmailDeliveries` queue, encrypted bodies, lease fencing + deterministic event IDs |
+| OpenTelemetry/Prometheus/Grafana/Tempo | ✅ | monitoring config validation |
+| Angular SSR/auth guards | ✅ | 7 unit test + 22-route prerender |
+| Frontend CI security gate | ✅ | locked npm ci, npm audit, test, SSR build |
+
+## P1 paketleri
+
+### P1.1 API sözleşmeleri — tamamlandı
+
+- Her API cevabı `application/problem+json` kullanır.
+- Hatalarda stack trace yerine `type`, `status`, `instance` ve güvenli
+  `traceId` bulunur.
+- Identity, Coaching ve Notification v1 varsayılanıyla versioning middleware'i
+  kullanır; eski route'lar kırılmaz.
+- Kullanıcı ve bildirim listeleri bounded pagination uygular; deterministic
+  ordering ve toplam kayıt header'ları kullanılır.
+- Sözleşme ayrıntısı: `docs/API_CONTRACTS.md`.
+
+### P1.2 Olay güvenilirliği — tamamlandı
+
+- Üç domain servisinde EF Core MassTransit inbox/outbox tabloları vardır.
+- Identity, Coaching ve Notification için production Compose `*-migrations`
+  one-shot job'ları migration'ı web replica'larından önce uygular.
+- Consumer endpoint'lerinde exponential retry ve duplicate delivery için inbox
+  middleware'i aktiftir.
+- SMTP teslimi consumer retry'ından ayrılmış durable `EmailDeliveries` queue ve
+  lease-fenced worker ile yürütülür. Kuyruk gövdeleri Data Protection ile
+  şifrelenir, gövdeler retention sonunda temizlenirken idempotency tombstone'ları
+  korunur ve worker claim index'leriyle tarama maliyeti sınırlanır; SignalR
+  bildirim ID'leri event ID'sine bağlanır.
+- Kalıcı hatalar `_error` dead-letter kuyruğunda kalır; replay operasyonel bir
+  karardır, otomatik sonsuz retry değildir.
+- Ayrıntı: `docs/EVENT_RELIABILITY.md`.
+
+### P1.3 Tenant ve rol matrisi — tamamlandı
+
+- Identity scope sorguları aktif user/profile/institution ile sınırlandırılır.
+- Coaching write hedefleri teacher profile, institution, active student ve
+  assignment ilişkisini doğrular.
+- Parent, InstitutionAdmin/Owner, Teacher, Student ve SystemAdmin okuma
+  davranışları gerçek PostgreSQL testleriyle kontrol edilir.
+- Assignment detayında öğrenciler arası not/feedback sızıntısı engellenir.
+
+### P1.4 Frontend kalite kapısı — tamamlandı
+
+- SSR sırasında browser-only auth, dashboard, register, settings ve notification
+  çağrıları çalıştırılmaz.
+- Angular testleri, production browser/SSR build'i ve `npm audit` CI'de zorunlu.
+- Admin panel bağımlılıkları lock dosyasına sabitlenmiştir; kritik/high audit
+  açıkları sıfır olmalıdır.
+
+## Sıradaki geliştirme sırası
+
+P1 tamamlandıktan sonra feature geliştirme ve production hazırlığı şu sırada
+ilerleyecektir:
+
+1. **Bölünmüş bounded context'ler:** Coaching içindeki Assignment/Exam/Session/
+   Goal modüllerinin command/query sözleşmelerini ayrı contract testleriyle
+   sabitle; yeni Blog, Content ve Analytics servislerini ancak veri sahibi ve
+   olay sözleşmesi netleşince ekle.
+2. **Idempotency ve audit:** Dış write endpoint'lerinde client idempotency key,
+   audit actor/tenant/event metadata ve replay davranışı ekle. Event consumer
+   teslim idempotency'si P1 kapsamında tamamlandı; bu adım HTTP write ve audit
+   kapsamını genişletir.
+3. **E2E kritik akışlar:** register → email confirmation → login/refresh,
+   tenant-scoped coaching read/write, support submit/reply ve notification
+   SignalR akışlarını Gateway üzerinden Playwright ile doğrula.
+4. **Kapasite doğrulama:** disposable tenant ile smoke → baseline → 64/128/256
+   worker → soak koşularını çalıştır; p95/p99, 5xx/429, DB pool, Redis,
+   RabbitMQ lag/dead-letter ve container throttling ölç.
+5. **Staging operasyonu:** immutable image SHA, migration forward/rollback,
+   backup/restore tatbikatı, secret rotation, readiness/canary ve incident
+   runbook'larını prova et.
+6. **Production go/no-go:** SLO'lar, restore RPO/RTO, alarm sahipliği, domain
+   ve TLS/ingress kararı yazılı onaylanmadan deployment yapılmaz.
+
+## Mimari kurallar
+
+- Servisler birbirinin veritabanına bağlanmaz; paylaşım yalnız HTTP contract veya
+  versionlanmış event ile yapılır.
+- Controller'lar authorization, validation ve ProblemDetails sözleşmesini
+  bypass edecek broad catch blokları eklemez.
+- Uzun süren veya tekrarlanabilir işlerde request thread'ini tutmak yerine
+  outbox + consumer + bounded retry kullanılır.
+- Liste endpoint'leri sınırsız sonuç döndürmez; tenant filtresi count ve data
+  sorgusunda aynı olmalıdır.
+- Secret, token, request body ve PII loglanmaz; correlation/trace ID güvenli
+  formatta taşınır.
+- Ücretli kütüphane yoktur; kullanılan paketler OSS lisans/vulnerability
+  taramasından geçer.
+
+## Doğrulama komutları
+
+```powershell
+# Backend
+$env:TEMP = (Join-Path (Get-Location) '.build-temp')
+$env:TMP = $env:TEMP
+dotnet restore tests/Integration/Identity.API.IntegrationTests/Identity.API.IntegrationTests.csproj
+dotnet test tests/Integration/Identity.API.IntegrationTests/Identity.API.IntegrationTests.csproj `
+  --configuration Release --no-restore
+
+# Frontend
+npm ci --prefix clients/admin-panel --legacy-peer-deps
+npm audit --prefix clients/admin-panel --audit-level=high
+npm test --prefix clients/admin-panel -- --watch=false --progress=false
+npm run build --prefix clients/admin-panel
+
+# Compose/monitoring
+docker compose --env-file .env.example config --quiet
+docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.scale.yml config --quiet
 ```
-Aşama 1: Temel Altyapı          [Hafta 1-2]     ◀── ŞU AN BURADASINIZ
-Aşama 2: Identity Service       [Hafta 2-3]
-Aşama 3: API Gateway            [Hafta 3-4]
-Aşama 4: İlk İş Servisi         [Hafta 4-6]
-Aşama 5: Diğer Servisler        [Hafta 6-12]
-Aşama 6: Frontend'ler           [Hafta 8-14]
-Aşama 7: DevOps & Production    [Hafta 12-16]
-```
 
----
+## Üretime geçiş koşulu
 
-## 🎯 AŞAMA 1: Temel Altyapı (Hafta 1-2)
+CI'nin yeşil olması tek başına production onayı değildir. `docs/CI_CD_AND_PRODUCTION_MONITORING.md`,
+`docs/PHASE5_PRODUCTION_HARDENING.md` ve `docs/PHASE6_PERFORMANCE_OBSERVABILITY.md`
+runbook'ları staging üzerinde uygulanıp kanıtlanmadan gerçek kullanıcı trafiği
+verilmez.
 
-### 1.1 Solution Yapısı ve Klasörler
-- [ ] Ana solution oluştur
-- [ ] Mikroservis klasör yapısı
-- [ ] Shared libraries projeleri
-- [ ] Docker altyapısı
-
-### 1.2 Shared Kernel (Ortak Katman)
-- [ ] Base Entity, AggregateRoot
-- [ ] Result Pattern
-- [ ] Domain Events base
-- [ ] Common Exceptions
-
-### 1.3 Shared Infrastructure
-- [ ] Serilog konfigürasyonu
-- [ ] RabbitMQ connection helpers
-- [ ] Redis cache helpers
-- [ ] TS.MediatR behaviors (Logging, Validation)
-
-### 1.4 Development Altyapısı
-- [ ] Docker Compose (PostgreSQL, Redis, RabbitMQ)
-- [ ] Local Keycloak kurulumu
-- [ ] Elasticsearch (logging için)
-
----
-
-## 🔐 AŞAMA 2: Identity Service (Hafta 2-3)
-
-### 2.1 Keycloak Kurulumu
-- [ ] Keycloak Docker container
-- [ ] Realm konfigürasyonu (edu-platform)
-- [ ] Client apps tanımlama (web, mobile, api)
-- [ ] Role tanımları (Student, Teacher, Parent, Admin)
-
-### 2.2 Identity Service API
-- [ ] User sync service (Keycloak ↔ Local DB)
-- [ ] Profile management endpoints
-- [ ] User preferences
-- [ ] JWT validation middleware
-
----
-
-## 🌐 AŞAMA 3: API Gateway (Hafta 3-4)
-
-### 3.1 YARP Gateway
-- [ ] Gateway projesi oluştur
-- [ ] Route konfigürasyonları
-- [ ] Authentication integration
-- [ ] Rate limiting
-- [ ] Request logging
-
----
-
-## 📚 AŞAMA 4: İlk İş Servisi - Speed Reading (Hafta 4-6)
-
-### 4.1 Domain Layer
-- [ ] Exercise entity
-- [ ] StudentProgress entity
-- [ ] Domain events
-
-### 4.2 Application Layer
-- [ ] Commands (CreateExercise, CompleteExercise)
-- [ ] Queries (GetExercises, GetProgress)
-- [ ] Validators
-- [ ] Mappers
-
-### 4.3 Infrastructure Layer
-- [ ] PostgreSQL DbContext
-- [ ] Repository implementations
-- [ ] RabbitMQ event publishing
-
-### 4.4 API Layer
-- [ ] Controllers
-- [ ] Health checks
-- [ ] Swagger documentation
-
----
-
-## 📊 AŞAMA 5: Diğer Servisler (Hafta 6-12)
-
-### 5.1 Coaching Service
-### 5.2 Blog Service  
-### 5.3 Interactive Content Service
-### 5.4 Exam Service
-### 5.5 Analytics Service
-### 5.6 Notification Service
-
----
-
-## 🖥️ AŞAMA 6: Frontend Uygulamaları (Hafta 8-14)
-
-### 6.1 Angular Web App
-### 6.2 Flutter Mobile App
-
----
-
-## ☁️ AŞAMA 7: DevOps & Production (Hafta 12-16)
-
-### 7.1 Kubernetes Deployment
-### 7.2 CI/CD Pipeline
-### 7.3 Monitoring & Alerting
-
----
-
-# ✅ Mevcut İlerleme
-
-| Aşama | Durum | Tamamlanma |
-|-------|-------|------------|
-| Aşama 1.1 - Solution Yapısı | ✅ Tamamlandı | 100% |
-| Aşama 1.2 - Shared Kernel | ✅ Tamamlandı | 100% |
-| Aşama 1.3 - Shared Infrastructure | ✅ Tamamlandı | 100% |
-| Aşama 1.4 - Development Altyapısı | ✅ Tamamlandı | 100% |
-| **Aşama 2 - Identity Service** | 🔄 Devam Ediyor | 70% |
-
----
-
-## 📁 Oluşturulan Dosyalar
-
-### Solution & Shared Libraries
-- ✅ `EduPlatform.sln`
-- ✅ `shared/EduPlatform.Shared.Kernel/` (Entity, AggregateRoot, ValueObject, DomainEvent, Result, Error, Exceptions)
-- ✅ `shared/EduPlatform.Shared.Contracts/`
-- ✅ `shared/EduPlatform.Shared.Infrastructure/` (Serilog, Redis, RabbitMQ, Mediator Behaviors)
-
-### Docker Infrastructure
-- ✅ `infrastructure/docker/docker-compose.infra.yml` (PostgreSQL, Redis, RabbitMQ, Keycloak, Elasticsearch, Seq)
-- ✅ `infrastructure/docker/init-scripts/create-databases.sh`
-
-### Identity Service (Aşama 2)
-- ✅ `services/identity-service/Identity.sln`
-- ✅ `services/identity-service/Identity.Domain/` (User, Institution, StudentProfile, TeacherProfile, ParentProfile, TeacherStudentAssignment)
-- ✅ `services/identity-service/Identity.Application/` (Yapı hazır)
-- ✅ `services/identity-service/Identity.Infrastructure/` (DbContext, Entity Configurations)
-- ✅ `services/identity-service/Identity.API/` (Program.cs, Swagger, Health Checks)
-
-### Dokümantasyon
-- ✅ `docs/DATABASE_DESIGN_IDENTITY.md` (Veritabanı şeması)
-- ✅ `ARCHITECTURE_REPORT.md`
-- ✅ `PROJECT_STRUCTURE.md`
-
----
-
-## 🚀 Sonraki Adımlar
-
-1. [ ] EF Core Migration oluştur
-2. [ ] Docker altyapısını başlat
-3. [ ] Veritabanı tablolarını oluştur
-4. [ ] API Controller'ları ekle
-
----
-
-*Son Güncelleme: 2024-12-20 01:55*
+Son güncelleme: 2026-08-19
