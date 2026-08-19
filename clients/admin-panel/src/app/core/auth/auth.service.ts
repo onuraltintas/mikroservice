@@ -25,6 +25,29 @@ interface AuthSessionResponse {
     expiresInMinutes: number;
 }
 
+export interface AuthLoginResult {
+    authenticated: boolean;
+    requiresMfa: boolean;
+    mfaEnrollmentRequired: boolean;
+    mfaChallengeToken: string | null;
+}
+
+interface AuthLoginResponse extends Partial<AuthSessionResponse> {
+    requiresMfa?: boolean;
+    mfaEnrollmentRequired?: boolean;
+    mfaChallengeToken?: string | null;
+}
+
+export interface MfaSetupResponse {
+    secret: string;
+    otpAuthUri: string;
+    setupToken: string;
+}
+
+interface MfaSessionResponse extends AuthSessionResponse {
+    recoveryCodes?: string[] | null;
+}
+
 export function hasRequiredPermission(user: UserProfile | null, permission: string): boolean {
     return !!user && user.permissions.includes(permission);
 }
@@ -103,31 +126,53 @@ export class AuthService implements OnDestroy {
         this.oauthService.initLoginFlow();
     }
 
-    async loginWithGoogle(idToken: string): Promise<boolean> {
-        const response = await firstValueFrom(this.httpClient.post<AuthSessionResponse>(
+    async loginWithGoogle(idToken: string): Promise<AuthLoginResult> {
+        const response = await firstValueFrom(this.httpClient.post<AuthLoginResponse>(
             `${environment.apiUrl}/auth/google-login`,
             { idToken },
             { withCredentials: true }));
-        if (!response?.accessToken) return false;
-
-        this.applySession(response);
-        await this.router.navigate(['/dashboard']);
-        return true;
+        return this.handleLoginResponse(response);
     }
 
     async loginWithPassword(
         email: string,
         pass: string,
-        rememberMe: boolean = true): Promise<boolean> {
-        const response = await firstValueFrom(this.httpClient.post<AuthSessionResponse>(
+        rememberMe: boolean = true): Promise<AuthLoginResult> {
+        const response = await firstValueFrom(this.httpClient.post<AuthLoginResponse>(
             `${environment.apiUrl}/auth/login`,
             { email, password: pass, rememberMe },
             { withCredentials: true }));
-        if (!response?.accessToken) return false;
+        return this.handleLoginResponse(response);
+    }
 
+    async startMfaSetup(challengeToken: string): Promise<MfaSetupResponse> {
+        return firstValueFrom(this.httpClient.post<MfaSetupResponse>(
+            `${environment.apiUrl}/auth/mfa/setup`,
+            { challengeToken }));
+    }
+
+    async enableMfa(
+        challengeToken: string,
+        setupToken: string,
+        code: string): Promise<string[]> {
+        const response = await firstValueFrom(this.httpClient.post<MfaSessionResponse>(
+            `${environment.apiUrl}/auth/mfa/enable`,
+            { challengeToken, setupToken, code },
+            { withCredentials: true }));
+        this.applySession(response);
+        return response.recoveryCodes ?? [];
+    }
+
+    async verifyMfa(
+        challengeToken: string,
+        code: string | null,
+        recoveryCode: string | null = null): Promise<void> {
+        const response = await firstValueFrom(this.httpClient.post<AuthSessionResponse>(
+            `${environment.apiUrl}/auth/mfa/verify`,
+            { challengeToken, code, recoveryCode },
+            { withCredentials: true }));
         this.applySession(response);
         await this.router.navigate(['/dashboard']);
-        return true;
     }
 
     async refreshSession(): Promise<boolean> {
@@ -204,6 +249,35 @@ export class AuthService implements OnDestroy {
         this.accessTokenExpiresAt = Date.now() + lifetimeMinutes * 60_000;
         this.loadUserProfile();
         this.scheduleRefresh();
+    }
+
+    private async handleLoginResponse(response: AuthLoginResponse): Promise<AuthLoginResult> {
+        if (response.requiresMfa) {
+            return {
+                authenticated: false,
+                requiresMfa: true,
+                mfaEnrollmentRequired: response.mfaEnrollmentRequired === true,
+                mfaChallengeToken: response.mfaChallengeToken ?? null
+            };
+        }
+
+        if (!response.accessToken || !response.tokenType || response.expiresInMinutes === undefined) {
+            return {
+                authenticated: false,
+                requiresMfa: false,
+                mfaEnrollmentRequired: false,
+                mfaChallengeToken: null
+            };
+        }
+
+        this.applySession(response as AuthSessionResponse);
+        await this.router.navigate(['/dashboard']);
+        return {
+            authenticated: true,
+            requiresMfa: false,
+            mfaEnrollmentRequired: false,
+            mfaChallengeToken: null
+        };
     }
 
     private scheduleRefresh() {

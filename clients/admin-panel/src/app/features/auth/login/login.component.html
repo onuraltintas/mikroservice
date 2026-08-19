@@ -91,7 +91,7 @@
                 <p class="text-gray-500 dark:text-gray-400">Lütfen hesabınıza giriş yapın.</p>
             </div>
 
-            <form (submit)="onSubmit($event)" class="flex flex-col gap-6">
+            <form *ngIf="mfaStage() === 'none'" (submit)="onSubmit($event)" class="flex flex-col gap-6">
 
                 <!-- Email -->
                 <div class="group">
@@ -166,6 +166,68 @@
                 </div>
 
             </form>
+
+            <section *ngIf="mfaStage() === 'setup' || mfaStage() === 'verify'"
+                class="flex flex-col gap-5" aria-labelledby="mfa-title">
+                <div>
+                    <h4 id="mfa-title" class="text-xl font-bold text-gray-900 dark:text-white">
+                        {{ mfaStage() === 'setup' ? 'İki Adımlı Doğrulamayı Kurun' : 'Doğrulama Kodu' }}
+                    </h4>
+                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                        {{ mfaStage() === 'setup'
+                            ? 'Authenticator uygulamanıza aşağıdaki anahtarı ekleyin ve üretilen kodu girin.'
+                            : 'Authenticator uygulamanızdaki altı haneli kodu girin.' }}
+                    </p>
+                </div>
+
+                <div *ngIf="mfaStage() === 'setup'"
+                    class="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+                    <span class="block text-xs font-semibold uppercase text-blue-700 dark:text-blue-300">Kurulum anahtarı</span>
+                    <code class="mt-2 block break-all text-base font-bold tracking-wider text-gray-900 dark:text-white">{{ mfaSecret() }}</code>
+                </div>
+
+                <div>
+                    <label for="mfa-code" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Altı haneli kod
+                    </label>
+                    <input id="mfa-code" name="mfaCode" inputmode="numeric" autocomplete="one-time-code"
+                        maxlength="6" pattern="[0-9]{6}" [(ngModel)]="mfaCode"
+                        class="w-full rounded-xl border border-gray-200 bg-gray-50 px-5 py-4 text-center text-2xl font-bold tracking-[0.5em] text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-700/50 dark:text-white">
+                </div>
+
+                <button mat-flat-button color="primary" type="button" (click)="submitMfa()"
+                    [disabled]="isLoading() || mfaCode.length !== 6" class="!py-4 !rounded-xl !font-bold">
+                    <mat-spinner *ngIf="isLoading()" diameter="22"></mat-spinner>
+                    <span *ngIf="!isLoading()">Doğrula ve Devam Et</span>
+                </button>
+
+                <details *ngIf="mfaStage() === 'verify'" class="text-sm text-gray-600 dark:text-gray-300">
+                    <summary class="cursor-pointer font-semibold text-blue-600">Kurtarma kodu kullan</summary>
+                    <label for="mfa-recovery" class="mt-4 mb-2 block">Tek kullanımlık kurtarma kodu</label>
+                    <input id="mfa-recovery" name="mfaRecoveryCode" autocomplete="one-time-code"
+                        [(ngModel)]="mfaRecoveryCode"
+                        class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 uppercase dark:border-gray-600 dark:bg-gray-700/50">
+                    <button mat-stroked-button type="button" (click)="submitRecoveryCode()"
+                        [disabled]="isLoading() || !mfaRecoveryCode.trim()" class="mt-3 w-full">
+                        Kurtarma Koduyla Doğrula
+                    </button>
+                </details>
+            </section>
+
+            <section *ngIf="mfaStage() === 'recovery'" class="flex flex-col gap-5" aria-labelledby="recovery-title">
+                <div>
+                    <h4 id="recovery-title" class="text-xl font-bold text-gray-900 dark:text-white">Kurtarma Kodlarınızı Kaydedin</h4>
+                    <p class="mt-2 text-sm text-amber-700 dark:text-amber-300">
+                        Bu kodlar yalnızca bir kez gösterilir. Her kod tek kullanımlıktır; güvenli bir parola yöneticisine kaydedin.
+                    </p>
+                </div>
+                <ul class="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-4 font-mono text-sm dark:bg-gray-700"
+                    aria-label="Tek kullanımlık kurtarma kodları">
+                    <li *ngFor="let code of recoveryCodes()" class="select-all text-center">{{ code }}</li>
+                </ul>
+                <button mat-flat-button color="primary" type="button" (click)="finishMfaEnrollment()"
+                    class="!py-4 !rounded-xl !font-bold">Kodları Kaydettim, Devam Et</button>
+            </section>
 
             <div *ngIf="errorMessage()"
                 class="mt-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 text-red-600 dark:text-red-400 flex flex-col gap-2 relative overflow-hidden">

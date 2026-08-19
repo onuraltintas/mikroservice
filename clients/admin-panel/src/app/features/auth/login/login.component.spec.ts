@@ -40,6 +40,7 @@ describe('LoginComponent MFA flow', () => {
     const component = createComponent(authService);
     component.mfaChallengeToken = 'challenge';
     component.mfaSetupToken = 'setup';
+    component.mfaStage.set('setup');
     component.mfaCode = '123456';
 
     await component.submitMfa();

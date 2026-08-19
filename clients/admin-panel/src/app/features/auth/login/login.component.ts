@@ -41,6 +41,14 @@ export class LoginComponent {
     showResendLink = signal(false);
     showSupportLink = signal(false);
     resendingEmail = signal(false);
+    mfaStage = signal<'none' | 'setup' | 'verify' | 'recovery'>('none');
+    mfaSecret = signal('');
+    mfaOtpAuthUri = signal('');
+    recoveryCodes = signal<string[]>([]);
+    mfaChallengeToken = '';
+    mfaSetupToken = '';
+    mfaCode = '';
+    mfaRecoveryCode = '';
 
     // Password Flow Properties
     email = '';
@@ -60,8 +68,12 @@ export class LoginComponent {
     async handleGoogleLogin(idToken: string) {
         this.isLoading.set(true);
         try {
-            await this.authService.loginWithGoogle(idToken);
-            this.toaster.success('Google ile giriş başarılı!');
+            const result = await this.authService.loginWithGoogle(idToken);
+            if (result.requiresMfa) {
+                await this.beginMfa(result.mfaChallengeToken, result.mfaEnrollmentRequired);
+            } else {
+                this.toaster.success('Google ile giriş başarılı!');
+            }
         } catch (error: any) {
             console.error('Google Login Error:', error);
             const errorCode = error.error?.code; // Changed from error.error?.Error which was likely incorrect based on typical formatting
@@ -102,8 +114,12 @@ export class LoginComponent {
 
         try {
             // rememberMe bilgisini de gönderiyoruz
-            await this.authService.loginWithPassword(this.email, this.password, this.rememberMe);
-            this.toaster.success('Giriş başarılı! Yönlendiriliyorsunuz.');
+            const result = await this.authService.loginWithPassword(this.email, this.password, this.rememberMe);
+            if (result.requiresMfa) {
+                await this.beginMfa(result.mfaChallengeToken, result.mfaEnrollmentRequired);
+            } else {
+                this.toaster.success('Giriş başarılı! Yönlendiriliyorsunuz.');
+            }
         } catch (error: any) {
             console.error('Login error:', error);
 
@@ -124,6 +140,73 @@ export class LoginComponent {
             }
             this.isLoading.set(false);
         }
+    }
+
+    async submitMfa() {
+        if (!this.mfaChallengeToken || this.mfaCode.length !== 6) return;
+
+        this.isLoading.set(true);
+        this.errorMessage.set(null);
+        try {
+            if (this.mfaStage() === 'setup') {
+                const codes = await this.authService.enableMfa(
+                    this.mfaChallengeToken,
+                    this.mfaSetupToken,
+                    this.mfaCode);
+                this.recoveryCodes.set(codes);
+                this.mfaCode = '';
+                this.mfaStage.set('recovery');
+                this.toaster.success('İki adımlı doğrulama etkinleştirildi.');
+                return;
+            }
+
+            await this.authService.verifyMfa(this.mfaChallengeToken, this.mfaCode);
+            this.toaster.success('Giriş doğrulandı.');
+        } catch (error: any) {
+            this.errorMessage.set(error.error?.description || 'Doğrulama kodu geçersiz.');
+        } finally {
+            this.isLoading.set(false);
+        }
+    }
+
+    async submitRecoveryCode() {
+        if (!this.mfaChallengeToken || !this.mfaRecoveryCode.trim()) return;
+
+        this.isLoading.set(true);
+        try {
+            await this.authService.verifyMfa(
+                this.mfaChallengeToken,
+                null,
+                this.mfaRecoveryCode.trim());
+            this.toaster.success('Kurtarma koduyla giriş doğrulandı.');
+        } catch (error: any) {
+            this.errorMessage.set(error.error?.description || 'Kurtarma kodu geçersiz.');
+        } finally {
+            this.isLoading.set(false);
+        }
+    }
+
+    async finishMfaEnrollment() {
+        await this.router.navigate(['/dashboard']);
+    }
+
+    private async beginMfa(challengeToken: string | null, enrollmentRequired: boolean) {
+        if (!challengeToken) {
+            throw new Error('MFA challenge alınamadı.');
+        }
+
+        this.mfaChallengeToken = challengeToken;
+        this.password = '';
+        if (!enrollmentRequired) {
+            this.mfaStage.set('verify');
+            return;
+        }
+
+        const setup = await this.authService.startMfaSetup(challengeToken);
+        this.mfaSecret.set(setup.secret);
+        this.mfaOtpAuthUri.set(setup.otpAuthUri);
+        this.mfaSetupToken = setup.setupToken;
+        this.mfaStage.set('setup');
     }
 
     async resendVerification() {
