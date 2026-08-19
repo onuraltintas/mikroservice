@@ -89,6 +89,51 @@ describe('AuthService browser session security', () => {
     expect(service.isAuthenticated()).toBe(true);
     expect(service.userProfile()?.id).toBe('restored-user');
   });
+
+  it('keeps an MFA challenge outside authenticated session state', async () => {
+    const service = TestBed.inject(AuthService);
+    http.expectOne(req => req.url.endsWith('/auth/refresh-token')).flush(
+      { error: 'no session' },
+      { status: 401, statusText: 'Unauthorized' });
+
+    const loginPromise = service.loginWithPassword('admin@example.test', 'password', true);
+    http.expectOne(req => req.url.endsWith('/auth/login')).flush({
+      requiresMfa: true,
+      mfaEnrollmentRequired: true,
+      mfaChallengeToken: 'challenge'
+    });
+
+    const result = await loginPromise;
+    expect(result.requiresMfa).toBe(true);
+    expect(result.mfaEnrollmentRequired).toBe(true);
+    expect(result.mfaChallengeToken).toBe('challenge');
+    expect(service.isAuthenticated()).toBe(false);
+  });
+
+  it('completes MFA verification using the HttpOnly refresh cookie', async () => {
+    const service = TestBed.inject(AuthService);
+    http.expectOne(req => req.url.endsWith('/auth/refresh-token')).flush(
+      { error: 'no session' },
+      { status: 401, statusText: 'Unauthorized' });
+
+    const verifyPromise = service.verifyMfa('challenge', '123456');
+    const request = http.expectOne(req => req.url.endsWith('/auth/mfa/verify'));
+    expect(request.request.withCredentials).toBe(true);
+    expect(request.request.body).toEqual({
+      challengeToken: 'challenge',
+      code: '123456',
+      recoveryCode: null
+    });
+    request.flush({
+      accessToken: createToken('mfa-admin'),
+      tokenType: 'Bearer',
+      expiresInMinutes: 15
+    });
+
+    await verifyPromise;
+    expect(service.isAuthenticated()).toBe(true);
+    expect(service.userProfile()?.id).toBe('mfa-admin');
+  });
 });
 
 function createToken(userId: string): string {
