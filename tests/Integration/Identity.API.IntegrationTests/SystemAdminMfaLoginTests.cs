@@ -3,6 +3,7 @@ using EduPlatform.Shared.Security.Interfaces;
 using FluentAssertions;
 using Identity.Application.Commands.Login;
 using Identity.Application.Commands.GoogleLogin;
+using Identity.Application.Commands.RefreshToken;
 using Identity.Application.DTOs.Settings;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
@@ -70,6 +71,27 @@ public sealed class SystemAdminMfaLoginTests
         tokenService.RefreshTokenRequested.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task LegacySystemAdminRefreshToken_ShouldRequireFreshMfaLogin()
+    {
+        var user = CreateSystemAdministrator();
+        var refreshToken = RefreshToken.Create(
+            user.Id, "legacy-refresh", DateTime.UtcNow.AddDays(1), "127.0.0.1",
+            isPersistent: true, mfaVerifiedAt: null);
+        user.AddRefreshToken(refreshToken);
+        var tokenService = new RejectingTokenService();
+        var handler = new RefreshTokenCommandHandler(
+            new StubUserRepository(user), tokenService, new StubUnitOfWork());
+
+        var result = await handler.Handle(
+            new RefreshTokenCommand(refreshToken.Token), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.MfaRequired");
+        refreshToken.IsActive.Should().BeFalse();
+        tokenService.AccessTokenRequested.Should().BeFalse();
+    }
+
     private static User CreateSystemAdministrator()
     {
         var user = User.Create(Guid.NewGuid(), "admin@example.com");
@@ -88,7 +110,7 @@ public sealed class SystemAdminMfaLoginTests
         public void Delete(User value) => throw new NotSupportedException();
         public Task<Identity.Application.Queries.GetAllUsers.PagedList<Identity.Application.Queries.GetUserProfile.UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Identity.Application.Queries.GetAllUsers.UserSummaryDto> GetSummaryAsync(Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken) => Task.FromResult<User?>(user);
         public Task RevokeActiveRefreshTokensAsync(Guid userId, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<List<User>> GetUsersByRolesAsync(List<string> roleNames, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
