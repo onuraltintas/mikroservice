@@ -26,9 +26,9 @@ public static class RefreshTokenCookiePolicy
         LoginResponse session,
         bool isProduction) => Issue(
             response,
-            session.AccessToken,
-            session.RefreshToken,
-            session.RefreshTokenExpiresAt,
+            session.AccessToken ?? throw new InvalidOperationException("An access token is required to issue a session."),
+            session.RefreshToken ?? throw new InvalidOperationException("A refresh token is required to issue a session."),
+            session.RefreshTokenExpiresAt ?? throw new InvalidOperationException("A refresh token expiry is required to issue a session."),
             session.TokenType,
             session.ExpiresInMinutes,
             session.IsPersistent,

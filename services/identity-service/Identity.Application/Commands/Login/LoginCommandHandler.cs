@@ -15,6 +15,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
     private readonly IUnitOfWork _unitOfWork;
     private readonly IIdentityService _identityService;
     private readonly IConfigurationService _configurationService;
+    private readonly IMultiFactorService _multiFactorService;
     private readonly Microsoft.Extensions.Logging.ILogger<LoginCommandHandler> _logger;
 
     public LoginCommandHandler(
@@ -24,6 +25,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         IUnitOfWork unitOfWork,
         IIdentityService identityService,
         IConfigurationService configurationService,
+        IMultiFactorService multiFactorService,
         Microsoft.Extensions.Logging.ILogger<LoginCommandHandler> logger)
     {
         _userRepository = userRepository;
@@ -32,6 +34,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         _unitOfWork = unitOfWork;
         _identityService = identityService;
         _configurationService = configurationService;
+        _multiFactorService = multiFactorService;
         _logger = logger;
     }
 
@@ -50,7 +53,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             return Result.Failure<LoginResponse>(new Error("Auth.InvalidCredentials", "E-posta veya şifre hatalı."));
         }
 
-        if (_passwordHasher.NeedsRehash(user.PasswordHash, user.PasswordSalt))
+        var passwordRehashed = _passwordHasher.NeedsRehash(user.PasswordHash, user.PasswordSalt);
+        if (passwordRehashed)
         {
             _passwordHasher.CreatePasswordHash(request.Password, out var passwordHash, out var passwordSalt);
             user.SetPassword(passwordHash, passwordSalt);
@@ -86,6 +90,20 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             {
                 return Result.Failure<LoginResponse>(new Error("System.MaintenanceMode", "Sistem şu anda bakım modundadır. Lütfen daha sonra tekrar deneyiniz."));
             }
+        }
+
+        var isSystemAdministrator = user.Roles.Any(role =>
+            string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
+        if (isSystemAdministrator)
+        {
+            if (passwordRehashed)
+            {
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+
+            return Result.Success(LoginResponse.RequireMfa(
+                _multiFactorService.CreateChallenge(user.Id, request.RememberMe),
+                enrollmentRequired: !user.MfaEnabled));
         }
 
         // 6. Generate Tokens
