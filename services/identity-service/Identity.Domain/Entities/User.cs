@@ -1,4 +1,8 @@
 using EduPlatform.Shared.Kernel.Primitives;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 
 namespace Identity.Domain.Entities;
 
@@ -26,6 +30,18 @@ public class User : AggregateRoot
     public bool PhoneConfirmed { get; private set; }
     public bool IsActive { get; private set; } = true;
     public DateTime? LastLoginAt { get; private set; }
+
+    public bool MfaEnabled { get; private set; }
+    public string? MfaSecretProtected { get; private set; }
+    public string MfaRecoveryCodeHashesJson { get; private set; } = "[]";
+    public DateTimeOffset? MfaEnabledAt { get; private set; }
+    public long? LastAcceptedMfaTimeStep { get; private set; }
+    public int MfaFailedAttempts { get; private set; }
+    public DateTimeOffset? MfaLockedUntil { get; private set; }
+
+    [NotMapped]
+    public IReadOnlyList<string> MfaRecoveryCodeHashes =>
+        JsonSerializer.Deserialize<string[]>(MfaRecoveryCodeHashesJson) ?? [];
 
     // Navigation properties
     private readonly List<UserRole> _roles = new();
@@ -132,6 +148,95 @@ public class User : AggregateRoot
     public void RecordLogin()
     {
         LastLoginAt = DateTime.UtcNow;
+    }
+
+    public void EnableMfa(
+        string protectedSecret,
+        IEnumerable<string> recoveryCodeHashes,
+        DateTimeOffset enabledAt)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(protectedSecret);
+        ArgumentNullException.ThrowIfNull(recoveryCodeHashes);
+
+        var hashes = recoveryCodeHashes
+            .Where(hash => !string.IsNullOrWhiteSpace(hash))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        if (hashes.Length == 0)
+        {
+            throw new ArgumentException("At least one recovery code hash is required.", nameof(recoveryCodeHashes));
+        }
+
+        MfaSecretProtected = protectedSecret;
+        MfaRecoveryCodeHashesJson = JsonSerializer.Serialize(hashes);
+        MfaEnabledAt = enabledAt;
+        MfaEnabled = true;
+        LastAcceptedMfaTimeStep = null;
+        ResetMfaFailures();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public bool TryAcceptMfaTimeStep(long timeStep)
+    {
+        if (!MfaEnabled || LastAcceptedMfaTimeStep >= timeStep)
+        {
+            return false;
+        }
+
+        LastAcceptedMfaTimeStep = timeStep;
+        ResetMfaFailures();
+        UpdatedAt = DateTime.UtcNow;
+        return true;
+    }
+
+    public bool ConsumeMfaRecoveryCode(string recoveryCodeHash)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(recoveryCodeHash);
+
+        var hashes = MfaRecoveryCodeHashes.ToList();
+        var supplied = Encoding.UTF8.GetBytes(recoveryCodeHash);
+        var matchIndex = hashes.FindIndex(stored =>
+        {
+            var candidate = Encoding.UTF8.GetBytes(stored);
+            return candidate.Length == supplied.Length
+                && CryptographicOperations.FixedTimeEquals(candidate, supplied);
+        });
+
+        if (matchIndex < 0)
+        {
+            return false;
+        }
+
+        hashes.RemoveAt(matchIndex);
+        MfaRecoveryCodeHashesJson = JsonSerializer.Serialize(hashes);
+        ResetMfaFailures();
+        UpdatedAt = DateTime.UtcNow;
+        return true;
+    }
+
+    public void RecordFailedMfaAttempt(DateTimeOffset now)
+    {
+        if (MfaLockedUntil <= now)
+        {
+            MfaFailedAttempts = 0;
+            MfaLockedUntil = null;
+        }
+
+        MfaFailedAttempts++;
+        if (MfaFailedAttempts >= 5)
+        {
+            MfaLockedUntil = now.AddMinutes(5);
+        }
+
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public bool IsMfaVerificationLocked(DateTimeOffset now) => MfaLockedUntil > now;
+
+    public void ResetMfaFailures()
+    {
+        MfaFailedAttempts = 0;
+        MfaLockedUntil = null;
     }
 
     public void Deactivate()

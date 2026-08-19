@@ -30,6 +30,14 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.PhoneNumber)
             .HasMaxLength(20);
 
+        builder.Property(u => u.MfaSecretProtected)
+            .HasMaxLength(2048);
+
+        builder.Property(u => u.MfaRecoveryCodeHashesJson)
+            .IsRequired()
+            .HasMaxLength(4096)
+            .HasDefaultValue("[]");
+
         builder.Property(u => u.CreatedAt)
             .HasDefaultValueSql("NOW()");
 
