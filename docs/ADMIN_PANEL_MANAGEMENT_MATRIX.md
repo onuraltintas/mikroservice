@@ -15,7 +15,7 @@ route guard'ları yalnızca kullanıcı deneyimi ve erken yönlendirme sağlar.
 | Identity | Kurum listeleme/detay ve yönetici listesi (SystemAdmin global, diğer yöneticiler yalnız aktif kendi tenant'ı) | `/api/institutions` | `Permissions.Institutions.View` |
 | Identity | Kurum oluşturma, aktiflik ve lisans/kapasite yönetimi | `/api/institutions` | `SystemAdmin` + `Permissions.Institutions.Manage` |
 | Identity | Kendi tenant'ının iletişim bilgileri ve kurum yöneticileri | `/api/institutions` | Aktif tenant yöneticisi + `Permissions.Institutions.Manage` |
-| Identity | Sistem ayarları, log ve retention yönetimi | `/api/configurations`, `/api/system-logs` | `Permissions.Operations.View` ve mevcut SystemAdmin mutasyon politikaları |
+| Identity | Secret içermeyen feature flag ve sistem ayarları, log ve retention yönetimi | `/api/configurations`, `/api/system-logs` | `Permissions.Operations.View` ve mevcut SystemAdmin mutasyon politikaları |
 | Notification | Destek talebi listeleme, filtreleme, notlandırma, işlenmiş işareti ve yanıt | `/api/support/requests`, `/api/support/reply` | `Permissions.Support.View/Reply` |
 | Notification | E-posta şablonu listeleme, oluşturma, konu/gövde/aktiflik güncelleme | `/api/email-templates` | `Permissions.Notifications.Templates` |
 | Notification | Kullanıcının kendi bildirimleri | `/api/notifications` | Oturum sahibi |
@@ -49,6 +49,9 @@ Bunlar eksik CRUD olarak değerlendirilmez; farklı bir güvenlik ve işletim s�
 Bu alanlar CI/CD, secret manager, migration job ve observability runbook'larıyla
 yönetilir. Admin paneline secret veya altyapı yazma yetkisi vermek, platform
 admininin JWT'si ele geçirildiğinde blast radius'u gereksiz şekilde büyütür.
+`ConfigurationDataType.Secret` ile oluşturulmuş eski kayıtlar migration sürecinde
+tanınır ancak yönetim API'sinde listelenmez, okunmaz veya değiştirilemez. Yeni
+secret kaydı oluşturma da fail-closed olarak reddedilir.
 
 ## Yetkilendirme ve işletim kuralları
 

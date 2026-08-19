@@ -205,14 +205,6 @@ import { ToasterService } from '../../../../core/services/toaster.service';
                                 <input type="number" [value]="config.value" (change)="updateValue(config, $event)" class="w-full px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
                             </div>
 
-                            <!-- Secret -->
-                            <div *ngSwitchCase="4" class="relative">
-                                <input [type]="showSecrets.has(config.id) ? 'text' : 'password'" [value]="config.value" (change)="updateValue(config, $event)" class="w-full pl-3 pr-10 py-1.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-mono overflow-hidden truncate">
-                                <button (click)="toggleSecret(config.id)" class="absolute right-2 top-1.5 text-gray-400 hover:text-indigo-500">
-                                    <span class="material-icons text-sm">{{ showSecrets.has(config.id) ? 'visibility_off' : 'visibility' }}</span>
-                                </button>
-                            </div>
-
                             <!-- Default / String -->
                             <div *ngSwitchCase="0">
                                 <textarea [value]="config.value" (change)="updateValue(config, $event)" rows="2" class="w-full px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-1 focus:ring-indigo-500 outline-none transition-all resize-none"></textarea>
@@ -256,7 +248,6 @@ import { ToasterService } from '../../../../core/services/toaster.service';
                         <option [ngValue]="1">Sayı (Number)</option>
                         <option [ngValue]="2">Aç/Kapat (Boolean)</option>
                         <option [ngValue]="3">JSON</option>
-                        <option [ngValue]="4">Gizli (Secret/API Key)</option>
                     </select>
                 </div>
                 <div>
@@ -295,7 +286,6 @@ export class ConfigurationsComponent implements OnInit {
     selectedGroup = signal<string>('All');
     searchQuery = '';
     showCreateModal = false;
-    showSecrets = new Set<string>();
 
     newConfig = {
         key: '',
@@ -457,14 +447,6 @@ export class ConfigurationsComponent implements OnInit {
             next: () => this.toaster.success('Redis cache başarıyla yenilendi.'),
             error: () => this.toaster.error('Cache yenilenemedi.')
         });
-    }
-
-    toggleSecret(id: string) {
-        if (this.showSecrets.has(id)) {
-            this.showSecrets.delete(id);
-        } else {
-            this.showSecrets.add(id);
-        }
     }
 
     onKeyChange(value: string) {

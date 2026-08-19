@@ -1,7 +1,9 @@
 using Identity.Application.DTOs.Settings;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using Identity.Infrastructure.Persistence;
+using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -26,6 +28,7 @@ public class ConfigurationService : IConfigurationService
     {
         return await _context.Configurations
             .AsNoTracking()
+            .Where(c => c.DataType != ConfigurationDataType.Secret)
             .Select(c => new ConfigurationDto
             {
                 Id = c.Id,
@@ -37,6 +40,19 @@ public class ConfigurationService : IConfigurationService
                 Group = c.Group
             })
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<string?> GetManageableConfigurationValueAsync(
+        string key,
+        CancellationToken cancellationToken)
+    {
+        var normalizedKey = key.ToLower().Trim();
+        return await _context.Configurations
+            .AsNoTracking()
+            .Where(c => c.DataType != ConfigurationDataType.Secret)
+            .Where(c => c.Key.ToLower() == normalizedKey)
+            .Select(c => c.Value)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<string?> GetConfigurationValueAsync(string key, CancellationToken cancellationToken)
@@ -66,15 +82,20 @@ public class ConfigurationService : IConfigurationService
         var normalizedKey = key.ToLower().Trim();
         var cacheKey = $"{CacheKeyPrefix}public:{normalizedKey}";
 
-        var cachedValue = await _cache.GetStringAsync(cacheKey, cancellationToken);
-        if (!string.IsNullOrEmpty(cachedValue)) return cachedValue;
-
-        // Check if config exists AND IS PUBLIC
+        // Validate public eligibility before consulting Redis. This prevents a
+        // value cached by an older deployment from exposing a legacy secret.
         var config = await _context.Configurations
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Key.ToLower() == normalizedKey && c.IsPublic, cancellationToken);
+            .FirstOrDefaultAsync(
+                c => c.Key.ToLower() == normalizedKey
+                    && c.IsPublic
+                    && c.DataType != ConfigurationDataType.Secret,
+                cancellationToken);
 
         if (config == null) return null;
+
+        var cachedValue = await _cache.GetStringAsync(cacheKey, cancellationToken);
+        if (!string.IsNullOrEmpty(cachedValue)) return cachedValue;
 
         await _cache.SetStringAsync(cacheKey, config.Value, new DistributedCacheEntryOptions
         {
@@ -86,6 +107,7 @@ public class ConfigurationService : IConfigurationService
 
     public async Task<ConfigurationDto> CreateConfigurationAsync(CreateConfigurationRequest request, CancellationToken cancellationToken)
     {
+        EnsureManageableDataType(request.DataType);
         var normalizedKey = request.Key.ToLower().Trim();
         
         var existing = await _context.Configurations
@@ -93,6 +115,7 @@ public class ConfigurationService : IConfigurationService
 
         if (existing != null)
         {
+            EnsureManageableDataType(existing.DataType);
             _logger.LogInformation("Updating existing configuration: {Key}", normalizedKey);
             existing.UpdateValue(request.Value, request.IsPublic);
             existing.UpdateMetadata(request.Description, request.Group, request.DataType);
@@ -126,6 +149,8 @@ public class ConfigurationService : IConfigurationService
 
         if (config == null) throw new Exception($"Configuration '{normalizedKey}' not found.");
 
+        EnsureManageableDataType(config.DataType);
+
         config.UpdateValue(request.Value);
         await _context.SaveChangesAsync(cancellationToken);
         await UpdateCacheAsync(normalizedKey, request.Value, cancellationToken);
@@ -138,6 +163,8 @@ public class ConfigurationService : IConfigurationService
             .FirstOrDefaultAsync(c => c.Key.ToLower() == normalizedKey, cancellationToken);
 
         if (config == null) return;
+
+        EnsureManageableDataType(config.DataType);
 
         _context.Configurations.Remove(config);
         await _context.SaveChangesAsync(cancellationToken);
@@ -167,6 +194,16 @@ public class ConfigurationService : IConfigurationService
         
         // Invalidate public cache for this key
          await _cache.RemoveAsync($"{CacheKeyPrefix}public:{key}", ct);
+    }
+
+    private static void EnsureManageableDataType(ConfigurationDataType dataType)
+    {
+        if (dataType == ConfigurationDataType.Secret)
+        {
+            throw new BusinessRuleException(
+                "Configuration.SecretManagementForbidden",
+                "Secret değerler yönetim API'sinde saklanamaz; bir secret manager kullanılmalıdır.");
+        }
     }
 
     private static ConfigurationDto MapToDto(SystemConfiguration c) => new()

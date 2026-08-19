@@ -30,7 +30,7 @@ public class ConfigurationsController : ControllerBase
     [HttpGet("{key}")]
     public async Task<ActionResult<string>> GetValue(string key, CancellationToken cancellationToken)
     {
-        var value = await _configurationService.GetConfigurationValueAsync(key, cancellationToken);
+        var value = await _configurationService.GetManageableConfigurationValueAsync(key, cancellationToken);
         if (value == null) return NotFound();
         return Ok(value);
     }

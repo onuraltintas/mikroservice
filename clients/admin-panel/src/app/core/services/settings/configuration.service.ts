@@ -7,8 +7,7 @@ export enum ConfigurationDataType {
     String = 0,
     Number = 1,
     Boolean = 2,
-    Json = 3,
-    Secret = 4
+    Json = 3
 }
 
 export interface Configuration {
@@ -88,7 +87,6 @@ export class ConfigurationService {
                 case 'Number': config.dataType = ConfigurationDataType.Number; break;
                 case 'Boolean': config.dataType = ConfigurationDataType.Boolean; break;
                 case 'Json': config.dataType = ConfigurationDataType.Json; break;
-                case 'Secret': config.dataType = ConfigurationDataType.Secret; break;
                 default: config.dataType = ConfigurationDataType.String;
             }
         }
