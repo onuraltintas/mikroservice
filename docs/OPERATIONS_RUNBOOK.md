@@ -193,6 +193,40 @@ Mesaj replay'i otomatik yapılmaz; dead-letter ve durable queue replay'i olay
 Gerçek credential geçmişte commit edilmişse önce tüm değerler rotate edilir;
 history purge (git filter/rewrite) ayrıca yedek ve ekip onayı gerektirir.
 
+### Repository credential olayı müdahalesi
+
+Bu prosedür, bir secret veya credential'ın Git geçmişine girdiği doğrulandığında
+uygulanır. `git revert` yeterli değildir; hassas blob eski commit'te kalır.
+
+1. Önce etkilenen sağlayıcıdaki credential'ı revoke/rotate edin. PostgreSQL,
+   RabbitMQ, Redis, SMTP, Keycloak admin/database/client ve test yönetici
+   hesapları ayrı ayrı doğrulanır; secret değeri ticket, log veya commit'e
+   yazılmaz.
+2. Yeni değerle health/readiness, login/refresh ve servisler arası çağrı smoke
+   testini doğrulayın. JWT için mevcut overlap sırası korunur.
+3. Her yolu doğrulayarak `git-filter-repo --sensitive-data-removal` ile hassas
+   dosyayı ya da metni tüm branch/tag/ref geçmişinden çıkarın. Uzak dalları
+   yalnız güncel uç SHA'lara karşı `--force-with-lease` ile güncelleyin.
+4. Eski history'den türemiş tüm yerel klonlar yeniden klonlanır; eski dalı merge
+   etmek sızıntıyı geri getirebileceğinden kullanılmaz. Korunmamış yerel iş
+   varsa önce patch alınır.
+5. Açık repository, fork veya pull request geçmişi varsa GitHub Support'a
+   repository adı, etkilenen pull request sayısı ve `git-filter-repo` tarafından
+   bildirilen ilk değişen commit bilgisiyle purge talebi açın. Force-push tek
+   başına GitHub cache'lerini ve diğer klonları garantiyle silmez. Ayrıntılar:
+   [GitHub hassas veri temizleme prosedürü](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository).
+
+2026-08-19'da geçmişteki `infrastructure/docker/.env.backup` dosyası bu
+prosedürle `main` ve `codex/platform-hardening` dallarından çıkarıldı. Yerel
+çalışma ortamındaki aktif PostgreSQL, RabbitMQ ve Redis değerlerinin sızmış
+değerlerle eşleşmediği doğrulandı. Eski Keycloak veya SMTP kurulumu hâlâ
+kullanılıyorsa, ilgili sağlayıcı erişimi olan kişi yukarıdaki ilk adımı ayrıca
+tamamlamalıdır.
+
+CI, `.env`/`.env.backup` benzeri izlenen dosyaları ve yaygın private-key
+biçimlerini reddeder. Bu koruma secret manager, kısa ömürlü credential ve kod
+incelemesinin yerine geçmez.
+
 ## 5. Canary, readiness ve rollback
 
 1. Migration job tamamlanır; yeni image tek staging replica ile başlatılır.
