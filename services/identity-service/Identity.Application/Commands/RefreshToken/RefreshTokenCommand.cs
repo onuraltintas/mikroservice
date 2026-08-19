@@ -9,5 +9,6 @@ public record RefreshTokenResponse(
     string AccessToken,
     string RefreshToken,
     DateTime RefreshTokenExpiresAt,
+    bool IsPersistent,
     string TokenType = "Bearer",
     int ExpiresInMinutes = 15);

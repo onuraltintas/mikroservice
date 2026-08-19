@@ -58,7 +58,8 @@ public sealed class RefreshTokenCookiePolicyTests
         var login = new LoginResponse(
             "access-token",
             "browser-secret-refresh-token",
-            refreshExpiresAt);
+            refreshExpiresAt,
+            IsPersistent: true);
 
         var response = RefreshTokenCookiePolicy.Issue(
             context.Response,

@@ -167,8 +167,16 @@ public sealed class SessionInvalidationTests
     {
         public string GenerateAccessToken(User user) => "unused";
 
-        public RefreshToken GenerateRefreshToken(Guid userId, string ipAddress) =>
-            RefreshToken.Create(userId, "unused", DateTime.UtcNow.AddDays(1), ipAddress);
+        public RefreshToken GenerateRefreshToken(
+            Guid userId,
+            string ipAddress,
+            bool isPersistent = true) =>
+            RefreshToken.Create(
+                userId,
+                "unused",
+                DateTime.UtcNow.AddDays(1),
+                ipAddress,
+                isPersistent);
     }
 
     private sealed class SystemAdminCurrentUser(Guid? userId = null) : ICurrentUserService

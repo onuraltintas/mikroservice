@@ -14,6 +14,7 @@ public class RefreshToken : Entity
     public DateTime? RevokedAt { get; private set; }
     public string? RevokedByIp { get; private set; }
     public string? ReasonRevoked { get; private set; }
+    public bool IsPersistent { get; private set; }
     
     // Computed Properties
     public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
@@ -22,7 +23,12 @@ public class RefreshToken : Entity
 
     private RefreshToken() { } // EF Core
 
-    public static RefreshToken Create(Guid userId, string token, DateTime expiresAt, string? createdByIp)
+    public static RefreshToken Create(
+        Guid userId,
+        string token,
+        DateTime expiresAt,
+        string? createdByIp,
+        bool isPersistent = true)
     {
         return new RefreshToken
         {
@@ -31,7 +37,8 @@ public class RefreshToken : Entity
             Token = token,
             ExpiresAt = expiresAt,
             CreatedAt = DateTime.UtcNow,
-            CreatedByIp = createdByIp
+            CreatedByIp = createdByIp,
+            IsPersistent = isPersistent
         };
     }
 

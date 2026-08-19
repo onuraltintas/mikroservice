@@ -185,6 +185,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         return Result.Success(new LoginResponse(
             accessToken,
             refreshToken.Token,
-            refreshToken.ExpiresAt));
+            refreshToken.ExpiresAt,
+            refreshToken.IsPersistent));
     }
 }

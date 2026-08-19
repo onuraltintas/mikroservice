@@ -22,7 +22,8 @@ public class ValidationBehaviorTests
             return Task.FromResult(Result.Success(new LoginResponse(
                 "access",
                 "refresh",
-                DateTime.UtcNow.AddDays(7))));
+                DateTime.UtcNow.AddDays(7),
+                IsPersistent: true)));
         };
 
         var action = () => behavior.Handle(command, next, CancellationToken.None);

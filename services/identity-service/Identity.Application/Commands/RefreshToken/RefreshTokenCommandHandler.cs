@@ -48,7 +48,10 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
 
         // 3. Generate New
         var newAccessToken = _tokenService.GenerateAccessToken(user);
-        var newRefreshToken = _tokenService.GenerateRefreshToken(user.Id, "0.0.0.0");
+        var newRefreshToken = _tokenService.GenerateRefreshToken(
+            user.Id,
+            "0.0.0.0",
+            existingRefreshToken.IsPersistent);
         
         user.AddRefreshToken(newRefreshToken);
 
@@ -57,6 +60,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         return Result.Success(new RefreshTokenResponse(
             newAccessToken,
             newRefreshToken.Token,
-            newRefreshToken.ExpiresAt));
+            newRefreshToken.ExpiresAt,
+            newRefreshToken.IsPersistent));
     }
 }

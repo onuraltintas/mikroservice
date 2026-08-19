@@ -109,7 +109,10 @@ public class TokenService : ITokenService
         }
     }
 
-    public RefreshToken GenerateRefreshToken(Guid userId, string ipAddress)
+    public RefreshToken GenerateRefreshToken(
+        Guid userId,
+        string ipAddress,
+        bool isPersistent = true)
     {
         var expiryDaysStr = Environment.GetEnvironmentVariable("JWT_REFRESH_TOKEN_EXPIRY_DAYS")
                             ?? _configuration["JWT_REFRESH_TOKEN_EXPIRY_DAYS"]
@@ -126,7 +129,8 @@ public class TokenService : ITokenService
             userId, 
             token, 
             DateTime.UtcNow.AddDays(expiryDays), 
-            ipAddress
+            ipAddress,
+            isPersistent
         );
     }
 }
