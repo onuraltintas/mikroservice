@@ -13,6 +13,7 @@ namespace Identity.Infrastructure.Services;
 
 public class LocalIdentityService : IIdentityService
 {
+    private const string SecuritySensitiveChangeReason = "security-sensitive account change";
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IUnitOfWork _unitOfWork;
@@ -112,7 +113,10 @@ public class LocalIdentityService : IIdentityService
             }
 
             user.AddRole(new Identity.Domain.Entities.UserRole(userId, role.Id));
-            
+            await _userRepository.RevokeActiveRefreshTokensAsync(
+                userId,
+                SecuritySensitiveChangeReason,
+                cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             _logger.LogInformation("Successfully assigned role {RoleName} to user {UserId}", roleName, userId);
             return Result.Success();
@@ -141,6 +145,10 @@ public class LocalIdentityService : IIdentityService
         if (user == null) return Result.Failure(new Error("Identity.UserNotFound", "User not found."));
 
         user.Deactivate();
+        await _userRepository.RevokeActiveRefreshTokensAsync(
+            userId,
+            SecuritySensitiveChangeReason,
+            cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Success();
     }
@@ -162,7 +170,10 @@ public class LocalIdentityService : IIdentityService
 
         _passwordHasher.CreatePasswordHash(newPassword, out byte[] hash, out byte[] salt);
         user.SetPassword(hash, salt);
-        
+        await _userRepository.RevokeActiveRefreshTokensAsync(
+            userId,
+            SecuritySensitiveChangeReason,
+            cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Success();
     }
@@ -243,7 +254,10 @@ public class LocalIdentityService : IIdentityService
             if (role == null) return Result.Failure(new Error("Identity.RoleNotFound", $"Role '{roleName}' not found."));
 
             user.RemoveRole(role.Id);
-            
+            await _userRepository.RevokeActiveRefreshTokensAsync(
+                userId,
+                SecuritySensitiveChangeReason,
+                cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Success();
         }

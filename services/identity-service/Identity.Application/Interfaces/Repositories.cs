@@ -17,6 +17,7 @@ public interface IUserRepository
     Task<PagedList<UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken);
     Task<UserSummaryDto> GetSummaryAsync(Guid? institutionId, CancellationToken cancellationToken);
     Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
+    Task RevokeActiveRefreshTokensAsync(Guid userId, string reason, CancellationToken cancellationToken);
     Task<List<User>> GetUsersByRolesAsync(List<string> roleNames, CancellationToken cancellationToken);
 }
 

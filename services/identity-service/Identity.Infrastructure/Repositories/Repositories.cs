@@ -56,6 +56,24 @@ public class UserRepository : IUserRepository
             .FirstOrDefaultAsync(u => u.RefreshTokens.Any(rt => rt.Token == refreshToken), cancellationToken);
     }
 
+    public async Task RevokeActiveRefreshTokensAsync(
+        Guid userId,
+        string reason,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+        var activeTokens = await _context.RefreshTokens
+            .Where(token => token.UserId == userId
+                && token.RevokedAt == null
+                && token.ExpiresAt > now)
+            .ToListAsync(cancellationToken);
+
+        foreach (var token in activeTokens)
+        {
+            token.Revoke("system", reason);
+        }
+    }
+
     public async Task<PagedList<UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken)
     {
         if (page is < 1 or > GetAllUsersQuery.MaxPageNumber)
