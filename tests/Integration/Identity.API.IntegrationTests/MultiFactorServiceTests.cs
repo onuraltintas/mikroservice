@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Identity.Application.Interfaces;
 using Identity.Infrastructure.Security;
 using Microsoft.AspNetCore.DataProtection;
 

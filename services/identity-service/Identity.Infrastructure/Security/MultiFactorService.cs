@@ -2,11 +2,12 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using EduPlatform.Shared.Kernel.Results;
+using Identity.Application.Interfaces;
 using Microsoft.AspNetCore.DataProtection;
 
 namespace Identity.Infrastructure.Security;
 
-public sealed class MultiFactorService
+public sealed class MultiFactorService : IMultiFactorService
 {
     private const string Issuer = "EduPlatform";
     private const string RecoveryAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -111,23 +112,3 @@ public sealed class MultiFactorService
     private static Result<T> Invalid<T>(string errorCode) =>
         Result.Failure<T>(new Error(errorCode, "MFA doğrulama isteği geçersiz veya süresi dolmuş."));
 }
-
-public interface IMfaExpiringPayload
-{
-    DateTimeOffset ExpiresAt { get; }
-}
-
-public sealed record MfaChallengePayload(
-    Guid UserId,
-    bool RememberMe,
-    DateTimeOffset ExpiresAt) : IMfaExpiringPayload;
-
-public sealed record MfaSetupPayload(
-    Guid UserId,
-    string Secret,
-    DateTimeOffset ExpiresAt) : IMfaExpiringPayload;
-
-public sealed record MfaSetupResponse(
-    string Secret,
-    string OtpAuthUri,
-    string SetupToken);

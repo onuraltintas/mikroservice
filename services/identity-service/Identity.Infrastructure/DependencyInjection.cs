@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Identity.Application.Interfaces;
 using EduPlatform.Shared.Infrastructure.Middleware;
+using Identity.Infrastructure.Security;
 
 namespace Identity.Infrastructure;
 
@@ -67,6 +68,8 @@ public static class DependencyInjection
         services.AddScoped<IGoogleAuthService, Services.GoogleAuthService>();
         services.AddScoped<ISystemLogService, Services.Logs.SystemLogService>();
         services.AddScoped<IConfigurationService, Services.ConfigurationService>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddScoped<IMultiFactorService, MultiFactorService>();
         services.AddSingleton<IAdminAuditWriter, IdentityAdminAuditWriter>();
 
         // Repositories
