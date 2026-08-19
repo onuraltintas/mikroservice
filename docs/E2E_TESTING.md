@@ -52,6 +52,12 @@ $env:E2E_START_UI = 'true'
 npm test --prefix tests/E2E
 ```
 
+SystemAdmin MFA zorunlu olduğundan E2E hesabının authenticator secret'ını kaynak
+kodda veya CI değişkenlerinde düz metin tutmayın. Disposable admin'i her koşuda
+`/api/auth/mfa/setup` akışıyla kaydedin ve koşu sonunda temizleyin. Kurtarma
+kodları yalnız ilk kurulum cevabında görünür; loglara veya ekran görüntüsü
+artifact'lerine yazılmamalıdır.
+
 Support write sözleşmesi yalnız ayrı database/SMTP kullanan disposable bir ortamda
 çalıştırılır. Test kalıcı bir support kaydı oluşturduğu için bu iki anahtar
 birlikte zorunludur:

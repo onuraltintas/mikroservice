@@ -77,6 +77,17 @@ dağıtım tercih edilmelidir.
 
 ## 3. JWT iptal (revocation) kararı
 
+SystemAdmin oturumları için MFA zorunludur. Parola veya Google ilk faktörü yalnız
+5 dakikalık Data Protection challenge üretir; access/refresh token TOTP ya da tek
+kullanımlık kurtarma kodundan sonra verilir. MFA ile açılan JWT `amr=mfa` ve
+`auth_time` taşır. Refresh token `MfaVerifiedAt` değerini yeni token çiftine
+aktarır; bu değeri taşımayan eski SystemAdmin refresh tokenı iptal edilir.
+
+Kritik yönetici mutasyonları `MfaRequired` politikasını uygular. TOTP secret'ı düz
+metin saklanmaz, recovery kodları SHA-256 hash olarak ve tek kullanımlı tutulur.
+Beş hatalı MFA denemesi kullanıcıyı beş dakika kilitler; aynı TOTP zaman adımı
+ikinci kez kabul edilmez.
+
 Mevcut erişim token'ları HMAC-SHA256 ile imzalanır ve `jti` içerir. Refresh token'ları
 veritabanında tutulup döndürülür/revoke edilir. Erişim token'ı için tüm servislerde
 her istekte veritabanı sorgusu yapılmadığından, kullanıcı pasifleştirme sonrası

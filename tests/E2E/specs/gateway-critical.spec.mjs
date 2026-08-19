@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { completeApiMfa } from '../support/totp.mjs';
 
 const protectedEndpoints = [
   ['/api/users/summary', 'GET'],
@@ -66,13 +67,10 @@ test.describe('Gateway authenticated admin surface', () => {
     });
 
     expect(loginResponse.status()).toBe(200);
-    const login = await loginResponse.json();
+    const login = await completeApiMfa(request, await loginResponse.json());
     expect(login.accessToken).toEqual(expect.any(String));
-    expect(login.refreshToken).toEqual(expect.any(String));
 
-    const refreshResponse = await request.post('/api/auth/refresh-token', {
-      data: { refreshToken: login.refreshToken }
-    });
+    const refreshResponse = await request.post('/api/auth/refresh-token', { data: {} });
     expect(refreshResponse.status()).toBe(200);
     const refreshed = await refreshResponse.json();
     expect(refreshed.accessToken).toEqual(expect.any(String));

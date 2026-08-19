@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { generateTotp } from '../support/totp.mjs';
 
 test.describe('Admin panel critical navigation', () => {
   test.skip(
@@ -28,6 +29,20 @@ test.describe('Admin panel critical navigation', () => {
     await page.locator('input[name="email"]').fill(process.env.E2E_ADMIN_EMAIL);
     await page.locator('input[name="password"]').fill(process.env.E2E_ADMIN_PASSWORD);
     await page.getByRole('button', { name: /Giriş Yap/i }).click();
+
+    const mfaCode = page.locator('input[name="mfaCode"]');
+    await expect(mfaCode).toBeVisible();
+    let secret = process.env.E2E_ADMIN_TOTP_SECRET;
+    const setupSecret = page.getByText('Kurulum anahtarı').locator('..').locator('code');
+    if (await setupSecret.isVisible()) {
+      secret = (await setupSecret.textContent())?.trim();
+    }
+    if (!secret) throw new Error('E2E_ADMIN_TOTP_SECRET is required for an enrolled SystemAdmin.');
+    await mfaCode.fill(generateTotp(secret));
+    await page.getByRole('button', { name: /Doğrula ve Devam Et/i }).click();
+
+    const recoveryContinue = page.getByRole('button', { name: /Kodları Kaydettim/i });
+    if (await recoveryContinue.isVisible()) await recoveryContinue.click();
 
     await expect(page).toHaveURL(/\/dashboard(?:\/)?$/, { timeout: 30_000 });
     await expect(page.locator('body')).not.toContainText('Giriş başarısız');
