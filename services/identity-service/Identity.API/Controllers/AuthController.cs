@@ -14,6 +14,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Identity.API.Security;
+using Identity.Application.Services;
 
 namespace Identity.API.Controllers;
 
@@ -172,6 +173,82 @@ public class AuthController : ControllerBase
             _environment.IsProduction()));
     }
 
+    [HttpPost("mfa/setup")]
+    [AllowAnonymous]
+    public async Task<IActionResult> StartMfaSetup(
+        [FromBody] MfaSetupRequest request,
+        [FromServices] MfaAuthenticationCoordinator coordinator,
+        CancellationToken cancellationToken)
+    {
+        var result = await coordinator.StartSetupAsync(request.ChallengeToken, cancellationToken);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [HttpPost("mfa/enable")]
+    [AllowAnonymous]
+    public async Task<IActionResult> EnableMfa(
+        [FromBody] MfaEnableRequest request,
+        [FromServices] MfaAuthenticationCoordinator coordinator,
+        CancellationToken cancellationToken)
+    {
+        if (!IsSixDigitCode(request.Code))
+        {
+            return BadRequest(new Error("Auth.InvalidMfaCode", "MFA doğrulama kodu altı rakam olmalıdır."));
+        }
+
+        var result = await coordinator.EnableAsync(
+            request.ChallengeToken,
+            request.SetupToken,
+            request.Code,
+            GetClientIpAddress(),
+            cancellationToken);
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Error);
+        }
+
+        var session = RefreshTokenCookiePolicy.Issue(Response, result.Value.Session, _environment.IsProduction());
+        return Ok(new MfaSessionResponse(
+            session.AccessToken,
+            session.TokenType,
+            session.ExpiresInMinutes,
+            result.Value.RecoveryCodes));
+    }
+
+    [HttpPost("mfa/verify")]
+    [AllowAnonymous]
+    public async Task<IActionResult> VerifyMfa(
+        [FromBody] MfaVerifyRequest request,
+        [FromServices] MfaAuthenticationCoordinator coordinator,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.Code) == string.IsNullOrWhiteSpace(request.RecoveryCode))
+        {
+            return BadRequest(new Error("Auth.InvalidMfaCode", "TOTP veya kurtarma kodlarından yalnızca biri gönderilmelidir."));
+        }
+
+        if (request.Code is not null && !IsSixDigitCode(request.Code))
+        {
+            return BadRequest(new Error("Auth.InvalidMfaCode", "MFA doğrulama kodu altı rakam olmalıdır."));
+        }
+
+        var result = await coordinator.VerifyAsync(
+            request.ChallengeToken,
+            request.Code,
+            request.RecoveryCode,
+            GetClientIpAddress(),
+            cancellationToken);
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Error);
+        }
+
+        return Ok(RefreshTokenCookiePolicy.Issue(
+            Response,
+            result.Value.Session,
+            _environment.IsProduction()));
+    }
+
     [HttpPost("forgot-password")]
     [AllowAnonymous]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordCommand command)
@@ -219,9 +296,23 @@ public class AuthController : ControllerBase
         RefreshTokenCookiePolicy.Clear(Response, _environment.IsProduction());
         return Ok();
     }
+
+    private string GetClientIpAddress() =>
+        HttpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
+
+    private static bool IsSixDigitCode(string code) =>
+        code.Length == 6 && code.All(char.IsAsciiDigit);
 }
 
 public record GoogleLoginRequest(string IdToken);
 public record RefreshTokenRequest(string? RefreshToken = null);
 public record RevokeTokenRequest(string? Token = null);
+public sealed record MfaSetupRequest(string ChallengeToken);
+public sealed record MfaEnableRequest(string ChallengeToken, string SetupToken, string Code);
+public sealed record MfaVerifyRequest(string ChallengeToken, string? Code = null, string? RecoveryCode = null);
+public sealed record MfaSessionResponse(
+    string AccessToken,
+    string TokenType,
+    int ExpiresInMinutes,
+    IReadOnlyList<string>? RecoveryCodes = null);
 
