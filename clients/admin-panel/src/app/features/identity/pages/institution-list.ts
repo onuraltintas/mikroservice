@@ -62,11 +62,11 @@ import { InstitutionAdminDto, InstitutionDto, InstitutionService } from '../../.
       }
 
       <div class="flex flex-wrap gap-3">
-        <input class="rounded-lg border p-2 dark:bg-gray-900" [(ngModel)]="search" (keyup.enter)="load()" placeholder="Kurum, şehir veya e-posta ara" aria-label="Kurum ara">
-        <select class="rounded-lg border p-2 dark:bg-gray-900" [(ngModel)]="activeFilter" (change)="load()" aria-label="Aktiflik filtresi">
+        <input class="rounded-lg border p-2 dark:bg-gray-900" [(ngModel)]="search" (keyup.enter)="applyFilters()" placeholder="Kurum, şehir veya e-posta ara" aria-label="Kurum ara">
+        <select class="rounded-lg border p-2 dark:bg-gray-900" [(ngModel)]="activeFilter" (change)="applyFilters()" aria-label="Aktiflik filtresi">
           <option [ngValue]="undefined">Tümü</option><option [ngValue]="true">Aktif</option><option [ngValue]="false">Pasif</option>
         </select>
-        <button class="rounded-lg border px-4 py-2" type="button" (click)="load()">Yenile</button>
+        <button class="rounded-lg border px-4 py-2" type="button" (click)="applyFilters()">Yenile</button>
       </div>
 
       @if (error()) { <div class="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">{{ error() }}</div> }
@@ -79,7 +79,7 @@ import { InstitutionAdminDto, InstitutionDto, InstitutionService } from '../../.
           </tbody>
         </table>
       </div>
-      <div class="text-sm text-gray-500">Toplam {{ totalCount() }} kurum</div>
+      <div class="flex items-center justify-between text-sm text-gray-500"><span>Toplam {{ totalCount() }} kurum · Sayfa {{ currentPage() }} / {{ totalPages() }}</span><div class="flex gap-2"><button class="rounded border px-3 py-1 disabled:opacity-40" [disabled]="currentPage() <= 1" (click)="changePage(currentPage() - 1)">Önceki</button><button class="rounded border px-3 py-1 disabled:opacity-40" [disabled]="currentPage() >= totalPages()" (click)="changePage(currentPage() + 1)">Sonraki</button></div></div>
     </section>
   `
 })
@@ -92,6 +92,9 @@ export class InstitutionListComponent {
   canChangeTenantSettings = computed(() => this.authService.userProfile()?.roles.includes('SystemAdmin') ?? false);
   institutions = signal<InstitutionDto[]>([]);
   totalCount = signal(0);
+  currentPage = signal(1);
+  readonly pageSize = 25;
+  totalPages = computed(() => Math.max(1, Math.ceil(this.totalCount() / this.pageSize)));
   loading = signal(false);
   saving = signal(false);
   error = signal<string | null>(null);
@@ -116,10 +119,16 @@ export class InstitutionListComponent {
 
   load() {
     this.loading.set(true); this.error.set(null);
-    this.service.getAll(1, 100, this.search, this.activeFilter).subscribe({
+    this.service.getAll(this.currentPage(), this.pageSize, this.search, this.activeFilter).subscribe({
       next: response => { this.institutions.set(response.items); this.totalCount.set(response.totalCount); this.loading.set(false); },
       error: () => { this.error.set('Kurumlar yüklenemedi.'); this.loading.set(false); }
     });
+  }
+
+  applyFilters() { this.currentPage.set(1); this.load(); }
+  changePage(page: number) {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page); this.load();
   }
 
   create() {
