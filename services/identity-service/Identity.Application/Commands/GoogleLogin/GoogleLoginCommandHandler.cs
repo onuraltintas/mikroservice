@@ -198,6 +198,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             accessToken,
             refreshToken.Token,
             refreshToken.ExpiresAt,
-            refreshToken.IsPersistent));
+            refreshToken.IsPersistent,
+            ExpiresInMinutes: _tokenService.GetAccessTokenLifetimeMinutes()));
     }
 }

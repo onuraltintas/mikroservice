@@ -104,6 +104,7 @@ public sealed class SystemAdminMfaLoginTests
     {
         public bool AccessTokenRequested { get; private set; }
         public bool RefreshTokenRequested { get; private set; }
+        public int GetAccessTokenLifetimeMinutes() => 15;
         public string GenerateAccessToken(User user, DateTimeOffset? mfaVerifiedAt = null)
         {
             AccessTokenRequested = true;

@@ -31,7 +31,8 @@ public sealed class AuthenticationSessionIssuer : IAuthenticationSessionIssuer
                 accessToken,
                 refreshToken.Token,
                 refreshToken.ExpiresAt,
-                refreshToken.IsPersistent))
+                refreshToken.IsPersistent,
+                ExpiresInMinutes: _tokens.GetAccessTokenLifetimeMinutes()))
             : Result.Failure<LoginResponse>(persisted.Error);
     }
 }

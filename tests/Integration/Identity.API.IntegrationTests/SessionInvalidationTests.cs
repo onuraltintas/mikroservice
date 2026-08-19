@@ -165,6 +165,7 @@ public sealed class SessionInvalidationTests
 
     private sealed class StubTokenService : ITokenService
     {
+        public int GetAccessTokenLifetimeMinutes() => 15;
         public string GenerateAccessToken(User user, DateTimeOffset? mfaVerifiedAt = null) => "unused";
 
         public RefreshToken GenerateRefreshToken(

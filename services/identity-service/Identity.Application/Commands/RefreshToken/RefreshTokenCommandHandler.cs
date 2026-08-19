@@ -62,6 +62,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
             newAccessToken,
             newRefreshToken.Token,
             newRefreshToken.ExpiresAt,
-            newRefreshToken.IsPersistent));
+            newRefreshToken.IsPersistent,
+            ExpiresInMinutes: _tokenService.GetAccessTokenLifetimeMinutes()));
     }
 }

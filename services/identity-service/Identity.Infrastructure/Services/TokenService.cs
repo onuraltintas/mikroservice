@@ -25,11 +25,6 @@ public class TokenService : ITokenService
     {
         try 
         {
-            // 1. Try to get dynamic configuration from Redis/DB
-            var dynamicExpiryStr = _configService.GetConfigurationValueAsync("Auth.TokenLifetime", CancellationToken.None).GetAwaiter().GetResult();
-            int.TryParse(dynamicExpiryStr, out var dynamicExpiry);
-
-            // 2. Fallback to Environment Variables or appsettings
             var keyRing = JwtKeyRing.FromConfiguration(_configuration);
             
             var issuer = _configuration["JWT_ISSUER"]
@@ -39,31 +34,21 @@ public class TokenService : ITokenService
                           ?? _configuration["Jwt:Audience"]
                           ?? throw new InvalidOperationException("JWT_AUDIENCE is not configured.");
             
-            int expiryMinutes;
-            if (dynamicExpiry > 0)
-            {
-                expiryMinutes = dynamicExpiry;
-            }
-            else 
-            {
-                var expiryMinutesStr = Environment.GetEnvironmentVariable("JWT_EXPIRY_MINUTES") 
-                                      ?? _configuration["JWT_EXPIRY_MINUTES"]
-                                      ?? "30";
-                int.TryParse(expiryMinutesStr, out expiryMinutes);
-                if (expiryMinutes == 0) expiryMinutes = 30;
-            }
+            var expiryMinutes = GetAccessTokenLifetimeMinutes();
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyRing.ActiveSecret))
             {
                 KeyId = keyRing.ActiveKeyId
             };
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            var issuedAt = DateTime.UtcNow;
 
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Iat, new DateTimeOffset(issuedAt).ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture), ClaimValueTypes.Integer64)
             };
 
             if (mfaVerifiedAt.HasValue)
@@ -99,7 +84,8 @@ public class TokenService : ITokenService
                 issuer: issuer,
                 audience: audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
+                notBefore: issuedAt,
+                expires: issuedAt.AddMinutes(expiryMinutes),
                 signingCredentials: credentials);
 
             if (!string.IsNullOrWhiteSpace(keyRing.ActiveKeyId))
@@ -113,6 +99,21 @@ public class TokenService : ITokenService
         {
             throw new InvalidOperationException("JWT generation failed.", ex);
         }
+    }
+
+    public int GetAccessTokenLifetimeMinutes()
+    {
+        var dynamicValue = _configService
+            .GetConfigurationValueAsync("Auth.TokenLifetime", CancellationToken.None)
+            .GetAwaiter()
+            .GetResult();
+        var configuredValue = dynamicValue
+            ?? Environment.GetEnvironmentVariable("JWT_EXPIRY_MINUTES")
+            ?? _configuration["JWT_EXPIRY_MINUTES"];
+
+        return int.TryParse(configuredValue, out var minutes) && minutes is >= 1 and <= 1440
+            ? minutes
+            : 30;
     }
 
     public RefreshToken GenerateRefreshToken(

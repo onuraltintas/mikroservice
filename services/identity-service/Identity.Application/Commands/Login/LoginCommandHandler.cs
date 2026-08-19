@@ -135,6 +135,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             accessToken,
             refreshToken.Token,
             refreshToken.ExpiresAt,
-            refreshToken.IsPersistent));
+            refreshToken.IsPersistent,
+            ExpiresInMinutes: _tokenService.GetAccessTokenLifetimeMinutes()));
     }
 }
