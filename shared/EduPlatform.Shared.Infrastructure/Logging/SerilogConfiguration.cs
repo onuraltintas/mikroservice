@@ -72,7 +72,7 @@ public static class SerilogConfiguration
             options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
             {
                 var safePath = CreateSafePath(httpContext);
-                diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+                diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value ?? string.Empty);
                 diagnosticContext.Set(
                     CorrelationIdMiddleware.HeaderName,
                     httpContext.TraceIdentifier);

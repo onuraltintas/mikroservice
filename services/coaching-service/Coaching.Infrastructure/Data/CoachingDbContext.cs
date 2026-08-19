@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Coaching.Domain.Entities;
 using MassTransit;
 using System.Reflection;
+using EduPlatform.Shared.Infrastructure.Middleware;
 
 namespace Coaching.Infrastructure.Data;
 
@@ -22,6 +23,7 @@ public class CoachingDbContext : DbContext
     public DbSet<CoachingSession> CoachingSessions => Set<CoachingSession>();
     public DbSet<SessionAttendance> SessionAttendances => Set<SessionAttendance>();
     public DbSet<AcademicGoal> AcademicGoals => Set<AcademicGoal>();
+    public DbSet<AdminAuditRecord> AdminAuditRecords => Set<AdminAuditRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,6 +31,7 @@ public class CoachingDbContext : DbContext
 
         // Apply all entity configurations from assembly
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        ConfigureAdminAudit(modelBuilder);
 
         // Schema
         modelBuilder.HasDefaultSchema("coaching");
@@ -40,8 +43,32 @@ public class CoachingDbContext : DbContext
         modelBuilder.AddOutboxStateEntity();
     }
 
+    private static void ConfigureAdminAudit(ModelBuilder modelBuilder)
+    {
+        var audit = modelBuilder.Entity<AdminAuditRecord>();
+        audit.ToTable("AdminAuditRecords");
+        audit.HasKey(record => record.Id);
+        audit.Property(record => record.ServiceName).HasMaxLength(150);
+        audit.Property(record => record.ActorUserId).HasMaxLength(100);
+        audit.Property(record => record.ActorRoles).HasMaxLength(500);
+        audit.Property(record => record.TenantId).HasMaxLength(100);
+        audit.Property(record => record.HttpMethod).HasMaxLength(10);
+        audit.Property(record => record.Path).HasMaxLength(500);
+        audit.Property(record => record.CorrelationId).HasMaxLength(100);
+        audit.Property(record => record.ClientIp).HasMaxLength(64);
+        audit.Property(record => record.UserAgent).HasMaxLength(256);
+        audit.HasIndex(record => new { record.OccurredAt, record.Id });
+        audit.HasIndex(record => new { record.ActorUserId, record.OccurredAt });
+    }
+
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        if (ChangeTracker.Entries<AdminAuditRecord>()
+            .Any(entry => entry.State is EntityState.Modified or EntityState.Deleted))
+        {
+            throw new InvalidOperationException("Admin audit records are append-only.");
+        }
+
         // Timestamps are managed by entities themselves (CreatedAt defaults to UtcNow, UpdatedAt set manually)
         return await base.SaveChangesAsync(cancellationToken);
     }

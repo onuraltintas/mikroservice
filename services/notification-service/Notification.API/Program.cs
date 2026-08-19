@@ -129,6 +129,7 @@ builder.Services.AddHealthChecks()
 // Register INotificationDbContext for Application layer access
 builder.Services.AddScoped<INotificationDbContext>(provider => 
     provider.GetRequiredService<NotificationDbContext>());
+builder.Services.AddSingleton<IAdminAuditWriter, NotificationAdminAuditWriter>();
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IEmailDeliveryQueue, EmailDeliveryQueue>();
@@ -260,6 +261,7 @@ var app = builder.Build();
 app.UseRequestLogging();
 app.UseExceptionHandler();
 app.UseAuthentication();
+app.UseMiddleware<AdminAuditMiddleware>();
 app.UseAuthorization();
 app.UseRequestTimeouts();
 

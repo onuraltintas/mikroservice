@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Infrastructure.Extensions;
 using EduPlatform.Shared.Infrastructure.Logging;
+using EduPlatform.Shared.Infrastructure.Middleware;
 using EduPlatform.Shared.Infrastructure.Observability;
 using EduPlatform.Shared.Security.Extensions;
 using Identity.Infrastructure;
@@ -205,6 +206,7 @@ app.UseRouting();
 app.UseCors("AllowAll");
 
 app.UseAuthentication();
+app.UseMiddleware<AdminAuditMiddleware>();
 app.UseAuthorization();
 
 // Health Checks

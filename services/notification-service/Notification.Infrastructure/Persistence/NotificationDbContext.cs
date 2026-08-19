@@ -3,6 +3,7 @@ using Notification.Domain.Entities;
 
 using Notification.Application.Interfaces;
 using MassTransit;
+using EduPlatform.Shared.Infrastructure.Middleware;
 
 namespace Notification.Infrastructure.Persistence;
 
@@ -17,6 +18,7 @@ public class NotificationDbContext : DbContext, INotificationDbContext
     public DbSet<EmailDelivery> EmailDeliveries { get; set; }
     public DbSet<SupportRequest> SupportRequests { get; set; }
     public DbSet<SupportForwardDelivery> SupportForwardDeliveries { get; set; }
+    public DbSet<AdminAuditRecord> AdminAuditRecords => Set<AdminAuditRecord>();
 
     public Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync(
         CancellationToken cancellationToken)
@@ -25,6 +27,8 @@ public class NotificationDbContext : DbContext, INotificationDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        ConfigureAdminAudit(modelBuilder);
 
         // Notification Item
         modelBuilder.Entity<NotificationItem>().HasKey(x => x.Id);
@@ -75,5 +79,34 @@ public class NotificationDbContext : DbContext, INotificationDbContext
         modelBuilder.AddInboxStateEntity();
         modelBuilder.AddOutboxMessageEntity();
         modelBuilder.AddOutboxStateEntity();
+    }
+
+    private static void ConfigureAdminAudit(ModelBuilder modelBuilder)
+    {
+        var audit = modelBuilder.Entity<AdminAuditRecord>();
+        audit.ToTable("AdminAuditRecords");
+        audit.HasKey(record => record.Id);
+        audit.Property(record => record.ServiceName).HasMaxLength(150);
+        audit.Property(record => record.ActorUserId).HasMaxLength(100);
+        audit.Property(record => record.ActorRoles).HasMaxLength(500);
+        audit.Property(record => record.TenantId).HasMaxLength(100);
+        audit.Property(record => record.HttpMethod).HasMaxLength(10);
+        audit.Property(record => record.Path).HasMaxLength(500);
+        audit.Property(record => record.CorrelationId).HasMaxLength(100);
+        audit.Property(record => record.ClientIp).HasMaxLength(64);
+        audit.Property(record => record.UserAgent).HasMaxLength(256);
+        audit.HasIndex(record => new { record.OccurredAt, record.Id });
+        audit.HasIndex(record => new { record.ActorUserId, record.OccurredAt });
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        if (ChangeTracker.Entries<AdminAuditRecord>()
+            .Any(entry => entry.State is EntityState.Modified or EntityState.Deleted))
+        {
+            throw new InvalidOperationException("Admin audit records are append-only.");
+        }
+
+        return base.SaveChangesAsync(cancellationToken);
     }
 }

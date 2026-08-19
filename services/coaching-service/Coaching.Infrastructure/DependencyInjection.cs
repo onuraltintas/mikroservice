@@ -57,6 +57,7 @@ public static class DependencyInjection
 
         // Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddSingleton<IAdminAuditWriter, CoachingAdminAuditWriter>();
         services.AddHttpClient<ICoachingIdentityAuthorizationClient, IdentityAuthorizationClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);
