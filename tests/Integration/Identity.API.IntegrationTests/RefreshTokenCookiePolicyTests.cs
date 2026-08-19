@@ -38,6 +38,19 @@ public sealed class RefreshTokenCookiePolicyTests
     }
 
     [Fact]
+    public void RememberMeDisabled_ShouldCreateBrowserSessionCookie()
+    {
+        var options = RefreshTokenCookiePolicy.CreateOptions(
+            isProduction: true,
+            DateTimeOffset.UtcNow.AddDays(7),
+            isPersistent: false);
+
+        options.Expires.Should().BeNull();
+        options.HttpOnly.Should().BeTrue();
+        options.Secure.Should().BeTrue();
+    }
+
+    [Fact]
     public void IssueSession_ShouldKeepRefreshTokenOutOfResponseBody()
     {
         var context = new DefaultHttpContext();

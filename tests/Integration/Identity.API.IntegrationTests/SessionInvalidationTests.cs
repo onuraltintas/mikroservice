@@ -114,6 +114,19 @@ public sealed class SessionInvalidationTests
         (await ReadTokenAsync(context, refreshToken.Id)).IsRevoked.Should().BeTrue();
     }
 
+    [Fact]
+    public void RefreshToken_ShouldRememberBrowserPersistencePreference()
+    {
+        var token = RefreshToken.Create(
+            Guid.NewGuid(),
+            "session-token",
+            DateTime.UtcNow.AddDays(1),
+            "127.0.0.1",
+            isPersistent: false);
+
+        token.IsPersistent.Should().BeFalse();
+    }
+
     private static RefreshToken AddRefreshToken(User user)
     {
         var refreshToken = RefreshToken.Create(
