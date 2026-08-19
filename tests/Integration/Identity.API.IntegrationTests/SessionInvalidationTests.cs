@@ -3,6 +3,8 @@ using EduPlatform.Shared.Security.Interfaces;
 using EduPlatform.Shared.Security.Services;
 using FluentAssertions;
 using Identity.Application.Interfaces;
+using Identity.Application.Commands.ChangePassword;
+using Identity.Application.Commands.ResetPassword;
 using Identity.Domain.Entities;
 using Identity.Infrastructure.Persistence;
 using Identity.Infrastructure.Repositories;
@@ -59,6 +61,73 @@ public sealed class SessionInvalidationTests
         storedToken.ReasonRevoked.Should().Contain("security-sensitive");
     }
 
+    [Fact]
+    public async Task UserChangingOwnPassword_ShouldRevokeActiveRefreshTokens()
+    {
+        await using var context = CreateContext();
+        var hasher = new PasswordHasher();
+        var user = User.Create(Guid.NewGuid(), "self@example.test", "Self", "User");
+        hasher.CreatePasswordHash("Current-Password-1!", out var hash, out var salt);
+        user.SetPassword(hash, salt);
+        var refreshToken = AddRefreshToken(user);
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+        var repository = new UserRepository(context);
+        var handler = new ChangePasswordCommandHandler(
+            repository,
+            hasher,
+            new UnitOfWork(context),
+            new SystemAdminCurrentUser(user.Id));
+
+        var result = await handler.Handle(
+            new ChangePasswordCommand("Current-Password-1!", "Replacement-Password-1!"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        (await ReadTokenAsync(context, refreshToken.Id)).IsRevoked.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task PasswordReset_ShouldRevokeActiveRefreshTokens()
+    {
+        await using var context = CreateContext();
+        var user = User.Create(Guid.NewGuid(), "reset@example.test", "Reset", "User");
+        user.GeneratePasswordResetToken();
+        var resetToken = user.PasswordResetToken!;
+        var refreshToken = AddRefreshToken(user);
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+        var repository = new UserRepository(context);
+        var handler = new ResetPasswordCommandHandler(
+            repository,
+            new UnitOfWork(context),
+            new PasswordHasher());
+
+        var result = await handler.Handle(
+            new ResetPasswordCommand(
+                user.Email,
+                resetToken,
+                "Replacement-Password-1!"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        (await ReadTokenAsync(context, refreshToken.Id)).IsRevoked.Should().BeTrue();
+    }
+
+    private static RefreshToken AddRefreshToken(User user)
+    {
+        var refreshToken = RefreshToken.Create(
+            user.Id,
+            $"refresh-{Guid.NewGuid():N}",
+            DateTime.UtcNow.AddDays(7),
+            "127.0.0.1");
+        user.AddRefreshToken(refreshToken);
+        return refreshToken;
+    }
+
+    private static Task<RefreshToken> ReadTokenAsync(IdentityDbContext context, Guid tokenId) =>
+        context.RefreshTokens.AsNoTracking().SingleAsync(token => token.Id == tokenId);
+
     private static IdentityDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<IdentityDbContext>()
@@ -89,9 +158,9 @@ public sealed class SessionInvalidationTests
             RefreshToken.Create(userId, "unused", DateTime.UtcNow.AddDays(1), ipAddress);
     }
 
-    private sealed class SystemAdminCurrentUser : ICurrentUserService
+    private sealed class SystemAdminCurrentUser(Guid? userId = null) : ICurrentUserService
     {
-        public Guid? UserId => Guid.NewGuid();
+        public Guid? UserId => userId ?? Guid.NewGuid();
         public string? Email => "admin@example.test";
         public string? FullName => "System Admin";
         public IEnumerable<string> Roles => ["SystemAdmin"];
