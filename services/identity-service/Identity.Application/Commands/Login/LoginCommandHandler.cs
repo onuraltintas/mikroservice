@@ -92,7 +92,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         var accessToken = _tokenService.GenerateAccessToken(user);
         
         var ipAddress = "0.0.0.0"; // Should be passed in command but defaulting here
-        var refreshToken = _tokenService.GenerateRefreshToken(user.Id, ipAddress, request.RememberMe); 
+        var refreshToken = _tokenService.GenerateRefreshToken(user.Id, ipAddress, request.RememberMe);
         
         // 7. Save Refresh Token (Securely bypassing concurrency checks on User)
         var saveTokenResult = await _identityService.SaveRefreshTokenAsync(user.Id, refreshToken, cancellationToken);

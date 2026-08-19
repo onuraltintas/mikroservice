@@ -60,9 +60,11 @@ secret kaydı oluşturma da fail-closed olarak reddedilir.
 2. Frontend `permissionGuard` ve sidebar filtreleri token'daki permission claim'ini
    kullanır; backend `[HasPermission]`/`[Authorize]` kontrolü olmadan hiçbir işlem
    güvenli kabul edilmez.
-3. Yeni permission atandıktan veya kaldırıldıktan sonra mevcut JWT claim'i
-   değişmeyeceği için kullanıcı yeniden giriş yapmalı ya da refresh token ile yeni
-   access token almalıdır.
+3. Access token yalnız tarayıcı belleğinde, refresh token ise `HttpOnly`,
+   `SameSite=Strict` cookie'de tutulur. Uygulama açılışında ve access token süresi
+   dolarken refresh rotasyonu yapılır. Parola, rol ve hesap aktifliği değişiklikleri
+   tüm refresh oturumlarını iptal eder; mevcut kısa ömürlü access token en geç kendi
+   süresi sonunda geçersiz olur.
 4. Support submit anonim kalır; body limiti, validator, idempotency key ve gateway
    + service rate limit'i birlikte uygulanır.
 5. Coaching admin endpoint'i SystemAdmin rolüyle ek fail-closed kontrol taşır;
