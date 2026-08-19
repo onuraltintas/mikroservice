@@ -1,4 +1,4 @@
-import { Injectable, inject, signal, PLATFORM_ID, OnDestroy } from '@angular/core';
+import { effect, Injectable, inject, signal, PLATFORM_ID, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
@@ -16,6 +16,17 @@ export interface Notification {
     relatedEntityId?: string;
 }
 
+@Injectable({ providedIn: 'root' })
+export class NotificationHubConnectionFactory {
+    create(hubUrl: string, accessTokenFactory: () => string): signalR.HubConnection {
+        return new signalR.HubConnectionBuilder()
+            .withUrl(hubUrl, { accessTokenFactory })
+            .withAutomaticReconnect()
+            .configureLogging(signalR.LogLevel.Error)
+            .build();
+    }
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -23,11 +34,14 @@ export class NotificationService implements OnDestroy {
     private http = inject(HttpClient);
     private authService = inject(AuthService);
     private platformId = inject(PLATFORM_ID);
+    private hubConnectionFactory = inject(NotificationHubConnectionFactory);
 
     private apiUrl = `${environment.apiUrl}/notifications`;
     private hubUrl = `${environment.apiUrl.replace('/api', '')}/hubs/notifications`;
 
     private hubConnection?: signalR.HubConnection;
+    private sessionGeneration = 0;
+    private sessionTransition = Promise.resolve();
 
     private _notifications = signal<Notification[]>([]);
     notifications = this._notifications.asReadonly();
@@ -35,36 +49,65 @@ export class NotificationService implements OnDestroy {
     private _unreadCount = signal<number>(0);
     unreadCount = this._unreadCount.asReadonly();
 
+    private readonly authSessionEffect = effect(() => {
+        const userId = this.authService.userProfile()?.id ?? null;
+        this.queueSessionTransition(userId);
+    });
+
     constructor() {
-        if (isPlatformBrowser(this.platformId)) {
-            this.initSignalR();
-            this.fetchNotifications();
-        }
+        // The authSessionEffect owns browser session startup and teardown.
     }
 
-    private initSignalR() {
-        const token = this.authService.getToken();
-        if (!token) return;
+    private queueSessionTransition(userId: string | null) {
+        if (!isPlatformBrowser(this.platformId)) return;
 
-        this.hubConnection = new signalR.HubConnectionBuilder()
-            .withUrl(this.hubUrl, {
-                accessTokenFactory: () => token
-            })
-            .withAutomaticReconnect()
-            .configureLogging(signalR.LogLevel.Error)
-            .build();
+        const generation = ++this.sessionGeneration;
+        if (!userId) this.clearNotifications();
+        this.sessionTransition = this.sessionTransition
+            .then(() => this.transitionSession(userId, generation))
+            .catch(error => console.error('SignalR session transition failed:', error));
+    }
 
-        this.hubConnection.start()
-            .then(() => console.log('SignalR Notification Hub connected'))
-            .catch(err => console.error('SignalR Error: ', err));
+    private async transitionSession(userId: string | null, generation: number) {
+        const previousConnection = this.hubConnection;
+        this.hubConnection = undefined;
+        this.clearNotifications();
 
-        this.hubConnection.on('ReceiveNotification', (notification: Notification) => {
+        if (previousConnection) {
+            await previousConnection.stop();
+        }
+
+        if (generation !== this.sessionGeneration || !userId || !this.authService.getToken()) {
+            return;
+        }
+
+        const connection = this.hubConnectionFactory.create(
+            this.hubUrl,
+            () => this.authService.getToken());
+
+        connection.on('ReceiveNotification', (notification: Notification) => {
             const alreadyReceived = this._notifications().some(existing => existing.id === notification.id);
             if (!alreadyReceived) {
                 this._notifications.update(prev => [notification, ...prev]);
                 this._unreadCount.update(count => count + 1);
             }
         });
+
+        this.hubConnection = connection;
+        await connection.start();
+
+        if (generation !== this.sessionGeneration) {
+            if (this.hubConnection === connection) this.hubConnection = undefined;
+            await connection.stop();
+            return;
+        }
+
+        this.fetchNotifications();
+    }
+
+    private clearNotifications() {
+        this._notifications.set([]);
+        this._unreadCount.set(0);
     }
 
     fetchNotifications() {
@@ -103,6 +146,10 @@ export class NotificationService implements OnDestroy {
     }
 
     ngOnDestroy() {
-        this.hubConnection?.stop();
+        this.authSessionEffect.destroy();
+        this.sessionGeneration++;
+        this.clearNotifications();
+        void this.hubConnection?.stop();
+        this.hubConnection = undefined;
     }
 }

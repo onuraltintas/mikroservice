@@ -24,7 +24,8 @@ describe('NotificationService session isolation', () => {
     let token = 'token-a';
     const auth = {
       userProfile: profile.asReadonly(),
-      getToken: vi.fn(() => token)
+      getToken: vi.fn(() => token),
+      isAuthenticated: vi.fn(() => profile() !== null)
     };
     const firstConnection = createConnection();
     const secondConnection = createConnection();

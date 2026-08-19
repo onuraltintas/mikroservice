@@ -71,6 +71,9 @@ secret kaydı oluşturma da fail-closed olarak reddedilir.
    kurum yöneticisi kullanıcı ekranında salt-okunur tenant görünümüne sahiptir.
 7. Kurum mutation'ları handler seviyesinde de scope kontrolü yapar; controller
    metadata'sı tek başına tenant izolasyonu olarak kabul edilmez.
+8. Notification SignalR bağlantısı oturum sahibine bağlıdır. Logout veya kullanıcı
+   değişiminde eski bağlantı durdurulur, istemci bildirim state'i temizlenir ve
+   reconnect her çağrıda güncel access token'ı alır.
 
 ## Tamamlanma doğrulaması
 
