@@ -56,7 +56,7 @@ public sealed class RefreshTokenCookiePolicyTests
         json.Should().Contain("access-token");
         json.Should().NotContain("browser-secret-refresh-token");
         json.Should().NotContain("RefreshToken");
-        context.Response.Headers.SetCookie.ToString().Should()
-            .ContainAll("HttpOnly", "secure", "samesite=strict", "path=/api/auth");
+        context.Response.Headers.SetCookie.ToString().ToLowerInvariant().Should()
+            .ContainAll("httponly", "secure", "samesite=strict", "path=/api/auth");
     }
 }

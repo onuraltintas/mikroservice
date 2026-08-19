@@ -113,6 +113,9 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
              _logger.LogError(ex, "Login stats recording failed");
         }
 
-        return Result.Success(new LoginResponse(accessToken, refreshToken.Token));
+        return Result.Success(new LoginResponse(
+            accessToken,
+            refreshToken.Token,
+            refreshToken.ExpiresAt));
     }
 }

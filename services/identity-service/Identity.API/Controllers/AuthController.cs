@@ -13,6 +13,7 @@ using Identity.Application.Commands.ResetPassword;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Identity.API.Security;
 
 namespace Identity.API.Controllers;
 
@@ -22,10 +23,12 @@ namespace Identity.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IWebHostEnvironment _environment;
 
-    public AuthController(IMediator mediator)
+    public AuthController(IMediator mediator, IWebHostEnvironment environment)
     {
         _mediator = mediator;
+        _environment = environment;
     }
 
     [HttpPost("login")]
@@ -37,7 +40,10 @@ public class AuthController : ControllerBase
         {
             return BadRequest(result.Error);
         }
-        return Ok(result.Value);
+        return Ok(RefreshTokenCookiePolicy.Issue(
+            Response,
+            result.Value,
+            _environment.IsProduction()));
     }
 
     [HttpPost("register/student")]
@@ -94,14 +100,24 @@ public class AuthController : ControllerBase
 
     [HttpPost("refresh-token")]
     [AllowAnonymous]
-    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenCommand command)
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
     {
-         var result = await _mediator.Send(command);
+        var refreshToken = Request.Cookies[RefreshTokenCookiePolicy.CookieName]
+            ?? request.RefreshToken;
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            return BadRequest(new { Error = "Refresh token is required." });
+        }
+
+        var result = await _mediator.Send(new RefreshTokenCommand(refreshToken));
         if (result.IsFailure)
         {
             return BadRequest(result.Error);
         }
-        return Ok(result.Value);
+        return Ok(RefreshTokenCookiePolicy.Issue(
+            Response,
+            result.Value,
+            _environment.IsProduction()));
     }
 
     [HttpPost("confirm-email")]
@@ -146,7 +162,10 @@ public class AuthController : ControllerBase
             return BadRequest(result.Error);
         }
 
-        return Ok(result.Value);
+        return Ok(RefreshTokenCookiePolicy.Issue(
+            Response,
+            result.Value,
+            _environment.IsProduction()));
     }
 
     [HttpPost("forgot-password")]
@@ -177,8 +196,15 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> RevokeToken([FromBody] RevokeTokenRequest request)
     {
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
-        // If token is empty, try to get from cookie? For now body is enough.
-        var command = new RevokeTokenCommand(request.Token, ipAddress);
+        var refreshToken = Request.Cookies[RefreshTokenCookiePolicy.CookieName]
+            ?? request.Token;
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            RefreshTokenCookiePolicy.Clear(Response, _environment.IsProduction());
+            return Ok();
+        }
+
+        var command = new RevokeTokenCommand(refreshToken, ipAddress);
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -186,10 +212,12 @@ public class AuthController : ControllerBase
             return BadRequest(result.Error);
         }
 
+        RefreshTokenCookiePolicy.Clear(Response, _environment.IsProduction());
         return Ok();
     }
 }
 
 public record GoogleLoginRequest(string IdToken);
-public record RevokeTokenRequest(string Token);
+public record RefreshTokenRequest(string? RefreshToken = null);
+public record RevokeTokenRequest(string? Token = null);
 

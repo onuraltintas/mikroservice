@@ -54,6 +54,9 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new RefreshTokenResponse(newAccessToken, newRefreshToken.Token));
+        return Result.Success(new RefreshTokenResponse(
+            newAccessToken,
+            newRefreshToken.Token,
+            newRefreshToken.ExpiresAt));
     }
 }

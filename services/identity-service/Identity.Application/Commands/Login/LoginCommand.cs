@@ -5,4 +5,9 @@ namespace Identity.Application.Commands.Login;
 
 public record LoginCommand(string Email, string Password) : IRequest<Result<LoginResponse>>;
 
-public record LoginResponse(string AccessToken, string RefreshToken, string TokenType = "Bearer", int ExpiresInMinutes = 15);
+public record LoginResponse(
+    string AccessToken,
+    string RefreshToken,
+    DateTime RefreshTokenExpiresAt,
+    string TokenType = "Bearer",
+    int ExpiresInMinutes = 15);

@@ -182,6 +182,9 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
              return Result.Failure<LoginResponse>(saveTokenResult.Error);
         }
 
-        return Result.Success(new LoginResponse(accessToken, refreshToken.Token));
+        return Result.Success(new LoginResponse(
+            accessToken,
+            refreshToken.Token,
+            refreshToken.ExpiresAt));
     }
 }

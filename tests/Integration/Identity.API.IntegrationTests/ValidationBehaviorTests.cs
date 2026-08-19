@@ -19,7 +19,10 @@ public class ValidationBehaviorTests
         RequestHandlerDelegate<Result<LoginResponse>> next = () =>
         {
             handlerCalled = true;
-            return Task.FromResult(Result.Success(new LoginResponse("access", "refresh")));
+            return Task.FromResult(Result.Success(new LoginResponse(
+                "access",
+                "refresh",
+                DateTime.UtcNow.AddDays(7))));
         };
 
         var action = () => behavior.Handle(command, next, CancellationToken.None);
