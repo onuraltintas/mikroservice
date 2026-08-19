@@ -1,0 +1,39 @@
+using FluentAssertions;
+using Identity.API.Controllers;
+using Microsoft.AspNetCore.Authorization;
+
+namespace Identity.API.IntegrationTests;
+
+public sealed class SystemAdminStepUpPolicyTests
+{
+    public static TheoryData<Type, string> CriticalActions => new()
+    {
+        { typeof(UserController), nameof(UserController.CreateUser) },
+        { typeof(UserController), nameof(UserController.DeleteUser) },
+        { typeof(UserController), nameof(UserController.ChangePassword) },
+        { typeof(UserController), nameof(UserController.AssignRole) },
+        { typeof(UserController), nameof(UserController.RemoveRole) },
+        { typeof(RolesController), nameof(RolesController.CreateRole) },
+        { typeof(RolesController), nameof(RolesController.UpdateRole) },
+        { typeof(RolesController), nameof(RolesController.DeleteRole) },
+        { typeof(RolesController), nameof(RolesController.UpdateRolePermissions) },
+        { typeof(PermissionsController), nameof(PermissionsController.CreatePermission) },
+        { typeof(PermissionsController), nameof(PermissionsController.UpdatePermission) },
+        { typeof(PermissionsController), nameof(PermissionsController.DeletePermission) },
+        { typeof(ConfigurationsController), nameof(ConfigurationsController.Create) },
+        { typeof(ConfigurationsController), nameof(ConfigurationsController.Update) },
+        { typeof(ConfigurationsController), nameof(ConfigurationsController.Delete) }
+    };
+
+    [Theory]
+    [MemberData(nameof(CriticalActions))]
+    public void CriticalSystemAdminAction_ShouldRequireMfaPolicy(Type controller, string actionName)
+    {
+        var action = controller.GetMethod(actionName);
+
+        action.Should().NotBeNull();
+        action!.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
+            .Cast<AuthorizeAttribute>()
+            .Should().Contain(attribute => attribute.Policy == "MfaRequired");
+    }
+}
