@@ -1,6 +1,8 @@
 using FluentAssertions;
 using Identity.API.Security;
+using Identity.Application.Commands.Login;
 using Microsoft.AspNetCore.Http;
+using System.Text.Json;
 
 namespace Identity.API.IntegrationTests;
 
@@ -33,5 +35,28 @@ public sealed class RefreshTokenCookiePolicyTests
         options.HttpOnly.Should().BeTrue();
         options.Secure.Should().BeFalse();
         options.SameSite.Should().Be(SameSiteMode.Strict);
+    }
+
+    [Fact]
+    public void IssueSession_ShouldKeepRefreshTokenOutOfResponseBody()
+    {
+        var context = new DefaultHttpContext();
+        var refreshExpiresAt = DateTime.UtcNow.AddDays(7);
+        var login = new LoginResponse(
+            "access-token",
+            "browser-secret-refresh-token",
+            refreshExpiresAt);
+
+        var response = RefreshTokenCookiePolicy.Issue(
+            context.Response,
+            login,
+            isProduction: true);
+
+        var json = JsonSerializer.Serialize(response);
+        json.Should().Contain("access-token");
+        json.Should().NotContain("browser-secret-refresh-token");
+        json.Should().NotContain("RefreshToken");
+        context.Response.Headers.SetCookie.ToString().Should()
+            .ContainAll("HttpOnly", "secure", "samesite=strict", "path=/api/auth");
     }
 }
