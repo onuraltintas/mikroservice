@@ -34,9 +34,12 @@ public sealed class AdminAuditMiddlewareTests
         record.StatusCode.Should().Be(204);
         record.CorrelationId.Should().Be(context.TraceIdentifier);
         record.ServiceName.Should().Be("Identity.API.Tests");
-        record.GetType().GetProperties()
+        var recordedValues = record.GetType().GetProperties()
             .Select(property => property.GetValue(record)?.ToString())
-            .Should().NotContain(value => value?.Contains("secret-password") == true);
+            .ToList();
+        recordedValues.Any(value =>
+            value != null && value.Contains("secret-password", StringComparison.Ordinal))
+            .Should().BeFalse();
     }
 
     [Theory]
