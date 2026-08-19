@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Identity.API.Controllers;
+using Identity.API.Controllers.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using EduPlatform.Shared.Security.Extensions;
@@ -13,19 +14,29 @@ public sealed class SystemAdminStepUpPolicyTests
     {
         { typeof(UserController), nameof(UserController.CreateUser) },
         { typeof(UserController), nameof(UserController.DeleteUser) },
+        { typeof(UserController), nameof(UserController.ActivateUser) },
+        { typeof(UserController), nameof(UserController.ConfirmEmail) },
         { typeof(UserController), nameof(UserController.ChangePassword) },
+        { typeof(UserController), nameof(UserController.UpdateUser) },
         { typeof(UserController), nameof(UserController.AssignRole) },
         { typeof(UserController), nameof(UserController.RemoveRole) },
         { typeof(RolesController), nameof(RolesController.CreateRole) },
         { typeof(RolesController), nameof(RolesController.UpdateRole) },
         { typeof(RolesController), nameof(RolesController.DeleteRole) },
+        { typeof(RolesController), nameof(RolesController.RestoreRole) },
         { typeof(RolesController), nameof(RolesController.UpdateRolePermissions) },
         { typeof(PermissionsController), nameof(PermissionsController.CreatePermission) },
         { typeof(PermissionsController), nameof(PermissionsController.UpdatePermission) },
         { typeof(PermissionsController), nameof(PermissionsController.DeletePermission) },
+        { typeof(PermissionsController), nameof(PermissionsController.RestorePermission) },
         { typeof(ConfigurationsController), nameof(ConfigurationsController.Create) },
         { typeof(ConfigurationsController), nameof(ConfigurationsController.Update) },
-        { typeof(ConfigurationsController), nameof(ConfigurationsController.Delete) }
+        { typeof(ConfigurationsController), nameof(ConfigurationsController.Delete) },
+        { typeof(ConfigurationsController), nameof(ConfigurationsController.RefreshCache) },
+        { typeof(InstitutionsController), nameof(InstitutionsController.Create) },
+        { typeof(InstitutionsController), nameof(InstitutionsController.SetActive) },
+        { typeof(SystemLogsController), nameof(SystemLogsController.CreateRetentionPolicy) },
+        { typeof(SystemLogsController), nameof(SystemLogsController.DeleteRetentionPolicy) }
     };
 
     [Theory]
