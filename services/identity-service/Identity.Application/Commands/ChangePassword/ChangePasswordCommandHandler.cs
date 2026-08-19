@@ -48,6 +48,11 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
         
         user.SetPassword(newHash, newSalt);
 
+        await _userRepository.RevokeActiveRefreshTokensAsync(
+            user.Id,
+            "security-sensitive password change",
+            cancellationToken);
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

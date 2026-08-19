@@ -74,6 +74,11 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
         // Clear token
         user.ClearPasswordResetToken();
 
+        await _userRepository.RevokeActiveRefreshTokensAsync(
+            user.Id,
+            "security-sensitive password reset",
+            cancellationToken);
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
