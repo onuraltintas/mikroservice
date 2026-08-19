@@ -59,4 +59,16 @@ public sealed class UserMultiFactorStateTests
         user.MfaFailedAttempts.Should().Be(0);
         user.MfaLockedUntil.Should().BeNull();
     }
+
+    [Fact]
+    public void RefreshToken_ShouldCarryMfaAuthenticationTime()
+    {
+        var verifiedAt = DateTimeOffset.Parse("2026-08-19T10:00:00Z");
+
+        var token = RefreshToken.Create(
+            Guid.NewGuid(), "token", DateTime.UtcNow.AddDays(1), "127.0.0.1",
+            isPersistent: true, mfaVerifiedAt: verifiedAt);
+
+        token.MfaVerifiedAt.Should().Be(verifiedAt);
+    }
 }
