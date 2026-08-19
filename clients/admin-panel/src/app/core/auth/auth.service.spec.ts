@@ -51,6 +51,9 @@ describe('AuthService browser session security', () => {
 
   it('keeps login tokens out of localStorage and sends cookie credentials', async () => {
     const service = TestBed.inject(AuthService);
+    http.expectOne(req => req.url.endsWith('/auth/refresh-token')).flush(
+      { error: 'no session' },
+      { status: 401, statusText: 'Unauthorized' });
     const loginPromise = service.loginWithPassword(
       'admin@example.test',
       'Correct-Password-1!',

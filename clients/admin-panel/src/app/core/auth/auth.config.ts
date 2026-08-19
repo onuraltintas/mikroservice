@@ -6,10 +6,10 @@ export const authConfig: AuthConfig = {
     issuer: '', // Local service does not provide discovery yet
     loginUrl: `${environment.apiUrl}/auth/login`,
     tokenEndpoint: `${environment.apiUrl}/auth/login`, // We use the same for local simplified flow
-    redirectUri: 'http://localhost:4200/dashboard',
+    redirectUri: typeof window === 'undefined' ? '/dashboard' : `${window.location.origin}/dashboard`,
     clientId: 'admin-panel',
     responseType: 'code',
     scope: 'openid profile email',
-    requireHttps: false,
-    showDebugInformation: true,
+    requireHttps: environment.production,
+    showDebugInformation: !environment.production,
 };

@@ -1,10 +1,10 @@
-import { Injectable, computed, inject, signal, PLATFORM_ID } from '@angular/core';
+import { Injectable, inject, signal, PLATFORM_ID, OnDestroy } from '@angular/core';
 import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { isPlatformBrowser } from '@angular/common';
-import { OAuthService, AuthConfig } from 'angular-oauth2-oidc';
+import { OAuthService } from 'angular-oauth2-oidc';
 import { authConfig } from './auth.config';
 import { Router } from '@angular/router';
-import { BehaviorSubject, filter, firstValueFrom } from 'rxjs';
+import { BehaviorSubject, filter, firstValueFrom, Subscription } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
@@ -19,266 +19,244 @@ export interface UserProfile {
     permissions: string[];
 }
 
-/**
- * Frontend visibility is derived from the same permission keys enforced by
- * the APIs.  The server remains authoritative; this helper only prevents
- * links/routes that the current token cannot use from being rendered.
- */
+interface AuthSessionResponse {
+    accessToken: string;
+    tokenType: string;
+    expiresInMinutes: number;
+}
+
 export function hasRequiredPermission(user: UserProfile | null, permission: string): boolean {
     return !!user && user.permissions.includes(permission);
 }
 
-@Injectable({
-    providedIn: 'root'
-})
-export class AuthService {
+@Injectable({ providedIn: 'root' })
+export class AuthService implements OnDestroy {
     private oauthService = inject(OAuthService);
-    private authService = inject(SocialAuthService); // Inject social service
+    private socialAuthService = inject(SocialAuthService);
     private router = inject(Router);
     private platformId = inject(PLATFORM_ID);
+    private httpClient = inject(HttpClient);
 
-    // State
     private _userProfile = signal<UserProfile | null>(null);
     userProfile = this._userProfile.asReadonly();
+    private _accessToken = signal('');
+    private accessTokenExpiresAt = 0;
+    private refreshTimer?: ReturnType<typeof setTimeout>;
+    private refreshPromise?: Promise<boolean>;
+    private oauthEventsSubscription?: Subscription;
 
-    // AuthGuard'ın bekleyeceği sinyal
     public isDoneLoading$ = new BehaviorSubject<boolean>(false);
 
     constructor() {
         if (isPlatformBrowser(this.platformId)) {
-            // BEST PRACTICE: Kararlılık için her zaman LocalStorage kullan.
-            this.oauthService.setStorage(localStorage);
-            this.oauthService.requireHttps = false; // Early disable
-            this.initializeAuth();
+            void this.initializeAuth();
         } else {
-            this.isDoneLoading$.next(true); // SSR için bloklama yapmasın
+            this.isDoneLoading$.next(true);
         }
     }
 
     private async initializeAuth() {
         this.oauthService.configure(authConfig);
-        this.oauthService.requireHttps = false; // FORCE DISABLE FOR LOCAL DEV
-        // this.oauthService.setupAutomaticSilentRefresh(); // Disabled to avoid 415 errors with custom JSON backend
+        this.oauthService.requireHttps = environment.production;
 
         try {
-            // Discovery'yi yerel geliştirme için tamamen opsiyonel yapalım.
-            // if (authConfig.issuer) {
-            //     await this.oauthService.loadDiscoveryDocument();
-            // }
-
-            // Kütüphanenin kendi kendine "refresh" yapmasını engellemek için 
-            // sadece geçerli bir manuel token var mı ona bakıyoruz.
-            if (this.isAuthenticated()) {
-                this.loadUserProfile();
-            }
-        } catch (e) {
-            console.warn('Auth Init bypassed for manual flow.');
+            await this.refreshSession();
         } finally {
-            // Her durumda (hata olsa bile) "Yükleme Bitti" de, yoksa uygulama sonsuza kadar bekler.
             this.isDoneLoading$.next(true);
         }
 
-        this.oauthService.events.subscribe(e => {
-            if (e.type === 'token_received' || e.type === 'token_refreshed') {
-                this.loadUserProfile();
-            } else if (e.type === 'logout') {
-                this._userProfile.set(null);
+        this.oauthEventsSubscription = this.oauthService.events.subscribe(event => {
+            if (event.type === 'token_received' || event.type === 'token_refreshed') {
+                const accessToken = this.oauthService.getAccessToken();
+                if (accessToken) {
+                    this.applySession({ accessToken, tokenType: 'Bearer', expiresInMinutes: 15 });
+                }
+            } else if (event.type === 'logout') {
+                this.clearSession();
             }
         });
     }
 
-    // --- GUARD İÇİN BEKLEME HELPER'I ---
     async waitForAuth(): Promise<boolean> {
-        // isDoneLoading true olana kadar bekle
-        await firstValueFrom(this.isDoneLoading$.pipe(filter(isDone => isDone === true)));
+        await firstValueFrom(this.isDoneLoading$.pipe(filter(isDone => isDone)));
         return this.isAuthenticated();
     }
 
     isAuthenticated(): boolean {
-        if (this.oauthService.hasValidAccessToken()) return true;
-
-        if (isPlatformBrowser(this.platformId)) {
-            const token = localStorage.getItem('access_token');
-            const expiresAtStr = localStorage.getItem('expires_at');
-
-            if (token && expiresAtStr) {
-                const expiresAt = parseInt(expiresAtStr, 10);
-                if (Date.now() < expiresAt) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return this._accessToken().length > 0 && Date.now() < this.accessTokenExpiresAt;
     }
-
-    private httpClient = inject(HttpClient);
-
-    // --- ACTIONS ---
 
     login() {
         this.oauthService.initLoginFlow();
     }
 
     async loginWithGoogle(idToken: string): Promise<boolean> {
+        const response = await firstValueFrom(this.httpClient.post<AuthSessionResponse>(
+            `${environment.apiUrl}/auth/google-login`,
+            { idToken },
+            { withCredentials: true }));
+        if (!response?.accessToken) return false;
+
+        this.applySession(response);
+        await this.router.navigate(['/dashboard']);
+        return true;
+    }
+
+    async loginWithPassword(
+        email: string,
+        pass: string,
+        rememberMe: boolean = true): Promise<boolean> {
+        const response = await firstValueFrom(this.httpClient.post<AuthSessionResponse>(
+            `${environment.apiUrl}/auth/login`,
+            { email, password: pass, rememberMe },
+            { withCredentials: true }));
+        if (!response?.accessToken) return false;
+
+        this.applySession(response);
+        await this.router.navigate(['/dashboard']);
+        return true;
+    }
+
+    async refreshSession(): Promise<boolean> {
+        if (!isPlatformBrowser(this.platformId)) return false;
+        if (this.refreshPromise) return this.refreshPromise;
+
+        const operation = this.performRefresh();
+        this.refreshPromise = operation;
         try {
-            const response = await firstValueFrom(this.httpClient.post<any>(`${environment.apiUrl}/auth/google-login`, { idToken }));
-
-            if (response && response.accessToken) {
-                // Manually save tokens for OAuthService compatibility or simple usage
-                localStorage.setItem('access_token', response.accessToken);
-                localStorage.setItem('refresh_token', response.refreshToken);
-
-                // Set fake expiry if not provided, basically activating the session
-                // OAuthService checks 'expires_at' (epoch ms)
-                const expiresAt = Date.now() + (15 * 60 * 1000); // 15 mins default
-                localStorage.setItem('expires_at', expiresAt.toString());
-
-                // Trigger profile load
-                this.loadUserProfile();
-                this.router.navigate(['/dashboard']);
-                return true;
-            }
-        } catch (err) {
-            console.error('Google Login Backend Failed', err);
-            throw err;
+            return await operation;
+        } finally {
+            if (this.refreshPromise === operation) this.refreshPromise = undefined;
         }
-        return false;
     }
 
-    async loginWithPassword(email: string, pass: string, rememberMe: boolean = true): Promise<boolean> {
+    private async performRefresh(): Promise<boolean> {
         try {
-            const response = await firstValueFrom(
-                this.httpClient.post<any>(`${environment.apiUrl}/auth/login`, {
-                    email,
-                    password: pass
-                })
-            );
-
-            if (response && response.accessToken) {
-                // Manually save tokens
-                localStorage.setItem('access_token', response.accessToken);
-                localStorage.setItem('refresh_token', response.refreshToken);
-
-                const expiresAt = Date.now() + (response.expiresInMinutes || 15) * 60 * 1000;
-                localStorage.setItem('expires_at', expiresAt.toString());
-
-                // Trigger profile load
-                this.loadUserProfile();
-                this.router.navigate(['/dashboard']);
-                return true;
+            const response = await firstValueFrom(this.httpClient.post<AuthSessionResponse>(
+                `${environment.apiUrl}/auth/refresh-token`,
+                {},
+                { withCredentials: true }));
+            if (!response?.accessToken) {
+                this.clearSession();
+                return false;
             }
-        } catch (err) {
-            console.error('Login Failed', err);
-            throw err;
+
+            this.applySession(response);
+            return true;
+        } catch {
+            this.clearSession();
+            return false;
         }
-        return false;
     }
 
-    async confirmEmail(userId: string, token: string): Promise<any> {
-        return firstValueFrom(
-            this.httpClient.post<any>(`${environment.apiUrl}/auth/confirm-email`, {
-                userId,
-                token
-            })
-        );
+    async confirmEmail(userId: string, token: string): Promise<unknown> {
+        return firstValueFrom(this.httpClient.post(
+            `${environment.apiUrl}/auth/confirm-email`,
+            { userId, token }));
     }
 
-    async resendVerificationEmail(email: string): Promise<any> {
-        return firstValueFrom(
-            this.httpClient.post<any>(`${environment.apiUrl}/auth/resend-verification-email`, {
-                email
-            })
-        );
+    async resendVerificationEmail(email: string): Promise<unknown> {
+        return firstValueFrom(this.httpClient.post(
+            `${environment.apiUrl}/auth/resend-verification-email`,
+            { email }));
     }
 
     async logout() {
-        // Attempt to revoke token on backend
+        this.clearSession();
+
         try {
-            // Also sign out from Google to prevent auto-login
-            await this.authService.signOut();
-        } catch (e) {
-            // Ignore if not logged in with Google
+            await this.socialAuthService.signOut();
+        } catch {
+            // The user may not have authenticated with Google.
         }
 
         try {
-            if (isPlatformBrowser(this.platformId)) {
-                // Usually we revoke the Refresh Token
-                const refreshToken = localStorage.getItem('refresh_token');
-                if (refreshToken) {
-                    await firstValueFrom(this.httpClient.post(`${environment.apiUrl}/auth/revoke-token`, { token: refreshToken })); // Fixed endpoint URL
-                }
-            }
-        } catch (e) {
-            console.warn('Token revocation failed:', e);
+            await firstValueFrom(this.httpClient.post(
+                `${environment.apiUrl}/auth/revoke-token`,
+                {},
+                { withCredentials: true }));
+        } catch {
+            // Local state must still be cleared when the network is unavailable.
         }
 
         this.oauthService.logOut();
-        if (isPlatformBrowser(this.platformId)) {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            localStorage.removeItem('expires_at');
-            // Also notify the library to clear any internal state
-            sessionStorage.clear();
-        }
+        await this.router.navigate(['/auth/login']);
+    }
+
+    private applySession(response: AuthSessionResponse) {
+        this._accessToken.set(response.accessToken);
+        const lifetimeMinutes = Number.isFinite(response.expiresInMinutes)
+            ? Math.max(1, response.expiresInMinutes)
+            : 15;
+        this.accessTokenExpiresAt = Date.now() + lifetimeMinutes * 60_000;
+        this.loadUserProfile();
+        this.scheduleRefresh();
+    }
+
+    private scheduleRefresh() {
+        if (this.refreshTimer) clearTimeout(this.refreshTimer);
+        const delay = Math.max(1_000, this.accessTokenExpiresAt - Date.now() - 60_000);
+        this.refreshTimer = setTimeout(() => void this.refreshSession(), delay);
+    }
+
+    private clearSession() {
+        if (this.refreshTimer) clearTimeout(this.refreshTimer);
+        this.refreshTimer = undefined;
+        this._accessToken.set('');
+        this.accessTokenExpiresAt = 0;
         this._userProfile.set(null);
-        this.router.navigate(['/auth/login']);
     }
 
     private loadUserProfile() {
-        let accessToken = this.oauthService.getAccessToken();
-        if (!accessToken && isPlatformBrowser(this.platformId)) {
-            accessToken = localStorage.getItem('access_token') || '';
-        }
+        const parsedToken = this.parseJwt(this._accessToken());
+        const roleClaimType = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
+        const roles = parsedToken.role
+            || parsedToken.roles
+            || parsedToken[roleClaimType]
+            || parsedToken.realm_access?.roles
+            || [];
+        const permissions = parsedToken.permission || [];
+        const permissionsArray = Array.isArray(permissions) ? permissions : [permissions];
+        const rolesArray = Array.isArray(roles) ? roles : [roles];
+        const appRoles = [
+            'SystemAdmin', 'Admin', 'InstitutionOwner', 'InstitutionAdmin',
+            'Teacher', 'Student', 'Parent'
+        ];
+        const mainRole = appRoles.find(role => rolesArray.includes(role)) || rolesArray[0] || 'User';
 
-        const idClaims = this.oauthService.getIdentityClaims() as any;
-
-        if (accessToken) {
-            const parsedToken = this.parseJwt(accessToken);
-
-            // Handle multiple role claim formats (standard and Microsoft specific)
-            const roleClaimType = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
-            const roles = parsedToken.role ||
-                parsedToken.roles ||
-                parsedToken[roleClaimType] ||
-                parsedToken.realm_access?.roles ||
-                [];
-
-            // Handle permissions
-            const permissions = parsedToken.permission || [];
-            const permissionsArray = Array.isArray(permissions) ? permissions : [permissions];
-
-            const rolesArray = Array.isArray(roles) ? roles : [roles];
-
-            const appRoles = ['SystemAdmin', 'Admin', 'InstitutionOwner', 'InstitutionAdmin', 'Teacher', 'Student', 'Parent'];
-            const mainRole = appRoles.find(r => rolesArray.includes(r)) || rolesArray[0] || 'User';
-
-            this._userProfile.set({
-                id: idClaims?.sub || parsedToken.sub || parsedToken.id,
-                email: idClaims?.email || parsedToken.email || parsedToken.unique_name,
-                firstName: idClaims?.given_name || parsedToken.given_name || parsedToken.firstName || '',
-                lastName: idClaims?.family_name || parsedToken.family_name || parsedToken.lastName || '',
-                username: idClaims?.preferred_username || parsedToken.preferred_username || parsedToken.email || '',
-                roles: rolesArray,
-                role: mainRole,
-                permissions: permissionsArray
-            });
-        }
+        this._userProfile.set({
+            id: parsedToken.sub || parsedToken.id,
+            email: parsedToken.email || parsedToken.unique_name,
+            firstName: parsedToken.given_name || parsedToken.firstName || '',
+            lastName: parsedToken.family_name || parsedToken.lastName || '',
+            username: parsedToken.preferred_username || parsedToken.email || '',
+            roles: rolesArray,
+            role: mainRole,
+            permissions: permissionsArray
+        });
     }
 
     hasPermission(permission: string): boolean {
         return hasRequiredPermission(this.userProfile(), permission);
     }
 
-    private parseJwt(token: string) {
-        if (typeof window === 'undefined') return {};
+    private parseJwt(token: string): any {
+        if (typeof window === 'undefined' || !token) return {};
         try {
-            return JSON.parse(decodeURIComponent(window.atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
-        } catch (e) {
+            const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+            return JSON.parse(decodeURIComponent(window.atob(payload).split('').map(character =>
+                `%${(`00${character.charCodeAt(0).toString(16)}`).slice(-2)}`).join('')));
+        } catch {
             return {};
         }
     }
 
     getToken(): string {
-        return this.oauthService.getAccessToken() || (isPlatformBrowser(this.platformId) ? localStorage.getItem('access_token') || '' : '');
+        return this.isAuthenticated() ? this._accessToken() : '';
+    }
+
+    ngOnDestroy() {
+        this.oauthEventsSubscription?.unsubscribe();
+        this.clearSession();
     }
 }
