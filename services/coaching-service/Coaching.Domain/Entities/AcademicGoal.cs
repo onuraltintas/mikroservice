@@ -65,7 +65,13 @@ public class AcademicGoal : AggregateRoot
         string? targetSubject = null)
     {
         if (targetDate.HasValue) TargetDate = targetDate;
-        if (targetScore.HasValue) TargetScore = targetScore;
+        if (targetScore.HasValue)
+        {
+            if (targetScore.Value is < 0 or > 999.99m)
+                throw new ArgumentOutOfRangeException(nameof(targetScore), "Target score must be between 0 and 999.99");
+
+            TargetScore = targetScore;
+        }
         if (targetExamType.HasValue) TargetExamType = targetExamType;
         if (targetSubject != null) TargetSubject = targetSubject;
 

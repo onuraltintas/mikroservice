@@ -56,7 +56,8 @@ foreach ($headerValue in $Header) {
 }
 
 $deadline = [DateTime]::UtcNow.AddSeconds($DurationSeconds)
-$runStarted = [DateTime]::UtcNow
+$runStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+$stopwatchFrequency = [double][System.Diagnostics.Stopwatch]::Frequency
 $workers = 1..$Concurrency
 
 $workerResults = @(
@@ -75,7 +76,7 @@ $workerResults = @(
         $webSession = $null
 
         while ([DateTime]::UtcNow -lt $using:deadline) {
-            $started = [DateTime]::UtcNow
+            $started = [System.Diagnostics.Stopwatch]::GetTimestamp()
             $response = $null
 
             try {
@@ -99,7 +100,7 @@ $workerResults = @(
                 }
 
                 $response = Invoke-WebRequest @requestParameters
-                $elapsedMilliseconds = ([DateTime]::UtcNow - $started).TotalMilliseconds
+                $elapsedMilliseconds = (([System.Diagnostics.Stopwatch]::GetTimestamp() - $started) * 1000.0) / $using:stopwatchFrequency
                 $requests++
                 if ($latencies.Count -lt $latencySampleLimit) {
                     $latencies += $elapsedMilliseconds
@@ -124,7 +125,7 @@ $workerResults = @(
             catch {
                 $failures++
                 $requests++
-                $elapsedMilliseconds = ([DateTime]::UtcNow - $started).TotalMilliseconds
+                $elapsedMilliseconds = (([System.Diagnostics.Stopwatch]::GetTimestamp() - $started) * 1000.0) / $using:stopwatchFrequency
                 if ($latencies.Count -lt $latencySampleLimit) {
                     $latencies += $elapsedMilliseconds
                 }
@@ -204,7 +205,7 @@ foreach ($workerResult in $workerResults) {
 }
 
 $successRate = if ($totalRequests -eq 0) { 0 } else { [Math]::Round(($totalSuccesses / $totalRequests) * 100, 2) }
-$elapsedSeconds = [Math]::Max(0.001, ([DateTime]::UtcNow - $runStarted).TotalSeconds)
+$elapsedSeconds = [Math]::Max(0.001, $runStopwatch.Elapsed.TotalSeconds)
 $summary = [ordered]@{
     Target             = $displayTarget
     Method             = $Method

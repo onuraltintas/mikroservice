@@ -1,4 +1,6 @@
 using EduPlatform.Shared.Kernel.Primitives;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Notification.Domain.Entities;
 
@@ -40,4 +42,44 @@ public class SupportRequest : AggregateRoot
         AdminNote = adminNote;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public bool HasSamePayload(
+        string firstName,
+        string lastName,
+        string email,
+        string subject,
+        string message)
+    {
+        return string.Equals(
+            CreatePayloadFingerprint(FirstName, LastName, Email, Subject, Message),
+            CreatePayloadFingerprint(firstName, lastName, email, subject, message),
+            StringComparison.Ordinal);
+    }
+
+    private static string CreatePayloadFingerprint(
+        string firstName,
+        string lastName,
+        string email,
+        string subject,
+        string message)
+    {
+        var fields = new[]
+        {
+            NormalizeText(firstName),
+            NormalizeText(lastName),
+            NormalizeEmail(email),
+            NormalizeText(subject),
+            NormalizeText(message)
+        };
+        var canonicalPayload = string.Join(
+            "|",
+            fields.Select(field => $"{field.Length}:{field}"));
+
+        return Convert.ToHexString(
+            SHA256.HashData(Encoding.UTF8.GetBytes(canonicalPayload)));
+    }
+
+    private static string NormalizeText(string value) => value.Trim();
+
+    private static string NormalizeEmail(string value) => value.Trim().ToLowerInvariant();
 }

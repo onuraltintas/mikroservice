@@ -35,6 +35,11 @@ public class SupportController : ControllerBase
 
         if (result.IsFailure)
         {
+            if (result.Error.Code == "Error.Conflict")
+            {
+                return Conflict(result.Error);
+            }
+
             return BadRequest(result.Error);
         }
 

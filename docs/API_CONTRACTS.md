@@ -65,12 +65,24 @@ Yeni liste endpoint'leri için kurallar:
 
 ## Idempotent public writes
 
+Gateway write yanıtlarını cache'lemez veya replay etmez. Böylece her retry'da
+downstream servisinin authentication, tenant ve business authorization kontrolleri
+yeniden çalışır; Gateway veri sahibi değildir. Idempotency, write komutunun sahibi
+olan serviste, aynı transaction/unique constraint ve outbox sınırında uygulanmalıdır.
+Kimlik veya tenant kapsamı olan write'larda yalnızca Gateway katmanına konan genel bir
+cache/replay mekanizması kullanılmamalıdır.
+
 `POST /api/support/submit` requires an `Idempotency-Key` header containing a
 16–128 character `[A-Za-z0-9._~-]` value. The key is scoped to the submitted
 email address. Repeating the same request with the same key returns the
-original `SupportRequestId` and does not send a second acknowledgement or admin
-notification. Clients should reuse the key when retrying a timed-out request
-and generate a new key for a distinct support request.
+original `SupportRequestId` and does not create a second acknowledgement or
+admin notification. Reusing a key with a different canonical request payload
+returns `409 Conflict`. The support row, acknowledgement delivery row and
+Identity-forward delivery row are committed together. Durable workers retry
+those two side effects, so transient SMTP or Identity failures do not make the
+idempotent record permanently lose its notification work. Clients should reuse
+the key when retrying a timed-out request and generate a new key for a distinct
+support request.
 
 ## Contract testleri
 

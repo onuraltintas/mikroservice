@@ -134,6 +134,7 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IEmailDeliveryQueue, EmailDeliveryQueue>();
 builder.Services.AddScoped<INotificationService, Notification.API.Services.NotificationManager>();
 builder.Services.AddHostedService<EmailDeliveryWorker>();
+builder.Services.AddHostedService<SupportForwardDeliveryWorker>();
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 builder.Services.AddHttpClient<Notification.Application.Interfaces.IIdentityInternalService, Notification.Infrastructure.ExternalServices.IdentityInternalService>()
     .ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(10))

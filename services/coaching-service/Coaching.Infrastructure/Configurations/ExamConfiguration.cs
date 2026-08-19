@@ -41,6 +41,10 @@ public class ExamConfiguration : IEntityTypeConfiguration<Exam>
             .HasColumnName("subject")
             .HasMaxLength(100);
 
+        builder.Property(x => x.Description)
+            .HasColumnName("description")
+            .HasMaxLength(2_000);
+
         builder.Property(x => x.ExamDate)
             .HasColumnName("exam_date")
             .IsRequired();

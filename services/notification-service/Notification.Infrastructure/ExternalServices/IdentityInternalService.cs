@@ -23,7 +23,7 @@ public class IdentityInternalService : IIdentityInternalService
         _logger = logger;
     }
 
-    public async Task ForwardSupportRequestAsync(SubmitSupportRequestCommand request, Guid supportRequestId, CancellationToken cancellationToken = default)
+    public async Task<bool> ForwardSupportRequestAsync(SubmitSupportRequestCommand request, Guid supportRequestId, CancellationToken cancellationToken = default)
     {
         var command = new
         {
@@ -40,7 +40,7 @@ public class IdentityInternalService : IIdentityInternalService
             if (string.IsNullOrWhiteSpace(_serviceApiKey))
             {
                 _logger.LogError("Internal service API key is not configured; support request {SupportRequestId} was not forwarded.", supportRequestId);
-                return;
+                return false;
             }
 
             using var requestMessage = new HttpRequestMessage(
@@ -53,11 +53,16 @@ public class IdentityInternalService : IIdentityInternalService
 
             using var response = await _httpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             response.EnsureSuccessStatusCode();
+            return true;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {
-            // Log error but don't fail the main process
             _logger.LogError(ex, "Error forwarding support request to Identity Service");
+            return false;
         }
     }
 }

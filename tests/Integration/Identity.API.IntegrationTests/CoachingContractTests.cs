@@ -1,0 +1,120 @@
+using Coaching.Application.Commands.CreateAssignment;
+using Coaching.Application.Commands.CreateExam;
+using Coaching.Application.Commands.CreateGoal;
+using Coaching.Application.Commands.CreateSession;
+using Coaching.Domain.Enums;
+using FluentAssertions;
+
+namespace Identity.API.IntegrationTests;
+
+public sealed class CoachingContractTests
+{
+    [Fact]
+    public async Task CreateAssignmentContract_RejectsEmptyTargetsAndInvalidScoring()
+    {
+        var validator = new CreateAssignmentCommandValidator();
+        var result = await validator.ValidateAsync(new CreateAssignmentCommand
+        {
+            TeacherId = Guid.NewGuid(),
+            Title = "Math",
+            AssignmentType = "Individual",
+            DueDate = DateTime.UtcNow.AddDays(1),
+            MaxScore = 10,
+            PassingScore = 11,
+            StudentIds = new()
+        });
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Select(error => error.PropertyName)
+            .Should().Contain(new[] { "PassingScore", "StudentIds" });
+    }
+
+    [Fact]
+    public async Task CreateSessionContract_RejectsOverlongSession()
+    {
+        var validator = new CreateSessionCommandValidator();
+        var result = await validator.ValidateAsync(new CreateSessionCommand(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            DateTime.UtcNow.AddHours(1),
+            241,
+            "Math",
+            null,
+            SessionType.OneOnOne));
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == "DurationMinutes");
+    }
+
+    [Fact]
+    public async Task CreateExamContract_RejectsInvalidScoreAndPastDate()
+    {
+        var validator = new CreateExamCommandValidator();
+        var result = await validator.ValidateAsync(new CreateExamCommand(
+            Guid.NewGuid(),
+            "Mock exam",
+            ExamType.Mock,
+            DateTime.UtcNow.AddMinutes(-1),
+            0,
+            null,
+            null));
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Select(error => error.PropertyName)
+            .Should().Contain(new[] { "ExamDate", "MaxScore" });
+    }
+
+    [Fact]
+    public async Task CreateExamContract_RejectsUnknownTypeAndDatabaseOverflowScore()
+    {
+        var validator = new CreateExamCommandValidator();
+        var result = await validator.ValidateAsync(new CreateExamCommand(
+            Guid.NewGuid(),
+            "Mock exam",
+            (ExamType)999,
+            DateTime.UtcNow.AddDays(1),
+            1_000m,
+            null,
+            new string('x', 2_000)));
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Select(error => error.PropertyName)
+            .Should().Contain(new[] { "Type", "MaxScore" });
+    }
+
+    [Fact]
+    public async Task CreateGoalContract_RejectsInvalidStudentAndTargetScore()
+    {
+        var validator = new CreateGoalCommandValidator();
+        var result = await validator.ValidateAsync(new CreateGoalCommand(
+            Guid.Empty,
+            "Exam preparation",
+            GoalCategory.ExamPreparation,
+            null,
+            new string('x', 2_001),
+            DateTime.UtcNow.AddDays(1),
+            -1));
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Select(error => error.PropertyName)
+            .Should().Contain(new[] { "StudentId", "Description", "TargetScore" });
+    }
+
+    [Fact]
+    public async Task CreateGoalContract_RejectsUnknownCategoryAndDatabaseOverflowScore()
+    {
+        var validator = new CreateGoalCommandValidator();
+        var result = await validator.ValidateAsync(new CreateGoalCommand(
+            Guid.NewGuid(),
+            "Exam preparation",
+            (GoalCategory)999,
+            null,
+            null,
+            DateTime.UtcNow.AddDays(1),
+            1_000m));
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Select(error => error.PropertyName)
+            .Should().Contain(new[] { "Category", "TargetScore" });
+    }
+}

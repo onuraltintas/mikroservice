@@ -14,6 +14,7 @@ public class Exam : AggregateRoot
     public string Title { get; private set; } = string.Empty;
     public ExamType ExamType { get; private set; }
     public string? Subject { get; private set; }
+    public string? Description { get; private set; }
 
     public DateTime ExamDate { get; private set; }
     public int? DurationMinutes { get; private set; }
@@ -33,7 +34,8 @@ public class Exam : AggregateRoot
         ExamType examType,
         DateTime examDate,
         decimal maxScore,
-        Guid? institutionId = null)
+        Guid? institutionId = null,
+        string? description = null)
     {
         var exam = new Exam
         {
@@ -41,8 +43,11 @@ public class Exam : AggregateRoot
             Title = title ?? throw new ArgumentNullException(nameof(title)),
             ExamType = examType,
             ExamDate = examDate,
-            MaxScore = maxScore > 0 ? maxScore : throw new ArgumentException("Max score must be greater than 0"),
-            InstitutionId = institutionId
+            MaxScore = maxScore is > 0 and <= 999.99m
+                ? maxScore
+                : throw new ArgumentOutOfRangeException(nameof(maxScore), "Max score must be between 0 and 999.99"),
+            InstitutionId = institutionId,
+            Description = description
         };
 
         return exam;
@@ -51,11 +56,13 @@ public class Exam : AggregateRoot
     public void UpdateDetails(
         string? title = null,
         string? subject = null,
+        string? description = null,
         DateTime? examDate = null,
         int? durationMinutes = null)
     {
         if (title != null) Title = title;
         if (subject != null) Subject = subject;
+        if (description != null) Description = description;
         if (examDate.HasValue) ExamDate = examDate.Value;
         if (durationMinutes.HasValue) DurationMinutes = durationMinutes;
 

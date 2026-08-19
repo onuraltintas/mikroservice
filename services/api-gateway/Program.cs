@@ -125,8 +125,7 @@ var app = builder.Build();
 
 app.UseForwardedHeaders(forwardedHeadersOptions);
 
-app.UseCorrelationId();
-app.UseSerilogRequestLogging();
+app.UseRequestLogging();
 
 app.UseCors("AllowFrontend");
 

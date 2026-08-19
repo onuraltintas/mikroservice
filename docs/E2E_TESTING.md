@@ -13,9 +13,10 @@ Apache-2.0 lisanslı bir geliştirme bağımlılığıdır.
 - Yetkili admin ile login → refresh-token → yönetim yüzeylerini okuma
 - Admin panel login ekranının tarayıcıda açılması
 - Yetkili admin ile panel login → dashboard geçişi (staging kimlik bilgisi gerekir)
+- Disposable ortamda support submit → aynı idempotency anahtarıyla retry
 
 Testler varsayılan olarak yalnızca Docker'da çalışan Gateway'e bağlanır ve
-`http://localhost:5000` kullanır. E2E testleri business/support verisi yazmaz;
+`http://127.0.0.1:5000` kullanır. E2E testleri business/support verisi yazmaz;
 yetkili akış login ve refresh-token metadata kayıtları oluşturabilir. Kayıt/e-posta, tenant write ve
 SignalR senaryoları disposable staging tenant ve MailCatcher/SMTP erişimi olan
 ayrı bir profile bağlanmalıdır; ortak production verisiyle çalıştırılmamalıdır.
@@ -51,6 +52,16 @@ $env:E2E_START_UI = 'true'
 npm test --prefix tests/E2E
 ```
 
+Support write sözleşmesi yalnız ayrı database/SMTP kullanan disposable bir ortamda
+çalıştırılır. Test kalıcı bir support kaydı oluşturduğu için bu iki anahtar
+birlikte zorunludur:
+
+```powershell
+$env:E2E_DISPOSABLE_ENV = 'true'
+$env:E2E_RUN_SUPPORT_WRITE = 'true'
+npm run test:critical --prefix tests/E2E
+```
+
 `E2E_REQUIRED=true` kimlik bilgisi yoksa test keşfi sırasında fail eder; yanlışlıkla
 korumalı akışın sessizce skip edilmesini engeller. Kimlik bilgisi verilmezse
 yalnızca anonim Gateway sözleşmesi ve public login ekranı çalışır; bu lokal smoke
@@ -70,16 +81,20 @@ $env:E2E_UI_BASE_URL = 'https://staging.example.com'
 `.github/workflows/e2e.yml` yalnız manuel `workflow_dispatch` ve `staging`
 environment ile çalışır. `E2E_API_BASE_URL`, `E2E_UI_BASE_URL`,
 `E2E_ADMIN_EMAIL` ve `E2E_ADMIN_PASSWORD` GitHub Environment secret olarak
-tanımlanmadan job başlatılmamalıdır. Başarısız koşuda HTML/JUnit/trace/screenshot
-artefact'ları yüklenir. Ortak staging verisine yazan yeni senaryolar eklenirse
+tanımlanmadan job başlatılmamalıdır. Raporlama HTML/JUnit ile sınırlıdır; auth
+akışlarında token, parola, network trace veya ekran görüntüsü CI artefact'ı olarak
+toplanmaz. Ortak staging verisine yazan yeni senaryolar eklenirse
 her test kendi disposable tenant'ını üretmeli ve teardown yapmalıdır.
+Support write akışı varsayılan olarak kapalıdır; manuel workflow'da yalnız
+`run_support_write=true` ve staging environment variable
+`E2E_DISPOSABLE_ENV=true` ise açılır.
 
 ## Rapor ve hata ayıklama
 
 - HTML: `tests/E2E/playwright-report/`
 - JUnit: `tests/E2E/playwright-results.xml`
-- Başarısız test çıktıları: `tests/E2E/test-results/`
-- CI'da trace/video/screenshot yalnız failure veya retry ile tutulur.
+- CI artefact'ı: HTML/JUnit raporu; auth içeren testlerde trace/video/screenshot
+  kapalıdır.
 
 Test sözleşmesi Gateway route'larını ve HTTP durum kodlarını kontrol eder; servis
 iç implementasyonuna değil kullanıcıya görünen davranışa dayanır. Yeni route veya

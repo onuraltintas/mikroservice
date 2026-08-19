@@ -139,6 +139,9 @@ yazılmadan secret manager üzerinden receiver eklenmelidir.
 
 ## Deploy checklist
 
+Ayrıntılı migration, backup/restore, secret rotation, canary ve rollback adımları
+[staging operasyon runbook'unda](OPERATIONS_RUNBOOK.md) tutulur.
+
 Her release'te:
 
 - CI build, test, vulnerability ve Compose gate'leri yeşil olmalı.

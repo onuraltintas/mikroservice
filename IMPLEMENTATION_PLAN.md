@@ -94,13 +94,21 @@ P1 tamamlandıktan sonra feature geliştirme ve production hazırlığı şu sı
 ilerleyecektir:
 
 1. **Bölünmüş bounded context'ler:** Coaching içindeki Assignment/Exam/Session/
-   Goal modüllerinin command/query sözleşmelerini ayrı contract testleriyle
-   sabitle; yeni Blog, Content ve Analytics servislerini ancak veri sahibi ve
-   olay sözleşmesi netleşince ekle.
+   Goal command sözleşmeleri ve input sınırları `CoachingContractTests` ile
+   sabitlendi; ayrıntılı veri sahibi/HTTP/event matrisi
+   [bounded context sözleşmesinde](docs/BOUNDED_CONTEXT_CONTRACTS.md) tutulur.
+   Yeni Blog, Content ve Analytics servisleri ancak veri sahibi ve olay sözleşmesi
+   netleşince eklenecek.
 2. **Idempotency ve audit:** Dış write endpoint'lerinde client idempotency key,
-   audit actor/tenant/event metadata ve replay davranışı ekle. Event consumer
-   teslim idempotency'si P1 kapsamında tamamlandı; bu adım HTTP write ve audit
-   kapsamını genişletir.
+   audit actor/tenant/event metadata ve replay davranışı ekle. Gateway genel
+   response replay'i yapmaz; kimlik/tenant kontrolünü atlamamak için idempotency
+   veri sahibi servisin transaction/unique constraint sınırında kalır. Support
+   submit bu modelin örneğidir: support row, e-mail delivery ve Identity-forward
+   delivery aynı transaction'da yazılır; worker'lar bounded retry kullanır ve
+   Identity event MessageId'si support/admin çifti için deterministiktir.
+   Coaching/Identity write komutları için durable command-level idempotency ve
+   audit kaydı ayrıca uygulanacaktır. Event consumer teslim idempotency'si P1
+   kapsamında tamamlandı.
 3. **E2E kritik akışlar:** Gateway health, anonim auth/support bootstrap ve
    protected admin yüzeylerinin 401 sözleşmesi Docker üzerinde doğrulandı.
    Yetkili login → refresh → admin yüzeyleri ile Angular login/dashboard akışı
@@ -113,7 +121,8 @@ ilerleyecektir:
    RabbitMQ lag/dead-letter ve container throttling ölç.
 5. **Staging operasyonu:** immutable image SHA, migration forward/rollback,
    backup/restore tatbikatı, secret rotation, readiness/canary ve incident
-   runbook'larını prova et.
+   runbook'larını [staging operasyon runbook'u](docs/OPERATIONS_RUNBOOK.md)
+   üzerinden prova et.
 6. **Production go/no-go:** SLO'lar, restore RPO/RTO, alarm sahipliği, domain
    ve TLS/ingress kararı yazılı onaylanmadan deployment yapılmaz.
 

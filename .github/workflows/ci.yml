@@ -30,6 +30,10 @@ jobs:
             echo "Potential credential material found in tracked files."
             exit 1
           fi
+          if git ls-files -- '*.env' '*.env.*' '*.env.backup' | grep -Ev '(^|/).env.example$'; then
+            echo "Tracked environment files are not allowed; use .env.example only."
+            exit 1
+          fi
 
       - name: Validate JSON and base Compose configuration
         shell: bash

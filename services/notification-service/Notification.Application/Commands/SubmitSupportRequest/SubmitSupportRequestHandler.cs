@@ -10,16 +10,13 @@ public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestC
 {
     private readonly INotificationDbContext _dbContext;
     private readonly IEmailDeliveryQueue _emailDeliveryQueue;
-    private readonly IIdentityInternalService _identityService;
 
     public SubmitSupportRequestHandler(
         INotificationDbContext dbContext, 
-        IEmailDeliveryQueue emailDeliveryQueue,
-        IIdentityInternalService identityService)
+        IEmailDeliveryQueue emailDeliveryQueue)
     {
         _dbContext = dbContext;
         _emailDeliveryQueue = emailDeliveryQueue;
-        _identityService = identityService;
     }
 
     public async Task<Result<Guid>> Handle(SubmitSupportRequestCommand request, CancellationToken cancellationToken)
@@ -29,9 +26,21 @@ public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestC
         var existingRequest = await FindExistingAsync(normalizedEmail, idempotencyKey, cancellationToken);
         if (existingRequest is not null)
         {
+            if (!existingRequest.HasSamePayload(
+                    request.FirstName,
+                    request.LastName,
+                    normalizedEmail,
+                    request.Subject,
+                    request.Message))
+            {
+                return Result.Failure<Guid>(Error.Conflict(
+                    "This idempotency key has already been used with a different request payload."));
+            }
+
             return Result.Success(existingRequest.Id);
         }
 
+        await using var transaction = await _dbContext.BeginTransactionAsync(cancellationToken);
         var supportRequest = new SupportRequest(
             Guid.NewGuid(),
             request.FirstName,
@@ -43,12 +52,17 @@ public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestC
         );
 
         _dbContext.SupportRequests.Add(supportRequest);
+        _dbContext.SupportForwardDeliveries.Add(
+            SupportForwardDelivery.Create(supportRequest.Id));
         try
         {
+            await QueueAcknowledgmentEmail(request, supportRequest.Id, cancellationToken);
             await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
         }
         catch (DbUpdateException)
         {
+            await transaction.RollbackAsync(cancellationToken);
             // A concurrent retry may win the unique (email, key) insert. If
             // the row is now visible, return its original result and do not
             // send a second acknowledgement or admin notification.
@@ -58,14 +72,19 @@ public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestC
                 throw;
             }
 
+            if (!existingRequest.HasSamePayload(
+                    request.FirstName,
+                    request.LastName,
+                    normalizedEmail,
+                    request.Subject,
+                    request.Message))
+            {
+                return Result.Failure<Guid>(Error.Conflict(
+                    "This idempotency key has already been used with a different request payload."));
+            }
+
             return Result.Success(existingRequest.Id);
         }
-
-        // Send acknowledgment email to user
-        await QueueAcknowledgmentEmail(request, supportRequest.Id, cancellationToken);
-
-        // Forward to Identity service to notify admins
-        await _identityService.ForwardSupportRequestAsync(request, supportRequest.Id, cancellationToken);
 
         return Result.Success(supportRequest.Id);
     }

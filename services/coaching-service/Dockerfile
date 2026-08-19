@@ -16,10 +16,10 @@ RUN dotnet restore "services/coaching-service/Coaching.API/Coaching.API.csproj"
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/services/coaching-service/Coaching.API"
-RUN dotnet build "Coaching.API.csproj" -c Release -o /app/build
+RUN dotnet build "Coaching.API.csproj" -c Release -o /app/build --no-restore
 
 FROM build AS publish
-RUN dotnet publish "Coaching.API.csproj" -c Release -o /app/publish
+RUN dotnet publish "Coaching.API.csproj" -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app

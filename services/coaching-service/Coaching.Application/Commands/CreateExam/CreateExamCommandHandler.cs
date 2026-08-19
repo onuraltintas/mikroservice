@@ -41,17 +41,9 @@ public class CreateExamCommandHandler : IRequestHandler<CreateExamCommand, Creat
             command.Type,
             command.ExamDate,
             command.MaxScore,
-            institutionId
+            institutionId,
+            command.Description
         );
-
-        if (!string.IsNullOrEmpty(command.Description))
-        {
-            // UpdateDetails description parametresini almıyor entity'de (Subject update details alıyor). 
-            // Ama CreateExam açıklama alanı nerede saklanıyor? Entity'de Description yok!
-            // Wait, entity de 'Subject' parametresi var. Belki Description yerine Subject kullanmalıyım.
-            // Let's use Subject for description or general explanation.
-            exam.UpdateDetails(subject: command.Description);
-        }
 
         await _repository.AddAsync(exam, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

@@ -16,10 +16,10 @@ RUN dotnet restore "services/identity-service/Identity.API/Identity.API.csproj"
 # Copy everything else and build
 COPY . .
 WORKDIR "/src/services/identity-service/Identity.API"
-RUN dotnet build "Identity.API.csproj" -c Release -o /app/build
+RUN dotnet build "Identity.API.csproj" -c Release -o /app/build --no-restore
 
 FROM build AS publish
-RUN dotnet publish "Identity.API.csproj" -c Release -o /app/publish
+RUN dotnet publish "Identity.API.csproj" -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app

@@ -25,7 +25,7 @@ Gateway health smoke testi:
 
 ```powershell
 & .\tools\load-test.ps1 `
-  -BaseUrl http://localhost:5000 `
+  -BaseUrl http://127.0.0.1:5000 `
   -Path /health -Concurrency 32 -DurationSeconds 60 -Json -FailOnError
 ```
 
@@ -35,7 +35,7 @@ metin olarak saklamayın; oturumdan veya güvenli bir secret store'dan alın:
 ```powershell
 $token = $env:LOAD_TEST_TOKEN
 & .\tools\load-test.ps1 `
-  -BaseUrl http://localhost:5000 `
+  -BaseUrl http://127.0.0.1:5000 `
   -Path /api/users/me `
   -Concurrency 32 `
   -DurationSeconds 300 `
@@ -60,7 +60,7 @@ $body = @{
   StudentIds = @($studentId)
 } | ConvertTo-Json
 & .\tools\load-test.ps1 `
-  -BaseUrl http://localhost:5000 `
+  -BaseUrl http://127.0.0.1:5000 `
   -Path /api/assignments `
   -Method POST -Body $body -ContentType application/json `
   -Header "Authorization=Bearer $token" `

@@ -16,6 +16,11 @@ public class NotificationDbContext : DbContext, INotificationDbContext
     public DbSet<EmailTemplate> EmailTemplates { get; set; }
     public DbSet<EmailDelivery> EmailDeliveries { get; set; }
     public DbSet<SupportRequest> SupportRequests { get; set; }
+    public DbSet<SupportForwardDelivery> SupportForwardDeliveries { get; set; }
+
+    public Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync(
+        CancellationToken cancellationToken)
+        => Database.BeginTransactionAsync(cancellationToken);
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -50,6 +55,18 @@ public class NotificationDbContext : DbContext, INotificationDbContext
         modelBuilder.Entity<SupportRequest>()
             .HasIndex(x => new { x.Email, x.IdempotencyKey })
             .IsUnique();
+
+        modelBuilder.Entity<SupportForwardDelivery>().HasKey(x => x.Id);
+        modelBuilder.Entity<SupportForwardDelivery>()
+            .HasIndex(x => x.SupportRequestId)
+            .IsUnique();
+        modelBuilder.Entity<SupportForwardDelivery>()
+            .HasIndex(x => new { x.Status, x.NextAttemptAt, x.CreatedAt });
+        modelBuilder.Entity<SupportForwardDelivery>()
+            .HasIndex(x => new { x.Status, x.LeaseUntil, x.CreatedAt });
+        modelBuilder.Entity<SupportForwardDelivery>()
+            .Property(x => x.LeaseToken)
+            .IsConcurrencyToken();
 
         // Seed data is now handled by NotificationDbContextSeeder via external files.
         // See: Infrastructure/Seed/seeds.json

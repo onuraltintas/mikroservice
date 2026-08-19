@@ -1,11 +1,16 @@
 import { defineConfig } from '@playwright/test';
 
-const apiBaseUrl = process.env.E2E_API_BASE_URL ?? process.env.API_BASE_URL ?? 'http://localhost:5000';
+const apiBaseUrl = process.env.E2E_API_BASE_URL ?? process.env.API_BASE_URL ?? 'http://127.0.0.1:5000';
 const uiBaseUrl = process.env.E2E_UI_BASE_URL ?? process.env.BASE_URL ?? 'http://127.0.0.1:4200';
 const hasAdminCredentials = Boolean(process.env.E2E_ADMIN_EMAIL && process.env.E2E_ADMIN_PASSWORD);
+const runsSupportWrite = process.env.E2E_RUN_SUPPORT_WRITE === 'true';
 
 if (process.env.E2E_REQUIRED === 'true' && !hasAdminCredentials) {
   throw new Error('E2E_REQUIRED=true requires E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD.');
+}
+
+if (runsSupportWrite && process.env.E2E_DISPOSABLE_ENV !== 'true') {
+  throw new Error('E2E_RUN_SUPPORT_WRITE=true requires E2E_DISPOSABLE_ENV=true.');
 }
 
 export default defineConfig({
@@ -44,7 +49,7 @@ export default defineConfig({
         baseURL: uiBaseUrl,
         trace: 'off',
         video: 'off',
-        screenshot: 'only-on-failure'
+        screenshot: 'off'
       }
     }
   ],

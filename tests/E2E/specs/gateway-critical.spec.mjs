@@ -86,3 +86,31 @@ test.describe('Gateway authenticated admin surface', () => {
     }
   });
 });
+
+test.describe('Gateway disposable support write flow', () => {
+  test.skip(
+    process.env.E2E_RUN_SUPPORT_WRITE !== 'true',
+    'Set E2E_RUN_SUPPORT_WRITE=true only for a disposable environment.'
+  );
+
+  test('returns the original support request id for an equivalent retry', async ({ request }) => {
+    const nonce = crypto.randomUUID();
+    const payload = {
+      firstName: 'E2E',
+      lastName: 'Support',
+      email: `e2e-support-${nonce}@example.test`,
+      subject: 'Disposable idempotency verification',
+      message: 'This request is created only by the disposable E2E environment.'
+    };
+    const headers = { 'Idempotency-Key': `e2e-support-${nonce}` };
+
+    const first = await request.post('/api/support/submit', { data: payload, headers });
+    expect(first.status()).toBe(200);
+    const supportRequestId = await first.json();
+    expect(supportRequestId).toEqual(expect.any(String));
+
+    const retry = await request.post('/api/support/submit', { data: payload, headers });
+    expect(retry.status()).toBe(200);
+    expect(await retry.json()).toBe(supportRequestId);
+  });
+});
