@@ -43,6 +43,18 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         if (existingRefreshToken == null || !existingRefreshToken.IsActive)
              return Result.Failure<RefreshTokenResponse>(new Error("Auth.InvalidToken", "Oturum süresi dolmuş veya geçersiz."));
 
+        var isSystemAdministrator = user.Roles.Any(role =>
+            role.Role is not null
+            && string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
+        if (isSystemAdministrator && existingRefreshToken.MfaVerifiedAt is null)
+        {
+            existingRefreshToken.Revoke("system", "MFA reauthentication required");
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            return Result.Failure<RefreshTokenResponse>(new Error(
+                "Auth.MfaRequired",
+                "Yönetici oturumunun iki adımlı doğrulamayla yeniden açılması gerekiyor."));
+        }
+
         // 2. Revoke Old
         existingRefreshToken.Revoke("0.0.0.0", "Refreshed");
 

@@ -53,6 +53,8 @@ public class UserRepository : IUserRepository
         return await _context.Users
             .Include(u => u.RefreshTokens)
             .Include(u => u.Roles)
+                .ThenInclude(userRole => userRole.Role)
+                    .ThenInclude(role => role.Permissions)
             .FirstOrDefaultAsync(u => u.RefreshTokens.Any(rt => rt.Token == refreshToken), cancellationToken);
     }
 
