@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { UserProfile, hasRequiredPermission } from './auth.service';
+import { UserProfile, hasRequiredPermission, hasRequiredRole } from './auth.service';
 
 const user = (permissions: string[], roles: string[] = ['InstitutionAdmin']): UserProfile => ({
   id: 'user-1',
@@ -23,5 +23,12 @@ describe('hasRequiredPermission', () => {
 
   it('does not grant access to an unauthenticated user', () => {
     expect(hasRequiredPermission(null, 'Permissions.Institutions.View')).toBe(false);
+  });
+});
+
+describe('hasRequiredRole', () => {
+  it('requires an exact server-issued role', () => {
+    expect(hasRequiredRole(user([], ['SystemAdmin']), 'SystemAdmin')).toBe(true);
+    expect(hasRequiredRole(user([], ['InstitutionAdmin']), 'SystemAdmin')).toBe(false);
   });
 });
