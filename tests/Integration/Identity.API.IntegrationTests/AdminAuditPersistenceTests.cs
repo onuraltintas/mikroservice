@@ -29,4 +29,48 @@ public sealed class AdminAuditPersistenceTests
         notification.Model.FindEntityType(typeof(AdminAuditRecord)).Should().NotBeNull();
         coaching.Model.FindEntityType(typeof(AdminAuditRecord)).Should().NotBeNull();
     }
+
+    [Fact]
+    public async Task EveryApplicationDbContext_ShouldRejectAdminAuditMutationAndDeletion()
+    {
+        await AssertAppendOnlyAsync<IdentityDbContext>(options => new IdentityDbContext(options));
+        await AssertAppendOnlyAsync<NotificationDbContext>(options => new NotificationDbContext(options));
+        await AssertAppendOnlyAsync<CoachingDbContext>(options => new CoachingDbContext(options));
+    }
+
+    private static async Task AssertAppendOnlyAsync<TContext>(
+        Func<DbContextOptions<TContext>, TContext> createContext)
+        where TContext : DbContext
+    {
+        var options = new DbContextOptionsBuilder<TContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        await using var context = createContext(options);
+        var record = CreateRecord();
+        context.Add(record);
+        await context.SaveChangesAsync();
+
+        context.Entry(record).Property(nameof(AdminAuditRecord.StatusCode)).CurrentValue = 500;
+        var update = () => context.SaveChangesAsync();
+        await update.Should().ThrowAsync<InvalidOperationException>();
+
+        context.Entry(record).State = EntityState.Unchanged;
+        context.Remove(record);
+        var deletion = () => context.SaveChangesAsync();
+        await deletion.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    private static AdminAuditRecord CreateRecord() => new(
+        Guid.NewGuid(),
+        DateTimeOffset.UtcNow,
+        "test-service",
+        Guid.NewGuid().ToString(),
+        "SystemAdmin",
+        null,
+        "POST",
+        "/api/test",
+        200,
+        Guid.NewGuid().ToString(),
+        "127.0.0.1",
+        "integration-test");
 }
