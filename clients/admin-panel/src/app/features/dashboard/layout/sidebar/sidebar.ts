@@ -45,6 +45,7 @@ export class SidebarComponent {
   // Menu visibility follows server-issued permission claims, not role names.
   menuItems = computed(() => {
     const permissions = this.user()?.permissions ?? [];
+    const isSystemAdmin = this.user()?.roles?.includes('SystemAdmin') ?? false;
     const isManager = permissions.some(permission => permission.startsWith('Permissions.'));
     const items: any[] = [
       {
@@ -90,6 +91,12 @@ export class SidebarComponent {
         label: 'Destek ve Bildirim',
         icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.126 1.5 2.055v6.868c0 1.08-.846 1.98-1.924 2.067a48.102 48.102 0 0 1-3.476.25c-.658 0-1.312-.01-1.96-.028L12 21l-2.39-1.277a48.101 48.101 0 0 1-3.476-.25A2.062 2.062 0 0 1 4.21 17.434V10.566c0-.93.616-1.771 1.5-2.055" /></svg>',
         children: [
+          ...(isSystemAdmin ? [{
+            label: 'Yönetici Denetimi',
+            route: '/dashboard/settings/admin-audit',
+            permission: ADMIN_PERMISSIONS.operationsView,
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m5.25-4.5v6c0 5.25-3.75 9-8.25 10.5C7.5 20.25 3.75 16.5 3.75 11.25v-6L12 2.25l8.25 3Z" /></svg>'
+          }] : []),
           {
             label: 'Destek Gelen Kutusu',
             route: '/dashboard/notifications/support',
@@ -152,6 +159,7 @@ export class SidebarComponent {
       '/dashboard/notifications/support': ADMIN_PERMISSIONS.supportView,
       '/dashboard/notifications/email-templates': ADMIN_PERMISSIONS.notificationTemplates,
       '/dashboard/coaching': ADMIN_PERMISSIONS.coachingView,
+      '/dashboard/settings/admin-audit': ADMIN_PERMISSIONS.operationsView,
       '/dashboard/settings/logs': ADMIN_PERMISSIONS.operationsView,
       '/dashboard/settings/log-retention': ADMIN_PERMISSIONS.operationsView,
       '/dashboard/settings/configurations': ADMIN_PERMISSIONS.operationsView

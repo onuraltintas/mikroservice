@@ -1,7 +1,7 @@
 import { inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformServer } from '@angular/common';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from './auth.service';
+import { AuthService, hasRequiredRole } from './auth.service';
 
 export const authGuard: CanActivateFn = async (route, state) => {
     const authService = inject(AuthService);
@@ -37,8 +37,9 @@ export const permissionGuard: CanActivateFn = async (route, state) => {
     const router = inject(Router);
     const platformId = inject(PLATFORM_ID);
     const requiredPermission = route.data?.['permission'] as string | undefined;
+    const requiredRole = route.data?.['role'] as string | undefined;
 
-    if (!requiredPermission || isPlatformServer(platformId)) {
+    if ((!requiredPermission && !requiredRole) || isPlatformServer(platformId)) {
         return true;
     }
 
@@ -47,7 +48,10 @@ export const permissionGuard: CanActivateFn = async (route, state) => {
         return false;
     }
 
-    if (authService.hasPermission(requiredPermission)) {
+    const profile = authService.userProfile();
+    const hasPermission = !requiredPermission || authService.hasPermission(requiredPermission);
+    const hasRole = !requiredRole || hasRequiredRole(profile, requiredRole);
+    if (hasPermission && hasRole) {
         return true;
     }
 

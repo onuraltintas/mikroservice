@@ -28,6 +28,12 @@ export const DASHBOARD_ROUTES: Routes = [
         loadChildren: () => import('../notifications/notifications.routes').then(m => m.NOTIFICATION_ROUTES)
     },
     {
+        path: 'settings/admin-audit',
+        canActivate: [permissionGuard],
+        loadComponent: () => import('../settings/pages/admin-audit/admin-audit.component').then(m => m.AdminAuditComponent),
+        data: { title: 'Yönetici Denetim Kayıtları', permission: ADMIN_PERMISSIONS.operationsView, role: 'SystemAdmin' }
+    },
+    {
         path: 'settings/logs',
         canActivate: [permissionGuard],
         loadComponent: () => import('../settings/pages/logs/logs.component').then(m => m.SystemLogsComponent),
