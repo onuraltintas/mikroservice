@@ -196,6 +196,7 @@ public class UserController : ControllerBase
     [HttpPost("{id:guid}/activate")]
     [HasPermission(Permissions.Users.Activate)]
     [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> ActivateUser(Guid id)
     {
         var result = await _mediator.Send(new ActivateUserCommand(id));
@@ -209,6 +210,7 @@ public class UserController : ControllerBase
     [HttpPost("{id:guid}/confirm-email")]
     [HasPermission(Permissions.Users.ConfirmEmail)]
     [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> ConfirmEmail(Guid id)
     {
         var result = await _mediator.Send(new ConfirmEmailCommand(id));

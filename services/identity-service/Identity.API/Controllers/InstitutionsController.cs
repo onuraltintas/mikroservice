@@ -42,6 +42,7 @@ public sealed class InstitutionsController : ControllerBase
     [HttpPost]
     [HasPermission(Permissions.Institutions.Manage)]
     [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> Create(
         [FromBody] CreateInstitutionCommand command,
         CancellationToken cancellationToken)
@@ -87,6 +88,7 @@ public sealed class InstitutionsController : ControllerBase
     [HttpPost("{id:guid}/active")]
     [HasPermission(Permissions.Institutions.Manage)]
     [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> SetActive(
         Guid id,
         [FromBody] SetInstitutionActiveRequest request,

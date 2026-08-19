@@ -84,6 +84,7 @@ public class RolesController : ControllerBase
     /// </summary>
     [HttpPut("{id:guid}/restore")]
     [HasPermission(Permissions.Roles.Edit)]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> RestoreRole(Guid id)
     {
         var command = new RestoreRoleCommand(id);

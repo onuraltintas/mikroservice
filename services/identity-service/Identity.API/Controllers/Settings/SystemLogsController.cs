@@ -41,6 +41,7 @@ public class SystemLogsController : ControllerBase
 
     [HttpPost("retention-policies")]
     [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<ActionResult<RetentionPolicyDto>> CreateRetentionPolicy([FromBody] CreateRetentionPolicyRequest request, CancellationToken cancellationToken)
     {
         var policy = await _systemLogService.CreateRetentionPolicyAsync(request, cancellationToken);
@@ -50,6 +51,7 @@ public class SystemLogsController : ControllerBase
 
     [HttpDelete("retention-policies/{id}")]
     [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> DeleteRetentionPolicy(string id, CancellationToken cancellationToken)
     {
         var result = await _systemLogService.DeleteRetentionPolicyAsync(id, cancellationToken);

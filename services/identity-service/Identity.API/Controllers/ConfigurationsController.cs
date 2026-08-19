@@ -73,6 +73,7 @@ public class ConfigurationsController : ControllerBase
 
     [HttpPost("refresh-cache")]
     [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> RefreshCache(CancellationToken cancellationToken)
     {
         await _configurationService.RefreshCacheAsync(cancellationToken);

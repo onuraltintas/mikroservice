@@ -83,6 +83,7 @@ public class PermissionsController : ControllerBase
     /// </summary>
     [HttpPut("{id:guid}/restore")]
     [HasPermission(Permissions.PermissionManagement.Edit)]
+    [Authorize(Policy = "MfaRequired")]
     public async Task<IActionResult> RestorePermission(Guid id)
     {
         var command = new RestorePermissionCommand(id);
