@@ -167,6 +167,11 @@ public class AuthController : ControllerBase
             return BadRequest(result.Error);
         }
 
+        if (result.Value.RequiresMfa)
+        {
+            return Ok(result.Value);
+        }
+
         return Ok(RefreshTokenCookiePolicy.Issue(
             Response,
             result.Value,

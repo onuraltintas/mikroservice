@@ -16,6 +16,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
     private readonly IIdentityService _identityService;
     private readonly IStudentRepository _studentRepository;
     private readonly IConfigurationService _configurationService;
+    private readonly IMultiFactorService _multiFactorService;
     private readonly ILogger<GoogleLoginCommandHandler> _logger;
 
     public GoogleLoginCommandHandler(
@@ -26,6 +27,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         IIdentityService identityService,
         IStudentRepository studentRepository,
         IConfigurationService configurationService,
+        IMultiFactorService multiFactorService,
         ILogger<GoogleLoginCommandHandler> logger)
     {
         _googleAuthService = googleAuthService;
@@ -35,6 +37,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         _identityService = identityService;
         _studentRepository = studentRepository;
         _configurationService = configurationService;
+        _multiFactorService = multiFactorService;
         _logger = logger;
     }
 
@@ -167,6 +170,15 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             {
                  return Result.Failure<LoginResponse>(new Error("System.MaintenanceMode", "Sistem şu anda bakım modundadır. Lütfen daha sonra tekrar deneyiniz."));
             }
+        }
+
+        var isSystemAdministrator = user.Roles.Any(role =>
+            string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
+        if (isSystemAdministrator)
+        {
+            return Result.Success(LoginResponse.RequireMfa(
+                _multiFactorService.CreateChallenge(user.Id, rememberMe: true),
+                enrollmentRequired: !user.MfaEnabled));
         }
 
         // 3. Generate Tokens
