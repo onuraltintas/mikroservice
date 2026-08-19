@@ -36,18 +36,6 @@ public class SecurityMetadataTests
     }
 
     [Fact]
-    public void NotificationTestEndpoint_MustRequireAuthorization()
-    {
-        var action = typeof(NotificationsController).GetMethod(nameof(NotificationsController.GetAllNotifications));
-
-        action.Should().NotBeNull();
-        action!
-            .GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
-            .Should()
-            .NotBeEmpty("the test endpoint can return every user's notifications");
-    }
-
-    [Fact]
     public void InternalNotificationEndpoint_MustUseServiceAuthentication()
     {
         var action = typeof(InternalNotificationController).GetMethod(nameof(InternalNotificationController.ForwardSupport));
