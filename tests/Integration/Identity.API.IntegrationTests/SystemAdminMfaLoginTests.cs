@@ -2,6 +2,7 @@ using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Interfaces;
 using FluentAssertions;
 using Identity.Application.Commands.Login;
+using Identity.Application.Commands.GoogleLogin;
 using Identity.Application.DTOs.Settings;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
@@ -41,6 +42,34 @@ public sealed class SystemAdminMfaLoginTests
         mfaService.RememberMe.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task GoogleLogin_ShouldReturnMfaChallengeWithoutIssuingSessionTokens()
+    {
+        var user = CreateSystemAdministrator();
+        var tokenService = new RejectingTokenService();
+        var mfaService = new StubMfaService(user.Id);
+        var handler = new GoogleLoginCommandHandler(
+            new StubGoogleAuthService(user.Email),
+            new StubUserRepository(user),
+            tokenService,
+            new StubUnitOfWork(),
+            new RejectingIdentityService(),
+            new RejectingStudentRepository(),
+            new StubConfigurationService(),
+            mfaService,
+            NullLogger<GoogleLoginCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new GoogleLoginCommand("google-token", "127.0.0.1"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.RequiresMfa.Should().BeTrue();
+        result.Value.MfaChallengeToken.Should().Be("mfa-challenge");
+        tokenService.AccessTokenRequested.Should().BeFalse();
+        tokenService.RefreshTokenRequested.Should().BeFalse();
+    }
+
     private static User CreateSystemAdministrator()
     {
         var user = User.Create(Guid.NewGuid(), "admin@example.com");
@@ -75,12 +104,12 @@ public sealed class SystemAdminMfaLoginTests
     {
         public bool AccessTokenRequested { get; private set; }
         public bool RefreshTokenRequested { get; private set; }
-        public string GenerateAccessToken(User user)
+        public string GenerateAccessToken(User user, DateTimeOffset? mfaVerifiedAt = null)
         {
             AccessTokenRequested = true;
             throw new InvalidOperationException("Access token must not be issued before MFA.");
         }
-        public RefreshToken GenerateRefreshToken(Guid userId, string ipAddress, bool isPersistent = true)
+        public RefreshToken GenerateRefreshToken(Guid userId, string ipAddress, bool isPersistent = true, DateTimeOffset? mfaVerifiedAt = null)
         {
             RefreshTokenRequested = true;
             throw new InvalidOperationException("Refresh token must not be issued before MFA.");
@@ -109,6 +138,20 @@ public sealed class SystemAdminMfaLoginTests
     private sealed class StubUnitOfWork : IUnitOfWork
     {
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken) => Task.FromResult(0);
+    }
+
+    private sealed class StubGoogleAuthService(string email) : IGoogleAuthService
+    {
+        public Task<GoogleUser?> VerifyGoogleTokenAsync(string idToken) =>
+            Task.FromResult<GoogleUser?>(new GoogleUser(email, "System", "Admin", "", "google-id"));
+    }
+
+    private sealed class RejectingStudentRepository : IStudentRepository
+    {
+        public Task AddAsync(StudentProfile student, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<StudentProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<StudentProfile?> GetByUserIdAsync(Guid userId, Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<StudentProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 
     private sealed class StubConfigurationService : IConfigurationService
