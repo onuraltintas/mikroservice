@@ -47,6 +47,11 @@ public class RefreshToken : Entity
 
     public void Revoke(string? revokedByIp, string reason)
     {
+        if (IsRevoked)
+        {
+            return;
+        }
+
         RevokedAt = DateTime.UtcNow;
         RevokedByIp = revokedByIp;
         ReasonRevoked = reason;

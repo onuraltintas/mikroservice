@@ -239,6 +239,17 @@ public class User : AggregateRoot
         MfaLockedUntil = null;
     }
 
+    public void ResetMfa()
+    {
+        MfaEnabled = false;
+        MfaSecretProtected = null;
+        MfaRecoveryCodeHashesJson = "[]";
+        MfaEnabledAt = null;
+        LastAcceptedMfaTimeStep = null;
+        ResetMfaFailures();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void Deactivate()
     {
         IsActive = false;
