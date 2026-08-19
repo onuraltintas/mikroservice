@@ -116,13 +116,26 @@ Fast, isolated tests for business logic:
 - Validators
 - Domain services
 
-### 3. **E2E Tests** (TODO)
+### 3. **E2E Tests**
 
-Full system tests simulating real user scenarios:
+Gateway arkasındaki kritik kullanıcı sözleşmeleri Playwright ile `tests/E2E`
+altında çalışır:
 
-- User registration flow
-- Authentication & authorization
-- Cross-service workflows
+- Gateway health ve anonim auth/support bootstrap
+- Protected admin/support yüzeylerinin 401 davranışı
+- Yetkili login → refresh-token → admin API okuma
+- Angular admin panel login ekranı ve (staging kimliği ile) dashboard geçişi
+
+Docker lokal smoke için:
+
+```powershell
+npm ci --prefix tests/E2E
+npm run install:browsers --prefix tests/E2E
+npm run test:critical --prefix tests/E2E
+```
+
+Yetkili ve UI akışlarının ortam değişkenleri, staging kuralları ve CI job'ı için
+[E2E doğrulama kılavuzuna](../docs/E2E_TESTING.md) bakın.
 
 ## 📊 Current Test Coverage
 
@@ -130,7 +143,7 @@ Full system tests simulating real user scenarios:
 |-----------|-------------------|------------|-----------|
 | **Identity Service** | ✅ 3 tests | 🔄 TODO | 🔄 TODO |
 | **Coaching Service** | 🔄 TODO | 🔄 TODO | 🔄 TODO |
-| **API Gateway** | 🔄 TODO | N/A | 🔄 TODO |
+| **API Gateway** | ✅ Gateway smoke | N/A | ✅ Playwright critical flows |
 | **Shared Infrastructure** | ✅ Fixtures ready | N/A | N/A |
 
 ## 🛠️ Testcontainers
@@ -264,7 +277,7 @@ Tests are automatically run in GitHub Actions:
 1. ✅ **Phase 1 Complete**: Integration test infrastructure
 2. 🔄 **Phase 2**: Add more integration tests for all endpoints
 3. 🔄 **Phase 3**: Implement unit tests
-4. 🔄 **Phase 4**: Add E2E tests with SpecFlow
+4. ✅ **Phase 4**: Add Gateway E2E tests with Playwright
 
 ---
 

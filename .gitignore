@@ -35,6 +35,8 @@ out-tsc/
 bazel-out/
 test-results/
 .angular/
+tests/E2E/playwright-report/
+tests/E2E/playwright-results.xml
 
 # Flutter / Dart
 .dart_tool/

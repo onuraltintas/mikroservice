@@ -101,9 +101,13 @@ ilerleyecektir:
    audit actor/tenant/event metadata ve replay davranışı ekle. Event consumer
    teslim idempotency'si P1 kapsamında tamamlandı; bu adım HTTP write ve audit
    kapsamını genişletir.
-3. **E2E kritik akışlar:** register → email confirmation → login/refresh,
-   tenant-scoped coaching read/write, support submit/reply ve notification
-   SignalR akışlarını Gateway üzerinden Playwright ile doğrula.
+3. **E2E kritik akışlar:** Gateway health, anonim auth/support bootstrap ve
+   protected admin yüzeylerinin 401 sözleşmesi Docker üzerinde doğrulandı.
+   Yetkili login → refresh → admin yüzeyleri ile Angular login/dashboard akışı
+   Playwright testine bağlandı; staging SystemAdmin kimliği olmadığından lokal
+   koşuda bilinçli olarak skip edilir. Register → email confirmation,
+   tenant-scoped coaching write/read ve SignalR için disposable staging tenant/
+   SMTP fixture'ı ayrıca bağlanacak; ortak production verisiyle çalıştırılmayacak.
 4. **Kapasite doğrulama:** disposable tenant ile smoke → baseline → 64/128/256
    worker → soak koşularını çalıştır; p95/p99, 5xx/429, DB pool, Redis,
    RabbitMQ lag/dead-letter ve container throttling ölç.

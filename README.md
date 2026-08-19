@@ -214,6 +214,11 @@ olur. Ayrıntılı CI kapıları, alarm eşikleri ve production kullanım şekli
 [CI/CD ve Production Monitoring](docs/CI_CD_AND_PRODUCTION_MONITORING.md)
 runbook'una bakın.
 
+Gateway ve Angular admin panelinin kritik kullanıcı akışlarını çalıştırmak için
+[E2E doğrulama kılavuzunu](docs/E2E_TESTING.md) kullanın. Lokal smoke, Docker
+Gateway'e bağlanır; yetkili admin ve UI akışları yalnız disposable/staging
+kimlik bilgileriyle etkinleştirilir.
+
 HTTP hata formatı, v1 versioning ve pagination kuralları
 [API Contracts](docs/API_CONTRACTS.md); RabbitMQ/EF inbox-outbox, retry ve
 dead-letter davranışı [Event Reliability](docs/EVENT_RELIABILITY.md)

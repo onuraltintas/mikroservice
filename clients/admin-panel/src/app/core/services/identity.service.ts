@@ -110,7 +110,7 @@ export interface UpdatePermissionRequest {
 })
 export class IdentityService {
     private http = inject(HttpClient);
-    // environment.apiUrl includes '/api' suffix (e.g. http://localhost:5000/api)
+    // environment.apiUrl is the same-origin '/api' path (the dev server proxies it locally).
     private baseUrl = `${environment.apiUrl}/users`;
     private rolesUrl = `${environment.apiUrl}/roles`;
 

@@ -1,0 +1,15 @@
+{
+  "name": "eduplatform-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:critical": "playwright test specs/gateway-critical.spec.mjs",
+    "test:ui": "playwright test specs/admin-panel.spec.mjs",
+    "install:browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
+  }
+}

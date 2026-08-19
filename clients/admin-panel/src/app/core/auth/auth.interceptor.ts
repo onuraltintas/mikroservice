@@ -13,7 +13,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     const platformId = inject(PLATFORM_ID);
 
     // Check if request is for our API
-    if (req.url.startsWith(environment.apiUrl) || req.url.startsWith('http://localhost:5000')) {
+    if (req.url.startsWith(environment.apiUrl)) {
 
         const token = authService.getToken();
 
