@@ -47,11 +47,12 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         existingRefreshToken.Revoke("0.0.0.0", "Refreshed");
 
         // 3. Generate New
-        var newAccessToken = _tokenService.GenerateAccessToken(user);
+        var newAccessToken = _tokenService.GenerateAccessToken(user, existingRefreshToken.MfaVerifiedAt);
         var newRefreshToken = _tokenService.GenerateRefreshToken(
             user.Id,
             "0.0.0.0",
-            existingRefreshToken.IsPersistent);
+            existingRefreshToken.IsPersistent,
+            existingRefreshToken.MfaVerifiedAt);
         
         user.AddRefreshToken(newRefreshToken);
 

@@ -15,6 +15,7 @@ public class RefreshToken : Entity
     public string? RevokedByIp { get; private set; }
     public string? ReasonRevoked { get; private set; }
     public bool IsPersistent { get; private set; }
+    public DateTimeOffset? MfaVerifiedAt { get; private set; }
     
     // Computed Properties
     public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
@@ -28,7 +29,8 @@ public class RefreshToken : Entity
         string token,
         DateTime expiresAt,
         string? createdByIp,
-        bool isPersistent = true)
+        bool isPersistent = true,
+        DateTimeOffset? mfaVerifiedAt = null)
     {
         return new RefreshToken
         {
@@ -38,7 +40,8 @@ public class RefreshToken : Entity
             ExpiresAt = expiresAt,
             CreatedAt = DateTime.UtcNow,
             CreatedByIp = createdByIp,
-            IsPersistent = isPersistent
+            IsPersistent = isPersistent,
+            MfaVerifiedAt = mfaVerifiedAt
         };
     }
 

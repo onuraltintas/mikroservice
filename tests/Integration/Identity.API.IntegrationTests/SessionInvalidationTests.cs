@@ -165,18 +165,20 @@ public sealed class SessionInvalidationTests
 
     private sealed class StubTokenService : ITokenService
     {
-        public string GenerateAccessToken(User user) => "unused";
+        public string GenerateAccessToken(User user, DateTimeOffset? mfaVerifiedAt = null) => "unused";
 
         public RefreshToken GenerateRefreshToken(
             Guid userId,
             string ipAddress,
-            bool isPersistent = true) =>
+            bool isPersistent = true,
+            DateTimeOffset? mfaVerifiedAt = null) =>
             RefreshToken.Create(
                 userId,
                 "unused",
                 DateTime.UtcNow.AddDays(1),
                 ipAddress,
-                isPersistent);
+                isPersistent,
+                mfaVerifiedAt);
     }
 
     private sealed class SystemAdminCurrentUser(Guid? userId = null) : ICurrentUserService

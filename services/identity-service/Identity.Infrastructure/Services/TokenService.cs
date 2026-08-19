@@ -21,7 +21,7 @@ public class TokenService : ITokenService
         _configService = configService;
     }
 
-    public string GenerateAccessToken(User user)
+    public string GenerateAccessToken(User user, DateTimeOffset? mfaVerifiedAt = null)
     {
         try 
         {
@@ -65,6 +65,12 @@ public class TokenService : ITokenService
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
+
+            if (mfaVerifiedAt.HasValue)
+            {
+                claims.Add(new Claim("amr", "mfa"));
+                claims.Add(new Claim("auth_time", mfaVerifiedAt.Value.ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture), ClaimValueTypes.Integer64));
+            }
 
             if (user.Roles != null)
             {
@@ -112,7 +118,8 @@ public class TokenService : ITokenService
     public RefreshToken GenerateRefreshToken(
         Guid userId,
         string ipAddress,
-        bool isPersistent = true)
+        bool isPersistent = true,
+        DateTimeOffset? mfaVerifiedAt = null)
     {
         var expiryDaysStr = Environment.GetEnvironmentVariable("JWT_REFRESH_TOKEN_EXPIRY_DAYS")
                             ?? _configuration["JWT_REFRESH_TOKEN_EXPIRY_DAYS"]
@@ -130,7 +137,8 @@ public class TokenService : ITokenService
             token, 
             DateTime.UtcNow.AddDays(expiryDays), 
             ipAddress,
-            isPersistent
+            isPersistent,
+            mfaVerifiedAt
         );
     }
 }
