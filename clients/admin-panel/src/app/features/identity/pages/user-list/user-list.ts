@@ -8,7 +8,8 @@ import { EditUserModalComponent } from '../../components/edit-user-modal/edit-us
 import { ChangePasswordModalComponent } from '../../components/change-password-modal/change-password-modal';
 import { UserDetailsModalComponent } from '../../components/user-details-modal/user-details-modal';
 import { RoleManagementModalComponent } from '../../components/role-management-modal/role-management-modal';
-import { AuthService } from '../../../../core/auth/auth.service';
+import { AuthService, hasRequiredAccess } from '../../../../core/auth/auth.service';
+import { ADMIN_PERMISSIONS } from '../../../../core/auth/permissions';
 
 @Component({
   selector: 'app-user-list',
@@ -22,7 +23,14 @@ export class UserListComponent {
   private toaster = inject(ToasterService);
   private platformId = inject(PLATFORM_ID);
   private authService = inject(AuthService);
-  canManage = computed(() => this.authService.userProfile()?.roles.includes('SystemAdmin') ?? false);
+  private can = (permission: string) => computed(() =>
+    hasRequiredAccess(this.authService.userProfile(), permission, 'SystemAdmin'));
+  canCreate = this.can(ADMIN_PERMISSIONS.usersCreate);
+  canEdit = this.can(ADMIN_PERMISSIONS.usersEdit);
+  canDelete = this.can(ADMIN_PERMISSIONS.usersDelete);
+  canChangePassword = this.can(ADMIN_PERMISSIONS.usersChangePassword);
+  canActivate = this.can(ADMIN_PERMISSIONS.usersActivate);
+  canConfirmEmail = this.can(ADMIN_PERMISSIONS.usersConfirmEmail);
 
   // State
   users = signal<UserDto[]>([]);

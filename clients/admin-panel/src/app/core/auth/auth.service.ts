@@ -33,6 +33,15 @@ export function hasRequiredRole(user: UserProfile | null, role: string): boolean
     return !!user && user.roles.includes(role);
 }
 
+export function hasRequiredAccess(
+    user: UserProfile | null,
+    permission: string,
+    requiredRole?: string
+): boolean {
+    return hasRequiredPermission(user, permission)
+        && (!requiredRole || hasRequiredRole(user, requiredRole));
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService implements OnDestroy {
     private oauthService = inject(OAuthService);

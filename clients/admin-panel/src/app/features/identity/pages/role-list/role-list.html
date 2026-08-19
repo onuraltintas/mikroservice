@@ -7,12 +7,12 @@
                 Sistemdeki rolleri yönetin. Yeni roller ekleyebilir, mevcutları düzenleyebilir veya silebilirsiniz.
             </p>
         </div>
-        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+        @if (canCreate()) { <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
             <button type="button" (click)="openCreateModal()"
                 class="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto transition-colors duration-200">
                 Rol Ekle
             </button>
-        </div>
+        </div> }
     </div>
 
     <!-- Filters -->
@@ -131,7 +131,7 @@
                                         <div class="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                                             role="menu" tabindex="-1">
                                             <div class="py-1" role="none">
-                                                <button (click)="editRole(role)"
+                                                @if (canEdit()) { <button (click)="editRole(role)"
                                                     class="flex w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 items-center"
                                                     role="menuitem" tabindex="-1">
                                                     <svg class="mr-3 h-4 w-4 text-gray-400" fill="none"
@@ -141,10 +141,10 @@
                                                             d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M15.5 3.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 7.5-7.5z" />
                                                     </svg>
                                                     Düzenle
-                                                </button>
+                                                </button> }
 
 
-                                                <button (click)="openPermissionsModal(role)"
+                                                @if (canManagePermissions()) { <button (click)="openPermissionsModal(role)"
                                                     class="flex w-full px-4 py-2 text-sm text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center"
                                                     role="menuitem" tabindex="-1">
                                                     <svg class="mr-3 h-4 w-4 text-indigo-500" fill="none"
@@ -154,9 +154,9 @@
                                                             d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                                     </svg>
                                                     İzinleri Yönet
-                                                </button>
+                                                </button> }
 
-                                                @if (!role.isDeleted && !role.isSystemRole) {
+                                                @if (canDelete() && !role.isDeleted && !role.isSystemRole) {
                                                 <button (click)="deleteRole(role)"
                                                     class="flex w-full px-4 py-2 text-sm text-yellow-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center"
                                                     role="menuitem" tabindex="-1">
@@ -170,8 +170,8 @@
                                                 </button>
                                                 }
 
-                                                @if (role.isDeleted) {
-                                                <button (click)="restoreRole(role)"
+                                                @if (role.isDeleted && (canEdit() || canDelete())) {
+                                                @if (canEdit()) { <button (click)="restoreRole(role)"
                                                     class="flex w-full px-4 py-2 text-sm text-green-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center border-t border-gray-100 dark:border-gray-700"
                                                     role="menuitem" tabindex="-1">
                                                     <svg class="mr-3 h-4 w-4 text-green-500" fill="none"
@@ -181,9 +181,9 @@
                                                             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                                     </svg>
                                                     Aktif Yap
-                                                </button>
+                                                </button> }
 
-                                                <button (click)="permanentDeleteRole(role)"
+                                                @if (canDelete()) { <button (click)="permanentDeleteRole(role)"
                                                     class="flex w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center"
                                                     role="menuitem" tabindex="-1">
                                                     <svg class="mr-3 h-4 w-4 text-red-500" fill="none"
@@ -193,7 +193,7 @@
                                                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                     </svg>
                                                     Kalıcı Sil
-                                                </button>
+                                                </button> }
                                                 }
                                             </div>
                                         </div>

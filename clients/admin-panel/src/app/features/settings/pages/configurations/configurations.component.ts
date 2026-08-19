@@ -3,6 +3,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfigurationService, Configuration, ConfigurationDataType } from '../../../../core/services/settings/configuration.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
+import { AuthService, hasRequiredRole } from '../../../../core/auth/auth.service';
 
 @Component({
     selector: 'app-configurations',
@@ -16,14 +17,14 @@ import { ToasterService } from '../../../../core/services/toaster.service';
                 <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Sistem Operasyon Merkezi</h1>
                 <p class="text-gray-500 dark:text-gray-400 text-sm">Sistem parametrelerini ve modül durumlarını dinamik olarak yönetin.</p>
             </div>
-            <div class="flex gap-2">
+            @if (canManage()) { <div class="flex gap-2">
                 <button (click)="refreshRedisCache()" class="px-4 py-2 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 rounded-lg hover:bg-indigo-100 transition-all flex items-center gap-2 text-sm font-medium">
                     <span class="material-icons text-sm">cached</span> Önbelleği (Redis) Temizle
                 </button>
                 <button (click)="showCreateModal = true" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all flex items-center gap-2 text-sm font-medium shadow-sm">
                     <span class="material-icons text-sm">add</span> Yeni Ayar
                 </button>
-            </div>
+            </div> }
         </div>
 
         <!-- NEW: Maintenance Mode Operations Center -->
@@ -62,7 +63,7 @@ import { ToasterService } from '../../../../core/services/toaster.service';
                                 <div class="text-xs text-gray-500 dark:text-indigo-200/60">Tüm trafiği anında keser</div>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer scale-110">
-                                <input type="checkbox" [checked]="global.value === 'true'" (change)="updateValue(global, $event)" class="sr-only peer">
+                                <input type="checkbox" [checked]="global.value === 'true'" (change)="updateValue(global, $event)" [disabled]="!canManage()" class="sr-only peer">
                                 <div class="w-14 h-7 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
                             </label>
                         </div>
@@ -90,7 +91,7 @@ import { ToasterService } from '../../../../core/services/toaster.service';
                             <div *ngIf="selectedServiceConfig() as config" class="sm:border-l border-gray-200 dark:border-white/10 sm:pl-8 flex flex-col items-center animate-in zoom-in duration-300 min-w-[140px]">
                                 <label class="block text-[10px] font-bold text-gray-500 dark:text-indigo-300 uppercase tracking-widest mb-3">Modül Durumu</label>
                                 <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" [checked]="config.value === 'true'" (change)="updateValue(config, $event)" class="sr-only peer">
+                                    <input type="checkbox" [checked]="config.value === 'true'" (change)="updateValue(config, $event)" [disabled]="!canManage()" class="sr-only peer">
                                     <div class="w-16 h-8 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-amber-500 peer-checked:to-orange-600"></div>
                                 </label>
                                 <span class="mt-2 text-[10px] font-black tracking-tighter" [class]="config.value === 'true' ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400'">
@@ -108,11 +109,11 @@ import { ToasterService } from '../../../../core/services/toaster.service';
                         <!-- Missing Config State: Now with AUTO-CREATE button -->
                         <div *ngIf="selectedService && !selectedServiceConfig()" class="sm:border-l border-gray-200 dark:border-white/10 sm:pl-8 flex flex-col items-center min-w-[140px]">
                             <label class="block text-[10px] font-bold text-amber-600 dark:text-amber-300 uppercase tracking-widest mb-2 px-1">Bağlantı Eksik</label>
-                            <button 
+                            @if (canManage()) { <button
                                 (click)="quickCreateServiceConfig(selectedService)"
                                 class="px-3 py-2 bg-amber-50 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 rounded-xl text-[10px] font-bold hover:bg-amber-500 hover:text-white transition-all flex items-center gap-1 group">
                                 <span class="material-icons text-sm group-hover:rotate-180 transition-all duration-500">add_circle</span> AYAR OLUŞTUR
-                            </button>
+                            </button> }
                             <span class="mt-2 text-[9px] text-gray-500 text-center leading-tight">Bu modül henüz sisteme <br> tanımlanmamış.</span>
                         </div>
                     </div>
@@ -177,9 +178,9 @@ import { ToasterService } from '../../../../core/services/toaster.service';
                         </div>
                         <h3 class="font-bold text-gray-900 dark:text-white truncate text-sm" [title]="config.key">{{ config.key }}</h3>
                     </div>
-                    <button (click)="deleteConfig(config)" class="text-gray-400 hover:text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100">
+                    @if (canManage()) { <button (click)="deleteConfig(config)" class="text-gray-400 hover:text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100">
                         <span class="material-icons text-lg">delete_outline</span>
-                    </button>
+                    </button> }
                 </div>
 
                 <!-- Card Content -->
@@ -194,7 +195,7 @@ import { ToasterService } from '../../../../core/services/toaster.service';
                             <!-- Boolean -->
                             <div *ngSwitchCase="2" class="flex items-center">
                                 <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" [checked]="config.value === 'true'" (change)="updateValue(config, $event)" class="sr-only peer">
+                                    <input type="checkbox" [checked]="config.value === 'true'" (change)="updateValue(config, $event)" [disabled]="!canManage()" class="sr-only peer">
                                     <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
                                     <span class="ml-3 text-sm font-medium text-gray-600 dark:text-gray-300">{{ config.value === 'true' ? 'Açık' : 'Kapalı' }}</span>
                                 </label>
@@ -202,17 +203,17 @@ import { ToasterService } from '../../../../core/services/toaster.service';
 
                             <!-- Number -->
                             <div *ngSwitchCase="1">
-                                <input type="number" [value]="config.value" (change)="updateValue(config, $event)" class="w-full px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
+                                <input type="number" [value]="config.value" (change)="updateValue(config, $event)" [disabled]="!canManage()" class="w-full px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
                             </div>
 
                             <!-- Default / String -->
                             <div *ngSwitchCase="0">
-                                <textarea [value]="config.value" (change)="updateValue(config, $event)" rows="2" class="w-full px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-1 focus:ring-indigo-500 outline-none transition-all resize-none"></textarea>
+                                <textarea [value]="config.value" (change)="updateValue(config, $event)" [disabled]="!canManage()" rows="2" class="w-full px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-1 focus:ring-indigo-500 outline-none transition-all resize-none"></textarea>
                             </div>
 
                             <!-- Fallback -->
                             <div *ngSwitchDefault>
-                                <input type="text" [value]="config.value" (change)="updateValue(config, $event)" class="w-full px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
+                                <input type="text" [value]="config.value" (change)="updateValue(config, $event)" [disabled]="!canManage()" class="w-full px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-1 focus:ring-indigo-500 outline-none transition-all">
                             </div>
                         </ng-container>
                     </div>
@@ -228,7 +229,7 @@ import { ToasterService } from '../../../../core/services/toaster.service';
     </div>
 
     <!-- Create Modal Overlay -->
-    <div *ngIf="showCreateModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div *ngIf="showCreateModal && canManage()" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200">
             <div class="px-6 py-4 border-b border-gray-50 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
                 <h3 class="font-bold text-gray-900 dark:text-white">Yeni Ayar Ekle</h3>
@@ -279,6 +280,8 @@ export class ConfigurationsComponent implements OnInit {
     private configService = inject(ConfigurationService);
     private toaster = inject(ToasterService);
     private platformId = inject(PLATFORM_ID);
+    private authService = inject(AuthService);
+    canManage = computed(() => hasRequiredRole(this.authService.userProfile(), 'SystemAdmin'));
 
     configs = signal<Configuration[]>([]);
     discoveryServices = signal<string[]>([]);

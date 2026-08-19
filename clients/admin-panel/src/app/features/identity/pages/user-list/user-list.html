@@ -6,7 +6,7 @@
             <p class="mt-2 text-sm text-gray-700 dark:text-gray-400">Tüm sistem kullanıcılarını yönetin, rolleri
                 düzenleyin veya hesapları pasif duruma getirin.</p>
         </div>
-        @if (canManage()) { <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+        @if (canCreate()) { <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
             <button type="button" (click)="openCreateModal()"
                 class="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto transition-colors duration-200">
                 Kullanıcı Ekle
@@ -198,7 +198,7 @@
                                                     Detay
                                                 </button>
 
-                                                @if (canManage()) { <button (click)="editUser(user)"
+                                                @if (canEdit()) { <button (click)="editUser(user)"
                                                     class="flex w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 items-center transition-colors"
                                                     role="menuitem" tabindex="-1">
                                                     <svg class="mr-4 h-5 w-5 text-gray-400" fill="none"
@@ -210,7 +210,7 @@
                                                     Düzenle
                                                 </button> }
 
-                                                @if (canManage()) { <button (click)="openRoleModal(user)"
+                                                @if (canEdit()) { <button (click)="openRoleModal(user)"
                                                     class="flex w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 items-center transition-colors border-t border-gray-50 dark:border-gray-700/50"
                                                     role="menuitem" tabindex="-1">
                                                     <svg class="mr-4 h-5 w-5 text-indigo-500/70" fill="none"
@@ -222,7 +222,7 @@
                                                     Rol Yönetimi
                                                 </button> }
 
-                                                @if (canManage()) { <button (click)="openPasswordModal(user)"
+                                                @if (canChangePassword()) { <button (click)="openPasswordModal(user)"
                                                     class="flex w-full px-4 py-3 text-sm text-yellow-500 hover:bg-gray-100 dark:hover:bg-gray-700 items-center transition-colors"
                                                     role="menuitem" tabindex="-1">
                                                     <svg class="mr-4 h-5 w-5 text-yellow-500/70" fill="none"
@@ -234,7 +234,7 @@
                                                     Şifre Değiştir
                                                 </button> }
 
-                                                @if (canManage() && user.isActive) {
+                                                @if (canDelete() && user.isActive) {
                                                 <button (click)="deleteUser(user.userId)"
                                                     class="flex w-full px-4 py-3 text-sm text-yellow-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center transition-colors"
                                                     role="menuitem" tabindex="-1">
@@ -246,7 +246,7 @@
                                                     </svg>
                                                     Pasif Yap
                                                 </button>
-                                                } @else if (canManage()) {
+                                                } @else if (canActivate()) {
                                                 <button (click)="activateUser(user.userId)"
                                                     class="flex w-full px-4 py-3 text-sm text-green-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center transition-colors"
                                                     role="menuitem" tabindex="-1">
@@ -260,7 +260,7 @@
                                                 </button>
                                                 }
 
-                                                @if (canManage() && !user.emailConfirmed) {
+                                                @if (canConfirmEmail() && !user.emailConfirmed) {
                                                 <button (click)="confirmUserEmail(user.userId)"
                                                     class="flex w-full px-4 py-3 text-sm text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center border-t border-gray-100 dark:border-gray-700 transition-colors"
                                                     role="menuitem" tabindex="-1">
@@ -274,7 +274,7 @@
                                                 </button>
                                                 }
 
-                                                @if (canManage()) { <button (click)="permanentDeleteUser(user.userId)"
+                                                @if (canDelete()) { <button (click)="permanentDeleteUser(user.userId)"
                                                     class="flex w-full px-4 py-3 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 items-center border-t border-gray-100 dark:border-gray-700 transition-colors"
                                                     role="menuitem" tabindex="-1">
                                                     <svg class="mr-4 h-5 w-5 text-red-400" fill="none"

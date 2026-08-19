@@ -1,8 +1,9 @@
-import { Component, inject, signal, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, inject, signal, OnInit, PLATFORM_ID, computed } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SystemLogService, RetentionPolicy, CreateRetentionPolicyRequest } from '../../../../core/services/settings/system-log.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
+import { AuthService, hasRequiredRole } from '../../../../core/auth/auth.service';
 
 @Component({
     selector: 'app-log-retention',
@@ -65,7 +66,7 @@ import { ToasterService } from '../../../../core/services/toaster.service';
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-right">
-                                    <button (click)="deletePolicy(policy.id)" class="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Sil">
+                                    <button *ngIf="canManage()" (click)="deletePolicy(policy.id)" class="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Sil">
                                         <span class="material-icons text-sm">delete</span>
                                     </button>
                                 </td>
@@ -82,7 +83,7 @@ import { ToasterService } from '../../../../core/services/toaster.service';
             </div>
 
             <!-- Create New Policy -->
-            <div class="lg:col-span-1">
+            <div *ngIf="canManage()" class="lg:col-span-1">
                 <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm sticky top-6">
                     <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                         <h3 class="font-bold text-gray-800 dark:text-white flex items-center gap-2">
@@ -129,6 +130,8 @@ export class LogRetentionComponent implements OnInit {
     private logService = inject(SystemLogService);
     private toaster = inject(ToasterService);
     private platformId = inject(PLATFORM_ID);
+    private authService = inject(AuthService);
+    canManage = computed(() => hasRequiredRole(this.authService.userProfile(), 'SystemAdmin'));
 
     retentionPolicies = signal<RetentionPolicy[]>([]);
     seqUrl = 'http://localhost:5341';

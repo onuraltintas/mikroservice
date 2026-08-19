@@ -104,7 +104,7 @@ public class RolesController : ControllerBase
     /// Updates permissions for a role.
     /// </summary>
     [HttpPut("{id:guid}/permissions")]
-    [HasPermission(Permissions.Roles.Edit)]
+    [HasPermission(Permissions.Roles.ManagePermissions)]
     public async Task<IActionResult> UpdateRolePermissions(Guid id, [FromBody] UpdateRolePermissionsRequest request)
     {
         var command = new UpdateRolePermissionsCommand(id, request.Permissions);

@@ -7,6 +7,8 @@ using Coaching.API.Controllers;
 using EduPlatform.Shared.Security.Extensions;
 using Identity.API.Controllers;
 using Notification.API.Controllers;
+using EduPlatform.Shared.Security.Authorization;
+using Identity.Domain.Constants;
 using Xunit;
 
 namespace Identity.API.IntegrationTests;
@@ -102,5 +104,17 @@ public class SecurityMetadataTests
 
         services.Should().Contain(descriptor =>
             descriptor.ServiceType == typeof(MediatR.IPipelineBehavior<,>));
+    }
+
+    [Fact]
+    public void RolePermissionMutation_MustRequireDedicatedManagePermission()
+    {
+        var action = typeof(RolesController).GetMethod(nameof(RolesController.UpdateRolePermissions));
+
+        action.Should().NotBeNull();
+        action!.GetCustomAttributes(typeof(HasPermissionAttribute), inherit: true)
+            .Cast<HasPermissionAttribute>()
+            .Should().ContainSingle(attribute =>
+                attribute.Policy == Permissions.Roles.ManagePermissions);
     }
 }

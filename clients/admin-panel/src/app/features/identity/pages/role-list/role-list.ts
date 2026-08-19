@@ -6,6 +6,8 @@ import { CreateRoleModalComponent } from '../../components/create-role-modal/cre
 import { EditRoleModalComponent } from '../../components/edit-role-modal/edit-role-modal';
 import { RolePermissionsModalComponent } from '../../components/role-permissions-modal/role-permissions-modal';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { ADMIN_PERMISSIONS } from '../../../../core/auth/permissions';
 
 @Component({
     selector: 'app-role-list',
@@ -18,6 +20,11 @@ export class RoleListComponent {
     private identityService = inject(IdentityService);
     private toaster = inject(ToasterService);
     private platformId = inject(PLATFORM_ID);
+    private authService = inject(AuthService);
+    canCreate = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.rolesCreate));
+    canEdit = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.rolesEdit));
+    canDelete = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.rolesDelete));
+    canManagePermissions = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.rolesManagePermissions));
 
     // State
     roles = signal<RoleDto[]>([]);

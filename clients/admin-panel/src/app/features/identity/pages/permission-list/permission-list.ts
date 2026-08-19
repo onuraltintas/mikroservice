@@ -5,6 +5,8 @@ import { ToasterService } from '../../../../core/services/toaster.service';
 import { CreatePermissionModalComponent } from '../../components/create-permission-modal/create-permission-modal';
 import { EditPermissionModalComponent } from '../../components/edit-permission-modal/edit-permission-modal';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { ADMIN_PERMISSIONS } from '../../../../core/auth/permissions';
 
 @Component({
     selector: 'app-permission-list',
@@ -17,6 +19,10 @@ export class PermissionListComponent {
     private identityService = inject(IdentityService);
     private toaster = inject(ToasterService);
     private platformId = inject(PLATFORM_ID);
+    private authService = inject(AuthService);
+    canCreate = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.permissionCreate));
+    canEdit = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.permissionEdit));
+    canDelete = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.permissionDelete));
 
     permissions = signal<PermissionDto[]>([]);
     loading = signal(false);
