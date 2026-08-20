@@ -267,9 +267,21 @@ public sealed class AssignInstitutionAdminCommandHandler : IRequestHandler<Assig
                 "Kurum yöneticisi atanacak kullanıcı InstitutionAdmin veya InstitutionOwner rolüne sahip olmalıdır."));
         }
 
-        if (await _repository.HasAdminAsync(request.InstitutionId, request.UserId, cancellationToken))
+        var existingAdmin = await _repository.GetAdminAsync(
+            request.InstitutionId,
+            request.UserId,
+            cancellationToken);
+        if (existingAdmin?.IsActive == true)
         {
             return Result.Failure(new Error("InstitutionAdmin.Exists", "Kullanıcı zaten bu kurumun yöneticisi."));
+        }
+
+        if (existingAdmin is not null)
+        {
+            existingAdmin.ChangeRole(request.Role);
+            existingAdmin.Activate();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            return Result.Success();
         }
 
         await _repository.AddAdminAsync(

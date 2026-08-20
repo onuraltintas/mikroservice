@@ -79,7 +79,8 @@ secret kaydı oluşturma da fail-closed olarak reddedilir.
 7. Son aktif SystemAdmin hesabı silinemez, pasifleştirilemez veya SystemAdmin rolü
    kaldırılamaz; platformun yönetimsiz kalması fail-closed olarak engellenir.
 8. Kurum yöneticisi üyeliği pasifleştirildiğinde kullanıcının refresh oturumları
-   iptal edilir; yeniden etkinleştirme yeni bir güvenli oturum açılmasını gerektirir.
+   iptal edilir; yeniden atama mevcut üyeliği tek satır olarak yeniden etkinleştirir,
+   rolü günceller ve yeni bir güvenli oturum açılmasını gerektirir.
 9. Kurum pasifleştirildiğinde o kuruma bağlı yönetici, öğretmen, öğrenci ve veli
    üyelerinin aktif refresh oturumları iptal edilir; başka kuruma bağlı olmayan
    kullanıcılar etkilenmez. Yeniden etkinleştirme yeni güvenli oturum açılmasını gerektirir.
