@@ -60,6 +60,8 @@ daha yüksek kapasiteye geçebilen bir platformdur.
 ### P1.3 Tenant ve rol matrisi — tamamlandı
 
 - Identity scope sorguları aktif user/profile/institution ile sınırlandırılır.
+- Kurum pasifleştirilirken o kuruma bağlı aktif refresh oturumları toplu olarak
+  iptal edilir; unrelated tenant kullanıcılarının oturumları korunur.
 - Coaching write hedefleri teacher profile, institution, active student ve
   assignment ilişkisini doğrular.
 - Parent, InstitutionAdmin/Owner, Teacher, Student ve SystemAdmin okuma

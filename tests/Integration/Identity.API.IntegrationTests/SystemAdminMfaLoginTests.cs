@@ -112,6 +112,7 @@ public sealed class SystemAdminMfaLoginTests
         public Task<Identity.Application.Queries.GetAllUsers.UserSummaryDto> GetSummaryAsync(Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken) => Task.FromResult<User?>(user);
         public Task RevokeActiveRefreshTokensAsync(Guid userId, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task RevokeActiveRefreshTokensForInstitutionAsync(Guid institutionId, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<List<User>> GetUsersByRolesAsync(List<string> roleNames, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 

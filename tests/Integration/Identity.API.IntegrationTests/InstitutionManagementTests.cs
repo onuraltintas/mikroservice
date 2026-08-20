@@ -40,6 +40,7 @@ public sealed class InstitutionManagementTests
 
         var handler = new SetInstitutionActiveCommandHandler(
             new InstitutionRepository(context),
+            new UserRepository(context),
             new UnitOfWork(context),
             new InstitutionManagementAuthorization(
                 new StubCurrentUserService(Guid.NewGuid(), "SystemAdmin"),
@@ -60,6 +61,7 @@ public sealed class InstitutionManagementTests
         var teacher = User.Create(Guid.NewGuid(), "teacher@security.test", "Tenant", "Teacher");
         var student = User.Create(Guid.NewGuid(), "student@security.test", "Tenant", "Student");
         var parent = User.Create(Guid.NewGuid(), "parent@security.test", "Tenant", "Parent");
+        var unrelatedUser = User.Create(Guid.NewGuid(), "unrelated@security.test", "Other", "Tenant");
         var adminRole = Role.Create(Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(), "Institution admin", isSystemRole: true);
 
         administrator.AddRole(new Identity.Domain.Entities.UserRole(administrator.Id, adminRole.Id));
@@ -67,6 +69,8 @@ public sealed class InstitutionManagementTests
         student.AddRefreshToken(RefreshToken.Create(student.Id, "tenant-student-refresh", DateTime.UtcNow.AddDays(1), "127.0.0.1"));
         parent.AddRefreshToken(RefreshToken.Create(parent.Id, "tenant-parent-refresh", DateTime.UtcNow.AddDays(1), "127.0.0.1"));
         administrator.AddRefreshToken(RefreshToken.Create(administrator.Id, "tenant-admin-refresh", DateTime.UtcNow.AddDays(1), "127.0.0.1"));
+        var unrelatedToken = RefreshToken.Create(unrelatedUser.Id, "unrelated-refresh", DateTime.UtcNow.AddDays(1), "127.0.0.1");
+        unrelatedUser.AddRefreshToken(unrelatedToken);
 
         context.AddRange(
             institution,
@@ -75,6 +79,7 @@ public sealed class InstitutionManagementTests
             teacher,
             student,
             parent,
+            unrelatedUser,
             InstitutionAdmin.Create(administrator.Id, institution.Id, InstitutionAdminRole.Admin),
             TeacherProfile.Create(teacher.Id, "Tenant", "Teacher", institution.Id),
             StudentProfile.Create(student.Id, "Tenant", "Student", institution.Id, parent.Id));
@@ -91,7 +96,9 @@ public sealed class InstitutionManagementTests
             .Handle(new SetInstitutionActiveCommand(institution.Id, false), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        (await context.RefreshTokens.ToListAsync()).Should().OnlyContain(token => token.IsRevoked);
+        (await context.RefreshTokens.Where(token => token.UserId != unrelatedUser.Id).ToListAsync())
+            .Should().OnlyContain(token => token.IsRevoked);
+        (await context.RefreshTokens.SingleAsync(token => token.Id == unrelatedToken.Id)).IsRevoked.Should().BeFalse();
     }
 
     [Fact]

@@ -162,15 +162,18 @@ public sealed class UpdateInstitutionCommandHandler : IRequestHandler<UpdateInst
 public sealed class SetInstitutionActiveCommandHandler : IRequestHandler<SetInstitutionActiveCommand, Result>
 {
     private readonly IInstitutionRepository _repository;
+    private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly InstitutionManagementAuthorization _authorization;
 
     public SetInstitutionActiveCommandHandler(
         IInstitutionRepository repository,
+        IUserRepository userRepository,
         IUnitOfWork unitOfWork,
         InstitutionManagementAuthorization authorization)
     {
         _repository = repository;
+        _userRepository = userRepository;
         _unitOfWork = unitOfWork;
         _authorization = authorization;
     }
@@ -190,7 +193,14 @@ public sealed class SetInstitutionActiveCommandHandler : IRequestHandler<SetInst
         }
 
         if (request.IsActive) institution.Activate();
-        else institution.Deactivate();
+        else
+        {
+            institution.Deactivate();
+            await _userRepository.RevokeActiveRefreshTokensForInstitutionAsync(
+                request.Id,
+                "security-sensitive institution deactivation",
+                cancellationToken);
+        }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Success();

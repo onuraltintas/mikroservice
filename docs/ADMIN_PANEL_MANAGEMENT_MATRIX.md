@@ -80,20 +80,23 @@ secret kaydı oluşturma da fail-closed olarak reddedilir.
    kaldırılamaz; platformun yönetimsiz kalması fail-closed olarak engellenir.
 8. Kurum yöneticisi üyeliği pasifleştirildiğinde kullanıcının refresh oturumları
    iptal edilir; yeniden etkinleştirme yeni bir güvenli oturum açılmasını gerektirir.
-9. Kurum mutation'ları handler seviyesinde de scope kontrolü yapar; controller
+9. Kurum pasifleştirildiğinde o kuruma bağlı yönetici, öğretmen, öğrenci ve veli
+   üyelerinin aktif refresh oturumları iptal edilir; başka kuruma bağlı olmayan
+   kullanıcılar etkilenmez. Yeniden etkinleştirme yeni güvenli oturum açılmasını gerektirir.
+10. Kurum mutation'ları handler seviyesinde de scope kontrolü yapar; controller
    metadata'sı tek başına tenant izolasyonu olarak kabul edilmez.
-10. Notification SignalR bağlantısı oturum sahibine bağlıdır. Logout veya kullanıcı
+11. Notification SignalR bağlantısı oturum sahibine bağlıdır. Logout veya kullanıcı
    değişiminde eski bağlantı durdurulur, istemci bildirim state'i temizlenir ve
    reconnect her çağrıda güncel access token'ı alır.
-11. Kullanıcı, kurum, destek ve audit listeleri bounded server-side pagination
+12. Kullanıcı, kurum, destek ve audit listeleri bounded server-side pagination
    kullanır; panel hiçbir liste için ilk 100 kaydı tam sonuç olarak varsaymaz.
-12. Yazma düğmeleri yalnız sayfa görüntüleme iznine göre değil, karşılık gelen
+13. Yazma düğmeleri yalnız sayfa görüntüleme iznine göre değil, karşılık gelen
     `Create/Edit/Delete/Activate/Reply/ManagePermissions` iznine ve endpoint'in
     gerektirdiği role göre gösterilir. Sunucu policy'si yine nihai otoritedir.
-13. SystemAdmin access/refresh tokenı TOTP veya tek kullanımlık kurtarma kodu
+14. SystemAdmin access/refresh tokenı TOTP veya tek kullanımlık kurtarma kodu
     doğrulanmadan üretilmez. TOTP secret'ı Data Protection ile şifrelenir;
     kurtarma kodları yalnız hash olarak saklanır ve ilk kurulumda bir kez gösterilir.
-14. Kritik rol, izin, kullanıcı, parola ve konfigürasyon mutasyonları ayrıca
+15. Kritik rol, izin, kullanıcı, parola ve konfigürasyon mutasyonları ayrıca
     `MfaRequired` politikasını ister. JWT `amr=mfa` ve `auth_time` taşır; güven
     seviyesi refresh rotasyonu boyunca korunur. Eski MFA'sız SystemAdmin refresh
     tokenları iptal edilip yeniden girişe zorlanır.

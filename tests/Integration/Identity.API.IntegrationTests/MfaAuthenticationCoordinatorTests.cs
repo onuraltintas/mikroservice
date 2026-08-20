@@ -88,6 +88,7 @@ public sealed class MfaAuthenticationCoordinatorTests
         public Task<Identity.Application.Queries.GetAllUsers.UserSummaryDto> GetSummaryAsync(Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task RevokeActiveRefreshTokensAsync(Guid id, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task RevokeActiveRefreshTokensForInstitutionAsync(Guid institutionId, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<List<User>> GetUsersByRolesAsync(List<string> roleNames, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 
