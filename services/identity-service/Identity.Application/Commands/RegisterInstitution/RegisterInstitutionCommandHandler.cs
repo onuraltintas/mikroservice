@@ -89,8 +89,6 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
             await _institutionRepository.AddAsync(institution, cancellationToken);
             await _institutionRepository.AddAdminAsync(admin, cancellationToken);
 
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-
             // Publish Event for Notification Service (Verification)
             await _publishEndpoint.Publish(new UserRegisteredEvent(
                 userId,
@@ -99,6 +97,7 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
                 request.LastName,
                 user?.EmailVerificationToken ?? ""
             ), cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result.Success(userId);
         }

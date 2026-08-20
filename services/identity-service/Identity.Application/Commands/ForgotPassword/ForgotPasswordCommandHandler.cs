@@ -33,7 +33,6 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
         }
 
         user.GeneratePasswordResetToken();
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Publish event to send email
         await _publishEndpoint.Publish(new UserForgotPasswordEvent(
@@ -42,6 +41,7 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
             user.FirstName,
             user.LastName,
             user.PasswordResetToken!), cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

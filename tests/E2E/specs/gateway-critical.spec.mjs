@@ -6,7 +6,9 @@ const protectedEndpoints = [
   ['/api/institutions', 'GET'],
   ['/api/support/requests', 'GET'],
   ['/api/email-templates', 'GET'],
-  ['/api/coaching-admin/overview', 'GET']
+  ['/api/coaching-admin/overview', 'GET'],
+  ['/api/institution/teachers', 'POST'],
+  ['/api/invitations/00000000-0000-0000-0000-000000000000/accept', 'POST']
 ];
 
 test.describe('Gateway critical API flows', () => {

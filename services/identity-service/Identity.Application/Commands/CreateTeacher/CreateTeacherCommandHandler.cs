@@ -86,8 +86,6 @@ public class CreateTeacherCommandHandler : IRequestHandler<CreateTeacherCommand,
         {
             // await _userRepository.AddAsync(user, cancellationToken); // REMOVED
             await _teacherRepository.AddAsync(teacher, cancellationToken);
-            await _teacherRepository.AddAsync(teacher, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
             
             // Publish UserCreated Event
             var eventMessage = new EduPlatform.Shared.Contracts.Events.Identity.UserCreatedEvent(
@@ -101,9 +99,11 @@ public class CreateTeacherCommandHandler : IRequestHandler<CreateTeacherCommand,
             );
 
             await _publishEndpoint.Publish(eventMessage, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            // Return both TeacherId and TemporaryPassword so institution can share it
-            return Result.Success(new CreateTeacherResult(teacher.Id, temporaryPassword));
+            // Coaching uses the Identity user id as TeacherId. Keep the profile id
+            // explicit for Identity-owned invitation/profile operations.
+            return Result.Success(new CreateTeacherResult(teacherUserId, teacher.Id, temporaryPassword));
         }
         catch (Exception ex)
         {

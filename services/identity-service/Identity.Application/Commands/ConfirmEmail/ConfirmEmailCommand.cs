@@ -42,8 +42,6 @@ public class ConfirmEmailCommandHandler : IRequestHandler<ConfirmEmailCommand, R
 
         // 1. Confirm Email
         user.ConfirmEmail();
-        
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // 2. Publish Event for Notification Service (Welcome Email)
         var primaryRole = user.Roles.OrderBy(r => r.Role.Name).FirstOrDefault()?.Role?.Name ?? "User";
@@ -55,6 +53,7 @@ public class ConfirmEmailCommandHandler : IRequestHandler<ConfirmEmailCommand, R
             user.LastName,
             primaryRole
         ), cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

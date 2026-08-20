@@ -33,8 +33,6 @@ public class ResendVerificationEmailCommandHandler : IRequestHandler<ResendVerif
 
         // Generate new token
         user.GenerateEmailVerificationToken();
-        
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Publish Event
         await _publishEndpoint.Publish(new UserRegisteredEvent(
@@ -44,6 +42,7 @@ public class ResendVerificationEmailCommandHandler : IRequestHandler<ResendVerif
             user.LastName,
             user.EmailVerificationToken ?? ""
         ), cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

@@ -11,6 +11,10 @@ outbox kaydı aynı PostgreSQL transaction'ında tamamlanır.
 - Coaching de `InboxState`, `OutboxMessage` ve `OutboxState` tablolarını
   `AddMassTransitOutbox` migration'ı ile içerir.
 - `UseBusOutbox()` publish çağrılarını transaction sonrasında broker'a taşır.
+- EF bus outbox kullanan bir handler, aggregate değişikliklerini ve `Publish` çağrısını
+  aynı scoped `DbContext` içindeki tek `SaveChangesAsync` commit'inde tamamlamadan
+  başarılı dönmemelidir. Aksi halde event yalnızca change tracker'da kalır ve HTTP isteği
+  başarılı görünürken broker'a hiçbir outbox mesajı yazılmaz.
 - Coaching assignment, exam, session, goal ve exam-result producer'ları
   `shared/EduPlatform.Shared.Contracts/Events/Coaching` sözleşmelerini aynı
   write transaction'ında publish eder. Assignment submit/grade olayları da
@@ -41,6 +45,9 @@ outbox kaydı aynı PostgreSQL transaction'ında tamamlanır.
 - SignalR notification ID'si event `MessageId` ile deterministikleştirilir.
   Retry aynı kaydı ve aynı client ID'sini kullanır; frontend duplicate ID'leri
   yeniden eklemez.
+- Coaching integration event'lerinin SignalR bildirisine bağlanması ayrı bir
+  Notification consumer sözleşmesidir; consumer eklenene kadar event'in outbox'a
+  yazılması tek başına gerçek zamanlı kullanıcı bildirisi garantisi vermez.
 - Consumer'larda 5 denemeli exponential retry uygulanır (1 saniyeden 1
   dakikaya, 5 saniye jitter/delay ile). Kalıcı hatalar MassTransit'in `_error`
   dead-letter kuyruğuna gider ve monitoring ile izlenir.

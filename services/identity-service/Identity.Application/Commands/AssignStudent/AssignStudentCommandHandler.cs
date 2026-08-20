@@ -71,7 +71,6 @@ public class AssignStudentCommandHandler : IRequestHandler<AssignStudentCommand,
         );
 
         await _invitationRepository.AddAsync(invitation, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Find invitee user id if exists
         var inviteeUser = await _userRepository.GetByEmailAsync(request.StudentEmail, cancellationToken);
@@ -89,6 +88,7 @@ public class AssignStudentCommandHandler : IRequestHandler<AssignStudentCommand,
         );
 
         await _publishEndpoint.Publish(eventMessage, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success(invitation.Id);
     }

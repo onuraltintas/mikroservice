@@ -33,11 +33,7 @@ public class InstitutionController : ControllerBase
         
         if (result.IsSuccess)
         {
-            // Return both TeacherId and TemporaryPassword
-            return Ok(new { 
-                TeacherId = result.Value.TeacherId, 
-                TemporaryPassword = result.Value.TemporaryPassword 
-            });
+            return Ok(result.Value);
         }
 
         return BadRequest(new { Error = result.Error });
@@ -58,11 +54,7 @@ public class InstitutionController : ControllerBase
         
         if (result.IsSuccess)
         {
-            // Return both StudentId and TemporaryPassword
-            return Ok(new { 
-                StudentId = result.Value.StudentId, 
-                TemporaryPassword = result.Value.TemporaryPassword 
-            });
+            return Ok(result.Value);
         }
 
         return BadRequest(new { Error = result.Error });

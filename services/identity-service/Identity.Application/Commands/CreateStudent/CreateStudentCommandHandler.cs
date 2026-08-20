@@ -86,7 +86,6 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
         {
             // await _userRepository.AddAsync(user, cancellationToken); // REMOVED
             await _studentRepository.AddAsync(student, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
             
             // Publish UserCreated Event
             var eventMessage = new EduPlatform.Shared.Contracts.Events.Identity.UserCreatedEvent(
@@ -100,9 +99,11 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
             );
 
             await _publishEndpoint.Publish(eventMessage, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            // Return both StudentId and TemporaryPassword so institution can share it
-            return Result.Success(new CreateStudentResult(student.Id, temporaryPassword));
+            // Coaching uses the Identity user id as StudentId. Keep the profile id
+            // explicit for Identity-owned student-profile operations.
+            return Result.Success(new CreateStudentResult(studentUserId, student.Id, temporaryPassword));
         }
         catch (Exception ex)
         {

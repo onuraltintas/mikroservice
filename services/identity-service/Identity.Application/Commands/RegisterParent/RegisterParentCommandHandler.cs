@@ -76,7 +76,6 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
             }
 
             await _parentRepository.AddAsync(parent, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             // Publish Event for Notification Service (Verification)
             await _publishEndpoint.Publish(new UserRegisteredEvent(
@@ -86,6 +85,7 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
                 request.LastName,
                 user?.EmailVerificationToken ?? ""
             ), cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result.Success(userId);
         }

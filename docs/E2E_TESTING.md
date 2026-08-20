@@ -15,15 +15,29 @@ Apache-2.0 lisanslı bir geliştirme bağımlılığıdır.
 - Yetkili admin ile panel login → dashboard geçişi (staging kimlik bilgisi gerekir)
 - Disposable ortamda support submit → aynı idempotency anahtarıyla retry
 - Disposable ortamda student registration → MailCatcher verification link → email confirmation
+- Disposable tenant'ta institution → teacher/student daveti → coaching assignment
+  oluşturma/okuma ve aynı idempotency anahtarıyla replay
 
 Testler varsayılan olarak yalnızca Docker'da çalışan Gateway'e bağlanır ve
-`http://127.0.0.1:5000` kullanır. E2E testleri business/support verisi yazmaz;
-yetkili akış login ve refresh-token metadata kayıtları oluşturabilir. Kayıt/e-posta,
-tenant write ve SignalR senaryoları disposable staging tenant ve MailCatcher/SMTP
-erişimi olan ayrı bir profile bağlanmalıdır; ortak production verisiyle
+`http://127.0.0.1:5000` kullanır. Anonim smoke testleri business verisi yazmaz;
+yetkili akış login ve refresh-token metadata kayıtları oluşturabilir. Kayıt/e-posta
+ve tenant write senaryoları disposable staging tenant ve MailCatcher/SMTP erişimi
+olan ayrı bir profile bağlanmalıdır; ortak production verisiyle
 çalıştırılmamalıdır. Notification servisinin doğrulama bağlantısı
 `PUBLIC_APP_BASE_URL` ile üretilir; staging/production ortamında `localhost`
 değeri kullanılmamalıdır.
+
+Gateway üzerinden disposable tenant akışı Docker ortamında doğrulanmıştır:
+kurum, öğretmen ve öğrenci oluşturma; MailCatcher doğrulaması; davetlerin kabulü;
+assignment oluşturma, öğretmen/öğrenci okuması ve aynı `Idempotency-Key` ile replay
+tek bir assignment döndürür. Koşu sonunda tenant, kullanıcı, assignment ve e-posta
+verileri temizlenmelidir. Bu akış ortak production verisine karşı
+çalıştırılmamalıdır.
+
+Coaching event'lerinin RabbitMQ outbox'a yazılması doğrulanmıştır; Coaching event'ini
+Notification SignalR bildirisine dönüştüren uçtan uca tüketici akışı bu test paketinin
+kapsamında değildir. SignalR değişikliği yapılacaksa ayrı bir disposable kullanıcı,
+hub bağlantısı ve duplicate-delivery testi eklenmelidir.
 
 ## Lokal çalıştırma
 

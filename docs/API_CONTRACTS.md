@@ -90,6 +90,15 @@ institution resource IDs are not returned under that field. The same user ID is
 included in the e-mail verification link and is required by
 `POST /api/auth/confirm-email`.
 
+Institution-managed `POST /api/institution/teachers` and
+`POST /api/institution/students` follow the same cross-service identifier rule:
+`TeacherId`/`StudentId` is the Identity user ID used by Coaching, while
+`ProfileId` is the Identity-owned profile ID used only by profile/invitation
+operations. Both responses also include the generated `TemporaryPassword`.
+These routes and the invitation routes are exposed by the Gateway under the
+singular `/api/institution/{**catch-all}` and `/api/invitations/{**catch-all}`
+patterns; clients must not call the internal Identity service port directly.
+
 `POST /api/institutions` (SystemAdmin tenant creation) also requires an
 `Idempotency-Key` header. Identity scopes the key to
 `identity.institutions.create`, stores the canonical payload hash and the created

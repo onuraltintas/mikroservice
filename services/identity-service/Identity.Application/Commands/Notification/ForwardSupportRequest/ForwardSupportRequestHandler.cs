@@ -11,11 +11,16 @@ namespace Identity.Application.Commands.Notification.ForwardSupportRequest;
 public class ForwardSupportRequestHandler : IRequestHandler<ForwardSupportRequestCommand, Result>
 {
     private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
 
-    public ForwardSupportRequestHandler(IUserRepository userRepository, IPublishEndpoint publishEndpoint)
+    public ForwardSupportRequestHandler(
+        IUserRepository userRepository,
+        IUnitOfWork unitOfWork,
+        IPublishEndpoint publishEndpoint)
     {
         _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
     }
 
@@ -46,6 +51,10 @@ public class ForwardSupportRequestHandler : IRequestHandler<ForwardSupportReques
                 publishContext.MessageId = CreateMessageId(request.SupportRequestId, admin.Id);
             }, cancellationToken);
         }
+
+        // Identity uses MassTransit's EF bus outbox. Publish queues messages in
+        // the current DbContext; save them before the HTTP call returns.
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

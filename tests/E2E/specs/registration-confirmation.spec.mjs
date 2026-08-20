@@ -25,7 +25,9 @@ async function waitForVerificationLink(request, recipient) {
       const summary = JSON.stringify(message);
       if (!summary.toLowerCase().includes(recipient.toLowerCase())) continue;
 
-      const detailResponse = await request.get(`${mailApiBaseUrl}/messages/${message.id}.json`);
+      // MailCatcher's JSON endpoint returns metadata only. The verification
+      // URL lives in the rendered HTML message body.
+      const detailResponse = await request.get(`${mailApiBaseUrl}/messages/${message.id}.html`);
       if (!detailResponse.ok()) continue;
 
       const params = verificationParamsFromMessage(await detailResponse.text());
@@ -45,6 +47,7 @@ test.describe('Disposable registration and email confirmation', () => {
   );
 
   test('registers a student and confirms the e-mail link from MailCatcher', async ({ request }) => {
+    test.setTimeout(90_000);
     const nonce = crypto.randomUUID();
     const email = `e2e-student-${nonce}@example.test`;
 

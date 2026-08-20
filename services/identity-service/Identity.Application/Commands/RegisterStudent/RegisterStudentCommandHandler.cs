@@ -96,7 +96,6 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
 
             // await _userRepository.AddAsync(user, cancellationToken); // REMOVED: User already exists
             await _studentRepository.AddAsync(student, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             // Publish Event for Notification Service (Verification)
             await _publishEndpoint.Publish(new UserRegisteredEvent(
@@ -106,6 +105,7 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
                 request.LastName,
                 user?.EmailVerificationToken ?? ""
             ), cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result.Success(userId);
         }

@@ -12,6 +12,7 @@ public record CreateTeacherCommand(
 ) : IRequest<Result<CreateTeacherResult>>;
 
 /// <summary>
-/// Response DTO containing CreatedTeacherId and TemporaryPassword
+/// The cross-service TeacherId is the Identity user id. ProfileId is exposed
+/// separately for Identity-owned teacher-profile and invitation operations.
 /// </summary>
-public record CreateTeacherResult(Guid TeacherId, string TemporaryPassword);
+public record CreateTeacherResult(Guid TeacherId, Guid ProfileId, string TemporaryPassword);

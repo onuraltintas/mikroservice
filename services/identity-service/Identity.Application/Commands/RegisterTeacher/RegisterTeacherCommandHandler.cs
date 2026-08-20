@@ -74,7 +74,6 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
         {
             // await _userRepository.AddAsync(user, cancellationToken); // Removed
             await _teacherRepository.AddAsync(teacher, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             // Publish Event for Notification Service (Verification)
             await _publishEndpoint.Publish(new UserRegisteredEvent(
@@ -84,6 +83,7 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
                 request.LastName,
                 user?.EmailVerificationToken ?? ""
             ), cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result.Success(userId);
         }

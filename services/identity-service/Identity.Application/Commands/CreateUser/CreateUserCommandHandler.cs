@@ -2,7 +2,6 @@ using EduPlatform.Shared.Kernel.Results;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using MediatR;
-using Microsoft.Extensions.Logging;
 using MassTransit;
 using EduPlatform.Shared.Contracts.Events.Identity;
 using Identity.Domain.Enums;
@@ -20,7 +19,6 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
     private readonly IInstitutionRepository _institutionRepository; 
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
-    private readonly Microsoft.Extensions.Logging.ILogger<CreateUserCommandHandler> _logger;
     private readonly ICurrentUserService _currentUserService;
 
     public CreateUserCommandHandler(
@@ -31,7 +29,6 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         IInstitutionRepository institutionRepository,
         IUnitOfWork unitOfWork,
         IPublishEndpoint publishEndpoint,
-        Microsoft.Extensions.Logging.ILogger<CreateUserCommandHandler> logger,
         ICurrentUserService currentUserService)
     {
         _identityService = identityService;
@@ -41,7 +38,6 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         _institutionRepository = institutionRepository;
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
-        _logger = logger;
         _currentUserService = currentUserService;
     }
 
@@ -96,27 +92,19 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
                     break; 
             }
 
+            // 6. Queue the event in the EF bus outbox before the single commit.
+            // If the database is unavailable, neither the profile nor the event
+            // is reported as successfully created.
+            await _publishEndpoint.Publish(new UserCreatedEvent(
+                userId,
+                request.Email,
+                request.FirstName,
+                request.LastName,
+                request.Role,
+                tempPassword,
+                DateTime.UtcNow
+            ), cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            // 6. Publish Event
-            try
-            {
-                await _publishEndpoint.Publish(new UserCreatedEvent(
-                    userId,
-                    request.Email,
-                    request.FirstName,
-                    request.LastName,
-                    request.Role,
-                    tempPassword,
-                    DateTime.UtcNow
-                ), cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                // Log and continue. We don't want to fail the user creation just because MQ is down.
-                // In a real system, we might write to an Outbox table here.
-                _logger.LogWarning(ex, "Failed to publish UserCreatedEvent");
-            }
 
             return Result.Success(new CreateUserResponse(userId, tempPassword));
         }
