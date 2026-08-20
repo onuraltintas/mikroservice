@@ -158,6 +158,7 @@ public class UserRepository : IUserRepository
                 : $"{u.FirstName} {u.LastName}".Trim(),
             IsActive = u.IsActive,
             EmailConfirmed = u.EmailConfirmed,
+            MfaEnabled = u.MfaEnabled,
             PhoneNumber = u.PhoneNumber,
             LastLoginAt = u.LastLoginAt,
             Roles = u.Roles.Select(ur => ur.Role.Name).ToList()

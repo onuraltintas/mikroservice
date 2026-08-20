@@ -81,6 +81,9 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
             FullName = $"{user.FirstName} {user.LastName}",
             PhoneNumber = user.PhoneNumber,
             LastLoginAt = user.LastLoginAt,
+            IsActive = user.IsActive,
+            EmailConfirmed = user.EmailConfirmed,
+            MfaEnabled = user.MfaEnabled,
             Role = user.Roles.FirstOrDefault()?.Role?.Name ?? "Unknown",
             Roles = user.Roles.Select(r => r.Role?.Name ?? "Unknown").ToList(),
             Permissions = user.Roles

@@ -120,6 +120,9 @@ import { ToasterService } from '../../../../core/services/toaster.service';
                           </button>
                         </div>
                       }
+                      <span class="inline-flex items-center text-xs font-medium" [class.text-green-600]="user()?.mfaEnabled" [class.text-amber-600]="!user()?.mfaEnabled">
+                        {{ user()?.mfaEnabled ? 'MFA etkin' : 'MFA kurulmamış' }}
+                      </span>
                     </div>
                   }
                 </div>

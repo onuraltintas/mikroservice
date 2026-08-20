@@ -9,6 +9,7 @@ export interface UserDto {
     role: string;
     isActive: boolean;
     emailConfirmed: boolean;
+    mfaEnabled?: boolean;
     avatarUrl?: string;
     phoneNumber?: string;
     lastLoginAt?: string;

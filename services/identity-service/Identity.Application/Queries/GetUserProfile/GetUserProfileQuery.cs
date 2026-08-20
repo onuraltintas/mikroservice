@@ -13,6 +13,7 @@ public class UserProfileDto
     public string Role { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
     public bool EmailConfirmed { get; set; }
+    public bool MfaEnabled { get; set; }
     public DateTime? LastLoginAt { get; set; }
     
     // Common fields
