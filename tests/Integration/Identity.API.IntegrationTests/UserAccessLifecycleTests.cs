@@ -38,4 +38,18 @@ public sealed class UserAccessLifecycleTests
         token.RevokedByIp.Should().Be("10.0.0.1");
         token.ReasonRevoked.Should().Be("Administrator terminated the session");
     }
+
+    [Fact]
+    public void Deactivate_ShouldRevokeLoadedRefreshSessions()
+    {
+        var user = User.Create(Guid.NewGuid(), "user@example.com");
+        var session = RefreshToken.Create(user.Id, "refresh-token", DateTime.UtcNow.AddHours(1), "127.0.0.1");
+        user.AddRefreshToken(session);
+
+        user.Deactivate();
+
+        user.IsActive.Should().BeFalse();
+        session.IsRevoked.Should().BeTrue();
+        session.ReasonRevoked.Should().Be("Account deactivated");
+    }
 }
