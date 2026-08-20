@@ -169,6 +169,38 @@ public sealed class InstitutionManagementTests
         (await context.RefreshTokens.SingleAsync(token => token.Id == refreshToken.Id)).IsRevoked.Should().BeTrue();
     }
 
+    [Fact]
+    public async Task AssigningDeactivatedAdmin_ReactivatesExistingMembershipAndUpdatesRole()
+    {
+        await using var context = CreateContext();
+        var institution = Institution.Create("Reactivation School", InstitutionType.School);
+        var role = Role.Create(Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(), "Institution admin", isSystemRole: true);
+        var user = User.Create(Guid.NewGuid(), "reactivate@test.local", "Reactivation", "Manager");
+        user.AddRole(new Identity.Domain.Entities.UserRole(user.Id, role.Id));
+        var membership = InstitutionAdmin.Create(user.Id, institution.Id, InstitutionAdminRole.Admin);
+        membership.Deactivate();
+        context.AddRange(institution, role, user, membership);
+        await context.SaveChangesAsync();
+
+        var repository = new InstitutionRepository(context);
+        var result = await new AssignInstitutionAdminCommandHandler(
+                repository,
+                new UserRepository(context),
+                new UnitOfWork(context),
+                new InstitutionManagementAuthorization(
+                    new StubCurrentUserService(Guid.NewGuid(), "SystemAdmin"),
+                    repository))
+            .Handle(new AssignInstitutionAdminCommand(institution.Id, user.Id, InstitutionAdminRole.Owner), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        var admins = await repository.GetAdminsAsync(institution.Id, CancellationToken.None);
+        admins.Should().HaveCount(1);
+        admins.Should().ContainSingle(item =>
+            item.UserId == user.Id
+            && item.IsActive
+            && item.Role == InstitutionAdminRole.Owner);
+    }
+
     private static IdentityDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<IdentityDbContext>()
