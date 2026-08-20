@@ -86,6 +86,8 @@ public sealed class InstitutionManagementTests
         var role = Role.Create(Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(), "Institution admin", isSystemRole: true);
         var user = User.Create(Guid.NewGuid(), "manager@test.local", "Test", "Manager");
         user.AddRole(new Identity.Domain.Entities.UserRole(user.Id, role.Id));
+        var refreshToken = RefreshToken.Create(user.Id, "institution-admin-refresh", DateTime.UtcNow.AddDays(1), "127.0.0.1");
+        user.AddRefreshToken(refreshToken);
         context.AddRange(institution, role, user);
         await context.SaveChangesAsync();
 
@@ -104,6 +106,7 @@ public sealed class InstitutionManagementTests
         assignResult.IsSuccess.Should().BeTrue();
         var deactivateResult = await new SetInstitutionAdminActiveCommandHandler(
                 repository,
+                new UserRepository(context),
                 unitOfWork,
                 new InstitutionManagementAuthorization(
                     new StubCurrentUserService(Guid.NewGuid(), "SystemAdmin"),
@@ -113,6 +116,7 @@ public sealed class InstitutionManagementTests
         deactivateResult.IsSuccess.Should().BeTrue();
         (await repository.GetAdminsAsync(institution.Id, CancellationToken.None))
             .Should().ContainSingle(item => item.UserId == user.Id && !item.IsActive);
+        (await context.RefreshTokens.SingleAsync(token => token.Id == refreshToken.Id)).IsRevoked.Should().BeTrue();
     }
 
     private static IdentityDbContext CreateContext()
