@@ -12,5 +12,9 @@ public class CreateSessionCommandValidator : AbstractValidator<CreateSessionComm
         RuleFor(x => x.DurationMinutes).GreaterThan(0).LessThanOrEqualTo(240); // Max 4 hours
         RuleFor(x => x.Subject).MaximumLength(200);
         RuleFor(x => x.Notes).MaximumLength(2000);
+        RuleFor(x => x.IdempotencyKey)
+            .NotEmpty()
+            .Matches("^[A-Za-z0-9._~-]{16,128}$")
+            .WithMessage("Idempotency-Key 16-128 güvenli karakterden oluşmalıdır.");
     }
 }

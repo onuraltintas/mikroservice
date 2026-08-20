@@ -37,6 +37,7 @@ public class ExamsController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(CreateExamResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<CreateExamResponse>> CreateExam(
         [FromBody] CreateExamCommand command,
         CancellationToken cancellationToken)
@@ -45,12 +46,23 @@ public class ExamsController : ControllerBase
 
         try
         {
-            var result = await _mediator.Send(command, cancellationToken);
+            var idempotencyKey = Request.Headers["Idempotency-Key"].ToString();
+            var result = await _mediator.Send(
+                command with { IdempotencyKey = idempotencyKey },
+                cancellationToken);
             return CreatedAtAction(nameof(GetStudentResults), new { studentId = Guid.Empty }, result);
         }
         catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.Equals("Idempotency.Conflict", StringComparison.OrdinalIgnoreCase))
+        {
+            return Conflict(new { error = ex.Message, code = ex.Code });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Idempotency.", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
         }
         catch (EduPlatform.Shared.Kernel.Exceptions.ValidationException ex)
         {
@@ -69,6 +81,7 @@ public class ExamsController : ControllerBase
     [HttpPost("{id}/results")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> AddExamResult(
         Guid id,
         [FromBody] AddExamResultCommand command,
@@ -81,7 +94,10 @@ public class ExamsController : ControllerBase
 
         try
         {
-            await _mediator.Send(command, cancellationToken);
+            var idempotencyKey = Request.Headers["Idempotency-Key"].ToString();
+            await _mediator.Send(
+                command with { IdempotencyKey = idempotencyKey },
+                cancellationToken);
             return Ok(new { message = "Result added successfully" });
         }
         catch (InvalidOperationException ex)
@@ -91,6 +107,10 @@ public class ExamsController : ControllerBase
         catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.Equals("Idempotency.Conflict", StringComparison.OrdinalIgnoreCase))
+        {
+            return Conflict(new { error = ex.Message, code = ex.Code });
         }
         catch (BusinessRuleException ex)
         {

@@ -3,12 +3,10 @@ using Coaching.Domain.Enums;
 using Coaching.Application.Interfaces;
 using Coaching.Application.Authorization;
 using Coaching.Application.Exceptions;
+using Coaching.Application.Idempotency;
 using EduPlatform.Shared.Kernel.Exceptions;
 
 using MediatR;
-using System.Globalization;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Coaching.Application.Commands.CreateAssignment;
 
@@ -179,27 +177,18 @@ public class CreateAssignmentCommandHandler : IRequestHandler<CreateAssignmentCo
     private static string CreateRequestHash(CreateAssignmentCommand request)
     {
         var assignmentType = Enum.Parse<AssignmentType>(request.AssignmentType, ignoreCase: true);
-        var canonical = new StringBuilder()
-            .Append(Part(request.TeacherId.ToString("D")))
-            .Append(Part(request.InstitutionId?.ToString("D")))
-            .Append(Part(request.Title))
-            .Append(Part(request.Description))
-            .Append(Part(request.Subject))
-            .Append(Part(assignmentType.ToString()))
-            .Append(Part(request.TargetGradeLevel?.ToString(CultureInfo.InvariantCulture)))
-            .Append(Part(request.DueDate.ToUniversalTime().Ticks.ToString(CultureInfo.InvariantCulture)))
-            .Append(Part(request.EstimatedDurationMinutes?.ToString(CultureInfo.InvariantCulture)))
-            .Append(Part(request.MaxScore?.ToString(CultureInfo.InvariantCulture)))
-            .Append(Part(request.PassingScore?.ToString(CultureInfo.InvariantCulture)))
-            .Append(Part(string.Join(",", request.StudentIds
-                .Distinct()
-                .OrderBy(studentId => studentId)
-                .Select(studentId => studentId.ToString("D")))))
-            .ToString();
-
-        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
+        return IdempotencyRequestHasher.Create(
+            IdempotencyRequestHasher.Format(request.TeacherId),
+            IdempotencyRequestHasher.Format(request.InstitutionId),
+            request.Title,
+            request.Description,
+            request.Subject,
+            assignmentType.ToString(),
+            request.TargetGradeLevel?.ToString(),
+            IdempotencyRequestHasher.Format(request.DueDate),
+            request.EstimatedDurationMinutes?.ToString(),
+            IdempotencyRequestHasher.Format(request.MaxScore),
+            IdempotencyRequestHasher.Format(request.PassingScore),
+            IdempotencyRequestHasher.Format(request.StudentIds));
     }
-
-    private static string Part(string? value) =>
-        value is null ? "-1:" : $"{value.Length}:{value}";
 }

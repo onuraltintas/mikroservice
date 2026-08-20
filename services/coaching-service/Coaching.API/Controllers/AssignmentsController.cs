@@ -43,6 +43,7 @@ public class AssignmentsController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(CreateAssignmentResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<CreateAssignmentResponse>> CreateAssignment(
         [FromBody] CreateAssignmentCommand command,
@@ -72,6 +73,10 @@ public class AssignmentsController : ControllerBase
         catch (BusinessRuleException ex) when (ex.Code.Equals("Idempotency.Conflict", StringComparison.OrdinalIgnoreCase))
         {
             return Conflict(new { error = ex.Message, code = ex.Code });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Idempotency.", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
         }
         catch (ValidationException ex)
         {

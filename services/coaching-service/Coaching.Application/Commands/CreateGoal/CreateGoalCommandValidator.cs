@@ -30,5 +30,10 @@ public sealed class CreateGoalCommandValidator : AbstractValidator<CreateGoalCom
             .LessThanOrEqualTo(999.99m)
             .When(command => command.TargetScore.HasValue)
             .WithMessage("Target score cannot be negative.");
+
+        RuleFor(command => command.IdempotencyKey)
+            .NotEmpty()
+            .Matches("^[A-Za-z0-9._~-]{16,128}$")
+            .WithMessage("Idempotency-Key 16-128 güvenli karakterden oluşmalıdır.");
     }
 }

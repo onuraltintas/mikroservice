@@ -37,6 +37,7 @@ public class GoalsController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(CreateGoalResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<CreateGoalResponse>> CreateGoal(
         [FromBody] CreateGoalCommand command,
         CancellationToken cancellationToken)
@@ -45,12 +46,23 @@ public class GoalsController : ControllerBase
 
         try
         {
-            var result = await _mediator.Send(command, cancellationToken);
+            var idempotencyKey = Request.Headers["Idempotency-Key"].ToString();
+            var result = await _mediator.Send(
+                command with { IdempotencyKey = idempotencyKey },
+                cancellationToken);
             return CreatedAtAction(nameof(GetStudentGoals), new { studentId = command.StudentId }, result);
         }
         catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.Equals("Idempotency.Conflict", StringComparison.OrdinalIgnoreCase))
+        {
+            return Conflict(new { error = ex.Message, code = ex.Code });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Idempotency.", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
         }
         catch (ValidationException ex)
         {

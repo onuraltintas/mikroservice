@@ -36,6 +36,7 @@ public class SessionsController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(CreateSessionResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<CreateSessionResponse>> CreateSession(
         [FromBody] CreateSessionCommand command,
         CancellationToken cancellationToken)
@@ -45,12 +46,23 @@ public class SessionsController : ControllerBase
 
         try
         {
-            var result = await _mediator.Send(command, cancellationToken);
+            var idempotencyKey = Request.Headers["Idempotency-Key"].ToString();
+            var result = await _mediator.Send(
+                command with { IdempotencyKey = idempotencyKey },
+                cancellationToken);
             return CreatedAtAction(nameof(GetTeacherSessions), new { teacherId = command.TeacherId }, result);
         }
         catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.Equals("Idempotency.Conflict", StringComparison.OrdinalIgnoreCase))
+        {
+            return Conflict(new { error = ex.Message, code = ex.Code });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Idempotency.", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
         }
         catch (ValidationException ex)
         {

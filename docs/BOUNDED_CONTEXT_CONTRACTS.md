@@ -43,12 +43,11 @@ delivery row'u ve Identity forward delivery row'u aynı Notification transaction
 oluşur; iki durable worker bounded retry ile yan etkileri tamamlar. Aynı anahtar
 farklı canonical payload ile kullanılırsa servis `409 Conflict` döndürür. Böylece aynı
 key ile gelen retry mevcut ID'yi döndürürken kaybolan admin bildirimi tekrar
-denenebilir. Identity kurum oluşturma komutu ve Coaching assignment oluşturma
-komutu aynı prensibi `(scope, key, payload hash, resource ID)` kaydı ve unique
-constraint ile uygular. Her iki kayıt da ilgili domain satırıyla aynı
-transaction içinde oluşturulur; cross-service genel replay eklenmez. Diğer
-Coaching write komutları (exam, session, goal ve result) için aynı servis-sahibi
-model uygulanmadan istemciler retry anahtarını güvenilir kabul etmemelidir.
+denenebilir. Identity kurum oluşturma komutu ve Coaching assignment, exam,
+session, goal ve exam-result komutları aynı prensibi `(scope, key, payload hash,
+resource ID)` kaydı ve unique constraint ile uygular. Her kayıt ilgili domain
+satırıyla aynı transaction içinde oluşturulur; cross-service genel replay
+eklenmez. Exam-result replay'i mevcut sonuç doğrulanırsa no-op'tur.
 
 ## Doğrulama
 

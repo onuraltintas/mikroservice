@@ -10,7 +10,8 @@ public record CreateSessionCommand(
     int DurationMinutes,
     string? Subject,
     string? Notes,
-    SessionType Type
+    SessionType Type,
+    string? IdempotencyKey = null
 ) : IRequest<CreateSessionResponse>;
 
 public record CreateSessionResponse(Guid SessionId);

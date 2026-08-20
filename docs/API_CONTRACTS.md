@@ -103,6 +103,16 @@ institution, target list, score or assignment detail returns `409 Conflict`.
 The key is owned by the caller and must be reused for transport-level retries;
 clients must generate a new key for a distinct assignment.
 
+The same contract applies to Coaching `POST /api/exams`, `POST /api/sessions`,
+`POST /api/goals` and `POST /api/exams/{id}/results`, with scopes
+`coaching.exams.create`, `coaching.sessions.create`, `coaching.goals.create`
+and `coaching.exam-results.create`. A replay of an exam, session or goal
+returns its original resource ID; a replay of an exam result is a no-op after
+the existing result is verified. A changed payload always returns `409
+Conflict`. The key is read from the HTTP header, not from the JSON body, and
+each domain row plus its idempotency record is committed in one Coaching
+transaction.
+
 ## Contract testleri
 
 `tests/Integration/Identity.API.IntegrationTests` altında ProblemDetails,

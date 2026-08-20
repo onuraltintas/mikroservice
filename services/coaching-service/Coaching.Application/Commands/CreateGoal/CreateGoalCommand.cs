@@ -11,7 +11,8 @@ public record CreateGoalCommand(
     Guid? TeacherId,
     string? Description,
     DateTime? TargetDate,
-    decimal? TargetScore
+    decimal? TargetScore,
+    string? IdempotencyKey = null
 ) : IRequest<CreateGoalResponse>;
 
 public record CreateGoalResponse(Guid GoalId);

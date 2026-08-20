@@ -11,7 +11,8 @@ public record CreateExamCommand(
     DateTime ExamDate,
     decimal MaxScore,
     Guid? InstitutionId,
-    string? Description
+    string? Description,
+    string? IdempotencyKey = null
 ) : IRequest<CreateExamResponse>;
 
 public record CreateExamResponse(Guid ExamId);
