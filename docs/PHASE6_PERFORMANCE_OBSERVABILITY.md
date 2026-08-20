@@ -19,7 +19,9 @@ başlangıç noktasıdır:
 Her worker en fazla 10.000 latency örneği tutar; uzun koşularda p50/p95/p99
 sonuçları bounded-reservoir örneklemine dayalı yaklaşık değerlerdir. JSON çıktısı
 ayrıca gerçek koşu süresini ve ölçülen `RequestsPerSecond` değerini verir; uzun
-timeout'lar nedeniyle bu değer yapılandırılan duration'dan farklı olabilir.
+timeout'lar nedeniyle bu değer yapılandırılan duration'dan farklı olabilir. Worker
+latency ölçümü monotonic `Environment.TickCount64` kullanır; bu nedenle hardened
+PowerShell Constrained Language Mode altında da çalışır.
 
 Gateway health smoke testi:
 

@@ -56,8 +56,7 @@ foreach ($headerValue in $Header) {
 }
 
 $deadline = [DateTime]::UtcNow.AddSeconds($DurationSeconds)
-$runStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-$stopwatchFrequency = [double][System.Diagnostics.Stopwatch]::Frequency
+$runStarted = [Environment]::TickCount64
 $workers = 1..$Concurrency
 
 $workerResults = @(
@@ -76,7 +75,9 @@ $workerResults = @(
         $webSession = $null
 
         while ([DateTime]::UtcNow -lt $using:deadline) {
-            $started = [System.Diagnostics.Stopwatch]::GetTimestamp()
+            # TickCount64 is monotonic and available in PowerShell constrained
+            # language mode used by hardened CI/desktop environments.
+            $started = [Environment]::TickCount64
             $response = $null
 
             try {
@@ -100,7 +101,7 @@ $workerResults = @(
                 }
 
                 $response = Invoke-WebRequest @requestParameters
-                $elapsedMilliseconds = (([System.Diagnostics.Stopwatch]::GetTimestamp() - $started) * 1000.0) / $using:stopwatchFrequency
+                $elapsedMilliseconds = [double]([Environment]::TickCount64 - $started)
                 $requests++
                 if ($latencies.Count -lt $latencySampleLimit) {
                     $latencies += $elapsedMilliseconds
@@ -125,7 +126,7 @@ $workerResults = @(
             catch {
                 $failures++
                 $requests++
-                $elapsedMilliseconds = (([System.Diagnostics.Stopwatch]::GetTimestamp() - $started) * 1000.0) / $using:stopwatchFrequency
+                $elapsedMilliseconds = [double]([Environment]::TickCount64 - $started)
                 if ($latencies.Count -lt $latencySampleLimit) {
                     $latencies += $elapsedMilliseconds
                 }
@@ -205,7 +206,7 @@ foreach ($workerResult in $workerResults) {
 }
 
 $successRate = if ($totalRequests -eq 0) { 0 } else { [Math]::Round(($totalSuccesses / $totalRequests) * 100, 2) }
-$elapsedSeconds = [Math]::Max(0.001, $runStopwatch.Elapsed.TotalSeconds)
+$elapsedSeconds = [Math]::Max(0.001, ([Environment]::TickCount64 - $runStarted) / 1000.0)
 $summary = [ordered]@{
     Target             = $displayTarget
     Method             = $Method
