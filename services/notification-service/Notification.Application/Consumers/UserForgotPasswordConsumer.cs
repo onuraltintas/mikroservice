@@ -1,6 +1,8 @@
 using EduPlatform.Shared.Contracts.Events.Identity;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Notification.Application.Configuration;
 using Notification.Application.Interfaces;
 
 namespace Notification.Application.Consumers;
@@ -9,11 +11,16 @@ public class UserForgotPasswordConsumer : IConsumer<UserForgotPasswordEvent>
 {
     private readonly IEmailDeliveryQueue _emailDeliveryQueue;
     private readonly INotificationDbContext _dbContext;
+    private readonly PublicAppUrlOptions _publicAppUrlOptions;
 
-    public UserForgotPasswordConsumer(IEmailDeliveryQueue emailDeliveryQueue, INotificationDbContext dbContext)
+    public UserForgotPasswordConsumer(
+        IEmailDeliveryQueue emailDeliveryQueue,
+        INotificationDbContext dbContext,
+        IOptions<PublicAppUrlOptions> publicAppUrlOptions)
     {
         _emailDeliveryQueue = emailDeliveryQueue;
         _dbContext = dbContext;
+        _publicAppUrlOptions = publicAppUrlOptions.Value;
     }
 
     public async Task Consume(ConsumeContext<UserForgotPasswordEvent> context)
@@ -27,9 +34,9 @@ public class UserForgotPasswordConsumer : IConsumer<UserForgotPasswordEvent>
         string subject;
         string body;
 
-        // Frontend URL for password reset
-        // Industry Best Practice: Reset link should include token and optionally email
-        var resetLink = $"http://localhost:4200/auth/reset-password?token={message.ResetToken}&email={message.Email}";
+        var resetLink = _publicAppUrlOptions.BuildPasswordResetLink(
+            message.ResetToken,
+            message.Email);
 
         if (template != null)
         {

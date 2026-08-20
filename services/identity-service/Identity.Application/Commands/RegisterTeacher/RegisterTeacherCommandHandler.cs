@@ -85,7 +85,7 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
                 user?.EmailVerificationToken ?? ""
             ), cancellationToken);
 
-            return Result.Success(teacher.Id);
+            return Result.Success(userId);
         }
         catch (Exception ex)
         {

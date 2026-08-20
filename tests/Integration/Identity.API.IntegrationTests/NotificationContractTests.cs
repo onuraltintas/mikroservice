@@ -18,6 +18,17 @@ public sealed class NotificationContractTests
             "https://staging.example.test/auth/confirm-email?token=token%20with%20%26%20unsafe&userId=11111111-1111-1111-1111-111111111111");
     }
 
+    [Fact]
+    public void PublicAppUrlOptions_BuildsPasswordResetLinkWithEncodedValues()
+    {
+        var options = new PublicAppUrlOptions { BaseUrl = "https://staging.example.test" };
+
+        var link = options.BuildPasswordResetLink("reset token", "ada+test@example.test");
+
+        link.Should().Be(
+            "https://staging.example.test/auth/reset-password?token=reset%20token&email=ada%2Btest%40example.test");
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("localhost:4200")]

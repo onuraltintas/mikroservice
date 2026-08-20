@@ -84,6 +84,12 @@ idempotent record permanently lose its notification work. Clients should reuse
 the key when retrying a timed-out request and generate a new key for a distinct
 support request.
 
+Registration endpoints `POST /api/auth/register/student`, `/teacher`, `/parent`
+and `/institution` return a `userId` containing the Identity user ID. Profile or
+institution resource IDs are not returned under that field. The same user ID is
+included in the e-mail verification link and is required by
+`POST /api/auth/confirm-email`.
+
 `POST /api/institutions` (SystemAdmin tenant creation) also requires an
 `Idempotency-Key` header. Identity scopes the key to
 `identity.institutions.create`, stores the canonical payload hash and the created

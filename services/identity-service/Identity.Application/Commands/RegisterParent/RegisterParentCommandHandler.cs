@@ -87,7 +87,7 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
                 user?.EmailVerificationToken ?? ""
             ), cancellationToken);
 
-            return Result.Success(parent.Id);
+            return Result.Success(userId);
         }
         catch (Exception ex)
         {

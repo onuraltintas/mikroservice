@@ -63,6 +63,7 @@ test.describe('Disposable registration and email confirmation', () => {
     expect(registrationBody.userId).toEqual(expect.any(String));
 
     const verificationParams = await waitForVerificationLink(request, email);
+    expect(registrationBody.userId).toBe(verificationParams.userId);
 
     const confirmation = await request.post('/api/auth/confirm-email', {
       data: {

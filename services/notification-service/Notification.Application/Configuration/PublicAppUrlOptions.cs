@@ -48,4 +48,15 @@ public sealed class PublicAppUrlOptions
         var baseUrl = BaseUrl.TrimEnd('/');
         return $"{baseUrl}/auth/confirm-email?token={Uri.EscapeDataString(token)}&userId={Uri.EscapeDataString(userId.ToString())}";
     }
+
+    public string BuildPasswordResetLink(string token, string email)
+    {
+        if (!IsValidBaseUrl(BaseUrl))
+        {
+            throw new InvalidOperationException("PublicApp:BaseUrl is not a valid absolute HTTP(S) URL.");
+        }
+
+        var baseUrl = BaseUrl.TrimEnd('/');
+        return $"{baseUrl}/auth/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
+    }
 }

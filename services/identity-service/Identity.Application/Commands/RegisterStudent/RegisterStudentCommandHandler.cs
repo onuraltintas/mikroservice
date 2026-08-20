@@ -107,7 +107,7 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
                 user?.EmailVerificationToken ?? ""
             ), cancellationToken);
 
-            return Result.Success(student.Id);
+            return Result.Success(userId);
         }
         catch (Exception ex)
         {

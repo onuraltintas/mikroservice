@@ -100,7 +100,7 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
                 user?.EmailVerificationToken ?? ""
             ), cancellationToken);
 
-            return Result.Success(institution.Id);
+            return Result.Success(userId);
         }
         catch (Exception ex)
         {
