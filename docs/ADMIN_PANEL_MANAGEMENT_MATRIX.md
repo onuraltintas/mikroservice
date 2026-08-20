@@ -11,6 +11,7 @@ route guard'ları yalnızca kullanıcı deneyimi ve erken yönlendirme sağlar.
 | --- | --- | --- | --- |
 | Identity | Kullanıcı listeleme ve ayrıntı (aktif tenant scope'u) | `/api/users` | `Permissions.Users.View` |
 | Identity | Kullanıcı oluşturma, düzenleme, pasifleştirme/aktifleştirme, rol, e-posta ve parola yönetimi | `/api/users` | `SystemAdmin` + ilgili `Permissions.Users.*` |
+| Identity | Kullanıcının aktif refresh oturumlarını metadata olarak listeleme, tek/toplu oturum sonlandırma ve MFA sıfırlama | `/api/users/{id}/sessions`, `/api/users/{id}/mfa/reset` | `SystemAdmin` + `MfaRequired` + `Permissions.Users.Edit` |
 | Identity | Rol ve permission CRUD'u, role-permission eşlemesi | `/api/roles`, `/api/permissions` | `Permissions.Roles.*`, `Permissions.Permissions.*` |
 | Identity | Kurum listeleme/detay ve yönetici listesi (SystemAdmin global, diğer yöneticiler yalnız aktif kendi tenant'ı) | `/api/institutions` | `Permissions.Institutions.View` |
 | Identity | Kurum oluşturma, aktiflik ve lisans/kapasite yönetimi | `/api/institutions` | `SystemAdmin` + `Permissions.Institutions.Manage` |
@@ -66,7 +67,9 @@ secret kaydı oluşturma da fail-closed olarak reddedilir.
    `SameSite=Strict` cookie'de tutulur. Uygulama açılışında ve access token süresi
    dolarken refresh rotasyonu yapılır. Parola, rol ve hesap aktifliği değişiklikleri
    tüm refresh oturumlarını iptal eder; mevcut kısa ömürlü access token en geç kendi
-   süresi sonunda geçersiz olur.
+   süresi sonunda geçersiz olur. Admin panelindeki oturum sonlandırma ve MFA
+   sıfırlama işlemleri refresh oturumlarını anında kapatır; refresh token'ın
+   kendisi hiçbir API yanıtında dönmez.
 4. Support submit anonim kalır; body limiti, validator, idempotency key ve gateway
    + service rate limit'i birlikte uygulanır.
 5. Coaching admin endpoint'i SystemAdmin rolüyle ek fail-closed kontrol taşır;
