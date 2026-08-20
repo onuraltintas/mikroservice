@@ -253,6 +253,10 @@ public class User : AggregateRoot
     public void Deactivate()
     {
         IsActive = false;
+        foreach (var refreshToken in _refreshTokens.Where(token => token.IsActive))
+        {
+            refreshToken.Revoke(null, "Account deactivated");
+        }
         UpdatedAt = DateTime.UtcNow;
     }
 
