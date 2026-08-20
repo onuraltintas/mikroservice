@@ -49,9 +49,20 @@ public sealed class InstitutionsController : ControllerBase
     {
         var idempotencyKey = Request.Headers["Idempotency-Key"].ToString();
         var result = await _mediator.Send(command with { IdempotencyKey = idempotencyKey }, cancellationToken);
-        return result.IsSuccess
-            ? CreatedAtAction(nameof(GetById), new { id = result.Value }, new { institutionId = result.Value })
-            : BadRequest(new { Error = result.Error });
+        if (result.IsSuccess)
+        {
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = result.Value },
+                new { institutionId = result.Value });
+        }
+
+        if (result.Error.Code.Equals("Idempotency.Conflict", StringComparison.OrdinalIgnoreCase))
+        {
+            return Conflict(new { Error = result.Error });
+        }
+
+        return BadRequest(new { Error = result.Error });
     }
 
     [HttpGet("{id:guid}")]

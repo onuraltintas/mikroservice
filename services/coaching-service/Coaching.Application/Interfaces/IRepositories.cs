@@ -45,6 +45,18 @@ public interface IAcademicGoalRepository
     Task DeleteAsync(AcademicGoal goal, CancellationToken cancellationToken = default);
 }
 
+public interface IIdempotencyRepository
+{
+    Task<IdempotencyRecord?> GetAsync(
+        string scope,
+        string key,
+        CancellationToken cancellationToken = default);
+
+    Task AddAsync(
+        IdempotencyRecord record,
+        CancellationToken cancellationToken = default);
+}
+
 public interface ICoachingAdminRepository
 {
     Task<CoachingAdminOverviewDto> GetOverviewAsync(

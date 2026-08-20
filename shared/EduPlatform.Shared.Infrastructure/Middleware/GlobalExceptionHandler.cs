@@ -50,14 +50,22 @@ public class GlobalExceptionHandler : IExceptionHandler
             case BusinessRuleException businessRuleException:
                 var isAuthorizationFailure = businessRuleException.Code.StartsWith(
                     "Authorization.", StringComparison.OrdinalIgnoreCase);
+                var isIdempotencyConflict = businessRuleException.Code.Equals(
+                    "Idempotency.Conflict", StringComparison.OrdinalIgnoreCase);
                 problemDetails.Status = isAuthorizationFailure
                     ? StatusCodes.Status403Forbidden
+                    : isIdempotencyConflict
+                        ? StatusCodes.Status409Conflict
                     : StatusCodes.Status400BadRequest;
                 problemDetails.Title = isAuthorizationFailure
                     ? "Forbidden"
+                    : isIdempotencyConflict
+                        ? "Idempotency Conflict"
                     : "Business Rule Violation";
                 problemDetails.Type = isAuthorizationFailure
                     ? "https://eduplatform.dev/problems/forbidden"
+                    : isIdempotencyConflict
+                        ? "https://eduplatform.dev/problems/idempotency-conflict"
                     : "https://eduplatform.dev/problems/business-rule";
                 problemDetails.Detail = businessRuleException.Message;
                 problemDetails.Extensions["code"] = businessRuleException.Code;

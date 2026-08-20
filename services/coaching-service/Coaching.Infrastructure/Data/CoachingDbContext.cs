@@ -3,6 +3,8 @@ using Coaching.Domain.Entities;
 using MassTransit;
 using System.Reflection;
 using EduPlatform.Shared.Infrastructure.Middleware;
+using Coaching.Application.Exceptions;
+using Npgsql;
 
 namespace Coaching.Infrastructure.Data;
 
@@ -24,6 +26,7 @@ public class CoachingDbContext : DbContext
     public DbSet<SessionAttendance> SessionAttendances => Set<SessionAttendance>();
     public DbSet<AcademicGoal> AcademicGoals => Set<AcademicGoal>();
     public DbSet<AdminAuditRecord> AdminAuditRecords => Set<AdminAuditRecord>();
+    public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,6 +35,7 @@ public class CoachingDbContext : DbContext
         // Apply all entity configurations from assembly
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         ConfigureAdminAudit(modelBuilder);
+        ConfigureIdempotency(modelBuilder);
 
         // Schema
         modelBuilder.HasDefaultSchema("coaching");
@@ -61,6 +65,17 @@ public class CoachingDbContext : DbContext
         audit.HasIndex(record => new { record.ActorUserId, record.OccurredAt });
     }
 
+    private static void ConfigureIdempotency(ModelBuilder modelBuilder)
+    {
+        var idempotency = modelBuilder.Entity<IdempotencyRecord>();
+        idempotency.ToTable("IdempotencyRecords");
+        idempotency.HasKey(record => record.Id);
+        idempotency.Property(record => record.Scope).HasMaxLength(150).IsRequired();
+        idempotency.Property(record => record.Key).HasMaxLength(128).IsRequired();
+        idempotency.Property(record => record.RequestHash).HasMaxLength(64).IsRequired();
+        idempotency.HasIndex(record => new { record.Scope, record.Key }).IsUnique();
+    }
+
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         if (ChangeTracker.Entries<AdminAuditRecord>()
@@ -70,6 +85,20 @@ public class CoachingDbContext : DbContext
         }
 
         // Timestamps are managed by entities themselves (CreatedAt defaults to UtcNow, UpdatedAt set manually)
-        return await base.SaveChangesAsync(cancellationToken);
+        try
+        {
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (IsIdempotencyConstraintViolation(exception))
+        {
+            throw new IdempotencyConflictException(exception);
+        }
     }
+
+    private static bool IsIdempotencyConstraintViolation(DbUpdateException exception) =>
+        exception.InnerException is PostgresException postgresException
+        && string.Equals(
+            postgresException.ConstraintName,
+            "IX_IdempotencyRecords_Scope_Key",
+            StringComparison.Ordinal);
 }

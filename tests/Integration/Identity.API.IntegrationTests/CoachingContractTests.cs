@@ -30,6 +30,24 @@ public sealed class CoachingContractTests
     }
 
     [Fact]
+    public async Task CreateAssignmentContract_RequiresSafeIdempotencyKey()
+    {
+        var validator = new CreateAssignmentCommandValidator();
+        var result = await validator.ValidateAsync(new CreateAssignmentCommand
+        {
+            TeacherId = Guid.NewGuid(),
+            Title = "Math",
+            AssignmentType = "Individual",
+            DueDate = DateTime.UtcNow.AddDays(1),
+            StudentIds = [Guid.NewGuid()],
+            IdempotencyKey = "too-short"
+        });
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == "IdempotencyKey");
+    }
+
+    [Fact]
     public async Task CreateSessionContract_RejectsOverlongSession()
     {
         var validator = new CreateSessionCommandValidator();

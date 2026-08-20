@@ -24,6 +24,7 @@ public record CreateAssignmentCommand : IRequest<CreateAssignmentResponse>
     public decimal? PassingScore { get; init; }
     
     public List<Guid> StudentIds { get; init; } = new();
+    public string? IdempotencyKey { get; init; }
 }
 
 public record CreateAssignmentResponse(

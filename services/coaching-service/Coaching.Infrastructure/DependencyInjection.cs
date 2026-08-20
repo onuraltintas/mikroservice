@@ -50,6 +50,7 @@ public static class DependencyInjection
 
         // Repositories
         services.AddScoped<IAssignmentRepository, AssignmentRepository>();
+        services.AddScoped<IIdempotencyRepository, IdempotencyRepository>();
         services.AddScoped<IExamRepository, ExamRepository>();
         services.AddScoped<ICoachingSessionRepository, CoachingSessionRepository>();
         services.AddScoped<IAcademicGoalRepository, AcademicGoalRepository>();

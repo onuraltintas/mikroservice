@@ -5,6 +5,26 @@ using Coaching.Infrastructure.Data;
 
 namespace Coaching.Infrastructure.Repositories;
 
+public sealed class IdempotencyRepository(CoachingDbContext context) : IIdempotencyRepository
+{
+    public Task<IdempotencyRecord?> GetAsync(
+        string scope,
+        string key,
+        CancellationToken cancellationToken = default)
+    {
+        return context.IdempotencyRecords
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                record => record.Scope == scope && record.Key == key,
+                cancellationToken);
+    }
+
+    public Task AddAsync(IdempotencyRecord record, CancellationToken cancellationToken = default)
+    {
+        return context.IdempotencyRecords.AddAsync(record, cancellationToken).AsTask();
+    }
+}
+
 /// <summary>
 /// Assignment Repository Implementation
 /// </summary>

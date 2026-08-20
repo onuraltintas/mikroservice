@@ -42,4 +42,32 @@ public sealed class GlobalExceptionHandlerTests
             .Should().Be("Email is required.");
         root.TryGetProperty("stackTrace", out _).Should().BeFalse();
     }
+
+    [Fact]
+    public async Task IdempotencyConflict_ShouldReturn409ProblemDetails()
+    {
+        var context = new DefaultHttpContext();
+        context.Request.Path = "/api/assignments";
+        context.TraceIdentifier = "trace-idempotency-123";
+        await using var responseBody = new MemoryStream();
+        context.Response.Body = responseBody;
+
+        var handled = await new GlobalExceptionHandler(NullLogger<GlobalExceptionHandler>.Instance)
+            .TryHandleAsync(
+                context,
+                new BusinessRuleException(
+                    "Idempotency.Conflict",
+                    "The key was already used for a different request."),
+                CancellationToken.None);
+
+        handled.Should().BeTrue();
+        context.Response.StatusCode.Should().Be(StatusCodes.Status409Conflict);
+
+        responseBody.Position = 0;
+        using var document = await JsonDocument.ParseAsync(responseBody);
+        document.RootElement.GetProperty("title").GetString()
+            .Should().Be("Idempotency Conflict");
+        document.RootElement.GetProperty("type").GetString()
+            .Should().Be("https://eduplatform.dev/problems/idempotency-conflict");
+    }
 }

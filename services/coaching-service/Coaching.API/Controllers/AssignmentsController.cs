@@ -53,7 +53,10 @@ public class AssignmentsController : ControllerBase
 
         try
         {
-            var result = await _mediator.Send(command, cancellationToken);
+            var idempotencyKey = Request.Headers["Idempotency-Key"].ToString();
+            var result = await _mediator.Send(
+                command with { IdempotencyKey = idempotencyKey },
+                cancellationToken);
 
             _logger.LogInformation("Assignment created successfully: {AssignmentId}", result.AssignmentId);
 
@@ -65,6 +68,10 @@ public class AssignmentsController : ControllerBase
         catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.Equals("Idempotency.Conflict", StringComparison.OrdinalIgnoreCase))
+        {
+            return Conflict(new { error = ex.Message, code = ex.Code });
         }
         catch (ValidationException ex)
         {

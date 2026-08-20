@@ -38,6 +38,11 @@ public class CreateAssignmentCommandValidator : AbstractValidator<CreateAssignme
             .NotEmpty().WithMessage("At least one student must be assigned")
             .Must(ids => ids.Count <= 100).WithMessage("At most 100 students may be assigned")
             .Must(ids => ids.Distinct().Count() == ids.Count).WithMessage("Student IDs must be unique");
+
+        RuleFor(x => x.IdempotencyKey)
+            .NotEmpty()
+            .Matches("^[A-Za-z0-9._~-]{16,128}$")
+            .WithMessage("Idempotency-Key 16-128 güvenli karakterden oluşmalıdır.");
     }
 
     private bool BeValidAssignmentType(string type)

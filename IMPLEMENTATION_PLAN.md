@@ -108,9 +108,11 @@ ilerleyecektir:
    submit bu modelin örneğidir: support row, e-mail delivery ve Identity-forward
    delivery aynı transaction'da yazılır; worker'lar bounded retry kullanır ve
    Identity event MessageId'si support/admin çifti için deterministiktir.
-   Coaching/Identity write komutları için durable command-level idempotency ve
-   audit kaydı ayrıca uygulanacaktır. Event consumer teslim idempotency'si P1
-   kapsamında tamamlandı.
+   Identity kurum oluşturma ve Coaching assignment oluşturma komutları için
+   durable command-level idempotency (scope + canonical payload hash + resource
+   ID + unique constraint) uygulanmıştır. Exam, session, goal ve result write
+   komutları aynı modelle sıradaki iterasyonlarda tamamlanacaktır. Event
+   consumer teslim idempotency'si P1 kapsamında tamamlandı.
 3. **E2E kritik akışlar:** Gateway health, anonim auth/support bootstrap ve
    protected admin yüzeylerinin 401 sözleşmesi Docker üzerinde doğrulandı.
    Yetkili login → refresh → admin yüzeyleri ile Angular login/dashboard akışı

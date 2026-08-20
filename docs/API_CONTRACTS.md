@@ -93,6 +93,16 @@ with the institution row. A retry with the same payload returns the original
 returns `409 Conflict`. The admin panel generates the key once per create action
 so transport-level retries do not create duplicate tenants.
 
+`POST /api/assignments` (Coaching) requires the same 16–128 character
+`Idempotency-Key` header. Coaching scopes the key to
+`coaching.assignments.create`, stores a canonical request hash and the created
+assignment ID under a unique `(Scope, Key)` constraint, and commits that record
+with the assignment and student links. Retrying the same payload returns the
+original assignment response; reusing the key with a different teacher,
+institution, target list, score or assignment detail returns `409 Conflict`.
+The key is owned by the caller and must be reused for transport-level retries;
+clients must generate a new key for a distinct assignment.
+
 ## Contract testleri
 
 `tests/Integration/Identity.API.IntegrationTests` altında ProblemDetails,
