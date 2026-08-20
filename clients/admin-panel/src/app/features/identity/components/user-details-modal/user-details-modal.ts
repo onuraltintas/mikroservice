@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IdentityService, UserProfileDto } from '../../../../core/services/identity.service';
+import { IdentityService, UserProfileDto, UserSessionDto } from '../../../../core/services/identity.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
 
 @Component({
@@ -78,6 +78,50 @@ import { ToasterService } from '../../../../core/services/toaster.service';
                     <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Son Giriş</p>
                     <p class="text-gray-900 dark:text-white font-medium">{{ user()?.lastLoginAt ? (user()?.lastLoginAt | date:'dd.MM.yyyy HH:mm') : 'Henüz giriş yapmadı' }}</p>
                   </div>
+                </div>
+
+                <!-- Access Management -->
+                <div class="pt-6 border-t border-gray-100 dark:border-gray-700">
+                  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h5 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Erişim Yönetimi</h5>
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Refresh token değerleri gösterilmez; yalnızca oturum metadata'sı görüntülenir.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      <button type="button" (click)="revokeAllSessions()" [disabled]="sessions().length === 0"
+                        class="rounded-lg border border-amber-300 px-3 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-900/20">
+                        Tüm Oturumları Sonlandır
+                      </button>
+                      <button type="button" (click)="resetMfa()"
+                        class="rounded-lg border border-red-300 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/20">
+                        MFA'yı Sıfırla
+                      </button>
+                    </div>
+                  </div>
+
+                  @if (sessionsLoading()) {
+                    <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Oturumlar yükleniyor...</p>
+                  } @else if (sessions().length === 0) {
+                    <p class="mt-4 rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-500 dark:bg-gray-900/20 dark:text-gray-400">Aktif oturum bulunmuyor.</p>
+                  } @else {
+                    <div class="mt-4 space-y-2">
+                      @for (session of sessions(); track session.id) {
+                        <div class="flex flex-col gap-2 rounded-lg border border-gray-200 px-4 py-3 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
+                          <div class="text-xs text-gray-600 dark:text-gray-300">
+                            <span class="font-semibold">{{ session.createdByIp || 'IP bilinmiyor' }}</span>
+                            <span class="mx-2 text-gray-400">•</span>
+                            Başlangıç: {{ session.createdAt | date:'dd.MM.yyyy HH:mm' }}
+                            <span class="mx-2 text-gray-400">•</span>
+                            Bitiş: {{ session.expiresAt | date:'dd.MM.yyyy HH:mm' }}
+                            @if (session.mfaVerifiedAt) { <span class="ml-2 text-green-600 dark:text-green-400">MFA doğrulandı</span> }
+                          </div>
+                          <button type="button" (click)="revokeSession(session)" class="self-start rounded-md px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-900/20 sm:self-auto">
+                            Sonlandır
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  }
                 </div>
 
                 <!-- Roles & Permissions -->
@@ -192,6 +236,8 @@ export class UserDetailsModalComponent implements OnInit {
   private toaster = inject(ToasterService);
 
   user = signal<UserProfileDto | null>(null);
+  sessions = signal<UserSessionDto[]>([]);
+  sessionsLoading = signal(false);
   loading = signal(true);
   error = signal<string | null>(null);
 
@@ -207,6 +253,7 @@ export class UserDetailsModalComponent implements OnInit {
       next: (res) => {
         this.user.set(res);
         this.loading.set(false);
+        this.loadSessions();
       },
       error: (err) => {
         console.error('User detail error:', err);
@@ -214,6 +261,69 @@ export class UserDetailsModalComponent implements OnInit {
         this.loading.set(false);
         this.toaster.error('Bilgiler alınırken bir hata oluştu.');
       }
+    });
+  }
+
+  loadSessions() {
+    this.sessionsLoading.set(true);
+    this.identityService.getUserSessions(this.userId).subscribe({
+      next: (sessions) => {
+        this.sessions.set(sessions);
+        this.sessionsLoading.set(false);
+      },
+      error: () => {
+        this.sessions.set([]);
+        this.sessionsLoading.set(false);
+        this.toaster.error('Aktif oturumlar yüklenemedi.');
+      }
+    });
+  }
+
+  async revokeSession(session: UserSessionDto) {
+    const confirmed = await this.toaster.confirm(
+      'Oturumu Sonlandır',
+      'Bu oturumu sonlandırmak istediğinize emin misiniz?',
+      'Evet, sonlandır');
+    if (!confirmed) return;
+
+    this.identityService.revokeUserSession(this.userId, session.id).subscribe({
+      next: () => {
+        this.sessions.update(current => current.filter(item => item.id !== session.id));
+        this.toaster.success('Oturum sonlandırıldı.');
+      },
+      error: () => this.toaster.error('Oturum sonlandırılamadı.')
+    });
+  }
+
+  async revokeAllSessions() {
+    const confirmed = await this.toaster.confirm(
+      'Tüm Oturumları Sonlandır',
+      'Kullanıcının tüm aktif oturumları kapatılacak. Devam etmek istiyor musunuz?',
+      'Evet, hepsini kapat');
+    if (!confirmed) return;
+
+    this.identityService.revokeAllUserSessions(this.userId).subscribe({
+      next: () => {
+        this.sessions.set([]);
+        this.toaster.success('Tüm oturumlar sonlandırıldı.');
+      },
+      error: () => this.toaster.error('Oturumlar sonlandırılamadı.')
+    });
+  }
+
+  async resetMfa() {
+    const confirmed = await this.toaster.confirm(
+      'MFA Sıfırla',
+      'MFA kurulumu ve kurtarma kodları silinecek, tüm oturumlar kapatılacak.',
+      'Evet, MFA sıfırla');
+    if (!confirmed) return;
+
+    this.identityService.resetUserMfa(this.userId).subscribe({
+      next: () => {
+        this.sessions.set([]);
+        this.toaster.success('MFA sıfırlandı; kullanıcı yeniden kurulum yapmalıdır.');
+      },
+      error: () => this.toaster.error('MFA sıfırlanamadı.')
     });
   }
 
