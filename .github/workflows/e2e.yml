@@ -13,6 +13,11 @@ on:
         required: false
         default: false
         type: boolean
+      run_registration:
+        description: 'Run disposable registration and MailCatcher email-confirmation flow'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -35,6 +40,8 @@ jobs:
       E2E_REQUIRED: 'true'
       E2E_RUN_UI: ${{ inputs.run_ui }}
       E2E_RUN_SUPPORT_WRITE: ${{ inputs.run_support_write }}
+      E2E_RUN_REGISTRATION: ${{ inputs.run_registration }}
+      E2E_MAILCATCHER_API_BASE_URL: ${{ secrets.E2E_MAILCATCHER_API_BASE_URL }}
       E2E_DISPOSABLE_ENV: ${{ vars.E2E_DISPOSABLE_ENV }}
       E2E_START_UI: 'false'
     steps:
@@ -54,6 +61,16 @@ jobs:
           if [[ "$E2E_RUN_SUPPORT_WRITE" == "true" ]]; then
             test "$E2E_DISPOSABLE_ENV" = 'true' || {
               echo 'run_support_write=true requires staging variable E2E_DISPOSABLE_ENV=true.'
+              exit 1
+            }
+          fi
+          if [[ "$E2E_RUN_REGISTRATION" == "true" ]]; then
+            test -n "$E2E_MAILCATCHER_API_BASE_URL" || {
+              echo 'run_registration=true requires E2E_MAILCATCHER_API_BASE_URL.'
+              exit 1
+            }
+            test "$E2E_DISPOSABLE_ENV" = 'true' || {
+              echo 'run_registration=true requires staging variable E2E_DISPOSABLE_ENV=true.'
               exit 1
             }
           fi

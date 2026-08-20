@@ -14,12 +14,16 @@ Apache-2.0 lisanslı bir geliştirme bağımlılığıdır.
 - Admin panel login ekranının tarayıcıda açılması
 - Yetkili admin ile panel login → dashboard geçişi (staging kimlik bilgisi gerekir)
 - Disposable ortamda support submit → aynı idempotency anahtarıyla retry
+- Disposable ortamda student registration → MailCatcher verification link → email confirmation
 
 Testler varsayılan olarak yalnızca Docker'da çalışan Gateway'e bağlanır ve
 `http://127.0.0.1:5000` kullanır. E2E testleri business/support verisi yazmaz;
-yetkili akış login ve refresh-token metadata kayıtları oluşturabilir. Kayıt/e-posta, tenant write ve
-SignalR senaryoları disposable staging tenant ve MailCatcher/SMTP erişimi olan
-ayrı bir profile bağlanmalıdır; ortak production verisiyle çalıştırılmamalıdır.
+yetkili akış login ve refresh-token metadata kayıtları oluşturabilir. Kayıt/e-posta,
+tenant write ve SignalR senaryoları disposable staging tenant ve MailCatcher/SMTP
+erişimi olan ayrı bir profile bağlanmalıdır; ortak production verisiyle
+çalıştırılmamalıdır. Notification servisinin doğrulama bağlantısı
+`PUBLIC_APP_BASE_URL` ile üretilir; staging/production ortamında `localhost`
+değeri kullanılmamalıdır.
 
 ## Lokal çalıştırma
 
@@ -68,6 +72,16 @@ $env:E2E_RUN_SUPPORT_WRITE = 'true'
 npm run test:critical --prefix tests/E2E
 ```
 
+Kayıt ve doğrulama akışı da yalnız disposable ortamda çalıştırılır. MailCatcher
+API'si test koşucusundan erişilebilir olmalı ve URL ayrıca verilmelidir:
+
+```powershell
+$env:E2E_DISPOSABLE_ENV = 'true'
+$env:E2E_RUN_REGISTRATION = 'true'
+$env:E2E_MAILCATCHER_API_BASE_URL = 'http://127.0.0.1:1080'
+npm test --prefix tests/E2E -- --project=registration-disposable
+```
+
 `E2E_REQUIRED=true` kimlik bilgisi yoksa test keşfi sırasında fail eder; yanlışlıkla
 korumalı akışın sessizce skip edilmesini engeller. Kimlik bilgisi verilmezse
 yalnızca anonim Gateway sözleşmesi ve public login ekranı çalışır; bu lokal smoke
@@ -94,6 +108,9 @@ her test kendi disposable tenant'ını üretmeli ve teardown yapmalıdır.
 Support write akışı varsayılan olarak kapalıdır; manuel workflow'da yalnız
 `run_support_write=true` ve staging environment variable
 `E2E_DISPOSABLE_ENV=true` ise açılır.
+Registration akışı için ayrıca `run_registration=true`,
+`E2E_MAILCATCHER_API_BASE_URL` secret'ı ve aynı disposable environment koşulu
+gerekir.
 
 ## Rapor ve hata ayıklama
 

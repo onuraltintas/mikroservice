@@ -187,6 +187,9 @@ Mesaj replay'i otomatik yapılmaz; dead-letter ve durable queue replay'i olay
   payı geçince eski secret halkadan çıkarılır.
 - `INTERNAL_SERVICE_API_KEY`, PostgreSQL, Redis, RabbitMQ, SMTP ve Data Protection
   certificate secret'ları aynı anda değil, bağımlılık sırasıyla döndürülür.
+- `PUBLIC_APP_BASE_URL` staging/production'da doğrulanmış public HTTPS frontend
+  origin'ine ayarlanır; kayıt ve parola e-postelerindeki bağlantılar bu değeri
+  kullanır.
 - Eski değerler revoke edilmeden önce iki replica'da health/readiness ve
   service-to-service çağrı smoke testi alınır. Değişkenler loglanmaz.
 

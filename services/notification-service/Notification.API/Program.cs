@@ -2,6 +2,7 @@ using EduPlatform.Shared.Infrastructure.Logging;
 using EduPlatform.Shared.Infrastructure.Observability;
 using MassTransit;
 using Notification.Application.Consumers;
+using Notification.Application.Configuration;
 using Notification.Application.Interfaces;
 using Notification.Infrastructure.Services;
 using Notification.Infrastructure.Persistence;
@@ -64,6 +65,14 @@ builder.Host.UseCustomSerilog();
 builder.Services.AddPersistentDataProtection(builder.Configuration, "EduPlatform.Notification", builder.Environment.IsProduction());
 builder.Services.AddEduPlatformOpenTelemetry(builder.Configuration, builder.Environment, "EduPlatform.Notification");
 builder.Services.AddGlobalExceptionHandler();
+builder.Services.AddOptions<PublicAppUrlOptions>()
+    .Bind(builder.Configuration.GetSection(PublicAppUrlOptions.SectionName))
+    .Validate(
+        options => PublicAppUrlOptions.IsValidForEnvironment(
+            options.BaseUrl,
+            builder.Environment.IsProduction()),
+        "PublicApp:BaseUrl must be an absolute HTTP(S) URL without credentials, query, or fragment; production cannot use loopback.")
+    .ValidateOnStart();
 
 // Add services
 builder.Services.AddControllers()

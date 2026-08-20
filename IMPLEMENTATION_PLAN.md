@@ -120,9 +120,11 @@ ilerleyecektir:
    protected admin yüzeylerinin 401 sözleşmesi Docker üzerinde doğrulandı.
    Yetkili login → refresh → admin yüzeyleri ile Angular login/dashboard akışı
    Playwright testine bağlandı; staging SystemAdmin kimliği olmadığından lokal
-   koşuda bilinçli olarak skip edilir. Register → email confirmation,
-   tenant-scoped coaching write/read ve SignalR için disposable staging tenant/
-   SMTP fixture'ı ayrıca bağlanacak; ortak production verisiyle çalıştırılmayacak.
+   koşuda bilinçli olarak skip edilir. Disposable profile'da registration →
+   MailCatcher verification → email confirmation akışı da bağlandı. Tenant-scoped
+   coaching write/read ve SignalR için disposable staging tenant/fixture
+   entegrasyonu hâlâ ayrı bir profile bağlanacak; ortak production verisiyle
+   çalıştırılmayacak.
 4. **Kapasite doğrulama:** disposable tenant ile smoke → baseline → 64/128/256
    worker → soak koşularını çalıştır; p95/p99, 5xx/429, DB pool, Redis,
    RabbitMQ lag/dead-letter ve container throttling ölç.

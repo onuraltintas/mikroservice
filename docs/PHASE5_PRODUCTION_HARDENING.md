@@ -174,6 +174,10 @@ politikaları uygular.
   `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM_EMAIL` ve gerekiyorsa SMTP kullanıcı adı/
   parolasını gerçek sağlayıcıyla değiştirin. MailCatcher production profilinde
   başlatılmaz.
+- Doğrulama ve parola akışlarının tarayıcı bağlantıları Notification servisinde
+  `PublicApp__BaseUrl` / `PUBLIC_APP_BASE_URL` üzerinden üretilir. Bu değer
+  public HTTPS frontend origin'i olmalı; credentials, query veya fragment
+  içermemeli ve production'da `localhost` olmamalıdır.
 - RabbitMQ tek node için sabit `rabbit@rabbitmq` node adı kullanır. Mevcut
   `rabbitmq_data` volume'u eski container-id tabanlı node adıyla oluşturulduysa
   bu geçiş queue/message metadata'sını otomatik taşımaz. Production geçişinden

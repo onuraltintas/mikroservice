@@ -1,6 +1,8 @@
 using EduPlatform.Shared.Contracts.Events.Identity;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Notification.Application.Configuration;
 using Notification.Application.Interfaces;
 
 namespace Notification.Application.Consumers;
@@ -9,11 +11,16 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
 {
     private readonly IEmailDeliveryQueue _emailDeliveryQueue;
     private readonly INotificationDbContext _dbContext;
+    private readonly PublicAppUrlOptions _publicAppUrlOptions;
 
-    public UserRegisteredConsumer(IEmailDeliveryQueue emailDeliveryQueue, INotificationDbContext dbContext)
+    public UserRegisteredConsumer(
+        IEmailDeliveryQueue emailDeliveryQueue,
+        INotificationDbContext dbContext,
+        IOptions<PublicAppUrlOptions> publicAppUrlOptions)
     {
         _emailDeliveryQueue = emailDeliveryQueue;
         _dbContext = dbContext;
+        _publicAppUrlOptions = publicAppUrlOptions.Value;
     }
 
     public async Task Consume(ConsumeContext<UserRegisteredEvent> context)
@@ -27,8 +34,9 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
         string subject;
         string body;
 
-        // Frontend URL for verification
-        var verificationLink = $"http://localhost:4200/auth/confirm-email?token={message.VerificationToken}&userId={message.UserId}";
+        var verificationLink = _publicAppUrlOptions.BuildEmailVerificationLink(
+            message.UserId,
+            message.VerificationToken);
 
         if (template != null)
         {

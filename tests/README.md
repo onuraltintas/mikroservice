@@ -141,7 +141,7 @@ Yetkili ve UI akışlarının ortam değişkenleri, staging kuralları ve CI job
 
 | Component | Integration Tests | Unit Tests | E2E Tests |
 |-----------|-------------------|------------|-----------|
-| **Identity Service** | ✅ contract + integration suite | 🔄 planned | ✅ critical Gateway journeys |
+| **Identity Service** | ✅ contract + integration suite | 🔄 planned | ✅ critical Gateway + registration confirmation |
 | **Coaching Service** | ✅ contract + idempotency/event tests | 🔄 planned | ✅ Gateway journeys (environment-gated) |
 | **API Gateway** | ✅ metadata + smoke | N/A | ✅ Playwright critical flows |
 | **Shared Infrastructure** | ✅ Fixtures ready | N/A | N/A |

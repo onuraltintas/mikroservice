@@ -4,6 +4,7 @@ const apiBaseUrl = process.env.E2E_API_BASE_URL ?? process.env.API_BASE_URL ?? '
 const uiBaseUrl = process.env.E2E_UI_BASE_URL ?? process.env.BASE_URL ?? 'http://127.0.0.1:4200';
 const hasAdminCredentials = Boolean(process.env.E2E_ADMIN_EMAIL && process.env.E2E_ADMIN_PASSWORD);
 const runsSupportWrite = process.env.E2E_RUN_SUPPORT_WRITE === 'true';
+const runsRegistration = process.env.E2E_RUN_REGISTRATION === 'true';
 
 if (process.env.E2E_REQUIRED === 'true' && !hasAdminCredentials) {
   throw new Error('E2E_REQUIRED=true requires E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD.');
@@ -11,6 +12,14 @@ if (process.env.E2E_REQUIRED === 'true' && !hasAdminCredentials) {
 
 if (runsSupportWrite && process.env.E2E_DISPOSABLE_ENV !== 'true') {
   throw new Error('E2E_RUN_SUPPORT_WRITE=true requires E2E_DISPOSABLE_ENV=true.');
+}
+
+if (runsRegistration && process.env.E2E_DISPOSABLE_ENV !== 'true') {
+  throw new Error('E2E_RUN_REGISTRATION=true requires E2E_DISPOSABLE_ENV=true.');
+}
+
+if (runsRegistration && !process.env.E2E_MAILCATCHER_API_BASE_URL) {
+  throw new Error('E2E_RUN_REGISTRATION=true requires E2E_MAILCATCHER_API_BASE_URL.');
 }
 
 export default defineConfig({
@@ -50,6 +59,16 @@ export default defineConfig({
         trace: 'off',
         video: 'off',
         screenshot: 'off'
+      }
+    },
+    {
+      name: 'registration-disposable',
+      testMatch: /registration-confirmation\.spec\.mjs/,
+      use: {
+        baseURL: apiBaseUrl,
+        trace: 'off',
+        screenshot: 'off',
+        video: 'off'
       }
     }
   ],
