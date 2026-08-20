@@ -896,6 +896,31 @@ public class InvitationRepository : IInvitationRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<List<PendingInvitationReadModel>> GetPendingWithInviterEmailAsync(
+        string email,
+        CancellationToken cancellationToken)
+    {
+        var normalizedEmail = email.ToLowerInvariant();
+        return await (
+            from invitation in _context.Invitations.AsNoTracking()
+            join user in _context.Users.AsNoTracking()
+                on invitation.InviterId equals user.Id into inviterUsers
+            from user in inviterUsers.DefaultIfEmpty()
+            where invitation.InviteeEmail == normalizedEmail
+                && invitation.Status == Identity.Domain.Enums.InvitationStatus.Pending
+                && invitation.ExpiresAt > DateTime.UtcNow
+            orderby invitation.CreatedAt descending
+            select new PendingInvitationReadModel(
+                invitation.Id,
+                user != null && user.IsActive ? user.Email : "system",
+                invitation.Type,
+                invitation.Status,
+                invitation.Message,
+                invitation.CreatedAt,
+                invitation.ExpiresAt)
+        ).ToListAsync(cancellationToken);
+    }
+
     public async Task<List<Invitation>> GetByInviterIdAsync(Guid inviterId, CancellationToken cancellationToken)
     {
         return await _context.Invitations

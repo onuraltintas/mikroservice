@@ -25,12 +25,14 @@ public class GetMyInvitationsQueryHandler : IRequestHandler<GetMyInvitationsQuer
             return Result.Failure<List<InvitationDto>>(new Error("Auth.Unauthorized", "User is not authenticated"));
         }
 
-        var invitations = await _invitationRepository.GetPendingByEmailAsync(_currentUserService.Email, cancellationToken);
+        var invitations = await _invitationRepository.GetPendingWithInviterEmailAsync(
+            _currentUserService.Email,
+            cancellationToken);
 
         var dtos = invitations.Select(i => new InvitationDto
         {
             Id = i.Id,
-            InviterEmail = "system@eduplatform.com", // TODO: Get inviter email
+            InviterEmail = i.InviterEmail,
             Type = i.Type.ToString(),
             Status = i.Status.ToString(),
             Message = i.Message,

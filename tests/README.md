@@ -23,13 +23,13 @@ tests/
 │   ├── Coaching.API.IntegrationTests/
 │   └── Gateway.IntegrationTests/
 │
-├── Unit/                             # Unit tests (TODO)
+├── Unit/                             # Domain/application unit tests (planned)
 │   ├── Identity.Domain.Tests/
 │   ├── Identity.Application.Tests/
 │   ├── Coaching.Domain.Tests/
 │   └── Coaching.Application.Tests/
 │
-└── E2E/                              # End-to-end tests (TODO)
+└── E2E/                              # Playwright critical user journeys
     └── EduPlatform.E2E.Tests/
 ```
 
@@ -107,7 +107,7 @@ public class EmailTests
 }
 ```
 
-### 2. **Unit Tests** (TODO)
+### 2. **Unit Tests** (planned next)
 
 Fast, isolated tests for business logic:
 
@@ -141,9 +141,9 @@ Yetkili ve UI akışlarının ortam değişkenleri, staging kuralları ve CI job
 
 | Component | Integration Tests | Unit Tests | E2E Tests |
 |-----------|-------------------|------------|-----------|
-| **Identity Service** | ✅ 3 tests | 🔄 TODO | 🔄 TODO |
-| **Coaching Service** | 🔄 TODO | 🔄 TODO | 🔄 TODO |
-| **API Gateway** | ✅ Gateway smoke | N/A | ✅ Playwright critical flows |
+| **Identity Service** | ✅ contract + integration suite | 🔄 planned | ✅ critical Gateway journeys |
+| **Coaching Service** | ✅ contract + idempotency/event tests | 🔄 planned | ✅ Gateway journeys (environment-gated) |
+| **API Gateway** | ✅ metadata + smoke | N/A | ✅ Playwright critical flows |
 | **Shared Infrastructure** | ✅ Fixtures ready | N/A | N/A |
 
 ## 🛠️ Testcontainers
