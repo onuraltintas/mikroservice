@@ -1,5 +1,6 @@
 using Coaching.Application.Interfaces;
 using Coaching.Application.Authorization;
+using EduPlatform.Shared.Contracts.Events.Coaching;
 
 using MediatR;
 
@@ -13,15 +14,18 @@ public class SubmitAssignmentCommandHandler : IRequestHandler<SubmitAssignmentCo
     private readonly IAssignmentRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingEventPublisher _eventPublisher;
 
     public SubmitAssignmentCommandHandler(
         IAssignmentRepository repository,
         IUnitOfWork unitOfWork,
-        ICoachingAccessPolicy accessPolicy)
+        ICoachingAccessPolicy accessPolicy,
+        ICoachingEventPublisher eventPublisher)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task<SubmitAssignmentResponse> Handle(
@@ -39,15 +43,20 @@ public class SubmitAssignmentCommandHandler : IRequestHandler<SubmitAssignmentCo
         // Submit assignment (domain logic)
         assignment.SubmitAssignment(command.StudentId, command.StudentNote);
 
-        // Save
-        await _repository.UpdateAsync(assignment, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
         // Get submitted student
         var studentAssignment = assignment.AssignedStudents
             .First(s => s.StudentId == command.StudentId);
 
-        // TODO: Publish AssignmentSubmittedEvent to Notification Service
+        await _eventPublisher.PublishAsync(
+            new AssignmentSubmittedEvent(
+                assignment.Id,
+                command.StudentId,
+                studentAssignment.SubmittedAt!.Value),
+            cancellationToken);
+
+        // Save the aggregate and its outbox message in one transaction.
+        await _repository.UpdateAsync(assignment, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new SubmitAssignmentResponse(
             AssignmentId: assignment.Id,

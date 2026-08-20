@@ -5,6 +5,7 @@ using Coaching.Application.Authorization;
 using Coaching.Application.Exceptions;
 using Coaching.Application.Idempotency;
 using EduPlatform.Shared.Kernel.Exceptions;
+using EduPlatform.Shared.Contracts.Events.Coaching;
 
 using MediatR;
 
@@ -19,6 +20,7 @@ public class CreateAssignmentCommandHandler : IRequestHandler<CreateAssignmentCo
 
     private readonly IAssignmentRepository _assignmentRepository;
     private readonly IIdempotencyRepository _idempotencyRepository;
+    private readonly ICoachingEventPublisher _eventPublisher;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
     private readonly ICoachingIdentityAuthorizationClient _identityAuthorizationClient;
@@ -28,13 +30,15 @@ public class CreateAssignmentCommandHandler : IRequestHandler<CreateAssignmentCo
         IUnitOfWork unitOfWork,
         ICoachingAccessPolicy accessPolicy,
         ICoachingIdentityAuthorizationClient identityAuthorizationClient,
-        IIdempotencyRepository idempotencyRepository)
+        IIdempotencyRepository idempotencyRepository,
+        ICoachingEventPublisher eventPublisher)
     {
         _assignmentRepository = assignmentRepository;
         _idempotencyRepository = idempotencyRepository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
         _identityAuthorizationClient = identityAuthorizationClient;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task<CreateAssignmentResponse> Handle(CreateAssignmentCommand request, CancellationToken cancellationToken)
@@ -122,6 +126,15 @@ public class CreateAssignmentCommandHandler : IRequestHandler<CreateAssignmentCo
                 requestHash,
                 assignment.Id),
             cancellationToken);
+        await _eventPublisher.PublishAsync(
+            new AssignmentCreatedEvent(
+                assignment.Id,
+                assignment.TeacherId,
+                assignment.InstitutionId,
+                assignment.Title,
+                assignment.DueDate,
+                assignment.AssignedStudents.Select(student => student.StudentId).ToArray()),
+            cancellationToken);
 
         try
         {
@@ -140,8 +153,6 @@ public class CreateAssignmentCommandHandler : IRequestHandler<CreateAssignmentCo
 
             throw IdempotencyConflict();
         }
-
-        // TODO: Publish AssignmentCreatedEvent via MassTransit (for notifications)
 
         return new CreateAssignmentResponse(
             AssignmentId: assignment.Id,

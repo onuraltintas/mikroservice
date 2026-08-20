@@ -15,12 +15,14 @@ public sealed class CoachingAssignmentIdempotencyTests
         var assignments = new InMemoryAssignmentRepository();
         var idempotency = new InMemoryIdempotencyRepository();
         var unitOfWork = new CountingUnitOfWork();
+        var publisher = new NoopCoachingEventPublisher();
         var handler = new CreateAssignmentCommandHandler(
             assignments,
             unitOfWork,
             new AllowTeacherPolicy(),
             new AllowIdentityAuthorizationClient(),
-            idempotency);
+            idempotency,
+            publisher);
 
         var key = "assignment-key-20260820";
         var command = new CreateAssignmentCommand
@@ -45,6 +47,7 @@ public sealed class CoachingAssignmentIdempotencyTests
         replay.AssignmentId.Should().Be(first.AssignmentId);
         assignments.Items.Should().ContainSingle();
         unitOfWork.SaveCount.Should().Be(1);
+        publisher.Messages.Should().ContainSingle();
 
         var changed = command with { Title = "Different payload" };
         var conflict = () => handler.Handle(changed, CancellationToken.None);

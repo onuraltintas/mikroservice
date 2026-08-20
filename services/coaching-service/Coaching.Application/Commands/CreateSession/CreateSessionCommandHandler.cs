@@ -4,6 +4,7 @@ using Coaching.Application.Authorization;
 using Coaching.Application.Exceptions;
 using Coaching.Application.Idempotency;
 using EduPlatform.Shared.Kernel.Exceptions;
+using EduPlatform.Shared.Contracts.Events.Coaching;
 using MediatR;
 
 namespace Coaching.Application.Commands.CreateSession;
@@ -14,6 +15,7 @@ public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand,
 
     private readonly ICoachingSessionRepository _repository;
     private readonly IIdempotencyRepository _idempotencyRepository;
+    private readonly ICoachingEventPublisher _eventPublisher;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
     private readonly ICoachingIdentityAuthorizationClient _identityAuthorizationClient;
@@ -23,13 +25,15 @@ public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand,
         IUnitOfWork unitOfWork,
         ICoachingAccessPolicy accessPolicy,
         ICoachingIdentityAuthorizationClient identityAuthorizationClient,
-        IIdempotencyRepository idempotencyRepository)
+        IIdempotencyRepository idempotencyRepository,
+        ICoachingEventPublisher eventPublisher)
     {
         _repository = repository;
         _idempotencyRepository = idempotencyRepository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
         _identityAuthorizationClient = identityAuthorizationClient;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task<CreateSessionResponse> Handle(
@@ -84,6 +88,14 @@ public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand,
         await _idempotencyRepository.AddAsync(
             IdempotencyRecord.Create(IdempotencyScope, key!, requestHash, session.Id),
             cancellationToken);
+        await _eventPublisher.PublishAsync(
+            new SessionScheduledEvent(
+                session.Id,
+                session.TeacherId,
+                session.InstitutionId,
+                session.Attendances.Select(attendance => attendance.StudentId).ToArray(),
+                session.ScheduledDate),
+            cancellationToken);
 
         try
         {
@@ -97,8 +109,6 @@ public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand,
 
             throw IdempotencyConflict();
         }
-
-        // TODO: Publish SessionScheduledEvent
 
         return new CreateSessionResponse(session.Id);
     }

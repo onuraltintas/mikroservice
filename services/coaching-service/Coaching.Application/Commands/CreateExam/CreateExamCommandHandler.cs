@@ -4,6 +4,7 @@ using Coaching.Application.Authorization;
 using Coaching.Application.Exceptions;
 using Coaching.Application.Idempotency;
 using EduPlatform.Shared.Kernel.Exceptions;
+using EduPlatform.Shared.Contracts.Events.Coaching;
 
 using MediatR;
 
@@ -15,6 +16,7 @@ public class CreateExamCommandHandler : IRequestHandler<CreateExamCommand, Creat
 
     private readonly IExamRepository _repository;
     private readonly IIdempotencyRepository _idempotencyRepository;
+    private readonly ICoachingEventPublisher _eventPublisher;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
     private readonly ICoachingIdentityAuthorizationClient _identityAuthorizationClient;
@@ -24,13 +26,15 @@ public class CreateExamCommandHandler : IRequestHandler<CreateExamCommand, Creat
         IUnitOfWork unitOfWork,
         ICoachingAccessPolicy accessPolicy,
         ICoachingIdentityAuthorizationClient identityAuthorizationClient,
-        IIdempotencyRepository idempotencyRepository)
+        IIdempotencyRepository idempotencyRepository,
+        ICoachingEventPublisher eventPublisher)
     {
         _repository = repository;
         _idempotencyRepository = idempotencyRepository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
         _identityAuthorizationClient = identityAuthorizationClient;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task<CreateExamResponse> Handle(CreateExamCommand command, CancellationToken cancellationToken)
@@ -76,6 +80,14 @@ public class CreateExamCommandHandler : IRequestHandler<CreateExamCommand, Creat
         await _repository.AddAsync(exam, cancellationToken);
         await _idempotencyRepository.AddAsync(
             IdempotencyRecord.Create(IdempotencyScope, key!, requestHash, exam.Id),
+            cancellationToken);
+        await _eventPublisher.PublishAsync(
+            new ExamCreatedEvent(
+                exam.Id,
+                exam.CreatedByTeacherId,
+                exam.InstitutionId,
+                exam.Title,
+                exam.ExamDate),
             cancellationToken);
 
         try

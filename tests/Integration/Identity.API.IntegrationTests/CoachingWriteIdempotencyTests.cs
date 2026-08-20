@@ -18,12 +18,14 @@ public sealed class CoachingWriteIdempotencyTests
     {
         var repository = new InMemoryExamRepository();
         var unitOfWork = new CountingUnitOfWork();
+        var publisher = new NoopCoachingEventPublisher();
         var handler = new CreateExamCommandHandler(
             repository,
             unitOfWork,
             new AllowTeacherPolicy(),
             new AllowIdentityAuthorizationClient(),
-            new InMemoryIdempotencyRepository());
+            new InMemoryIdempotencyRepository(),
+            publisher);
         var command = new CreateExamCommand(
             Guid.NewGuid(),
             "Mock exam",
@@ -40,6 +42,7 @@ public sealed class CoachingWriteIdempotencyTests
         replay.Should().Be(first);
         repository.Items.Should().ContainSingle();
         unitOfWork.SaveCount.Should().Be(1);
+        publisher.Messages.Should().ContainSingle();
     }
 
     [Fact]
@@ -47,12 +50,14 @@ public sealed class CoachingWriteIdempotencyTests
     {
         var repository = new InMemorySessionRepository();
         var unitOfWork = new CountingUnitOfWork();
+        var publisher = new NoopCoachingEventPublisher();
         var handler = new CreateSessionCommandHandler(
             repository,
             unitOfWork,
             new AllowTeacherPolicy(),
             new AllowIdentityAuthorizationClient(),
-            new InMemoryIdempotencyRepository());
+            new InMemoryIdempotencyRepository(),
+            publisher);
         var command = new CreateSessionCommand(
             Guid.NewGuid(),
             Guid.NewGuid(),
@@ -69,6 +74,7 @@ public sealed class CoachingWriteIdempotencyTests
         replay.Should().Be(first);
         repository.Items.Should().ContainSingle();
         unitOfWork.SaveCount.Should().Be(1);
+        publisher.Messages.Should().ContainSingle();
     }
 
     [Fact]
@@ -76,12 +82,14 @@ public sealed class CoachingWriteIdempotencyTests
     {
         var repository = new InMemoryGoalRepository();
         var unitOfWork = new CountingUnitOfWork();
+        var publisher = new NoopCoachingEventPublisher();
         var handler = new CreateGoalCommandHandler(
             repository,
             unitOfWork,
             new AllowTeacherPolicy(),
             new AllowIdentityAuthorizationClient(),
-            new InMemoryIdempotencyRepository());
+            new InMemoryIdempotencyRepository(),
+            publisher);
         var command = new CreateGoalCommand(
             Guid.NewGuid(),
             "Exam preparation",
@@ -98,6 +106,7 @@ public sealed class CoachingWriteIdempotencyTests
         replay.Should().Be(first);
         repository.Items.Should().ContainSingle();
         unitOfWork.SaveCount.Should().Be(1);
+        publisher.Messages.Should().ContainSingle();
     }
 
     [Fact]
@@ -112,12 +121,14 @@ public sealed class CoachingWriteIdempotencyTests
         var repository = new InMemoryExamRepository();
         repository.Items.Add(exam);
         var unitOfWork = new CountingUnitOfWork();
+        var publisher = new NoopCoachingEventPublisher();
         var handler = new AddExamResultCommandHandler(
             repository,
             unitOfWork,
             new AllowTeacherPolicy(),
             new AllowIdentityAuthorizationClient(),
-            new InMemoryIdempotencyRepository());
+            new InMemoryIdempotencyRepository(),
+            publisher);
         var command = new AddExamResultCommand(
             exam.Id,
             Guid.NewGuid(),
@@ -134,6 +145,7 @@ public sealed class CoachingWriteIdempotencyTests
 
         exam.Results.Should().ContainSingle();
         unitOfWork.SaveCount.Should().Be(1);
+        publisher.Messages.Should().ContainSingle();
     }
 
     private sealed class InMemoryIdempotencyRepository : IIdempotencyRepository

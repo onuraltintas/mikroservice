@@ -48,6 +48,9 @@ daha yüksek kapasiteye geçebilen bir platformdur.
   one-shot job'ları migration'ı web replica'larından önce uygular.
 - Consumer endpoint'lerinde exponential retry ve duplicate delivery için inbox
   middleware'i aktiftir.
+- Coaching assignment/exam/session/goal/result ve assignment submit/grade
+  producer'ları versionlanmış shared contracts üzerinden EF outbox'a publish
+  eder; domain write ile event aynı transaction'dadır.
 - SMTP teslimi consumer retry'ından ayrılmış durable `EmailDeliveries` queue ve
   lease-fenced worker ile yürütülür. Kuyruk gövdeleri Data Protection ile
   şifrelenir, gövdeler retention sonunda temizlenirken idempotency tombstone'ları
@@ -101,8 +104,9 @@ ilerleyecektir:
    [bounded context sözleşmesinde](docs/BOUNDED_CONTEXT_CONTRACTS.md) tutulur.
    Yeni Blog, Content ve Analytics servisleri ancak veri sahibi ve olay sözleşmesi
    netleşince eklenecek.
-2. **Idempotency ve audit:** Dış write endpoint'lerinde client idempotency key,
-   audit actor/tenant/event metadata ve replay davranışı ekle. Gateway genel
+2. **Idempotency ve audit — tamamlandı:** Dış write endpoint'lerinde client
+   idempotency key, audit actor/tenant/event metadata ve replay davranışı
+   uygulanmıştır. Gateway genel
    response replay'i yapmaz; kimlik/tenant kontrolünü atlamamak için idempotency
    veri sahibi servisin transaction/unique constraint sınırında kalır. Support
    submit bu modelin örneğidir: support row, e-mail delivery ve Identity-forward

@@ -5,6 +5,7 @@ using Coaching.Application.Interfaces;
 using Coaching.Infrastructure.Data;
 using Coaching.Infrastructure.Repositories;
 using Coaching.Infrastructure.ExternalServices;
+using Coaching.Infrastructure.Messaging;
 using EduPlatform.Shared.Infrastructure.Middleware;
 
 namespace Coaching.Infrastructure;
@@ -58,6 +59,7 @@ public static class DependencyInjection
 
         // Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<ICoachingEventPublisher, MassTransitCoachingEventPublisher>();
         services.AddSingleton<IAdminAuditWriter, CoachingAdminAuditWriter>();
         services.AddHttpClient<ICoachingIdentityAuthorizationClient, IdentityAuthorizationClient>(client =>
         {

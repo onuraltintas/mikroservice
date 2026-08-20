@@ -11,6 +11,13 @@ outbox kaydı aynı PostgreSQL transaction'ında tamamlanır.
 - Coaching de `InboxState`, `OutboxMessage` ve `OutboxState` tablolarını
   `AddMassTransitOutbox` migration'ı ile içerir.
 - `UseBusOutbox()` publish çağrılarını transaction sonrasında broker'a taşır.
+- Coaching assignment, exam, session, goal ve exam-result producer'ları
+  `shared/EduPlatform.Shared.Contracts/Events/Coaching` sözleşmelerini aynı
+  write transaction'ında publish eder. Assignment submit/grade olayları da
+  aggregate güncellemesiyle aynı outbox sınırındadır. Create/result komutları
+  command-level idempotency ile replay edilir; submit/grade olaylarının
+  tüketicileri ise event MessageId/aggregate kimliğiyle duplicate yan etkiyi
+  engellemelidir.
 - Receive endpoint'leri EF inbox/outbox middleware'i kullanır; aynı mesajın
   tekrar teslim edilmesi idempotent işlenir.
 - Notification consumer'ları ve support reply/acknowledgement command'ları
