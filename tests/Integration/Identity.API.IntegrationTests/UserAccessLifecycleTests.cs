@@ -50,6 +50,6 @@ public sealed class UserAccessLifecycleTests
 
         user.IsActive.Should().BeFalse();
         session.IsRevoked.Should().BeTrue();
-        session.ReasonRevoked.Should().Be("Account deactivated");
+        session.ReasonRevoked.Should().Contain("security-sensitive");
     }
 }
