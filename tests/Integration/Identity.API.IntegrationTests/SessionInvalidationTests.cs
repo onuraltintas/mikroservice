@@ -163,6 +163,24 @@ public sealed class SessionInvalidationTests
         user.IsActive.Should().BeTrue();
     }
 
+    [Fact]
+    public async Task LastActiveSystemAdministrator_ShouldNotBeDeleted()
+    {
+        await using var context = CreateContext();
+        var user = User.Create(Guid.NewGuid(), "last-admin@example.test", "Last", "Admin");
+        var role = Role.Create("SystemAdmin", "System administrator", isSystemRole: true);
+        user.AddRole(new UserRole(user.Id, role.Id));
+        context.AddRange(user, role);
+        await context.SaveChangesAsync();
+
+        var result = await CreateService(context).DeleteUserAsync(
+            user.Id, CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Identity.LastSystemAdmin");
+        (await context.Users.AnyAsync(candidate => candidate.Id == user.Id)).Should().BeTrue();
+    }
+
     private static RefreshToken AddRefreshToken(User user)
     {
         var refreshToken = RefreshToken.Create(

@@ -132,6 +132,13 @@ public class LocalIdentityService : IIdentityService
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
         if (user == null) return Result.Failure(new Error("Identity.UserNotFound", "User not found."));
+
+        if (await IsLastActiveSystemAdministratorAsync(user, cancellationToken))
+        {
+            return Result.Failure(new Error(
+                "Identity.LastSystemAdmin",
+                "Son aktif SystemAdmin hesabı silinemez."));
+        }
         
         _userRepository.Delete(user);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -143,6 +150,13 @@ public class LocalIdentityService : IIdentityService
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
         if (user == null) return Result.Failure(new Error("Identity.UserNotFound", "User not found."));
+
+        if (await IsLastActiveSystemAdministratorAsync(user, cancellationToken))
+        {
+            return Result.Failure(new Error(
+                "Identity.LastSystemAdmin",
+                "Son aktif SystemAdmin hesabı pasifleştirilemez."));
+        }
 
         user.Deactivate();
         await _userRepository.RevokeActiveRefreshTokensAsync(
@@ -253,6 +267,14 @@ public class LocalIdentityService : IIdentityService
             var role = await _roleRepository.GetByNameAsync(roleName, cancellationToken);
             if (role == null) return Result.Failure(new Error("Identity.RoleNotFound", $"Role '{roleName}' not found."));
 
+            if (string.Equals(role.Name, Identity.Domain.Enums.UserRole.SystemAdmin.ToString(), StringComparison.OrdinalIgnoreCase)
+                && await IsLastActiveSystemAdministratorAsync(user, cancellationToken))
+            {
+                return Result.Failure(new Error(
+                    "Identity.LastSystemAdmin",
+                    "Son aktif SystemAdmin rolü kaldırılamaz."));
+            }
+
             user.RemoveRole(role.Id);
             await _userRepository.RevokeActiveRefreshTokensAsync(
                 userId,
@@ -328,5 +350,31 @@ public class LocalIdentityService : IIdentityService
         {
             return Result.Failure(new Error("RevokeToken.Exception", ex.Message));
         }
+    }
+
+    private async Task<bool> IsLastActiveSystemAdministratorAsync(
+        User user,
+        CancellationToken cancellationToken)
+    {
+        if (!user.IsActive || !user.Roles.Any(role =>
+                string.Equals(
+                    role.Role?.Name,
+                    Identity.Domain.Enums.UserRole.SystemAdmin.ToString(),
+                    StringComparison.OrdinalIgnoreCase)))
+        {
+            return false;
+        }
+
+        var systemAdminRoleIds = await _context.Roles
+            .Where(role => role.Name == Identity.Domain.Enums.UserRole.SystemAdmin.ToString())
+            .Select(role => role.Id)
+            .ToListAsync(cancellationToken);
+
+        var activeAdministrators = await _context.Users
+            .Where(candidate => candidate.IsActive
+                && candidate.Roles.Any(userRole => systemAdminRoleIds.Contains(userRole.RoleId)))
+            .CountAsync(cancellationToken);
+
+        return activeAdministrators <= 1;
     }
 }
