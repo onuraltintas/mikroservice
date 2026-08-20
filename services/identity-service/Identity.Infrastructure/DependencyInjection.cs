@@ -70,6 +70,7 @@ public static class DependencyInjection
         services.AddScoped<IConfigurationService, Services.ConfigurationService>();
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<IMultiFactorService, MultiFactorService>();
+        services.AddScoped<IUserAccessManagementService, Services.UserAccessManagementService>();
         services.AddSingleton<IAdminAuditWriter, IdentityAdminAuditWriter>();
 
         // Repositories

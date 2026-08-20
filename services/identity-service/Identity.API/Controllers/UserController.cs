@@ -21,11 +21,16 @@ public class UserController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IUserAccessManagementService _accessManagement;
 
-    public UserController(IMediator mediator, ICurrentUserService currentUserService)
+    public UserController(
+        IMediator mediator,
+        ICurrentUserService currentUserService,
+        IUserAccessManagementService accessManagement)
     {
         _mediator = mediator;
         _currentUserService = currentUserService;
+        _accessManagement = accessManagement;
     }
 
     /// <summary>
@@ -331,4 +336,53 @@ public class UserController : ControllerBase
     public record UpdateUserRequest(string FirstName, string LastName, string? PhoneNumber);
     
     public record RoleRequest(string RoleName);
+
+    [HttpGet("{id:guid}/sessions")]
+    [HasPermission(Permissions.Users.Edit)]
+    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
+    public async Task<IActionResult> GetSessions(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _accessManagement.GetActiveSessionsAsync(id, cancellationToken);
+        return result.IsSuccess ? Ok(result.Value) : NotFound(new { Error = result.Error });
+    }
+
+    [HttpDelete("{id:guid}/sessions/{sessionId:guid}")]
+    [HasPermission(Permissions.Users.Edit)]
+    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
+    public async Task<IActionResult> RevokeSession(
+        Guid id,
+        Guid sessionId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _accessManagement.RevokeSessionAsync(
+            id, sessionId, HttpContext.Connection.RemoteIpAddress?.ToString(), cancellationToken);
+        return result.IsSuccess ? NoContent() : NotFound(new { Error = result.Error });
+    }
+
+    [HttpDelete("{id:guid}/sessions")]
+    [HasPermission(Permissions.Users.Edit)]
+    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
+    public async Task<IActionResult> RevokeAllSessions(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _accessManagement.RevokeAllSessionsAsync(
+            id,
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            "Administrator terminated all sessions",
+            cancellationToken);
+        return result.IsSuccess ? NoContent() : NotFound(new { Error = result.Error });
+    }
+
+    [HttpPost("{id:guid}/mfa/reset")]
+    [HasPermission(Permissions.Users.Edit)]
+    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
+    public async Task<IActionResult> ResetMfa(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _accessManagement.ResetMfaAsync(
+            id, HttpContext.Connection.RemoteIpAddress?.ToString(), cancellationToken);
+        return result.IsSuccess ? NoContent() : NotFound(new { Error = result.Error });
+    }
 }
