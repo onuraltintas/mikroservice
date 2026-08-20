@@ -7,11 +7,16 @@ namespace Identity.Application.Commands.DeletePermission;
 public class DeletePermissionCommandHandler : IRequestHandler<DeletePermissionCommand, Result>
 {
     private readonly IPermissionRepository _permissionRepository;
+    private readonly IRoleRepository _roleRepository;
     private readonly IUnitOfWork _unitOfWork;
 
-    public DeletePermissionCommandHandler(IPermissionRepository permissionRepository, IUnitOfWork unitOfWork)
+    public DeletePermissionCommandHandler(
+        IPermissionRepository permissionRepository,
+        IRoleRepository roleRepository,
+        IUnitOfWork unitOfWork)
     {
         _permissionRepository = permissionRepository;
+        _roleRepository = roleRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -22,6 +27,8 @@ public class DeletePermissionCommandHandler : IRequestHandler<DeletePermissionCo
         {
             return Result.Failure(new Error("Permission.NotFound", "İzin bulunamadı."));
         }
+
+        await _roleRepository.RemovePermissionFromAllRolesAsync(permission.Key, cancellationToken);
 
         if (request.Permanent)
         {

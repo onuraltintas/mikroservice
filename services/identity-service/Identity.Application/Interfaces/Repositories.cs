@@ -31,6 +31,7 @@ public interface IRoleRepository
     void Delete(Role role);
     void AddRolePermission(RolePermission permission);
     void RemoveRolePermission(RolePermission permission);
+    Task RemovePermissionFromAllRolesAsync(string permissionKey, CancellationToken cancellationToken);
 }
 
 public interface IInstitutionRepository

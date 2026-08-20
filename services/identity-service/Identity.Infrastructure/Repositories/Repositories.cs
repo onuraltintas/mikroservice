@@ -931,5 +931,15 @@ public class RoleRepository : IRoleRepository
     {
         _context.RolePermissions.Remove(permission);
     }
+
+    public async Task RemovePermissionFromAllRolesAsync(
+        string permissionKey,
+        CancellationToken cancellationToken)
+    {
+        var assignments = await _context.RolePermissions
+            .Where(permission => permission.Permission == permissionKey)
+            .ToListAsync(cancellationToken);
+        _context.RolePermissions.RemoveRange(assignments);
+    }
 }
 

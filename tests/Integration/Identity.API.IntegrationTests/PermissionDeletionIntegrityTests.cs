@@ -29,7 +29,7 @@ public sealed class PermissionDeletionIntegrityTests
 
         result.IsSuccess.Should().BeTrue();
         (await context.RolePermissions.AnyAsync(item => item.Permission == permission.Key)).Should().BeFalse();
-        (await context.Permissions.SingleAsync(item => item.Id == permission.Id)).IsDeleted.Should().BeTrue();
+        (await context.Permissions.IgnoreQueryFilters().SingleAsync(item => item.Id == permission.Id)).IsDeleted.Should().BeTrue();
     }
 
     private static IdentityDbContext CreateContext() => new(
