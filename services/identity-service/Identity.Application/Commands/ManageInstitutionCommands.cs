@@ -274,15 +274,18 @@ public sealed class SetInstitutionAdminActiveCommandHandler
     : IRequestHandler<SetInstitutionAdminActiveCommand, Result>
 {
     private readonly IInstitutionRepository _repository;
+    private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly InstitutionManagementAuthorization _authorization;
 
     public SetInstitutionAdminActiveCommandHandler(
         IInstitutionRepository repository,
+        IUserRepository userRepository,
         IUnitOfWork unitOfWork,
         InstitutionManagementAuthorization authorization)
     {
         _repository = repository;
+        _userRepository = userRepository;
         _unitOfWork = unitOfWork;
         _authorization = authorization;
     }
@@ -307,7 +310,14 @@ public sealed class SetInstitutionAdminActiveCommandHandler
         }
 
         if (request.IsActive) admin.Activate();
-        else admin.Deactivate();
+        else
+        {
+            admin.Deactivate();
+            await _userRepository.RevokeActiveRefreshTokensAsync(
+                request.UserId,
+                "security-sensitive institution membership change",
+                cancellationToken);
+        }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Success();
