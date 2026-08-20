@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
 export interface InstitutionDto {
@@ -53,7 +53,11 @@ export class InstitutionService {
   }
 
   create(request: { name: string; type: number; city?: string; email?: string }) {
-    return this.http.post<{ institutionId: string }>(this.url, request);
+    const idempotencyKey = globalThis.crypto?.randomUUID?.()
+      ?? `institution-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    return this.http.post<{ institutionId: string }>(this.url, request, {
+      headers: new HttpHeaders({ 'Idempotency-Key': idempotencyKey })
+    });
   }
 
   update(id: string, request: Partial<InstitutionDto>) {
