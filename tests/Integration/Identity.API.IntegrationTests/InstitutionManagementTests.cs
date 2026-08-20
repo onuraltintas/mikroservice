@@ -201,6 +201,41 @@ public sealed class InstitutionManagementTests
             && item.Role == InstitutionAdminRole.Owner);
     }
 
+    [Fact]
+    public async Task CreateInstitution_IsIdempotentPerKeyAndRejectsPayloadChanges()
+    {
+        await using var context = CreateContext();
+        var repository = new InstitutionRepository(context);
+        var authorization = new InstitutionManagementAuthorization(
+            new StubCurrentUserService(Guid.NewGuid(), "SystemAdmin"),
+            repository);
+        var handler = new CreateInstitutionCommandHandler(
+            repository,
+            new UnitOfWork(context),
+            authorization,
+            new IdempotencyRepository(context));
+
+        var command = new CreateInstitutionCommand(
+            "Idempotent School",
+            InstitutionType.School,
+            "Istanbul",
+            "school@idempotency.test",
+            "institution-create-key");
+
+        var first = await handler.Handle(command, CancellationToken.None);
+        var retry = await handler.Handle(command, CancellationToken.None);
+        var changedPayload = await handler.Handle(
+            command with { Name = "Different School" },
+            CancellationToken.None);
+
+        first.IsSuccess.Should().BeTrue();
+        retry.IsSuccess.Should().BeTrue();
+        retry.Value.Should().Be(first.Value);
+        changedPayload.IsFailure.Should().BeTrue();
+        changedPayload.Error.Code.Should().Be("Idempotency.Conflict");
+        (await context.Institutions.CountAsync()).Should().Be(1);
+    }
+
     private static IdentityDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<IdentityDbContext>()
