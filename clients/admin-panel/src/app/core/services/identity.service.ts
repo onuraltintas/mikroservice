@@ -39,6 +39,15 @@ export interface UserProfileDto extends UserDto {
     studentDetails?: StudentDetailsDto;
 }
 
+export interface UserSessionDto {
+    id: string;
+    createdAt: string;
+    expiresAt: string;
+    createdByIp?: string;
+    isPersistent: boolean;
+    mfaVerifiedAt?: string;
+}
+
 export interface CreateUserRequest {
     firstName: string;
     lastName: string;
@@ -156,6 +165,22 @@ export class IdentityService {
 
     getUserById(userId: string) {
         return this.http.get<UserProfileDto>(`${this.baseUrl}/${userId}`);
+    }
+
+    getUserSessions(userId: string) {
+        return this.http.get<UserSessionDto[]>(`${this.baseUrl}/${userId}/sessions`);
+    }
+
+    revokeUserSession(userId: string, sessionId: string) {
+        return this.http.delete(`${this.baseUrl}/${userId}/sessions/${sessionId}`);
+    }
+
+    revokeAllUserSessions(userId: string) {
+        return this.http.delete(`${this.baseUrl}/${userId}/sessions`);
+    }
+
+    resetUserMfa(userId: string) {
+        return this.http.post(`${this.baseUrl}/${userId}/mfa/reset`, {});
     }
 
     getMyProfile() {
