@@ -52,6 +52,49 @@ public sealed class InstitutionManagementTests
     }
 
     [Fact]
+    public async Task DeactivatingInstitution_RevokesAllMemberRefreshSessions()
+    {
+        await using var context = CreateContext();
+        var institution = Institution.Create("Security Test School", InstitutionType.School);
+        var administrator = User.Create(Guid.NewGuid(), "admin@security.test", "Tenant", "Admin");
+        var teacher = User.Create(Guid.NewGuid(), "teacher@security.test", "Tenant", "Teacher");
+        var student = User.Create(Guid.NewGuid(), "student@security.test", "Tenant", "Student");
+        var parent = User.Create(Guid.NewGuid(), "parent@security.test", "Tenant", "Parent");
+        var adminRole = Role.Create(Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(), "Institution admin", isSystemRole: true);
+
+        administrator.AddRole(new Identity.Domain.Entities.UserRole(administrator.Id, adminRole.Id));
+        teacher.AddRefreshToken(RefreshToken.Create(teacher.Id, "tenant-teacher-refresh", DateTime.UtcNow.AddDays(1), "127.0.0.1"));
+        student.AddRefreshToken(RefreshToken.Create(student.Id, "tenant-student-refresh", DateTime.UtcNow.AddDays(1), "127.0.0.1"));
+        parent.AddRefreshToken(RefreshToken.Create(parent.Id, "tenant-parent-refresh", DateTime.UtcNow.AddDays(1), "127.0.0.1"));
+        administrator.AddRefreshToken(RefreshToken.Create(administrator.Id, "tenant-admin-refresh", DateTime.UtcNow.AddDays(1), "127.0.0.1"));
+
+        context.AddRange(
+            institution,
+            adminRole,
+            administrator,
+            teacher,
+            student,
+            parent,
+            InstitutionAdmin.Create(administrator.Id, institution.Id, InstitutionAdminRole.Admin),
+            TeacherProfile.Create(teacher.Id, "Tenant", "Teacher", institution.Id),
+            StudentProfile.Create(student.Id, "Tenant", "Student", institution.Id, parent.Id));
+        await context.SaveChangesAsync();
+
+        var repository = new InstitutionRepository(context);
+        var result = await new SetInstitutionActiveCommandHandler(
+                repository,
+                new UserRepository(context),
+                new UnitOfWork(context),
+                new InstitutionManagementAuthorization(
+                    new StubCurrentUserService(Guid.NewGuid(), "SystemAdmin"),
+                    repository))
+            .Handle(new SetInstitutionActiveCommand(institution.Id, false), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        (await context.RefreshTokens.ToListAsync()).Should().OnlyContain(token => token.IsRevoked);
+    }
+
+    [Fact]
     public async Task AssignAdminCommand_RejectsUserWithoutInstitutionAdminRole()
     {
         await using var context = CreateContext();
