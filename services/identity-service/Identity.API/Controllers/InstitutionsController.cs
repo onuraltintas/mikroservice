@@ -47,7 +47,8 @@ public sealed class InstitutionsController : ControllerBase
         [FromBody] CreateInstitutionCommand command,
         CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(command, cancellationToken);
+        var idempotencyKey = Request.Headers["Idempotency-Key"].ToString();
+        var result = await _mediator.Send(command with { IdempotencyKey = idempotencyKey }, cancellationToken);
         return result.IsSuccess
             ? CreatedAtAction(nameof(GetById), new { id = result.Value }, new { institutionId = result.Value })
             : BadRequest(new { Error = result.Error });

@@ -22,6 +22,16 @@ public interface IUserRepository
     Task<List<User>> GetUsersByRolesAsync(List<string> roleNames, CancellationToken cancellationToken);
 }
 
+public interface IIdempotencyRepository
+{
+    Task<IdempotencyRecord?> GetAsync(
+        string scope,
+        string key,
+        CancellationToken cancellationToken);
+
+    Task AddAsync(IdempotencyRecord record, CancellationToken cancellationToken);
+}
+
 public interface IRoleRepository
 {
     Task<Role?> GetByNameAsync(string roleName, CancellationToken cancellationToken);

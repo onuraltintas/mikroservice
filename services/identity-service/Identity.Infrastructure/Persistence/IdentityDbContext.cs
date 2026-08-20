@@ -5,6 +5,8 @@ using Serilog;
 using EduPlatform.Shared.Kernel.Primitives;
 using MassTransit;
 using EduPlatform.Shared.Infrastructure.Middleware;
+using Identity.Application.Exceptions;
+using Npgsql;
 
 namespace Identity.Infrastructure.Persistence;
 
@@ -33,6 +35,7 @@ public class IdentityDbContext : DbContext
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<SystemConfiguration> Configurations => Set<SystemConfiguration>();
     public DbSet<AdminAuditRecord> AdminAuditRecords => Set<AdminAuditRecord>();
+    public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,6 +44,7 @@ public class IdentityDbContext : DbContext
         // Apply all configurations from this assembly
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         ConfigureAdminAudit(modelBuilder);
+        ConfigureIdempotency(modelBuilder);
 
         // Set default schema
         modelBuilder.HasDefaultSchema("identity");
@@ -69,6 +73,17 @@ public class IdentityDbContext : DbContext
         audit.HasIndex(record => new { record.ActorUserId, record.OccurredAt });
     }
 
+    private static void ConfigureIdempotency(ModelBuilder modelBuilder)
+    {
+        var idempotency = modelBuilder.Entity<IdempotencyRecord>();
+        idempotency.ToTable("IdempotencyRecords");
+        idempotency.HasKey(record => record.Id);
+        idempotency.Property(record => record.Scope).HasMaxLength(150).IsRequired();
+        idempotency.Property(record => record.Key).HasMaxLength(128).IsRequired();
+        idempotency.Property(record => record.RequestHash).HasMaxLength(64).IsRequired();
+        idempotency.HasIndex(record => new { record.Scope, record.Key }).IsUnique();
+    }
+
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         EnsureAdminAuditIsAppendOnly();
@@ -95,8 +110,22 @@ public class IdentityDbContext : DbContext
             }
         }
 
-        return await base.SaveChangesAsync(cancellationToken);
+        try
+        {
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (IsIdempotencyConstraintViolation(exception))
+        {
+            throw new IdempotencyConflictException(exception);
+        }
     }
+
+    private static bool IsIdempotencyConstraintViolation(DbUpdateException exception) =>
+        exception.InnerException is PostgresException postgresException
+        && string.Equals(
+            postgresException.ConstraintName,
+            "IX_IdempotencyRecords_Scope_Key",
+            StringComparison.Ordinal);
 
     private void EnsureAdminAuditIsAppendOnly()
     {

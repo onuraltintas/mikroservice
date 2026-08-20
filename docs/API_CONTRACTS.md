@@ -84,6 +84,15 @@ idempotent record permanently lose its notification work. Clients should reuse
 the key when retrying a timed-out request and generate a new key for a distinct
 support request.
 
+`POST /api/institutions` (SystemAdmin tenant creation) also requires an
+`Idempotency-Key` header. Identity scopes the key to
+`identity.institutions.create`, stores the canonical payload hash and the created
+institution ID under a unique `(Scope, Key)` constraint, and commits that record
+with the institution row. A retry with the same payload returns the original
+`institutionId`; reusing the key with a different name, type, city or e-mail
+returns `409 Conflict`. The admin panel generates the key once per create action
+so transport-level retries do not create duplicate tenants.
+
 ## Contract testleri
 
 `tests/Integration/Identity.API.IntegrationTests` altında ProblemDetails,

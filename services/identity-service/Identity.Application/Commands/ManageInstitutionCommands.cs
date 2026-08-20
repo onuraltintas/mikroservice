@@ -2,10 +2,13 @@ using EduPlatform.Shared.Kernel.Results;
 using Identity.Application.DTOs.Institutions;
 using Identity.Application.Authorization;
 using Identity.Application.Interfaces;
+using Identity.Application.Exceptions;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using FluentValidation;
 using MediatR;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Identity.Application.Commands.ManageInstitutions;
 
@@ -13,7 +16,8 @@ public sealed record CreateInstitutionCommand(
     string Name,
     InstitutionType Type,
     string? City,
-    string? Email) : IRequest<Result<Guid>>;
+    string? Email,
+    string? IdempotencyKey = null) : IRequest<Result<Guid>>;
 
 public sealed class CreateInstitutionCommandValidator : AbstractValidator<CreateInstitutionCommand>
 {
@@ -24,6 +28,10 @@ public sealed class CreateInstitutionCommandValidator : AbstractValidator<Create
         RuleFor(command => command.Email).EmailAddress().MaximumLength(255)
             .When(command => !string.IsNullOrWhiteSpace(command.Email));
         RuleFor(command => command.Type).IsInEnum();
+        RuleFor(command => command.IdempotencyKey)
+            .NotEmpty()
+            .Matches("^[A-Za-z0-9._~-]{16,128}$")
+            .WithMessage("Idempotency-Key 16-128 güvenli karakterden oluşmalıdır.");
     }
 }
 
@@ -77,15 +85,18 @@ public sealed class CreateInstitutionCommandHandler : IRequestHandler<CreateInst
     private readonly IInstitutionRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly InstitutionManagementAuthorization _authorization;
+    private readonly IIdempotencyRepository _idempotencyRepository;
 
     public CreateInstitutionCommandHandler(
         IInstitutionRepository repository,
         IUnitOfWork unitOfWork,
-        InstitutionManagementAuthorization authorization)
+        InstitutionManagementAuthorization authorization,
+        IIdempotencyRepository idempotencyRepository)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _authorization = authorization;
+        _idempotencyRepository = idempotencyRepository;
     }
 
     public async Task<Result<Guid>> Handle(CreateInstitutionCommand request, CancellationToken cancellationToken)
@@ -96,10 +107,81 @@ public sealed class CreateInstitutionCommandHandler : IRequestHandler<CreateInst
             return Result.Failure<Guid>(access.Error);
         }
 
-        var institution = Institution.Create(request.Name.Trim(), request.Type, request.City?.Trim(), request.Email?.Trim());
+        var key = request.IdempotencyKey?.Trim();
+        var normalizedName = request.Name.Trim();
+        var normalizedCity = request.City?.Trim();
+        var normalizedEmail = request.Email?.Trim();
+        var requestHash = CreateRequestHash(normalizedName, request.Type, normalizedCity, normalizedEmail);
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return Result.Failure<Guid>(new Error(
+                "Idempotency.Required",
+                "Kurum oluşturma isteği için Idempotency-Key zorunludur."));
+        }
+
+        var existing = await _idempotencyRepository.GetAsync(
+            "identity.institutions.create",
+            key,
+            cancellationToken);
+        if (existing is not null)
+        {
+            return existing.Matches(requestHash)
+                ? Result.Success(existing.ResourceId)
+                : Result.Failure<Guid>(new Error(
+                    "Idempotency.Conflict",
+                    "Aynı Idempotency-Key farklı bir istek gövdesiyle tekrar kullanılamaz."));
+        }
+
+        var institution = Institution.Create(normalizedName, request.Type, normalizedCity, normalizedEmail);
         await _repository.AddAsync(institution, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _idempotencyRepository.AddAsync(
+            IdempotencyRecord.Create(
+                "identity.institutions.create",
+                key,
+                requestHash,
+                institution.Id),
+            cancellationToken);
+
+        try
+        {
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (IdempotencyConflictException)
+        {
+            var concurrent = await _idempotencyRepository.GetAsync(
+                "identity.institutions.create",
+                key,
+                cancellationToken);
+            if (concurrent is not null && concurrent.Matches(requestHash))
+            {
+                return Result.Success(concurrent.ResourceId);
+            }
+
+            throw;
+        }
+
         return Result.Success(institution.Id);
+    }
+
+    private static string CreateRequestHash(
+        string name,
+        InstitutionType type,
+        string? city,
+        string? email)
+    {
+        var canonical = string.Join(
+            "|",
+            name.Length,
+            name,
+            (int)type,
+            city?.Length ?? 0,
+            city ?? string.Empty,
+            email?.ToLowerInvariant().Length ?? 0,
+            email?.ToLowerInvariant() ?? string.Empty);
+
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
     }
 }
 
