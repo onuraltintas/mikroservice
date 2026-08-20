@@ -4,6 +4,7 @@ using MassTransit;
 using Notification.Application.Consumers;
 using Notification.Application.Configuration;
 using Notification.Application.Interfaces;
+using Notification.Application.Services;
 using Notification.Infrastructure.Services;
 using Notification.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -143,6 +144,7 @@ builder.Services.AddSingleton<IAdminAuditWriter, NotificationAdminAuditWriter>()
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IEmailDeliveryQueue, EmailDeliveryQueue>();
 builder.Services.AddScoped<INotificationService, Notification.API.Services.NotificationManager>();
+builder.Services.AddScoped<ICoachingNotificationDispatcher, CoachingNotificationDispatcher>();
 builder.Services.AddHostedService<EmailDeliveryWorker>();
 builder.Services.AddHostedService<SupportForwardDeliveryWorker>();
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
@@ -190,6 +192,12 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<UserCreatedConsumer>();
     x.AddConsumer<SendNotificationConsumer>();
     x.AddConsumer<UserForgotPasswordConsumer>();
+    x.AddConsumer<AssignmentCreatedConsumer>();
+    x.AddConsumer<AssignmentSubmittedConsumer>();
+    x.AddConsumer<AssignmentGradedConsumer>();
+    x.AddConsumer<ExamResultAddedConsumer>();
+    x.AddConsumer<SessionScheduledConsumer>();
+    x.AddConsumer<GoalCreatedConsumer>();
     
     // Outbox Pattern Configuration
     x.AddEntityFrameworkOutbox<NotificationDbContext>(o =>
@@ -261,6 +269,54 @@ builder.Services.AddMassTransit(x =>
                 retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
             e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
             e.ConfigureConsumer<UserForgotPasswordConsumer>(context);
+        });
+
+        cfg.ReceiveEndpoint("coaching-assignment-created", e =>
+        {
+            e.UseMessageRetry(retry =>
+                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<AssignmentCreatedConsumer>(context);
+        });
+
+        cfg.ReceiveEndpoint("coaching-assignment-submitted", e =>
+        {
+            e.UseMessageRetry(retry =>
+                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<AssignmentSubmittedConsumer>(context);
+        });
+
+        cfg.ReceiveEndpoint("coaching-assignment-graded", e =>
+        {
+            e.UseMessageRetry(retry =>
+                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<AssignmentGradedConsumer>(context);
+        });
+
+        cfg.ReceiveEndpoint("coaching-exam-result-added", e =>
+        {
+            e.UseMessageRetry(retry =>
+                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<ExamResultAddedConsumer>(context);
+        });
+
+        cfg.ReceiveEndpoint("coaching-session-scheduled", e =>
+        {
+            e.UseMessageRetry(retry =>
+                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<SessionScheduledConsumer>(context);
+        });
+
+        cfg.ReceiveEndpoint("coaching-goal-created", e =>
+        {
+            e.UseMessageRetry(retry =>
+                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<GoalCreatedConsumer>(context);
         });
     });
 });

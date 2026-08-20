@@ -42,12 +42,18 @@ outbox kaydı aynı PostgreSQL transaction'ında tamamlanır.
 - Worker claim sorguları `Status + NextAttemptAt/LeaseUntil + CreatedAt`
   bileşik index'lerini kullanır; backlog büyümesi bu nedenle tablo taramasına
   dönüşmemelidir.
-- SignalR notification ID'si event `MessageId` ile deterministikleştirilir.
-  Retry aynı kaydı ve aynı client ID'sini kullanır; frontend duplicate ID'leri
-  yeniden eklemez.
-- Coaching integration event'lerinin SignalR bildirisine bağlanması ayrı bir
-  Notification consumer sözleşmesidir; consumer eklenene kadar event'in outbox'a
-  yazılması tek başına gerçek zamanlı kullanıcı bildirisi garantisi vermez.
+- Tek alıcılı identity/notification event'lerinde SignalR notification ID'si
+  event `MessageId` ile deterministikleştirilir. Coaching fan-out event'lerinde
+  her alıcı için `SHA256("coaching-notification:{eventMessageId:N}:{recipientId:N}")`
+  değerinin ilk 16 byte'ı GUID olarak kullanılır. Böylece aynı event'in iki
+  alıcıya gönderilmesi aynı PostgreSQL primary key'ini paylaşmaz; retry aynı
+  alıcı için aynı ID'yi kullanır.
+- Coaching consumer'ları `coaching-assignment-created`,
+  `coaching-assignment-submitted`, `coaching-assignment-graded`,
+  `coaching-exam-result-added`, `coaching-session-scheduled` ve
+  `coaching-goal-created` kuyruklarında EF inbox/outbox ile çalışır. Legacy
+  `AssignmentSubmittedEvent` mesajlarında nullable `TeacherId` yoksa consumer
+  güvenli biçimde bildirim üretmeden başarılı olur.
 - Consumer'larda 5 denemeli exponential retry uygulanır (1 saniyeden 1
   dakikaya, 5 saniye jitter/delay ile). Kalıcı hatalar MassTransit'in `_error`
   dead-letter kuyruğuna gider ve monitoring ile izlenir.

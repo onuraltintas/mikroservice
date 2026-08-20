@@ -301,6 +301,7 @@ AssignmentSubmittedEvent:
   - AssignmentId
   - StudentId
   - SubmittedAt
+  - TeacherId (nullable for backward-compatible legacy messages)
 
 AssignmentGradedEvent:
   - AssignmentId
@@ -340,6 +341,14 @@ From Identity Service:
 ## 🔔 NOTIFICATION INTEGRATION
 
 ### Notification Scenarios
+
+Coaching olayları Notification Service tarafından RabbitMQ consumer'ları ile
+işlenir. Her alıcıya ayrı bir durable NotificationItem ve SignalR mesajı
+üretilir. `AssignmentCreated` ve `SessionScheduled` olaylarında listedeki
+öğrenciler; `AssignmentSubmitted` olayında öğretmen; `AssignmentGraded`,
+`ExamResultAdded` ve `GoalCreated` olaylarında ilgili öğrenci alıcıdır.
+`ExamCreated` olayının sözleşmesinde öğrenci alıcı listesi bulunmadığı için bu
+olay yalnızca outbox'a yazılır; alıcı sözleşmesi eklenmeden bildirim üretilmez.
 
 1. **Ödev Bildirimleri**
    ```json

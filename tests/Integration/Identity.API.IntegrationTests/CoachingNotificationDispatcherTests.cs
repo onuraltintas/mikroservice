@@ -33,7 +33,7 @@ public sealed class CoachingNotificationDispatcherTests
 
         firstSourceId.Should().NotBeNull();
         secondSourceId.Should().NotBeNull();
-        firstSourceId.Should().NotBe(secondSourceId);
+        firstSourceId!.Value.Should().NotBe(secondSourceId!.Value);
 
         await dispatcher.SendAsync(
             eventMessageId,

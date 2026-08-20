@@ -51,7 +51,8 @@ public class SubmitAssignmentCommandHandler : IRequestHandler<SubmitAssignmentCo
             new AssignmentSubmittedEvent(
                 assignment.Id,
                 command.StudentId,
-                studentAssignment.SubmittedAt!.Value),
+                studentAssignment.SubmittedAt!.Value,
+                assignment.TeacherId),
             cancellationToken);
 
         // Save the aggregate and its outbox message in one transaction.

@@ -11,7 +11,8 @@ public sealed record AssignmentCreatedEvent(
 public sealed record AssignmentSubmittedEvent(
     Guid AssignmentId,
     Guid StudentId,
-    DateTime SubmittedAt);
+    DateTime SubmittedAt,
+    Guid? TeacherId = null);
 
 public sealed record AssignmentGradedEvent(
     Guid AssignmentId,

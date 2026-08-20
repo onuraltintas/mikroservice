@@ -34,10 +34,12 @@ tek bir assignment döndürür. Koşu sonunda tenant, kullanıcı, assignment ve
 verileri temizlenmelidir. Bu akış ortak production verisine karşı
 çalıştırılmamalıdır.
 
-Coaching event'lerinin RabbitMQ outbox'a yazılması doğrulanmıştır; Coaching event'ini
-Notification SignalR bildirisine dönüştüren uçtan uca tüketici akışı bu test paketinin
-kapsamında değildir. SignalR değişikliği yapılacaksa ayrı bir disposable kullanıcı,
-hub bağlantısı ve duplicate-delivery testi eklenmelidir.
+Coaching event'lerinin RabbitMQ outbox'a yazılması ve Notification fan-out
+sözleşmesinin alıcı başına deterministik ID üretmesi doğrulanmıştır. Canlı
+SignalR hub bağlantısı (disposable kullanıcı + gerçek WebSocket istemcisi) bu
+test paketinin kapsamı dışındadır; release öncesi ayrı bir smoke koşusunda hub
+bağlantısı, RabbitMQ tüketimi, PostgreSQL bildirimi ve duplicate delivery
+birlikte doğrulanmalıdır.
 
 ## Lokal çalıştırma
 

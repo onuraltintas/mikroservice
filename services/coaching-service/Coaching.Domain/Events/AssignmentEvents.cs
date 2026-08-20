@@ -22,7 +22,8 @@ public record AssignmentCreatedEvent(
 public record AssignmentSubmittedEvent(
     Guid AssignmentId,
     Guid StudentId,
-    DateTime SubmittedAt
+    DateTime SubmittedAt,
+    Guid? TeacherId = null
 ) : DomainEvent
 {
     public override string EventType => nameof(AssignmentSubmittedEvent);
