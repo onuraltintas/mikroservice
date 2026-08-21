@@ -33,7 +33,25 @@ public class GetSessionsQueryHandler :
             query.PageNumber,
             query.PageSize,
             cancellationToken);
-        return MapToDto(page, query.PageNumber, query.PageSize);
+
+        var studentIds = page.Items
+            .SelectMany(session => session.Attendances)
+            .Select(attendance => attendance.StudentId)
+            .Distinct()
+            .ToArray();
+        var visibleStudentIds = studentIds.Length == 0
+            ? Array.Empty<Guid>()
+            : await _identityAuthorizationClient.AuthorizeStudentReadAsync(
+                _accessPolicy.CurrentUserId ?? query.TeacherId,
+                studentIds,
+                cancellationToken);
+
+        return MapToDto(
+            page,
+            query.PageNumber,
+            query.PageSize,
+            visibleStudentIds.ToHashSet(),
+            includeStudentReflections: true);
     }
 
     public async Task<PagedResponse<SessionDto>> Handle(
@@ -79,7 +97,8 @@ public class GetSessionsQueryHandler :
         int pageNumber,
         int pageSize,
         IReadOnlySet<Guid>? visibleStudentIds = null,
-        bool includeStudentNote = false)
+        bool includeStudentNote = false,
+        bool includeStudentReflections = false)
     {
         var sessions = page.Items.Select(s =>
         {
@@ -90,6 +109,17 @@ public class GetSessionsQueryHandler :
             var studentNote = includeStudentNote && visibleStudentIds?.Count == 1
                 ? s.Attendances.FirstOrDefault(attendance => visibleStudentIds.Contains(attendance.StudentId))?.StudentNote
                 : null;
+            var studentReflections = includeStudentReflections && visibleStudentIds is not null
+                ? s.Attendances
+                    .Where(attendance => visibleStudentIds.Contains(attendance.StudentId)
+                        && !string.IsNullOrWhiteSpace(attendance.StudentNote))
+                    .OrderBy(attendance => attendance.StudentId)
+                    .Select(attendance => new SessionStudentReflectionDto(
+                        attendance.StudentId,
+                        attendance.StudentNote!,
+                        attendance.AttendanceStatus.ToString()))
+                    .ToArray()
+                : Array.Empty<SessionStudentReflectionDto>();
 
             return new SessionDto(
                 Id: s.Id,
@@ -102,7 +132,8 @@ public class GetSessionsQueryHandler :
                 Type: s.SessionType.ToString(),
                 StudentIds: studentIds,
                 MeetingLink: s.MeetingLink,
-                StudentNote: studentNote);
+                StudentNote: studentNote,
+                StudentReflections: studentReflections);
         }).ToList();
 
         return new PagedResponse<SessionDto>(sessions, pageNumber, pageSize, page.TotalCount);

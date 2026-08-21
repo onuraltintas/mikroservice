@@ -87,9 +87,10 @@ public sealed class CoachingStudentSessionsQueryTests
 
         result.Items.Should().ContainSingle();
         result.Items[0].StudentIds.Should().ContainSingle().Which.Should().Be(allowedStudentId);
-        result.Items[0].StudentReflections.Should().ContainSingle();
-        result.Items[0].StudentReflections[0].StudentId.Should().Be(allowedStudentId);
-        result.Items[0].StudentReflections[0].Note.Should().Be("Bu hafta deneme analizini tamamladım.");
+        var reflections = result.Items[0].StudentReflections!;
+        reflections.Should().ContainSingle();
+        reflections[0].StudentId.Should().Be(allowedStudentId);
+        reflections[0].Note.Should().Be("Bu hafta deneme analizini tamamladım.");
         identityClient.RequestedStudentIds.Should().Contain(new[] { allowedStudentId, revokedStudentId });
     }
 

@@ -18,6 +18,11 @@ public record GetUpcomingSessionsQuery(
     int PageNumber = CoachingPaging.DefaultPageNumber,
     int PageSize = CoachingPaging.DefaultPageSize) : IRequest<PagedResponse<SessionDto>>;
 
+public sealed record SessionStudentReflectionDto(
+    Guid StudentId,
+    string Note,
+    string AttendanceStatus);
+
 public sealed class GetTeacherSessionsQueryValidator : PagedQueryValidator<GetTeacherSessionsQuery>
 {
     public GetTeacherSessionsQueryValidator()
@@ -55,5 +60,6 @@ public record SessionDto(
     string Type,
     IReadOnlyList<Guid> StudentIds,
     string? MeetingLink,
-    string? StudentNote
+    string? StudentNote,
+    IReadOnlyList<SessionStudentReflectionDto>? StudentReflections = null
 );
