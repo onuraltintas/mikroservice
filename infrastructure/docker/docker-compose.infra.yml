@@ -31,7 +31,7 @@ services:
     image: dpage/pgadmin4:latest
     container_name: eduplatform-pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@eduplatform.com
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:?PGADMIN_DEFAULT_EMAIL must be set}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:?PGADMIN_DEFAULT_PASSWORD must be set}
     ports:
       - "5050:80"

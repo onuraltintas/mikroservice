@@ -41,7 +41,8 @@ cp .env.example .env
 - `POSTGRES_PASSWORD`
 - `REDIS_PASSWORD`
 - `RABBITMQ_DEFAULT_PASS`
-- `KEYCLOAK_ADMIN_PASSWORD`
+- `GRAFANA_ADMIN_PASSWORD`
+- `PGADMIN_DEFAULT_PASSWORD` (yalnızca legacy `infrastructure/docker/docker-compose.infra.yml` profili kullanılıyorsa)
 - vb.
 
 ### 3. Docker Compose Başlat
