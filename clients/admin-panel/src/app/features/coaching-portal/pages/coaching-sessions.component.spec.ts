@@ -86,7 +86,7 @@ describe('CoachingSessionsComponent', () => {
     const profile = signal<UserProfile | null>(user('Teacher'));
     const service = {
       getTeacherSessions: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 0 })),
-      calendarFeedUrl: vi.fn(() => '/api/calendar/teacher.ics')
+      downloadCalendarFeed: vi.fn(() => of(new Blob(['BEGIN:VCALENDAR'], { type: 'text/calendar' })))
     };
 
     TestBed.configureTestingModule({
@@ -99,10 +99,10 @@ describe('CoachingSessionsComponent', () => {
     const fixture = TestBed.createComponent(CoachingSessionsComponent);
     fixture.detectChanges();
 
-    const link = fixture.nativeElement.querySelector('a[download]') as HTMLAnchorElement;
-    expect(link).not.toBeNull();
-    expect(link.getAttribute('href')).toContain('/api/calendar/teacher.ics');
-    expect(service.calendarFeedUrl).toHaveBeenCalledWith('teacher');
+    const button = fixture.nativeElement.querySelector('[data-testid="calendar-export"]') as HTMLButtonElement;
+    expect(button).not.toBeNull();
+    fixture.componentInstance.exportCalendar();
+    expect(service.downloadCalendarFeed).toHaveBeenCalledWith('teacher');
   });
 });
 
