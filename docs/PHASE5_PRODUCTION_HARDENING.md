@@ -138,7 +138,8 @@ politikaları uygular.
 - Gerçek credential içeren `.env`, `.env.backup` ve log dosyaları repoya
   alınmamalıdır. Yalnızca açıkça placeholder içeren örnek dosyalar istisnadır.
   Geçmiş commit'lerde gerçek credential bulunduğu doğrulanırsa değerleri önce
-  rotate edin; history purge işlemi için ayrıca onay ve yedekleme gerekir.
+  rotate edin; ardından kontrollü yedek alıp tüm branch/tag/ref geçmişinde
+  history purge uygulayın ve remote'u `--force-with-lease` ile güncelleyin.
 
 ## 5. Data Protection ve RabbitMQ geçişi
 

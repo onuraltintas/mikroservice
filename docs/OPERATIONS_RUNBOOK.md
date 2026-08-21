@@ -194,7 +194,9 @@ Mesaj replay'i otomatik yapılmaz; dead-letter ve durable queue replay'i olay
   service-to-service çağrı smoke testi alınır. Değişkenler loglanmaz.
 
 Gerçek credential geçmişte commit edilmişse önce tüm değerler rotate edilir;
-history purge (git filter/rewrite) ayrıca yedek ve ekip onayı gerektirir.
+history purge (git filter/rewrite) kontrollü yedek ve force-with-lease push ile
+uygulanır. İşlem tamamlandıktan sonra eski commit SHA'ları ve yerel klonlar
+geçersiz kabul edilir.
 
 ### Repository credential olayı müdahalesi
 
@@ -219,12 +221,16 @@ uygulanır. `git revert` yeterli değildir; hassas blob eski commit'te kalır.
    başına GitHub cache'lerini ve diğer klonları garantiyle silmez. Ayrıntılar:
    [GitHub hassas veri temizleme prosedürü](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository).
 
-2026-08-19'da geçmişteki `infrastructure/docker/.env.backup` dosyası bu
-prosedürle `main` ve `codex/platform-hardening` dallarından çıkarıldı. Yerel
-çalışma ortamındaki aktif PostgreSQL, RabbitMQ ve Redis değerlerinin sızmış
-değerlerle eşleşmediği doğrulandı. Eski Keycloak veya SMTP kurulumu hâlâ
-kullanılıyorsa, ilgili sağlayıcı erişimi olan kişi yukarıdaki ilk adımı ayrıca
-tamamlamalıdır.
+2026-08-21'de geçmişteki `infrastructure/docker/.env.backup` dosyası ve
+credential örnekleri `main` ile `codex/platform-hardening` dallarının tüm
+erişilebilir geçmişinden çıkarıldı. Uzak branch'ler beklenen SHA'lara karşı
+`--force-with-lease` ile güncellendi; doğrulamada `.env.backup` yolu ve bilinen
+credential literal'leri bulunmadı. Yerel PostgreSQL, RabbitMQ, Redis, Grafana,
+JWT ve internal-service-key değerleri döndürüldü; container health/readiness ve
+Gateway smoke testi başarılıdır. Eski Keycloak/harici SMTP kurulumu hâlâ
+kullanılıyorsa sağlayıcı erişimi olan kişi ilgili credential'ı ayrıca revoke veya
+rotate etmelidir. GitHub Actions secret'larının listelenmesi/revokasyonu için
+geçerli GitHub yetkisi gerekir; force-push bu secret'ları değiştirmez.
 
 CI, `.env`/`.env.backup` benzeri izlenen dosyaları ve yaygın private-key
 biçimlerini reddeder. Bu koruma secret manager, kısa ömürlü credential ve kod
