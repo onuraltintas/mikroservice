@@ -2,6 +2,7 @@ using Coaching.Domain.Entities;
 using Coaching.Domain.Enums;
 using Coaching.Application.Queries;
 using Coaching.Application.Queries.GetStudentProgress;
+using Coaching.Application.Queries.GetInstitutionCoachingComparison;
 
 namespace Coaching.Application.Interfaces;
 
@@ -53,6 +54,17 @@ public interface ICoachingStudentProgressRepository
 {
     Task<StudentProgressSummaryDto> GetStudentSummaryAsync(
         Guid studentId,
+        CancellationToken cancellationToken = default);
+}
+
+public interface ICoachingComparativeReportRepository
+{
+    Task<InstitutionCoachingComparisonDto> GetInstitutionComparisonAsync(
+        Guid institutionId,
+        IReadOnlyCollection<Guid> studentIds,
+        int? gradeLevel,
+        DateTime fromDate,
+        DateTime toDate,
         CancellationToken cancellationToken = default);
 }
 

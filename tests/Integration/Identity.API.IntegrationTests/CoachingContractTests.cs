@@ -220,7 +220,7 @@ public sealed class CoachingContractTests
 
         result.IsValid.Should().BeFalse();
         result.Errors.Select(error => error.PropertyName)
-            .Should().Contain(new[] { "InstitutionId", "GradeLevel", "FromDate", "ToDate" });
+            .Should().Contain(new[] { "InstitutionId", "GradeLevel", "DateRange" });
     }
 
     [Fact]

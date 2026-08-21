@@ -3,6 +3,7 @@ using Coaching.Domain.Entities;
 using Coaching.Application.Interfaces;
 using Coaching.Application.Queries;
 using Coaching.Application.Queries.GetStudentProgress;
+using Coaching.Application.Queries.GetInstitutionCoachingComparison;
 using Coaching.Infrastructure.Data;
 
 namespace Coaching.Infrastructure.Repositories;
@@ -414,6 +415,118 @@ public sealed class CoachingStudentProgressRepository(CoachingDbContext context)
             recordedAttendances.Length == 0
                 ? null
                 : Math.Round((decimal)attendedSessions / recordedAttendances.Length * 100, 2));
+    }
+
+    private static decimal? AveragePercentage(IReadOnlyCollection<double> values) =>
+        values.Count == 0 ? null : Math.Round((decimal)values.Average(), 2);
+}
+
+public sealed class CoachingComparativeReportRepository(CoachingDbContext context)
+    : ICoachingComparativeReportRepository
+{
+    public async Task<InstitutionCoachingComparisonDto> GetInstitutionComparisonAsync(
+        Guid institutionId,
+        IReadOnlyCollection<Guid> studentIds,
+        int? gradeLevel,
+        DateTime fromDate,
+        DateTime toDate,
+        CancellationToken cancellationToken = default)
+    {
+        var studentIdArray = studentIds.Distinct().ToArray();
+
+        var assignmentRows = await context.AssignmentStudents
+            .AsNoTracking()
+            .Where(item => studentIdArray.Contains(item.StudentId)
+                && item.Assignment.InstitutionId == institutionId
+                && item.Assignment.CreatedAt >= fromDate
+                && item.Assignment.CreatedAt <= toDate
+                && item.Assignment.Status != Domain.Enums.AssignmentStatus.Cancelled
+                && (!gradeLevel.HasValue || item.Assignment.TargetGradeLevel == gradeLevel.Value))
+            .Select(item => new
+            {
+                item.AssignmentId,
+                item.SubmittedAt,
+                item.Score,
+                item.Status,
+                item.Assignment.MaxScore
+            })
+            .ToListAsync(cancellationToken);
+
+        var assignmentPercentages = assignmentRows
+            .Where(item => item.Score.HasValue && item.MaxScore.HasValue && item.MaxScore.Value > 0)
+            .Select(item => (double)item.Score!.Value / (double)item.MaxScore!.Value * 100)
+            .ToArray();
+
+        var examRows = await context.ExamResults
+            .AsNoTracking()
+            .Where(item => studentIdArray.Contains(item.StudentId)
+                && item.Exam.InstitutionId == institutionId
+                && item.Exam.ExamDate >= fromDate
+                && item.Exam.ExamDate <= toDate
+                && (!gradeLevel.HasValue || item.Exam.TargetGradeLevel == gradeLevel.Value))
+            .Select(item => new
+            {
+                item.ExamId,
+                item.Score,
+                item.Exam.MaxScore
+            })
+            .ToListAsync(cancellationToken);
+        var examPercentages = examRows
+            .Where(item => item.MaxScore > 0)
+            .Select(item => (double)item.Score / (double)item.MaxScore * 100)
+            .ToArray();
+
+        var sessionRows = await context.SessionAttendances
+            .AsNoTracking()
+            .Where(item => studentIdArray.Contains(item.StudentId)
+                && item.Session.InstitutionId == institutionId
+                && item.Session.ScheduledDate >= fromDate
+                && item.Session.ScheduledDate <= toDate
+                && item.Session.Status != Domain.Enums.SessionStatus.Cancelled)
+            .Select(item => new
+            {
+                item.SessionId,
+                item.AttendanceStatus
+            })
+            .ToListAsync(cancellationToken);
+        var recordedSessionRows = sessionRows
+            .Where(item => item.AttendanceStatus != Domain.Enums.AttendanceStatus.NotRecorded)
+            .ToArray();
+        var attendedSessionRows = recordedSessionRows.Count(item =>
+            item.AttendanceStatus is Domain.Enums.AttendanceStatus.Present
+                or Domain.Enums.AttendanceStatus.Late);
+
+        var goals = await context.AcademicGoals
+            .AsNoTracking()
+            .Where(item => studentIdArray.Contains(item.StudentId)
+                && item.CreatedAt >= fromDate
+                && item.CreatedAt <= toDate)
+            .Select(item => new { item.CurrentProgress, item.IsCompleted })
+            .ToListAsync(cancellationToken);
+
+        return new InstitutionCoachingComparisonDto(
+            institutionId,
+            gradeLevel,
+            fromDate,
+            toDate,
+            studentIdArray.Length,
+            assignmentRows.Select(item => item.AssignmentId).Distinct().Count(),
+            assignmentRows.Count,
+            assignmentRows.Count(item => item.SubmittedAt.HasValue),
+            assignmentRows.Count(item => item.Status == Domain.Enums.StudentAssignmentStatus.Graded),
+            AveragePercentage(assignmentPercentages),
+            examRows.Select(item => item.ExamId).Distinct().Count(),
+            examRows.Count,
+            AveragePercentage(examPercentages),
+            sessionRows.Select(item => item.SessionId).Distinct().Count(),
+            recordedSessionRows.Length,
+            attendedSessionRows,
+            recordedSessionRows.Length == 0
+                ? null
+                : Math.Round((decimal)attendedSessionRows / recordedSessionRows.Length * 100, 2),
+            goals.Count,
+            goals.Count(item => item.IsCompleted),
+            goals.Count == 0 ? 0 : (int)Math.Round(goals.Average(item => item.CurrentProgress)));
     }
 
     private static decimal? AveragePercentage(IReadOnlyCollection<double> values) =>

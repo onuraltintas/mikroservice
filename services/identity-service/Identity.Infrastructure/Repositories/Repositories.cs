@@ -727,6 +727,69 @@ public class InstitutionRepository : IInstitutionRepository
 
         return new CoachingStudentReadAuthorization(allowedStudentUserIds);
     }
+
+    public async Task<IReadOnlyCollection<Guid>?> GetCoachingReportStudentUserIdsAsync(
+        Guid viewerUserId,
+        Guid institutionId,
+        int? gradeLevel,
+        CancellationToken cancellationToken)
+    {
+        var viewer = await _context.Users
+            .AsNoTracking()
+            .Where(user => user.Id == viewerUserId && user.IsActive)
+            .Select(user => new
+            {
+                user.Id,
+                Roles = user.Roles
+                    .Where(userRole => !userRole.Role.IsDeleted)
+                    .Select(userRole => userRole.Role.Name)
+                    .ToList()
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (viewer is null)
+        {
+            return null;
+        }
+
+        var isSystemAdministrator = viewer.Roles.Any(role =>
+            string.Equals(role, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
+        var hasInstitutionAdminScope = await _context.InstitutionAdmins
+            .AsNoTracking()
+            .AnyAsync(admin => admin.UserId == viewerUserId
+                && admin.InstitutionId == institutionId
+                && admin.IsActive
+                && admin.User.IsActive
+                && admin.Institution.IsActive,
+                cancellationToken);
+
+        if (!isSystemAdministrator && !hasInstitutionAdminScope)
+        {
+            return null;
+        }
+
+        var query = _context.StudentProfiles
+            .AsNoTracking()
+            .Where(profile => profile.UserId != Guid.Empty
+                && profile.InstitutionId == institutionId
+                && profile.IsActive
+                && profile.User.IsActive
+                && profile.Institution != null
+                && profile.Institution.IsActive
+                && profile.User.Roles.Any(userRole =>
+                    !userRole.Role.IsDeleted
+                    && userRole.Role.Name == "Student"));
+
+        if (gradeLevel.HasValue)
+        {
+            query = query.Where(profile => profile.GradeLevel == gradeLevel.Value);
+        }
+
+        return await query
+            .OrderBy(profile => profile.UserId)
+            .Select(profile => profile.UserId)
+            .ToListAsync(cancellationToken);
+    }
 }
 
 public class UnitOfWork : IUnitOfWork

@@ -68,6 +68,11 @@ public interface IInstitutionRepository
         Guid viewerUserId,
         IReadOnlyCollection<Guid> studentUserIds,
         CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<Guid>?> GetCoachingReportStudentUserIdsAsync(
+        Guid viewerUserId,
+        Guid institutionId,
+        int? gradeLevel,
+        CancellationToken cancellationToken);
 }
 
 public sealed record CoachingTeacherAuthorization(Guid? InstitutionId);

@@ -111,6 +111,7 @@ public static class DependencyInjection
         services.AddScoped<ICoachingSessionRepository, CoachingSessionRepository>();
         services.AddScoped<IAcademicGoalRepository, AcademicGoalRepository>();
         services.AddScoped<ICoachingStudentProgressRepository, CoachingStudentProgressRepository>();
+        services.AddScoped<ICoachingComparativeReportRepository, CoachingComparativeReportRepository>();
         services.AddScoped<ICoachingAdminRepository, CoachingAdminRepository>();
         if (storageOptions.Provider.Equals("Minio", StringComparison.OrdinalIgnoreCase))
             services.AddSingleton<IAssignmentAttachmentStorage, MinioAssignmentAttachmentStorage>();
@@ -126,6 +127,10 @@ public static class DependencyInjection
         services.AddScoped<ICoachingEventPublisher, MassTransitCoachingEventPublisher>();
         services.AddSingleton<IAdminAuditWriter, CoachingAdminAuditWriter>();
         services.AddHttpClient<ICoachingIdentityAuthorizationClient, IdentityAuthorizationClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
+        }).AddCorrelationIdPropagation();
+        services.AddHttpClient<ICoachingIdentityReportClient, IdentityAuthorizationClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);
         }).AddCorrelationIdPropagation();

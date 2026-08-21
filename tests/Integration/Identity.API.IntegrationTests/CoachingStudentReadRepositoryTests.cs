@@ -271,6 +271,54 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         result.Should().BeNull();
     }
 
+    [Fact]
+    public async Task CoachingReportRoster_ShouldRespectInstitutionGradeAndActiveState()
+    {
+        var institutionA = Institution.Create("Report Institution A", InstitutionType.School);
+        var institutionB = Institution.Create("Report Institution B", InstitutionType.School);
+        var administrator = User.Create(Guid.NewGuid(), "report-admin@example.test");
+        var gradeEight = User.Create(Guid.NewGuid(), "grade-eight@example.test");
+        var gradeNine = User.Create(Guid.NewGuid(), "grade-nine@example.test");
+        var inactive = User.Create(Guid.NewGuid(), "inactive-report@example.test");
+        inactive.Deactivate();
+        var otherInstitution = User.Create(Guid.NewGuid(), "other-report@example.test");
+
+        AddRole(administrator, "InstitutionAdmin");
+        AddRole(gradeEight, "Student");
+        AddRole(gradeNine, "Student");
+        AddRole(inactive, "Student");
+        AddRole(otherInstitution, "Student");
+
+        var inactiveProfile = StudentProfile.Create(inactive.Id, "Inactive", "Report", institutionA.Id);
+        inactiveProfile.UpdateEducationInfo(gradeLevel: 8);
+
+        var gradeEightProfile = StudentProfile.Create(gradeEight.Id, "Grade", "Eight", institutionA.Id);
+        gradeEightProfile.UpdateEducationInfo(gradeLevel: 8);
+        var gradeNineProfile = StudentProfile.Create(gradeNine.Id, "Grade", "Nine", institutionA.Id);
+        gradeNineProfile.UpdateEducationInfo(gradeLevel: 9);
+
+        _dbContext!.Institutions.AddRange(institutionA, institutionB);
+        _dbContext.Users.AddRange(administrator, gradeEight, gradeNine, inactive, otherInstitution);
+        _dbContext.InstitutionAdmins.Add(InstitutionAdmin.Create(
+            administrator.Id,
+            institutionA.Id,
+            InstitutionAdminRole.Admin));
+        _dbContext.StudentProfiles.AddRange(
+            gradeEightProfile,
+            gradeNineProfile,
+            inactiveProfile,
+            StudentProfile.Create(otherInstitution.Id, "Other", "Institution", institutionB.Id));
+        await _dbContext.SaveChangesAsync();
+
+        var result = await Repository().GetCoachingReportStudentUserIdsAsync(
+            administrator.Id,
+            institutionA.Id,
+            8,
+            CancellationToken.None);
+
+        result.Should().Equal(gradeEight.Id);
+    }
+
     private InstitutionRepository Repository() => new(_dbContext!);
 
     private void AddRole(User user, string roleName)

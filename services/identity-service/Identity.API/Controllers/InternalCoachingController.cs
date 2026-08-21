@@ -68,6 +68,32 @@ public sealed class InternalCoachingController : ControllerBase
             ? Forbid()
             : Ok(new CoachingStudentReadResponse(authorization.AllowedStudentUserIds));
     }
+
+    [HttpPost("report-students")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    [RequestSizeLimit(16_384)]
+    public async Task<IActionResult> GetReportStudents(
+        [FromBody] CoachingReportStudentRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.ViewerUserId == Guid.Empty
+            || request.InstitutionId == Guid.Empty
+            || request.GradeLevel is < 1 or > 12)
+        {
+            return BadRequest("Report student scope is invalid.");
+        }
+
+        var studentIds = await _institutionRepository.GetCoachingReportStudentUserIdsAsync(
+            request.ViewerUserId,
+            request.InstitutionId,
+            request.GradeLevel,
+            cancellationToken);
+
+        return studentIds is null
+            ? Forbid()
+            : Ok(new CoachingReportStudentResponse(studentIds));
+    }
 }
 
 public sealed record CoachingAuthorizationRequest(
@@ -84,3 +110,11 @@ public sealed record CoachingStudentReadRequest(
 
 public sealed record CoachingStudentReadResponse(
     IReadOnlyCollection<Guid> AllowedStudentUserIds);
+
+public sealed record CoachingReportStudentRequest(
+    Guid ViewerUserId,
+    Guid InstitutionId,
+    int? GradeLevel);
+
+public sealed record CoachingReportStudentResponse(
+    IReadOnlyCollection<Guid> StudentUserIds);
