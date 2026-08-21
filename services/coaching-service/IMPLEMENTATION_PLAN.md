@@ -31,11 +31,12 @@ takvim sağlayıcıları için OAuth tabanlı, açık rıza ve token-vault kulla
 adaptörlerdir.
 
 Son doğrulama: Identity/Coaching entegrasyon paketi 327 başarılı (2 Docker
-health testi ortam yokluğu nedeniyle atlandı), Angular paketi 63 başarılı ve
-production SSR/browser build başarılıdır. Docker health smoke 200, yeni
-calendar/early-warning rotaları auth olmadan 401 ve 5 saniyelik gateway health
-koşusunda 20.572 istek, %100 başarı, p95 16 ms ölçülmüştür; bu lokal smoke
-sonucudur, üretim SLA taahhüdü değildir.
+health testi ortam yokluğu nedeniyle atlandı), Angular paketi 64 başarılı ve
+son authenticated calendar export değişikliğiyle production SSR/browser build
+başarılıdır. Docker health smoke 200, yeni calendar/early-warning rotaları auth
+olmadan 401 ve 5 saniyelik gateway health koşusunda 19.083 istek, %100 başarı,
+p95/p99 16 ms ve yaklaşık 3.793 RPS ölçülmüştür; bu lokal smoke sonucudur,
+üretim SLA taahhüdü değildir.
 
 ---
 
