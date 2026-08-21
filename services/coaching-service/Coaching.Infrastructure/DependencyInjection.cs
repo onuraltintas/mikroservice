@@ -109,6 +109,7 @@ public static class DependencyInjection
         services.AddScoped<IIdempotencyRepository, IdempotencyRepository>();
         services.AddScoped<IExamRepository, ExamRepository>();
         services.AddScoped<ICoachingSessionRepository, CoachingSessionRepository>();
+        services.AddScoped<ICoachingCalendarRepository, CoachingCalendarRepository>();
         services.AddScoped<IAcademicGoalRepository, AcademicGoalRepository>();
         services.AddScoped<ICoachingStudentProgressRepository, CoachingStudentProgressRepository>();
         services.AddScoped<ICoachingComparativeReportRepository, CoachingComparativeReportRepository>();

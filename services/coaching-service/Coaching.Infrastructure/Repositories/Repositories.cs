@@ -284,6 +284,65 @@ public class CoachingSessionRepository : ICoachingSessionRepository
     }
 }
 
+public sealed class CoachingCalendarRepository(CoachingDbContext context)
+    : ICoachingCalendarRepository
+{
+    public Task<IReadOnlyCollection<CoachingCalendarSession>> GetByTeacherIdAsync(
+        Guid teacherId,
+        DateTime fromDate,
+        DateTime toDate,
+        int maxEvents,
+        CancellationToken cancellationToken = default) =>
+        GetCalendarSessionsAsync(
+            context.CoachingSessions
+                .AsNoTracking()
+                .Include(session => session.Attendances)
+                .Where(session => session.TeacherId == teacherId
+                    && session.ScheduledDate >= fromDate
+                    && session.ScheduledDate <= toDate),
+            maxEvents,
+            cancellationToken);
+
+    public Task<IReadOnlyCollection<CoachingCalendarSession>> GetByStudentIdAsync(
+        Guid studentId,
+        DateTime fromDate,
+        DateTime toDate,
+        int maxEvents,
+        CancellationToken cancellationToken = default) =>
+        GetCalendarSessionsAsync(
+            context.CoachingSessions
+                .AsNoTracking()
+                .Include(session => session.Attendances.Where(attendance => attendance.StudentId == studentId))
+                .Where(session => session.ScheduledDate >= fromDate
+                    && session.ScheduledDate <= toDate
+                    && session.Attendances.Any(attendance => attendance.StudentId == studentId)),
+            maxEvents,
+            cancellationToken);
+
+    private static async Task<IReadOnlyCollection<CoachingCalendarSession>> GetCalendarSessionsAsync(
+        IQueryable<CoachingSession> query,
+        int maxEvents,
+        CancellationToken cancellationToken)
+    {
+        var sessions = await query
+            .OrderBy(session => session.ScheduledDate)
+            .ThenBy(session => session.Id)
+            .Take(maxEvents)
+            .ToListAsync(cancellationToken);
+
+        return sessions
+            .Select(session => new CoachingCalendarSession(
+                session.Id,
+                session.Title,
+                session.ScheduledDate,
+                session.DurationMinutes,
+                session.Status.ToString(),
+                session.MeetingLink,
+                session.Attendances.Select(attendance => attendance.StudentId).ToArray()))
+            .ToArray();
+    }
+}
+
 /// <summary>
 /// AcademicGoal Repository Implementation
 /// </summary>
