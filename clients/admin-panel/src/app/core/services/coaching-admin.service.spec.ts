@@ -61,4 +61,47 @@ describe('CoachingAdminService', () => {
     goals.flush({ items: [], totalCount: 0, totalPages: 0 });
     http.verify();
   });
+
+  it('sends idempotent admin create requests and keeps resource ids in path', () => {
+    TestBed.configureTestingModule({
+      providers: [CoachingAdminService, provideHttpClient(), provideHttpClientTesting()]
+    });
+    const service = TestBed.inject(CoachingAdminService);
+    const http = TestBed.inject(HttpTestingController);
+
+    service.createSession({
+      teacherId: 'teacher-1', studentId: 'student-1', startTime: '2030-01-01T10:00:00Z',
+      durationMinutes: 60, type: 'OneOnOne'
+    }, 'session-key-123456').subscribe();
+    const session = http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/sessions'));
+    expect(session.request.method).toBe('POST');
+    expect(session.request.headers.get('Idempotency-Key')).toBe('session-key-123456');
+    session.flush({ sessionId: 'session-1' });
+
+    service.updateGoalProgress('goal/1', 75).subscribe();
+    const goal = http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/goals/goal%2F1/progress'));
+    expect(goal.request.method).toBe('PUT');
+    expect(goal.request.body).toEqual({ goalId: 'goal/1', progress: 75 });
+    goal.flush({});
+    http.verify();
+  });
+
+  it('requests session and exam detail resources with encoded ids', () => {
+    TestBed.configureTestingModule({
+      providers: [CoachingAdminService, provideHttpClient(), provideHttpClientTesting()]
+    });
+    const service = TestBed.inject(CoachingAdminService);
+    const http = TestBed.inject(HttpTestingController);
+
+    service.getSession('session/1').subscribe();
+    const session = http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/sessions/session%2F1'));
+    expect(session.request.method).toBe('GET');
+    session.flush({});
+
+    service.getExam('exam/1').subscribe();
+    const exam = http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/exams/exam%2F1'));
+    expect(exam.request.method).toBe('GET');
+    exam.flush({});
+    http.verify();
+  });
 });

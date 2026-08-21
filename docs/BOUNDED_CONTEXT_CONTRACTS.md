@@ -29,6 +29,11 @@ tanımlıdır. `CoachingContractTests` şu sınırları release sırasında sabi
 - SystemAdmin Coaching read model'i assignment, session, exam ve goal listelerini
   bounded pagination/filter ile sunar; admin DTO'larında Identity profile PII'si
   veya storage key bulunmaz.
+- SystemAdmin yönetim yüzeyi genel tablo CRUD'u değildir: Coaching command'larını
+  açık aksiyonlarla çağırır ve `Permissions.Coaching.Manage` + `MfaRequired`
+  ister. Seans katılımı ve sınav sonuçları için admin detay query'leri yalnızca
+  gerekli öğrenci kimliklerini/ölçüm alanlarını döndürür; tenant ve hedef
+  doğrulaması yine command handler'ında yapılır.
 
 Kimlik/tenant authorization Coaching'de tahmin edilmez. Teacher target'ları
 Identity internal authorization endpoint'inde aktif user/profile/institution,

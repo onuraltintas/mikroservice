@@ -28,23 +28,31 @@ route guard'ları yalnızca kullanıcı deneyimi ve erken yönlendirme sağlar.
 | Coaching | Assignment ayrıntısı; öğrenci teslim durumu, not/geri bildirim ve güvenli attachment metadata'sı | `/api/coaching-admin/assignments/{id}` | Yalnız `SystemAdmin` + `Permissions.Coaching.View` |
 | Coaching | Yalnız `Clean` durumundaki fotoğraf attachment'ını yetkili stream olarak indirme | `/api/assignments/{id}/students/{studentId}/attachments/{attachmentId}/content` | Assignment domain policy + aktif attachment |
 | Coaching | Sayfalı seans, sınav ve hedef operasyon listeleri; arama/durum filtreleri | `/api/coaching-admin/sessions`, `/api/coaching-admin/exams`, `/api/coaching-admin/goals` | Yalnız `SystemAdmin` + `Permissions.Coaching.View` |
+| Coaching | Seans ve sınav ayrıntısı; katılım ve sonuç ölçüm alanları | `/api/coaching-admin/sessions/{id}`, `/api/coaching-admin/exams/{id}` | `SystemAdmin` + `Permissions.Coaching.View`; kimlikler yalnız admin operasyonu için |
+| Coaching | Assignment oluşturma/iptal/silme/notlandırma; fotoğraf teslimlerinin güvenli yönetimi | `/api/coaching-admin/assignments*` | `SystemAdmin` + `Permissions.Coaching.Manage` + `MfaRequired` |
+| Coaching | Seans oluşturma/katılım güncelleme/iptal/silme | `/api/coaching-admin/sessions*` | `SystemAdmin` + `Permissions.Coaching.Manage` + `MfaRequired` |
+| Coaching | Sınav oluşturma/sonuç ekleme/silme | `/api/coaching-admin/exams*` | `SystemAdmin` + `Permissions.Coaching.Manage` + `MfaRequired` |
+| Coaching | Hedef oluşturma/ilerleme güncelleme/silme | `/api/coaching-admin/goals*` | `SystemAdmin` + `Permissions.Coaching.Manage` + `MfaRequired` |
 
-## Coaching neden doğrudan CRUD değil?
+## Coaching admin yönetimi neden explicit command olarak tasarlandı?
 
 Koçluk kayıtları öğrenci notu, geri bildirim, sınav sonucu ve katılım bilgisi
-içerir. Bunları genel bir admin CRUD ekranına açmak tenant ve eğitim verisi
-mahremiyeti açısından güvenli bir varsayılan değildir. Bu nedenle:
+içerir. Paneldeki yönetim işlemleri genel tablo CRUD'u olarak değil, domain
+komutlarını kullanan açık aksiyonlar olarak sunulur. Böylece:
 
 - Öğretmen/öğrenci yazma ve okuma işlemleri mevcut domain policy'leriyle sınırlıdır.
 - SystemAdmin paneli genel özetin yanında sayfalı operasyon listelerini ve gerekli
-  assignment ayrıntısını görür. Öğrenci teslim durumu, not, geri bildirim ve
-  attachment metadata'sı yalnızca korumalı admin ayrıntı endpoint'inden döner;
+  assignment/seans/sınav ayrıntılarını görür. Öğrenci teslim durumu, katılım,
+  not, geri bildirim ve attachment metadata'sı yalnızca korumalı admin ayrıntı
+  endpoint'lerinden döner;
   ham object-storage anahtarı, bekleyen/taranmamış dosya içeriği ve doğrudan bucket
   erişimi hiçbir API yanıtına eklenmez. Fotoğraf içeriği yalnızca `Clean` tarama
   durumundan sonra yetkili stream endpoint'i ile okunabilir.
-- İleride idari override gerekirse ayrı `Manage` command'ları, tenant scope,
-  audit actor/reason ve iki aşamalı onay ile eklenmelidir; mevcut genel endpoint'lere
-  bypass eklenmemelidir.
+- Her create çağrısı `Idempotency-Key` ile korunur; tekrar gönderim aynı kaydı
+  döndürür, farklı gövdeli tekrar `409 Conflict` üretir.
+- Mutasyonlar `MfaRequired` ve `Permissions.Coaching.Manage` ister. Komut
+  handler'ları öğretmen/öğrenci/kurum ilişkilerini yeniden doğrular; controller
+  metadata'sı tek başına yetki sınırı değildir.
 
 ## Bilerek panel dışında kalan sınırlar
 

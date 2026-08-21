@@ -106,6 +106,24 @@ export interface CoachingAdminSessionListItem {
   createdAt: string;
 }
 
+export interface CoachingAdminSessionAttendance {
+  studentId: string;
+  status: string;
+  teacherNote?: string;
+}
+
+export interface CoachingAdminSessionDetail {
+  id: string;
+  teacherId: string;
+  institutionId?: string;
+  title: string;
+  sessionType: string;
+  scheduledDate: string;
+  durationMinutes: number;
+  status: string;
+  attendances: CoachingAdminSessionAttendance[];
+}
+
 export interface CoachingAdminExamListItem {
   id: string;
   createdByTeacherId: string;
@@ -116,6 +134,28 @@ export interface CoachingAdminExamListItem {
   maxScore: number;
   resultCount: number;
   createdAt: string;
+}
+
+export interface CoachingAdminExamResult {
+  studentId: string;
+  score: number;
+  correctAnswers?: number;
+  wrongAnswers?: number;
+  emptyAnswers?: number;
+  subjectScores?: Record<string, number>;
+  teacherNotes?: string;
+}
+
+export interface CoachingAdminExamDetail {
+  id: string;
+  createdByTeacherId: string;
+  institutionId?: string;
+  title: string;
+  examType: string;
+  examDate: string;
+  maxScore: number;
+  description?: string;
+  results: CoachingAdminExamResult[];
 }
 
 export interface CoachingAdminGoalListItem {
@@ -133,6 +173,61 @@ export interface CoachingAdminGoalListItem {
 export interface CoachingAdminSessionPage { items: CoachingAdminSessionListItem[]; pageNumber: number; pageSize: number; totalCount: number; totalPages: number; }
 export interface CoachingAdminExamPage { items: CoachingAdminExamListItem[]; pageNumber: number; pageSize: number; totalCount: number; totalPages: number; }
 export interface CoachingAdminGoalPage { items: CoachingAdminGoalListItem[]; pageNumber: number; pageSize: number; totalCount: number; totalPages: number; }
+
+export interface CoachingAdminAssignmentCreateRequest {
+  teacherId: string;
+  institutionId?: string;
+  title: string;
+  description?: string;
+  subject?: string;
+  assignmentType: string;
+  assignmentSource: string;
+  targetGradeLevel?: number;
+  bookTitle?: string;
+  bookIsbn?: string;
+  bookEdition?: string;
+  bookChapter?: string;
+  bookStartPage?: number;
+  bookEndPage?: number;
+  bookStartQuestion?: number;
+  bookEndQuestion?: number;
+  dueDate: string;
+  estimatedDurationMinutes?: number;
+  maxScore?: number;
+  passingScore?: number;
+  studentIds: string[];
+}
+
+export interface CoachingAdminSessionCreateRequest {
+  teacherId: string;
+  studentId: string;
+  startTime: string;
+  durationMinutes: number;
+  subject?: string;
+  notes?: string;
+  type: string;
+  studentIds?: string[];
+}
+
+export interface CoachingAdminExamCreateRequest {
+  teacherId: string;
+  title: string;
+  type: string;
+  examDate: string;
+  maxScore: number;
+  institutionId?: string;
+  description?: string;
+}
+
+export interface CoachingAdminGoalCreateRequest {
+  studentId: string;
+  title: string;
+  category: string;
+  teacherId?: string;
+  description?: string;
+  targetDate?: string;
+  targetScore?: number;
+}
 
 @Injectable({ providedIn: 'root' })
 export class CoachingAdminService {
@@ -164,16 +259,104 @@ export class CoachingAdminService {
     return this.http.get<CoachingAdminAssignmentDetail>(`${this.url}/assignments/${encodeURIComponent(id)}`);
   }
 
+  createAssignment(request: CoachingAdminAssignmentCreateRequest, idempotencyKey: string) {
+    return this.http.post<{ assignmentId: string; title: string; dueDate: string; assignedStudentCount: number }>(
+      `${this.url}/assignments`,
+      request,
+      { headers: { 'Idempotency-Key': idempotencyKey } }
+    );
+  }
+
+  cancelAssignment(id: string) {
+    return this.http.post(`${this.url}/assignments/${encodeURIComponent(id)}/cancel`, {});
+  }
+
+  deleteAssignment(id: string) {
+    return this.http.delete(`${this.url}/assignments/${encodeURIComponent(id)}`);
+  }
+
+  gradeAssignment(id: string, request: { assignmentId: string; studentId: string; score: number; teacherFeedback?: string }) {
+    return this.http.post(`${this.url}/assignments/${encodeURIComponent(id)}/grade`, request);
+  }
+
+  createSession(request: CoachingAdminSessionCreateRequest, idempotencyKey: string) {
+    return this.http.post<{ sessionId: string }>(`${this.url}/sessions`, request, {
+      headers: { 'Idempotency-Key': idempotencyKey }
+    });
+  }
+
+  updateSessionAttendance(id: string, request: { sessionId: string; attended: boolean; notes?: string; studentId?: string }) {
+    return this.http.post(`${this.url}/sessions/${encodeURIComponent(id)}/attendance`, request);
+  }
+
+  cancelSession(id: string) {
+    return this.http.post(`${this.url}/sessions/${encodeURIComponent(id)}/cancel`, {});
+  }
+
+  deleteSession(id: string) {
+    return this.http.delete(`${this.url}/sessions/${encodeURIComponent(id)}`);
+  }
+
+  createExam(request: CoachingAdminExamCreateRequest, idempotencyKey: string) {
+    return this.http.post<{ examId: string }>(`${this.url}/exams`, request, {
+      headers: { 'Idempotency-Key': idempotencyKey }
+    });
+  }
+
+  addExamResult(id: string, request: {
+    examId: string;
+    studentId: string;
+    score: number;
+    correctAnswers: number;
+    wrongAnswers: number;
+    emptyAnswers: number;
+    subjectScores?: Record<string, number>;
+    notes?: string;
+  }, idempotencyKey: string) {
+    return this.http.post(`${this.url}/exams/${encodeURIComponent(id)}/results`, request, {
+      headers: { 'Idempotency-Key': idempotencyKey }
+    });
+  }
+
+  deleteExam(id: string) {
+    return this.http.delete(`${this.url}/exams/${encodeURIComponent(id)}`);
+  }
+
+  createGoal(request: CoachingAdminGoalCreateRequest, idempotencyKey: string) {
+    return this.http.post<{ goalId: string }>(`${this.url}/goals`, request, {
+      headers: { 'Idempotency-Key': idempotencyKey }
+    });
+  }
+
+  updateGoalProgress(id: string, progress: number) {
+    return this.http.put(`${this.url}/goals/${encodeURIComponent(id)}/progress`, {
+      goalId: id,
+      progress
+    });
+  }
+
+  deleteGoal(id: string) {
+    return this.http.delete(`${this.url}/goals/${encodeURIComponent(id)}`);
+  }
+
   getSessions(options: { pageNumber?: number; pageSize?: number; status?: string; search?: string } = {}) {
     return this.http.get<CoachingAdminSessionPage>(`${this.url}/sessions`, {
       params: this.listParams(options)
     });
   }
 
+  getSession(id: string) {
+    return this.http.get<CoachingAdminSessionDetail>(`${this.url}/sessions/${encodeURIComponent(id)}`);
+  }
+
   getExams(options: { pageNumber?: number; pageSize?: number; examType?: string; search?: string } = {}) {
     return this.http.get<CoachingAdminExamPage>(`${this.url}/exams`, {
       params: this.listParams(options, 'examType')
     });
+  }
+
+  getExam(id: string) {
+    return this.http.get<CoachingAdminExamDetail>(`${this.url}/exams/${encodeURIComponent(id)}`);
   }
 
   getGoals(options: { pageNumber?: number; pageSize?: number; completed?: boolean; search?: string } = {}) {

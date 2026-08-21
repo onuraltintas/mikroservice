@@ -162,12 +162,24 @@ pending-scan or rejected files return `409` and are never served. SystemAdmin
 can inspect the aggregate through `GET /api/coaching-admin/assignments/{id}`;
 the response contains metadata and attachment status, never a storage key.
 
-The Coaching admin read model also exposes bounded, read-only operational lists:
+The Coaching admin read model exposes bounded operational lists:
 `GET /api/coaching-admin/sessions`, `GET /api/coaching-admin/exams` and
 `GET /api/coaching-admin/goals`. Each endpoint supports `pageNumber` (1–1000),
 `pageSize` (1–100) and bounded search/filter parameters; student identifiers
 are returned only as identifiers needed for administration, not as Identity
 profile data.
+
+SystemAdmin coaching management is intentionally command-based rather than a
+generic table CRUD surface. With `Permissions.Coaching.Manage` and a recent
+`MfaRequired` authentication, the admin panel can create, cancel, grade and
+delete assignments; create, cancel, delete and record attendance for sessions;
+create and delete exams and add exam results; and create, update progress and
+delete goals. The details needed for attendance/results are available at
+`GET /api/coaching-admin/sessions/{id}` and
+`GET /api/coaching-admin/exams/{id}`. Create and result commands require a
+16–128 character `Idempotency-Key`; domain authorization and target validation
+still run in the Coaching handlers, so UI permissions are not a security
+boundary.
 
 The current local adapter is for Development/test environments and writes to a
 dedicated mounted directory. The scanner is explicitly selected with

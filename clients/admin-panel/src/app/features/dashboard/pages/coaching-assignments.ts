@@ -19,10 +19,13 @@ import {
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Koçluk ödevleri</h1>
           <p class="text-sm text-gray-500 dark:text-gray-400">Kitap ödevleri ve fotoğraf teslim metadata'sı.</p>
         </div>
-        <button type="button" (click)="load()" [disabled]="loading()"
-          class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
-          Yenile
-        </button>
+        <div class="flex gap-2">
+          <a routerLink="/dashboard/coaching/assignments/new" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">Yeni ödev</a>
+          <button type="button" (click)="load()" [disabled]="loading()"
+            class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 disabled:opacity-50 dark:border-gray-600 dark:text-gray-200">
+            Yenile
+          </button>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:grid-cols-4 dark:border-gray-700 dark:bg-gray-800">

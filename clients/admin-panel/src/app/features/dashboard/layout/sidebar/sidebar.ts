@@ -129,10 +129,34 @@ export class SidebarComponent {
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M5.25 4.5h13.5A2.25 2.25 0 0 1 21 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 17.25V6.75A2.25 2.25 0 0 1 5.25 4.5Z" /></svg>'
           },
           {
+            label: 'Yeni ödev oluştur',
+            route: '/dashboard/coaching/assignments/new',
+            permission: ADMIN_PERMISSIONS.coachingManage,
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>'
+          },
+          {
             label: 'Seanslar, sınavlar ve hedefler',
             route: '/dashboard/coaching/operations',
             permission: ADMIN_PERMISSIONS.coachingView,
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12h18M12 3v18m6.75-15.75L5.25 18.75" /></svg>'
+          },
+          {
+            label: 'Yeni seans oluştur',
+            route: '/dashboard/coaching/operations/new/session',
+            permission: ADMIN_PERMISSIONS.coachingManage,
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>'
+          },
+          {
+            label: 'Yeni sınav oluştur',
+            route: '/dashboard/coaching/operations/new/exam',
+            permission: ADMIN_PERMISSIONS.coachingManage,
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>'
+          },
+          {
+            label: 'Yeni hedef oluştur',
+            route: '/dashboard/coaching/operations/new/goal',
+            permission: ADMIN_PERMISSIONS.coachingManage,
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>'
           }
         ]
       });
@@ -172,7 +196,11 @@ export class SidebarComponent {
       '/dashboard/notifications/email-templates': ADMIN_PERMISSIONS.notificationTemplates,
       '/dashboard/coaching': ADMIN_PERMISSIONS.coachingView,
       '/dashboard/coaching/assignments': ADMIN_PERMISSIONS.coachingView,
+      '/dashboard/coaching/assignments/new': ADMIN_PERMISSIONS.coachingManage,
       '/dashboard/coaching/operations': ADMIN_PERMISSIONS.coachingView,
+      '/dashboard/coaching/operations/new/session': ADMIN_PERMISSIONS.coachingManage,
+      '/dashboard/coaching/operations/new/exam': ADMIN_PERMISSIONS.coachingManage,
+      '/dashboard/coaching/operations/new/goal': ADMIN_PERMISSIONS.coachingManage,
       '/dashboard/settings/admin-audit': ADMIN_PERMISSIONS.operationsView,
       '/dashboard/settings/logs': ADMIN_PERMISSIONS.operationsView,
       '/dashboard/settings/log-retention': ADMIN_PERMISSIONS.operationsView,
