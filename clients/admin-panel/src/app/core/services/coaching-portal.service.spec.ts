@@ -190,4 +190,14 @@ describe('CoachingPortalService', () => {
     upload.flush({});
     http.verify();
   });
+
+  it('builds a provider-independent calendar feed URL by audience', () => {
+    TestBed.configureTestingModule({
+      providers: [CoachingPortalService, provideHttpClient(), provideHttpClientTesting()]
+    });
+    const service = TestBed.inject(CoachingPortalService);
+
+    expect(service.calendarFeedUrl('teacher')).toContain('/calendar/teacher.ics');
+    expect(service.calendarFeedUrl('student')).toContain('/calendar/student.ics');
+  });
 });
