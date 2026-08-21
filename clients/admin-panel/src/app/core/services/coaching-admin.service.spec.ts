@@ -104,4 +104,26 @@ describe('CoachingAdminService', () => {
     exam.flush({});
     http.verify();
   });
+
+  it('requests a bounded institution comparison report with optional grade and dates', () => {
+    TestBed.configureTestingModule({
+      providers: [CoachingAdminService, provideHttpClient(), provideHttpClientTesting()]
+    });
+    const service = TestBed.inject(CoachingAdminService);
+    const http = TestBed.inject(HttpTestingController);
+
+    service.getInstitutionComparison('institution/1', {
+      gradeLevel: 8,
+      fromDate: '2030-01-01T00:00:00.000Z',
+      toDate: '2030-02-01T00:00:00.000Z'
+    }).subscribe();
+
+    const request = http.expectOne(candidate => candidate.url.endsWith('/reports/institution/institution%2F1/comparison'));
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('gradeLevel')).toBe('8');
+    expect(request.request.params.get('fromDate')).toBe('2030-01-01T00:00:00.000Z');
+    expect(request.request.params.get('toDate')).toBe('2030-02-01T00:00:00.000Z');
+    request.flush({});
+    http.verify();
+  });
 });
