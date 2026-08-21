@@ -36,7 +36,9 @@ son authenticated calendar export değişikliğiyle production SSR/browser build
 başarılıdır. Docker health smoke 200, yeni calendar/early-warning rotaları auth
 olmadan 401 ve 5 saniyelik gateway health koşusunda 19.083 istek, %100 başarı,
 p95/p99 16 ms ve yaklaşık 3.793 RPS ölçülmüştür; bu lokal smoke sonucudur,
-üretim SLA taahhüdü değildir.
+üretim SLA taahhüdü değildir. Aynı ortamda 16 worker/30 saniyelik baseline
+koşusunda 246.183 istek, %100 başarı, p95/p99 16 ms ve yaklaşık 8.159 RPS
+ölçülmüştür; bu da yalnızca yerel kapasite referansıdır.
 
 ---
 
