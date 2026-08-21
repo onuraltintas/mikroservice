@@ -2,6 +2,10 @@ using Coaching.Application.Commands.CreateAssignment;
 using Coaching.Application.Commands.CreateExam;
 using Coaching.Application.Commands.CreateGoal;
 using Coaching.Application.Commands.CreateSession;
+using Coaching.Application.Queries.GetCoachingAdminAssignments;
+using Coaching.Application.Queries.GetCoachingAdminSessions;
+using Coaching.Application.Queries.GetCoachingAdminExams;
+using Coaching.Application.Queries.GetCoachingAdminGoals;
 using Coaching.Domain.Enums;
 using FluentAssertions;
 
@@ -62,6 +66,25 @@ public sealed class CoachingContractTests
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(error => error.PropertyName == "DurationMinutes");
+    }
+
+    [Fact]
+    public async Task CreateSessionContract_RequiresMultipleStudentsForGroupSession()
+    {
+        var validator = new CreateSessionCommandValidator();
+        var result = await validator.ValidateAsync(new CreateSessionCommand(
+            Guid.NewGuid(),
+            Guid.Empty,
+            DateTime.UtcNow.AddHours(1),
+            60,
+            "Math",
+            null,
+            SessionType.Group,
+            "group-session-key",
+            [Guid.NewGuid()]));
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == "StudentIds");
     }
 
     [Fact]
@@ -134,5 +157,39 @@ public sealed class CoachingContractTests
         result.IsValid.Should().BeFalse();
         result.Errors.Select(error => error.PropertyName)
             .Should().Contain(new[] { "Category", "TargetScore" });
+    }
+
+    [Fact]
+    public async Task CoachingAdminAssignmentsContract_RejectsInvalidFilterAndPage()
+    {
+        var validator = new GetCoachingAdminAssignmentsQueryValidator();
+
+        var result = await validator.ValidateAsync(new GetCoachingAdminAssignmentsQuery(
+            PageNumber: 0,
+            PageSize: 101,
+            Status: "unknown",
+            Source: "unknown"));
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == nameof(GetCoachingAdminAssignmentsQuery.Status));
+        result.Errors.Should().Contain(error => error.PropertyName == nameof(GetCoachingAdminAssignmentsQuery.Source));
+    }
+
+    [Fact]
+    public async Task CoachingAdminOperationalQueries_RejectInvalidFiltersAndPage()
+    {
+        var sessionResult = await new GetCoachingAdminSessionsQueryValidator().ValidateAsync(
+            new GetCoachingAdminSessionsQuery(0, 101, "unknown", new string('x', 201)));
+        var examResult = await new GetCoachingAdminExamsQueryValidator().ValidateAsync(
+            new GetCoachingAdminExamsQuery(0, 101, "unknown", new string('x', 201)));
+        var goalResult = await new GetCoachingAdminGoalsQueryValidator().ValidateAsync(
+            new GetCoachingAdminGoalsQuery(0, 101, null, new string('x', 201)));
+
+        sessionResult.IsValid.Should().BeFalse();
+        sessionResult.Errors.Should().Contain(error => error.PropertyName == nameof(GetCoachingAdminSessionsQuery.Status));
+        examResult.IsValid.Should().BeFalse();
+        examResult.Errors.Should().Contain(error => error.PropertyName == nameof(GetCoachingAdminExamsQuery.ExamType));
+        goalResult.IsValid.Should().BeFalse();
+        goalResult.Errors.Should().Contain(error => error.PropertyName == nameof(GetCoachingAdminGoalsQuery.Search));
     }
 }

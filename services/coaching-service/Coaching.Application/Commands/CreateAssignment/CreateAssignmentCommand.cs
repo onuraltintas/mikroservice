@@ -15,7 +15,17 @@ public record CreateAssignmentCommand : IRequest<CreateAssignmentResponse>
     public string? Subject { get; init; }
     
     public string AssignmentType { get; init; } = "Individual"; // Individual, Group
+    public string AssignmentSource { get; init; } = "Digital"; // Digital, Book, Mixed
     public int? TargetGradeLevel { get; init; }
+
+    public string? BookTitle { get; init; }
+    public string? BookIsbn { get; init; }
+    public string? BookEdition { get; init; }
+    public string? BookChapter { get; init; }
+    public int? BookStartPage { get; init; }
+    public int? BookEndPage { get; init; }
+    public int? BookStartQuestion { get; init; }
+    public int? BookEndQuestion { get; init; }
     
     public DateTime DueDate { get; init; }
     public int? EstimatedDurationMinutes { get; init; }

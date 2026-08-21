@@ -1,6 +1,8 @@
 using EduPlatform.Shared.Contracts.Events.Identity;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Notification.Application.Configuration;
 using Notification.Application.Interfaces;
 
 namespace Notification.Application.Consumers;
@@ -10,12 +12,18 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
     private readonly IEmailDeliveryQueue _emailDeliveryQueue;
     private readonly INotificationService _notificationService;
     private readonly INotificationDbContext _dbContext;
+    private readonly PublicAppUrlOptions _publicAppUrlOptions;
 
-    public UserCreatedConsumer(IEmailDeliveryQueue emailDeliveryQueue, INotificationService notificationService, INotificationDbContext dbContext)
+    public UserCreatedConsumer(
+        IEmailDeliveryQueue emailDeliveryQueue,
+        INotificationService notificationService,
+        INotificationDbContext dbContext,
+        IOptions<PublicAppUrlOptions> publicAppUrlOptions)
     {
         _emailDeliveryQueue = emailDeliveryQueue;
         _notificationService = notificationService;
         _dbContext = dbContext;
+        _publicAppUrlOptions = publicAppUrlOptions.Value;
     }
 
     public async Task Consume(ConsumeContext<UserCreatedEvent> context)
@@ -30,6 +38,9 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
 
         string subject;
         string body;
+        var passwordSetupUrl = _publicAppUrlOptions.BuildPasswordResetLink(
+            message.PasswordSetupToken,
+            email);
 
         if (template != null)
         {
@@ -42,14 +53,15 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
                 .Replace("{{FirstName}}", message.FirstName ?? "")
                 .Replace("{{LastName}}", message.LastName ?? "")
                 .Replace("{{Role}}", message.Role ?? "")
-                .Replace("{{TemporaryPassword}}", message.TemporaryPassword ?? "")
+                .Replace("{{PasswordSetupUrl}}", passwordSetupUrl)
+                .Replace("{{PasswordSetupTokenExpiresAt}}", message.PasswordSetupTokenExpiresAt.ToString("O"))
                 .Replace("{{Email}}", message.Email ?? "");
         }
         else
         {
             // Fallback (Safe Mode)
             subject = $"Welcome to EduPlatform, {message.FirstName}!";
-            body = $"<h1>Welcome {message.FirstName}!</h1><p>Your account is ready.</p><p>Pass: {message.TemporaryPassword}</p>";
+            body = $"<h1>Welcome {message.FirstName}!</h1><p>Your account is ready.</p><p><a href=\"{passwordSetupUrl}\">Set your password</a></p><p>This link expires at {message.PasswordSetupTokenExpiresAt:O}.</p>";
         }
 
         var messageId = context.MessageId ?? throw new InvalidOperationException("UserCreatedEvent.MessageId is required.");

@@ -32,15 +32,25 @@ public class UpdateSessionAttendanceCommandHandler : IRequestHandler<UpdateSessi
 
         _accessPolicy.RequireTeacher(session.TeacherId);
 
-        // Assuming single student session for now (MVP)
-        var attendance = session.Attendances.FirstOrDefault();
+        var attendance = command.StudentId.HasValue
+            ? session.Attendances.FirstOrDefault(item => item.StudentId == command.StudentId.Value)
+            : session.Attendances.Count == 1
+                ? session.Attendances.First()
+                : null;
+
         if (attendance == null)
-            throw new InvalidOperationException("No student assigned to this session");
+        {
+            throw new InvalidOperationException(
+                session.Attendances.Count > 1
+                    ? "StudentId is required for a group session."
+                    : "No student assigned to this session");
+        }
 
         // Record attendance
         session.RecordAttendance(attendance.StudentId, command.Attended, command.Notes);
 
-        if (command.Attended)
+        if (command.Attended && session.Attendances.All(item =>
+                item.AttendanceStatus != AttendanceStatus.NotRecorded))
         {
             session.Complete();
         }

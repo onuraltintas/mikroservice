@@ -4,6 +4,7 @@ using MassTransit;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.IntegrationTests.Fixtures;
+using System.Text.Json;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -79,7 +80,8 @@ public class EventPublishingTests : IAsyncLifetime
             FirstName: "Test",
             LastName: "User",
             Role: "Student",
-            TemporaryPassword: "TempPass123!",
+            PasswordSetupToken: "setup-token",
+            PasswordSetupTokenExpiresAt: DateTime.UtcNow.AddHours(2),
             CreatedAt: DateTime.UtcNow
         );
 
@@ -114,7 +116,8 @@ public class EventPublishingTests : IAsyncLifetime
             FirstName: "User",
             LastName: "One",
             Role: "Student",
-            TemporaryPassword: "TempPass123!",
+            PasswordSetupToken: "setup-token-1",
+            PasswordSetupTokenExpiresAt: DateTime.UtcNow.AddHours(2),
             CreatedAt: DateTime.UtcNow
         );
 
@@ -124,7 +127,8 @@ public class EventPublishingTests : IAsyncLifetime
             FirstName: "User",
             LastName: "Two",
             Role: "Student",
-            TemporaryPassword: "TempPass123!",
+            PasswordSetupToken: "setup-token-2",
+            PasswordSetupTokenExpiresAt: DateTime.UtcNow.AddHours(2),
             CreatedAt: DateTime.UtcNow
         );
 
@@ -138,5 +142,25 @@ public class EventPublishingTests : IAsyncLifetime
         // Assert
         var publishedEvents = _harness.Published.Select<UserCreatedEvent>().ToList();
         publishedEvents.Should().HaveCount(2, "both events should be published");
+    }
+
+    [Fact]
+    public void UserCreatedEvent_ShouldNeverSerializeAPlaintextPassword()
+    {
+        var message = new UserCreatedEvent(
+            Guid.NewGuid(),
+            "user@example.com",
+            "User",
+            "One",
+            "Student",
+            "setup-token",
+            DateTime.UtcNow.AddHours(2),
+            DateTime.UtcNow);
+
+        var json = JsonSerializer.Serialize(message);
+
+        json.Should().Contain("PasswordSetupToken");
+        json.Should().NotContain("TemporaryPassword");
+        json.Should().NotContain("TempPass123!");
     }
 }

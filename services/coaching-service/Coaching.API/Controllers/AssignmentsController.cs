@@ -2,12 +2,17 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Coaching.Application.Commands.CreateAssignment;
 using Coaching.Application.Commands.SubmitAssignment;
+using Coaching.Application.Commands.CreateAssignmentAttachment;
+using Coaching.Application.Commands.UploadAssignmentAttachment;
+using Coaching.Application.Attachments;
 using Coaching.Application.Commands.GradeAssignment;
 using Coaching.Application.Commands.CancelAssignment;
 using Coaching.Application.Commands.DeleteAssignment;
 using Coaching.Application.Queries.GetAssignment;
 using Coaching.Application.Queries.GetTeacherAssignments;
 using Coaching.Application.Queries.GetStudentAssignments;
+using Coaching.Application.Queries.GetAssignmentAttachment;
+using Coaching.Application.Queries;
 using MediatR;
 using EduPlatform.Shared.Kernel.Exceptions;
 
@@ -82,6 +87,10 @@ public class AssignmentsController : ControllerBase
         {
             return BadRequest(new { error = ex.Message, details = ex.Errors });
         }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating assignment: {Title}", command.Title);
@@ -119,6 +128,10 @@ public class AssignmentsController : ControllerBase
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
         }
+        catch (BusinessRuleException ex)
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
+        }
         catch (ValidationException ex)
         {
             return BadRequest(new { error = ex.Message, details = ex.Errors });
@@ -127,6 +140,145 @@ public class AssignmentsController : ControllerBase
         {
             _logger.LogError(ex, "Error submitting assignment: {AssignmentId}", id);
             return StatusCode(500, new { error = "An error occurred while submitting the assignment" });
+        }
+    }
+
+    /// <summary>
+    /// Create a metadata record and a short-lived upload path for a student photo.
+    /// </summary>
+    [HttpPost("{id}/students/{studentId}/attachments")]
+    [ProducesResponseType(typeof(CreateAssignmentAttachmentResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<CreateAssignmentAttachmentResponse>> CreateAttachment(
+        Guid id,
+        Guid studentId,
+        [FromBody] CreateAssignmentAttachmentCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.AssignmentId || studentId != command.StudentId)
+            return BadRequest("Assignment or student ID mismatch");
+
+        try
+        {
+            var result = await _mediator.Send(command, cancellationToken);
+            return Created(result.UploadUrl, result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex)
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Upload the photo bytes to the server-side storage adapter.
+    /// </summary>
+    [HttpPut("{id}/students/{studentId}/attachments/{attachmentId}/content")]
+    [RequestSizeLimit(AssignmentAttachmentPolicy.MaxFileSizeBytes)]
+    [ProducesResponseType(typeof(UploadAssignmentAttachmentResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UploadAssignmentAttachmentResponse>> UploadAttachment(
+        Guid id,
+        Guid studentId,
+        Guid attachmentId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var command = new UploadAssignmentAttachmentCommand(
+                id,
+                studentId,
+                attachmentId,
+                Request.Body,
+                Request.ContentType ?? string.Empty,
+                Request.ContentLength ?? -1,
+                Request.Headers.TryGetValue("X-Content-SHA256", out var hash)
+                    ? hash.ToString()
+                    : string.Empty);
+
+            var result = await _mediator.Send(command, cancellationToken);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex)
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Streams a clean, authorized submission attachment.
+    /// </summary>
+    [HttpGet("{id}/students/{studentId}/attachments/{attachmentId}/content")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> GetAttachment(
+        Guid id,
+        Guid studentId,
+        Guid attachmentId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _mediator.Send(
+                new GetAssignmentAttachmentQuery(id, studentId, attachmentId),
+                cancellationToken);
+
+            return result is null
+                ? NotFound(new { error = "Attachment not found." })
+                : File(
+                    result.Content,
+                    result.ContentType,
+                    result.OriginalFileName,
+                    enableRangeProcessing: true);
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.Equals("Attachment.NotAvailable", StringComparison.OrdinalIgnoreCase))
+        {
+            return Conflict(new { error = ex.Message, code = ex.Code });
+        }
+        catch (FileNotFoundException)
+        {
+            return NotFound(new { error = "Attachment content not found." });
         }
     }
 
@@ -253,13 +405,17 @@ public class AssignmentsController : ControllerBase
     /// Get assignments for teacher
     /// </summary>
     [HttpGet("teacher/{teacherId}")]
-    [ProducesResponseType(typeof(TeacherAssignmentListResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetTeacherAssignments(Guid teacherId, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(PagedResponse<TeacherAssignmentDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetTeacherAssignments(
+        Guid teacherId,
+        CancellationToken cancellationToken,
+        [FromQuery] int pageNumber = CoachingPaging.DefaultPageNumber,
+        [FromQuery] int pageSize = CoachingPaging.DefaultPageSize)
     {
         _logger.LogInformation("Getting assignments for teacher: {TeacherId}", teacherId);
 
         var result = await _mediator.Send(
-            new GetTeacherAssignmentsQuery(teacherId), 
+            new GetTeacherAssignmentsQuery(teacherId, pageNumber, pageSize),
             cancellationToken);
 
         return Ok(result);
@@ -269,13 +425,17 @@ public class AssignmentsController : ControllerBase
     /// Get assignments for student
     /// </summary>
     [HttpGet("student/{studentId}")]
-    [ProducesResponseType(typeof(StudentAssignmentListResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetStudentAssignments(Guid studentId, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(PagedResponse<StudentAssignmentDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStudentAssignments(
+        Guid studentId,
+        CancellationToken cancellationToken,
+        [FromQuery] int pageNumber = CoachingPaging.DefaultPageNumber,
+        [FromQuery] int pageSize = CoachingPaging.DefaultPageSize)
     {
         _logger.LogInformation("Getting assignments for student: {StudentId}", studentId);
 
         var result = await _mediator.Send(
-            new GetStudentAssignmentsQuery(studentId),
+            new GetStudentAssignmentsQuery(studentId, pageNumber, pageSize),
             cancellationToken);
 
         return Ok(result);

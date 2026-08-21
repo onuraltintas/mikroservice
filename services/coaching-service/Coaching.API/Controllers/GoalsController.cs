@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Coaching.Application.Commands.CreateGoal;
 using Coaching.Application.Commands.UpdateGoalProgress;
 using Coaching.Application.Queries.GetGoals;
+using Coaching.Application.Queries;
 
 using MediatR;
 using Coaching.Application.Commands.DeleteGoal;
@@ -149,11 +150,15 @@ public class GoalsController : ControllerBase
     /// Get goals for a student
     /// </summary>
     [HttpGet("student/{studentId}")]
-    [ProducesResponseType(typeof(List<GoalDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetStudentGoals(Guid studentId, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(PagedResponse<GoalDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStudentGoals(
+        Guid studentId,
+        CancellationToken cancellationToken,
+        [FromQuery] int pageNumber = CoachingPaging.DefaultPageNumber,
+        [FromQuery] int pageSize = CoachingPaging.DefaultPageSize)
     {
         var result = await _mediator.Send(
-            new GetStudentGoalsQuery(studentId),
+            new GetStudentGoalsQuery(studentId, pageNumber, pageSize),
             cancellationToken);
 
         return Ok(result);

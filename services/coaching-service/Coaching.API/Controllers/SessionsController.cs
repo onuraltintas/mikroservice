@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Coaching.Application.Commands.CreateSession;
 using Coaching.Application.Commands.UpdateSessionAttendance;
 using Coaching.Application.Queries.GetSessions;
+using Coaching.Application.Queries;
 using MediatR;
 using Coaching.Application.Commands.DeleteSession;
 using EduPlatform.Shared.Kernel.Exceptions;
@@ -179,11 +180,15 @@ public class SessionsController : ControllerBase
     /// Get sessions for a teacher
     /// </summary>
     [HttpGet("teacher/{teacherId}")]
-    [ProducesResponseType(typeof(List<SessionDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetTeacherSessions(Guid teacherId, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(PagedResponse<SessionDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetTeacherSessions(
+        Guid teacherId,
+        CancellationToken cancellationToken,
+        [FromQuery] int pageNumber = CoachingPaging.DefaultPageNumber,
+        [FromQuery] int pageSize = CoachingPaging.DefaultPageSize)
     {
         var result = await _mediator.Send(
-            new GetTeacherSessionsQuery(teacherId), 
+            new GetTeacherSessionsQuery(teacherId, pageNumber, pageSize),
             cancellationToken);
 
         return Ok(result);
@@ -193,11 +198,14 @@ public class SessionsController : ControllerBase
     /// Get upcoming sessions
     /// </summary>
     [HttpGet("upcoming")]
-    [ProducesResponseType(typeof(List<SessionDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetUpcomingSessions(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(PagedResponse<SessionDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetUpcomingSessions(
+        CancellationToken cancellationToken,
+        [FromQuery] int pageNumber = CoachingPaging.DefaultPageNumber,
+        [FromQuery] int pageSize = CoachingPaging.DefaultPageSize)
     {
         var result = await _mediator.Send(
-            new GetUpcomingSessionsQuery(DateTime.UtcNow), 
+            new GetUpcomingSessionsQuery(DateTime.UtcNow, pageNumber, pageSize),
             cancellationToken);
 
         return Ok(result);

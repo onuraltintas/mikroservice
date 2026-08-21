@@ -15,4 +15,4 @@ public record CreateStudentCommand(
 /// The cross-service StudentId is the Identity user id. ProfileId is exposed
 /// separately for Identity-owned student-profile operations.
 /// </summary>
-public record CreateStudentResult(Guid StudentId, Guid ProfileId, string TemporaryPassword);
+public record CreateStudentResult(Guid StudentId, Guid ProfileId);

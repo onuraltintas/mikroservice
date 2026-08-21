@@ -74,7 +74,8 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         if (identityResult.IsFailure)
             return Result.Failure<CreateUserResponse>(identityResult.Error);
 
-        var (userId, tempPassword) = identityResult.Value;
+        var provisionedUser = identityResult.Value;
+        var userId = provisionedUser.UserId;
 
         // 4. Create Profile based on Role
         try 
@@ -101,12 +102,13 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
                 request.FirstName,
                 request.LastName,
                 request.Role,
-                tempPassword,
+                provisionedUser.PasswordSetupToken,
+                provisionedUser.PasswordSetupTokenExpiresAt,
                 DateTime.UtcNow
             ), cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return Result.Success(new CreateUserResponse(userId, tempPassword));
+            return Result.Success(new CreateUserResponse(userId));
         }
         catch (Exception ex)
         {

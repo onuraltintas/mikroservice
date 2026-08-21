@@ -1,6 +1,7 @@
 using Coaching.Application.Authorization;
 using Coaching.Application.Commands.CreateAssignment;
 using Coaching.Application.Interfaces;
+using Coaching.Application.Queries;
 using Coaching.Domain.Entities;
 using EduPlatform.Shared.Kernel.Exceptions;
 using FluentAssertions;
@@ -63,11 +64,27 @@ public sealed class CoachingAssignmentIdempotencyTests
         public Task<Assignment?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.SingleOrDefault(item => item.Id == id));
 
-        public Task<List<Assignment>> GetByTeacherIdAsync(Guid teacherId, CancellationToken cancellationToken = default) =>
-            Task.FromResult(Items.Where(item => item.TeacherId == teacherId).ToList());
+        public Task<PagedRepositoryResult<Assignment>> GetByTeacherIdAsync(
+            Guid teacherId,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            var filtered = Items.Where(item => item.TeacherId == teacherId).ToList();
+            var page = filtered.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+            return Task.FromResult(new PagedRepositoryResult<Assignment>(page, filtered.Count));
+        }
 
-        public Task<List<Assignment>> GetByStudentIdAsync(Guid studentId, CancellationToken cancellationToken = default) =>
-            Task.FromResult(Items.Where(item => item.AssignedStudents.Any(student => student.StudentId == studentId)).ToList());
+        public Task<PagedRepositoryResult<Assignment>> GetByStudentIdAsync(
+            Guid studentId,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            var filtered = Items.Where(item => item.AssignedStudents.Any(student => student.StudentId == studentId)).ToList();
+            var page = filtered.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+            return Task.FromResult(new PagedRepositoryResult<Assignment>(page, filtered.Count));
+        }
 
         public Task<Assignment> AddAsync(Assignment assignment, CancellationToken cancellationToken = default)
         {

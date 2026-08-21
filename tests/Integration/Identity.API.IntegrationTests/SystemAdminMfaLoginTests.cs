@@ -198,8 +198,8 @@ public sealed class SystemAdminMfaLoginTests
         public Task<Result> DeactivateUserAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> ActivateUserAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> AssignRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task<Result<(Guid UserId, string TemporaryPassword)>> RegisterUserWithTemporaryPasswordAsync(string email, string firstName, string lastName, CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task<Result<(Guid UserId, string TemporaryPassword)>> RegisterUserWithRoleAsync(string email, string firstName, string lastName, string roleName, string? phoneNumber, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<Result<ProvisionedUser>> RegisterUserWithPasswordSetupAsync(string email, string firstName, string lastName, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<Result<ProvisionedUser>> RegisterUserWithRoleAsync(string email, string firstName, string lastName, string roleName, string? phoneNumber, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> RemoveRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result<IEnumerable<string>>> GetAvailableRolesAsync(CancellationToken cancellationToken) => throw new NotSupportedException();

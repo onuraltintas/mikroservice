@@ -203,3 +203,8 @@ git diff --check
 Docker tabanlı entegrasyonlar ayrı bir CI job'ında çalıştırılmalı; Docker olmayan
 geliştirici makinelerinde yalnızca derleme ve container dışı test sonucu başarılı
 sayılmalıdır.
+
+Development/E2E smoke için Compose'a `TEST_ADMIN_PASSWORD` ve
+`TEST_DEFAULT_PASSWORD` değerleri yalnızca geçici olarak verilebilir. Bu değerler
+Production'da boş bırakılmalı; demo kullanıcı seed'i gerçek deployment sırrı veya
+kalıcı yönetici hesabı olarak kullanılmamalıdır.

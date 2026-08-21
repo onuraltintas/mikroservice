@@ -21,6 +21,14 @@ tanımlıdır. `CoachingContractTests` şu sınırları release sırasında sabi
 - Due/exam/session/target tarihleri geçmişte olamaz.
 - Assignment hedef listesi boş, duplicate veya 100'den büyük olamaz.
 - Score, duration ve passing-score değerleri domain sınırları içindedir.
+- Book/Mixed assignment'larda kitap başlığı ve geçerli sayfa aralığı zorunludur;
+  fotoğraf teslimleri 10 MiB, MIME, hash ve içerik imzası ile sınırlandırılır.
+- Fotoğraf bytes'ları PostgreSQL'e yazılmaz. `Local` yalnız Development/test
+  içindir; yatay ölçek için `Minio`/S3 uyumlu provider, tarama için `ClamAv`
+  seçilir ve Production bu iki seçimi fail-closed zorunlu kılar.
+- SystemAdmin Coaching read model'i assignment, session, exam ve goal listelerini
+  bounded pagination/filter ile sunar; admin DTO'larında Identity profile PII'si
+  veya storage key bulunmaz.
 
 Kimlik/tenant authorization Coaching'de tahmin edilmez. Teacher target'ları
 Identity internal authorization endpoint'inde aktif user/profile/institution,

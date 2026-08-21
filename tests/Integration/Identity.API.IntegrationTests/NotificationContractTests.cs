@@ -1,11 +1,42 @@
 using FluentAssertions;
+using Identity.Domain.Entities;
 using Notification.Application.Configuration;
 using Notification.Domain.Entities;
+using System.Text.Json;
 
 namespace Identity.API.IntegrationTests;
 
 public sealed class NotificationContractTests
 {
+    [Fact]
+    public void PasswordSetupToken_IsShortLivedAndCryptographicallyRandom()
+    {
+        var user = User.Create(
+            Guid.NewGuid(),
+            "student@example.test",
+            "Ada",
+            "Lovelace");
+
+        var firstToken = user.GeneratePasswordResetToken();
+        var firstExpiry = user.PasswordResetTokenExpiresAt;
+        var secondToken = user.GeneratePasswordResetToken();
+
+        firstToken.Should().HaveLength(43);
+        firstToken.Should().NotBe(secondToken);
+        user.PasswordResetToken.Should().Be(secondToken);
+        firstExpiry.Should().BeAfter(DateTime.UtcNow.AddHours(1));
+        firstExpiry.Should().BeBefore(DateTime.UtcNow.AddHours(3));
+    }
+
+    [Fact]
+    public void UserProvisioningResponse_ShouldNotExposeASecret()
+    {
+        var response = new Identity.Application.Commands.CreateUser.CreateUserResponse(Guid.NewGuid());
+
+        JsonSerializer.Serialize(response)
+            .Should().NotContain("TemporaryPassword");
+    }
+
     [Fact]
     public void PublicAppUrlOptions_BuildsVerificationLinkFromConfiguredOrigin()
     {

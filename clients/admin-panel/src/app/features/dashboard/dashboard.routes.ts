@@ -18,6 +18,24 @@ export const DASHBOARD_ROUTES: Routes = [
         loadChildren: () => import('../identity/identity.routes').then(m => m.IDENTITY_ROUTES)
     },
     {
+        path: 'coaching/assignments',
+        canActivate: [permissionGuard],
+        data: { permission: ADMIN_PERMISSIONS.coachingView },
+        loadComponent: () => import('./pages/coaching-assignments').then(m => m.CoachingAssignmentsComponent)
+    },
+    {
+        path: 'coaching/assignments/:id',
+        canActivate: [permissionGuard],
+        data: { permission: ADMIN_PERMISSIONS.coachingView },
+        loadComponent: () => import('./pages/coaching-assignment-detail').then(m => m.CoachingAssignmentDetailComponent)
+    },
+    {
+        path: 'coaching/operations',
+        canActivate: [permissionGuard],
+        data: { permission: ADMIN_PERMISSIONS.coachingView },
+        loadComponent: () => import('./pages/coaching-operational').then(m => m.CoachingOperationalComponent)
+    },
+    {
         path: 'coaching',
         canActivate: [permissionGuard],
         data: { permission: ADMIN_PERMISSIONS.coachingView },

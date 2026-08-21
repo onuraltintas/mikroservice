@@ -24,6 +24,10 @@ route guard'ları yalnızca kullanıcı deneyimi ve erken yönlendirme sağlar.
 | Notification | Kullanıcının kendi bildirimleri | `/api/notifications` | Oturum sahibi |
 | Coaching | Kullanıcıların assignment/exam/session/goal akışları ve tenant/rol kontrolleri | `/api/assignments`, `/api/exams`, `/api/sessions`, `/api/goals` | Teacher/Student/SystemAdmin domain policy'leri |
 | Coaching | Global, bounded ve PII'siz operasyon özeti | `/api/coaching-admin/overview` | Yalnız `SystemAdmin` + `Permissions.Coaching.View` |
+| Coaching | Sayfalı assignment listesi; kaynak, kitap aralığı, teslim ve attachment sayaçları | `/api/coaching-admin/assignments` | Yalnız `SystemAdmin` + `Permissions.Coaching.View` |
+| Coaching | Assignment ayrıntısı; öğrenci teslim durumu, not/geri bildirim ve güvenli attachment metadata'sı | `/api/coaching-admin/assignments/{id}` | Yalnız `SystemAdmin` + `Permissions.Coaching.View` |
+| Coaching | Yalnız `Clean` durumundaki fotoğraf attachment'ını yetkili stream olarak indirme | `/api/assignments/{id}/students/{studentId}/attachments/{attachmentId}/content` | Assignment domain policy + aktif attachment |
+| Coaching | Sayfalı seans, sınav ve hedef operasyon listeleri; arama/durum filtreleri | `/api/coaching-admin/sessions`, `/api/coaching-admin/exams`, `/api/coaching-admin/goals` | Yalnız `SystemAdmin` + `Permissions.Coaching.View` |
 
 ## Coaching neden doğrudan CRUD değil?
 
@@ -32,8 +36,12 @@ içerir. Bunları genel bir admin CRUD ekranına açmak tenant ve eğitim verisi
 mahremiyeti açısından güvenli bir varsayılan değildir. Bu nedenle:
 
 - Öğretmen/öğrenci yazma ve okuma işlemleri mevcut domain policy'leriyle sınırlıdır.
-- SystemAdmin paneli yalnız sayısal özet ve sınırlı son ödev listesini görür; öğrenci
-  PII'si ve not detayları dönmez.
+- SystemAdmin paneli genel özetin yanında sayfalı operasyon listelerini ve gerekli
+  assignment ayrıntısını görür. Öğrenci teslim durumu, not, geri bildirim ve
+  attachment metadata'sı yalnızca korumalı admin ayrıntı endpoint'inden döner;
+  ham object-storage anahtarı, bekleyen/taranmamış dosya içeriği ve doğrudan bucket
+  erişimi hiçbir API yanıtına eklenmez. Fotoğraf içeriği yalnızca `Clean` tarama
+  durumundan sonra yetkili stream endpoint'i ile okunabilir.
 - İleride idari override gerekirse ayrı `Manage` command'ları, tenant scope,
   audit actor/reason ve iki aşamalı onay ile eklenmelidir; mevcut genel endpoint'lere
   bypass eklenmemelidir.

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Coaching.Domain.Entities;
 using Coaching.Application.Interfaces;
+using Coaching.Application.Queries;
 using Coaching.Infrastructure.Data;
 
 namespace Coaching.Infrastructure.Repositories;
@@ -41,25 +42,44 @@ public class AssignmentRepository : IAssignmentRepository
     {
         return await _context.Assignments
             .Include(a => a.AssignedStudents)
+                .ThenInclude(student => student.SubmissionAttachments)
             .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
     }
 
-    public async Task<List<Assignment>> GetByTeacherIdAsync(Guid teacherId, CancellationToken cancellationToken = default)
+    public async Task<PagedRepositoryResult<Assignment>> GetByTeacherIdAsync(Guid teacherId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
     {
-        return await _context.Assignments
+        var query = _context.Assignments
             .Include(a => a.AssignedStudents)
+                .ThenInclude(student => student.SubmissionAttachments)
             .Where(a => a.TeacherId == teacherId)
             .OrderByDescending(a => a.CreatedAt)
+            .ThenByDescending(a => a.Id);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip(CoachingPaging.GetSkip(pageNumber, pageSize))
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        return new PagedRepositoryResult<Assignment>(items, totalCount);
     }
 
-    public async Task<List<Assignment>> GetByStudentIdAsync(Guid studentId, CancellationToken cancellationToken = default)
+    public async Task<PagedRepositoryResult<Assignment>> GetByStudentIdAsync(Guid studentId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
     {
-        return await _context.Assignments
-            .Include(a => a.AssignedStudents)
+        var query = _context.Assignments
+            .Include(a => a.AssignedStudents.Where(s => s.StudentId == studentId))
+                .ThenInclude(student => student.SubmissionAttachments)
             .Where(a => a.AssignedStudents.Any(s => s.StudentId == studentId))
             .OrderByDescending(a => a.CreatedAt)
+            .ThenByDescending(a => a.Id);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip(CoachingPaging.GetSkip(pageNumber, pageSize))
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        return new PagedRepositoryResult<Assignment>(items, totalCount);
     }
 
     public async Task<Assignment> AddAsync(Assignment assignment, CancellationToken cancellationToken = default)
@@ -109,13 +129,21 @@ public class ExamRepository : IExamRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<Exam>> GetByStudentIdAsync(Guid studentId, CancellationToken cancellationToken = default)
+    public async Task<PagedRepositoryResult<Exam>> GetByStudentIdAsync(Guid studentId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
     {
-        return await _context.Exams
-            .Include(e => e.Results)
+        var query = _context.Exams
+            .Include(e => e.Results.Where(r => r.StudentId == studentId))
             .Where(e => e.Results.Any(r => r.StudentId == studentId))
             .OrderByDescending(e => e.ExamDate)
+            .ThenByDescending(e => e.Id);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip(CoachingPaging.GetSkip(pageNumber, pageSize))
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        return new PagedRepositoryResult<Exam>(items, totalCount);
     }
 
     public async Task<Exam> AddAsync(Exam exam, CancellationToken cancellationToken = default)
@@ -156,36 +184,62 @@ public class CoachingSessionRepository : ICoachingSessionRepository
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
     }
 
-    public async Task<List<CoachingSession>> GetByTeacherIdAsync(Guid teacherId, CancellationToken cancellationToken = default)
+    public async Task<PagedRepositoryResult<CoachingSession>> GetByTeacherIdAsync(Guid teacherId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
     {
-        return await _context.CoachingSessions
+        var query = _context.CoachingSessions
             .Include(s => s.Attendances)
             .Where(s => s.TeacherId == teacherId)
             .OrderByDescending(s => s.ScheduledDate)
+            .ThenByDescending(s => s.Id);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip(CoachingPaging.GetSkip(pageNumber, pageSize))
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        return new PagedRepositoryResult<CoachingSession>(items, totalCount);
     }
 
-    public async Task<List<CoachingSession>> GetUpcomingSessionsAsync(DateTime from, CancellationToken cancellationToken = default)
+    public async Task<PagedRepositoryResult<CoachingSession>> GetUpcomingSessionsAsync(DateTime from, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
     {
-        return await _context.CoachingSessions
+        var query = _context.CoachingSessions
             .Include(s => s.Attendances)
             .Where(s => s.ScheduledDate >= from && s.Status == Domain.Enums.SessionStatus.Scheduled)
             .OrderBy(s => s.ScheduledDate)
+            .ThenBy(s => s.Id);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip(CoachingPaging.GetSkip(pageNumber, pageSize))
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        return new PagedRepositoryResult<CoachingSession>(items, totalCount);
     }
 
-    public async Task<List<CoachingSession>> GetUpcomingSessionsByTeacherIdAsync(
+    public async Task<PagedRepositoryResult<CoachingSession>> GetUpcomingSessionsByTeacherIdAsync(
         Guid teacherId,
         DateTime from,
+        int pageNumber,
+        int pageSize,
         CancellationToken cancellationToken = default)
     {
-        return await _context.CoachingSessions
+        var query = _context.CoachingSessions
             .Include(s => s.Attendances)
             .Where(s => s.TeacherId == teacherId &&
                         s.ScheduledDate >= from &&
                         s.Status == Domain.Enums.SessionStatus.Scheduled)
             .OrderBy(s => s.ScheduledDate)
+            .ThenBy(s => s.Id);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip(CoachingPaging.GetSkip(pageNumber, pageSize))
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        return new PagedRepositoryResult<CoachingSession>(items, totalCount);
     }
 
     public async Task<CoachingSession> AddAsync(CoachingSession session, CancellationToken cancellationToken = default)
@@ -225,12 +279,20 @@ public class AcademicGoalRepository : IAcademicGoalRepository
             .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
     }
 
-    public async Task<List<AcademicGoal>> GetByStudentIdAsync(Guid studentId, CancellationToken cancellationToken = default)
+    public async Task<PagedRepositoryResult<AcademicGoal>> GetByStudentIdAsync(Guid studentId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
     {
-        return await _context.AcademicGoals
+        var query = _context.AcademicGoals
             .Where(g => g.StudentId == studentId)
             .OrderByDescending(g => g.CreatedAt)
+            .ThenByDescending(g => g.Id);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip(CoachingPaging.GetSkip(pageNumber, pageSize))
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        return new PagedRepositoryResult<AcademicGoal>(items, totalCount);
     }
 
     public async Task<AcademicGoal> AddAsync(AcademicGoal goal, CancellationToken cancellationToken = default)
@@ -332,5 +394,185 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
                 item.StudentCount,
                 item.SubmittedStudentCount,
                 item.CreatedAt)).ToList());
+    }
+
+    public async Task<PagedRepositoryResult<CoachingAdminAssignmentListDto>> GetAssignmentsAsync(
+        int pageNumber,
+        int pageSize,
+        string? status,
+        string? source,
+        string? search,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.Assignments.AsNoTracking().AsQueryable();
+
+        if (Enum.TryParse<Domain.Enums.AssignmentStatus>(status, true, out var parsedStatus))
+            query = query.Where(assignment => assignment.Status == parsedStatus);
+
+        if (Enum.TryParse<Domain.Enums.AssignmentSource>(source, true, out var parsedSource))
+            query = query.Where(assignment => assignment.Source == parsedSource);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(assignment =>
+                EF.Functions.ILike(assignment.Title, $"%{term}%")
+                || (assignment.Description != null && EF.Functions.ILike(assignment.Description, $"%{term}%")));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderByDescending(assignment => assignment.CreatedAt)
+            .ThenByDescending(assignment => assignment.Id)
+            .Skip(CoachingPaging.GetSkip(pageNumber, pageSize))
+            .Take(pageSize)
+            .Select(assignment => new CoachingAdminAssignmentListDto(
+                assignment.Id,
+                assignment.TeacherId,
+                assignment.InstitutionId,
+                assignment.Title,
+                assignment.Source.ToString(),
+                assignment.BookTitle,
+                assignment.BookStartPage,
+                assignment.BookEndPage,
+                assignment.Status,
+                assignment.DueDate,
+                assignment.AssignedStudents.Count,
+                assignment.AssignedStudents.Count(student =>
+                    student.Status == Domain.Enums.StudentAssignmentStatus.Submitted
+                    || student.Status == Domain.Enums.StudentAssignmentStatus.Graded),
+                assignment.AssignedStudents.SelectMany(student => student.SubmissionAttachments).Count(),
+                assignment.CreatedAt))
+            .ToListAsync(cancellationToken);
+
+        return new PagedRepositoryResult<CoachingAdminAssignmentListDto>(items, totalCount);
+    }
+
+    public async Task<PagedRepositoryResult<CoachingAdminSessionListDto>> GetSessionsAsync(
+        int pageNumber,
+        int pageSize,
+        string? status,
+        string? search,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.CoachingSessions.AsNoTracking().AsQueryable();
+
+        if (Enum.TryParse<Domain.Enums.SessionStatus>(status, true, out var parsedStatus))
+            query = query.Where(session => session.Status == parsedStatus);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(session =>
+                EF.Functions.ILike(session.Title, $"%{term}%")
+                || (session.Description != null && EF.Functions.ILike(session.Description, $"%{term}%")));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderByDescending(session => session.ScheduledDate)
+            .ThenByDescending(session => session.Id)
+            .Skip(CoachingPaging.GetSkip(pageNumber, pageSize))
+            .Take(pageSize)
+            .Select(session => new CoachingAdminSessionListDto(
+                session.Id,
+                session.TeacherId,
+                session.InstitutionId,
+                session.Title,
+                session.SessionType,
+                session.ScheduledDate,
+                session.DurationMinutes,
+                session.Status,
+                session.Attendances.Count,
+                session.Attendances.Count(attendance =>
+                    attendance.AttendanceStatus == Domain.Enums.AttendanceStatus.Present),
+                session.CreatedAt))
+            .ToListAsync(cancellationToken);
+
+        return new PagedRepositoryResult<CoachingAdminSessionListDto>(items, totalCount);
+    }
+
+    public async Task<PagedRepositoryResult<CoachingAdminExamListDto>> GetExamsAsync(
+        int pageNumber,
+        int pageSize,
+        string? examType,
+        string? search,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.Exams.AsNoTracking().AsQueryable();
+
+        if (Enum.TryParse<Domain.Enums.ExamType>(examType, true, out var parsedExamType))
+            query = query.Where(exam => exam.ExamType == parsedExamType);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(exam =>
+                EF.Functions.ILike(exam.Title, $"%{term}%")
+                || (exam.Description != null && EF.Functions.ILike(exam.Description, $"%{term}%"))
+                || (exam.Subject != null && EF.Functions.ILike(exam.Subject, $"%{term}%")));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderByDescending(exam => exam.ExamDate)
+            .ThenByDescending(exam => exam.Id)
+            .Skip(CoachingPaging.GetSkip(pageNumber, pageSize))
+            .Take(pageSize)
+            .Select(exam => new CoachingAdminExamListDto(
+                exam.Id,
+                exam.CreatedByTeacherId,
+                exam.InstitutionId,
+                exam.Title,
+                exam.ExamType,
+                exam.ExamDate,
+                exam.MaxScore,
+                exam.Results.Count,
+                exam.CreatedAt))
+            .ToListAsync(cancellationToken);
+
+        return new PagedRepositoryResult<CoachingAdminExamListDto>(items, totalCount);
+    }
+
+    public async Task<PagedRepositoryResult<CoachingAdminGoalListDto>> GetGoalsAsync(
+        int pageNumber,
+        int pageSize,
+        bool? completed,
+        string? search,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.AcademicGoals.AsNoTracking().AsQueryable();
+
+        if (completed.HasValue)
+            query = query.Where(goal => goal.IsCompleted == completed.Value);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(goal =>
+                EF.Functions.ILike(goal.Title, $"%{term}%")
+                || (goal.Description != null && EF.Functions.ILike(goal.Description, $"%{term}%"))
+                || (goal.TargetSubject != null && EF.Functions.ILike(goal.TargetSubject, $"%{term}%")));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderByDescending(goal => goal.CreatedAt)
+            .ThenByDescending(goal => goal.Id)
+            .Skip(CoachingPaging.GetSkip(pageNumber, pageSize))
+            .Take(pageSize)
+            .Select(goal => new CoachingAdminGoalListDto(
+                goal.Id,
+                goal.StudentId,
+                goal.SetByTeacherId,
+                goal.Title,
+                goal.Category,
+                goal.TargetDate,
+                goal.CurrentProgress,
+                goal.IsCompleted,
+                goal.CreatedAt))
+            .ToListAsync(cancellationToken);
+
+        return new PagedRepositoryResult<CoachingAdminGoalListDto>(items, totalCount);
     }
 }

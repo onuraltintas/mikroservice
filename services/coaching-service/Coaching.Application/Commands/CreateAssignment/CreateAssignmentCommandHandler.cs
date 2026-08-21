@@ -77,6 +77,7 @@ public class CreateAssignmentCommandHandler : IRequestHandler<CreateAssignmentCo
 
         // Parse AssignmentType
         var assignmentType = Enum.Parse<AssignmentType>(request.AssignmentType, ignoreCase: true);
+        var assignmentSource = Enum.Parse<AssignmentSource>(request.AssignmentSource, ignoreCase: true);
 
         // Create Assignment aggregate
         var assignment = Assignment.Create(
@@ -97,6 +98,20 @@ public class CreateAssignmentCommandHandler : IRequestHandler<CreateAssignmentCo
                 subject: request.Subject,
                 estimatedDurationMinutes: request.EstimatedDurationMinutes
             );
+        }
+
+        if (assignmentSource is AssignmentSource.Book or AssignmentSource.Mixed)
+        {
+            assignment.SetBookReference(
+                request.BookTitle!,
+                request.BookStartPage!.Value,
+                request.BookEndPage!.Value,
+                request.BookStartQuestion,
+                request.BookEndQuestion,
+                request.BookIsbn,
+                request.BookEdition,
+                request.BookChapter,
+                assignmentSource);
         }
 
         // Set scoring if provided
@@ -188,6 +203,7 @@ public class CreateAssignmentCommandHandler : IRequestHandler<CreateAssignmentCo
     private static string CreateRequestHash(CreateAssignmentCommand request)
     {
         var assignmentType = Enum.Parse<AssignmentType>(request.AssignmentType, ignoreCase: true);
+        var assignmentSource = Enum.Parse<AssignmentSource>(request.AssignmentSource, ignoreCase: true);
         return IdempotencyRequestHasher.Create(
             IdempotencyRequestHasher.Format(request.TeacherId),
             IdempotencyRequestHasher.Format(request.InstitutionId),
@@ -195,11 +211,20 @@ public class CreateAssignmentCommandHandler : IRequestHandler<CreateAssignmentCo
             request.Description,
             request.Subject,
             assignmentType.ToString(),
+            assignmentSource.ToString(),
             request.TargetGradeLevel?.ToString(),
             IdempotencyRequestHasher.Format(request.DueDate),
             request.EstimatedDurationMinutes?.ToString(),
             IdempotencyRequestHasher.Format(request.MaxScore),
             IdempotencyRequestHasher.Format(request.PassingScore),
+            request.BookTitle,
+            request.BookIsbn,
+            request.BookEdition,
+            request.BookChapter,
+            request.BookStartPage?.ToString(),
+            request.BookEndPage?.ToString(),
+            request.BookStartQuestion?.ToString(),
+            request.BookEndQuestion?.ToString(),
             IdempotencyRequestHasher.Format(request.StudentIds));
     }
 }

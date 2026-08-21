@@ -18,6 +18,15 @@ public record AssignmentResponse(
     string? Description,
     string? Subject,
     string Type,
+    string Source,
+    string? BookTitle,
+    string? BookIsbn,
+    string? BookEdition,
+    string? BookChapter,
+    int? BookStartPage,
+    int? BookEndPage,
+    int? BookStartQuestion,
+    int? BookEndQuestion,
     int? TargetGradeLevel,
     DateTime DueDate,
     int? EstimatedDurationMinutes,
@@ -33,5 +42,16 @@ public record AssignedStudentDto(
     DateTime? SubmittedAt,
     decimal? Score,
     string? TeacherFeedback,
-    string Status
+    string Status,
+    IReadOnlyList<AssignmentAttachmentDto>? Attachments = null
+);
+
+public record AssignmentAttachmentDto(
+    Guid Id,
+    string OriginalFileName,
+    string ContentType,
+    long SizeBytes,
+    string Status,
+    DateTime? UploadedAt,
+    DateTime? ScannedAt
 );

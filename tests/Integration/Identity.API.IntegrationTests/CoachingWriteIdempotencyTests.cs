@@ -4,6 +4,7 @@ using Coaching.Application.Commands.CreateExam;
 using Coaching.Application.Commands.CreateGoal;
 using Coaching.Application.Commands.CreateSession;
 using Coaching.Application.Interfaces;
+using Coaching.Application.Queries;
 using Coaching.Domain.Entities;
 using Coaching.Domain.Enums;
 using EduPlatform.Shared.Kernel.Exceptions;
@@ -172,8 +173,16 @@ public sealed class CoachingWriteIdempotencyTests
         public Task<List<Exam>> GetByInstitutionIdAsync(Guid institutionId, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.Where(item => item.InstitutionId == institutionId).ToList());
 
-        public Task<List<Exam>> GetByStudentIdAsync(Guid studentId, CancellationToken cancellationToken = default) =>
-            Task.FromResult(Items.Where(item => item.Results.Any(result => result.StudentId == studentId)).ToList());
+        public Task<PagedRepositoryResult<Exam>> GetByStudentIdAsync(
+            Guid studentId,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            var filtered = Items.Where(item => item.Results.Any(result => result.StudentId == studentId)).ToList();
+            var page = filtered.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+            return Task.FromResult(new PagedRepositoryResult<Exam>(page, filtered.Count));
+        }
 
         public Task<Exam> AddAsync(Exam exam, CancellationToken cancellationToken = default)
         {
@@ -197,14 +206,39 @@ public sealed class CoachingWriteIdempotencyTests
         public Task<CoachingSession?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.SingleOrDefault(item => item.Id == id));
 
-        public Task<List<CoachingSession>> GetByTeacherIdAsync(Guid teacherId, CancellationToken cancellationToken = default) =>
-            Task.FromResult(Items.Where(item => item.TeacherId == teacherId).ToList());
+        public Task<PagedRepositoryResult<CoachingSession>> GetByTeacherIdAsync(
+            Guid teacherId,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            var filtered = Items.Where(item => item.TeacherId == teacherId).ToList();
+            var page = filtered.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+            return Task.FromResult(new PagedRepositoryResult<CoachingSession>(page, filtered.Count));
+        }
 
-        public Task<List<CoachingSession>> GetUpcomingSessionsAsync(DateTime from, CancellationToken cancellationToken = default) =>
-            Task.FromResult(Items.Where(item => item.ScheduledDate >= from).ToList());
+        public Task<PagedRepositoryResult<CoachingSession>> GetUpcomingSessionsAsync(
+            DateTime from,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            var filtered = Items.Where(item => item.ScheduledDate >= from).ToList();
+            var page = filtered.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+            return Task.FromResult(new PagedRepositoryResult<CoachingSession>(page, filtered.Count));
+        }
 
-        public Task<List<CoachingSession>> GetUpcomingSessionsByTeacherIdAsync(Guid teacherId, DateTime from, CancellationToken cancellationToken = default) =>
-            Task.FromResult(Items.Where(item => item.TeacherId == teacherId && item.ScheduledDate >= from).ToList());
+        public Task<PagedRepositoryResult<CoachingSession>> GetUpcomingSessionsByTeacherIdAsync(
+            Guid teacherId,
+            DateTime from,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            var filtered = Items.Where(item => item.TeacherId == teacherId && item.ScheduledDate >= from).ToList();
+            var page = filtered.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+            return Task.FromResult(new PagedRepositoryResult<CoachingSession>(page, filtered.Count));
+        }
 
         public Task<CoachingSession> AddAsync(CoachingSession session, CancellationToken cancellationToken = default)
         {
@@ -228,8 +262,16 @@ public sealed class CoachingWriteIdempotencyTests
         public Task<AcademicGoal?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.SingleOrDefault(item => item.Id == id));
 
-        public Task<List<AcademicGoal>> GetByStudentIdAsync(Guid studentId, CancellationToken cancellationToken = default) =>
-            Task.FromResult(Items.Where(item => item.StudentId == studentId).ToList());
+        public Task<PagedRepositoryResult<AcademicGoal>> GetByStudentIdAsync(
+            Guid studentId,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            var filtered = Items.Where(item => item.StudentId == studentId).ToList();
+            var page = filtered.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+            return Task.FromResult(new PagedRepositoryResult<AcademicGoal>(page, filtered.Count));
+        }
 
         public Task<AcademicGoal> AddAsync(AcademicGoal goal, CancellationToken cancellationToken = default)
         {

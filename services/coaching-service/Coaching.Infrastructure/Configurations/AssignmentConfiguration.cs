@@ -46,6 +46,29 @@ public class AssignmentConfiguration : IEntityTypeConfiguration<Assignment>
             .HasMaxLength(20)
             .IsRequired();
 
+        builder.Property(x => x.Source)
+            .HasColumnName("source")
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .IsRequired();
+
+        builder.Property(x => x.BookTitle)
+            .HasColumnName("book_title")
+            .HasMaxLength(200);
+        builder.Property(x => x.BookIsbn)
+            .HasColumnName("book_isbn")
+            .HasMaxLength(32);
+        builder.Property(x => x.BookEdition)
+            .HasColumnName("book_edition")
+            .HasMaxLength(100);
+        builder.Property(x => x.BookChapter)
+            .HasColumnName("book_chapter")
+            .HasMaxLength(200);
+        builder.Property(x => x.BookStartPage).HasColumnName("book_start_page");
+        builder.Property(x => x.BookEndPage).HasColumnName("book_end_page");
+        builder.Property(x => x.BookStartQuestion).HasColumnName("book_start_question");
+        builder.Property(x => x.BookEndQuestion).HasColumnName("book_end_question");
+
         builder.Property(x => x.TargetGradeLevel)
             .HasColumnName("target_grade_level");
 
@@ -156,5 +179,79 @@ public class AssignmentStudentConfiguration : IEntityTypeConfiguration<Assignmen
         builder.HasIndex(x => new { x.AssignmentId, x.StudentId })
             .HasDatabaseName("ix_assignment_students_assignment_student")
             .IsUnique();
+
+        builder.HasMany(x => x.SubmissionAttachments)
+            .WithOne(x => x.AssignmentStudent)
+            .HasForeignKey(x => x.AssignmentStudentId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+/// <summary>
+/// Assignment submission attachment metadata configuration.
+/// </summary>
+public sealed class AssignmentSubmissionAttachmentConfiguration
+    : IEntityTypeConfiguration<AssignmentSubmissionAttachment>
+{
+    public void Configure(EntityTypeBuilder<AssignmentSubmissionAttachment> builder)
+    {
+        builder.ToTable("assignment_submission_attachments");
+
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.Id)
+            .HasColumnName("id")
+            .ValueGeneratedNever();
+
+        builder.Property(x => x.AssignmentStudentId)
+            .HasColumnName("assignment_student_id")
+            .IsRequired();
+
+        builder.Property(x => x.StorageKey)
+            .HasColumnName("storage_key")
+            .HasMaxLength(512)
+            .IsRequired();
+
+        builder.Property(x => x.OriginalFileName)
+            .HasColumnName("original_file_name")
+            .HasMaxLength(255)
+            .IsRequired();
+
+        builder.Property(x => x.ContentType)
+            .HasColumnName("content_type")
+            .HasMaxLength(100)
+            .IsRequired();
+
+        builder.Property(x => x.SizeBytes)
+            .HasColumnName("size_bytes")
+            .IsRequired();
+
+        builder.Property(x => x.Sha256)
+            .HasColumnName("sha256")
+            .HasMaxLength(64)
+            .IsRequired();
+
+        builder.Property(x => x.Status)
+            .HasColumnName("status")
+            .HasConversion<string>()
+            .HasMaxLength(30)
+            .IsRequired();
+
+        builder.Property(x => x.UploadExpiresAt)
+            .HasColumnName("upload_expires_at");
+
+        builder.Property(x => x.RejectionReason)
+            .HasColumnName("rejection_reason")
+            .HasMaxLength(500);
+
+        builder.Property(x => x.CreatedAt).HasColumnName("created_at").IsRequired();
+        builder.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+        builder.Property(x => x.UploadedAt).HasColumnName("uploaded_at");
+        builder.Property(x => x.ScannedAt).HasColumnName("scanned_at");
+
+        builder.HasIndex(x => x.AssignmentStudentId)
+            .HasDatabaseName("ix_assignment_submission_attachments_student");
+        builder.HasIndex(x => new { x.AssignmentStudentId, x.Status })
+            .HasDatabaseName("ix_assignment_submission_attachments_status");
     }
 }

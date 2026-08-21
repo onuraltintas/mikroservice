@@ -42,11 +42,23 @@ public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand,
     {
         _accessPolicy.RequireTeacher(command.TeacherId);
 
+        var studentIds = command.Type == Coaching.Domain.Enums.SessionType.Group
+            ? command.StudentIds?.Where(studentId => studentId != Guid.Empty).Distinct().ToArray()
+            : new[] { command.StudentId };
+
+        if (studentIds is null || studentIds.Length == 0)
+        {
+            throw new ValidationException(new Dictionary<string, string[]>
+            {
+                [nameof(command.StudentIds)] = ["At least one student is required."]
+            });
+        }
+
         var key = command.IdempotencyKey?.Trim();
         EnsureKey(key);
         var requestHash = IdempotencyRequestHasher.Create(
             IdempotencyRequestHasher.Format(command.TeacherId),
-            IdempotencyRequestHasher.Format(command.StudentId),
+            string.Join(',', studentIds.Select(IdempotencyRequestHasher.Format)),
             IdempotencyRequestHasher.Format(command.StartTime),
             command.DurationMinutes.ToString(),
             command.Subject,
@@ -63,7 +75,7 @@ public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand,
 
         var institutionId = await _identityAuthorizationClient.AuthorizeTeacherTargetsAsync(
             command.TeacherId,
-            new[] { command.StudentId },
+            studentIds,
             null,
             _accessPolicy.IsSystemAdministrator,
             cancellationToken);
@@ -77,7 +89,7 @@ public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand,
             institutionId
         );
 
-        session.AddStudent(command.StudentId);
+        session.AddStudents(studentIds);
 
         if (!string.IsNullOrEmpty(command.Notes))
         {

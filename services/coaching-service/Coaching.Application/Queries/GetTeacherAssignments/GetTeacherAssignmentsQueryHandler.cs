@@ -1,12 +1,13 @@
 using Coaching.Application.Interfaces;
 using Coaching.Domain.Enums;
 using Coaching.Application.Authorization;
+using Coaching.Application.Queries;
 
 using MediatR;
 
 namespace Coaching.Application.Queries.GetTeacherAssignments;
 
-public class GetTeacherAssignmentsQueryHandler : IRequestHandler<GetTeacherAssignmentsQuery, TeacherAssignmentListResponse>
+public class GetTeacherAssignmentsQueryHandler : IRequestHandler<GetTeacherAssignmentsQuery, PagedResponse<TeacherAssignmentDto>>
 {
     private readonly IAssignmentRepository _repository;
     private readonly ICoachingAccessPolicy _accessPolicy;
@@ -19,14 +20,18 @@ public class GetTeacherAssignmentsQueryHandler : IRequestHandler<GetTeacherAssig
         _accessPolicy = accessPolicy;
     }
 
-    public async Task<TeacherAssignmentListResponse> Handle(
+    public async Task<PagedResponse<TeacherAssignmentDto>> Handle(
         GetTeacherAssignmentsQuery query, 
         CancellationToken cancellationToken)
     {
         _accessPolicy.RequireTeacher(query.TeacherId);
-        var assignments = await _repository.GetByTeacherIdAsync(query.TeacherId, cancellationToken);
+        var page = await _repository.GetByTeacherIdAsync(
+            query.TeacherId,
+            query.PageNumber,
+            query.PageSize,
+            cancellationToken);
 
-        var dtos = assignments.Select(a => new TeacherAssignmentDto(
+        var dtos = page.Items.Select(a => new TeacherAssignmentDto(
             Id: a.Id,
             Title: a.Title,
             Type: a.Type.ToString(),
@@ -38,6 +43,10 @@ public class GetTeacherAssignmentsQueryHandler : IRequestHandler<GetTeacherAssig
             CreatedAt: a.CreatedAt
         )).ToList();
 
-        return new TeacherAssignmentListResponse(dtos);
+        return new PagedResponse<TeacherAssignmentDto>(
+            dtos.ToList(),
+            query.PageNumber,
+            query.PageSize,
+            page.TotalCount);
     }
 }

@@ -121,6 +121,42 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("BookChapter")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("book_chapter");
+
+                    b.Property<string>("BookEdition")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("book_edition");
+
+                    b.Property<int?>("BookEndPage")
+                        .HasColumnType("integer")
+                        .HasColumnName("book_end_page");
+
+                    b.Property<int?>("BookEndQuestion")
+                        .HasColumnType("integer")
+                        .HasColumnName("book_end_question");
+
+                    b.Property<string>("BookIsbn")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("book_isbn");
+
+                    b.Property<int?>("BookStartPage")
+                        .HasColumnType("integer")
+                        .HasColumnName("book_start_page");
+
+                    b.Property<int?>("BookStartQuestion")
+                        .HasColumnType("integer")
+                        .HasColumnName("book_start_question");
+
+                    b.Property<string>("BookTitle")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("book_title");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -153,6 +189,12 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)")
                         .HasColumnName("passing_score");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("source");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -275,6 +317,92 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasDatabaseName("ix_assignment_students_assignment_student");
 
                     b.ToTable("assignment_students", "coaching");
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.AssignmentSubmissionAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AssignmentStudentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assignment_student_id");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("content_type");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("original_file_name");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("rejection_reason");
+
+                    b.Property<DateTime?>("ScannedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("scanned_at");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("sha256");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("size_bytes");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("UploadExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("upload_expires_at");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("storage_key");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UploadedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("uploaded_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignmentStudentId")
+                        .HasDatabaseName("ix_assignment_submission_attachments_student");
+
+                    b.HasIndex("AssignmentStudentId", "Status")
+                        .HasDatabaseName("ix_assignment_submission_attachments_status");
+
+                    b.ToTable("assignment_submission_attachments", "coaching");
                 });
 
             modelBuilder.Entity("Coaching.Domain.Entities.CoachingSession", b =>
@@ -516,6 +644,50 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.ToTable("exam_results", "coaching");
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.IdempotencyRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("ResourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Scope", "Key")
+                        .IsUnique();
+
+                    b.ToTable("IdempotencyRecords", "coaching");
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.SessionAttendance", b =>
                 {
                     b.Property<Guid>("Id")
@@ -638,50 +810,6 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.HasIndex("OccurredAt", "Id");
 
                     b.ToTable("AdminAuditRecords", "coaching");
-                });
-
-            modelBuilder.Entity("Coaching.Domain.Entities.IdempotencyRecord", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<string>("RequestHash")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<Guid>("ResourceId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Scope")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Scope", "Key")
-                        .IsUnique();
-
-                    b.ToTable("IdempotencyRecords", "coaching");
                 });
 
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.InboxState", b =>
@@ -863,6 +991,17 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Navigation("Assignment");
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.AssignmentSubmissionAttachment", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.AssignmentStudent", "AssignmentStudent")
+                        .WithMany("SubmissionAttachments")
+                        .HasForeignKey("AssignmentStudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AssignmentStudent");
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.ExamResult", b =>
                 {
                     b.HasOne("Coaching.Domain.Entities.Exam", "Exam")
@@ -900,6 +1039,11 @@ namespace Coaching.Infrastructure.Data.Migrations
             modelBuilder.Entity("Coaching.Domain.Entities.Assignment", b =>
                 {
                     b.Navigation("AssignedStudents");
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.AssignmentStudent", b =>
+                {
+                    b.Navigation("SubmissionAttachments");
                 });
 
             modelBuilder.Entity("Coaching.Domain.Entities.CoachingSession", b =>

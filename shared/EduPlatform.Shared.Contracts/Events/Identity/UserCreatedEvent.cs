@@ -6,6 +6,7 @@ public record UserCreatedEvent(
     string FirstName,
     string LastName,
     string Role,
-    string TemporaryPassword,
+    string PasswordSetupToken,
+    DateTime PasswordSetupTokenExpiresAt,
     DateTime CreatedAt
 );

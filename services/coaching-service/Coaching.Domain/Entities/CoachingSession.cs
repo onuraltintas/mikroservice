@@ -148,7 +148,7 @@ public class SessionAttendance : Entity
         {
             SessionId = sessionId,
             StudentId = studentId,
-            AttendanceStatus = AttendanceStatus.Present, // Default
+            AttendanceStatus = AttendanceStatus.NotRecorded,
             CreatedAt = DateTime.UtcNow
         };
     }

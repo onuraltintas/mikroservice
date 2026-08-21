@@ -3,6 +3,11 @@ using Identity.Domain.Entities;
 
 namespace Identity.Application.Interfaces;
 
+public sealed record ProvisionedUser(
+    Guid UserId,
+    string PasswordSetupToken,
+    DateTime PasswordSetupTokenExpiresAt);
+
 public interface IIdentityService
 {
     /// <summary>
@@ -32,16 +37,16 @@ public interface IIdentityService
     Task<Result> AssignRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Creates a user with a temporary password. Password change is required on first login.
+    /// Creates a user with an unusable internal password and a one-time password setup token.
     /// </summary>
-    /// <returns>UserId and Temporary Password</returns>
-    Task<Result<(Guid UserId, string TemporaryPassword)>> RegisterUserWithTemporaryPasswordAsync(
+    /// <returns>UserId and the short-lived password setup token.</returns>
+    Task<Result<ProvisionedUser>> RegisterUserWithPasswordSetupAsync(
         string email, 
         string firstName, 
         string lastName, 
         CancellationToken cancellationToken);
 
-    Task<Result<(Guid UserId, string TemporaryPassword)>> RegisterUserWithRoleAsync(
+    Task<Result<ProvisionedUser>> RegisterUserWithRoleAsync(
         string email, 
         string firstName, 
         string lastName, 

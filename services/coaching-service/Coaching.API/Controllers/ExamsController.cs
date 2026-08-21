@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Coaching.Application.Commands.CreateExam;
 using Coaching.Application.Commands.AddExamResult;
 using Coaching.Application.Queries.GetExamResults;
+using Coaching.Application.Queries;
 
 using MediatR;
 using Coaching.Application.Commands.DeleteExam;
@@ -161,11 +162,15 @@ public class ExamsController : ControllerBase
     /// Get all exam results for a student
     /// </summary>
     [HttpGet("student/{studentId}")]
-    [ProducesResponseType(typeof(List<ExamResultDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetStudentResults(Guid studentId, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(PagedResponse<ExamResultDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStudentResults(
+        Guid studentId,
+        CancellationToken cancellationToken,
+        [FromQuery] int pageNumber = CoachingPaging.DefaultPageNumber,
+        [FromQuery] int pageSize = CoachingPaging.DefaultPageSize)
     {
         var result = await _mediator.Send(
-            new GetStudentExamResultsQuery(studentId),
+            new GetStudentExamResultsQuery(studentId, pageNumber, pageSize),
             cancellationToken);
 
         return Ok(result);

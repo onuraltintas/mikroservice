@@ -1,4 +1,5 @@
 using FluentValidation;
+using Coaching.Domain.Enums;
 
 namespace Coaching.Application.Commands.CreateAssignment;
 
@@ -21,6 +22,41 @@ public class CreateAssignmentCommandValidator : AbstractValidator<CreateAssignme
 
         RuleFor(x => x.AssignmentType)
             .Must(BeValidAssignmentType).WithMessage("Assignment type must be 'Individual' or 'Group'");
+
+        RuleFor(x => x.AssignmentSource)
+            .Must(BeValidAssignmentSource).WithMessage("Assignment source must be 'Digital', 'Book' or 'Mixed'");
+
+        When(x => IsBookSource(x.AssignmentSource), () =>
+        {
+            RuleFor(x => x.BookTitle)
+                .NotEmpty().WithMessage("Book title is required for book assignments")
+                .MaximumLength(200);
+            RuleFor(x => x.BookStartPage)
+                .NotNull().GreaterThan(0).WithMessage("Book start page must be greater than 0");
+            RuleFor(x => x.BookEndPage)
+                .NotNull().GreaterThan(0).WithMessage("Book end page must be greater than 0")
+                .GreaterThanOrEqualTo(x => x.BookStartPage)
+                .WithMessage("Book end page cannot be before the start page");
+            RuleFor(x => x.BookStartQuestion)
+                .GreaterThan(0).When(x => x.BookStartQuestion.HasValue)
+                .WithMessage("Book start question must be greater than 0");
+            RuleFor(x => x.BookEndQuestion)
+                .GreaterThanOrEqualTo(x => x.BookStartQuestion)
+                .When(x => x.BookEndQuestion.HasValue)
+                .WithMessage("Book end question cannot be before the start question");
+            RuleFor(x => x)
+                .Must(x => x.BookStartQuestion.HasValue == x.BookEndQuestion.HasValue)
+                .WithMessage("Book question range must include both start and end");
+        });
+
+        When(x => !IsBookSource(x.AssignmentSource), () =>
+        {
+            RuleFor(x => x.BookTitle).Empty();
+            RuleFor(x => x.BookStartPage).Null();
+            RuleFor(x => x.BookEndPage).Null();
+            RuleFor(x => x.BookStartQuestion).Null();
+            RuleFor(x => x.BookEndQuestion).Null();
+        });
 
         RuleFor(x => x.TargetGradeLevel)
             .InclusiveBetween(1, 12).When(x => x.TargetGradeLevel.HasValue)
@@ -50,4 +86,11 @@ public class CreateAssignmentCommandValidator : AbstractValidator<CreateAssignme
         return type.Equals("Individual", StringComparison.OrdinalIgnoreCase) ||
                type.Equals("Group", StringComparison.OrdinalIgnoreCase);
     }
+
+    private static bool BeValidAssignmentSource(string source) =>
+        Enum.TryParse<AssignmentSource>(source, true, out _);
+
+    private static bool IsBookSource(string source) =>
+        Enum.TryParse<AssignmentSource>(source, true, out var parsed)
+        && parsed is AssignmentSource.Book or AssignmentSource.Mixed;
 }

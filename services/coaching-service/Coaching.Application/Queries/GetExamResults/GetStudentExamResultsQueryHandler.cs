@@ -1,11 +1,12 @@
 using Coaching.Application.Interfaces;
 using Coaching.Application.Authorization;
+using Coaching.Application.Queries;
 
 using MediatR;
 
 namespace Coaching.Application.Queries.GetExamResults;
 
-public class GetStudentExamResultsQueryHandler : IRequestHandler<GetStudentExamResultsQuery, List<ExamResultDto>>
+public class GetStudentExamResultsQueryHandler : IRequestHandler<GetStudentExamResultsQuery, PagedResponse<ExamResultDto>>
 {
     private readonly IExamRepository _repository;
     private readonly ICoachingAccessPolicy _accessPolicy;
@@ -21,7 +22,7 @@ public class GetStudentExamResultsQueryHandler : IRequestHandler<GetStudentExamR
         _identityAuthorizationClient = identityAuthorizationClient;
     }
 
-    public async Task<List<ExamResultDto>> Handle(
+    public async Task<PagedResponse<ExamResultDto>> Handle(
         GetStudentExamResultsQuery query,
         CancellationToken cancellationToken)
     {
@@ -30,11 +31,15 @@ public class GetStudentExamResultsQueryHandler : IRequestHandler<GetStudentExamR
             _identityAuthorizationClient,
             new[] { query.StudentId },
             cancellationToken);
-        var exams = await _repository.GetByStudentIdAsync(query.StudentId, cancellationToken);
+        var page = await _repository.GetByStudentIdAsync(
+            query.StudentId,
+            query.PageNumber,
+            query.PageSize,
+            cancellationToken);
         
         var results = new List<ExamResultDto>();
 
-        foreach (var exam in exams)
+        foreach (var exam in page.Items)
         {
             var studentResult = exam.Results.FirstOrDefault(r => r.StudentId == query.StudentId);
             if (studentResult == null) continue;
@@ -53,6 +58,10 @@ public class GetStudentExamResultsQueryHandler : IRequestHandler<GetStudentExamR
             ));
         }
 
-        return results;
+        return new PagedResponse<ExamResultDto>(
+            results,
+            query.PageNumber,
+            query.PageSize,
+            page.TotalCount);
     }
 }

@@ -16,7 +16,17 @@ public class Assignment : AggregateRoot
     public string? Subject { get; private set; } // Matematik, Türkçe, Fen, etc.
 
     public AssignmentType Type { get; private set; }
+    public AssignmentSource Source { get; private set; }
     public int? TargetGradeLevel { get; private set; } // 1-12
+
+    public string? BookTitle { get; private set; }
+    public string? BookIsbn { get; private set; }
+    public string? BookEdition { get; private set; }
+    public string? BookChapter { get; private set; }
+    public int? BookStartPage { get; private set; }
+    public int? BookEndPage { get; private set; }
+    public int? BookStartQuestion { get; private set; }
+    public int? BookEndQuestion { get; private set; }
 
     public DateTime DueDate { get; private set; }
     public int? EstimatedDurationMinutes { get; private set; }
@@ -46,6 +56,7 @@ public class Assignment : AggregateRoot
             DueDate = dueDate,
             Type = type,
             InstitutionId = institutionId,
+            Source = AssignmentSource.Digital,
             Status = AssignmentStatus.Active
         };
 
@@ -65,6 +76,45 @@ public class Assignment : AggregateRoot
         if (dueDate.HasValue) DueDate = dueDate.Value;
         if (estimatedDurationMinutes.HasValue) EstimatedDurationMinutes = estimatedDurationMinutes;
 
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetBookReference(
+        string bookTitle,
+        int startPage,
+        int endPage,
+        int? startQuestion = null,
+        int? endQuestion = null,
+        string? isbn = null,
+        string? edition = null,
+        string? chapter = null,
+        AssignmentSource source = AssignmentSource.Book)
+    {
+        if (source is not (AssignmentSource.Book or AssignmentSource.Mixed))
+            throw new ArgumentException("Book reference requires Book or Mixed source.", nameof(source));
+
+        if (string.IsNullOrWhiteSpace(bookTitle))
+            throw new ArgumentException("Book title is required.", nameof(bookTitle));
+
+        if (startPage < 1 || endPage < startPage)
+            throw new ArgumentOutOfRangeException(nameof(startPage), "Book page range is invalid.");
+
+        if (startQuestion.HasValue != endQuestion.HasValue
+            || (startQuestion.HasValue && (startQuestion.Value < 1
+                || endQuestion!.Value < startQuestion.Value)))
+        {
+            throw new ArgumentOutOfRangeException(nameof(startQuestion), "Book question range is invalid.");
+        }
+
+        Source = source;
+        BookTitle = bookTitle.Trim();
+        BookIsbn = string.IsNullOrWhiteSpace(isbn) ? null : isbn.Trim();
+        BookEdition = string.IsNullOrWhiteSpace(edition) ? null : edition.Trim();
+        BookChapter = string.IsNullOrWhiteSpace(chapter) ? null : chapter.Trim();
+        BookStartPage = startPage;
+        BookEndPage = endPage;
+        BookStartQuestion = startQuestion;
+        BookEndQuestion = endQuestion;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -181,9 +231,38 @@ public class AssignmentStudent : Entity
 
     public void Submit(string? note = null)
     {
+        if (_submissionAttachments.Any(attachment => attachment.Status != AttachmentScanStatus.Clean))
+            throw new InvalidOperationException("All submission attachments must pass the security scan before submission.");
+
         SubmittedAt = DateTime.UtcNow;
         StudentNote = note;
         Status = StudentAssignmentStatus.Submitted;
+    }
+
+    private readonly List<AssignmentSubmissionAttachment> _submissionAttachments = new();
+    public IReadOnlyCollection<AssignmentSubmissionAttachment> SubmissionAttachments =>
+        _submissionAttachments.AsReadOnly();
+
+    public AssignmentSubmissionAttachment AddSubmissionAttachment(
+        string storageKey,
+        string originalFileName,
+        string contentType,
+        long sizeBytes,
+        string sha256)
+    {
+        if (string.IsNullOrWhiteSpace(storageKey))
+            throw new ArgumentException("Storage key is required.", nameof(storageKey));
+
+        var attachment = AssignmentSubmissionAttachment.CreatePending(
+            Id,
+            storageKey,
+            originalFileName,
+            contentType,
+            sizeBytes,
+            sha256);
+        _submissionAttachments.Add(attachment);
+        UpdatedAt = DateTime.UtcNow;
+        return attachment;
     }
 
     public void Grade(decimal score, string? feedback = null)

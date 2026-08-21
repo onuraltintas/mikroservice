@@ -53,8 +53,8 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
              return Result.Failure<CreateStudentResult>(new Error("CreateStudent.Forbidden", "You are not an admin of any institution."));
         }
 
-        // 3. Create user with temporary password (user must change on first login)
-        var identityResult = await _identityService.RegisterUserWithTemporaryPasswordAsync(
+        // 3. Create user with a one-time password setup token.
+        var identityResult = await _identityService.RegisterUserWithPasswordSetupAsync(
             request.Email,
             request.FirstName,
             request.LastName,
@@ -62,7 +62,8 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
 
         if (identityResult.IsFailure) return Result.Failure<CreateStudentResult>(identityResult.Error);
         
-        var (studentUserId, temporaryPassword) = identityResult.Value;
+        var provisionedUser = identityResult.Value;
+        var studentUserId = provisionedUser.UserId;
 
         // Assign Role
         var roleResult = await _identityService.AssignRoleAsync(studentUserId, Identity.Domain.Enums.UserRole.Student.ToString(), cancellationToken);
@@ -94,7 +95,8 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
                 FirstName: request.FirstName,
                 LastName: request.LastName,
                 Role: "Student",
-                TemporaryPassword: temporaryPassword,
+                PasswordSetupToken: provisionedUser.PasswordSetupToken,
+                PasswordSetupTokenExpiresAt: provisionedUser.PasswordSetupTokenExpiresAt,
                 CreatedAt: DateTime.UtcNow
             );
 
@@ -103,7 +105,7 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
 
             // Coaching uses the Identity user id as StudentId. Keep the profile id
             // explicit for Identity-owned student-profile operations.
-            return Result.Success(new CreateStudentResult(studentUserId, student.Id, temporaryPassword));
+            return Result.Success(new CreateStudentResult(studentUserId, student.Id));
         }
         catch (Exception ex)
         {

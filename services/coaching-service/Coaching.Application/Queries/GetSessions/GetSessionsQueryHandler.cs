@@ -5,8 +5,8 @@ using MediatR;
 namespace Coaching.Application.Queries.GetSessions;
 
 public class GetSessionsQueryHandler : 
-    IRequestHandler<GetTeacherSessionsQuery, List<SessionDto>>,
-    IRequestHandler<GetUpcomingSessionsQuery, List<SessionDto>>
+    IRequestHandler<GetTeacherSessionsQuery, PagedResponse<SessionDto>>,
+    IRequestHandler<GetUpcomingSessionsQuery, PagedResponse<SessionDto>>
 {
     private readonly ICoachingSessionRepository _repository;
     private readonly ICoachingAccessPolicy _accessPolicy;
@@ -19,39 +19,55 @@ public class GetSessionsQueryHandler :
         _accessPolicy = accessPolicy;
     }
 
-    public async Task<List<SessionDto>> Handle(
+    public async Task<PagedResponse<SessionDto>> Handle(
         GetTeacherSessionsQuery query,
         CancellationToken cancellationToken)
     {
         _accessPolicy.RequireTeacher(query.TeacherId);
-        var sessions = await _repository.GetByTeacherIdAsync(query.TeacherId, cancellationToken);
-        return MapToDto(sessions);
+        var page = await _repository.GetByTeacherIdAsync(
+            query.TeacherId,
+            query.PageNumber,
+            query.PageSize,
+            cancellationToken);
+        return MapToDto(page, query.PageNumber, query.PageSize);
     }
 
-    public async Task<List<SessionDto>> Handle(
+    public async Task<PagedResponse<SessionDto>> Handle(
         GetUpcomingSessionsQuery query,
         CancellationToken cancellationToken)
     {
-        var sessions = _accessPolicy.IsSystemAdministrator
-            ? await _repository.GetUpcomingSessionsAsync(query.FromDate, cancellationToken)
+        var page = _accessPolicy.IsSystemAdministrator
+            ? await _repository.GetUpcomingSessionsAsync(query.FromDate, query.PageNumber, query.PageSize, cancellationToken)
             : await _repository.GetUpcomingSessionsByTeacherIdAsync(
                 _accessPolicy.RequireCurrentTeacher(),
                 query.FromDate,
+                query.PageNumber,
+                query.PageSize,
                 cancellationToken);
-        return MapToDto(sessions);
+        return MapToDto(page, query.PageNumber, query.PageSize);
     }
 
-    private static List<SessionDto> MapToDto(List<Domain.Entities.CoachingSession> sessions)
+    private static PagedResponse<SessionDto> MapToDto(
+        PagedRepositoryResult<Domain.Entities.CoachingSession> page,
+        int pageNumber,
+        int pageSize)
     {
-        return sessions.Select(s => new SessionDto(
-            Id: s.Id,
-            StudentId: s.Attendances.FirstOrDefault()?.StudentId ?? Guid.Empty,
-            StartTime: s.ScheduledDate,
-            EndTime: s.ScheduledDate.AddMinutes(s.DurationMinutes),
-            DurationMinutes: s.DurationMinutes,
-            Subject: s.Title,
-            Status: s.Status.ToString(),
-            Type: s.SessionType.ToString()
-        )).ToList();
+        var sessions = page.Items.Select(s =>
+        {
+            var studentIds = s.Attendances.Select(attendance => attendance.StudentId).ToArray();
+
+            return new SessionDto(
+                Id: s.Id,
+                StudentId: studentIds.FirstOrDefault(),
+                StartTime: s.ScheduledDate,
+                EndTime: s.ScheduledDate.AddMinutes(s.DurationMinutes),
+                DurationMinutes: s.DurationMinutes,
+                Subject: s.Title,
+                Status: s.Status.ToString(),
+                Type: s.SessionType.ToString(),
+                StudentIds: studentIds);
+        }).ToList();
+
+        return new PagedResponse<SessionDto>(sessions, pageNumber, pageSize, page.TotalCount);
     }
 }

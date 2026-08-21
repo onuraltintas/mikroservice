@@ -124,11 +124,17 @@ public class User : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void GeneratePasswordResetToken()
+    public string GeneratePasswordResetToken()
     {
-        PasswordResetToken = Guid.NewGuid().ToString("N");
+        Span<byte> tokenBytes = stackalloc byte[32];
+        RandomNumberGenerator.Fill(tokenBytes);
+        PasswordResetToken = Convert.ToBase64String(tokenBytes)
+            .TrimEnd('=')
+            .Replace('+', '-')
+            .Replace('/', '_');
         PasswordResetTokenExpiresAt = DateTime.UtcNow.AddHours(2); // Short lived
         UpdatedAt = DateTime.UtcNow;
+        return PasswordResetToken;
     }
 
     public void ClearPasswordResetToken()

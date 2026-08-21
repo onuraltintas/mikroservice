@@ -4,7 +4,7 @@ using MediatR;
 
 namespace Identity.Application.Commands.CreateUser;
 
-public record CreateUserResponse(Guid UserId, string TemporaryPassword);
+public record CreateUserResponse(Guid UserId);
 
 public record CreateUserCommand(
     string FirstName,

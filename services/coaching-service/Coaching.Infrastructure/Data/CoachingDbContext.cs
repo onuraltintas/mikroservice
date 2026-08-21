@@ -20,6 +20,7 @@ public class CoachingDbContext : DbContext
     // DbSets
     public DbSet<Assignment> Assignments => Set<Assignment>();
     public DbSet<AssignmentStudent> AssignmentStudents => Set<AssignmentStudent>();
+    public DbSet<AssignmentSubmissionAttachment> AssignmentSubmissionAttachments => Set<AssignmentSubmissionAttachment>();
     public DbSet<Exam> Exams => Set<Exam>();
     public DbSet<ExamResult> ExamResults => Set<ExamResult>();
     public DbSet<CoachingSession> CoachingSessions => Set<CoachingSession>();

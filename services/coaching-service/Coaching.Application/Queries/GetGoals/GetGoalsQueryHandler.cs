@@ -1,11 +1,12 @@
 using Coaching.Application.Interfaces;
 using Coaching.Application.Authorization;
+using Coaching.Application.Queries;
 
 using MediatR;
 
 namespace Coaching.Application.Queries.GetGoals;
 
-public class GetGoalsQueryHandler : IRequestHandler<GetStudentGoalsQuery, List<GoalDto>>
+public class GetGoalsQueryHandler : IRequestHandler<GetStudentGoalsQuery, PagedResponse<GoalDto>>
 {
     private readonly IAcademicGoalRepository _repository;
     private readonly ICoachingAccessPolicy _accessPolicy;
@@ -21,7 +22,7 @@ public class GetGoalsQueryHandler : IRequestHandler<GetStudentGoalsQuery, List<G
         _identityAuthorizationClient = identityAuthorizationClient;
     }
 
-    public async Task<List<GoalDto>> Handle(
+    public async Task<PagedResponse<GoalDto>> Handle(
         GetStudentGoalsQuery query,
         CancellationToken cancellationToken)
     {
@@ -30,9 +31,13 @@ public class GetGoalsQueryHandler : IRequestHandler<GetStudentGoalsQuery, List<G
             _identityAuthorizationClient,
             new[] { query.StudentId },
             cancellationToken);
-        var goals = await _repository.GetByStudentIdAsync(query.StudentId, cancellationToken);
+        var page = await _repository.GetByStudentIdAsync(
+            query.StudentId,
+            query.PageNumber,
+            query.PageSize,
+            cancellationToken);
         
-        return goals.Select(g => new GoalDto(
+        var goals = page.Items.Select(g => new GoalDto(
             Id: g.Id,
             Title: g.Title,
             Description: g.Description,
@@ -43,5 +48,11 @@ public class GetGoalsQueryHandler : IRequestHandler<GetStudentGoalsQuery, List<G
             IsCompleted: g.IsCompleted,
             CompletedAt: g.CompletedAt
         )).ToList();
+
+        return new PagedResponse<GoalDto>(
+            goals,
+            query.PageNumber,
+            query.PageSize,
+            page.TotalCount);
     }
 }

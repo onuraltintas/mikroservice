@@ -56,6 +56,15 @@ public class GetAssignmentQueryHandler : IRequestHandler<GetAssignmentQuery, Ass
             Description: assignment.Description,
             Subject: assignment.Subject,
             Type: assignment.Type.ToString(),
+            Source: assignment.Source.ToString(),
+            BookTitle: assignment.BookTitle,
+            BookIsbn: assignment.BookIsbn,
+            BookEdition: assignment.BookEdition,
+            BookChapter: assignment.BookChapter,
+            BookStartPage: assignment.BookStartPage,
+            BookEndPage: assignment.BookEndPage,
+            BookStartQuestion: assignment.BookStartQuestion,
+            BookEndQuestion: assignment.BookEndQuestion,
             TargetGradeLevel: assignment.TargetGradeLevel,
             DueDate: assignment.DueDate,
             EstimatedDurationMinutes: assignment.EstimatedDurationMinutes,
@@ -67,7 +76,15 @@ public class GetAssignmentQueryHandler : IRequestHandler<GetAssignmentQuery, Ass
                 SubmittedAt: s.SubmittedAt,
                 Score: s.Score,
                 TeacherFeedback: s.TeacherFeedback,
-                Status: s.Status.ToString()
+                Status: s.Status.ToString(),
+                Attachments: s.SubmissionAttachments.Select(attachment => new AssignmentAttachmentDto(
+                    attachment.Id,
+                    attachment.OriginalFileName,
+                    attachment.ContentType,
+                    attachment.SizeBytes,
+                    attachment.Status.ToString(),
+                    attachment.UploadedAt,
+                    attachment.ScannedAt)).ToList()
             )).ToList(),
             CreatedAt: assignment.CreatedAt
         );

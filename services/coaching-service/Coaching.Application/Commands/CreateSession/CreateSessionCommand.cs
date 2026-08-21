@@ -11,7 +11,8 @@ public record CreateSessionCommand(
     string? Subject,
     string? Notes,
     SessionType Type,
-    string? IdempotencyKey = null
+    string? IdempotencyKey = null,
+    IReadOnlyCollection<Guid>? StudentIds = null
 ) : IRequest<CreateSessionResponse>;
 
 public record CreateSessionResponse(Guid SessionId);

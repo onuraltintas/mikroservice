@@ -1,12 +1,13 @@
 using Coaching.Application.Interfaces;
 using Coaching.Domain.Enums;
 using Coaching.Application.Authorization;
+using Coaching.Application.Queries;
 
 using MediatR;
 
 namespace Coaching.Application.Queries.GetStudentAssignments;
 
-public class GetStudentAssignmentsQueryHandler : IRequestHandler<GetStudentAssignmentsQuery, StudentAssignmentListResponse>
+public class GetStudentAssignmentsQueryHandler : IRequestHandler<GetStudentAssignmentsQuery, PagedResponse<StudentAssignmentDto>>
 {
     private readonly IAssignmentRepository _repository;
     private readonly ICoachingAccessPolicy _accessPolicy;
@@ -22,7 +23,7 @@ public class GetStudentAssignmentsQueryHandler : IRequestHandler<GetStudentAssig
         _identityAuthorizationClient = identityAuthorizationClient;
     }
 
-    public async Task<StudentAssignmentListResponse> Handle(
+    public async Task<PagedResponse<StudentAssignmentDto>> Handle(
         GetStudentAssignmentsQuery query,
         CancellationToken cancellationToken)
     {
@@ -31,9 +32,13 @@ public class GetStudentAssignmentsQueryHandler : IRequestHandler<GetStudentAssig
             _identityAuthorizationClient,
             new[] { query.StudentId },
             cancellationToken);
-        var assignments = await _repository.GetByStudentIdAsync(query.StudentId, cancellationToken);
+        var page = await _repository.GetByStudentIdAsync(
+            query.StudentId,
+            query.PageNumber,
+            query.PageSize,
+            cancellationToken);
 
-        var dtos = assignments.Select(a =>
+        var dtos = page.Items.Select(a =>
         {
             var studentAssignment = a.AssignedStudents.First(s => s.StudentId == query.StudentId);
             
@@ -52,6 +57,10 @@ public class GetStudentAssignmentsQueryHandler : IRequestHandler<GetStudentAssig
             );
         }).ToList();
 
-        return new StudentAssignmentListResponse(dtos);
+        return new PagedResponse<StudentAssignmentDto>(
+            dtos.ToList(),
+            query.PageNumber,
+            query.PageSize,
+            page.TotalCount);
     }
 }

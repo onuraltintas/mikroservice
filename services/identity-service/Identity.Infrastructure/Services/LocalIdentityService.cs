@@ -5,6 +5,7 @@ using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using Microsoft.Extensions.Logging;
+using System.Security.Cryptography;
 
 using Identity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -67,22 +68,85 @@ public class LocalIdentityService : IIdentityService
         return Result.Success(userId);
     }
 
-    public async Task<Result<(Guid UserId, string TemporaryPassword)>> RegisterUserWithTemporaryPasswordAsync(
+    public async Task<Result<ProvisionedUser>> RegisterUserWithPasswordSetupAsync(
         string email, 
         string firstName, 
         string lastName, 
         CancellationToken cancellationToken)
     {
-        // Generate Temp Password
-        var tempPassword = Guid.NewGuid().ToString("N").Substring(0, 8) + "Aa1!"; 
-        
-        var result = await RegisterUserAsync(email, tempPassword, firstName, lastName, cancellationToken);
-        
-        if (result.IsFailure)
-            return Result.Failure<(Guid, string)>(result.Error);
-
-        return Result.Success((result.Value, tempPassword));
+        return await CreateProvisionedUserAsync(
+            email,
+            firstName,
+            lastName,
+            roleId: null,
+            phoneNumber: null,
+            confirmEmail: false,
+            cancellationToken);
     }
+
+    private async Task<Result<ProvisionedUser>> CreateProvisionedUserAsync(
+        string email,
+        string firstName,
+        string lastName,
+        Guid? roleId,
+        string? phoneNumber,
+        bool confirmEmail,
+        CancellationToken cancellationToken)
+    {
+        var existingUser = await _userRepository.GetByEmailAsync(email, cancellationToken);
+        if (existingUser != null)
+        {
+            return Result.Failure<ProvisionedUser>(
+                new Error("Identity.UserExists", "User with this email already exists."));
+        }
+
+        var userId = Guid.NewGuid();
+        var user = User.Create(userId, email, firstName, lastName);
+
+        if (confirmEmail)
+        {
+            user.ConfirmEmail();
+        }
+
+        if (!string.IsNullOrWhiteSpace(phoneNumber))
+        {
+            user.SetPhoneNumber(phoneNumber);
+        }
+
+        // The password is generated only to satisfy the existing credential schema.
+        // It is never returned, logged, or published. The user can authenticate only
+        // after consuming the one-time setup token.
+        var internalPassword = GenerateInternalProvisioningPassword();
+        _passwordHasher.CreatePasswordHash(internalPassword, out byte[] hash, out byte[] salt);
+        user.SetPassword(hash, salt);
+
+        var passwordSetupToken = user.GeneratePasswordResetToken();
+        var passwordSetupTokenExpiresAt = user.PasswordResetTokenExpiresAt
+            ?? throw new InvalidOperationException("Password setup token expiry was not generated.");
+
+        if (roleId.HasValue)
+        {
+            user.AddRole(new Identity.Domain.Entities.UserRole(userId, roleId.Value));
+        }
+
+        await _userRepository.AddAsync(user, cancellationToken);
+        try
+        {
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<ProvisionedUser>(new Error("Register.Exception", ex.Message));
+        }
+
+        return Result.Success(new ProvisionedUser(
+            userId,
+            passwordSetupToken,
+            passwordSetupTokenExpiresAt));
+    }
+
+    private static string GenerateInternalProvisioningPassword()
+        => Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)) + "Aa1!";
 
     public async Task<Result> AssignRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken)
     {
@@ -202,7 +266,7 @@ public class LocalIdentityService : IIdentityService
         return Result.Success();
     }
 
-    public async Task<Result<(Guid UserId, string TemporaryPassword)>> RegisterUserWithRoleAsync(
+    public async Task<Result<ProvisionedUser>> RegisterUserWithRoleAsync(
         string email, 
         string firstName, 
         string lastName, 
@@ -214,48 +278,26 @@ public class LocalIdentityService : IIdentityService
             && !_currentUserService.Roles.Any(role =>
                 string.Equals(role, Identity.Domain.Enums.UserRole.SystemAdmin.ToString(), StringComparison.OrdinalIgnoreCase)))
         {
-            return Result.Failure<(Guid, string)>(Error.Forbidden(
+            return Result.Failure<ProvisionedUser>(Error.Forbidden(
                 "SystemAdmin kullanıcısı yalnızca mevcut bir SystemAdmin tarafından oluşturulabilir."));
         }
 
-        // 1. Check User Existence
-        var existingUser = await _userRepository.GetByEmailAsync(email, cancellationToken);
-        if (existingUser != null) return Result.Failure<(Guid, string)>(new Error("Identity.UserExists", "User with this email already exists."));
-
-        // 2. Check Role Existence
+        // Check role existence before creating the user.
         var role = await _roleRepository.GetByNameAsync(roleName, cancellationToken);
-        if (role == null) return Result.Failure<(Guid, string)>(new Error("Identity.RoleNotFound", $"Role '{roleName}' not found."));
-
-        // 3. Create User
-        var userId = Guid.NewGuid();
-        var user = User.Create(userId, email, firstName, lastName);
-        user.ConfirmEmail();
-        
-        if (!string.IsNullOrEmpty(phoneNumber))
+        if (role == null)
         {
-            user.SetPhoneNumber(phoneNumber);
-        }
-        
-        // 4. Hash Password
-        var tempPassword = Guid.NewGuid().ToString("N").Substring(0, 8) + "Aa1!"; 
-        _passwordHasher.CreatePasswordHash(tempPassword, out byte[] hash, out byte[] salt);
-        user.SetPassword(hash, salt);
-
-        // 5. Assign Role
-        user.AddRole(new Identity.Domain.Entities.UserRole(userId, role.Id));
-
-        // 6. Save (One Transaction)
-        await _userRepository.AddAsync(user, cancellationToken);
-        try 
-        {
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            return Result.Failure<(Guid, string)>(new Error("Register.Exception", ex.Message));
+            return Result.Failure<ProvisionedUser>(
+                new Error("Identity.RoleNotFound", $"Role '{roleName}' not found."));
         }
 
-        return Result.Success((userId, tempPassword));
+        return await CreateProvisionedUserAsync(
+            email,
+            firstName,
+            lastName,
+            role.Id,
+            phoneNumber,
+            confirmEmail: true,
+            cancellationToken);
     }
     public async Task<Result> RemoveRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken)
     {

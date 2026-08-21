@@ -94,7 +94,8 @@ Institution-managed `POST /api/institution/teachers` and
 `POST /api/institution/students` follow the same cross-service identifier rule:
 `TeacherId`/`StudentId` is the Identity user ID used by Coaching, while
 `ProfileId` is the Identity-owned profile ID used only by profile/invitation
-operations. Both responses also include the generated `TemporaryPassword`.
+operations. Neither response contains a password. The notification event carries
+only a short-lived password-setup token; credentials never cross service boundaries.
 These routes and the invitation routes are exposed by the Gateway under the
 singular `/api/institution/{**catch-all}` and `/api/invitations/{**catch-all}`
 patterns; clients must not call the internal Identity service port directly.
@@ -117,6 +118,81 @@ original assignment response; reusing the key with a different teacher,
 institution, target list, score or assignment detail returns `409 Conflict`.
 The key is owned by the caller and must be reused for transport-level retries;
 clients must generate a new key for a distinct assignment.
+
+### Kitap ödevi ve fotoğraf teslimi
+
+`POST /api/assignments` accepts `AssignmentSource` values `Digital`, `Book` or
+`Mixed`. For `Book`/`Mixed`, `BookTitle`, `BookStartPage` and `BookEndPage` are
+required; the optional question range must contain both start and end values.
+ISBN, edition and chapter are metadata only and are bounded by the Coaching
+validator.
+
+Students create an attachment metadata row first:
+
+```http
+POST /api/assignments/{assignmentId}/students/{studentId}/attachments
+Content-Type: application/json
+```
+
+```json
+{
+  "assignmentId": "...",
+  "studentId": "...",
+  "fileName": "matematik-01.jpg",
+  "contentType": "image/jpeg",
+  "sizeBytes": 183421,
+  "sha256": "<64 hexadecimal characters>"
+}
+```
+
+The response contains an opaque attachment ID and a short-lived upload path.
+The expiry is persisted with the attachment and enforced by the `PUT` endpoint;
+an expired path returns `Attachment.UploadExpired` and cannot write bytes. The
+client then sends the raw bytes with `PUT` to that path and supplies the same
+`Content-Type`, `Content-Length` and `X-Content-SHA256` values. Only JPEG, PNG
+and WebP images up to 10 MiB are accepted; the service verifies size, hash and
+the image magic signature. A submission cannot be completed while any
+attachment is not clean. Original filenames are metadata only; storage keys
+are server-generated and are never exposed in the response.
+
+Clean attachment bytes are streamed through the authorized endpoint
+`GET /api/assignments/{assignmentId}/students/{studentId}/attachments/{attachmentId}/content`.
+The same student/teacher/system-admin scope checks are applied on every read;
+pending-scan or rejected files return `409` and are never served. SystemAdmin
+can inspect the aggregate through `GET /api/coaching-admin/assignments/{id}`;
+the response contains metadata and attachment status, never a storage key.
+
+The Coaching admin read model also exposes bounded, read-only operational lists:
+`GET /api/coaching-admin/sessions`, `GET /api/coaching-admin/exams` and
+`GET /api/coaching-admin/goals`. Each endpoint supports `pageNumber` (1–1000),
+`pageSize` (1–100) and bounded search/filter parameters; student identifiers
+are returned only as identifiers needed for administration, not as Identity
+profile data.
+
+The current local adapter is for Development/test environments and writes to a
+dedicated mounted directory. The scanner is explicitly selected with
+`ATTACHMENT_SCANNER_PROVIDER=Local|ClamAv`; `Local` is a deterministic
+development scanner and does not claim malware detection. The optional OSS
+Compose profile starts ClamAV:
+
+```powershell
+docker compose --env-file .env --profile security-scan up -d clamav
+```
+
+Before Production, use `ATTACHMENT_SCANNER_PROVIDER=ClamAv` together with a
+MinIO/S3-compatible storage adapter. The repository includes a MinIO profile
+for local scale testing:
+
+```powershell
+docker compose --env-file .env --profile object-storage up -d minio
+```
+
+Set `ATTACHMENT_STORAGE_PROVIDER=Minio` and the `ATTACHMENT_MINIO_*` values
+before starting Coaching. Production configuration rejects both the `Local`
+storage provider and the `Local` scanner, and remains fail-closed if the
+configured dependencies cannot be reached. The application interface is
+storage-provider agnostic, so another S3-compatible service can be substituted
+without changing the API contract.
 
 The same contract applies to Coaching `POST /api/exams`, `POST /api/sessions`,
 `POST /api/goals` and `POST /api/exams/{id}/results`, with scopes

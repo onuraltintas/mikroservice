@@ -24,6 +24,7 @@ public enum SessionStatus
 /// </summary>
 public enum AttendanceStatus
 {
+    NotRecorded = 0, // Henüz işlenmedi
     Present = 1,     // Katıldı
     Absent = 2,      // Katılmadı
     Late = 3,       // Geç katıldı
