@@ -12,16 +12,23 @@ MVP'nin uygulanan durumu bu belgede yazan ilk taslak işaretlerinden üstündür
 Şu an doğrulanmış kapsam; idempotent ödev/sınav/seans/hedef komutları,
 tenant ve rol kontrolleri, kitap ödevi + fotoğraf eki tarama akışı, admin
 operasyon ekranları, öğrenci/öğretmen/veli portalı, seans online bağlantısı,
-öğrenci seans yansıması, SignalR bildirim merkezi ve yetkili öğrenci progress
-summary raporudur. Identity ↔ Coaching okuma yetkisi her öğrenci sorgusunda
-tekrar doğrulanır.
+öğrenci seans yansıması, öğretmen için yetkili öğrenci yansımaları, SignalR
+bildirim merkezi ve yetkili öğrenci progress summary raporudur. Identity ↔
+Coaching okuma yetkisi her öğrenci sorgusunda tekrar doğrulanır.
+
+Kurum/sınıf karşılaştırmalı raporu ve sayfalı kural tabanlı erken uyarı raporu
+Identity'nin aktif öğrenci kapsamını kaynak alır; Coaching kişisel kimlik
+verisini kopyalamaz. Öğretmen ve öğrenci için standart RFC 5545 iCalendar
+feed'i de mevcuttur; dış sağlayıcı OAuth adaptörleri sonraki entegrasyon
+fazına bırakılmıştır.
 
 Bu MVP'de bilinçli olarak ayrı bir `CoachingPlan` tablosu açılmadı: hedef,
 ödev, sınav ve seanslar zaten ayrı yaşam döngülerine sahip aggregate'lerdir;
 plan görünümü bunları birleştiren read/report katmanıdır. Bu, iki kaynaktan
-aynı hedefi tutma riskini azaltır. Bir sonraki ürün fazı; koç notlarının
-öğretmen görünümü, kurum/sınıf karşılaştırmalı raporlar, risk/erken uyarı
-modelleri, dış takvim senkronizasyonu ve gerçek zamanlı kapasite/soak testidir.
+aynı hedefi tutma riskini azaltır. Bir sonraki ürün fazı; gerçek zamanlı
+kapasite/soak testi, gözlemlenebilirlik panoları ve Google/Outlook gibi dış
+takvim sağlayıcıları için OAuth tabanlı, açık rıza ve token-vault kullanan
+adaptörlerdir.
 
 Son doğrulama: Identity/Coaching entegrasyon paketi 313 başarılı (2 Docker
 health testi ortam yokluğu nedeniyle atlandı), Angular paketi 56 başarılı ve

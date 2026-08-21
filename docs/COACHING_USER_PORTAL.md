@@ -55,6 +55,13 @@ ekleyebilir ve okuyabilir; veli/öğretmen bu özel notu göremez ve bu endpoint
 seçtikten sonra aynı öğrenci okuma endpoint'ini
 kullanır ve Coaching → Identity ilişki kontrolü tekrar çalışır.
 
+Öğretmen response'unda yalnızca Identity tarafından yetkilendirilen ve boş
+olmayan öğrenci yansımaları `studentReflections` alanında görünür; öğretmen bu
+alanı değiştiremez. Portal ayrıca `GET /api/calendar/teacher.ics` veya
+`GET /api/calendar/student.ics` ile standart iCalendar dışa aktarımı sunar.
+Feed 366 günle sınırlıdır, seans kimlikleri ve toplantı bağlantısı dışındaki
+öğrenci verilerini içermez ve erişim JWT rolüyle tekrar doğrulanır.
+
 Öğrenci özeti `GET /api/reports/student/{studentId}/progress` endpoint'inden
 tek bir aggregate response olarak ödev, sınav, hedef ve seans metriklerini alır;
 frontend sayfalama limitlerine güvenerek eksik ortalama hesaplamaz. Öğrenci `POST /api/goals` ile

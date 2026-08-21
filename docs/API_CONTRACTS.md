@@ -98,6 +98,25 @@ admin komutları MFA ve `Permissions.Coaching.Manage` gerektirir.
 ödev teslim/not, sınav yüzdesi, hedef ilerlemesi ve seans katılımını aggregate
 eder; endpoint Identity ilişkisel okuma yetkisini tekrar doğrular.
 
+SystemAdmin için kurum karşılaştırma raporu
+`GET /api/reports/institution/{institutionId}/comparison` ile, aktif Identity
+öğrenci kapsamı ve isteğe bağlı `gradeLevel`, `fromDate`, `toDate` filtreleriyle
+aggregate edilir. Erken uyarı raporu
+`GET /api/reports/institution/{institutionId}/early-warnings` aynı filtrelere
+ek olarak `pageNumber` (1–1000) ve `pageSize` (1–100) kabul eder. Yanıt yalnız
+öğrenci kimliği, metrikler, puan ve makinece okunabilir risk kodları taşır;
+Identity'den e-posta/telefon gibi kişisel profil alanları kopyalanmaz. Risk
+puanı deterministik ve açıklanabilir eşiklerle hesaplanır; klinik/psikolojik
+tanı değildir.
+
+Takvim entegrasyonu sağlayıcıdan bağımsız olarak RFC 5545 feed'iyle başlar:
+öğretmen `GET /api/calendar/teacher.ics`, öğrenci
+`GET /api/calendar/student.ics` çağırır. Her iki endpoint de yalnız mevcut
+JWT sahibinin kendi Coaching kapsamını döndürür; tarih aralığı en fazla 366
+gündür ve en fazla 500 seans yayınlanır. Google/Outlook OAuth senkronizasyonu
+bu feed sözleşmesinin üzerine, açık kullanıcı rızası ve güvenli token saklama
+ile ayrı adaptör olarak eklenmelidir.
+
 ## Idempotent public writes
 
 Gateway write yanıtlarını cache'lemez veya replay etmez. Böylece her retry'da

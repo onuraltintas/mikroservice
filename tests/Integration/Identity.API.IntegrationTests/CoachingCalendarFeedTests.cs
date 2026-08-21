@@ -25,7 +25,7 @@ public sealed class CoachingCalendarFeedTests
             60,
             "Scheduled",
             "https://meet.example.test/session-1",
-            studentId));
+            new[] { studentId }));
         var handler = new GetCalendarFeedQueryHandler(
             repository,
             CreatePolicy(teacherId, "Teacher"));
