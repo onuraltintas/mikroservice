@@ -69,8 +69,24 @@ export class CoachingSessionsComponent implements OnInit {
     return studentId.length > 12 ? `…${studentId.slice(-8)}` : studentId;
   }
 
-  calendarFeedUrl() {
-    return this.coachingService.calendarFeedUrl(this.isTeacher() ? 'teacher' : 'student');
+  exportCalendar() {
+    const audience = this.isTeacher() ? 'teacher' : 'student';
+    this.coachingService.downloadCalendarFeed(audience).subscribe({
+      next: blob => {
+        if (typeof URL.createObjectURL !== 'function') {
+          this.errorMessage.set('Takvim dosyası bu tarayıcıda indirilemedi.');
+          return;
+        }
+
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `coaching-${audience}.ics`;
+        anchor.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.errorMessage.set('Takvim dosyası indirilemedi.')
+    });
   }
 
   saveNote(session: CoachingSession) {

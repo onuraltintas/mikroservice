@@ -410,6 +410,10 @@ export class CoachingPortalService {
     return `${environment.apiUrl}/calendar/${audience}.ics`;
   }
 
+  downloadCalendarFeed(audience: 'teacher' | 'student'): Observable<Blob> {
+    return this.http.get(this.calendarFeedUrl(audience), { responseType: 'blob' });
+  }
+
   getMyChildren(): Observable<ChildSummary[]> {
     return this.http.get<ChildSummary[]>(`${environment.apiUrl}/users/me/children`);
   }
