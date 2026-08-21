@@ -200,4 +200,20 @@ describe('CoachingPortalService', () => {
     expect(service.calendarFeedUrl('teacher')).toContain('/calendar/teacher.ics');
     expect(service.calendarFeedUrl('student')).toContain('/calendar/student.ics');
   });
+
+  it('downloads the calendar feed through the authenticated HttpClient', () => {
+    TestBed.configureTestingModule({
+      providers: [CoachingPortalService, provideHttpClient(), provideHttpClientTesting()]
+    });
+    const service = TestBed.inject(CoachingPortalService);
+    const http = TestBed.inject(HttpTestingController);
+
+    service.downloadCalendarFeed('teacher').subscribe();
+
+    const request = http.expectOne(candidate => candidate.url.endsWith('/calendar/teacher.ics'));
+    expect(request.request.method).toBe('GET');
+    expect(request.request.responseType).toBe('blob');
+    request.flush(new Blob(['BEGIN:VCALENDAR'], { type: 'text/calendar' }));
+    http.verify();
+  });
 });
