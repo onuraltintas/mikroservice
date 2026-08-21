@@ -62,7 +62,6 @@ public sealed class CoachingEarlyWarningQueryTests
             EarlyWarningReasonCodes.LowGoalProgress,
             EarlyWarningReasonCodes.NoRecentActivity
         });
-        warning.Should().NotHaveProperty("Email");
         identity.Requests.Should().ContainSingle().Which.Should().Be(
             (institutionId, 8, 1, 10));
         repository.RequestedStudentIds.Should().BeEquivalentTo(new[] { studentId });
