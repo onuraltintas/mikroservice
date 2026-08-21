@@ -34,6 +34,15 @@ Kapılar sırasıyla:
 9. Monitoring Compose, Prometheus/Alertmanager/OTel/Tempo/Blackbox config doğrulaması.
 10. Dört Docker image'ının push edilmeden reproducible build edilmesi.
 
+`.github/workflows/performance.yml` ayrıca yalnızca manuel olarak ve `staging`
+environment onayıyla çalışır. `PERF_BASE_URL` HTTPS staging secret'ı zorunludur;
+workflow yalnız GET isteği kabul eder, 1--128 worker ve 1--600 saniye sınırları
+uygular. İsteğe bağlı `PERF_TOKEN` secret'ı authenticated read senaryosu için
+Bearer header olarak kullanılır. Her koşunun JSON sonucu 14 gün saklanan bir
+artifact'tir. Bu workflow production URL'si veya yazma endpoint'i için
+tasarlanmamıştır; gerçek staging adresi ve disposable veri seti olmadan
+çalıştırılmamalıdır.
+
 Bu workflow dış bir registry'ye veya production cluster'a otomatik deploy etmez.
 Registry, imaj adlandırma, Kubernetes/VM hedefi ve rollback politikası
 belirlenmeden source-derived image'ı dışarı göndermek güvenli değildir. Hedef

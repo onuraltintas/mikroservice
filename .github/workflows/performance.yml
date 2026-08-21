@@ -1,0 +1,127 @@
+name: EduPlatform Performance
+
+on:
+  workflow_dispatch:
+    inputs:
+      path:
+        description: 'GET-only staging endpoint path (for example /health or /api/users/me)'
+        required: true
+        default: /health
+        type: string
+      authenticated:
+        description: 'Send the staging PERF_TOKEN as a Bearer token'
+        required: true
+        default: false
+        type: boolean
+      concurrency:
+        description: 'Parallel workers (1-128)'
+        required: true
+        default: '16'
+        type: string
+      duration_seconds:
+        description: 'Run duration in seconds (1-600)'
+        required: true
+        default: '60'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eduplatform-performance-staging
+  cancel-in-progress: false
+
+jobs:
+  load-test:
+    name: Staging GET load test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: staging
+    env:
+      PERF_BASE_URL: ${{ secrets.PERF_BASE_URL }}
+      PERF_TOKEN: ${{ secrets.PERF_TOKEN }}
+      PERF_PATH: ${{ inputs.path }}
+      PERF_AUTHENTICATED: ${{ inputs.authenticated }}
+      PERF_CONCURRENCY: ${{ inputs.concurrency }}
+      PERF_DURATION_SECONDS: ${{ inputs.duration_seconds }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate staging-only inputs
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          if ([string]::IsNullOrWhiteSpace($env:PERF_BASE_URL)) {
+            throw 'The staging PERF_BASE_URL secret is required.'
+          }
+
+          $baseUri = $null
+          if (-not [Uri]::TryCreate($env:PERF_BASE_URL, [UriKind]::Absolute, [ref]$baseUri)) {
+            throw 'PERF_BASE_URL must be an absolute HTTPS URL.'
+          }
+          if ($baseUri.Scheme -ne 'https') {
+            throw 'Performance workflow accepts HTTPS targets only.'
+          }
+          if (-not [string]::IsNullOrEmpty($baseUri.UserInfo) -or
+              -not [string]::IsNullOrEmpty($baseUri.Query) -or
+              -not [string]::IsNullOrEmpty($baseUri.Fragment)) {
+            throw 'PERF_BASE_URL must not contain userinfo, query, or fragment data.'
+          }
+
+          if ($env:PERF_PATH -notmatch '^/[A-Za-z0-9._~!$&''()*+,;=:@%/-]+$' -or
+              $env:PERF_PATH.Contains('..')) {
+            throw 'PERF_PATH must be a simple GET path without query, fragment, or traversal segments.'
+          }
+
+          $concurrency = 0
+          $duration = 0
+          if (-not [int]::TryParse($env:PERF_CONCURRENCY, [ref]$concurrency) -or
+              $concurrency -lt 1 -or $concurrency -gt 128) {
+            throw 'PERF_CONCURRENCY must be between 1 and 128.'
+          }
+          if (-not [int]::TryParse($env:PERF_DURATION_SECONDS, [ref]$duration) -or
+              $duration -lt 1 -or $duration -gt 600) {
+            throw 'PERF_DURATION_SECONDS must be between 1 and 600.'
+          }
+
+          if ($env:PERF_AUTHENTICATED -eq 'true' -and [string]::IsNullOrWhiteSpace($env:PERF_TOKEN)) {
+            throw 'PERF_TOKEN is required when authenticated=true.'
+          }
+
+          Write-Output ("Validated HTTPS staging target {0}{1}; GET-only run, {2} workers, {3}s." -f
+            $baseUri.Authority, $env:PERF_PATH, $concurrency, $duration)
+
+      - name: Run bounded GET load test
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $arguments = @(
+            '-NoProfile',
+            '-File', 'tools/load-test.ps1',
+            '-BaseUrl', $env:PERF_BASE_URL,
+            '-Path', $env:PERF_PATH,
+            '-Concurrency', $env:PERF_CONCURRENCY,
+            '-DurationSeconds', $env:PERF_DURATION_SECONDS,
+            '-TimeoutSeconds', '10',
+            '-Json',
+            '-FailOnError'
+          )
+          if ($env:PERF_AUTHENTICATED -eq 'true') {
+            $arguments += @('-Header', "Authorization=Bearer $env:PERF_TOKEN")
+          }
+
+          & pwsh @arguments | Tee-Object -FilePath performance-result.json
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+
+      - name: Publish performance result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-${{ github.run_id }}
+          path: performance-result.json
+          if-no-files-found: warn
+          retention-days: 14
