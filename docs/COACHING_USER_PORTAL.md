@@ -47,10 +47,18 @@ aynı ilişkiyi tekrar doğrular.
 ile, öğretmen kendi seanslarını `GET /api/sessions/teacher/{teacherId}` ile
 görüntüler. Grup seanslarında öğrenci cevabı yalnızca kendi attendance satırını
 içerir; başka öğrencilerin kimlikleri veya katılım bilgileri response'a
-eklenmez. Veli, aktif çocuğu seçtikten sonra aynı öğrenci okuma endpoint'ini
+eklenmez. Yetkili kullanıcıya yalnız HTTP(S) olarak doğrulanmış `meetingLink`
+alanı da döner; öğrenci ve öğretmen bu bağlantıyı portalın seans kartından
+açabilir. Öğrenci seans sonrası `PUT /api/sessions/{sessionId}/student-note`
+ile yalnız kendi attendance kaydına en fazla 2.000 karakterlik yansıma notu
+ekleyebilir ve okuyabilir; veli/öğretmen bu özel notu göremez ve bu endpoint ile yazamaz. Veli, aktif çocuğu
+seçtikten sonra aynı öğrenci okuma endpoint'ini
 kullanır ve Coaching → Identity ilişki kontrolü tekrar çalışır.
 
-Öğrenci `POST /api/goals` ile `TeacherId = null` göndererek kendi hedefini
+Öğrenci özeti `GET /api/reports/student/{studentId}/progress` endpoint'inden
+tek bir aggregate response olarak ödev, sınav, hedef ve seans metriklerini alır;
+frontend sayfalama limitlerine güvenerek eksik ortalama hesaplamaz. Öğrenci `POST /api/goals` ile
+`TeacherId = null` göndererek kendi hedefini
 oluşturabilir. İstek `Idempotency-Key` header'ı taşır; istemci aynı ağ
 zaman aşımı için aynı anahtarı, yeni hedef için yeni anahtarı kullanır.
 İlerleme yalnız öğrencinin kendi hedefi için `PUT

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Coaching.Application.Commands.CreateSession;
 using Coaching.Application.Commands.UpdateSessionAttendance;
+using Coaching.Application.Commands.UpdateSessionStudentNote;
 using Coaching.Application.Queries.GetSessions;
 using Coaching.Application.Queries;
 using MediatR;
@@ -192,6 +193,44 @@ public class SessionsController : ControllerBase
             cancellationToken);
 
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Save a student's private reflection for an attended session.
+    /// </summary>
+    [HttpPut("{id}/student-note")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateStudentNote(
+        Guid id,
+        [FromBody] UpdateSessionStudentNoteCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.SessionId)
+            return BadRequest("Session ID mismatch");
+
+        try
+        {
+            await _mediator.Send(command, cancellationToken);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating student note for session: {SessionId}", id);
+            return StatusCode(500, new { error = "An error occurred" });
+        }
     }
 
     /// <summary>

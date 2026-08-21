@@ -3,10 +3,12 @@ using Coaching.Application.Commands.CreateExam;
 using Coaching.Application.Commands.CreateGoal;
 using Coaching.Application.Commands.CreateSession;
 using Coaching.Application.Commands.UpdateGoalProgress;
+using Coaching.Application.Commands.UpdateSessionStudentNote;
 using Coaching.Application.Queries.GetCoachingAdminAssignments;
 using Coaching.Application.Queries.GetCoachingAdminSessions;
 using Coaching.Application.Queries.GetCoachingAdminExams;
 using Coaching.Application.Queries.GetCoachingAdminGoals;
+using Coaching.Application.Queries.GetStudentProgress;
 using Coaching.Domain.Enums;
 using FluentAssertions;
 
@@ -67,6 +69,28 @@ public sealed class CoachingContractTests
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(error => error.PropertyName == "DurationMinutes");
+    }
+
+    [Theory]
+    [InlineData("javascript:alert(1)")]
+    [InlineData("not-a-url")]
+    public async Task CreateSessionContract_RejectsUnsafeMeetingLink(string meetingLink)
+    {
+        var validator = new CreateSessionCommandValidator();
+        var result = await validator.ValidateAsync(new CreateSessionCommand(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            DateTime.UtcNow.AddHours(1),
+            60,
+            "Math",
+            null,
+            SessionType.OneOnOne,
+            "meeting-link-key",
+            null,
+            meetingLink));
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == nameof(CreateSessionCommand.MeetingLink));
     }
 
     [Fact]
@@ -171,6 +195,26 @@ public sealed class CoachingContractTests
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(error => error.PropertyName == nameof(UpdateGoalProgressCommand.Progress));
+    }
+
+    [Fact]
+    public async Task StudentProgressQueryContract_RequiresStudentId()
+    {
+        var result = await new GetStudentProgressQueryValidator()
+            .ValidateAsync(new GetStudentProgressQuery(Guid.Empty));
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == nameof(GetStudentProgressQuery.StudentId));
+    }
+
+    [Fact]
+    public async Task UpdateSessionStudentNoteContract_RejectsOverlongNote()
+    {
+        var result = await new UpdateSessionStudentNoteCommandValidator().ValidateAsync(
+            new UpdateSessionStudentNoteCommand(Guid.NewGuid(), Guid.NewGuid(), new string('x', 2_001)));
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == nameof(UpdateSessionStudentNoteCommand.Note));
     }
 
     [Fact]

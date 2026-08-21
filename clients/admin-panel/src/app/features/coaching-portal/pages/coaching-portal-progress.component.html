@@ -17,10 +17,10 @@
   </div>
 
   <ng-container *ngIf="!isLoading()">
-    <div class="grid gap-4 sm:grid-cols-3">
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
       <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <p class="text-sm text-slate-500">Tamamlanan hedef</p>
-        <p class="mt-2 text-3xl font-bold">{{ goals().filter(goal => goal.isCompleted).length }}<span class="text-base font-medium text-slate-400"> / {{ goals().length }}</span></p>
+        <p class="mt-2 text-3xl font-bold">{{ summary()?.completedGoals ?? goals().filter(goal => goal.isCompleted).length }}<span class="text-base font-medium text-slate-400"> / {{ summary()?.totalGoals ?? goals().length }}</span></p>
       </div>
       <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <p class="text-sm text-slate-500">Ortalama başarı</p>
@@ -28,7 +28,15 @@
       </div>
       <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <p class="text-sm text-slate-500">Sınav sayısı</p>
-        <p class="mt-2 text-3xl font-bold">{{ examResults().length }}</p>
+        <p class="mt-2 text-3xl font-bold">{{ summary()?.totalExams ?? examResults().length }}</p>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <p class="text-sm text-slate-500">Ödev teslim oranı</p>
+        <p class="mt-2 text-3xl font-bold">{{ assignmentCompletion() === null ? '—' : '%' + assignmentCompletion() }}</p>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <p class="text-sm text-slate-500">Seans katılımı</p>
+        <p class="mt-2 text-3xl font-bold">{{ attendancePercentage() === null ? '—' : '%' + attendancePercentage() }}</p>
       </div>
     </div>
 

@@ -79,6 +79,17 @@ describe('CoachingPortalService', () => {
     http.verify();
   });
 
+  it('requests the aggregate student progress report through the reports route', () => {
+    const { service, http } = setup();
+
+    service.getStudentProgress('student/1').subscribe();
+
+    const request = http.expectOne(candidate => candidate.url.endsWith('/reports/student/student%2F1/progress'));
+    expect(request.request.method).toBe('GET');
+    request.flush({ studentId: 'student/1', totalAssignments: 1 });
+    http.verify();
+  });
+
   it('creates a student goal with a required idempotency key', () => {
     const { service, http } = setup();
 
@@ -115,6 +126,22 @@ describe('CoachingPortalService', () => {
     expect(request.request.method).toBe('PUT');
     expect(request.request.body).toEqual({ goalId: 'goal/1', progress: 75 });
     request.flush({ message: 'Progress updated successfully' });
+    http.verify();
+  });
+
+  it('updates only the current student reflection for a session', () => {
+    const { service, http } = setup();
+
+    service.updateStudentSessionNote('session/1', 'student/1', '  Bugün fonksiyonları pekiştirdim.  ').subscribe();
+
+    const request = http.expectOne(candidate => candidate.url.endsWith('/sessions/session%2F1/student-note'));
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({
+      sessionId: 'session/1',
+      studentId: 'student/1',
+      note: 'Bugün fonksiyonları pekiştirdim.'
+    });
+    request.flush(null);
     http.verify();
   });
 

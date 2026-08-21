@@ -1,9 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
-import { CoachingPortalService, ExamResult, Goal } from '../../../core/services/coaching-portal.service';
+import { CoachingPortalService, ExamResult, Goal, StudentProgressSummary } from '../../../core/services/coaching-portal.service';
 
 @Component({
   selector: 'app-coaching-portal-progress',
@@ -19,6 +19,7 @@ export class CoachingPortalProgressComponent implements OnInit {
 
   readonly goals = signal<Goal[]>([]);
   readonly examResults = signal<ExamResult[]>([]);
+  readonly summary = signal<StudentProgressSummary | null>(null);
   readonly isLoading = signal(true);
   readonly errorMessage = signal<string | null>(null);
   readonly showGoalForm = signal(false);
@@ -51,10 +52,12 @@ export class CoachingPortalProgressComponent implements OnInit {
     }
 
     forkJoin({
+      summary: this.coachingService.getStudentProgress(studentId).pipe(catchError(() => of(null))),
       goals: this.coachingService.getStudentGoals(studentId, 1, 100),
       exams: this.coachingService.getStudentExamResults(studentId, 1, 100)
     }).subscribe({
       next: result => {
+        this.summary.set(result.summary);
         this.goals.set(result.goals.items);
         this.examResults.set(result.exams.items);
       },
@@ -148,9 +151,21 @@ export class CoachingPortalProgressComponent implements OnInit {
   }
 
   averageScore() {
+    const summary = this.summary();
+    if (summary?.averageExamPercentage !== undefined) return Math.round(summary.averageExamPercentage);
     const results = this.examResults();
     if (results.length === 0) return null;
     const percentage = results.reduce((total, result) => total + (result.maxScore > 0 ? result.score / result.maxScore : 0), 0) / results.length;
     return Math.round(percentage * 100);
+  }
+
+  assignmentCompletion() {
+    const summary = this.summary();
+    if (!summary || summary.totalAssignments === 0) return null;
+    return Math.round(summary.submittedAssignments / summary.totalAssignments * 100);
+  }
+
+  attendancePercentage() {
+    return this.summary()?.attendancePercentage ?? null;
   }
 }

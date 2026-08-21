@@ -73,6 +73,9 @@ type Resource = 'session' | 'exam' | 'goal';
           <label class="block text-sm text-gray-700 dark:text-gray-200">Notlar
             <textarea [(ngModel)]="session.notes" name="notes" maxlength="2000" rows="4" class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900"></textarea>
           </label>
+          <label class="block text-sm text-gray-700 dark:text-gray-200">Online görüşme bağlantısı (isteğe bağlı)
+            <input [(ngModel)]="session.meetingLink" name="meetingLink" type="url" maxlength="500" placeholder="https://..." class="mt-1 w-full rounded-lg border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" />
+          </label>
           <div class="flex justify-end gap-3"><a routerLink="/dashboard/coaching/operations" class="rounded-lg border px-4 py-2 text-sm dark:border-gray-600">Vazgeç</a><button type="submit" [disabled]="submitting()" class="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white disabled:opacity-50">{{ submitting() ? 'Kaydediliyor…' : 'Seans oluştur' }}</button></div>
         </form>
       } @else if (resource() === 'exam') {
@@ -163,7 +166,7 @@ export class CoachingResourceCreateComponent implements OnInit {
 
   session: CoachingAdminSessionCreateRequest & { startTime: string } = {
     teacherId: '', studentId: '', startTime: this.defaultDateTime(), durationMinutes: 60,
-    subject: '', notes: '', type: 'OneOnOne'
+    subject: '', notes: '', meetingLink: '', type: 'OneOnOne'
   };
   exam: CoachingAdminExamCreateRequest & { examDate: string } = {
     teacherId: '', title: '', type: 'Mock', examDate: this.defaultDateTime(), maxScore: 100,

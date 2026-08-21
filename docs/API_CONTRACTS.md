@@ -83,12 +83,20 @@ Portal seans görünürlüğü `GET /api/sessions/student/{studentId}` ve
 `GET /api/sessions/teacher/{teacherId}` endpoint'lerini kullanır. Öğrenci
 sorgusunda Coaching → Identity ilişkisi doğrulanır ve grup seansındaki
 attendance listesi yalnızca sorgulanan öğrenciye daraltılır; veli aynı endpoint'i
-aktif çocuk ilişkisiyle kullanır. Öğrenci kendi hedefini `POST /api/goals` ile
+aktif çocuk ilişkisiyle kullanır. `POST /api/sessions` içindeki isteğe bağlı
+`meetingLink` yalnızca mutlak HTTP(S) URL olarak kabul edilir ve yetkili seans
+okumalarında döndürülür. Öğrenci seans yansımasını `PUT
+/api/sessions/{sessionId}/student-note` ile yalnız kendi attendance satırına
+ve en fazla 2.000 karakter olarak yazar; bu özel not yalnız öğrenci okuma
+response'unda döner. Öğrenci kendi hedefini `POST /api/goals` ile
 `TeacherId = null` göndererek oluşturabilir; istek 16–128 karakterlik
 `Idempotency-Key` header'ı taşır. Öğrencinin kendi hedef ilerlemesi
 `PUT /api/goals/{goalId}/progress` ile 0–100 arasında güncellenir. Yönetici
 hedef komutlarıyla bu self-service akış aynı yetki sınırlarını paylaşmaz:
 admin komutları MFA ve `Permissions.Coaching.Manage` gerektirir.
+`GET /api/reports/student/{studentId}/progress` ise aynı öğrenci kapsamı için
+ödev teslim/not, sınav yüzdesi, hedef ilerlemesi ve seans katılımını aggregate
+eder; endpoint Identity ilişkisel okuma yetkisini tekrar doğrular.
 
 ## Idempotent public writes
 

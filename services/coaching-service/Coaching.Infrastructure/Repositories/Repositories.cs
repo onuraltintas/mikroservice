@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Coaching.Domain.Entities;
 using Coaching.Application.Interfaces;
 using Coaching.Application.Queries;
+using Coaching.Application.Queries.GetStudentProgress;
 using Coaching.Infrastructure.Data;
 
 namespace Coaching.Infrastructure.Repositories;
@@ -333,6 +334,90 @@ public class AcademicGoalRepository : IAcademicGoalRepository
         _context.AcademicGoals.Remove(goal);
         return Task.CompletedTask;
     }
+}
+
+public sealed class CoachingStudentProgressRepository(CoachingDbContext context)
+    : ICoachingStudentProgressRepository
+{
+    public async Task<StudentProgressSummaryDto> GetStudentSummaryAsync(
+        Guid studentId,
+        CancellationToken cancellationToken = default)
+    {
+        var assignments = await context.AssignmentStudents
+            .AsNoTracking()
+            .Where(item => item.StudentId == studentId
+                && item.Assignment.Status != Domain.Enums.AssignmentStatus.Cancelled)
+            .Select(item => new
+            {
+                item.SubmittedAt,
+                item.Score,
+                item.Status,
+                item.Assignment.MaxScore
+            })
+            .ToListAsync(cancellationToken);
+
+        var assignmentPercentages = assignments
+            .Where(item => item.Score.HasValue && item.MaxScore.HasValue && item.MaxScore.Value > 0)
+            .Select(item => (double)item.Score!.Value / (double)item.MaxScore!.Value * 100)
+            .ToArray();
+
+        var exams = await context.ExamResults
+            .AsNoTracking()
+            .Where(item => item.StudentId == studentId)
+            .Select(item => new { item.Score, item.Exam.MaxScore })
+            .ToListAsync(cancellationToken);
+        var examPercentages = exams
+            .Where(item => item.MaxScore > 0)
+            .Select(item => (double)item.Score / (double)item.MaxScore * 100)
+            .ToArray();
+
+        var goals = await context.AcademicGoals
+            .AsNoTracking()
+            .Where(item => item.StudentId == studentId)
+            .Select(item => new { item.CurrentProgress, item.IsCompleted })
+            .ToListAsync(cancellationToken);
+
+        var attendances = await context.SessionAttendances
+            .AsNoTracking()
+            .Where(item => item.StudentId == studentId
+                && item.Session.Status != Domain.Enums.SessionStatus.Cancelled)
+            .Select(item => new
+            {
+                item.AttendanceStatus,
+                item.Session.Status,
+                item.Session.ScheduledDate
+            })
+            .ToListAsync(cancellationToken);
+
+        var recordedAttendances = attendances
+            .Where(item => item.AttendanceStatus != Domain.Enums.AttendanceStatus.NotRecorded)
+            .ToArray();
+        var attendedSessions = recordedAttendances.Count(item =>
+            item.AttendanceStatus is Domain.Enums.AttendanceStatus.Present
+                or Domain.Enums.AttendanceStatus.Late);
+
+        return new StudentProgressSummaryDto(
+            studentId,
+            assignments.Count,
+            assignments.Count(item => item.SubmittedAt.HasValue),
+            assignments.Count(item => item.Status == Domain.Enums.StudentAssignmentStatus.Graded),
+            AveragePercentage(assignmentPercentages),
+            exams.Count,
+            AveragePercentage(examPercentages),
+            goals.Count,
+            goals.Count(item => item.IsCompleted),
+            goals.Count == 0 ? 0 : (int)Math.Round(goals.Average(item => item.CurrentProgress)),
+            attendances.Count,
+            attendances.Count(item => item.Status == Domain.Enums.SessionStatus.Scheduled
+                && item.ScheduledDate >= DateTime.UtcNow),
+            attendedSessions,
+            recordedAttendances.Length == 0
+                ? null
+                : Math.Round((decimal)attendedSessions / recordedAttendances.Length * 100, 2));
+    }
+
+    private static decimal? AveragePercentage(IReadOnlyCollection<double> values) =>
+        values.Count == 0 ? null : Math.Round((decimal)values.Average(), 2);
 }
 
 public sealed class CoachingAdminRepository : ICoachingAdminRepository

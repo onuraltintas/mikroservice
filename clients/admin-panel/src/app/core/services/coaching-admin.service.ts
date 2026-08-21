@@ -122,6 +122,7 @@ export interface CoachingAdminSessionDetail {
   durationMinutes: number;
   status: string;
   attendances: CoachingAdminSessionAttendance[];
+  meetingLink?: string;
 }
 
 export interface CoachingAdminExamListItem {
@@ -205,6 +206,7 @@ export interface CoachingAdminSessionCreateRequest {
   durationMinutes: number;
   subject?: string;
   notes?: string;
+  meetingLink?: string;
   type: string;
   studentIds?: string[];
 }

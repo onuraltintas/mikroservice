@@ -141,6 +141,23 @@ export interface UpdateGoalProgressResponse {
   message: string;
 }
 
+export interface StudentProgressSummary {
+  studentId: string;
+  totalAssignments: number;
+  submittedAssignments: number;
+  gradedAssignments: number;
+  averageAssignmentPercentage?: number;
+  totalExams: number;
+  averageExamPercentage?: number;
+  totalGoals: number;
+  completedGoals: number;
+  averageGoalProgress: number;
+  totalSessions: number;
+  upcomingSessions: number;
+  attendedSessions: number;
+  attendancePercentage?: number;
+}
+
 export interface ExamResult {
   examId: string;
   examTitle: string;
@@ -164,6 +181,8 @@ export interface CoachingSession {
   status: string;
   type: string;
   studentIds: string[];
+  meetingLink?: string;
+  studentNote?: string;
 }
 
 export interface ChildSummary {
@@ -302,6 +321,12 @@ export class CoachingPortalService {
     );
   }
 
+  getStudentProgress(studentId: string): Observable<StudentProgressSummary> {
+    return this.http.get<StudentProgressSummary>(
+      `${environment.apiUrl}/reports/student/${this.id(studentId)}/progress`
+    );
+  }
+
   createStudentGoal(
     studentId: string,
     request: CreateStudentGoalRequest,
@@ -327,6 +352,17 @@ export class CoachingPortalService {
     return this.http.put<UpdateGoalProgressResponse>(
       `${environment.apiUrl}/goals/${this.id(goalId)}/progress`,
       { goalId, progress }
+    );
+  }
+
+  updateStudentSessionNote(
+    sessionId: string,
+    studentId: string,
+    note: string
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${environment.apiUrl}/sessions/${this.id(sessionId)}/student-note`,
+      { sessionId, studentId, note: note.trim() || null }
     );
   }
 

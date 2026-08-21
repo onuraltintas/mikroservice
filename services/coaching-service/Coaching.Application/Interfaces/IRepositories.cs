@@ -1,6 +1,7 @@
 using Coaching.Domain.Entities;
 using Coaching.Domain.Enums;
 using Coaching.Application.Queries;
+using Coaching.Application.Queries.GetStudentProgress;
 
 namespace Coaching.Application.Interfaces;
 
@@ -46,6 +47,13 @@ public interface IAcademicGoalRepository
     Task<AcademicGoal> AddAsync(AcademicGoal goal, CancellationToken cancellationToken = default);
     Task UpdateAsync(AcademicGoal goal, CancellationToken cancellationToken = default);
     Task DeleteAsync(AcademicGoal goal, CancellationToken cancellationToken = default);
+}
+
+public interface ICoachingStudentProgressRepository
+{
+    Task<StudentProgressSummaryDto> GetStudentSummaryAsync(
+        Guid studentId,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed record PagedRepositoryResult<T>(IReadOnlyList<T> Items, int TotalCount);

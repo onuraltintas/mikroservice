@@ -6,6 +6,29 @@
 
 ---
 
+## GÜNCEL DURUM (21 Ağustos 2026)
+
+MVP'nin uygulanan durumu bu belgede yazan ilk taslak işaretlerinden üstündür.
+Şu an doğrulanmış kapsam; idempotent ödev/sınav/seans/hedef komutları,
+tenant ve rol kontrolleri, kitap ödevi + fotoğraf eki tarama akışı, admin
+operasyon ekranları, öğrenci/öğretmen/veli portalı, seans online bağlantısı,
+öğrenci seans yansıması, SignalR bildirim merkezi ve yetkili öğrenci progress
+summary raporudur. Identity ↔ Coaching okuma yetkisi her öğrenci sorgusunda
+tekrar doğrulanır.
+
+Bu MVP'de bilinçli olarak ayrı bir `CoachingPlan` tablosu açılmadı: hedef,
+ödev, sınav ve seanslar zaten ayrı yaşam döngülerine sahip aggregate'lerdir;
+plan görünümü bunları birleştiren read/report katmanıdır. Bu, iki kaynaktan
+aynı hedefi tutma riskini azaltır. Bir sonraki ürün fazı; koç notlarının
+öğretmen görünümü, kurum/sınıf karşılaştırmalı raporlar, risk/erken uyarı
+modelleri, dış takvim senkronizasyonu ve gerçek zamanlı kapasite/soak testidir.
+
+Son doğrulama: Identity/Coaching entegrasyon paketi 313 başarılı (2 Docker
+health testi ortam yokluğu nedeniyle atlandı), Angular paketi 56 başarılı ve
+production SSR/browser build başarılıdır.
+
+---
+
 ## 📋 PROJE KAPSAMI
 
 ### Hedef Kitleönü

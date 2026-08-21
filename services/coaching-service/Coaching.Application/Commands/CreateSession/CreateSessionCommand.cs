@@ -12,7 +12,8 @@ public record CreateSessionCommand(
     string? Notes,
     SessionType Type,
     string? IdempotencyKey = null,
-    IReadOnlyCollection<Guid>? StudentIds = null
+    IReadOnlyCollection<Guid>? StudentIds = null,
+    string? MeetingLink = null
 ) : IRequest<CreateSessionResponse>;
 
 public record CreateSessionResponse(Guid SessionId);

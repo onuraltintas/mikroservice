@@ -63,7 +63,8 @@ public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand,
             command.DurationMinutes.ToString(),
             command.Subject,
             command.Notes,
-            command.Type.ToString());
+            command.Type.ToString(),
+            command.MeetingLink);
         var existing = await _idempotencyRepository.GetAsync(IdempotencyScope, key!, cancellationToken);
         if (existing is not null)
         {
@@ -94,6 +95,11 @@ public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand,
         if (!string.IsNullOrEmpty(command.Notes))
         {
             session.AddTeacherNotes(command.Notes);
+        }
+
+        if (!string.IsNullOrWhiteSpace(command.MeetingLink))
+        {
+            session.SetMeetingLink(command.MeetingLink.Trim());
         }
 
         await _repository.AddAsync(session, cancellationToken);

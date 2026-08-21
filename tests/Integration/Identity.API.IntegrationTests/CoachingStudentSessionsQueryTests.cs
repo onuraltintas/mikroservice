@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Coaching.Application.Authorization;
+using Coaching.Application.Commands.UpdateSessionStudentNote;
 using Coaching.Application.Interfaces;
 using Coaching.Application.Queries.GetSessions;
 using Coaching.Domain.Entities;
@@ -55,6 +56,53 @@ public sealed class CoachingStudentSessionsQueryTests
 
         await action.Should().ThrowAsync<BusinessRuleException>()
             .Where(exception => exception.Code == "Authorization.Forbidden");
+    }
+
+    [Fact]
+    public async Task StudentSessionNoteCommand_ShouldUpdateOnlyAssignedStudentNote()
+    {
+        var studentId = Guid.NewGuid();
+        var session = CoachingSession.Create(
+            Guid.NewGuid(),
+            "Matematik koçluğu",
+            DateTime.UtcNow.AddDays(1),
+            SessionType.OneOnOne);
+        session.AddStudent(studentId);
+        var repository = new StubSessionRepository(session);
+        var handler = new UpdateSessionStudentNoteCommandHandler(
+            repository,
+            new StubUnitOfWork(),
+            CreatePolicy(studentId, "Student"));
+
+        await handler.Handle(
+            new UpdateSessionStudentNoteCommand(session.Id, studentId, "  Bugün tekrar yaptım.  "),
+            CancellationToken.None);
+
+        session.Attendances.Single().StudentNote.Should().Be("Bugün tekrar yaptım.");
+    }
+
+    [Fact]
+    public async Task StudentSessionNoteCommand_ShouldRejectSystemAdministrator()
+    {
+        var studentId = Guid.NewGuid();
+        var session = CoachingSession.Create(
+            Guid.NewGuid(),
+            "Matematik koçluğu",
+            DateTime.UtcNow.AddDays(1),
+            SessionType.OneOnOne);
+        session.AddStudent(studentId);
+        var handler = new UpdateSessionStudentNoteCommandHandler(
+            new StubSessionRepository(session),
+            new StubUnitOfWork(),
+            CreatePolicy(Guid.NewGuid(), "SystemAdmin"));
+
+        var action = () => handler.Handle(
+            new UpdateSessionStudentNoteCommand(session.Id, studentId, "Yetkisiz not"),
+            CancellationToken.None);
+
+        await action.Should().ThrowAsync<BusinessRuleException>()
+            .Where(exception => exception.Code == "Authorization.Forbidden");
+        session.Attendances.Single().StudentNote.Should().BeNull();
     }
 
     private static ICoachingAccessPolicy CreatePolicy(Guid userId, params string[] roles) =>
@@ -126,6 +174,14 @@ public sealed class CoachingStudentSessionsQueryTests
             RequestedStudentIds = studentIds;
             return Task.FromResult(allowedStudentIds);
         }
+    }
+
+    private sealed class StubUnitOfWork : IUnitOfWork
+    {
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => Task.FromResult(1);
+        public Task BeginTransactionAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task CommitTransactionAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task RollbackTransactionAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     private sealed class StubCurrentUserService(Guid userId, string[] roles) : ICurrentUserService

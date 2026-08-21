@@ -53,5 +53,7 @@ public record SessionDto(
     string? Subject,
     string Status,
     string Type,
-    IReadOnlyList<Guid> StudentIds
+    IReadOnlyList<Guid> StudentIds,
+    string? MeetingLink,
+    string? StudentNote
 );

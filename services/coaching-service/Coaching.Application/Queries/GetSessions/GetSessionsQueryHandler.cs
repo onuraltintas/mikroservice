@@ -66,14 +66,20 @@ public class GetSessionsQueryHandler :
             query.PageSize,
             cancellationToken);
 
-        return MapToDto(page, query.PageNumber, query.PageSize, allowedStudentIds);
+        return MapToDto(
+            page,
+            query.PageNumber,
+            query.PageSize,
+            allowedStudentIds,
+            includeStudentNote: _accessPolicy.IsCurrentStudent(query.StudentId));
     }
 
     private static PagedResponse<SessionDto> MapToDto(
         PagedRepositoryResult<Domain.Entities.CoachingSession> page,
         int pageNumber,
         int pageSize,
-        IReadOnlySet<Guid>? visibleStudentIds = null)
+        IReadOnlySet<Guid>? visibleStudentIds = null,
+        bool includeStudentNote = false)
     {
         var sessions = page.Items.Select(s =>
         {
@@ -81,6 +87,9 @@ public class GetSessionsQueryHandler :
                 .Select(attendance => attendance.StudentId)
                 .Where(studentId => visibleStudentIds is null || visibleStudentIds.Contains(studentId))
                 .ToArray();
+            var studentNote = includeStudentNote && visibleStudentIds?.Count == 1
+                ? s.Attendances.FirstOrDefault(attendance => visibleStudentIds.Contains(attendance.StudentId))?.StudentNote
+                : null;
 
             return new SessionDto(
                 Id: s.Id,
@@ -91,7 +100,9 @@ public class GetSessionsQueryHandler :
                 Subject: s.Title,
                 Status: s.Status.ToString(),
                 Type: s.SessionType.ToString(),
-                StudentIds: studentIds);
+                StudentIds: studentIds,
+                MeetingLink: s.MeetingLink,
+                StudentNote: studentNote);
         }).ToList();
 
         return new PagedResponse<SessionDto>(sessions, pageNumber, pageSize, page.TotalCount);

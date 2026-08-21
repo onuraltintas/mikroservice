@@ -25,6 +25,7 @@ type Resource = 'session' | 'exam';
         @if (session(); as value) {
           <h1 class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{{ value.title }}</h1>
           <p class="text-sm text-gray-500 dark:text-gray-400">{{ value.scheduledDate | date:'dd.MM.yyyy HH:mm' }} · {{ value.status }}</p>
+          @if (value.meetingLink) { <a [href]="value.meetingLink" target="_blank" rel="noopener noreferrer" class="mt-2 inline-flex text-sm font-medium text-indigo-600 hover:underline">Online görüşme bağlantısını aç →</a> }
         } @else if (exam(); as value) {
           <h1 class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{{ value.title }}</h1>
           <p class="text-sm text-gray-500 dark:text-gray-400">{{ value.examDate | date:'dd.MM.yyyy HH:mm' }} · {{ value.examType }} · Maksimum {{ value.maxScore }}</p>

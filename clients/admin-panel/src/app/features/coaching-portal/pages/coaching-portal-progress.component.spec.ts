@@ -9,6 +9,7 @@ import { CoachingPortalProgressComponent } from './coaching-portal-progress.comp
 describe('CoachingPortalProgressComponent', () => {
   const profile = signal<UserProfile | null>(null);
   let service: {
+    getStudentProgress: ReturnType<typeof vi.fn>;
     getStudentGoals: ReturnType<typeof vi.fn>;
     getStudentExamResults: ReturnType<typeof vi.fn>;
     createStudentGoal: ReturnType<typeof vi.fn>;
@@ -18,6 +19,11 @@ describe('CoachingPortalProgressComponent', () => {
   beforeEach(async () => {
     profile.set(user('Student'));
     service = {
+      getStudentProgress: vi.fn(() => of({
+        studentId: 'user-1', totalAssignments: 0, submittedAssignments: 0, gradedAssignments: 0,
+        totalExams: 0, totalGoals: 0, completedGoals: 0, averageGoalProgress: 0,
+        totalSessions: 0, upcomingSessions: 0, attendedSessions: 0
+      })),
       getStudentGoals: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 0 })),
       getStudentExamResults: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 0 })),
       createStudentGoal: vi.fn(() => of({ goalId: 'goal-1' })),

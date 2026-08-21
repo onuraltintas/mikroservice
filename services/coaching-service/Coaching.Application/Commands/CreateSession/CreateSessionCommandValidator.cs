@@ -23,6 +23,12 @@ public class CreateSessionCommandValidator : AbstractValidator<CreateSessionComm
         RuleFor(x => x.DurationMinutes).GreaterThan(0).LessThanOrEqualTo(240); // Max 4 hours
         RuleFor(x => x.Subject).MaximumLength(200);
         RuleFor(x => x.Notes).MaximumLength(2000);
+        RuleFor(x => x.MeetingLink)
+            .MaximumLength(500)
+            .Must(link => Uri.TryCreate(link, UriKind.Absolute, out var uri)
+                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+            .When(x => !string.IsNullOrWhiteSpace(x.MeetingLink))
+            .WithMessage("Meeting link must be an absolute HTTP(S) URL.");
         RuleFor(x => x.IdempotencyKey)
             .NotEmpty()
             .Matches("^[A-Za-z0-9._~-]{16,128}$")
