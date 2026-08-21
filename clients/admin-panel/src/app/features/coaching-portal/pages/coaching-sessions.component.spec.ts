@@ -80,6 +80,29 @@ describe('CoachingSessionsComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Bu hafta deneme analizini tamamladım.');
     expect(fixture.nativeElement.querySelector('textarea')).toBeNull();
   });
+
+  it('exposes a teacher iCalendar export link', () => {
+    const profile = signal<UserProfile | null>(user('Teacher'));
+    const service = {
+      getTeacherSessions: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 0 })),
+      calendarFeedUrl: vi.fn(() => '/api/calendar/teacher.ics')
+    };
+
+    TestBed.configureTestingModule({
+      imports: [CoachingSessionsComponent],
+      providers: [
+        { provide: AuthService, useValue: { userProfile: profile } },
+        { provide: CoachingPortalService, useValue: service }
+      ]
+    });
+    const fixture = TestBed.createComponent(CoachingSessionsComponent);
+    fixture.detectChanges();
+
+    const link = fixture.nativeElement.querySelector('a[download]') as HTMLAnchorElement;
+    expect(link).not.toBeNull();
+    expect(link.getAttribute('href')).toContain('/api/calendar/teacher.ics');
+    expect(service.calendarFeedUrl).toHaveBeenCalledWith('teacher');
+  });
 });
 
 function user(role: string): UserProfile {
