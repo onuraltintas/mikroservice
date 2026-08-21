@@ -73,10 +73,20 @@ public interface IInstitutionRepository
         Guid institutionId,
         int? gradeLevel,
         CancellationToken cancellationToken);
+    Task<CoachingReportStudentPage?> GetCoachingReportStudentPageAsync(
+        Guid viewerUserId,
+        Guid institutionId,
+        int? gradeLevel,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken);
 }
 
 public sealed record CoachingTeacherAuthorization(Guid? InstitutionId);
 public sealed record CoachingStudentReadAuthorization(IReadOnlyCollection<Guid> AllowedStudentUserIds);
+public sealed record CoachingReportStudentPage(
+    IReadOnlyCollection<Guid> StudentUserIds,
+    int TotalCount);
 
 public interface IUnitOfWork
 {

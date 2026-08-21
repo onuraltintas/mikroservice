@@ -319,6 +319,47 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         result.Should().Equal(gradeEight.Id);
     }
 
+    [Fact]
+    public async Task CoachingReportRosterPage_ShouldReturnBoundedOrderedPageAndTotalCount()
+    {
+        var institution = Institution.Create("Paged Report Institution", InstitutionType.School);
+        var administrator = User.Create(Guid.NewGuid(), "paged-report-admin@example.test");
+        AddRole(administrator, "InstitutionAdmin");
+
+        var students = Enumerable.Range(0, 3)
+            .Select(index => User.Create(Guid.NewGuid(), $"paged-student-{index}@example.test"))
+            .OrderBy(user => user.Id)
+            .ToArray();
+        foreach (var student in students)
+        {
+            AddRole(student, "Student");
+            var profile = StudentProfile.Create(student.Id, "Paged", "Student", institution.Id);
+            profile.UpdateEducationInfo(gradeLevel: 8);
+            _dbContext!.StudentProfiles.Add(profile);
+        }
+
+        _dbContext!.Institutions.Add(institution);
+        _dbContext.Users.AddRange(administrator);
+        _dbContext.Users.AddRange(students);
+        _dbContext.InstitutionAdmins.Add(InstitutionAdmin.Create(
+            administrator.Id,
+            institution.Id,
+            InstitutionAdminRole.Admin));
+        await _dbContext.SaveChangesAsync();
+
+        var result = await Repository().GetCoachingReportStudentPageAsync(
+            administrator.Id,
+            institution.Id,
+            8,
+            pageNumber: 2,
+            pageSize: 2,
+            CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result!.TotalCount.Should().Be(3);
+        result.StudentUserIds.Should().Equal(students.Skip(2).Select(student => student.Id));
+    }
+
     private InstitutionRepository Repository() => new(_dbContext!);
 
     private void AddRole(User user, string roleName)
