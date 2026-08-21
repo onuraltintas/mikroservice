@@ -1,0 +1,329 @@
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+
+export interface PagedResponse<T> {
+  items: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages?: number;
+}
+
+export interface StudentAssignment {
+  id: string;
+  title: string;
+  subject?: string;
+  dueDate: string;
+  status: string;
+  submittedAt?: string;
+  score?: number;
+  maxScore?: number;
+  teacherFeedback?: string;
+  isOverdue: boolean;
+}
+
+export interface TeacherAssignment {
+  id: string;
+  title: string;
+  type: string;
+  dueDate: string;
+  status: string;
+  totalStudents: number;
+  submittedCount: number;
+  createdAt: string;
+}
+
+export interface AssignmentAttachment {
+  id: string;
+  originalFileName: string;
+  contentType: string;
+  sizeBytes: number;
+  status: string;
+  uploadedAt?: string;
+  scannedAt?: string;
+}
+
+export interface AssignedStudent {
+  studentId: string;
+  submittedAt?: string;
+  score?: number;
+  teacherFeedback?: string;
+  status: string;
+  attachments?: AssignmentAttachment[];
+}
+
+export interface AssignmentDetail {
+  id: string;
+  teacherId: string;
+  institutionId?: string;
+  title: string;
+  description?: string;
+  subject?: string;
+  type: string;
+  source: string;
+  bookTitle?: string;
+  bookIsbn?: string;
+  bookEdition?: string;
+  bookChapter?: string;
+  bookStartPage?: number;
+  bookEndPage?: number;
+  bookStartQuestion?: number;
+  bookEndQuestion?: number;
+  targetGradeLevel?: number;
+  dueDate: string;
+  estimatedDurationMinutes?: number;
+  maxScore?: number;
+  passingScore?: number;
+  status: string;
+  assignedStudents: AssignedStudent[];
+  createdAt: string;
+}
+
+export interface SubmitAssignmentResponse {
+  assignmentId: string;
+  studentId: string;
+  submittedAt: string;
+  status: string;
+}
+
+export interface GradeAssignmentResponse {
+  assignmentId: string;
+  studentId: string;
+  score: number;
+  status: string;
+  gradedAt: string;
+}
+
+export interface CreateAttachmentResponse {
+  assignmentId: string;
+  studentId: string;
+  attachmentId: string;
+  uploadUrl: string;
+  uploadUrlExpiresAt: string;
+  status: string;
+}
+
+export interface UploadAttachmentResponse {
+  attachmentId: string;
+  sizeBytes: number;
+  sha256: string;
+  status: string;
+  uploadedAt: string;
+}
+
+export interface Goal {
+  id: string;
+  title: string;
+  description?: string;
+  category: string;
+  targetDate?: string;
+  targetScore?: number;
+  progress: number;
+  isCompleted: boolean;
+  completedAt?: string;
+}
+
+export interface ExamResult {
+  examId: string;
+  examTitle: string;
+  examDate: string;
+  examType: string;
+  score: number;
+  maxScore: number;
+  correctAnswers?: number;
+  wrongAnswers?: number;
+  emptyAnswers?: number;
+  subjectScores?: Record<string, number>;
+}
+
+export interface CoachingSession {
+  id: string;
+  studentId: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  subject?: string;
+  status: string;
+  type: string;
+  studentIds: string[];
+}
+
+export interface ChildSummary {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  gradeLevel?: number;
+  institutionId?: string;
+  institutionName?: string;
+  avatarUrl?: string;
+}
+
+@Injectable({ providedIn: 'root' })
+export class CoachingPortalService {
+  private readonly http = inject(HttpClient);
+  private readonly url = `${environment.apiUrl}/assignments`;
+
+  getStudentAssignments(
+    studentId: string,
+    pageNumber = 1,
+    pageSize = 25
+  ): Observable<PagedResponse<StudentAssignment>> {
+    return this.http.get<PagedResponse<StudentAssignment>>(
+      `${this.url}/student/${this.id(studentId)}`,
+      { params: this.paging(pageNumber, pageSize) }
+    );
+  }
+
+  getTeacherAssignments(
+    teacherId: string,
+    pageNumber = 1,
+    pageSize = 25
+  ): Observable<PagedResponse<TeacherAssignment>> {
+    return this.http.get<PagedResponse<TeacherAssignment>>(
+      `${this.url}/teacher/${this.id(teacherId)}`,
+      { params: this.paging(pageNumber, pageSize) }
+    );
+  }
+
+  getAssignment(assignmentId: string): Observable<AssignmentDetail> {
+    return this.http.get<AssignmentDetail>(`${this.url}/${this.id(assignmentId)}`);
+  }
+
+  submitAssignment(
+    assignmentId: string,
+    studentId: string,
+    studentNote?: string
+  ): Observable<SubmitAssignmentResponse> {
+    const note = studentNote?.trim();
+    return this.http.post<SubmitAssignmentResponse>(
+      `${this.url}/${this.id(assignmentId)}/submit`,
+      {
+        assignmentId,
+        studentId,
+        studentNote: note || null
+      }
+    );
+  }
+
+  gradeAssignment(
+    assignmentId: string,
+    studentId: string,
+    score: number,
+    teacherFeedback?: string
+  ): Observable<GradeAssignmentResponse> {
+    const feedback = teacherFeedback?.trim();
+    return this.http.post<GradeAssignmentResponse>(
+      `${this.url}/${this.id(assignmentId)}/grade`,
+      {
+        assignmentId,
+        studentId,
+        score,
+        teacherFeedback: feedback || null
+      }
+    );
+  }
+
+  createAttachment(
+    assignmentId: string,
+    studentId: string,
+    file: File,
+    sha256: string
+  ): Observable<CreateAttachmentResponse> {
+    return this.http.post<CreateAttachmentResponse>(
+      `${this.url}/${this.id(assignmentId)}/students/${this.id(studentId)}/attachments`,
+      {
+        assignmentId,
+        studentId,
+        fileName: file.name,
+        contentType: file.type,
+        sizeBytes: file.size,
+        sha256
+      }
+    );
+  }
+
+  uploadAttachment(
+    assignmentId: string,
+    studentId: string,
+    attachmentId: string,
+    file: File,
+    sha256: string
+  ): Observable<UploadAttachmentResponse> {
+    const headers = new HttpHeaders({
+      'Content-Type': file.type,
+      'X-Content-SHA256': sha256
+    });
+
+    return this.http.put<UploadAttachmentResponse>(
+      `${this.url}/${this.id(assignmentId)}/students/${this.id(studentId)}/attachments/${this.id(attachmentId)}/content`,
+      file,
+      { headers }
+    );
+  }
+
+  downloadAttachment(
+    assignmentId: string,
+    studentId: string,
+    attachmentId: string
+  ): Observable<Blob> {
+    return this.http.get(
+      `${this.url}/${this.id(assignmentId)}/students/${this.id(studentId)}/attachments/${this.id(attachmentId)}/content`,
+      { responseType: 'blob' }
+    );
+  }
+
+  getStudentGoals(
+    studentId: string,
+    pageNumber = 1,
+    pageSize = 25
+  ): Observable<PagedResponse<Goal>> {
+    return this.http.get<PagedResponse<Goal>>(
+      `${environment.apiUrl}/goals/student/${this.id(studentId)}`,
+      { params: this.paging(pageNumber, pageSize) }
+    );
+  }
+
+  getStudentExamResults(
+    studentId: string,
+    pageNumber = 1,
+    pageSize = 25
+  ): Observable<PagedResponse<ExamResult>> {
+    return this.http.get<PagedResponse<ExamResult>>(
+      `${environment.apiUrl}/exams/student/${this.id(studentId)}`,
+      { params: this.paging(pageNumber, pageSize) }
+    );
+  }
+
+  getTeacherSessions(
+    teacherId: string,
+    pageNumber = 1,
+    pageSize = 25
+  ): Observable<PagedResponse<CoachingSession>> {
+    return this.http.get<PagedResponse<CoachingSession>>(
+      `${environment.apiUrl}/sessions/teacher/${this.id(teacherId)}`,
+      { params: this.paging(pageNumber, pageSize) }
+    );
+  }
+
+  getMyChildren(): Observable<ChildSummary[]> {
+    return this.http.get<ChildSummary[]>(`${environment.apiUrl}/users/me/children`);
+  }
+
+  async calculateSha256(file: File): Promise<string> {
+    const digest = await globalThis.crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+    return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+  }
+
+  private paging(pageNumber: number, pageSize: number): HttpParams {
+    const page = Math.min(1_000, Math.max(1, Math.floor(Number.isFinite(pageNumber) ? pageNumber : 1)));
+    const size = Math.min(100, Math.max(1, Math.floor(Number.isFinite(pageSize) ? pageSize : 25)));
+    return new HttpParams().set('pageNumber', page).set('pageSize', size);
+  }
+
+  private id(value: string): string {
+    return encodeURIComponent(value);
+  }
+}

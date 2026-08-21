@@ -172,7 +172,7 @@ export class AuthService implements OnDestroy {
             { challengeToken, code, recoveryCode },
             { withCredentials: true }));
         this.applySession(response);
-        await this.router.navigate(['/dashboard']);
+        await this.router.navigate([this.getLandingRoute()]);
     }
 
     async refreshSession(): Promise<boolean> {
@@ -271,7 +271,7 @@ export class AuthService implements OnDestroy {
         }
 
         this.applySession(response as AuthSessionResponse);
-        await this.router.navigate(['/dashboard']);
+        await this.router.navigate([this.getLandingRoute()]);
         return {
             authenticated: true,
             requiresMfa: false,
@@ -325,6 +325,13 @@ export class AuthService implements OnDestroy {
 
     hasPermission(permission: string): boolean {
         return hasRequiredPermission(this.userProfile(), permission);
+    }
+
+    getLandingRoute(): string {
+        const role = this.userProfile()?.role;
+        return ['Student', 'Teacher', 'Parent'].includes(role ?? '')
+            ? '/coaching-portal'
+            : '/dashboard';
     }
 
     private parseJwt(token: string): any {

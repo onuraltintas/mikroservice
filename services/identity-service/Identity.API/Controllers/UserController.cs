@@ -145,6 +145,31 @@ public class UserController : ControllerBase
         return BadRequest(new { Error = result.Error });
     }
 
+    /// <summary>
+    /// Lists the active children linked to the authenticated parent.
+    /// </summary>
+    [HttpGet("me/children")]
+    [Authorize(Roles = "Parent")]
+    [ProducesResponseType(typeof(IReadOnlyList<Identity.Application.Queries.GetMyChildren.ChildSummaryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetMyChildren(CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new Identity.Application.Queries.GetMyChildren.GetMyChildrenQuery(), cancellationToken);
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value);
+        }
+
+        if (result.Error.Code == "Error.Unauthorized")
+            return Unauthorized();
+
+        if (result.Error.Code == "Error.Forbidden")
+            return Forbid();
+
+        return BadRequest(new { Error = result.Error });
+    }
+
     [HttpGet("summary")]
     [HasPermission(Permissions.Users.View)]
     public async Task<IActionResult> GetSummary(CancellationToken cancellationToken)

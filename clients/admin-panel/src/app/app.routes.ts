@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/auth/auth.guard';
+import { authGuard, coachingPortalGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
     // Auth Routes
@@ -17,6 +17,19 @@ export const routes: Routes = [
             {
                 path: '',
                 loadChildren: () => import('./features/dashboard/dashboard.routes').then(m => m.DASHBOARD_ROUTES)
+            }
+        ]
+    },
+
+    // Student, teacher and parent Coaching workspace. Management routes stay under /dashboard.
+    {
+        path: 'coaching-portal',
+        canActivate: [authGuard, coachingPortalGuard],
+        loadComponent: () => import('./features/coaching-portal/layout/coaching-portal-layout.component').then(m => m.CoachingPortalLayoutComponent),
+        children: [
+            {
+                path: '',
+                loadChildren: () => import('./features/coaching-portal/coaching-portal.routes').then(m => m.COACHING_PORTAL_ROUTES)
             }
         ]
     },

@@ -868,6 +868,37 @@ public class ParentRepository : IParentRepository
         return await _context.ParentProfiles
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
+
+    public async Task<IReadOnlyList<StudentProfile>> GetActiveChildrenByUserIdAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var hasActiveParentProfile = await _context.ParentProfiles
+            .AsNoTracking()
+            .AnyAsync(parent => parent.UserId == userId
+                && parent.IsActive
+                && parent.User.IsActive,
+                cancellationToken);
+
+        if (!hasActiveParentProfile)
+        {
+            return Array.Empty<StudentProfile>();
+        }
+
+        return await _context.StudentProfiles
+            .AsNoTracking()
+            .Include(student => student.User)
+            .Include(student => student.Institution)
+            .Where(student => student.ParentId == userId
+                && student.IsActive
+                && student.User.IsActive
+                && (!student.InstitutionId.HasValue
+                    || (student.Institution != null && student.Institution.IsActive)))
+            .OrderBy(student => student.FirstName)
+            .ThenBy(student => student.LastName)
+            .ThenBy(student => student.UserId)
+            .ToListAsync(cancellationToken);
+    }
 }
 
 

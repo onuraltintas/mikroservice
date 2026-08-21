@@ -63,6 +63,22 @@ Yeni liste endpoint'leri için kurallar:
 4. `Skip` hesabı bounded integer/long aritmetiğiyle yapılır.
 5. Toplam sayım ve sayfa verisi aynı tenant filtresini kullanır.
 
+## Coaching kullanıcı portalı
+
+Öğrenci, öğretmen ve veli kullanıcı arayüzü `/coaching-portal` altında lazy
+olarak yüklenir. Portalın kullandığı özet liste response'ları `items`,
+`pageNumber`, `pageSize`, `totalCount` ve `totalPages` alanlarını taşır.
+
+Veli çocuk seçimi Identity servisinin `GET /api/users/me/children` endpoint'i
+üzerinden yapılır. Endpoint `Parent` rolü ister ve yalnız aktif veliye bağlı
+aktif çocukları döndürür; frontend hiçbir zaman çocuk ID'sini kullanıcıdan
+serbest metin olarak kabul etmez.
+
+Öğrenci fotoğrafı için metadata kaydı ve ham içerik yüklemesi iki ayrı istektir.
+MIME, 10 MiB boyut ve SHA-256 doğrulamaları backend'de zorunludur; dosya temiz
+tarama durumuna geçmeden indirme endpoint'i içeriği açmaz. Ayrıntılı ekran ve
+rol matrisi için `docs/COACHING_USER_PORTAL.md` belgesine bakın.
+
 ## Idempotent public writes
 
 Gateway write yanıtlarını cache'lemez veya replay etmez. Böylece her retry'da
