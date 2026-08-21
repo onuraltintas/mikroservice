@@ -30,6 +30,29 @@ export interface CoachingAdminOverview {
   recentAssignments: CoachingAdminAssignment[];
 }
 
+export interface InstitutionCoachingComparison {
+  institutionId: string;
+  gradeLevel?: number;
+  fromDate: string;
+  toDate: string;
+  studentCount: number;
+  assignmentCount: number;
+  assignedAssignmentCount: number;
+  submittedAssignmentCount: number;
+  gradedAssignmentCount: number;
+  averageAssignmentPercentage?: number;
+  examCount: number;
+  examResultCount: number;
+  averageExamPercentage?: number;
+  sessionCount: number;
+  attendanceRecordedCount: number;
+  attendedSessionCount: number;
+  attendancePercentage?: number;
+  goalCount: number;
+  completedGoalCount: number;
+  averageGoalProgress: number;
+}
+
 export interface CoachingAdminAssignmentListItem extends CoachingAdminAssignment {
   source: string;
   bookTitle?: string;
@@ -239,6 +262,22 @@ export class CoachingAdminService {
   getOverview(recentLimit = 10) {
     const params = new HttpParams().set('recentLimit', recentLimit);
     return this.http.get<CoachingAdminOverview>(`${this.url}/overview`, { params });
+  }
+
+  getInstitutionComparison(
+    institutionId: string,
+    options: { gradeLevel?: number; fromDate?: string; toDate?: string } = {}
+  ) {
+    let params = new HttpParams();
+    if (options.gradeLevel !== undefined && options.gradeLevel !== null) {
+      params = params.set('gradeLevel', options.gradeLevel);
+    }
+    if (options.fromDate) params = params.set('fromDate', options.fromDate);
+    if (options.toDate) params = params.set('toDate', options.toDate);
+    return this.http.get<InstitutionCoachingComparison>(
+      `${environment.apiUrl}/reports/institution/${encodeURIComponent(institutionId)}/comparison`,
+      { params }
+    );
   }
 
   getAssignments(options: {
