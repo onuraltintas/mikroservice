@@ -30,9 +30,12 @@ kapasite/soak testi, gözlemlenebilirlik panoları ve Google/Outlook gibi dış
 takvim sağlayıcıları için OAuth tabanlı, açık rıza ve token-vault kullanan
 adaptörlerdir.
 
-Son doğrulama: Identity/Coaching entegrasyon paketi 313 başarılı (2 Docker
-health testi ortam yokluğu nedeniyle atlandı), Angular paketi 56 başarılı ve
-production SSR/browser build başarılıdır.
+Son doğrulama: Identity/Coaching entegrasyon paketi 327 başarılı (2 Docker
+health testi ortam yokluğu nedeniyle atlandı), Angular paketi 63 başarılı ve
+production SSR/browser build başarılıdır. Docker health smoke 200, yeni
+calendar/early-warning rotaları auth olmadan 401 ve 5 saniyelik gateway health
+koşusunda 20.572 istek, %100 başarı, p95 16 ms ölçülmüştür; bu lokal smoke
+sonucudur, üretim SLA taahhüdü değildir.
 
 ---
 
