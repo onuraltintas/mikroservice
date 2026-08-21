@@ -790,6 +790,81 @@ public class InstitutionRepository : IInstitutionRepository
             .Select(profile => profile.UserId)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<CoachingReportStudentPage?> GetCoachingReportStudentPageAsync(
+        Guid viewerUserId,
+        Guid institutionId,
+        int? gradeLevel,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        if (pageNumber is < 1 or > 1000 || pageSize is < 1 or > 100)
+        {
+            return null;
+        }
+
+        var viewer = await _context.Users
+            .AsNoTracking()
+            .Where(user => user.Id == viewerUserId && user.IsActive)
+            .Select(user => new
+            {
+                user.Id,
+                Roles = user.Roles
+                    .Where(userRole => !userRole.Role.IsDeleted)
+                    .Select(userRole => userRole.Role.Name)
+                    .ToList()
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (viewer is null)
+        {
+            return null;
+        }
+
+        var isSystemAdministrator = viewer.Roles.Any(role =>
+            string.Equals(role, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
+        var hasInstitutionAdminScope = await _context.InstitutionAdmins
+            .AsNoTracking()
+            .AnyAsync(admin => admin.UserId == viewerUserId
+                && admin.InstitutionId == institutionId
+                && admin.IsActive
+                && admin.User.IsActive
+                && admin.Institution.IsActive,
+                cancellationToken);
+
+        if (!isSystemAdministrator && !hasInstitutionAdminScope)
+        {
+            return null;
+        }
+
+        var query = _context.StudentProfiles
+            .AsNoTracking()
+            .Where(profile => profile.UserId != Guid.Empty
+                && profile.InstitutionId == institutionId
+                && profile.IsActive
+                && profile.User.IsActive
+                && profile.Institution != null
+                && profile.Institution.IsActive
+                && profile.User.Roles.Any(userRole =>
+                    !userRole.Role.IsDeleted
+                    && userRole.Role.Name == "Student"));
+
+        if (gradeLevel.HasValue)
+        {
+            query = query.Where(profile => profile.GradeLevel == gradeLevel.Value);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var studentUserIds = await query
+            .OrderBy(profile => profile.UserId)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(profile => profile.UserId)
+            .ToListAsync(cancellationToken);
+
+        return new CoachingReportStudentPage(studentUserIds, totalCount);
+    }
 }
 
 public class UnitOfWork : IUnitOfWork

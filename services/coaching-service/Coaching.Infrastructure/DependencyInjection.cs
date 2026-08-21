@@ -112,6 +112,7 @@ public static class DependencyInjection
         services.AddScoped<IAcademicGoalRepository, AcademicGoalRepository>();
         services.AddScoped<ICoachingStudentProgressRepository, CoachingStudentProgressRepository>();
         services.AddScoped<ICoachingComparativeReportRepository, CoachingComparativeReportRepository>();
+        services.AddScoped<ICoachingEarlyWarningRepository, CoachingEarlyWarningRepository>();
         services.AddScoped<ICoachingAdminRepository, CoachingAdminRepository>();
         if (storageOptions.Provider.Equals("Minio", StringComparison.OrdinalIgnoreCase))
             services.AddSingleton<IAssignmentAttachmentStorage, MinioAssignmentAttachmentStorage>();

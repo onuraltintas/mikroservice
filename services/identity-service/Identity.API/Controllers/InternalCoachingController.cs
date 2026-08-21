@@ -11,6 +11,8 @@ namespace Identity.API.Controllers;
 public sealed class InternalCoachingController : ControllerBase
 {
     private const int MaxStudentTargets = 100;
+    private const int MaxReportPageSize = 100;
+    private const int MaxReportPageNumber = 1000;
     private readonly IInstitutionRepository _institutionRepository;
 
     public InternalCoachingController(IInstitutionRepository institutionRepository)
@@ -94,6 +96,38 @@ public sealed class InternalCoachingController : ControllerBase
             ? Forbid()
             : Ok(new CoachingReportStudentResponse(studentIds));
     }
+
+    [HttpPost("report-student-page")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    [RequestSizeLimit(16_384)]
+    public async Task<IActionResult> GetReportStudentPage(
+        [FromBody] CoachingReportStudentPageRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.ViewerUserId == Guid.Empty
+            || request.InstitutionId == Guid.Empty
+            || request.GradeLevel is < 1 or > 12
+            || request.PageNumber is < 1 or > MaxReportPageNumber
+            || request.PageSize is < 1 or > MaxReportPageSize)
+        {
+            return BadRequest("Report student page scope is invalid.");
+        }
+
+        var page = await _institutionRepository.GetCoachingReportStudentPageAsync(
+            request.ViewerUserId,
+            request.InstitutionId,
+            request.GradeLevel,
+            request.PageNumber,
+            request.PageSize,
+            cancellationToken);
+
+        return page is null
+            ? Forbid()
+            : Ok(new CoachingReportStudentPageResponse(
+                page.StudentUserIds,
+                page.TotalCount));
+    }
 }
 
 public sealed record CoachingAuthorizationRequest(
@@ -118,3 +152,14 @@ public sealed record CoachingReportStudentRequest(
 
 public sealed record CoachingReportStudentResponse(
     IReadOnlyCollection<Guid> StudentUserIds);
+
+public sealed record CoachingReportStudentPageRequest(
+    Guid ViewerUserId,
+    Guid InstitutionId,
+    int? GradeLevel,
+    int PageNumber,
+    int PageSize);
+
+public sealed record CoachingReportStudentPageResponse(
+    IReadOnlyCollection<Guid> StudentUserIds,
+    int TotalCount);

@@ -239,7 +239,95 @@ public sealed class IdentityAuthorizationClient : ICoachingIdentityAuthorization
         }
     }
 
+    public async Task<CoachingStudentReportPage> GetActiveStudentPageAsync(
+        Guid viewerUserId,
+        Guid institutionId,
+        int? gradeLevel,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        if (viewerUserId == Guid.Empty || institutionId == Guid.Empty)
+        {
+            throw new BusinessRuleException(
+                "Authorization.Forbidden",
+                "Rapor kapsamı geçersiz.");
+        }
+
+        if (gradeLevel is < 1 or > 12)
+        {
+            throw new BusinessRuleException(
+                "Authorization.Forbidden",
+                "Rapor sınıf seviyesi geçersiz.");
+        }
+
+        if (pageNumber is < 1 or > 1000 || pageSize is < 1 or > 100)
+        {
+            throw new BusinessRuleException(
+                "Authorization.Forbidden",
+                "Rapor sayfalama kapsamı geçersiz.");
+        }
+
+        if (string.IsNullOrWhiteSpace(_serviceApiKey))
+        {
+            throw new InvalidOperationException("Internal service API key is not configured.");
+        }
+
+        var payload = new
+        {
+            ViewerUserId = viewerUserId,
+            InstitutionId = institutionId,
+            GradeLevel = gradeLevel,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"{_baseUrl}/api/internal/coaching/report-student-page")
+        {
+            Content = JsonContent.Create(payload)
+        };
+        request.Headers.Add(InternalServiceAuthentication.HeaderName, _serviceApiKey);
+
+        try
+        {
+            using var response = await _httpClient.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken);
+            if (response.StatusCode is System.Net.HttpStatusCode.Forbidden or
+                System.Net.HttpStatusCode.Unauthorized)
+            {
+                throw new BusinessRuleException(
+                    "Authorization.Forbidden",
+                    "Kurum raporu kapsamına erişim yetkiniz yok.");
+            }
+
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<ReportStudentPageResponse>(
+                cancellationToken: cancellationToken);
+            return result is null
+                ? throw new InvalidOperationException("Identity report student page response was empty.")
+                : new CoachingStudentReportPage(
+                    result.StudentUserIds ?? Array.Empty<Guid>(),
+                    result.TotalCount);
+        }
+        catch (BusinessRuleException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            _logger.LogError(
+                ex,
+                "Identity report student page scope failed for institution {InstitutionId}",
+                institutionId);
+            throw new InvalidOperationException("Identity report scope service is unavailable.", ex);
+        }
+    }
+
     private sealed record AuthorizationResponse(Guid? InstitutionId);
     private sealed record StudentReadAuthorizationResponse(Guid[]? AllowedStudentUserIds);
     private sealed record ReportStudentResponse(Guid[]? StudentUserIds);
+    private sealed record ReportStudentPageResponse(Guid[]? StudentUserIds, int TotalCount);
 }

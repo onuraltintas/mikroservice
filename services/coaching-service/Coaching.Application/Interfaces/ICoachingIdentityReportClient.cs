@@ -11,4 +11,16 @@ public interface ICoachingIdentityReportClient
         Guid institutionId,
         int? gradeLevel,
         CancellationToken cancellationToken);
+
+    Task<CoachingStudentReportPage> GetActiveStudentPageAsync(
+        Guid viewerUserId,
+        Guid institutionId,
+        int? gradeLevel,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken);
 }
+
+public sealed record CoachingStudentReportPage(
+    IReadOnlyCollection<Guid> StudentUserIds,
+    int TotalCount);

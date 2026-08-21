@@ -1,4 +1,5 @@
 using Coaching.Application.Queries.GetInstitutionCoachingComparison;
+using Coaching.Application.Queries.GetInstitutionEarlyWarnings;
 using EduPlatform.Shared.Contracts.Authorization;
 using EduPlatform.Shared.Kernel.Exceptions;
 using EduPlatform.Shared.Security.Authorization;
@@ -34,6 +35,36 @@ public sealed class ComparativeReportsController(IMediator mediator) : Controlle
                     fromDate,
                     toDate,
                     gradeLevel),
+                cancellationToken));
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+    }
+
+    [HttpGet("institution/{institutionId:guid}/early-warnings")]
+    [ProducesResponseType(typeof(InstitutionEarlyWarningReportDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<InstitutionEarlyWarningReportDto>> GetInstitutionEarlyWarnings(
+        Guid institutionId,
+        [FromQuery] DateTime? fromDate,
+        [FromQuery] DateTime? toDate,
+        [FromQuery] int? gradeLevel,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 25,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return Ok(await mediator.Send(
+                new GetInstitutionEarlyWarningsQuery(
+                    institutionId,
+                    fromDate,
+                    toDate,
+                    gradeLevel,
+                    pageNumber,
+                    pageSize),
                 cancellationToken));
         }
         catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))

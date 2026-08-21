@@ -533,6 +533,194 @@ public sealed class CoachingComparativeReportRepository(CoachingDbContext contex
         values.Count == 0 ? null : Math.Round((decimal)values.Average(), 2);
 }
 
+public sealed class CoachingEarlyWarningRepository(CoachingDbContext context)
+    : ICoachingEarlyWarningRepository
+{
+    public async Task<IReadOnlyCollection<CoachingStudentEarlyWarningMetrics>> GetStudentMetricsAsync(
+        Guid institutionId,
+        IReadOnlyCollection<Guid> studentIds,
+        int? gradeLevel,
+        DateTime fromDate,
+        DateTime toDate,
+        CancellationToken cancellationToken = default)
+    {
+        var studentIdArray = studentIds.Distinct().ToArray();
+        if (studentIdArray.Length == 0)
+        {
+            return Array.Empty<CoachingStudentEarlyWarningMetrics>();
+        }
+
+        var accumulators = studentIdArray.ToDictionary(
+            studentId => studentId,
+            _ => new EarlyWarningAccumulator());
+
+        var assignmentRows = await context.AssignmentStudents
+            .AsNoTracking()
+            .Where(item => studentIdArray.Contains(item.StudentId)
+                && item.Assignment.InstitutionId == institutionId
+                && item.Assignment.CreatedAt >= fromDate
+                && item.Assignment.CreatedAt <= toDate
+                && item.Assignment.Status != Domain.Enums.AssignmentStatus.Cancelled
+                && (!gradeLevel.HasValue || item.Assignment.TargetGradeLevel == gradeLevel.Value))
+            .Select(item => new
+            {
+                item.StudentId,
+                item.SubmittedAt,
+                item.Score,
+                item.Status,
+                item.Assignment.MaxScore,
+                item.Assignment.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
+
+        foreach (var row in assignmentRows)
+        {
+            if (!accumulators.TryGetValue(row.StudentId, out var accumulator))
+            {
+                continue;
+            }
+
+            accumulator.AssignmentCount++;
+            accumulator.SubmittedAssignmentCount += row.SubmittedAt.HasValue ? 1 : 0;
+            accumulator.GradedAssignmentCount += row.Status == Domain.Enums.StudentAssignmentStatus.Graded ? 1 : 0;
+            if (row.Score.HasValue && row.MaxScore.HasValue && row.MaxScore.Value > 0)
+            {
+                accumulator.AssignmentPercentages.Add(
+                    row.Score.Value / row.MaxScore.Value * 100);
+            }
+
+            accumulator.RecordActivity(row.CreatedAt);
+        }
+
+        var examRows = await context.ExamResults
+            .AsNoTracking()
+            .Where(item => studentIdArray.Contains(item.StudentId)
+                && item.Exam.InstitutionId == institutionId
+                && item.Exam.ExamDate >= fromDate
+                && item.Exam.ExamDate <= toDate
+                && (!gradeLevel.HasValue || item.Exam.TargetGradeLevel == gradeLevel.Value))
+            .Select(item => new
+            {
+                item.StudentId,
+                item.Score,
+                item.Exam.MaxScore,
+                item.Exam.ExamDate
+            })
+            .ToListAsync(cancellationToken);
+
+        foreach (var row in examRows)
+        {
+            if (!accumulators.TryGetValue(row.StudentId, out var accumulator))
+            {
+                continue;
+            }
+
+            accumulator.RecordActivity(row.ExamDate);
+        }
+
+        var sessionRows = await context.SessionAttendances
+            .AsNoTracking()
+            .Where(item => studentIdArray.Contains(item.StudentId)
+                && item.Session.InstitutionId == institutionId
+                && item.Session.ScheduledDate >= fromDate
+                && item.Session.ScheduledDate <= toDate
+                && item.Session.Status != Domain.Enums.SessionStatus.Cancelled)
+            .Select(item => new
+            {
+                item.StudentId,
+                item.AttendanceStatus,
+                item.Session.ScheduledDate
+            })
+            .ToListAsync(cancellationToken);
+
+        foreach (var row in sessionRows)
+        {
+            if (!accumulators.TryGetValue(row.StudentId, out var accumulator))
+            {
+                continue;
+            }
+
+            if (row.AttendanceStatus != Domain.Enums.AttendanceStatus.NotRecorded)
+            {
+                accumulator.RecordedAttendanceCount++;
+                accumulator.AttendedSessionCount += row.AttendanceStatus is
+                    Domain.Enums.AttendanceStatus.Present or Domain.Enums.AttendanceStatus.Late
+                    ? 1
+                    : 0;
+            }
+
+            accumulator.RecordActivity(row.ScheduledDate);
+        }
+
+        var goalRows = await context.AcademicGoals
+            .AsNoTracking()
+            .Where(item => studentIdArray.Contains(item.StudentId)
+                && item.CreatedAt >= fromDate
+                && item.CreatedAt <= toDate)
+            .Select(item => new
+            {
+                item.StudentId,
+                item.CurrentProgress,
+                item.IsCompleted,
+                item.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
+
+        foreach (var row in goalRows)
+        {
+            if (!accumulators.TryGetValue(row.StudentId, out var accumulator))
+            {
+                continue;
+            }
+
+            accumulator.GoalCount++;
+            accumulator.CompletedGoalCount += row.IsCompleted ? 1 : 0;
+            accumulator.GoalProgressTotal += row.CurrentProgress;
+            accumulator.RecordActivity(row.CreatedAt);
+        }
+
+        return accumulators.Select(item => item.Value.ToMetrics(item.Key)).ToArray();
+    }
+
+    private sealed class EarlyWarningAccumulator
+    {
+        public int AssignmentCount { get; set; }
+        public int SubmittedAssignmentCount { get; set; }
+        public int GradedAssignmentCount { get; set; }
+        public List<decimal> AssignmentPercentages { get; } = [];
+        public int RecordedAttendanceCount { get; set; }
+        public int AttendedSessionCount { get; set; }
+        public int GoalCount { get; set; }
+        public int CompletedGoalCount { get; set; }
+        public int GoalProgressTotal { get; set; }
+        public DateTime? LastActivityAt { get; private set; }
+
+        public void RecordActivity(DateTime activityAt)
+        {
+            if (!LastActivityAt.HasValue || activityAt > LastActivityAt.Value)
+            {
+                LastActivityAt = activityAt;
+            }
+        }
+
+        public CoachingStudentEarlyWarningMetrics ToMetrics(Guid studentId) =>
+            new(
+                studentId,
+                AssignmentCount,
+                SubmittedAssignmentCount,
+                GradedAssignmentCount,
+                AssignmentPercentages.Count == 0
+                    ? null
+                    : Math.Round(AssignmentPercentages.Average(), 2),
+                RecordedAttendanceCount,
+                AttendedSessionCount,
+                GoalCount,
+                CompletedGoalCount,
+                GoalCount == 0 ? 0 : (int)Math.Round((decimal)GoalProgressTotal / GoalCount),
+                LastActivityAt);
+    }
+}
+
 public sealed class CoachingAdminRepository : ICoachingAdminRepository
 {
     private readonly CoachingDbContext _context;
