@@ -126,4 +126,30 @@ describe('CoachingAdminService', () => {
     request.flush({});
     http.verify();
   });
+
+  it('requests a paged institution early-warning report with bounded filters', () => {
+    TestBed.configureTestingModule({
+      providers: [CoachingAdminService, provideHttpClient(), provideHttpClientTesting()]
+    });
+    const service = TestBed.inject(CoachingAdminService);
+    const http = TestBed.inject(HttpTestingController);
+
+    service.getInstitutionEarlyWarnings('institution/1', {
+      pageNumber: 2,
+      pageSize: 10,
+      gradeLevel: 8,
+      fromDate: '2030-01-01T00:00:00.000Z',
+      toDate: '2030-02-01T23:59:59.999Z'
+    }).subscribe();
+
+    const request = http.expectOne(candidate => candidate.url.endsWith('/reports/institution/institution%2F1/early-warnings'));
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('pageNumber')).toBe('2');
+    expect(request.request.params.get('pageSize')).toBe('10');
+    expect(request.request.params.get('gradeLevel')).toBe('8');
+    expect(request.request.params.get('fromDate')).toBe('2030-01-01T00:00:00.000Z');
+    expect(request.request.params.get('toDate')).toBe('2030-02-01T23:59:59.999Z');
+    request.flush({});
+    http.verify();
+  });
 });
