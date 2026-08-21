@@ -59,6 +59,41 @@ public sealed class CoachingStudentSessionsQueryTests
     }
 
     [Fact]
+    public async Task TeacherSessionQuery_ShouldExposeOnlyIdentityAuthorizedStudentReflections()
+    {
+        var teacherId = Guid.NewGuid();
+        var allowedStudentId = Guid.NewGuid();
+        var revokedStudentId = Guid.NewGuid();
+        var session = CoachingSession.Create(
+            teacherId,
+            "Haftalık takip",
+            DateTime.UtcNow.AddDays(1),
+            SessionType.Group);
+        session.AddStudents([allowedStudentId, revokedStudentId]);
+        session.Attendances.Single(attendance => attendance.StudentId == allowedStudentId)
+            .AddStudentNote("Bu hafta deneme analizini tamamladım.");
+        session.Attendances.Single(attendance => attendance.StudentId == revokedStudentId)
+            .AddStudentNote("Bu kayıt artık öğretmene görünmemeli.");
+
+        var identityClient = new StubIdentityAuthorizationClient([allowedStudentId]);
+        var handler = new GetSessionsQueryHandler(
+            new StubSessionRepository(session),
+            CreatePolicy(teacherId, "Teacher"),
+            identityClient);
+
+        var result = await handler.Handle(
+            new GetTeacherSessionsQuery(teacherId),
+            CancellationToken.None);
+
+        result.Items.Should().ContainSingle();
+        result.Items[0].StudentIds.Should().ContainSingle().Which.Should().Be(allowedStudentId);
+        result.Items[0].StudentReflections.Should().ContainSingle();
+        result.Items[0].StudentReflections[0].StudentId.Should().Be(allowedStudentId);
+        result.Items[0].StudentReflections[0].Note.Should().Be("Bu hafta deneme analizini tamamladım.");
+        identityClient.RequestedStudentIds.Should().Contain(new[] { allowedStudentId, revokedStudentId });
+    }
+
+    [Fact]
     public async Task StudentSessionNoteCommand_ShouldUpdateOnlyAssignedStudentNote()
     {
         var studentId = Guid.NewGuid();
