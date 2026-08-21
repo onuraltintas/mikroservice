@@ -69,6 +69,10 @@ export class CoachingSessionsComponent implements OnInit {
     return studentId.length > 12 ? `…${studentId.slice(-8)}` : studentId;
   }
 
+  calendarFeedUrl() {
+    return this.coachingService.calendarFeedUrl(this.isTeacher() ? 'teacher' : 'student');
+  }
+
   saveNote(session: CoachingSession) {
     const studentId = this.authService.userProfile()?.id;
     if (!studentId || !this.isStudent()) return;

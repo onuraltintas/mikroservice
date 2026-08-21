@@ -63,7 +63,8 @@ describe('CoachingSessionsComponent', () => {
       }]
     };
     const service = {
-      getTeacherSessions: vi.fn(() => of({ items: [session], pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1 }))
+      getTeacherSessions: vi.fn(() => of({ items: [session], pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1 })),
+      calendarFeedUrl: vi.fn(() => '/api/calendar/teacher.ics')
     };
 
     TestBed.configureTestingModule({

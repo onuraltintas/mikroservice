@@ -406,6 +406,10 @@ export class CoachingPortalService {
     );
   }
 
+  calendarFeedUrl(audience: 'teacher' | 'student'): string {
+    return `${environment.apiUrl}/calendar/${audience}.ics`;
+  }
+
   getMyChildren(): Observable<ChildSummary[]> {
     return this.http.get<ChildSummary[]>(`${environment.apiUrl}/users/me/children`);
   }
