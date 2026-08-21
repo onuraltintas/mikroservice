@@ -9,6 +9,7 @@ using Coaching.Application.Queries.GetCoachingAdminSessions;
 using Coaching.Application.Queries.GetCoachingAdminExams;
 using Coaching.Application.Queries.GetCoachingAdminGoals;
 using Coaching.Application.Queries.GetStudentProgress;
+using Coaching.Application.Queries.GetInstitutionCoachingComparison;
 using Coaching.Domain.Enums;
 using FluentAssertions;
 
@@ -205,6 +206,21 @@ public sealed class CoachingContractTests
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(error => error.PropertyName == nameof(GetStudentProgressQuery.StudentId));
+    }
+
+    [Fact]
+    public async Task ComparativeReportContract_RejectsInvalidGradeAndRange()
+    {
+        var result = await new GetInstitutionCoachingComparisonQueryValidator().ValidateAsync(
+            new GetInstitutionCoachingComparisonQuery(
+                Guid.Empty,
+                DateTime.UtcNow,
+                DateTime.UtcNow.AddDays(367),
+                13));
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Select(error => error.PropertyName)
+            .Should().Contain(new[] { "InstitutionId", "GradeLevel", "FromDate", "ToDate" });
     }
 
     [Fact]
