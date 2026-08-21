@@ -13,6 +13,7 @@ using Identity.Application.Commands.ResetPassword;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using Identity.API.Security;
 using Identity.Application.Services;
 
@@ -156,10 +157,15 @@ public class AuthController : ControllerBase
 
     [HttpPost("google-login")]
     [AllowAnonymous]
-    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest? request)
     {
+        if (request is null || string.IsNullOrWhiteSpace(request.IdToken))
+        {
+            return BadRequest(new Error("Auth.InvalidToken", "Google ID Token is required."));
+        }
+
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
-        var command = new Identity.Application.Commands.GoogleLogin.GoogleLoginCommand(request.IdToken, ipAddress);
+        var command = new Identity.Application.Commands.GoogleLogin.GoogleLoginCommand(request.IdToken!, ipAddress);
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -176,6 +182,21 @@ public class AuthController : ControllerBase
             Response,
             result.Value,
             _environment.IsProduction()));
+    }
+
+    [HttpPost("google-link")]
+    [Authorize]
+    public async Task<IActionResult> LinkGoogle([FromBody] GoogleLoginRequest? request, CancellationToken cancellationToken)
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.IdToken))
+        {
+            return BadRequest(new Error("Auth.InvalidToken", "Google ID Token is required."));
+        }
+
+        var result = await _mediator.Send(
+            new Identity.Application.Commands.GoogleLogin.LinkGoogleLoginCommand(request.IdToken),
+            cancellationToken);
+        return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
 
     [HttpPost("mfa/setup")]
@@ -309,7 +330,10 @@ public class AuthController : ControllerBase
         code.Length == 6 && code.All(char.IsAsciiDigit);
 }
 
-public record GoogleLoginRequest(string IdToken);
+public sealed record GoogleLoginRequest(
+    [param: Required]
+    [param: StringLength(16_384, MinimumLength = 1)]
+    string? IdToken);
 public record RefreshTokenRequest(string? RefreshToken = null);
 public record RevokeTokenRequest(string? Token = null);
 public sealed record MfaSetupRequest(string ChallengeToken);

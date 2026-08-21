@@ -110,6 +110,21 @@ describe('AuthService browser session security', () => {
     expect(service.isAuthenticated()).toBe(false);
   });
 
+  it('links a Google account using the authenticated cookie session', async () => {
+    const service = TestBed.inject(AuthService);
+    http.expectOne(req => req.url.endsWith('/auth/refresh-token')).flush(
+      { error: 'no session' },
+      { status: 401, statusText: 'Unauthorized' });
+
+    const linkPromise = service.linkGoogleAccount('google-id-token');
+    const request = http.expectOne(req => req.url.endsWith('/auth/google-link'));
+    expect(request.request.withCredentials).toBe(true);
+    expect(request.request.body).toEqual({ idToken: 'google-id-token' });
+    request.flush({});
+
+    await linkPromise;
+  });
+
   it('completes MFA verification using the HttpOnly refresh cookie', async () => {
     const service = TestBed.inject(AuthService);
     http.expectOne(req => req.url.endsWith('/auth/refresh-token')).flush(

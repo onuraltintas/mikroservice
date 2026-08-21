@@ -13,6 +13,8 @@ public interface IUserRepository
     Task AddAsync(User user, CancellationToken cancellationToken);
     Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken);
+    Task<User?> GetByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken);
+    Task<bool> TryAddLoginAsync(User user, UserLogin login, CancellationToken cancellationToken);
     void Delete(User user);
     Task<PagedList<UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken);
     Task<UserSummaryDto> GetSummaryAsync(Guid? institutionId, CancellationToken cancellationToken);
@@ -91,6 +93,7 @@ public sealed record CoachingReportStudentPage(
 public interface IUnitOfWork
 {
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
+    void ClearTracking();
 }
 
 public interface ITeacherRepository

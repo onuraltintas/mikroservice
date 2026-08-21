@@ -2,6 +2,7 @@ using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using Identity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 using Identity.Application.Queries.GetAllUsers;
 using Identity.Application.Queries.GetUserProfile;
@@ -42,6 +43,49 @@ public class UserRepository : IUserRepository
                     .ThenInclude(r => r.Permissions)
             .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail, cancellationToken);
     }
+
+    public async Task<User?> GetByLoginAsync(
+        string loginProvider,
+        string providerKey,
+        CancellationToken cancellationToken)
+    {
+        return await _context.Users
+            .Include(u => u.Logins)
+            .Include(u => u.Roles)
+                .ThenInclude(ur => ur.Role)
+                    .ThenInclude(r => r.Permissions)
+            .FirstOrDefaultAsync(
+                user => user.Logins.Any(login =>
+                    login.LoginProvider == loginProvider
+                    && login.ProviderKey == providerKey),
+                cancellationToken);
+    }
+
+    public async Task<bool> TryAddLoginAsync(
+        User user,
+        UserLogin login,
+        CancellationToken cancellationToken)
+    {
+        user.AddLogin(login);
+
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch (DbUpdateException exception) when (IsExternalLoginConstraintViolation(exception))
+        {
+            _context.Entry(login).State = EntityState.Detached;
+            return false;
+        }
+    }
+
+    private static bool IsExternalLoginConstraintViolation(DbUpdateException exception) =>
+        exception.InnerException is PostgresException postgresException
+        && string.Equals(
+            postgresException.ConstraintName,
+            "IX_UserLogins_LoginProvider_ProviderKey",
+            StringComparison.Ordinal);
 
     public void Delete(User user)
     {
@@ -880,6 +924,8 @@ public class UnitOfWork : IUnitOfWork
     {
         return await _context.SaveChangesAsync(cancellationToken);
     }
+
+    public void ClearTracking() => _context.ChangeTracker.Clear();
 }
 
 public class TeacherRepository : ITeacherRepository

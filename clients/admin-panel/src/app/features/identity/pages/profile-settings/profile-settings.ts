@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { IdentityService, UserProfileDto } from '../../../../core/services/identity.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { AuthService } from '../../../../core/auth/auth.service';
+import { GoogleLoginProvider, SocialAuthService } from '@abacritt/angularx-social-login';
 
 import { RouterModule } from '@angular/router';
 
@@ -19,6 +20,7 @@ export class ProfileSettingsComponent implements OnInit {
     private identityService = inject(IdentityService);
     private toaster = inject(ToasterService);
     private authService = inject(AuthService);
+    private socialAuthService = inject(SocialAuthService);
     private platformId = inject(PLATFORM_ID);
 
     profileForm!: FormGroup;
@@ -28,6 +30,7 @@ export class ProfileSettingsComponent implements OnInit {
     loading = signal(true);
     savingProfile = signal(false);
     savingPassword = signal(false);
+    linkingGoogle = signal(false);
 
     ngOnInit() {
         this.initForms();
@@ -120,5 +123,27 @@ export class ProfileSettingsComponent implements OnInit {
                 this.savingPassword.set(false);
             }
         });
+    }
+
+    async linkGoogleAccount() {
+        if (this.linkingGoogle()) return;
+
+        this.linkingGoogle.set(true);
+        try {
+            const googleUser = await this.socialAuthService.signIn(GoogleLoginProvider.PROVIDER_ID);
+            if (!googleUser?.idToken) {
+                throw new Error('Google kimlik doğrulama belirteci alınamadı.');
+            }
+
+            await this.authService.linkGoogleAccount(googleUser.idToken);
+            this.toaster.success('Google hesabınız başarıyla bağlandı.');
+        } catch (error: any) {
+            const message = error?.error?.message
+                || error?.error?.description
+                || 'Google hesabı bağlanamadı.';
+            this.toaster.error(message);
+        } finally {
+            this.linkingGoogle.set(false);
+        }
     }
 }

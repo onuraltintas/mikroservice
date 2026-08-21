@@ -134,6 +134,13 @@ export class AuthService implements OnDestroy {
         return this.handleLoginResponse(response);
     }
 
+    async linkGoogleAccount(idToken: string): Promise<void> {
+        await firstValueFrom(this.httpClient.post(
+            `${environment.apiUrl}/auth/google-link`,
+            { idToken },
+            { withCredentials: true }));
+    }
+
     async loginWithPassword(
         email: string,
         pass: string,

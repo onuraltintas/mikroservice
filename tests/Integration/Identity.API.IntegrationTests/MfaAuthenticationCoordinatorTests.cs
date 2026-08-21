@@ -83,6 +83,8 @@ public sealed class MfaAuthenticationCoordinatorTests
         public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult<User?>(user);
         public Task AddAsync(User value, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<User?> GetByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<bool> TryAddLoginAsync(User value, UserLogin login, CancellationToken cancellationToken) => throw new NotSupportedException();
         public void Delete(User value) => throw new NotSupportedException();
         public Task<Identity.Application.Queries.GetAllUsers.PagedList<Identity.Application.Queries.GetUserProfile.UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Identity.Application.Queries.GetAllUsers.UserSummaryDto> GetSummaryAsync(Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
@@ -95,6 +97,7 @@ public sealed class MfaAuthenticationCoordinatorTests
     private sealed class StubUnitOfWork : IUnitOfWork
     {
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken) => Task.FromResult(1);
+        public void ClearTracking() { }
     }
 
     private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider

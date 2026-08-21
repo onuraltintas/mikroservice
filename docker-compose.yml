@@ -107,6 +107,7 @@ services:
       - JWT_KEY_ID=${JWT_KEY_ID:-}
       - JWT_PREVIOUS_SECRETS=${JWT_PREVIOUS_SECRETS:-}
       - JWT_PREVIOUS_KEY_IDS=${JWT_PREVIOUS_KEY_IDS:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID must be set}
       - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY}
       # Development/E2E only. Empty by default; never set these in Production.
       - TEST_ADMIN_PASSWORD=${TEST_ADMIN_PASSWORD:-}

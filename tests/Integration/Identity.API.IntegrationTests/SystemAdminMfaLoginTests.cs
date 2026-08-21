@@ -47,6 +47,7 @@ public sealed class SystemAdminMfaLoginTests
     public async Task GoogleLogin_ShouldReturnMfaChallengeWithoutIssuingSessionTokens()
     {
         var user = CreateSystemAdministrator();
+        user.AddLogin(UserLogin.Create(user.Id, "Google", "google-id", "Google"));
         var tokenService = new RejectingTokenService();
         var mfaService = new StubMfaService(user.Id);
         var handler = new GoogleLoginCommandHandler(
@@ -69,6 +70,133 @@ public sealed class SystemAdminMfaLoginTests
         result.Value.MfaChallengeToken.Should().Be("mfa-challenge");
         tokenService.AccessTokenRequested.Should().BeFalse();
         tokenService.RefreshTokenRequested.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GoogleLogin_ShouldUseLinkedSubjectBeforeEmailLookup()
+    {
+        var linkedUser = CreateSystemAdministrator();
+        var emailMatchedUser = CreateSystemAdministrator();
+        var tokenService = new RejectingTokenService();
+        var mfaService = new StubMfaService(linkedUser.Id);
+        var userRepository = new StubUserRepository(emailMatchedUser, linkedUser);
+        var handler = new GoogleLoginCommandHandler(
+            new StubGoogleAuthService("changed@example.com", googleId: "google-subject"),
+            userRepository,
+            tokenService,
+            new StubUnitOfWork(),
+            new RejectingIdentityService(),
+            new RejectingStudentRepository(),
+            new StubConfigurationService(),
+            mfaService,
+            NullLogger<GoogleLoginCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new GoogleLoginCommand("google-token", "127.0.0.1"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        mfaService.RememberMe.Should().BeTrue();
+        userRepository.ExternalLoginLookupCalled.Should().BeTrue();
+        userRepository.EmailLookupCalled.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GoogleLogin_ShouldRequireExplicitLinkForPrivilegedAccount()
+    {
+        var user = CreateSystemAdministrator();
+        var handler = new GoogleLoginCommandHandler(
+            new StubGoogleAuthService(user.Email),
+            new StubUserRepository(user),
+            new RejectingTokenService(),
+            new StubUnitOfWork(),
+            new RejectingIdentityService(),
+            new RejectingStudentRepository(),
+            new StubConfigurationService(),
+            new StubMfaService(user.Id),
+            NullLogger<GoogleLoginCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new GoogleLoginCommand("google-token", "127.0.0.1"),
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.ExternalLoginLinkRequired");
+    }
+
+    [Fact]
+    public async Task GoogleLogin_ShouldNotReactivateInactiveAccountAfterRegistrationRace()
+    {
+        var inactiveUser = CreateSystemAdministrator();
+        inactiveUser.Deactivate();
+        var userRepository = new StubUserRepository(
+            inactiveUser,
+            externalUser: null,
+            null,
+            inactiveUser);
+        var identityService = new RejectingIdentityService(Result.Failure<Guid>(
+            new Error("Identity.UserExists", "User already exists.")));
+        var handler = new GoogleLoginCommandHandler(
+            new StubGoogleAuthService(inactiveUser.Email),
+            userRepository,
+            new RejectingTokenService(),
+            new StubUnitOfWork(),
+            identityService,
+            new RejectingStudentRepository(),
+            new StubConfigurationService(allowRegistration: "true"),
+            new StubMfaService(inactiveUser.Id),
+            NullLogger<GoogleLoginCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new GoogleLoginCommand("google-token", "127.0.0.1"),
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.UserInactive");
+        inactiveUser.IsActive.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GoogleLogin_ShouldRejectUnverifiedGoogleEmail()
+    {
+        var user = CreateSystemAdministrator();
+        var handler = new GoogleLoginCommandHandler(
+            new StubGoogleAuthService(user.Email, isEmailVerified: false),
+            new StubUserRepository(user),
+            new RejectingTokenService(),
+            new StubUnitOfWork(),
+            new RejectingIdentityService(),
+            new RejectingStudentRepository(),
+            new StubConfigurationService(),
+            new StubMfaService(user.Id),
+            NullLogger<GoogleLoginCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new GoogleLoginCommand("google-token", "127.0.0.1"),
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.InvalidToken");
+    }
+
+    [Fact]
+    public async Task GoogleLink_ShouldPersistGoogleSubjectForPrivilegedAccount()
+    {
+        var user = CreateSystemAdministrator();
+        var userRepository = new StubUserRepository(user, externalUser: null);
+        var handler = new LinkGoogleLoginCommandHandler(
+            new StubGoogleAuthService(user.Email, googleId: "google-subject"),
+            userRepository,
+            new StubCurrentUserService(user.Id),
+            NullLogger<LinkGoogleLoginCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new LinkGoogleLoginCommand("google-token"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        user.Logins.Should().ContainSingle(login =>
+            login.LoginProvider == "Google" && login.ProviderKey == "google-subject");
     }
 
     [Fact]
@@ -102,11 +230,40 @@ public sealed class SystemAdminMfaLoginTests
         return user;
     }
 
-    private sealed class StubUserRepository(User user) : IUserRepository
+    private sealed class StubUserRepository(User user, User? externalUser = null, params User?[] emailResults) : IUserRepository
     {
-        public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken) => Task.FromResult<User?>(user);
+        private readonly User? _externalUser = externalUser;
+        private readonly Queue<User?> _emailResults = new(emailResults);
+        public bool ExternalLoginLookupCalled { get; private set; }
+        public bool EmailLookupCalled { get; private set; }
+
+        public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
+        {
+            EmailLookupCalled = true;
+            return Task.FromResult(_emailResults.Count > 0 ? _emailResults.Dequeue() : user);
+        }
+
+        public Task<User?> GetByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
+        {
+            ExternalLoginLookupCalled = true;
+            if (_externalUser is not null)
+            {
+                return Task.FromResult<User?>(_externalUser);
+            }
+
+            var hasMatchingLogin = user.Logins.Any(login =>
+                login.LoginProvider == loginProvider && login.ProviderKey == providerKey);
+            return Task.FromResult(hasMatchingLogin ? user : null);
+        }
+
+        public Task<bool> TryAddLoginAsync(User value, UserLogin login, CancellationToken cancellationToken)
+        {
+            value.AddLogin(login);
+            return Task.FromResult(true);
+        }
+
         public Task AddAsync(User value, CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult<User?>(user);
         public void Delete(User value) => throw new NotSupportedException();
         public Task<Identity.Application.Queries.GetAllUsers.PagedList<Identity.Application.Queries.GetUserProfile.UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Identity.Application.Queries.GetAllUsers.UserSummaryDto> GetSummaryAsync(Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
@@ -162,12 +319,24 @@ public sealed class SystemAdminMfaLoginTests
     private sealed class StubUnitOfWork : IUnitOfWork
     {
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken) => Task.FromResult(0);
+        public void ClearTracking() { }
     }
 
-    private sealed class StubGoogleAuthService(string email) : IGoogleAuthService
+    private sealed class StubGoogleAuthService(
+        string email,
+        string googleId = "google-id",
+        bool isEmailVerified = true,
+        string issuer = "https://accounts.google.com") : IGoogleAuthService
     {
         public Task<GoogleUser?> VerifyGoogleTokenAsync(string idToken) =>
-            Task.FromResult<GoogleUser?>(new GoogleUser(email, "System", "Admin", "", "google-id"));
+            Task.FromResult<GoogleUser?>(new GoogleUser(
+                email,
+                "System",
+                "Admin",
+                "",
+                googleId,
+                isEmailVerified,
+                issuer));
     }
 
     private sealed class RejectingStudentRepository : IStudentRepository
@@ -178,9 +347,20 @@ public sealed class SystemAdminMfaLoginTests
         public Task<StudentProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 
-    private sealed class StubConfigurationService : IConfigurationService
+    private sealed class StubCurrentUserService(Guid userId) : ICurrentUserService
     {
-        public Task<string?> GetConfigurationValueAsync(string key, CancellationToken cancellationToken) => Task.FromResult<string?>(null);
+        public Guid? UserId => userId;
+        public string? Email => null;
+        public string? FullName => null;
+        public IEnumerable<string> Roles => Array.Empty<string>();
+        public bool IsAuthenticated => true;
+        public System.Security.Claims.ClaimsPrincipal? User => null;
+    }
+
+    private sealed class StubConfigurationService(string? allowRegistration = null) : IConfigurationService
+    {
+        public Task<string?> GetConfigurationValueAsync(string key, CancellationToken cancellationToken) =>
+            Task.FromResult<string?>(key == "auth.allowregistration" ? allowRegistration : null);
         public Task<List<ConfigurationDto>> GetAllConfigurationsAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<string?> GetManageableConfigurationValueAsync(string key, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<string?> GetPublicConfigurationValueAsync(string key, CancellationToken cancellationToken) => throw new NotSupportedException();
@@ -190,10 +370,13 @@ public sealed class SystemAdminMfaLoginTests
         public Task RefreshCacheAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 
-    private sealed class RejectingIdentityService : IIdentityService
+    private sealed class RejectingIdentityService(Result<Guid>? registerResult = null) : IIdentityService
     {
         public Task<Result> SaveRefreshTokenAsync(Guid userId, RefreshToken refreshToken, CancellationToken cancellationToken) => throw new InvalidOperationException("Refresh token must not be persisted before MFA.");
-        public Task<Result<Guid>> RegisterUserAsync(string email, string password, string firstName, string lastName, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<Result<Guid>> RegisterUserAsync(string email, string password, string firstName, string lastName, CancellationToken cancellationToken) =>
+            registerResult is not null
+                ? Task.FromResult(registerResult)
+                : throw new NotSupportedException();
         public Task<Result> DeleteUserAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> DeactivateUserAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> ActivateUserAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();

@@ -45,14 +45,24 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
     {
         // 1. Verify Google Token
         var googleUser = await _googleAuthService.VerifyGoogleTokenAsync(request.IdToken);
-        if (googleUser == null)
+        if (googleUser is null || !GoogleAuthenticationRules.IsVerifiedGoogleUser(googleUser))
         {
-            _logger.LogWarning("Google Login Failed: Invalid Google Token provided.");
+            _logger.LogWarning("Google login failed security validation.");
             return Result.Failure<LoginResponse>(new Error("Auth.InvalidToken", "Invalid Google ID Token."));
         }
 
-        // 2. Check if user exists
-        var user = await _userRepository.GetByEmailAsync(googleUser.Email, cancellationToken);
+        // Google subject is the stable external identifier. Email is only used for
+        // first-login account linking/registration after the ID token is verified.
+        var user = await _userRepository.GetByLoginAsync(
+            GoogleAuthenticationRules.LoginProvider,
+            googleUser.GoogleId,
+            cancellationToken);
+        var userWasLinkedByGoogleSubject = user is not null;
+
+        if (user is null)
+        {
+            user = await _userRepository.GetByEmailAsync(googleUser.Email, cancellationToken);
+        }
         
         if (user == null)
         {
@@ -60,12 +70,12 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             var allowRegistration = await _configurationService.GetConfigurationValueAsync("auth.allowregistration", cancellationToken);
             if (!string.Equals(allowRegistration, "true", StringComparison.OrdinalIgnoreCase))
             {
-                 _logger.LogWarning("Google Login Blocked: Registration is disabled and user {Email} does not exist.", googleUser.Email);
+                 _logger.LogWarning("Google login blocked because registration is disabled.");
                  return Result.Failure<LoginResponse>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları kapalıdır. Mevcut bir hesabınız yoksa giriş yapamazsınız."));
             }
 
             // 2b. Auto-Register User
-            _logger.LogInformation("Google Login: Registering new user {Email}", googleUser.Email);
+            _logger.LogInformation("Google login is registering a new user.");
 
             var randomPassword = Guid.NewGuid().ToString("N") + "A1!"; // Unused but required
             
@@ -77,19 +87,26 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                 cancellationToken);
 
             Guid userId;
+            var createdNewUser = false;
             if (regResult.IsFailure)
             {
                 // Handle Race Condition: If user was created by another request in the meantime
                 if (regResult.Error.Code == "Identity.UserExists")
                 {
-                    _logger.LogInformation("Google Login: Race condition detected for {Email}, retrieving existing user.", googleUser.Email);
+                    _logger.LogInformation("Google login registration raced with another user creation; reloading the account.");
                     user = await _userRepository.GetByEmailAsync(googleUser.Email, cancellationToken);
                      if (user == null) 
                     {
-                         _logger.LogError("Google Login Error: User exists reported but retrieval returned null for {Email}", googleUser.Email);
+                         _logger.LogError("Google login could not reload the account after a user-exists response.");
                          return Result.Failure<LoginResponse>(new Error("Auth.UserNotFoundAfterRace", "User exists but could not be retrieved."));
                     }
                     userId = user.Id;
+
+                    if (!user.IsActive)
+                    {
+                        _logger.LogWarning("Google login rejected an inactive account after a registration race.");
+                        return Result.Failure<LoginResponse>(new Error("Auth.UserInactive", "User account is inactive."));
+                    }
                 }
                 else
                 {
@@ -100,6 +117,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             else 
             {
                userId = regResult.Value;
+               createdNewUser = true;
                // Reload user to get fresh entity
                user = await _userRepository.GetByIdAsync(userId, cancellationToken);
             }
@@ -107,13 +125,84 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             // 2b-bis. Post-Creation Setup (Only if we have a user now)
             if (user != null)
             {
-                // Ensure Email Checked (Google Trusted) & User Active
-                if (!user.EmailConfirmed || !user.IsActive)
+                if (!createdNewUser && GoogleAuthenticationRules.RequiresExplicitLink(user))
+                {
+                    return Result.Failure<LoginResponse>(new Error(
+                        "Auth.ExternalLoginLinkRequired",
+                        "Bu hesap için Google girişini önce hesap ayarlarından bağlamalısınız."));
+                }
+
+                var linkedGoogleUser = await _userRepository.GetByLoginAsync(
+                    GoogleAuthenticationRules.LoginProvider,
+                    googleUser.GoogleId,
+                    cancellationToken);
+                if (linkedGoogleUser is not null && linkedGoogleUser.Id != user.Id)
+                {
+                    return Result.Failure<LoginResponse>(new Error(
+                        "Auth.ExternalLoginAlreadyLinked",
+                        "Google hesabı başka bir kullanıcıya bağlıdır."));
+                }
+
+                var userChanged = false;
+                UserLogin? googleLogin = null;
+                if (linkedGoogleUser is null)
+                {
+                    googleLogin = UserLogin.Create(
+                        user.Id,
+                        GoogleAuthenticationRules.LoginProvider,
+                        googleUser.GoogleId,
+                        GoogleAuthenticationRules.LoginProvider);
+                    userChanged = true;
+                }
+
+                // Only a newly created Google account may be activated here. A
+                // registration race must never reactivate an administrator-disabled account.
+                if (createdNewUser && (!user.EmailConfirmed || !user.IsActive))
                 {
                     if (!user.EmailConfirmed) user.ConfirmEmail();
                     if (!user.IsActive) user.Activate();
-                    
-                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+                    userChanged = true;
+                }
+
+                if (userChanged)
+                {
+                    try
+                    {
+                        if (googleLogin is not null)
+                        {
+                            var loginAdded = await _userRepository.TryAddLoginAsync(
+                                user,
+                                googleLogin,
+                                cancellationToken);
+                            if (!loginAdded)
+                            {
+                                if (createdNewUser)
+                                {
+                                    await CompensateProvisionedUserAsync(userId);
+                                }
+
+                                return Result.Failure<LoginResponse>(new Error(
+                                    "Auth.ExternalLoginAlreadyLinked",
+                                    "Google hesabı başka bir kullanıcıya bağlıdır."));
+                            }
+                        }
+                        else
+                        {
+                            await _unitOfWork.SaveChangesAsync(cancellationToken);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Google login could not persist the external login for {UserId}.", userId);
+                        if (createdNewUser)
+                        {
+                            await CompensateProvisionedUserAsync(userId);
+                        }
+
+                        return Result.Failure<LoginResponse>(new Error(
+                            "Auth.ExternalLoginPersistenceFailed",
+                            "Google hesabı bağlanamadı."));
+                    }
                 }
 
                 // If freshly registered (regResult.IsSuccess), do roles & profile setup
@@ -122,24 +211,88 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                     _logger.LogInformation("Google Login: Setting up profile/roles for new user {UserId}", userId);
                     
                     // Assign Role: Student (Default)
-                    await _identityService.AssignRoleAsync(userId, Identity.Domain.Enums.UserRole.Student.ToString(), cancellationToken);
+                    var roleResult = await _identityService.AssignRoleAsync(
+                        userId,
+                        Identity.Domain.Enums.UserRole.Student.ToString(),
+                        cancellationToken);
+                    if (roleResult.IsFailure)
+                    {
+                        _logger.LogError("Google login could not assign the default Student role for {UserId}.", userId);
+                        await CompensateProvisionedUserAsync(userId);
+                        return Result.Failure<LoginResponse>(roleResult.Error);
+                    }
                     
                     // Create Student Profile
-                    var student = StudentProfile.Create(userId, googleUser.FirstName, googleUser.LastName);
-                    if (!string.IsNullOrEmpty(googleUser.PictureUrl)) student.SetAvatar(googleUser.PictureUrl);
-                    
-                    await _studentRepository.AddAsync(student, cancellationToken);
-                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+                    try
+                    {
+                        var student = StudentProfile.Create(userId, googleUser.FirstName, googleUser.LastName);
+                        if (!string.IsNullOrEmpty(googleUser.PictureUrl)) student.SetAvatar(googleUser.PictureUrl);
+
+                        await _studentRepository.AddAsync(student, cancellationToken);
+                        await _unitOfWork.SaveChangesAsync(cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Google login could not create the Student profile for {UserId}.", userId);
+                        await CompensateProvisionedUserAsync(userId);
+                        return Result.Failure<LoginResponse>(new Error(
+                            "Auth.UserProvisioningFailed",
+                            "Google hesabı için öğrenci profili oluşturulamadı."));
+                    }
                 }
             }
         } 
-        else 
+        else
         {
-            // User existed
-             if (!user.IsActive)
+            if (!user.IsActive)
             {
-                 _logger.LogWarning("Google Login: User {Email} is inactive.", googleUser.Email);
-                 return Result.Failure<LoginResponse>(new Error("Auth.UserInactive", "User account is inactive."));
+                _logger.LogWarning("Google login rejected an inactive account.");
+                return Result.Failure<LoginResponse>(new Error("Auth.UserInactive", "User account is inactive."));
+            }
+
+            if (!userWasLinkedByGoogleSubject && GoogleAuthenticationRules.RequiresExplicitLink(user))
+            {
+                return Result.Failure<LoginResponse>(new Error(
+                    "Auth.ExternalLoginLinkRequired",
+                    "Bu hesap için Google girişini önce hesap ayarlarından bağlamalısınız."));
+            }
+
+            // A verified Google email may link an existing local account on its
+            // first Google login. Future logins use the provider subject above.
+            if (!userWasLinkedByGoogleSubject
+                && !user.Logins.Any(login =>
+                    login.LoginProvider == GoogleAuthenticationRules.LoginProvider
+                    && login.ProviderKey == googleUser.GoogleId))
+            {
+                if (!user.EmailConfirmed)
+                {
+                    user.ConfirmEmail();
+                }
+
+                try
+                {
+                    var loginAdded = await _userRepository.TryAddLoginAsync(
+                        user,
+                        UserLogin.Create(
+                            user.Id,
+                            GoogleAuthenticationRules.LoginProvider,
+                            googleUser.GoogleId,
+                            GoogleAuthenticationRules.LoginProvider),
+                        cancellationToken);
+                    if (!loginAdded)
+                    {
+                        return Result.Failure<LoginResponse>(new Error(
+                            "Auth.ExternalLoginAlreadyLinked",
+                            "Google hesabı başka bir kullanıcıya bağlıdır."));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Google login could not persist the external login for {UserId}.", user.Id);
+                    return Result.Failure<LoginResponse>(new Error(
+                        "Auth.ExternalLoginPersistenceFailed",
+                        "Google hesabı bağlanamadı."));
+                }
             }
         }
 
@@ -149,7 +302,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
              user = await _userRepository.GetByEmailAsync(googleUser.Email, cancellationToken);
              if (user == null)
              {
-                 _logger.LogError("Google Login Critical: User lookup failed at end of flow for {Email}", googleUser.Email);
+                 _logger.LogError("Google login could not reload the account at the end of the flow.");
                  return Result.Failure<LoginResponse>(new Error("Auth.UserCreationFailed", "Could not retrieve user."));
              }
         }
@@ -200,5 +353,30 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             refreshToken.ExpiresAt,
             refreshToken.IsPersistent,
             ExpiresInMinutes: _tokenService.GetAccessTokenLifetimeMinutes()));
+    }
+
+    private async Task CompensateProvisionedUserAsync(Guid userId)
+    {
+        using var cleanupTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+        try
+        {
+            _unitOfWork.ClearTracking();
+            var cleanupResult = await _identityService.DeleteUserAsync(userId, cleanupTimeout.Token);
+            if (cleanupResult.IsFailure)
+            {
+                _logger.LogError(
+                    "Google login compensation failed for provisioned user {UserId}: {ErrorCode}.",
+                    userId,
+                    cleanupResult.Error.Code);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Google login compensation threw for provisioned user {UserId}.",
+                userId);
+        }
     }
 }
