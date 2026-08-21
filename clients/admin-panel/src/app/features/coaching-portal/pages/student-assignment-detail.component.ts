@@ -33,6 +33,13 @@ export class StudentAssignmentDetailComponent implements OnInit {
   readonly gradeDrafts = signal<Record<string, { score: number | null; feedback: string }>>({});
   readonly studentNote = signal('');
   readonly studentId = computed(() => this.authService.userProfile()?.id ?? '');
+  readonly backRoute = computed(() => {
+    switch (this.authService.userProfile()?.role) {
+      case 'Teacher': return '/coaching-portal/teacher/assignments';
+      case 'Parent': return '/coaching-portal/children';
+      default: return '/coaching-portal/assignments';
+    }
+  });
   readonly isStudent = computed(() => this.authService.userProfile()?.role === 'Student');
   readonly isTeacher = computed(() => this.authService.userProfile()?.role === 'Teacher');
   readonly studentRecord = computed<AssignedStudent | undefined>(() => {

@@ -3,6 +3,8 @@ import { Component, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
+import { AuthService } from '../../../core/auth/auth.service';
+import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import {
   CoachingAdminAssignmentListItem,
   CoachingAdminService
@@ -18,9 +20,11 @@ import {
         <div>
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Koçluk ödevleri</h1>
           <p class="text-sm text-gray-500 dark:text-gray-400">Kitap ödevleri ve fotoğraf teslim metadata'sı.</p>
-        </div>
+      </div>
         <div class="flex gap-2">
-          <a routerLink="/dashboard/coaching/assignments/new" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">Yeni ödev</a>
+          @if (canManage()) {
+            <a routerLink="/dashboard/coaching/assignments/new" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">Yeni ödev</a>
+          }
           <button type="button" (click)="load()" [disabled]="loading()"
             class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 disabled:opacity-50 dark:border-gray-600 dark:text-gray-200">
             Yenile
@@ -61,7 +65,7 @@ import {
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
             @for (assignment of assignments(); track assignment.id) {
               <tr>
-                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white"><a class="text-indigo-600 hover:underline" [routerLink]="['/coaching/assignments', assignment.id]">{{ assignment.title }}</a></td>
+                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white"><a class="text-indigo-600 hover:underline" [routerLink]="['/dashboard/coaching/assignments', assignment.id]">{{ assignment.title }}</a></td>
                 <td class="px-4 py-3">{{ sourceLabel(assignment.source) }}</td>
                 <td class="px-4 py-3">{{ bookRange(assignment) }}</td>
                 <td class="px-4 py-3">{{ assignment.submittedStudentCount }}/{{ assignment.studentCount }}</td>
@@ -87,6 +91,7 @@ import {
 })
 export class CoachingAssignmentsComponent implements OnInit {
   private readonly service = inject(CoachingAdminService);
+  private readonly auth = inject(AuthService);
   private readonly platformId = inject(PLATFORM_ID);
   readonly assignments = signal<CoachingAdminAssignmentListItem[]>([]);
   readonly loading = signal(false);
@@ -98,6 +103,8 @@ export class CoachingAssignmentsComponent implements OnInit {
   search = '';
   source = '';
   status = '';
+
+  canManage() { return this.auth.hasPermission(ADMIN_PERMISSIONS.coachingManage); }
 
   ngOnInit() { if (isPlatformBrowser(this.platformId)) this.load(); }
 

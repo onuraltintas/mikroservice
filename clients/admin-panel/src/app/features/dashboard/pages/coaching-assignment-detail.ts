@@ -4,6 +4,8 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
+import { AuthService } from '../../../core/auth/auth.service';
+import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import {
   CoachingAdminAssignmentDetail,
   CoachingAdminService
@@ -15,7 +17,7 @@ import {
   imports: [CommonModule, FormsModule, RouterModule],
   template: `
     <section class="space-y-6">
-      <a routerLink="/coaching/assignments" class="inline-flex text-sm font-medium text-indigo-600 hover:underline">← Ödev listesine dön</a>
+      <a routerLink="/dashboard/coaching/assignments" class="inline-flex text-sm font-medium text-indigo-600 hover:underline">← Ödev listesine dön</a>
 
       @if (loading()) {
         <div class="rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-500 dark:border-gray-700 dark:bg-gray-800">Yükleniyor…</div>
@@ -30,10 +32,12 @@ import {
             </div>
             <div class="flex flex-wrap gap-2">
               <button type="button" (click)="load()" [disabled]="loading() || actionLoading()" class="rounded-lg border border-gray-300 px-4 py-2 text-sm dark:border-gray-600">Yenile</button>
-              @if (item.status === 'Active') {
+              @if (canManage() && item.status === 'Active') {
                 <button type="button" (click)="cancelAssignment(item.id)" [disabled]="actionLoading()" class="rounded-lg border border-amber-300 px-4 py-2 text-sm text-amber-700 dark:border-amber-700 dark:text-amber-300">İptal et</button>
               }
-              <button type="button" (click)="deleteAssignment(item.id)" [disabled]="actionLoading()" class="rounded-lg border border-red-300 px-4 py-2 text-sm text-red-700 dark:border-red-700 dark:text-red-300">Sil</button>
+              @if (canManage()) {
+                <button type="button" (click)="deleteAssignment(item.id)" [disabled]="actionLoading()" class="rounded-lg border border-red-300 px-4 py-2 text-sm text-red-700 dark:border-red-700 dark:text-red-300">Sil</button>
+              }
             </div>
           </div>
           @if (item.bookTitle) {
@@ -47,7 +51,7 @@ import {
         <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700">
             <thead class="bg-gray-50 text-left text-xs uppercase text-gray-500 dark:bg-gray-900/40 dark:text-gray-400">
-              <tr><th class="px-4 py-3">Öğrenci</th><th class="px-4 py-3">Durum</th><th class="px-4 py-3">Teslim</th><th class="px-4 py-3">Puan</th><th class="px-4 py-3">Geri bildirim</th><th class="px-4 py-3">Fotoğraflar</th><th class="px-4 py-3">İşlem</th></tr>
+              <tr><th class="px-4 py-3">Öğrenci</th><th class="px-4 py-3">Durum</th><th class="px-4 py-3">Teslim</th><th class="px-4 py-3">Puan</th><th class="px-4 py-3">Geri bildirim</th><th class="px-4 py-3">Fotoğraflar</th>@if (canManage()) { <th class="px-4 py-3">İşlem</th> }</tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
               @for (student of item.assignedStudents; track student.studentId) {
@@ -64,16 +68,16 @@ import {
                       } @else { <span class="mr-2 text-amber-600">{{ attachment.originalFileName }} ({{ attachment.status }})</span> }
                     } @empty { <span class="text-gray-400">—</span> }
                   </td>
-                  <td class="min-w-64 px-4 py-3">
+                  @if (canManage()) { <td class="min-w-64 px-4 py-3">
                     <div class="space-y-2">
                       <input type="number" min="0" [max]="item.maxScore ?? 100" [ngModel]="scoreFor(student.studentId)" (ngModelChange)="setScore(student.studentId, $event)" class="w-24 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-900" placeholder="Puan" />
                       <input type="text" maxlength="1000" [ngModel]="feedbackFor(student.studentId)" (ngModelChange)="setFeedback(student.studentId, $event)" class="w-full rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-900" placeholder="Geri bildirim" />
-                      <button type="button" (click)="gradeAssignment(item.id, student.studentId)" [disabled]="actionLoading() || !scoreFor(student.studentId)" class="rounded bg-indigo-600 px-3 py-1 text-xs font-medium text-white disabled:opacity-50">Notu kaydet</button>
+                      <button type="button" (click)="gradeAssignment(item.id, student.studentId)" [disabled]="actionLoading() || scoreFor(student.studentId) === ''" class="rounded bg-indigo-600 px-3 py-1 text-xs font-medium text-white disabled:opacity-50">Notu kaydet</button>
                     </div>
-                  </td>
+                  </td> }
                 </tr>
               } @empty {
-                <tr><td colspan="7" class="px-4 py-10 text-center text-gray-500">Atanmış öğrenci bulunamadı.</td></tr>
+                <tr><td [attr.colspan]="canManage() ? 7 : 6" class="px-4 py-10 text-center text-gray-500">Atanmış öğrenci bulunamadı.</td></tr>
               }
             </tbody>
           </table>
@@ -84,6 +88,7 @@ import {
 })
 export class CoachingAssignmentDetailComponent implements OnInit {
   private readonly service = inject(CoachingAdminService);
+  private readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
@@ -93,6 +98,8 @@ export class CoachingAssignmentDetailComponent implements OnInit {
   readonly actionLoading = signal(false);
   private readonly scoreDraft: Record<string, string> = {};
   private readonly feedbackDraft: Record<string, string> = {};
+
+  canManage() { return this.auth.hasPermission(ADMIN_PERMISSIONS.coachingManage); }
 
   ngOnInit() { if (isPlatformBrowser(this.platformId)) this.load(); }
 
@@ -140,7 +147,7 @@ export class CoachingAssignmentDetailComponent implements OnInit {
     if (typeof window !== 'undefined' && !window.confirm('Bu ödev kalıcı olarak silinsin mi?')) return;
     this.actionLoading.set(true);
     this.service.deleteAssignment(id).pipe(finalize(() => this.actionLoading.set(false))).subscribe({
-      next: () => this.router.navigate(['/coaching/assignments']),
+      next: () => this.router.navigate(['/dashboard/coaching/assignments']),
       error: () => this.error.set('Ödev silinemedi.')
     });
   }
