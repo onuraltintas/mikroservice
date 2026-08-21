@@ -183,6 +183,13 @@ export interface CoachingSession {
   studentIds: string[];
   meetingLink?: string;
   studentNote?: string;
+  studentReflections?: CoachingStudentReflection[];
+}
+
+export interface CoachingStudentReflection {
+  studentId: string;
+  note: string;
+  attendanceStatus: string;
 }
 
 export interface ChildSummary {

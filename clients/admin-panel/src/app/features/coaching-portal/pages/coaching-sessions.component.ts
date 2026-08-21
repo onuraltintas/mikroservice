@@ -65,6 +65,10 @@ export class CoachingSessionsComponent implements OnInit {
     this.noteDrafts.update(notes => ({ ...notes, [sessionId]: note }));
   }
 
+  studentLabel(studentId: string) {
+    return studentId.length > 12 ? `…${studentId.slice(-8)}` : studentId;
+  }
+
   saveNote(session: CoachingSession) {
     const studentId = this.authService.userProfile()?.id;
     if (!studentId || !this.isStudent()) return;
