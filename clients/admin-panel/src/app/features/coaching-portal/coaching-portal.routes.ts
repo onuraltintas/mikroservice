@@ -14,6 +14,14 @@ export const COACHING_PORTAL_ROUTES: Routes = [
     loadComponent: () => import('./pages/coaching-portal-progress.component').then(m => m.CoachingPortalProgressComponent)
   },
   {
+    path: 'sessions',
+    loadComponent: () => import('./pages/coaching-sessions.component').then(m => m.CoachingSessionsComponent)
+  },
+  {
+    path: 'notifications',
+    loadComponent: () => import('./pages/coaching-notifications.component').then(m => m.CoachingNotificationsComponent)
+  },
+  {
     path: 'assignments/:id',
     loadComponent: () => import('./pages/student-assignment-detail.component').then(m => m.StudentAssignmentDetailComponent)
   },

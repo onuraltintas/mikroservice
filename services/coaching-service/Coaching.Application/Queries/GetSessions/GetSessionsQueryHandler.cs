@@ -6,17 +6,21 @@ namespace Coaching.Application.Queries.GetSessions;
 
 public class GetSessionsQueryHandler : 
     IRequestHandler<GetTeacherSessionsQuery, PagedResponse<SessionDto>>,
+    IRequestHandler<GetStudentSessionsQuery, PagedResponse<SessionDto>>,
     IRequestHandler<GetUpcomingSessionsQuery, PagedResponse<SessionDto>>
 {
     private readonly ICoachingSessionRepository _repository;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _identityAuthorizationClient;
 
     public GetSessionsQueryHandler(
         ICoachingSessionRepository repository,
-        ICoachingAccessPolicy accessPolicy)
+        ICoachingAccessPolicy accessPolicy,
+        ICoachingIdentityAuthorizationClient identityAuthorizationClient)
     {
         _repository = repository;
         _accessPolicy = accessPolicy;
+        _identityAuthorizationClient = identityAuthorizationClient;
     }
 
     public async Task<PagedResponse<SessionDto>> Handle(
@@ -47,14 +51,36 @@ public class GetSessionsQueryHandler :
         return MapToDto(page, query.PageNumber, query.PageSize);
     }
 
+    public async Task<PagedResponse<SessionDto>> Handle(
+        GetStudentSessionsQuery query,
+        CancellationToken cancellationToken)
+    {
+        var allowedStudentIds = await CoachingStudentReadAuthorization.RequireAsync(
+            _accessPolicy,
+            _identityAuthorizationClient,
+            new[] { query.StudentId },
+            cancellationToken);
+        var page = await _repository.GetByStudentIdAsync(
+            query.StudentId,
+            query.PageNumber,
+            query.PageSize,
+            cancellationToken);
+
+        return MapToDto(page, query.PageNumber, query.PageSize, allowedStudentIds);
+    }
+
     private static PagedResponse<SessionDto> MapToDto(
         PagedRepositoryResult<Domain.Entities.CoachingSession> page,
         int pageNumber,
-        int pageSize)
+        int pageSize,
+        IReadOnlySet<Guid>? visibleStudentIds = null)
     {
         var sessions = page.Items.Select(s =>
         {
-            var studentIds = s.Attendances.Select(attendance => attendance.StudentId).ToArray();
+            var studentIds = s.Attendances
+                .Select(attendance => attendance.StudentId)
+                .Where(studentId => visibleStudentIds is null || visibleStudentIds.Contains(studentId))
+                .ToArray();
 
             return new SessionDto(
                 Id: s.Id,

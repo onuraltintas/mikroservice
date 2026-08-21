@@ -9,9 +9,9 @@ servisleri kendi kaynaklarında tekrar doğrular.
 
 | Rol | Ekranlar | Yazma yetkisi |
 | --- | --- | --- |
-| Student | Ödev listesi/detayı, teslim, fotoğraf eki, hedefler ve sınav sonuçları | Yalnızca kendi ödev teslimi ve kendi ekleri |
-| Teacher | Kendi ödevleri, assignment detayı, öğrenci teslimleri ve puan/geri bildirim | Yalnızca sahibi olduğu assignment öğrencilerini değerlendirme |
-| Parent | Bağlı aktif çocuk seçimi, çocuğun ödev/hedef/sınav özeti | Koçluk verilerine yazma yok |
+| Student | Ödev listesi/detayı, teslim, fotoğraf eki, hedefler, seanslar ve sınav sonuçları | Yalnızca kendi ödev teslimi/ekleri ve kendi hedef oluşturma-ilerleme güncellemesi |
+| Teacher | Kendi ödevleri, assignment detayı, öğrenci teslimleri, puan/geri bildirim ve seanslar | Yalnızca sahibi olduğu assignment öğrencilerini değerlendirme |
+| Parent | Bağlı aktif çocuk seçimi, çocuğun ödev/hedef/sınav/seans özeti | Koçluk verilerine yazma yok |
 
 Giriş sonrası `Student`, `Teacher` ve `Parent` rolleri `/coaching-portal`a,
 yönetim rolleri `/dashboard`a yönlendirilir. `/coaching-portal` route'u
@@ -40,6 +40,24 @@ profilini ve varsa aktif kurumu birlikte kontrol eder; pasif veya başka veliye
 bağlı çocuklar response'a eklenmez. Parent daha sonra çocuğun `userId`'siyle
 Coaching okuma endpoint'lerini çağırır; Coaching → Identity iç erişim kontrolü
 aynı ilişkiyi tekrar doğrular.
+
+## Seans ve öğrenci hedefi akışları
+
+Öğrenci kendi kapsamındaki seansları `GET /api/sessions/student/{studentId}`
+ile, öğretmen kendi seanslarını `GET /api/sessions/teacher/{teacherId}` ile
+görüntüler. Grup seanslarında öğrenci cevabı yalnızca kendi attendance satırını
+içerir; başka öğrencilerin kimlikleri veya katılım bilgileri response'a
+eklenmez. Veli, aktif çocuğu seçtikten sonra aynı öğrenci okuma endpoint'ini
+kullanır ve Coaching → Identity ilişki kontrolü tekrar çalışır.
+
+Öğrenci `POST /api/goals` ile `TeacherId = null` göndererek kendi hedefini
+oluşturabilir. İstek `Idempotency-Key` header'ı taşır; istemci aynı ağ
+zaman aşımı için aynı anahtarı, yeni hedef için yeni anahtarı kullanır.
+İlerleme yalnız öğrencinin kendi hedefi için `PUT
+/api/goals/{goalId}/progress` ile 0–100 arasında güncellenebilir. Öğretmen ve
+veli bu kullanıcı portalında başkasının hedef ilerlemesini değiştiremez;
+öğretmen/admin yönetimi ayrı, MFA ve `Permissions.Coaching.Manage` korumalı
+admin API'sinde kalır.
 
 ## SSR ve güvenlik
 

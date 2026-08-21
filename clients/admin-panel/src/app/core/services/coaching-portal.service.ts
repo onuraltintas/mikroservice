@@ -125,6 +125,22 @@ export interface Goal {
   completedAt?: string;
 }
 
+export interface CreateStudentGoalRequest {
+  title: string;
+  category: number;
+  description?: string | null;
+  targetDate?: string | null;
+  targetScore?: number | null;
+}
+
+export interface CreateGoalResponse {
+  goalId: string;
+}
+
+export interface UpdateGoalProgressResponse {
+  message: string;
+}
+
 export interface ExamResult {
   examId: string;
   examTitle: string;
@@ -286,6 +302,34 @@ export class CoachingPortalService {
     );
   }
 
+  createStudentGoal(
+    studentId: string,
+    request: CreateStudentGoalRequest,
+    idempotencyKey: string
+  ): Observable<CreateGoalResponse> {
+    const headers = new HttpHeaders({ 'Idempotency-Key': idempotencyKey });
+    return this.http.post<CreateGoalResponse>(
+      `${environment.apiUrl}/goals`,
+      {
+        studentId,
+        title: request.title.trim(),
+        category: request.category,
+        teacherId: null,
+        description: request.description?.trim() || null,
+        targetDate: request.targetDate || null,
+        targetScore: request.targetScore ?? null
+      },
+      { headers }
+    );
+  }
+
+  updateGoalProgress(goalId: string, progress: number): Observable<UpdateGoalProgressResponse> {
+    return this.http.put<UpdateGoalProgressResponse>(
+      `${environment.apiUrl}/goals/${this.id(goalId)}/progress`,
+      { goalId, progress }
+    );
+  }
+
   getStudentExamResults(
     studentId: string,
     pageNumber = 1,
@@ -304,6 +348,17 @@ export class CoachingPortalService {
   ): Observable<PagedResponse<CoachingSession>> {
     return this.http.get<PagedResponse<CoachingSession>>(
       `${environment.apiUrl}/sessions/teacher/${this.id(teacherId)}`,
+      { params: this.paging(pageNumber, pageSize) }
+    );
+  }
+
+  getStudentSessions(
+    studentId: string,
+    pageNumber = 1,
+    pageSize = 25
+  ): Observable<PagedResponse<CoachingSession>> {
+    return this.http.get<PagedResponse<CoachingSession>>(
+      `${environment.apiUrl}/sessions/student/${this.id(studentId)}`,
       { params: this.paging(pageNumber, pageSize) }
     );
   }

@@ -31,6 +31,7 @@ public interface ICoachingSessionRepository
 {
     Task<CoachingSession?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<PagedRepositoryResult<CoachingSession>> GetByTeacherIdAsync(Guid teacherId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
+    Task<PagedRepositoryResult<CoachingSession>> GetByStudentIdAsync(Guid studentId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<PagedRepositoryResult<CoachingSession>> GetUpcomingSessionsAsync(DateTime from, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<PagedRepositoryResult<CoachingSession>> GetUpcomingSessionsByTeacherIdAsync(Guid teacherId, DateTime from, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<CoachingSession> AddAsync(CoachingSession session, CancellationToken cancellationToken = default);

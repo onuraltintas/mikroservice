@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CoachingPortalService, ExamResult, Goal } from '../../../core/services/coaching-portal.service';
@@ -7,18 +8,39 @@ import { CoachingPortalService, ExamResult, Goal } from '../../../core/services/
 @Component({
   selector: 'app-coaching-portal-progress',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './coaching-portal-progress.component.html',
   styleUrl: './coaching-portal-progress.component.scss'
 })
 export class CoachingPortalProgressComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly coachingService = inject(CoachingPortalService);
+  private readonly formBuilder = inject(FormBuilder);
 
   readonly goals = signal<Goal[]>([]);
   readonly examResults = signal<ExamResult[]>([]);
   readonly isLoading = signal(true);
   readonly errorMessage = signal<string | null>(null);
+  readonly showGoalForm = signal(false);
+  readonly isSavingGoal = signal(false);
+  readonly updatingGoalId = signal<string | null>(null);
+  readonly goalFormError = signal<string | null>(null);
+  readonly goalCategories = [
+    { value: 1, label: 'Sınav hazırlığı' },
+    { value: 2, label: 'Ders hakimiyeti' },
+    { value: 3, label: 'Not yükseltme' },
+    { value: 4, label: 'Çalışma alışkanlığı' },
+    { value: 5, label: 'Zaman yönetimi' },
+    { value: 99, label: 'Diğer' }
+  ];
+  readonly minTargetDate = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+  readonly goalForm = this.formBuilder.group({
+    title: ['', [Validators.required, Validators.maxLength(200)]],
+    category: [1, [Validators.required]],
+    description: ['', [Validators.maxLength(2_000)]],
+    targetDate: [''],
+    targetScore: [null as number | null, [Validators.min(0), Validators.max(999.99)]]
+  });
 
   ngOnInit() {
     const studentId = this.authService.userProfile()?.id;
@@ -42,6 +64,87 @@ export class CoachingPortalProgressComponent implements OnInit {
       },
       complete: () => this.isLoading.set(false)
     });
+  }
+
+  toggleGoalForm() {
+    this.showGoalForm.update(visible => !visible);
+    this.goalFormError.set(null);
+  }
+
+  createGoal() {
+    const studentId = this.authService.userProfile()?.id;
+    if (!studentId) {
+      this.goalFormError.set('Öğrenci profili bulunamadı.');
+      return;
+    }
+
+    if (this.goalForm.invalid) {
+      this.goalForm.markAllAsTouched();
+      return;
+    }
+
+    const value = this.goalForm.getRawValue();
+    const targetDate = value.targetDate ? `${value.targetDate}T23:59:59.000Z` : null;
+    this.isSavingGoal.set(true);
+    this.goalFormError.set(null);
+
+    this.coachingService.createStudentGoal(
+      studentId,
+      {
+        title: value.title ?? '',
+        category: Number(value.category),
+        description: value.description,
+        targetDate,
+        targetScore: value.targetScore
+      },
+      this.newIdempotencyKey()
+    ).subscribe({
+      next: () => {
+        this.showGoalForm.set(false);
+        this.goalForm.reset({ title: '', category: 1, description: '', targetDate: '', targetScore: null });
+        this.loadGoals(studentId);
+      },
+      error: () => {
+        this.goalFormError.set('Hedef oluşturulamadı. Bilgileri kontrol edip tekrar deneyin.');
+        this.isSavingGoal.set(false);
+      },
+      complete: () => this.isSavingGoal.set(false)
+    });
+  }
+
+  updateProgress(goal: Goal, event: Event) {
+    const input = event.target as HTMLInputElement;
+    const progress = Math.min(100, Math.max(0, Number(input.value)));
+    if (!Number.isFinite(progress) || progress === goal.progress) return;
+
+    this.updatingGoalId.set(goal.id);
+    this.coachingService.updateGoalProgress(goal.id, progress).subscribe({
+      next: () => {
+        this.goals.update(items => items.map(item => item.id === goal.id
+          ? { ...item, progress, isCompleted: progress === 100 }
+          : item));
+      },
+      error: () => {
+        this.goalFormError.set('Hedef ilerlemesi güncellenemedi.');
+        input.value = String(goal.progress);
+      },
+      complete: () => this.updatingGoalId.set(null)
+    });
+  }
+
+  categoryLabel(category: string) {
+    return this.goalCategories.find(item => item.value === Number(category))?.label ?? category;
+  }
+
+  private loadGoals(studentId: string) {
+    this.coachingService.getStudentGoals(studentId, 1, 100).subscribe({
+      next: page => this.goals.set(page.items),
+      error: () => this.goalFormError.set('Hedef listesi yenilenemedi.')
+    });
+  }
+
+  private newIdempotencyKey() {
+    return globalThis.crypto.randomUUID();
   }
 
   averageScore() {

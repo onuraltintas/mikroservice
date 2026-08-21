@@ -2,6 +2,7 @@ using Coaching.Application.Commands.CreateAssignment;
 using Coaching.Application.Commands.CreateExam;
 using Coaching.Application.Commands.CreateGoal;
 using Coaching.Application.Commands.CreateSession;
+using Coaching.Application.Commands.UpdateGoalProgress;
 using Coaching.Application.Queries.GetCoachingAdminAssignments;
 using Coaching.Application.Queries.GetCoachingAdminSessions;
 using Coaching.Application.Queries.GetCoachingAdminExams;
@@ -157,6 +158,19 @@ public sealed class CoachingContractTests
         result.IsValid.Should().BeFalse();
         result.Errors.Select(error => error.PropertyName)
             .Should().Contain(new[] { "Category", "TargetScore" });
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(101)]
+    public async Task UpdateGoalProgressContract_RejectsProgressOutsidePercentageRange(int progress)
+    {
+        var validator = new UpdateGoalProgressCommandValidator();
+
+        var result = await validator.ValidateAsync(new UpdateGoalProgressCommand(Guid.NewGuid(), progress));
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(error => error.PropertyName == nameof(UpdateGoalProgressCommand.Progress));
     }
 
     [Fact]

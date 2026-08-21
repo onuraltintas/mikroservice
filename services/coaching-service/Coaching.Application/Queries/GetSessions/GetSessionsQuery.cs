@@ -9,6 +9,10 @@ public record GetTeacherSessionsQuery(
     Guid TeacherId,
     int PageNumber = CoachingPaging.DefaultPageNumber,
     int PageSize = CoachingPaging.DefaultPageSize) : IRequest<PagedResponse<SessionDto>>;
+public record GetStudentSessionsQuery(
+    Guid StudentId,
+    int PageNumber = CoachingPaging.DefaultPageNumber,
+    int PageSize = CoachingPaging.DefaultPageSize) : IRequest<PagedResponse<SessionDto>>;
 public record GetUpcomingSessionsQuery(
     DateTime FromDate,
     int PageNumber = CoachingPaging.DefaultPageNumber,
@@ -19,6 +23,15 @@ public sealed class GetTeacherSessionsQueryValidator : PagedQueryValidator<GetTe
     public GetTeacherSessionsQueryValidator()
     {
         RuleFor(query => query.TeacherId).NotEmpty();
+        AddPagingRules(query => query.PageNumber, query => query.PageSize);
+    }
+}
+
+public sealed class GetStudentSessionsQueryValidator : PagedQueryValidator<GetStudentSessionsQuery>
+{
+    public GetStudentSessionsQueryValidator()
+    {
+        RuleFor(query => query.StudentId).NotEmpty();
         AddPagingRules(query => query.PageNumber, query => query.PageSize);
     }
 }

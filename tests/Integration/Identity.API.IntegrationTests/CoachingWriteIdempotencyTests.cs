@@ -217,6 +217,19 @@ public sealed class CoachingWriteIdempotencyTests
             return Task.FromResult(new PagedRepositoryResult<CoachingSession>(page, filtered.Count));
         }
 
+        public Task<PagedRepositoryResult<CoachingSession>> GetByStudentIdAsync(
+            Guid studentId,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            var filtered = Items
+                .Where(item => item.Attendances.Any(attendance => attendance.StudentId == studentId))
+                .ToList();
+            var page = filtered.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+            return Task.FromResult(new PagedRepositoryResult<CoachingSession>(page, filtered.Count));
+        }
+
         public Task<PagedRepositoryResult<CoachingSession>> GetUpcomingSessionsAsync(
             DateTime from,
             int pageNumber,

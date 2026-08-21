@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import {
   ChildSummary,
   CoachingPortalService,
+  CoachingSession,
   ExamResult,
   Goal,
   StudentAssignment
@@ -27,6 +28,7 @@ export class ParentChildrenComponent implements OnInit {
   readonly assignments = signal<StudentAssignment[]>([]);
   readonly goals = signal<Goal[]>([]);
   readonly examResults = signal<ExamResult[]>([]);
+  readonly sessions = signal<CoachingSession[]>([]);
   readonly isLoading = signal(true);
   readonly isChildLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -59,12 +61,14 @@ export class ParentChildrenComponent implements OnInit {
     forkJoin({
       assignments: this.coachingService.getStudentAssignments(child.userId, 1, 25),
       goals: this.coachingService.getStudentGoals(child.userId, 1, 25),
-      examResults: this.coachingService.getStudentExamResults(child.userId, 1, 25)
+      examResults: this.coachingService.getStudentExamResults(child.userId, 1, 25),
+      sessions: this.coachingService.getStudentSessions(child.userId, 1, 25)
     }).subscribe({
       next: result => {
         this.assignments.set(result.assignments.items);
         this.goals.set(result.goals.items);
         this.examResults.set(result.examResults.items);
+        this.sessions.set(result.sessions.items);
       },
       error: () => {
         this.errorMessage.set('Çocuğun koçluk verileri yüklenemedi.');

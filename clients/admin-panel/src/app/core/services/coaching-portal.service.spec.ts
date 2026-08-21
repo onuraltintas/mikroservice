@@ -66,6 +66,58 @@ describe('CoachingPortalService', () => {
     http.verify();
   });
 
+  it('requests bounded student session pages with encoded student ids', () => {
+    const { service, http } = setup();
+
+    service.getStudentSessions('student/1', 2000, 200).subscribe();
+
+    const request = http.expectOne(candidate => candidate.url.endsWith('/sessions/student/student%2F1'));
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('pageNumber')).toBe('1000');
+    expect(request.request.params.get('pageSize')).toBe('100');
+    request.flush({ items: [], pageNumber: 1000, pageSize: 100, totalCount: 0, totalPages: 1 });
+    http.verify();
+  });
+
+  it('creates a student goal with a required idempotency key', () => {
+    const { service, http } = setup();
+
+    service.createStudentGoal('student/1', {
+      title: '  Matematik neti  ',
+      category: 1,
+      description: '  Haftalık tekrar  ',
+      targetDate: '2030-01-01T23:59:59.000Z',
+      targetScore: 80
+    }, 'goal-key-123456').subscribe();
+
+    const request = http.expectOne(candidate => candidate.url.endsWith('/goals'));
+    expect(request.request.method).toBe('POST');
+    expect(request.request.headers.get('Idempotency-Key')).toBe('goal-key-123456');
+    expect(request.request.body).toEqual({
+      studentId: 'student/1',
+      title: 'Matematik neti',
+      category: 1,
+      teacherId: null,
+      description: 'Haftalık tekrar',
+      targetDate: '2030-01-01T23:59:59.000Z',
+      targetScore: 80
+    });
+    request.flush({ goalId: 'goal-1' });
+    http.verify();
+  });
+
+  it('updates goal progress through the protected goal resource', () => {
+    const { service, http } = setup();
+
+    service.updateGoalProgress('goal/1', 75).subscribe();
+
+    const request = http.expectOne(candidate => candidate.url.endsWith('/goals/goal%2F1/progress'));
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ goalId: 'goal/1', progress: 75 });
+    request.flush({ message: 'Progress updated successfully' });
+    http.verify();
+  });
+
   it('requests the parent child list from the identity-owned endpoint', () => {
     const { service, http } = setup();
 

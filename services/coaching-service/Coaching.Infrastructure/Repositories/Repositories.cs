@@ -201,6 +201,27 @@ public class CoachingSessionRepository : ICoachingSessionRepository
         return new PagedRepositoryResult<CoachingSession>(items, totalCount);
     }
 
+    public async Task<PagedRepositoryResult<CoachingSession>> GetByStudentIdAsync(
+        Guid studentId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.CoachingSessions
+            .Include(session => session.Attendances.Where(attendance => attendance.StudentId == studentId))
+            .Where(session => session.Attendances.Any(attendance => attendance.StudentId == studentId))
+            .OrderByDescending(session => session.ScheduledDate)
+            .ThenByDescending(session => session.Id);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip(CoachingPaging.GetSkip(pageNumber, pageSize))
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedRepositoryResult<CoachingSession>(items, totalCount);
+    }
+
     public async Task<PagedRepositoryResult<CoachingSession>> GetUpcomingSessionsAsync(DateTime from, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
     {
         var query = _context.CoachingSessions

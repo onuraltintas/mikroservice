@@ -79,6 +79,17 @@ MIME, 10 MiB boyut ve SHA-256 doğrulamaları backend'de zorunludur; dosya temiz
 tarama durumuna geçmeden indirme endpoint'i içeriği açmaz. Ayrıntılı ekran ve
 rol matrisi için `docs/COACHING_USER_PORTAL.md` belgesine bakın.
 
+Portal seans görünürlüğü `GET /api/sessions/student/{studentId}` ve
+`GET /api/sessions/teacher/{teacherId}` endpoint'lerini kullanır. Öğrenci
+sorgusunda Coaching → Identity ilişkisi doğrulanır ve grup seansındaki
+attendance listesi yalnızca sorgulanan öğrenciye daraltılır; veli aynı endpoint'i
+aktif çocuk ilişkisiyle kullanır. Öğrenci kendi hedefini `POST /api/goals` ile
+`TeacherId = null` göndererek oluşturabilir; istek 16–128 karakterlik
+`Idempotency-Key` header'ı taşır. Öğrencinin kendi hedef ilerlemesi
+`PUT /api/goals/{goalId}/progress` ile 0–100 arasında güncellenir. Yönetici
+hedef komutlarıyla bu self-service akış aynı yetki sınırlarını paylaşmaz:
+admin komutları MFA ve `Permissions.Coaching.Manage` gerektirir.
+
 ## Idempotent public writes
 
 Gateway write yanıtlarını cache'lemez veya replay etmez. Böylece her retry'da

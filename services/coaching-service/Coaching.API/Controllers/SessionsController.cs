@@ -195,6 +195,24 @@ public class SessionsController : ControllerBase
     }
 
     /// <summary>
+    /// Get sessions for a student or an authorized parent viewer.
+    /// </summary>
+    [HttpGet("student/{studentId}")]
+    [ProducesResponseType(typeof(PagedResponse<SessionDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStudentSessions(
+        Guid studentId,
+        CancellationToken cancellationToken,
+        [FromQuery] int pageNumber = CoachingPaging.DefaultPageNumber,
+        [FromQuery] int pageSize = CoachingPaging.DefaultPageSize)
+    {
+        var result = await _mediator.Send(
+            new GetStudentSessionsQuery(studentId, pageNumber, pageSize),
+            cancellationToken);
+
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Get upcoming sessions
     /// </summary>
     [HttpGet("upcoming")]

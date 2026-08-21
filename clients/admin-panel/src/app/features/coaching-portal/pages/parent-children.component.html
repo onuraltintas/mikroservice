@@ -27,10 +27,17 @@
     <div *ngIf="selectedChild() as child" class="space-y-5">
       <div *ngIf="isChildLoading()" class="h-40 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" aria-label="İlerleme yükleniyor"></div>
       <ng-container *ngIf="!isChildLoading()">
-        <div class="grid gap-4 sm:grid-cols-3">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500 dark:text-slate-400">Ödev teslimi</p><p class="mt-2 text-3xl font-bold">{{ submittedAssignments() }}<span class="text-base font-medium text-slate-400"> / {{ assignments().length }}</span></p></div>
           <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500 dark:text-slate-400">Tamamlanan hedef</p><p class="mt-2 text-3xl font-bold">{{ completedGoals() }}<span class="text-base font-medium text-slate-400"> / {{ goals().length }}</span></p></div>
           <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500 dark:text-slate-400">Sınav kaydı</p><p class="mt-2 text-3xl font-bold">{{ examResults().length }}</p></div>
+          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500 dark:text-slate-400">Seans</p><p class="mt-2 text-3xl font-bold">{{ sessions().length }}</p></div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div class="border-b border-slate-200 px-5 py-4 dark:border-slate-800"><h2 class="font-semibold">Koçluk seansları</h2></div>
+          <div *ngIf="sessions().length === 0" class="p-5 text-sm text-slate-500 dark:text-slate-400">Henüz seans bulunmuyor.</div>
+          <div *ngFor="let session of sessions()" class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 last:border-0 dark:border-slate-800/70"><div><p class="font-medium">{{ session.subject || 'Koçluk seansı' }}</p><p class="mt-1 text-xs text-slate-500">{{ session.startTime | date:'d MMM y, HH:mm' }} · {{ session.durationMinutes }} dk</p></div><span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold dark:bg-slate-800">{{ session.status }}</span></div>
         </div>
 
         <div class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">

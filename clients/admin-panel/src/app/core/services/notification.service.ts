@@ -4,7 +4,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../auth/auth.service';
 import * as signalR from '@microsoft/signalr';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 
 export interface Notification {
     id: string;
@@ -126,16 +126,37 @@ export class NotificationService implements OnDestroy {
         });
     }
 
-    markAsRead(id: string): Observable<any> {
-        return this.http.post(`${this.apiUrl}/${id}/mark-as-read`, {});
+    markAsRead(id: string): Observable<unknown> {
+        return this.http.post(`${this.apiUrl}/${id}/mark-as-read`, {}).pipe(
+            tap(() => {
+                let wasUnread = false;
+                this._notifications.update(notifications => notifications.map(notification => {
+                    if (notification.id !== id) return notification;
+                    wasUnread = !notification.isRead;
+                    return { ...notification, isRead: true };
+                }));
+                if (wasUnread) this._unreadCount.update(count => Math.max(0, count - 1));
+            })
+        );
     }
 
-    markAllAsRead(): Observable<any> {
-        return this.http.post(`${this.apiUrl}/mark-all-as-read`, {});
+    markAllAsRead(): Observable<unknown> {
+        return this.http.post(`${this.apiUrl}/mark-all-as-read`, {}).pipe(
+            tap(() => {
+                this._notifications.update(notifications => notifications.map(notification => ({ ...notification, isRead: true })));
+                this._unreadCount.set(0);
+            })
+        );
     }
 
-    deleteNotification(id: string): Observable<any> {
-        return this.http.delete(`${this.apiUrl}/${id}`);
+    deleteNotification(id: string): Observable<unknown> {
+        return this.http.delete(`${this.apiUrl}/${id}`).pipe(
+            tap(() => {
+                const deleted = this._notifications().find(notification => notification.id === id);
+                this._notifications.update(notifications => notifications.filter(notification => notification.id !== id));
+                if (deleted?.isRead === false) this._unreadCount.update(count => Math.max(0, count - 1));
+            })
+        );
     }
 
     replyToSupportRequest(supportRequestId: string, message: string): Observable<any> {
