@@ -44,6 +44,42 @@ describe('CoachingSessionsComponent', () => {
       'Bugün hedefimi netleştirdim.'
     );
   });
+
+  it('loads student reflections for a teacher session without enabling student editing', () => {
+    const profile = signal<UserProfile | null>(user('Teacher'));
+    const session: CoachingSession = {
+      id: 'session-2',
+      studentId: 'student-1',
+      startTime: '2030-01-01T10:00:00Z',
+      endTime: '2030-01-01T11:00:00Z',
+      durationMinutes: 60,
+      status: 'Completed',
+      type: 'OneOnOne',
+      studentIds: ['student-1'],
+      studentReflections: [{
+        studentId: 'student-1',
+        note: 'Bu hafta deneme analizini tamamladım.',
+        attendanceStatus: 'Present'
+      }]
+    };
+    const service = {
+      getTeacherSessions: vi.fn(() => of({ items: [session], pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1 }))
+    };
+
+    TestBed.configureTestingModule({
+      imports: [CoachingSessionsComponent],
+      providers: [
+        { provide: AuthService, useValue: { userProfile: profile } },
+        { provide: CoachingPortalService, useValue: service }
+      ]
+    });
+    const fixture = TestBed.createComponent(CoachingSessionsComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Öğrenci yansımaları');
+    expect(fixture.nativeElement.textContent).toContain('Bu hafta deneme analizini tamamladım.');
+    expect(fixture.nativeElement.querySelector('textarea')).toBeNull();
+  });
 });
 
 function user(role: string): UserProfile {
