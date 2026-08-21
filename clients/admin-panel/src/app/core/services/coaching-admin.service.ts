@@ -53,6 +53,34 @@ export interface InstitutionCoachingComparison {
   averageGoalProgress: number;
 }
 
+export interface StudentEarlyWarning {
+  studentId: string;
+  riskLevel: 'Low' | 'Medium' | 'High' | number;
+  riskScore: number;
+  reasonCodes: string[];
+  assignmentCount: number;
+  submittedAssignmentCount: number;
+  averageAssignmentPercentage?: number;
+  recordedAttendanceCount: number;
+  attendedSessionCount: number;
+  attendancePercentage?: number;
+  goalCount: number;
+  averageGoalProgress: number;
+  lastActivityAt?: string;
+}
+
+export interface InstitutionEarlyWarningReport {
+  institutionId: string;
+  gradeLevel?: number;
+  fromDate: string;
+  toDate: string;
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  items: StudentEarlyWarning[];
+}
+
 export interface CoachingAdminAssignmentListItem extends CoachingAdminAssignment {
   source: string;
   bookTitle?: string;
@@ -276,6 +304,30 @@ export class CoachingAdminService {
     if (options.toDate) params = params.set('toDate', options.toDate);
     return this.http.get<InstitutionCoachingComparison>(
       `${environment.apiUrl}/reports/institution/${encodeURIComponent(institutionId)}/comparison`,
+      { params }
+    );
+  }
+
+  getInstitutionEarlyWarnings(
+    institutionId: string,
+    options: {
+      pageNumber?: number;
+      pageSize?: number;
+      gradeLevel?: number;
+      fromDate?: string;
+      toDate?: string;
+    } = {}
+  ) {
+    let params = new HttpParams()
+      .set('pageNumber', options.pageNumber ?? 1)
+      .set('pageSize', options.pageSize ?? 25);
+    if (options.gradeLevel !== undefined && options.gradeLevel !== null) {
+      params = params.set('gradeLevel', options.gradeLevel);
+    }
+    if (options.fromDate) params = params.set('fromDate', options.fromDate);
+    if (options.toDate) params = params.set('toDate', options.toDate);
+    return this.http.get<InstitutionEarlyWarningReport>(
+      `${environment.apiUrl}/reports/institution/${encodeURIComponent(institutionId)}/early-warnings`,
       { params }
     );
   }
