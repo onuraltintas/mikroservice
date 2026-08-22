@@ -147,6 +147,39 @@ describe('CoachingSessionsComponent', () => {
     expect(service.updateSessionAttendance).toHaveBeenCalledWith('session-3', 'student-1', false);
     expect(session.studentReflections?.[0].attendanceStatus).toBe('Absent');
   });
+
+  it('lets a teacher cancel a scheduled session and updates the local status', () => {
+    const profile = signal<UserProfile | null>(user('Teacher'));
+    const session: CoachingSession = {
+      id: 'session-4',
+      studentId: 'student-1',
+      startTime: '2030-01-01T10:00:00Z',
+      endTime: '2030-01-01T11:00:00Z',
+      durationMinutes: 60,
+      status: 'Scheduled',
+      type: 'OneOnOne',
+      studentIds: ['student-1']
+    };
+    const service = {
+      getTeacherSessions: vi.fn(() => of({ items: [session], pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1 })),
+      cancelTeacherSession: vi.fn(() => of({ message: 'Session cancelled successfully' }))
+    };
+
+    TestBed.configureTestingModule({
+      imports: [CoachingSessionsComponent],
+      providers: [
+        { provide: AuthService, useValue: { userProfile: profile } },
+        { provide: CoachingPortalService, useValue: service },
+        { provide: ActivatedRoute, useValue: {} }
+      ]
+    });
+    const component = TestBed.createComponent(CoachingSessionsComponent).componentInstance;
+    component.ngOnInit();
+    component.cancelSession(session);
+
+    expect(service.cancelTeacherSession).toHaveBeenCalledWith('session-4');
+    expect(component.sessions()[0].status).toBe('Cancelled');
+  });
 });
 
 function user(role: string): UserProfile {

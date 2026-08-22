@@ -23,6 +23,7 @@ export class CoachingSessionsComponent implements OnInit {
   readonly noteDrafts = signal<Record<string, string>>({});
   readonly savingNoteId = signal<string | null>(null);
   readonly savingAttendanceKey = signal<string | null>(null);
+  readonly savingCancellationId = signal<string | null>(null);
 
   ngOnInit() {
     const profile = this.authService.userProfile();
@@ -117,6 +118,25 @@ export class CoachingSessionsComponent implements OnInit {
       },
       error: () => this.errorMessage.set('Yoklama kaydedilemedi.'),
       complete: () => this.savingAttendanceKey.set(null)
+    });
+  }
+
+  canCancel(session: CoachingSession) {
+    return this.isTeacher()
+      && !['Cancelled', 'Completed'].includes(session.status)
+      && new Date(session.startTime).getTime() > Date.now();
+  }
+
+  cancelSession(session: CoachingSession) {
+    if (!this.canCancel(session)) return;
+
+    this.savingCancellationId.set(session.id);
+    this.coachingService.cancelTeacherSession(session.id).subscribe({
+      next: () => this.sessions.update(items => items.map(item => item.id === session.id
+        ? { ...item, status: 'Cancelled' }
+        : item)),
+      error: () => this.errorMessage.set('Seans iptal edilemedi.'),
+      complete: () => this.savingCancellationId.set(null)
     });
   }
 
