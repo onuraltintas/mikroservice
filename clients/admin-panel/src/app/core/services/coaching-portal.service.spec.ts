@@ -89,7 +89,7 @@ describe('CoachingPortalService', () => {
       assignmentType: 'Individual',
       assignmentSource: 'Book',
       dueDate: '2030-01-02T10:00:00.000Z',
-      studentIds: ['student-1', 'student-1', 'student-2'],
+      studentIds: [' student-1 ', 'student-1', 'student-2'],
       bookTitle: '  Matematik  ' 
     }, 'assignment-key-123456').subscribe();
 
