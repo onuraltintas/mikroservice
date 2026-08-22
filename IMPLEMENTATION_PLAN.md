@@ -125,11 +125,21 @@ ilerleyecektir:
    `coaching-disposable` Playwright profili teacher login → assignment
    idempotent replay → student tenant-scope read → gerçek SignalR notification
    teslimini kapsar; dört fixture secret'ı ve `E2E_DISPOSABLE_ENV=true` olmadan
-   çalışmaz. Docker daemon erişimi olan staging/CI koşusunda yeşil kanıt alınmadan
-   production verisiyle çalıştırılmaz.
-4. **Kapasite doğrulama:** disposable tenant ile smoke → baseline → 64/128/256
-   worker → soak koşularını çalıştır; p95/p99, 5xx/429, DB pool, Redis,
-   RabbitMQ lag/dead-letter ve container throttling ölç.
+   çalışmaz. 22.08.2026 tarihinde Docker üzerinde coaching profili 2/2 geçti;
+   gateway profilinde 11 test geçti, 2 yetkili SystemAdmin testi staging secret'ı
+   olmadığı için skip edildi. CI/staging'de aynı disposable fixture ile yeşil kanıt ve yetkili
+   admin/UI koşusu alınmadan production verisiyle çalıştırılmaz.
+4. **Kapasite doğrulama — lokal referans tamamlandı:** disposable tenant ile
+   smoke → baseline → 64/128/256 worker ve 60 saniyelik soak koşuları çalıştırıldı.
+   `/api/users/me` profil GET'indeki gereksiz login yazımı kaldırıldı; servis
+   başına PostgreSQL havuzu `POSTGRES_MAX_POOL_SIZE=30` ile sınırlandı. Son
+   256-worker koşusu 19.044/19.044 HTTP 200, p95 265 ms, p99 297 ms verdi;
+   PostgreSQL `too many clients`, Identity DB bağlantı hatası, RabbitMQ backlog
+   ve Redis reject/eviction sinyalleri sıfırdı. Ayrıntılı tablo
+   [performans runbook'unda](docs/PHASE6_PERFORMANCE_OBSERVABILITY.md) bulunur.
+   Bu tek-host/tek-replica kanıtı production kapasitesi değildir; staging'de
+   30–60 dakikalık soak, replica artışı, gerçek trafik karışımı ve managed
+   PostgreSQL/PgBouncer doğrulaması sonraki operasyon aşamasında zorunludur.
 5. **Staging operasyonu:** immutable image SHA, migration forward/rollback,
    backup/restore tatbikatı, secret rotation, readiness/canary ve incident
    runbook'larını [staging operasyon runbook'u](docs/OPERATIONS_RUNBOOK.md)

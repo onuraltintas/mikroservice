@@ -109,8 +109,11 @@ npm test --prefix tests/E2E -- --project=registration-disposable
 
 Disposable coaching tenant ve SignalR akışı için staging environment secret'larına
 önceden doğrulanmış, MFA'sız bir Teacher ve Student fixture hesabı ekleyin. Bu
-hesaplar aynı aktif kurumda olmalı; test sırasında öğrenci ve öğretmen profilleri
-başka tenant'lara aitse akış fail eder:
+hesaplar aynı aktif kurumda olmalı ve Identity tarafında aralarında aktif
+öğretmen–öğrenci assignment bağlantısı bulunmalı; yalnızca aynı kuruma üye olmak
+coaching yazma yetkisi için yeterli değildir. Test sırasında öğrenci ve öğretmen
+profilleri başka tenant'lara aitse veya bağlantı pasif/bekleyen durumdaysa akış
+fail eder:
 
 ```powershell
 $env:E2E_DISPOSABLE_ENV = 'true'

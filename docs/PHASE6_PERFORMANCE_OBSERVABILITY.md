@@ -96,6 +96,33 @@ kararlıysa geçin:
 | Step-up 3 | 256 | 10 dk | Yatay çoğaltma öncesi tek replica sınırı |
 | Soak | Sınırın %60–70'i | 30–60 dk | Bellek sızıntısı, kuyruk büyümesi ve GC |
 
+### 22.08.2026 lokal Docker kanıtı
+
+Docker Compose üzerinde sentetik disposable Teacher fixture ile Gateway'in
+`/api/users/me` salt-okuma rotası ölçüldü. Koşular gerçek kullanıcı veya PII
+kullanmadı; tüm istekler aynı kısa ömürlü test token'ı kullandı.
+
+| Koşu | Worker / süre | İstek | Başarı | RPS | p95 / p99 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Smoke (`/health`) | 10 / 15 sn | 78.786 | %100 (200) | 5.208,99 | 16 / 16 ms |
+| Baseline | 16 / 30 sn | 25.097 | %100 (200) | 834,40 | 32 / 47 ms |
+| Step-up 1 | 64 / 30 sn | 38.289 | %100 (200) | 1.270,33 | 78 / 94 ms |
+| Step-up 2 | 128 / 30 sn | 36.798 | %100 (200) | 1.218,36 | 141 / 187 ms |
+| Step-up 3 | 256 / 15 sn | 19.044 | %100 (200) | 1.247,48 | 265 / 297 ms |
+| Soak | 128 / 60 sn | 78.877 | %100 (200) | 1.309,51 | 125 / 156 ms |
+
+İlk 128/256 worker denemesinde PostgreSQL'in varsayılan 100 bağlantı sınırı,
+servis başına varsayılan Npgsql havuzlarıyla taşabiliyordu (`too many clients`).
+Salt-okuma profil rotasındaki gereksiz `RecordUserLogin` yazımı kaldırıldı ve
+Compose bağlantı dizelerine `POSTGRES_MAX_POOL_SIZE=30` bütçesi eklendi. Bu
+ayar sonrası 256 worker koşusunda PostgreSQL `too many clients` sayısı 0,
+Identity DB bağlantı hata satırı 0, RabbitMQ coaching/send-notification
+`messages_ready` ve `messages_unacknowledged` değerleri 0, Redis
+`rejected_connections` ve `evicted_keys` değerleri 0 oldu. Bu sonuçlar tek
+makinede tek replica için yerel referanstır; üretim kapasitesi, yatay replica,
+managed PostgreSQL/PgBouncer, gerçek trafik karışımı ve 30–60 dakikalık staging
+soak koşusu ile ayrıca doğrulanmalıdır.
+
 Başlangıç kabul eşikleri (ölçüm sonrası ürün SLA'ları ile kesinleştirilmelidir):
 
 - Gateway health: p95 < 100 ms, p99 < 250 ms.

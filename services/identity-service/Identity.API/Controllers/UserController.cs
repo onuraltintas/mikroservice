@@ -45,9 +45,6 @@ public class UserController : ControllerBase
         if (_currentUserService.UserId == null)
             return Unauthorized();
 
-        // Record the login
-        await _mediator.Send(new Identity.Application.Commands.RecordUserLogin.RecordUserLoginCommand(_currentUserService.UserId.Value));
-
         var query = new GetUserProfileQuery(_currentUserService.UserId.Value);
         var result = await _mediator.Send(query);
 

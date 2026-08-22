@@ -200,6 +200,18 @@ test.describe('Disposable coaching write/read and SignalR flow', () => {
     await expectAnonymousHubRejected(baseURL);
   });
 
+  test('does not accept a SignalR query token on regular API routes', async ({ request }) => {
+    const teacher = await login(
+      request,
+      process.env.E2E_COACHING_TEACHER_EMAIL,
+      process.env.E2E_COACHING_TEACHER_PASSWORD);
+
+    const response = await request.get(
+      `/api/users/me?access_token=${encodeURIComponent(teacher.accessToken)}`);
+
+    expect(response.status()).toBe(401);
+  });
+
   test('teacher creates an assignment, student reads it, and SignalR receives the notification', async ({ request, baseURL }) => {
     test.setTimeout(60_000);
 
@@ -282,6 +294,18 @@ test.describe('Disposable coaching write/read and SignalR flow', () => {
       const notification = await hub.waitForNotification();
       expect(notification.type).toBe('AssignmentCreated');
       expect(notification.relatedEntityId).toBe(assignmentId);
+
+      const notificationsResponse = await request.get('/api/notifications?pageNumber=1&pageSize=100', {
+        headers: { Authorization: `Bearer ${student.accessToken}` }
+      });
+      expect(notificationsResponse.status()).toBe(200);
+      const persistedNotification = (await notificationsResponse.json())
+        .find(item => item.relatedEntityId === assignmentId);
+      expect(persistedNotification).toEqual(expect.objectContaining({
+        type: 'AssignmentCreated',
+        relatedEntityId: assignmentId,
+        isRead: false
+      }));
     } finally {
       if (assignmentId) {
         const deleteResponse = await request.delete(`/api/assignments/${assignmentId}`, {

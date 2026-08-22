@@ -54,7 +54,8 @@ public class NotificationManager : INotificationService
             Message = message,
             Type = type,
             CreatedAt = notification.CreatedAt,
-            IsRead = false
+            IsRead = notification.IsRead,
+            RelatedEntityId = notification.RelatedEntityId
         });
     }
 }

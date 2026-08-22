@@ -1,6 +1,7 @@
 using Serilog;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Threading.RateLimiting;
 using DotNetEnv;
 using EduPlatform.Gateway;
@@ -117,8 +118,27 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Add Authentication
-builder.Services.AddCustomAuthentication(builder.Configuration);
+// Add Authentication. SignalR browser clients cannot send an Authorization header
+// during the WebSocket upgrade, so only the notification hub accepts the standard
+// short-lived access_token query parameter.
+builder.Services.AddCustomAuthentication(builder.Configuration, options =>
+{
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrWhiteSpace(accessToken)
+                && path.StartsWithSegments("/hubs/notifications"))
+            {
+                context.Token = accessToken;
+            }
+
+            return Task.CompletedTask;
+        }
+    };
+});
 builder.Services.AddGlobalAuthorization();
 
 var app = builder.Build();
