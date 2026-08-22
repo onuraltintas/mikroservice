@@ -203,6 +203,19 @@ export interface ChildSummary {
   avatarUrl?: string;
 }
 
+export interface TeacherStudent {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  gradeLevel?: number;
+  institutionId?: string;
+  institutionName?: string;
+  avatarUrl?: string;
+  subject?: string;
+  assignmentStartDate: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CoachingPortalService {
   private readonly http = inject(HttpClient);
@@ -227,6 +240,23 @@ export class CoachingPortalService {
     return this.http.get<PagedResponse<TeacherAssignment>>(
       `${this.url}/teacher/${this.id(teacherId)}`,
       { params: this.paging(pageNumber, pageSize) }
+    );
+  }
+
+  getTeacherStudents(
+    pageNumber = 1,
+    pageSize = 25,
+    searchTerm?: string
+  ): Observable<PagedResponse<TeacherStudent>> {
+    let params = this.paging(pageNumber, pageSize);
+    const search = searchTerm?.trim();
+    if (search) {
+      params = params.set('searchTerm', search);
+    }
+
+    return this.http.get<PagedResponse<TeacherStudent>>(
+      `${environment.apiUrl}/teachers/me/students`,
+      { params }
     );
   }
 
