@@ -36,14 +36,15 @@ Düzenleme akışları da tamamlandı: `PUT /api/coaching-admin/assignments/{id}
 /api/coaching-admin/exams/{id}/results/{resultId}` sınav sonucunu ve `PUT
 /api/coaching-admin/goals/{id}` hedef tanımını günceller. Aynı komutlar öğretmen
 ve öğrenci erişim politikaları korunarak standart Coaching API rotalarında da
-mevcuttur. Teslim edilmiş/notlandırılmış veya eki bulunan bir öğrenci ödevden
-çıkarılamaz; maksimum puan mevcut notların altına indirilemez.
+mevcuttur. Çalışmaya başlanmış, teslim edilmiş/notlandırılmış veya eki bulunan
+bir öğrenci ödevden çıkarılamaz; maksimum puan mevcut notların altına indirilemez.
 
 Bu PUT/POST/DELETE yönetim istekleri mevcut append-only `AdminAuditMiddleware`
-tarafından actor, tenant, HTTP yöntemi, endpoint, durum kodu ve correlation ID
-ile kaydedilir. Admin panelindeki **Yönetici Denetim Kayıtları → Koçluk**
-ekranından PUT düzenleme geçmişi aranabilir; hassas istek gövdesi audit kaydına
-alınmaz.
+tarafından actor, tenant, HTTP yöntemi, endpoint, durum kodu, işlem türü, kaynak
+kimliği ve değişen alan adları ile kaydedilir. Admin panelindeki **Yönetici
+Denetim Kayıtları → Koçluk** ekranından PUT düzenleme geçmişi aranabilir.
+İstek gövdesi değerleri (özellikle parola/token alanları) audit kaydına alınmaz;
+sadece güvenli alan adı listesi tutulur.
 
 Bu MVP'de bilinçli olarak ayrı bir `CoachingPlan` tablosu açılmadı: hedef,
 ödev, sınav ve seanslar zaten ayrı yaşam döngülerine sahip aggregate'lerdir;
@@ -53,10 +54,12 @@ kapasite/soak testi, gözlemlenebilirlik panoları ve Google/Outlook gibi dış
 takvim sağlayıcıları için OAuth tabanlı, açık rıza ve token-vault kullanan
 adaptörlerdir.
 
-Son doğrulama: Identity/Coaching entegrasyon paketi 327 başarılı (2 Docker
-health testi ortam yokluğu nedeniyle atlandı), Angular paketi 64 başarılı ve
-son authenticated calendar export değişikliğiyle production SSR/browser build
-başarılıdır. Docker health smoke 200, yeni calendar/early-warning rotaları auth
+Son doğrulama (22.08.2026): coaching düzenleme, audit, migration metadata ve
+notification event paketi 44/44 backend testi; Angular paketi 66/66 test ve
+production SSR/browser build başarılıdır. Tam entegrasyon paketi Docker engine
+çalışmadığı için Testcontainers tabanlı Postgres/RabbitMQ/Redis/MailCatcher
+testlerini koşturamaz; bu testler Docker erişimi olan CI/ortamda yeniden
+çalıştırılmalıdır. Docker health smoke 200, yeni calendar/early-warning rotaları auth
 olmadan 401 ve 5 saniyelik gateway health koşusunda 19.083 istek, %100 başarı,
 p95/p99 16 ms ve yaklaşık 3.793 RPS ölçülmüştür; bu lokal smoke sonucudur,
 üretim SLA taahhüdü değildir. Aynı ortamda 16 worker/30 saniyelik baseline

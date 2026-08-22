@@ -17,7 +17,7 @@ route guard'ları yalnızca kullanıcı deneyimi ve erken yönlendirme sağlar.
 | Identity | Kurum oluşturma, aktiflik ve lisans/kapasite yönetimi | `/api/institutions` | `SystemAdmin` + `Permissions.Institutions.Manage` |
 | Identity | Kendi tenant'ının iletişim bilgileri ve kurum yöneticileri | `/api/institutions` | Aktif tenant yöneticisi + `Permissions.Institutions.Manage` |
 | Identity | Secret içermeyen feature flag ve sistem ayarları, log ve retention yönetimi | `/api/configurations`, `/api/system-logs` | `Permissions.Operations.View` ve mevcut SystemAdmin mutasyon politikaları |
-| Identity / Notification / Coaching | Servis-lokal, append-only yönetici denetim kayıtlarını filtreleme ve sayfalama | `/api/admin-audit/{service}` | Yalnız `SystemAdmin` + `Permissions.Operations.View` |
+| Identity / Notification / Coaching | Servis-lokal, append-only yönetici denetim kayıtlarını işlem, kaynak ve değişen alan adlarıyla filtreleme/sayfalama | `/api/admin-audit/{service}` | Yalnız `SystemAdmin` + `Permissions.Operations.View` |
 | Identity | SystemAdmin TOTP kurulumu, doğrulama ve tek kullanımlık kurtarma kodları | `/api/auth/mfa/*` | Parola/Google ilk faktöründen üretilen 5 dakikalık challenge |
 | Notification | Destek talebi listeleme, filtreleme, notlandırma, işlenmiş işareti ve yanıt | `/api/support/requests`, `/api/support/reply` | `Permissions.Support.View/Reply` |
 | Notification | E-posta şablonu listeleme, oluşturma, konu/gövde/aktiflik güncelleme | `/api/email-templates` | `Permissions.Notifications.Templates` |
@@ -29,10 +29,10 @@ route guard'ları yalnızca kullanıcı deneyimi ve erken yönlendirme sağlar.
 | Coaching | Yalnız `Clean` durumundaki fotoğraf attachment'ını yetkili stream olarak indirme | `/api/assignments/{id}/students/{studentId}/attachments/{attachmentId}/content` | Assignment domain policy + aktif attachment |
 | Coaching | Sayfalı seans, sınav ve hedef operasyon listeleri; arama/durum filtreleri | `/api/coaching-admin/sessions`, `/api/coaching-admin/exams`, `/api/coaching-admin/goals` | Yalnız `SystemAdmin` + `Permissions.Coaching.View` |
 | Coaching | Seans ve sınav ayrıntısı; katılım ve sonuç ölçüm alanları | `/api/coaching-admin/sessions/{id}`, `/api/coaching-admin/exams/{id}` | `SystemAdmin` + `Permissions.Coaching.View`; kimlikler yalnız admin operasyonu için |
-| Coaching | Assignment oluşturma/iptal/silme/notlandırma; fotoğraf teslimlerinin güvenli yönetimi | `/api/coaching-admin/assignments*` | `SystemAdmin` + `Permissions.Coaching.Manage` + `MfaRequired` |
-| Coaching | Seans oluşturma/katılım güncelleme/iptal/silme | `/api/coaching-admin/sessions*` | `SystemAdmin` + `Permissions.Coaching.Manage` + `MfaRequired` |
-| Coaching | Sınav oluşturma/sonuç ekleme/silme | `/api/coaching-admin/exams*` | `SystemAdmin` + `Permissions.Coaching.Manage` + `MfaRequired` |
-| Coaching | Hedef oluşturma/ilerleme güncelleme/silme | `/api/coaching-admin/goals*` | `SystemAdmin` + `Permissions.Coaching.Manage` + `MfaRequired` |
+| Coaching | Assignment oluşturma, düzenleme, güvenli öğrenci yeniden atama/iptal/silme/notlandırma; fotoğraf teslimlerinin güvenli yönetimi | `/api/coaching-admin/assignments*` | `SystemAdmin` + `Permissions.Coaching.Manage` + `MfaRequired` |
+| Coaching | Seans oluşturma, düzenleme/yeniden planlama, katılım güncelleme/iptal/silme | `/api/coaching-admin/sessions*` | `SystemAdmin` + `Permissions.Coaching.Manage` + `MfaRequired` |
+| Coaching | Sınav oluşturma, düzenleme, sonuç ekleme/düzeltme/silme | `/api/coaching-admin/exams*` | `SystemAdmin` + `Permissions.Coaching.Manage` + `MfaRequired` |
+| Coaching | Hedef oluşturma, düzenleme/nullable hedef temizleme, ilerleme güncelleme/silme | `/api/coaching-admin/goals*` | `SystemAdmin` + `Permissions.Coaching.Manage` + `MfaRequired` |
 
 ## Coaching admin yönetimi neden explicit command olarak tasarlandı?
 

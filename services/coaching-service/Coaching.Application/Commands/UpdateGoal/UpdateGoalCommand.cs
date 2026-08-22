@@ -1,6 +1,7 @@
 using Coaching.Application.Authorization;
 using Coaching.Application.Interfaces;
 using Coaching.Domain.Enums;
+using EduPlatform.Shared.Contracts.Events.Coaching;
 using FluentValidation;
 using MediatR;
 
@@ -46,15 +47,18 @@ public sealed class UpdateGoalCommandHandler
     private readonly IAcademicGoalRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingEventPublisher _eventPublisher;
 
     public UpdateGoalCommandHandler(
         IAcademicGoalRepository repository,
         IUnitOfWork unitOfWork,
-        ICoachingAccessPolicy accessPolicy)
+        ICoachingAccessPolicy accessPolicy,
+        ICoachingEventPublisher eventPublisher)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task<UpdateGoalResponse> Handle(
@@ -82,6 +86,13 @@ public sealed class UpdateGoalCommandHandler
             command.TargetExamType,
             command.TargetSubject);
 
+        await _eventPublisher.PublishAsync(
+            new GoalUpdatedEvent(
+                goal.Id,
+                goal.StudentId,
+                goal.SetByTeacherId,
+                goal.Title),
+            cancellationToken);
         await _repository.UpdateAsync(goal, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

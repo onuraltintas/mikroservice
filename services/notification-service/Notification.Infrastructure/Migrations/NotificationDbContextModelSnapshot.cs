@@ -38,9 +38,17 @@ namespace Notification.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("Action")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<string>("ClientIp")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ChangedFieldsJson")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<string>("CorrelationId")
                         .IsRequired()
@@ -59,6 +67,14 @@ namespace Notification.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ResourceId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ResourceType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("ServiceName")
                         .IsRequired()
@@ -79,6 +95,8 @@ namespace Notification.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ActorUserId", "OccurredAt");
+
+                    b.HasIndex("ResourceType", "ResourceId", "OccurredAt");
 
                     b.HasIndex("OccurredAt", "Id");
 

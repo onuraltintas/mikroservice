@@ -128,7 +128,11 @@ builder.Services.AddApplication();
 
 // Add Controllers
 builder.Services.AddControllers()
-    .AddEduPlatformApiConventions();
+    .AddEduPlatformApiConventions()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter(
+                allowIntegerValues: false)));
 builder.Services.AddEduPlatformApiVersioning();
 
 // Add Swagger

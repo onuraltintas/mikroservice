@@ -16,7 +16,7 @@ import {
     <main class="p-4 md:p-6 min-h-full" aria-labelledby="audit-title">
       <header class="mb-6">
         <h1 id="audit-title" class="text-2xl font-bold text-gray-900 dark:text-white">Yönetici Denetim Kayıtları</h1>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Yönetim işlemlerinin servis bazlı, değiştirilemez metadata geçmişi.</p>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Yönetim işlemlerinin servis bazlı, değiştirilemez işlem ve değişen alan geçmişi.</p>
       </header>
 
       <nav class="flex flex-wrap gap-2 mb-5" aria-label="Audit servisi">
@@ -54,20 +54,21 @@ import {
         <div class="overflow-x-auto">
           <table class="w-full min-w-[1050px] text-left text-sm">
             <thead class="bg-gray-50 dark:bg-gray-900 text-xs uppercase text-gray-500 dark:text-gray-400">
-              <tr><th class="px-4 py-3">Zaman</th><th class="px-4 py-3">Aktör</th><th class="px-4 py-3">İşlem</th><th class="px-4 py-3">Durum</th><th class="px-4 py-3">Tenant</th><th class="px-4 py-3">Correlation ID</th></tr>
+              <tr><th class="px-4 py-3">Zaman</th><th class="px-4 py-3">Aktör</th><th class="px-4 py-3">İşlem</th><th class="px-4 py-3">Durum</th><th class="px-4 py-3">Tenant</th><th class="px-4 py-3">Değişen alanlar</th><th class="px-4 py-3">Correlation ID</th></tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
               @for (record of records(); track record.id) {
                 <tr>
                   <td class="px-4 py-3 whitespace-nowrap">{{ record.occurredAt | date:'dd.MM.yyyy HH:mm:ss' }}</td>
                   <td class="px-4 py-3"><div class="font-medium">{{ record.actorUserId }}</div><div class="text-xs text-gray-500">{{ record.actorRoles }}</div></td>
-                  <td class="px-4 py-3 font-mono"><span class="font-semibold">{{ record.httpMethod }}</span> {{ record.path }}</td>
+                  <td class="px-4 py-3 font-mono"><span class="font-semibold">{{ record.action || record.httpMethod }}</span> {{ record.resourceType || '' }} {{ record.resourceId || '' }}<div class="text-xs text-gray-500">{{ record.path }}</div></td>
                   <td class="px-4 py-3"><span [class.text-red-600]="record.statusCode >= 400">{{ record.statusCode }}</span></td>
                   <td class="px-4 py-3">{{ record.tenantId || '-' }}</td>
+                  <td class="px-4 py-3 text-xs" [title]="record.changedFieldsJson || ''">{{ changedFields(record) }}</td>
                   <td class="px-4 py-3 font-mono text-xs" [title]="record.correlationId">{{ shortId(record.correlationId) }}</td>
                 </tr>
               } @empty {
-                <tr><td colspan="6" class="px-6 py-12 text-center text-gray-500">{{ loading() ? 'Yükleniyor…' : 'Kayıt bulunamadı.' }}</td></tr>
+                <tr><td colspan="7" class="px-6 py-12 text-center text-gray-500">{{ loading() ? 'Yükleniyor…' : 'Kayıt bulunamadı.' }}</td></tr>
               }
             </tbody>
           </table>
@@ -124,6 +125,15 @@ export class AdminAuditComponent implements OnInit, OnDestroy {
 
   totalPages(): number { return Math.max(1, Math.ceil(this.totalCount() / this.pageSize)); }
   shortId(value: string): string { return value.length > 18 ? `${value.slice(0, 18)}…` : value; }
+  changedFields(record: AdminAuditRecord): string {
+    if (!record.changedFieldsJson) return '-';
+    try {
+      const fields = JSON.parse(record.changedFieldsJson) as unknown;
+      return Array.isArray(fields) ? fields.join(', ') : '-';
+    } catch {
+      return '-';
+    }
+  }
 
   private load(): void {
     this.request?.unsubscribe();

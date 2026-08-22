@@ -1,6 +1,7 @@
 using Coaching.Application.Authorization;
 using Coaching.Application.Interfaces;
 using Coaching.Domain.Enums;
+using EduPlatform.Shared.Contracts.Events.Coaching;
 using FluentValidation;
 using MediatR;
 
@@ -43,7 +44,7 @@ public sealed class UpdateAssignmentCommandValidator : AbstractValidator<UpdateA
             .NotEqual(DateTime.MinValue)
             .WithMessage("Due date is required.");
         RuleFor(command => command.AssignmentSource)
-            .Must(source => Enum.TryParse<AssignmentSource>(source, true, out _))
+            .Must(IsValidAssignmentSource)
             .WithMessage("Assignment source must be Digital, Book or Mixed.");
         RuleFor(command => command.TargetGradeLevel)
             .InclusiveBetween(1, 12)
@@ -98,8 +99,13 @@ public sealed class UpdateAssignmentCommandValidator : AbstractValidator<UpdateA
     }
 
     private static bool IsBookSource(string source) =>
-        Enum.TryParse<AssignmentSource>(source, true, out var parsed)
+        IsValidAssignmentSource(source)
+        && Enum.TryParse<AssignmentSource>(source, true, out var parsed)
         && parsed is AssignmentSource.Book or AssignmentSource.Mixed;
+
+    private static bool IsValidAssignmentSource(string source) =>
+        Enum.TryParse<AssignmentSource>(source, true, out var parsed)
+        && Enum.IsDefined(parsed);
 }
 
 public sealed class UpdateAssignmentCommandHandler
@@ -109,17 +115,20 @@ public sealed class UpdateAssignmentCommandHandler
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
     private readonly ICoachingIdentityAuthorizationClient _identityAuthorizationClient;
+    private readonly ICoachingEventPublisher _eventPublisher;
 
     public UpdateAssignmentCommandHandler(
         IAssignmentRepository repository,
         IUnitOfWork unitOfWork,
         ICoachingAccessPolicy accessPolicy,
-        ICoachingIdentityAuthorizationClient identityAuthorizationClient)
+        ICoachingIdentityAuthorizationClient identityAuthorizationClient,
+        ICoachingEventPublisher eventPublisher)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
         _identityAuthorizationClient = identityAuthorizationClient;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task<UpdateAssignmentResponse> Handle(
@@ -185,6 +194,15 @@ public sealed class UpdateAssignmentCommandHandler
             assignment.ReassignStudents(command.StudentIds);
         }
 
+        await _eventPublisher.PublishAsync(
+            new AssignmentUpdatedEvent(
+                assignment.Id,
+                assignment.TeacherId,
+                assignment.InstitutionId,
+                assignment.Title,
+                assignment.DueDate,
+                assignment.AssignedStudents.Select(student => student.StudentId).ToArray()),
+            cancellationToken);
         await _repository.UpdateAsync(assignment, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

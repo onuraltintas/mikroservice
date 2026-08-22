@@ -1,3 +1,4 @@
+using Coaching.Application.Commands.UpdateAssignment;
 using Coaching.Domain.Entities;
 using Coaching.Domain.Enums;
 using EduPlatform.Shared.Kernel.Exceptions;
@@ -7,6 +8,35 @@ namespace Identity.API.IntegrationTests;
 
 public sealed class CoachingEditingDomainTests
 {
+    [Fact]
+    public void AssignmentEditValidator_ShouldRejectNumericSourceValues()
+    {
+        var command = new UpdateAssignmentCommand(
+            Guid.NewGuid(),
+            "Ödev",
+            null,
+            null,
+            "999",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            DateTime.UtcNow.AddDays(1),
+            null,
+            null,
+            null);
+
+        new UpdateAssignmentCommandValidator()
+            .Validate(command)
+            .IsValid
+            .Should().BeFalse();
+    }
+
     [Fact]
     public void AssignmentEdit_ShouldReplaceEditableFieldsAndReassignUnsubmittedStudents()
     {
@@ -56,6 +86,23 @@ public sealed class CoachingEditingDomainTests
             .Which.Code.Should().Be("Assignment.ReassignmentNotAllowed");
         assignment.AssignedStudents.Should().ContainSingle()
             .Which.StudentId.Should().Be(studentId);
+    }
+
+    [Fact]
+    public void AssignmentReassignment_ShouldProtectInProgressWork()
+    {
+        var studentId = Guid.NewGuid();
+        var assignment = Assignment.Create(
+            Guid.NewGuid(),
+            "Ödev",
+            DateTime.UtcNow.AddDays(2));
+        assignment.AssignToStudent(studentId);
+        assignment.AssignedStudents.Single().MarkAsInProgress();
+
+        var action = () => assignment.ReassignStudents([Guid.NewGuid()]);
+
+        action.Should().Throw<BusinessRuleException>()
+            .Which.Code.Should().Be("Assignment.ReassignmentNotAllowed");
     }
 
     [Fact]

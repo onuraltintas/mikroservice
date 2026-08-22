@@ -193,11 +193,16 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<SendNotificationConsumer>();
     x.AddConsumer<UserForgotPasswordConsumer>();
     x.AddConsumer<AssignmentCreatedConsumer>();
+    x.AddConsumer<AssignmentUpdatedConsumer>();
     x.AddConsumer<AssignmentSubmittedConsumer>();
     x.AddConsumer<AssignmentGradedConsumer>();
+    x.AddConsumer<ExamUpdatedConsumer>();
     x.AddConsumer<ExamResultAddedConsumer>();
+    x.AddConsumer<ExamResultUpdatedConsumer>();
     x.AddConsumer<SessionScheduledConsumer>();
+    x.AddConsumer<SessionUpdatedConsumer>();
     x.AddConsumer<GoalCreatedConsumer>();
+    x.AddConsumer<GoalUpdatedConsumer>();
     
     // Outbox Pattern Configuration
     x.AddEntityFrameworkOutbox<NotificationDbContext>(o =>

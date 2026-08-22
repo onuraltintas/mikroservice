@@ -1,6 +1,7 @@
 using Coaching.Application.Authorization;
 using Coaching.Application.Interfaces;
 using Coaching.Domain.Enums;
+using EduPlatform.Shared.Contracts.Events.Coaching;
 using FluentValidation;
 using MediatR;
 
@@ -75,15 +76,18 @@ public sealed class UpdateExamCommandHandler
     private readonly IExamRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingEventPublisher _eventPublisher;
 
     public UpdateExamCommandHandler(
         IExamRepository repository,
         IUnitOfWork unitOfWork,
-        ICoachingAccessPolicy accessPolicy)
+        ICoachingAccessPolicy accessPolicy,
+        ICoachingEventPublisher eventPublisher)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task<UpdateExamResponse> Handle(
@@ -104,6 +108,16 @@ public sealed class UpdateExamCommandHandler
             command.MaxScore,
             command.TargetGradeLevel);
 
+        await _eventPublisher.PublishAsync(
+            new ExamUpdatedEvent(
+                exam.Id,
+                exam.CreatedByTeacherId,
+                exam.InstitutionId,
+                exam.Title,
+                exam.ExamDate,
+                exam.MaxScore,
+                exam.Results.Select(result => result.StudentId).ToArray()),
+            cancellationToken);
         await _repository.UpdateAsync(exam, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -117,15 +131,18 @@ public sealed class UpdateExamResultCommandHandler
     private readonly IExamRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingEventPublisher _eventPublisher;
 
     public UpdateExamResultCommandHandler(
         IExamRepository repository,
         IUnitOfWork unitOfWork,
-        ICoachingAccessPolicy accessPolicy)
+        ICoachingAccessPolicy accessPolicy,
+        ICoachingEventPublisher eventPublisher)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task<UpdateExamResultResponse> Handle(
@@ -147,6 +164,14 @@ public sealed class UpdateExamResultCommandHandler
             command.Notes);
 
         var result = exam.Results.Single(item => item.Id == command.ResultId);
+        await _eventPublisher.PublishAsync(
+            new ExamResultUpdatedEvent(
+                exam.Id,
+                result.Id,
+                result.StudentId,
+                result.Score,
+                result.Ranking),
+            cancellationToken);
         await _repository.UpdateAsync(exam, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

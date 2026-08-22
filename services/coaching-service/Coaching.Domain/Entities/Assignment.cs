@@ -246,12 +246,12 @@ public class Assignment : AggregateRoot
             .ToArray();
 
         if (removedStudents.Any(assignedStudent =>
-                assignedStudent.Status is StudentAssignmentStatus.Submitted or StudentAssignmentStatus.Graded
+                assignedStudent.Status != StudentAssignmentStatus.Assigned
                 || assignedStudent.SubmissionAttachments.Count > 0))
         {
             throw new BusinessRuleException(
                 "Assignment.ReassignmentNotAllowed",
-                "Teslim edilmiş, notlandırılmış veya ek dosyası bulunan öğrenci ödevden çıkarılamaz.");
+                "Çalışmaya başlanmış, teslim edilmiş, notlandırılmış veya ek dosyası bulunan öğrenci ödevden çıkarılamaz.");
         }
 
         foreach (var removedStudent in removedStudents)

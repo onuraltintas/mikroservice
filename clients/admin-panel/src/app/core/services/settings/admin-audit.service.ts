@@ -18,6 +18,10 @@ export interface AdminAuditRecord {
   correlationId: string;
   clientIp?: string;
   userAgent?: string;
+  action?: string;
+  resourceType?: string;
+  resourceId?: string;
+  changedFieldsJson?: string;
 }
 
 export interface AdminAuditPage {

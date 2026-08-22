@@ -69,8 +69,13 @@ public class IdentityDbContext : DbContext
         audit.Property(record => record.CorrelationId).HasMaxLength(100);
         audit.Property(record => record.ClientIp).HasMaxLength(64);
         audit.Property(record => record.UserAgent).HasMaxLength(256);
+        audit.Property(record => record.Action).HasMaxLength(32);
+        audit.Property(record => record.ResourceType).HasMaxLength(100);
+        audit.Property(record => record.ResourceId).HasMaxLength(100);
+        audit.Property(record => record.ChangedFieldsJson).HasMaxLength(2_000);
         audit.HasIndex(record => new { record.OccurredAt, record.Id });
         audit.HasIndex(record => new { record.ActorUserId, record.OccurredAt });
+        audit.HasIndex(record => new { record.ResourceType, record.ResourceId, record.OccurredAt });
     }
 
     private static void ConfigureIdempotency(ModelBuilder modelBuilder)

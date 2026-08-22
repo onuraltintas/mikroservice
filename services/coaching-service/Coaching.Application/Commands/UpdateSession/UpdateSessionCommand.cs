@@ -1,5 +1,6 @@
 using Coaching.Application.Authorization;
 using Coaching.Application.Interfaces;
+using EduPlatform.Shared.Contracts.Events.Coaching;
 using FluentValidation;
 using MediatR;
 
@@ -44,15 +45,18 @@ public sealed class UpdateSessionCommandHandler
     private readonly ICoachingSessionRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingEventPublisher _eventPublisher;
 
     public UpdateSessionCommandHandler(
         ICoachingSessionRepository repository,
         IUnitOfWork unitOfWork,
-        ICoachingAccessPolicy accessPolicy)
+        ICoachingAccessPolicy accessPolicy,
+        ICoachingEventPublisher eventPublisher)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task<UpdateSessionResponse> Handle(
@@ -71,6 +75,14 @@ public sealed class UpdateSessionCommandHandler
             command.MeetingLink,
             command.TeacherNotes);
 
+        await _eventPublisher.PublishAsync(
+            new SessionUpdatedEvent(
+                session.Id,
+                session.TeacherId,
+                session.InstitutionId,
+                session.Attendances.Select(attendance => attendance.StudentId).ToArray(),
+                session.ScheduledDate),
+            cancellationToken);
         await _repository.UpdateAsync(session, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

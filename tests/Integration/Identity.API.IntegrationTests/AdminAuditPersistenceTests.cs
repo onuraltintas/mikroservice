@@ -32,6 +32,19 @@ public sealed class AdminAuditPersistenceTests
         identity.Model.FindEntityType(typeof(AdminAuditRecord)).Should().NotBeNull();
         notification.Model.FindEntityType(typeof(AdminAuditRecord)).Should().NotBeNull();
         coaching.Model.FindEntityType(typeof(AdminAuditRecord)).Should().NotBeNull();
+
+        foreach (var entityType in new[]
+                 {
+                     identity.Model.FindEntityType(typeof(AdminAuditRecord)),
+                     notification.Model.FindEntityType(typeof(AdminAuditRecord)),
+                     coaching.Model.FindEntityType(typeof(AdminAuditRecord))
+                 })
+        {
+            entityType!.FindProperty(nameof(AdminAuditRecord.Action)).Should().NotBeNull();
+            entityType.FindProperty(nameof(AdminAuditRecord.ResourceType)).Should().NotBeNull();
+            entityType.FindProperty(nameof(AdminAuditRecord.ResourceId)).Should().NotBeNull();
+            entityType.FindProperty(nameof(AdminAuditRecord.ChangedFieldsJson)).Should().NotBeNull();
+        }
     }
 
     [Fact]

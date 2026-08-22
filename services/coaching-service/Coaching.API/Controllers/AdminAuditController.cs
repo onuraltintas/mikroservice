@@ -47,7 +47,11 @@ public sealed class AdminAuditController(CoachingDbContext dbContext) : Controll
             query = query.Where(record =>
                 record.ActorUserId.Contains(search)
                 || record.Path.Contains(search)
-                || record.CorrelationId.Contains(search));
+                || record.CorrelationId.Contains(search)
+                || (record.Action != null && record.Action.Contains(search))
+                || (record.ResourceType != null && record.ResourceType.Contains(search))
+                || (record.ResourceId != null && record.ResourceId.Contains(search))
+                || (record.ChangedFieldsJson != null && record.ChangedFieldsJson.Contains(search)));
         }
 
         if (request.StatusCode.HasValue)

@@ -88,9 +88,11 @@ public class CreateAssignmentCommandValidator : AbstractValidator<CreateAssignme
     }
 
     private static bool BeValidAssignmentSource(string source) =>
-        Enum.TryParse<AssignmentSource>(source, true, out _);
+        Enum.TryParse<AssignmentSource>(source, true, out var parsed)
+        && Enum.IsDefined(parsed);
 
     private static bool IsBookSource(string source) =>
-        Enum.TryParse<AssignmentSource>(source, true, out var parsed)
+        BeValidAssignmentSource(source)
+        && Enum.TryParse<AssignmentSource>(source, true, out var parsed)
         && parsed is AssignmentSource.Book or AssignmentSource.Mixed;
 }
