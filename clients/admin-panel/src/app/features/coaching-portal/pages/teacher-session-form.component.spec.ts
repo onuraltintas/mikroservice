@@ -72,4 +72,13 @@ describe('TeacherSessionFormComponent', () => {
     expect(service.createTeacherSession).not.toHaveBeenCalled();
     expect(component.errorMessage()).toContain('gelecekte');
   });
+
+  it('supports searching and paging the teacher roster for large cohorts', () => {
+    component.setStudentSearch('  Zeynep  ');
+    component.studentTotalPages.set(2);
+    component.nextStudentsPage();
+
+    expect(service.getTeacherStudents).toHaveBeenLastCalledWith(2, 100, 'Zeynep');
+    expect(component.studentPageNumber()).toBe(2);
+  });
 });
