@@ -50,12 +50,45 @@ public sealed class CoachingEditingDomainTests
         assignment.AssignToStudent(studentId);
         assignment.SubmitAssignment(studentId);
 
-        var action = () => assignment.ReassignStudents([]);
+        var action = () => assignment.ReassignStudents([Guid.NewGuid()]);
 
         action.Should().Throw<BusinessRuleException>()
             .Which.Code.Should().Be("Assignment.ReassignmentNotAllowed");
         assignment.AssignedStudents.Should().ContainSingle()
             .Which.StudentId.Should().Be(studentId);
+    }
+
+    [Fact]
+    public void AssignmentReassignment_ShouldRequireAtLeastOneStudent()
+    {
+        var assignment = Assignment.Create(
+            Guid.NewGuid(),
+            "Ödev",
+            DateTime.UtcNow.AddDays(2));
+        assignment.AssignToStudent(Guid.NewGuid());
+
+        var action = () => assignment.ReassignStudents([]);
+
+        action.Should().Throw<BusinessRuleException>()
+            .Which.Code.Should().Be("Assignment.ReassignmentRequiresStudent");
+    }
+
+    [Fact]
+    public void AssignmentEdit_ShouldRejectMaxScoreBelowExistingGrade()
+    {
+        var studentId = Guid.NewGuid();
+        var assignment = Assignment.Create(
+            Guid.NewGuid(),
+            "Ödev",
+            DateTime.UtcNow.AddDays(2));
+        assignment.AssignToStudent(studentId);
+        assignment.SetScoring(100);
+        assignment.GradeAssignment(studentId, 80);
+
+        var action = () => assignment.SetScoring(70);
+
+        action.Should().Throw<BusinessRuleException>()
+            .Which.Code.Should().Be("Assignment.MaxScoreBelowGrade");
     }
 
     [Fact]

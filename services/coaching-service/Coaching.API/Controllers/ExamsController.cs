@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Coaching.Application.Commands.CreateExam;
 using Coaching.Application.Commands.AddExamResult;
+using Coaching.Application.Commands.UpdateExam;
 using Coaching.Application.Queries.GetExamResults;
 using Coaching.Application.Queries;
 
@@ -77,6 +78,48 @@ public class ExamsController : ControllerBase
     }
 
     /// <summary>
+    /// Replace an exam definition.
+    /// </summary>
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(UpdateExamResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UpdateExamResponse>> UpdateExam(
+        Guid id,
+        [FromBody] UpdateExamCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.ExamId)
+            return BadRequest(new { error = "Exam ID mismatch" });
+
+        try
+        {
+            return Ok(await _mediator.Send(command, cancellationToken));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
+        }
+        catch (BusinessRuleException ex)
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Add custom student result to an exam
     /// </summary>
     [HttpPost("{id}/results")]
@@ -125,6 +168,49 @@ public class ExamsController : ControllerBase
         {
             _logger.LogError(ex, "Error adding exam result");
             return StatusCode(500, new { error = "An error occurred" });
+        }
+    }
+
+    /// <summary>
+    /// Correct an existing exam result without changing its student identity.
+    /// </summary>
+    [HttpPut("{id:guid}/results/{resultId:guid}")]
+    [ProducesResponseType(typeof(UpdateExamResultResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UpdateExamResultResponse>> UpdateExamResult(
+        Guid id,
+        Guid resultId,
+        [FromBody] UpdateExamResultCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.ExamId || resultId != command.ResultId)
+            return BadRequest(new { error = "Exam or result ID mismatch" });
+
+        try
+        {
+            return Ok(await _mediator.Send(command, cancellationToken));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
+        }
+        catch (BusinessRuleException ex)
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
         }
     }
 

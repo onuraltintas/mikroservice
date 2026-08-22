@@ -2,6 +2,7 @@ using Coaching.API.Controllers;
 using EduPlatform.Shared.Security.Authorization;
 using FluentAssertions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.API.IntegrationTests;
 
@@ -62,5 +63,20 @@ public sealed class CoachingAdminManagementMetadataTests
             .Should()
             .Contain(attribute => attribute.Policy == "MfaRequired")
             .And.Contain(attribute => attribute.Roles == "SystemAdmin");
+    }
+
+    [Theory]
+    [InlineData(nameof(CoachingAdminController.UpdateAssignment))]
+    [InlineData(nameof(CoachingAdminController.UpdateSession))]
+    [InlineData(nameof(CoachingAdminController.UpdateExam))]
+    [InlineData(nameof(CoachingAdminController.UpdateExamResult))]
+    [InlineData(nameof(CoachingAdminController.UpdateGoal))]
+    public void CoachingEditActions_MustUsePut(string actionName)
+    {
+        typeof(CoachingAdminController)
+            .GetMethod(actionName)!
+            .GetCustomAttributes(typeof(HttpPutAttribute), inherit: true)
+            .Should()
+            .NotBeEmpty();
     }
 }

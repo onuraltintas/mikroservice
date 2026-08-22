@@ -58,6 +58,42 @@ public class AcademicGoal : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Replaces the editable goal fields. Null values intentionally clear optional targets.
+    /// </summary>
+    public void UpdateEditableDetails(
+        string title,
+        string? description,
+        GoalCategory category,
+        DateTime? targetDate,
+        decimal? targetScore,
+        ExamType? targetExamType,
+        string? targetSubject)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            throw new ArgumentException("Title is required.", nameof(title));
+
+        if (!Enum.IsDefined(category))
+            throw new ArgumentOutOfRangeException(nameof(category));
+
+        if (targetScore is < 0 or > 999.99m)
+            throw new ArgumentOutOfRangeException(
+                nameof(targetScore),
+                "Target score must be between 0 and 999.99.");
+
+        if (targetExamType.HasValue && !Enum.IsDefined(targetExamType.Value))
+            throw new ArgumentOutOfRangeException(nameof(targetExamType));
+
+        Title = title.Trim();
+        Description = NormalizeOptional(description);
+        Category = category;
+        TargetDate = targetDate;
+        TargetScore = targetScore;
+        TargetExamType = targetExamType;
+        TargetSubject = NormalizeOptional(targetSubject);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void SetTarget(
         DateTime? targetDate = null,
         decimal? targetScore = null,
@@ -112,4 +148,7 @@ public class AcademicGoal : AggregateRoot
         CompletedAt = null;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    private static string? NormalizeOptional(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

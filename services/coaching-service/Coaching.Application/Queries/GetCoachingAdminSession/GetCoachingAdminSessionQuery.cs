@@ -21,7 +21,9 @@ public sealed record CoachingAdminSessionDetailDto(
     int DurationMinutes,
     SessionStatus Status,
     IReadOnlyList<CoachingAdminAttendanceDto> Attendances,
-    string? MeetingLink);
+    string? MeetingLink,
+    string? Description,
+    string? TeacherNotes);
 
 public sealed record CoachingAdminAttendanceDto(
     Guid StudentId,
@@ -65,6 +67,8 @@ public sealed class GetCoachingAdminSessionQueryHandler(
                     attendance.AttendanceStatus,
                     attendance.TeacherNote))
                 .ToArray(),
-            session.MeetingLink);
+            session.MeetingLink,
+            session.Description,
+            session.TeacherNotes);
     }
 }

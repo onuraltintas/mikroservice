@@ -65,6 +65,34 @@ public class CoachingSession : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Replaces the editable session fields. Null optional values are cleared.
+    /// </summary>
+    public void UpdateEditableDetails(
+        string title,
+        string? description,
+        DateTime scheduledDate,
+        int durationMinutes,
+        string? meetingLink,
+        string? teacherNotes)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            throw new ArgumentException("Title is required.", nameof(title));
+
+        if (durationMinutes <= 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(durationMinutes),
+                "Duration must be greater than 0.");
+
+        Title = title.Trim();
+        Description = NormalizeOptional(description);
+        ScheduledDate = scheduledDate;
+        DurationMinutes = durationMinutes;
+        MeetingLink = NormalizeOptional(meetingLink);
+        TeacherNotes = NormalizeOptional(teacherNotes);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void SetMeetingLink(string meetingLink)
     {
         MeetingLink = meetingLink;
@@ -121,6 +149,9 @@ public class CoachingSession : AggregateRoot
             
         UpdatedAt = DateTime.UtcNow;
     }
+
+    private static string? NormalizeOptional(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
 
 /// <summary>

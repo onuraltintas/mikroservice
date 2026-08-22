@@ -32,6 +32,9 @@ import {
             </div>
             <div class="flex flex-wrap gap-2">
               <button type="button" (click)="load()" [disabled]="loading() || actionLoading()" class="rounded-lg border border-gray-300 px-4 py-2 text-sm dark:border-gray-600">Yenile</button>
+              @if (canManage()) {
+                <a [routerLink]="['/dashboard/coaching/assignments', item.id, 'edit']" class="rounded-lg border border-indigo-300 px-4 py-2 text-sm text-indigo-700 dark:border-indigo-700 dark:text-indigo-300">Düzenle</a>
+              }
               @if (canManage() && item.status === 'Active') {
                 <button type="button" (click)="cancelAssignment(item.id)" [disabled]="actionLoading()" class="rounded-lg border border-amber-300 px-4 py-2 text-sm text-amber-700 dark:border-amber-700 dark:text-amber-300">İptal et</button>
               }

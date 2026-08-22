@@ -29,6 +29,22 @@ API istemciden gelen kurum kimliğine güvenmez; kurum üyeliğini ve öğrenci
 roster'ını service-key korumalı internal Identity uçlarıyla doğrular. Admin
 yazma/grade işlemleri MFA ve SystemAdmin rolüyle sınırlıdır.
 
+Düzenleme akışları da tamamlandı: `PUT /api/coaching-admin/assignments/{id}`
+ödev alanlarını ve güvenli öğrenci yeniden atamasını, `PUT
+/api/coaching-admin/sessions/{id}` seans yeniden planlamasını, `PUT
+/api/coaching-admin/exams/{id}` sınav tanımını, `PUT
+/api/coaching-admin/exams/{id}/results/{resultId}` sınav sonucunu ve `PUT
+/api/coaching-admin/goals/{id}` hedef tanımını günceller. Aynı komutlar öğretmen
+ve öğrenci erişim politikaları korunarak standart Coaching API rotalarında da
+mevcuttur. Teslim edilmiş/notlandırılmış veya eki bulunan bir öğrenci ödevden
+çıkarılamaz; maksimum puan mevcut notların altına indirilemez.
+
+Bu PUT/POST/DELETE yönetim istekleri mevcut append-only `AdminAuditMiddleware`
+tarafından actor, tenant, HTTP yöntemi, endpoint, durum kodu ve correlation ID
+ile kaydedilir. Admin panelindeki **Yönetici Denetim Kayıtları → Koçluk**
+ekranından PUT düzenleme geçmişi aranabilir; hassas istek gövdesi audit kaydına
+alınmaz.
+
 Bu MVP'de bilinçli olarak ayrı bir `CoachingPlan` tablosu açılmadı: hedef,
 ödev, sınav ve seanslar zaten ayrı yaşam döngülerine sahip aggregate'lerdir;
 plan görünümü bunları birleştiren read/report katmanıdır. Bu, iki kaynaktan

@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Kernel.Primitives;
+using EduPlatform.Shared.Kernel.Exceptions;
 using Coaching.Domain.Enums;
 
 namespace Coaching.Domain.Entities;
@@ -79,6 +80,33 @@ public class Assignment : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Replaces the editable assignment fields. Unlike the legacy partial update method,
+    /// null values intentionally clear optional fields.
+    /// </summary>
+    public void UpdateEditableDetails(
+        string title,
+        string? description,
+        string? subject,
+        DateTime dueDate,
+        int? estimatedDurationMinutes)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            throw new ArgumentException("Title is required.", nameof(title));
+
+        if (estimatedDurationMinutes is <= 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(estimatedDurationMinutes),
+                "Estimated duration must be greater than 0.");
+
+        Title = title.Trim();
+        Description = NormalizeOptional(description);
+        Subject = NormalizeOptional(subject);
+        DueDate = dueDate;
+        EstimatedDurationMinutes = estimatedDurationMinutes;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void SetBookReference(
         string bookTitle,
         int startPage,
@@ -118,13 +146,48 @@ public class Assignment : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void ClearBookReference()
+    {
+        Source = AssignmentSource.Digital;
+        BookTitle = null;
+        BookIsbn = null;
+        BookEdition = null;
+        BookChapter = null;
+        BookStartPage = null;
+        BookEndPage = null;
+        BookStartQuestion = null;
+        BookEndQuestion = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void SetScoring(decimal maxScore, decimal? passingScore = null)
     {
-        if (maxScore <= 0)
-            throw new ArgumentException("Max score must be greater than 0", nameof(maxScore));
+        if (maxScore is <= 0 or > 999.99m)
+            throw new ArgumentOutOfRangeException(
+                nameof(maxScore),
+                "Max score must be between 0 and 999.99.");
+
+        if (passingScore is < 0 or > 999.99m || passingScore > maxScore)
+            throw new ArgumentOutOfRangeException(
+                nameof(passingScore),
+                "Passing score must be between 0 and the maximum score.");
+
+        if (_assignedStudents.Any(student => student.Score > maxScore))
+        {
+            throw new BusinessRuleException(
+                "Assignment.MaxScoreBelowGrade",
+                "Maksimum puan mevcut bir öğrenci notunun altına indirilemez.");
+        }
 
         MaxScore = maxScore;
         PassingScore = passingScore;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void ClearScoring()
+    {
+        MaxScore = null;
+        PassingScore = null;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -134,6 +197,12 @@ public class Assignment : AggregateRoot
             throw new ArgumentOutOfRangeException(nameof(gradeLevel), "Grade level must be between 1 and 12");
 
         TargetGradeLevel = gradeLevel;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void ClearTargetGradeLevel()
+    {
+        TargetGradeLevel = null;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -153,6 +222,45 @@ public class Assignment : AggregateRoot
         {
             AssignToStudent(studentId);
         }
+    }
+
+    /// <summary>
+    /// Reconciles assignment recipients without deleting submitted or graded work.
+    /// </summary>
+    public void ReassignStudents(IEnumerable<Guid> studentIds)
+    {
+        var requestedStudentIds = studentIds
+            .Where(studentId => studentId != Guid.Empty)
+            .Distinct()
+            .ToHashSet();
+
+        if (requestedStudentIds.Count == 0)
+        {
+            throw new BusinessRuleException(
+                "Assignment.ReassignmentRequiresStudent",
+                "Ödev en az bir öğrenciye atanmalıdır.");
+        }
+
+        var removedStudents = _assignedStudents
+            .Where(assignedStudent => !requestedStudentIds.Contains(assignedStudent.StudentId))
+            .ToArray();
+
+        if (removedStudents.Any(assignedStudent =>
+                assignedStudent.Status is StudentAssignmentStatus.Submitted or StudentAssignmentStatus.Graded
+                || assignedStudent.SubmissionAttachments.Count > 0))
+        {
+            throw new BusinessRuleException(
+                "Assignment.ReassignmentNotAllowed",
+                "Teslim edilmiş, notlandırılmış veya ek dosyası bulunan öğrenci ödevden çıkarılamaz.");
+        }
+
+        foreach (var removedStudent in removedStudents)
+        {
+            _assignedStudents.Remove(removedStudent);
+        }
+
+        AssignToStudents(requestedStudentIds);
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void Complete()
@@ -189,6 +297,9 @@ public class Assignment : AggregateRoot
         studentAssignment.Grade(score, feedback);
         UpdatedAt = DateTime.UtcNow;
     }
+
+    private static string? NormalizeOptional(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
 
 /// <summary>

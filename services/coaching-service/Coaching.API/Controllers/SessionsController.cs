@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Coaching.Application.Commands.CreateSession;
 using Coaching.Application.Commands.UpdateSessionAttendance;
 using Coaching.Application.Commands.UpdateSessionStudentNote;
+using Coaching.Application.Commands.UpdateSession;
 using Coaching.Application.Queries.GetSessions;
 using Coaching.Application.Queries;
 using MediatR;
@@ -193,6 +194,44 @@ public class SessionsController : ControllerBase
             cancellationToken);
 
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Reschedule a session and replace its editable details.
+    /// </summary>
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(UpdateSessionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UpdateSessionResponse>> UpdateSession(
+        Guid id,
+        [FromBody] UpdateSessionCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.SessionId)
+            return BadRequest(new { error = "Session ID mismatch" });
+
+        try
+        {
+            return Ok(await _mediator.Send(command, cancellationToken));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     /// <summary>

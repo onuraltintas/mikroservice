@@ -152,4 +152,56 @@ describe('CoachingAdminService', () => {
     request.flush({});
     http.verify();
   });
+
+  it('sends all coaching edit requests with resource ids in the path', () => {
+    TestBed.configureTestingModule({
+      providers: [CoachingAdminService, provideHttpClient(), provideHttpClientTesting()]
+    });
+    const service = TestBed.inject(CoachingAdminService);
+    const http = TestBed.inject(HttpTestingController);
+
+    service.updateAssignment('assignment/1', {
+      assignmentId: 'assignment/1', title: 'Güncel ödev', assignmentSource: 'Digital',
+      dueDate: '2030-01-01T10:00:00Z'
+    }).subscribe();
+    const assignment = http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/assignments/assignment%2F1'));
+    expect(assignment.request.method).toBe('PUT');
+    expect(assignment.request.body.assignmentId).toBe('assignment/1');
+    assignment.flush({});
+
+    service.updateSession('session/1', {
+      sessionId: 'session/1', title: 'Güncel seans', scheduledDate: '2030-01-01T10:00:00Z', durationMinutes: 60
+    }).subscribe();
+    const session = http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/sessions/session%2F1'));
+    expect(session.request.method).toBe('PUT');
+    session.flush({});
+
+    service.updateExam('exam/1', {
+      examId: 'exam/1', title: 'Güncel sınav', type: 'Mock', examDate: '2030-01-01T10:00:00Z', maxScore: 100
+    }).subscribe();
+    const exam = http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/exams/exam%2F1'));
+    expect(exam.request.method).toBe('PUT');
+    exam.flush({});
+
+    service.updateExamResult('exam/1', 'result/1', {
+      examId: 'exam/1', resultId: 'result/1', score: 90, correctAnswers: 9, wrongAnswers: 1, emptyAnswers: 0
+    }).subscribe();
+    const result = http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/exams/exam%2F1/results/result%2F1'));
+    expect(result.request.method).toBe('PUT');
+    result.flush({});
+
+    service.getGoal('goal/1').subscribe();
+    const goalDetail = http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/goals/goal%2F1'));
+    expect(goalDetail.request.method).toBe('GET');
+    goalDetail.flush({});
+
+    service.updateGoal('goal/1', {
+      goalId: 'goal/1', title: 'Güncel hedef', category: 'StudyHabits'
+    }).subscribe();
+    const goal = http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/goals/goal%2F1'));
+    expect(goal.request.method).toBe('PUT');
+    goal.flush({});
+
+    http.verify();
+  });
 });

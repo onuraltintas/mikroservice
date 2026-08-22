@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Coaching.Application.Commands.CreateGoal;
 using Coaching.Application.Commands.UpdateGoalProgress;
+using Coaching.Application.Commands.UpdateGoal;
 using Coaching.Application.Queries.GetGoals;
 using Coaching.Application.Queries;
 
@@ -73,6 +74,48 @@ public class GoalsController : ControllerBase
         {
             _logger.LogError(ex, "Error creating goal");
             return StatusCode(500, new { error = "An error occurred while creating the goal" });
+        }
+    }
+
+    /// <summary>
+    /// Replace an academic goal definition and its optional targets.
+    /// </summary>
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(UpdateGoalResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UpdateGoalResponse>> UpdateGoal(
+        Guid id,
+        [FromBody] UpdateGoalCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.GoalId)
+            return BadRequest(new { error = "Goal ID mismatch" });
+
+        try
+        {
+            return Ok(await _mediator.Send(command, cancellationToken));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
+        }
+        catch (BusinessRuleException ex)
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
         }
     }
 

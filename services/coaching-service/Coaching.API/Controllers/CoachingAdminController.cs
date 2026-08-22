@@ -6,19 +6,24 @@ using Coaching.Application.Queries.GetCoachingAdminExam;
 using Coaching.Application.Queries.GetCoachingAdminSessions;
 using Coaching.Application.Queries.GetCoachingAdminExams;
 using Coaching.Application.Queries.GetCoachingAdminGoals;
+using Coaching.Application.Queries.GetCoachingAdminGoal;
 using Coaching.Application.Queries;
 using Coaching.Application.Commands.CreateAssignment;
 using Coaching.Application.Commands.CancelAssignment;
 using Coaching.Application.Commands.DeleteAssignment;
 using Coaching.Application.Commands.GradeAssignment;
+using Coaching.Application.Commands.UpdateAssignment;
 using Coaching.Application.Commands.CreateSession;
 using Coaching.Application.Commands.UpdateSessionAttendance;
+using Coaching.Application.Commands.UpdateSession;
 using Coaching.Application.Commands.DeleteSession;
 using Coaching.Application.Commands.CreateExam;
 using Coaching.Application.Commands.AddExamResult;
+using Coaching.Application.Commands.UpdateExam;
 using Coaching.Application.Commands.DeleteExam;
 using Coaching.Application.Commands.CreateGoal;
 using Coaching.Application.Commands.UpdateGoalProgress;
+using Coaching.Application.Commands.UpdateGoal;
 using Coaching.Application.Commands.DeleteGoal;
 using Coaching.Application.Interfaces;
 using Coaching.Application.Authorization;
@@ -259,6 +264,44 @@ public sealed class CoachingAdminController : ControllerBase
         }
     }
 
+    [HttpPut("assignments/{id:guid}")]
+    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
+    [HasPermission(PlatformPermissions.Coaching.Manage)]
+    public async Task<ActionResult<UpdateAssignmentResponse>> UpdateAssignment(
+        Guid id,
+        [FromBody] UpdateAssignmentCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.AssignmentId)
+            return BadRequest(new { error = "Assignment ID mismatch" });
+
+        try
+        {
+            return Ok(await _mediator.Send(command, cancellationToken));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
+        }
+        catch (BusinessRuleException ex)
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
     [HttpPost("sessions")]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
@@ -319,6 +362,40 @@ public sealed class CoachingAdminController : ControllerBase
         catch (ValidationException ex)
         {
             return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
+    }
+
+    [HttpPut("sessions/{id:guid}")]
+    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
+    [HasPermission(PlatformPermissions.Coaching.Manage)]
+    public async Task<ActionResult<UpdateSessionResponse>> UpdateSession(
+        Guid id,
+        [FromBody] UpdateSessionCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.SessionId)
+            return BadRequest(new { error = "Session ID mismatch" });
+
+        try
+        {
+            return Ok(await _mediator.Send(command, cancellationToken));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -432,6 +509,83 @@ public sealed class CoachingAdminController : ControllerBase
         }
     }
 
+    [HttpPut("exams/{id:guid}")]
+    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
+    [HasPermission(PlatformPermissions.Coaching.Manage)]
+    public async Task<ActionResult<UpdateExamResponse>> UpdateExam(
+        Guid id,
+        [FromBody] UpdateExamCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.ExamId)
+            return BadRequest(new { error = "Exam ID mismatch" });
+
+        try
+        {
+            return Ok(await _mediator.Send(command, cancellationToken));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
+        }
+        catch (BusinessRuleException ex)
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpPut("exams/{id:guid}/results/{resultId:guid}")]
+    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
+    [HasPermission(PlatformPermissions.Coaching.Manage)]
+    public async Task<ActionResult<UpdateExamResultResponse>> UpdateExamResult(
+        Guid id,
+        Guid resultId,
+        [FromBody] UpdateExamResultCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.ExamId || resultId != command.ResultId)
+            return BadRequest(new { error = "Exam or result ID mismatch" });
+
+        try
+        {
+            return Ok(await _mediator.Send(command, cancellationToken));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
+        }
+        catch (BusinessRuleException ex)
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
     [HttpDelete("exams/{id:guid}")]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
@@ -513,6 +667,44 @@ public sealed class CoachingAdminController : ControllerBase
         catch (ValidationException ex)
         {
             return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
+    }
+
+    [HttpPut("goals/{id:guid}")]
+    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
+    [HasPermission(PlatformPermissions.Coaching.Manage)]
+    public async Task<ActionResult<UpdateGoalResponse>> UpdateGoal(
+        Guid id,
+        [FromBody] UpdateGoalCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.GoalId)
+            return BadRequest(new { error = "Goal ID mismatch" });
+
+        try
+        {
+            return Ok(await _mediator.Send(command, cancellationToken));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
+        }
+        catch (BusinessRuleException ex)
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -599,5 +791,23 @@ public sealed class CoachingAdminController : ControllerBase
                 scope.StudentIds),
             cancellationToken);
         return Ok(goals);
+    }
+
+    [HttpGet("goals/{id:guid}")]
+    [ProducesResponseType(typeof(CoachingAdminGoalDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetGoal(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+        var goal = await _mediator.Send(
+            new GetCoachingAdminGoalQuery(
+                id,
+                scope.InstitutionId,
+                AdministrativeScope: true,
+                ScopedStudentIds: scope.StudentIds),
+            cancellationToken);
+        return goal is null ? NotFound() : Ok(goal);
     }
 }

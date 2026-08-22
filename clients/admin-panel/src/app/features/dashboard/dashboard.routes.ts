@@ -30,6 +30,12 @@ export const DASHBOARD_ROUTES: Routes = [
         loadComponent: () => import('./pages/coaching-assignments').then(m => m.CoachingAssignmentsComponent)
     },
     {
+        path: 'coaching/assignments/:id/edit',
+        canActivate: [permissionGuard],
+        data: { permission: ADMIN_PERMISSIONS.coachingManage },
+        loadComponent: () => import('./pages/coaching-assignment-edit').then(m => m.CoachingAssignmentEditComponent)
+    },
+    {
         path: 'coaching/assignments/:id',
         canActivate: [permissionGuard],
         data: { permission: ADMIN_PERMISSIONS.coachingView },
@@ -40,6 +46,12 @@ export const DASHBOARD_ROUTES: Routes = [
         canActivate: [permissionGuard],
         data: { permission: ADMIN_PERMISSIONS.coachingManage, resource },
         loadComponent: () => import('./pages/coaching-resource-create').then(m => m.CoachingResourceCreateComponent)
+    })),
+    ...(['session', 'exam', 'goal'] as const).map(resource => ({
+        path: `coaching/operations/${resource}/:id/edit`,
+        canActivate: [permissionGuard],
+        data: { permission: ADMIN_PERMISSIONS.coachingManage, resource },
+        loadComponent: () => import('./pages/coaching-resource-edit').then(m => m.CoachingResourceEditComponent)
     })),
     ...(['session', 'exam'] as const).map(resource => ({
         path: `coaching/operations/${resource}/:id`,

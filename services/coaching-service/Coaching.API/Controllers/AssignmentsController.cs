@@ -6,6 +6,7 @@ using Coaching.Application.Commands.CreateAssignmentAttachment;
 using Coaching.Application.Commands.UploadAssignmentAttachment;
 using Coaching.Application.Attachments;
 using Coaching.Application.Commands.GradeAssignment;
+using Coaching.Application.Commands.UpdateAssignment;
 using Coaching.Application.Commands.CancelAssignment;
 using Coaching.Application.Commands.DeleteAssignment;
 using Coaching.Application.Queries.GetAssignment;
@@ -140,6 +141,48 @@ public class AssignmentsController : ControllerBase
         {
             _logger.LogError(ex, "Error submitting assignment: {AssignmentId}", id);
             return StatusCode(500, new { error = "An error occurred while submitting the assignment" });
+        }
+    }
+
+    /// <summary>
+    /// Replace an assignment definition and, when supplied, reconcile its recipients.
+    /// </summary>
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(UpdateAssignmentResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UpdateAssignmentResponse>> UpdateAssignment(
+        Guid id,
+        [FromBody] UpdateAssignmentCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.AssignmentId)
+            return BadRequest(new { error = "Assignment ID mismatch" });
+
+        try
+        {
+            return Ok(await _mediator.Send(command, cancellationToken));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
+        }
+        catch (BusinessRuleException ex)
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message, details = ex.Errors });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
         }
     }
 

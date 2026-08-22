@@ -17,18 +17,23 @@ public sealed record CoachingAdminExamDetailDto(
     Guid? InstitutionId,
     string Title,
     ExamType ExamType,
+    string? Subject,
     DateTime ExamDate,
+    int? DurationMinutes,
     decimal MaxScore,
+    int? TargetGradeLevel,
     string? Description,
     IReadOnlyList<CoachingAdminExamResultDto> Results);
 
 public sealed record CoachingAdminExamResultDto(
+    Guid Id,
     Guid StudentId,
     decimal Score,
     int? CorrectAnswers,
     int? WrongAnswers,
     int? EmptyAnswers,
     Dictionary<string, decimal>? SubjectScores,
+    int? Ranking,
     string? TeacherNotes);
 
 public sealed class GetCoachingAdminExamQueryHandler(
@@ -55,8 +60,11 @@ public sealed class GetCoachingAdminExamQueryHandler(
             exam.InstitutionId,
             exam.Title,
             exam.ExamType,
+            exam.Subject,
             exam.ExamDate,
+            exam.DurationMinutes,
             exam.MaxScore,
+            exam.TargetGradeLevel,
             exam.Description,
             (request.AdministrativeScope && request.InstitutionId.HasValue
                 ? exam.Results.Where(result =>
@@ -64,12 +72,14 @@ public sealed class GetCoachingAdminExamQueryHandler(
                 : exam.Results)
                 .OrderBy(result => result.StudentId)
                 .Select(result => new CoachingAdminExamResultDto(
+                    result.Id,
                     result.StudentId,
                     result.Score,
                     result.CorrectAnswers,
                     result.WrongAnswers,
                     result.EmptyAnswers,
                     result.GetSubjectScores(),
+                    result.Ranking,
                     result.TeacherNotes))
                 .ToArray());
     }

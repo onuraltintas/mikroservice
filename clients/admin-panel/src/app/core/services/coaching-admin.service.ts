@@ -174,6 +174,8 @@ export interface CoachingAdminSessionDetail {
   status: string;
   attendances: CoachingAdminSessionAttendance[];
   meetingLink?: string;
+  description?: string;
+  teacherNotes?: string;
 }
 
 export interface CoachingAdminExamListItem {
@@ -189,12 +191,14 @@ export interface CoachingAdminExamListItem {
 }
 
 export interface CoachingAdminExamResult {
+  id: string;
   studentId: string;
   score: number;
   correctAnswers?: number;
   wrongAnswers?: number;
   emptyAnswers?: number;
   subjectScores?: Record<string, number>;
+  ranking?: number;
   teacherNotes?: string;
 }
 
@@ -204,10 +208,29 @@ export interface CoachingAdminExamDetail {
   institutionId?: string;
   title: string;
   examType: string;
+  subject?: string;
   examDate: string;
+  durationMinutes?: number;
   maxScore: number;
+  targetGradeLevel?: number;
   description?: string;
   results: CoachingAdminExamResult[];
+}
+
+export interface CoachingAdminGoalDetail {
+  id: string;
+  studentId: string;
+  setByTeacherId?: string;
+  title: string;
+  description?: string;
+  category: string;
+  targetExamType?: string;
+  targetSubject?: string;
+  targetScore?: number;
+  targetDate?: string;
+  currentProgress: number;
+  isCompleted: boolean;
+  createdAt: string;
 }
 
 export interface CoachingAdminGoalListItem {
@@ -280,6 +303,73 @@ export interface CoachingAdminGoalCreateRequest {
   description?: string;
   targetDate?: string;
   targetScore?: number;
+}
+
+export interface CoachingAdminAssignmentUpdateRequest {
+  assignmentId: string;
+  title: string;
+  description?: string | null;
+  subject?: string | null;
+  assignmentSource: string;
+  targetGradeLevel?: number | null;
+  bookTitle?: string | null;
+  bookIsbn?: string | null;
+  bookEdition?: string | null;
+  bookChapter?: string | null;
+  bookStartPage?: number | null;
+  bookEndPage?: number | null;
+  bookStartQuestion?: number | null;
+  bookEndQuestion?: number | null;
+  dueDate: string;
+  estimatedDurationMinutes?: number | null;
+  maxScore?: number | null;
+  passingScore?: number | null;
+  studentIds?: string[] | null;
+}
+
+export interface CoachingAdminSessionUpdateRequest {
+  sessionId: string;
+  title: string;
+  description?: string | null;
+  scheduledDate: string;
+  durationMinutes: number;
+  meetingLink?: string | null;
+  teacherNotes?: string | null;
+}
+
+export interface CoachingAdminExamUpdateRequest {
+  examId: string;
+  title: string;
+  type: string;
+  subject?: string | null;
+  description?: string | null;
+  examDate: string;
+  durationMinutes?: number | null;
+  maxScore: number;
+  targetGradeLevel?: number | null;
+}
+
+export interface CoachingAdminExamResultUpdateRequest {
+  examId: string;
+  resultId: string;
+  score: number;
+  correctAnswers: number;
+  wrongAnswers: number;
+  emptyAnswers: number;
+  subjectScores?: Record<string, number> | null;
+  ranking?: number | null;
+  notes?: string | null;
+}
+
+export interface CoachingAdminGoalUpdateRequest {
+  goalId: string;
+  title: string;
+  description?: string | null;
+  category: string;
+  targetDate?: string | null;
+  targetScore?: number | null;
+  targetExamType?: string | null;
+  targetSubject?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -360,6 +450,13 @@ export class CoachingAdminService {
     );
   }
 
+  updateAssignment(id: string, request: CoachingAdminAssignmentUpdateRequest) {
+    return this.http.put<{ assignmentId: string; dueDate: string; assignedStudentCount: number }>(
+      `${this.url}/assignments/${encodeURIComponent(id)}`,
+      request
+    );
+  }
+
   cancelAssignment(id: string) {
     return this.http.post(`${this.url}/assignments/${encodeURIComponent(id)}/cancel`, {});
   }
@@ -376,6 +473,13 @@ export class CoachingAdminService {
     return this.http.post<{ sessionId: string }>(`${this.url}/sessions`, request, {
       headers: { 'Idempotency-Key': idempotencyKey }
     });
+  }
+
+  updateSession(id: string, request: CoachingAdminSessionUpdateRequest) {
+    return this.http.put<{ sessionId: string; scheduledDate: string }>(
+      `${this.url}/sessions/${encodeURIComponent(id)}`,
+      request
+    );
   }
 
   updateSessionAttendance(id: string, request: { sessionId: string; attended: boolean; notes?: string; studentId?: string }) {
@@ -411,6 +515,20 @@ export class CoachingAdminService {
     });
   }
 
+  updateExam(id: string, request: CoachingAdminExamUpdateRequest) {
+    return this.http.put<{ examId: string; examDate: string; maxScore: number }>(
+      `${this.url}/exams/${encodeURIComponent(id)}`,
+      request
+    );
+  }
+
+  updateExamResult(examId: string, resultId: string, request: CoachingAdminExamResultUpdateRequest) {
+    return this.http.put<{ examId: string; resultId: string; score: number }>(
+      `${this.url}/exams/${encodeURIComponent(examId)}/results/${encodeURIComponent(resultId)}`,
+      request
+    );
+  }
+
   deleteExam(id: string) {
     return this.http.delete(`${this.url}/exams/${encodeURIComponent(id)}`);
   }
@@ -419,6 +537,17 @@ export class CoachingAdminService {
     return this.http.post<{ goalId: string }>(`${this.url}/goals`, request, {
       headers: { 'Idempotency-Key': idempotencyKey }
     });
+  }
+
+  getGoal(id: string) {
+    return this.http.get<CoachingAdminGoalDetail>(`${this.url}/goals/${encodeURIComponent(id)}`);
+  }
+
+  updateGoal(id: string, request: CoachingAdminGoalUpdateRequest) {
+    return this.http.put<{ goalId: string; title: string }>(
+      `${this.url}/goals/${encodeURIComponent(id)}`,
+      request
+    );
   }
 
   updateGoalProgress(id: string, progress: number) {
