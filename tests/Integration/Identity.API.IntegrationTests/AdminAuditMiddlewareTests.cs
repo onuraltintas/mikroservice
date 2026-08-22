@@ -42,6 +42,23 @@ public sealed class AdminAuditMiddlewareTests
             .Should().BeFalse();
     }
 
+    [Fact]
+    public async Task AdminEdit_ShouldWriteAuditRecord()
+    {
+        var writer = new CapturingAuditWriter();
+        var context = CreateContext("PUT", "/api/coaching-admin/assignments/assignment-id", "SystemAdmin");
+        var middleware = new AdminAuditMiddleware(
+            _ => Task.CompletedTask,
+            new TestHostEnvironment(),
+            NullLogger<AdminAuditMiddleware>.Instance);
+
+        await middleware.InvokeAsync(context, writer);
+
+        writer.Records.Should().ContainSingle();
+        writer.Records.Single().HttpMethod.Should().Be("PUT");
+        writer.Records.Single().Path.Should().Be("/api/coaching-admin/assignments/assignment-id");
+    }
+
     [Theory]
     [InlineData("GET", "SystemAdmin")]
     [InlineData("POST", "Student")]
