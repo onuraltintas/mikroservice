@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { AuthService, UserProfile } from '../../../core/auth/auth.service';
@@ -29,7 +30,8 @@ describe('CoachingSessionsComponent', () => {
       imports: [CoachingSessionsComponent],
       providers: [
         { provide: AuthService, useValue: { userProfile: profile } },
-        { provide: CoachingPortalService, useValue: service }
+        { provide: CoachingPortalService, useValue: service },
+        { provide: ActivatedRoute, useValue: {} }
       ]
     });
     const component = TestBed.createComponent(CoachingSessionsComponent).componentInstance;
@@ -71,7 +73,8 @@ describe('CoachingSessionsComponent', () => {
       imports: [CoachingSessionsComponent],
       providers: [
         { provide: AuthService, useValue: { userProfile: profile } },
-        { provide: CoachingPortalService, useValue: service }
+        { provide: CoachingPortalService, useValue: service },
+        { provide: ActivatedRoute, useValue: {} }
       ]
     });
     const fixture = TestBed.createComponent(CoachingSessionsComponent);
@@ -93,7 +96,8 @@ describe('CoachingSessionsComponent', () => {
       imports: [CoachingSessionsComponent],
       providers: [
         { provide: AuthService, useValue: { userProfile: profile } },
-        { provide: CoachingPortalService, useValue: service }
+        { provide: CoachingPortalService, useValue: service },
+        { provide: ActivatedRoute, useValue: {} }
       ]
     });
     const fixture = TestBed.createComponent(CoachingSessionsComponent);

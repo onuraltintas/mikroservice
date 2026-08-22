@@ -19,6 +19,12 @@ export const COACHING_PORTAL_ROUTES: Routes = [
     loadComponent: () => import('./pages/coaching-portal-progress.component').then(m => m.CoachingPortalProgressComponent)
   },
   {
+    path: 'teacher/sessions/new',
+    canActivate: [coachingRoleGuard],
+    data: { coachingRoles: ['Teacher'] },
+    loadComponent: () => import('./pages/teacher-session-form.component').then(m => m.TeacherSessionFormComponent)
+  },
+  {
     path: 'sessions',
     canActivate: [coachingRoleGuard],
     data: { coachingRoles: ['Student', 'Teacher'] },

@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CoachingPortalService, CoachingSession } from '../../../core/services/coaching-portal.service';
 
 @Component({
   selector: 'app-coaching-sessions',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './coaching-sessions.component.html',
   styleUrl: './coaching-sessions.component.scss'
 })
