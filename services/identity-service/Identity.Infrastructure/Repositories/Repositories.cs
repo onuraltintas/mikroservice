@@ -1043,8 +1043,11 @@ public class TeacherRepository : ITeacherRepository
                 && teacher.IsActive
                 && teacher.User.IsActive
                 && assignment.InstitutionId == teacher.InstitutionId
+                && (!teacher.InstitutionId.HasValue
+                    || (teacher.Institution != null && teacher.Institution.IsActive))
                 && student.IsActive
                 && student.User.IsActive
+                && student.InstitutionId == assignment.InstitutionId
                 && (!student.InstitutionId.HasValue
                     || (student.Institution != null && student.Institution.IsActive))
             select new
@@ -1084,6 +1087,7 @@ public class TeacherRepository : ITeacherRepository
         var rows = await grouped
             .OrderBy(group => group.Key.LastName)
             .ThenBy(group => group.Key.FirstName)
+            .ThenBy(group => group.Key.UserId)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .Select(group => new
@@ -1095,7 +1099,11 @@ public class TeacherRepository : ITeacherRepository
                 group.Key.InstitutionId,
                 group.Key.InstitutionName,
                 group.Key.AvatarUrl,
-                Subject = group.Select(student => student.Subject).FirstOrDefault(),
+                Subject = group
+                    .Where(student => student.Subject != null)
+                    .OrderBy(student => student.Subject)
+                    .Select(student => student.Subject)
+                    .FirstOrDefault(),
                 AssignmentStartDate = group.Min(student => student.StartDate)
             })
             .ToListAsync(cancellationToken);
