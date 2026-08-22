@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
-import { CoachingPortalService, CoachingSession } from '../../../core/services/coaching-portal.service';
+import { CoachingPortalService, CoachingSession, CoachingStudentReflection } from '../../../core/services/coaching-portal.service';
 
 @Component({
   selector: 'app-coaching-sessions',
@@ -22,6 +22,7 @@ export class CoachingSessionsComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly noteDrafts = signal<Record<string, string>>({});
   readonly savingNoteId = signal<string | null>(null);
+  readonly savingAttendanceKey = signal<string | null>(null);
 
   ngOnInit() {
     const profile = this.authService.userProfile();
@@ -102,5 +103,24 @@ export class CoachingSessionsComponent implements OnInit {
       error: () => this.errorMessage.set('Seans notu kaydedilemedi.'),
       complete: () => this.savingNoteId.set(null)
     });
+  }
+
+  saveAttendance(session: CoachingSession, reflection: CoachingStudentReflection, attended: boolean) {
+    if (!this.isTeacher()) return;
+
+    const key = this.attendanceKey(session.id, reflection.studentId);
+    this.savingAttendanceKey.set(key);
+    this.coachingService.updateSessionAttendance(session.id, reflection.studentId, attended).subscribe({
+      next: () => {
+        reflection.attendanceStatus = attended ? 'Present' : 'Absent';
+        this.sessions.update(items => [...items]);
+      },
+      error: () => this.errorMessage.set('Yoklama kaydedilemedi.'),
+      complete: () => this.savingAttendanceKey.set(null)
+    });
+  }
+
+  attendanceKey(sessionId: string, studentId: string) {
+    return `${sessionId}:${studentId}`;
   }
 }

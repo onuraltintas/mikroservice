@@ -144,7 +144,7 @@ describe('CoachingSessionsComponent', () => {
     component.ngOnInit();
     component.saveAttendance(session, reflection, false);
 
-    expect(service.updateSessionAttendance).toHaveBeenCalledWith('session-3', 'student-1', false, undefined);
+    expect(service.updateSessionAttendance).toHaveBeenCalledWith('session-3', 'student-1', false);
     expect(session.studentReflections?.[0].attendanceStatus).toBe('Absent');
   });
 });
