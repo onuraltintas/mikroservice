@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { coachingRoleGuard } from '../../core/auth/auth.guard';
 
 export const COACHING_PORTAL_ROUTES: Routes = [
   {
@@ -7,14 +8,20 @@ export const COACHING_PORTAL_ROUTES: Routes = [
   },
   {
     path: 'assignments',
+    canActivate: [coachingRoleGuard],
+    data: { coachingRoles: ['Student'] },
     loadComponent: () => import('./pages/student-assignments.component').then(m => m.StudentAssignmentsComponent)
   },
   {
     path: 'progress',
+    canActivate: [coachingRoleGuard],
+    data: { coachingRoles: ['Student'] },
     loadComponent: () => import('./pages/coaching-portal-progress.component').then(m => m.CoachingPortalProgressComponent)
   },
   {
     path: 'sessions',
+    canActivate: [coachingRoleGuard],
+    data: { coachingRoles: ['Student', 'Teacher'] },
     loadComponent: () => import('./pages/coaching-sessions.component').then(m => m.CoachingSessionsComponent)
   },
   {
@@ -23,18 +30,26 @@ export const COACHING_PORTAL_ROUTES: Routes = [
   },
   {
     path: 'assignments/:id',
+    canActivate: [coachingRoleGuard],
+    data: { coachingRoles: ['Student', 'Teacher', 'Parent'] },
     loadComponent: () => import('./pages/student-assignment-detail.component').then(m => m.StudentAssignmentDetailComponent)
   },
   {
     path: 'teacher/students',
+    canActivate: [coachingRoleGuard],
+    data: { coachingRoles: ['Teacher'] },
     loadComponent: () => import('./pages/teacher-students.component').then(m => m.TeacherStudentsComponent)
   },
   {
     path: 'teacher/assignments',
+    canActivate: [coachingRoleGuard],
+    data: { coachingRoles: ['Teacher'] },
     loadComponent: () => import('./pages/teacher-assignments.component').then(m => m.TeacherAssignmentsComponent)
   },
   {
     path: 'children',
+    canActivate: [coachingRoleGuard],
+    data: { coachingRoles: ['Parent'] },
     loadComponent: () => import('./pages/parent-children.component').then(m => m.ParentChildrenComponent)
   }
 ];

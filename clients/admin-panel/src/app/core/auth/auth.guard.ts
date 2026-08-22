@@ -9,6 +9,13 @@ export function hasCoachingPortalRole(user: { roles: string[] } | null): boolean
     return !!user && COACHING_PORTAL_ROLES.some(role => user.roles.includes(role));
 }
 
+export function hasRequiredCoachingRole(
+    user: { roles: string[] } | null,
+    requiredRoles: readonly string[]
+): boolean {
+    return !!user && requiredRoles.some(role => user.roles.includes(role));
+}
+
 export const authGuard: CanActivateFn = async (route, state) => {
     const authService = inject(AuthService);
     const router = inject(Router);
@@ -84,6 +91,34 @@ export const coachingPortalGuard: CanActivateFn = async (route, state) => {
     }
 
     if (hasCoachingPortalRole(authService.userProfile())) {
+        return true;
+    }
+
+    await router.navigate(['/dashboard'], { queryParams: { forbidden: 'true' } });
+    return false;
+};
+
+/**
+ * Restricts a child portal route to its declared coaching role allow-list.
+ * API authorization remains authoritative; this guard prevents accidental
+ * cross-panel navigation and keeps the UI contract explicit.
+ */
+export const coachingRoleGuard: CanActivateFn = async (route, state) => {
+    const authService = inject(AuthService);
+    const router = inject(Router);
+    const platformId = inject(PLATFORM_ID);
+    const requiredRoles = route.data?.['coachingRoles'] as readonly string[] | undefined;
+
+    if (!requiredRoles?.length || isPlatformServer(platformId)) {
+        return true;
+    }
+
+    if (!(await authService.waitForAuth())) {
+        await router.navigate(['/auth/login'], { queryParams: { returnUrl: state.url } });
+        return false;
+    }
+
+    if (hasRequiredCoachingRole(authService.userProfile(), requiredRoles)) {
         return true;
     }
 
