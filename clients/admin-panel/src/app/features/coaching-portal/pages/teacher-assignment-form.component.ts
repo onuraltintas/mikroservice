@@ -37,6 +37,7 @@ export class TeacherAssignmentFormComponent implements OnInit {
   readonly assignedStudentIds = signal<string[]>([]);
   readonly inactiveAssignedStudentIds = signal<string[]>([]);
   readonly isValidatingStudents = signal(false);
+  readonly studentValidationFailed = signal(false);
   readonly selectedStudentIds = new Set<string>();
 
   form = {
@@ -153,6 +154,10 @@ export class TeacherAssignmentFormComponent implements OnInit {
     }
     if (this.isValidatingStudents()) {
       this.errorMessage.set('Öğrenci ilişkileri doğrulanıyor; lütfen tekrar deneyin.');
+      return;
+    }
+    if (this.studentValidationFailed()) {
+      this.errorMessage.set('Aktif öğrenci ilişkileri doğrulanamadı; ödev güncellenemez.');
       return;
     }
     if (Number.isNaN(dueDate.getTime()) || dueDate <= new Date()) {
@@ -281,7 +286,10 @@ export class TeacherAssignmentFormComponent implements OnInit {
   }
 
   private loadAllActiveStudentsForValidation(pageNumber = 1, activeStudentIds = new Set<string>()) {
-    if (pageNumber === 1) this.isValidatingStudents.set(true);
+    if (pageNumber === 1) {
+      this.isValidatingStudents.set(true);
+      this.studentValidationFailed.set(false);
+    }
     this.coachingService.getTeacherStudents(pageNumber, 100).subscribe({
       next: page => {
         page.items.forEach(student => activeStudentIds.add(student.userId));
@@ -295,6 +303,7 @@ export class TeacherAssignmentFormComponent implements OnInit {
       },
       error: () => {
         this.isValidatingStudents.set(false);
+        this.studentValidationFailed.set(true);
         this.errorMessage.set('Aktif öğrenci ilişkileri doğrulanamadı.');
       }
     });
