@@ -113,8 +113,10 @@ kullanmadı; tüm istekler aynı kısa ömürlü test token'ı kullandı.
 
 İlk 128/256 worker denemesinde PostgreSQL'in varsayılan 100 bağlantı sınırı,
 servis başına varsayılan Npgsql havuzlarıyla taşabiliyordu (`too many clients`).
-Salt-okuma profil rotasındaki gereksiz `RecordUserLogin` yazımı kaldırıldı ve
-Compose bağlantı dizelerine `POSTGRES_MAX_POOL_SIZE=30` bütçesi eklendi. Bu
+Salt-okuma profil rotasındaki gereksiz `RecordUserLogin` yazımı kaldırıldı;
+başarılı parola, Google ve MFA oturumları login istatistiğini kendi oturum
+oluşturma sınırında best-effort olarak kaydetmeye devam eder. Compose bağlantı
+dizelerine `POSTGRES_MAX_POOL_SIZE=30` bütçesi eklendi. Bu
 ayar sonrası 256 worker koşusunda PostgreSQL `too many clients` sayısı 0,
 Identity DB bağlantı hata satırı 0, RabbitMQ coaching/send-notification
 `messages_ready` ve `messages_unacknowledged` değerleri 0, Redis

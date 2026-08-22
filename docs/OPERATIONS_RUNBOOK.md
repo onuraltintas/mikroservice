@@ -177,6 +177,17 @@ test -s "$rabbit_backup_root/rabbitmq-definitions.json"
 Mesaj replay'i otomatik yapılmaz; dead-letter ve durable queue replay'i olay
 özeline göre onaylanır.
 
+### 22.08.2026 yerel Docker prova kanıtı
+
+Disposable Docker ortamında üç PostgreSQL custom-format backup'ı alındı ve
+checksum manifest'i üretildi. Identity backup'ı ayrı bir
+`identity_restore_drill_<timestamp>` veritabanına restore edildi; tablo ve
+kullanıcı sayısı doğrulandıktan sonra yalnızca bu disposable veritabanı
+kaldırıldı. RabbitMQ definitions export'u ve commit/image manifest'i de repo
+dışındaki, erişim kontrollü artifact köküne yazıldı. Bu kanıtlar repository'ye
+eklenmedi ve production backup'ı yerine geçmez; staging'de aynı adımlar gerçek
+artifact store, RPO/RTO ölçümü ve erişim onayıyla tekrarlanmalıdır.
+
 ## 4. Secret ve key rotation
 
 - Yeni `JWT_SECRET` ve `JWT_KEY_ID` önce doğrulayıcıların `JWT_PREVIOUS_SECRETS`

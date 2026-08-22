@@ -143,7 +143,14 @@ ilerleyecektir:
 5. **Staging operasyonu:** immutable image SHA, migration forward/rollback,
    backup/restore tatbikatı, secret rotation, readiness/canary ve incident
    runbook'larını [staging operasyon runbook'u](docs/OPERATIONS_RUNBOOK.md)
-   üzerinden prova et.
+   üzerinden prova et. Yerel Docker operasyon provası 22.08.2026 tarihinde
+   tamamlandı: üç PostgreSQL custom-format dump'ı checksum'larıyla alındı,
+   Identity dump'ı ayrı disposable database'e restore edilip 20 tablo ve 14
+   kullanıcıyla doğrulandı, ardından yalnızca bu disposable database kaldırıldı;
+   RabbitMQ definitions ve commit/image manifest'i repo dışı artifact dizinine
+   yazıldı. Staging registry/digest push, gerçek readiness/canary, replica soak,
+   Data Protection/SMTP sertifikaları ve environment secret'ları hâlâ gerçek
+   staging erişimi gerektirir.
 6. **Production go/no-go:** SLO'lar, restore RPO/RTO, alarm sahipliği, domain
    ve TLS/ingress kararı yazılı onaylanmadan deployment yapılmaz.
 

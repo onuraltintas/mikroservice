@@ -73,6 +73,31 @@ public sealed class SystemAdminMfaLoginTests
     }
 
     [Fact]
+    public async Task GoogleLogin_ShouldRecordLastLoginAtAfterIssuingSession()
+    {
+        var user = User.Create(Guid.NewGuid(), "student@example.com");
+        user.AddLogin(UserLogin.Create(user.Id, "Google", "google-id", "Google"));
+        var handler = new GoogleLoginCommandHandler(
+            new StubGoogleAuthService(user.Email),
+            new StubUserRepository(user),
+            new IssuingTokenService(),
+            new StubUnitOfWork(),
+            new RejectingIdentityService(allowRefreshToken: true),
+            new RejectingStudentRepository(),
+            new StubConfigurationService(),
+            new StubMfaService(user.Id),
+            NullLogger<GoogleLoginCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new GoogleLoginCommand("google-token", "127.0.0.1"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.RequiresMfa.Should().BeFalse();
+        user.LastLoginAt.Should().NotBeNull();
+    }
+
+    [Fact]
     public async Task GoogleLogin_ShouldUseLinkedSubjectBeforeEmailLookup()
     {
         var linkedUser = CreateSystemAdministrator();
@@ -297,6 +322,24 @@ public sealed class SystemAdminMfaLoginTests
         }
     }
 
+    private sealed class IssuingTokenService : ITokenService
+    {
+        public string GenerateAccessToken(User user, DateTimeOffset? mfaVerifiedAt = null) => "access-token";
+        public int GetAccessTokenLifetimeMinutes() => 15;
+        public RefreshToken GenerateRefreshToken(
+            Guid userId,
+            string ipAddress,
+            bool isPersistent = true,
+            DateTimeOffset? mfaVerifiedAt = null) =>
+            RefreshToken.Create(
+                userId,
+                "refresh-token",
+                DateTime.UtcNow.AddDays(1),
+                ipAddress,
+                isPersistent,
+                mfaVerifiedAt);
+    }
+
     private sealed class StubMfaService(Guid expectedUserId) : IMultiFactorService
     {
         public bool? RememberMe { get; private set; }
@@ -370,9 +413,14 @@ public sealed class SystemAdminMfaLoginTests
         public Task RefreshCacheAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 
-    private sealed class RejectingIdentityService(Result<Guid>? registerResult = null) : IIdentityService
+    private sealed class RejectingIdentityService(
+        Result<Guid>? registerResult = null,
+        bool allowRefreshToken = false) : IIdentityService
     {
-        public Task<Result> SaveRefreshTokenAsync(Guid userId, RefreshToken refreshToken, CancellationToken cancellationToken) => throw new InvalidOperationException("Refresh token must not be persisted before MFA.");
+        public Task<Result> SaveRefreshTokenAsync(Guid userId, RefreshToken refreshToken, CancellationToken cancellationToken) =>
+            allowRefreshToken
+                ? Task.FromResult(Result.Success())
+                : throw new InvalidOperationException("Refresh token must not be persisted before MFA.");
         public Task<Result<Guid>> RegisterUserAsync(string email, string password, string firstName, string lastName, CancellationToken cancellationToken) =>
             registerResult is not null
                 ? Task.FromResult(registerResult)

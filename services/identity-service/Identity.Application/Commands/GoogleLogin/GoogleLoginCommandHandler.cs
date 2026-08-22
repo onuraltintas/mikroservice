@@ -347,6 +347,19 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
              return Result.Failure<LoginResponse>(saveTokenResult.Error);
         }
 
+        // Google login issues a session directly for non-administrator users.
+        // Record the successful authentication here; MFA-protected accounts are
+        // recorded by AuthenticationSessionIssuer after MFA completion.
+        try
+        {
+            user.RecordLogin();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Login stats recording failed for {UserId}.", user.Id);
+        }
+
         return Result.Success(new LoginResponse(
             accessToken,
             refreshToken.Token,
