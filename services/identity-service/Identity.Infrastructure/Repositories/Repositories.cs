@@ -6,6 +6,7 @@ using Npgsql;
 
 using Identity.Application.Queries.GetAllUsers;
 using Identity.Application.Queries.GetUserProfile;
+using Identity.Application.Queries.GetTeacherStudents;
 using Identity.Application.DTOs.Institutions;
 using Identity.Domain.Enums;
 
@@ -1022,6 +1023,98 @@ public class TeacherRepository : ITeacherRepository
                 && (!t.InstitutionId.HasValue
                     || (t.Institution != null && t.Institution.IsActive)),
                 cancellationToken);
+    }
+
+    public async Task<PagedList<TeacherStudentDto>> GetStudentsByTeacherUserIdAsync(
+        Guid teacherUserId,
+        int pageNumber,
+        int pageSize,
+        string? searchTerm,
+        CancellationToken cancellationToken)
+    {
+        var query =
+            from assignment in _context.TeacherStudentAssignments.AsNoTracking()
+            join teacher in _context.TeacherProfiles.AsNoTracking()
+                on assignment.TeacherId equals teacher.Id
+            join student in _context.StudentProfiles.AsNoTracking()
+                on assignment.StudentId equals student.Id
+            where assignment.IsActive
+                && teacher.UserId == teacherUserId
+                && teacher.IsActive
+                && teacher.User.IsActive
+                && assignment.InstitutionId == teacher.InstitutionId
+                && student.IsActive
+                && student.User.IsActive
+                && (!student.InstitutionId.HasValue
+                    || (student.Institution != null && student.Institution.IsActive))
+            select new
+            {
+                student.UserId,
+                student.FirstName,
+                student.LastName,
+                student.GradeLevel,
+                student.InstitutionId,
+                InstitutionName = student.Institution != null ? student.Institution.Name : null,
+                student.AvatarUrl,
+                assignment.Subject,
+                assignment.StartDate
+            };
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.Trim();
+            query = query.Where(student =>
+                EF.Functions.ILike(student.FirstName, $"%{term}%")
+                || EF.Functions.ILike(student.LastName, $"%{term}%"));
+        }
+
+        var grouped = query
+            .GroupBy(student => new
+            {
+                student.UserId,
+                student.FirstName,
+                student.LastName,
+                student.GradeLevel,
+                student.InstitutionId,
+                student.InstitutionName,
+                student.AvatarUrl
+            });
+
+        var totalCount = await grouped.CountAsync(cancellationToken);
+        var rows = await grouped
+            .OrderBy(group => group.Key.LastName)
+            .ThenBy(group => group.Key.FirstName)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(group => new
+            {
+                group.Key.UserId,
+                group.Key.FirstName,
+                group.Key.LastName,
+                group.Key.GradeLevel,
+                group.Key.InstitutionId,
+                group.Key.InstitutionName,
+                group.Key.AvatarUrl,
+                Subject = group.Select(student => student.Subject).FirstOrDefault(),
+                AssignmentStartDate = group.Min(student => student.StartDate)
+            })
+            .ToListAsync(cancellationToken);
+
+        var items = rows
+            .Select(student => new TeacherStudentDto(
+                student.UserId,
+                student.FirstName,
+                student.LastName,
+                $"{student.FirstName} {student.LastName}".Trim(),
+                student.GradeLevel,
+                student.InstitutionId,
+                student.InstitutionName,
+                student.AvatarUrl,
+                student.Subject,
+                student.AssignmentStartDate))
+            .ToList();
+
+        return new PagedList<TeacherStudentDto>(items, totalCount, pageNumber, pageSize);
     }
     
     public async Task AddStudentAssignmentAsync(TeacherStudentAssignment assignment, CancellationToken cancellationToken)

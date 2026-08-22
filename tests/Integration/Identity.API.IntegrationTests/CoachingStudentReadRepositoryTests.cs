@@ -211,6 +211,51 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task TeacherStudentRoster_ShouldReturnOnlyActiveAssignedStudents()
+    {
+        var institution = Institution.Create("Teacher Roster School", InstitutionType.School);
+        var teacher = User.Create(Guid.NewGuid(), "roster-teacher@example.test");
+        var assignedStudent = User.Create(Guid.NewGuid(), "roster-assigned@example.test");
+        var unassignedStudent = User.Create(Guid.NewGuid(), "roster-unassigned@example.test");
+        var inactiveStudent = User.Create(Guid.NewGuid(), "roster-inactive@example.test");
+
+        AddRole(teacher, "Teacher");
+        AddRole(assignedStudent, "Student");
+        AddRole(unassignedStudent, "Student");
+        AddRole(inactiveStudent, "Student");
+
+        var teacherProfile = TeacherProfile.Create(teacher.Id, "Roster", "Teacher", institution.Id);
+        var assignedProfile = StudentProfile.Create(assignedStudent.Id, "Ada", "Assigned", institution.Id);
+        assignedProfile.UpdateEducationInfo(gradeLevel: 8);
+        var unassignedProfile = StudentProfile.Create(unassignedStudent.Id, "Una", "Assigned", institution.Id);
+        var inactiveProfile = StudentProfile.Create(inactiveStudent.Id, "Ina", "Inactive", institution.Id);
+        inactiveProfile.Deactivate();
+
+        _dbContext!.Institutions.Add(institution);
+        _dbContext.Users.AddRange(teacher, assignedStudent, unassignedStudent, inactiveStudent);
+        _dbContext.TeacherProfiles.Add(teacherProfile);
+        _dbContext.StudentProfiles.AddRange(assignedProfile, unassignedProfile, inactiveProfile);
+        _dbContext.TeacherStudentAssignments.AddRange(
+            TeacherStudentAssignment.Create(teacherProfile.Id, assignedProfile.Id, institution.Id, "Matematik"),
+            TeacherStudentAssignment.Create(teacherProfile.Id, inactiveProfile.Id, institution.Id, "Fen"));
+        await _dbContext.SaveChangesAsync();
+
+        var result = await TeacherRepository().GetStudentsByTeacherUserIdAsync(
+            teacher.Id,
+            pageNumber: 1,
+            pageSize: 25,
+            searchTerm: null,
+            CancellationToken.None);
+
+        result.TotalCount.Should().Be(1);
+        result.Items.Should().ContainSingle(student =>
+            student.UserId == assignedStudent.Id
+            && student.FullName == "Ada Assigned"
+            && student.GradeLevel == 8
+            && student.Subject == "Matematik");
+    }
+
+    [Fact]
     public async Task SystemAdministrator_ShouldReadActiveStudentsAcrossInstitutions()
     {
         var institutionA = Institution.Create("System Institution A", InstitutionType.School);
@@ -361,6 +406,8 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
     }
 
     private InstitutionRepository Repository() => new(_dbContext!);
+
+    private TeacherRepository TeacherRepository() => new(_dbContext!);
 
     private void AddRole(User user, string roleName)
     {

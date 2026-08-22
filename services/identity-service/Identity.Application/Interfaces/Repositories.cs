@@ -106,6 +106,12 @@ public interface ITeacherRepository
     Task<TeacherProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken);
     Task<TeacherProfile?> GetByUserIdAsync(Guid userId, Guid? institutionId, CancellationToken cancellationToken);
     Task<TeacherProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<PagedList<Identity.Application.Queries.GetTeacherStudents.TeacherStudentDto>> GetStudentsByTeacherUserIdAsync(
+        Guid teacherUserId,
+        int pageNumber,
+        int pageSize,
+        string? searchTerm,
+        CancellationToken cancellationToken);
     Task AddStudentAssignmentAsync(TeacherStudentAssignment assignment, CancellationToken cancellationToken);
     Task<TeacherStudentAssignment?> GetAssignmentAsync(Guid teacherId, Guid studentId, CancellationToken cancellationToken);
 }

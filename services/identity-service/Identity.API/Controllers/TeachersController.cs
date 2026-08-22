@@ -1,4 +1,6 @@
 using Identity.Application.Commands.AssignStudent;
+using Identity.Application.Queries.GetAllUsers;
+using Identity.Application.Queries.GetTeacherStudents;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +18,37 @@ public class TeachersController : ControllerBase
     public TeachersController(IMediator mediator)
     {
         _mediator = mediator;
+    }
+
+    /// <summary>
+    /// Öğretmenin aktif ve kendisine bağlı öğrencilerini sayfalı döndürür.
+    /// </summary>
+    [HttpGet("me/students")]
+    [Authorize(Roles = "Teacher")]
+    [ProducesResponseType(typeof(PagedList<TeacherStudentDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetMyStudents(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 25,
+        [FromQuery] string? searchTerm = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _mediator.Send(
+            new GetTeacherStudentsQuery(pageNumber, pageSize, searchTerm),
+            cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value);
+        }
+
+        return result.Error.Code switch
+        {
+            "Error.Unauthorized" => Unauthorized(),
+            "Error.Forbidden" => Forbid(),
+            _ => BadRequest(new { Error = result.Error })
+        };
     }
 
     /// <summary>
