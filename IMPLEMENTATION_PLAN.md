@@ -121,10 +121,12 @@ ilerleyecektir:
    Yetkili login → refresh → admin yüzeyleri ile Angular login/dashboard akışı
    Playwright testine bağlandı; staging SystemAdmin kimliği olmadığından lokal
    koşuda bilinçli olarak skip edilir. Disposable profile'da registration →
-   MailCatcher verification → email confirmation akışı da bağlandı. Tenant-scoped
-   coaching write/read ve SignalR için disposable staging tenant/fixture
-   entegrasyonu hâlâ ayrı bir profile bağlanacak; ortak production verisiyle
-   çalıştırılmayacak.
+   MailCatcher verification → email confirmation akışı da bağlandı. Ayrı
+   `coaching-disposable` Playwright profili teacher login → assignment
+   idempotent replay → student tenant-scope read → gerçek SignalR notification
+   teslimini kapsar; dört fixture secret'ı ve `E2E_DISPOSABLE_ENV=true` olmadan
+   çalışmaz. Docker daemon erişimi olan staging/CI koşusunda yeşil kanıt alınmadan
+   production verisiyle çalıştırılmaz.
 4. **Kapasite doğrulama:** disposable tenant ile smoke → baseline → 64/128/256
    worker → soak koşularını çalıştır; p95/p99, 5xx/429, DB pool, Redis,
    RabbitMQ lag/dead-letter ve container throttling ölç.
@@ -178,4 +180,4 @@ CI'nin yeşil olması tek başına production onayı değildir. `docs/CI_CD_AND_
 runbook'ları staging üzerinde uygulanıp kanıtlanmadan gerçek kullanıcı trafiği
 verilmez.
 
-Son güncelleme: 2026-08-19
+Son güncelleme: 2026-08-22

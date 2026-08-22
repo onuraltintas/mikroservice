@@ -125,6 +125,8 @@ altında çalışır:
 - Protected admin/support yüzeylerinin 401 davranışı
 - Yetkili login → refresh-token → admin API okuma
 - Angular admin panel login ekranı ve (staging kimliği ile) dashboard geçişi
+- Disposable coaching fixture'da tenant-scope assignment write/read ve SignalR
+  notification teslimi (environment-gated)
 
 Docker lokal smoke için:
 

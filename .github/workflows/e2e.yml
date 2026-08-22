@@ -18,6 +18,11 @@ on:
         required: false
         default: false
         type: boolean
+      run_coaching:
+        description: 'Run disposable coaching assignment, authorization, and SignalR flow'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -41,7 +46,12 @@ jobs:
       E2E_RUN_UI: ${{ inputs.run_ui }}
       E2E_RUN_SUPPORT_WRITE: ${{ inputs.run_support_write }}
       E2E_RUN_REGISTRATION: ${{ inputs.run_registration }}
+      E2E_RUN_COACHING: ${{ inputs.run_coaching }}
       E2E_MAILCATCHER_API_BASE_URL: ${{ secrets.E2E_MAILCATCHER_API_BASE_URL }}
+      E2E_COACHING_TEACHER_EMAIL: ${{ secrets.E2E_COACHING_TEACHER_EMAIL }}
+      E2E_COACHING_TEACHER_PASSWORD: ${{ secrets.E2E_COACHING_TEACHER_PASSWORD }}
+      E2E_COACHING_STUDENT_EMAIL: ${{ secrets.E2E_COACHING_STUDENT_EMAIL }}
+      E2E_COACHING_STUDENT_PASSWORD: ${{ secrets.E2E_COACHING_STUDENT_PASSWORD }}
       E2E_DISPOSABLE_ENV: ${{ vars.E2E_DISPOSABLE_ENV }}
       E2E_START_UI: 'false'
     steps:
@@ -73,6 +83,16 @@ jobs:
               echo 'run_registration=true requires staging variable E2E_DISPOSABLE_ENV=true.'
               exit 1
             }
+          fi
+          if [[ "$E2E_RUN_COACHING" == "true" ]]; then
+            test "$E2E_DISPOSABLE_ENV" = 'true' || {
+              echo 'run_coaching=true requires staging variable E2E_DISPOSABLE_ENV=true.'
+              exit 1
+            }
+            test -n "$E2E_COACHING_TEACHER_EMAIL" || { echo 'E2E_COACHING_TEACHER_EMAIL is missing.'; exit 1; }
+            test -n "$E2E_COACHING_TEACHER_PASSWORD" || { echo 'E2E_COACHING_TEACHER_PASSWORD is missing.'; exit 1; }
+            test -n "$E2E_COACHING_STUDENT_EMAIL" || { echo 'E2E_COACHING_STUDENT_EMAIL is missing.'; exit 1; }
+            test -n "$E2E_COACHING_STUDENT_PASSWORD" || { echo 'E2E_COACHING_STUDENT_PASSWORD is missing.'; exit 1; }
           fi
 
       - name: Setup Node

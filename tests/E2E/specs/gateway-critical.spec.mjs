@@ -11,6 +11,10 @@ const protectedEndpoints = [
   ['/api/invitations/00000000-0000-0000-0000-000000000000/accept', 'POST']
 ];
 
+const authenticatedAdminReadEndpoints = protectedEndpoints
+  .filter(([, method]) => method === 'GET')
+  .map(([endpoint]) => endpoint);
+
 test.describe('Gateway critical API flows', () => {
   test('exposes a healthy gateway to the public edge', async ({ request }) => {
     const response = await request.get('/health');
@@ -60,7 +64,7 @@ test.describe('Gateway authenticated admin surface', () => {
     'Set E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD to run authenticated admin checks.'
   );
 
-  test('logs in through the gateway and reads every enabled admin surface', async ({ request }) => {
+  test('logs in through the gateway and reads every enabled admin read surface', async ({ request }) => {
     const loginResponse = await request.post('/api/auth/login', {
       data: {
         email: process.env.E2E_ADMIN_EMAIL,
@@ -78,7 +82,7 @@ test.describe('Gateway authenticated admin surface', () => {
     expect(refreshed.accessToken).toEqual(expect.any(String));
 
     const token = refreshed.accessToken;
-    for (const endpoint of protectedEndpoints) {
+    for (const endpoint of authenticatedAdminReadEndpoints) {
       const response = await request.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` }
       });

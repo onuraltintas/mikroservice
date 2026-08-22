@@ -17,6 +17,8 @@ Apache-2.0 lisanslı bir geliştirme bağımlılığıdır.
 - Disposable ortamda student registration → MailCatcher verification link → email confirmation
 - Disposable tenant'ta institution → teacher/student daveti → coaching assignment
   oluşturma/okuma ve aynı idempotency anahtarıyla replay
+- Disposable coaching fixture'da teacher login → assignment oluşturma/replay → student
+  tenant-scope okuma ve gerçek SignalR `ReceiveNotification` teslimi
 
 Testler varsayılan olarak yalnızca Docker'da çalışan Gateway'e bağlanır ve
 `http://127.0.0.1:5000` kullanır. Anonim smoke testleri business verisi yazmaz;
@@ -27,19 +29,26 @@ olan ayrı bir profile bağlanmalıdır; ortak production verisiyle
 `PUBLIC_APP_BASE_URL` ile üretilir; staging/production ortamında `localhost`
 değeri kullanılmamalıdır.
 
-Gateway üzerinden disposable tenant akışı Docker ortamında doğrulanmıştır:
+Gateway üzerinden disposable tenant akışı Docker ortamında doğrulanmalıdır:
 kurum, öğretmen ve öğrenci oluşturma; MailCatcher doğrulaması; davetlerin kabulü;
 assignment oluşturma, öğretmen/öğrenci okuması ve aynı `Idempotency-Key` ile replay
 tek bir assignment döndürür. Koşu sonunda tenant, kullanıcı, assignment ve e-posta
 verileri temizlenmelidir. Bu akış ortak production verisine karşı
 çalıştırılmamalıdır.
 
+Coaching/SignalR akışı, silinebilir bir fixture tenant'taki önceden hazırlanmış
+Teacher ve Student hesaplarını kullanır. Test her koşuda benzersiz bir assignment
+oluşturur, replay davranışını doğrular, öğrencinin yalnızca kendi satırını okuduğunu
+kontrol eder ve assignment notification'ının Gateway üzerinden WebSocket/SignalR
+hub'a ulaştığını bekler. `finally` bloğu assignment'ı siler; fixture hesapları ve
+tenant veritabanı koşu öncesi/sonrası disposable profile tarafından temizlenmelidir.
+
 Coaching event'lerinin RabbitMQ outbox'a yazılması ve Notification fan-out
 sözleşmesinin alıcı başına deterministik ID üretmesi doğrulanmıştır. Canlı
-SignalR hub bağlantısı (disposable kullanıcı + gerçek WebSocket istemcisi) bu
-test paketinin kapsamı dışındadır; release öncesi ayrı bir smoke koşusunda hub
-bağlantısı, RabbitMQ tüketimi, PostgreSQL bildirimi ve duplicate delivery
-birlikte doğrulanmalıdır.
+SignalR hub bağlantısı ve `AssignmentCreated` bildiriminin gerçek WebSocket
+istemcisine ulaşması `coaching-disposable` projesinde doğrulanır. RabbitMQ
+tüketimi, PostgreSQL bildirimi ve duplicate delivery için aynı disposable koşu
+CI'de çalıştırılmalı; ortak production verisine bağlanılmamalıdır.
 
 ## Lokal çalıştırma
 
@@ -98,6 +107,27 @@ $env:E2E_MAILCATCHER_API_BASE_URL = 'http://127.0.0.1:1080'
 npm test --prefix tests/E2E -- --project=registration-disposable
 ```
 
+Disposable coaching tenant ve SignalR akışı için staging environment secret'larına
+önceden doğrulanmış, MFA'sız bir Teacher ve Student fixture hesabı ekleyin. Bu
+hesaplar aynı aktif kurumda olmalı; test sırasında öğrenci ve öğretmen profilleri
+başka tenant'lara aitse akış fail eder:
+
+```powershell
+$env:E2E_DISPOSABLE_ENV = 'true'
+$env:E2E_RUN_COACHING = 'true'
+$env:E2E_COACHING_TEACHER_EMAIL = 'teacher-fixture@example.test'
+$env:E2E_COACHING_TEACHER_PASSWORD = '<secret-from-secret-store>'
+$env:E2E_COACHING_STUDENT_EMAIL = 'student-fixture@example.test'
+$env:E2E_COACHING_STUDENT_PASSWORD = '<secret-from-secret-store>'
+npm run test:coaching --prefix tests/E2E
+```
+
+Bu profil öğretmen token'ını `TeacherId`, öğrenci token'ını `StudentId` olarak
+kullanır; `institutionId` profillerden çözülür. Assignment oluşturma ve replay,
+öğrenci list/detail authorization'ı ve `AssignmentCreated` SignalR bildirimi tek
+akışta doğrulanır. Parolalar repoya, komut çıktısına veya Playwright artefact'ına
+yazılmamalıdır.
+
 `E2E_REQUIRED=true` kimlik bilgisi yoksa test keşfi sırasında fail eder; yanlışlıkla
 korumalı akışın sessizce skip edilmesini engeller. Kimlik bilgisi verilmezse
 yalnızca anonim Gateway sözleşmesi ve public login ekranı çalışır; bu lokal smoke
@@ -127,6 +157,10 @@ Support write akışı varsayılan olarak kapalıdır; manuel workflow'da yalnı
 Registration akışı için ayrıca `run_registration=true`,
 `E2E_MAILCATCHER_API_BASE_URL` secret'ı ve aynı disposable environment koşulu
 gerekir.
+Coaching/SignalR akışı için manuel workflow'da `run_coaching=true`,
+`E2E_DISPOSABLE_ENV=true` ve dört `E2E_COACHING_*` secret'ı gerekir. Bu akış
+yalnız disposable fixture ile çalışır; ortak staging veya production verisine
+karşı açılmamalıdır.
 
 ## Rapor ve hata ayıklama
 
@@ -134,6 +168,15 @@ gerekir.
 - JUnit: `tests/E2E/playwright-results.xml`
 - CI artefact'ı: HTML/JUnit raporu; auth içeren testlerde trace/video/screenshot
   kapalıdır.
+
+Çalışma alanı rapor dizinine yazamıyorsa yolları geçici, erişilebilir bir dizine
+taşıyabilirsiniz; CI'de varsayılan yollar değiştirilmemelidir:
+
+```powershell
+$env:E2E_TEST_RESULTS_DIR = 'C:\temp\eduplatform-e2e\test-results'
+$env:E2E_REPORT_DIR = 'C:\temp\eduplatform-e2e\report'
+$env:E2E_JUNIT_FILE = 'C:\temp\eduplatform-e2e\results.xml'
+```
 
 Test sözleşmesi Gateway route'larını ve HTTP durum kodlarını kontrol eder; servis
 iç implementasyonuna değil kullanıcıya görünen davranışa dayanır. Yeni route veya
