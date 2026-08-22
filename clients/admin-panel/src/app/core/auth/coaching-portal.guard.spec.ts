@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hasCoachingPortalRole } from './auth.guard';
+import { hasCoachingPortalRole, hasRequiredCoachingRole } from './auth.guard';
 
 describe('hasCoachingPortalRole', () => {
   it('allows student, teacher and parent identities', () => {
@@ -12,5 +12,17 @@ describe('hasCoachingPortalRole', () => {
     expect(hasCoachingPortalRole({ roles: ['SystemAdmin'] })).toBe(false);
     expect(hasCoachingPortalRole({ roles: ['InstitutionAdmin'] })).toBe(false);
     expect(hasCoachingPortalRole(null)).toBe(false);
+  });
+});
+
+describe('hasRequiredCoachingRole', () => {
+  it('matches one of the roles required by a child portal route', () => {
+    expect(hasRequiredCoachingRole({ roles: ['Teacher'] }, ['Teacher'])).toBe(true);
+    expect(hasRequiredCoachingRole({ roles: ['Parent'] }, ['Teacher', 'Parent'])).toBe(true);
+  });
+
+  it('rejects a role outside the child route allow-list', () => {
+    expect(hasRequiredCoachingRole({ roles: ['Student'] }, ['Teacher'])).toBe(false);
+    expect(hasRequiredCoachingRole(null, ['Teacher'])).toBe(false);
   });
 });
