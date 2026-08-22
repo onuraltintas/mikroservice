@@ -18,7 +18,7 @@
         <input [(ngModel)]="form.durationMinutes" name="durationMinutes" type="number" min="1" max="240" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950" />
       </label>
       <label class="text-sm font-medium">Seans türü
-        <select [(ngModel)]="form.type" name="type" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950"><option value="OneOnOne">Birebir</option><option value="Group">Grup</option><option value="Online">Online</option></select>
+        <select [(ngModel)]="form.type" name="type" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950"><option value="OneOnOne">Birebir</option><option value="Group">Grup</option></select>
       </label>
     </div>
     <div class="grid gap-4 md:grid-cols-2">
@@ -34,11 +34,11 @@
     </label>
     <fieldset>
       <legend class="mb-2 text-sm font-semibold">Katılımcı öğrenciler</legend>
-      <form class="mb-3 flex gap-2" (submit)="$event.preventDefault(); setStudentSearch(studentSearchInput.value)">
+      <div role="search" class="mb-3 flex gap-2">
         <label class="sr-only" for="session-student-search">Öğrenci ara</label>
         <input #studentSearchInput id="session-student-search" type="search" [value]="studentSearchTerm()" placeholder="İsimle ara" class="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950" />
-        <button type="submit" class="rounded-lg border border-indigo-300 px-3 py-2 text-sm font-semibold text-indigo-700 dark:border-indigo-900/50 dark:text-indigo-200">Ara</button>
-      </form>
+        <button type="button" (click)="setStudentSearch(studentSearchInput.value)" class="rounded-lg border border-indigo-300 px-3 py-2 text-sm font-semibold text-indigo-700 dark:border-indigo-900/50 dark:text-indigo-200">Ara</button>
+      </div>
       <div class="grid max-h-72 gap-2 overflow-y-auto rounded-xl border border-slate-200 p-3 md:grid-cols-2 dark:border-slate-800">
         <label *ngFor="let student of students(); trackBy: trackByStudent" class="flex items-center gap-2 rounded-lg px-2 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-800">
           <input type="checkbox" [checked]="isSelected(student.userId)" (change)="toggleStudent(student.userId)" />

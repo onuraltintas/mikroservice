@@ -247,6 +247,85 @@ describe('CoachingPortalService', () => {
     http.verify();
   });
 
+  it('loads and mutates teacher exams and academic goals through protected resources', () => {
+    const { service, http } = setup();
+
+    service.getTeacherExams('teacher/1', 2, 25).subscribe();
+    const exams = http.expectOne(candidate => candidate.url.endsWith('/exams/teacher/teacher%2F1'));
+    expect(exams.request.method).toBe('GET');
+    expect(exams.request.params.get('pageNumber')).toBe('2');
+    exams.flush({ items: [], pageNumber: 2, pageSize: 25, totalCount: 0, totalPages: 0 });
+
+    service.createTeacherExam({
+      teacherId: 'teacher-1',
+      title: '  LGS denemesi  ',
+      type: 4,
+      examDate: '2030-02-01T10:00:00.000Z',
+      maxScore: 500,
+      description: '  Genel deneme  '
+    }, 'exam-key-123456').subscribe();
+    const createExam = http.expectOne(candidate => candidate.url.endsWith('/exams'));
+    expect(createExam.request.method).toBe('POST');
+    expect(createExam.request.headers.get('Idempotency-Key')).toBe('exam-key-123456');
+    expect(createExam.request.body).toEqual({
+      teacherId: 'teacher-1',
+      title: 'LGS denemesi',
+      type: 4,
+      examDate: '2030-02-01T10:00:00.000Z',
+      maxScore: 500,
+      institutionId: null,
+      description: 'Genel deneme'
+    });
+    createExam.flush({ examId: 'exam-1' });
+
+    service.updateTeacherExam('exam/1', {
+      examId: 'exam/1',
+      title: '  Güncel deneme  ',
+      type: 4,
+      examDate: '2030-02-02T10:00:00.000Z',
+      maxScore: 500
+    }).subscribe();
+    const updateExam = http.expectOne(candidate => candidate.url.endsWith('/exams/exam%2F1'));
+    expect(updateExam.request.method).toBe('PUT');
+    expect(updateExam.request.body.title).toBe('Güncel deneme');
+    updateExam.flush({ examId: 'exam/1', examDate: '2030-02-02T10:00:00Z', maxScore: 500 });
+
+    service.getTeacherGoals('teacher/1').subscribe();
+    const goals = http.expectOne(candidate => candidate.url.endsWith('/goals/teacher/teacher%2F1'));
+    expect(goals.request.method).toBe('GET');
+    goals.flush({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 0 });
+
+    service.createTeacherGoal({
+      teacherId: 'teacher-1',
+      studentId: 'student-1',
+      title: '  Matematik hedefi  ',
+      category: 2,
+      targetScore: 80
+    }, 'goal-key-123456').subscribe();
+    const createGoal = http.expectOne(candidate => candidate.url.endsWith('/goals'));
+    expect(createGoal.request.method).toBe('POST');
+    expect(createGoal.request.headers.get('Idempotency-Key')).toBe('goal-key-123456');
+    expect(createGoal.request.body).toMatchObject({
+      teacherId: 'teacher-1',
+      studentId: 'student-1',
+      title: 'Matematik hedefi',
+      category: 2,
+      targetScore: 80
+    });
+    createGoal.flush({ goalId: 'goal-1' });
+
+    service.updateTeacherGoal('goal/1', {
+      goalId: 'goal/1',
+      title: '  Güncel hedef  ',
+      category: 2
+    }).subscribe();
+    const updateGoal = http.expectOne(candidate => candidate.url.endsWith('/goals/goal%2F1'));
+    expect(updateGoal.request.method).toBe('PUT');
+    expect(updateGoal.request.body.title).toBe('Güncel hedef');
+    updateGoal.flush({ goalId: 'goal/1', title: 'Güncel hedef' });
+    http.verify();
+  });
+
   it('updates only the current student reflection for a session', () => {
     const { service, http } = setup();
 

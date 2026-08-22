@@ -10,7 +10,7 @@ servisleri kendi kaynaklarında tekrar doğrular.
 | Rol | Ekranlar | Yazma yetkisi |
 | --- | --- | --- |
 | Student | Ödev listesi/detayı, teslim, fotoğraf eki, hedefler, seanslar ve sınav sonuçları | Yalnızca kendi ödev teslimi/ekleri ve kendi hedef oluşturma-ilerleme güncellemesi |
-| Teacher | Kendi ödevleri, assignment detayı, öğrenci teslimleri, puan/geri bildirim ve seanslar | Yalnızca sahibi olduğu assignment öğrencilerini değerlendirme |
+| Teacher | Kendi ödevleri, assignment detayı, öğrenci teslimleri, puan/geri bildirim, seanslar, öğrenci listesi ve akademik takip | Yalnızca bağlı aktif öğrencilerine ödev/seans/sınav/hedef yönetimi; kendi seanslarında yoklama ve geri bildirim |
 | Parent | Bağlı aktif çocuk seçimi, çocuğun ödev/hedef/sınav/seans özeti | Koçluk verilerine yazma yok |
 
 Giriş sonrası `Student`, `Teacher` ve `Parent` rolleri `/coaching-portal`a,
@@ -73,6 +73,26 @@ zaman aşımı için aynı anahtarı, yeni hedef için yeni anahtarı kullanır.
 veli bu kullanıcı portalında başkasının hedef ilerlemesini değiştiremez;
 öğretmen/admin yönetimi ayrı, MFA ve `Permissions.Coaching.Manage` korumalı
 admin API'sinde kalır.
+
+## Öğretmen akademik ve seans yönetimi
+
+Öğretmen portalı `/coaching-portal/teacher/academic` ekranında yalnızca kendi
+öğretmen kimliğiyle sınav ve hedef listelerini sayfalı olarak okur. Sınav/hedef
+oluşturma istekleri `Idempotency-Key` taşır; düzenleme endpoint'leri kaynak
+sahipliğini sunucu tarafında doğrular. Liste DTO'ları açıklama, süre, sınıf,
+hedef sınavı ve ders alanlarını da döndürür; böylece düzenleme sırasında
+gönderilmeyen opsiyonel alanlar yanlışlıkla silinmez.
+
+Seans listeleri 25'lik sayfalarla yüklenir ve toplam kayıt sayısı API'nin
+`totalCount` alanından gösterilir. Gelecekteki planlanmış seans iptal
+edildiğinde Coaching outbox üzerinden `SessionCancelledEvent` yayınlanır;
+Notification servisi öğrencileri bilgilendirir. Tamamlanmış, iptal edilmiş veya
+başlamış seanslar domain kuralıyla yeniden planlanamaz/iptal edilemez ve API
+400 döndürür. Düzenleme formu öğretmen notunu mevcut kaynaktan doldurur.
+
+Ödev düzenleme ekranı aktif olmayan öğrenci ilişkilerini sessizce kaldırmaz;
+pasif atama varsa öğretmene açık uyarı gösterir ve güvenli ilişki doğrulaması
+tamamlanmadan güncellemeyi engeller.
 
 ## SSR ve güvenlik
 

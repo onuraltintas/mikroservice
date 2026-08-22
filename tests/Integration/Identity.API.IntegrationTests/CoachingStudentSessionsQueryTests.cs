@@ -70,6 +70,7 @@ public sealed class CoachingStudentSessionsQueryTests
             DateTime.UtcNow.AddDays(1),
             SessionType.Group);
         session.AddStudents([allowedStudentId, revokedStudentId]);
+        session.AddTeacherNotes("Koçun özel notu");
         session.Attendances.Single(attendance => attendance.StudentId == allowedStudentId)
             .AddStudentNote("Bu hafta deneme analizini tamamladım.");
         session.Attendances.Single(attendance => attendance.StudentId == revokedStudentId)
@@ -87,6 +88,7 @@ public sealed class CoachingStudentSessionsQueryTests
 
         result.Items.Should().ContainSingle();
         result.Items[0].StudentIds.Should().ContainSingle().Which.Should().Be(allowedStudentId);
+        result.Items[0].TeacherNotes.Should().Be("Koçun özel notu");
         var reflections = result.Items[0].StudentReflections!;
         reflections.Should().ContainSingle();
         reflections[0].StudentId.Should().Be(allowedStudentId);
@@ -105,6 +107,7 @@ public sealed class CoachingStudentSessionsQueryTests
             DateTime.UtcNow.AddDays(1),
             SessionType.OneOnOne);
         session.AddStudent(studentId);
+        session.AddTeacherNotes("Reschedule notu");
 
         var handler = new GetSessionQueryHandler(
             new StubSessionRepository(session),
@@ -115,6 +118,7 @@ public sealed class CoachingStudentSessionsQueryTests
 
         result.Id.Should().Be(session.Id);
         result.StudentIds.Should().ContainSingle().Which.Should().Be(studentId);
+        result.TeacherNotes.Should().Be("Reschedule notu");
     }
 
     [Fact]

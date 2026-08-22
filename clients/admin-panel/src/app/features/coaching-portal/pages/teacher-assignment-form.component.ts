@@ -34,6 +34,9 @@ export class TeacherAssignmentFormComponent implements OnInit {
   readonly studentPageNumber = signal(1);
   readonly studentTotalPages = signal(1);
   readonly studentSearchTerm = signal('');
+  readonly assignedStudentIds = signal<string[]>([]);
+  readonly inactiveAssignedStudentIds = signal<string[]>([]);
+  readonly isValidatingStudents = signal(false);
   readonly selectedStudentIds = new Set<string>();
 
   form = {
@@ -106,7 +109,10 @@ export class TeacherAssignmentFormComponent implements OnInit {
     this.coachingService.getAssignment(assignmentId).subscribe({
       next: assignment => {
         this.fillForm(assignment);
-        assignment.assignedStudents.forEach(student => this.selectedStudentIds.add(student.studentId));
+        const assignedStudentIds = assignment.assignedStudents.map(student => student.studentId);
+        this.assignedStudentIds.set(assignedStudentIds);
+        assignedStudentIds.forEach(studentId => this.selectedStudentIds.add(studentId));
+        this.loadAllActiveStudentsForValidation();
       },
       error: () => {
         this.errorMessage.set('Ödev detayı yüklenemedi veya bu ödevi düzenleme yetkiniz yok.');
@@ -139,6 +145,14 @@ export class TeacherAssignmentFormComponent implements OnInit {
 
     if (!teacherId || !title) {
       this.errorMessage.set('Öğretmen profili ve başlık zorunludur.');
+      return;
+    }
+    if (this.inactiveAssignedStudentIds().length > 0) {
+      this.errorMessage.set('Bu ödevde pasif öğrenci ataması var. Öğrenci ilişkisi düzeltilmeden kayıt yapılamaz.');
+      return;
+    }
+    if (this.isValidatingStudents()) {
+      this.errorMessage.set('Öğrenci ilişkileri doğrulanıyor; lütfen tekrar deneyin.');
       return;
     }
     if (Number.isNaN(dueDate.getTime()) || dueDate <= new Date()) {
@@ -258,5 +272,31 @@ export class TeacherAssignmentFormComponent implements OnInit {
     const date = new Date(value);
     date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
     return date.toISOString().slice(0, 16);
+  }
+
+  private refreshInactiveAssignments(activeStudentIds: Set<string>) {
+    this.inactiveAssignedStudentIds.set(
+      this.assignedStudentIds().filter(studentId => !activeStudentIds.has(studentId))
+    );
+  }
+
+  private loadAllActiveStudentsForValidation(pageNumber = 1, activeStudentIds = new Set<string>()) {
+    if (pageNumber === 1) this.isValidatingStudents.set(true);
+    this.coachingService.getTeacherStudents(pageNumber, 100).subscribe({
+      next: page => {
+        page.items.forEach(student => activeStudentIds.add(student.userId));
+        const totalPages = page.totalPages ?? Math.max(1, Math.ceil(page.totalCount / page.pageSize));
+        if (pageNumber < totalPages) {
+          this.loadAllActiveStudentsForValidation(pageNumber + 1, activeStudentIds);
+          return;
+        }
+        this.refreshInactiveAssignments(activeStudentIds);
+        this.isValidatingStudents.set(false);
+      },
+      error: () => {
+        this.isValidatingStudents.set(false);
+        this.errorMessage.set('Aktif öğrenci ilişkileri doğrulanamadı.');
+      }
+    });
   }
 }

@@ -206,4 +206,22 @@ public class GoalsController : ControllerBase
 
         return Ok(result);
     }
+
+    /// <summary>
+    /// Get academic goals set by a teacher.
+    /// </summary>
+    [HttpGet("teacher/{teacherId:guid}")]
+    [ProducesResponseType(typeof(PagedResponse<TeacherGoalDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetTeacherGoals(
+        Guid teacherId,
+        CancellationToken cancellationToken,
+        [FromQuery] int pageNumber = CoachingPaging.DefaultPageNumber,
+        [FromQuery] int pageSize = CoachingPaging.DefaultPageSize)
+    {
+        var result = await _mediator.Send(
+            new GetTeacherGoalsQuery(teacherId, pageNumber, pageSize),
+            cancellationToken);
+
+        return Ok(result);
+    }
 }

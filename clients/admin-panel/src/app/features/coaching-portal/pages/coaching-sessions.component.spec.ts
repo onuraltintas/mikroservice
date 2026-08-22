@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { AuthService, UserProfile } from '../../../core/auth/auth.service';
 import { CoachingPortalService, CoachingSession } from '../../../core/services/coaching-portal.service';
@@ -180,7 +180,80 @@ describe('CoachingSessionsComponent', () => {
     expect(service.cancelTeacherSession).toHaveBeenCalledWith('session-4');
     expect(component.sessions()[0].status).toBe('Cancelled');
   });
+
+  it('clears the cancellation busy state when the API rejects the request', () => {
+    const profile = signal<UserProfile | null>(user('Teacher'));
+    const session: CoachingSession = {
+      id: 'session-5',
+      studentId: 'student-1',
+      startTime: '2030-01-01T10:00:00Z',
+      endTime: '2030-01-01T11:00:00Z',
+      durationMinutes: 60,
+      status: 'Scheduled',
+      type: 'OneOnOne',
+      studentIds: ['student-1']
+    };
+    const service = {
+      getTeacherSessions: vi.fn(() => of({ items: [session], pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1 })),
+      cancelTeacherSession: vi.fn(() => throwError(() => new Error('conflict')))
+    };
+
+    TestBed.configureTestingModule({
+      imports: [CoachingSessionsComponent],
+      providers: [
+        { provide: AuthService, useValue: { userProfile: profile } },
+        { provide: CoachingPortalService, useValue: service },
+        { provide: ActivatedRoute, useValue: {} }
+      ]
+    });
+    const component = TestBed.createComponent(CoachingSessionsComponent).componentInstance;
+    component.ngOnInit();
+    component.cancelSession(session);
+
+    expect(component.savingCancellationId()).toBeNull();
+    expect(component.errorMessage()).toBe('Seans iptal edilemedi.');
+  });
+
+  it('loads additional session pages without replacing the first page', () => {
+    const profile = signal<UserProfile | null>(user('Teacher'));
+    const firstSession = { ...sessionFor('session-page-1'), subject: 'Matematik' };
+    const secondSession = { ...sessionFor('session-page-2'), subject: 'Fizik' };
+    const service = {
+      getTeacherSessions: vi.fn()
+        .mockReturnValueOnce(of({ items: [firstSession], pageNumber: 1, pageSize: 1, totalCount: 2, totalPages: 2 }))
+        .mockReturnValueOnce(of({ items: [secondSession], pageNumber: 2, pageSize: 1, totalCount: 2, totalPages: 2 }))
+    };
+
+    TestBed.configureTestingModule({
+      imports: [CoachingSessionsComponent],
+      providers: [
+        { provide: AuthService, useValue: { userProfile: profile } },
+        { provide: CoachingPortalService, useValue: service },
+        { provide: ActivatedRoute, useValue: {} }
+      ]
+    });
+    const component = TestBed.createComponent(CoachingSessionsComponent).componentInstance;
+    component.ngOnInit();
+    component.loadMore();
+
+    expect(service.getTeacherSessions).toHaveBeenNthCalledWith(2, 'user-1', 2, 25);
+    expect(component.sessions().map(session => session.id)).toEqual(['session-page-1', 'session-page-2']);
+    expect(component.totalCount()).toBe(2);
+  });
 });
+
+function sessionFor(id: string): CoachingSession {
+  return {
+    id,
+    studentId: 'student-1',
+    startTime: '2030-01-01T10:00:00Z',
+    endTime: '2030-01-01T11:00:00Z',
+    durationMinutes: 60,
+    status: 'Scheduled',
+    type: 'OneOnOne',
+    studentIds: ['student-1']
+  };
+}
 
 function user(role: string): UserProfile {
   return {

@@ -47,6 +47,7 @@ public sealed class GetSessionQueryHandler(
                     attendance.StudentId,
                     attendance.StudentNote!,
                     attendance.AttendanceStatus.ToString()))
-                .ToArray());
+                .ToArray(),
+            TeacherNotes: session.TeacherNotes);
     }
 }

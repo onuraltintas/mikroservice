@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 import { AuthService, hasRole } from '../../../core/auth/auth.service';
 import { CoachingPortalService, CoachingSession, CoachingStudentReflection } from '../../../core/services/coaching-portal.service';
 
@@ -24,6 +25,10 @@ export class CoachingSessionsComponent implements OnInit {
   readonly savingNoteId = signal<string | null>(null);
   readonly savingAttendanceKey = signal<string | null>(null);
   readonly savingCancellationId = signal<string | null>(null);
+  readonly pageNumber = signal(1);
+  readonly totalPages = signal(1);
+  readonly totalCount = signal(0);
+  readonly loadingMore = signal(false);
 
   ngOnInit() {
     const profile = this.authService.userProfile();
@@ -36,12 +41,15 @@ export class CoachingSessionsComponent implements OnInit {
     }
 
     const request = this.isTeacher()
-      ? this.coachingService.getTeacherSessions(profile.id, 1, 100)
-      : this.coachingService.getStudentSessions(profile.id, 1, 100);
+      ? this.coachingService.getTeacherSessions(profile.id, 1, 25)
+      : this.coachingService.getStudentSessions(profile.id, 1, 25);
 
     request.subscribe({
       next: page => {
         this.sessions.set(page.items);
+        this.pageNumber.set(page.pageNumber);
+        this.totalCount.set(page.totalCount);
+        this.totalPages.set(page.totalPages ?? Math.max(1, Math.ceil(page.totalCount / page.pageSize)));
         this.noteDrafts.set(Object.fromEntries(page.items.map(session => [session.id, session.studentNote ?? ''])));
       },
       error: () => {
@@ -49,6 +57,30 @@ export class CoachingSessionsComponent implements OnInit {
         this.isLoading.set(false);
       },
       complete: () => this.isLoading.set(false)
+    });
+  }
+
+  loadMore() {
+    const profile = this.authService.userProfile();
+    if (!profile?.id || this.pageNumber() >= this.totalPages() || this.loadingMore()) return;
+
+    const nextPage = this.pageNumber() + 1;
+    this.loadingMore.set(true);
+    const request = this.isTeacher()
+      ? this.coachingService.getTeacherSessions(profile.id, nextPage, 25)
+      : this.coachingService.getStudentSessions(profile.id, nextPage, 25);
+    request.pipe(finalize(() => this.loadingMore.set(false))).subscribe({
+      next: page => {
+        this.sessions.update(items => [...items, ...page.items]);
+        this.pageNumber.set(page.pageNumber);
+        this.totalCount.set(page.totalCount);
+        this.totalPages.set(page.totalPages ?? Math.max(1, Math.ceil(page.totalCount / page.pageSize)));
+        this.noteDrafts.update(notes => ({
+          ...notes,
+          ...Object.fromEntries(page.items.map(session => [session.id, session.studentNote ?? '']))
+        }));
+      },
+      error: () => this.errorMessage.set('Daha fazla seans yüklenemedi.')
     });
   }
 
@@ -131,12 +163,13 @@ export class CoachingSessionsComponent implements OnInit {
     if (!this.canCancel(session)) return;
 
     this.savingCancellationId.set(session.id);
-    this.coachingService.cancelTeacherSession(session.id).subscribe({
+    this.coachingService.cancelTeacherSession(session.id).pipe(
+      finalize(() => this.savingCancellationId.set(null))
+    ).subscribe({
       next: () => this.sessions.update(items => items.map(item => item.id === session.id
         ? { ...item, status: 'Cancelled' }
         : item)),
-      error: () => this.errorMessage.set('Seans iptal edilemedi.'),
-      complete: () => this.savingCancellationId.set(null)
+      error: () => this.errorMessage.set('Seans iptal edilemedi.')
     });
   }
 

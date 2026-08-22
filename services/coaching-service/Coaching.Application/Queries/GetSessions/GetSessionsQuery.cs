@@ -63,5 +63,6 @@ public record SessionDto(
     IReadOnlyList<Guid> StudentIds,
     string? MeetingLink,
     string? StudentNote,
-    IReadOnlyList<SessionStudentReflectionDto>? StudentReflections = null
+    IReadOnlyList<SessionStudentReflectionDto>? StudentReflections = null,
+    string? TeacherNotes = null
 );

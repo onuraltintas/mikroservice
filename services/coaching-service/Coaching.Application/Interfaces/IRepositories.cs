@@ -23,6 +23,7 @@ public interface IExamRepository
 {
     Task<Exam?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<List<Exam>> GetByInstitutionIdAsync(Guid institutionId, CancellationToken cancellationToken = default);
+    Task<PagedRepositoryResult<Exam>> GetByTeacherIdAsync(Guid teacherId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<PagedRepositoryResult<Exam>> GetByStudentIdAsync(Guid studentId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<Exam> AddAsync(Exam exam, CancellationToken cancellationToken = default);
     Task UpdateAsync(Exam exam, CancellationToken cancellationToken = default);
@@ -44,6 +45,7 @@ public interface ICoachingSessionRepository
 public interface IAcademicGoalRepository
 {
     Task<AcademicGoal?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<PagedRepositoryResult<AcademicGoal>> GetByTeacherIdAsync(Guid teacherId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<PagedRepositoryResult<AcademicGoal>> GetByStudentIdAsync(Guid studentId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<AcademicGoal> AddAsync(AcademicGoal goal, CancellationToken cancellationToken = default);
     Task UpdateAsync(AcademicGoal goal, CancellationToken cancellationToken = default);

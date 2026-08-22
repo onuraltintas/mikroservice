@@ -19,7 +19,8 @@ describe('TeacherSessionFormComponent edit mode', () => {
       status: 'Scheduled',
       type: 'OneOnOne',
       studentIds: ['student-1'],
-      meetingLink: 'https://meet.example.test/old'
+      meetingLink: 'https://meet.example.test/old',
+      teacherNotes: 'Koç notu korunmalı'
     };
     const service = {
       getTeacherStudents: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 0 })),
@@ -43,6 +44,7 @@ describe('TeacherSessionFormComponent edit mode', () => {
     expect(component.isEditing).toBe(true);
     expect(service.getTeacherSession).toHaveBeenCalledWith('session-1');
     expect(component.form.subject).toBe('Matematik');
+    expect(component.form.notes).toBe('Koç notu korunmalı');
     component.form.startTime = '2030-01-05T10:00';
     component.submit();
 

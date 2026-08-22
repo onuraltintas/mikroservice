@@ -261,4 +261,22 @@ public class ExamsController : ControllerBase
 
         return Ok(result);
     }
+
+    /// <summary>
+    /// Get exams created by a teacher.
+    /// </summary>
+    [HttpGet("teacher/{teacherId:guid}")]
+    [ProducesResponseType(typeof(PagedResponse<TeacherExamDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetTeacherExams(
+        Guid teacherId,
+        CancellationToken cancellationToken,
+        [FromQuery] int pageNumber = CoachingPaging.DefaultPageNumber,
+        [FromQuery] int pageSize = CoachingPaging.DefaultPageSize)
+    {
+        var result = await _mediator.Send(
+            new GetTeacherExamsQuery(teacherId, pageNumber, pageSize),
+            cancellationToken);
+
+        return Ok(result);
+    }
 }

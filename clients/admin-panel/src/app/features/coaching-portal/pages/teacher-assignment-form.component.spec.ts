@@ -85,4 +85,17 @@ describe('TeacherAssignmentFormComponent', () => {
     expect(service.getTeacherStudents).toHaveBeenLastCalledWith(2, 100, 'Zeynep');
     expect(component.studentPageNumber()).toBe(2);
   });
+
+  it('blocks saving while the assignment still contains a passive student', () => {
+    component.form.title = 'Haftalık tekrar';
+    component.form.dueDate = '2030-01-02T10:00';
+    component.selectedStudentIds.add('student-legacy');
+    component.inactiveAssignedStudentIds.set(['student-legacy']);
+
+    component.submit();
+
+    expect(service.createTeacherAssignment).not.toHaveBeenCalled();
+    expect(service.updateTeacherAssignment).not.toHaveBeenCalled();
+    expect(component.errorMessage()).toContain('pasif');
+  });
 });

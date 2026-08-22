@@ -201,6 +201,7 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<ExamResultUpdatedConsumer>();
     x.AddConsumer<SessionScheduledConsumer>();
     x.AddConsumer<SessionUpdatedConsumer>();
+    x.AddConsumer<SessionCancelledConsumer>();
     x.AddConsumer<GoalCreatedConsumer>();
     x.AddConsumer<GoalUpdatedConsumer>();
     
@@ -314,6 +315,14 @@ builder.Services.AddMassTransit(x =>
                 retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
             e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
             e.ConfigureConsumer<SessionScheduledConsumer>(context);
+        });
+
+        cfg.ReceiveEndpoint("coaching-session-cancelled", e =>
+        {
+            e.UseMessageRetry(retry =>
+                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<SessionCancelledConsumer>(context);
         });
 
         cfg.ReceiveEndpoint("coaching-goal-created", e =>

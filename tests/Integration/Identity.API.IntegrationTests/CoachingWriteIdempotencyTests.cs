@@ -8,6 +8,7 @@ using Coaching.Application.Queries;
 using Coaching.Domain.Entities;
 using Coaching.Domain.Enums;
 using EduPlatform.Shared.Kernel.Exceptions;
+using EduPlatform.Shared.Contracts.Events.Coaching;
 using FluentAssertions;
 
 namespace Identity.API.IntegrationTests;
@@ -149,6 +150,38 @@ public sealed class CoachingWriteIdempotencyTests
         publisher.Messages.Should().ContainSingle();
     }
 
+    [Fact]
+    public async Task CancelSession_PublishesCancellationEventForAllStudents()
+    {
+        var teacherId = Guid.NewGuid();
+        var firstStudentId = Guid.NewGuid();
+        var secondStudentId = Guid.NewGuid();
+        var session = CoachingSession.Create(
+            teacherId,
+            "Weekly coaching",
+            DateTime.UtcNow.AddHours(2),
+            SessionType.Group);
+        session.AddStudents([firstStudentId, secondStudentId]);
+
+        var repository = new InMemorySessionRepository();
+        repository.Items.Add(session);
+        var unitOfWork = new CountingUnitOfWork();
+        var publisher = new NoopCoachingEventPublisher();
+        var handler = new Coaching.Application.Commands.DeleteSession.SessionDeleteHandlers(
+            repository,
+            unitOfWork,
+            new AllowTeacherPolicy(),
+            publisher);
+
+        await handler.Handle(new Coaching.Application.Commands.DeleteSession.CancelSessionCommand(session.Id), CancellationToken.None);
+
+        session.Status.Should().Be(SessionStatus.Cancelled);
+        unitOfWork.SaveCount.Should().Be(1);
+        publisher.Messages.Should().ContainSingle(message => message is SessionCancelledEvent);
+        var cancellation = publisher.Messages.OfType<SessionCancelledEvent>().Single();
+        cancellation.StudentIds.Should().BeEquivalentTo(new[] { firstStudentId, secondStudentId });
+    }
+
     private sealed class InMemoryIdempotencyRepository : IIdempotencyRepository
     {
         private readonly Dictionary<(string Scope, string Key), IdempotencyRecord> _records = [];
@@ -172,6 +205,17 @@ public sealed class CoachingWriteIdempotencyTests
 
         public Task<List<Exam>> GetByInstitutionIdAsync(Guid institutionId, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.Where(item => item.InstitutionId == institutionId).ToList());
+
+        public Task<PagedRepositoryResult<Exam>> GetByTeacherIdAsync(
+            Guid teacherId,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            var filtered = Items.Where(item => item.CreatedByTeacherId == teacherId).ToList();
+            var page = filtered.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+            return Task.FromResult(new PagedRepositoryResult<Exam>(page, filtered.Count));
+        }
 
         public Task<PagedRepositoryResult<Exam>> GetByStudentIdAsync(
             Guid studentId,
@@ -274,6 +318,17 @@ public sealed class CoachingWriteIdempotencyTests
 
         public Task<AcademicGoal?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.SingleOrDefault(item => item.Id == id));
+
+        public Task<PagedRepositoryResult<AcademicGoal>> GetByTeacherIdAsync(
+            Guid teacherId,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default)
+        {
+            var filtered = Items.Where(item => item.SetByTeacherId == teacherId).ToList();
+            var page = filtered.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+            return Task.FromResult(new PagedRepositoryResult<AcademicGoal>(page, filtered.Count));
+        }
 
         public Task<PagedRepositoryResult<AcademicGoal>> GetByStudentIdAsync(
             Guid studentId,

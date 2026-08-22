@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Kernel.Primitives;
+using EduPlatform.Shared.Kernel.Exceptions;
 using Coaching.Domain.Enums;
 
 namespace Coaching.Domain.Entities;
@@ -76,6 +77,11 @@ public class CoachingSession : AggregateRoot
         string? meetingLink,
         string? teacherNotes)
     {
+        if (Status != SessionStatus.Scheduled)
+            throw new BusinessRuleException(
+                "Session.NotEditable",
+                "Yalnızca planlanmış seanslar yeniden planlanabilir.");
+
         if (string.IsNullOrWhiteSpace(title))
             throw new ArgumentException("Title is required.", nameof(title));
 
@@ -83,6 +89,11 @@ public class CoachingSession : AggregateRoot
             throw new ArgumentOutOfRangeException(
                 nameof(durationMinutes),
                 "Duration must be greater than 0.");
+
+        if (scheduledDate <= DateTime.UtcNow)
+            throw new BusinessRuleException(
+                "Session.NotEditable",
+                "Seans başlangıcı gelecekte olmalıdır.");
 
         Title = title.Trim();
         Description = NormalizeOptional(description);
@@ -131,6 +142,11 @@ public class CoachingSession : AggregateRoot
 
     public void Cancel()
     {
+        if (Status != SessionStatus.Scheduled || ScheduledDate <= DateTime.UtcNow)
+            throw new BusinessRuleException(
+                "Session.NotCancellable",
+                "Yalnızca gelecekteki planlanmış seanslar iptal edilebilir.");
+
         Status = SessionStatus.Cancelled;
         UpdatedAt = DateTime.UtcNow;
     }

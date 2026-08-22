@@ -34,6 +34,7 @@ describe('coaching portal route role contract', () => {
 
     expect(route('teacher/students')?.data?.['coachingRoles']).toEqual(['Teacher']);
     expect(route('teacher/assignments/new')?.data?.['coachingRoles']).toEqual(['Teacher']);
+    expect(route('teacher/academic')?.data?.['coachingRoles']).toEqual(['Teacher']);
     expect(route('teacher/sessions/:id/edit')?.data?.['coachingRoles']).toEqual(['Teacher']);
     expect(route('children')?.data?.['coachingRoles']).toEqual(['Parent']);
     expect(route('assignments/:id')?.data?.['coachingRoles']).toEqual(['Student', 'Teacher', 'Parent']);

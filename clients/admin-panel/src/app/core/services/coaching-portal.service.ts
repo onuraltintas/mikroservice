@@ -171,6 +171,77 @@ export interface ExamResult {
   subjectScores?: Record<string, number>;
 }
 
+export interface TeacherExam {
+  id: string;
+  title: string;
+  examType: string;
+  examDate: string;
+  maxScore: number;
+  subject?: string;
+  resultCount: number;
+  description?: string;
+  durationMinutes?: number;
+  targetGradeLevel?: number;
+}
+
+export interface TeacherGoal {
+  id: string;
+  studentId: string;
+  title: string;
+  description?: string;
+  category: string;
+  targetDate?: string;
+  targetScore?: number;
+  targetExamType?: string;
+  targetSubject?: string;
+  progress: number;
+  isCompleted: boolean;
+  completedAt?: string;
+}
+
+export interface TeacherExamCreateRequest {
+  teacherId: string;
+  title: string;
+  type: number;
+  examDate: string;
+  maxScore: number;
+  institutionId?: string | null;
+  description?: string | null;
+}
+
+export interface TeacherExamUpdateRequest {
+  examId: string;
+  title: string;
+  type: number;
+  subject?: string | null;
+  description?: string | null;
+  examDate: string;
+  durationMinutes?: number | null;
+  maxScore: number;
+  targetGradeLevel?: number | null;
+}
+
+export interface TeacherGoalCreateRequest {
+  teacherId: string;
+  studentId: string;
+  title: string;
+  category: number;
+  description?: string | null;
+  targetDate?: string | null;
+  targetScore?: number | null;
+}
+
+export interface TeacherGoalUpdateRequest {
+  goalId: string;
+  title: string;
+  description?: string | null;
+  category: number;
+  targetDate?: string | null;
+  targetScore?: number | null;
+  targetExamType?: number | null;
+  targetSubject?: string | null;
+}
+
 export interface CoachingSession {
   id: string;
   studentId: string;
@@ -184,6 +255,7 @@ export interface CoachingSession {
   meetingLink?: string;
   studentNote?: string;
   studentReflections?: CoachingStudentReflection[];
+  teacherNotes?: string;
 }
 
 export interface CoachingStudentReflection {
@@ -522,6 +594,97 @@ export class CoachingPortalService {
     return this.http.get<PagedResponse<ExamResult>>(
       `${environment.apiUrl}/exams/student/${this.id(studentId)}`,
       { params: this.paging(pageNumber, pageSize) }
+    );
+  }
+
+  getTeacherExams(
+    teacherId: string,
+    pageNumber = 1,
+    pageSize = 25
+  ): Observable<PagedResponse<TeacherExam>> {
+    return this.http.get<PagedResponse<TeacherExam>>(
+      `${environment.apiUrl}/exams/teacher/${this.id(teacherId)}`,
+      { params: this.paging(pageNumber, pageSize) }
+    );
+  }
+
+  createTeacherExam(
+    request: TeacherExamCreateRequest,
+    idempotencyKey: string
+  ): Observable<{ examId: string }> {
+    const headers = new HttpHeaders({ 'Idempotency-Key': idempotencyKey });
+    return this.http.post<{ examId: string }>(
+      `${environment.apiUrl}/exams`,
+      {
+        ...request,
+        title: request.title.trim(),
+        institutionId: request.institutionId || null,
+        description: request.description?.trim() || null
+      },
+      { headers }
+    );
+  }
+
+  updateTeacherExam(
+    examId: string,
+    request: TeacherExamUpdateRequest
+  ): Observable<{ examId: string; examDate: string; maxScore: number }> {
+    return this.http.put<{ examId: string; examDate: string; maxScore: number }>(
+      `${environment.apiUrl}/exams/${this.id(examId)}`,
+      {
+        ...request,
+        examId,
+        title: request.title.trim(),
+        subject: request.subject?.trim() || null,
+        description: request.description?.trim() || null
+      }
+    );
+  }
+
+  getTeacherGoals(
+    teacherId: string,
+    pageNumber = 1,
+    pageSize = 25
+  ): Observable<PagedResponse<TeacherGoal>> {
+    return this.http.get<PagedResponse<TeacherGoal>>(
+      `${environment.apiUrl}/goals/teacher/${this.id(teacherId)}`,
+      { params: this.paging(pageNumber, pageSize) }
+    );
+  }
+
+  createTeacherGoal(
+    request: TeacherGoalCreateRequest,
+    idempotencyKey: string
+  ): Observable<{ goalId: string }> {
+    const headers = new HttpHeaders({ 'Idempotency-Key': idempotencyKey });
+    return this.http.post<{ goalId: string }>(
+      `${environment.apiUrl}/goals`,
+      {
+        ...request,
+        title: request.title.trim(),
+        description: request.description?.trim() || null,
+        targetDate: request.targetDate || null,
+        targetScore: request.targetScore ?? null
+      },
+      { headers }
+    );
+  }
+
+  updateTeacherGoal(
+    goalId: string,
+    request: TeacherGoalUpdateRequest
+  ): Observable<{ goalId: string; title: string }> {
+    return this.http.put<{ goalId: string; title: string }>(
+      `${environment.apiUrl}/goals/${this.id(goalId)}`,
+      {
+        ...request,
+        goalId,
+        title: request.title.trim(),
+        description: request.description?.trim() || null,
+        targetDate: request.targetDate || null,
+        targetScore: request.targetScore ?? null,
+        targetSubject: request.targetSubject?.trim() || null
+      }
     );
   }
 

@@ -141,6 +141,10 @@ public class SessionsController : ControllerBase
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
         }
+        catch (BusinessRuleException ex)
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error cancelling session: {SessionId}", id);
@@ -246,6 +250,10 @@ public class SessionsController : ControllerBase
         catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
+        }
+        catch (BusinessRuleException ex)
+        {
+            return BadRequest(new { error = ex.Message, code = ex.Code });
         }
         catch (ValidationException ex)
         {

@@ -133,7 +133,8 @@ public class GetSessionsQueryHandler :
                 StudentIds: studentIds,
                 MeetingLink: s.MeetingLink,
                 StudentNote: studentNote,
-                StudentReflections: studentReflections);
+                StudentReflections: studentReflections,
+                TeacherNotes: includeStudentReflections ? s.TeacherNotes : null);
         }).ToList();
 
         return new PagedResponse<SessionDto>(sessions, pageNumber, pageSize, page.TotalCount);

@@ -31,6 +31,7 @@ public sealed class CoachingNotificationConsumerTests
             configurator.AddConsumer<ExamResultUpdatedConsumer>();
             configurator.AddConsumer<SessionScheduledConsumer>();
             configurator.AddConsumer<SessionUpdatedConsumer>();
+            configurator.AddConsumer<SessionCancelledConsumer>();
             configurator.AddConsumer<GoalCreatedConsumer>();
             configurator.AddConsumer<GoalUpdatedConsumer>();
             configurator.UsingInMemory((context, busConfigurator) => busConfigurator.ConfigureEndpoints(context));
@@ -63,6 +64,8 @@ public sealed class CoachingNotificationConsumerTests
                 Guid.NewGuid(), teacherId, null, new[] { firstStudentId, secondStudentId }, DateTime.UtcNow.AddHours(2)));
             await harness.Bus.Publish(new SessionUpdatedEvent(
                 Guid.NewGuid(), teacherId, null, new[] { firstStudentId, secondStudentId }, DateTime.UtcNow.AddHours(3)));
+            await harness.Bus.Publish(new SessionCancelledEvent(
+                Guid.NewGuid(), teacherId, null, new[] { firstStudentId, secondStudentId }, DateTime.UtcNow.AddHours(3)));
             await harness.Bus.Publish(new GoalCreatedEvent(
                 Guid.NewGuid(), secondStudentId, teacherId, "Read two books"));
             await harness.Bus.Publish(new GoalUpdatedEvent(
@@ -77,15 +80,16 @@ public sealed class CoachingNotificationConsumerTests
             (await harness.Consumed.Any<ExamResultUpdatedEvent>()).Should().BeTrue();
             (await harness.Consumed.Any<SessionScheduledEvent>()).Should().BeTrue();
             (await harness.Consumed.Any<SessionUpdatedEvent>()).Should().BeTrue();
+            (await harness.Consumed.Any<SessionCancelledEvent>()).Should().BeTrue();
             (await harness.Consumed.Any<GoalCreatedEvent>()).Should().BeTrue();
             (await harness.Consumed.Any<GoalUpdatedEvent>()).Should().BeTrue();
 
-            for (var attempt = 0; attempt < 50 && recordingDispatcher.Calls.Count < 11; attempt++)
+            for (var attempt = 0; attempt < 50 && recordingDispatcher.Calls.Count < 12; attempt++)
             {
                 await Task.Delay(20);
             }
 
-            recordingDispatcher.Calls.Should().HaveCount(11);
+            recordingDispatcher.Calls.Should().HaveCount(12);
             recordingDispatcher.Calls.Single(call => call.Type == "AssignmentSubmitted")
                 .RecipientIds.Should().Equal(teacherId);
             recordingDispatcher.Calls.Single(call => call.Type == "AssignmentGraded")
@@ -94,6 +98,8 @@ public sealed class CoachingNotificationConsumerTests
                 .RecipientIds.Should().Equal(secondStudentId);
             recordingDispatcher.Calls.Single(call => call.Type == "GoalCreated")
                 .RecipientIds.Should().Equal(secondStudentId);
+            recordingDispatcher.Calls.Single(call => call.Type == "SessionCancelled")
+                .RecipientIds.Should().BeEquivalentTo(new[] { firstStudentId, secondStudentId });
 
             recordingDispatcher.Calls
                 .Where(call => call.Type == "AssignmentCreated" || call.Type == "SessionScheduled")

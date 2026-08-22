@@ -98,6 +98,12 @@ export class TeacherSessionFormComponent implements OnInit {
   }
 
   toggleStudent(studentId: string) {
+    if (this.form.type !== 'Group') {
+      this.selectedStudentIds.clear();
+      this.selectedStudentIds.add(studentId);
+      return;
+    }
+
     if (this.selectedStudentIds.has(studentId)) {
       this.selectedStudentIds.delete(studentId);
     } else if (this.selectedStudentIds.size < 100) {
@@ -120,8 +126,12 @@ export class TeacherSessionFormComponent implements OnInit {
       this.errorMessage.set('Seans başlangıcı gelecekte olmalıdır.');
       return;
     }
-    if (this.selectedStudentIds.size === 0) {
-      this.errorMessage.set('En az bir aktif öğrenci seçilmelidir.');
+    if (this.form.type === 'Group' && this.selectedStudentIds.size < 2) {
+      this.errorMessage.set('Grup seansı için en az iki aktif öğrenci seçilmelidir.');
+      return;
+    }
+    if (this.form.type === 'OneOnOne' && this.selectedStudentIds.size !== 1) {
+      this.errorMessage.set('Birebir seans için tam olarak bir aktif öğrenci seçilmelidir.');
       return;
     }
     if (!Number.isInteger(this.form.durationMinutes) || this.form.durationMinutes < 1 || this.form.durationMinutes > 240) {
@@ -188,7 +198,7 @@ export class TeacherSessionFormComponent implements OnInit {
       startTime: this.toLocalDateTime(session.startTime),
       durationMinutes: session.durationMinutes,
       subject: session.subject ?? '',
-      notes: '',
+      notes: session.teacherNotes ?? '',
       meetingLink: session.meetingLink ?? '',
       type: session.type
     };

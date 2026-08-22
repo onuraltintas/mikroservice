@@ -72,6 +72,13 @@ public sealed record SessionUpdatedEvent(
     Guid[] StudentIds,
     DateTime ScheduledDate);
 
+public sealed record SessionCancelledEvent(
+    Guid SessionId,
+    Guid TeacherId,
+    Guid? InstitutionId,
+    Guid[] StudentIds,
+    DateTime ScheduledDate);
+
 public sealed record GoalCreatedEvent(
     Guid GoalId,
     Guid StudentId,

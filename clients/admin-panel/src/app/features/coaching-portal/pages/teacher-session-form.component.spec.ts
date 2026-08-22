@@ -81,4 +81,12 @@ describe('TeacherSessionFormComponent', () => {
     expect(service.getTeacherStudents).toHaveBeenLastCalledWith(2, 100, 'Zeynep');
     expect(component.studentPageNumber()).toBe(2);
   });
+
+  it('keeps one-on-one sessions to a single selected student', () => {
+    component.form.type = 'OneOnOne';
+    component.toggleStudent('student-1');
+    component.toggleStudent('student-2');
+
+    expect([...component.selectedStudentIds]).toEqual(['student-2']);
+  });
 });

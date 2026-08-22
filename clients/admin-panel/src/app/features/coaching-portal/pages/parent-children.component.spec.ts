@@ -88,6 +88,49 @@ describe('ParentChildrenComponent', () => {
 
     expect(service.getStudentProgress).toHaveBeenCalledWith('child-1');
     expect(component.progressSummary()).toEqual(summary);
+    expect(component.submittedAssignments()).toBe(8);
+    expect(component.completedGoals()).toBe(1);
+  });
+
+  it('loads the next assignment page without replacing the already visible records', () => {
+    const child: ChildSummary = {
+      userId: 'child-1',
+      firstName: 'Ada',
+      lastName: 'Yılmaz',
+      fullName: 'Ada Yılmaz'
+    };
+    const page = (id: string, pageNumber: number) => ({
+      items: [{ id, title: id, dueDate: '2030-01-01', status: 'Assigned', isOverdue: false }],
+      pageNumber,
+      pageSize: 25,
+      totalCount: 2,
+      totalPages: 2
+    });
+    const service = {
+      getMyChildren: vi.fn(() => of([child])),
+      getStudentAssignments: vi.fn()
+        .mockReturnValueOnce(of(page('assignment-1', 1)))
+        .mockReturnValueOnce(of(page('assignment-2', 2))),
+      getStudentGoals: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 0 })),
+      getStudentExamResults: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 0 })),
+      getStudentSessions: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 0 })),
+      getStudentProgress: vi.fn(() => of(null))
+    };
+    TestBed.configureTestingModule({
+      imports: [ParentChildrenComponent],
+      providers: [
+        { provide: AuthService, useValue: { userProfile: signal<UserProfile | null>(parentProfile()) } },
+        { provide: CoachingPortalService, useValue: service },
+        { provide: ActivatedRoute, useValue: {} }
+      ]
+    });
+    const component = TestBed.createComponent(ParentChildrenComponent).componentInstance;
+    component.ngOnInit();
+    component.loadMoreAssignments();
+
+    expect(service.getStudentAssignments).toHaveBeenLastCalledWith('child-1', 2, 25);
+    expect(component.assignmentPageNumber()).toBe(2);
+    expect(component.assignments().map(item => item.id)).toEqual(['assignment-1', 'assignment-2']);
   });
 });
 

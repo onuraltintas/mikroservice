@@ -131,6 +131,27 @@ public class ExamRepository : IExamRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<PagedRepositoryResult<Exam>> GetByTeacherIdAsync(
+        Guid teacherId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.Exams
+            .Include(exam => exam.Results)
+            .Where(exam => exam.CreatedByTeacherId == teacherId)
+            .OrderByDescending(exam => exam.ExamDate)
+            .ThenByDescending(exam => exam.Id);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip(CoachingPaging.GetSkip(pageNumber, pageSize))
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedRepositoryResult<Exam>(items, totalCount);
+    }
+
     public async Task<PagedRepositoryResult<Exam>> GetByStudentIdAsync(Guid studentId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
     {
         var query = _context.Exams
@@ -367,6 +388,26 @@ public class AcademicGoalRepository : IAcademicGoalRepository
             .Where(g => g.StudentId == studentId)
             .OrderByDescending(g => g.CreatedAt)
             .ThenByDescending(g => g.Id);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip(CoachingPaging.GetSkip(pageNumber, pageSize))
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedRepositoryResult<AcademicGoal>(items, totalCount);
+    }
+
+    public async Task<PagedRepositoryResult<AcademicGoal>> GetByTeacherIdAsync(
+        Guid teacherId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.AcademicGoals
+            .Where(goal => goal.SetByTeacherId == teacherId)
+            .OrderByDescending(goal => goal.CreatedAt)
+            .ThenByDescending(goal => goal.Id);
 
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query

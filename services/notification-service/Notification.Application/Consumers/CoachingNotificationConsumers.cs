@@ -222,6 +222,29 @@ public sealed class SessionUpdatedConsumer : IConsumer<SessionUpdatedEvent>
     }
 }
 
+public sealed class SessionCancelledConsumer : IConsumer<SessionCancelledEvent>
+{
+    private readonly ICoachingNotificationDispatcher _dispatcher;
+
+    public SessionCancelledConsumer(ICoachingNotificationDispatcher dispatcher)
+    {
+        _dispatcher = dispatcher;
+    }
+
+    public Task Consume(ConsumeContext<SessionCancelledEvent> context)
+    {
+        var message = context.Message;
+        return _dispatcher.SendAsync(
+            CoachingConsumerMessageIds.Require(context),
+            message.StudentIds,
+            "Koçluk seansı iptal edildi",
+            $"Koçluk seansın iptal edildi: {message.ScheduledDate:dd.MM.yyyy HH:mm}",
+            "SessionCancelled",
+            message.SessionId.ToString(),
+            context.CancellationToken);
+    }
+}
+
 public sealed class GoalCreatedConsumer : IConsumer<GoalCreatedEvent>
 {
     private readonly ICoachingNotificationDispatcher _dispatcher;
