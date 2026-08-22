@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 import { AuthService, hasRole } from '../../../core/auth/auth.service';
 import {
   ChildSummary,
@@ -9,7 +9,8 @@ import {
   CoachingSession,
   ExamResult,
   Goal,
-  StudentAssignment
+  StudentAssignment,
+  StudentProgressSummary
 } from '../../../core/services/coaching-portal.service';
 
 @Component({
@@ -29,6 +30,7 @@ export class ParentChildrenComponent implements OnInit {
   readonly goals = signal<Goal[]>([]);
   readonly examResults = signal<ExamResult[]>([]);
   readonly sessions = signal<CoachingSession[]>([]);
+  readonly progressSummary = signal<StudentProgressSummary | null>(null);
   readonly isLoading = signal(true);
   readonly isChildLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -57,18 +59,21 @@ export class ParentChildrenComponent implements OnInit {
     this.selectedChild.set(child);
     this.isChildLoading.set(true);
     this.errorMessage.set(null);
+    this.progressSummary.set(null);
 
     forkJoin({
       assignments: this.coachingService.getStudentAssignments(child.userId, 1, 25),
       goals: this.coachingService.getStudentGoals(child.userId, 1, 25),
       examResults: this.coachingService.getStudentExamResults(child.userId, 1, 25),
-      sessions: this.coachingService.getStudentSessions(child.userId, 1, 25)
+      sessions: this.coachingService.getStudentSessions(child.userId, 1, 25),
+      progress: this.coachingService.getStudentProgress(child.userId).pipe(catchError(() => of(null)))
     }).subscribe({
       next: result => {
         this.assignments.set(result.assignments.items);
         this.goals.set(result.goals.items);
         this.examResults.set(result.examResults.items);
         this.sessions.set(result.sessions.items);
+        this.progressSummary.set(result.progress);
       },
       error: () => {
         this.errorMessage.set('Çocuğun koçluk verileri yüklenemedi.');

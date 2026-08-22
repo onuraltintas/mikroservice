@@ -34,6 +34,13 @@
           <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500 dark:text-slate-400">Seans</p><p class="mt-2 text-3xl font-bold">{{ sessions().length }}</p></div>
         </div>
 
+        <div *ngIf="progressSummary() as summary" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="rounded-2xl border border-indigo-100 bg-indigo-50 p-5 dark:border-indigo-900/50 dark:bg-indigo-950/20"><p class="text-sm text-indigo-700 dark:text-indigo-200">Ödev başarı ortalaması</p><p class="mt-2 text-3xl font-bold text-indigo-900 dark:text-indigo-100">{{ summary.averageAssignmentPercentage === undefined ? '—' : '%' + (summary.averageAssignmentPercentage | number:'1.0-0') }}</p></div>
+          <div class="rounded-2xl border border-indigo-100 bg-indigo-50 p-5 dark:border-indigo-900/50 dark:bg-indigo-950/20"><p class="text-sm text-indigo-700 dark:text-indigo-200">Sınav başarı ortalaması</p><p class="mt-2 text-3xl font-bold text-indigo-900 dark:text-indigo-100">{{ summary.averageExamPercentage === undefined ? '—' : '%' + (summary.averageExamPercentage | number:'1.0-0') }}</p></div>
+          <div class="rounded-2xl border border-indigo-100 bg-indigo-50 p-5 dark:border-indigo-900/50 dark:bg-indigo-950/20"><p class="text-sm text-indigo-700 dark:text-indigo-200">Hedef ilerlemesi</p><p class="mt-2 text-3xl font-bold text-indigo-900 dark:text-indigo-100">%{{ summary.averageGoalProgress | number:'1.0-0' }}</p></div>
+          <div class="rounded-2xl border border-indigo-100 bg-indigo-50 p-5 dark:border-indigo-900/50 dark:bg-indigo-950/20"><p class="text-sm text-indigo-700 dark:text-indigo-200">Seans katılımı</p><p class="mt-2 text-3xl font-bold text-indigo-900 dark:text-indigo-100">{{ summary.attendancePercentage === undefined ? '—' : '%' + (summary.attendancePercentage | number:'1.0-0') }}</p></div>
+        </div>
+
         <div class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div class="border-b border-slate-200 px-5 py-4 dark:border-slate-800"><h2 class="font-semibold">Koçluk seansları</h2></div>
           <div *ngIf="sessions().length === 0" class="p-5 text-sm text-slate-500 dark:text-slate-400">Henüz seans bulunmuyor.</div>
