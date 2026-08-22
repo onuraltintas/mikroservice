@@ -66,6 +66,20 @@ describe('CoachingPortalService', () => {
     http.verify();
   });
 
+  it('loads the authenticated teacher student roster with bounded search paging', () => {
+    const { service, http } = setup();
+
+    service.getTeacherStudents(5000, 999, '  Ada  ').subscribe();
+
+    const request = http.expectOne(candidate => candidate.url.endsWith('/teachers/me/students'));
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('pageNumber')).toBe('1000');
+    expect(request.request.params.get('pageSize')).toBe('100');
+    expect(request.request.params.get('searchTerm')).toBe('Ada');
+    request.flush({ items: [], pageNumber: 1000, pageSize: 100, totalCount: 0, totalPages: 0 });
+    http.verify();
+  });
+
   it('requests bounded student session pages with encoded student ids', () => {
     const { service, http } = setup();
 
