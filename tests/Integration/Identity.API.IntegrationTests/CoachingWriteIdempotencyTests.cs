@@ -140,12 +140,14 @@ public sealed class CoachingWriteIdempotencyTests
             1,
             new Dictionary<string, decimal> { ["Mathematics"] = 85 },
             "Good work",
-            "result-key-20260820");
+            "result-key-20260820",
+            3);
 
         await handler.Handle(command, CancellationToken.None);
         await handler.Handle(command, CancellationToken.None);
 
         exam.Results.Should().ContainSingle();
+        exam.Results.Single().Ranking.Should().Be(3);
         unitOfWork.SaveCount.Should().Be(1);
         publisher.Messages.Should().ContainSingle();
     }
@@ -202,6 +204,17 @@ public sealed class CoachingWriteIdempotencyTests
 
         public Task<Exam?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.SingleOrDefault(item => item.Id == id));
+
+        public Task<Exam?> GetMetadataByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Items.SingleOrDefault(item => item.Id == id));
+
+        public Task<PagedRepositoryResult<ExamResult>> GetResultsByExamIdAsync(Guid examId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
+        {
+            var exam = Items.SingleOrDefault(item => item.Id == examId);
+            var results = exam?.Results ?? [];
+            var page = results.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+            return Task.FromResult(new PagedRepositoryResult<ExamResult>(page, results.Count));
+        }
 
         public Task<List<Exam>> GetByInstitutionIdAsync(Guid institutionId, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.Where(item => item.InstitutionId == institutionId).ToList());

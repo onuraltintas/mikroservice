@@ -54,7 +54,8 @@ public class GetStudentExamResultsQueryHandler : IRequestHandler<GetStudentExamR
                 CorrectAnswers: studentResult.CorrectAnswers,
                 WrongAnswers: studentResult.WrongAnswers,
                 EmptyAnswers: studentResult.EmptyAnswers,
-                SubjectScores: studentResult.GetSubjectScores()
+                SubjectScores: studentResult.GetSubjectScores(),
+                Ranking: studentResult.Ranking
             ));
         }
 

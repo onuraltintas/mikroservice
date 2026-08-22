@@ -169,6 +169,7 @@ export interface ExamResult {
   wrongAnswers?: number;
   emptyAnswers?: number;
   subjectScores?: Record<string, number>;
+  ranking?: number;
 }
 
 export interface TeacherExam {
@@ -182,6 +183,38 @@ export interface TeacherExam {
   description?: string;
   durationMinutes?: number;
   targetGradeLevel?: number;
+}
+
+export interface TeacherExamResult {
+  id: string;
+  studentId: string;
+  score: number;
+  correctAnswers?: number;
+  wrongAnswers?: number;
+  emptyAnswers?: number;
+  subjectScores?: Record<string, number>;
+  ranking?: number;
+  teacherNotes?: string;
+}
+
+export interface TeacherExamDetail extends TeacherExam {
+  results: TeacherExamResult[];
+  resultPageNumber: number;
+  resultPageSize: number;
+  resultTotalPages: number;
+}
+
+export interface TeacherExamResultMutationRequest {
+  examId: string;
+  resultId?: string;
+  studentId?: string;
+  score: number;
+  correctAnswers: number;
+  wrongAnswers: number;
+  emptyAnswers: number;
+  subjectScores?: Record<string, number> | null;
+  ranking?: number | null;
+  notes?: string | null;
 }
 
 export interface TeacherGoal {
@@ -637,6 +670,46 @@ export class CoachingPortalService {
         title: request.title.trim(),
         subject: request.subject?.trim() || null,
         description: request.description?.trim() || null
+      }
+    );
+  }
+
+  getTeacherExamDetail(examId: string, pageNumber = 1, pageSize = 25): Observable<TeacherExamDetail> {
+    return this.http.get<TeacherExamDetail>(
+      `${environment.apiUrl}/exams/${this.id(examId)}/teacher-detail`,
+      { params: this.paging(pageNumber, pageSize) }
+    );
+  }
+
+  addTeacherExamResult(
+    examId: string,
+    request: TeacherExamResultMutationRequest,
+    idempotencyKey: string
+  ): Observable<{ message: string }> {
+    const headers = new HttpHeaders({ 'Idempotency-Key': idempotencyKey });
+    return this.http.post<{ message: string }>(
+      `${environment.apiUrl}/exams/${this.id(examId)}/results`,
+      {
+        ...request,
+        examId,
+        notes: request.notes?.trim() || null
+      },
+      { headers }
+    );
+  }
+
+  updateTeacherExamResult(
+    examId: string,
+    resultId: string,
+    request: TeacherExamResultMutationRequest
+  ): Observable<{ examId: string; resultId: string; score: number }> {
+    return this.http.put<{ examId: string; resultId: string; score: number }>(
+      `${environment.apiUrl}/exams/${this.id(examId)}/results/${this.id(resultId)}`,
+      {
+        ...request,
+        examId,
+        resultId,
+        notes: request.notes?.trim() || null
       }
     );
   }

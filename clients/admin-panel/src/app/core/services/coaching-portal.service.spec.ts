@@ -326,6 +326,47 @@ describe('CoachingPortalService', () => {
     http.verify();
   });
 
+  it('loads teacher exam results and supports add/correct mutations with idempotency', () => {
+    const { service, http } = setup();
+
+    service.getTeacherExamDetail('exam/1').subscribe();
+    const detail = http.expectOne(candidate => candidate.url.endsWith('/exams/exam%2F1/teacher-detail'));
+    expect(detail.request.method).toBe('GET');
+    expect(detail.request.params.get('pageNumber')).toBe('1');
+    expect(detail.request.params.get('pageSize')).toBe('25');
+    detail.flush({ id: 'exam/1', results: [], resultPageNumber: 1, resultPageSize: 25, resultTotalPages: 1 });
+
+    service.addTeacherExamResult('exam/1', {
+      examId: 'exam/1',
+      studentId: 'student/1',
+      score: 420,
+      correctAnswers: 80,
+      wrongAnswers: 10,
+      emptyAnswers: 0,
+      notes: '  Tekrar gerekli  '
+    }, 'result-key-123456').subscribe();
+    const add = http.expectOne(candidate => candidate.url.endsWith('/exams/exam%2F1/results'));
+    expect(add.request.method).toBe('POST');
+    expect(add.request.headers.get('Idempotency-Key')).toBe('result-key-123456');
+    expect(add.request.body.notes).toBe('Tekrar gerekli');
+    add.flush({ message: 'Result added successfully' });
+
+    service.updateTeacherExamResult('exam/1', 'result/1', {
+      examId: 'exam/1',
+      resultId: 'result/1',
+      score: 430,
+      correctAnswers: 82,
+      wrongAnswers: 8,
+      emptyAnswers: 0,
+      notes: '  Güncel not  '
+    }).subscribe();
+    const update = http.expectOne(candidate => candidate.url.endsWith('/exams/exam%2F1/results/result%2F1'));
+    expect(update.request.method).toBe('PUT');
+    expect(update.request.body.notes).toBe('Güncel not');
+    update.flush({ examId: 'exam/1', resultId: 'result/1', score: 430 });
+    http.verify();
+  });
+
   it('updates only the current student reflection for a session', () => {
     const { service, http } = setup();
 

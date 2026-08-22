@@ -30,5 +30,6 @@ public record ExamResultDto(
     int? CorrectAnswers,
     int? WrongAnswers,
     int? EmptyAnswers,
-    Dictionary<string, decimal>? SubjectScores
+    Dictionary<string, decimal>? SubjectScores,
+    int? Ranking = null
 );

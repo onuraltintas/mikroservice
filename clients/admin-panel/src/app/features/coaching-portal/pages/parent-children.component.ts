@@ -14,7 +14,7 @@ import {
 } from '../../../core/services/coaching-portal.service';
 
 type ParentAssignmentFilter = 'all' | 'pending' | 'submitted' | 'overdue';
-type ParentCollection = 'assignments' | 'goals' | 'sessions';
+type ParentCollection = 'assignments' | 'goals' | 'sessions' | 'exams';
 
 @Component({
   selector: 'app-parent-children',
@@ -41,6 +41,8 @@ export class ParentChildrenComponent implements OnInit {
   readonly goalTotalPages = signal(1);
   readonly sessionPageNumber = signal(1);
   readonly sessionTotalPages = signal(1);
+  readonly examPageNumber = signal(1);
+  readonly examTotalPages = signal(1);
   readonly loadingMore = signal<ParentCollection | null>(null);
   readonly isLoading = signal(true);
   readonly isChildLoading = signal(false);
@@ -74,9 +76,11 @@ export class ParentChildrenComponent implements OnInit {
     this.assignmentPageNumber.set(1);
     this.goalPageNumber.set(1);
     this.sessionPageNumber.set(1);
+    this.examPageNumber.set(1);
     this.assignmentTotalPages.set(1);
     this.goalTotalPages.set(1);
     this.sessionTotalPages.set(1);
+    this.examTotalPages.set(1);
 
     forkJoin({
       assignments: this.coachingService.getStudentAssignments(child.userId, 1, 25),
@@ -94,6 +98,7 @@ export class ParentChildrenComponent implements OnInit {
         this.assignmentTotalPages.set(result.assignments.totalPages ?? Math.max(1, Math.ceil(result.assignments.totalCount / result.assignments.pageSize)));
         this.goalTotalPages.set(result.goals.totalPages ?? Math.max(1, Math.ceil(result.goals.totalCount / result.goals.pageSize)));
         this.sessionTotalPages.set(result.sessions.totalPages ?? Math.max(1, Math.ceil(result.sessions.totalCount / result.sessions.pageSize)));
+        this.examTotalPages.set(result.examResults.totalPages ?? Math.max(1, Math.ceil(result.examResults.totalCount / result.examResults.pageSize)));
       },
       error: () => {
         this.errorMessage.set('Çocuğun koçluk verileri yüklenemedi.');
@@ -159,6 +164,22 @@ export class ParentChildrenComponent implements OnInit {
     });
   }
 
+  loadMoreExams() {
+    const child = this.selectedChild();
+    if (!child || this.examPageNumber() >= this.examTotalPages() || this.loadingMore()) return;
+    const nextPage = this.examPageNumber() + 1;
+    this.loadingMore.set('exams');
+    this.coachingService.getStudentExamResults(child.userId, nextPage, 25).pipe(
+      finalize(() => this.loadingMore.set(null))
+    ).subscribe({
+      next: page => {
+        this.examResults.update(items => [...items, ...page.items]);
+        this.examPageNumber.set(page.pageNumber);
+      },
+      error: () => this.errorMessage.set('Sınav sonuçlarının devamı yüklenemedi.')
+    });
+  }
+
   setAssignmentFilter(filter: ParentAssignmentFilter) {
     this.assignmentFilter.set(filter);
   }
@@ -169,5 +190,13 @@ export class ParentChildrenComponent implements OnInit {
     if (filter === 'overdue') return this.assignments().filter(assignment => assignment.isOverdue && !assignment.submittedAt);
     if (filter === 'pending') return this.assignments().filter(assignment => !assignment.submittedAt && !assignment.isOverdue);
     return this.assignments();
+  }
+
+  scorePercentage(result: ExamResult) {
+    return result.maxScore > 0 ? Math.round(result.score / result.maxScore * 100) : null;
+  }
+
+  subjectScoreLabel(scores?: Record<string, number>) {
+    return scores ? Object.entries(scores).map(([subject, score]) => `${subject}: ${score}`).join(' · ') : '—';
   }
 }

@@ -54,6 +54,31 @@ public sealed class CoachingTeacherAcademicQueryTests
             .Where(exception => exception.Code == "Authorization.Forbidden");
     }
 
+    [Fact]
+    public async Task TeacherExamDetail_ShouldExposeOwnResultsForCorrection()
+    {
+        var teacherId = Guid.NewGuid();
+        var studentId = Guid.NewGuid();
+        var exam = Exam.Create(teacherId, "LGS denemesi", ExamType.LGS, DateTime.UtcNow.AddDays(1), 500);
+        exam.AddResult(ExamResult.Create(exam.Id, studentId, 420));
+        var result = exam.Results.Single();
+        result.SetAnswerStatistics(80, 10, 0);
+        result.AddTeacherNotes("Tekrar gereken konular var.");
+
+        var handler = new GetTeacherExamDetailQueryHandler(
+            new StubExamRepository(exam),
+            CreatePolicy(teacherId, "Teacher"));
+
+        var detail = await handler.Handle(new GetTeacherExamDetailQuery(exam.Id), CancellationToken.None);
+
+        detail.Should().NotBeNull();
+        detail!.Results.Should().ContainSingle().Which.Should().Match<TeacherExamResultDto>(item =>
+            item.StudentId == studentId
+            && item.Score == 420
+            && item.CorrectAnswers == 80
+            && item.TeacherNotes == "Tekrar gereken konular var.");
+    }
+
     private static ICoachingAccessPolicy CreatePolicy(Guid userId, params string[] roles) =>
         new CoachingAccessPolicy(new StubCurrentUserService(userId, roles));
 
@@ -63,6 +88,15 @@ public sealed class CoachingTeacherAcademicQueryTests
 
         public Task<Exam?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
             Task.FromResult(_exams.SingleOrDefault(exam => exam.Id == id));
+
+        public Task<Exam?> GetMetadataByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(_exams.SingleOrDefault(exam => exam.Id == id));
+
+        public Task<PagedRepositoryResult<ExamResult>> GetResultsByExamIdAsync(Guid examId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
+        {
+            var exam = _exams.SingleOrDefault(item => item.Id == examId);
+            return Task.FromResult(Page(exam?.Results ?? [], pageNumber, pageSize));
+        }
 
         public Task<List<Exam>> GetByInstitutionIdAsync(Guid institutionId, CancellationToken cancellationToken = default) =>
             Task.FromResult(_exams.Where(exam => exam.InstitutionId == institutionId).ToList());

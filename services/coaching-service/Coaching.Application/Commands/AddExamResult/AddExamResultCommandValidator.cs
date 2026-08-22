@@ -25,6 +25,10 @@ public sealed class AddExamResultCommandValidator : AbstractValidator<AddExamRes
         RuleFor(command => command.EmptyAnswers)
             .GreaterThanOrEqualTo(0);
 
+        RuleFor(command => command.Ranking)
+            .GreaterThan(0)
+            .When(command => command.Ranking.HasValue);
+
         RuleFor(command => command.IdempotencyKey)
             .NotEmpty()
             .Matches("^[A-Za-z0-9._~-]{16,128}$")

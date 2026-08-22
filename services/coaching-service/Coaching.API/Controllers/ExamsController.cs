@@ -279,4 +279,29 @@ public class ExamsController : ControllerBase
 
         return Ok(result);
     }
+
+    /// <summary>
+    /// Get one teacher-owned exam with its student results for correction.
+    /// </summary>
+    [HttpGet("{id:guid}/teacher-detail")]
+    [ProducesResponseType(typeof(TeacherExamDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetTeacherExamDetail(
+        Guid id,
+        CancellationToken cancellationToken,
+        [FromQuery] int pageNumber = CoachingPaging.DefaultPageNumber,
+        [FromQuery] int pageSize = CoachingPaging.DefaultPageSize)
+    {
+        try
+        {
+            var result = await _mediator.Send(new GetTeacherExamDetailQuery(id, pageNumber, pageSize), cancellationToken);
+            return result is null ? NotFound(new { error = "Exam not found" }) : Ok(result);
+        }
+        catch (EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException ex)
+            when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
+        }
+    }
 }

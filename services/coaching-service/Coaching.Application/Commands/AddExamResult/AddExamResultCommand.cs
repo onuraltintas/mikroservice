@@ -11,5 +11,6 @@ public record AddExamResultCommand(
     int EmptyAnswers,
     Dictionary<string, decimal>? SubjectScores,
     string? Notes,
-    string? IdempotencyKey = null
+    string? IdempotencyKey = null,
+    int? Ranking = null
 ) : IRequest;

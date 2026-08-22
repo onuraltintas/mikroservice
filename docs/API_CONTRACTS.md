@@ -270,6 +270,13 @@ Conflict`. The key is read from the HTTP header, not from the JSON body, and
 each domain row plus its idempotency record is committed in one Coaching
 transaction.
 
+Teacher portal result correction uses `GET /api/exams/{id}/teacher-detail`;
+with bounded `pageNumber`/`pageSize` result pagination; the response is restricted to the owning teacher and contains result
+statistics, ranking, subject scores and teacher notes. New results accept an
+optional `ranking` field in `POST /api/exams/{id}/results`; corrections use
+`PUT /api/exams/{id}/results/{resultId}`. Student result reads expose ranking
+as a read-only field alongside the answer statistics.
+
 ## Contract testleri
 
 `tests/Integration/Identity.API.IntegrationTests` altında ProblemDetails,

@@ -22,6 +22,8 @@ public interface IAssignmentRepository
 public interface IExamRepository
 {
     Task<Exam?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Exam?> GetMetadataByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<PagedRepositoryResult<ExamResult>> GetResultsByExamIdAsync(Guid examId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<List<Exam>> GetByInstitutionIdAsync(Guid institutionId, CancellationToken cancellationToken = default);
     Task<PagedRepositoryResult<Exam>> GetByTeacherIdAsync(Guid teacherId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<PagedRepositoryResult<Exam>> GetByStudentIdAsync(Guid studentId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);

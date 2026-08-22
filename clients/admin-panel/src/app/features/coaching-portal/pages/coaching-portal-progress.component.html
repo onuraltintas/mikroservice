@@ -40,6 +40,11 @@
       </div>
     </div>
 
+    <div *ngIf="examTrend().length" class="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-5 dark:border-indigo-900/50 dark:bg-indigo-950/20">
+      <div class="flex flex-wrap items-end justify-between gap-3"><div><h2 class="font-semibold text-indigo-950 dark:text-indigo-100">Son sınav trendi</h2><p class="mt-1 text-sm text-indigo-700/80 dark:text-indigo-200/80">Son altı sınavdaki başarı yüzdelerin.</p></div><span class="text-xs text-indigo-700 dark:text-indigo-200">Eskiden yeniye</span></div>
+      <div class="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-6"><div *ngFor="let result of examTrend()" class="rounded-xl border border-indigo-100 bg-white p-3 dark:border-indigo-900/50 dark:bg-slate-900"><p class="truncate text-xs font-medium text-slate-500" [title]="result.examTitle">{{ result.examTitle }}</p><p class="mt-2 text-xl font-bold text-indigo-700 dark:text-indigo-200">{{ scorePercentage(result) === null ? '—' : '%' + scorePercentage(result) }}</p><div class="mt-2 h-1.5 overflow-hidden rounded-full bg-indigo-100 dark:bg-indigo-950"><div class="h-full rounded-full bg-indigo-600" [style.width.%]="scorePercentage(result) ?? 0"></div></div></div></div>
+    </div>
+
     <div class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4 dark:border-slate-800">
         <div>
@@ -110,10 +115,11 @@
       <div *ngIf="examResults().length === 0" class="p-5 text-sm text-slate-500">Henüz sınav sonucu bulunmuyor.</div>
       <div *ngIf="examResults().length" class="overflow-x-auto">
         <table class="min-w-full text-left text-sm">
-          <thead class="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-800/60"><tr><th class="px-5 py-3">Sınav</th><th class="px-5 py-3">Tarih</th><th class="px-5 py-3">Puan</th><th class="px-5 py-3">Başarı</th></tr></thead>
-          <tbody><tr *ngFor="let result of examResults()" class="border-t border-slate-100 dark:border-slate-800"><td class="px-5 py-4 font-medium">{{ result.examTitle }}</td><td class="px-5 py-4 text-slate-500">{{ result.examDate | date:'d MMM y' }}</td><td class="px-5 py-4">{{ result.score }} / {{ result.maxScore }}</td><td class="px-5 py-4 font-semibold">{{ result.maxScore > 0 ? (result.score / result.maxScore * 100 | number:'1.0-0') : '—' }}%</td></tr></tbody>
+          <thead class="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-800/60"><tr><th class="px-5 py-3">Sınav</th><th class="px-5 py-3">Tarih</th><th class="px-5 py-3">Puan</th><th class="px-5 py-3">Başarı</th><th class="px-5 py-3">Doğru / Yanlış / Boş</th><th class="px-5 py-3">Sıra</th><th class="px-5 py-3">Ders kırılımı</th></tr></thead>
+          <tbody><tr *ngFor="let result of examResults()" class="border-t border-slate-100 dark:border-slate-800"><td class="px-5 py-4 font-medium">{{ result.examTitle }}<span class="mt-1 block text-xs font-normal text-slate-500">{{ result.examType }}</span></td><td class="px-5 py-4 text-slate-500">{{ result.examDate | date:'d MMM y' }}</td><td class="px-5 py-4">{{ result.score }} / {{ result.maxScore }}</td><td class="px-5 py-4 font-semibold">{{ scorePercentage(result) === null ? '—' : '%' + scorePercentage(result) }}</td><td class="px-5 py-4 text-slate-500">{{ result.correctAnswers ?? '—' }} / {{ result.wrongAnswers ?? '—' }} / {{ result.emptyAnswers ?? '—' }}</td><td class="px-5 py-4">{{ result.ranking ?? '—' }}</td><td class="px-5 py-4 text-xs text-slate-500">{{ subjectScoreLabel(result.subjectScores) }}</td></tr></tbody>
         </table>
       </div>
+      <div *ngIf="examPageNumber() < examTotalPages()" class="border-t border-slate-100 p-4 text-center dark:border-slate-800"><button type="button" (click)="loadMoreExams()" [disabled]="loadingMoreExams()" class="rounded-lg border border-indigo-200 px-4 py-2 text-sm font-semibold text-indigo-700 disabled:opacity-50 dark:border-indigo-900/50 dark:text-indigo-200">{{ loadingMoreExams() ? 'Yükleniyor…' : 'Daha fazla sınav göster' }}</button></div>
     </div>
   </ng-container>
 </section>

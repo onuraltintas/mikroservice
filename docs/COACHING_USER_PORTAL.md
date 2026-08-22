@@ -83,6 +83,20 @@ sahipliğini sunucu tarafında doğrular. Liste DTO'ları açıklama, süre, sı
 hedef sınavı ve ders alanlarını da döndürür; böylece düzenleme sırasında
 gönderilmeyen opsiyonel alanlar yanlışlıkla silinmez.
 
+Sınav kartındaki `Sonuçları yönet` akışı `GET /api/exams/{examId}/teacher-detail`
+ile yalnızca sınav sahibinin öğrenci sonuçlarını açar; `pageNumber` ve `pageSize`
+parametreleri sonuçları 25'lik varsayılan sayfalarla sınırlar. Öğretmen sonuç eklerken
+`POST /api/exams/{examId}/results` ve benzersiz `Idempotency-Key`, düzeltirken
+`PUT /api/exams/{examId}/results/{resultId}` kullanılır. Puan, cevap dağılımı,
+sıralama, ders puanları ve öğretmen notu hem istemcide hem Coaching domain
+kurallarında doğrulanır; öğrenci hedefi Identity ilişki kontrolünden geçmeden
+sonuç eklenemez.
+
+Öğrenci ilerleme ekranı son altı sınavı kronolojik trend olarak, puan/sıralama,
+doğru-yanlış-boş ve ders kırılımıyla gösterir ve sonuçları 25'lik sayfalarla
+yükler. Veli çocuk görünümünde aynı sınav ayrıntıları salt okunur olarak yer
+alır; çocuk seçimi değiştiğinde sonuç sayfalaması ve kapsamı sıfırlanır.
+
 Seans listeleri 25'lik sayfalarla yüklenir ve toplam kayıt sayısı API'nin
 `totalCount` alanından gösterilir. Gelecekteki planlanmış seans iptal
 edildiğinde Coaching outbox üzerinden `SessionCancelledEvent` yayınlanır;

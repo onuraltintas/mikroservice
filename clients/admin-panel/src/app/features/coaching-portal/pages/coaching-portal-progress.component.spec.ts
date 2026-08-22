@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { AuthService, UserProfile } from '../../../core/auth/auth.service';
-import { CoachingPortalService, Goal } from '../../../core/services/coaching-portal.service';
+import { CoachingPortalService, ExamResult, Goal } from '../../../core/services/coaching-portal.service';
 import { CoachingPortalProgressComponent } from './coaching-portal-progress.component';
 
 describe('CoachingPortalProgressComponent', () => {
@@ -78,6 +78,24 @@ describe('CoachingPortalProgressComponent', () => {
 
     expect(service.updateGoalProgress).toHaveBeenCalledWith('goal-1', 75);
     expect(component.goals()[0]).toMatchObject({ progress: 75, isCompleted: false });
+  });
+
+  it('keeps the exam trend chronological and loads the next result page', () => {
+    const component = TestBed.createComponent(CoachingPortalProgressComponent).componentInstance;
+    const first: ExamResult = { examId: 'exam-1', examTitle: 'İlk deneme', examDate: '2030-02-01', examType: 'Mock', score: 60, maxScore: 100 };
+    const second: ExamResult = { examId: 'exam-2', examTitle: 'Son deneme', examDate: '2030-03-01', examType: 'Mock', score: 80, maxScore: 100 };
+    component.examResults.set([second, first]);
+    component.examPageNumber.set(1);
+    component.examTotalPages.set(2);
+    service.getStudentExamResults.mockReturnValue(of({ items: [second], pageNumber: 2, pageSize: 25, totalCount: 2, totalPages: 2 }));
+
+    expect(component.examTrend().map(result => result.examId)).toEqual(['exam-1', 'exam-2']);
+    expect(component.scorePercentage(second)).toBe(80);
+    component.loadMoreExams();
+
+    expect(service.getStudentExamResults).toHaveBeenLastCalledWith('user-1', 2, 25);
+    expect(component.examPageNumber()).toBe(2);
+    expect(component.examResults()).toHaveLength(3);
   });
 });
 

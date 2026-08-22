@@ -62,7 +62,8 @@ public class AddExamResultCommandHandler : IRequestHandler<AddExamResultCommand>
             command.WrongAnswers.ToString(),
             command.EmptyAnswers.ToString(),
             IdempotencyRequestHasher.Format(command.SubjectScores),
-            command.Notes);
+            command.Notes,
+            command.Ranking?.ToString());
         var existing = await _idempotencyRepository.GetAsync(IdempotencyScope, key!, cancellationToken);
         if (existing is not null)
         {
@@ -98,6 +99,11 @@ public class AddExamResultCommandHandler : IRequestHandler<AddExamResultCommand>
         if (command.SubjectScores != null)
         {
             result.SetSubjectScores(command.SubjectScores);
+        }
+
+        if (command.Ranking.HasValue)
+        {
+            result.SetRanking(command.Ranking.Value);
         }
 
         if (!string.IsNullOrEmpty(command.Notes))
