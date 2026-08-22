@@ -52,6 +52,10 @@ export class StudentAssignmentDetailComponent implements OnInit {
     return this.isStudent() && !!this.studentRecord() && status !== 'submitted' && status !== 'graded';
   });
 
+  hasBookReference(assignment: AssignmentDetail) {
+    return assignment.source === 'Book' || assignment.source === 'Mixed';
+  }
+
   ngOnInit() {
     this.load();
   }

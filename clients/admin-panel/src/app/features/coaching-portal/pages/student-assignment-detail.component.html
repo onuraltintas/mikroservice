@@ -26,7 +26,7 @@
       </div>
     </div>
 
-    <div *ngIf="item.source === 'Book' && (item.bookTitle || item.bookStartPage || item.bookStartQuestion)" class="rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900/40 dark:bg-amber-950/20">
+    <div *ngIf="hasBookReference(item) && (item.bookTitle || item.bookStartPage || item.bookStartQuestion)" class="rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900/40 dark:bg-amber-950/20">
       <h2 class="font-semibold text-amber-950 dark:text-amber-100">Kitap / kaynak görevi</h2>
       <dl class="mt-4 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
         <div *ngIf="item.bookTitle"><dt class="text-amber-800/70 dark:text-amber-200/70">Kitap</dt><dd class="mt-1 font-medium">{{ item.bookTitle }}</dd></div>
