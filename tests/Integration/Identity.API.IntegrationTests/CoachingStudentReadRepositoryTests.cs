@@ -256,6 +256,89 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task TeacherStudentRoster_ShouldEnforceTenantAndActiveInstitution()
+    {
+        var institutionA = Institution.Create("Active Teacher School", InstitutionType.School);
+        var institutionB = Institution.Create("Other Student School", InstitutionType.School);
+        var teacher = User.Create(Guid.NewGuid(), "tenant-teacher@example.test");
+        var sameInstitutionStudent = User.Create(Guid.NewGuid(), "same-institution@example.test");
+        var crossInstitutionStudent = User.Create(Guid.NewGuid(), "cross-institution@example.test");
+
+        AddRole(teacher, "Teacher");
+        AddRole(sameInstitutionStudent, "Student");
+        AddRole(crossInstitutionStudent, "Student");
+
+        var teacherProfile = TeacherProfile.Create(teacher.Id, "Tenant", "Teacher", institutionA.Id);
+        var sameInstitutionProfile = StudentProfile.Create(
+            sameInstitutionStudent.Id,
+            "Same",
+            "Institution",
+            institutionA.Id);
+        var crossInstitutionProfile = StudentProfile.Create(
+            crossInstitutionStudent.Id,
+            "Cross",
+            "Institution",
+            institutionB.Id);
+
+        _dbContext!.Institutions.AddRange(institutionA, institutionB);
+        _dbContext.Users.AddRange(teacher, sameInstitutionStudent, crossInstitutionStudent);
+        _dbContext.TeacherProfiles.Add(teacherProfile);
+        _dbContext.StudentProfiles.AddRange(sameInstitutionProfile, crossInstitutionProfile);
+        _dbContext.TeacherStudentAssignments.AddRange(
+            TeacherStudentAssignment.Create(teacherProfile.Id, sameInstitutionProfile.Id, institutionA.Id),
+            // Deliberately inconsistent data: the assignment claims institution A while the student belongs to B.
+            TeacherStudentAssignment.Create(teacherProfile.Id, crossInstitutionProfile.Id, institutionA.Id));
+        await _dbContext.SaveChangesAsync();
+
+        var activeResult = await TeacherRepository().GetStudentsByTeacherUserIdAsync(
+            teacher.Id, 1, 25, null, CancellationToken.None);
+
+        activeResult.Items.Should().ContainSingle(student => student.UserId == sameInstitutionStudent.Id);
+
+        institutionA.Deactivate();
+        await _dbContext.SaveChangesAsync();
+
+        var inactiveInstitutionResult = await TeacherRepository().GetStudentsByTeacherUserIdAsync(
+            teacher.Id, 1, 25, null, CancellationToken.None);
+
+        inactiveInstitutionResult.TotalCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task TeacherStudentRoster_ShouldUseStableOrderingAndSubjectSelection()
+    {
+        var institution = Institution.Create("Deterministic Roster School", InstitutionType.School);
+        var teacher = User.Create(Guid.NewGuid(), "deterministic-teacher@example.test");
+        var firstStudent = User.Create(Guid.NewGuid(), "deterministic-first@example.test");
+        var secondStudent = User.Create(Guid.NewGuid(), "deterministic-second@example.test");
+
+        AddRole(teacher, "Teacher");
+        AddRole(firstStudent, "Student");
+        AddRole(secondStudent, "Student");
+
+        var teacherProfile = TeacherProfile.Create(teacher.Id, "Deterministic", "Teacher", institution.Id);
+        var firstProfile = StudentProfile.Create(firstStudent.Id, "Same", "Name", institution.Id);
+        var secondProfile = StudentProfile.Create(secondStudent.Id, "Same", "Name", institution.Id);
+
+        _dbContext!.Institutions.Add(institution);
+        _dbContext.Users.AddRange(teacher, firstStudent, secondStudent);
+        _dbContext.TeacherProfiles.Add(teacherProfile);
+        _dbContext.StudentProfiles.AddRange(firstProfile, secondProfile);
+        _dbContext.TeacherStudentAssignments.AddRange(
+            TeacherStudentAssignment.Create(teacherProfile.Id, firstProfile.Id, institution.Id, "Türkçe"),
+            TeacherStudentAssignment.Create(teacherProfile.Id, firstProfile.Id, institution.Id, "Matematik"),
+            TeacherStudentAssignment.Create(teacherProfile.Id, secondProfile.Id, institution.Id, "Fen"));
+        await _dbContext.SaveChangesAsync();
+
+        var result = await TeacherRepository().GetStudentsByTeacherUserIdAsync(
+            teacher.Id, 1, 25, null, CancellationToken.None);
+
+        result.Items.Select(student => student.UserId)
+            .Should().Equal(new[] { firstStudent.Id, secondStudent.Id }.OrderBy(id => id));
+        result.Items.Single(student => student.UserId == firstStudent.Id).Subject.Should().Be("Matematik");
+    }
+
+    [Fact]
     public async Task SystemAdministrator_ShouldReadActiveStudentsAcrossInstitutions()
     {
         var institutionA = Institution.Create("System Institution A", InstitutionType.School);
