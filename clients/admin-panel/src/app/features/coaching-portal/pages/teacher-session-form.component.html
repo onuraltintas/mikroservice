@@ -34,6 +34,11 @@
     </label>
     <fieldset>
       <legend class="mb-2 text-sm font-semibold">Katılımcı öğrenciler</legend>
+      <form class="mb-3 flex gap-2" (submit)="$event.preventDefault(); setStudentSearch(studentSearchInput.value)">
+        <label class="sr-only" for="session-student-search">Öğrenci ara</label>
+        <input #studentSearchInput id="session-student-search" type="search" [value]="studentSearchTerm()" placeholder="İsimle ara" class="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950" />
+        <button type="submit" class="rounded-lg border border-indigo-300 px-3 py-2 text-sm font-semibold text-indigo-700 dark:border-indigo-900/50 dark:text-indigo-200">Ara</button>
+      </form>
       <div class="grid max-h-72 gap-2 overflow-y-auto rounded-xl border border-slate-200 p-3 md:grid-cols-2 dark:border-slate-800">
         <label *ngFor="let student of students(); trackBy: trackByStudent" class="flex items-center gap-2 rounded-lg px-2 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-800">
           <input type="checkbox" [checked]="isSelected(student.userId)" (change)="toggleStudent(student.userId)" />
@@ -42,6 +47,11 @@
         <p *ngIf="students().length === 0" class="text-sm text-slate-500">Aktif öğrenciniz bulunamadı.</p>
       </div>
       <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Seçili öğrenci: {{ selectedStudentIds.size }}</p>
+      <div *ngIf="studentTotalPages() > 1" class="mt-3 flex items-center justify-between text-sm">
+        <button type="button" (click)="previousStudentsPage()" [disabled]="studentPageNumber() === 1" class="rounded-lg border border-slate-300 px-3 py-1.5 disabled:opacity-40 dark:border-slate-700">Önceki</button>
+        <span class="text-slate-500 dark:text-slate-400">Sayfa {{ studentPageNumber() }} / {{ studentTotalPages() }}</span>
+        <button type="button" (click)="nextStudentsPage()" [disabled]="studentPageNumber() >= studentTotalPages()" class="rounded-lg border border-slate-300 px-3 py-1.5 disabled:opacity-40 dark:border-slate-700">Sonraki</button>
+      </div>
     </fieldset>
     <div class="flex justify-end gap-3">
       <a routerLink="/coaching-portal/sessions" class="rounded-lg border border-slate-300 px-4 py-2 text-sm dark:border-slate-700">Vazgeç</a>
