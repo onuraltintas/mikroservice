@@ -3,7 +3,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
-import { AuthService } from '../../../core/auth/auth.service';
+import { AuthService, hasRole } from '../../../core/auth/auth.service';
 import {
   AssignmentAttachment,
   AssignmentDetail,
@@ -33,15 +33,14 @@ export class StudentAssignmentDetailComponent implements OnInit {
   readonly gradeDrafts = signal<Record<string, { score: number | null; feedback: string }>>({});
   readonly studentNote = signal('');
   readonly studentId = computed(() => this.authService.userProfile()?.id ?? '');
+  readonly isTeacher = computed(() => hasRole(this.authService.userProfile(), 'Teacher'));
+  readonly isStudent = computed(() => !this.isTeacher() && hasRole(this.authService.userProfile(), 'Student'));
+  readonly isParent = computed(() => !this.isTeacher() && !this.isStudent() && hasRole(this.authService.userProfile(), 'Parent'));
   readonly backRoute = computed(() => {
-    switch (this.authService.userProfile()?.role) {
-      case 'Teacher': return '/coaching-portal/teacher/assignments';
-      case 'Parent': return '/coaching-portal/children';
-      default: return '/coaching-portal/assignments';
-    }
+    if (this.isTeacher()) return '/coaching-portal/teacher/assignments';
+    if (this.isParent()) return '/coaching-portal/children';
+    return '/coaching-portal/assignments';
   });
-  readonly isStudent = computed(() => this.authService.userProfile()?.role === 'Student');
-  readonly isTeacher = computed(() => this.authService.userProfile()?.role === 'Teacher');
   readonly studentRecord = computed<AssignedStudent | undefined>(() => {
     const assignment = this.assignment();
     const studentId = this.studentId();

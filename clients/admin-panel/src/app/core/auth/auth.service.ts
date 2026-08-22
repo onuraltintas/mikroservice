@@ -56,6 +56,10 @@ export function hasRequiredRole(user: UserProfile | null, role: string): boolean
     return !!user && user.roles.includes(role);
 }
 
+export function hasRole(user: UserProfile | null, role: string): boolean {
+    return !!user && (user.role === role || user.roles.includes(role));
+}
+
 export function hasRequiredAccess(
     user: UserProfile | null,
     permission: string,

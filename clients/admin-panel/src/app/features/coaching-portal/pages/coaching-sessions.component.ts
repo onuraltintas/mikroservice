@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AuthService } from '../../../core/auth/auth.service';
+import { AuthService, hasRole } from '../../../core/auth/auth.service';
 import { CoachingPortalService, CoachingSession, CoachingStudentReflection } from '../../../core/services/coaching-portal.service';
 
 @Component({
@@ -26,9 +26,9 @@ export class CoachingSessionsComponent implements OnInit {
 
   ngOnInit() {
     const profile = this.authService.userProfile();
-    this.isTeacher.set(profile?.role === 'Teacher');
-    this.isStudent.set(profile?.role === 'Student');
-    if (!profile?.id || !['Student', 'Teacher'].includes(profile.role)) {
+    this.isTeacher.set(hasRole(profile, 'Teacher'));
+    this.isStudent.set(!this.isTeacher() && hasRole(profile, 'Student'));
+    if (!profile?.id || (!this.isStudent() && !this.isTeacher())) {
       this.isLoading.set(false);
       this.errorMessage.set('Seans bilgisi için öğrenci veya öğretmen profili bulunamadı.');
       return;

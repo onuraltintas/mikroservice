@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AuthService } from '../../../core/auth/auth.service';
+import { AuthService, hasRole } from '../../../core/auth/auth.service';
 import { CoachingPortalService, StudentAssignment, TeacherAssignment } from '../../../core/services/coaching-portal.service';
 
 @Component({
@@ -27,9 +27,9 @@ export class CoachingPortalHomeComponent implements OnInit {
 
   ngOnInit() {
     const profile = this.user();
-    this.isStudent.set(profile?.role === 'Student');
-    this.isTeacher.set(profile?.role === 'Teacher');
-    this.isParent.set(profile?.role === 'Parent');
+    this.isTeacher.set(hasRole(profile, 'Teacher'));
+    this.isStudent.set(!this.isTeacher() && hasRole(profile, 'Student'));
+    this.isParent.set(!this.isTeacher() && !this.isStudent() && hasRole(profile, 'Parent'));
 
     if (!profile?.id) {
       this.isLoading.set(false);

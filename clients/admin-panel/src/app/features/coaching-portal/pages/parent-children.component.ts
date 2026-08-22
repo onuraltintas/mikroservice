@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { AuthService } from '../../../core/auth/auth.service';
+import { AuthService, hasRole } from '../../../core/auth/auth.service';
 import {
   ChildSummary,
   CoachingPortalService,
@@ -34,7 +34,7 @@ export class ParentChildrenComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
 
   ngOnInit() {
-    if (this.authService.userProfile()?.role !== 'Parent') {
+    if (!hasRole(this.authService.userProfile(), 'Parent')) {
       this.isLoading.set(false);
       this.errorMessage.set('Bu alan yalnızca veli hesabı ile kullanılabilir.');
       return;
