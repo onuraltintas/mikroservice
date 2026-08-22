@@ -173,6 +173,17 @@ describe('CoachingPortalService', () => {
     http.verify();
   });
 
+  it('loads one teacher session through the protected detail route', () => {
+    const { service, http } = setup();
+
+    service.getTeacherSession('session/1').subscribe();
+
+    const request = http.expectOne(candidate => candidate.url.endsWith('/sessions/session%2F1'));
+    expect(request.request.method).toBe('GET');
+    request.flush({ id: 'session/1', studentIds: [] });
+    http.verify();
+  });
+
   it('requests bounded student session pages with encoded student ids', () => {
     const { service, http } = setup();
 
