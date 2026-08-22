@@ -108,6 +108,45 @@ describe('CoachingSessionsComponent', () => {
     fixture.componentInstance.exportCalendar();
     expect(service.downloadCalendarFeed).toHaveBeenCalledWith('teacher');
   });
+
+  it('lets a teacher update attendance for an assigned session student', () => {
+    const profile = signal<UserProfile | null>(user('Teacher'));
+    const reflection = {
+      studentId: 'student-1',
+      note: 'Not',
+      attendanceStatus: 'Present'
+    };
+    const session: CoachingSession = {
+      id: 'session-3',
+      studentId: 'student-1',
+      startTime: '2030-01-01T10:00:00Z',
+      endTime: '2030-01-01T11:00:00Z',
+      durationMinutes: 60,
+      status: 'Scheduled',
+      type: 'OneOnOne',
+      studentIds: ['student-1'],
+      studentReflections: [reflection]
+    };
+    const service = {
+      getTeacherSessions: vi.fn(() => of({ items: [session], pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1 })),
+      updateSessionAttendance: vi.fn(() => of({ message: 'Attendance updated successfully' }))
+    };
+
+    TestBed.configureTestingModule({
+      imports: [CoachingSessionsComponent],
+      providers: [
+        { provide: AuthService, useValue: { userProfile: profile } },
+        { provide: CoachingPortalService, useValue: service },
+        { provide: ActivatedRoute, useValue: {} }
+      ]
+    });
+    const component = TestBed.createComponent(CoachingSessionsComponent).componentInstance;
+    component.ngOnInit();
+    component.saveAttendance(session, reflection, false);
+
+    expect(service.updateSessionAttendance).toHaveBeenCalledWith('session-3', 'student-1', false, undefined);
+    expect(session.studentReflections?.[0].attendanceStatus).toBe('Absent');
+  });
 });
 
 function user(role: string): UserProfile {
