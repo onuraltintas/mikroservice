@@ -13,6 +13,8 @@ import {
   StudentProgressSummary
 } from '../../../core/services/coaching-portal.service';
 
+type ParentAssignmentFilter = 'all' | 'pending' | 'submitted' | 'overdue';
+
 @Component({
   selector: 'app-parent-children',
   standalone: true,
@@ -31,6 +33,7 @@ export class ParentChildrenComponent implements OnInit {
   readonly examResults = signal<ExamResult[]>([]);
   readonly sessions = signal<CoachingSession[]>([]);
   readonly progressSummary = signal<StudentProgressSummary | null>(null);
+  readonly assignmentFilter = signal<ParentAssignmentFilter>('all');
   readonly isLoading = signal(true);
   readonly isChildLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -89,5 +92,17 @@ export class ParentChildrenComponent implements OnInit {
 
   submittedAssignments() {
     return this.assignments().filter(assignment => !!assignment.submittedAt).length;
+  }
+
+  setAssignmentFilter(filter: ParentAssignmentFilter) {
+    this.assignmentFilter.set(filter);
+  }
+
+  visibleAssignments(): StudentAssignment[] {
+    const filter = this.assignmentFilter();
+    if (filter === 'submitted') return this.assignments().filter(assignment => !!assignment.submittedAt);
+    if (filter === 'overdue') return this.assignments().filter(assignment => assignment.isOverdue && !assignment.submittedAt);
+    if (filter === 'pending') return this.assignments().filter(assignment => !assignment.submittedAt && !assignment.isOverdue);
+    return this.assignments();
   }
 }
