@@ -536,6 +536,12 @@ export class CoachingPortalService {
     );
   }
 
+  getTeacherSession(sessionId: string): Observable<CoachingSession> {
+    return this.http.get<CoachingSession>(
+      `${environment.apiUrl}/sessions/${this.id(sessionId)}`
+    );
+  }
+
   createTeacherSession(
     request: TeacherSessionCreateRequest,
     idempotencyKey: string
