@@ -56,7 +56,7 @@ describe('TeacherAssignmentFormComponent', () => {
     component.toggleStudent(student.userId);
     component.submit();
 
-    expect(service.getTeacherStudents).toHaveBeenCalledWith(1, 100, undefined);
+    expect(service.getTeacherStudents).toHaveBeenCalledWith(1, 100);
     expect(service.createTeacherAssignment).toHaveBeenCalledOnce();
     const [request, idempotencyKey] = service.createTeacherAssignment.mock.calls[0];
     expect(request).toMatchObject({

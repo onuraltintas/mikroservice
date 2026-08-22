@@ -41,6 +41,18 @@ export const COACHING_PORTAL_ROUTES: Routes = [
     loadComponent: () => import('./pages/teacher-students.component').then(m => m.TeacherStudentsComponent)
   },
   {
+    path: 'teacher/assignments/new',
+    canActivate: [coachingRoleGuard],
+    data: { coachingRoles: ['Teacher'] },
+    loadComponent: () => import('./pages/teacher-assignment-form.component').then(m => m.TeacherAssignmentFormComponent)
+  },
+  {
+    path: 'teacher/assignments/:id/edit',
+    canActivate: [coachingRoleGuard],
+    data: { coachingRoles: ['Teacher'] },
+    loadComponent: () => import('./pages/teacher-assignment-form.component').then(m => m.TeacherAssignmentFormComponent)
+  },
+  {
     path: 'teacher/assignments',
     canActivate: [coachingRoleGuard],
     data: { coachingRoles: ['Teacher'] },

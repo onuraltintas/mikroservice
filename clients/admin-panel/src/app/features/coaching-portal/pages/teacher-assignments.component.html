@@ -1,8 +1,11 @@
 <section class="space-y-5">
-  <div>
+  <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <div>
     <p class="text-sm font-medium text-indigo-600 dark:text-indigo-300">Koç çalışma alanı</p>
     <h1 class="mt-1 text-2xl font-bold tracking-tight">Ödev yönetimi</h1>
     <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Atadığın çalışmaları, teslim durumlarını ve öğrenci değerlendirmelerini yönet.</p>
+    </div>
+    <a routerLink="/coaching-portal/teacher/assignments/new" class="rounded-lg bg-indigo-600 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-indigo-500">Yeni ödev</a>
   </div>
 
   <div *ngIf="errorMessage()" role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">{{ errorMessage() }}</div>
@@ -14,10 +17,10 @@
   </div>
 
   <div *ngIf="!isLoading() && assignments().length > 0" class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-    <a *ngFor="let assignment of assignments(); trackBy: trackById" [routerLink]="['/coaching-portal/assignments', assignment.id]" class="flex flex-col gap-4 border-b border-slate-100 p-5 last:border-0 hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800/70 dark:hover:bg-slate-800/50">
-      <div class="min-w-0"><h2 class="truncate font-semibold">{{ assignment.title }}</h2><p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ assignment.type }} · Son tarih {{ assignment.dueDate | date:'d MMM y, HH:mm' }}</p></div>
-      <div class="flex items-center gap-4 text-sm"><span class="text-slate-500 dark:text-slate-400">{{ assignment.submittedCount }} / {{ assignment.totalStudents }} teslim</span><span class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200">{{ assignment.status }}</span><span class="text-slate-400" aria-hidden="true">→</span></div>
-    </a>
+    <div *ngFor="let assignment of assignments(); trackBy: trackById" class="flex flex-col gap-4 border-b border-slate-100 p-5 last:border-0 hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800/70 dark:hover:bg-slate-800/50">
+      <a [routerLink]="['/coaching-portal/assignments', assignment.id]" class="min-w-0"><h2 class="truncate font-semibold">{{ assignment.title }}</h2><p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ assignment.type }} · Son tarih {{ assignment.dueDate | date:'d MMM y, HH:mm' }}</p></a>
+      <div class="flex flex-wrap items-center gap-4 text-sm"><span class="text-slate-500 dark:text-slate-400">{{ assignment.submittedCount }} / {{ assignment.totalStudents }} teslim</span><span class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200">{{ assignment.status }}</span><a [routerLink]="['/coaching-portal/teacher/assignments', assignment.id, 'edit']" class="font-semibold text-indigo-600 hover:underline dark:text-indigo-300">Düzenle</a></div>
+    </div>
   </div>
 
   <div *ngIf="!isLoading() && totalPages() > 1" class="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
