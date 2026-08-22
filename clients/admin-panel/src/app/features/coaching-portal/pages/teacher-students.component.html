@@ -1,0 +1,45 @@
+<section class="space-y-5">
+  <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <div>
+      <p class="text-sm font-medium text-indigo-600 dark:text-indigo-300">Koç çalışma alanı</p>
+      <h1 class="mt-1 text-2xl font-bold tracking-tight">Öğrencilerim</h1>
+      <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Yalnızca aktif koçluk ataması bulunan öğrenciler listelenir.</p>
+    </div>
+    <form class="flex w-full gap-2 sm:w-auto" (submit)="$event.preventDefault(); setSearchTerm(searchInput.value)">
+      <label class="sr-only" for="teacher-student-search">Öğrenci ara</label>
+      <input #searchInput id="teacher-student-search" type="search" [value]="searchTerm()" placeholder="İsimle ara"
+        class="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-indigo-500 focus:ring-2 dark:border-slate-700 dark:bg-slate-900 sm:w-64" />
+      <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Ara</button>
+      <button *ngIf="searchTerm()" type="button" (click)="clearSearch()" class="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700">Temizle</button>
+    </form>
+  </div>
+
+  <div *ngIf="errorMessage()" role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">{{ errorMessage() }}</div>
+  <div *ngIf="isLoading()" class="space-y-3" aria-label="Öğrenciler yükleniyor">
+    <div *ngFor="let item of [1, 2, 3]" class="h-20 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800"></div>
+  </div>
+
+  <div *ngIf="!isLoading() && !errorMessage() && students().length === 0" class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900">
+    <p class="font-semibold">Öğrenci bulunamadı</p>
+    <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Arama ölçütünü değiştirerek tekrar deneyebilirsin.</p>
+  </div>
+
+  <div *ngIf="!isLoading() && students().length > 0" class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div *ngFor="let student of students(); trackBy: trackById" class="flex flex-col gap-3 border-b border-slate-100 p-5 last:border-0 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800/70">
+      <div class="flex min-w-0 items-center gap-3">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 font-semibold text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-200" aria-hidden="true">{{ student.firstName.charAt(0) }}{{ student.lastName.charAt(0) }}</div>
+        <div class="min-w-0">
+          <h2 class="truncate font-semibold">{{ student.fullName }}</h2>
+          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ student.gradeLevel ? student.gradeLevel + '. sınıf' : 'Sınıf bilgisi yok' }}<span *ngIf="student.subject"> · {{ student.subject }}</span></p>
+        </div>
+      </div>
+      <p class="text-sm text-slate-500 dark:text-slate-400">Atama: {{ student.assignmentStartDate | date:'d MMM y' }}</p>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading() && totalPages() > 1" class="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
+    <button type="button" (click)="previousPage()" [disabled]="pageNumber() === 1" class="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700">Önceki</button>
+    <span class="text-sm text-slate-500 dark:text-slate-400">Sayfa {{ pageNumber() }} / {{ totalPages() }}</span>
+    <button type="button" (click)="nextPage()" [disabled]="pageNumber() >= totalPages()" class="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700">Sonraki</button>
+  </div>
+</section>

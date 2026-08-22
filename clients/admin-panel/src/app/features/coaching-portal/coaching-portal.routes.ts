@@ -26,6 +26,10 @@ export const COACHING_PORTAL_ROUTES: Routes = [
     loadComponent: () => import('./pages/student-assignment-detail.component').then(m => m.StudentAssignmentDetailComponent)
   },
   {
+    path: 'teacher/students',
+    loadComponent: () => import('./pages/teacher-students.component').then(m => m.TeacherStudentsComponent)
+  },
+  {
     path: 'teacher/assignments',
     loadComponent: () => import('./pages/teacher-assignments.component').then(m => m.TeacherAssignmentsComponent)
   },
