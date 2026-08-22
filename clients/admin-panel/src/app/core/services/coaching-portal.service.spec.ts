@@ -133,6 +133,46 @@ describe('CoachingPortalService', () => {
     http.verify();
   });
 
+  it('creates, reschedules, and records attendance for a teacher session', () => {
+    const { service, http } = setup();
+
+    service.createTeacherSession({
+      teacherId: 'teacher-1',
+      studentId: 'student-1',
+      startTime: '2030-01-04T10:00:00.000Z',
+      durationMinutes: 45,
+      type: 'OneOnOne',
+      subject: 'Matematik'
+    }, 'session-key-123456').subscribe();
+    const create = http.expectOne(candidate => candidate.url.endsWith('/sessions'));
+    expect(create.request.method).toBe('POST');
+    expect(create.request.headers.get('Idempotency-Key')).toBe('session-key-123456');
+    create.flush({ sessionId: 'session-1' });
+
+    service.updateTeacherSession('session/1', {
+      sessionId: 'session/1',
+      title: '  Yeni seans  ',
+      scheduledDate: '2030-01-05T10:00:00.000Z',
+      durationMinutes: 60
+    }).subscribe();
+    const update = http.expectOne(candidate => candidate.url.endsWith('/sessions/session%2F1'));
+    expect(update.request.method).toBe('PUT');
+    expect(update.request.body.title).toBe('Yeni seans');
+    update.flush({ sessionId: 'session/1', scheduledDate: '2030-01-05T10:00:00Z' });
+
+    service.updateSessionAttendance('session/1', 'student/1', true, '  Katıldı  ').subscribe();
+    const attendance = http.expectOne(candidate => candidate.url.endsWith('/sessions/session%2F1/attendance'));
+    expect(attendance.request.method).toBe('POST');
+    expect(attendance.request.body).toEqual({
+      sessionId: 'session/1',
+      studentId: 'student/1',
+      attended: true,
+      notes: 'Katıldı'
+    });
+    attendance.flush({ message: 'Attendance updated successfully' });
+    http.verify();
+  });
+
   it('requests bounded student session pages with encoded student ids', () => {
     const { service, http } = setup();
 
