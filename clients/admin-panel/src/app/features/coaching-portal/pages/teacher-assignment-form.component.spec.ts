@@ -76,4 +76,13 @@ describe('TeacherAssignmentFormComponent', () => {
     expect(service.createTeacherAssignment).not.toHaveBeenCalled();
     expect(component.errorMessage()).toContain('başlık');
   });
+
+  it('supports searching and paging beyond the first 100 assigned students', () => {
+    component.setStudentSearch('  Zeynep  ');
+    component.studentTotalPages.set(2);
+    component.nextStudentsPage();
+
+    expect(service.getTeacherStudents).toHaveBeenLastCalledWith(2, 100, 'Zeynep');
+    expect(component.studentPageNumber()).toBe(2);
+  });
 });
