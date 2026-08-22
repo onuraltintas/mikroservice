@@ -192,6 +192,33 @@ export interface CoachingStudentReflection {
   attendanceStatus: string;
 }
 
+export interface TeacherSessionCreateRequest {
+  teacherId: string;
+  studentId: string;
+  startTime: string;
+  durationMinutes: number;
+  subject?: string | null;
+  notes?: string | null;
+  type: string;
+  studentIds?: string[] | null;
+  meetingLink?: string | null;
+}
+
+export interface TeacherSessionUpdateRequest {
+  sessionId: string;
+  title: string;
+  description?: string | null;
+  scheduledDate: string;
+  durationMinutes: number;
+  meetingLink?: string | null;
+  teacherNotes?: string | null;
+}
+
+export interface TeacherSessionMutationResponse {
+  sessionId: string;
+  scheduledDate?: string;
+}
+
 export interface ChildSummary {
   userId: string;
   firstName: string;
@@ -506,6 +533,65 @@ export class CoachingPortalService {
     return this.http.get<PagedResponse<CoachingSession>>(
       `${environment.apiUrl}/sessions/teacher/${this.id(teacherId)}`,
       { params: this.paging(pageNumber, pageSize) }
+    );
+  }
+
+  createTeacherSession(
+    request: TeacherSessionCreateRequest,
+    idempotencyKey: string
+  ): Observable<{ sessionId: string }> {
+    const headers = new HttpHeaders({ 'Idempotency-Key': idempotencyKey });
+    return this.http.post<{ sessionId: string }>(
+      `${environment.apiUrl}/sessions`,
+      {
+        ...request,
+        subject: request.subject?.trim() || null,
+        notes: request.notes?.trim() || null,
+        meetingLink: request.meetingLink?.trim() || null,
+        studentIds: request.studentIds?.length ? [...new Set(request.studentIds)] : null
+      },
+      { headers }
+    );
+  }
+
+  updateTeacherSession(
+    sessionId: string,
+    request: TeacherSessionUpdateRequest
+  ): Observable<TeacherSessionMutationResponse> {
+    return this.http.put<TeacherSessionMutationResponse>(
+      `${environment.apiUrl}/sessions/${this.id(sessionId)}`,
+      {
+        ...request,
+        sessionId,
+        title: request.title.trim(),
+        description: request.description?.trim() || null,
+        meetingLink: request.meetingLink?.trim() || null,
+        teacherNotes: request.teacherNotes?.trim() || null
+      }
+    );
+  }
+
+  updateSessionAttendance(
+    sessionId: string,
+    studentId: string,
+    attended: boolean,
+    notes?: string
+  ): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${environment.apiUrl}/sessions/${this.id(sessionId)}/attendance`,
+      {
+        sessionId,
+        studentId,
+        attended,
+        notes: notes?.trim() || null
+      }
+    );
+  }
+
+  cancelTeacherSession(sessionId: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${environment.apiUrl}/sessions/${this.id(sessionId)}/cancel`,
+      {}
     );
   }
 
