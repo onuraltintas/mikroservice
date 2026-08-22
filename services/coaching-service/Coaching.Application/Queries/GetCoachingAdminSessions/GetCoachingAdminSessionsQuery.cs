@@ -9,7 +9,8 @@ public sealed record GetCoachingAdminSessionsQuery(
     int PageNumber = CoachingPaging.DefaultPageNumber,
     int PageSize = CoachingPaging.DefaultPageSize,
     string? Status = null,
-    string? Search = null) : IRequest<PagedResponse<CoachingAdminSessionListDto>>;
+    string? Search = null,
+    Guid? InstitutionId = null) : IRequest<PagedResponse<CoachingAdminSessionListDto>>;
 
 public sealed class GetCoachingAdminSessionsQueryValidator
     : PagedQueryValidator<GetCoachingAdminSessionsQuery>

@@ -90,11 +90,11 @@ public sealed class GetInstitutionEarlyWarningsQueryHandler(
         GetInstitutionEarlyWarningsQuery request,
         CancellationToken cancellationToken)
     {
-        if (!accessPolicy.IsSystemAdministrator)
+        if (!accessPolicy.IsSystemAdministrator && !accessPolicy.IsInstitutionAdministrator)
         {
             throw new EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException(
                 "Authorization.Forbidden",
-                "Erken uyarı raporunu yalnızca sistem yöneticisi görüntüleyebilir.");
+                "Erken uyarı raporuna erişim yetkiniz yok.");
         }
 
         var viewerUserId = accessPolicy.CurrentUserId

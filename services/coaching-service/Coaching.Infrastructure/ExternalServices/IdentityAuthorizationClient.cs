@@ -26,6 +26,63 @@ public sealed class IdentityAuthorizationClient : ICoachingIdentityAuthorization
         _logger = logger;
     }
 
+    public async Task<CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(
+        Guid viewerUserId,
+        CancellationToken cancellationToken)
+    {
+        if (viewerUserId == Guid.Empty)
+        {
+            throw new BusinessRuleException(
+                "Authorization.Forbidden",
+                "Oturum açmış kullanıcı bulunamadı.");
+        }
+
+        EnsureServiceApiKey();
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"{_baseUrl}/api/internal/coaching/authorize-admin")
+        {
+            Content = JsonContent.Create(new { ViewerUserId = viewerUserId })
+        };
+        request.Headers.Add(InternalServiceAuthentication.HeaderName, _serviceApiKey);
+
+        try
+        {
+            using var response = await _httpClient.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken);
+
+            if (response.StatusCode is System.Net.HttpStatusCode.Forbidden or
+                System.Net.HttpStatusCode.Unauthorized)
+            {
+                throw new BusinessRuleException(
+                    "Authorization.Forbidden",
+                    "Coaching yönetim kapsamına erişim yetkiniz yok.");
+            }
+
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<AdminAuthorizationResponse>(
+                cancellationToken: cancellationToken);
+            return result is null
+                ? throw new InvalidOperationException("Identity admin authorization response was empty.")
+                : new CoachingAdminAccessScope(result.IsGlobal, result.InstitutionId);
+        }
+        catch (BusinessRuleException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            _logger.LogError(
+                ex,
+                "Identity coaching admin authorization failed for viewer {ViewerUserId}",
+                viewerUserId);
+            throw new InvalidOperationException("Identity authorization service is unavailable.", ex);
+        }
+    }
+
     public async Task<Guid?> AuthorizeTeacherTargetsAsync(
         Guid teacherId,
         IReadOnlyCollection<Guid> studentIds,
@@ -327,7 +384,16 @@ public sealed class IdentityAuthorizationClient : ICoachingIdentityAuthorization
     }
 
     private sealed record AuthorizationResponse(Guid? InstitutionId);
+    private sealed record AdminAuthorizationResponse(bool IsGlobal, Guid? InstitutionId);
     private sealed record StudentReadAuthorizationResponse(Guid[]? AllowedStudentUserIds);
     private sealed record ReportStudentResponse(Guid[]? StudentUserIds);
     private sealed record ReportStudentPageResponse(Guid[]? StudentUserIds, int TotalCount);
+
+    private void EnsureServiceApiKey()
+    {
+        if (string.IsNullOrWhiteSpace(_serviceApiKey))
+        {
+            throw new InvalidOperationException("Internal service API key is not configured.");
+        }
+    }
 }

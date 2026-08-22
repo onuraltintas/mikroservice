@@ -4,7 +4,11 @@ using MediatR;
 
 namespace Coaching.Application.Queries.GetCoachingAdminSession;
 
-public sealed record GetCoachingAdminSessionQuery(Guid SessionId)
+public sealed record GetCoachingAdminSessionQuery(
+    Guid SessionId,
+    Guid? InstitutionId = null,
+    bool AdministrativeScope = false,
+    IReadOnlyCollection<Guid>? ScopedStudentIds = null)
     : IRequest<CoachingAdminSessionDetailDto?>;
 
 public sealed record CoachingAdminSessionDetailDto(
@@ -36,6 +40,12 @@ public sealed class GetCoachingAdminSessionQueryHandler(
         if (session is null)
             return null;
 
+        if (request.InstitutionId.HasValue
+            && session.InstitutionId != request.InstitutionId)
+        {
+            return null;
+        }
+
         return new CoachingAdminSessionDetailDto(
             session.Id,
             session.TeacherId,
@@ -45,7 +55,10 @@ public sealed class GetCoachingAdminSessionQueryHandler(
             session.ScheduledDate,
             session.DurationMinutes,
             session.Status,
-            session.Attendances
+            (request.AdministrativeScope && request.InstitutionId.HasValue
+                ? session.Attendances.Where(attendance =>
+                    request.ScopedStudentIds?.Contains(attendance.StudentId) == true)
+                : session.Attendances)
                 .OrderBy(attendance => attendance.StudentId)
                 .Select(attendance => new CoachingAdminAttendanceDto(
                     attendance.StudentId,

@@ -5,7 +5,11 @@ namespace Coaching.Application.Queries.GetAssignment;
 /// <summary>
 /// Get Assignment By ID Query
 /// </summary>
-public record GetAssignmentQuery(Guid AssignmentId) : IRequest<AssignmentResponse?>;
+public record GetAssignmentQuery(
+    Guid AssignmentId,
+    Guid? InstitutionId = null,
+    bool AdministrativeScope = false,
+    IReadOnlyCollection<Guid>? ScopedStudentIds = null) : IRequest<AssignmentResponse?>;
 
 /// <summary>
 /// Assignment Response DTO

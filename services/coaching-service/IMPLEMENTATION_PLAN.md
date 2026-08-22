@@ -22,6 +22,13 @@ verisini kopyalamaz. Öğretmen ve öğrenci için standart RFC 5545 iCalendar
 feed'i de mevcuttur; dış sağlayıcı OAuth adaptörleri sonraki entegrasyon
 fazına bırakılmıştır.
 
+Admin coaching okuma kapsamı artık Identity tarafından çözülür: SystemAdmin
+global görünüm alır; InstitutionAdmin ve InstitutionOwner yalnızca aktif
+kurumlarının ödev, sınav, seans, hedef ve rapor verilerini okuyabilir. Coaching
+API istemciden gelen kurum kimliğine güvenmez; kurum üyeliğini ve öğrenci
+roster'ını service-key korumalı internal Identity uçlarıyla doğrular. Admin
+yazma/grade işlemleri MFA ve SystemAdmin rolüyle sınırlıdır.
+
 Bu MVP'de bilinçli olarak ayrı bir `CoachingPlan` tablosu açılmadı: hedef,
 ödev, sınav ve seanslar zaten ayrı yaşam döngülerine sahip aggregate'lerdir;
 plan görünümü bunları birleştiren read/report katmanıdır. Bu, iki kaynaktan
@@ -522,13 +529,17 @@ Parent:
 InstitutionAdmin:
   - View active students' assignments, exam results and goals within an active institution
   - Assignment details are filtered to the institution-scoped students
-  - Institution-wide aggregate reports and notifications remain a separate read/reporting phase
+  - View institution-scoped comparison and early-warning reports
 
 InstitutionOwner:
   - Same institution-scoped read permissions as InstitutionAdmin
   - Write/grade permissions are not inherited from read access
 
 Authorization boundary:
+  - Coaching admin read scope is resolved through the service-key protected
+    `/api/internal/coaching/authorize-admin` endpoint.
+  - Tenant admin detail views additionally use Identity's active student roster;
+    a missing roster fails closed instead of exposing unscoped goals or student rows.
   - Coaching delegates student-read scope checks to Identity through the service-key protected
     `/api/internal/coaching/authorize-student-read` endpoint.
   - Identity verifies active user/profile/institution state, parent-child relation, active institution

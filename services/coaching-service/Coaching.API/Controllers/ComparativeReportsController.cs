@@ -11,7 +11,7 @@ namespace Coaching.API.Controllers;
 
 [ApiController]
 [ApiVersion(1.0)]
-[Authorize(Roles = "SystemAdmin")]
+[Authorize]
 [HasPermission(PlatformPermissions.Coaching.View)]
 [Route("api/reports")]
 [Produces("application/json")]

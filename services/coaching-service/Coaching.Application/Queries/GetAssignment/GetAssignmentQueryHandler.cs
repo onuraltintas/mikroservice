@@ -32,16 +32,20 @@ public class GetAssignmentQueryHandler : IRequestHandler<GetAssignmentQuery, Ass
         if (assignment == null)
             return null;
 
-        var allowedStudentIds = await CoachingStudentReadAuthorization.RequireAsync(
-            _accessPolicy,
-            _identityAuthorizationClient,
-            assignment.AssignedStudents.Select(student => student.StudentId).ToArray(),
-            cancellationToken);
+        if (query.InstitutionId.HasValue
+            && assignment.InstitutionId != query.InstitutionId)
+        {
+            return null;
+        }
 
-        var visibleStudents = assignment.AssignedStudents.Where(student =>
-            allowedStudentIds.Contains(student.StudentId));
+        var visibleStudents = query.AdministrativeScope
+            ? query.InstitutionId.HasValue
+                ? assignment.AssignedStudents.Where(student =>
+                    query.ScopedStudentIds?.Contains(student.StudentId) == true)
+                : assignment.AssignedStudents
+            : await GetVisibleStudentsAsync(assignment, cancellationToken);
 
-        if (!visibleStudents.Any())
+        if (!query.AdministrativeScope && !visibleStudents.Any())
         {
             throw new BusinessRuleException(
                 "Authorization.Forbidden",
@@ -88,6 +92,20 @@ public class GetAssignmentQueryHandler : IRequestHandler<GetAssignmentQuery, Ass
             )).ToList(),
             CreatedAt: assignment.CreatedAt
         );
+    }
+
+    private async Task<IEnumerable<Domain.Entities.AssignmentStudent>> GetVisibleStudentsAsync(
+        Domain.Entities.Assignment assignment,
+        CancellationToken cancellationToken)
+    {
+        var allowedStudentIds = await CoachingStudentReadAuthorization.RequireAsync(
+            _accessPolicy,
+            _identityAuthorizationClient,
+            assignment.AssignedStudents.Select(student => student.StudentId).ToArray(),
+            cancellationToken);
+
+        return assignment.AssignedStudents.Where(student =>
+            allowedStudentIds.Contains(student.StudentId));
     }
 
 }

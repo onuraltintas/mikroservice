@@ -73,6 +73,45 @@ public sealed class CoachingComparativeReportQueryTests
             .Where(exception => exception.Code == "Authorization.Forbidden");
     }
 
+    [Fact]
+    public async Task ComparativeReportQuery_ShouldAllowInstitutionAdministratorScope()
+    {
+        var institutionId = Guid.NewGuid();
+        var expected = new InstitutionCoachingComparisonDto(
+            institutionId,
+            null,
+            DateTime.UtcNow.AddDays(-30),
+            DateTime.UtcNow,
+            0,
+            0,
+            0,
+            0,
+            0,
+            null,
+            0,
+            0,
+            null,
+            0,
+            0,
+            0,
+            null,
+            0,
+            0,
+            0);
+        var identity = new StubReportIdentityClient([]);
+        var handler = new GetInstitutionCoachingComparisonQueryHandler(
+            new StubComparativeReportRepository(expected),
+            identity,
+            CreatePolicy(Guid.NewGuid(), "InstitutionAdmin"));
+
+        var result = await handler.Handle(
+            new GetInstitutionCoachingComparisonQuery(institutionId),
+            CancellationToken.None);
+
+        result.Should().Be(expected);
+        identity.Requests.Should().ContainSingle();
+    }
+
     private static ICoachingAccessPolicy CreatePolicy(Guid userId, params string[] roles) =>
         new CoachingAccessPolicy(new StubCurrentUserService(userId, roles));
 

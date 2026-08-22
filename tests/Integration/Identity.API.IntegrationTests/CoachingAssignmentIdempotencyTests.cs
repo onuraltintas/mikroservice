@@ -132,6 +132,9 @@ public sealed class CoachingAssignmentIdempotencyTests
 
     private sealed class AllowIdentityAuthorizationClient : ICoachingIdentityAuthorizationClient
     {
+        public Task<CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(Guid viewerUserId, CancellationToken cancellationToken) =>
+            Task.FromResult<CoachingAdminAccessScope?>(null);
+
         public Task<Guid?> AuthorizeTeacherTargetsAsync(
             Guid teacherId,
             IReadOnlyCollection<Guid> studentIds,
@@ -151,6 +154,7 @@ public sealed class CoachingAssignmentIdempotencyTests
     {
         public Guid? CurrentUserId => Guid.NewGuid();
         public bool IsSystemAdministrator => false;
+        public bool IsInstitutionAdministrator => false;
         public bool IsCurrentTeacher(Guid teacherId) => true;
         public bool IsCurrentStudent(Guid studentId) => false;
         public Guid RequireCurrentTeacher() => Guid.NewGuid();

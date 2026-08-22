@@ -84,6 +84,24 @@ public sealed class CoachingEarlyWarningQueryTests
     }
 
     [Fact]
+    public async Task EarlyWarningQuery_ShouldAllowInstitutionAdministratorScope()
+    {
+        var identity = new StubReportIdentityClient(
+            new CoachingStudentReportPage([], 0));
+        var handler = new GetInstitutionEarlyWarningsQueryHandler(
+            new StubEarlyWarningRepository(),
+            identity,
+            CreatePolicy(Guid.NewGuid(), "InstitutionOwner"));
+
+        var result = await handler.Handle(
+            new GetInstitutionEarlyWarningsQuery(Guid.NewGuid()),
+            CancellationToken.None);
+
+        result.Items.Should().BeEmpty();
+        identity.Requests.Should().ContainSingle();
+    }
+
+    [Fact]
     public void EarlyWarningQueryValidator_ShouldBoundPagingAndDateRange()
     {
         var validator = new GetInstitutionEarlyWarningsQueryValidator();

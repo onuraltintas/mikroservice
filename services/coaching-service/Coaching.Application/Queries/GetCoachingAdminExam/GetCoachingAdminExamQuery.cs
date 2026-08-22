@@ -4,7 +4,11 @@ using MediatR;
 
 namespace Coaching.Application.Queries.GetCoachingAdminExam;
 
-public sealed record GetCoachingAdminExamQuery(Guid ExamId)
+public sealed record GetCoachingAdminExamQuery(
+    Guid ExamId,
+    Guid? InstitutionId = null,
+    bool AdministrativeScope = false,
+    IReadOnlyCollection<Guid>? ScopedStudentIds = null)
     : IRequest<CoachingAdminExamDetailDto?>;
 
 public sealed record CoachingAdminExamDetailDto(
@@ -39,6 +43,12 @@ public sealed class GetCoachingAdminExamQueryHandler(
         if (exam is null)
             return null;
 
+        if (request.InstitutionId.HasValue
+            && exam.InstitutionId != request.InstitutionId)
+        {
+            return null;
+        }
+
         return new CoachingAdminExamDetailDto(
             exam.Id,
             exam.CreatedByTeacherId,
@@ -48,7 +58,10 @@ public sealed class GetCoachingAdminExamQueryHandler(
             exam.ExamDate,
             exam.MaxScore,
             exam.Description,
-            exam.Results
+            (request.AdministrativeScope && request.InstitutionId.HasValue
+                ? exam.Results.Where(result =>
+                    request.ScopedStudentIds?.Contains(result.StudentId) == true)
+                : exam.Results)
                 .OrderBy(result => result.StudentId)
                 .Select(result => new CoachingAdminExamResultDto(
                     result.StudentId,

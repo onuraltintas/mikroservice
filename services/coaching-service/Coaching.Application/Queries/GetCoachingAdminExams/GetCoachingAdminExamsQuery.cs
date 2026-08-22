@@ -9,7 +9,8 @@ public sealed record GetCoachingAdminExamsQuery(
     int PageNumber = CoachingPaging.DefaultPageNumber,
     int PageSize = CoachingPaging.DefaultPageSize,
     string? ExamType = null,
-    string? Search = null) : IRequest<PagedResponse<CoachingAdminExamListDto>>;
+    string? Search = null,
+    Guid? InstitutionId = null) : IRequest<PagedResponse<CoachingAdminExamListDto>>;
 
 public sealed class GetCoachingAdminExamsQueryValidator
     : PagedQueryValidator<GetCoachingAdminExamsQuery>

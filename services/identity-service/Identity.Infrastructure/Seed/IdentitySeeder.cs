@@ -79,16 +79,14 @@ public static class IdentitySeeder
             { 
                 Identity.Domain.Constants.Permissions.Users.View,
                 Identity.Domain.Constants.Permissions.Institutions.View,
-                Identity.Domain.Constants.Permissions.Institutions.Manage
+                Identity.Domain.Constants.Permissions.Institutions.Manage,
+                Identity.Domain.Constants.Permissions.Coaching.View
             };
 
-            // Coaching admin overview is a global, read-only operational view and
-            // is intentionally restricted to SystemAdmin. Remove the keys from
-            // older institution role rows during the additive seed migration so
-            // stale tokens cannot expose a misleading panel entry.
+            // Coaching admin read access is tenant-scoped by the Coaching API and
+            // Identity membership checks. Coaching.Manage remains SystemAdmin-only.
             var institutionRolePermissionsToRemove = new HashSet<string>(StringComparer.Ordinal)
             {
-                Identity.Domain.Constants.Permissions.Coaching.View,
                 Identity.Domain.Constants.Permissions.Coaching.Manage,
                 Identity.Domain.Constants.Permissions.Users.Create,
                 Identity.Domain.Constants.Permissions.Users.Edit,

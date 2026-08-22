@@ -21,6 +21,7 @@ using Coaching.Application.Commands.CreateGoal;
 using Coaching.Application.Commands.UpdateGoalProgress;
 using Coaching.Application.Commands.DeleteGoal;
 using Coaching.Application.Interfaces;
+using Coaching.Application.Authorization;
 using EduPlatform.Shared.Contracts.Authorization;
 using EduPlatform.Shared.Kernel.Exceptions;
 using EduPlatform.Shared.Security.Authorization;
@@ -33,29 +34,37 @@ namespace Coaching.API.Controllers;
 [ApiController]
 [ApiVersion(1.0)]
 [Route("api/coaching-admin")]
-[Authorize(Roles = "SystemAdmin")]
+[Authorize]
 [HasPermission(PlatformPermissions.Coaching.View)]
 [Produces("application/json")]
 public sealed class CoachingAdminController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ICoachingAdminScopeAuthorization _adminScopeAuthorization;
 
-    public CoachingAdminController(IMediator mediator)
+    public CoachingAdminController(
+        IMediator mediator,
+        ICoachingAdminScopeAuthorization adminScopeAuthorization)
     {
         _mediator = mediator;
+        _adminScopeAuthorization = adminScopeAuthorization;
     }
 
     /// <summary>
-    /// Returns a bounded, read-only operational summary for the global administrator.
-    /// Tenant-scoped coaching data remains behind the existing teacher/student policies.
+    /// Returns a bounded, read-only operational summary for a system administrator or
+    /// the authenticated institution administrator's active institution.
     /// </summary>
     [HttpGet("overview")]
     public async Task<IActionResult> GetOverview(
         [FromQuery] int recentLimit = 10,
         CancellationToken cancellationToken = default)
     {
+        var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
         var overview = await _mediator.Send(
-            new GetCoachingAdminOverviewQuery(recentLimit),
+            new GetCoachingAdminOverviewQuery(
+                recentLimit,
+                scope.InstitutionId,
+                scope.StudentIds),
             cancellationToken);
         return Ok(overview);
     }
@@ -67,8 +76,13 @@ public sealed class CoachingAdminController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
+        var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
         var assignment = await _mediator.Send(
-            new GetAssignmentQuery(id),
+            new GetAssignmentQuery(
+                id,
+                scope.InstitutionId,
+                AdministrativeScope: true,
+                ScopedStudentIds: scope.StudentIds),
             cancellationToken);
 
         return assignment is null ? NotFound() : Ok(assignment);
@@ -81,8 +95,13 @@ public sealed class CoachingAdminController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
+        var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
         var session = await _mediator.Send(
-            new GetCoachingAdminSessionQuery(id),
+            new GetCoachingAdminSessionQuery(
+                id,
+                scope.InstitutionId,
+                AdministrativeScope: true,
+                ScopedStudentIds: scope.StudentIds),
             cancellationToken);
         return session is null ? NotFound() : Ok(session);
     }
@@ -94,8 +113,13 @@ public sealed class CoachingAdminController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
+        var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
         var exam = await _mediator.Send(
-            new GetCoachingAdminExamQuery(id),
+            new GetCoachingAdminExamQuery(
+                id,
+                scope.InstitutionId,
+                AdministrativeScope: true,
+                ScopedStudentIds: scope.StudentIds),
             cancellationToken);
         return exam is null ? NotFound() : Ok(exam);
     }
@@ -110,8 +134,15 @@ public sealed class CoachingAdminController : ControllerBase
         [FromQuery] string? search = null,
         CancellationToken cancellationToken = default)
     {
+        var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
         var assignments = await _mediator.Send(
-            new GetCoachingAdminAssignmentsQuery(pageNumber, pageSize, status, source, search),
+            new GetCoachingAdminAssignmentsQuery(
+                pageNumber,
+                pageSize,
+                status,
+                source,
+                search,
+                scope.InstitutionId),
             cancellationToken);
         return Ok(assignments);
     }
@@ -121,6 +152,7 @@ public sealed class CoachingAdminController : ControllerBase
     /// The command handler remains the single source of truth for tenant and target validation.
     /// </summary>
     [HttpPost("assignments")]
+    [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<ActionResult<CreateAssignmentResponse>> CreateAssignment(
@@ -152,6 +184,7 @@ public sealed class CoachingAdminController : ControllerBase
 
     /// <summary>Soft-cancels an assignment on behalf of a system administrator.</summary>
     [HttpPost("assignments/{id:guid}/cancel")]
+    [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> CancelAssignment(Guid id, CancellationToken cancellationToken)
@@ -173,6 +206,7 @@ public sealed class CoachingAdminController : ControllerBase
 
     /// <summary>Hard-deletes an assignment on behalf of a system administrator.</summary>
     [HttpDelete("assignments/{id:guid}")]
+    [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> DeleteAssignment(Guid id, CancellationToken cancellationToken)
@@ -194,6 +228,7 @@ public sealed class CoachingAdminController : ControllerBase
 
     /// <summary>Grades an assigned student's work on behalf of a system administrator.</summary>
     [HttpPost("assignments/{id:guid}/grade")]
+    [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<ActionResult<GradeAssignmentResponse>> GradeAssignment(
@@ -225,6 +260,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPost("sessions")]
+    [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<ActionResult<CreateSessionResponse>> CreateSession(
@@ -254,6 +290,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPost("sessions/{id:guid}/attendance")]
+    [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> UpdateSessionAttendance(
@@ -286,6 +323,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPost("sessions/{id:guid}/cancel")]
+    [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> CancelSession(Guid id, CancellationToken cancellationToken)
@@ -306,6 +344,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpDelete("sessions/{id:guid}")]
+    [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> DeleteSession(Guid id, CancellationToken cancellationToken)
@@ -326,6 +365,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPost("exams")]
+    [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<ActionResult<CreateExamResponse>> CreateExam(
@@ -355,6 +395,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPost("exams/{id:guid}/results")]
+    [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> AddExamResult(
@@ -392,6 +433,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpDelete("exams/{id:guid}")]
+    [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> DeleteExam(Guid id, CancellationToken cancellationToken)
@@ -412,6 +454,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPost("goals")]
+    [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<ActionResult<CreateGoalResponse>> CreateGoal(
@@ -441,6 +484,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPut("goals/{id:guid}/progress")]
+    [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> UpdateGoalProgress(
@@ -473,6 +517,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpDelete("goals/{id:guid}")]
+    [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> DeleteGoal(Guid id, CancellationToken cancellationToken)
@@ -501,8 +546,14 @@ public sealed class CoachingAdminController : ControllerBase
         [FromQuery] string? search = null,
         CancellationToken cancellationToken = default)
     {
+        var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
         var sessions = await _mediator.Send(
-            new GetCoachingAdminSessionsQuery(pageNumber, pageSize, status, search),
+            new GetCoachingAdminSessionsQuery(
+                pageNumber,
+                pageSize,
+                status,
+                search,
+                scope.InstitutionId),
             cancellationToken);
         return Ok(sessions);
     }
@@ -516,8 +567,14 @@ public sealed class CoachingAdminController : ControllerBase
         [FromQuery] string? search = null,
         CancellationToken cancellationToken = default)
     {
+        var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
         var exams = await _mediator.Send(
-            new GetCoachingAdminExamsQuery(pageNumber, pageSize, examType, search),
+            new GetCoachingAdminExamsQuery(
+                pageNumber,
+                pageSize,
+                examType,
+                search,
+                scope.InstitutionId),
             cancellationToken);
         return Ok(exams);
     }
@@ -531,8 +588,15 @@ public sealed class CoachingAdminController : ControllerBase
         [FromQuery] string? search = null,
         CancellationToken cancellationToken = default)
     {
+        var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
         var goals = await _mediator.Send(
-            new GetCoachingAdminGoalsQuery(pageNumber, pageSize, completed, search),
+            new GetCoachingAdminGoalsQuery(
+                pageNumber,
+                pageSize,
+                completed,
+                search,
+                scope.InstitutionId,
+                scope.StudentIds),
             cancellationToken);
         return Ok(goals);
     }

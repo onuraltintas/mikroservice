@@ -13,6 +13,7 @@ public static class DependencyInjection
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
         services.AddScoped<ICoachingAccessPolicy, CoachingAccessPolicy>();
+        services.AddScoped<ICoachingAdminScopeAuthorization, CoachingAdminScopeAuthorization>();
 
 
         return services;

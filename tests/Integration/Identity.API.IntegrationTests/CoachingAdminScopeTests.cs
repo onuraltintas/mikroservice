@@ -16,7 +16,8 @@ public sealed class CoachingAdminScopeTests
             new CoachingAdminAccessScope(IsGlobal: false, InstitutionId: institutionId));
         var authorization = new CoachingAdminScopeAuthorization(
             new StubCurrentUserService(Guid.NewGuid(), "InstitutionAdmin"),
-            client);
+            client,
+            new StubIdentityReportClient());
 
         var scope = await authorization.RequireReadScopeAsync(CancellationToken.None);
 
@@ -31,7 +32,8 @@ public sealed class CoachingAdminScopeTests
         var client = new StubIdentityAuthorizationClient(null);
         var authorization = new CoachingAdminScopeAuthorization(
             new StubCurrentUserService(Guid.NewGuid(), "SystemAdmin"),
-            client);
+            client,
+            new StubIdentityReportClient());
 
         var scope = await authorization.RequireReadScopeAsync(CancellationToken.None);
 
@@ -45,12 +47,32 @@ public sealed class CoachingAdminScopeTests
     {
         var authorization = new CoachingAdminScopeAuthorization(
             new StubCurrentUserService(Guid.NewGuid(), "Teacher"),
-            new StubIdentityAuthorizationClient(null));
+            new StubIdentityAuthorizationClient(null),
+            new StubIdentityReportClient());
 
         var action = () => authorization.RequireReadScopeAsync(CancellationToken.None);
 
         await action.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>()
             .Where(exception => exception.Code == "Authorization.Forbidden");
+    }
+
+    private sealed class StubIdentityReportClient : ICoachingIdentityReportClient
+    {
+        public Task<IReadOnlyCollection<Guid>> GetActiveStudentIdsAsync(
+            Guid viewerUserId,
+            Guid institutionId,
+            int? gradeLevel,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyCollection<Guid>>(Array.Empty<Guid>());
+
+        public Task<CoachingStudentReportPage> GetActiveStudentPageAsync(
+            Guid viewerUserId,
+            Guid institutionId,
+            int? gradeLevel,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new CoachingStudentReportPage(Array.Empty<Guid>(), 0));
     }
 
     private sealed class StubIdentityAuthorizationClient(CoachingAdminAccessScope? scope)

@@ -8,13 +8,15 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingAdminManagementMetadataTests
 {
     [Fact]
-    public void CoachingAdminOverview_MustRequireSystemAdminAndPermission()
+    public void CoachingAdminOverview_MustRequireAuthenticatedPermissionWithoutGlobalRoleAssumption()
     {
         var authorizeAttributes = typeof(CoachingAdminController)
             .GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
             .Cast<AuthorizeAttribute>();
 
-        authorizeAttributes.Should().Contain(attribute => attribute.Roles == "SystemAdmin");
+        authorizeAttributes.Should().Contain(attribute =>
+            string.IsNullOrWhiteSpace(attribute.Roles)
+            && string.IsNullOrWhiteSpace(attribute.Policy));
 
         typeof(CoachingAdminController)
             .GetCustomAttributes(typeof(HasPermissionAttribute), inherit: true)
@@ -53,6 +55,7 @@ public sealed class CoachingAdminManagementMetadataTests
             .GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
             .Cast<AuthorizeAttribute>()
             .Should()
-            .Contain(attribute => attribute.Policy == "MfaRequired");
+            .Contain(attribute => attribute.Policy == "MfaRequired")
+            .And.Contain(attribute => attribute.Roles == "SystemAdmin");
     }
 }

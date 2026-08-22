@@ -791,33 +791,59 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
 
     public async Task<CoachingAdminOverviewDto> GetOverviewAsync(
         int recentLimit,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? institutionId = null,
+        IReadOnlyCollection<Guid>? scopedStudentIds = null)
     {
-        var totalAssignments = await _context.Assignments.CountAsync(cancellationToken);
-        var activeAssignments = await _context.Assignments
+        var assignments = _context.Assignments.AsNoTracking().AsQueryable();
+        var sessions = _context.CoachingSessions.AsNoTracking().AsQueryable();
+        var exams = _context.Exams.AsNoTracking().AsQueryable();
+        var goals = _context.AcademicGoals.AsNoTracking().AsQueryable();
+
+        if (institutionId.HasValue)
+        {
+            assignments = assignments.Where(item => item.InstitutionId == institutionId.Value);
+            sessions = sessions.Where(item => item.InstitutionId == institutionId.Value);
+            exams = exams.Where(item => item.InstitutionId == institutionId.Value);
+
+            goals = scopedStudentIds is null
+                ? goals.Where(_ => false)
+                : goals.Where(item => scopedStudentIds.Contains(item.StudentId));
+        }
+
+        var assignmentIds = assignments.Select(item => item.Id);
+        var examIds = exams.Select(item => item.Id);
+        var assignmentStudents = _context.AssignmentStudents
+            .AsNoTracking()
+            .Where(item => assignmentIds.Contains(item.AssignmentId));
+        var examResults = _context.ExamResults
+            .AsNoTracking()
+            .Where(item => examIds.Contains(item.ExamId));
+
+        var totalAssignments = await assignments.CountAsync(cancellationToken);
+        var activeAssignments = await assignments
             .CountAsync(item => item.Status == Domain.Enums.AssignmentStatus.Active, cancellationToken);
-        var completedAssignments = await _context.Assignments
+        var completedAssignments = await assignments
             .CountAsync(item => item.Status == Domain.Enums.AssignmentStatus.Completed, cancellationToken);
-        var cancelledAssignments = await _context.Assignments
+        var cancelledAssignments = await assignments
             .CountAsync(item => item.Status == Domain.Enums.AssignmentStatus.Cancelled, cancellationToken);
-        var totalAssignmentStudents = await _context.AssignmentStudents.CountAsync(cancellationToken);
-        var submittedAssignmentStudents = await _context.AssignmentStudents
+        var totalAssignmentStudents = await assignmentStudents.CountAsync(cancellationToken);
+        var submittedAssignmentStudents = await assignmentStudents
             .CountAsync(item => item.Status == Domain.Enums.StudentAssignmentStatus.Submitted
                 || item.Status == Domain.Enums.StudentAssignmentStatus.Graded,
                 cancellationToken);
-        var totalExams = await _context.Exams.CountAsync(cancellationToken);
-        var totalExamResults = await _context.ExamResults.CountAsync(cancellationToken);
-        var totalSessions = await _context.CoachingSessions.CountAsync(cancellationToken);
-        var upcomingSessions = await _context.CoachingSessions
+        var totalExams = await exams.CountAsync(cancellationToken);
+        var totalExamResults = await examResults.CountAsync(cancellationToken);
+        var totalSessions = await sessions.CountAsync(cancellationToken);
+        var upcomingSessions = await sessions
             .CountAsync(item => item.Status == Domain.Enums.SessionStatus.Scheduled
                 && item.ScheduledDate >= DateTime.UtcNow,
                 cancellationToken);
-        var totalGoals = await _context.AcademicGoals.CountAsync(cancellationToken);
-        var completedGoals = await _context.AcademicGoals
+        var totalGoals = await goals.CountAsync(cancellationToken);
+        var completedGoals = await goals
             .CountAsync(item => item.IsCompleted, cancellationToken);
 
-        var recentAssignments = await _context.Assignments
-            .AsNoTracking()
+        var recentAssignments = await assignments
             .OrderByDescending(item => item.CreatedAt)
             .ThenByDescending(item => item.Id)
             .Take(recentLimit)
@@ -868,9 +894,13 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
         string? status,
         string? source,
         string? search,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? institutionId = null)
     {
         var query = _context.Assignments.AsNoTracking().AsQueryable();
+
+        if (institutionId.HasValue)
+            query = query.Where(assignment => assignment.InstitutionId == institutionId.Value);
 
         if (Enum.TryParse<Domain.Enums.AssignmentStatus>(status, true, out var parsedStatus))
             query = query.Where(assignment => assignment.Status == parsedStatus);
@@ -919,9 +949,13 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
         int pageSize,
         string? status,
         string? search,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? institutionId = null)
     {
         var query = _context.CoachingSessions.AsNoTracking().AsQueryable();
+
+        if (institutionId.HasValue)
+            query = query.Where(session => session.InstitutionId == institutionId.Value);
 
         if (Enum.TryParse<Domain.Enums.SessionStatus>(status, true, out var parsedStatus))
             query = query.Where(session => session.Status == parsedStatus);
@@ -963,9 +997,13 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
         int pageSize,
         string? examType,
         string? search,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? institutionId = null)
     {
         var query = _context.Exams.AsNoTracking().AsQueryable();
+
+        if (institutionId.HasValue)
+            query = query.Where(exam => exam.InstitutionId == institutionId.Value);
 
         if (Enum.TryParse<Domain.Enums.ExamType>(examType, true, out var parsedExamType))
             query = query.Where(exam => exam.ExamType == parsedExamType);
@@ -1005,9 +1043,18 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
         int pageSize,
         bool? completed,
         string? search,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? institutionId = null,
+        IReadOnlyCollection<Guid>? scopedStudentIds = null)
     {
         var query = _context.AcademicGoals.AsNoTracking().AsQueryable();
+
+        if (institutionId.HasValue)
+        {
+            query = scopedStudentIds is null
+                ? query.Where(_ => false)
+                : query.Where(goal => scopedStudentIds.Contains(goal.StudentId));
+        }
 
         if (completed.HasValue)
             query = query.Where(goal => goal.IsCompleted == completed.Value);

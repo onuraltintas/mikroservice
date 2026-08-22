@@ -96,6 +96,7 @@ public sealed class CoachingAttachmentReadTests
     {
         public Guid? CurrentUserId => viewerId;
         public bool IsSystemAdministrator => false;
+        public bool IsInstitutionAdministrator => false;
         public bool IsCurrentTeacher(Guid teacherId) => false;
         public bool IsCurrentStudent(Guid studentId) => studentId == viewerId;
         public Guid RequireCurrentTeacher() => throw new NotSupportedException();
@@ -107,6 +108,9 @@ public sealed class CoachingAttachmentReadTests
 
     private sealed class FakeIdentityAuthorizationClient(Guid viewerId) : ICoachingIdentityAuthorizationClient
     {
+        public Task<CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(Guid viewerUserId, CancellationToken cancellationToken) =>
+            Task.FromResult<CoachingAdminAccessScope?>(null);
+
         public Task<Guid?> AuthorizeTeacherTargetsAsync(Guid teacherId, IReadOnlyCollection<Guid> studentIds, Guid? requestedInstitutionId, bool isSystemAdministrator, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<IReadOnlyCollection<Guid>> AuthorizeStudentReadAsync(Guid viewerUserId, IReadOnlyCollection<Guid> studentIds, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyCollection<Guid>>(viewerUserId == viewerId ? studentIds : []);

@@ -16,7 +16,8 @@ public sealed class GetCoachingAdminExamsQueryHandler(
             request.PageSize,
             request.ExamType,
             request.Search,
-            cancellationToken);
+            cancellationToken,
+            request.InstitutionId);
 
         return new PagedResponse<CoachingAdminExamListDto>(
             page.Items,

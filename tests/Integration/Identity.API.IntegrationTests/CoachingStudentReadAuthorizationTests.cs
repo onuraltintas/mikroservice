@@ -92,6 +92,9 @@ public sealed class CoachingStudentReadAuthorizationTests
         public bool WasCalled { get; private set; }
         public IReadOnlyCollection<Guid> RequestedStudentIds { get; private set; } = Array.Empty<Guid>();
 
+        public Task<CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(Guid viewerUserId, CancellationToken cancellationToken) =>
+            Task.FromResult<CoachingAdminAccessScope?>(null);
+
         public Task<Guid?> AuthorizeTeacherTargetsAsync(
             Guid teacherId,
             IReadOnlyCollection<Guid> studentIds,

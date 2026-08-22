@@ -537,6 +537,57 @@ public class InstitutionRepository : IInstitutionRepository
                    cancellationToken);
     }
 
+    public async Task<CoachingAdminAccessAuthorization?> AuthorizeCoachingAdminAsync(
+        Guid viewerUserId,
+        CancellationToken cancellationToken)
+    {
+        var viewer = await _context.Users
+            .AsNoTracking()
+            .Where(user => user.Id == viewerUserId && user.IsActive)
+            .Select(user => new
+            {
+                Roles = user.Roles
+                    .Where(userRole => !userRole.Role.IsDeleted)
+                    .Select(userRole => userRole.Role.Name)
+                    .ToList()
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (viewer is null)
+        {
+            return null;
+        }
+
+        if (viewer.Roles.Any(role =>
+                string.Equals(role, "SystemAdmin", StringComparison.OrdinalIgnoreCase)))
+        {
+            return new CoachingAdminAccessAuthorization(IsGlobal: true, InstitutionId: null);
+        }
+
+        var isInstitutionAdministrator = viewer.Roles.Any(role =>
+            string.Equals(role, "InstitutionAdmin", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(role, "InstitutionOwner", StringComparison.OrdinalIgnoreCase));
+        if (!isInstitutionAdministrator)
+        {
+            return null;
+        }
+
+        var institutionId = await _context.InstitutionAdmins
+            .AsNoTracking()
+            .Where(admin => admin.UserId == viewerUserId
+                && admin.IsActive
+                && admin.User.IsActive
+                && admin.Institution.IsActive)
+            .OrderBy(admin => admin.CreatedAt)
+            .ThenBy(admin => admin.Id)
+            .Select(admin => (Guid?)admin.InstitutionId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return institutionId.HasValue
+            ? new CoachingAdminAccessAuthorization(IsGlobal: false, institutionId)
+            : null;
+    }
+
     public async Task<CoachingTeacherAuthorization?> AuthorizeCoachingTeacherTargetsAsync(
         Guid teacherUserId,
         IReadOnlyCollection<Guid> studentUserIds,

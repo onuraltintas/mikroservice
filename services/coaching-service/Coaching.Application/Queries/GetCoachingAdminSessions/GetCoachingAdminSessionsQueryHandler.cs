@@ -16,7 +16,8 @@ public sealed class GetCoachingAdminSessionsQueryHandler(
             request.PageSize,
             request.Status,
             request.Search,
-            cancellationToken);
+            cancellationToken,
+            request.InstitutionId);
 
         return new PagedResponse<CoachingAdminSessionListDto>(
             page.Items,

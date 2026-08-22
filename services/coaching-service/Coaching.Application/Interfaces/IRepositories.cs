@@ -86,7 +86,9 @@ public interface ICoachingAdminRepository
 {
     Task<CoachingAdminOverviewDto> GetOverviewAsync(
         int recentLimit,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Guid? institutionId = null,
+        IReadOnlyCollection<Guid>? scopedStudentIds = null);
 
     Task<PagedRepositoryResult<CoachingAdminAssignmentListDto>> GetAssignmentsAsync(
         int pageNumber,
@@ -94,28 +96,33 @@ public interface ICoachingAdminRepository
         string? status,
         string? source,
         string? search,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Guid? institutionId = null);
 
     Task<PagedRepositoryResult<CoachingAdminSessionListDto>> GetSessionsAsync(
         int pageNumber,
         int pageSize,
         string? status,
         string? search,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Guid? institutionId = null);
 
     Task<PagedRepositoryResult<CoachingAdminExamListDto>> GetExamsAsync(
         int pageNumber,
         int pageSize,
         string? examType,
         string? search,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Guid? institutionId = null);
 
     Task<PagedRepositoryResult<CoachingAdminGoalListDto>> GetGoalsAsync(
         int pageNumber,
         int pageSize,
         bool? completed,
         string? search,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Guid? institutionId = null,
+        IReadOnlyCollection<Guid>? scopedStudentIds = null);
 }
 
 public sealed record CoachingAdminOverviewDto(

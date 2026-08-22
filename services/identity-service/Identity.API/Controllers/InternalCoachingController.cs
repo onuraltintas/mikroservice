@@ -45,6 +45,30 @@ public sealed class InternalCoachingController : ControllerBase
             : Ok(new CoachingAuthorizationResponse(authorization.InstitutionId));
     }
 
+    [HttpPost("authorize-admin")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    [RequestSizeLimit(16_384)]
+    public async Task<IActionResult> AuthorizeAdmin(
+        [FromBody] CoachingAdminAuthorizationRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.ViewerUserId == Guid.Empty)
+        {
+            return BadRequest("Admin scope viewer is invalid.");
+        }
+
+        var authorization = await _institutionRepository.AuthorizeCoachingAdminAsync(
+            request.ViewerUserId,
+            cancellationToken);
+
+        return authorization is null
+            ? Forbid()
+            : Ok(new CoachingAdminAuthorizationResponse(
+                authorization.IsGlobal,
+                authorization.InstitutionId));
+    }
+
     [HttpPost("authorize-student-read")]
     [AllowAnonymous]
     [InternalServiceKey]
@@ -137,6 +161,10 @@ public sealed record CoachingAuthorizationRequest(
     bool IsSystemAdministrator);
 
 public sealed record CoachingAuthorizationResponse(Guid? InstitutionId);
+
+public sealed record CoachingAdminAuthorizationRequest(Guid ViewerUserId);
+
+public sealed record CoachingAdminAuthorizationResponse(bool IsGlobal, Guid? InstitutionId);
 
 public sealed record CoachingStudentReadRequest(
     Guid ViewerUserId,

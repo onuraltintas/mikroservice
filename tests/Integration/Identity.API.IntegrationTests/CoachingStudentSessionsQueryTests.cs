@@ -194,6 +194,9 @@ public sealed class CoachingStudentSessionsQueryTests
     {
         public IReadOnlyCollection<Guid> RequestedStudentIds { get; private set; } = [];
 
+        public Task<CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(Guid viewerUserId, CancellationToken cancellationToken) =>
+            Task.FromResult<CoachingAdminAccessScope?>(null);
+
         public Task<Guid?> AuthorizeTeacherTargetsAsync(
             Guid teacherId,
             IReadOnlyCollection<Guid> studentIds,

@@ -60,6 +60,9 @@ public interface IInstitutionRepository
     Task<Guid?> GetInstitutionIdByAdminIdAsync(Guid adminUserId, CancellationToken cancellationToken);
     Task<Guid?> GetPrimaryInstitutionIdByUserIdAsync(Guid userId, CancellationToken cancellationToken);
     Task<bool> IsUserInInstitutionAsync(Guid userId, Guid institutionId, CancellationToken cancellationToken);
+    Task<CoachingAdminAccessAuthorization?> AuthorizeCoachingAdminAsync(
+        Guid viewerUserId,
+        CancellationToken cancellationToken);
     Task<CoachingTeacherAuthorization?> AuthorizeCoachingTeacherTargetsAsync(
         Guid teacherUserId,
         IReadOnlyCollection<Guid> studentUserIds,
@@ -85,6 +88,7 @@ public interface IInstitutionRepository
 }
 
 public sealed record CoachingTeacherAuthorization(Guid? InstitutionId);
+public sealed record CoachingAdminAccessAuthorization(bool IsGlobal, Guid? InstitutionId);
 public sealed record CoachingStudentReadAuthorization(IReadOnlyCollection<Guid> AllowedStudentUserIds);
 public sealed record CoachingReportStudentPage(
     IReadOnlyCollection<Guid> StudentUserIds,

@@ -6,6 +6,7 @@ public interface ICoachingAccessPolicy
 {
     Guid? CurrentUserId { get; }
     bool IsSystemAdministrator { get; }
+    bool IsInstitutionAdministrator { get; }
     bool IsCurrentTeacher(Guid teacherId);
     bool IsCurrentStudent(Guid studentId);
     Guid RequireCurrentTeacher();
@@ -25,6 +26,8 @@ public sealed class CoachingAccessPolicy : ICoachingAccessPolicy
     }
 
     public bool IsSystemAdministrator => IsSystemAdmin();
+
+    public bool IsInstitutionAdministrator => HasRole("InstitutionAdmin") || HasRole("InstitutionOwner");
 
     public Guid? CurrentUserId => _currentUser.UserId;
 

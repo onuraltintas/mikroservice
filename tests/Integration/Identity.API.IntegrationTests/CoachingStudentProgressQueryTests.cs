@@ -56,6 +56,9 @@ public sealed class CoachingStudentProgressQueryTests
     private sealed class StubIdentityAuthorizationClient(
         IReadOnlyCollection<Guid> allowedStudentIds) : ICoachingIdentityAuthorizationClient
     {
+        public Task<CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(Guid viewerUserId, CancellationToken cancellationToken) =>
+            Task.FromResult<CoachingAdminAccessScope?>(null);
+
         public Task<Guid?> AuthorizeTeacherTargetsAsync(
             Guid teacherId,
             IReadOnlyCollection<Guid> studentIds,

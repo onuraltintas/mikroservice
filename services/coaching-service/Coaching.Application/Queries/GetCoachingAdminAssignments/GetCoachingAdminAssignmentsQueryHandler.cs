@@ -23,7 +23,8 @@ public sealed class GetCoachingAdminAssignmentsQueryHandler
             request.Status,
             request.Source,
             request.Search,
-            cancellationToken);
+            cancellationToken,
+            request.InstitutionId);
 
         return new PagedResponse<CoachingAdminAssignmentListDto>(
             page.Items,

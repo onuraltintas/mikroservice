@@ -10,7 +10,8 @@ public sealed record GetCoachingAdminAssignmentsQuery(
     int PageSize = CoachingPaging.DefaultPageSize,
     string? Status = null,
     string? Source = null,
-    string? Search = null) : IRequest<PagedResponse<CoachingAdminAssignmentListDto>>;
+    string? Search = null,
+    Guid? InstitutionId = null) : IRequest<PagedResponse<CoachingAdminAssignmentListDto>>;
 
 public sealed class GetCoachingAdminAssignmentsQueryValidator
     : PagedQueryValidator<GetCoachingAdminAssignmentsQuery>

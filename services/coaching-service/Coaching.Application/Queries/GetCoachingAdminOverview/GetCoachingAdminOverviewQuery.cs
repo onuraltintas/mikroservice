@@ -4,7 +4,10 @@ using MediatR;
 
 namespace Coaching.Application.Queries.GetCoachingAdminOverview;
 
-public sealed record GetCoachingAdminOverviewQuery(int RecentLimit = 10)
+public sealed record GetCoachingAdminOverviewQuery(
+    int RecentLimit = 10,
+    Guid? InstitutionId = null,
+    IReadOnlyCollection<Guid>? ScopedStudentIds = null)
     : IRequest<CoachingAdminOverviewDto>;
 
 public sealed class GetCoachingAdminOverviewQueryValidator
@@ -29,5 +32,9 @@ public sealed class GetCoachingAdminOverviewQueryHandler
     public Task<CoachingAdminOverviewDto> Handle(
         GetCoachingAdminOverviewQuery request,
         CancellationToken cancellationToken) =>
-        _repository.GetOverviewAsync(request.RecentLimit, cancellationToken);
+        _repository.GetOverviewAsync(
+            request.RecentLimit,
+            cancellationToken,
+            request.InstitutionId,
+            request.ScopedStudentIds);
 }

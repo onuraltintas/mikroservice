@@ -64,11 +64,11 @@ public sealed class GetInstitutionCoachingComparisonQueryHandler(
         GetInstitutionCoachingComparisonQuery request,
         CancellationToken cancellationToken)
     {
-        if (!accessPolicy.IsSystemAdministrator)
+        if (!accessPolicy.IsSystemAdministrator && !accessPolicy.IsInstitutionAdministrator)
         {
             throw new EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException(
                 "Authorization.Forbidden",
-                "Karşılaştırmalı coaching raporunu yalnızca sistem yöneticisi görüntüleyebilir.");
+                "Karşılaştırmalı coaching raporuna erişim yetkiniz yok.");
         }
 
         var viewerUserId = accessPolicy.CurrentUserId

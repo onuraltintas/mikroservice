@@ -61,6 +61,85 @@ public sealed class CoachingAdminOverviewTests
         result.RecentAssignments.Should().ContainSingle();
     }
 
+    [Fact]
+    public async Task Overview_TenantScope_ExcludesOtherInstitutionAndUnrosteredGoals()
+    {
+        await using var context = CreateContext();
+        var institutionId = Guid.NewGuid();
+        var otherInstitutionId = Guid.NewGuid();
+        var inScopeStudentId = Guid.NewGuid();
+        var otherStudentId = Guid.NewGuid();
+
+        var inScopeAssignment = Assignment.Create(
+            Guid.NewGuid(),
+            "Kurum içi ödev",
+            DateTime.UtcNow.AddDays(3),
+            AssignmentType.Individual,
+            institutionId);
+        inScopeAssignment.AssignToStudent(inScopeStudentId);
+
+        var otherAssignment = Assignment.Create(
+            Guid.NewGuid(),
+            "Diğer kurum ödevi",
+            DateTime.UtcNow.AddDays(3),
+            AssignmentType.Individual,
+            otherInstitutionId);
+        otherAssignment.AssignToStudent(otherStudentId);
+
+        var inScopeExam = Exam.Create(
+            Guid.NewGuid(),
+            "Kurum sınavı",
+            ExamType.Mock,
+            DateTime.UtcNow,
+            100,
+            institutionId);
+        var otherExam = Exam.Create(
+            Guid.NewGuid(),
+            "Diğer kurum sınavı",
+            ExamType.Mock,
+            DateTime.UtcNow,
+            100,
+            otherInstitutionId);
+        var inScopeSession = CoachingSession.Create(
+            Guid.NewGuid(),
+            "Kurum seansı",
+            DateTime.UtcNow.AddDays(1),
+            SessionType.OneOnOne,
+            institutionId: institutionId);
+        var otherSession = CoachingSession.Create(
+            Guid.NewGuid(),
+            "Diğer kurum seansı",
+            DateTime.UtcNow.AddDays(1),
+            SessionType.OneOnOne,
+            institutionId: otherInstitutionId);
+        var inScopeGoal = AcademicGoal.Create(inScopeStudentId, "Kurum hedefi", GoalCategory.ExamPreparation);
+        var otherGoal = AcademicGoal.Create(otherStudentId, "Diğer kurum hedefi", GoalCategory.ExamPreparation);
+
+        context.AddRange(
+            inScopeAssignment,
+            otherAssignment,
+            inScopeExam,
+            otherExam,
+            inScopeSession,
+            otherSession,
+            inScopeGoal,
+            otherGoal);
+        await context.SaveChangesAsync();
+
+        var result = await new CoachingAdminRepository(context)
+            .GetOverviewAsync(
+                10,
+                CancellationToken.None,
+                institutionId,
+                new[] { inScopeStudentId });
+
+        result.TotalAssignments.Should().Be(1);
+        result.TotalExams.Should().Be(1);
+        result.TotalSessions.Should().Be(1);
+        result.TotalGoals.Should().Be(1);
+        result.RecentAssignments.Should().ContainSingle(item => item.InstitutionId == institutionId);
+    }
+
     private static CoachingDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<CoachingDbContext>()

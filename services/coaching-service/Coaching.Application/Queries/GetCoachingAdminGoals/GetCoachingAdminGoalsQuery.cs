@@ -8,7 +8,9 @@ public sealed record GetCoachingAdminGoalsQuery(
     int PageNumber = CoachingPaging.DefaultPageNumber,
     int PageSize = CoachingPaging.DefaultPageSize,
     bool? Completed = null,
-    string? Search = null) : IRequest<PagedResponse<CoachingAdminGoalListDto>>;
+    string? Search = null,
+    Guid? InstitutionId = null,
+    IReadOnlyCollection<Guid>? ScopedStudentIds = null) : IRequest<PagedResponse<CoachingAdminGoalListDto>>;
 
 public sealed class GetCoachingAdminGoalsQueryValidator
     : PagedQueryValidator<GetCoachingAdminGoalsQuery>
