@@ -50,6 +50,15 @@ describe('StudentAssignmentDetailComponent navigation', () => {
     expect(component.hasBookReference(mixed)).toBe(true);
     expect(component.hasBookReference({ source: 'Digital' } as AssignmentDetail)).toBe(false);
   });
+
+  it('uses the authorized teacher role when the profile has multiple roles', () => {
+    profile.set({ ...user('InstitutionAdmin'), roles: ['InstitutionAdmin', 'Teacher'] });
+    const component = TestBed.createComponent(StudentAssignmentDetailComponent).componentInstance;
+
+    expect(component.isTeacher()).toBe(true);
+    expect(component.isStudent()).toBe(false);
+    expect(component.backRoute()).toBe('/coaching-portal/teacher/assignments');
+  });
 });
 
 function user(role: string): UserProfile {
