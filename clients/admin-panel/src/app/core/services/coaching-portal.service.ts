@@ -216,6 +216,59 @@ export interface TeacherStudent {
   assignmentStartDate: string;
 }
 
+export interface TeacherAssignmentCreateRequest {
+  teacherId: string;
+  institutionId?: string | null;
+  title: string;
+  description?: string | null;
+  subject?: string | null;
+  assignmentType: string;
+  assignmentSource: string;
+  targetGradeLevel?: number | null;
+  bookTitle?: string | null;
+  bookIsbn?: string | null;
+  bookEdition?: string | null;
+  bookChapter?: string | null;
+  bookStartPage?: number | null;
+  bookEndPage?: number | null;
+  bookStartQuestion?: number | null;
+  bookEndQuestion?: number | null;
+  dueDate: string;
+  estimatedDurationMinutes?: number | null;
+  maxScore?: number | null;
+  passingScore?: number | null;
+  studentIds: string[];
+}
+
+export interface TeacherAssignmentUpdateRequest {
+  assignmentId: string;
+  title: string;
+  description?: string | null;
+  subject?: string | null;
+  assignmentSource: string;
+  targetGradeLevel?: number | null;
+  bookTitle?: string | null;
+  bookIsbn?: string | null;
+  bookEdition?: string | null;
+  bookChapter?: string | null;
+  bookStartPage?: number | null;
+  bookEndPage?: number | null;
+  bookStartQuestion?: number | null;
+  bookEndQuestion?: number | null;
+  dueDate: string;
+  estimatedDurationMinutes?: number | null;
+  maxScore?: number | null;
+  passingScore?: number | null;
+  studentIds?: string[] | null;
+}
+
+export interface TeacherAssignmentMutationResponse {
+  assignmentId: string;
+  title?: string;
+  dueDate: string;
+  assignedStudentCount: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CoachingPortalService {
   private readonly http = inject(HttpClient);
@@ -240,6 +293,37 @@ export class CoachingPortalService {
     return this.http.get<PagedResponse<TeacherAssignment>>(
       `${this.url}/teacher/${this.id(teacherId)}`,
       { params: this.paging(pageNumber, pageSize) }
+    );
+  }
+
+  createTeacherAssignment(
+    request: TeacherAssignmentCreateRequest,
+    idempotencyKey: string
+  ): Observable<TeacherAssignmentMutationResponse> {
+    const headers = new HttpHeaders({ 'Idempotency-Key': idempotencyKey });
+    const body = this.normalizeAssignmentRequest(request);
+    return this.http.post<TeacherAssignmentMutationResponse>(
+      `${this.url}`,
+      body,
+      { headers }
+    );
+  }
+
+  updateTeacherAssignment(
+    assignmentId: string,
+    request: TeacherAssignmentUpdateRequest
+  ): Observable<TeacherAssignmentMutationResponse> {
+    const body = { ...this.normalizeAssignmentRequest(request), assignmentId };
+    return this.http.put<TeacherAssignmentMutationResponse>(
+      `${this.url}/${this.id(assignmentId)}`,
+      body
+    );
+  }
+
+  cancelTeacherAssignment(assignmentId: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${this.url}/${this.id(assignmentId)}/cancel`,
+      {}
     );
   }
 
@@ -461,5 +545,30 @@ export class CoachingPortalService {
 
   private id(value: string): string {
     return encodeURIComponent(value);
+  }
+
+  private normalizeAssignmentRequest(
+    request: TeacherAssignmentCreateRequest | TeacherAssignmentUpdateRequest
+  ) {
+    const body: Record<string, unknown> = {
+      ...request,
+      title: request.title.trim(),
+      description: request.description?.trim() || null,
+      subject: request.subject?.trim() || null,
+      studentIds: request.studentIds
+        ? [...new Set(request.studentIds.map(studentId => studentId.trim()).filter(Boolean))]
+        : null
+    };
+
+    for (const field of ['bookTitle', 'bookIsbn', 'bookEdition', 'bookChapter']) {
+      const value = request[field as keyof typeof request];
+      if (value === undefined) {
+        delete body[field];
+      } else {
+        body[field] = typeof value === 'string' ? value.trim() || null : value;
+      }
+    }
+
+    return body;
   }
 }
