@@ -1,10 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
-import { CoachingPortalService, TeacherSessionCreateRequest, TeacherStudent } from '../../../core/services/coaching-portal.service';
+import { CoachingPortalService, CoachingSession, TeacherSessionCreateRequest, TeacherSessionUpdateRequest, TeacherStudent } from '../../../core/services/coaching-portal.service';
 
 @Component({
   selector: 'app-teacher-session-form',
@@ -17,7 +17,10 @@ export class TeacherSessionFormComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly coachingService = inject(CoachingPortalService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
+  readonly sessionId = this.route.snapshot.paramMap.get('id');
+  readonly isEditing = !!this.sessionId;
   readonly students = signal<TeacherStudent[]>([]);
   readonly isLoading = signal(true);
   readonly isSaving = signal(false);
@@ -38,6 +41,7 @@ export class TeacherSessionFormComponent implements OnInit {
 
   ngOnInit() {
     this.loadStudents();
+    if (this.sessionId) this.loadSession(this.sessionId);
   }
 
   loadStudents() {
@@ -52,6 +56,19 @@ export class TeacherSessionFormComponent implements OnInit {
       },
       error: () => {
         this.errorMessage.set('Öğrenci listesi yüklenemedi.');
+        this.isLoading.set(false);
+      },
+      complete: () => {
+        if (!this.sessionId) this.isLoading.set(false);
+      }
+    });
+  }
+
+  private loadSession(sessionId: string) {
+    this.coachingService.getTeacherSession(sessionId).subscribe({
+      next: session => this.fillForm(session),
+      error: () => {
+        this.errorMessage.set('Seans detayı yüklenemedi veya bu seansı düzenleme yetkiniz yok.');
         this.isLoading.set(false);
       },
       complete: () => this.isLoading.set(false)
@@ -122,6 +139,27 @@ export class TeacherSessionFormComponent implements OnInit {
     }
 
     const studentIds = [...this.selectedStudentIds];
+    if (this.isEditing && this.sessionId) {
+      const request: TeacherSessionUpdateRequest = {
+        sessionId: this.sessionId,
+        title: this.form.subject.trim() || 'Koçluk seansı',
+        description: this.form.notes.trim() || null,
+        scheduledDate: startTime.toISOString(),
+        durationMinutes: this.form.durationMinutes,
+        meetingLink: this.form.meetingLink.trim() || null,
+        teacherNotes: this.form.notes.trim() || null
+      };
+      this.isSaving.set(true);
+      this.errorMessage.set(null);
+      this.coachingService.updateTeacherSession(this.sessionId, request)
+        .pipe(finalize(() => this.isSaving.set(false)))
+        .subscribe({
+          next: () => void this.router.navigate(['/coaching-portal/sessions']),
+          error: () => this.errorMessage.set('Seans güncellenemedi; alanları kontrol edin.')
+        });
+      return;
+    }
+
     const request: TeacherSessionCreateRequest = {
       teacherId,
       studentId: studentIds[0],
@@ -145,8 +183,26 @@ export class TeacherSessionFormComponent implements OnInit {
       });
   }
 
+  private fillForm(session: CoachingSession) {
+    this.form = {
+      startTime: this.toLocalDateTime(session.startTime),
+      durationMinutes: session.durationMinutes,
+      subject: session.subject ?? '',
+      notes: '',
+      meetingLink: session.meetingLink ?? '',
+      type: session.type
+    };
+    session.studentIds.forEach(studentId => this.selectedStudentIds.add(studentId));
+  }
+
   private defaultStartTime() {
     const date = new Date(Date.now() + 60 * 60 * 1000);
+    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+    return date.toISOString().slice(0, 16);
+  }
+
+  private toLocalDateTime(value: string) {
+    const date = new Date(value);
     date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
     return date.toISOString().slice(0, 16);
   }

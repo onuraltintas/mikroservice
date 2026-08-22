@@ -2,7 +2,7 @@
   <div>
     <a routerLink="/coaching-portal/sessions" class="text-sm font-medium text-indigo-600 hover:underline">← Seanslarıma dön</a>
     <p class="mt-4 text-sm font-medium text-indigo-600 dark:text-indigo-300">Koç çalışma alanı</p>
-    <h1 class="mt-1 text-2xl font-bold tracking-tight">Yeni seans planla</h1>
+    <h1 class="mt-1 text-2xl font-bold tracking-tight">{{ isEditing ? 'Seansı yeniden planla' : 'Yeni seans planla' }}</h1>
     <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Yalnızca aktif öğrencilerinle seans oluşturabilirsin.</p>
   </div>
 
@@ -55,7 +55,7 @@
     </fieldset>
     <div class="flex justify-end gap-3">
       <a routerLink="/coaching-portal/sessions" class="rounded-lg border border-slate-300 px-4 py-2 text-sm dark:border-slate-700">Vazgeç</a>
-      <button type="submit" [disabled]="isSaving() || isLoading()" class="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50">{{ isSaving() ? 'Kaydediliyor…' : 'Seansı planla' }}</button>
+      <button type="submit" [disabled]="isSaving() || isLoading()" class="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50">{{ isSaving() ? 'Kaydediliyor…' : (isEditing ? 'Değişiklikleri kaydet' : 'Seansı planla') }}</button>
     </div>
   </form>
 </section>

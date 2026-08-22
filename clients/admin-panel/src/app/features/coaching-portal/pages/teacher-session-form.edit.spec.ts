@@ -44,7 +44,6 @@ describe('TeacherSessionFormComponent edit mode', () => {
     expect(service.getTeacherSession).toHaveBeenCalledWith('session-1');
     expect(component.form.subject).toBe('Matematik');
     component.form.startTime = '2030-01-05T10:00';
-    component.toggleStudent('student-1');
     component.submit();
 
     expect(service.updateTeacherSession).toHaveBeenCalledOnce();
