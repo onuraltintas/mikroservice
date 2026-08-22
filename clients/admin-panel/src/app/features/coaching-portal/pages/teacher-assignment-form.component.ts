@@ -31,6 +31,9 @@ export class TeacherAssignmentFormComponent implements OnInit {
   readonly isLoading = signal(true);
   readonly isSaving = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly studentPageNumber = signal(1);
+  readonly studentTotalPages = signal(1);
+  readonly studentSearchTerm = signal('');
   readonly selectedStudentIds = new Set<string>();
 
   form = {
@@ -62,8 +65,15 @@ export class TeacherAssignmentFormComponent implements OnInit {
   }
 
   loadStudents() {
-    this.coachingService.getTeacherStudents(1, 100).subscribe({
-      next: page => this.students.set(page.items),
+    const search = this.studentSearchTerm();
+    const request = search
+      ? this.coachingService.getTeacherStudents(this.studentPageNumber(), 100, search)
+      : this.coachingService.getTeacherStudents(this.studentPageNumber(), 100);
+    request.subscribe({
+      next: page => {
+        this.students.set(page.items);
+        this.studentTotalPages.set(page.totalPages ?? Math.max(1, Math.ceil(page.totalCount / page.pageSize)));
+      },
       error: () => {
         this.errorMessage.set('Öğrenci listesi yüklenemedi.');
         this.isLoading.set(false);
@@ -72,6 +82,24 @@ export class TeacherAssignmentFormComponent implements OnInit {
         if (!this.assignmentId) this.isLoading.set(false);
       }
     });
+  }
+
+  setStudentSearch(value: string) {
+    this.studentSearchTerm.set(value.trim());
+    this.studentPageNumber.set(1);
+    this.loadStudents();
+  }
+
+  previousStudentsPage() {
+    if (this.studentPageNumber() <= 1) return;
+    this.studentPageNumber.update(page => page - 1);
+    this.loadStudents();
+  }
+
+  nextStudentsPage() {
+    if (this.studentPageNumber() >= this.studentTotalPages()) return;
+    this.studentPageNumber.update(page => page + 1);
+    this.loadStudents();
   }
 
   private loadAssignment(assignmentId: string) {
