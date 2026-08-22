@@ -197,6 +197,29 @@ public class SessionsController : ControllerBase
     }
 
     /// <summary>
+    /// Gets one session for its owning teacher, including only identity-authorized students.
+    /// </summary>
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(SessionDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetSession(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return Ok(await _mediator.Send(new GetSessionQuery(id), cancellationToken));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
+        }
+    }
+
+    /// <summary>
     /// Reschedule a session and replace its editable details.
     /// </summary>
     [HttpPut("{id:guid}")]

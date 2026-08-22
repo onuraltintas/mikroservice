@@ -18,6 +18,8 @@ public record GetUpcomingSessionsQuery(
     int PageNumber = CoachingPaging.DefaultPageNumber,
     int PageSize = CoachingPaging.DefaultPageSize) : IRequest<PagedResponse<SessionDto>>;
 
+public record GetSessionQuery(Guid SessionId) : IRequest<SessionDto>;
+
 public sealed record SessionStudentReflectionDto(
     Guid StudentId,
     string Note,
