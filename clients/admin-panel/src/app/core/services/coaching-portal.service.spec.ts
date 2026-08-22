@@ -80,6 +80,59 @@ describe('CoachingPortalService', () => {
     http.verify();
   });
 
+  it('creates a teacher assignment with a deduplicated student set and idempotency key', () => {
+    const { service, http } = setup();
+
+    service.createTeacherAssignment({
+      teacherId: 'teacher-1',
+      title: '  Kitap tekrar ödevi  ',
+      assignmentType: 'Individual',
+      assignmentSource: 'Book',
+      dueDate: '2030-01-02T10:00:00.000Z',
+      studentIds: ['student-1', 'student-1', 'student-2'],
+      bookTitle: '  Matematik  ' 
+    }, 'assignment-key-123456').subscribe();
+
+    const request = http.expectOne(candidate => candidate.url.endsWith('/assignments'));
+    expect(request.request.method).toBe('POST');
+    expect(request.request.headers.get('Idempotency-Key')).toBe('assignment-key-123456');
+    expect(request.request.body).toEqual({
+      teacherId: 'teacher-1',
+      title: 'Kitap tekrar ödevi',
+      assignmentType: 'Individual',
+      assignmentSource: 'Book',
+      dueDate: '2030-01-02T10:00:00.000Z',
+      studentIds: ['student-1', 'student-2'],
+      bookTitle: 'Matematik',
+      description: null,
+      subject: null
+    });
+    request.flush({ assignmentId: 'assignment-1', title: 'Kitap tekrar ödevi', dueDate: '2030-01-02T10:00:00Z', assignedStudentCount: 2 });
+    http.verify();
+  });
+
+  it('updates and cancels a teacher assignment through the protected resource path', () => {
+    const { service, http } = setup();
+
+    service.updateTeacherAssignment('assignment/1', {
+      assignmentId: 'assignment/1',
+      title: '  Güncel ödev  ',
+      assignmentSource: 'Digital',
+      dueDate: '2030-01-03T10:00:00.000Z',
+      studentIds: null
+    }).subscribe();
+    const update = http.expectOne(candidate => candidate.url.endsWith('/assignments/assignment%2F1'));
+    expect(update.request.method).toBe('PUT');
+    expect(update.request.body.title).toBe('Güncel ödev');
+    update.flush({ assignmentId: 'assignment/1', dueDate: '2030-01-03T10:00:00Z', assignedStudentCount: 2 });
+
+    service.cancelTeacherAssignment('assignment/1').subscribe();
+    const cancel = http.expectOne(candidate => candidate.url.endsWith('/assignments/assignment%2F1/cancel'));
+    expect(cancel.request.method).toBe('POST');
+    cancel.flush({ message: 'Assignment cancelled successfully' });
+    http.verify();
+  });
+
   it('requests bounded student session pages with encoded student ids', () => {
     const { service, http } = setup();
 
