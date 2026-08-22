@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { vi } from 'vitest';
 import { AuthService, UserProfile } from '../../../core/auth/auth.service';
-import { CoachingPortalService } from '../../../core/services/coaching-portal.service';
+import { AssignmentDetail, CoachingPortalService } from '../../../core/services/coaching-portal.service';
 import { StudentAssignmentDetailComponent } from './student-assignment-detail.component';
 
 describe('StudentAssignmentDetailComponent navigation', () => {
@@ -41,6 +41,14 @@ describe('StudentAssignmentDetailComponent navigation', () => {
     const component = TestBed.createComponent(StudentAssignmentDetailComponent).componentInstance;
 
     expect(component.backRoute()).toBe('/coaching-portal/children');
+  });
+
+  it('shows book instructions for mixed assignments as well as book-only assignments', () => {
+    const component = TestBed.createComponent(StudentAssignmentDetailComponent).componentInstance;
+    const mixed = { source: 'Mixed' } as AssignmentDetail;
+
+    expect(component.hasBookReference(mixed)).toBe(true);
+    expect(component.hasBookReference({ source: 'Digital' } as AssignmentDetail)).toBe(false);
   });
 });
 
