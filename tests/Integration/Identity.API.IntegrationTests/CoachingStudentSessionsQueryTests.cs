@@ -95,6 +95,51 @@ public sealed class CoachingStudentSessionsQueryTests
     }
 
     [Fact]
+    public async Task TeacherSessionByIdQuery_ShouldReturnOnlyTheCurrentTeachersSession()
+    {
+        var teacherId = Guid.NewGuid();
+        var studentId = Guid.NewGuid();
+        var session = CoachingSession.Create(
+            teacherId,
+            "Tekil seans",
+            DateTime.UtcNow.AddDays(1),
+            SessionType.OneOnOne);
+        session.AddStudent(studentId);
+
+        var handler = new GetSessionQueryHandler(
+            new StubSessionRepository(session),
+            CreatePolicy(teacherId, "Teacher"),
+            new StubIdentityAuthorizationClient([studentId]));
+
+        var result = await handler.Handle(new GetSessionQuery(session.Id), CancellationToken.None);
+
+        result.Id.Should().Be(session.Id);
+        result.StudentIds.Should().ContainSingle().Which.Should().Be(studentId);
+    }
+
+    [Fact]
+    public async Task TeacherSessionByIdQuery_ShouldRejectAnotherTeacher()
+    {
+        var ownerTeacherId = Guid.NewGuid();
+        var viewerTeacherId = Guid.NewGuid();
+        var session = CoachingSession.Create(
+            ownerTeacherId,
+            "Tekil seans",
+            DateTime.UtcNow.AddDays(1),
+            SessionType.OneOnOne);
+
+        var handler = new GetSessionQueryHandler(
+            new StubSessionRepository(session),
+            CreatePolicy(viewerTeacherId, "Teacher"),
+            new StubIdentityAuthorizationClient([]));
+
+        var action = () => handler.Handle(new GetSessionQuery(session.Id), CancellationToken.None);
+
+        await action.Should().ThrowAsync<BusinessRuleException>()
+            .Where(exception => exception.Code == "Authorization.Forbidden");
+    }
+
+    [Fact]
     public async Task StudentSessionNoteCommand_ShouldUpdateOnlyAssignedStudentNote()
     {
         var studentId = Guid.NewGuid();
