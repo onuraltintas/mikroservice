@@ -152,6 +152,39 @@ public class DatabaseCrudTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task AddExternalLogin_AfterRegistrationAndEmailConfirmation_ShouldPersist()
+    {
+        var userId = Guid.NewGuid();
+        var user = User.Create(userId, "google-flow@concurrency.edu", "Google", "Flow");
+
+        _dbContext!.Users.Add(user);
+        await _dbContext.SaveChangesAsync();
+
+        // Match the Google registration flow: load the saved aggregate, confirm
+        // the trusted provider email, then attach the external login.
+        var reloaded = await _dbContext.Users
+            .Include(candidate => candidate.Roles)
+            .ThenInclude(userRole => userRole.Role)
+            .FirstAsync(candidate => candidate.Id == userId);
+        reloaded.ConfirmEmail();
+        var login = UserLogin.Create(
+            userId,
+            "Google",
+            "google-subject",
+            "Google");
+
+        var repository = new Identity.Infrastructure.Repositories.UserRepository(_dbContext);
+        var loginAdded = await repository.TryAddLoginAsync(reloaded, login, CancellationToken.None);
+        loginAdded.Should().BeTrue();
+
+        _dbContext.ChangeTracker.Clear();
+        var persistedLogin = await _dbContext.UserLogins
+            .SingleOrDefaultAsync(login => login.UserId == userId);
+        persistedLogin.Should().NotBeNull();
+        persistedLogin!.ProviderKey.Should().Be("google-subject");
+    }
+
+    [Fact]
     public async Task QueryUsers_WithFilters_ShouldWork()
     {
         // Arrange

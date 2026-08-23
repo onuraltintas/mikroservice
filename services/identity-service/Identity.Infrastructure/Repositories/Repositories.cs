@@ -68,6 +68,11 @@ public class UserRepository : IUserRepository
         CancellationToken cancellationToken)
     {
         user.AddLogin(login);
+        // The login is created with an assigned Guid. When it is only added to
+        // the aggregate navigation, EF Core can infer Modified instead of Added
+        // and issue an UPDATE for a row that does not exist. Register the new
+        // dependent explicitly so the external-login insert is deterministic.
+        _context.UserLogins.Add(login);
 
         try
         {
