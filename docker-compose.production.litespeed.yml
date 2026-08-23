@@ -8,7 +8,7 @@ services:
     ports: !reset []
     environment:
       ForwardedHeaders__ForwardLimit: "1"
-      ForwardedHeaders__KnownProxies: ${FORWARDED_HEADERS_KNOWN_PROXIES:-172.31.0.10}
+      ForwardedHeaders__KnownProxies: ${FORWARDED_HEADERS_KNOWN_PROXIES:-172.31.0.20}
       ForwardedHeaders__KnownNetworks: ${FORWARDED_HEADERS_KNOWN_NETWORKS:-}
 
   production-edge:
@@ -32,7 +32,9 @@ services:
       retries: 6
     networks:
       edu-network:
-        ipv4_address: 172.31.0.10
+        # Keep the edge address outside the first dynamically allocated
+        # addresses so it cannot collide with the gateway or app containers.
+        ipv4_address: 172.31.0.20
 
 volumes:
   production_caddy_data:
