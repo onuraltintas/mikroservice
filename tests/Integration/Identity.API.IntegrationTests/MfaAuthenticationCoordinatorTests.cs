@@ -4,6 +4,7 @@ using Identity.Application.Commands.Login;
 using Identity.Application.Interfaces;
 using Identity.Application.Services;
 using Identity.Domain.Entities;
+using EduPlatform.Shared.Security.Interfaces;
 
 namespace Identity.API.IntegrationTests;
 
@@ -18,7 +19,8 @@ public sealed class MfaAuthenticationCoordinatorTests
         var mfa = new StubMfaService(user.Id);
         var issuer = new StubSessionIssuer();
         var coordinator = new MfaAuthenticationCoordinator(
-            new StubUserRepository(user), mfa, issuer, new StubUnitOfWork(), new FixedTimeProvider(Now));
+            new StubUserRepository(user), mfa, issuer, new StubUnitOfWork(),
+            new FixedTimeProvider(Now), new AcceptingPasswordHasher());
 
         var result = await coordinator.EnableAsync(
             "challenge", "setup", "123456", "127.0.0.1", CancellationToken.None);
@@ -38,9 +40,10 @@ public sealed class MfaAuthenticationCoordinatorTests
         var mfa = new StubMfaService(user.Id);
         var coordinator = new MfaAuthenticationCoordinator(
             new StubUserRepository(user), mfa, new StubSessionIssuer(),
-            new StubUnitOfWork(), new FixedTimeProvider(Now));
+            new StubUnitOfWork(), new FixedTimeProvider(Now), new AcceptingPasswordHasher());
 
-        var result = await coordinator.StartAuthenticatedSetupAsync(user.Id, CancellationToken.None);
+        user.SetPassword([1], [2]);
+        var result = await coordinator.StartAuthenticatedSetupAsync(user.Id, "current-password", CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.SetupToken.Should().Be("setup");
@@ -56,7 +59,7 @@ public sealed class MfaAuthenticationCoordinatorTests
         var issuer = new StubSessionIssuer();
         var coordinator = new MfaAuthenticationCoordinator(
             new StubUserRepository(user), new StubMfaService(user.Id), issuer,
-            new StubUnitOfWork(), new FixedTimeProvider(Now));
+            new StubUnitOfWork(), new FixedTimeProvider(Now), new AcceptingPasswordHasher());
 
         var result = await coordinator.VerifyAsync(
             "challenge", "123456", null, "127.0.0.1", CancellationToken.None);
@@ -119,5 +122,12 @@ public sealed class MfaAuthenticationCoordinatorTests
     private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
     {
         public override DateTimeOffset GetUtcNow() => now;
+    }
+
+    private sealed class AcceptingPasswordHasher : IPasswordHasher
+    {
+        public void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt) => throw new NotSupportedException();
+        public bool VerifyPasswordHash(string password, byte[] storedHash, byte[] storedSalt) => password == "current-password";
+        public bool NeedsRehash(byte[] storedHash, byte[] storedSalt) => false;
     }
 }

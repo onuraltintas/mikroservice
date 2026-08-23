@@ -2,6 +2,7 @@ using EduPlatform.Shared.Kernel.Results;
 using Identity.Application.Commands.Login;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
+using EduPlatform.Shared.Security.Interfaces;
 
 namespace Identity.Application.Services;
 
@@ -33,19 +34,22 @@ public sealed class MfaAuthenticationCoordinator
     private readonly IAuthenticationSessionIssuer _sessionIssuer;
     private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _timeProvider;
+    private readonly IPasswordHasher _passwordHasher;
 
     public MfaAuthenticationCoordinator(
         IUserRepository users,
         IMultiFactorService multiFactor,
         IAuthenticationSessionIssuer sessionIssuer,
         IUnitOfWork unitOfWork,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IPasswordHasher passwordHasher)
     {
         _users = users;
         _multiFactor = multiFactor;
         _sessionIssuer = sessionIssuer;
         _unitOfWork = unitOfWork;
         _timeProvider = timeProvider;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<Result<MfaSetupResponse>> StartSetupAsync(
@@ -68,6 +72,7 @@ public sealed class MfaAuthenticationCoordinator
 
     public async Task<Result<MfaSetupResponse>> StartAuthenticatedSetupAsync(
         Guid userId,
+        string currentPassword,
         CancellationToken cancellationToken)
     {
         var user = await _users.GetByIdAsync(userId, cancellationToken);
@@ -79,6 +84,16 @@ public sealed class MfaAuthenticationCoordinator
         if (user.MfaEnabled)
         {
             return Result.Failure<MfaSetupResponse>(new Error("Auth.MfaAlreadyEnabled", "MFA zaten etkin."));
+        }
+
+        if (string.IsNullOrWhiteSpace(currentPassword)
+            || user.PasswordHash.Length == 0
+            || user.PasswordSalt.Length == 0
+            || !_passwordHasher.VerifyPasswordHash(currentPassword, user.PasswordHash, user.PasswordSalt))
+        {
+            return Result.Failure<MfaSetupResponse>(new Error(
+                "Auth.ReauthenticationRequired",
+                "MFA kurulumu için mevcut şifrenizi doğrulamanız gerekir."));
         }
 
         var challengeToken = _multiFactor.CreateChallenge(user.Id, rememberMe: true);

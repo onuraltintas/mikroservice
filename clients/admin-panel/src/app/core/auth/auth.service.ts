@@ -163,10 +163,10 @@ export class AuthService implements OnDestroy {
             { challengeToken }));
     }
 
-    async startAuthenticatedMfaSetup(): Promise<MfaSetupResponse> {
+    async startAuthenticatedMfaSetup(currentPassword: string): Promise<MfaSetupResponse> {
         return firstValueFrom(this.httpClient.post<MfaSetupResponse>(
             `${environment.apiUrl}/auth/mfa/setup-authenticated`,
-            {},
+            { currentPassword },
             { withCredentials: true }));
     }
 

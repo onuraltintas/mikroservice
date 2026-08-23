@@ -33,6 +33,7 @@ export class ProfileSettingsComponent implements OnInit {
     savingPassword = signal(false);
     linkingGoogle = signal(false);
     mfaSetup = signal<MfaSetupResponse | null>(null);
+    mfaCurrentPassword = '';
     mfaCode = '';
     mfaRecoveryCodes = signal<string[]>([]);
     mfaLoading = signal(false);
@@ -154,16 +155,17 @@ export class ProfileSettingsComponent implements OnInit {
     }
 
     async startMfaSetup() {
-        if (this.mfaLoading() || this.user()?.mfaEnabled) return;
+        if (this.mfaLoading() || this.user()?.mfaEnabled || !this.mfaCurrentPassword.trim()) return;
 
         this.mfaLoading.set(true);
         try {
-            const setup = await this.authService.startAuthenticatedMfaSetup();
+            const setup = await this.authService.startAuthenticatedMfaSetup(this.mfaCurrentPassword.trim());
             if (!setup.challengeToken) {
                 throw new Error('MFA kurulumu için doğrulama isteği alınamadı.');
             }
             this.mfaSetup.set(setup);
             this.mfaRecoveryCodes.set([]);
+            this.mfaCurrentPassword = '';
         } catch (error: any) {
             const message = error?.error?.message
                 || error?.error?.description

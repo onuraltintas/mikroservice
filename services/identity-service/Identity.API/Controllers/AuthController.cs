@@ -216,6 +216,7 @@ public class AuthController : ControllerBase
     [HttpPost("mfa/setup-authenticated")]
     [Authorize]
     public async Task<IActionResult> StartAuthenticatedMfaSetup(
+        [FromBody] MfaAuthenticatedSetupRequest request,
         [FromServices] MfaAuthenticationCoordinator coordinator,
         [FromServices] ICurrentUserService currentUser,
         CancellationToken cancellationToken)
@@ -225,7 +226,10 @@ public class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        var result = await coordinator.StartAuthenticatedSetupAsync(currentUser.UserId.Value, cancellationToken);
+        var result = await coordinator.StartAuthenticatedSetupAsync(
+            currentUser.UserId.Value,
+            request.CurrentPassword,
+            cancellationToken);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 
@@ -356,6 +360,7 @@ public sealed record GoogleLoginRequest(
 public record RefreshTokenRequest(string? RefreshToken = null);
 public record RevokeTokenRequest(string? Token = null);
 public sealed record MfaSetupRequest(string ChallengeToken);
+public sealed record MfaAuthenticatedSetupRequest(string CurrentPassword);
 public sealed record MfaEnableRequest(string ChallengeToken, string SetupToken, string Code);
 public sealed record MfaVerifyRequest(string ChallengeToken, string? Code = null, string? RecoveryCode = null);
 public sealed record MfaSessionResponse(
