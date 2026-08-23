@@ -33,6 +33,8 @@ public class AuthController : ControllerBase
         _environment = environment;
     }
 
+    private bool UseSecureSessionCookie => !_environment.IsDevelopment();
+
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<IActionResult> Login([FromBody] LoginCommand command)
@@ -49,7 +51,7 @@ public class AuthController : ControllerBase
         return Ok(RefreshTokenCookiePolicy.Issue(
             Response,
             result.Value,
-            _environment.IsProduction()));
+            UseSecureSessionCookie));
     }
 
     [HttpPost("register/student")]
@@ -123,7 +125,7 @@ public class AuthController : ControllerBase
         return Ok(RefreshTokenCookiePolicy.Issue(
             Response,
             result.Value,
-            _environment.IsProduction()));
+            UseSecureSessionCookie));
     }
 
     [HttpPost("confirm-email")]
@@ -181,7 +183,7 @@ public class AuthController : ControllerBase
         return Ok(RefreshTokenCookiePolicy.Issue(
             Response,
             result.Value,
-            _environment.IsProduction()));
+            UseSecureSessionCookie));
     }
 
     [HttpPost("google-link")]
@@ -233,7 +235,7 @@ public class AuthController : ControllerBase
             return BadRequest(result.Error);
         }
 
-        var session = RefreshTokenCookiePolicy.Issue(Response, result.Value.Session, _environment.IsProduction());
+        var session = RefreshTokenCookiePolicy.Issue(Response, result.Value.Session, UseSecureSessionCookie);
         return Ok(new MfaSessionResponse(
             session.AccessToken,
             session.TokenType,
@@ -272,7 +274,7 @@ public class AuthController : ControllerBase
         return Ok(RefreshTokenCookiePolicy.Issue(
             Response,
             result.Value.Session,
-            _environment.IsProduction()));
+            UseSecureSessionCookie));
     }
 
     [HttpPost("forgot-password")]
@@ -307,7 +309,7 @@ public class AuthController : ControllerBase
             ?? request.Token;
         if (string.IsNullOrWhiteSpace(refreshToken))
         {
-            RefreshTokenCookiePolicy.Clear(Response, _environment.IsProduction());
+            RefreshTokenCookiePolicy.Clear(Response, UseSecureSessionCookie);
             return Ok();
         }
 
@@ -319,7 +321,7 @@ public class AuthController : ControllerBase
             return BadRequest(result.Error);
         }
 
-        RefreshTokenCookiePolicy.Clear(Response, _environment.IsProduction());
+        RefreshTokenCookiePolicy.Clear(Response, UseSecureSessionCookie);
         return Ok();
     }
 

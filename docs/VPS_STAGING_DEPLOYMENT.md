@@ -23,6 +23,15 @@ PostgreSQL, Redis, RabbitMQ, MailCatcher ve Gateway host portlarına bağlanmaz;
 servisler Docker ağı içinde kalır. Prometheus, Grafana ve Alertmanager da
 observability overlay'i ile loopback'e bağlanır ve VPS dışından erişilemez.
 
+Mevcut VPS üzerinde LiteSpeed zaten 80/443 kullanıyorsa Caddy'yi public porta
+almayın. `docker-compose.staging.litespeed.yml` override'ı Caddy'yi yalnızca
+`127.0.0.1:5100` üzerinde HTTP router olarak çalıştırır; LiteSpeed yalnızca
+`staging.onuraltintas.net` vhost'u için bu porta proxy yapar ve TLS'i kendi
+üzerinde sonlandırır. Böylece diğer sitelerin listener/vhost'ları değişmez.
+LiteSpeed'in proxy katmanı `X-Forwarded-For` zincirini iç hopta taşır; Caddy
+sadece staging Docker gateway adresini trusted proxy kabul eder ve backend'e
+TLS'in public kenarda sonlandığını `X-Forwarded-Proto: https` ile bildirir.
+
 ## VPS ön koşulları
 
 - Ubuntu 24.04 LTS (veya güncel, desteklenen Linux), Docker Engine ve Compose v2.
@@ -99,6 +108,23 @@ docker compose --env-file .env.staging \
   -f docker-compose.observability.yml \
   --profile security-scan --profile object-storage up -d --build
 ```
+
+LiteSpeed'in 80/443 kullandığı mevcut sunucularda bunun yerine şu override'ı
+kullanın:
+
+```bash
+docker compose --env-file .env.staging \
+  -f docker-compose.yml -f docker-compose.staging.yml \
+  -f docker-compose.staging.litespeed.yml \
+  -f docker-compose.observability.yml \
+  --profile security-scan --profile object-storage up -d --build
+```
+
+Bu modda `staging.onuraltintas.net` için ayrı bir LiteSpeed vhost oluşturulmalı,
+backend'i `127.0.0.1:5100` adresine proxy etmeli ve yalnız bu vhost için
+Let's Encrypt sertifikası alınmalıdır. Mevcut vhost dosyalarını kopyalayıp
+üzerine yazmayın; yeni vhost'u oluşturduktan sonra `lswsctrl configtest` ve
+graceful reload çalıştırın.
 
 Migration container'ları (`identity-migrations`, `coaching-migrations`,
 `notification-migrations`) tamamlanmadan web servisleri başlamaz. Kontrol:

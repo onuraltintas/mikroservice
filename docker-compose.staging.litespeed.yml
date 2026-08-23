@@ -1,0 +1,11 @@
+# Existing VPS mode: LiteSpeed owns public 80/443, so Caddy runs as an
+# internal HTTP router on loopback. LiteSpeed terminates TLS and proxies the
+# dedicated staging vhost to 127.0.0.1:5100.
+services:
+  staging-edge:
+    ports: !override
+      - "127.0.0.1:5100:80"
+    volumes: !override
+      - ./infrastructure/caddy/Caddyfile.staging.litespeed:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
