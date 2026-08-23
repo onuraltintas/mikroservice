@@ -34,6 +34,15 @@
 		}
 	}
 
+	# SignalR negotiation and WebSocket upgrades must reach the gateway;
+	# otherwise the SPA fallback returns index.html instead of JSON.
+	@signalr path /hubs/notifications /hubs/notifications/*
+	handle @signalr {
+		reverse_proxy api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+	}
+
 	handle {
 		reverse_proxy admin-panel:4000
 	}
