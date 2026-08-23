@@ -67,7 +67,6 @@ public class UserRepository : IUserRepository
         UserLogin login,
         CancellationToken cancellationToken)
     {
-        user.AddLogin(login);
         // The login is created with an assigned Guid. When it is only added to
         // the aggregate navigation, EF Core can infer Modified instead of Added
         // and issue an UPDATE for a row that does not exist. Register the new
@@ -77,11 +76,17 @@ public class UserRepository : IUserRepository
         try
         {
             await _context.SaveChangesAsync(cancellationToken);
+            user.AddLogin(login);
             return true;
         }
         catch (DbUpdateException exception) when (IsExternalLoginConstraintViolation(exception))
         {
             _context.Entry(login).State = EntityState.Detached;
+            // SaveChanges rolls the transaction back, but EF keeps scalar
+            // changes in the tracked aggregate. Reload it so a caller that
+            // continues using this scoped context cannot accidentally persist
+            // those changes after the duplicate-login result.
+            await _context.Entry(user).ReloadAsync(cancellationToken);
             return false;
         }
     }

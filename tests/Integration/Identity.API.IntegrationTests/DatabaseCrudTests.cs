@@ -159,6 +159,7 @@ public class DatabaseCrudTests : IAsyncLifetime
 
         _dbContext!.Users.Add(user);
         await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
 
         // Match the Google registration flow: load the saved aggregate, confirm
         // the trusted provider email, then attach the external login.
@@ -182,6 +183,36 @@ public class DatabaseCrudTests : IAsyncLifetime
             .SingleOrDefaultAsync(login => login.UserId == userId);
         persistedLogin.Should().NotBeNull();
         persistedLogin!.ProviderKey.Should().Be("google-subject");
+    }
+
+    [Fact]
+    public async Task AddExternalLogin_WhenProviderKeyAlreadyExists_ShouldReturnFalseAndLeaveNoDirtyUserState()
+    {
+        var firstUserId = Guid.NewGuid();
+        var firstUser = User.Create(firstUserId, "google-first@concurrency.edu", "First", "User");
+        _dbContext!.Users.Add(firstUser);
+        await _dbContext.SaveChangesAsync();
+
+        var repository = new Identity.Infrastructure.Repositories.UserRepository(_dbContext);
+        var firstLogin = UserLogin.Create(firstUserId, "Google", "duplicate-subject", "Google");
+        (await repository.TryAddLoginAsync(firstUser, firstLogin, CancellationToken.None)).Should().BeTrue();
+
+        var secondUserId = Guid.NewGuid();
+        var secondUser = User.Create(secondUserId, "google-second@concurrency.edu", "Second", "User");
+        _dbContext.Users.Add(secondUser);
+        await _dbContext.SaveChangesAsync();
+        secondUser.UpdateName("Unsaved", "Change");
+
+        var duplicateLogin = UserLogin.Create(secondUserId, "Google", "duplicate-subject", "Google");
+        (await repository.TryAddLoginAsync(secondUser, duplicateLogin, CancellationToken.None)).Should().BeFalse();
+
+        _dbContext.ChangeTracker.Clear();
+        var persistedSecondUser = await _dbContext.Users.SingleAsync(user => user.Id == secondUserId);
+        persistedSecondUser.FirstName.Should().Be("Second");
+        persistedSecondUser.LastName.Should().Be("User");
+        (await _dbContext.UserLogins.CountAsync(login =>
+            login.LoginProvider == "Google" && login.ProviderKey == "duplicate-subject"))
+            .Should().Be(1);
     }
 
     [Fact]
