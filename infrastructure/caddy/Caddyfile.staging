@@ -1,0 +1,21 @@
+{
+	email {$TLS_ACME_EMAIL}
+}
+
+{$STAGING_DOMAIN} {
+	encode gzip zstd
+
+	@api path /api/*
+	handle @api {
+		reverse_proxy api-gateway:8080
+	}
+
+	@health path /health /health/*
+	handle @health {
+		reverse_proxy api-gateway:8080
+	}
+
+	handle {
+		reverse_proxy admin-panel:4000
+	}
+}

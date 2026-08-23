@@ -1,6 +1,7 @@
 using Serilog;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Threading.RateLimiting;
 using DotNetEnv;
@@ -42,13 +43,16 @@ builder.Services.AddStackExchangeRedisCache(options =>
         : $"{redisHost}:{redisPort},password={redisPassword},abortConnect=false";
     options.InstanceName = "EduPlatform:"; // Key prefix
 });
-var redisOptions = ConfigurationOptions.Parse(
-    string.IsNullOrWhiteSpace(redisPassword)
-        ? $"{redisHost}:{redisPort}"
-        : $"{redisHost}:{redisPort},password={redisPassword}");
+var redisConnectionString = string.IsNullOrWhiteSpace(redisPassword)
+    ? $"{redisHost}:{redisPort}"
+    : $"{redisHost}:{redisPort},password={redisPassword}";
+var redisOptions = ConfigurationOptions.Parse(redisConnectionString);
 redisOptions.AbortOnConnectFail = false;
 redisOptions.ConnectTimeout = 1000;
 redisOptions.ConnectRetry = 1;
+
+builder.Services.AddHealthChecks()
+    .AddRedis(redisConnectionString, name: "redis", tags: new[] { "ready" });
 
 // Register the actual multiplexer with DI so it is disposed during host shutdown.
 // The lazy resolver keeps health and non-rate-limited routes independent of Redis startup.
@@ -165,6 +169,14 @@ app.MapReverseProxy(proxyPipeline =>
 app.MapGet("/", () => "EduPlatform API Gateway Running 🚀").AllowAnonymous();
 
 app.MapGet("/health", () => Results.Ok("Healthy")).AllowAnonymous();
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false
+}).AllowAnonymous();
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+}).AllowAnonymous();
 
 app.MapGet("/api/gateway/services", (IConfiguration configuration) =>
 {

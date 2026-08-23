@@ -9,6 +9,8 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+.env.staging
+.env.production
 *.env.backup
 secrets/
 *.pfx

@@ -5,6 +5,10 @@ edilmesi gereken release, migration, backup/restore, secret rotation ve rollback
 adımlarını toplar. Komutlar gerçek production verisine karşı çalıştırılmamalıdır;
 restore adımları özellikle ayrı bir PostgreSQL database/volume üzerinde denenir.
 
+Tek VPS üzerinde staging kurulumu için [VPS Staging Deployment](VPS_STAGING_DEPLOYMENT.md)
+rehberindeki Caddy, private network, migration ve smoke-test adımları bu runbook
+ile birlikte uygulanır.
+
 ## 1. Release ve immutable image
 
 1. CI'nin `Release --warnaserror`, test, npm audit, EF drift, vulnerability ve

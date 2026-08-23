@@ -286,6 +286,13 @@ jobs:
           docker compose --env-file .env.example config --quiet
           docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.scale.yml config --quiet
 
+      - name: Validate staging VPS configuration
+        run: |
+          docker compose --env-file .env.example \
+            -f docker-compose.yml \
+            -f docker-compose.staging.yml \
+            --profile security-scan --profile object-storage config --quiet
+
       - name: Validate production and observability overlays
         env:
           DATAPROTECTION_CERTIFICATE_HOST_PATH: ${{ runner.temp }}/dataprotection-ci.pfx
@@ -372,13 +379,20 @@ jobs:
       matrix:
         include:
           - name: identity
+            context: .
             dockerfile: services/identity-service/Dockerfile
           - name: coaching
+            context: .
             dockerfile: services/coaching-service/Dockerfile
           - name: notification
+            context: .
             dockerfile: services/notification-service/Dockerfile
           - name: gateway
+            context: .
             dockerfile: services/api-gateway/Dockerfile
+          - name: admin-panel
+            context: clients/admin-panel
+            dockerfile: clients/admin-panel/Dockerfile
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -389,7 +403,7 @@ jobs:
       - name: Build image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
           push: false
           tags: eduplatform-ci-${{ matrix.name }}:${{ github.sha }}
