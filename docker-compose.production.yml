@@ -23,6 +23,30 @@ services:
     profiles: ["development"]
     ports: !reset []
 
+  clamav:
+    # Attachment malware scanning is required by the production coaching
+    # service; remove the development-only profile in this overlay.
+    profiles: !reset []
+    ports: !reset []
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --ping 3 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+  minio:
+    # Coaching attachments use the OSS S3-compatible object store in
+    # production; remove the optional development profile in this overlay.
+    profiles: !reset []
+    ports: !reset []
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
   identity-service:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/identity-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     environment:
@@ -32,6 +56,10 @@ services:
     depends_on:
       identity-migrations:
         condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     secrets:
       - source: dataprotection_certificate
         target: eduplatform-dataprotection.pfx
@@ -61,6 +89,16 @@ services:
     depends_on:
       coaching-migrations:
         condition: service_completed_successfully
+      identity-service:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     secrets:
       - source: dataprotection_certificate
         target: eduplatform-dataprotection.pfx
@@ -98,6 +136,12 @@ services:
     depends_on:
       notification-migrations:
         condition: service_completed_successfully
+      identity-service:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     secrets:
       - source: dataprotection_certificate
         target: eduplatform-dataprotection.pfx
