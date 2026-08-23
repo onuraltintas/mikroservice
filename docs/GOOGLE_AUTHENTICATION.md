@@ -37,8 +37,9 @@ endpoint'ini çağırarak hesabı açıkça bağlamalıdır. Google hesabı bulu
 kullanıcı, `auth.allowregistration` açıkken öğrenci hesabı olarak oluşturulur.
 
 ID token, access token veya Google refresh token'ı uygulama veritabanında saklanmaz.
-SystemAdmin kullanıcıları Google ilk faktöründen sonra da MFA challenge'ına tabiidir.
-Auth gateway `/api/auth/*` trafiğini IP başına rate limit eder.
+MFA kullanıcı bazında isteğe bağlıdır ve varsayılan olarak kapalıdır. MFA etkin bir
+SystemAdmin Google ilk faktöründen sonra MFA challenge'ına tabiidir; MFA kapalıysa
+normal oturum açılır. Auth gateway `/api/auth/*` trafiğini IP başına rate limit eder.
 
 ## Takvim entegrasyonundan ayrım
 

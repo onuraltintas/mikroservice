@@ -8,7 +8,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { LoginComponent } from './login.component';
 
 describe('LoginComponent MFA flow', () => {
-  it('starts mandatory SystemAdmin enrollment without creating a normal login session', async () => {
+  it('starts MFA enrollment only when the backend explicitly requires it', async () => {
     const authService = {
       loginWithPassword: vi.fn().mockResolvedValue({
         authenticated: false,

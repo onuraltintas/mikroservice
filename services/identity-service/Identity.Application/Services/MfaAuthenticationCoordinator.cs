@@ -96,7 +96,9 @@ public sealed class MfaAuthenticationCoordinator
                 "MFA kurulumu için mevcut şifrenizi doğrulamanız gerekir."));
         }
 
-        var challengeToken = _multiFactor.CreateChallenge(user.Id, rememberMe: true);
+        // MFA kurulumu için üretilen geçici challenge, kullanıcının mevcut
+        // oturum tercihinden bağımsız olarak kalıcı oturum oluşturmamalıdır.
+        var challengeToken = _multiFactor.CreateChallenge(user.Id, rememberMe: false);
         var setup = _multiFactor.CreateSetup(user.Id, user.Email);
         return Result.Success(setup with { ChallengeToken = challengeToken });
     }

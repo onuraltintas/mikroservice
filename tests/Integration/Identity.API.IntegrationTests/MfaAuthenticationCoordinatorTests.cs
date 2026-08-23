@@ -48,6 +48,7 @@ public sealed class MfaAuthenticationCoordinatorTests
         result.IsSuccess.Should().BeTrue();
         result.Value.SetupToken.Should().Be("setup");
         result.Value.ChallengeToken.Should().Be("challenge");
+        mfa.LastRememberMe.Should().BeFalse();
     }
 
     [Fact]
@@ -71,7 +72,12 @@ public sealed class MfaAuthenticationCoordinatorTests
 
     private sealed class StubMfaService(Guid userId) : IMultiFactorService
     {
-        public string CreateChallenge(Guid id, bool rememberMe) => "challenge";
+        public bool? LastRememberMe { get; private set; }
+        public string CreateChallenge(Guid id, bool rememberMe)
+        {
+            LastRememberMe = rememberMe;
+            return "challenge";
+        }
         public Result<MfaChallengePayload> ReadChallenge(string token) =>
             Result.Success(new MfaChallengePayload(userId, false, Now.AddMinutes(5)));
         public MfaSetupResponse CreateSetup(Guid id, string email) => new("secret", "otpauth://test", "setup");

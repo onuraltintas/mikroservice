@@ -18,7 +18,7 @@ route guard'ları yalnızca kullanıcı deneyimi ve erken yönlendirme sağlar.
 | Identity | Kendi tenant'ının iletişim bilgileri ve kurum yöneticileri | `/api/institutions` | Aktif tenant yöneticisi + `Permissions.Institutions.Manage` |
 | Identity | Secret içermeyen feature flag ve sistem ayarları, log ve retention yönetimi | `/api/configurations`, `/api/system-logs` | `Permissions.Operations.View` ve mevcut SystemAdmin mutasyon politikaları |
 | Identity / Notification / Coaching | Servis-lokal, append-only yönetici denetim kayıtlarını işlem, kaynak ve değişen alan adlarıyla filtreleme/sayfalama | `/api/admin-audit/{service}` | Yalnız `SystemAdmin` + `Permissions.Operations.View` |
-| Identity | SystemAdmin TOTP kurulumu, doğrulama ve tek kullanımlık kurtarma kodları | `/api/auth/mfa/*` | Parola/Google ilk faktöründen üretilen 5 dakikalık challenge |
+| Identity | Kullanıcının MFA kurulumu, doğrulaması ve tek kullanımlık kurtarma kodları | `/api/auth/mfa/*` | Profil ayarlarında mevcut parola ile yeniden doğrulama; girişte yalnız MFA etkinse 5 dakikalık challenge |
 | Notification | Destek talebi listeleme, filtreleme, notlandırma, işlenmiş işareti ve yanıt | `/api/support/requests`, `/api/support/reply` | `Permissions.Support.View/Reply` |
 | Notification | E-posta şablonu listeleme, oluşturma, konu/gövde/aktiflik güncelleme | `/api/email-templates` | `Permissions.Notifications.Templates` |
 | Notification | Kullanıcının kendi bildirimleri | `/api/notifications` | Oturum sahibi |
@@ -110,13 +110,16 @@ secret kaydı oluşturma da fail-closed olarak reddedilir.
 13. Yazma düğmeleri yalnız sayfa görüntüleme iznine göre değil, karşılık gelen
     `Create/Edit/Delete/Activate/Reply/ManagePermissions` iznine ve endpoint'in
     gerektirdiği role göre gösterilir. Sunucu policy'si yine nihai otoritedir.
-14. SystemAdmin access/refresh tokenı TOTP veya tek kullanımlık kurtarma kodu
-    doğrulanmadan üretilmez. TOTP secret'ı Data Protection ile şifrelenir;
-    kurtarma kodları yalnız hash olarak saklanır ve ilk kurulumda bir kez gösterilir.
+14. MFA varsayılan olarak kapalıdır. MFA etkin bir SystemAdmin access/refresh tokenı
+    TOTP veya tek kullanımlık kurtarma kodu doğrulanmadan üretilmez; MFA kapalı
+    hesaplar normal ilk faktör oturumu açabilir. TOTP secret'ı Data Protection ile
+    şifrelenir, kurtarma kodları yalnız hash olarak saklanır ve ilk kurulumda bir kez
+    gösterilir. Kurulum mevcut parola ile yeniden doğrulama ister.
 15. Kritik rol, izin, kullanıcı, parola ve konfigürasyon mutasyonları ayrıca
     `MfaRequired` politikasını ister. JWT `amr=mfa` ve `auth_time` taşır; güven
-    seviyesi refresh rotasyonu boyunca korunur. Eski MFA'sız SystemAdmin refresh
-    tokenları iptal edilip yeniden girişe zorlanır.
+    seviyesi refresh rotasyonu boyunca korunur. MFA sonradan etkinleştirilen
+    SystemAdmin'in eski MFA'sız refresh tokenları iptal edilip yeniden girişe
+    zorlanır.
 
 ## Tamamlanma doğrulaması
 
