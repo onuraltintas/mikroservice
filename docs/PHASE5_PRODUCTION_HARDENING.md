@@ -172,9 +172,27 @@ politikaları uygular.
   alınmaz.
 - Production overlay'i gerçek SMTP ayarlarını da bekler. `.env.example` içindeki
   `SMTP_HOST=mailcatcher` yalnız geliştirme içindir; production `.env` dosyasında
-  `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM_EMAIL` ve gerekiyorsa SMTP kullanıcı adı/
-  parolasını gerçek sağlayıcıyla değiştirin. MailCatcher production profilinde
-  başlatılmaz.
+  `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM_EMAIL`, `SMTP_USERNAME` ve
+  `SMTP_PASSWORD` değerlerini gerçek sağlayıcıyla değiştirin. MailCatcher
+  production profilinde başlatılmaz.
+- İlk SystemAdmin hesabı için `BOOTSTRAP_ADMIN_EMAIL` ve
+  `BOOTSTRAP_ADMIN_PASSWORD` yalnızca ilk identity-service başlatmasında set
+  edilir. Başarılı seed log'u görüldükten sonra `BOOTSTRAP_ADMIN_PASSWORD`
+  deployment secret store'dan kaldırılır ve identity-service yeniden oluşturulur
+  (yalnızca restart eski environment değerini container'dan kaldırmaz); parola
+  veritabanında yalnızca hash olarak tutulur. Mevcut bir kullanıcı bu e-posta ile
+  kayıtlıysa seeder rolü otomatik olarak yükseltmez ve açık hata loglar.
+
+  ```powershell
+  docker compose -f docker-compose.yml -f docker-compose.production.yml up -d --force-recreate identity-service
+  ```
+
+- Hostinger Email için production `.env` değerleri sağlayıcının verdiği gerçek
+  mailbox ile doldurulmalıdır. Eduİvme alan adı için tipik ayarlar:
+  `SMTP_HOST=smtp.hostinger.com`, `SMTP_PORT=465` (SSL; `587` STARTTLS alternatifi),
+  `SMTP_FROM_EMAIL=<mailbox>@eduivme.com`, `SMTP_USERNAME=<mailbox>@eduivme.com`,
+  `SMTP_PASSWORD=<mailbox-parolası>`, `SMTP_FROM_NAME=Eduİvme`. Kullanılan
+  mailbox adının `eduivme` yazımını taşıdığı doğrulanmalıdır.
 - Doğrulama ve parola akışlarının tarayıcı bağlantıları Notification servisinde
   `PublicApp__BaseUrl` / `PUBLIC_APP_BASE_URL` üzerinden üretilir. Bu değer
   public HTTPS frontend origin'i olmalı; credentials, query veya fragment
@@ -188,6 +206,118 @@ politikaları uygular.
 - RabbitMQ 4.x'te legacy management metrics collector kapalı, Prometheus
   plugin'i açıktır. Uzun süreli grafik ve alerting için Prometheus/Grafana
   collector'ı RabbitMQ'nun iç ağdaki `15692` endpoint'inden scrape etmelidir.
+
+## 5.1. Eduİvme root domain ve mevcut LiteSpeed
+
+Mevcut VPS'te LiteSpeed 80/443 portlarını kullandığı için production edge
+yalnızca loopback'te çalışır. Bu overlay, Eduİvme için `127.0.0.1:5200` portunu
+kullanır; diğer sitelerin vhost/listener ayarlarına dokunulmaz:
+
+Production Docker ağı `172.31.0.0/16`, edge container'ı `172.31.0.10` sabit
+adresini kullanır. LiteSpeed'in Docker köprü adresi `172.31.0.1/32` olarak
+güvenilir; aynı ağdaki diğer container'lar forwarded header üretemez. Bu
+değerler Gateway'in forwarded-header güveni ve rate-limit istemci IP'si için
+birlikte ayarlanmıştır. VPS'te bu subnet başka bir ağla çakışıyorsa
+`PRODUCTION_NETWORK_SUBNET`, `PRODUCTION_NETWORK_NAME`,
+`FORWARDED_HEADERS_KNOWN_PROXIES` ve Caddyfile içindeki `trusted_proxies`
+adresi aynı değişiklikle güncellenmelidir.
+
+```bash
+test -z "$(git status --porcelain)" || { echo 'Working tree must be clean'; exit 1; }
+export RELEASE_TAG="$(git rev-parse HEAD)"
+export PRODUCTION_IMAGE_REPOSITORY="eduivme"
+RELEASE_DIR="/var/lib/eduivme/releases/${RELEASE_TAG}"
+mkdir -p "$RELEASE_DIR"
+
+# Keep the exact release inputs and rendered manifest for rollback/audit.
+printf 'RELEASE_TAG=%s\nPRODUCTION_IMAGE_REPOSITORY=%s\n' \
+  "$RELEASE_TAG" "$PRODUCTION_IMAGE_REPOSITORY" > "$RELEASE_DIR/release.env"
+mkdir -p "$RELEASE_DIR/source"
+git archive --format=tar HEAD | tar -xf - -C "$RELEASE_DIR/source"
+docker compose --env-file .env \
+  -f docker-compose.yml \
+  -f docker-compose.production.yml \
+  -f docker-compose.production.litespeed.yml config --no-interpolate > "$RELEASE_DIR/compose.config.yml"
+docker run --rm \
+  -v "$PWD/infrastructure/caddy/Caddyfile.production.litespeed:/etc/caddy/Caddyfile:ro" \
+  caddy:2.9.1-alpine caddy validate --config /etc/caddy/Caddyfile
+docker compose --env-file .env \
+  -f docker-compose.yml \
+  -f docker-compose.production.yml \
+  -f docker-compose.production.litespeed.yml \
+  build --pull
+docker compose --env-file .env \
+  -f docker-compose.yml \
+  -f docker-compose.production.yml \
+  -f docker-compose.production.litespeed.yml \
+  up -d --no-build
+docker compose --env-file .env \
+  -f docker-compose.yml \
+  -f docker-compose.production.yml \
+  -f docker-compose.production.litespeed.yml \
+  images > "$RELEASE_DIR/images.txt"
+```
+
+`RELEASE_TAG` değişmez bir Git commit etiketi olmalıdır; dağıtılmış bir etiket
+tekrar kullanılmamalıdır. Her uygulama/migration imajı bu etiketle saklandığı
+için önceki release imajları VPS'te tutulduğu sürece geri alma yeniden build
+gerektirmez. Önceki release'in `release.env` dosyasını yükleyip aynı Compose
+komutunu `up -d --no-build` ile çalıştırın:
+
+```bash
+set -a
+. /var/lib/eduivme/releases/<onceki-commit>/release.env
+set +a
+docker compose --env-file .env \
+  -f /var/lib/eduivme/releases/<onceki-commit>/source/docker-compose.yml \
+  -f /var/lib/eduivme/releases/<onceki-commit>/source/docker-compose.production.yml \
+  -f /var/lib/eduivme/releases/<onceki-commit>/source/docker-compose.production.litespeed.yml \
+  up -d --no-build
+```
+
+Deploy öncesinde yalnızca Eduİvme vhost ve edge dosyalarının yedeğini alın;
+diğer sitelerin vhost/listener dosyalarına dokunmayın. Geri alma sırasında
+önceki vhost yedeğini geri yükleyip `lshttpd -t` ve `lswsctrl reload` çalıştırın.
+
+LiteSpeed'e yalnızca `infrastructure/litespeed/eduivme.com.vhost.conf` içindeki
+yeni vhost eklenmelidir. Önce DNS'in `eduivme.com`, `www.eduivme.com` ve
+kullanılacak `.com.tr` isimlerini VPS'e çözdüğünü doğrulayın. Sonra ACME
+challenge docroot'u ve sertifikayı oluşturun:
+
+```bash
+mkdir -p /home/eduivme.com/public_html/.well-known/acme-challenge
+certbot certonly --webroot \
+  -w /home/eduivme.com/public_html \
+  -d eduivme.com -d www.eduivme.com \
+  -d eduivme.com.tr -d www.eduivme.com.tr \
+  --email <sertifika-iletisim-adresi> --agree-tos --no-eff-email
+```
+
+Sertifika yenileme hook'unu bir kez kurup önce dry-run ile doğrulayın. Hook
+yalnızca `eduivme.com` lineage'ı yenilendiğinde LiteSpeed'i reload eder:
+
+```bash
+install -m 0750 infrastructure/litespeed/eduivme-certbot-deploy-hook.sh \
+  /etc/letsencrypt/renewal-hooks/deploy/eduivme-litespeed-reload
+certbot renew --dry-run
+```
+
+`.com.tr` DNS'i henüz hazır değilse önce yalnızca `.com` isimleriyle sertifika
+alın; `.com.tr` kayıtları yayıldıktan sonra aynı sertifikayı SAN isimleriyle
+yenileyin. Sertifika alındıktan sonra LiteSpeed yapılandırmasını doğrulayın ve
+graceful reload yapın:
+
+```bash
+/usr/local/lsws/bin/lshttpd -t
+/usr/local/lsws/bin/lswsctrl reload
+```
+
+Ardından aşağıdaki smoke testleri çalıştırın:
+
+```bash
+curl --fail --silent https://eduivme.com/health/live
+curl --fail --silent https://eduivme.com/health/ready
+```
 
 ## 6. CI release kapıları
 

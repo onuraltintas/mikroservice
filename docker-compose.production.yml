@@ -24,6 +24,7 @@ services:
     ports: !reset []
 
   identity-service:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/identity-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
@@ -36,6 +37,7 @@ services:
         target: eduplatform-dataprotection.pfx
 
   identity-migrations:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/identity-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     build:
       context: .
       dockerfile: services/identity-service/Dockerfile
@@ -47,8 +49,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - edu-network
 
   coaching-service:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/coaching-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
@@ -63,6 +68,7 @@ services:
   # Apply the Coaching schema once before web replicas start. The command
   # exits after EF migrations and never starts RabbitMQ consumers or HTTP.
   coaching-migrations:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/coaching-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     build:
       context: .
       dockerfile: services/coaching-service/Dockerfile
@@ -74,16 +80,19 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - edu-network
 
   notification-service:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/notification-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       Email__Host: ${SMTP_HOST:?SMTP_HOST must be set to a production SMTP host}
       Email__Port: ${SMTP_PORT:?SMTP_PORT must be set to a production SMTP port}
       Email__From: ${SMTP_FROM_EMAIL:?SMTP_FROM_EMAIL must be set}
-      Email__Username: ${SMTP_USERNAME:-}
-      Email__Password: ${SMTP_PASSWORD:-}
-      Email__FromName: ${SMTP_FROM_NAME:-EduPlatform}
+      Email__Username: ${SMTP_USERNAME:?SMTP_USERNAME must be set for production SMTP}
+      Email__Password: ${SMTP_PASSWORD:?SMTP_PASSWORD must be set for production SMTP}
+      Email__FromName: ${SMTP_FROM_NAME:-Eduİvme}
       DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
       DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?DATAPROTECTION_CERTIFICATE_PASSWORD must be set}
     depends_on:
@@ -94,6 +103,7 @@ services:
         target: eduplatform-dataprotection.pfx
 
   notification-migrations:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/notification-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     build:
       context: .
       dockerfile: services/notification-service/Dockerfile
@@ -105,8 +115,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - edu-network
 
   api-gateway:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/api-gateway:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
@@ -114,3 +127,31 @@ services:
     secrets:
       - source: dataprotection_certificate
         target: eduplatform-dataprotection.pfx
+
+  # The Angular SSR application remains private; the dedicated LiteSpeed
+  # overlay publishes it through production-edge on loopback only.
+  admin-panel:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/admin-panel:${RELEASE_TAG:?RELEASE_TAG must be set for production}
+    build:
+      context: ./clients/admin-panel
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+    expose:
+      - "4000"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--no-verbose", "http://127.0.0.1:4000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    restart: unless-stopped
+    depends_on:
+      api-gateway:
+        condition: service_started
+    networks:
+      - edu-network
+
+volumes:
+  production_caddy_data:
+  production_caddy_config:

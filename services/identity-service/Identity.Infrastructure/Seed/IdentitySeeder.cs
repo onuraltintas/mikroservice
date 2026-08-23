@@ -4,6 +4,7 @@ using Identity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Identity.Infrastructure.Seed;
@@ -20,9 +21,21 @@ public static class IdentitySeeder
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
         var passwordHasher = scope.ServiceProvider.GetRequiredService<EduPlatform.Shared.Security.Interfaces.IPasswordHasher>();
         var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var hostEnvironment = scope.ServiceProvider.GetRequiredService<IHostEnvironment>();
+        var connectionOpened = false;
 
         try
         {
+            // Keep the connection open while seeding so the session-level advisory
+            // lock prevents duplicate bootstrap users when multiple replicas start.
+            await context.Database.OpenConnectionAsync();
+            connectionOpened = true;
+            await using (var lockCommand = context.Database.GetDbConnection().CreateCommand())
+            {
+                lockCommand.CommandText = "SELECT pg_advisory_lock(hashtext('eduplatform.identity.seed.v1')::bigint);";
+                await lockCommand.ExecuteNonQueryAsync();
+            }
+
             logger.LogInformation("🌱 Seeding Starting...");
 
             // 1. Seed Roles (Dynamic Update)
@@ -186,28 +199,61 @@ public static class IdentitySeeder
             logger.LogInformation("✅ System and Service-specific configurations seeded & synced.");
 
 
-            // 2. Check if admin user exists in DB
-            var adminEmail = "admin@edu.com";
-            var existingUser = await userRepository.GetByEmailAsync(adminEmail, CancellationToken.None);
+            // 2. Optional bootstrap SystemAdmin. This is intentionally controlled by
+            // explicit environment variables so production never receives a hardcoded
+            // credential. Clear BOOTSTRAP_ADMIN_PASSWORD after the first successful run.
+            var bootstrapAdminEmail = GetSetting(configuration, "BOOTSTRAP_ADMIN_EMAIL")?.Trim();
+            var bootstrapAdminPassword = GetSetting(configuration, "BOOTSTRAP_ADMIN_PASSWORD");
 
-            if (existingUser != null)
+            if (!string.IsNullOrWhiteSpace(bootstrapAdminEmail)
+                && !string.IsNullOrWhiteSpace(bootstrapAdminPassword))
             {
-                logger.LogInformation("✅ Database already seeded (Users exist).");
+                await EnsureBootstrapAdminAsync(
+                    bootstrapAdminEmail,
+                    bootstrapAdminPassword,
+                    dbRoles,
+                    userRepository,
+                    unitOfWork,
+                    passwordHasher,
+                    logger);
+            }
+            else if (hostEnvironment.IsProduction())
+            {
+                var hasSystemAdmin = await context.UserRoles
+                    .AnyAsync(userRole => userRole.Role.Name == Identity.Domain.Enums.UserRole.SystemAdmin.ToString());
+                if (!hasSystemAdmin)
+                {
+                    throw new InvalidOperationException(
+                        "No SystemAdmin exists and BOOTSTRAP_ADMIN_EMAIL/BOOTSTRAP_ADMIN_PASSWORD are not configured.");
+                }
+
+                logger.LogInformation(
+                    "Bootstrap credentials are not configured; an existing production SystemAdmin was preserved.");
+            }
+
+            // Demo users are development-only and remain opt-in. Never create them in
+            // staging/production just because a shared database is empty.
+            if (!hostEnvironment.IsDevelopment())
+            {
+                logger.LogInformation("Non-development environment detected; demo user seeding is skipped.");
                 return;
             }
 
-            logger.LogInformation("⚡ No users found. Starting seed process...");
+            var demoAdminEmail = "admin@edu.com";
+            var existingDemoAdmin = await userRepository.GetByEmailAsync(demoAdminEmail, CancellationToken.None);
 
-            // Get Passwords from Env (Must be set in .env)
-            var adminPass = Environment.GetEnvironmentVariable("TEST_ADMIN_PASSWORD") 
-                           ?? configuration["TEST_ADMIN_PASSWORD"];
-            
-            var defaultPass = Environment.GetEnvironmentVariable("TEST_DEFAULT_PASSWORD") 
-                           ?? configuration["TEST_DEFAULT_PASSWORD"];
+            if (existingDemoAdmin != null)
+            {
+                logger.LogInformation("✅ Development demo users already seeded.");
+                return;
+            }
+
+            // Get development-only demo passwords from env (never use these in production).
+            var adminPass = GetSetting(configuration, "TEST_ADMIN_PASSWORD");
+            var defaultPass = GetSetting(configuration, "TEST_DEFAULT_PASSWORD");
 
             if (string.IsNullOrEmpty(adminPass) || string.IsNullOrEmpty(defaultPass))
             {
-                // Safety check: Don't seed if passwords are missing
                 logger.LogInformation("TEST_ADMIN_PASSWORD and TEST_DEFAULT_PASSWORD are not configured; demo user seeding is skipped.");
                 return;
             }
@@ -283,6 +329,77 @@ public static class IdentitySeeder
         catch (Exception ex)
         {
             logger.LogError(ex, "❌ Seeding Failed.");
+            if (hostEnvironment.IsProduction())
+            {
+                throw;
+            }
         }
+        finally
+        {
+            if (connectionOpened)
+            {
+                await context.Database.CloseConnectionAsync();
+            }
+        }
+    }
+
+    private static string? GetSetting(IConfiguration configuration, string key) =>
+        Environment.GetEnvironmentVariable(key) ?? configuration[key];
+
+    private static async Task EnsureBootstrapAdminAsync(
+        string email,
+        string password,
+        IReadOnlyCollection<Role> roles,
+        IUserRepository userRepository,
+        IUnitOfWork unitOfWork,
+        EduPlatform.Shared.Security.Interfaces.IPasswordHasher passwordHasher,
+        ILogger logger)
+    {
+        if (password.Length < 12)
+        {
+            throw new InvalidOperationException("BOOTSTRAP_ADMIN_PASSWORD must be at least 12 characters long.");
+        }
+
+        var existingUser = await userRepository.GetByEmailAsync(email, CancellationToken.None);
+        if (existingUser != null)
+        {
+            var isSystemAdmin = existingUser.Roles.Any(userRole =>
+                string.Equals(
+                    userRole.Role.Name,
+                    Identity.Domain.Enums.UserRole.SystemAdmin.ToString(),
+                    StringComparison.OrdinalIgnoreCase));
+
+            if (!isSystemAdmin)
+            {
+                throw new InvalidOperationException(
+                    $"Bootstrap admin email {email} already belongs to a non-SystemAdmin user; no role escalation was performed.");
+            }
+            else
+            {
+                logger.LogInformation("✅ Bootstrap SystemAdmin already exists: {Email}", email);
+            }
+
+            return;
+        }
+
+        var systemAdminRole = roles.FirstOrDefault(role =>
+            string.Equals(
+                role.Name,
+                Identity.Domain.Enums.UserRole.SystemAdmin.ToString(),
+                StringComparison.OrdinalIgnoreCase));
+        if (systemAdminRole is null)
+        {
+            throw new InvalidOperationException("SystemAdmin role was not available during bootstrap seeding.");
+        }
+
+        var user = User.Create(Guid.NewGuid(), email, "System", "Admin");
+        user.ConfirmEmail();
+        passwordHasher.CreatePasswordHash(password, out var passwordHash, out var passwordSalt);
+        user.SetPassword(passwordHash, passwordSalt);
+        user.AddRole(new UserRole(user.Id, systemAdminRole.Id));
+
+        await userRepository.AddAsync(user, CancellationToken.None);
+        await unitOfWork.SaveChangesAsync(CancellationToken.None);
+        logger.LogInformation("✅ Bootstrap SystemAdmin created: {Email}", email);
     }
 }

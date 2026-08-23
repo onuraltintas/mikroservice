@@ -88,6 +88,7 @@ services:
 
   # Identity Service
   identity-service:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/identity-service:${RELEASE_TAG:-dev}
     build:
       context: .
       dockerfile: services/identity-service/Dockerfile
@@ -109,6 +110,10 @@ services:
       - JWT_PREVIOUS_KEY_IDS=${JWT_PREVIOUS_KEY_IDS:-}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID must be set}
       - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY}
+      # One-time production bootstrap. Clear BOOTSTRAP_ADMIN_PASSWORD after
+      # the first successful identity-service start.
+      - BOOTSTRAP_ADMIN_EMAIL=${BOOTSTRAP_ADMIN_EMAIL:-admin@eduivme.com}
+      - BOOTSTRAP_ADMIN_PASSWORD=${BOOTSTRAP_ADMIN_PASSWORD:-}
       # Development/E2E only. Empty by default; never set these in Production.
       - TEST_ADMIN_PASSWORD=${TEST_ADMIN_PASSWORD:-}
       - TEST_DEFAULT_PASSWORD=${TEST_DEFAULT_PASSWORD:-}
@@ -161,6 +166,7 @@ services:
 
   # Coaching Service
   coaching-service:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/coaching-service:${RELEASE_TAG:-dev}
     build:
       context: .
       dockerfile: services/coaching-service/Dockerfile
@@ -211,6 +217,7 @@ services:
 
   # Notification Service
   notification-service:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/notification-service:${RELEASE_TAG:-dev}
     build:
       context: .
       dockerfile: services/notification-service/Dockerfile
@@ -253,6 +260,7 @@ services:
 
   # API Gateway (YARP)
   api-gateway:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/api-gateway:${RELEASE_TAG:-dev}
     build:
       context: .
       dockerfile: services/api-gateway/Dockerfile

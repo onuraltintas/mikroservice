@@ -22,9 +22,9 @@ public class EmailService : IEmailService
         
         // Check environment variables first for security
         var fromEmail = Environment.GetEnvironmentVariable("SMTP_FROM_EMAIL") 
-                        ?? _configuration["SMTP_FROM_EMAIL"] ?? _configuration["Email:From"] ?? "no-reply@eduplatform.com";
+                        ?? _configuration["SMTP_FROM_EMAIL"] ?? _configuration["Email:From"] ?? "noreply@eduivme.com";
         var fromName = Environment.GetEnvironmentVariable("SMTP_FROM_NAME") 
-                      ?? _configuration["SMTP_FROM_NAME"] ?? _configuration["Email:FromName"] ?? "EduPlatform";
+                      ?? _configuration["SMTP_FROM_NAME"] ?? _configuration["Email:FromName"] ?? "Eduİvme";
         email.From.Add(new MailboxAddress(fromName, fromEmail));
         email.To.Add(MailboxAddress.Parse(to));
         email.Subject = subject;

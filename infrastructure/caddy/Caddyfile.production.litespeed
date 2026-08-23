@@ -1,0 +1,40 @@
+{
+	auto_https off
+
+	servers {
+		# LiteSpeed reaches the container through the Docker bridge gateway.
+		# Trust only that host-side hop; do not trust arbitrary containers on the
+		# production network to supply forwarded client headers.
+		trusted_proxies static 172.31.0.1/32
+	}
+}
+
+# LiteSpeed terminates public TLS. Caddy is an internal HTTP router only.
+:80 {
+	encode gzip zstd
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+
+	@api path /api/*
+	handle @api {
+		reverse_proxy api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+	}
+
+	@health path /health /health/*
+	handle @health {
+		reverse_proxy api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+	}
+
+	handle {
+		reverse_proxy admin-panel:4000
+	}
+}

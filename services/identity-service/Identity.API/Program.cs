@@ -218,13 +218,14 @@ app.MapHealthChecks("/health/live").AllowAnonymous();
 app.MapControllers();
 
 // ============================================
-// Database Migration (Development only)
+// Database Migration and Idempotent Seed
 // ============================================
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
-    
+
+    if (app.Environment.IsDevelopment())
+    {
         try
         {
             Log.Information("Applying database migrations...");
@@ -235,17 +236,23 @@ if (app.Environment.IsDevelopment())
         {
             Log.Warning(ex, "Database migration skipped or failed - checking if seeding is possible");
         }
+    }
 
-        // Seed Users (Independent of migration success to allow recovery in dev)
-        try 
+    // Production migrations run in the dedicated --migrate-only container. The
+    // idempotent seed still runs in the service so a configured bootstrap admin
+    // can be created after that migration job completes.
+    try
+    {
+        await Identity.Infrastructure.Seed.IdentitySeeder.SeedAsync(scope.ServiceProvider);
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "Seeding failed");
+        if (app.Environment.IsProduction())
         {
-            await Identity.Infrastructure.Seed.IdentitySeeder.SeedAsync(scope.ServiceProvider);
+            throw;
         }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Seeding failed");
-        }
-
+    }
 }
 
 Log.Information("Identity API starting on {Urls}", builder.Configuration["ASPNETCORE_URLS"] ?? "http://localhost:5000");
