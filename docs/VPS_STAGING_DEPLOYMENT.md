@@ -4,6 +4,8 @@ Bu doküman tek VPS üzerinde, production verisinden izole bir **staging** ortam
 kurmak içindir. Staging ortamı kabul testleri içindir; 100.000+ kullanıcı için
 production topolojisi değildir.
 
+Bu kurulumda kullanılan staging adresi: `https://staging.onuraltintas.net`.
+
 ## Topoloji
 
 ```text
@@ -69,13 +71,13 @@ REDIS_PORT=6379
 REDIS_PASSWORD=<unique-redis-password>
 JWT_SECRET=<at-least-32-random-characters>
 INTERNAL_SERVICE_API_KEY=<random-service-key>
-PUBLIC_APP_BASE_URL=https://staging.example.com
+PUBLIC_APP_BASE_URL=https://staging.onuraltintas.net
 SMTP_HOST=mailcatcher
 SMTP_PORT=1025
 ATTACHMENT_STORAGE_PROVIDER=Minio
 ATTACHMENT_SCANNER_PROVIDER=ClamAv
-STAGING_DOMAIN=staging.example.com
-TLS_ACME_EMAIL=ops@example.com
+STAGING_DOMAIN=staging.onuraltintas.net
+TLS_ACME_EMAIL=onuraltintas@gmail.com
 FORWARDED_HEADERS_FORWARD_LIMIT=1
 FORWARDED_HEADERS_KNOWN_NETWORKS=172.30.0.0/16
 ```
@@ -123,8 +125,10 @@ docker compose --env-file .env.staging \
 Bu modda `staging.onuraltintas.net` için ayrı bir LiteSpeed vhost oluşturulmalı,
 backend'i `127.0.0.1:5100` adresine proxy etmeli ve yalnız bu vhost için
 Let's Encrypt sertifikası alınmalıdır. Mevcut vhost dosyalarını kopyalayıp
-üzerine yazmayın; yeni vhost'u oluşturduktan sonra `lswsctrl configtest` ve
-graceful reload çalıştırın.
+üzerine yazmayın. Vhost'u kurduktan sonra `/usr/local/lsws/bin/lshttpd -t`
+ile yapılandırmayı kontrol edin; mevcut sunucudaki eski, ilgisiz vhost
+uyarılarını staging vhost hatalarından ayırın ve yalnızca başarılı kontrolün
+ardından `/usr/local/lsws/bin/lswsctrl reload` ile graceful reload yapın.
 
 Migration container'ları (`identity-migrations`, `coaching-migrations`,
 `notification-migrations`) tamamlanmadan web servisleri başlamaz. Kontrol:
@@ -147,8 +151,8 @@ DNS ve Caddy sertifikası hazır olduktan sonra aşağıdaki kontrollerin tamam�
 başarılı olmalıdır:
 
 ```bash
-curl --fail --silent https://staging.example.com/health/live
-curl --fail --silent https://staging.example.com/health/ready
+curl --fail --silent https://staging.onuraltintas.net/health/live
+curl --fail --silent https://staging.onuraltintas.net/health/ready
 ```
 
 Tarayıcıda Angular SSR giriş sayfasını, Google girişini (etkinse), token
