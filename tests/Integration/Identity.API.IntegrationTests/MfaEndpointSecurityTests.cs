@@ -23,4 +23,17 @@ public sealed class MfaEndpointSecurityTests
             .Cast<HttpPostAttribute>()
             .Should().ContainSingle(attribute => attribute.Template == route);
     }
+
+    [Fact]
+    public void AuthenticatedMfaSetup_ShouldRequireAnAuthenticatedSession()
+    {
+        var action = typeof(AuthController).GetMethod(nameof(AuthController.StartAuthenticatedMfaSetup));
+
+        action.Should().NotBeNull();
+        action!.GetCustomAttributes(typeof(AllowAnonymousAttribute), inherit: true).Should().BeEmpty();
+        action.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true).Should().ContainSingle();
+        action.GetCustomAttributes(typeof(HttpPostAttribute), inherit: true)
+            .Cast<HttpPostAttribute>()
+            .Should().ContainSingle(attribute => attribute.Template == "mfa/setup-authenticated");
+    }
 }

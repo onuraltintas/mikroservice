@@ -1,9 +1,10 @@
 import { Component, OnInit, inject, signal, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { IdentityService, UserProfileDto } from '../../../../core/services/identity.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
-import { AuthService } from '../../../../core/auth/auth.service';
+import { AuthService, MfaSetupResponse } from '../../../../core/auth/auth.service';
 import { GoogleLoginProvider, SocialAuthService } from '@abacritt/angularx-social-login';
 
 import { RouterModule } from '@angular/router';
@@ -11,7 +12,7 @@ import { RouterModule } from '@angular/router';
 @Component({
     selector: 'app-profile-settings',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterModule],
+    imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
     templateUrl: './profile-settings.html',
     styleUrl: './profile-settings.scss'
 })
@@ -31,6 +32,11 @@ export class ProfileSettingsComponent implements OnInit {
     savingProfile = signal(false);
     savingPassword = signal(false);
     linkingGoogle = signal(false);
+    mfaSetup = signal<MfaSetupResponse | null>(null);
+    mfaCode = '';
+    mfaRecoveryCodes = signal<string[]>([]);
+    mfaLoading = signal(false);
+    mfaEnabling = signal(false);
 
     ngOnInit() {
         this.initForms();
@@ -144,6 +150,53 @@ export class ProfileSettingsComponent implements OnInit {
             this.toaster.error(message);
         } finally {
             this.linkingGoogle.set(false);
+        }
+    }
+
+    async startMfaSetup() {
+        if (this.mfaLoading() || this.user()?.mfaEnabled) return;
+
+        this.mfaLoading.set(true);
+        try {
+            const setup = await this.authService.startAuthenticatedMfaSetup();
+            if (!setup.challengeToken) {
+                throw new Error('MFA kurulumu için doğrulama isteği alınamadı.');
+            }
+            this.mfaSetup.set(setup);
+            this.mfaRecoveryCodes.set([]);
+        } catch (error: any) {
+            const message = error?.error?.message
+                || error?.error?.description
+                || 'MFA kurulumu başlatılamadı.';
+            this.toaster.error(message);
+        } finally {
+            this.mfaLoading.set(false);
+        }
+    }
+
+    async enableMfa() {
+        const setup = this.mfaSetup();
+        const code = this.mfaCode.trim();
+        if (!setup?.challengeToken || !/^\d{6}$/.test(code) || this.mfaEnabling()) return;
+
+        this.mfaEnabling.set(true);
+        try {
+            const recoveryCodes = await this.authService.enableMfa(
+                setup.challengeToken,
+                setup.setupToken,
+                code);
+            this.mfaRecoveryCodes.set(recoveryCodes);
+            this.mfaSetup.set(null);
+            this.mfaCode = '';
+            this.user.update(current => current ? { ...current, mfaEnabled: true } : current);
+            this.toaster.success('İki adımlı doğrulama etkinleştirildi. Kurtarma kodlarını güvenli bir yerde saklayın.');
+        } catch (error: any) {
+            const message = error?.error?.message
+                || error?.error?.description
+                || 'MFA etkinleştirilemedi.';
+            this.toaster.error(message);
+        } finally {
+            this.mfaEnabling.set(false);
         }
     }
 }

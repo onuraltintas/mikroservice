@@ -327,7 +327,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
 
         var isSystemAdministrator = user.Roles.Any(role =>
             string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
-        if (isSystemAdministrator)
+        if (isSystemAdministrator && user.MfaEnabled)
         {
             return Result.Success(LoginResponse.RequireMfa(
                 _multiFactorService.CreateChallenge(user.Id, rememberMe: true),

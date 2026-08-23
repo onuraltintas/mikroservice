@@ -32,6 +32,22 @@ public sealed class MfaAuthenticationCoordinatorTests
     }
 
     [Fact]
+    public async Task StartAuthenticatedSetup_ShouldCreateBoundChallengeForDisabledUser()
+    {
+        var user = User.Create(Guid.NewGuid(), "admin@example.com");
+        var mfa = new StubMfaService(user.Id);
+        var coordinator = new MfaAuthenticationCoordinator(
+            new StubUserRepository(user), mfa, new StubSessionIssuer(),
+            new StubUnitOfWork(), new FixedTimeProvider(Now));
+
+        var result = await coordinator.StartAuthenticatedSetupAsync(user.Id, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.SetupToken.Should().Be("setup");
+        result.Value.ChallengeToken.Should().Be("challenge");
+    }
+
+    [Fact]
     public async Task Verify_ShouldRejectReplayedTotpAndNeverIssueSession()
     {
         var user = User.Create(Guid.NewGuid(), "admin@example.com");
@@ -52,7 +68,7 @@ public sealed class MfaAuthenticationCoordinatorTests
 
     private sealed class StubMfaService(Guid userId) : IMultiFactorService
     {
-        public string CreateChallenge(Guid id, bool rememberMe) => throw new NotSupportedException();
+        public string CreateChallenge(Guid id, bool rememberMe) => "challenge";
         public Result<MfaChallengePayload> ReadChallenge(string token) =>
             Result.Success(new MfaChallengePayload(userId, false, Now.AddMinutes(5)));
         public MfaSetupResponse CreateSetup(Guid id, string email) => new("secret", "otpauth://test", "setup");

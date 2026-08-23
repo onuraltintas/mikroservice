@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using Identity.API.Security;
 using Identity.Application.Services;
+using EduPlatform.Shared.Security.Interfaces;
 
 namespace Identity.API.Controllers;
 
@@ -209,6 +210,22 @@ public class AuthController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await coordinator.StartSetupAsync(request.ChallengeToken, cancellationToken);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [HttpPost("mfa/setup-authenticated")]
+    [Authorize]
+    public async Task<IActionResult> StartAuthenticatedMfaSetup(
+        [FromServices] MfaAuthenticationCoordinator coordinator,
+        [FromServices] ICurrentUserService currentUser,
+        CancellationToken cancellationToken)
+    {
+        if (!currentUser.UserId.HasValue)
+        {
+            return Unauthorized();
+        }
+
+        var result = await coordinator.StartAuthenticatedSetupAsync(currentUser.UserId.Value, cancellationToken);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 

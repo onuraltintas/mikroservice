@@ -14,9 +14,36 @@ namespace Identity.API.IntegrationTests;
 public sealed class SystemAdminMfaLoginTests
 {
     [Fact]
-    public async Task PasswordLogin_ShouldReturnMfaChallengeWithoutIssuingSessionTokens()
+    public async Task PasswordLogin_WhenMfaIsDisabled_ShouldIssueNormalSession()
     {
         var user = CreateSystemAdministrator();
+        var tokenService = new IssuingTokenService();
+        var mfaService = new StubMfaService(user.Id);
+        var handler = new LoginCommandHandler(
+            new StubUserRepository(user),
+            new AcceptingPasswordHasher(),
+            tokenService,
+            new StubUnitOfWork(),
+            new RejectingIdentityService(allowRefreshToken: true),
+            new StubConfigurationService(),
+            mfaService,
+            NullLogger<LoginCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new LoginCommand(user.Email, "correct-password", RememberMe: false),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.RequiresMfa.Should().BeFalse();
+        result.Value.AccessToken.Should().Be("access-token");
+        result.Value.RefreshToken.Should().Be("refresh-token");
+        mfaService.RememberMe.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task PasswordLogin_WhenMfaIsEnabled_ShouldReturnMfaChallenge()
+    {
+        var user = CreateSystemAdministrator(mfaEnabled: true);
         var tokenService = new RejectingTokenService();
         var mfaService = new StubMfaService(user.Id);
         var handler = new LoginCommandHandler(
@@ -35,7 +62,7 @@ public sealed class SystemAdminMfaLoginTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.RequiresMfa.Should().BeTrue();
-        result.Value.MfaEnrollmentRequired.Should().BeTrue();
+        result.Value.MfaEnrollmentRequired.Should().BeFalse();
         result.Value.MfaChallengeToken.Should().Be("mfa-challenge");
         result.Value.AccessToken.Should().BeNull();
         tokenService.AccessTokenRequested.Should().BeFalse();
@@ -44,9 +71,38 @@ public sealed class SystemAdminMfaLoginTests
     }
 
     [Fact]
-    public async Task GoogleLogin_ShouldReturnMfaChallengeWithoutIssuingSessionTokens()
+    public async Task GoogleLogin_WhenMfaIsDisabled_ShouldIssueNormalSession()
     {
         var user = CreateSystemAdministrator();
+        user.AddLogin(UserLogin.Create(user.Id, "Google", "google-id", "Google"));
+        var tokenService = new IssuingTokenService();
+        var mfaService = new StubMfaService(user.Id);
+        var handler = new GoogleLoginCommandHandler(
+            new StubGoogleAuthService(user.Email),
+            new StubUserRepository(user),
+            tokenService,
+            new StubUnitOfWork(),
+            new RejectingIdentityService(allowRefreshToken: true),
+            new RejectingStudentRepository(),
+            new StubConfigurationService(),
+            mfaService,
+            NullLogger<GoogleLoginCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new GoogleLoginCommand("google-token", "127.0.0.1"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.RequiresMfa.Should().BeFalse();
+        result.Value.AccessToken.Should().Be("access-token");
+        result.Value.RefreshToken.Should().Be("refresh-token");
+        mfaService.RememberMe.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GoogleLogin_WhenMfaIsEnabled_ShouldReturnMfaChallenge()
+    {
+        var user = CreateSystemAdministrator(mfaEnabled: true);
         user.AddLogin(UserLogin.Create(user.Id, "Google", "google-id", "Google"));
         var tokenService = new RejectingTokenService();
         var mfaService = new StubMfaService(user.Id);
@@ -67,6 +123,7 @@ public sealed class SystemAdminMfaLoginTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.RequiresMfa.Should().BeTrue();
+        result.Value.MfaEnrollmentRequired.Should().BeFalse();
         result.Value.MfaChallengeToken.Should().Be("mfa-challenge");
         tokenService.AccessTokenRequested.Should().BeFalse();
         tokenService.RefreshTokenRequested.Should().BeFalse();
@@ -100,7 +157,7 @@ public sealed class SystemAdminMfaLoginTests
     [Fact]
     public async Task GoogleLogin_ShouldUseLinkedSubjectBeforeEmailLookup()
     {
-        var linkedUser = CreateSystemAdministrator();
+        var linkedUser = CreateSystemAdministrator(mfaEnabled: true);
         var emailMatchedUser = CreateSystemAdministrator();
         var tokenService = new RejectingTokenService();
         var mfaService = new StubMfaService(linkedUser.Id);
@@ -129,7 +186,7 @@ public sealed class SystemAdminMfaLoginTests
     [Fact]
     public async Task GoogleLogin_ShouldRequireExplicitLinkForPrivilegedAccount()
     {
-        var user = CreateSystemAdministrator();
+        var user = CreateSystemAdministrator(mfaEnabled: true);
         var handler = new GoogleLoginCommandHandler(
             new StubGoogleAuthService(user.Email),
             new StubUserRepository(user),
@@ -184,7 +241,7 @@ public sealed class SystemAdminMfaLoginTests
     [Fact]
     public async Task GoogleLogin_ShouldRejectUnverifiedGoogleEmail()
     {
-        var user = CreateSystemAdministrator();
+        var user = CreateSystemAdministrator(mfaEnabled: true);
         var handler = new GoogleLoginCommandHandler(
             new StubGoogleAuthService(user.Email, isEmailVerified: false),
             new StubUserRepository(user),
@@ -207,7 +264,7 @@ public sealed class SystemAdminMfaLoginTests
     [Fact]
     public async Task GoogleLink_ShouldPersistGoogleSubjectForPrivilegedAccount()
     {
-        var user = CreateSystemAdministrator();
+        var user = CreateSystemAdministrator(mfaEnabled: true);
         var userRepository = new StubUserRepository(user, externalUser: null);
         var handler = new LinkGoogleLoginCommandHandler(
             new StubGoogleAuthService(user.Email, googleId: "google-subject"),
@@ -227,7 +284,7 @@ public sealed class SystemAdminMfaLoginTests
     [Fact]
     public async Task LegacySystemAdminRefreshToken_ShouldRequireFreshMfaLogin()
     {
-        var user = CreateSystemAdministrator();
+        var user = CreateSystemAdministrator(mfaEnabled: true);
         var refreshToken = RefreshToken.Create(
             user.Id, "legacy-refresh", DateTime.UtcNow.AddDays(1), "127.0.0.1",
             isPersistent: true, mfaVerifiedAt: null);
@@ -245,13 +302,37 @@ public sealed class SystemAdminMfaLoginTests
         tokenService.AccessTokenRequested.Should().BeFalse();
     }
 
-    private static User CreateSystemAdministrator()
+    [Fact]
+    public async Task SystemAdminRefreshToken_WhenMfaIsDisabled_ShouldIssueNormalSession()
+    {
+        var user = CreateSystemAdministrator();
+        var refreshToken = RefreshToken.Create(
+            user.Id, "refresh-token", DateTime.UtcNow.AddDays(1), "127.0.0.1",
+            isPersistent: true, mfaVerifiedAt: null);
+        user.AddRefreshToken(refreshToken);
+
+        var handler = new RefreshTokenCommandHandler(
+            new StubUserRepository(user), new IssuingTokenService(), new StubUnitOfWork());
+
+        var result = await handler.Handle(
+            new RefreshTokenCommand(refreshToken.Token), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.AccessToken.Should().Be("access-token");
+        refreshToken.IsActive.Should().BeFalse();
+    }
+
+    private static User CreateSystemAdministrator(bool mfaEnabled = false)
     {
         var user = User.Create(Guid.NewGuid(), "admin@example.com");
         var role = Role.Create("SystemAdmin", "System administrator", isSystemRole: true);
         var userRole = new UserRole(user.Id, role.Id);
         typeof(UserRole).GetProperty(nameof(UserRole.Role))!.SetValue(userRole, role);
         user.AddRole(userRole);
+        if (mfaEnabled)
+        {
+            user.EnableMfa("protected-secret", ["recovery-hash"], DateTimeOffset.UtcNow);
+        }
         return user;
     }
 

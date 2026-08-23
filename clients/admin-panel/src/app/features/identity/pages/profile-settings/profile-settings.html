@@ -180,6 +180,64 @@
                 </form>
             </div>
 
+            <!-- MFA Section -->
+            <div
+                class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div
+                    class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex items-center space-x-3">
+                    <div class="p-2 bg-indigo-100 dark:bg-indigo-500/10 rounded-lg">
+                        <svg class="h-5 w-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3zm-7 8a7 7 0 0114 0M19 8v4m2-2h-4" />
+                        </svg>
+                    </div>
+                    <h2 class="text-lg font-bold text-gray-900 dark:text-white">İki Adımlı Doğrulama</h2>
+                </div>
+
+                <div class="p-6 space-y-4">
+                    @if (user()?.mfaEnabled) {
+                    <p class="text-sm text-green-700 dark:text-green-300">MFA hesabınızda etkin.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Kapatmak veya sıfırlamak için sistem yöneticisine başvurun.</p>
+                    } @else if (!mfaSetup() && mfaRecoveryCodes().length === 0) {
+                    <p class="text-sm text-gray-600 dark:text-gray-300">MFA isteğe bağlıdır ve varsayılan olarak kapalıdır. Hesabınızı ek bir doğrulama katmanıyla koruyabilirsiniz.</p>
+                    <button type="button" (click)="startMfaSetup()" [disabled]="mfaLoading()"
+                        class="inline-flex items-center px-5 py-2.5 rounded-lg text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        {{ mfaLoading() ? 'Kurulum başlatılıyor...' : 'MFA’yı etkinleştir' }}
+                    </button>
+                    } @else if (mfaSetup()) {
+                    <div class="rounded-lg border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-800 dark:bg-indigo-900/20">
+                        <p class="text-sm font-semibold text-indigo-900 dark:text-indigo-200">Authenticator uygulamanıza bu anahtarı ekleyin:</p>
+                        <code class="mt-2 block break-all text-sm font-bold tracking-wider text-indigo-950 dark:text-indigo-100">{{ mfaSetup()?.secret }}</code>
+                        <p class="mt-3 text-xs text-indigo-800 dark:text-indigo-300">Ardından uygulamanın ürettiği 6 haneli kodu girin. Kurulum anahtarını paylaşmayın.</p>
+                    </div>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                        <label class="flex-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Doğrulama kodu
+                            <input type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6"
+                                [(ngModel)]="mfaCode"
+                                class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-2.5"
+                                placeholder="123456">
+                        </label>
+                        <button type="button" (click)="enableMfa()" [disabled]="mfaEnabling() || mfaCode.length !== 6"
+                            class="inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                            {{ mfaEnabling() ? 'Etkinleştiriliyor...' : 'Kodu doğrula ve etkinleştir' }}
+                        </button>
+                    </div>
+                    } @else {
+                    <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+                        <p class="text-sm font-semibold text-amber-900 dark:text-amber-200">Kurtarma kodları</p>
+                        <p class="mt-1 text-xs text-amber-800 dark:text-amber-300">Bu kodlar yalnızca bir kez gösterilir. Güvenli bir yerde saklayın.</p>
+                        <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                            @for (code of mfaRecoveryCodes(); track code) {
+                            <code class="rounded bg-white px-2 py-1 text-center text-xs font-semibold text-gray-800 dark:bg-gray-800 dark:text-gray-200">{{ code }}</code>
+                            }
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+
             <!-- Connected Accounts Section -->
             <div
                 class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">

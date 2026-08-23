@@ -46,7 +46,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         var isSystemAdministrator = user.Roles.Any(role =>
             role.Role is not null
             && string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
-        if (isSystemAdministrator && existingRefreshToken.MfaVerifiedAt is null)
+        if (isSystemAdministrator && user.MfaEnabled && existingRefreshToken.MfaVerifiedAt is null)
         {
             existingRefreshToken.Revoke("system", "MFA reauthentication required");
             await _unitOfWork.SaveChangesAsync(cancellationToken);

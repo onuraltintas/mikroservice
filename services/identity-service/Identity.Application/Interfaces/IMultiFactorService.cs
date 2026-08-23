@@ -33,4 +33,5 @@ public sealed record MfaSetupPayload(
 public sealed record MfaSetupResponse(
     string Secret,
     string OtpAuthUri,
-    string SetupToken);
+    string SetupToken,
+    string? ChallengeToken = null);

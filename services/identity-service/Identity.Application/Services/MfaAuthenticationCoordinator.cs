@@ -66,6 +66,26 @@ public sealed class MfaAuthenticationCoordinator
         return Result.Success(_multiFactor.CreateSetup(context.Value.User.Id, context.Value.User.Email));
     }
 
+    public async Task<Result<MfaSetupResponse>> StartAuthenticatedSetupAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var user = await _users.GetByIdAsync(userId, cancellationToken);
+        if (user is null || !user.IsActive)
+        {
+            return Result.Failure<MfaSetupResponse>(InvalidChallenge);
+        }
+
+        if (user.MfaEnabled)
+        {
+            return Result.Failure<MfaSetupResponse>(new Error("Auth.MfaAlreadyEnabled", "MFA zaten etkin."));
+        }
+
+        var challengeToken = _multiFactor.CreateChallenge(user.Id, rememberMe: true);
+        var setup = _multiFactor.CreateSetup(user.Id, user.Email);
+        return Result.Success(setup with { ChallengeToken = challengeToken });
+    }
+
     public async Task<Result<MfaCompletionResponse>> EnableAsync(
         string challengeToken,
         string setupToken,

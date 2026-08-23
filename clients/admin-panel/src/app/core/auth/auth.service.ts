@@ -42,6 +42,7 @@ export interface MfaSetupResponse {
     secret: string;
     otpAuthUri: string;
     setupToken: string;
+    challengeToken?: string;
 }
 
 interface MfaSessionResponse extends AuthSessionResponse {
@@ -160,6 +161,13 @@ export class AuthService implements OnDestroy {
         return firstValueFrom(this.httpClient.post<MfaSetupResponse>(
             `${environment.apiUrl}/auth/mfa/setup`,
             { challengeToken }));
+    }
+
+    async startAuthenticatedMfaSetup(): Promise<MfaSetupResponse> {
+        return firstValueFrom(this.httpClient.post<MfaSetupResponse>(
+            `${environment.apiUrl}/auth/mfa/setup-authenticated`,
+            {},
+            { withCredentials: true }));
     }
 
     async enableMfa(
