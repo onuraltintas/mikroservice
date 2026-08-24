@@ -1,7 +1,8 @@
 using Asp.Versioning;
+using EduPlatform.Shared.Contracts.Authorization;
+using EduPlatform.Shared.Security.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using EduPlatform.Shared.Contracts.Authorization;
 using SpeedReading.Application.Content;
 
 namespace SpeedReading.API.Controllers;
@@ -9,7 +10,9 @@ namespace SpeedReading.API.Controllers;
 [ApiController]
 [ApiVersion(1.0)]
 [Route("api/speed-reading/exercise-types")]
-public sealed class ExerciseTypesController(ILegacySpeedReadingCatalog catalog) : ControllerBase
+public sealed class ExerciseTypesController(
+    ILegacySpeedReadingCatalog catalog,
+    ISpeedReadingContentAdminWriter adminWriter) : ControllerBase
 {
     [HttpGet]
     [AllowAnonymous]
@@ -36,5 +39,74 @@ public sealed class ExerciseTypesController(ILegacySpeedReadingCatalog catalog) 
             pageNumber,
             pageSize,
             cancellationToken));
+    }
+
+    [HttpPost]
+    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    public async Task<ActionResult<ExerciseTypeSummary>> CreateExerciseType(
+        [FromBody] CreateExerciseTypeRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await adminWriter.CreateExerciseTypeAsync(
+            actorId,
+            request,
+            idempotencyKey ?? string.Empty,
+            cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPut("{id:guid}")]
+    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    public async Task<ActionResult<ExerciseTypeSummary>> UpdateExerciseType(
+        Guid id,
+        [FromBody] UpdateExerciseTypeRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await adminWriter.UpdateExerciseTypeAsync(
+            actorId,
+            id,
+            request,
+            idempotencyKey ?? string.Empty,
+            cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpDelete("{id:guid}")]
+    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    public async Task<IActionResult> DeleteExerciseType(
+        Guid id,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId))
+        {
+            return Unauthorized();
+        }
+
+        await adminWriter.DeleteExerciseTypeAsync(
+            actorId,
+            id,
+            idempotencyKey ?? string.Empty,
+            cancellationToken);
+        return NoContent();
+    }
+
+    private bool TryGetCurrentUserId(out Guid userId)
+    {
+        var value = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value;
+        return Guid.TryParse(value, out userId);
     }
 }

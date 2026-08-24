@@ -30,14 +30,21 @@ if (migrationOnly)
     await using var migrationApp = builder.Build();
     await using var migrationScope = migrationApp.Services.CreateAsyncScope();
     var migrationDb = migrationScope.ServiceProvider.GetRequiredService<SpeedReadingDbContext>();
-    var scriptPath = Path.Combine(AppContext.BaseDirectory, "Database", "001_write_support.sql");
-    if (!File.Exists(scriptPath))
+    var scriptDirectory = Path.Combine(AppContext.BaseDirectory, "Database");
+    var scriptPaths = Directory.Exists(scriptDirectory)
+        ? Directory.GetFiles(scriptDirectory, "*.sql").Order(StringComparer.OrdinalIgnoreCase).ToArray()
+        : [];
+    if (scriptPaths.Length == 0)
     {
-        throw new FileNotFoundException("Speed Reading write-support migration script is missing.", scriptPath);
+        throw new DirectoryNotFoundException(
+            $"Speed Reading migration scripts are missing: {scriptDirectory}");
     }
 
-    var script = await File.ReadAllTextAsync(scriptPath);
-    await migrationDb.Database.ExecuteSqlRawAsync(script);
+    foreach (var scriptPath in scriptPaths)
+    {
+        var script = await File.ReadAllTextAsync(scriptPath);
+        await migrationDb.Database.ExecuteSqlRawAsync(script);
+    }
     return;
 }
 
@@ -100,6 +107,7 @@ var app = builder.Build();
 app.UseRequestLogging();
 app.UseExceptionHandler();
 app.UseAuthentication();
+app.UseMiddleware<EduPlatform.Shared.Infrastructure.Middleware.AdminAuditMiddleware>();
 app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())

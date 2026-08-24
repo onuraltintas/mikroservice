@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
 
@@ -29,6 +29,18 @@ export interface SpeedReadingExerciseType {
   categoryId: string | null;
 }
 
+export interface SpeedReadingExerciseTypeRequest {
+  name: string;
+  displayName: string;
+  description?: string | null;
+  iconName?: string | null;
+  colorCode?: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  engineType: string;
+  categoryId?: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SpeedReadingAdminService {
   private readonly http = inject(HttpClient);
@@ -47,5 +59,43 @@ export class SpeedReadingAdminService {
       `${this.url}/exercise-types`,
       { params }
     );
+  }
+
+  createExerciseType(request: SpeedReadingExerciseTypeRequest, idempotencyKey?: string) {
+    return this.http.post<SpeedReadingExerciseType>(
+      `${this.url}/exercise-types`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  updateExerciseType(
+    id: string,
+    request: SpeedReadingExerciseTypeRequest,
+    idempotencyKey?: string
+  ) {
+    return this.http.put<SpeedReadingExerciseType>(
+      `${this.url}/exercise-types/${id}`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  deleteExerciseType(id: string, idempotencyKey?: string) {
+    return this.http.delete<void>(
+      `${this.url}/exercise-types/${id}`,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  private idempotencyHeaders(idempotencyKey?: string): HttpHeaders {
+    return new HttpHeaders({
+      'Idempotency-Key': idempotencyKey ?? this.createIdempotencyKey()
+    });
+  }
+
+  private createIdempotencyKey(): string {
+    return globalThis.crypto?.randomUUID?.()
+      ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   }
 }

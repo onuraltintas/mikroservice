@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using EduPlatform.Shared.Infrastructure.Middleware;
 using SpeedReading.Infrastructure.Legacy;
 
 namespace SpeedReading.Infrastructure;
@@ -29,6 +30,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     internal DbSet<LegacyStudentNodeProgress> StudentNodeProgresses => Set<LegacyStudentNodeProgress>();
     internal DbSet<LegacyPersonalizedLearningPath> PersonalizedLearningPaths => Set<LegacyPersonalizedLearningPath>();
     internal DbSet<LegacyIdempotencyRecord> IdempotencyRecords => Set<LegacyIdempotencyRecord>();
+    internal DbSet<AdminAuditRecord> AdminAuditRecords => Set<AdminAuditRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -190,6 +192,28 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
                 .IsUnique();
             entity.HasIndex(item => item.CreatedAt)
                 .HasDatabaseName("IX_SpeedReadingIdempotencyRecords_CreatedAt");
+        });
+
+        modelBuilder.Entity<AdminAuditRecord>(entity =>
+        {
+            entity.ToTable("SpeedReadingAdminAuditRecords");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.ServiceName).HasMaxLength(150).IsRequired();
+            entity.Property(item => item.ActorUserId).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.ActorRoles).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.TenantId).HasMaxLength(100);
+            entity.Property(item => item.HttpMethod).HasMaxLength(10).IsRequired();
+            entity.Property(item => item.Path).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.CorrelationId).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.ClientIp).HasMaxLength(64);
+            entity.Property(item => item.UserAgent).HasMaxLength(256);
+            entity.Property(item => item.Action).HasMaxLength(32);
+            entity.Property(item => item.ResourceType).HasMaxLength(100);
+            entity.Property(item => item.ResourceId).HasMaxLength(100);
+            entity.Property(item => item.ChangedFieldsJson).HasMaxLength(2_000);
+            entity.HasIndex(item => new { item.OccurredAt, item.Id });
+            entity.HasIndex(item => new { item.ActorUserId, item.OccurredAt });
+            entity.HasIndex(item => new { item.ResourceType, item.ResourceId, item.OccurredAt });
         });
     }
 }

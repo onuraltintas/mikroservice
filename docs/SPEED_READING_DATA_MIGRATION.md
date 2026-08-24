@@ -24,11 +24,14 @@ uç noktası için additive bir ledger ile başlatılmıştır:
 - Tüm sorgular `AsNoTracking` ve `IsDeleted = false` filtresiyle çalışır.
 - Mevcut uygulama yazmaya devam ederken yeni servis yalnızca doğrulanmış
   okuma trafiği alır.
-- Yeni servisin sahip olduğu tek ek tablo `SpeedReadingIdempotencyRecords`'tır.
+- Yeni servisin sahip olduğu ek tablolar `SpeedReadingIdempotencyRecords` ve
+  `SpeedReadingAdminAuditRecords`'tır.
   Bu tablo aynı `Idempotency-Key` ile gelen tekrarların ikinci sonuç kaydı
   üretmesini engeller; eski tabloları değiştirmez. `CreatedAt` index'i,
   operasyon ekibinin 7 günlük replay penceresinden eski kayıtları güvenle
   temizleyebilmesi için eklenir.
+- Admin mutation istekleri `AdminAuditMiddleware` ile append-only audit
+  kaydına yazılır; request body içindeki hassas alan adları audit'e alınmaz.
 
 İlk dikey dilimde taşınan tablolar:
 

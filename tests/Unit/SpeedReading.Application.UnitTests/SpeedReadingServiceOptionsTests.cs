@@ -81,7 +81,8 @@ public sealed class SpeedReadingServiceOptionsTests
             "StudentPathProgresses",
             "StudentNodeProgresses",
             "PersonalizedLearningPaths",
-            "SpeedReadingIdempotencyRecords"
+            "SpeedReadingIdempotencyRecords",
+            "SpeedReadingAdminAuditRecords"
         });
         context.Database.ProviderName.Should().Contain("Npgsql");
 

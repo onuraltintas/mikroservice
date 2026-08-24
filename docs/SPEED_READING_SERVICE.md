@@ -14,7 +14,8 @@ kontratları, idempotency ve audit dilimi tamamlanana kadar ayrı tutulur.
 - Mevcut hızlı okuma veritabanı korunur; servis mevcut business tabloları için
   migration çalıştırmaz ve şemayı değiştirmez. Yazma dilimi için ayrı
   `speed-reading-migrations` one-shot container'ı yalnızca
-  `SpeedReadingIdempotencyRecords` tablosunu oluşturur.
+  `SpeedReadingIdempotencyRecords` ve `SpeedReadingAdminAuditRecords`
+  tablolarını oluşturur.
 - `ConnectionStrings:SpeedReading` veya `SPEED_READING_CONNECTION_STRING`
   zorunludur. Bağlantı bilgisi yoksa servis güvenli şekilde başlamaz.
 - Yeni servis veri sahibi olarak devreye alındığında eski uygulamanın yazma

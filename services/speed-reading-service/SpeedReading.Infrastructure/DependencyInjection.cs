@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using EduPlatform.Shared.Infrastructure.Middleware;
 using SpeedReading.Application.Content;
 using SpeedReading.Application.Progress;
 using SpeedReading.Infrastructure.Legacy;
@@ -28,10 +29,12 @@ public static class DependencyInjection
                 npgsql.EnableRetryOnFailure()));
 
         services.AddScoped<ILegacySpeedReadingCatalog, LegacySpeedReadingCatalog>();
+        services.AddScoped<ISpeedReadingContentAdminWriter, LegacySpeedReadingContentAdminWriter>();
         services.AddScoped<ILegacySpeedReadingProgress, LegacySpeedReadingProgress>();
         services.AddScoped<ISpeedReadingProgressWriter, LegacySpeedReadingProgressWriter>();
         services.AddScoped<ILegacySpeedReadingPrograms, LegacySpeedReadingPrograms>();
         services.AddScoped<ILegacySpeedReadingLearningPaths, LegacySpeedReadingLearningPaths>();
+        services.AddSingleton<IAdminAuditWriter, SpeedReadingAdminAuditWriter>();
 
         return services;
     }

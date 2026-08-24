@@ -1,16 +1,20 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Component, OnInit, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { finalize, forkJoin } from 'rxjs';
+import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
+import { AuthService } from '../../../core/auth/auth.service';
 import {
   SpeedReadingAdminService,
   SpeedReadingCapabilities,
-  SpeedReadingExerciseType
+  SpeedReadingExerciseType,
+  SpeedReadingExerciseTypeRequest
 } from '../../../core/services/speed-reading-admin.service';
 
 @Component({
   selector: 'app-speed-reading-overview',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <section class="space-y-6">
       <div class="flex flex-wrap items-center justify-between gap-3">
@@ -57,19 +61,68 @@ import {
         </div>
 
         <div class="rounded-xl border border-indigo-100 bg-indigo-50 p-5 text-sm text-indigo-900 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-200">
-          Mevcut hızlı okuma veritabanı korunarak içerik kataloğu bu servisten okunuyor. Yazma ve program yönetimi ekranları, veri sahipliği ve geri dönüş kontrolleri tamamlandıktan sonra ayrı yetkilerle açılacaktır.
+          Mevcut hızlı okuma veritabanı korunarak içerik kataloğu bu servisten okunuyor. İçerik değişiklikleri yalnızca ContentManage yetkisine sahip yöneticilere açıktır ve her mutation idempotency ile audit edilir.
         </div>
 
         <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Egzersiz türleri</h2>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Mevcut hızlı okuma kataloğundan salt-okunur görünüm.</p>
-            </div>
-            <span class="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-              {{ exerciseTypes().length }} tür
-            </span>
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Egzersiz türleri</h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Katalog motorlarının ve görünür adlarının yönetimi.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                  {{ exerciseTypes().length }} tür
+                </span>
+                @if (canManageContent()) {
+                  <button type="button" (click)="startCreate()"
+                    class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white">Yeni tür</button>
+                }
+              </div>
           </div>
+
+          @if (canManageContent() && editingId !== null) {
+            <form class="mt-4 grid grid-cols-1 gap-3 rounded-lg border border-indigo-200 bg-indigo-50/50 p-4 sm:grid-cols-2"
+              (ngSubmit)="saveExerciseType()">
+              <label class="text-sm text-gray-700 dark:text-gray-200">Teknik ad
+                <input name="name" [(ngModel)]="draft.name" required maxlength="100"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200">Görünen ad
+                <input name="displayName" [(ngModel)]="draft.displayName" required maxlength="150"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200">Motor tipi
+                <input name="engineType" [(ngModel)]="draft.engineType" required maxlength="100"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200">Renk (#RRGGBB)
+                <input name="colorCode" [(ngModel)]="draft.colorCode" maxlength="7" placeholder="#2563eb"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200">İkon adı
+                <input name="iconName" [(ngModel)]="draft.iconName" maxlength="100" placeholder="grid"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200">Sıra
+                <input type="number" name="sortOrder" [(ngModel)]="draft.sortOrder" min="0" max="10000"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200 sm:col-span-2">Açıklama
+                <textarea name="description" [(ngModel)]="draft.description" maxlength="1000" rows="2"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800"></textarea>
+              </label>
+              <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+                <input type="checkbox" name="isActive" [(ngModel)]="draft.isActive" /> Aktif
+              </label>
+              <div class="flex justify-end gap-2 sm:col-span-2">
+                <button type="button" (click)="cancelEdit()" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">Vazgeç</button>
+                <button type="submit" [disabled]="saving()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50">
+                  {{ saving() ? 'Kaydediliyor…' : (editingId === 'new' ? 'Oluştur' : 'Kaydet') }}
+                </button>
+              </div>
+            </form>
+          }
 
           @if (exerciseTypes().length) {
             <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -81,6 +134,12 @@ import {
                   </div>
                   <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ type.engineType || 'Genel egzersiz' }}</p>
                   <p class="mt-2 line-clamp-2 text-sm text-gray-600 dark:text-gray-300">{{ type.description }}</p>
+                  @if (canManageContent()) {
+                    <div class="mt-3 flex gap-2">
+                      <button type="button" (click)="startEdit(type)" class="rounded border border-gray-300 px-2 py-1 text-xs">Düzenle</button>
+                      <button type="button" (click)="deleteExerciseType(type)" class="rounded border border-red-300 px-2 py-1 text-xs text-red-700">Sil</button>
+                    </div>
+                  }
                 </article>
               }
             </div>
@@ -94,11 +153,17 @@ import {
 })
 export class SpeedReadingOverviewComponent implements OnInit {
   private readonly service = inject(SpeedReadingAdminService);
+  private readonly authService = inject(AuthService);
   private readonly platformId = inject(PLATFORM_ID);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly capabilities = signal<SpeedReadingCapabilities | null>(null);
   readonly exerciseTypes = signal<SpeedReadingExerciseType[]>([]);
+  readonly saving = signal(false);
+  readonly canManageContent = computed(() =>
+    this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingContentManage));
+  editingId: string | null = null;
+  draft: SpeedReadingExerciseTypeRequest = this.emptyDraft();
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
@@ -119,5 +184,67 @@ export class SpeedReadingOverviewComponent implements OnInit {
       },
       error: () => this.error.set('Hızlı okuma servis bilgisi yüklenemedi.')
     });
+  }
+
+  startCreate() {
+    this.editingId = 'new';
+    this.draft = this.emptyDraft();
+  }
+
+  startEdit(type: SpeedReadingExerciseType) {
+    this.editingId = type.id;
+    this.draft = {
+      name: type.name,
+      displayName: type.displayName,
+      description: type.description,
+      iconName: type.iconName,
+      colorCode: type.colorCode,
+      sortOrder: type.sortOrder,
+      isActive: type.isActive,
+      engineType: type.engineType,
+      categoryId: type.categoryId
+    };
+  }
+
+  cancelEdit() {
+    this.editingId = null;
+  }
+
+  saveExerciseType() {
+    if (this.editingId === null) return;
+    this.saving.set(true);
+    const request$ = this.editingId === 'new'
+      ? this.service.createExerciseType(this.draft)
+      : this.service.updateExerciseType(this.editingId, this.draft);
+
+    request$.pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => {
+        this.editingId = null;
+        this.load();
+      },
+      error: () => this.error.set('Egzersiz türü kaydedilemedi.')
+    });
+  }
+
+  deleteExerciseType(type: SpeedReadingExerciseType) {
+    if (!globalThis.confirm(`“${type.displayName || type.name}” türü silinsin mi?`)) return;
+    this.service.deleteExerciseType(type.id).subscribe({
+      next: () => this.load(),
+      error: () => this.error.set('Egzersiz türü silinemedi.')
+    });
+  }
+
+  private emptyDraft(): SpeedReadingExerciseTypeRequest {
+    return {
+      name: '',
+      displayName: '',
+      description: '',
+      iconName: '',
+      colorCode: '',
+      sortOrder: 0,
+      isActive: true,
+      engineType: '',
+      categoryId: null
+    };
   }
 }

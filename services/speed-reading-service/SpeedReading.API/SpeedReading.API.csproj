@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Database\001_write_support.sql" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Database\*.sql" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

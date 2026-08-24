@@ -57,4 +57,23 @@ describe('SpeedReadingAdminService', () => {
     expect(request.request.method).toBe('GET');
     request.flush(response);
   });
+
+  it('creates an exercise type with an idempotency key', () => {
+    service.createExerciseType({
+      name: 'schulte',
+      displayName: 'Schulte Tablosu',
+      description: 'Odaklanma',
+      iconName: 'grid',
+      colorCode: '#2563eb',
+      sortOrder: 1,
+      isActive: true,
+      engineType: 'SchulteTable',
+      categoryId: null
+    }, 'admin-type-key-123456').subscribe();
+
+    const request = http.expectOne('/api/speed-reading/exercise-types');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.headers.get('Idempotency-Key')).toBe('admin-type-key-123456');
+    request.flush({ id: 'type-1' });
+  });
 });
