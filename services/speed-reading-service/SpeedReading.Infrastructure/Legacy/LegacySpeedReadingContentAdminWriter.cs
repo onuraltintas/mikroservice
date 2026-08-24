@@ -274,6 +274,140 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         }
     }
 
+    public async Task<ReadingTextSummary> CreateReadingTextAsync(
+        Guid actorId,
+        CreateReadingTextRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequest(actorId, request, idempotencyKey);
+        idempotencyKey = NormalizeKey(idempotencyKey);
+        const string scope = "speed-reading.reading-texts.create";
+        var requestHash = CreateRequestHash(actorId, scope, Guid.Empty, request);
+        var existing = await GetLedgerAsync(scope, idempotencyKey, cancellationToken);
+        if (existing is not null)
+        {
+            return await ReplayReadingTextAsync(existing, requestHash, cancellationToken);
+        }
+
+        await EnsureExerciseExistsAsync(request.ExerciseId, cancellationToken);
+        var now = DateTime.UtcNow;
+        var readingText = new LegacyReadingText
+        {
+            Id = Guid.NewGuid(),
+            Title = request.Title.Trim(),
+            Content = request.Content,
+            WordCount = request.WordCount,
+            Category = request.Category.Trim(),
+            DifficultyLevel = request.DifficultyLevel,
+            TargetAgeGroupConfigurationId = request.TargetAgeGroupConfigurationId,
+            Language = request.Language.Trim(),
+            IsActive = request.IsActive,
+            Tags = request.Tags?.Trim() ?? string.Empty,
+            RecommendedMinLevel = request.RecommendedMinLevel,
+            RecommendedMaxLevel = request.RecommendedMaxLevel,
+            ExerciseId = request.ExerciseId,
+            CreatedAt = now,
+            CreatedBy = actorId
+        };
+
+        db.ReadingTexts.Add(readingText);
+        AddLedger(scope, idempotencyKey, requestHash, readingText.Id, now);
+        await SaveOrReplayAsync(readingText.Id, scope, idempotencyKey, requestHash, cancellationToken);
+        return ToSummary(readingText);
+    }
+
+    public async Task<ReadingTextSummary> UpdateReadingTextAsync(
+        Guid actorId,
+        Guid readingTextId,
+        UpdateReadingTextRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequest(actorId, request, idempotencyKey);
+        idempotencyKey = NormalizeKey(idempotencyKey);
+        const string scope = "speed-reading.reading-texts.update";
+        var requestHash = CreateRequestHash(actorId, scope, readingTextId, request);
+        var existing = await GetLedgerAsync(scope, idempotencyKey, cancellationToken);
+        if (existing is not null)
+        {
+            return await ReplayReadingTextAsync(existing, requestHash, cancellationToken);
+        }
+
+        var readingText = await db.ReadingTexts
+            .SingleOrDefaultAsync(item => item.Id == readingTextId && !item.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException("ReadingText", readingTextId);
+        await EnsureExerciseExistsAsync(request.ExerciseId, cancellationToken);
+        readingText.Title = request.Title.Trim();
+        readingText.Content = request.Content;
+        readingText.WordCount = request.WordCount;
+        readingText.Category = request.Category.Trim();
+        readingText.DifficultyLevel = request.DifficultyLevel;
+        readingText.TargetAgeGroupConfigurationId = request.TargetAgeGroupConfigurationId;
+        readingText.Language = request.Language.Trim();
+        readingText.IsActive = request.IsActive;
+        readingText.Tags = request.Tags?.Trim() ?? string.Empty;
+        readingText.RecommendedMinLevel = request.RecommendedMinLevel;
+        readingText.RecommendedMaxLevel = request.RecommendedMaxLevel;
+        readingText.ExerciseId = request.ExerciseId;
+        readingText.UpdatedAt = DateTime.UtcNow;
+        readingText.UpdatedBy = actorId;
+
+        AddLedger(scope, idempotencyKey, requestHash, readingText.Id, DateTime.UtcNow);
+        await SaveOrReplayAsync(readingText.Id, scope, idempotencyKey, requestHash, cancellationToken);
+        return ToSummary(readingText);
+    }
+
+    public async Task DeleteReadingTextAsync(
+        Guid actorId,
+        Guid readingTextId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateIdempotency(actorId, idempotencyKey);
+        idempotencyKey = NormalizeKey(idempotencyKey);
+        const string scope = "speed-reading.reading-texts.delete";
+        var requestHash = SpeedReadingRequestHasher.Create(
+            actorId.ToString("D"), scope, readingTextId.ToString("D"));
+        var existing = await GetLedgerAsync(scope, idempotencyKey, cancellationToken);
+        if (existing is not null)
+        {
+            EnsureReplayMatches(existing, requestHash);
+            return;
+        }
+
+        var readingText = await db.ReadingTexts
+            .SingleOrDefaultAsync(item => item.Id == readingTextId && !item.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException("ReadingText", readingTextId);
+        if (await db.ReadingQuestions.AnyAsync(
+                item => item.ReadingTextId == readingTextId && !item.IsDeleted,
+                cancellationToken))
+        {
+            throw new BusinessRuleException(
+                "ReadingText.HasQuestions",
+                "Okuma metni, bağlı sorular kaldırılmadan silinemez.");
+        }
+
+        var now = DateTime.UtcNow;
+        readingText.IsDeleted = true;
+        readingText.DeletedAt = now;
+        readingText.DeletedBy = actorId;
+        readingText.UpdatedAt = now;
+        readingText.UpdatedBy = actorId;
+        AddLedger(scope, idempotencyKey, requestHash, readingText.Id, now);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (IsIdempotencyConflict(exception))
+        {
+            db.ChangeTracker.Clear();
+            var concurrent = await db.IdempotencyRecords
+                .SingleAsync(item => item.Scope == scope && item.Key == idempotencyKey, cancellationToken);
+            EnsureReplayMatches(concurrent, requestHash);
+        }
+    }
+
     private async Task<ExerciseTypeSummary> ReplayAsync(
         LegacyIdempotencyRecord record,
         string requestHash,
@@ -299,6 +433,21 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
             ?? throw new BusinessRuleException(
                 "Idempotency.ResourceMissing",
                 "Idempotency kaydına ait egzersiz bulunamadı; yeni bir anahtar kullanın.");
+    }
+
+    private async Task<ReadingTextSummary> ReplayReadingTextAsync(
+        LegacyIdempotencyRecord record,
+        string requestHash,
+        CancellationToken cancellationToken)
+    {
+        EnsureReplayMatches(record, requestHash);
+        var readingText = await db.ReadingTexts
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == record.ResourceId && !item.IsDeleted, cancellationToken)
+            ?? throw new BusinessRuleException(
+                "Idempotency.ResourceMissing",
+                "Idempotency kaydına ait okuma metni bulunamadı; yeni bir anahtar kullanın.");
+        return ToSummary(readingText);
     }
 
     private async Task SaveOrReplayAsync(
@@ -368,6 +517,22 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
             .AsNoTracking()
             .SingleOrDefaultAsync(item => item.Id == exerciseTypeId && !item.IsDeleted && item.IsActive, cancellationToken)
         ?? throw new NotFoundException("ExerciseType", exerciseTypeId);
+
+    private async Task EnsureExerciseExistsAsync(Guid? exerciseId, CancellationToken cancellationToken)
+    {
+        if (!exerciseId.HasValue)
+        {
+            return;
+        }
+
+        var exists = await db.Exercises
+            .AsNoTracking()
+            .AnyAsync(item => item.Id == exerciseId && !item.IsDeleted, cancellationToken);
+        if (!exists)
+        {
+            throw new NotFoundException("Exercise", exerciseId.Value);
+        }
+    }
 
     private async Task<ExerciseSummary?> GetExerciseSummaryAsync(
         Guid exerciseId,
@@ -482,6 +647,49 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         }
     }
 
+    private static void ValidateRequest(
+        Guid actorId,
+        CreateReadingTextRequest request,
+        string idempotencyKey) =>
+        ValidateReadingTextRequest(actorId, idempotencyKey, request.Title, request.Content,
+            request.WordCount, request.Category, request.DifficultyLevel, request.Language,
+            request.RecommendedMinLevel, request.RecommendedMaxLevel, request.ExerciseId);
+
+    private static void ValidateRequest(
+        Guid actorId,
+        UpdateReadingTextRequest request,
+        string idempotencyKey) =>
+        ValidateReadingTextRequest(actorId, idempotencyKey, request.Title, request.Content,
+            request.WordCount, request.Category, request.DifficultyLevel, request.Language,
+            request.RecommendedMinLevel, request.RecommendedMaxLevel, request.ExerciseId);
+
+    private static void ValidateReadingTextRequest(
+        Guid actorId,
+        string idempotencyKey,
+        string title,
+        string content,
+        int wordCount,
+        string category,
+        int difficultyLevel,
+        string language,
+        int recommendedMinLevel,
+        int recommendedMaxLevel,
+        Guid? exerciseId)
+    {
+        ValidateIdempotency(actorId, idempotencyKey);
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length > 250
+            || string.IsNullOrWhiteSpace(content) || content.Length > 2_097_152
+            || wordCount < 0
+            || string.IsNullOrWhiteSpace(category) || category.Trim().Length > 100
+            || difficultyLevel is < 0 or > 10
+            || string.IsNullOrWhiteSpace(language) || language.Trim().Length > 10
+            || recommendedMinLevel < 0 || recommendedMaxLevel < recommendedMinLevel
+            || exerciseId == Guid.Empty)
+        {
+            throw new ArgumentException("Okuma metni alanları geçersiz.", nameof(title));
+        }
+    }
+
     private static void ValidateIdempotency(Guid actorId, string idempotencyKey)
     {
         if (actorId == Guid.Empty || !Regex.IsMatch(idempotencyKey?.Trim() ?? string.Empty, IdempotencyKeyPattern))
@@ -515,6 +723,36 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
             request.Description, request.DifficultyLevel.ToString(CultureInfo.InvariantCulture),
             request.ExerciseTypeId.ToString("D"), request.ConfigurationJson,
             request.TargetAgeGroupConfigurationId?.ToString("D"));
+
+    private static string CreateRequestHash(
+        Guid actorId,
+        string scope,
+        Guid resourceId,
+        CreateReadingTextRequest request) =>
+        SpeedReadingRequestHasher.Create(
+            actorId.ToString("D"), scope, resourceId.ToString("D"), request.Title,
+            request.Content, request.WordCount.ToString(CultureInfo.InvariantCulture),
+            request.Category, request.DifficultyLevel.ToString(CultureInfo.InvariantCulture),
+            request.TargetAgeGroupConfigurationId?.ToString("D"), request.Language,
+            request.IsActive.ToString(), request.Tags,
+            request.RecommendedMinLevel.ToString(CultureInfo.InvariantCulture),
+            request.RecommendedMaxLevel.ToString(CultureInfo.InvariantCulture),
+            request.ExerciseId?.ToString("D"));
+
+    private static string CreateRequestHash(
+        Guid actorId,
+        string scope,
+        Guid resourceId,
+        UpdateReadingTextRequest request) =>
+        SpeedReadingRequestHasher.Create(
+            actorId.ToString("D"), scope, resourceId.ToString("D"), request.Title,
+            request.Content, request.WordCount.ToString(CultureInfo.InvariantCulture),
+            request.Category, request.DifficultyLevel.ToString(CultureInfo.InvariantCulture),
+            request.TargetAgeGroupConfigurationId?.ToString("D"), request.Language,
+            request.IsActive.ToString(), request.Tags,
+            request.RecommendedMinLevel.ToString(CultureInfo.InvariantCulture),
+            request.RecommendedMaxLevel.ToString(CultureInfo.InvariantCulture),
+            request.ExerciseId?.ToString("D"));
 
     private static string CreateRequestHash(
         Guid actorId,
@@ -577,4 +815,14 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         exerciseTypeName,
         exercise.ConfigurationJson,
         exercise.TargetAgeGroupConfigurationId);
+
+    private static ReadingTextSummary ToSummary(LegacyReadingText text) => new(
+        text.Id,
+        text.Title,
+        text.WordCount,
+        text.Category,
+        text.DifficultyLevel,
+        text.Language,
+        text.IsActive,
+        text.ExerciseId);
 }

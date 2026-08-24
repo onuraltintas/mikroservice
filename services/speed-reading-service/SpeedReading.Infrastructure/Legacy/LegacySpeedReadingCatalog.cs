@@ -174,7 +174,9 @@ internal sealed class LegacySpeedReadingCatalog(SpeedReadingDbContext db) : ILeg
                 item.Language,
                 item.IsActive,
                 item.Tags,
-                item.ExerciseId
+                item.ExerciseId,
+                item.RecommendedMinLevel,
+                item.RecommendedMaxLevel
             })
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -216,7 +218,9 @@ internal sealed class LegacySpeedReadingCatalog(SpeedReadingDbContext db) : ILeg
             text.IsActive,
             SplitTags(text.Tags),
             text.ExerciseId,
-            questions);
+            questions,
+            text.RecommendedMinLevel,
+            text.RecommendedMaxLevel);
     }
 
     private static (int Page, int Size) NormalizePage(int pageNumber, int pageSize) =>

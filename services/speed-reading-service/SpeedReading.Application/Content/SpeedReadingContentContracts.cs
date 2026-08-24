@@ -64,7 +64,9 @@ public sealed record ReadingTextDetails(
     bool IsActive,
     IReadOnlyList<string> Tags,
     Guid? ExerciseId,
-    IReadOnlyList<ReadingQuestionSummary> Questions);
+    IReadOnlyList<ReadingQuestionSummary> Questions,
+    int RecommendedMinLevel,
+    int RecommendedMaxLevel);
 
 public interface ILegacySpeedReadingCatalog
 {

@@ -73,6 +73,8 @@ tablosunu uygular.
   başlığı ile; tekrar istekler güvenli biçimde replay edilir)
 - `POST|PUT|DELETE /api/speed-reading/exercise-types` (`ContentManage`)
 - `POST|PUT|DELETE /api/speed-reading/exercises` (`ContentManage`)
+- `POST|PUT|DELETE /api/speed-reading/reading-texts` (`ContentManage`; sorusu
+  bulunan metinler silinemez)
 - `GET /api/speed-reading/progress/active-exercise-sessions`
 - `GET /api/speed-reading/program-templates`
 - `GET /api/speed-reading/progress/programs`

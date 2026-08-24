@@ -61,6 +61,40 @@ export interface SpeedReadingExerciseRequest {
   targetAgeGroupConfigurationId?: string | null;
 }
 
+export interface SpeedReadingReadingText {
+  id: string;
+  title: string;
+  wordCount: number;
+  category: string;
+  difficultyLevel: number;
+  language: string;
+  isActive: boolean;
+  exerciseId: string | null;
+}
+
+export interface SpeedReadingReadingTextRequest {
+  title: string;
+  content: string;
+  wordCount: number;
+  category: string;
+  difficultyLevel: number;
+  targetAgeGroupConfigurationId?: string | null;
+  language: string;
+  isActive: boolean;
+  tags?: string | null;
+  recommendedMinLevel: number;
+  recommendedMaxLevel: number;
+  exerciseId?: string | null;
+}
+
+export interface SpeedReadingReadingTextDetails extends SpeedReadingReadingText {
+  content: string;
+  targetAgeGroupConfigurationId: string | null;
+  tags: string[];
+  recommendedMinLevel: number;
+  recommendedMaxLevel: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SpeedReadingAdminService {
   private readonly http = inject(HttpClient);
@@ -137,6 +171,50 @@ export class SpeedReadingAdminService {
   deleteExercise(id: string, idempotencyKey?: string) {
     return this.http.delete<void>(
       `${this.url}/exercises/${id}`,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  getReadingTexts(exerciseId?: string) {
+    let params = new HttpParams();
+    if (exerciseId) {
+      params = params.set('exerciseId', exerciseId);
+    }
+    return this.http.get<SpeedReadingReadingText[]>(
+      `${this.url}/reading-texts`,
+      { params }
+    );
+  }
+
+  getReadingText(id: string) {
+    return this.http.get<SpeedReadingReadingTextDetails>(
+      `${this.url}/reading-texts/${id}`
+    );
+  }
+
+  createReadingText(request: SpeedReadingReadingTextRequest, idempotencyKey?: string) {
+    return this.http.post<SpeedReadingReadingText>(
+      `${this.url}/reading-texts`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  updateReadingText(
+    id: string,
+    request: SpeedReadingReadingTextRequest,
+    idempotencyKey?: string
+  ) {
+    return this.http.put<SpeedReadingReadingText>(
+      `${this.url}/reading-texts/${id}`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  deleteReadingText(id: string, idempotencyKey?: string) {
+    return this.http.delete<void>(
+      `${this.url}/reading-texts/${id}`,
       { headers: this.idempotencyHeaders(idempotencyKey) }
     );
   }

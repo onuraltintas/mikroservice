@@ -10,7 +10,9 @@ import {
   SpeedReadingExercise,
   SpeedReadingExerciseRequest,
   SpeedReadingExerciseType,
-  SpeedReadingExerciseTypeRequest
+  SpeedReadingExerciseTypeRequest,
+  SpeedReadingReadingText,
+  SpeedReadingReadingTextRequest
 } from '../../../core/services/speed-reading-admin.service';
 
 @Component({
@@ -223,6 +225,110 @@ import {
             <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Katalogda gösterilecek egzersiz bulunamadı.</p>
           }
         </div>
+
+        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Okuma metinleri</h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Metin, seviye, dil ve bağlı egzersiz içeriklerini yönetin.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                {{ readingTexts().length }} metin
+              </span>
+              @if (canManageContent()) {
+                <button type="button" (click)="startCreateReadingText()"
+                  class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white">Yeni metin</button>
+              }
+            </div>
+          </div>
+
+          @if (canManageContent() && readingTextEditingId !== null) {
+            <form class="mt-4 grid grid-cols-1 gap-3 rounded-lg border border-indigo-200 bg-indigo-50/50 p-4 sm:grid-cols-2"
+              (ngSubmit)="saveReadingText()">
+              <label class="text-sm text-gray-700 dark:text-gray-200">Başlık
+                <input name="readingTextTitle" [(ngModel)]="readingTextDraft.title" required maxlength="300"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200">Kategori
+                <input name="readingTextCategory" [(ngModel)]="readingTextDraft.category" required maxlength="100"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200">Dil
+                <input name="readingTextLanguage" [(ngModel)]="readingTextDraft.language" required maxlength="20" placeholder="tr"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200">Bağlı egzersiz
+                <select name="readingTextExerciseId" [(ngModel)]="readingTextDraft.exerciseId"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800">
+                  <option [ngValue]="null">Bağlantısız</option>
+                  @for (exercise of exercises(); track exercise.id) {
+                    <option [ngValue]="exercise.id">{{ exercise.title }}</option>
+                  }
+                </select>
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200">Kelime sayısı
+                <input type="number" name="readingTextWordCount" [(ngModel)]="readingTextDraft.wordCount" required min="1" max="1000000"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200">Zorluk (0-10)
+                <input type="number" name="readingTextDifficulty" [(ngModel)]="readingTextDraft.difficultyLevel" min="0" max="10"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200">Önerilen min. seviye
+                <input type="number" name="readingTextMinLevel" [(ngModel)]="readingTextDraft.recommendedMinLevel" min="0" max="100"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200">Önerilen maks. seviye
+                <input type="number" name="readingTextMaxLevel" [(ngModel)]="readingTextDraft.recommendedMaxLevel" min="0" max="100"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200 sm:col-span-2">İçerik
+                <textarea name="readingTextContent" [(ngModel)]="readingTextDraft.content" required maxlength="1000000" rows="6"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800"></textarea>
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200 sm:col-span-2">Etiketler (virgülle ayrılmış)
+                <input name="readingTextTags" [(ngModel)]="readingTextDraft.tags" maxlength="2000"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+              </label>
+              <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+                <input type="checkbox" name="readingTextIsActive" [(ngModel)]="readingTextDraft.isActive" /> Aktif
+              </label>
+              <div class="flex justify-end gap-2 sm:col-span-2">
+                <button type="button" (click)="cancelReadingTextEdit()" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">Vazgeç</button>
+                <button type="submit" [disabled]="saving()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50">
+                  {{ saving() ? 'Kaydediliyor…' : (readingTextEditingId === 'new' ? 'Oluştur' : 'Kaydet') }}
+                </button>
+              </div>
+            </form>
+          }
+
+          @if (readingTexts().length) {
+            <div class="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+              @for (text of readingTexts(); track text.id) {
+                <article class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 class="font-medium text-gray-900 dark:text-white">{{ text.title }}</h3>
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ text.category }} · {{ text.language }} · {{ text.wordCount }} kelime · Zorluk {{ text.difficultyLevel }}</p>
+                    </div>
+                    <span class="rounded-full px-2 py-1 text-xs" [class.bg-emerald-100]="text.isActive" [class.text-emerald-700]="text.isActive" [class.bg-gray-100]="!text.isActive" [class.text-gray-600]="!text.isActive">
+                      {{ text.isActive ? 'Aktif' : 'Pasif' }}
+                    </span>
+                  </div>
+                  @if (canManageContent()) {
+                    <div class="mt-3 flex gap-2">
+                      <button type="button" (click)="startEditReadingText(text)" class="rounded border border-gray-300 px-2 py-1 text-xs">Düzenle</button>
+                      <button type="button" (click)="deleteReadingText(text)" class="rounded border border-red-300 px-2 py-1 text-xs text-red-700">Sil</button>
+                    </div>
+                  }
+                </article>
+              }
+            </div>
+          } @else if (!loading()) {
+            <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Katalogda gösterilecek okuma metni bulunamadı.</p>
+          }
+        </div>
       }
     </section>
   `
@@ -236,6 +342,7 @@ export class SpeedReadingOverviewComponent implements OnInit {
   readonly capabilities = signal<SpeedReadingCapabilities | null>(null);
   readonly exerciseTypes = signal<SpeedReadingExerciseType[]>([]);
   readonly exercises = signal<SpeedReadingExercise[]>([]);
+  readonly readingTexts = signal<SpeedReadingReadingText[]>([]);
   readonly saving = signal(false);
   readonly canManageContent = computed(() =>
     this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingContentManage));
@@ -243,6 +350,8 @@ export class SpeedReadingOverviewComponent implements OnInit {
   draft: SpeedReadingExerciseTypeRequest = this.emptyDraft();
   exerciseEditingId: string | null = null;
   exerciseDraft: SpeedReadingExerciseRequest = this.emptyExerciseDraft();
+  readingTextEditingId: string | null = null;
+  readingTextDraft: SpeedReadingReadingTextRequest = this.emptyReadingTextDraft();
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
@@ -256,12 +365,14 @@ export class SpeedReadingOverviewComponent implements OnInit {
     forkJoin({
       capabilities: this.service.getCapabilities(),
       exerciseTypes: this.service.getExerciseTypes(),
-      exercises: this.service.getExercises()
+      exercises: this.service.getExercises(),
+      readingTexts: this.service.getReadingTexts()
     }).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: value => {
         this.capabilities.set(value.capabilities);
         this.exerciseTypes.set(value.exerciseTypes.items);
         this.exercises.set(value.exercises.items);
+        this.readingTexts.set(value.readingTexts);
       },
       error: () => this.error.set('Hızlı okuma servis bilgisi yüklenemedi.')
     });
@@ -360,6 +471,70 @@ export class SpeedReadingOverviewComponent implements OnInit {
     });
   }
 
+  startCreateReadingText() {
+    this.readingTextEditingId = 'new';
+    this.readingTextDraft = this.emptyReadingTextDraft();
+  }
+
+  startEditReadingText(text: SpeedReadingReadingText) {
+    this.readingTextEditingId = text.id;
+    this.readingTextDraft = {
+      title: text.title,
+      content: '',
+      wordCount: text.wordCount,
+      category: text.category,
+      difficultyLevel: text.difficultyLevel,
+      targetAgeGroupConfigurationId: null,
+      language: text.language,
+      isActive: text.isActive,
+      tags: '',
+      recommendedMinLevel: 0,
+      recommendedMaxLevel: 100,
+      exerciseId: text.exerciseId
+    };
+    this.service.getReadingText(text.id).subscribe({
+      next: details => {
+        this.readingTextDraft = {
+          ...this.readingTextDraft,
+          content: details.content,
+          targetAgeGroupConfigurationId: details.targetAgeGroupConfigurationId,
+          tags: details.tags.join(', '),
+          recommendedMinLevel: details.recommendedMinLevel,
+          recommendedMaxLevel: details.recommendedMaxLevel
+        };
+      },
+      error: () => this.error.set('Okuma metni ayrıntıları yüklenemedi.')
+    });
+  }
+
+  cancelReadingTextEdit() {
+    this.readingTextEditingId = null;
+  }
+
+  saveReadingText() {
+    if (this.readingTextEditingId === null) return;
+    this.saving.set(true);
+    const request$ = this.readingTextEditingId === 'new'
+      ? this.service.createReadingText(this.readingTextDraft)
+      : this.service.updateReadingText(this.readingTextEditingId, this.readingTextDraft);
+
+    request$.pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => {
+        this.readingTextEditingId = null;
+        this.load();
+      },
+      error: () => this.error.set('Okuma metni kaydedilemedi.')
+    });
+  }
+
+  deleteReadingText(text: SpeedReadingReadingText) {
+    if (!globalThis.confirm(`“${text.title}” okuma metni silinsin mi?`)) return;
+    this.service.deleteReadingText(text.id).subscribe({
+      next: () => this.load(),
+      error: () => this.error.set('Okuma metni silinemedi. Bağlı soruları kontrol edin.')
+    });
+  }
+
   private emptyDraft(): SpeedReadingExerciseTypeRequest {
     return {
       name: '',
@@ -382,6 +557,23 @@ export class SpeedReadingOverviewComponent implements OnInit {
       exerciseTypeId: '',
       configurationJson: '{}',
       targetAgeGroupConfigurationId: null
+    };
+  }
+
+  private emptyReadingTextDraft(): SpeedReadingReadingTextRequest {
+    return {
+      title: '',
+      content: '',
+      wordCount: 1,
+      category: '',
+      difficultyLevel: 0,
+      targetAgeGroupConfigurationId: null,
+      language: 'tr',
+      isActive: true,
+      tags: '',
+      recommendedMinLevel: 0,
+      recommendedMaxLevel: 100,
+      exerciseId: null
     };
   }
 }

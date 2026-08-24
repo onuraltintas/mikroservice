@@ -96,4 +96,53 @@ describe('SpeedReadingAdminService', () => {
     expect(createRequest.request.headers.get('Idempotency-Key')).toBe('exercise-key-123456');
     createRequest.flush({ id: 'exercise-1' });
   });
+
+  it('loads reading texts and details, then sends idempotent mutations', () => {
+    service.getReadingTexts('exercise-1').subscribe(value => expect(value).toEqual([]));
+    const listRequest = http.expectOne('/api/speed-reading/reading-texts?exerciseId=exercise-1');
+    expect(listRequest.request.method).toBe('GET');
+    listRequest.flush([]);
+
+    service.getReadingText('text-1').subscribe(value => expect(value.id).toBe('text-1'));
+    const detailRequest = http.expectOne('/api/speed-reading/reading-texts/text-1');
+    expect(detailRequest.request.method).toBe('GET');
+    detailRequest.flush({
+      id: 'text-1', title: 'Metin', content: 'İçerik', wordCount: 1, category: 'Genel',
+      difficultyLevel: 1, language: 'tr', isActive: true, exerciseId: null,
+      targetAgeGroupConfigurationId: null, tags: [], recommendedMinLevel: 0, recommendedMaxLevel: 10
+    });
+
+    const request = {
+      title: 'Metin',
+      content: 'İçerik',
+      wordCount: 1,
+      category: 'Genel',
+      difficultyLevel: 1,
+      targetAgeGroupConfigurationId: null,
+      language: 'tr',
+      isActive: true,
+      tags: 'odak',
+      recommendedMinLevel: 0,
+      recommendedMaxLevel: 10,
+      exerciseId: null
+    };
+
+    service.createReadingText(request, 'reading-text-key-123456').subscribe();
+    const createRequest = http.expectOne('/api/speed-reading/reading-texts');
+    expect(createRequest.request.method).toBe('POST');
+    expect(createRequest.request.headers.get('Idempotency-Key')).toBe('reading-text-key-123456');
+    createRequest.flush({ id: 'text-1' });
+
+    service.updateReadingText('text-1', request, 'reading-text-update-123456').subscribe();
+    const updateRequest = http.expectOne('/api/speed-reading/reading-texts/text-1');
+    expect(updateRequest.request.method).toBe('PUT');
+    expect(updateRequest.request.headers.get('Idempotency-Key')).toBe('reading-text-update-123456');
+    updateRequest.flush({ id: 'text-1' });
+
+    service.deleteReadingText('text-1', 'reading-text-delete-123456').subscribe();
+    const deleteRequest = http.expectOne('/api/speed-reading/reading-texts/text-1');
+    expect(deleteRequest.request.method).toBe('DELETE');
+    expect(deleteRequest.request.headers.get('Idempotency-Key')).toBe('reading-text-delete-123456');
+    deleteRequest.flush(null);
+  });
 });

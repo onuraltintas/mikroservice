@@ -38,6 +38,34 @@ public sealed record UpdateExerciseRequest(
     string ConfigurationJson,
     Guid? TargetAgeGroupConfigurationId);
 
+public sealed record CreateReadingTextRequest(
+    string Title,
+    string Content,
+    int WordCount,
+    string Category,
+    int DifficultyLevel,
+    Guid? TargetAgeGroupConfigurationId,
+    string Language,
+    bool IsActive,
+    string? Tags,
+    int RecommendedMinLevel,
+    int RecommendedMaxLevel,
+    Guid? ExerciseId);
+
+public sealed record UpdateReadingTextRequest(
+    string Title,
+    string Content,
+    int WordCount,
+    string Category,
+    int DifficultyLevel,
+    Guid? TargetAgeGroupConfigurationId,
+    string Language,
+    bool IsActive,
+    string? Tags,
+    int RecommendedMinLevel,
+    int RecommendedMaxLevel,
+    Guid? ExerciseId);
+
 public interface ISpeedReadingContentAdminWriter
 {
     Task<ExerciseTypeSummary> CreateExerciseTypeAsync(
@@ -75,6 +103,25 @@ public interface ISpeedReadingContentAdminWriter
     Task DeleteExerciseAsync(
         Guid actorId,
         Guid exerciseId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<ReadingTextSummary> CreateReadingTextAsync(
+        Guid actorId,
+        CreateReadingTextRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<ReadingTextSummary> UpdateReadingTextAsync(
+        Guid actorId,
+        Guid readingTextId,
+        UpdateReadingTextRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteReadingTextAsync(
+        Guid actorId,
+        Guid readingTextId,
         string idempotencyKey,
         CancellationToken cancellationToken = default);
 }

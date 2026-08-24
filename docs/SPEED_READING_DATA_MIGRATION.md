@@ -81,6 +81,10 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
 - `POST /api/speed-reading/exercises` / `PUT /api/speed-reading/exercises/{id}` /
   `DELETE /api/speed-reading/exercises/{id}` — `ContentManage` yetkili
   egzersiz yönetimi. Bağlı okuma metni olan egzersizler silinemez.
+- `POST /api/speed-reading/reading-texts` / `PUT /api/speed-reading/reading-texts/{id}` /
+  `DELETE /api/speed-reading/reading-texts/{id}` — `ContentManage` yetkili
+  okuma metni yönetimi. Sorusu bulunan metinler silinemez; metin ayrıntısı
+  güncellemede mevcut içerik ve etiketler korunarak açıkça gönderilmelidir.
 - `GET /api/speed-reading/progress/active-exercise-sessions` — aktif/paused oturumlar
 - `GET /api/speed-reading/program-templates` — aktif program şablonları
 - `GET /api/speed-reading/progress/programs` — oturum açmış kullanıcının programları
@@ -89,10 +93,10 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
 - `GET /api/speed-reading/learning-paths/progress` — öğrencinin yolu ve düğüm durumları
 - `GET /api/speed-reading/learning-paths/personalized` — kişiselleştirilmiş yol öğeleri
 
-Bu yazma uç noktası yalnızca öğrenci sonucunu taşımak için açılmıştır. Eski
-uygulamanın aynı sonucu yazan yolu, üretimde yeni servis tek veri sahibi olarak
-doğrulanana kadar kapatılmamalıdır. İçerik yönetimi ve admin CRUD'u sonraki
-dilimdir.
+Yazma uç noktaları idempotency ve audit ile korunur. Eski uygulamanın aynı
+sonucu veya içeriği yazan yolları, üretimde yeni servis tek veri sahibi olarak
+doğrulanana kadar kapatılmamalıdır; geçiş tamamlanınca eski yazma yolları
+kapatılmalıdır.
 
 ## Geçiş kontrol listesi
 
@@ -104,8 +108,9 @@ dilimdir.
 4. En az bir gözlem periyodu boyunca hata, gecikme ve satır sayısı metriklerini
    izle.
 5. Yeni servisi platform ve bağımsız frontend'lerde kademeli olarak aç.
-6. `speed-reading-migrations` one-shot container'ı ile yalnızca
-   `001_write_support.sql` scriptini çalıştır; tablo ve unique index'i doğrula.
+6. `speed-reading-migrations` one-shot container'ı ile sıralı
+   `Database/*.sql` scriptlerini çalıştır; ledger, audit tablosu ve unique
+   index'leri doğrula.
 7. Yazma yetkisini yalnızca yeni servisin veritabanı kullanıcısına ver; eski
    uygulamanın aynı sonuç write endpoint'ini kapat.
 8. Sorun halinde Gateway rotasını eski uygulamaya geri al; veritabanına geri
@@ -115,11 +120,11 @@ dilimdir.
 
 Sıradaki dilimler, her biri test ve geri dönüş kontrolüyle ayrı ayrı taşınır:
 
-1. Sonuç yazma uç noktasının entegrasyon/geri dönüş testleri ve audit event'i.
-2. Analitik, gamification ve rapor snapshot'ları.
-3. Admin içerik CRUD uçları ve audit event'leri.
+1. ReadingQuestions admin CRUD uçları ve soru doğrulama kuralları.
+2. Program, öğrenme yolu ve rapor yönetiminin admin yetki sınırlarıyla taşınması.
+3. Analitik, gamification ve rapor snapshot'larının yazma/geri dönüş testleri.
 4. Mevcut `speed-reading-frontend` uygulamasının bağımsız servis Gateway'ine
-   geçirilmesi.
+   geçirilmesi ve gerçek veritabanıyla uçtan uca doğrulanması.
 
 Her dilimde mevcut şema korunacak; yeni tablo veya kolon ihtiyacı varsa önce
 ayrı bir versiyonlanmış migration ve geri dönüş planı hazırlanacaktır.
