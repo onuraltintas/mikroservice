@@ -1,0 +1,264 @@
+<!-- ============================================================
+     DAILY EXERCISES — Sprint 4 Redesign
+     Pure Tailwind + sp-* design system, no Angular Material.
+     ============================================================ -->
+<div class="de-page">
+
+  <!-- ── Page Header ──────────────────────────────────────────── -->
+  <div class="de-header">
+    <div class="de-header__left">
+      @if (progress()) {
+        <p class="de-header__week">Hafta {{ progress()!.currentWeek || 1 }} • Gün {{ progress()!.currentDay || 1 }}</p>
+      }
+      <h1 class="de-header__title">Günlük İlerleme</h1>
+    </div>
+    <a routerLink="/student/dashboard" class="de-back-btn">
+      <span class="material-icons">dashboard</span>
+      Dashboard
+    </a>
+  </div>
+
+  <!-- ── Stats row ─────────────────────────────────────────────── -->
+  @if (progress()) {
+    <div class="de-stats">
+      <div class="de-stat de-stat--orange">
+        <span class="material-icons de-stat__icon">local_fire_department</span>
+        <div>
+          <span class="de-stat__value">{{ progress()!.currentStreak }}</span>
+          <span class="de-stat__label">Seri (gün)</span>
+        </div>
+      </div>
+      <div class="de-stat de-stat--purple">
+        <span class="material-icons de-stat__icon">emoji_events</span>
+        <div>
+          <span class="de-stat__value">{{ progress()!.longestStreak }}</span>
+          <span class="de-stat__label">Rekor Seri</span>
+        </div>
+      </div>
+      <div class="de-stat de-stat--blue">
+        <span class="material-icons de-stat__icon">speed</span>
+        <div>
+          <span class="de-stat__value">Lv. {{ progress()!.currentDifficultyLevel }}</span>
+          <span class="de-stat__label">Zorluk</span>
+        </div>
+      </div>
+      <div class="de-stat de-stat--green">
+        <span class="material-icons de-stat__icon">assessment</span>
+        <div>
+          <span class="de-stat__value">%{{ progress()!.averageSuccessRate | number:'1.0-0' }}</span>
+          <span class="de-stat__label">Başarı</span>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Tabs ───────────────────────────────────────────────────── -->
+  <div class="de-tabs">
+    <button class="de-tab" [class.de-tab--active]="selectedTabIndex === 0" (click)="switchTab(0)">
+      <span class="material-icons">today</span>
+      Bugünün Programı
+    </button>
+    <button class="de-tab" [class.de-tab--active]="selectedTabIndex === 1" (click)="switchTab(1)">
+      <span class="material-icons">history</span>
+      Geçmiş Günler
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TODAY TAB
+       ══════════════════════════════════════════════ -->
+  @if (selectedTabIndex === 0) {
+    <div class="de-tab-content">
+
+      <!-- Loading -->
+      @if (loading()) {
+        <div class="de-loading">
+          <div class="de-spinner"></div>
+          <p>Program yükleniyor…</p>
+        </div>
+
+      } @else {
+        <!-- Progress banner -->
+        @if (exercises().length > 0) {
+          <div class="de-progress-banner">
+            <div class="de-progress-banner__info">
+              <span class="de-progress-banner__label">Tamamlanan Hedefler</span>
+              <span class="de-progress-banner__count">{{ completedCount() }} / {{ exercises().length }}</span>
+            </div>
+            <div class="de-progress-bar">
+              <div class="de-progress-bar__fill" [style.width.%]="getProgressPercentage()"></div>
+            </div>
+          </div>
+        }
+
+        <!-- All completed celebration -->
+        @if (completedCount() === exercises().length && exercises().length > 0) {
+          <div class="de-celebration">
+            <span class="de-celebration__emoji">🎉</span>
+            <h2 class="de-celebration__title">Harika İş!</h2>
+            <p class="de-celebration__desc">Bugünün tüm egzersizlerini başarıyla tamamladın.</p>
+            @if (progress()?.currentStreak) {
+              <div class="de-celebration__streak">
+                🔥 {{ progress()?.currentStreak }} günlük serin devam ediyor!
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Exercise cards grid -->
+        @if (exercises().length > 0) {
+          <div class="de-grid">
+            @for (exercise of exercises(); track exercise.exerciseId; let i = $index) {
+              <div class="de-card"
+                [class.de-card--done]="exercise.isCompleted"
+                [class.de-card--locked]="isExerciseDisabled(i)">
+
+                <!-- Colored header strip -->
+                <div class="de-card__header" [style.background]="getExerciseColor(exercise.exerciseTypeName)">
+                  <div class="de-card__icon-wrap">
+                    <span class="material-icons de-card__icon">{{ getExerciseIcon(exercise.exerciseTypeName) }}</span>
+                  </div>
+                  <span class="de-card__order">#{{ i + 1 }}</span>
+                  @if (exercise.isCompleted) {
+                    <div class="de-card__done-badge">
+                      <span class="material-icons">check_circle</span>
+                    </div>
+                  }
+                </div>
+
+                <!-- Body -->
+                <div class="de-card__body">
+                  <span class="de-card__type">{{ exercise.exerciseTypeName }}</span>
+                  <h3 class="de-card__title">{{ exercise.title }}</h3>
+                  <div class="de-card__tags">
+                    <span class="de-card__tag">
+                      <span class="material-icons">speed</span>
+                      Level {{ exercise.difficultyLevel }}
+                    </span>
+                    <span class="de-card__tag">
+                      <span class="material-icons">schedule</span>
+                      ~{{ exercise.estimatedDurationMinutes }} dk
+                    </span>
+                  </div>
+                  @if (exercise.description) {
+                    <p class="de-card__desc">{{ exercise.description }}</p>
+                  }
+                </div>
+
+                <!-- Footer -->
+                <div class="de-card__footer">
+                  @if (!exercise.isCompleted) {
+                    <button class="de-card__btn de-card__btn--primary"
+                      [disabled]="isExerciseDisabled(i)"
+                      (click)="startExercise(exercise)">
+                      <span class="material-icons">play_circle</span>
+                      BAŞLA
+                    </button>
+                    @if (isExerciseDisabled(i)) {
+                      <p class="de-card__locked-hint">
+                        <span class="material-icons">lock</span>
+                        Önceki egzersizi tamamla
+                      </p>
+                    }
+                  } @else {
+                    <div class="de-card__done-row">
+                      <span class="material-icons">check_circle</span>
+                      Tamamlandı
+                    </div>
+                    <button class="de-card__btn de-card__btn--ghost"
+                      (click)="startExercise(exercise)">
+                      <span class="material-icons">replay</span>
+                      TEKRAR ET
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+        } @else {
+          <!-- Empty state -->
+          <div class="de-empty">
+            <span class="material-icons de-empty__icon">event_busy</span>
+            <h3 class="de-empty__title">Bugün Hiç Egzersiz Yok</h3>
+            <p class="de-empty__desc">Bugün için planlanmış program görünmüyor. Kendine biraz zaman ayır!</p>
+            <a routerLink="/student/dashboard" class="de-card__btn de-card__btn--primary">
+              <span class="material-icons">dashboard</span>
+              Dashboard'a Dön
+            </a>
+          </div>
+        }
+      }
+    </div>
+  }
+
+  <!-- ══════════════════════════════════════════════
+       HISTORY TAB
+       ══════════════════════════════════════════════ -->
+  @if (selectedTabIndex === 1) {
+    <div class="de-tab-content">
+
+      <!-- Day chips -->
+      @if (availableHistoricalDays().length > 0) {
+        <div class="de-day-chips">
+          <span class="de-day-chips__label">Gün Seç:</span>
+          @for (day of availableHistoricalDays(); track day) {
+            <button class="de-day-chip"
+              [class.de-day-chip--active]="selectedHistoricalDay() === day"
+              (click)="loadHistoricalDay(day)">
+              Gün {{ day }}
+            </button>
+          }
+        </div>
+      }
+
+      <!-- Loading -->
+      @if (historicalLoading()) {
+        <div class="de-loading">
+          <div class="de-spinner"></div>
+        </div>
+
+      } @else if (historicalExercises().length > 0) {
+        <div class="de-grid">
+          @for (exercise of historicalExercises(); track exercise.exerciseId; let i = $index) {
+            <div class="de-card de-card--done">
+              <div class="de-card__header" [style.background]="getExerciseColor(exercise.exerciseTypeName)">
+                <div class="de-card__icon-wrap">
+                  <span class="material-icons de-card__icon">{{ getExerciseIcon(exercise.exerciseTypeName) }}</span>
+                </div>
+                <span class="de-card__order">#{{ i + 1 }}</span>
+              </div>
+              <div class="de-card__body">
+                <span class="de-card__type">{{ exercise.exerciseTypeName }}</span>
+                <h3 class="de-card__title">{{ exercise.title }}</h3>
+                <div class="de-card__tags">
+                  <span class="de-card__tag">
+                    <span class="material-icons">speed</span>
+                    Level {{ exercise.difficultyLevel }}
+                  </span>
+                  <span class="de-card__tag">
+                    <span class="material-icons">schedule</span>
+                    ~{{ exercise.estimatedDurationMinutes }} dk
+                  </span>
+                </div>
+              </div>
+              <div class="de-card__footer">
+                <button class="de-card__btn de-card__btn--ghost" (click)="startHistoricalExercise(exercise)">
+                  <span class="material-icons">replay</span>
+                  PRATİK YAP
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+      } @else if (availableHistoricalDays().length === 0) {
+        <div class="de-empty">
+          <span class="material-icons de-empty__icon">history_toggle_off</span>
+          <h3 class="de-empty__title">Henüz Geçmiş Yok</h3>
+          <p class="de-empty__desc">İlerledikçe geçmiş günleriniz burada birikecek.</p>
+        </div>
+      }
+    </div>
+  }
+</div>

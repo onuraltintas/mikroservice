@@ -1,0 +1,75 @@
+<div class="chart-container">
+  <div class="chart-title" *ngIf="title">{{ title }}</div>
+
+  <svg [attr.width]="chartWidth" [attr.height]="chartHeight" class="line-chart">
+    <!-- Grid lines -->
+    <g class="grid" *ngIf="showGrid">
+      <line
+        *ngFor="let ratio of getGridLines()"
+        [attr.x1]="padding.left"
+        [attr.y1]="getYPosition(ratio)"
+        [attr.x2]="chartWidth - padding.right"
+        [attr.y2]="getYPosition(ratio)"
+        class="grid-line"
+      />
+    </g>
+
+    <!-- Y-axis labels -->
+    <g class="y-axis">
+      <text
+        *ngFor="let ratio of getGridLines()"
+        [attr.x]="padding.left - 10"
+        [attr.y]="getYPosition(ratio)"
+        class="axis-label"
+      >
+        {{ getYValue(ratio) }}
+      </text>
+    </g>
+
+    <!-- Line path -->
+    <polyline
+      *ngIf="points"
+      [attr.points]="points"
+      class="line-path"
+      [attr.stroke]="color"
+    />
+
+    <!-- Area under line -->
+    <polygon
+      *ngIf="points"
+      [attr.points]="points + ' ' + (chartWidth - padding.right) + ',' + (chartHeight - padding.bottom) + ' ' + padding.left + ',' + (chartHeight - padding.bottom)"
+      class="line-area"
+      [attr.fill]="color"
+    />
+
+    <!-- Data points -->
+    <g class="points" *ngIf="showPoints">
+      <circle
+        *ngFor="let point of getPointsArray()"
+        [attr.cx]="point.x"
+        [attr.cy]="point.y"
+        r="4"
+        class="data-point"
+        [attr.fill]="color"
+      >
+        <title>{{ point.label }}: {{ point.value }}</title>
+      </circle>
+    </g>
+
+    <!-- X-axis labels -->
+    <g class="x-axis">
+      <text
+        *ngFor="let point of data; let i = index"
+        [attr.x]="getXLabelPosition(i)"
+        [attr.y]="chartHeight - padding.bottom + 20"
+        class="axis-label x-label"
+      >
+        {{ point.label }}
+      </text>
+    </g>
+  </svg>
+
+  <div class="empty-state" *ngIf="!data || data.length === 0">
+    <p>Veri bulunamadı</p>
+  </div>
+</div>

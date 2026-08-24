@@ -1,0 +1,49 @@
+<!-- Level Badges Widget — Sprint 3 -->
+<div class="lb-widget">
+  <!-- Level header -->
+  <div class="lb-header">
+    <div class="lb-icon-wrap">
+      <span class="material-icons">military_tech</span>
+    </div>
+    <div class="lb-header__info">
+      <h3 class="lb-level">Seviye {{ currentLevel() }}</h3>
+      <p class="lb-xp">{{ currentXP() }} / {{ maxXP() }} XP</p>
+    </div>
+  </div>
+
+  <!-- XP progress bar -->
+  <div class="lb-xp-bar-wrap">
+    <div class="lb-xp-bar">
+      <div class="lb-xp-fill" [style.width.%]="getXPPercentage()"></div>
+    </div>
+    <p class="lb-xp-hint">
+      <span class="material-icons">arrow_upward</span>
+      {{ maxXP() - currentXP() }} XP kaldı
+    </p>
+  </div>
+
+  <!-- Badges -->
+  <div class="lb-badges-section">
+    <h4 class="lb-badges-title">Son Başarımlar</h4>
+    <div class="lb-badges-grid">
+      @for (badge of badges().slice(0, 3); track badge.id) {
+        <div class="lb-badge" [class.lb-badge--locked]="!badge.unlocked" [title]="badge.description">
+          <div class="lb-badge__icon">
+            @if (badge.unlocked && badge.icon) {
+              <span class="lb-badge__emoji">{{ badge.icon }}</span>
+            } @else {
+              <span class="material-icons lb-badge__mat-icon">{{ badge.unlocked ? 'workspace_premium' : 'lock' }}</span>
+            }
+          </div>
+          <span class="lb-badge__name">{{ badge.name }}</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Action -->
+  <a routerLink="/student/achievements" class="lb-view-all">
+    Tüm Başarımlar
+    <span class="material-icons">chevron_right</span>
+  </a>
+</div>

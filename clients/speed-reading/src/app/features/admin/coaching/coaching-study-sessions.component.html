@@ -1,0 +1,94 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2><mat-icon>timer</mat-icon> Çalışma Oturumları</h2>
+    <button mat-raised-button color="primary" (click)="load()">
+      <mat-icon>refresh</mat-icon> Yenile
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Çalışma Tipi</mat-label>
+          <mat-select [(ngModel)]="filterStudyType" (selectionChange)="onFilter()">
+            <mat-option *ngFor="let o of studyTypeOptions" [value]="o.value">{{ o.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="loading()" class="loading-container"><mat-spinner diameter="40"></mat-spinner></div>
+      <div *ngIf="!loading() && records.length === 0" class="empty-state">
+        <mat-icon>timer_off</mat-icon><p>Çalışma oturumu bulunamadı</p>
+      </div>
+
+      <table mat-table [dataSource]="records" *ngIf="!loading() && records.length > 0" class="full-width-table">
+        <ng-container matColumnDef="studentName">
+          <th mat-header-cell *matHeaderCellDef>Öğrenci</th>
+          <td mat-cell *matCellDef="let r">{{ r.studentName || (r.studentId | slice:0:8) + '...' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef>Tarih</th>
+          <td mat-cell *matCellDef="let r">{{ r.date | date:'dd.MM.yyyy' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="subject">
+          <th mat-header-cell *matHeaderCellDef>Ders</th>
+          <td mat-cell *matCellDef="let r">{{ r.subjectName ?? '—' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="topic">
+          <th mat-header-cell *matHeaderCellDef>Konu</th>
+          <td mat-cell *matCellDef="let r">{{ r.topicName ?? '—' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="studyType">
+          <th mat-header-cell *matHeaderCellDef>Tip</th>
+          <td mat-cell *matCellDef="let r">
+            <span class="type-chip">
+              <mat-icon class="icon-sm">{{ typeIcons[r.studyType] }}</mat-icon>
+              {{ typeLabels[r.studyType] }}
+            </span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="minutes">
+          <th mat-header-cell *matHeaderCellDef>Süre</th>
+          <td mat-cell *matCellDef="let r">
+            {{ r.actualMinutes }} dk
+            <span *ngIf="r.plannedMinutes !== r.actualMinutes" class="text-muted">(plan: {{ r.plannedMinutes }})</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="questions">
+          <th mat-header-cell *matHeaderCellDef>Soru</th>
+          <td mat-cell *matCellDef="let r">
+            <span *ngIf="r.questionsSolved > 0">
+              {{ r.questionsSolved }}
+              <span *ngIf="r.correctAnswers != null" class="text-muted">
+                (D:{{ r.correctAnswers }} Y:{{ r.wrongAnswers }})
+              </span>
+            </span>
+            <span *ngIf="!r.questionsSolved" class="text-muted">—</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="accuracy">
+          <th mat-header-cell *matHeaderCellDef>Doğruluk</th>
+          <td mat-cell *matCellDef="let r">{{ accuracy(r) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="verified">
+          <th mat-header-cell *matHeaderCellDef>Onay</th>
+          <td mat-cell *matCellDef="let r">
+            <mat-icon [style.color]="r.isVerifiedByCoach ? '#4CAF50' : '#BDBDBD'"
+              [matTooltip]="r.isVerifiedByCoach ? 'Koç onayladı' : 'Onaysız'">
+              {{ r.isVerifiedByCoach ? 'verified' : 'pending' }}
+            </mat-icon>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <mat-paginator *ngIf="!loading() && total > 0"
+        [length]="total" [pageSize]="pageSize" [pageIndex]="page - 1"
+        [pageSizeOptions]="[10, 20, 50]" showFirstLastButtons
+        (page)="onPage($event)">
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

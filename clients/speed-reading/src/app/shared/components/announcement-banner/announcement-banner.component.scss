@@ -1,0 +1,125 @@
+.announcement-banner {
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #2196f3;
+    background: #e3f2fd;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.announcement-pinned {
+    border-left-color: #ff9800;
+    background: #fff3e0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.announcement-urgent {
+    border-left-color: #f44336;
+    background: #ffebee;
+}
+
+.announcement-high {
+    border-left-color: #ff5722;
+    background: #fbe9e7;
+}
+
+.announcement-content {
+    display: flex;
+    align-items: start;
+    gap: 1rem;
+}
+
+.announcement-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.announcement-body {
+    flex: 1;
+}
+
+.announcement-title {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.pin-icon {
+    margin-right: 0.5rem;
+}
+
+.announcement-text {
+    color: #424242;
+    line-height: 1.5;
+}
+
+.announcement-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.action-button {
+    padding: 0.5rem 1rem;
+    background: #2196f3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.action-button:hover {
+    background: #1976d2;
+}
+
+.dismiss-button {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.dismiss-button:hover {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 768px) {
+    .announcement-banner {
+        padding: 0.75rem 1rem;
+    }
+
+    .announcement-content {
+        flex-direction: column;
+    }
+
+    .announcement-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

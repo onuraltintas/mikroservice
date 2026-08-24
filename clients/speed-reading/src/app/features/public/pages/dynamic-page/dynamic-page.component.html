@@ -1,0 +1,26 @@
+<div class="dynamic-page-container" *ngIf="!loading && page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>{{ page.title }}</h1>
+        </div>
+    </div>
+
+    <!-- Page Content -->
+    <div class="page-content">
+        <article class="prose" [innerHTML]="page.content | safeHtml"></article>
+    </div>
+
+    <!-- Back Button -->
+    <div class="page-actions">
+        <button mat-stroked-button routerLink="/">
+            <mat-icon>home</mat-icon>
+            Ana Sayfaya Dön
+        </button>
+    </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-container" *ngIf="loading">
+    <mat-spinner></mat-spinner>
+</div>

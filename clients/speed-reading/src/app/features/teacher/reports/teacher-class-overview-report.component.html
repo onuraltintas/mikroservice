@@ -1,0 +1,228 @@
+<div class="class-overview-container">
+    <!-- Header with controls -->
+    <div class="header">
+        <div class="title-section">
+            <h1>Sınıf Özeti Raporu</h1>
+            <p class="subtitle" *ngIf="report()">
+                {{ report()!.metadata.startDate | date:'dd MMM yyyy' }} - {{ report()!.metadata.endDate | date:'dd MMM
+                yyyy' }}
+            </p>
+        </div>
+
+        <div class="controls">
+            <mat-form-field appearance="outline" class="date-range-selector">
+                <mat-label>Tarih Aralığı</mat-label>
+                <mat-select [value]="selectedDateRange()"
+                    (selectionChange)="selectedDateRange.set($event.value); onDateRangeChange()">
+                    <mat-option *ngFor="let option of dateRangeOptions" [value]="option.value">
+                        <mat-icon class="option-icon">{{ option.icon }}</mat-icon>
+                        {{ option.label }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <!-- Custom Date Range Picker -->
+            <div class="custom-date-range" *ngIf="showCustomDatePicker()">
+                <mat-form-field appearance="outline" class="date-field">
+                    <mat-label>Başlangıç</mat-label>
+                    <input matInput [matDatepicker]="startPicker" [value]="customStartDate()"
+                        (dateChange)="customStartDate.set($event.value); onCustomDateChange()" [max]="maxDate">
+                    <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #startPicker></mat-datepicker>
+                </mat-form-field>
+
+                <span class="date-separator">—</span>
+
+                <mat-form-field appearance="outline" class="date-field">
+                    <mat-label>Bitiş</mat-label>
+                    <input matInput [matDatepicker]="endPicker" [value]="customEndDate()"
+                        (dateChange)="customEndDate.set($event.value); onCustomDateChange()" [max]="maxDate"
+                        [min]="customStartDate()">
+                    <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #endPicker></mat-datepicker>
+                </mat-form-field>
+            </div>
+
+            <button mat-icon-button (click)="refreshReport()" matTooltip="Yenile" class="refresh-btn">
+                <mat-icon>refresh</mat-icon>
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading state -->
+    <div *ngIf="loading()" class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Rapor yükleniyor...</p>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error() && !loading()" class="error-container">
+        <mat-icon>error_outline</mat-icon>
+        <p>{{ error() }}</p>
+        <button mat-raised-button color="primary" (click)="refreshReport()">Tekrar Dene</button>
+    </div>
+
+    <!-- Report content -->
+    <div *ngIf="report() && !loading()" class="report-content">
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+            <mat-card class="kpi-card students-card">
+                <mat-card-content>
+                    <div class="kpi-icon">👥</div>
+                    <div class="kpi-details">
+                        <div class="kpi-value">{{ report()!.totalStudents }}</div>
+                        <div class="kpi-label">Toplam Öğrenci</div>
+                        <div class="kpi-badge">{{ report()!.activeStudents }} aktif</div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <mat-card class="kpi-card wpm-card">
+                <mat-card-content>
+                    <div class="kpi-icon">⚡</div>
+                    <div class="kpi-details">
+                        <div class="kpi-value">{{ report()!.classAverageWPM | number:'1.0-0' }}</div>
+                        <div class="kpi-label">Ortalama Okuma Hızı</div>
+                        <div class="kpi-unit">kelime/dakika</div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <mat-card class="kpi-card comprehension-card">
+                <mat-card-content>
+                    <div class="kpi-icon">🎯</div>
+                    <div class="kpi-details">
+                        <div class="kpi-value">{{ report()!.classAverageComprehension | number:'1.0-0' }}%</div>
+                        <div class="kpi-label">Ortalama Anlama</div>
+                        <div class="kpi-unit">başarı oranı</div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <mat-card class="kpi-card activities-card">
+                <mat-card-content>
+                    <div class="kpi-icon">📊</div>
+                    <div class="kpi-details">
+                        <div class="kpi-value">{{ report()!.totalActivitiesCompleted }}</div>
+                        <div class="kpi-label">Toplam Aktivite</div>
+                        <div class="kpi-badge">~{{ activitiesPerStudent() }}/öğrenci</div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+
+        </div>
+
+        <!-- Performance Distribution Chart -->
+        <mat-card class="chart-card">
+            <mat-card-header>
+                <mat-card-title>Performans Dağılımı</mat-card-title>
+                <mat-card-subtitle>Sınıf ortalamasına göre öğrenci dağılımı</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+                <app-bar-chart *ngIf="performanceChartData().length > 0" [data]="performanceChartData()"
+                    [xAxisLabel]="'Performans Seviyesi'" [yAxisLabel]="'Öğrenci Sayısı'">
+                </app-bar-chart>
+                <div *ngIf="performanceChartData().length === 0" class="no-data">
+                    <mat-icon>info</mat-icon>
+                    <p>Henüz veri yok</p>
+                </div>
+            </mat-card-content>
+        </mat-card>
+
+        <!-- Student Lists -->
+        <div class="student-lists-grid">
+            <!-- Top Performers -->
+            <mat-card class="student-list-card top-performers">
+                <mat-card-header>
+                    <mat-card-title>
+                        <mat-icon class="title-icon">emoji_events</mat-icon>
+                        En İyi Performans
+                    </mat-card-title>
+                    <mat-card-subtitle>En yüksek anlama oranına sahip öğrenciler</mat-card-subtitle>
+                </mat-card-header>
+                <mat-card-content>
+                    <table mat-table [dataSource]="report()!.topPerformers" class="student-table">
+                        <ng-container matColumnDef="identifier">
+                            <th mat-header-cell *matHeaderCellDef>Öğrenci</th>
+                            <td mat-cell *matCellDef="let student">{{ student.studentIdentifier }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="wpm">
+                            <th mat-header-cell *matHeaderCellDef>Okuma Hızı</th>
+                            <td mat-cell *matCellDef="let student">{{ student.averageWPM | number:'1.0-0' }} KDP</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="comprehension">
+                            <th mat-header-cell *matHeaderCellDef>Anlama</th>
+                            <td mat-cell *matCellDef="let student">
+                                <span class="comprehension-badge high">{{ student.averageComprehension | number:'1.0-0'
+                                    }}%</span>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="activities">
+                            <th mat-header-cell *matHeaderCellDef>Aktivite</th>
+                            <td mat-cell *matCellDef="let student">{{ student.activitiesCompleted }}</td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="['identifier', 'wpm', 'comprehension', 'activities']"></tr>
+                        <tr mat-row *matRowDef="let row; columns: ['identifier', 'wpm', 'comprehension', 'activities']">
+                        </tr>
+                    </table>
+
+                    <div *ngIf="report()!.topPerformers.length === 0" class="no-data-small">
+                        <p>Henüz veri yok</p>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <!-- Students Needing Support -->
+            <mat-card class="student-list-card needs-support">
+                <mat-card-header>
+                    <mat-card-title>
+                        <mat-icon class="title-icon">support_agent</mat-icon>
+                        Destek Gereken Öğrenciler
+                    </mat-card-title>
+                    <mat-card-subtitle>Ekstra desteğe ihtiyaç duyabilecek öğrenciler</mat-card-subtitle>
+                </mat-card-header>
+                <mat-card-content>
+                    <table mat-table [dataSource]="report()!.studentsNeedingSupport" class="student-table">
+                        <ng-container matColumnDef="identifier">
+                            <th mat-header-cell *matHeaderCellDef>Öğrenci</th>
+                            <td mat-cell *matCellDef="let student">{{ student.studentIdentifier }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="wpm">
+                            <th mat-header-cell *matHeaderCellDef>Okuma Hızı</th>
+                            <td mat-cell *matCellDef="let student">{{ student.averageWPM | number:'1.0-0' }} KDP</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="comprehension">
+                            <th mat-header-cell *matHeaderCellDef>Anlama</th>
+                            <td mat-cell *matCellDef="let student">
+                                <span class="comprehension-badge low">{{ student.averageComprehension | number:'1.0-0'
+                                    }}%</span>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="activities">
+                            <th mat-header-cell *matHeaderCellDef>Aktivite</th>
+                            <td mat-cell *matCellDef="let student">{{ student.activitiesCompleted }}</td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="['identifier', 'wpm', 'comprehension', 'activities']"></tr>
+                        <tr mat-row *matRowDef="let row; columns: ['identifier', 'wpm', 'comprehension', 'activities']">
+                        </tr>
+                    </table>
+
+                    <div *ngIf="report()!.studentsNeedingSupport.length === 0" class="no-data-small">
+                        <p>Tüm öğrenciler iyi durumda! 🎉</p>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+
+    </div>
+</div>

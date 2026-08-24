@@ -1,0 +1,123 @@
+<div class="gamification-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <mat-icon class="header-icon">videogame_asset</mat-icon>
+      <div class="header-text">
+        <h1 class="header-title">Oyunlaştırma</h1>
+        <p class="header-subtitle">İlerlemenizi takip edin, başarılar kazanın ve lider tablosunda yükselip</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <mat-icon>hourglass_empty</mat-icon>
+    <p>Yükleniyor...</p>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div class="dashboard-content" *ngIf="!isLoading && userGamification">
+    <!-- Overview Section -->
+    <section class="overview-section">
+      <h2 class="section-title">
+        <mat-icon>dashboard</mat-icon>
+        <span>Genel Bakış</span>
+      </h2>
+
+      <!-- Progress Bar -->
+      <div class="progress-container">
+        <app-progress-bar
+          [currentXP]="userGamification.currentLevelXP"
+          [nextLevelXP]="userGamification.nextLevelXP"
+          [level]="userGamification.currentLevel"
+          [levelTitle]="userGamification.levelTitle"
+          [totalXP]="userGamification.totalXP">
+        </app-progress-bar>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <app-stats-card
+          title="Toplam XP"
+          [value]="userGamification.totalXP"
+          subtitle="Toplam deneyim puanı"
+          icon="star"
+          color="#FFD700"
+          trend="up"
+          trendValue="+120">
+        </app-stats-card>
+
+        <app-stats-card
+          title="Seviye"
+          [value]="userGamification.currentLevel"
+          [subtitle]="userGamification.levelTitle"
+          icon="trending_up"
+          [color]="getTierColor(userGamification.currentLevel)">
+        </app-stats-card>
+
+        <app-stats-card
+          title="Tamamlanan Aktivite"
+          [value]="userGamification.totalActivitiesCompleted"
+          subtitle="Toplam aktivite sayısı"
+          icon="assignment_turned_in"
+          color="#4CAF50"
+          trend="up"
+          trendValue="+5">
+        </app-stats-card>
+
+        <app-stats-card
+          title="Okuma Süresi"
+          [value]="formatDuration(userGamification.totalReadingMinutes)"
+          subtitle="Toplam okuma dakikası"
+          icon="schedule"
+          color="var(--warning-orange)"
+          trend="up"
+          trendValue="+45m">
+        </app-stats-card>
+      </div>
+    </section>
+
+    <!-- Streak Section -->
+    <section class="streak-section">
+      <h2 class="section-title">
+        <mat-icon>local_fire_department</mat-icon>
+        <span>Aktivite Serisi</span>
+      </h2>
+
+      <app-streak-display
+        [currentStreak]="userGamification.currentStreak"
+        [longestStreak]="userGamification.longestStreak"
+        [lastActivityDate]="userGamification.lastActivityDate"
+        [streakFreezeCount]="userGamification.streakFreezeCount">
+      </app-streak-display>
+    </section>
+
+    <!-- Tabs for Achievements and Leaderboard -->
+    <section class="tabs-section">
+      <mat-tab-group animationDuration="300ms" dynamicHeight>
+        <!-- Achievements Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>military_tech</mat-icon>
+            <span>Başarılar</span>
+          </ng-template>
+          <div class="tab-content">
+            <app-achievement-grid></app-achievement-grid>
+          </div>
+        </mat-tab>
+
+        <!-- Leaderboard Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>emoji_events</mat-icon>
+            <span>Liderlik Tablosu</span>
+          </ng-template>
+          <div class="tab-content">
+            <app-leaderboard></app-leaderboard>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </section>
+  </div>
+</div>

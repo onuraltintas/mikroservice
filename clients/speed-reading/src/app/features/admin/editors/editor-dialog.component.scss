@@ -1,0 +1,76 @@
+@use '@angular/material' as mat;
+
+h2[mat-dialog-title] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #1a1a1a;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    background: #fff;
+    gap: 12px;
+
+    mat-icon {
+        color: #3f51b5;
+    }
+}
+
+mat-dialog-content {
+    padding: 20px 24px !important;
+    background-color: #fff;
+    max-height: 80vh;
+    min-width: 500px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 8px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    align-items: flex-start;
+
+    @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.full-width {
+    width: 100%;
+    grid-column: 1 / -1;
+}
+
+mat-form-field {
+    width: 100%;
+}
+
+.password-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.password-errors {
+    padding-left: 4px;
+    margin-top: -8px;
+
+    small {
+        font-size: 11px;
+        line-height: 1.2;
+    }
+}
+
+mat-dialog-actions {
+    padding: 16px 24px !important;
+    background: #fff;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    gap: 12px;
+}

@@ -1,0 +1,21 @@
+<div class="error-container">
+    <mat-card class="error-card">
+        <div class="error-icon">
+            <mat-icon>error_outline</mat-icon>
+        </div>
+        <h1>500</h1>
+        <h2>Sunucu Hatası</h2>
+        <p>Üzgünüz, bir sunucu hatası oluştu. Teknik ekibimiz bu sorun üzerinde çalışıyor.</p>
+        <p class="secondary-text">Lütfen birkaç dakika sonra tekrar deneyin.</p>
+        <div class="actions">
+            <button mat-raised-button color="primary" routerLink="/">
+                <mat-icon>home</mat-icon>
+                Ana Sayfaya Dön
+            </button>
+            <button mat-button (click)="reload()">
+                <mat-icon>refresh</mat-icon>
+                Sayfayı Yenile
+            </button>
+        </div>
+    </mat-card>
+</div>

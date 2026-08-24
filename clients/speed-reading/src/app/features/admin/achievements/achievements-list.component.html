@@ -1,0 +1,234 @@
+<div class="achievements-container">
+    <div class="header">
+        <div>
+            <h1>Başarım Yönetimi</h1>
+            <p class="subtitle">Kullanıcıların kazanabileceği başarımları yönetin</p>
+        </div>
+        <div class="header-actions">
+            <button mat-raised-button color="primary" (click)="openAchievementDialog()">
+                <mat-icon>add</mat-icon>
+                Yeni Başarım
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-row">
+        <mat-card class="stat-card">
+            <mat-card-content>
+                <div class="stat-content">
+                    <mat-icon>emoji_events</mat-icon>
+                    <div class="stat-info">
+                        <span class="stat-value">{{ stats.totalCount }}</span>
+                        <span class="stat-label">Toplam Başarım</span>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card class="stat-card bronze">
+            <mat-card-content>
+                <div class="stat-content">
+                    <span class="tier-icon">🥉</span>
+                    <div class="stat-info">
+                        <span class="stat-value">{{ stats.bronzeCount }}</span>
+                        <span class="stat-label">Bronze</span>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card class="stat-card silver">
+            <mat-card-content>
+                <div class="stat-content">
+                    <span class="tier-icon">🥈</span>
+                    <div class="stat-info">
+                        <span class="stat-value">{{ stats.silverCount }}</span>
+                        <span class="stat-label">Silver</span>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card class="stat-card gold">
+            <mat-card-content>
+                <div class="stat-content">
+                    <span class="tier-icon">🥇</span>
+                    <div class="stat-info">
+                        <span class="stat-value">{{ stats.goldCount }}</span>
+                        <span class="stat-label">Gold</span>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card class="stat-card diamond">
+            <mat-card-content>
+                <div class="stat-content">
+                    <span class="tier-icon">💎</span>
+                    <div class="stat-info">
+                        <span class="stat-value">{{ stats.diamondCount }}</span>
+                        <span class="stat-label">Diamond</span>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+    <!-- Filters -->
+    <mat-card class="filters-card">
+        <mat-card-content>
+            <div class="filters">
+                <mat-form-field appearance="outline">
+                    <mat-label>Ara</mat-label>
+                    <input matInput [(ngModel)]="filters.search" (ngModelChange)="onFilterChange()"
+                        placeholder="Başarım adı veya açıklama ara...">
+                    <mat-icon matPrefix>search</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Kategori</mat-label>
+                    <mat-select [(ngModel)]="filters.category" (ngModelChange)="onFilterChange()">
+                        <mat-option [value]="''">Tümü</mat-option>
+                        <mat-option *ngFor="let cat of categories" [value]="cat">
+                            <mat-icon>{{ getCategoryIcon(cat) }}</mat-icon>
+                            {{ cat }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Seviye (Tier)</mat-label>
+                    <mat-select [(ngModel)]="filters.tier" (ngModelChange)="onFilterChange()">
+                        <mat-option [value]="''">Tümü</mat-option>
+                        <mat-option *ngFor="let tier of tiers" [value]="tier">
+                            {{ tier }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Durum</mat-label>
+                    <mat-select [(ngModel)]="filters.isActive" (ngModelChange)="onFilterChange()">
+                        <mat-option [value]="undefined">Tümü</mat-option>
+                        <mat-option [value]="true">Aktif</mat-option>
+                        <mat-option [value]="false">Pasif</mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <button mat-button (click)="clearFilters()" *ngIf="hasActiveFilters()">
+                    <mat-icon>clear</mat-icon>
+                    Filtreleri Temizle
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Table -->
+    <mat-card>
+        <mat-card-content>
+            <div *ngIf="loading()" class="loading">
+                <mat-spinner diameter="50"></mat-spinner>
+                <p>Yükleniyor...</p>
+            </div>
+
+            <table mat-table [dataSource]="achievements" class="achievements-table" matSort
+                (matSortChange)="onSortChange($event)" *ngIf="!loading()">
+
+                <ng-container matColumnDef="iconEmoji">
+                    <th mat-header-cell *matHeaderCellDef>İkon</th>
+                    <td mat-cell *matCellDef="let item">
+                        <span class="achievement-icon">{{ item.iconEmoji }}</span>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header="name">Başarım</th>
+                    <td mat-cell *matCellDef="let item">
+                        <div class="achievement-info">
+                            <strong>{{ item.name }}</strong>
+                            <span class="description">{{ item.description }}</span>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="category">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header="category">Kategori</th>
+                    <td mat-cell *matCellDef="let item">
+                        <mat-chip>
+                            <mat-icon>{{ getCategoryIcon(item.category) }}</mat-icon>
+                            {{ item.category }}
+                        </mat-chip>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="tier">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header="tier">Seviye</th>
+                    <td mat-cell *matCellDef="let item">
+                        <mat-chip [style.background-color]="getTierColor(item.tier)"
+                            [style.color]="item.tier === 'Gold' || item.tier === 'Diamond' ? '#000' : '#fff'">
+                            {{ item.tier }}
+                        </mat-chip>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="xpReward">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header="xpReward">XP Ödül</th>
+                    <td mat-cell *matCellDef="let item">
+                        <span class="xp-reward">
+                            <mat-icon>star</mat-icon>
+                            {{ item.xpReward }}
+                        </span>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="isActive">
+                    <th mat-header-cell *matHeaderCellDef>Durum</th>
+                    <td mat-cell *matCellDef="let item">
+                        <mat-chip [color]="item.isActive ? 'primary' : 'warn'">
+                            {{ item.isActive ? 'Aktif' : 'Pasif' }}
+                        </mat-chip>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="unlockedByUsersCount">
+                    <th mat-header-cell *matHeaderCellDef>Kazanan</th>
+                    <td mat-cell *matCellDef="let item">
+                        <span class="user-count" matTooltip="Bu başarımı kazanan kullanıcı sayısı">
+                            <mat-icon>people</mat-icon>
+                            {{ item.unlockedByUsersCount }}
+                        </span>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef>İşlemler</th>
+                    <td mat-cell *matCellDef="let item">
+                        <div class="action-buttons">
+                            <button mat-icon-button color="primary" (click)="openAchievementDialog(item)"
+                                matTooltip="Düzenle">
+                                <mat-icon>edit</mat-icon>
+                            </button>
+                            <button mat-icon-button color="warn" (click)="deleteAchievement(item)"
+                                matTooltip="Kalıcı Olarak Sil">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+
+            <mat-paginator *ngIf="!loading() && totalCount > 0" [length]="totalCount" [pageSize]="pageSize"
+                [pageIndex]="pageNumber - 1" [pageSizeOptions]="[10, 20, 50, 100]" (page)="onPageChange($event)"
+                showFirstLastButtons>
+            </mat-paginator>
+
+            <div *ngIf="achievements.length === 0 && !loading()" class="no-data">
+                <mat-icon>emoji_events</mat-icon>
+                <p>Henüz başarım eklenmemiş</p>
+                <button mat-raised-button color="primary" (click)="openAchievementDialog()">
+                    İlk Başarımı Ekle
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</div>

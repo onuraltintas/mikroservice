@@ -1,0 +1,204 @@
+// =============================================================================
+// ACHIEVEMENTS — Sprint 5
+// =============================================================================
+
+.ach-page { max-width: var(--sp-content-max-width); }
+
+// Loading
+.ach-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 80px;
+  color: var(--sp-text-2);
+  font-size: 0.875rem;
+}
+.ach-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--sp-surface-3);
+  border-top-color: var(--sp-xp);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+// Header
+.ach-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.ach-header__sub {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--sp-xp);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 4px;
+}
+.ach-header__title {
+  font-family: var(--sp-font-sans);
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--sp-text-1);
+  margin: 0;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ach-header__stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+// Stats
+.ach-stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-md);
+  padding: 10px 14px;
+}
+.ach-stat__icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.ach-stat--gold .ach-stat__icon    { color: var(--sp-xp); }
+.ach-stat--emerald .ach-stat__icon { color: var(--sp-success); }
+
+.ach-stat__value {
+  display: block;
+  font-family: var(--sp-font-sans);
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--sp-text-1);
+  line-height: 1;
+}
+.ach-stat__label {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--sp-text-3);
+  margin-top: 2px;
+}
+
+// Overall progress
+.ach-overall-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+.ach-overall-progress__bar {
+  height: 8px;
+  background: var(--sp-surface-3);
+  border-radius: var(--sp-radius-full);
+  overflow: hidden;
+}
+.ach-overall-progress__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--sp-xp) 0%, var(--sp-streak) 100%);
+  border-radius: var(--sp-radius-full);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ach-overall-progress__pct {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--sp-text-2);
+}
+
+// Filter chips
+.ach-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.ach-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: var(--sp-radius-full);
+  border: 1px solid var(--sp-border);
+  background: var(--sp-surface);
+  font-family: var(--sp-font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--sp-text-2);
+  cursor: pointer;
+  transition: all var(--sp-transition-fast);
+  .material-icons { font-size: 15px; }
+  &:hover { background: var(--sp-surface-3); color: var(--sp-text-1); }
+  &--active {
+    background: var(--sp-primary);
+    border-color: var(--sp-primary);
+    color: #fff;
+  }
+}
+.ach-filter-chip__count {
+  font-size: 0.6875rem;
+  background: rgba(0,0,0,0.12);
+  border-radius: var(--sp-radius-full);
+  padding: 0 6px;
+}
+
+// Content
+.ach-content {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+// Tier section
+.ach-tier__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.ach-tier__title {
+  font-family: var(--sp-font-sans);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--sp-text-2);
+  white-space: nowrap;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ach-tier__line {
+  flex: 1;
+  height: 1px;
+  background: var(--sp-border);
+}
+
+// Achievement grid
+.ach-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+// Empty state
+.ach-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 64px 24px;
+  text-align: center;
+}
+.ach-empty__icon  { font-size: 48px; color: var(--sp-text-3); }
+.ach-empty__title { font-family: var(--sp-font-sans); font-size: 1rem; font-weight: 700; color: var(--sp-text-1); margin: 0; }
+.ach-empty__desc  { font-size: 0.875rem; color: var(--sp-text-2); margin: 0; }

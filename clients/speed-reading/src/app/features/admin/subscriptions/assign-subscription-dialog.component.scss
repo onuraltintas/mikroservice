@@ -1,0 +1,558 @@
+// ── Dialog Header ──────────────────────────────────────────────────
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+
+  mat-icon { font-size: 22px; width: 22px; height: 22px; }
+}
+
+h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.header-left p {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin: 2px 0 0;
+}
+
+.close-btn { color: #9ca3af; }
+
+// ── Step Bar ───────────────────────────────────────────────────────
+.step-bar {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.5rem 0;
+  gap: 0;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #e5e7eb;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #9ca3af;
+  transition: all 0.2s;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+.step.active .step-circle {
+  border-color: #6366f1;
+  background: #6366f1;
+  color: white;
+}
+
+.step.done .step-circle {
+  border-color: #22c55e;
+  background: #22c55e;
+  color: white;
+}
+
+.step-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+.step.active .step-label { color: #6366f1; }
+.step.done  .step-label  { color: #22c55e; }
+
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: #e5e7eb;
+  margin: 0 4px;
+  margin-bottom: 20px;
+  transition: background 0.2s;
+
+  &.done { background: #22c55e; }
+}
+
+// ── Dialog Content ─────────────────────────────────────────────────
+mat-dialog-content {
+  padding: 1rem 1.5rem 0.5rem !important;
+  max-height: 60vh;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 2px; }
+}
+
+.step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.step-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+// ── Step actions ──────────────────────────────────────────────────
+.step-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 0.75rem 0 0.25rem;
+  border-top: 1px solid #f3f4f6;
+  margin-top: 0.25rem;
+}
+
+.btn-spinner {
+  display: inline-block;
+  margin-right: 6px;
+}
+
+// ── STEP 1: User search ────────────────────────────────────────────
+.selected-user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 2px solid #6366f1;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f5f3ff, #eef2ff);
+}
+
+.user-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(99,102,241,0.35);
+}
+
+.user-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-name {
+  font-weight: 700;
+  color: #111827;
+  font-size: 0.9rem;
+}
+
+.user-email {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.user-roles {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+}
+
+.change-btn { color: #6366f1; }
+
+.search-wrapper { position: relative; }
+
+.full-width { width: 100%; }
+
+.results-list {
+  position: absolute;
+  top: calc(100% - 8px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.13);
+  z-index: 9999;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.result-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.12s;
+
+  &:hover { background: #f9fafb; }
+  & + .result-item { border-top: 1px solid #f3f4f6; }
+}
+
+.result-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: white;
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.result-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.result-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #111827;
+}
+
+.result-email {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.result-roles { display: flex; gap: 3px; flex-shrink: 0; }
+
+.empty-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  color: #9ca3af;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  margin-top: -8px;
+
+  mat-icon { font-size: 17px; width: 17px; height: 17px; }
+}
+
+.search-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  padding: 0 2px;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+// ── Role badges ───────────────────────────────────────────────────
+.role-badge, .role-badge-sm {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.role-badge-sm {
+  font-size: 0.65rem;
+  padding: 1px 6px;
+}
+
+// ── STEP 2: Plan cards ────────────────────────────────────────────
+.loading-plans {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1.5rem;
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+
+.plan-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.plan-card {
+  padding: 14px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: white;
+
+  &:hover {
+    border-color: #a5b4fc;
+    background: #fafaff;
+    box-shadow: 0 2px 8px rgba(99,102,241,0.08);
+  }
+
+  &.selected {
+    border-color: #6366f1;
+    background: linear-gradient(135deg, #f5f3ff, #eef2ff);
+    box-shadow: 0 4px 16px rgba(99,102,241,0.15);
+  }
+}
+
+.plan-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.plan-card-check {
+  color: #6366f1;
+  mat-icon { font-size: 20px; width: 20px; height: 20px; }
+}
+
+.plan-card-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #111827;
+  flex: 1;
+}
+
+.plan-card-modules {
+  display: flex;
+  gap: 4px;
+}
+
+.mod-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: #d1fae5;
+  color: #065f46;
+
+  mat-icon { font-size: 12px; width: 12px; height: 12px; }
+}
+
+.plan-card-price {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  margin-bottom: 8px;
+}
+
+.price-amount {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.price-currency {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.price-period {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.plan-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: #6b7280;
+
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+      color: #22c55e;
+      flex-shrink: 0;
+    }
+  }
+}
+
+// ── STEP 3: Duration ──────────────────────────────────────────────
+.summary-card {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.summary-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summary-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sum-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: white;
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sum-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sum-email {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.summary-arrow {
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.summary-plan {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.sum-plan-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #6366f1;
+}
+
+.sum-plan-price {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.preset-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.preset-btn {
+  padding: 6px 14px;
+  border-radius: 99px;
+  border: 2px solid #e5e7eb;
+  background: white;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: #a5b4fc;
+    color: #6366f1;
+  }
+
+  &.active {
+    border-color: #6366f1;
+    background: #6366f1;
+    color: white;
+  }
+}
+
+.date-row {
+  display: flex;
+  gap: 12px;
+
+  mat-form-field { flex: 1; }
+}
+
+.duration-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #6b7280;
+  padding: 8px 12px;
+  background: #f0fdf4;
+  border-radius: 8px;
+  border: 1px solid #bbf7d0;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: #22c55e;
+  }
+}

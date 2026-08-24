@@ -1,0 +1,244 @@
+<div class="content-analysis-container">
+    <div class="header">
+        <div class="title-section">
+            <h1>Platform İçerik Analizi</h1>
+            <p class="subtitle" *ngIf="report()">
+                Tüm kurumlar genelinde detaylı okuma ve egzersiz analizi
+            </p>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading()" class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Platform analizi yükleniyor...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="!loading() && !report()" class="error-container">
+        <mat-icon>error_outline</mat-icon>
+        <p>Rapor yüklenemedi.</p>
+    </div>
+
+    <!-- Content -->
+    <div *ngIf="report() && !loading()" class="report-content">
+        <!-- Overview Cards -->
+        <div class="kpi-grid">
+            <mat-card class="kpi-card">
+                <div class="kpi-content">
+                    <div class="kpi-value">{{ report()?.totalExercises | number }}</div>
+                    <div class="kpi-label">Toplam Egzersiz</div>
+                </div>
+                <mat-icon class="kpi-icon">fitness_center</mat-icon>
+            </mat-card>
+
+            <mat-card class="kpi-card">
+                <div class="kpi-content">
+                    <div class="kpi-value">{{ report()?.totalReadingTexts | number }}</div>
+                    <div class="kpi-label">Toplam Okuma Metni</div>
+                </div>
+                <mat-icon class="kpi-icon">menu_book</mat-icon>
+            </mat-card>
+        </div>
+
+        <mat-tab-group animationDuration="0ms" class="custom-tabs">
+
+            <!-- READING TAB -->
+            <mat-tab label="Okuma Analizi">
+                <div class="tab-content">
+                    <mat-card class="chart-card">
+                        <mat-card-header>
+                            <mat-card-title>Zorluk Seviyesi Performansı (Platform Geneli)</mat-card-title>
+                            <mat-card-subtitle>Seviyelere göre ortalama WPM ve Anlama Oranı</mat-card-subtitle>
+                        </mat-card-header>
+                        <mat-card-content>
+                            <app-bar-chart *ngIf="readingPerformanceChart().length > 0"
+                                [data]="readingPerformanceChart()" [xAxisLabel]="'Zorluk Seviyesi'"
+                                [yAxisLabel]="'Değer'">
+                            </app-bar-chart>
+                            <div *ngIf="readingPerformanceChart().length === 0" class="no-data">
+                                <mat-icon>info</mat-icon>
+                                <p>Grafik için yeterli veri yok</p>
+                            </div>
+                        </mat-card-content>
+                    </mat-card>
+
+                    <mat-card class="table-card">
+                        <mat-card-header>
+                            <mat-card-title>
+                                <mat-icon class="title-icon">table_chart</mat-icon>
+                                Okuma Detayları
+                            </mat-card-title>
+                        </mat-card-header>
+                        <mat-card-content>
+                            <table mat-table [dataSource]="readingList()" class="data-table">
+                                <ng-container matColumnDef="level">
+                                    <th mat-header-cell *matHeaderCellDef>Seviye</th>
+                                    <td mat-cell *matCellDef="let element">Seviye {{ element.difficultyLevel }}</td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="reads">
+                                    <th mat-header-cell *matHeaderCellDef>Okunma Sayısı</th>
+                                    <td mat-cell *matCellDef="let element">{{ element.totalReads }}</td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="wpm">
+                                    <th mat-header-cell *matHeaderCellDef>Ort. WPM</th>
+                                    <td mat-cell *matCellDef="let element">{{ element.averageWPM | number:'1.0-0' }}
+                                    </td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="comp">
+                                    <th mat-header-cell *matHeaderCellDef>Ort. Anlama</th>
+                                    <td mat-cell *matCellDef="let element">%{{ element.averageComprehension |
+                                        number:'1.0-0' }}</td>
+                                </ng-container>
+
+                                <tr mat-header-row *matHeaderRowDef="['level', 'reads', 'wpm', 'comp']"></tr>
+                                <tr mat-row *matRowDef="let row; columns: ['level', 'reads', 'wpm', 'comp']"></tr>
+                            </table>
+                        </mat-card-content>
+                    </mat-card>
+                </div>
+            </mat-tab>
+
+            <!-- EXERCISE TAB -->
+            <mat-tab label="Egzersiz Analizi">
+                <div class="tab-content">
+                    <mat-card class="chart-card">
+                        <mat-card-header>
+                            <mat-card-title>Egzersiz Kullanımı (Platform Geneli)</mat-card-title>
+                            <mat-card-subtitle>Egzersiz türlerine göre toplam tamamlanma sayıları</mat-card-subtitle>
+                        </mat-card-header>
+                        <mat-card-content>
+                            <app-bar-chart *ngIf="exerciseFrequencyChart().length > 0" [data]="exerciseFrequencyChart()"
+                                [xAxisLabel]="'Egzersiz Türü'" [yAxisLabel]="'Tamamlanma'">
+                            </app-bar-chart>
+                            <div *ngIf="exerciseFrequencyChart().length === 0" class="no-data">
+                                <mat-icon>info</mat-icon>
+                                <p>Grafik için yeterli veri yok</p>
+                            </div>
+                        </mat-card-content>
+                    </mat-card>
+
+                    <mat-card class="table-card">
+                        <mat-card-header>
+                            <mat-card-title>
+                                <mat-icon class="title-icon">list_alt</mat-icon>
+                                Egzersiz Detayları
+                            </mat-card-title>
+                        </mat-card-header>
+                        <mat-card-content>
+                            <table mat-table [dataSource]="exerciseList()" class="data-table">
+                                <ng-container matColumnDef="type">
+                                    <th mat-header-cell *matHeaderCellDef>Egzersiz Türü</th>
+                                    <td mat-cell *matCellDef="let element">{{ element.exerciseTypeName }}</td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="completions">
+                                    <th mat-header-cell *matHeaderCellDef>Tamamlanma</th>
+                                    <td mat-cell *matCellDef="let element">{{ element.totalCompletions }}</td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="active">
+                                    <th mat-header-cell *matHeaderCellDef>Aktif Kullanıcı</th>
+                                    <td mat-cell *matCellDef="let element">{{ element.activeStudents }}</td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="score">
+                                    <th mat-header-cell *matHeaderCellDef>Ort. Başarı</th>
+                                    <td mat-cell *matCellDef="let element">
+                                        <span class="score-badge" [class.high]="element.averageScore >= 70"
+                                            [class.medium]="element.averageScore >= 50 && element.averageScore < 70"
+                                            [class.low]="element.averageScore < 50">
+                                            %{{ element.averageScore | number:'1.0-0' }}
+                                        </span>
+                                    </td>
+                                </ng-container>
+
+                                <tr mat-header-row *matHeaderRowDef="['type', 'completions', 'active', 'score']"></tr>
+                                <tr mat-row *matRowDef="let row; columns: ['type', 'completions', 'active', 'score']">
+                                </tr>
+                            </table>
+                        </mat-card-content>
+                    </mat-card>
+                </div>
+            </mat-tab>
+
+            <!-- CONTENT USAGE TAB -->
+            <mat-tab label="İçerik Kullanımı">
+                <div class="tab-content">
+                    <div class="content-grid">
+                        <!-- Most Used -->
+                        <mat-card class="table-card">
+                            <mat-card-header>
+                                <mat-card-title>En Çok Kullanılan İçerikler</mat-card-title>
+                            </mat-card-header>
+                            <mat-card-content>
+                                <table class="simple-table" *ngIf="report()?.mostUsedContent?.length">
+                                    <thead>
+                                        <tr>
+                                            <th>Başlık</th>
+                                            <th>Tür</th>
+                                            <th>Kullanım</th>
+                                            <th>Ort. Başarı</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr *ngFor="let item of report()?.mostUsedContent">
+                                            <td>{{ item.title }}</td>
+                                            <td>{{ item.contentType }}</td>
+                                            <td>{{ item.usageCount }}</td>
+                                            <td>%{{ item.averageScore }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <p *ngIf="!report()?.mostUsedContent?.length" class="no-data">Veri yok</p>
+                            </mat-card-content>
+                        </mat-card>
+
+                        <!-- Least Used -->
+                        <mat-card class="table-card">
+                            <mat-card-header>
+                                <mat-card-title>En Az Kullanılan İçerikler</mat-card-title>
+                            </mat-card-header>
+                            <mat-card-content>
+                                <table class="simple-table" *ngIf="report()?.leastUsedContent?.length">
+                                    <thead>
+                                        <tr>
+                                            <th>Başlık</th>
+                                            <th>Tür</th>
+                                            <th>Kullanım</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr *ngFor="let item of report()?.leastUsedContent">
+                                            <td>{{ item.title }}</td>
+                                            <td>{{ item.contentType }}</td>
+                                            <td>{{ item.usageCount }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <p *ngIf="!report()?.leastUsedContent?.length" class="no-data">Veri yok</p>
+                            </mat-card-content>
+                        </mat-card>
+                    </div>
+
+                    <!-- Popular Topics -->
+                    <mat-card class="chart-card" *ngIf="report()?.popularTopics?.length">
+                        <mat-card-header>
+                            <mat-card-title>Popüler Konular</mat-card-title>
+                        </mat-card-header>
+                        <mat-card-content>
+                            <div class="topics-list">
+                                <span class="topic-tag" *ngFor="let topic of report()?.popularTopics">
+                                    {{ topic }}
+                                </span>
+                            </div>
+                        </mat-card-content>
+                    </mat-card>
+                </div>
+            </mat-tab>
+        </mat-tab-group>
+    </div>
+</div>

@@ -46,6 +46,11 @@ okunur bir uyumluluk katmanıdır:
 
 ## Yeni servis uçları
 
+Frontend, `speed-reading-frontend` image'ı olarak API'den bağımsız dağıtılır.
+Base Compose'ta `speed-reading` profiliyle isteğe bağlıdır; staging ve
+production overlay'leri servisi etkinleştirir. Public domain/edge yönlendirmesi
+ayrı bir yayın adımıdır; bu sayede mevcut VPS sitelerine dokunulmaz.
+
 Gateway üzerinden aşağıdaki sözleşmeler sunulur:
 
 - `GET /api/speed-reading/capabilities` — servis modu ve entegrasyon durumu

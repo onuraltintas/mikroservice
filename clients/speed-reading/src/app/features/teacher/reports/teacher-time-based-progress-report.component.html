@@ -1,0 +1,164 @@
+<div class="progress-report-container">
+    <!-- Header with controls -->
+    <div class="header">
+        <div class="title-section">
+            <h1>Zaman Bazlı İlerleme</h1>
+            <p class="subtitle" *ngIf="report()">
+                Sınıfın zaman içindeki gelişim grafiği ve aktivite analizi
+            </p>
+        </div>
+
+        <div class="controls">
+            <mat-form-field appearance="outline" class="date-range-selector">
+                <mat-label>Tarih Aralığı</mat-label>
+                <mat-select [value]="selectedDateRange()"
+                    (selectionChange)="selectedDateRange.set($event.value); onDateRangeChange()">
+                    <mat-option *ngFor="let option of dateRangeOptions" [value]="option.value">
+                        <mat-icon class="option-icon">{{ option.icon }}</mat-icon>
+                        {{ option.label }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <!-- Custom Date Range Picker -->
+            <div class="custom-date-range" *ngIf="showCustomDatePicker()">
+                <mat-form-field appearance="outline" class="date-field">
+                    <mat-label>Başlangıç</mat-label>
+                    <input matInput [matDatepicker]="startPicker" [value]="customStartDate()"
+                        (dateChange)="customStartDate.set($event.value); onCustomDateChange()" [max]="maxDate">
+                    <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #startPicker></mat-datepicker>
+                </mat-form-field>
+
+                <span class="date-separator">—</span>
+
+                <mat-form-field appearance="outline" class="date-field">
+                    <mat-label>Bitiş</mat-label>
+                    <input matInput [matDatepicker]="endPicker" [value]="customEndDate()"
+                        (dateChange)="customEndDate.set($event.value); onCustomDateChange()" [max]="maxDate"
+                        [min]="customStartDate()">
+                    <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #endPicker></mat-datepicker>
+                </mat-form-field>
+            </div>
+
+            <button mat-icon-button (click)="refreshReport()" matTooltip="Yenile" class="refresh-btn">
+                <mat-icon>refresh</mat-icon>
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading state -->
+    <div *ngIf="loading()" class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Veriler yükleniyor...</p>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error() && !loading()" class="error-container">
+        <mat-icon>error_outline</mat-icon>
+        <p>{{ error() }}</p>
+        <button mat-raised-button color="primary" (click)="refreshReport()">Tekrar Dene</button>
+    </div>
+
+    <!-- Report content -->
+    <div *ngIf="report() && !loading()" class="report-content">
+
+        <!-- Charts Row -->
+        <div class="charts-row">
+            <!-- Weekly Progress Chart -->
+            <mat-card class="chart-card">
+                <mat-card-header>
+                    <mat-card-title>Haftalık Gelişim</mat-card-title>
+                    <mat-card-subtitle>Haftalara göre sınıf ortalama puanı</mat-card-subtitle>
+                </mat-card-header>
+                <mat-card-content>
+                    <app-line-chart *ngIf="weeklyChartData().length > 0" [data]="weeklyChartData()"
+                        [xAxisLabel]="'Hafta'" [yAxisLabel]="'Ortalama Puan'">
+                    </app-line-chart>
+                    <div *ngIf="!weeklyChartData().length" class="no-data">
+                        <mat-icon>bar_chart</mat-icon>
+                        <p>Bu tarih aralığı için veri yok</p>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <!-- Activity Intensity Chart -->
+            <mat-card class="chart-card">
+                <mat-card-header>
+                    <mat-card-title>Aktivite Yoğunluğu</mat-card-title>
+                    <mat-card-subtitle>Günlük tamamlanan aktivite sayısı</mat-card-subtitle>
+                </mat-card-header>
+                <mat-card-content>
+                    <app-line-chart *ngIf="activityChartData().length > 0" [data]="activityChartData()"
+                        [xAxisLabel]="'Gün'" [yAxisLabel]="'Aktivite Sayısı'">
+                    </app-line-chart>
+                    <div *ngIf="!activityChartData().length" class="no-data">
+                        <mat-icon>show_chart</mat-icon>
+                        <p>Aktivite verisi bulunamadı</p>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+
+        <!-- Student Progress Lists -->
+        <div class="lists-row">
+            <!-- Improving Students -->
+            <mat-card class="list-card improving">
+                <mat-card-header>
+                    <mat-card-title>
+                        <mat-icon class="trend-icon up">trending_up</mat-icon>
+                        Gelişim Gösterenler
+                    </mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="student-list" *ngIf="improvingStudentsList().length > 0">
+                        <div class="student-item" *ngFor="let student of improvingStudentsList()">
+                            <div class="student-info">
+                                <div class="student-name">{{ student.studentName }}</div>
+                                <div class="score-change positive">
+                                    +{{ student.improvement | number:'1.0-1' }} puan
+                                </div>
+                            </div>
+                            <div class="current-score">
+                                {{ student.currentScore | number:'1.0-0' }}
+                            </div>
+                        </div>
+                    </div>
+                    <div *ngIf="!improvingStudentsList().length" class="no-data-small">
+                        <p>Kayıt bulunamadı</p>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <!-- Declining Students -->
+            <mat-card class="list-card declining">
+                <mat-card-header>
+                    <mat-card-title>
+                        <mat-icon class="trend-icon down">trending_down</mat-icon>
+                        Düşüş Gösterenler
+                    </mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="student-list" *ngIf="decliningStudentsList().length > 0">
+                        <div class="student-item" *ngFor="let student of decliningStudentsList()">
+                            <div class="student-info">
+                                <div class="student-name">{{ student.studentName }}</div>
+                                <div class="score-change negative">
+                                    {{ student.improvement | number:'1.0-1' }} puan
+                                </div>
+                            </div>
+                            <div class="current-score">
+                                {{ student.currentScore | number:'1.0-0' }}
+                            </div>
+                        </div>
+                    </div>
+                    <div *ngIf="!decliningStudentsList().length" class="no-data-small">
+                        <p>Kayıt bulunamadı</p>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+
+    </div>
+</div>

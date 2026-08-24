@@ -1,0 +1,169 @@
+<div class="results-container">
+    <div class="header">
+        <div>
+            <h1>Öğrenci Okuma Sonuçları</h1>
+            <p class="subtitle">Öğrencilerinizin okuma performansını takip edin</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <mat-card class="filters-card">
+        <mat-card-content>
+            <div class="filters">
+                <mat-form-field appearance="outline">
+                    <mat-label>Öğrenci</mat-label>
+                    <mat-select [(ngModel)]="filters.studentId" (ngModelChange)="onFilterChange()">
+                        <mat-option [value]="''">Tümü</mat-option>
+                        <mat-option *ngFor="let student of students" [value]="student.id">
+                            {{ student.fullName }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Metin Ara</mat-label>
+                    <input matInput [(ngModel)]="filters.textSearch" (ngModelChange)="onFilterChange()"
+                        placeholder="Metin adı...">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Kategori</mat-label>
+                    <mat-select [(ngModel)]="filters.category" (ngModelChange)="onFilterChange()">
+                        <mat-option [value]="''">Tümü</mat-option>
+                        <mat-option *ngFor="let cat of categories" [value]="cat">{{ cat }}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Başlangıç Tarihi</mat-label>
+                    <input matInput [matDatepicker]="startPicker" [(ngModel)]="filters.startDate"
+                        (ngModelChange)="onFilterChange()">
+                    <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #startPicker></mat-datepicker>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Bitiş Tarihi</mat-label>
+                    <input matInput [matDatepicker]="endPicker" [(ngModel)]="filters.endDate"
+                        (ngModelChange)="onFilterChange()">
+                    <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #endPicker></mat-datepicker>
+                </mat-form-field>
+
+                <button mat-button (click)="clearFilters()" *ngIf="hasActiveFilters()">
+                    <mat-icon>clear</mat-icon>
+                    Temizle
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Aggregate Stats -->
+    <div class="stats-grid" *ngIf="aggregateStats && sessions.length > 0">
+        <mat-card class="stat-card">
+            <div class="stat-content">
+                <mat-icon>speed</mat-icon>
+                <div>
+                    <div class="stat-value">{{ aggregateStats.averageWPM.toFixed(0) }}</div>
+                    <div class="stat-label">Ortalama WPM</div>
+                </div>
+            </div>
+        </mat-card>
+
+        <mat-card class="stat-card">
+            <div class="stat-content">
+                <mat-icon>quiz</mat-icon>
+                <div>
+                    <div class="stat-value">%{{ aggregateStats.averageComprehension.toFixed(0) }}</div>
+                    <div class="stat-label">Ortalama Anlama</div>
+                </div>
+            </div>
+        </mat-card>
+
+        <mat-card class="stat-card">
+            <div class="stat-content">
+                <mat-icon>analytics</mat-icon>
+                <div>
+                    <div class="stat-value">{{ aggregateStats.averageEfficiency.toFixed(1) }}</div>
+                    <div class="stat-label">Ortalama Verimlilik</div>
+                </div>
+            </div>
+        </mat-card>
+
+        <mat-card class="stat-card">
+            <div class="stat-content">
+                <mat-icon>library_books</mat-icon>
+                <div>
+                    <div class="stat-value">{{ aggregateStats.totalSessions }}</div>
+                    <div class="stat-label">Toplam Okuma</div>
+                </div>
+            </div>
+        </mat-card>
+    </div>
+
+    <!-- Results Table -->
+    <mat-card>
+        <mat-card-content>
+            <div *ngIf="loading" class="loading">
+                <mat-spinner diameter="50"></mat-spinner>
+                <p>Yükleniyor...</p>
+            </div>
+
+            <table mat-table [dataSource]="sessions" class="results-table" *ngIf="!loading">
+                <ng-container matColumnDef="student">
+                    <th mat-header-cell *matHeaderCellDef>Öğrenci</th>
+                    <td mat-cell *matCellDef="let session">{{ getStudentName(session.userId) }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="date">
+                    <th mat-header-cell *matHeaderCellDef>Tarih</th>
+                    <td mat-cell *matCellDef="let session">{{ formatDate(session.completedAt) }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="text">
+                    <th mat-header-cell *matHeaderCellDef>Metin</th>
+                    <td mat-cell *matCellDef="let session">
+                        <strong>{{ session.readingTextTitle }}</strong>
+                        <div class="meta">{{ session.category }}</div>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="wpm">
+                    <th mat-header-cell *matHeaderCellDef>WPM</th>
+                    <td mat-cell *matCellDef="let session">
+                        <strong class="wpm">{{ session.calculatedWPM }}</strong>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="comprehension">
+                    <th mat-header-cell *matHeaderCellDef>Anlama</th>
+                    <td mat-cell *matCellDef="let session">
+                        <mat-chip [class]="getComprehensionClass(session.comprehensionRate)">
+                            %{{ Math.round(session.comprehensionRate) }}
+                        </mat-chip>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="efficiency">
+                    <th mat-header-cell *matHeaderCellDef>Verimlilik</th>
+                    <td mat-cell *matCellDef="let session">{{ session.efficiencyScore.toFixed(1) }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="performance">
+                    <th mat-header-cell *matHeaderCellDef>Performans</th>
+                    <td mat-cell *matCellDef="let session">
+                        <mat-chip color="primary" selected>{{ session.performanceLevel }}</mat-chip>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+
+            <div *ngIf="sessions.length === 0 && !loading" class="no-data">
+                <mat-icon>assignment</mat-icon>
+                <p>Seçili kriterlere uygun sonuç bulunamadı</p>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</div>

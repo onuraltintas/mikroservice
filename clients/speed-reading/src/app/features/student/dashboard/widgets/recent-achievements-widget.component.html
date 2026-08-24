@@ -1,0 +1,36 @@
+<!-- Recent Achievements Widget — Sprint 3 -->
+<div class="ra-widget">
+  <div class="ra-widget__header">
+    <div class="ra-icon-wrap">
+      <span class="material-icons">celebration</span>
+    </div>
+    <h3 class="ra-widget__title">Son Başarılar</h3>
+  </div>
+
+  @if (achievements().length === 0) {
+    <div class="ra-empty">
+      <span class="material-icons ra-empty__icon">emoji_events</span>
+      <p class="ra-empty__title">Henüz başarı yok</p>
+      <p class="ra-empty__hint">Egzersiz yaparak başarı kazan!</p>
+    </div>
+  } @else {
+    <ul class="ra-list" aria-label="Son başarılar">
+      @for (achievement of achievements(); track achievement.id) {
+        <li class="ra-item">
+          <div class="ra-item__icon">
+            @if (achievement.icon) {
+              <span class="ra-item__emoji">{{ achievement.icon }}</span>
+            } @else {
+              <span class="material-icons ra-item__mat-icon">emoji_events</span>
+            }
+          </div>
+          <div class="ra-item__content">
+            <h4 class="ra-item__title">{{ achievement.title }}</h4>
+            <p class="ra-item__desc">{{ achievement.description }}</p>
+            <time class="ra-item__time">{{ formatTime(achievement.timestamp) }}</time>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</div>

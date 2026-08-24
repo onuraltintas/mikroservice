@@ -1,0 +1,40 @@
+mat-dialog-content {
+    max-height: 80vh;
+    padding: 24px;
+}
+
+.full-width {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+textarea {
+    font-family: 'Roboto', sans-serif;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+mat-hint {
+    font-size: 11px;
+}
+
+mat-dialog-actions {
+    padding: 16px 24px;
+    gap: 12px;
+}
+
+mat-dialog-actions button {
+    min-width: 100px;
+}
+
+mat-spinner {
+    display: inline-block;
+    margin-right: 8px;
+}

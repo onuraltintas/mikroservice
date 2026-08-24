@@ -1,0 +1,144 @@
+<mat-card class="reading-profile-widget" [class.compact]="compact">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>auto_awesome</mat-icon>
+      Okuma Profilim
+    </mat-card-title>
+    <button mat-icon-button (click)="refresh()" matTooltip="Yenile" [disabled]="loading">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </mat-card-header>
+
+  <mat-card-content>
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      <p>Profil yükleniyor...</p>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state" *ngIf="error && !loading">
+      <mat-icon color="warn">error</mat-icon>
+      <p>{{ error }}</p>
+      <button mat-raised-button color="primary" (click)="loadProfile()">
+        Tekrar Dene
+      </button>
+    </div>
+
+    <!-- Profile Data -->
+    <div class="profile-data" *ngIf="profile && !loading && !error">
+      
+      <!-- Reading Level -->
+      <div class="profile-section">
+        <div class="section-header">
+          <mat-icon>trending_up</mat-icon>
+          <h3>Okuma Seviyesi</h3>
+        </div>
+        <div class="level-display">
+          <div class="level-badge" [class]="adaptiveTextService.getLevelColor(profile.currentReadingLevel)">
+            {{ profile.currentReadingLevel }}
+          </div>
+          <div class="level-info">
+            <span class="level-description">
+              {{ adaptiveTextService.getLevelDescription(profile.currentReadingLevel) }}
+            </span>
+            <mat-progress-bar 
+              mode="determinate" 
+              [value]="getLevelProgress()"
+              color="primary">
+            </mat-progress-bar>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics -->
+      <div class="profile-section" *ngIf="!compact">
+        <div class="section-header">
+          <mat-icon>assessment</mat-icon>
+          <h3>İstatistikler</h3>
+        </div>
+        
+        <div class="stats-grid">
+          <!-- Comprehension Score -->
+          <div class="stat-card">
+            <mat-icon [style.color]="getComprehensionColor()">psychology</mat-icon>
+            <div class="stat-content">
+              <div class="stat-value">
+                {{ profile.averageComprehensionScore > 0 ? (profile.averageComprehensionScore | number:'1.0-0') + '%' : 'N/A' }}
+              </div>
+              <div class="stat-label">Ort. Anlama</div>
+            </div>
+          </div>
+
+          <!-- Reading Speed -->
+          <div class="stat-card">
+            <mat-icon [class]="getSpeedIcon()">speed</mat-icon>
+            <div class="stat-content">
+              <div class="stat-value">
+                {{ profile.averageReadingSpeed > 0 ? (profile.averageReadingSpeed | number:'1.0-0') : 'N/A' }}
+              </div>
+              <div class="stat-label">
+                {{ profile.averageReadingSpeed > 0 ? 'WPM' : 'Henüz yok' }}
+              </div>
+              <div class="stat-description" *ngIf="profile.averageReadingSpeed > 0">
+                {{ adaptiveTextService.getSpeedDescription(profile.averageReadingSpeed) }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Texts Read -->
+          <div class="stat-card">
+            <mat-icon color="primary">menu_book</mat-icon>
+            <div class="stat-content">
+              <div class="stat-value">{{ profile.totalTextsRead }}</div>
+              <div class="stat-label">Okunan Metin</div>
+            </div>
+          </div>
+
+          <!-- Total Reading Time -->
+          <div class="stat-card">
+            <mat-icon color="accent">schedule</mat-icon>
+            <div class="stat-content">
+              <div class="stat-value">
+                {{ profile.totalReadingTimeSeconds > 0 ? adaptiveTextService.formatReadingTime(profile.totalReadingTimeSeconds) : 'N/A' }}
+              </div>
+              <div class="stat-label">Toplam Süre</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preferred Categories -->
+      <div class="profile-section" *ngIf="profile.preferredCategories.length > 0 && !compact">
+        <div class="section-header">
+          <mat-icon>favorite</mat-icon>
+          <h3>Sevdiğim Kategoriler</h3>
+        </div>
+        <mat-chip-set>
+          <mat-chip *ngFor="let category of profile.preferredCategories" class="preferred-chip">
+            {{ category }}
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+
+      <!-- Difficult Categories -->
+      <div class="profile-section" *ngIf="profile.difficultCategories.length > 0 && !compact">
+        <div class="section-header">
+          <mat-icon>warning</mat-icon>
+          <h3>Zorluk Çektiğim Kategoriler</h3>
+        </div>
+        <mat-chip-set>
+          <mat-chip *ngFor="let category of profile.difficultCategories" class="difficult-chip">
+            {{ category }}
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+
+      <!-- Last Updated -->
+      <div class="last-updated" *ngIf="!compact">
+        <mat-icon>update</mat-icon>
+        <span>Son güncelleme: {{ profile.lastCalculatedAt | date:'short' }}</span>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

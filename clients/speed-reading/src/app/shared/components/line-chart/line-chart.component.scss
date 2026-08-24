@@ -1,0 +1,63 @@
+.chart-container {
+  width: 100%;
+  position: relative;
+
+  .chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .line-chart {
+    width: 100%;
+    height: auto;
+    display: block;
+
+    .grid-line {
+      stroke: #e0e0e0;
+      stroke-width: 1;
+      stroke-dasharray: 2, 2;
+    }
+
+    .axis-label {
+      font-size: 11px;
+      fill: #999;
+      text-anchor: end;
+
+      &.x-label {
+        text-anchor: middle;
+      }
+    }
+
+    .line-path {
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .line-area {
+      opacity: 0.1;
+    }
+
+    .data-point {
+      stroke: white;
+      stroke-width: 2;
+      cursor: pointer;
+      transition: r 0.2s;
+
+      &:hover {
+        r: 6;
+      }
+    }
+  }
+
+  .empty-state {
+    padding: 40px;
+    text-align: center;
+    color: #999;
+    font-size: 14px;
+  }
+}

@@ -1,0 +1,130 @@
+h2[mat-dialog-title] {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+mat-dialog-content {
+    min-width: 750px;
+    max-width: 800px;
+    max-height: 75vh;
+    padding: 0;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.form-section {
+    padding: 24px;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.87);
+    margin: 0 0 16px 0;
+}
+
+.section-title mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: rgba(0, 0, 0, 0.54);
+}
+
+.full-width {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.age-range-fields {
+    display: flex;
+    gap: 16px;
+}
+
+.wpm-range-fields {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.half-width {
+    flex: 1;
+    margin-bottom: 16px;
+}
+
+.status-toggle {
+    margin-bottom: 0;
+    padding: 12px;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 4px;
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.toggle-label mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+}
+
+mat-dialog-actions {
+    padding: 16px 24px;
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.saving-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 10;
+}
+
+.saving-overlay p {
+    margin: 0;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.6);
+}
+
+mat-divider {
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    mat-dialog-content {
+        min-width: unset;
+        width: 100%;
+        max-height: 70vh;
+    }
+
+    .age-range-fields {
+        flex-direction: column;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 900px) {
+    mat-dialog-content {
+        min-width: 600px;
+        max-width: 700px;
+    }
+}

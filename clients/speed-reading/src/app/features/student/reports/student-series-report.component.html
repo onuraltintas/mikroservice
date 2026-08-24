@@ -1,0 +1,82 @@
+<div class="series-report">
+  @if (loading()) {
+    <div class="loading-container"><div class="rp-spinner"></div></div>
+  } @else if (report()) {
+    <div class="summary-cards">
+      <div class="rp-card">
+        <div class="rp-card__body">
+          <div class="stat-value">{{ report()!.summary.totalSeriesStarted }}</div>
+          <div class="stat-label">Series Started</div>
+        </div>
+      </div>
+      <div class="rp-card">
+        <div class="rp-card__body">
+          <div class="stat-value">{{ report()!.summary.seriesCompleted }}</div>
+          <div class="stat-label">Completed</div>
+        </div>
+      </div>
+      <div class="rp-card">
+        <div class="rp-card__body">
+          <div class="stat-value">{{ report()!.summary.seriesInProgress }}</div>
+          <div class="stat-label">In Progress</div>
+        </div>
+      </div>
+      <div class="rp-card">
+        <div class="rp-card__body">
+          <div class="stat-value">{{ report()!.summary.totalMilestones }}</div>
+          <div class="stat-label">Milestones</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rp-card active-series-card">
+      <div class="rp-card__header">
+        <h3 class="rp-card__title">Active Series</h3>
+      </div>
+      <div class="rp-card__body">
+        <ul class="rp-list">
+          @for (series of report()!.activeSeries; track series.seriesId) {
+            <li class="rp-list__item">
+              <div class="series-info">
+                <div class="series-name">{{ series.seriesName }}</div>
+                <div class="series-stats">{{ series.exercisesCompleted }}/{{ series.totalExercises }} exercises - Avg: {{ series.averageScore }}%</div>
+                <div class="rp-progress-bar">
+                  <div class="rp-progress-bar__fill" [style.width.%]="series.progress"></div>
+                </div>
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+    </div>
+
+    <div class="rp-card">
+      <div class="rp-card__header">
+        <h3 class="rp-card__title">Completion Timeline</h3>
+      </div>
+      <div class="rp-card__body">
+        <div class="chart-container">
+          <app-line-chart [data]="report()!.completionTimelineChart.data"></app-line-chart>
+        </div>
+      </div>
+    </div>
+
+    <div class="rp-card">
+      <div class="rp-card__header">
+        <h3 class="rp-card__title">Milestones</h3>
+      </div>
+      <div class="rp-card__body">
+        <div class="milestones-grid">
+          @for (milestone of report()!.milestones; track milestone.id) {
+            <span class="rp-chip">
+              <span class="material-icons">emoji_events</span>
+              {{ milestone.title }} - {{ formatDate(milestone.earnedAt) }}
+            </span>
+          }
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="empty-state">No series data available</div>
+  }
+</div>

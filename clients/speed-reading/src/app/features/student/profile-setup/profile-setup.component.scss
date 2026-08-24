@@ -1,0 +1,559 @@
+// =============================================================================
+// Profile Setup — Native HTML / sp-* design system
+// Material kütüphanesi kaldırıldı; custom step indicator + native inputs
+// =============================================================================
+
+// ── Container ────────────────────────────────────────────────────────────────
+.ps-container {
+  min-height: 100vh;
+  background: var(--sp-surface-2);
+  padding: 48px 16px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  font-family: var(--sp-font-sans);
+}
+
+// ── Başlık ────────────────────────────────────────────────────────────────────
+.ps-header {
+  text-align: center;
+  animation: ps-fade-up 0.4s ease both;
+
+  &__title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--sp-text-1);
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+  }
+
+  &__sub {
+    font-size: 0.9375rem;
+    color: var(--sp-text-3);
+    margin: 0;
+    font-weight: 400;
+  }
+}
+
+// ── Step Göstergesi ───────────────────────────────────────────────────────────
+.ps-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  max-width: 520px;
+  animation: ps-fade-up 0.4s 0.05s ease both;
+}
+
+.ps-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+
+  &__circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 700;
+    background: var(--sp-surface-3);
+    color: var(--sp-text-3);
+    border: 2px solid var(--sp-border);
+    transition: background 0.3s, color 0.3s, border-color 0.3s;
+  }
+
+  &__label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--sp-text-3);
+    white-space: nowrap;
+    transition: color 0.3s;
+  }
+
+  &--active {
+    .ps-step__circle {
+      background: var(--sp-primary);
+      color: #fff;
+      border-color: var(--sp-primary);
+      box-shadow: 0 0 0 4px var(--sp-primary-ghost);
+    }
+    .ps-step__label { color: var(--sp-primary); }
+  }
+
+  &--done {
+    .ps-step__circle {
+      background: var(--sp-success);
+      color: #fff;
+      border-color: var(--sp-success);
+    }
+    .ps-step__label { color: var(--sp-success-text); }
+  }
+}
+
+.ps-step__line {
+  flex: 1;
+  height: 2px;
+  background: var(--sp-border);
+  margin: 0 8px;
+  margin-bottom: 20px; // label yüksekliğini hizala
+  border-radius: 1px;
+  transition: background 0.4s;
+
+  &--done { background: var(--sp-success); }
+}
+
+// ── Kart ──────────────────────────────────────────────────────────────────────
+.ps-card {
+  width: 100%;
+  max-width: 680px;
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-lg);
+  box-shadow: var(--sp-shadow-card);
+  padding: 32px;
+  animation: ps-fade-up 0.35s 0.1s ease both;
+
+  @media (max-width: 640px) {
+    padding: 20px 16px;
+    border-radius: var(--sp-radius-md);
+  }
+}
+
+// ── Step İçerik ───────────────────────────────────────────────────────────────
+.ps-step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: ps-fade-up 0.25s ease both;
+}
+
+.ps-step-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+
+  &__icon {
+    font-size: 28px;
+    color: var(--sp-primary);
+    flex-shrink: 0;
+
+    &--success { color: var(--sp-success); }
+  }
+
+  &__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--sp-text-1);
+    margin: 0;
+  }
+}
+
+// ── Form Elemanları ───────────────────────────────────────────────────────────
+.ps-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ps-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--sp-text-2);
+
+  .material-icons {
+    font-size: 18px;
+    color: var(--sp-primary);
+  }
+}
+
+.ps-label-sm {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--sp-text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ps-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  font-family: var(--sp-font-sans);
+  font-size: 0.9375rem;
+  color: var(--sp-text-1);
+  background: var(--sp-surface-2);
+  border: 1.5px solid var(--sp-border);
+  border-radius: var(--sp-radius-sm);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: none;
+
+  &:focus {
+    border-color: var(--sp-primary);
+    box-shadow: 0 0 0 3px var(--sp-primary-ghost);
+  }
+
+  &--error { border-color: var(--sp-danger); }
+
+  // Sayı input'larında ok düğmelerini gizle
+  &[type='number'] {
+    -moz-appearance: textfield;
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button { display: none; }
+  }
+}
+
+.ps-error {
+  font-size: 0.75rem;
+  color: var(--sp-danger);
+  font-weight: 500;
+}
+
+// ── Yaş Grubu Bilgi Kartı ─────────────────────────────────────────────────────
+.ps-info-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(6, 182, 212, 0.06);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  border-radius: var(--sp-radius-sm);
+  animation: ps-slide-in 0.3s ease both;
+
+  &__icon {
+    font-size: 24px;
+    color: var(--sp-diamond);
+    flex-shrink: 0;
+  }
+
+  &__label {
+    display: block;
+    font-size: 0.6875rem;
+    color: var(--sp-text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+
+  &__value {
+    display: block;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--sp-text-1);
+  }
+
+  &__check {
+    margin-left: auto;
+    font-size: 22px;
+    color: var(--sp-success);
+    flex-shrink: 0;
+  }
+}
+
+// ── Öğrenme Stili Kartları ────────────────────────────────────────────────────
+.ps-style-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+.ps-style-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 12px;
+  background: var(--sp-surface-2);
+  border: 2px solid var(--sp-border);
+  border-radius: var(--sp-radius-md);
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    transform 0.15s,
+    box-shadow 0.2s;
+  font-family: var(--sp-font-sans);
+
+  &__icon {
+    font-size: 28px;
+    color: var(--sp-primary);
+    transition: color 0.2s;
+  }
+
+  &__label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--sp-text-2);
+    transition: color 0.2s;
+  }
+
+  &:hover:not(.ps-style-card--selected) {
+    border-color: var(--sp-primary-light);
+    background: var(--sp-primary-ghost);
+    transform: translateY(-2px);
+    box-shadow: var(--sp-shadow-sm);
+  }
+
+  &--selected {
+    background: var(--sp-primary);
+    border-color: var(--sp-primary);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+
+    .ps-style-card__icon,
+    .ps-style-card__label { color: #fff; }
+  }
+}
+
+// ── Hedef Kartları ────────────────────────────────────────────────────────────
+.ps-goals-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ps-goal-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--sp-surface-2);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-md);
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--sp-shadow-sm);
+  }
+
+  &__icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--sp-radius-sm);
+    background: var(--sp-primary-ghost);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .material-icons { color: var(--sp-primary); font-size: 22px; }
+
+    &--amber {
+      background: var(--sp-warning-light);
+      .material-icons { color: var(--sp-warning-dark); }
+    }
+
+    &--green {
+      background: var(--sp-success-light);
+      .material-icons { color: var(--sp-success-dark); }
+    }
+  }
+
+  &__title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--sp-text-1);
+    margin: 0;
+  }
+}
+
+// ── Tavsiye Satırı ────────────────────────────────────────────────────────────
+.ps-rec {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  color: var(--sp-warning-text);
+  background: var(--sp-warning-light);
+  border-radius: var(--sp-radius-sm);
+  padding: 6px 10px;
+  margin-top: 4px;
+
+  &__icon {
+    font-size: 16px;
+    color: var(--sp-warning);
+    flex-shrink: 0;
+  }
+
+  strong { color: var(--sp-warning-dark); }
+}
+
+// ── Özet Bölümü ───────────────────────────────────────────────────────────────
+.ps-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ps-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  background: var(--sp-surface-2);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-md);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--sp-border);
+    margin-bottom: 4px;
+
+    .material-icons { font-size: 18px; color: var(--sp-primary); }
+
+    h3 {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: var(--sp-text-1);
+      margin: 0;
+    }
+  }
+}
+
+.ps-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+
+  & > span:first-child { color: var(--sp-text-3); }
+  & > span:last-child  { color: var(--sp-text-1); font-weight: 600; }
+
+  &__hl { color: var(--sp-primary) !important; font-weight: 700 !important; }
+}
+
+// ── Final Notu ────────────────────────────────────────────────────────────────
+.ps-final-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--sp-warning-light);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: var(--sp-radius-sm);
+
+  .material-icons { color: var(--sp-warning); font-size: 22px; flex-shrink: 0; }
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--sp-warning-text);
+    font-weight: 500;
+    line-height: 1.4;
+  }
+}
+
+// ── Aksiyon Butonları ─────────────────────────────────────────────────────────
+.ps-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+
+  &--right { justify-content: flex-end; }
+
+  @media (max-width: 400px) {
+    flex-direction: column;
+    .ps-btn { width: 100%; justify-content: center; }
+  }
+}
+
+.ps-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  font-family: var(--sp-font-sans);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: var(--sp-radius-sm);
+  border: none;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    transform 0.15s,
+    box-shadow 0.2s;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  &:active:not(:disabled) { transform: scale(0.97); }
+
+  &--primary {
+    background: var(--sp-primary);
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(99, 102, 241, 0.3);
+
+    &:hover:not(:disabled) {
+      background: var(--sp-primary-dark);
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+      transform: translateY(-2px);
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--sp-text-2);
+    border: 1.5px solid var(--sp-border);
+
+    &:hover:not(:disabled) {
+      background: var(--sp-surface-3);
+      border-color: var(--sp-text-3);
+      color: var(--sp-text-1);
+    }
+  }
+
+  &--create {
+    padding: 12px 32px;
+    font-size: 1rem;
+  }
+}
+
+// ── Animasyonlar ──────────────────────────────────────────────────────────────
+@keyframes ps-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ps-slide-in {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+// sp-spinning (global _animations.scss ile eşleştirildi)
+.sp-spinning { animation: ps-spin 0.8s linear infinite; }
+
+@keyframes ps-spin {
+  to { transform: rotate(360deg); }
+}

@@ -1,0 +1,79 @@
+<div class="reading-speed-report">
+  @if (loading()) {
+    <div class="loading-container">
+      <div class="rp-spinner"></div>
+    </div>
+  } @else if (report()) {
+    <div class="report-grid">
+      <div class="rp-card gauge-card">
+        <div class="rp-card__header">
+          <h3 class="rp-card__title">Current Reading Speed</h3>
+        </div>
+        <div class="rp-card__body">
+          <div class="chart-container">
+            <app-gauge-chart [value]="report()!.currentWPM" [min]="0" [max]="1000" units="WPM"></app-gauge-chart>
+          </div>
+        </div>
+      </div>
+
+      <div class="rp-card benchmarks-card">
+        <div class="rp-card__header">
+          <h3 class="rp-card__title">Benchmarks</h3>
+        </div>
+        <div class="rp-card__body">
+          <div class="chart-container">
+            <app-number-card [data]="benchmarkData()"></app-number-card>
+          </div>
+        </div>
+      </div>
+
+      <div class="rp-card chart-card full-width">
+        <div class="rp-card__header">
+          <h3 class="rp-card__title">Reading Speed Trend</h3>
+        </div>
+        <div class="rp-card__body">
+          <div class="chart-container">
+            <app-line-chart [data]="report()!.wpmTrendChart.data" xAxisLabel="Date" yAxisLabel="WPM"></app-line-chart>
+          </div>
+        </div>
+      </div>
+
+      <div class="rp-card chart-card">
+        <div class="rp-card__header">
+          <h3 class="rp-card__title">Speed by Category</h3>
+        </div>
+        <div class="rp-card__body">
+          <div class="chart-container">
+            <app-bar-chart [data]="report()!.categoryWPMChart.data" xAxisLabel="Category" yAxisLabel="WPM"></app-bar-chart>
+          </div>
+        </div>
+      </div>
+
+      <div class="rp-card stats-card">
+        <div class="rp-card__header">
+          <h3 class="rp-card__title">Detailed Statistics</h3>
+        </div>
+        <div class="rp-card__body">
+          <table class="rp-table">
+            <thead>
+              <tr>
+                <th>Metrik</th>
+                <th>Değer</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (stat of statsDataSource(); track stat.metric) {
+                <tr>
+                  <td>{{ stat.metric }}</td>
+                  <td>{{ stat.value }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="empty-state">No reading speed data available</div>
+  }
+</div>

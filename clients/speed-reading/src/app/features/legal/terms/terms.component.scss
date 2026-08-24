@@ -1,0 +1,139 @@
+.legal-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.legal-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 20px 0;
+
+  .back-button {
+    color: #667eea;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 600;
+    color: #333;
+  }
+}
+
+.legal-card {
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.legal-content {
+  line-height: 1.8;
+  color: #333;
+
+  section {
+    margin-bottom: 32px;
+
+    h2 {
+      color: #667eea;
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 8px;
+    }
+
+    h3 {
+      color: #555;
+      font-size: 18px;
+      font-weight: 600;
+      margin: 16px 0 12px 0;
+    }
+
+    p {
+      margin-bottom: 16px;
+      text-align: justify;
+    }
+
+    ul {
+      margin: 12px 0;
+      padding-left: 24px;
+
+      li {
+        margin-bottom: 8px;
+      }
+    }
+
+    a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 500;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .update-date {
+    font-size: 14px;
+    color: #666;
+    font-style: italic;
+  }
+
+  .acceptance-section {
+    background: #e8f0fe;
+    border-left: 4px solid #667eea;
+    padding: 20px;
+    margin-top: 32px;
+    border-radius: 4px;
+
+    .acceptance-text {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.6;
+
+      strong {
+        color: #667eea;
+      }
+    }
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 40px;
+
+  button {
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .legal-container {
+    padding: 10px;
+  }
+
+  .legal-header {
+    h1 {
+      font-size: 24px;
+    }
+  }
+
+  .legal-content section h2 {
+    font-size: 20px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+}

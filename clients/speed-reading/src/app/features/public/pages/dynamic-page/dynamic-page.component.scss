@@ -1,0 +1,146 @@
+.dynamic-page-container {
+    min-height: 100vh;
+    background: #f9fafb;
+}
+
+.page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 4rem 2rem;
+    text-align: center;
+
+    .header-content {
+        max-width: 1024px;
+        margin: 0 auto;
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 0;
+
+            @media (max-width: 768px) {
+                font-size: 2rem;
+            }
+        }
+    }
+}
+
+.page-content {
+    max-width: 1024px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+
+    .prose {
+        background: white;
+        padding: 3rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        font-size: 1.125rem;
+        line-height: 1.8;
+        color: #1f2937;
+
+        @media (max-width: 768px) {
+            padding: 1.5rem;
+        }
+
+        ::ng-deep {
+
+            h1,
+            h2,
+            h3,
+            h4,
+            h5,
+            h6 {
+                margin-top: 2rem;
+                margin-bottom: 1rem;
+                font-weight: 600;
+                color: #111827;
+            }
+
+            h2 {
+                font-size: 2rem;
+                border-bottom: 2px solid #e5e7eb;
+                padding-bottom: 0.5rem;
+            }
+
+            h3 {
+                font-size: 1.5rem;
+            }
+
+            p {
+                margin-bottom: 1.5rem;
+            }
+
+            a {
+                color: #667eea;
+                text-decoration: underline;
+
+                &:hover {
+                    color: #764ba2;
+                }
+            }
+
+            img {
+                max-width: 100%;
+                height: auto;
+                border-radius: 8px;
+                margin: 2rem 0;
+            }
+
+            ul,
+            ol {
+                margin-bottom: 1.5rem;
+                padding-left: 2rem;
+
+                li {
+                    margin-bottom: 0.5rem;
+                }
+            }
+
+            blockquote {
+                border-left: 4px solid #667eea;
+                padding-left: 1.5rem;
+                margin: 2rem 0;
+                font-style: italic;
+                color: #6b7280;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 2rem 0;
+
+                th,
+                td {
+                    border: 1px solid #e5e7eb;
+                    padding: 0.75rem;
+                    text-align: left;
+                }
+
+                th {
+                    background: #f3f4f6;
+                    font-weight: 600;
+                }
+            }
+        }
+    }
+}
+
+.page-actions {
+    max-width: 1024px;
+    margin: 0 auto;
+    padding: 0 2rem 3rem;
+
+    button {
+        mat-icon {
+            margin-right: 0.5rem;
+        }
+    }
+}
+
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}

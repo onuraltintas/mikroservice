@@ -1,0 +1,73 @@
+<div class="profile-container">
+    <div class="sp-card profile-card">
+        <div class="sp-card-header">
+            <div class="header-content">
+                <div class="avatar-circle">
+                    <span class="material-icons">person</span>
+                </div>
+                <div class="header-text">
+                    <div class="sp-card-title">Profilim</div>
+                    <div class="sp-card-subtitle">Kişisel bilgilerinizi düzenleyin</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sp-card-content">
+            @if (loading()) {
+            <div class="loading-state">
+                <div class="sp-spinner"></div>
+            </div>
+            } @else {
+            <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+                <div class="form-row">
+                    <div class="sp-field">
+                        <label>Ad</label>
+                        <input type="text" formControlName="firstName" placeholder="Adınız">
+                        <div class="sp-error" *ngIf="profileForm.get('firstName')?.hasError('required')">
+                            Ad zorunludur
+                        </div>
+                    </div>
+
+                    <div class="sp-field">
+                        <label>Soyad</label>
+                        <input type="text" formControlName="lastName" placeholder="Soyadınız">
+                        <div class="sp-error" *ngIf="profileForm.get('lastName')?.hasError('required')">
+                            Soyad zorunludur
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sp-field full-width">
+                    <label>E-posta</label>
+                    <input type="email" formControlName="email" placeholder="ornek@email.com">
+                    <div class="sp-hint">E-posta adresi değiştirilemez</div>
+                </div>
+
+                <div class="form-row">
+                    <div class="sp-field">
+                        <label>Telefon</label>
+                        <input type="text" formControlName="phoneNumber" placeholder="5XX XXX XX XX">
+                    </div>
+
+                    <div class="sp-field">
+                        <label>Doğum Tarihi</label>
+                        <input type="date" formControlName="dateOfBirth">
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="sp-btn sp-btn-primary" type="submit" [disabled]="profileForm.invalid || saving()">
+                        @if (saving()) {
+                        <div class="sp-spinner sp-spinner-sm"></div>
+                        Kaydediliyor...
+                        } @else {
+                        <span class="material-icons">save</span>
+                        Değişiklikleri Kaydet
+                        }
+                    </button>
+                </div>
+            </form>
+            }
+        </div>
+    </div>
+</div>

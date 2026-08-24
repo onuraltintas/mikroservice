@@ -1,0 +1,37 @@
+<div class="progress-container">
+  <!-- Level badge -->
+  <div class="level-badge" [style.background-color]="progressColor">
+    <span class="level-icon">{{ levelIcon }}</span>
+    <span class="level-number">{{ level }}</span>
+  </div>
+
+  <!-- Progress info -->
+  <div class="progress-info">
+    <div class="level-info">
+      <div class="level-title">{{ levelTitle }}</div>
+      <div class="tier-badge" [style.background-color]="progressColor">
+        {{ getTierName(level) }} Tier
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="progress-wrapper">
+      <div class="progress-track">
+        <div class="progress-fill"
+             [style.width.%]="animatedPercentage"
+             [style.background-color]="progressColor"></div>
+      </div>
+
+      <div class="progress-text">
+        <span class="current-xp">{{ formatXP(currentXP) }} / {{ formatXP(nextLevelXP) }} XP</span>
+        <span class="percentage">{{ progressPercentage.toFixed(0) }}%</span>
+      </div>
+    </div>
+
+    <!-- Total XP -->
+    <div class="total-xp" *ngIf="showDetails">
+      <span class="label">Toplam XP:</span>
+      <span class="value">{{ formatXP(totalXP) }}</span>
+    </div>
+  </div>
+</div>

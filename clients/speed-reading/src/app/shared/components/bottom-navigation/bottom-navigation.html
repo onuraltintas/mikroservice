@@ -1,0 +1,12 @@
+<nav class="bottom-navigation" role="navigation" aria-label="Ana navigasyon">
+  <button
+    *ngFor="let item of navItems"
+    class="nav-item"
+    [class.active]="isActive(item)"
+    (click)="navigate(item.route)"
+    [attr.aria-label]="item.label"
+    [attr.aria-current]="isActive(item) ? 'page' : null">
+    <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+    <span class="nav-label">{{ item.label }}</span>
+  </button>
+</nav>

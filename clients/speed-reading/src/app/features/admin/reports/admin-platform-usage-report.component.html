@@ -1,0 +1,203 @@
+<div class="platform-report">
+    @if (loading()) {
+    <div class="loading"><mat-spinner></mat-spinner></div>
+    } @else if (report()) {
+
+    <!-- Summary Cards -->
+    <div class="stats-grid">
+        <mat-card>
+            <mat-card-content>
+                <div class="stat">{{ report()!.totalUsers }}</div>
+                <div class="label">Toplam Kullanıcı</div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-content>
+                <div class="stat">{{ report()!.activeUsers }}</div>
+                <div class="label">Aktif Kullanıcı</div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-content>
+                <div class="stat positive">+{{ report()!.newUsers }}</div>
+                <div class="label">Yeni Kullanıcı</div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-content>
+                <div class="stat">{{ report()!.engagementRate.toFixed(1) }}%</div>
+                <div class="label">Katılım Oranı</div>
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+    <!-- User Growth Chart -->
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>Kullanıcı Artışı</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            @if (report()!.userGrowth && report()!.userGrowth.length > 0) {
+            <div class="chart"><app-line-chart [data]="transformChartData(report()!.userGrowth)"></app-line-chart></div>
+            } @else {
+            <p class="no-data">Kullanıcı artış verisi bulunamadı</p>
+            }
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Charts Grid -->
+    <div class="charts-grid">
+        <mat-card>
+            <mat-card-header>
+                <mat-card-title>Günlük Aktif Kullanıcılar</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                @if (report()!.dailyActiveUsers && report()!.dailyActiveUsers.length > 0) {
+                <div class="chart"><app-line-chart
+                        [data]="transformChartData(report()!.dailyActiveUsers)"></app-line-chart></div>
+                } @else {
+                <p class="no-data">Veri bulunamadı</p>
+                }
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-header>
+                <mat-card-title>Aktivite Hacmi</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                @if (report()!.activityVolume && report()!.activityVolume.length > 0) {
+                <div class="chart"><app-bar-chart [data]="transformChartData(report()!.activityVolume)"></app-bar-chart>
+                </div>
+                } @else {
+                <p class="no-data">Veri bulunamadı</p>
+                }
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+    <!-- Activity Stats -->
+    <div class="activity-stats">
+        <mat-card>
+            <mat-card-content>
+                <div class="stat">{{ report()!.totalActivities }}</div>
+                <div class="label">Toplam Aktivite</div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-content>
+                <div class="stat">{{ report()!.totalReadingSessions }}</div>
+                <div class="label">Okuma Oturumu</div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-content>
+                <div class="stat">{{ report()!.retentionRate.toFixed(1) }}%</div>
+                <div class="label">Elde Tutma Oranı</div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-content>
+                <div class="stat">{{ report()!.averageSessionDuration.toFixed(1) }} dk</div>
+                <div class="label">Ort. Oturum Süresi</div>
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+
+    <!-- Hourly Activity Heatmap -->
+    <mat-card class="full-width-chart">
+        <mat-card-header>
+            <mat-card-title>Saatlik Aktivite Yoğunluğu</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            @if (report()!.hourlyActivity && report()!.hourlyActivity.length > 0) {
+            <div class="chart">
+                <app-bar-chart [data]="transformChartData(report()!.hourlyActivity)"></app-bar-chart>
+            </div>
+            } @else {
+            <p class="no-data">Veri bulunamadı</p>
+            }
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Popular Content & Top Institutions Grid -->
+    <div class="charts-grid">
+        <!-- Popular Content -->
+        <mat-card>
+            <mat-card-header>
+                <mat-card-title>Popüler İçerikler</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                @if (report()!.popularContent && report()!.popularContent.length > 0) {
+                <table class="simple-table">
+                    <thead>
+                        <tr>
+                            <th>Başlık</th>
+                            <th>Kullanım</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (content of report()!.popularContent; track content.title) {
+                        <tr>
+                            <td>{{ content.title }}</td>
+                            <td>{{ content.usageCount }}</td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+                } @else {
+                <p class="no-data">Veri bulunamadı</p>
+                }
+            </mat-card-content>
+        </mat-card>
+
+        <!-- Top Institutions -->
+        <mat-card>
+            <mat-card-header>
+                <mat-card-title>En Aktif Kurumlar</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                @if (report()!.topInstitutions && report()!.topInstitutions.length > 0) {
+                <table class="simple-table">
+                    <thead>
+                        <tr>
+                            <th>Kurum</th>
+                            <th>Aktif Kullanıcı</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (inst of report()!.topInstitutions; track inst.name) {
+                        <tr>
+                            <td>{{ inst.name }}</td>
+                            <td>{{ inst.activeUserCount }}</td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+                } @else {
+                <p class="no-data">Veri bulunamadı</p>
+                }
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+    <!-- Feature Usage Stats -->
+    @if (report()!.featureUsageStats && getObjectKeys(report()!.featureUsageStats).length > 0) {
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>Özellik Kullanım İstatistikleri</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <div class="feature-stats">
+                @for (item of getFeatureUsageArray(); track item.key) {
+                <div class="feature-item">
+                    <span class="feature-name">{{ item.key }}</span>
+                    <span class="feature-count">{{ item.value }} kullanım</span>
+                </div>
+                }
+            </div>
+        </mat-card-content>
+    </mat-card>
+    }
+    }
+</div>

@@ -1,0 +1,42 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://masterhizliokuma.com/sitemap.xml
+
+# Admin, Auth ve Dashboard sayfalarını indeksleme (private areas)
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /student/
+Disallow: /teacher/
+Disallow: /editor/
+
+# API endpoints
+Disallow: /api/
+
+# Statik dosyalar
+Disallow: /*.json$
+
+# Crawl hızı - aşırı yüklemeyi önle
+Crawl-delay: 1
+
+# Google specific
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /student/
+Disallow: /teacher/
+Disallow: /editor/
+Disallow: /api/
+
+# Bing specific  
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /student/
+Disallow: /teacher/
+Disallow: /editor/
+Disallow: /api/
+Crawl-delay: 2

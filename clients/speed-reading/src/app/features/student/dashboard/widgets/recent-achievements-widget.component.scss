@@ -1,0 +1,90 @@
+.ra-widget {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-card);
+  box-shadow: var(--sp-shadow-card);
+  padding: 20px;
+}
+.ra-widget__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.ra-icon-wrap {
+  width: 40px;
+  height: 40px;
+  background: var(--sp-xp-light);
+  border-radius: var(--sp-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  .material-icons { font-size: 20px; color: var(--sp-xp); }
+}
+.ra-widget__title {
+  font-family: var(--sp-font-sans);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--sp-text-1);
+  margin: 0;
+}
+.ra-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 32px 16px;
+  text-align: center;
+}
+.ra-empty__icon { font-size: 36px; color: var(--sp-text-3); }
+.ra-empty__title { font-size: 0.875rem; font-weight: 700; color: var(--sp-text-1); margin: 0; }
+.ra-empty__hint  { font-size: 0.75rem; color: var(--sp-text-3); margin: 0; }
+.ra-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ra-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.ra-item__icon {
+  width: 36px;
+  height: 36px;
+  background: var(--sp-xp-light);
+  border-radius: var(--sp-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ra-item__emoji { font-size: 18px; line-height: 1; }
+.ra-item__mat-icon { font-size: 18px; color: var(--sp-xp); }
+.ra-item__content { flex: 1; min-width: 0; }
+.ra-item__title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--sp-text-1);
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ra-item__desc {
+  font-size: 0.75rem;
+  color: var(--sp-text-2);
+  margin: 0 0 2px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ra-item__time {
+  font-size: 0.6875rem;
+  color: var(--sp-text-3);
+}

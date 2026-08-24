@@ -1,0 +1,252 @@
+<!-- ── Dialog Header ──────────────────────────────────────────────── -->
+<div class="dialog-header">
+  <div class="header-left">
+    <div class="header-icon">
+      <mat-icon>workspace_premium</mat-icon>
+    </div>
+    <div>
+      <h2>Abonelik Ata</h2>
+      <p>Kullanıcıya abonelik planı atayın</p>
+    </div>
+  </div>
+  <button mat-icon-button class="close-btn" (click)="cancel()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<!-- ── Step Indicator ─────────────────────────────────────────────── -->
+<div class="step-bar">
+  <div class="step" [class.active]="step === 1" [class.done]="step > 1">
+    <div class="step-circle">
+      <mat-icon *ngIf="step > 1">check</mat-icon>
+      <span *ngIf="step <= 1">1</span>
+    </div>
+    <span class="step-label">Kullanıcı</span>
+  </div>
+  <div class="step-line" [class.done]="step > 1"></div>
+  <div class="step" [class.active]="step === 2" [class.done]="step > 2">
+    <div class="step-circle">
+      <mat-icon *ngIf="step > 2">check</mat-icon>
+      <span *ngIf="step <= 2">2</span>
+    </div>
+    <span class="step-label">Plan</span>
+  </div>
+  <div class="step-line" [class.done]="step > 2"></div>
+  <div class="step" [class.active]="step === 3">
+    <div class="step-circle">3</div>
+    <span class="step-label">Süre</span>
+  </div>
+</div>
+
+<mat-dialog-content>
+
+  <!-- ══ ADIM 1: Kullanıcı Seçimi ════════════════════════════════════ -->
+  <div *ngIf="step === 1" class="step-content">
+    <div class="step-title">Kullanıcıyı seçin</div>
+
+    <!-- Seçili kullanıcı kartı -->
+    <div *ngIf="selectedUser" class="selected-user-card">
+      <div class="user-avatar">{{ (selectedUser.fullName || selectedUser.email || '?').charAt(0).toUpperCase() }}</div>
+      <div class="user-info">
+        <span class="user-name">{{ selectedUser.fullName }}</span>
+        <span class="user-email">{{ selectedUser.email }}</span>
+        <div class="user-roles">
+          <span *ngFor="let role of selectedUser.roles" class="role-badge">{{ getRoleLabel(role) }}</span>
+        </div>
+      </div>
+      <button mat-icon-button (click)="clearUser()" matTooltip="Değiştir" class="change-btn">
+        <mat-icon>edit</mat-icon>
+      </button>
+    </div>
+
+    <!-- Arama alanı -->
+    <div *ngIf="!selectedUser" class="search-wrapper">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>İsim veya e-posta ile ara</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [formControl]="userSearchControl"
+               placeholder="En az 2 karakter girin..."
+               autocomplete="off">
+        <mat-spinner matSuffix *ngIf="searchingUsers" diameter="18"></mat-spinner>
+      </mat-form-field>
+
+      <!-- Sonuç dropdown -->
+      <div class="results-list" *ngIf="showDropdown && userResults.length > 0">
+        <div class="result-item" *ngFor="let user of userResults" (click)="selectUser(user)">
+          <div class="result-avatar">{{ (user.fullName || user.email || '?').charAt(0).toUpperCase() }}</div>
+          <div class="result-info">
+            <span class="result-name">{{ user.fullName }}</span>
+            <span class="result-email">{{ user.email }}</span>
+          </div>
+          <div class="result-roles">
+            <span *ngFor="let role of user.roles" class="role-badge-sm">{{ getRoleLabel(role) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-search"
+           *ngIf="showDropdown && userResults.length === 0 && !searchingUsers">
+        <mat-icon>person_off</mat-icon>
+        <span>Kullanıcı bulunamadı</span>
+      </div>
+
+      <div class="search-hint" *ngIf="!showDropdown">
+        <mat-icon>info_outline</mat-icon>
+        <span>İsim veya e-posta adresinin bir bölümünü yazın</span>
+      </div>
+    </div>
+
+    <div class="step-actions">
+      <button mat-stroked-button (click)="cancel()">İptal</button>
+      <button mat-raised-button color="primary"
+              [disabled]="!selectedUser"
+              (click)="goToStep2()">
+        Devam
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ ADIM 2: Plan Seçimi ══════════════════════════════════════════ -->
+  <div *ngIf="step === 2" class="step-content">
+    <div class="step-title">Plan seçin</div>
+
+    <div class="loading-plans" *ngIf="loadingPlans">
+      <mat-spinner diameter="32"></mat-spinner>
+      <span>Planlar yükleniyor...</span>
+    </div>
+
+    <div class="plan-cards" *ngIf="!loadingPlans">
+      <div *ngFor="let plan of plans"
+           class="plan-card"
+           [class.selected]="selectedPlan?.id === plan.id"
+           (click)="selectPlan(plan)">
+
+        <div class="plan-card-header">
+          <div class="plan-card-check" *ngIf="selectedPlan?.id === plan.id">
+            <mat-icon>check_circle</mat-icon>
+          </div>
+          <div class="plan-card-title">{{ plan.name }}</div>
+          <div class="plan-card-modules">
+            <span *ngFor="let mod of plan.modules" class="mod-badge">
+              <mat-icon>{{ getModuleIcon(mod) }}</mat-icon>
+              {{ getModuleLabel(mod) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="plan-card-price">
+          <span class="price-amount">{{ plan.price | number:'1.0-0' }}</span>
+          <span class="price-currency">TL</span>
+          <span class="price-period">/ {{ getBillingPeriodLabel(plan.billingPeriod) }}</span>
+        </div>
+
+        <ul class="plan-features" *ngIf="plan.features?.length">
+          <li *ngFor="let f of plan.features?.slice(0,4)">
+            <mat-icon>check</mat-icon>
+            {{ f }}
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step-actions">
+      <button mat-stroked-button (click)="step = 1">
+        <mat-icon>arrow_back</mat-icon>
+        Geri
+      </button>
+      <button mat-raised-button color="primary"
+              [disabled]="!selectedPlan"
+              (click)="goToStep3()">
+        Devam
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ ADIM 3: Süre & Özet ══════════════════════════════════════════ -->
+  <div *ngIf="step === 3" class="step-content" [formGroup]="form">
+
+    <!-- Özet -->
+    <div class="summary-card">
+      <div class="summary-row">
+        <div class="summary-user">
+          <div class="sum-avatar">{{ (selectedUser!.fullName || selectedUser!.email || '?').charAt(0).toUpperCase() }}</div>
+          <div>
+            <div class="sum-name">{{ selectedUser!.fullName || selectedUser!.email }}</div>
+            <div class="sum-email">{{ selectedUser!.email }}</div>
+          </div>
+        </div>
+        <mat-icon class="summary-arrow">arrow_forward</mat-icon>
+        <div class="summary-plan">
+          <div class="sum-plan-name">{{ selectedPlan!.name }}</div>
+          <div class="sum-plan-price">{{ selectedPlan!.price | number:'1.0-0' }} TL / {{ getBillingPeriodLabel(selectedPlan!.billingPeriod) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Süre hızlı seçim -->
+    <div class="step-title" style="margin-top:1.25rem">Süreyi belirleyin</div>
+    <div class="preset-buttons">
+      <button *ngFor="let p of durationPresets"
+              class="preset-btn"
+              [class.active]="selectedPreset?.label === p.label"
+              (click)="applyPreset(p)">
+        {{ p.label }}
+      </button>
+    </div>
+
+    <!-- Tarih alanları -->
+    <div class="date-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Başlangıç</mat-label>
+        <mat-icon matPrefix>event</mat-icon>
+        <input matInput type="date" formControlName="startDate">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Bitiş</mat-label>
+        <mat-icon matPrefix>event_available</mat-icon>
+        <input matInput type="date" formControlName="endDate">
+        <mat-hint>Boş = Sınırsız</mat-hint>
+      </mat-form-field>
+    </div>
+
+    <!-- Süre özeti -->
+    <div class="duration-summary">
+      <mat-icon>schedule</mat-icon>
+      <span *ngIf="form.get('endDate')?.value">
+        {{ form.get('startDate')?.value | date:'dd MMM yyyy':'':'tr' }}
+        &nbsp;→&nbsp;
+        {{ form.get('endDate')?.value | date:'dd MMM yyyy':'':'tr' }}
+      </span>
+      <span *ngIf="!form.get('endDate')?.value">
+        {{ form.get('startDate')?.value | date:'dd MMM yyyy':'':'tr' }} tarihinden itibaren sınırsız
+      </span>
+    </div>
+
+    <!-- Notlar -->
+    <mat-form-field appearance="outline" class="full-width" style="margin-top:0.75rem">
+      <mat-label>Not (İsteğe bağlı)</mat-label>
+      <mat-icon matPrefix>notes</mat-icon>
+      <textarea matInput formControlName="notes"
+                placeholder="Örn: Kampanya kodu, ücretsiz deneme..."
+                rows="2"></textarea>
+    </mat-form-field>
+
+    <div class="step-actions">
+      <button mat-stroked-button (click)="step = 2">
+        <mat-icon>arrow_back</mat-icon>
+        Geri
+      </button>
+      <button mat-raised-button color="primary"
+              [disabled]="loading() || form.invalid"
+              (click)="save()">
+        <mat-spinner *ngIf="loading()" diameter="18" class="btn-spinner"></mat-spinner>
+        <mat-icon *ngIf="!loading()">workspace_premium</mat-icon>
+        Aboneliği Ata
+      </button>
+    </div>
+  </div>
+
+</mat-dialog-content>

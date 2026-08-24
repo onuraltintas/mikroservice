@@ -1,0 +1,19 @@
+<!-- Badge Card — Sprint 5 Redesign -->
+<div class="badge-card" [class.badge-card--unlocked]="isUnlocked" [class.badge-card--locked]="!isUnlocked"
+  [title]="tooltipText">
+  <div class="badge-card__icon" [style.filter]="iconFilter">
+    {{ achievement.iconEmoji }}
+  </div>
+  <div class="badge-card__info">
+    <span class="badge-card__name">{{ achievement.name }}</span>
+    <span class="badge-card__tier" [style.color]="tierColor">{{ tierText }}</span>
+    @if (!isUnlocked) {
+      <span class="badge-card__xp badge-card__xp--locked">🔒 {{ achievement.xpReward }} XP</span>
+    } @else {
+      <span class="badge-card__xp badge-card__xp--earned">⭐ {{ achievement.xpReward }} XP</span>
+      @if (userAchievement?.unlockedAt) {
+        <time class="badge-card__date">{{ userAchievement!.unlockedAt | date:'dd.MM.yyyy' }}</time>
+      }
+    }
+  </div>
+</div>

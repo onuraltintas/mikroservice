@@ -1,0 +1,40 @@
+.deleted-records-container {
+    padding: 24px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+
+    .header-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+}
+
+.selected-row {
+    background-color: rgba(63, 81, 181, 0.08);
+}
+
+.filters {
+    margin-bottom: 16px;
+}
+
+.count {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.records-table {
+    width: 100%;
+}
+
+.loading,
+.no-data {
+    text-align: center;
+    padding: 48px;
+    color: #666;
+}

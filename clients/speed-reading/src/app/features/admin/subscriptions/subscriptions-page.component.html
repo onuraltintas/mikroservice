@@ -1,0 +1,23 @@
+<div class="subscriptions-container">
+  <div class="header">
+    <div>
+      <h1>Abonelik Yönetimi</h1>
+      <p class="subtitle">Platformları, planları ve kullanıcı aboneliklerini yönetin</p>
+    </div>
+  </div>
+
+  <mat-tab-group animationDuration="200ms">
+    <mat-tab label="🏗️ Platformlar">
+      <app-products-list />
+    </mat-tab>
+    <mat-tab label="📦 Planlar">
+      <app-subscription-plans-list />
+    </mat-tab>
+    <mat-tab label="👥 Kullanıcı Abonelikleri">
+      <app-user-subscriptions-list />
+    </mat-tab>
+    <mat-tab label="💳 Ödemeler">
+      <app-payment-history />
+    </mat-tab>
+  </mat-tab-group>
+</div>

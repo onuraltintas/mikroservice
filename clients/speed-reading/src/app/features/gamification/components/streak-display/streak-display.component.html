@@ -1,0 +1,57 @@
+<mat-card class="streak-card">
+  <mat-card-header>
+    <mat-card-title>
+      <div class="streak-header">
+        <span class="streak-icon">{{ getStreakIcon(currentStreak) }}</span>
+        <span>Aktivite Serisi</span>
+      </div>
+    </mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    <!-- Current streak -->
+    <div class="streak-stats">
+      <div class="stat-item primary">
+        <span class="stat-value">{{ currentStreak }}</span>
+        <span class="stat-label">Günlük Seri</span>
+      </div>
+
+      <div class="stat-item">
+        <span class="stat-value">{{ longestStreak }}</span>
+        <span class="stat-label">En Uzun Seri</span>
+      </div>
+
+      <div class="stat-item" *ngIf="streakFreezeCount > 0">
+        <span class="stat-value freeze">❄️ {{ streakFreezeCount }}</span>
+        <span class="stat-label">Dondurma</span>
+      </div>
+    </div>
+
+    <!-- Streak calendar -->
+    <div class="streak-calendar">
+      <div class="calendar-day"
+           *ngFor="let day of streakDays"
+           [class.active]="day.hasActivity"
+           [class.today]="day.isToday"
+           [matTooltip]="day.date.toLocaleDateString('tr-TR')"
+           matTooltipPosition="above">
+        <span class="day-label">{{ day.dayOfWeek }}</span>
+        <div class="day-indicator">
+          <mat-icon *ngIf="day.hasActivity">local_fire_department</mat-icon>
+          <mat-icon *ngIf="!day.hasActivity">radio_button_unchecked</mat-icon>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status message -->
+    <div class="streak-message" [class]="streakStatus">
+      <mat-icon>{{ streakStatus === 'active' ? 'check_circle' : streakStatus === 'frozen' ? 'ac_unit' : 'info' }}</mat-icon>
+      <span>{{ getStreakMessage() }}</span>
+    </div>
+
+    <!-- Motivation -->
+    <div class="motivation-message" *ngIf="currentStreak > 0">
+      {{ getMotivationMessage() }}
+    </div>
+  </mat-card-content>
+</mat-card>

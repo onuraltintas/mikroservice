@@ -1,0 +1,53 @@
+<section class="newsletter-section" id="newsletter">
+    <div class="container">
+        <div class="newsletter-content">
+            <div class="newsletter-text">
+                <h2>{{ title }}</h2>
+                <p>{{ description }}</p>
+                <ul class="benefits">
+                    <li *ngFor="let benefit of benefits">
+                        <mat-icon>check_circle</mat-icon> {{ benefit }}
+                    </li>
+                </ul>
+            </div>
+
+            <div class="newsletter-form-container">
+                <div *ngIf="!submitted" class="form-card">
+                    <form [formGroup]="newsletterForm" (ngSubmit)="onSubmit()">
+                        <mat-form-field appearance="outline" class="email-field">
+                            <mat-label>E-posta adresiniz</mat-label>
+                            <input matInput type="email" formControlName="email" placeholder="ornek@email.com">
+                            <mat-icon matPrefix>email</mat-icon>
+                            <mat-error *ngIf="newsletterForm.get('email')?.hasError('required')">
+                                E-posta gereklidir
+                            </mat-error>
+                            <mat-error *ngIf="newsletterForm.get('email')?.hasError('email')">
+                                Geçerli bir e-posta adresi giriniz
+                            </mat-error>
+                        </mat-form-field>
+
+                        <button mat-raised-button type="submit" class="subscribe-btn"
+                            [disabled]="newsletterForm.invalid || loading">
+                            <mat-icon *ngIf="!loading">send</mat-icon>
+                            <span *ngIf="!loading">Abone Ol</span>
+                            <span *ngIf="loading">Gönderiliyor...</span>
+                        </button>
+
+                        <p *ngIf="error" class="error-message">{{ error }}</p>
+                    </form>
+                    <p class="privacy-note">
+                        <mat-icon>lock</mat-icon>
+                        Bilgileriniz güvende. Her zaman abonelikten çıkabilirsiniz.
+                    </p>
+                </div>
+
+                <div *ngIf="submitted" class="success-card">
+                    <mat-icon class="success-icon">check_circle</mat-icon>
+                    <h3>Tebrikler!</h3>
+                    <p>Bültenimize başarıyla abone oldunuz. Yakında e-posta kutunuza ilk içeriklerimiz ulaşacak.</p>
+                    <button mat-flat-button color="primary" (click)="resetForm()">Tamam</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

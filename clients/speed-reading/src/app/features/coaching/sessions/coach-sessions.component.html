@@ -1,0 +1,102 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2><mat-icon>event</mat-icon> Koçluk Seansları</h2>
+    <button mat-raised-button color="primary" (click)="openNewSession()">
+      <mat-icon>add</mat-icon> Seans Planla
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Durum</mat-label>
+          <mat-select [(ngModel)]="filterStatus" (selectionChange)="onFilter()">
+            <mat-option *ngFor="let o of statusOptions" [value]="o.value">{{ o.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="loading()" class="loading-container"><mat-spinner diameter="40"></mat-spinner></div>
+      <div *ngIf="!loading() && sessions.length === 0" class="empty-state">
+        <mat-icon>event_busy</mat-icon>
+        <p>Henüz koçluk seansı yok</p>
+      </div>
+
+      <table mat-table [dataSource]="sessions" *ngIf="!loading() && sessions.length > 0" class="full-width-table">
+        <ng-container matColumnDef="scheduledAt">
+          <th mat-header-cell *matHeaderCellDef>Tarih / Saat</th>
+          <td mat-cell *matCellDef="let s">{{ s.scheduledAt | date:'dd.MM.yyyy HH:mm' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="student">
+          <th mat-header-cell *matHeaderCellDef>Öğrenci</th>
+          <td mat-cell *matCellDef="let s">
+            <a [routerLink]="['/coaching/students', s.studentId]" class="student-link">
+              <mat-icon class="icon-sm">person</mat-icon>
+              {{ getStudentLabel(s) }}
+            </a>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef>Tip</th>
+          <td mat-cell *matCellDef="let s">{{ typeLabels[s.sessionType] }}</td>
+        </ng-container>
+        <ng-container matColumnDef="duration">
+          <th mat-header-cell *matHeaderCellDef>Süre</th>
+          <td mat-cell *matCellDef="let s">
+            {{ s.actualDurationMinutes ?? s.plannedDurationMinutes }} dk
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Durum</th>
+          <td mat-cell *matCellDef="let s">
+            <div>
+              <span class="status-badge status-{{ s.status.toLowerCase() }}">
+                {{ statusLabels[s.status] }}
+              </span>
+              <!-- Action items chip'leri -->
+              <div *ngIf="getActionItems(s).length > 0" style="margin-top:6px">
+                <mat-chip-set>
+                  <mat-chip *ngFor="let item of getActionItems(s)" style="font-size:0.75em"
+                    [matTooltip]="item">
+                    <mat-icon matChipTrailingIcon style="font-size:14px;cursor:pointer"
+                      matTooltip="Ödev Oluştur"
+                      (click)="openActionAsAssignment(s, item)">add_task</mat-icon>
+                    {{ item.length > 30 ? (item | slice:0:30) + '…' : item }}
+                  </mat-chip>
+                </mat-chip-set>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let s">
+            <button mat-icon-button color="primary"
+              *ngIf="s.status === 'Scheduled'"
+              matTooltip="Seans Brifing" (click)="openBriefing(s)">
+              <mat-icon>summarize</mat-icon>
+            </button>
+            <button mat-icon-button color="accent"
+              *ngIf="s.status === 'Scheduled'"
+              matTooltip="Seansı Tamamla" (click)="completeSession(s)">
+              <mat-icon>check_circle</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" *ngIf="s.status === 'Scheduled'"
+              matTooltip="İptal Et" (click)="cancelSession(s)">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <mat-paginator *ngIf="!loading() && total > 0"
+        [length]="total" [pageSize]="pageSize" [pageIndex]="page - 1"
+        [pageSizeOptions]="[10, 20, 50]" showFirstLastButtons
+        (page)="onPage($event)">
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

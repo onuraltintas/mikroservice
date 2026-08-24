@@ -1,0 +1,89 @@
+<!-- Achievements — Sprint 5 Redesign -->
+<div class="ach-page">
+
+  @if (loading) {
+    <div class="ach-loading">
+      <div class="ach-spinner"></div>
+      <p>Başarımlar yükleniyor…</p>
+    </div>
+
+  } @else {
+    <!-- Header -->
+    <div class="ach-header">
+      <div>
+        <p class="ach-header__sub">Oyunlaştırma</p>
+        <h1 class="ach-header__title">
+          <span>🏆</span>
+          Başarımlar & Rozetler
+        </h1>
+      </div>
+      <div class="ach-header__stats">
+        <div class="ach-stat ach-stat--gold">
+          <span class="material-icons ach-stat__icon">workspace_premium</span>
+          <div>
+            <span class="ach-stat__value">{{ unlockedCount }}</span>
+            <span class="ach-stat__label">Kazanılan</span>
+          </div>
+        </div>
+        <div class="ach-stat ach-stat--emerald">
+          <span class="material-icons ach-stat__icon">stars</span>
+          <div>
+            <span class="ach-stat__value">{{ totalXPEarned | number }}</span>
+            <span class="ach-stat__label">Toplam XP</span>
+          </div>
+        </div>
+        <!-- Progress -->
+        <div class="ach-overall-progress">
+          <div class="ach-overall-progress__bar">
+            <div class="ach-overall-progress__fill" [style.width.%]="progressPercentage"></div>
+          </div>
+          <span class="ach-overall-progress__pct">{{ progressPercentage }}% tamamlandı</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category filter -->
+    <div class="ach-filters">
+      @for (cat of categories; track cat.value) {
+        <button class="ach-filter-chip"
+          [class.ach-filter-chip--active]="selectedCategory === cat.value"
+          (click)="selectCategory(cat.value)">
+          <span class="material-icons">{{ cat.icon }}</span>
+          {{ cat.label }}
+          @if (cat.value !== 'All') {
+            <span class="ach-filter-chip__count">
+              {{ getCategoryStats(cat.value).unlocked }}/{{ getCategoryStats(cat.value).total }}
+            </span>
+          }
+        </button>
+      }
+    </div>
+
+    <!-- Tiers -->
+    <div class="ach-content">
+      @for (tier of ['Diamond', 'Gold', 'Silver', 'Bronze', 'Special']; track tier) {
+        @if (getAchievementsByTier(tier).length > 0) {
+          <div class="ach-tier">
+            <div class="ach-tier__header">
+              <h2 class="ach-tier__title">{{ getTierLabel(tier) }}</h2>
+              <div class="ach-tier__line"></div>
+            </div>
+            <div class="ach-grid">
+              @for (achievement of getAchievementsByTier(tier); track achievement.id) {
+                <app-badge-card [achievement]="achievement" [userAchievement]="achievement.userAchievement" />
+              }
+            </div>
+          </div>
+        }
+      }
+
+      @if (filteredAchievements.length === 0) {
+        <div class="ach-empty">
+          <span class="material-icons ach-empty__icon">search_off</span>
+          <h3 class="ach-empty__title">Bu kategoride rozet bulunamadı</h3>
+          <p class="ach-empty__desc">Farklı bir kategori seçerek keşfetmeye devam et.</p>
+        </div>
+      }
+    </div>
+  }
+</div>

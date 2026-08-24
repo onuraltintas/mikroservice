@@ -1,0 +1,273 @@
+<div class="admin-dashboard" *ngIf="!loading() && dashboard">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <h1>Platform Yönetimi Dashboard</h1>
+    <p class="subtitle">Sistem geneli istatistikler ve performans metrikleri</p>
+    <a mat-raised-button color="primary" routerLink="/admin/metrics">
+      <mat-icon>analytics</mat-icon>
+      Detaylı Metrikler
+    </a>
+  </div>
+
+  <!-- Overview Stats -->
+  <div class="overview-grid">
+    <mat-card class="overview-card users">
+      <mat-icon>people</mat-icon>
+      <div class="overview-content">
+        <span class="overview-value">{{ dashboard.overview.totalUsers }}</span>
+        <span class="overview-label">Toplam Kullanıcı</span>
+        <div class="overview-breakdown">
+          <span>{{ dashboard.overview.totalStudents }} öğrenci</span>
+          <span>{{ dashboard.overview.totalTeachers }} öğretmen</span>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="overview-card institutions">
+      <mat-icon>business</mat-icon>
+      <div class="overview-content">
+        <span class="overview-value">{{ dashboard.overview.totalInstitutions }}</span>
+        <span class="overview-label">Kurum</span>
+        <span class="overview-detail">Aktif kurumlar</span>
+      </div>
+    </mat-card>
+
+    <mat-card class="overview-card content">
+      <mat-icon>library_books</mat-icon>
+      <div class="overview-content">
+        <span class="overview-value">{{ dashboard.overview.totalExercises + dashboard.overview.totalReadingTexts
+          }}</span>
+        <span class="overview-label">İçerik</span>
+        <div class="overview-breakdown">
+          <span>{{ dashboard.overview.totalExercises }} egzersiz</span>
+          <span>{{ dashboard.overview.totalReadingTexts }} metin</span>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="overview-card activity">
+      <mat-icon>trending_up</mat-icon>
+      <div class="overview-content">
+        <span class="overview-value">{{ dashboard.overview.activeUsersThisWeek }}</span>
+        <span class="overview-label">Aktif Kullanıcı</span>
+        <span class="overview-detail">Bu hafta</span>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Activity Stats -->
+  <div class="activity-stats">
+    <mat-card>
+      <h3>Aktivite İstatistikleri</h3>
+      <div class="stats-row">
+        <div class="stat-item">
+          <mat-icon>today</mat-icon>
+          <div>
+            <span class="stat-value">{{ dashboard.overview.exercisesCompletedToday }}</span>
+            <span class="stat-label">Bugün Tamamlanan</span>
+          </div>
+        </div>
+        <div class="stat-item">
+          <mat-icon>date_range</mat-icon>
+          <div>
+            <span class="stat-value">{{ dashboard.overview.exercisesCompletedThisWeek }}</span>
+            <span class="stat-label">Bu Hafta</span>
+          </div>
+        </div>
+        <div class="stat-item">
+          <mat-icon>calendar_month</mat-icon>
+          <div>
+            <span class="stat-value">{{ dashboard.overview.exercisesCompletedThisMonth }}</span>
+            <span class="stat-label">Bu Ay</span>
+          </div>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Platform Health -->
+  <mat-card class="health-card">
+    <div class="card-header">
+      <h2><mat-icon>health_and_safety</mat-icon> Platform Sağlığı</h2>
+    </div>
+    <div class="health-grid">
+      <div class="health-item">
+        <span class="health-label">Genel Sağlık Skoru</span>
+        <div class="health-score" [ngClass]="getHealthColor(dashboard.platformHealth.overallHealthScore)">
+          <span class="score-value">{{ dashboard.platformHealth.overallHealthScore | number:'1.0-0' }}</span>
+          <span class="score-max">/100</span>
+        </div>
+        <mat-progress-bar mode="determinate" [value]="dashboard.platformHealth.overallHealthScore"
+          [color]="getHealthColor(dashboard.platformHealth.overallHealthScore)">
+        </mat-progress-bar>
+      </div>
+
+      <div class="health-item">
+        <span class="health-label">Kullanıcı Katılımı</span>
+        <div class="health-score">
+          <span class="score-value">{{ dashboard.platformHealth.userEngagementRate | number:'1.0-0' }}</span>
+          <span class="score-max">%</span>
+        </div>
+        <mat-progress-bar mode="determinate" [value]="dashboard.platformHealth.userEngagementRate">
+        </mat-progress-bar>
+      </div>
+
+      <div class="health-item">
+        <span class="health-label">İçerik Kalitesi</span>
+        <div class="health-score">
+          <span class="score-value">{{ dashboard.platformHealth.contentQualityScore | number:'1.0-0' }}</span>
+          <span class="score-max">%</span>
+        </div>
+        <mat-progress-bar mode="determinate" [value]="dashboard.platformHealth.contentQualityScore">
+        </mat-progress-bar>
+      </div>
+
+      <div class="health-item">
+        <span class="health-label">Sistem Uptime</span>
+        <div class="health-score success">
+          <span class="score-value">{{ dashboard.platformHealth.systemUptime | number:'1.1-1' }}</span>
+          <span class="score-max">%</span>
+        </div>
+        <mat-progress-bar mode="determinate" [value]="dashboard.platformHealth.systemUptime" color="accent">
+        </mat-progress-bar>
+      </div>
+    </div>
+  </mat-card>
+
+  <!-- Top Institutions -->
+  <mat-card class="institutions-card">
+    <div class="card-header">
+      <h2><mat-icon>leaderboard</mat-icon> En Aktif Kurumlar</h2>
+    </div>
+    <div class="table-container">
+      <table mat-table [dataSource]="dashboard.topInstitutions" class="institutions-table">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Kurum</th>
+          <td mat-cell *matCellDef="let institution">
+            <strong>{{ institution.institutionName }}</strong>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="students">
+          <th mat-header-cell *matHeaderCellDef>Öğrenci</th>
+          <td mat-cell *matCellDef="let institution">{{ institution.studentCount }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="teachers">
+          <th mat-header-cell *matHeaderCellDef>Öğretmen</th>
+          <td mat-cell *matCellDef="let institution">{{ institution.teacherCount }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="kdp">
+          <th mat-header-cell *matHeaderCellDef>Ort. KDP</th>
+          <td mat-cell *matCellDef="let institution">
+            <span class="kdp-badge">{{ institution.averageKDP | number:'1.0-0' }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="exercises">
+          <th mat-header-cell *matHeaderCellDef>Tamamlanan Egzersiz</th>
+          <td mat-cell *matCellDef="let institution">{{ institution.totalExercisesCompleted }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="institutionColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: institutionColumns;"></tr>
+      </table>
+    </div>
+  </mat-card>
+
+  <!-- Popular Content -->
+  <mat-card class="content-card">
+    <div class="card-header">
+      <h2><mat-icon>star</mat-icon> Popüler İçerikler</h2>
+    </div>
+    <div class="table-container">
+      <table mat-table [dataSource]="dashboard.popularContent" class="content-table">
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef>İçerik</th>
+          <td mat-cell *matCellDef="let content">
+            <div class="content-info">
+              <strong>{{ content.contentTitle }}</strong>
+              <span class="content-type">{{ content.contentType }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef>Tip</th>
+          <td mat-cell *matCellDef="let content">{{ content.contentType }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="usage">
+          <th mat-header-cell *matHeaderCellDef>Kullanım</th>
+          <td mat-cell *matCellDef="let content">
+            <span class="usage-count">{{ content.usageCount }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="avgTime">
+          <th mat-header-cell *matHeaderCellDef>Ort. Süre</th>
+          <td mat-cell *matCellDef="let content">
+            {{ formatDuration(content.averageCompletionTime) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="avgScore">
+          <th mat-header-cell *matHeaderCellDef>Ort. Skor</th>
+          <td mat-cell *matCellDef="let content">
+            {{ content.averageScore | number:'1.0-0' }}%
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="contentColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: contentColumns;"></tr>
+      </table>
+    </div>
+  </mat-card>
+
+  <!-- System Metrics -->
+  <mat-card class="system-metrics-card">
+    <div class="card-header">
+      <h2><mat-icon>settings</mat-icon> Sistem Metrikleri</h2>
+    </div>
+    <div class="metrics-grid">
+      <div class="metric-item">
+        <mat-icon>notifications</mat-icon>
+        <div>
+          <span class="metric-value">{{ dashboard.systemMetrics.totalNotificationsSent }}</span>
+          <span class="metric-label">Gönderilen Bildirim</span>
+        </div>
+      </div>
+
+      <div class="metric-item">
+        <mat-icon>email</mat-icon>
+        <div>
+          <span class="metric-value">{{ dashboard.systemMetrics.totalEmailsSent }}</span>
+          <span class="metric-label">Gönderilen Email</span>
+        </div>
+      </div>
+
+      <div class="metric-item">
+        <mat-icon>assessment</mat-icon>
+        <div>
+          <span class="metric-value">{{ dashboard.systemMetrics.totalReportsGenerated }}</span>
+          <span class="metric-label">Oluşturulan Rapor</span>
+        </div>
+      </div>
+
+      <div class="metric-item">
+        <mat-icon>backup</mat-icon>
+        <div>
+          <span class="metric-value">{{ formatDate(dashboard.systemMetrics.lastBackupDate) }}</span>
+          <span class="metric-label">Son Yedekleme</span>
+        </div>
+      </div>
+    </div>
+  </mat-card>
+</div>
+
+<!-- Loading State -->
+<div class="loading-container" *ngIf="loading()">
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  <p>Dashboard yükleniyor...</p>
+</div>

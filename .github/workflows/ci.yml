@@ -85,6 +85,36 @@ jobs:
       - name: Build browser and SSR bundles
         run: npm run build
 
+  speed-reading-frontend:
+    name: Speed Reading frontend checks
+    runs-on: ubuntu-latest
+    needs: [source-safety]
+    defaults:
+      run:
+        working-directory: clients/speed-reading
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: clients/speed-reading/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Fail on vulnerable npm packages
+        run: npm audit --audit-level=high
+
+      - name: Run frontend unit tests
+        run: npm test -- --watch=false --progress=false
+
+      - name: Build standalone browser bundle
+        run: npm run build -- --configuration production
+
   dotnet:
     name: Build (${{ matrix.name }})
     runs-on: ubuntu-latest
@@ -381,7 +411,7 @@ jobs:
   container-build:
     name: Container build (${{ matrix.name }})
     runs-on: ubuntu-latest
-    needs: [dotnet, tests, migration-drift, gateway-smoke, compose, vulnerabilities, frontend]
+    needs: [dotnet, tests, migration-drift, gateway-smoke, compose, vulnerabilities, frontend, speed-reading-frontend]
     strategy:
       fail-fast: false
       matrix:
@@ -404,6 +434,9 @@ jobs:
           - name: admin-panel
             context: clients/admin-panel
             dockerfile: clients/admin-panel/Dockerfile
+          - name: speed-reading-frontend
+            context: clients/speed-reading
+            dockerfile: clients/speed-reading/Dockerfile
     steps:
       - name: Checkout
         uses: actions/checkout@v4

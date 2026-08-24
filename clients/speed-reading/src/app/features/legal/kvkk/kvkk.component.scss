@@ -1,0 +1,90 @@
+@use '../terms/terms.component.scss' as *;
+
+.purpose-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+
+  thead {
+    background: #667eea;
+    color: white;
+
+    th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #eee;
+
+      &:nth-child(even) {
+        background: #f9f9f9;
+      }
+
+      td {
+        padding: 12px;
+      }
+
+      td:first-child {
+        font-weight: 600;
+        color: #667eea;
+        min-width: 150px;
+      }
+    }
+  }
+}
+
+.rights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+
+  .right-item {
+    background: #f5f7ff;
+    border-left: 4px solid #667eea;
+    padding: 16px;
+    border-radius: 4px;
+
+    h4 {
+      margin: 0 0 8px 0;
+      color: #667eea;
+      font-size: 16px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      color: #666;
+    }
+  }
+}
+
+.info-box {
+  background: #fff9e6;
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 16px 0;
+
+  p {
+    margin: 8px 0;
+
+    strong {
+      color: #ff9800;
+    }
+  }
+
+  a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

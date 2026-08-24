@@ -1,0 +1,47 @@
+<section class="blog-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>{{ sectionTitle }}</h2>
+            <p>{{ sectionSubtitle }}</p>
+        </div>
+
+        <div class="blog-grid">
+            <mat-card *ngFor="let post of posts" class="blog-card" [routerLink]="['/blog', post.slug]">
+                <div class="image-container">
+                    <div class="image-placeholder"></div>
+                    <span class="category-badge" [ngClass]="getCategoryColor(getCategory(post.tags))">
+                        {{ getCategory(post.tags) }}
+                    </span>
+                </div>
+
+                <mat-card-content>
+                    <div class="metadata">
+                        <span>
+                            <mat-icon>calendar_today</mat-icon>
+                            {{ formatDate(post.publishedAt) }}
+                        </span>
+                        <span>
+                            <mat-icon>schedule</mat-icon>
+                            {{ getReadTime(post.content) }}
+                        </span>
+                    </div>
+
+                    <h3>{{ post.title }}</h3>
+                    <p>{{ post.summary }}</p>
+
+                    <div class="author">
+                        <div class="avatar">{{ getAuthorInitials(post.author) }}</div>
+                        <span>{{ post.author || 'Anonim' }}</span>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+
+        <div class="cta-button">
+            <button mat-stroked-button routerLink="/blog" class="view-all-btn">
+                Tüm Blog Yazılarını Gör
+                <mat-icon>arrow_forward</mat-icon>
+            </button>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,316 @@
+
+// Variables for consistent theming
+$primary-color: #3f51b5;
+$success-bg: #ecfdf5;
+$success-text: #047857;
+$success-border: #a7f3d0;
+$danger-bg: #fef2f2;
+$danger-text: #b91c1c;
+$danger-border: #fecaca;
+$gray-border: #e5e7eb;
+$gray-bg: #f9fafb;
+$gray-text: #6b7280;
+
+:host {
+  display: block;
+}
+
+.dialog-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 90vh; /* Ensure it fits in viewport */
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 24px;
+  border-bottom: 1px solid $gray-border;
+  background-color: white;
+
+  .header-left {
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 4px;
+
+      .dialog-title {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #111827;
+      }
+
+      .status-badge {
+        padding: 2px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: 1px solid transparent;
+
+        &.active {
+          background-color: $success-bg;
+          color: $success-text;
+          border-color: $success-border;
+        }
+
+        &.passive {
+          background-color: $danger-bg;
+          color: $danger-text;
+          border-color: $danger-border;
+        }
+      }
+    }
+
+    .subtitle {
+      margin: 0;
+      color: $gray-text;
+      font-size: 0.875rem;
+    }
+  }
+
+  .close-btn {
+    margin-top: -8px;
+    margin-right: -8px;
+    color: #9ca3af;
+    
+    &:hover {
+      color: #4b5563;
+    }
+  }
+}
+
+.dialog-content {
+  padding: 24px !important; /* Override Material padding */
+  overflow-y: auto;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 32px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+
+  .info-card {
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+
+    label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      opacity: 0.8;
+    }
+
+    &.date-card {
+      background-color: #eff6ff;
+      border-color: #dbeafe;
+      label { color: #1e40af; }
+      .value { color: #1e3a8a; font-weight: 600; font-size: 1rem; }
+    }
+
+    &.status-card {
+      background-color: #faf5ff;
+      border-color: #f3e8ff;
+      label { color: #6b21a8; }
+      
+      .value-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        
+        span {
+            font-weight: 600;
+            color: #581c87;
+            font-size: 0.9rem;
+        }
+
+        .progress-track {
+            height: 6px;
+            background-color: #e9d5ff; // purple-200
+            border-radius: 999px;
+            overflow: hidden;
+            width: 100%;
+
+            .progress-fill {
+                height: 100%;
+                background-color: #a855f7; // purple-500
+                border-radius: 999px;
+                transition: width 0.5s ease-out;
+            }
+        }
+      }
+    }
+
+    &.desc-card {
+      grid-column: 1 / -1;
+      background-color: $gray-bg;
+      border-color: $gray-border;
+      label { color: #4b5563; }
+      p { margin: 0; font-size: 0.875rem; color: #374151; line-height: 1.5; }
+    }
+  }
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+
+  h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  .count-pill {
+    background-color: $gray-bg;
+    color: $gray-text;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+}
+
+.table-container {
+  border: 1px solid $gray-border;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 32px;
+
+  table {
+    width: 100%;
+    
+    th.mat-header-cell {
+        background-color: $gray-bg;
+        color: #4b5563;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        padding: 16px;
+    }
+
+    td.mat-cell {
+        padding: 12px 16px;
+        color: #374151;
+        font-size: 0.9rem;
+        border-bottom-color: #f3f4f6;
+
+        &.name-cell {
+            font-weight: 500;
+            color: #111827;
+        }
+
+        &.score-cell {
+            font-weight: 700;
+            color: $primary-color;
+        }
+    }
+
+    tr.mat-row:hover {
+        background-color: #f9fafb;
+    }
+
+    .status-cell {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        
+        mat-icon { font-size: 18px; width: 18px; height: 18px; color: #d1d5db; }
+        span { color: #6b7280; font-size: 0.85rem; }
+
+        &.done {
+            mat-icon { color: #10b981; }
+            span { color: #059669; font-weight: 500; }
+        }
+    }
+
+    .delete-btn {
+        opacity: 0.5;
+        transition: opacity 0.2s;
+        &:hover { opacity: 1; color: $danger-text; }
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 48px;
+        color: #9ca3af;
+        
+        mat-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 8px; opacity: 0.5; }
+        p { margin: 0; font-size: 0.95rem; }
+    }
+  }
+}
+
+.add-student-container {
+   background-color: #eef2ff; // indigo-50
+   border: 1px solid #e0e7ff; // indigo-100
+   border-radius: 12px;
+   padding: 20px;
+
+   .add-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      
+      mat-icon { color: $primary-color; font-size: 20px; width: 20px; height: 20px; }
+      h4 { margin: 0; font-size: 0.95rem; font-weight: 700; color: #312e81; }
+   }
+
+   .add-body {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+
+      .student-select {
+         flex: 1;
+         
+         // Override Material Input BG
+         ::ng-deep .mat-mdc-text-field-wrapper {
+             background-color: white !important;
+             border-radius: 8px;
+         }
+
+         .level-hint {
+             font-size: 0.75rem;
+             color: #9ca3af;
+             margin-left: 8px;
+         }
+      }
+
+      .add-btn {
+         height: 56px;
+         border-radius: 8px !important;
+         min-width: 100px;
+         font-weight: 600;
+         letter-spacing: 0.5px;
+      }
+   }
+}
+
+.loading-wrapper {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   height: 300px;
+   gap: 16px;
+   color: $gray-text;
+}

@@ -1,0 +1,217 @@
+// Exit Confirmation Dialog Styles
+.dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #212121 !important; // Koyu gri - görünürlük için
+  margin: 0;
+  padding: 20px 24px 16px;
+
+  .warning-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.dialog-content {
+  padding: 0 24px 20px;
+}
+
+.exit-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px 0;
+
+  .progress-info,
+  .warning-message,
+  .time-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    p {
+      margin: 0;
+      line-height: 1.6;
+      font-size: 15px;
+      color: var(--text-primary);
+    }
+
+    strong {
+      font-weight: 600;
+    }
+  }
+
+  .progress-info {
+    background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+    border: 2px solid var(--primary-blue);
+
+    mat-icon {
+      color: var(--primary-blue);
+    }
+
+    .progress-value {
+      color: var(--primary-blue);
+      font-size: 18px;
+    }
+  }
+
+  .warning-message {
+    background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+    border: 2px solid var(--warning-orange);
+
+    mat-icon {
+      color: var(--warning-orange);
+    }
+
+    strong {
+      color: var(--warning-orange-text);
+    }
+  }
+
+  .time-info {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: 12px 16px;
+    font-size: 14px;
+    color: var(--text-secondary);
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: var(--text-secondary);
+    }
+
+    strong {
+      color: var(--text-primary);
+    }
+  }
+}
+
+.dialog-actions {
+  padding: 16px 24px 20px;
+  gap: 12px;
+
+  button {
+    min-width: 120px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    transition: all var(--transition-fast);
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .continue-button {
+    color: var(--secondary-green);
+    border: 2px solid var(--secondary-green);
+
+    &:hover {
+      background: var(--secondary-green);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(67, 160, 71, 0.3);
+    }
+  }
+
+  .exit-button {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+    }
+  }
+}
+
+// Animation
+::ng-deep .mat-mdc-dialog-container {
+  animation: dialogFadeIn 0.3s ease;
+}
+
+@keyframes dialogFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .dialog-title {
+    font-size: 18px;
+    padding: 16px 20px 12px;
+
+    .warning-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  .dialog-content {
+    padding: 0 20px 16px;
+  }
+
+  .exit-dialog-content {
+    gap: 16px;
+
+    .progress-info,
+    .warning-message {
+      padding: 12px;
+
+      p {
+        font-size: 14px;
+      }
+    }
+  }
+
+  .dialog-actions {
+    padding: 12px 20px 16px;
+    flex-direction: column;
+
+    button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .dialog-title {
+    color: white;
+  }
+
+  .exit-dialog-content {
+    .progress-info {
+      background: linear-gradient(135deg, rgba(25, 118, 210, 0.2) 0%, rgba(25, 118, 210, 0.1) 100%);
+    }
+
+    .warning-message {
+      background: linear-gradient(135deg, rgba(255, 152, 0, 0.2) 0%, rgba(255, 152, 0, 0.1) 100%);
+    }
+  }
+}

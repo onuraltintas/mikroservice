@@ -1,0 +1,40 @@
+<app-navbar></app-navbar>
+
+<main class="about-page">
+    <section class="hero-section">
+        <div class="container">
+            <h1>{{ heroTitle }}</h1>
+            <p *ngIf="heroSubtitle">{{ heroSubtitle }}</p>
+        </div>
+    </section>
+
+    <div class="container content-container">
+        <section class="story-section" *ngIf="storyTitle || storyContent">
+            <h2 *ngIf="storyTitle">{{ storyTitle }}</h2>
+            <div class="rich-text" [innerHTML]="storyContent"></div>
+        </section>
+
+        <section class="mission-section" *ngIf="missionTitle || missionContent">
+            <h2 *ngIf="missionTitle">{{ missionTitle }}</h2>
+            <div class="rich-text" [innerHTML]="missionContent"></div>
+        </section>
+
+        <section class="testimonials-section" *ngIf="testimonials.length > 0">
+            <h2>Kullanıcı Yorumları</h2>
+            <div class="testimonials-grid">
+                <div class="testimonial-card" *ngFor="let item of testimonials">
+                    <div class="rating">
+                        <span class="star" *ngFor="let s of getStars(item.rating)" [class.filled]="s === 1">★</span>
+                    </div>
+                    <p class="text">"{{ item.text }}"</p>
+                    <div class="author">
+                        <strong>{{ item.name }}</strong>
+                        <span>{{ item.role }}</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<app-footer></app-footer>

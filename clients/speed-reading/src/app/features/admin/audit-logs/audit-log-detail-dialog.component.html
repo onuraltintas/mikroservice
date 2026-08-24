@@ -1,0 +1,94 @@
+<div class="dialog-header">
+    <div class="header-content">
+        <mat-icon>history</mat-icon>
+        <h2>Aktivite Log Detayı</h2>
+    </div>
+    <button mat-icon-button mat-dialog-close class="close-btn">
+        <mat-icon>close</mat-icon>
+    </button>
+</div>
+
+<mat-dialog-content>
+    <!-- Loading State -->
+    <div *ngIf="loading()" class="loading-state">
+        <mat-spinner diameter="60"></mat-spinner>
+        <p>Yükleniyor...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error" class="error-state">
+        <mat-icon>error</mat-icon>
+        <p>{{ error }}</p>
+    </div>
+
+    <!-- Log Detail -->
+    <div *ngIf="log && !loading()" class="log-detail">
+        <!-- Basic Info -->
+        <mat-card class="info-section">
+            <h3><mat-icon>info</mat-icon> Genel Bilgiler</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label><mat-icon>person</mat-icon> Kullanıcı:</label>
+                    <span>{{ log.userName }} <small>({{ log.userEmail }})</small></span>
+                </div>
+                <div class="info-item">
+                    <label><mat-icon>schedule</mat-icon> Tarih/Saat:</label>
+                    <span>{{ log.timestamp | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+                </div>
+                <div class="info-item">
+                    <label><mat-icon>bolt</mat-icon> Aksiyon:</label>
+                    <span class="action-badge" [class]="'action-' + log.action.toLowerCase()">
+                        {{ log.action }}
+                    </span>
+                </div>
+                <div class="info-item" *ngIf="log.entityType">
+                    <label><mat-icon>category</mat-icon> Varlık Tipi:</label>
+                    <span>{{ log.entityType }}</span>
+                </div>
+                <div class="info-item" *ngIf="log.entityName">
+                    <label><mat-icon>label</mat-icon> Varlık Adı:</label>
+                    <span>{{ log.entityName }}</span>
+                </div>
+                <div class="info-item">
+                    <label><mat-icon>computer</mat-icon> IP Adresi:</label>
+                    <span class="ip-address">{{ log.ipAddress }}</span>
+                </div>
+                <div class="info-item full-width" *ngIf="log.userAgent">
+                    <label><mat-icon>devices</mat-icon> User Agent:</label>
+                    <span class="user-agent">{{ log.userAgent }}</span>
+                </div>
+            </div>
+        </mat-card>
+
+        <!-- Old vs New Values Comparison -->
+        <div class="values-comparison" *ngIf="log.oldValues || log.newValues">
+            <h3><mat-icon>compare_arrows</mat-icon> Değişiklikler</h3>
+            <div class="comparison-grid">
+                <!-- Old Values -->
+                <mat-card class="values-section old-values" *ngIf="log.oldValues">
+                    <h4><mat-icon>history</mat-icon> Eski Değerler</h4>
+                    <pre class="json-display">{{ formatJson(log.oldValues) }}</pre>
+                </mat-card>
+
+                <!-- New Values -->
+                <mat-card class="values-section new-values" *ngIf="log.newValues">
+                    <h4><mat-icon>new_releases</mat-icon> Yeni Değerler</h4>
+                    <pre class="json-display">{{ formatJson(log.newValues) }}</pre>
+                </mat-card>
+            </div>
+        </div>
+
+        <!-- Additional Info -->
+        <mat-card class="info-section" *ngIf="log.additionalInfo">
+            <h3><mat-icon>notes</mat-icon> Ek Bilgiler</h3>
+            <p class="additional-info">{{ log.additionalInfo }}</p>
+        </mat-card>
+    </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-raised-button mat-dialog-close color="primary">
+        <mat-icon>close</mat-icon>
+        Kapat
+    </button>
+</mat-dialog-actions>

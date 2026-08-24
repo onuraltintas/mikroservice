@@ -1,0 +1,85 @@
+<div class="announcements-container">
+    <div class="header">
+        <h1>Announcement Management</h1>
+        <button class="btn-primary" (click)="createNew()">
+            ➕ Create Announcement
+        </button>
+    </div>
+
+    <div class="filters">
+        <select [(ngModel)]="filterActive" (change)="loadAnnouncements()">
+            <option [ngValue]="undefined">All Status</option>
+            <option [ngValue]="true">Active Only</option>
+            <option [ngValue]="false">Inactive Only</option>
+        </select>
+
+        <select [(ngModel)]="filterAudience" (change)="loadAnnouncements()">
+            <option [ngValue]="undefined">All Audiences</option>
+            <option [ngValue]="Audience.All">All Users</option>
+            <option [ngValue]="Audience.Students">Students</option>
+            <option [ngValue]="Audience.Teachers">Teachers</option>
+            <option [ngValue]="Audience.Admins">Admins</option>
+        </select>
+
+        <label>
+            <input type="checkbox" [(ngModel)]="includeExpired" (change)="loadAnnouncements()">
+            Include Expired
+        </label>
+    </div>
+
+    <div class="announcements-list">
+        <div *ngFor="let announcement of announcements" class="announcement-card">
+            <div class="card-header">
+                <div class="title-section">
+                    <span *ngIf="announcement.isPinned" class="badge badge-pinned">📌 Pinned</span>
+                    <span class="badge" [class]="'badge-' + getPriorityClass(announcement.priority)">
+                        {{ getPriorityLabel(announcement.priority) }}
+                    </span>
+                    <h3>{{ announcement.title }}</h3>
+                </div>
+                <div class="status-section">
+                    <span class="badge" [class.badge-active]="announcement.isActive"
+                        [class.badge-inactive]="!announcement.isActive">
+                        {{ announcement.isActive ? 'Active' : 'Inactive' }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="info-row">
+                    <span><strong>Audience:</strong> {{ getAudienceLabel(announcement.targetAudience) }}</span>
+                    <span><strong>Display:</strong> {{ getDisplayTypeLabel(announcement.displayType) }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span><strong>Views:</strong> {{ announcement.viewCount }}</span>
+                    <span><strong>Clicks:</strong> {{ announcement.clickCount }}</span>
+                    <span><strong>CTR:</strong> {{ calculateCTR(announcement) }}%</span>
+                </div>
+
+                <div class="info-row">
+                    <span><strong>Created:</strong> {{ announcement.createdAt | date:'short' }}</span>
+                    <span *ngIf="announcement.expiresAt">
+                        <strong>Expires:</strong> {{ announcement.expiresAt | date:'short' }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="card-actions">
+                <button class="btn-secondary" (click)="viewStats(announcement.id)">
+                    📊 Stats
+                </button>
+                <button class="btn-secondary" (click)="edit(announcement.id)">
+                    ✏️ Edit
+                </button>
+                <button class="btn-danger" (click)="delete(announcement.id)">
+                    🗑️ Delete
+                </button>
+            </div>
+        </div>
+
+        <div *ngIf="announcements.length === 0" class="no-data">
+            No announcements found
+        </div>
+    </div>
+</div>

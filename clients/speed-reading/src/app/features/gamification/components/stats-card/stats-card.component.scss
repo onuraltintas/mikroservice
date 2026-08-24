@@ -1,0 +1,195 @@
+.stats-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+  color: white;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  ::ng-deep .mat-mdc-card-content {
+    padding: 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  // Decorative background pattern
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.icon-wrapper {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: white;
+  }
+}
+
+.trend-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+
+  .trend-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+
+    &.trend-up {
+      color: #4CAF50;
+      animation: trendUp 0.6s ease-out;
+    }
+
+    &.trend-down {
+      color: #F44336;
+      animation: trendDown 0.6s ease-out;
+    }
+
+    &.trend-neutral {
+      color: #FFC107;
+    }
+  }
+
+  .trend-value {
+    font-size: 12px;
+    font-weight: 600;
+  }
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stats-title {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+  opacity: 0.95;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stats-value {
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 8px 0;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  animation: countUp 0.6s ease-out;
+}
+
+.stats-subtitle {
+  font-size: 12px;
+  margin: 0;
+  opacity: 0.85;
+  font-weight: 400;
+}
+
+// Animations
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes trendUp {
+  0%, 50% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-4px);
+  }
+  75% {
+    transform: translateY(4px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes trendDown {
+  0%, 50% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(4px);
+  }
+  75% {
+    transform: translateY(-4px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .stats-card {
+    ::ng-deep .mat-mdc-card-content {
+      padding: 20px;
+    }
+  }
+
+  .icon-wrapper {
+    width: 48px;
+    height: 48px;
+
+    mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  .stats-value {
+    font-size: 30px;
+  }
+
+  .stats-title {
+    font-size: 13px;
+  }
+}

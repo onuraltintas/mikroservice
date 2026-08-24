@@ -1,0 +1,31 @@
+<div class="unsubscribe-container">
+    <mat-card class="unsubscribe-card">
+        <mat-card-content>
+            <!-- Loading State -->
+            <div *ngIf="loading" class="spinner-container">
+                <mat-spinner diameter="50"></mat-spinner>
+                <p>Abonelikten ayrılınıyor, lütfen bekleyin...</p>
+            </div>
+
+            <!-- Success State -->
+            <div *ngIf="!loading && success">
+                <mat-icon class="status-icon success">check_circle</mat-icon>
+                <h2>Abonelik İptal Edildi</h2>
+                <p>{{ message }}</p>
+                <div style="margin-top: 30px;">
+                    <a mat-button color="primary" routerLink="/">Ana Sayfaya Dön</a>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div *ngIf="!loading && !success">
+                <mat-icon class="status-icon error">error</mat-icon>
+                <h2>İşlem Başarısız</h2>
+                <p>{{ message }}</p>
+                <div style="margin-top: 30px;">
+                    <a mat-button color="primary" routerLink="/">Ana Sayfaya Dön</a>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</div>

@@ -1,0 +1,133 @@
+@use '@angular/material' as mat;
+
+:host {
+    display: block;
+}
+
+h2[mat-dialog-title] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px; // Reduced padding
+    margin: 0;
+    font-size: 20px; // Slightly smaller title
+    font-weight: 500;
+    color: #1a1a1a;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    background: #fff;
+
+    .title-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        mat-icon {
+            width: 24px;
+            height: 24px;
+            font-size: 24px;
+            color: #3f51b5;
+        }
+    }
+}
+
+mat-dialog-content {
+    padding: 20px 24px !important; // Reduced padding
+    background-color: #fff; // White bg looks cleaner usually
+    max-height: 80vh;
+
+    @media (max-width: 600px) {
+        max-height: calc(100vh - 140px); // Leave space for header (approx 60px) and footer (approx 80px)
+    }
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px; // Reduced gap
+    padding-top: 8px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px; // Reduced gap
+    align-items: flex-start;
+
+    @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.full-width {
+    width: 100%;
+    grid-column: 1 / -1;
+}
+
+.section-title {
+    grid-column: 1 / -1;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #3f51b5; // Colored section title for better visibility
+    font-weight: 600;
+    margin-top: 8px;
+    margin-bottom: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    padding-bottom: 4px;
+}
+
+mat-form-field {
+    width: 100%;
+    // Removed custom override that was breaking labels
+}
+
+
+.password-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.password-errors {
+    padding-left: 4px;
+    margin-top: -8px;
+
+    small {
+        font-size: 11px;
+        line-height: 1.2;
+    }
+}
+
+.w-100 {
+    width: 100%;
+}
+
+.status-toggle {
+    display: flex;
+    align-items: center;
+    height: 56px; // Match input height roughly
+}
+
+mat-dialog-actions {
+    padding: 16px 24px !important; // Reduced padding
+    background: #fff;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+// Button styling improvements
+button[mat-button] {
+    font-weight: 500;
+}
+
+button[mat-raised-button] {
+    padding: 0 24px;
+    height: 40px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 20px;
+    elevation: 0; // Flat look
+
+    &:not(:disabled) {
+        box-shadow: 0 4px 12px rgba(63, 81, 181, 0.2);
+    }
+}

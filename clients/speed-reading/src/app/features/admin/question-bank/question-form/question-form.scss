@@ -1,0 +1,185 @@
+// Variables
+$primary-color: #3f51b5;
+$bg-color: #f5f7fa;
+$card-bg: #ffffff;
+$border-radius: 12px;
+$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+:host {
+    display: block;
+    background-color: $bg-color;
+    min-height: 100%;
+    padding-bottom: 2rem;
+}
+
+.form-actions-footer {
+    display: none;
+}
+
+.page-header {
+    background: white;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    h1 {
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #2c3e50;
+    }
+}
+
+.form-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.content-card {
+    border-radius: $border-radius;
+    border: none;
+    box-shadow: $shadow-md;
+    height: 100%;
+
+    mat-card-header {
+        padding: 1.5rem 1.5rem 0;
+
+        mat-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: $primary-color;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    }
+}
+
+// Option Cards
+.option-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.2s ease;
+    position: relative;
+
+    &:hover {
+        border-color: rgba($primary-color, 0.5);
+        background-color: rgba($primary-color, 0.02);
+    }
+
+    &.is-correct {
+        border-color: #4caf50;
+        background-color: #e8f5e9;
+
+        .option-label {
+            background-color: #4caf50;
+            color: white;
+        }
+    }
+
+    .option-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        gap: 10px;
+    }
+
+    .option-label {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background-color: #f0f0f0;
+        color: #666;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .correct-toggle {
+        margin-left: auto;
+    }
+}
+
+.sticky-column {
+    position: sticky;
+    top: 2rem;
+}
+
+textarea {
+    line-height: 1.6;
+    font-size: 1rem;
+}
+
+// Global Form Field Overrides
+mat-form-field {
+    width: 100%;
+
+    .mat-mdc-form-field-subscript-wrapper {
+        // Prevent layout shift if needed, or keep default
+    }
+}
+
+// Ensure textareas fill the width
+textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+// Grid Layouts
+.options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+
+    @media (max-width: 992px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 576px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+// Responsive
+@media (max-width: 992px) {
+    .sticky-column {
+        position: static;
+    }
+
+    .form-container {
+        padding: 0 1rem;
+    }
+}
+
+.form-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 2rem; // Moderate gap between buttons (32px)
+    margin-top: 2.5rem;
+    margin-bottom: 3rem;
+    padding-top: 1rem;
+}

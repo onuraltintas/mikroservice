@@ -1,0 +1,304 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2><mat-icon>person</mat-icon> {{ studentName || 'Öğrenci Detayı' }}</h2>
+    <button mat-stroked-button routerLink="/coaching/students">
+      <mat-icon>arrow_back</mat-icon> Listeye Dön
+    </button>
+  </div>
+
+  <div *ngIf="loading()" class="loading-container"><mat-spinner diameter="48"></mat-spinner></div>
+
+  <ng-container *ngIf="!loading()">
+    <!-- Özet Kartlar -->
+    <div class="dashboard-stats" style="margin-bottom:20px">
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <mat-icon class="stat-icon" style="color:#388E3C">flag</mat-icon>
+          <div class="stat-value">{{ activeGoals }}</div>
+          <div class="stat-label">Aktif Hedef</div>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <mat-icon class="stat-icon" style="color:#F57C00">assignment</mat-icon>
+          <div class="stat-value">{{ pendingAssignments }}</div>
+          <div class="stat-label">Bekleyen Ödev</div>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <mat-icon class="stat-icon" style="color:#1976D2">event</mat-icon>
+          <div class="stat-value">{{ sessions.length }}</div>
+          <div class="stat-label">Toplam Seans</div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Sekmeler -->
+    <mat-card>
+      <mat-card-content style="padding:0">
+        <mat-tab-group animationDuration="200ms">
+
+          <!-- Hedefler -->
+          <mat-tab label="Hedefler">
+            <div style="padding:16px">
+              <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+                <button mat-raised-button color="primary" (click)="openNewGoal()">
+                  <mat-icon>add</mat-icon> Yeni Hedef
+                </button>
+              </div>
+              <div *ngIf="goals.length === 0" class="empty-state"><mat-icon>flag_outlined</mat-icon><p>Henüz hedef yok</p></div>
+              <table mat-table [dataSource]="goals" *ngIf="goals.length > 0" class="full-width-table">
+                <ng-container matColumnDef="title">
+                  <th mat-header-cell *matHeaderCellDef>Başlık</th>
+                  <td mat-cell *matCellDef="let g"><span [matTooltip]="g.successCriteria">{{ g.title }}</span></td>
+                </ng-container>
+                <ng-container matColumnDef="level">
+                  <th mat-header-cell *matHeaderCellDef>Seviye</th>
+                  <td mat-cell *matCellDef="let g">
+                    <span class="level-badge level-{{ g.level.toLowerCase() }}">{{ levelLabels[g.level] }}</span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="targetDate">
+                  <th mat-header-cell *matHeaderCellDef>Hedef Tarih</th>
+                  <td mat-cell *matCellDef="let g">{{ g.targetDate | date:'dd.MM.yyyy' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="progress">
+                  <th mat-header-cell *matHeaderCellDef>İlerleme</th>
+                  <td mat-cell *matCellDef="let g" style="min-width:140px">
+                    <div class="progress-cell">
+                      <mat-progress-bar mode="determinate" [value]="g.completionPercentage"></mat-progress-bar>
+                      <span class="progress-label">%{{ g.completionPercentage | number:'1.0-0' }}</span>
+                    </div>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef></th>
+                  <td mat-cell *matCellDef="let g">
+                    <button mat-icon-button matTooltip="İlerleme Güncelle" (click)="checkInGoal(g)" *ngIf="g.status === 'Active'">
+                      <mat-icon>update</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="goalColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: goalColumns;"></tr>
+              </table>
+            </div>
+          </mat-tab>
+
+          <!-- Seanslar -->
+          <mat-tab label="Koçluk Seansları">
+            <div style="padding:16px">
+              <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+                <button mat-raised-button color="primary" (click)="openNewSession()">
+                  <mat-icon>add</mat-icon> Seans Planla
+                </button>
+              </div>
+              <div *ngIf="sessions.length === 0" class="empty-state"><mat-icon>event_busy</mat-icon><p>Henüz seans yok</p></div>
+              <table mat-table [dataSource]="sessions" *ngIf="sessions.length > 0" class="full-width-table">
+                <ng-container matColumnDef="scheduledAt">
+                  <th mat-header-cell *matHeaderCellDef>Tarih / Saat</th>
+                  <td mat-cell *matCellDef="let s">{{ s.scheduledAt | date:'dd.MM.yyyy HH:mm' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="type">
+                  <th mat-header-cell *matHeaderCellDef>Tip</th>
+                  <td mat-cell *matCellDef="let s">{{ sessionTypeLabels[s.sessionType] }}</td>
+                </ng-container>
+                <ng-container matColumnDef="duration">
+                  <th mat-header-cell *matHeaderCellDef>Süre</th>
+                  <td mat-cell *matCellDef="let s">
+                    {{ s.actualDurationMinutes ?? s.plannedDurationMinutes }} dk
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef>Durum</th>
+                  <td mat-cell *matCellDef="let s">
+                    <span class="status-badge status-{{ s.status.toLowerCase() }}">{{ sessionStatusLabels[s.status] }}</span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="sessionActions">
+                  <th mat-header-cell *matHeaderCellDef></th>
+                  <td mat-cell *matCellDef="let s">
+                    <button mat-icon-button color="accent" *ngIf="s.status === 'Scheduled'"
+                      matTooltip="Seansı Tamamla" (click)="completeSession(s)">
+                      <mat-icon>check_circle</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="sessionColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: sessionColumns;"></tr>
+              </table>
+            </div>
+          </mat-tab>
+
+          <!-- Çalışma Seansları -->
+          <mat-tab label="Çalışmalar">
+            <div style="padding:16px">
+              <div *ngIf="studySessions.length === 0" class="empty-state"><mat-icon>menu_book</mat-icon><p>Henüz çalışma kaydı yok</p></div>
+              <table mat-table [dataSource]="studySessions" *ngIf="studySessions.length > 0" class="full-width-table">
+                <ng-container matColumnDef="date">
+                  <th mat-header-cell *matHeaderCellDef>Tarih</th>
+                  <td mat-cell *matCellDef="let ss">{{ ss.date | date:'dd.MM.yyyy' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="subject">
+                  <th mat-header-cell *matHeaderCellDef>Ders</th>
+                  <td mat-cell *matCellDef="let ss">{{ getSubjectName(ss.subjectId) }}</td>
+                </ng-container>
+                <ng-container matColumnDef="studyType">
+                  <th mat-header-cell *matHeaderCellDef>Tip</th>
+                  <td mat-cell *matCellDef="let ss">{{ studyTypeLabels[ss.studyType] || ss.studyType }}</td>
+                </ng-container>
+                <ng-container matColumnDef="duration">
+                  <th mat-header-cell *matHeaderCellDef>Süre</th>
+                  <td mat-cell *matCellDef="let ss">{{ ss.actualMinutes }} dk</td>
+                </ng-container>
+                <ng-container matColumnDef="questions">
+                  <th mat-header-cell *matHeaderCellDef>Soru</th>
+                  <td mat-cell *matCellDef="let ss">
+                    {{ ss.questionsSolved }}
+                    <span *ngIf="ss.correctAnswers != null" class="text-muted"> ({{ ss.correctAnswers }}D)</span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="verified">
+                  <th mat-header-cell *matHeaderCellDef>Onay</th>
+                  <td mat-cell *matCellDef="let ss">
+                    <mat-icon *ngIf="ss.isVerifiedByCoach" style="color:#4CAF50;font-size:20px" matTooltip="Koç tarafından onaylandı">verified</mat-icon>
+                    <mat-icon *ngIf="!ss.isVerifiedByCoach" style="color:#bbb;font-size:20px" matTooltip="Henüz onaylanmadı">pending</mat-icon>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="verifyAction">
+                  <th mat-header-cell *matHeaderCellDef></th>
+                  <td mat-cell *matCellDef="let ss">
+                    <button mat-icon-button color="primary" *ngIf="!ss.isVerifiedByCoach"
+                      matTooltip="Onayla" (click)="verifyStudySession(ss.id)">
+                      <mat-icon>check</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="studySessionColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: studySessionColumns;"></tr>
+              </table>
+            </div>
+          </mat-tab>
+
+          <!-- Ödevler -->
+          <mat-tab label="Ödevler">
+            <div style="padding:16px">
+              <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+                <button mat-raised-button color="primary" (click)="openNewAssignment()">
+                  <mat-icon>add</mat-icon> Ödev Ver
+                </button>
+              </div>
+              <div *ngIf="assignments.length === 0" class="empty-state"><mat-icon>assignment_late</mat-icon><p>Henüz ödev yok</p></div>
+              <table mat-table [dataSource]="assignments" *ngIf="assignments.length > 0" class="full-width-table">
+                <ng-container matColumnDef="title">
+                  <th mat-header-cell *matHeaderCellDef>Ödev</th>
+                  <td mat-cell *matCellDef="let a"><strong>{{ a.title }}</strong></td>
+                </ng-container>
+                <ng-container matColumnDef="dueDate">
+                  <th mat-header-cell *matHeaderCellDef>Son Tarih</th>
+                  <td mat-cell *matCellDef="let a">{{ a.dueDate | date:'dd.MM.yyyy' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef>Durum</th>
+                  <td mat-cell *matCellDef="let a">
+                    <span class="status-badge status-{{ a.status === 'Pending' ? 'scheduled' : a.status === 'Completed' ? 'completed' : 'cancelled' }}">
+                      {{ assignmentStatusLabels[a.status] }}
+                    </span>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="assignmentColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: assignmentColumns;"></tr>
+              </table>
+            </div>
+          </mat-tab>
+
+          <!-- Zayıf Konu Analizi -->
+          <mat-tab label="Zayıf Konular">
+            <div style="padding:16px">
+              <div *ngIf="weakSubjects.length === 0" class="empty-state">
+                <mat-icon>analytics</mat-icon><p>Analiz için yeterli sınav verisi yok</p>
+              </div>
+              <table mat-table [dataSource]="weakSubjects" *ngIf="weakSubjects.length > 0" class="full-width-table">
+                <ng-container matColumnDef="subjectName">
+                  <th mat-header-cell *matHeaderCellDef>Ders</th>
+                  <td mat-cell *matCellDef="let a"><strong>{{ a.subjectName }}</strong></td>
+                </ng-container>
+                <ng-container matColumnDef="averageNet">
+                  <th mat-header-cell *matHeaderCellDef>Ort. Net</th>
+                  <td mat-cell *matCellDef="let a">{{ a.averageNet | number:'1.2-2' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="deficit">
+                  <th mat-header-cell *matHeaderCellDef>Açık</th>
+                  <td mat-cell *matCellDef="let a">
+                    <span [style.color]="a.deficit > 5 ? '#f44336' : a.deficit > 0 ? '#F57C00' : '#4CAF50'"
+                          [style.fontWeight]="a.deficit > 5 ? '600' : 'normal'">
+                      {{ a.deficit > 0 ? '-' : '' }}{{ a.deficit | number:'1.1-1' }}
+                    </span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="trend">
+                  <th mat-header-cell *matHeaderCellDef>Trend</th>
+                  <td mat-cell *matCellDef="let a">
+                    <mat-icon [style.color]="a.trend === 'improving' ? '#4CAF50' : a.trend === 'declining' ? '#f44336' : '#F57C00'">
+                      {{ a.trend === 'improving' ? 'trending_up' : a.trend === 'declining' ? 'trending_down' : 'trending_flat' }}
+                    </mat-icon>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="dataPoints">
+                  <th mat-header-cell *matHeaderCellDef>Son Netler</th>
+                  <td mat-cell *matCellDef="let a">
+                    <span *ngFor="let dp of a.dataPoints; let i = index">
+                      <span [matTooltip]="dp.examDate | date:'dd.MM.yyyy'">{{ dp.net | number:'1.1-1' }}</span>
+                      <span *ngIf="i < a.dataPoints.length - 1" class="text-muted"> → </span>
+                    </span>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="weakSubjectColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: weakSubjectColumns;"></tr>
+              </table>
+            </div>
+          </mat-tab>
+
+          <!-- Sınav Sonuçları -->
+          <mat-tab label="Sınav Sonuçları">
+            <div style="padding:16px">
+              <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+                <button mat-raised-button color="primary" (click)="openNewExam()">
+                  <mat-icon>add</mat-icon> Sonuç Gir
+                </button>
+              </div>
+              <div *ngIf="examResults.length === 0" class="empty-state"><mat-icon>quiz</mat-icon><p>Henüz sınav sonucu yok</p></div>
+              <table mat-table [dataSource]="examResults" *ngIf="examResults.length > 0" class="full-width-table">
+                <ng-container matColumnDef="examName">
+                  <th mat-header-cell *matHeaderCellDef>Sınav</th>
+                  <td mat-cell *matCellDef="let e"><strong>{{ e.examName }}</strong></td>
+                </ng-container>
+                <ng-container matColumnDef="examDate">
+                  <th mat-header-cell *matHeaderCellDef>Tarih</th>
+                  <td mat-cell *matCellDef="let e">{{ e.examDate | date:'dd.MM.yyyy' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="examType">
+                  <th mat-header-cell *matHeaderCellDef>Tip</th>
+                  <td mat-cell *matCellDef="let e">
+                    <span class="status-badge status-active">{{ examTypeLabels[e.examType] }}</span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="totalNet">
+                  <th mat-header-cell *matHeaderCellDef>Toplam Net</th>
+                  <td mat-cell *matCellDef="let e">
+                    <span *ngIf="e.totalNet != null">{{ e.totalNet | number:'1.2-2' }}</span>
+                    <span *ngIf="e.totalNet == null" class="text-muted">—</span>
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="examColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: examColumns;"></tr>
+              </table>
+            </div>
+          </mat-tab>
+
+        </mat-tab-group>
+      </mat-card-content>
+    </mat-card>
+  </ng-container>
+</div>

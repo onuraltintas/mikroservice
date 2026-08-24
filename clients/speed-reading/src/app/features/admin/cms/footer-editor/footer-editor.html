@@ -1,0 +1,228 @@
+<div class="footer-editor" [formGroup]="footerForm">
+    <div class="header">
+        <h2>Footer Yönetimi</h2>
+        <div class="actions">
+            <button mat-button (click)="onCancel()" [disabled]="loading()">
+                <mat-icon>cancel</mat-icon>
+                İptal
+            </button>
+            <button mat-raised-button color="primary" (click)="onSave()" [disabled]="footerForm.invalid || loading()">
+                <mat-spinner *ngIf="loading()" diameter="20" class="button-spinner"></mat-spinner>
+                <mat-icon *ngIf="!loading()">save</mat-icon>
+                {{ loading() ? 'Kaydediliyor...' : 'Kaydet' }}
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-overlay" *ngIf="loading()"
+        style="display: flex; justify-content: center; align-items: center; padding: 4rem;">
+        <mat-spinner diameter="48"></mat-spinner>
+    </div>
+
+    <mat-tab-group animationDuration="0ms" *ngIf="!loading()">
+        <!-- Branding Tab -->
+        <mat-tab label="Logo & Tagline">
+            <div class="tab-content" formGroupName="branding">
+                <h3>Marka Bilgileri</h3>
+                <p class="helper-text">Logo metni ve slogan ayarları</p>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Logo Metni</mat-label>
+                    <input matInput formControlName="logoText" placeholder="Hızlı Okuma">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Slogan (Tagline)</mat-label>
+                    <textarea matInput formControlName="tagline" rows="2"
+                        placeholder="Okuma hızınızı bilimsel yöntemlerle 3 katına çıkarın"></textarea>
+                </mat-form-field>
+            </div>
+        </mat-tab>
+
+        <!-- Social Media Tab -->
+        <mat-tab label="Sosyal Medya">
+            <div class="tab-content">
+                <h3>Sosyal Medya Linkleri</h3>
+                <p class="helper-text">Footer'da gösterilecek sosyal medya hesapları</p>
+
+                <div formArrayName="socialLinks">
+                    <div *ngFor="let link of socialLinksList.controls; let i = index; trackBy: trackByFn"
+                        class="form-array-item">
+                        <div [formGroup]="$any(link)" class="link-row">
+                            <mat-form-field appearance="outline" style="flex: 1">
+                                <mat-label>Platform</mat-label>
+                                <mat-select formControlName="icon">
+                                    <mat-option *ngFor="let opt of socialIconOptions" [value]="opt.value">
+                                        <mat-icon>{{opt.value}}</mat-icon> {{opt.label}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline" style="flex: 2">
+                                <mat-label>URL</mat-label>
+                                <input matInput formControlName="url" placeholder="https://facebook.com/...">
+                            </mat-form-field>
+
+                            <button mat-icon-button color="warn" (click)="removeSocialLink(i)" title="Sil">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="empty-state" *ngIf="socialLinksList.controls.length === 0">
+                    <p>Henüz sosyal medya linki eklenmemiş.</p>
+                </div>
+
+                <button mat-stroked-button (click)="addSocialLink()" class="add-btn">
+                    <mat-icon>add</mat-icon>
+                    Sosyal Medya Ekle
+                </button>
+            </div>
+        </mat-tab>
+
+        <!-- Product Links Tab -->
+        <mat-tab label="Ürün Linkleri">
+            <div class="tab-content">
+                <h3>Ürün Linkleri</h3>
+                <p class="helper-text">"Ürün" sütununda gösterilecek linkler</p>
+
+                <div formArrayName="productLinks">
+                    <div *ngFor="let link of productLinksList.controls; let i = index; trackBy: trackByFn"
+                        class="form-array-item">
+                        <div [formGroup]="$any(link)" class="link-row">
+                            <mat-form-field appearance="outline" style="flex: 1">
+                                <mat-label>Etiket</mat-label>
+                                <input matInput formControlName="label" placeholder="Özellikler">
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline" style="flex: 1">
+                                <mat-label>Route</mat-label>
+                                <input matInput formControlName="route" placeholder="/">
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline" style="flex: 1">
+                                <mat-label>Fragment (opsiyonel)</mat-label>
+                                <input matInput formControlName="fragment" placeholder="ozellikler">
+                            </mat-form-field>
+
+                            <button mat-icon-button color="warn" (click)="removeProductLink(i)" title="Sil">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="empty-state" *ngIf="productLinksList.controls.length === 0">
+                    <p>Henüz link eklenmemiş.</p>
+                </div>
+
+                <button mat-stroked-button (click)="addProductLink()" class="add-btn">
+                    <mat-icon>add</mat-icon>
+                    Link Ekle
+                </button>
+            </div>
+        </mat-tab>
+
+        <!-- Support Links Tab -->
+        <mat-tab label="Destek Linkleri">
+            <div class="tab-content">
+                <h3>Destek Linkleri</h3>
+                <p class="helper-text">"Destek" sütununda gösterilecek linkler</p>
+
+                <div formArrayName="supportLinks">
+                    <div *ngFor="let link of supportLinksList.controls; let i = index; trackBy: trackByFn"
+                        class="form-array-item">
+                        <div [formGroup]="$any(link)" class="link-row">
+                            <mat-form-field appearance="outline" style="flex: 1">
+                                <mat-label>Etiket</mat-label>
+                                <input matInput formControlName="label" placeholder="SSS">
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline" style="flex: 1">
+                                <mat-label>Route</mat-label>
+                                <input matInput formControlName="route" placeholder="/sss">
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline" style="flex: 1">
+                                <mat-label>Fragment (opsiyonel)</mat-label>
+                                <input matInput formControlName="fragment" placeholder="">
+                            </mat-form-field>
+
+                            <button mat-icon-button color="warn" (click)="removeSupportLink(i)" title="Sil">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="empty-state" *ngIf="supportLinksList.controls.length === 0">
+                    <p>Henüz link eklenmemiş.</p>
+                </div>
+
+                <button mat-stroked-button (click)="addSupportLink()" class="add-btn">
+                    <mat-icon>add</mat-icon>
+                    Link Ekle
+                </button>
+            </div>
+        </mat-tab>
+
+        <!-- Legal Links Tab -->
+        <mat-tab label="Yasal Linkler">
+            <div class="tab-content">
+                <h3>Yasal Linkler</h3>
+                <p class="helper-text">"Yasal" sütununda gösterilecek linkler</p>
+
+                <div formArrayName="legalLinks">
+                    <div *ngFor="let link of legalLinksList.controls; let i = index; trackBy: trackByFn"
+                        class="form-array-item">
+                        <div [formGroup]="$any(link)" class="link-row">
+                            <mat-form-field appearance="outline" style="flex: 1">
+                                <mat-label>Etiket</mat-label>
+                                <input matInput formControlName="label" placeholder="Gizlilik Politikası">
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline" style="flex: 1">
+                                <mat-label>Route</mat-label>
+                                <input matInput formControlName="route" placeholder="/legal/privacy">
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline" style="flex: 1">
+                                <mat-label>Fragment (opsiyonel)</mat-label>
+                                <input matInput formControlName="fragment" placeholder="">
+                            </mat-form-field>
+
+                            <button mat-icon-button color="warn" (click)="removeLegalLink(i)" title="Sil">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="empty-state" *ngIf="legalLinksList.controls.length === 0">
+                    <p>Henüz link eklenmemiş.</p>
+                </div>
+
+                <button mat-stroked-button (click)="addLegalLink()" class="add-btn">
+                    <mat-icon>add</mat-icon>
+                    Link Ekle
+                </button>
+            </div>
+        </mat-tab>
+
+        <!-- Copyright Tab -->
+        <mat-tab label="Copyright">
+            <div class="tab-content" formGroupName="copyright">
+                <h3>Copyright Metni</h3>
+                <p class="helper-text">Footer'ın en altında gösterilecek telif hakkı metni</p>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Copyright Metni</mat-label>
+                    <input matInput formControlName="text" placeholder="Hızlı Okuma Platformu. Tüm hakları saklıdır.">
+                    <mat-hint>Yıl otomatik olarak eklenir (© 2024 ...)</mat-hint>
+                </mat-form-field>
+            </div>
+        </mat-tab>
+    </mat-tab-group>
+</div>

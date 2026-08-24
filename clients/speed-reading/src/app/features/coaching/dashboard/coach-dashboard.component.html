@@ -1,0 +1,147 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2><mat-icon>dashboard</mat-icon> Genel Bakış</h2>
+  </div>
+
+  <div *ngIf="loading()" class="loading-container"><mat-spinner diameter="48"></mat-spinner></div>
+
+  <ng-container *ngIf="!loading()">
+    <!-- Uyarı Banner: Hareketsiz Öğrenciler -->
+    <div *ngIf="atRiskStudents.length > 0" style="margin-bottom:16px;padding:12px 16px;background:#FFF3E0;border-left:4px solid #F57C00;border-radius:4px;display:flex;align-items:flex-start;gap:12px">
+      <mat-icon style="color:#F57C00;flex-shrink:0;margin-top:2px">warning</mat-icon>
+      <div>
+        <div style="font-weight:600;color:#E65100;margin-bottom:4px">Son 7 günde çalışma yapmayan öğrenciler:</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <a *ngFor="let s of atRiskStudents" [routerLink]="['/coaching/students', s.studentId]"
+            style="background:#FFE0B2;color:#E65100;padding:2px 10px;border-radius:12px;font-size:13px;text-decoration:none">
+            {{ s.studentName || s.studentId.slice(0,8) }}
+            <span *ngIf="s.daysSinceLastStudy != null"> · {{ s.daysSinceLastStudy }} gün</span>
+            <span *ngIf="s.daysSinceLastStudy == null"> · Hiç</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Özet Kartlar -->
+    <div class="dashboard-stats">
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <mat-icon class="stat-icon" style="color:#1976D2">people</mat-icon>
+          <div class="stat-value">{{ activeStudents }}</div>
+          <div class="stat-label">Aktif Öğrenci</div>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <mat-icon class="stat-icon" style="color:#388E3C">event</mat-icon>
+          <div class="stat-value">{{ upcomingSessions.length }}</div>
+          <div class="stat-label">Yaklaşan Seans (7 gün)</div>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <mat-icon class="stat-icon" style="color:#F57C00">assignment_late</mat-icon>
+          <div class="stat-value">{{ pendingAssignments.length }}</div>
+          <div class="stat-label">Bekleyen Ödev</div>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="stat-card" *ngIf="pendingReviewCount > 0" style="cursor:pointer" routerLink="/coaching/assignments">
+        <mat-card-content>
+          <mat-icon class="stat-icon" style="color:#7B1FA2">rate_review</mat-icon>
+          <div class="stat-value" style="color:#7B1FA2">{{ pendingReviewCount }}</div>
+          <div class="stat-label">İnceleme Bekliyor</div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Yaklaşan Seanslar -->
+    <mat-card style="margin-bottom:20px">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>event</mat-icon> Yaklaşan Seanslar
+        </mat-card-title>
+        <span class="spacer"></span>
+        <a mat-button routerLink="/coaching/sessions">Tümü →</a>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="upcomingSessions.length === 0" class="empty-state" style="padding:24px">
+          <mat-icon>event_available</mat-icon>
+          <p>Önümüzdeki 7 günde planlanmış seans yok</p>
+        </div>
+        <table mat-table [dataSource]="upcomingSessions" *ngIf="upcomingSessions.length > 0" class="full-width-table">
+          <ng-container matColumnDef="scheduledAt">
+            <th mat-header-cell *matHeaderCellDef>Tarih / Saat</th>
+            <td mat-cell *matCellDef="let s">{{ s.scheduledAt | date:'dd.MM.yyyy HH:mm' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="studentId">
+            <th mat-header-cell *matHeaderCellDef>Öğrenci</th>
+            <td mat-cell *matCellDef="let s">
+              <a [routerLink]="['/coaching/students', s.studentId]" class="student-link">
+                {{ s.studentName || (s.studentId | slice:0:8) + '...' }}
+              </a>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef>Tip</th>
+            <td mat-cell *matCellDef="let s">{{ typeLabels[s.sessionType] }}</td>
+          </ng-container>
+          <ng-container matColumnDef="duration">
+            <th mat-header-cell *matHeaderCellDef>Süre</th>
+            <td mat-cell *matCellDef="let s">{{ s.plannedDurationMinutes }} dk</td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="sessionColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: sessionColumns;"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Bekleyen Ödevler -->
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>assignment</mat-icon> Teslim Tarihi Yaklaşan Ödevler
+        </mat-card-title>
+        <span class="spacer"></span>
+        <a mat-button routerLink="/coaching/assignments">Tümü →</a>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="pendingAssignments.length === 0" class="empty-state" style="padding:24px">
+          <mat-icon>assignment_turned_in</mat-icon>
+          <p>Bekleyen ödev yok</p>
+        </div>
+        <table mat-table [dataSource]="pendingAssignments" *ngIf="pendingAssignments.length > 0" class="full-width-table">
+          <ng-container matColumnDef="title">
+            <th mat-header-cell *matHeaderCellDef>Ödev</th>
+            <td mat-cell *matCellDef="let a"><strong>{{ a.title }}</strong></td>
+          </ng-container>
+          <ng-container matColumnDef="studentId">
+            <th mat-header-cell *matHeaderCellDef>Öğrenci</th>
+            <td mat-cell *matCellDef="let a">
+              <a [routerLink]="['/coaching/students', a.studentId]" class="student-link">
+                {{ a.studentName || (a.studentId | slice:0:8) + '...' }}
+              </a>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="dueDate">
+            <th mat-header-cell *matHeaderCellDef>Son Tarih</th>
+            <td mat-cell *matCellDef="let a">
+              <span [style.color]="isOverdue(a.dueDate) ? '#f44336' : 'inherit'">
+                {{ a.dueDate | date:'dd.MM.yyyy' }}
+              </span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Durum</th>
+            <td mat-cell *matCellDef="let a">
+              <span class="status-badge status-{{ isOverdue(a.dueDate) ? 'noshow' : 'scheduled' }}">
+                {{ isOverdue(a.dueDate) ? 'Gecikti' : 'Bekliyor' }}
+              </span>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="assignmentColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: assignmentColumns;"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+  </ng-container>
+</div>

@@ -1,0 +1,189 @@
+<div class="page-container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <div>
+            <h1 class="page-title">Ödev Yönetimi</h1>
+            <p class="page-subtitle">Sınıfınız için okuma ve egzersiz ödevlerini kolayca planlayın.</p>
+        </div>
+        <button mat-flat-button color="primary" class="add-btn" (click)="openCreateDialog()">
+            <mat-icon>add_circle_outline</mat-icon>
+            Yeni Ödev Ata
+        </button>
+    </div>
+
+    <!-- Filters Section -->
+    <mat-card class="filter-card" appearance="outlined">
+        <mat-card-content class="filter-content">
+
+            <!-- Search -->
+            <mat-form-field appearance="outline" class="search-field">
+                <mat-label>Ödev Ara</mat-label>
+                <mat-icon matPrefix class="text-gray-400">search</mat-icon>
+                <input matInput [formControl]="searchControl" placeholder="Başlık, açıklama...">
+            </mat-form-field>
+
+            <!-- Exercise Type -->
+            <mat-form-field appearance="outline" class="filter-field">
+                <mat-label>Egzersiz Türü</mat-label>
+                <mat-select [formControl]="exerciseTypeControl">
+                    <mat-option [value]="null">Tümü</mat-option>
+                    <mat-option *ngFor="let type of exerciseTypes" [value]="type.id">
+                        {{getTurkishTypeName(type)}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <!-- Status -->
+            <mat-form-field appearance="outline" class="filter-field">
+                <mat-label>Durum</mat-label>
+                <mat-select [formControl]="statusControl">
+                    <mat-option [value]="null">Tümü</mat-option>
+                    <mat-option [value]="true">
+                        <span class="status-dot active"></span> Aktif
+                    </mat-option>
+                    <mat-option [value]="false">
+                        <span class="status-dot passive"></span> Pasif
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <div class="filter-actions">
+                <button mat-icon-button color="accent" matTooltip="Filtreleri Temizle" (click)="clearFilters()"
+                    *ngIf="searchControl.value || statusControl.value !== null || exerciseTypeControl.value">
+                    <mat-icon>filter_list_off</mat-icon>
+                </button>
+            </div>
+
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Data Section -->
+    <mat-card class="data-card" appearance="outlined">
+
+        <!-- Loading Overlay -->
+        <div *ngIf="loading" class="loading-overlay">
+            <mat-spinner diameter="40"></mat-spinner>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loading && assignments.length === 0" class="empty-state">
+            <div class="empty-icon-bg">
+                <mat-icon class="empty-icon">assignment_off</mat-icon>
+            </div>
+            <h3>Sonuç Bulunamadı</h3>
+            <p>Arama kriterlerinize uygun ödev kaydı mevcut değil.</p>
+            <button mat-stroked-button color="primary" (click)="clearFilters()">
+                Filtreleri Temizle
+            </button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container" *ngIf="assignments.length > 0">
+            <table mat-table [dataSource]="assignments" matSort class="modern-table">
+
+                <!-- Title Column -->
+                <ng-container matColumnDef="title">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header> ÖDEV DETAYI </th>
+                    <td mat-cell *matCellDef="let element">
+                        <div class="title-cell">
+                            <span class="title-text">{{element.title}}</span>
+                            <span *ngIf="element.description" class="description-text">{{element.description}}</span>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Exercise Column -->
+                <ng-container matColumnDef="exercise">
+                    <th mat-header-cell *matHeaderCellDef> EGZERSİZ TÜRÜ </th>
+                    <td mat-cell *matCellDef="let element">
+                        <div class="exercise-cell">
+                            <div class="exercise-chip">
+                                {{element.exerciseTypeName || 'Genel'}}
+                            </div>
+                            <span class="exercise-name">{{element.exerciseTitle}}</span>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- DueDate Column -->
+                <ng-container matColumnDef="dueDate">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header> SON TESLİM </th>
+                    <td mat-cell *matCellDef="let element">
+                        <div class="date-cell" [class.overdue]="isOverdue(element.dueDate) && element.isActive">
+                            <div class="date-icon-bg">
+                                <mat-icon>event_note</mat-icon>
+                            </div>
+                            <div class="date-info">
+                                <span class="date-text">{{element.dueDate | date:'d MMM yyyy'}}</span>
+                                <span class="time-text">{{element.dueDate | date:'HH:mm'}} | {{element.dueDate |
+                                    date:'EEEE':'':'tr'}}</span>
+                            </div>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Stats Column -->
+                <ng-container matColumnDef="stats">
+                    <th mat-header-cell *matHeaderCellDef> İLERLEME & DURUM </th>
+                    <td mat-cell *matCellDef="let element">
+                        <div class="stats-cell">
+
+                            <!-- Status Chip -->
+                            <span class="status-chip" [class.active]="element.isActive"
+                                [class.passive]="!element.isActive">
+                                {{ element.isActive ? 'Aktif' : 'Tamamlandı' }}
+                            </span>
+
+                            <!-- Progress -->
+                            <div class="progress-wrapper"
+                                matTooltip="{{element.completedCount}} / {{element.studentCount}} öğrenci tamamladı">
+                                <div class="progress-info">
+                                    <span class="progress-text">%{{ (element.completedCount / (element.studentCount ||
+                                        1) * 100) | number:'1.0-0' }}</span>
+                                </div>
+                                <mat-progress-bar mode="determinate"
+                                    [value]="(element.completedCount / (element.studentCount || 1)) * 100"
+                                    class="custom-progress">
+                                </mat-progress-bar>
+                            </div>
+
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- CreatedAt Column -->
+                <ng-container matColumnDef="createdAt">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header> OLUŞTURULMA </th>
+                    <td mat-cell *matCellDef="let element">
+                        <span class="text-gray-500 text-sm">{{element.createdAt | date:'d MMM yyyy'}}</span>
+                    </td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef> </th>
+                    <td mat-cell *matCellDef="let element">
+                        <div class="actions-wrapper">
+                            <button mat-icon-button color="primary" (click)="openDetails(element)"
+                                matTooltip="Detayları Görüntüle">
+                                <mat-icon>visibility</mat-icon>
+                            </button>
+                            <button mat-icon-button color="warn" (click)="deleteAssignment(element)"
+                                matTooltip="Ödevi Sil">
+                                <mat-icon>delete_outline</mat-icon>
+                            </button>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
+            </table>
+        </div>
+
+        <mat-paginator [length]="totalCount" [pageSize]="10" [pageSizeOptions]="[5, 10, 25]"
+            (page)="onPageChange($event)" class="custom-paginator" *ngIf="assignments.length > 0">
+        </mat-paginator>
+
+    </mat-card>
+</div>

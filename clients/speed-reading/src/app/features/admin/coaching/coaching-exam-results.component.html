@@ -1,0 +1,87 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2><mat-icon>analytics</mat-icon> Sınav Sonuçları</h2>
+    <button mat-raised-button color="primary" (click)="load()">
+      <mat-icon>refresh</mat-icon> Yenile
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Sınav Tipi</mat-label>
+          <mat-select [(ngModel)]="filterExamType" (selectionChange)="onFilter()">
+            <mat-option *ngFor="let o of examTypeOptions" [value]="o.value">{{ o.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="loading()" class="loading-container"><mat-spinner diameter="40"></mat-spinner></div>
+      <div *ngIf="!loading() && records.length === 0" class="empty-state">
+        <mat-icon>quiz</mat-icon><p>Sınav sonucu bulunamadı</p>
+      </div>
+
+      <table mat-table [dataSource]="records" *ngIf="!loading() && records.length > 0" class="full-width-table">
+        <ng-container matColumnDef="studentName">
+          <th mat-header-cell *matHeaderCellDef>Öğrenci</th>
+          <td mat-cell *matCellDef="let r">{{ r.studentName || (r.studentId | slice:0:8) + '...' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="examName">
+          <th mat-header-cell *matHeaderCellDef>Sınav Adı</th>
+          <td mat-cell *matCellDef="let r">
+            <span [matTooltip]="r.notes">{{ r.examName }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="examDate">
+          <th mat-header-cell *matHeaderCellDef>Tarih</th>
+          <td mat-cell *matCellDef="let r">{{ r.examDate | date:'dd.MM.yyyy' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="examType">
+          <th mat-header-cell *matHeaderCellDef>Tip</th>
+          <td mat-cell *matCellDef="let r">
+            <span class="status-badge status-active">{{ examTypeLabels[r.examType] }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="totalNet">
+          <th mat-header-cell *matHeaderCellDef>Toplam Net</th>
+          <td mat-cell *matCellDef="let r">
+            <span *ngIf="r.totalNet != null">{{ r.totalNet | number:'1.2-2' }}</span>
+            <span *ngIf="r.totalNet == null" class="text-muted">—</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="score">
+          <th mat-header-cell *matHeaderCellDef>Tahmini Puan</th>
+          <td mat-cell *matCellDef="let r">
+            <span *ngIf="r.estimatedScore != null">{{ r.estimatedScore | number:'1.0-0' }}</span>
+            <span *ngIf="r.estimatedScore == null" class="text-muted">—</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="recordedBy">
+          <th mat-header-cell *matHeaderCellDef>Giren</th>
+          <td mat-cell *matCellDef="let r">
+            <mat-icon [matTooltip]="r.isRecordedByCoach ? 'Koç girdi' : 'Öğrenci girdi'" class="icon-sm">
+              {{ r.isRecordedByCoach ? 'sports' : 'person' }}
+            </mat-icon>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>İşlemler</th>
+          <td mat-cell *matCellDef="let r">
+            <button mat-icon-button color="warn" matTooltip="Sil" (click)="deleteResult(r)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <mat-paginator *ngIf="!loading() && total > 0"
+        [length]="total" [pageSize]="pageSize" [pageIndex]="page - 1"
+        [pageSizeOptions]="[10, 20, 50]" showFirstLastButtons
+        (page)="onPage($event)">
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -1,0 +1,35 @@
+<div class="reports-container">
+    <div class="teacher-selector-bar" *ngIf="showDropdown()">
+        <mat-form-field appearance="outline" class="teacher-select">
+            <mat-label>Öğretmen Seçin</mat-label>
+            <mat-select [value]="selectedTeacherId()" (selectionChange)="onTeacherSelect($event.value)">
+                <mat-option *ngFor="let teacher of teachers()" [value]="teacher.id">
+                    {{ teacher.firstName }} {{ teacher.lastName }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+    </div>
+
+    <nav mat-tab-nav-bar [tabPanel]="tabPanel">
+        <a mat-tab-link routerLink="class-overview" queryParamsHandling="merge" routerLinkActive
+            #rla1="routerLinkActive" [active]="rla1.isActive">
+            <mat-icon class="tab-icon">groups</mat-icon>
+            Sınıf Özeti
+        </a>
+        <a mat-tab-link routerLink="content-analysis" queryParamsHandling="merge" routerLinkActive
+            #rla2="routerLinkActive" [active]="rla2.isActive">
+            <mat-icon class="tab-icon">analytics</mat-icon>
+            İçerik Analizi
+        </a>
+        <a mat-tab-link routerLink="progress" queryParamsHandling="merge" routerLinkActive #rla3="routerLinkActive"
+            [active]="rla3.isActive">
+            <mat-icon class="tab-icon">timeline</mat-icon>
+            Zaman Bazlı İlerleme
+        </a>
+    </nav>
+
+    <div class="tab-content">
+        <mat-tab-nav-panel #tabPanel></mat-tab-nav-panel>
+        <router-outlet></router-outlet>
+    </div>
+</div>

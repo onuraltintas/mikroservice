@@ -1,0 +1,146 @@
+<div class="about-page-editor" [formGroup]="aboutForm">
+    <div class="header">
+        <h2>Hakkımızda Sayfası Yönetimi</h2>
+        <div class="actions">
+            <button mat-button (click)="onCancel()" [disabled]="loading()">
+                <mat-icon>cancel</mat-icon>
+                İptal
+            </button>
+            <button mat-raised-button color="primary" (click)="onSave()" [disabled]="aboutForm.invalid || loading()">
+                <mat-spinner *ngIf="loading()" diameter="20" class="button-spinner"></mat-spinner>
+                <mat-icon *ngIf="!loading()">save</mat-icon>
+                {{ loading() ? 'Kaydediliyor...' : 'Kaydet' }}
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-overlay" *ngIf="loading()"
+        style="display: flex; justify-content: center; align-items: center; padding: 4rem;">
+        <mat-spinner diameter="48"></mat-spinner>
+    </div>
+
+    <mat-tab-group animationDuration="0ms" *ngIf="!loading()">
+        <mat-tab label="Hero Section">
+            <div class="tab-content" formGroupName="hero">
+                <h3>Hero Section</h3>
+                <p class="helper-text">Hakkımızda sayfası üst başlık alanı</p>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Başlık</mat-label>
+                    <input matInput formControlName="title">
+                    <mat-error>Başlık gereklidir</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Alt Başlık</mat-label>
+                    <textarea matInput formControlName="subtitle" rows="3"></textarea>
+                    <mat-error>Alt başlık gereklidir</mat-error>
+                </mat-form-field>
+            </div>
+        </mat-tab>
+
+        <mat-tab label="Hikayemiz">
+            <div class="tab-content" formGroupName="story">
+                <h3>Hikayemiz</h3>
+                <p class="helper-text">Kuruluş hikayesi ve genel tanıtım</p>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Bölüm Başlığı</mat-label>
+                    <input matInput formControlName="title">
+                    <mat-error>Başlık gereklidir</mat-error>
+                </mat-form-field>
+
+                <div class="editor-container">
+                    <label>İçerik</label>
+                    <quill-editor formControlName="content" [modules]="quillConfig"></quill-editor>
+                    <mat-error
+                        *ngIf="aboutForm.get('story.content')?.touched && aboutForm.get('story.content')?.invalid">
+                        İçerik gereklidir
+                    </mat-error>
+                </div>
+            </div>
+        </mat-tab>
+
+        <mat-tab label="Misyon & Vizyon">
+            <div class="tab-content" formGroupName="mission">
+                <h3>Misyon ve Vizyon</h3>
+                <p class="helper-text">Kurumun amaçları ve hedefleri</p>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Bölüm Başlığı</mat-label>
+                    <input matInput formControlName="title">
+                    <mat-error>Başlık gereklidir</mat-error>
+                </mat-form-field>
+
+                <div class="editor-container">
+                    <label>İçerik</label>
+                    <quill-editor formControlName="content" [modules]="quillConfig"></quill-editor>
+                    <mat-error
+                        *ngIf="aboutForm.get('mission.content')?.touched && aboutForm.get('mission.content')?.invalid">
+                        İçerik gereklidir
+                    </mat-error>
+                </div>
+            </div>
+        </mat-tab>
+
+        <mat-tab label="Kullanıcı Yorumları">
+            <div class="tab-content">
+                <div class="section-header">
+                    <div>
+                        <h3>Kullanıcı Yorumları</h3>
+                        <p class="helper-text">Müşteri geri bildirimlerini yönetin</p>
+                    </div>
+                    <button mat-raised-button color="primary" (click)="addTestimonial()">
+                        <mat-icon>add</mat-icon>
+                        Yeni Yorum Ekle
+                    </button>
+                </div>
+
+                <div class="testimonials-list" formArrayName="testimonials">
+                    <div class="testimonial-item" *ngFor="let testimonial of testimonials.controls; let i = index"
+                        [formGroupName]="i">
+                        <div class="item-header">
+                            <span class="index">#{{i + 1}}</span>
+                            <button mat-icon-button color="warn" (click)="removeTestimonial(i)" matTooltip="Sil">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </div>
+
+                        <div class="form-row">
+                            <mat-form-field appearance="outline">
+                                <mat-label>İsim Soyisim</mat-label>
+                                <input matInput formControlName="name" placeholder="Örn: Ahmet Yılmaz">
+                                <mat-error>İsim gereklidir</mat-error>
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline">
+                                <mat-label>Ünvan/Rol</mat-label>
+                                <input matInput formControlName="role" placeholder="Örn: Öğrenci">
+                                <mat-error>Rol gereklidir</mat-error>
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline" style="width: 100px;">
+                                <mat-label>Puan</mat-label>
+                                <input matInput type="number" formControlName="rating" min="1" max="5">
+                                <mat-error>1-5 arası</mat-error>
+                            </mat-form-field>
+                        </div>
+
+                        <mat-form-field appearance="outline" class="full-width">
+                            <mat-label>Yorum Metni</mat-label>
+                            <textarea matInput formControlName="text" rows="2"
+                                placeholder="Kullanıcı yorumu..."></textarea>
+                            <mat-error>Yorum metni gereklidir</mat-error>
+                        </mat-form-field>
+                    </div>
+
+                    <div class="no-data" *ngIf="testimonials.length === 0">
+                        <mat-icon>chat_bubble_outline</mat-icon>
+                        <p>Henüz yorum eklenmemiş. "Yeni Yorum Ekle" butonu ile ekleyebilirsiniz.</p>
+                    </div>
+                </div>
+            </div>
+        </mat-tab>
+    </mat-tab-group>
+</div>

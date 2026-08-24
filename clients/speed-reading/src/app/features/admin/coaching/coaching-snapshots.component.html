@@ -1,0 +1,111 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2><mat-icon>summarize</mat-icon> Haftalık / Aylık Özetler</h2>
+    <button mat-raised-button color="primary" (click)="load()">
+      <mat-icon>refresh</mat-icon> Yenile
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Periyot</mat-label>
+          <mat-select [(ngModel)]="filterType" (selectionChange)="onFilter()">
+            <mat-option *ngFor="let o of typeOptions" [value]="o.value">{{ o.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="loading()" class="loading-container"><mat-spinner diameter="40"></mat-spinner></div>
+      <div *ngIf="!loading() && records.length === 0" class="empty-state">
+        <mat-icon>summarize</mat-icon><p>Özet bulunamadı</p>
+      </div>
+
+      <table mat-table [dataSource]="records" *ngIf="!loading() && records.length > 0" class="full-width-table">
+        <ng-container matColumnDef="studentName">
+          <th mat-header-cell *matHeaderCellDef>Öğrenci</th>
+          <td mat-cell *matCellDef="let r">{{ r.studentName || (r.studentId | slice:0:8) + '...' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="period">
+          <th mat-header-cell *matHeaderCellDef>Periyot</th>
+          <td mat-cell *matCellDef="let r">
+            {{ r.periodStart | date:'dd.MM' }} – {{ r.periodEnd | date:'dd.MM.yyyy' }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef>Tip</th>
+          <td mat-cell *matCellDef="let r">
+            <span class="status-badge" [class]="r.snapshotType === 'Weekly' ? 'status-scheduled' : 'status-completed'">
+              {{ typeLabels[r.snapshotType] }}
+            </span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="studyMinutes">
+          <th mat-header-cell *matHeaderCellDef>Çalışma</th>
+          <td mat-cell *matCellDef="let r">
+            <span matTooltip="{{ r.totalStudySessions }} oturum">
+              {{ r.totalStudyMinutes }} dk
+            </span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="questions">
+          <th mat-header-cell *matHeaderCellDef>Sorular</th>
+          <td mat-cell *matCellDef="let r">
+            <span *ngIf="r.totalQuestionsSolved > 0">
+              {{ r.totalQuestionsSolved }}
+              <span class="text-muted">(D: {{ r.totalCorrect }})</span>
+            </span>
+            <span *ngIf="!r.totalQuestionsSolved" class="text-muted">—</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="goals">
+          <th mat-header-cell *matHeaderCellDef>Hedefler</th>
+          <td mat-cell *matCellDef="let r">{{ goalRate(r) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="assignments">
+          <th mat-header-cell *matHeaderCellDef>Ödevler</th>
+          <td mat-cell *matCellDef="let r">{{ assignmentRate(r) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="exams">
+          <th mat-header-cell *matHeaderCellDef>Sınavlar</th>
+          <td mat-cell *matCellDef="let r">
+            <span *ngIf="r.examsRecorded > 0">
+              {{ r.examsRecorded }}
+              <span *ngIf="r.averageNetChange != null" class="text-muted">
+                (Δ {{ r.averageNetChange | number:'1.1-1' }})
+              </span>
+            </span>
+            <span *ngIf="!r.examsRecorded" class="text-muted">—</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="note">
+          <th mat-header-cell *matHeaderCellDef>Koç Notu</th>
+          <td mat-cell *matCellDef="let r">
+            <span *ngIf="r.coachSummaryNote" [matTooltip]="r.coachSummaryNote" class="text-truncate">
+              <mat-icon class="icon-sm">notes</mat-icon>
+            </span>
+            <span *ngIf="!r.coachSummaryNote" class="text-muted">—</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let r">
+            <button mat-icon-button color="primary" matTooltip="Özeti Yeniden Oluştur"
+              (click)="generateSnapshot(r)">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <mat-paginator *ngIf="!loading() && total > 0"
+        [length]="total" [pageSize]="pageSize" [pageIndex]="page - 1"
+        [pageSizeOptions]="[10, 20, 50]" showFirstLastButtons
+        (page)="onPage($event)">
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

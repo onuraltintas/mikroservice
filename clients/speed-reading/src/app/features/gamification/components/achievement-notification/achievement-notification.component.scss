@@ -1,0 +1,210 @@
+.achievement-notification {
+  position: relative;
+  min-width: 350px;
+  padding: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  animation: slideInRight 0.5s ease;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+    animation: shimmer 2s infinite;
+  }
+}
+
+.notification-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 2;
+}
+
+.icon-container {
+  flex-shrink: 0;
+
+  .achievement-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    animation: bounceIn 0.6s ease;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    mat-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+      color: white;
+    }
+  }
+
+  > mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: white;
+  }
+}
+
+.text-content {
+  flex: 1;
+  color: white;
+
+  .title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .message {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    opacity: 0.95;
+  }
+
+  .xp-reward {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 10px;
+    border-radius: 12px;
+    width: fit-content;
+
+    .xp-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+.close-button {
+  flex-shrink: 0;
+  color: white;
+  opacity: 0.8;
+  transition: opacity 0.3s;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+// Confetti animation
+.confetti {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.8);
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  animation: confettiFall 1.5s ease-out forwards;
+
+  &:nth-child(1) { animation-delay: 0s; }
+  &:nth-child(2) { animation-delay: 0.1s; background: #FFD700; }
+  &:nth-child(3) { animation-delay: 0.2s; background: #FF6B9D; }
+  &:nth-child(4) { animation-delay: 0.3s; background: #00BCD4; }
+  &:nth-child(5) { animation-delay: 0.4s; }
+  &:nth-child(6) { animation-delay: 0.5s; background: #4CAF50; }
+  &:nth-child(7) { animation-delay: 0.6s; background: #FFA500; }
+  &:nth-child(8) { animation-delay: 0.7s; background: #9C27B0; }
+}
+
+// Animations
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(
+      calc(var(--random-x, 50px) - 25px),
+      calc(var(--random-y, 100px))
+    ) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+// Different notification types
+.achievement {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.xp {
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+}
+
+.streak {
+  background: linear-gradient(135deg, #FF5722 0%, #E64A19 100%);
+}
+
+.level {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+}

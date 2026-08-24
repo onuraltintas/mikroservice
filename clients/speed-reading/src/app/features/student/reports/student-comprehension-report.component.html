@@ -1,0 +1,87 @@
+<div class="comprehension-report">
+    @if (loading()) {
+    <div class="loading-container"><div class="rp-spinner"></div></div>
+    } @else if (report()) {
+    <div class="report-grid">
+        <div class="rp-card">
+            <div class="rp-card__header"><h3 class="rp-card__title">Overall Comprehension</h3></div>
+            <div class="rp-card__body">
+                <div class="chart-container">
+                    <app-number-card [data]="overallComprehensionData()"></app-number-card>
+                </div>
+            </div>
+        </div>
+
+        <div class="rp-card">
+            <div class="rp-card__header"><h3 class="rp-card__title">Benchmarks</h3></div>
+            <div class="rp-card__body">
+                <div class="chart-container">
+                    <app-number-card [data]="benchmarkData()"></app-number-card>
+                </div>
+            </div>
+        </div>
+
+        <div class="rp-card full-width">
+            <div class="rp-card__header"><h3 class="rp-card__title">Question Type Analysis</h3></div>
+            <div class="rp-card__body">
+                <div class="chart-container">
+                    <app-radar-chart [data]="report()!.questionTypeChart.data"></app-radar-chart>
+                </div>
+            </div>
+        </div>
+
+        <div class="rp-card full-width">
+            <div class="rp-card__header"><h3 class="rp-card__title">Category Performance</h3></div>
+            <div class="rp-card__body">
+                <div class="chart-container">
+                    <app-bar-chart [data]="report()!.categoryComprehensionChart.data" xAxisLabel="Category"
+                        yAxisLabel="Score (%)"></app-bar-chart>
+                </div>
+            </div>
+        </div>
+
+        <div class="rp-card">
+            <div class="rp-card__header"><h3 class="rp-card__title">Category Breakdown</h3></div>
+            <div class="rp-card__body">
+                <table class="rp-table breakdown-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Rate</th>
+                            <th>Questions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (item of report()!.categoryBreakdown; track item.categoryName) {
+                        <tr>
+                            <td>{{ item.categoryName }}</td>
+                            <td>{{ item.comprehensionRate }}%</td>
+                            <td>{{ item.correctAnswers }}/{{ item.questionsAnswered }}</td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="rp-card">
+            <div class="rp-card__header"><h3 class="rp-card__title">Improvement Areas</h3></div>
+            <div class="rp-card__body">
+                <ul class="rp-list">
+                    @for (area of report()!.improvementAreas; track area.area) {
+                    <li class="rp-list__item">
+                        <span class="material-icons" [class]="'priority-' + area.priority">flag</span>
+                        <div>
+                            <div class="rp-list__item-title">{{ area.area }}</div>
+                            <div class="rp-list__item-line">{{ area.recommendations.join(', ') }}</div>
+                        </div>
+                    </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+    } @else {
+    <div class="empty-state">No comprehension data available</div>
+    }
+</div>

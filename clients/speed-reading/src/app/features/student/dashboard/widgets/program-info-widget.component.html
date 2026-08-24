@@ -1,0 +1,128 @@
+<div class="sp-card program-info-card">
+    <div class="header-content">
+        <div class="title-section">
+            <span class="material-icons header-icon">school</span>
+            <div style="font-size:16px;font-weight:600">Programınız</div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading()" class="loading-state">
+        <div class="sp-spinner"></div>
+        <p>Program bilgisi yükleniyor...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error() && !loading()" class="error-state">
+        <span class="material-icons" style="color:#f44336">error_outline</span>
+        <p>{{ error() }}</p>
+    </div>
+
+    <!-- Program Info -->
+    <div *ngIf="programInfo() && !loading()" class="program-content">
+        <!-- Program Name & Type -->
+        <div class="program-header">
+            <h3 class="program-name">{{ programInfo()!.templateName }}</h3>
+
+            <!-- Exam Badge (if ExamPrep) -->
+            <span *ngIf="isExamPrep()" class="sp-chip exam-chip">
+                <span class="material-icons chip-icon">emoji_events</span>
+                {{ programInfo()!.examType }}
+            </span>
+
+            <!-- Program Type Badge -->
+            <span class="sp-chip type-chip">
+                {{ programInfo()!.programTypeName }}
+            </span>
+        </div>
+
+        <!-- Program Description -->
+        <p class="program-description">{{ programInfo()!.templateDescription }}</p>
+
+        <!-- Progress Stats Grid -->
+        <div class="stats-grid">
+            <!-- Week & Day -->
+            <div class="stat-item">
+                <span class="material-icons stat-icon">calendar_today</span>
+                <div class="stat-content">
+                    <span class="stat-label">İlerleme</span>
+                    <span class="stat-value">Hafta {{ programInfo()!.currentWeek }}, Gün {{
+                        programInfo()!.currentDay }}</span>
+                </div>
+            </div>
+
+            <!-- Difficulty Level -->
+            <div class="stat-item">
+                <span class="material-icons stat-icon" [class.max-difficulty]="isMaxDifficulty()">trending_up</span>
+                <div class="stat-content">
+                    <span class="stat-label">Zorluk Seviyesi</span>
+                    <span class="stat-value">
+                        {{ programInfo()!.currentDifficultyLevel }}/{{ programInfo()!.maxDifficultyLevel }}
+                        <span class="difficulty-badge">{{ getDifficultyDescription() }}</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Days Completed -->
+            <div class="stat-item">
+                <span class="material-icons stat-icon">done_all</span>
+                <div class="stat-content">
+                    <span class="stat-label">Tamamlanan Gün</span>
+                    <span class="stat-value">{{ programInfo()!.totalDaysCompleted }} gün</span>
+                </div>
+            </div>
+
+            <!-- Exercises Completed -->
+            <div class="stat-item">
+                <span class="material-icons stat-icon">fitness_center</span>
+                <div class="stat-content">
+                    <span class="stat-label">Tamamlanan Egzersiz</span>
+                    <span class="stat-value">{{ programInfo()!.totalExercisesCompleted }} egzersiz</span>
+                </div>
+            </div>
+
+            <!-- Success Rate -->
+            <div class="stat-item">
+                <span class="material-icons stat-icon"
+                    [class.high-success]="programInfo()!.averageSuccessRate >= 80">psychology</span>
+                <div class="stat-content">
+                    <span class="stat-label">Başarı Oranı</span>
+                    <span class="stat-value">%{{ programInfo()!.averageSuccessRate | number:'1.0-0' }}</span>
+                </div>
+            </div>
+
+            <!-- Current Streak -->
+            <div class="stat-item" *ngIf="programInfo()!.currentStreak > 0">
+                <span class="material-icons stat-icon streak-icon">local_fire_department</span>
+                <div class="stat-content">
+                    <span class="stat-label">Mevcut Seri</span>
+                    <span class="stat-value">{{ programInfo()!.currentStreak }} gün 🔥</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-section">
+            <div class="progress-header">
+                <span class="progress-label">Haftalık İlerleme</span>
+                <span class="progress-percentage">%{{ getProgressPercentage() }}</span>
+            </div>
+            <div class="sp-bar">
+                <div class="sp-bar-fill" [style.width.%]="getProgressPercentage()"></div>
+            </div>
+        </div>
+
+        <!-- Age Group & Score Range Info -->
+        <div class="meta-info">
+            <div class="meta-item">
+                <span class="material-icons meta-icon">person</span>
+                <span>{{ programInfo()!.targetAgeGroupName }}</span>
+            </div>
+            <div class="meta-item">
+                <span class="material-icons meta-icon">analytics</span>
+                <span>Puan Aralığı: {{ programInfo()!.minAssessmentScore }}-{{ programInfo()!.maxAssessmentScore
+                    }}</span>
+            </div>
+        </div>
+    </div>
+</div>

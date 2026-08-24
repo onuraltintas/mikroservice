@@ -1,0 +1,159 @@
+<div class="view-container">
+    <!-- Header -->
+    <div class="header-section">
+        <button mat-icon-button (click)="goBack()">
+            <mat-icon>arrow_back</mat-icon>
+        </button>
+        <h1>Şablon Detayları</h1>
+        <div class="spacer"></div>
+        <button mat-raised-button color="primary" (click)="editTemplate()" *ngIf="template()">
+            <mat-icon>edit</mat-icon>
+            Düzenle
+        </button>
+        <button mat-raised-button color="warn" (click)="deleteTemplate()" *ngIf="template()">
+            <mat-icon>delete</mat-icon>
+            Sil
+        </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading()" class="loading-state">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Yükleniyor...</p>
+    </div>
+
+    <!-- Template Details -->
+    <div *ngIf="!loading() && template()" class="content">
+        <!-- General Info Card -->
+        <mat-card>
+            <mat-card-header>
+                <mat-card-title>Genel Bilgiler</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">Program Adı:</span>
+                        <span class="value">{{ template()!.name }}</span>
+                    </div>
+
+                    <div class="info-item full-width" *ngIf="template()!.description">
+                        <span class="label">Açıklama:</span>
+                        <span class="value">{{ template()!.description }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Yaş Grubu:</span>
+                        <mat-chip-set>
+                            <mat-chip>
+                                {{ getAgeGroupName() }}
+                            </mat-chip>
+                        </mat-chip-set>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Puan Aralığı:</span>
+                        <span class="value">{{ template()!.minAssessmentScore }} - {{ template()!.maxAssessmentScore
+                            }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Başlangıç Zorluk:</span>
+                        <span class="value">Seviye {{ template()!.initialDifficultyLevel }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Max Zorluk:</span>
+                        <span class="value">Seviye {{ template()!.maxDifficultyLevel }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Zorluk Artış Sıklığı:</span>
+                        <span class="value">{{ template()!.weeksPerDifficultyIncrease }} hafta</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Sıralama:</span>
+                        <span class="value">{{ template()!.displayOrder }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Durum:</span>
+                        <mat-chip-set>
+                            <mat-chip [class]="template()!.isActive ? 'active-chip' : 'inactive-chip'">
+                                {{ template()!.isActive ? 'Aktif' : 'Pasif' }}
+                            </mat-chip>
+                        </mat-chip-set>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Atanmış Öğrenci:</span>
+                        <span class="value">{{ studentCount() }}</span>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+
+        <!-- Weekly Pattern Card -->
+        <mat-card>
+            <mat-card-header>
+                <mat-card-title>Haftalık Egzersiz Pattern'i</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                <!-- Debug Info -->
+                <div *ngIf="!weeklyPattern()" class="warning-message">
+                    <mat-icon>warning</mat-icon>
+                    <div>
+                        <strong>Pattern yüklenemedi!</strong>
+                        <p>WeeklyPatternJson parse edilemedi. Raw JSON'u kontrol edin.</p>
+                    </div>
+                </div>
+
+                <mat-tab-group *ngIf="weeklyPattern()">
+                    <mat-tab *ngFor="let weekKey of weekKeys()"
+                        [label]="'Hafta ' + templateService.getWeekNumber(weekKey)">
+                        <div class="week-content">
+                            <div *ngFor="let dayKey of templateService.getDayKeys(weeklyPattern()![weekKey])"
+                                class="day-section">
+                                <h4>Gün {{ templateService.getDayNumber(dayKey) }}</h4>
+                                <div class="exercise-list">
+                                    <div *ngFor="let exercise of weeklyPattern()![weekKey][dayKey]; let i = index"
+                                        class="exercise-card">
+                                        <div class="exercise-header">
+                                            <mat-icon>fitness_center</mat-icon>
+                                            <h3>Egzersiz {{ i + 1 }}</h3>
+                                        </div>
+                                        <div class="exercise-details">
+                                            <div class="detail">
+                                                <span class="label">Tür:</span>
+                                                <mat-chip>{{ exercise.type }}</mat-chip>
+                                            </div>
+                                            <div class="detail">
+                                                <span class="label">Sayı:</span>
+                                                <span class="value">{{ exercise.count }}</span>
+                                            </div>
+                                            <div class="detail">
+                                                <span class="label">Zorluk:</span>
+                                                <span class="value">{{ exercise.difficulty }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <mat-divider class="day-divider"></mat-divider>
+                            </div>
+                        </div>
+                    </mat-tab>
+                </mat-tab-group>
+            </mat-card-content>
+        </mat-card>
+
+        <!-- Raw JSON Card (Collapsed by default) -->
+        <mat-card>
+            <mat-card-header>
+                <mat-card-title>Raw JSON</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                <pre class="json-viewer">{{ template()!.weeklyPatternJson }}</pre>
+            </mat-card-content>
+        </mat-card>
+    </div>
+</div>

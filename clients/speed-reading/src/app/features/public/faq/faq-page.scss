@@ -1,0 +1,160 @@
+.faq-page {
+    .hero-section {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        padding: 8rem 0 4rem;
+        text-align: center;
+
+        .container {
+            max-width: 56rem;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            font-size: 1.125rem;
+            opacity: 0.9;
+        }
+    }
+
+    .filter-section {
+        background: #f8fafc;
+        padding: 1.5rem 0;
+        border-bottom: 1px solid #e5e7eb;
+
+        .container {
+            max-width: 56rem;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .category-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: center;
+
+            button {
+                padding: 0.5rem 1.25rem;
+                border: 1px solid #e5e7eb;
+                background: white;
+                border-radius: 9999px;
+                font-size: 0.875rem;
+                font-weight: 500;
+                color: #4b5563;
+                cursor: pointer;
+                transition: all 0.2s ease;
+
+                &:hover {
+                    border-color: #667eea;
+                    color: #667eea;
+                }
+
+                &.active {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border-color: transparent;
+                }
+            }
+        }
+    }
+
+    .faq-list-section {
+        padding: 3rem 0 5rem;
+        background: white;
+
+        .container {
+            max-width: 56rem;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .faq-accordion {
+            .mat-expansion-panel {
+                margin-bottom: 1rem;
+                border: 1px solid #e5e7eb;
+                box-shadow: none !important;
+                border-radius: 0.75rem !important;
+
+                &:hover {
+                    background: #f9fafb;
+                }
+            }
+
+            .mat-expansion-panel-header {
+                padding: 1.5rem;
+                height: auto !important;
+                min-height: 72px;
+            }
+
+            .mat-content {
+                display: block !important;
+            }
+
+            .mat-panel-title {
+                margin-right: 0 !important;
+            }
+
+            .faq-header-content {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+                width: 100%;
+            }
+
+            .category-badge {
+                display: inline-block;
+                padding: 0.35rem 0.85rem;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                font-size: 0.7rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                border-radius: 4px;
+                box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            }
+
+            .question-text {
+                font-size: 1rem;
+                font-weight: 600;
+                color: #1f2937;
+                line-height: 1.5;
+            }
+
+            .mat-expansion-panel-body {
+                padding: 0 1.5rem 1.5rem;
+
+                p {
+                    color: #6b7280;
+                    line-height: 1.7;
+                    margin: 0;
+                }
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #9ca3af;
+
+            mat-icon {
+                font-size: 3rem;
+                width: 3rem;
+                height: 3rem;
+                margin-bottom: 1rem;
+            }
+
+            p {
+                font-size: 1rem;
+            }
+        }
+    }
+}

@@ -1,0 +1,33 @@
+<h2 mat-dialog-title class="dialog-title">
+    <span class="material-icons title-icon">layers</span>
+    <span>{{ data.title }}</span>
+    <span class="subtitle">Seviye Seçimi</span>
+</h2>
+
+<mat-dialog-content>
+    <div class="level-list">
+        <div *ngFor="let ex of data.exercises; trackBy: trackById" class="level-item" (click)="select(ex)">
+            <div class="level-info">
+                <div class="level-header">
+                    <span class="level-badge" [ngClass]="getDifficultyClass(ex.difficultyLevel)">
+                        Seviye {{ ex.difficultyLevel }}
+                    </span>
+                    <span class="age-badge" *ngIf="getAgeGroupName(ex)" [ngClass]="getAgeGroupClass(ex)">
+                        {{ getAgeGroupName(ex) }}
+                    </span>
+                    <span class="level-title">{{ ex.title }}</span>
+                </div>
+                <p class="level-desc" *ngIf="ex.description">
+                    {{ ex.description.length > 80 ? (ex.description | slice:0:80) + '...' : ex.description }}
+                </p>
+            </div>
+            <button class="sp-btn play-btn">
+                <span class="material-icons">play_circle</span>
+            </button>
+        </div>
+    </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button class="sp-btn" mat-dialog-close>vazgeç</button>
+</mat-dialog-actions>

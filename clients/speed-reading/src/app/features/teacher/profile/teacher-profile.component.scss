@@ -1,0 +1,203 @@
+// Variables
+$primary: #4f46e5;
+$bg-color: #f3f4f6;
+$text-primary: #111827;
+$text-secondary: #6b7280;
+$card-bg: #ffffff;
+$border: #e5e7eb;
+
+.page-container {
+    padding: 32px;
+    background-color: $bg-color;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.header-section {
+    margin-bottom: 32px;
+
+    .page-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: $text-primary;
+        margin: 0 0 8px 0;
+        letter-spacing: -0.025em;
+    }
+
+    .page-subtitle {
+        color: $text-secondary;
+        font-size: 16px;
+        margin: 0;
+    }
+}
+
+.profile-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 32px;
+    align-items: start;
+}
+
+// Summary Card (Left)
+.summary-card {
+    border: none;
+    border-radius: 16px;
+    background: $card-bg;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
+    overflow: hidden;
+    padding: 0;
+    position: relative;
+
+    .profile-header-bg {
+        height: 100px;
+        background: linear-gradient(135deg, $primary 0%, #818cf8 100%);
+    }
+
+    .profile-avatar-wrapper {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        margin-top: -50px; // Overlap background
+        margin-bottom: 16px;
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background-color: #fff;
+        color: $primary;
+        font-size: 36px;
+        font-weight: 700;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 4px solid #fff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .summary-content {
+        text-align: center;
+        padding: 0 24px 32px 24px;
+
+        .user-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: $text-primary;
+            margin: 0 0 4px 0;
+        }
+
+        .user-role {
+            display: inline-block;
+            background-color: #eef2ff;
+            color: $primary;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            text-align: left;
+            border-top: 1px solid $border;
+            padding-top: 24px;
+
+            .info-item {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                color: $text-secondary;
+                font-size: 14px;
+
+                mat-icon {
+                    font-size: 20px;
+                    width: 20px;
+                    height: 20px;
+                    color: #9ca3af;
+                }
+            }
+        }
+    }
+}
+
+// Edit Card (Right)
+.edit-card {
+    border: none;
+    border-radius: 16px;
+    background: $card-bg;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+    padding: 0; // Let tabs fill the card
+    overflow: hidden;
+
+    ::ng-deep .mat-mdc-tab-header {
+        background-color: #fff;
+        border-bottom: 1px solid $border;
+    }
+
+    ::ng-deep .mat-mdc-tab-body-content {
+        // No extra padding needed here usually
+    }
+}
+
+.tab-content {
+    padding: 24px;
+}
+
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    .form-row {
+        display: flex;
+        gap: 24px;
+
+        .half-width {
+            flex: 1;
+        }
+
+        .full-width {
+            width: 100%;
+        }
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 16px;
+        border-top: 1px solid $border;
+        margin-top: 8px;
+
+        button {
+            height: 48px;
+            padding: 0 32px;
+            font-weight: 500;
+
+            mat-spinner {
+                display: inline-block;
+                margin-right: 8px;
+            }
+        }
+    }
+}
+
+// Responsive
+@media (max-width: 960px) {
+    .profile-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 16px;
+    }
+}
+
+// Material Tweaks
+::ng-deep .mat-mdc-form-field-subscript-wrapper {
+    // Keep for errors
+}

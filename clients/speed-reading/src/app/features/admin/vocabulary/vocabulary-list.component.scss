@@ -1,0 +1,149 @@
+.vocabulary-container {
+    padding: 24px;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+}
+
+.header h1 {
+    margin: 0 0 4px 0;
+    font-size: 28px;
+    font-weight: 500;
+}
+
+.subtitle {
+    margin: 0;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 14px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.categories-info-card {
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.categories-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.categories-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.categories-header mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+}
+
+.category-count {
+    font-size: 13px;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+.categories-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.category-chip {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    font-size: 13px !important;
+}
+
+.category-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    opacity: 0.9;
+    font-style: italic;
+}
+
+.category-hint mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+.filters-card {
+    margin-bottom: 24px;
+}
+
+.filters {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filters mat-form-field {
+    min-width: 200px;
+}
+
+.vocabulary-table {
+    width: 100%;
+}
+
+.definition-text {
+    max-width: 400px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.no-data {
+    text-align: center;
+    padding: 64px 24px;
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.no-data mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+}
+
+.loading {
+    text-align: center;
+    padding: 64px 24px;
+}
+
+.loading p {
+    margin-top: 16px;
+    color: rgba(0, 0, 0, 0.6);
+}
+
+mat-chip {
+    font-size: 12px;
+}
+
+mat-paginator {
+    margin-top: 16px;
+}

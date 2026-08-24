@@ -1,0 +1,98 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2><mat-icon>analytics</mat-icon> Zayıf Konu Analizi</h2>
+  </div>
+
+  <mat-card style="margin-bottom:16px">
+    <mat-card-content>
+      <div class="filters" style="align-items:flex-end">
+        <mat-form-field appearance="outline">
+          <mat-label>Öğrenci</mat-label>
+          <mat-select [(ngModel)]="selectedStudentId">
+            <mat-option value="">-- Seçiniz --</mat-option>
+            <mat-option *ngFor="let r of relationships" [value]="r.studentId">
+              {{ getStudentLabel(r) }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Sınav Tipi</mat-label>
+          <mat-select [(ngModel)]="filterExamType">
+            <mat-option *ngFor="let o of examTypeOptions" [value]="o.value">{{ o.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline" style="width:120px">
+          <mat-label>Son N Sınav</mat-label>
+          <mat-select [(ngModel)]="lastN">
+            <mat-option [value]="3">3</mat-option>
+            <mat-option [value]="5">5</mat-option>
+            <mat-option [value]="10">10</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <button mat-raised-button color="primary" [disabled]="!selectedStudentId" (click)="analyze()">
+          <mat-icon>search</mat-icon> Analiz Et
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card>
+    <mat-card-content>
+      <div *ngIf="loading()" class="loading-container"><mat-spinner diameter="40"></mat-spinner></div>
+      <div *ngIf="!loading() && analysis.length === 0 && selectedStudentId" class="empty-state">
+        <mat-icon>analytics</mat-icon>
+        <p>Analiz için yeterli sınav verisi yok</p>
+      </div>
+      <div *ngIf="!loading() && !selectedStudentId" class="empty-state">
+        <mat-icon>person_search</mat-icon>
+        <p>Analiz için önce bir öğrenci seçin</p>
+      </div>
+
+      <table mat-table [dataSource]="analysis" *ngIf="!loading() && analysis.length > 0" class="full-width-table">
+        <ng-container matColumnDef="subjectName">
+          <th mat-header-cell *matHeaderCellDef>Ders</th>
+          <td mat-cell *matCellDef="let a"><strong>{{ a.subjectName }}</strong></td>
+        </ng-container>
+        <ng-container matColumnDef="averageNet">
+          <th mat-header-cell *matHeaderCellDef>Ort. Net</th>
+          <td mat-cell *matCellDef="let a">{{ a.averageNet | number:'1.2-2' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="targetNet">
+          <th mat-header-cell *matHeaderCellDef>Hedef Net</th>
+          <td mat-cell *matCellDef="let a">
+            <span *ngIf="a.targetNet > 0">{{ a.targetNet | number:'1.2-2' }}</span>
+            <span *ngIf="!a.targetNet" class="text-muted">—</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="deficit">
+          <th mat-header-cell *matHeaderCellDef>Açık</th>
+          <td mat-cell *matCellDef="let a">
+            <span [style.color]="getDeficitColor(a.deficit)" [style.fontWeight]="a.deficit > 5 ? '600' : 'normal'">
+              {{ a.deficit > 0 ? '-' : '' }}{{ a.deficit | number:'1.1-1' }}
+            </span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="trend">
+          <th mat-header-cell *matHeaderCellDef>Trend</th>
+          <td mat-cell *matCellDef="let a">
+            <span style="display:flex;align-items:center;gap:4px" [style.color]="trendColors[a.trend]">
+              <mat-icon [style.color]="trendColors[a.trend]">{{ trendIcons[a.trend] }}</mat-icon>
+              {{ trendLabels[a.trend] }}
+            </span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="dataPoints">
+          <th mat-header-cell *matHeaderCellDef>Son Netler</th>
+          <td mat-cell *matCellDef="let a">
+            <span *ngFor="let dp of a.dataPoints; let i = index">
+              <span [matTooltip]="dp.examDate | date:'dd.MM.yyyy'">{{ dp.net | number:'1.1-1' }}</span>
+              <span *ngIf="i < a.dataPoints.length - 1" class="text-muted"> → </span>
+            </span>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -1,0 +1,38 @@
+<h2 mat-dialog-title class="dialog-title">
+  <mat-icon color="warn" class="warning-icon">warning</mat-icon>
+  {{ data.title || 'Egzersizi Bırakmak İstediğinizden Emin Misiniz?' }}
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <div class="exit-dialog-content">
+    <div class="progress-info" *ngIf="data.progress && data.progress > 0">
+      <mat-icon>analytics</mat-icon>
+      <p>
+        İlerlemeniz <strong class="progress-value">%{{ getFormattedProgress() }}</strong> oranında tamamlandı.
+      </p>
+    </div>
+
+    <div class="warning-message">
+      <mat-icon>info</mat-icon>
+      <p>
+        {{ data.message || 'Şimdi çıkarsanız, bu ilerleme kaydedilmeyecek ve egzersizi baştan başlatmanız gerekecek.' }}
+      </p>
+    </div>
+
+    <div class="time-info" *ngIf="data.timeSpent">
+      <mat-icon>schedule</mat-icon>
+      <span>Geçen süre: <strong>{{ formatTime(data.timeSpent) }}</strong></span>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="dialog-actions">
+  <button mat-button [mat-dialog-close]="false" class="continue-button">
+    <mat-icon>play_arrow</mat-icon>
+    {{ data.cancelText || 'Devam Et' }}
+  </button>
+  <button mat-raised-button color="warn" [mat-dialog-close]="true" class="exit-button">
+    <mat-icon>exit_to_app</mat-icon>
+    {{ data.confirmText || 'Çıkış Yap' }}
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,112 @@
+<h2 mat-dialog-title>{{ isEditMode ? 'Egzersiz Düzenle' : 'Yeni Egzersiz' }}</h2>
+
+<mat-dialog-content>
+    <form [formGroup]="exerciseForm">
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Başlık</mat-label>
+            <input matInput formControlName="title" placeholder="Egzersiz başlığı">
+            <mat-error *ngIf="exerciseForm.get('title')?.hasError('required')">
+                Başlık zorunludur
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Açıklama</mat-label>
+            <textarea matInput formControlName="description" rows="3" placeholder="Egzersiz açıklaması"></textarea>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Egzersiz Tipi</mat-label>
+            <mat-select formControlName="exerciseTypeId">
+                <mat-optgroup *ngFor="let category of groupedTypes | keyvalue" [label]="category.key">
+                    <mat-option *ngFor="let type of category.value" [value]="type.id">
+                        <mat-icon [style.color]="type.colorCode">{{ type.iconName }}</mat-icon>
+                        {{ type.displayName }}
+                    </mat-option>
+                </mat-optgroup>
+            </mat-select>
+            <mat-error *ngIf="exerciseForm.get('exerciseTypeId')?.hasError('required')">
+                Egzersiz tipi zorunludur
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Zorluk Seviyesi</mat-label>
+            <mat-select formControlName="difficultyLevel">
+                <mat-option [value]="1">Seviye 1 (Çok Kolay)</mat-option>
+                <mat-option [value]="2">Seviye 2 (Kolay)</mat-option>
+                <mat-option [value]="3">Seviye 3 (Orta)</mat-option>
+                <mat-option [value]="4">Seviye 4 (Zor)</mat-option>
+                <mat-option [value]="5">Seviye 5 (Çok Zor)</mat-option>
+            </mat-select>
+            <mat-error *ngIf="exerciseForm.get('difficultyLevel')?.hasError('required')">
+                Zorluk seviyesi zorunludur
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Hedef Yaş Grubu</mat-label>
+            <mat-select formControlName="targetAgeGroupId">
+                <mat-option [value]="null">Tümü / Belirtilmemiş</mat-option>
+                <mat-option *ngFor="let group of ageGroups" [value]="group.id">
+                    {{ group.displayName }} ({{ group.minAge }}{{ group.maxAge ? '-' + group.maxAge : '+' }} yaş)
+                </mat-option>
+            </mat-select>
+            <mat-hint>Bu egzersizin hangi yaş grubuna yönelik olduğunu belirler</mat-hint>
+        </mat-form-field>
+
+        <!-- ExamSimulation Specific Fields -->
+        <div *ngIf="isExamSimulationType()" class="exam-config-section">
+            <h4>Sınav Simülasyonu Ayarları</h4>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Soru Sayısı</mat-label>
+                <input matInput type="number" [(ngModel)]="examConfig.questionCount"
+                    [ngModelOptions]="{standalone: true}" min="1" max="50">
+                <mat-hint>Her oturumda kaç soru gösterilecek (1-50)</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Soru Başına Hedef Süre (saniye)</mat-label>
+                <input matInput type="number" [(ngModel)]="examConfig.targetTimePerQuestion"
+                    [ngModelOptions]="{standalone: true}" min="30">
+                <mat-hint>Boş bırakılırsa kelime sayısına göre otomatik hesaplanır</mat-hint>
+            </mat-form-field>
+
+            <button mat-stroked-button type="button" (click)="applyExamConfig()">
+                <mat-icon>settings</mat-icon>
+                Yapılandırmayı Uygula
+            </button>
+        </div>
+
+        <div class="template-section" style="margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <mat-form-field appearance="outline" style="flex: 1; margin-bottom: 0;">
+                <mat-label>Hızlı Şablon Yükle (Universal Engine)</mat-label>
+                <mat-select [(ngModel)]="selectedTemplateKey" [ngModelOptions]="{standalone: true}">
+                    <mat-option *ngFor="let tmpl of engineTemplates" [value]="tmpl.key">
+                        {{ tmpl.label }}
+                    </mat-option>
+                </mat-select>
+                <mat-hint>Motor tipine göre örnek JSON yükler</mat-hint>
+            </mat-form-field>
+            <button mat-stroked-button type="button" (click)="applyTemplate()" [disabled]="!selectedTemplateKey"
+                style="height: 56px;">
+                <mat-icon>content_paste</mat-icon>
+                Uygula
+            </button>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Yapılandırma (JSON)</mat-label>
+            <textarea matInput formControlName="configurationJson" rows="5" placeholder='{"key": "value"}'></textarea>
+            <mat-hint>Egzersiz için özel yapılandırma (JSON formatında)</mat-hint>
+        </mat-form-field>
+    </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">İptal</button>
+    <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!exerciseForm.valid || saving">
+        {{ saving ? 'Kaydediliyor...' : 'Kaydet' }}
+    </button>
+</mat-dialog-actions>

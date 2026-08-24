@@ -1,0 +1,361 @@
+.main-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f5f5;
+}
+
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: 64px;
+  background: white;
+  color: rgba(0, 0, 0, 0.87);
+
+  .logo-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-right: 48px;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+
+    .logo-image {
+      height: 40px;
+      width: auto;
+      border-radius: 4px;
+      object-fit: contain;
+    }
+
+    .logo-text {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      white-space: nowrap;
+    }
+  }
+
+  .top-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 100%;
+
+    .nav-link {
+      height: 100%;
+      border-radius: 0;
+      padding: 0 16px;
+      color: rgba(0, 0, 0, 0.6);
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+
+      mat-icon {
+        margin-right: 8px;
+      }
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+        color: #673ab7;
+      }
+
+      &.active {
+        color: #673ab7;
+        border-bottom-color: #673ab7;
+        background-color: rgba(103, 58, 183, 0.04);
+      }
+
+      .badge {
+        margin-left: 8px;
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: 600;
+        line-height: 1;
+
+        &.badge-primary {
+          background: #e3f2fd;
+          color: #1976d2;
+        }
+
+        &.badge-warn {
+          background: #ffebee;
+          color: #c62828;
+        }
+      }
+    }
+  }
+
+  .toolbar-spacer {
+    flex: 1 1 auto;
+  }
+
+  .user-button {
+    margin-left: 8px;
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #673ab7;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      font-size: 14px;
+    }
+  }
+
+  .admin-switch-btn {
+    margin-right: 8px;
+
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+
+  // Mobile optimization
+  @media (max-width: 768px) {
+    height: 56px;
+    padding: 0 16px;
+
+    .logo-container {
+      margin-right: 0;
+
+      .logo-image {
+        height: 32px;
+      }
+
+      .logo-text {
+        font-size: 18px;
+      }
+    }
+  }
+}
+
+.page-content {
+  flex: 1;
+  padding: 24px;
+  width: 100%;
+  box-sizing: border-box;
+
+  .content-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  // Mobile optimizations
+  @media (max-width: 768px) {
+    padding: 16px;
+    // Bottom nav padding removed as we switched to Sidenav
+  }
+}
+
+.sidenav-container {
+  height: 100%;
+  min-height: 100vh;
+}
+
+.sidenav {
+  width: 280px;
+  background-color: #ffffff; // Ensure solid background
+  border-right: 1px solid rgba(0, 0, 0, 0.12); // distinct border
+
+  .mat-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+}
+
+.mobile-menu-btn {
+  margin-right: 8px;
+}
+
+.user-menu-header {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  gap: 12px;
+  min-width: 200px;
+
+  .avatar-large {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    font-size: 18px;
+  }
+
+  .user-info {
+    flex: 1;
+
+    .user-name {
+      font-weight: 500;
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.87);
+    }
+
+    .user-role {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.54);
+      margin-top: 2px;
+    }
+  }
+}
+
+.notifications-menu {
+  .mat-mdc-menu-content {
+    padding: 0;
+  }
+
+  .notifications-header {
+    padding: 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 500;
+    }
+  }
+
+  .notification-content {
+    margin-left: 12px;
+
+    .notification-title {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.87);
+    }
+
+    .notification-time {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.54);
+      margin-top: 2px;
+    }
+  }
+
+  .view-all {
+    justify-content: center;
+    color: #673ab7;
+    font-weight: 500;
+  }
+}
+
+.footer {
+  background: white;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 24px 0;
+  margin-top: auto;
+
+  .footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.6);
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+
+      a {
+        color: rgba(0, 0, 0, 0.6);
+        text-decoration: none;
+        transition: color 0.2s;
+
+        &:hover {
+          color: #673ab7;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .footer {
+    // padding-bottom removed
+
+    .footer-content {
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+
+      .footer-links {
+        justify-content: center;
+        gap: 16px;
+      }
+    }
+  }
+}
+
+/* Context Badge Styling (Framed Name & Spaced - 14px) */
+.context-badge {
+  display: flex !important;
+  align-items: center !important;
+  margin-right: 20px;
+  max-width: 240px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    color: #ef6c00;
+  }
+
+  .badge-value {
+    font-size: 14px; // Increased to 14px
+    font-weight: 600;
+    color: #ef6c00;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+
+    // Framed Style
+    border: 1px solid rgba(239, 108, 0, 0.4);
+    background-color: #fff3e0;
+    border-radius: 4px;
+    padding: 3px 12px;
+    margin-left: 8px;
+    max-width: 180px;
+  }
+
+  @media (max-width: 768px) {
+    margin-right: 8px;
+
+    .badge-value {
+      max-width: 110px;
+      font-size: 12px; // Slightly smaller on mobile
+    }
+  }
+}
+
+.admin-switch-btn {
+  height: 32px !important; // Increased to 32px
+  line-height: 32px !important;
+  font-size: 13px !important; // 13px fits better than 14px for button text usually, but trying 13.5
+  padding: 0 14px !important;
+  margin-right: 8px;
+  border-radius: 16px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    margin-right: 6px;
+  }
+}

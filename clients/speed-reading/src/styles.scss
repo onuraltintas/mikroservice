@@ -1,0 +1,1192 @@
+// Include theming for Angular Material with `mat.theme()`.
+// This Sass mixin will define CSS variables that are used for styling Angular Material
+// components according to the Material 3 design spec.
+// Learn more about theming and how to use it for your application's
+// custom components at https://material.angular.dev/guide/theming
+@use '@angular/material' as mat;
+
+// Import ngx-toastr styles
+@use 'ngx-toastr/toastr';
+
+// =============================================================================
+// STUDENT PANEL DESIGN TOKENS
+// Sprint 0: CSS custom properties for the new student panel design system.
+// These --sp-* variables are consumed by Tailwind classes (bg-sp-primary etc.)
+// and by student component SCSS files directly.
+// Admin/teacher panels are NOT affected — they use the old --primary-* variables.
+// =============================================================================
+@use 'styles/student-tokens';
+@use 'styles/animations';
+
+// Import Quill Styles
+@import 'quill/dist/quill.core.css';
+@import 'quill/dist/quill.snow.css';
+
+// ========================================
+// GLOBAL RESET
+// ========================================
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+// ========================================
+// CUSTOM CSS VARIABLES - Speed Reading Platform
+// Based on Scientific Research for Education
+// ========================================
+:root {
+  // PRIMARY COLORS - Konsantrasyon ve Odaklanma
+  --primary-blue: #1976D2;
+  --primary-blue-light: #42A5F5;
+  --primary-blue-dark: #0D47A1;
+  --primary-blue-gradient: linear-gradient(135deg, #1976D2 0%, #42A5F5 100%);
+
+  // SECONDARY COLORS - Başarı ve Gelişim
+  --secondary-green: #43A047;
+  --secondary-green-light: #66BB6A;
+  --secondary-green-dark: #2E7D32;
+  --secondary-green-gradient: linear-gradient(135deg, #43A047 0%, #66BB6A 100%);
+
+  // ACCENT COLORS - Motivasyon ve Ödül
+  --accent-purple: #9C27B0;
+  --accent-purple-light: #BA68C8;
+  --accent-purple-dark: #7B1FA2;
+
+  --accent-gold: #FFD700;
+  --accent-gold-light: #FFE54C;
+  --accent-gold-dark: #FFA500;
+  --accent-gold-gradient: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+
+  // GAMİFİKASYON COLORS
+  --gamify-purple: #667eea;
+  --gamify-purple-dark: #764ba2;
+  --gamify-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+  // Aliases for consistency (used in components)
+  --purple-color: #667eea;
+  --purple-dark: #764ba2;
+  --purple-light: rgba(102, 126, 234, 0.1);
+  --purple-shadow: rgba(102, 126, 234, 0.3);
+  --gradient-purple: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+  --success-green: #43A047;
+  --success-green-text: #2E7D32; // 4.98:1 kontrast - küçük metinler için WCAG AA uyumlu
+  --warning-dark: #F57C00;
+
+  // WARNING COLOR - Dikkat (Kırmızı YERİNE Turuncu)
+  --warning-orange: #FF9800; // 2.17:1 - SADECE arka plan, icon, border için
+  --warning-orange-light: #FFB74D;
+  --warning-orange-dark: #F57C00;
+  --warning-orange-text: #E65100; // 4.54:1 kontrast - metinler için WCAG AA uyumlu
+
+  // SUCCESS & INFO
+  --success-color: #43A047;
+  --info-color: #1976D2;
+
+  // NEUTRAL COLORS
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-tertiary: #9e9e9e;
+  --text-disabled: #bdbdbd;
+
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  --bg-hover: #f1f3f5;
+
+  --border-color: #e9ecef;
+  --divider-color: #dee2e6;
+
+  // BLOOM TAXONOMY COLORS
+  --bloom-1-remembering: #43A047;
+  --bloom-2-understanding: #66BB6A;
+  --bloom-3-applying: #1976D2;
+  --bloom-4-analyzing: #667eea;
+  --bloom-5-evaluating: #9C27B0;
+  --bloom-6-creating: #FFD700;
+
+  // SHADOWS
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.15);
+
+  // TRANSITIONS
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.6s ease;
+
+  // BORDER RADIUS
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-round: 50%;
+
+  // SPACING
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+
+  // TYPOGRAPHY
+  --font-xs: 12px;
+  --font-sm: 14px;
+  --font-base: 16px;
+  --font-lg: 18px;
+  --font-xl: 20px;
+  --font-2xl: 24px;
+  --font-3xl: 32px;
+  --font-4xl: 40px;
+
+  // ========================================
+  // USER READING SETTINGS
+  // Dynamically updated by SettingsService
+  // ========================================
+  --reading-font-size: 16px;
+  --reading-font-family: 'Arial', sans-serif;
+  --reading-line-height: 1.5;
+  --reading-letter-spacing: 0px;
+
+  // Theme Colors (Light - Default)
+  --theme-bg-primary: #ffffff;
+  --theme-bg-secondary: #f8f9fa;
+  --theme-bg-tertiary: #e9ecef;
+  --theme-text-primary: #212529;
+  --theme-text-secondary: #6c757d;
+  --theme-border: #e9ecef;
+}
+
+// ========================================
+// DARK THEME
+// ========================================
+[data-theme="dark"] {
+  --theme-bg-primary: #1e1e1e;
+  --theme-bg-secondary: #2d2d2d;
+  --theme-bg-tertiary: #3a3a3a;
+  --theme-text-primary: #ffffff;
+  --theme-text-secondary: #b0b0b0;
+  --theme-border: #3a3a3a;
+
+  // Override Material colors for dark theme
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #2d2d2d;
+  --bg-tertiary: #3a3a3a;
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0b0;
+  --border-color: #3a3a3a;
+}
+
+// ========================================
+// SEPIA THEME (Eye-friendly for reading)
+// ========================================
+[data-theme="sepia"] {
+  --theme-bg-primary: #f4ecd8;
+  --theme-bg-secondary: #e8dcc0;
+  --theme-bg-tertiary: #d9cdb0;
+  --theme-text-primary: #5c4a2f;
+  --theme-text-secondary: #7d6b4f;
+  --theme-border: #d9cdb0;
+
+  // Override Material colors for sepia theme
+  --bg-primary: #f4ecd8;
+  --bg-secondary: #e8dcc0;
+  --bg-tertiary: #d9cdb0;
+  --text-primary: #5c4a2f;
+  --text-secondary: #7d6b4f;
+  --border-color: #d9cdb0;
+}
+
+// ========================================
+// HIGH CONTRAST MODE (Accessibility)
+// ========================================
+[data-high-contrast="true"] {
+  --theme-text-primary: #000000;
+  --theme-bg-primary: #ffffff;
+  --theme-border: #000000;
+
+  * {
+    border-color: #000000 !important;
+  }
+
+  button,
+  a {
+    outline: 2px solid #000000 !important;
+  }
+}
+
+// Responsive typography
+@media (max-width: 768px) {
+  :root {
+    --font-xs: 11px;
+    --font-sm: 13px;
+    --font-base: 15px;
+    --font-lg: 17px;
+    --font-xl: 19px;
+    --font-2xl: 22px;
+    --font-3xl: 28px;
+    --font-4xl: 34px;
+  }
+}
+
+html {
+  @include mat.theme((color: (primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    ));
+}
+
+body {
+  color-scheme: light;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  margin: 0;
+  font-size: var(--font-base);
+  line-height: 1.6;
+}
+
+/* Global Styles and Utilities */
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Utility Classes */
+.full-width {
+  width: 100%;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mt-1 {
+  margin-top: 8px;
+}
+
+.mt-2 {
+  margin-top: 16px;
+}
+
+.mt-3 {
+  margin-top: 24px;
+}
+
+.mt-4 {
+  margin-top: 32px;
+}
+
+.mb-1 {
+  margin-bottom: 8px;
+}
+
+.mb-2 {
+  margin-bottom: 16px;
+}
+
+.mb-3 {
+  margin-bottom: 24px;
+}
+
+.mb-4 {
+  margin-bottom: 32px;
+}
+
+.p-1 {
+  padding: 8px;
+}
+
+.p-2 {
+  padding: 16px;
+}
+
+.p-3 {
+  padding: 24px;
+}
+
+.p-4 {
+  padding: 32px;
+}
+
+/* Responsive Container */
+.container {
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+@media (min-width: 576px) {
+  .container {
+    max-width: 540px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 720px;
+  }
+}
+
+@media (min-width: 992px) {
+  .container {
+    max-width: 960px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1140px;
+  }
+}
+
+/* Loading Spinner */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+/* Card Hover Effect */
+mat-card {
+  transition: box-shadow 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+mat-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Button Improvements */
+button[mat-raised-button],
+button[mat-flat-button] {
+  letter-spacing: 0.5px;
+}
+
+/* Table Responsive */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Success/Warning States */
+.success-text {
+  color: var(--success-color);
+}
+
+.error-text,
+.warning-text {
+  color: var(--warning-orange-text);
+  /* Koyu turuncu - WCAG AA uyumlu (4.54:1) */
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 4px 12px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-xs);
+  font-weight: 600;
+}
+
+.status-badge.success {
+  background-color: #e8f5e9;
+  color: var(--success-color);
+}
+
+.status-badge.warning,
+.status-badge.error {
+  background-color: #fff3e0;
+  color: var(--warning-orange-text);
+  /* Koyu turuncu - WCAG AA uyumlu */
+}
+
+/* Toast/Snackbar Styles */
+.toast-success {
+  .mat-mdc-snack-bar-container {
+    --mdc-snackbar-container-color: var(--success-color);
+    --mat-snack-bar-button-color: #ffffff;
+    --mdc-snackbar-supporting-text-color: #ffffff;
+  }
+}
+
+.toast-error,
+.toast-warning {
+  .mat-mdc-snack-bar-container {
+    --mdc-snackbar-container-color: var(--warning-orange);
+    --mat-snack-bar-button-color: #ffffff;
+    --mdc-snackbar-supporting-text-color: #ffffff;
+  }
+}
+
+.toast-info {
+  .mat-mdc-snack-bar-container {
+    --mdc-snackbar-container-color: var(--info-color);
+    --mat-snack-bar-button-color: #ffffff;
+    --mdc-snackbar-supporting-text-color: #ffffff;
+  }
+}
+
+// ========================================
+// COMPONENT LIBRARY
+// ========================================
+
+/* Custom Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  background: var(--primary-blue);
+  color: white;
+
+  &:hover:not(:disabled) {
+    background: var(--primary-blue-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.btn-success {
+  background: var(--secondary-green);
+  color: white;
+
+  &:hover:not(:disabled) {
+    background: var(--secondary-green-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.btn-warning {
+  background: var(--warning-orange);
+  color: white;
+
+  &:hover:not(:disabled) {
+    background: var(--warning-orange-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.btn-gamify {
+  background: var(--gamify-gradient);
+  color: white;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+  }
+
+  &:hover:not(:disabled)::before {
+    left: 100%;
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+  }
+}
+
+/* Button Sizes */
+.btn-sm {
+  padding: 8px 16px;
+  font-size: var(--font-sm);
+  height: 36px;
+}
+
+.btn-md {
+  padding: 12px 24px;
+  font-size: var(--font-base);
+  height: 44px;
+}
+
+.btn-lg {
+  padding: 16px 32px;
+  font-size: var(--font-lg);
+  height: 52px;
+}
+
+/* Custom Cards */
+.card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: all var(--transition-normal);
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.card-elevated {
+  box-shadow: var(--shadow-lg);
+
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+  }
+}
+
+.card-gradient {
+  background: var(--gamify-gradient);
+  color: white;
+}
+
+/* Custom Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-primary {
+  background: var(--primary-blue);
+  color: white;
+}
+
+.badge-success {
+  background: var(--secondary-green);
+  color: white;
+}
+
+.badge-warning {
+  background: var(--warning-orange);
+  color: white;
+}
+
+.badge-gold {
+  background: var(--accent-gold-gradient);
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.badge-purple {
+  background: var(--gamify-gradient);
+  color: white;
+}
+
+/* Progress Bars */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  position: relative;
+
+  &-fill {
+    height: 100%;
+    background: var(--primary-blue);
+    border-radius: var(--radius-sm);
+    transition: width var(--transition-slow);
+    position: relative;
+    overflow: hidden;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg,
+          transparent,
+          rgba(255, 255, 255, 0.3),
+          transparent);
+      animation: shimmer 2s infinite;
+    }
+  }
+
+  &.progress-success .progress-bar-fill {
+    background: var(--secondary-green-gradient);
+  }
+
+  &.progress-warning .progress-bar-fill {
+    background: var(--warning-orange);
+  }
+
+  &.progress-purple .progress-bar-fill {
+    background: var(--gamify-gradient);
+  }
+
+  &.progress-gold .progress-bar-fill {
+    background: var(--accent-gold-gradient);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Loading Spinner */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--bg-tertiary);
+  border-top-color: var(--primary-blue);
+  border-radius: 50%;
+  animation: rotate 1s linear infinite;
+
+  &.spinner-sm {
+    width: 24px;
+    height: 24px;
+    border-width: 3px;
+  }
+
+  &.spinner-lg {
+    width: 56px;
+    height: 56px;
+    border-width: 5px;
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ========================================
+// ANIMATIONS
+// ========================================
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+
+/* Animation Classes */
+.animate-fade-in {
+  animation: fadeIn var(--transition-normal);
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp var(--transition-normal);
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--transition-normal);
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+.animate-shake {
+  animation: shake 0.5s;
+}
+
+.hover-lift {
+  transition: transform var(--transition-fast);
+
+  &:hover {
+    transform: translateY(-4px);
+  }
+}
+
+
+
+.hover-grow {
+  transition: transform var(--transition-fast);
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+// ========================================
+// QUILL EDITOR CUSTOMIZATION
+// Larger Toolbar for better UX
+// ========================================
+.ql-toolbar.ql-snow {
+  padding: 12px;
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px 8px 0 0;
+
+  // Buttons (Bold, Italic, Link, etc.)
+  button {
+    width: 32px !important;
+    height: 32px !important;
+    margin-right: 4px;
+
+    svg {
+      width: 24px !important;
+      height: 24px !important;
+    }
+  }
+
+  // Pickers (Font Size, Header, etc.)
+  .ql-picker-label {
+    padding-left: 8px;
+    height: 32px;
+    line-height: 32px;
+  }
+
+  // Groups spacing
+  .ql-formats {
+    margin-right: 24px !important;
+  }
+}
+
+.ql-container.ql-snow {
+  font-family: 'Inter', Roboto, sans-serif !important;
+  font-size: 16px !important;
+  border-radius: 0 0 8px 8px;
+}
+
+// ========================================
+// ACCESSIBILITY
+// ========================================
+
+// Enhanced focus states for better visibility (WCAG 2.1 AA)
+*:focus-visible {
+  outline: 3px solid #0D47A1; // Koyu mavi - 7.12:1 kontrast (AAA)
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 0 0 4px rgba(13, 71, 161, 0.15); // Extra görünürlük
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+// Touch Targets - WCAG 2.1 AA (Minimum 44x44px)
+@media (max-width: 768px) {
+
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  .btn,
+  .mat-mdc-button,
+  .mat-mdc-raised-button,
+  .mat-mdc-icon-button,
+  .mat-mdc-fab,
+  .mat-mdc-mini-fab {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  // Radio buttons ve checkboxlar
+  .mat-mdc-radio-button,
+  .mat-mdc-checkbox {
+    min-height: 44px;
+    padding: 8px;
+  }
+
+  // Clickable cards
+  .card[role="button"],
+  .recommendation-item,
+  .leaderboard-entry {
+    min-height: 60px;
+    padding: 12px;
+  }
+}
+
+// Reduced motion preference (WCAG 2.1)
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// ========================================
+// SUBSCRIPTION DIALOG PANEL OVERRIDES
+// Angular Material MDC dialog adds padding:24px to .mdc-dialog__surface
+// Our custom header/step-bar sit outside mat-dialog-content so we need padding:0
+// ========================================
+.assign-dialog-panel,
+.plan-dialog-panel,
+.coaching-dialog-panel {
+  .mdc-dialog__surface {
+    padding: 0 !important;
+    overflow: hidden !important;
+    border-radius: 16px !important;
+  }
+}
+
+// Dialog z-index override for sticky headers
+.cdk-overlay-container {
+  z-index: 1000 !important;
+}
+
+.cdk-overlay-backdrop {
+  z-index: 1000 !important;
+  background-color: rgba(0, 0, 0, 0.32) !important;
+}
+
+.cdk-overlay-pane {
+  z-index: 1001 !important;
+}
+
+// Custom dialog container with proper z-index
+.custom-dialog-container {
+  z-index: 1002 !important;
+}
+
+.exit-dialog {
+  z-index: 1100 !important;
+}
+
+// ========================================
+// COACHING ADMIN SHARED STYLES
+// ========================================
+
+.page-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+  }
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  mat-form-field {
+    min-width: 180px;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: #9e9e9e;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 12px;
+    color: #bdbdbd;
+  }
+
+  p {
+    margin: 0;
+    font-size: 15px;
+  }
+}
+
+.full-width-table {
+  width: 100%;
+
+  th.mat-header-cell {
+    font-weight: 600;
+    color: #555;
+    font-size: 13px;
+  }
+}
+
+.text-muted {
+  color: #9e9e9e;
+  font-size: 0.875em;
+}
+
+.icon-sm {
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  vertical-align: middle;
+}
+
+.star-icon {
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+
+// Status badges for coaching module
+.status-badge {
+  &.status-active      { background: #e8f5e9; color: #2e7d32; }
+  &.status-completed   { background: #e3f2fd; color: #1565c0; }
+  &.status-cancelled   { background: #ffebee; color: #c62828; }
+  &.status-scheduled   { background: #fff9c4; color: #f57f17; }
+  &.status-noshow      { background: #fce4ec; color: #ad1457; }
+  &.status-rescheduled { background: #f3e5f5; color: #6a1b9a; }
+  &.status-paused      { background: #f5f5f5; color: #616161; }
+  &.status-pending     { background: #fff9c4; color: #f57f17; }
+  &.status-failed      { background: #ffebee; color: #c62828; }
+}
+
+// Level badges for goals
+.level-badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+
+  &.level-yearly  { background: #e8eaf6; color: #283593; }
+  &.level-monthly { background: #e0f7fa; color: #00695c; }
+  &.level-weekly  { background: #f3e5f5; color: #6a1b9a; }
+  &.level-daily   { background: #fff3e0; color: #e65100; }
+}
+
+// Goal progress bar cell
+.progress-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-progress-bar {
+    flex: 1;
+    min-width: 80px;
+    border-radius: 4px;
+  }
+
+  .progress-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+    white-space: nowrap;
+  }
+}
+
+// Study session type chip
+.type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+}
+
+// Subjects grid
+.subjects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.subject-card {
+  border: 1px solid #e0e0e0;
+  box-shadow: none !important;
+
+  .subject-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+  }
+}
+
+.group-badge {
+  padding: 3px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+}
+
+.topics-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-top: 4px;
+}
+
+.topic-chip {
+  background: #f5f5f5;
+  color: #555;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+}
+
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
+  display: inline-block;
+}
+
+// Old Quill overrides removed to prevent usage of mini-toolbar styles
+// Fix for transparent profile menu on mobile/tablet
+.user-profile-menu {
+  background-color: #ffffff !important;
+
+  .mat-mdc-menu-panel {
+    background-color: #ffffff !important;
+  }
+}
+
+// =============================================================================
+// TAILWIND CSS UTILITIES — Student Panel
+// =============================================================================
+// - preflight (reset) devre dışı: tailwind.config.js → corePlugins.preflight: false
+// - Sadece utility class'lar eklenir, Angular Material bozulmaz
+// - Sadece src/app/features/student/** dosyaları taranır
+// =============================================================================
+@tailwind utilities;

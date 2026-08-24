@@ -1,0 +1,1892 @@
+<div class="player-container">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+        <div class="ep-spinner"></div>
+        <p>Egzersiz yükleniyor...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error" class="error-state">
+        <span class="material-icons">error_outline</span>
+        <h2>Hata</h2>
+        <p>{{ error }}</p>
+        <button class="ep-btn ep-btn--primary" (click)="goBack()">
+            <span class="material-icons">arrow_back</span>
+            Geri Dön
+        </button>
+    </div>
+
+    <!-- Unsupported Engine -->
+    <div *ngIf="!isLoading && !error && !engine" class="unsupported-state">
+        <span class="material-icons">extension_off</span>
+        <h2>Desteklenmeyen Motor</h2>
+        <p>Bu egzersiz tipi henüz Universal Engine'de desteklenmiyor.</p>
+        <p class="engine-type">Engine Type: {{ parsedConfig?.engineType || 'Belirtilmemiş' }}</p>
+        <button class="ep-btn ep-btn--primary" (click)="goBack()">
+            <span class="material-icons">arrow_back</span>
+            Klasik Modda Aç
+        </button>
+    </div>
+
+    <!-- Exercise Ready -->
+    <div *ngIf="!isLoading && !error && engine && !engineState.isRunning && !engineState.isCompleted"
+        class="ready-state">
+        <div class="start-card">
+            <div class="card-header-content">
+                <div class="exercise-icon-large">
+                    <span class="material-icons">{{ getExerciseIcon() }}</span>
+                </div>
+                <h1>{{ exercise?.title }}</h1>
+                <span class="exercise-subtitle">{{ getEngineDisplayName() }}</span>
+            </div>
+
+            <div class="card-body-content">
+                <p class="description">{{ exercise?.description }}</p>
+
+                <div class="badges-container">
+                    <div class="info-badge level">
+                        <span class="material-icons">signal_cellular_alt</span>
+                        <span>Seviye {{ exercise?.difficultyLevel }}</span>
+                    </div>
+                    <div class="info-badge config">
+                        <span class="material-icons">settings</span>
+                        <span>{{ getConfigSummary() }}</span>
+                    </div>
+                </div>
+                <!-- Word Highlight Details (Speed Reading/Chunking) -->
+                <div *ngIf="parsedConfig?.engineType === 'word_highlight'" class="exercise-details">
+                    <div class="detail-item" *ngIf="parsedConfig?.engineConfig?.['pacer']?.['speedWpm']">
+                        <span class="label">Hedef Hız:</span>
+                        <span class="value">{{ parsedConfig?.engineConfig?.['pacer']?.['speedWpm'] }} WPM</span>
+                    </div>
+                    <div class="detail-item"
+                        *ngIf="parsedConfig?.engineConfig?.['pacer']?.['chunkSize'] || parsedConfig?.engineConfig?.['content']?.['chunkSize']">
+                        <span class="label">Kelime Grubu:</span>
+                        <span class="value">{{ parsedConfig?.engineConfig?.['pacer']?.['chunkSize'] ||
+                            parsedConfig?.engineConfig?.['content']?.['chunkSize'] }}'li Gruplar</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Egzersiz Tipi:</span>
+                        <span class="value">{{ parsedConfig?.engineConfig?.['mode'] === 'chunking' ? 'Gruplama' : 'Hız
+                            Okuma' }}</span>
+                    </div>
+                </div>
+
+                <!-- Text Stream (RSVP/Tachistoscope) Details -->
+                <div *ngIf="parsedConfig?.engineType === 'text_stream'" class="exercise-details">
+                    <div class="detail-item">
+                        <span class="label">Zorluk:</span>
+                        <span class="value">{{ getDifficultyLabel(parsedConfig?.engineConfig?.['DifficultyLevel'] ||
+                            exercise?.difficultyLevel || 1) }}</span>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="label">Mod:</span>
+                        <span class="value">{{ parsedConfig?.engineConfig?.['mode'] === 'rsvp' ? 'RSVP Hızlı Okuma' :
+                            'Takistostop' }}</span>
+                    </div>
+
+                    <!-- Duration (if available) or Stimulus Count -->
+                    <div class="detail-item" *ngIf="parsedConfig?.engineConfig?.['content']?.['durationSeconds']">
+                        <span class="label">Süre:</span>
+                        <span class="value">{{ parsedConfig?.engineConfig?.['content']?.['durationSeconds'] }} sn</span>
+                    </div>
+                    <div class="detail-item" *ngIf="!parsedConfig?.engineConfig?.['content']?.['durationSeconds']">
+                        <span class="label">Soru:</span>
+                        <span class="value">{{ parsedConfig?.engineConfig?.['content']?.['count'] ||
+                            parsedConfig?.engineConfig?.['TotalStimuli'] ||
+                            getEstimatedStimulusCount(parsedConfig?.engineConfig?.['DifficultyLevel'] ||
+                            exercise?.difficultyLevel || 1) }} Adet</span>
+                    </div>
+
+                    <!-- WPM (if available) or DurationMs -->
+                    <div class="detail-item" *ngIf="parsedConfig?.engineConfig?.['pacer']?.['speedWpm']">
+                        <span class="label">Hız:</span>
+                        <span class="value">{{ parsedConfig?.engineConfig?.['pacer']?.['speedWpm'] }} WPM</span>
+                    </div>
+                    <div class="detail-item" *ngIf="!parsedConfig?.engineConfig?.['pacer']?.['speedWpm']">
+                        <span class="label">Gösterme:</span>
+                        <span class="value">{{ parsedConfig?.engineConfig?.['timing']?.['durationMs'] ||
+                            parsedConfig?.engineConfig?.['DisplayDurationMs'] ||
+                            getEstimatedDuration(parsedConfig?.engineConfig?.['DifficultyLevel'] ||
+                            exercise?.difficultyLevel || 1) }}ms</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-action-area">
+                <button class="ep-btn ep-btn--primary" class="start-button-large" (click)="startExercise()">
+                    <span class="material-icons">play_circle_filled</span>
+                    EGZERSİZE BAŞLA
+                </button>
+                <button class="cancel-button" (click)="goBack()">
+                    Vazgeç
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise Running - Grid Interaction -->
+    <div *ngIf="engine && engineState.isRunning && engine.engineType === 'grid_interaction'" class="game-container">
+        <div class="game-header">
+            <div class="timer" [class.countdown]="hasTimeLimit()" [class.urgent]="isTimeUrgent()">
+                <span class="material-icons">{{ hasTimeLimit() ? 'hourglass_empty' : 'timer' }}</span>
+                {{ hasTimeLimit() ? formatTime(getRemainingTimeMs()) : formatTime(engineState.timeElapsed) }}
+            </div>
+            <div class="progress-info">
+                <span>{{ engineState.currentStep }} / {{ engineState.totalSteps }}</span>
+                <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
+            </div>
+            <div class="target-display">
+                Hedef: <strong>{{ getCurrentTarget() }}</strong>
+            </div>
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+                <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
+            </button>
+            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div class="grid-wrapper">
+            <div class="grid-container" [style.--grid-size]="getGridSize()">
+                <button *ngFor="let cell of getGrid(); let i = index; trackBy: trackByIdx" class="grid-cell"
+                    [class.clicked]="clickedCells.has(i)" [class.correct]="correctCells.has(i)"
+                    [class.wrong]="wrongCells.has(i)" (click)="onCellClick(i, cell)" [disabled]="engineState.isPaused">
+                    {{ cell }}
+                </button>
+            </div>
+            <!-- Fixation Point - Merkez Odaklanma Noktası -->
+            <div class="fixation-point" *ngIf="engineState.isRunning && !engineState.isPaused">
+                <div class="fixation-dot"></div>
+            </div>
+        </div>
+
+        <div class="game-stats">
+            <div class="stat">
+                <span class="label">Skor</span>
+                <span class="value">{{ engineState.score }}%</span>
+            </div>
+            <div class="stat">
+                <span class="label">Doğruluk</span>
+                <span class="value">{{ engineState.accuracy }}%</span>
+            </div>
+            <div class="stat">
+                <span class="label">Hatalar</span>
+                <span class="value error">{{ engineState.errors }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise Running - Motion Path (Eye Tracking / Fixation) -->
+    <div *ngIf="engine && engineState.isRunning && engine.engineType === 'motion_path'"
+        class="game-container motion-path-container">
+        <div class="game-header">
+            <div class="timer" [class.countdown]="hasTimeLimit() || isSaccadeMode()"
+                [class.urgent]="isTimeUrgent() || engineState.isLastTenSeconds"
+                [class.last-ten-seconds]="engineState.isLastTenSeconds">
+                <span class="material-icons">{{ hasTimeLimit() || isSaccadeMode() ? 'hourglass_empty' : 'timer' }}</span>
+                <!-- Saccade mode: show remaining seconds countdown -->
+                <ng-container *ngIf="isSaccadeMode() && engineState.remainingSeconds !== undefined; else normalTimer">
+                    {{ engineState.remainingSeconds }}s
+                </ng-container>
+                <ng-template #normalTimer>
+                    {{ hasTimeLimit() ? formatTime(getRemainingTimeMs()) : formatTime(engineState.timeElapsed) }}
+                </ng-template>
+            </div>
+            <div class="progress-info">
+                <!-- Saccade mode: show target count instead of time-based progress -->
+                <ng-container *ngIf="isSaccadeMode(); else normalProgress">
+                    <span class="target-counter">
+                        <span class="material-icons" class="target-icon">track_changes</span>
+                        {{ engineState.targetCount || 0 }} hedef
+                    </span>
+                </ng-container>
+                <ng-template #normalProgress>
+                    <span>{{ engineState.currentStep }} / {{ engineState.totalSteps }} Nokta</span>
+                    <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
+                </ng-template>
+            </div>
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+                <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
+            </button>
+            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div class="eye-tracking-area">
+            <div class="tracking-instruction">
+                <span class="material-icons">{{ isFixationMode() ? 'center_focus_strong' : (isSaccadeMode() ? 'ads_click' : 'visibility')
+                    }}</span>
+                <span>{{ isFixationMode() ? 'Noktaya odaklanın ve bekleyin' : (isSaccadeMode() ? 'Hedefleri takip edin
+                    (Gerektiğinde tıklayın)' : 'Gözlerinizle noktayı takip edin') }}</span>
+            </div>
+            <div class="tracking-canvas">
+                <!-- Peripheral Characters (Only in Fixation Mode) -->
+                <ng-container *ngIf="isFixationMode()">
+                    <div *ngFor="let char of getPeripheralChars(); trackBy: trackPeripheralChar" class="peripheral-char"
+                        [style.left.%]="char.x" [style.top.%]="char.y">
+                        {{ char.char }}
+                    </div>
+                </ng-container>
+
+                <!-- Target Dot Container -->
+                <div class="target-container" [style.left.%]="getTargetX()" [style.top.%]="getTargetY()">
+                    <!-- Countdown Circle (Fixation & Saccade) -->
+                    <svg *ngIf="isFixationMode() || isSaccadeMode()" class="fixation-progress-svg"
+                        [attr.width]="getFixationPointSize() * 2.2" [attr.height]="getFixationPointSize() * 2.2"
+                        viewBox="0 0 100 100">
+                        <circle class="progress-background" cx="50" cy="50" r="45"></circle>
+                        <circle class="progress-bar" cx="50" cy="50" r="45" [attr.stroke-dasharray]="282.7"
+                            [attr.stroke-dashoffset]="282.7 * (1 - getFixationProgress() / 100)"></circle>
+                    </svg>
+
+                    <!-- Focus Point / Target -->
+                    <div class="target-dot" [style.width.px]="getFixationPointSize()"
+                        [style.height.px]="getFixationPointSize()" [class.paused]="engineState.isPaused"
+                        [class.has-value]="getSaccadeValue()">
+                        <span class="dot-value" *ngIf="getSaccadeValue()" [style.font-size.px]="getSaccadeFontSize()">{{
+                            getSaccadeValue() }}</span>
+                    </div>
+                </div>
+
+                <!-- Peripheral Vision Input Area (When waiting for user input) -->
+                <div *ngIf="isFixationMode() && isAwaitingPeripheralInput() && !isShowingPeripheralFeedback()"
+                    class="peripheral-input-overlay">
+                    <div class="peripheral-input-card">
+                        <div class="input-header">
+                            <span class="material-icons">visibility</span>
+                            <span>Çevrede ne gördünüz?</span>
+                        </div>
+                        <div class="input-hint">
+                            Noktanın etrafındaki harfleri yazın
+                        </div>
+                        <input #peripheralInput type="text" class="peripheral-input" [(ngModel)]="peripheralInputValue"
+                            (input)="onPeripheralInputChange($event)" (keydown.enter)="submitPeripheralInput()"
+                            maxlength="4" autocomplete="off" autocorrect="off" autocapitalize="characters"
+                            spellcheck="false" />
+                        <button class="ep-btn ep-btn--primary" (click)="submitPeripheralInput()">
+                            <span class="material-icons">check</span> Gönder
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Peripheral Vision Feedback (After submission) -->
+                <div *ngIf="isFixationMode() && isShowingPeripheralFeedback()" class="peripheral-input-overlay">
+                    <div class="peripheral-feedback-card" [class.correct]="getPeripheralFeedback()?.isCorrect"
+                        [class.incorrect]="!getPeripheralFeedback()?.isCorrect">
+                        <span class="material-icons feedback-icon">{{ getPeripheralFeedback()?.isCorrect ? 'check_circle' :
+                            'cancel' }}</span>
+                        <div class="feedback-text">
+                            {{ getPeripheralFeedback()?.isCorrect ? 'Doğru!' : 'Yanlış!' }}
+                        </div>
+                        <div class="feedback-details">
+                            <span class="user-answer">Sizin: <strong>{{ getPeripheralFeedback()?.userInput || '-'
+                                    }}</strong></span>
+                            <span class="correct-answer">Doğru: <strong>{{ getPeripheralFeedback()?.correctChars
+                                    }}</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Last Chars Feedback (Only in Fixation Mode - when not awaiting input) -->
+                <div *ngIf="isFixationMode() && !isAwaitingPeripheralInput() && !isShowingPeripheralFeedback() && getFixationLastChars()"
+                    class="fixation-feedback">
+                    Son görülen: <strong>{{ getFixationLastChars() }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-stats">
+            <div class="stat" *ngIf="isSaccadeMode()">
+                <span class="label">Hedefler</span>
+                <span class="value">{{ engineState.targetCount || 0 }}</span>
+            </div>
+            <div class="stat" *ngIf="!isSaccadeMode() && !isFixationMode()">
+                <span class="label">Satır</span>
+                <span class="value">{{ engineState.currentStep }}</span>
+            </div>
+            <div class="stat" *ngIf="!isSaccadeMode()">
+                <span class="label">Görünme</span>
+                <span class="value">{{ getMotionPathFixationDuration() }} ms</span>
+            </div>
+            <div class="stat" *ngIf="isFixationMode()">
+                <span class="label">Doğru</span>
+                <span class="value correct-count">{{ getCorrectCount() }}</span>
+            </div>
+            <div class="stat" *ngIf="isFixationMode()">
+                <span class="label">Yanlış</span>
+                <span class="value incorrect-count">{{ getIncorrectCount() }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise Running - Text Stream (Tachistoscope/RSVP) -->
+    <div *ngIf="engine && engineState.isRunning && engine.engineType === 'text_stream'"
+        class="game-container text-stream-container">
+        <div class="game-header">
+            <div class="timer" [class.countdown]="hasTimeLimit()" [class.urgent]="isTimeUrgent()">
+                <span class="material-icons">{{ hasTimeLimit() ? 'hourglass_empty' : 'timer' }}</span>
+                {{ hasTimeLimit() ? formatTime(getRemainingTimeMs()) : formatTime(engineState.timeElapsed) }}
+            </div>
+            <div class="progress-info">
+                <span class="word-count-display"
+                    style="font-size: 24px; font-weight: 800; color: #EF6C00; display: flex; align-items: baseline; line-height: 1; margin-bottom: 4px;">
+                    {{ engineState.currentStep }}/{{ engineState.totalSteps }}
+                    <small
+                        style="font-size: 13px; font-weight: 600; color: #757575; margin-left: 6px; text-transform: uppercase;">Kelime</small>
+                </span>
+                <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
+            </div>
+
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+                <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
+            </button>
+            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div class="flash-area">
+            <!-- Fixation Point -->
+            <div *ngIf="isShowingFixation()" class="fixation-cross">+</div>
+
+            <!-- Stimulus Display -->
+            <div *ngIf="isShowingStimulus()" class="stimulus-display" [ngClass]="'font-' + getStimulusFontSize()">
+                {{ getCurrentStimulus() }}
+            </div>
+
+            <!-- Answer Input Area -->
+            <div *ngIf="isWaitingForAnswer()" class="answer-area">
+                <div class="answer-prompt">Ne gördünüz?</div>
+                <div class="answer-input-wrapper">
+                    <input type="text" class="answer-input" [(ngModel)]="tachistoscopeAnswer"
+                        (keydown.enter)="submitTachistoscopeAnswer()" placeholder="Gördüğünüzü yazın..." autofocus
+                        #answerInput autocomplete="off" autocorrect="off" spellcheck="false">
+                    <button class="submit-btn" (click)="submitTachistoscopeAnswer()">
+                        <span class="material-icons">send</span>
+                    </button>
+                </div>
+                <div class="duration-info">
+                    Gösterim: {{ getCurrentDuration() }}ms
+                </div>
+            </div>
+
+            <!-- Feedback Display -->
+            <div *ngIf="tachistoscopeFeedback" class="feedback-display"
+                [class.correct]="tachistoscopeFeedback.isCorrect" [class.wrong]="!tachistoscopeFeedback.isCorrect">
+                <span class="material-icons">{{ tachistoscopeFeedback.isCorrect ? 'check_circle' : 'cancel' }}</span>
+                <span>{{ tachistoscopeFeedback.isCorrect ? 'Doğru!' : 'Yanlış: ' + tachistoscopeFeedback.correctAnswer
+                    }}</span>
+            </div>
+
+            <!-- Empty state -->
+            <div *ngIf="!isShowingFixation() && !isShowingStimulus() && !isWaitingForAnswer() && !tachistoscopeFeedback"
+                class="waiting-state">
+                <div class="pulse-dot"></div>
+            </div>
+        </div>
+
+        <div class="game-stats">
+            <div class="stat">
+                <span class="label">Hız</span>
+                <span class="value">{{ getCurrentTextStreamWpm() }} WPM</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise Running - Text Fade -->
+    <div *ngIf="engine && engineState.isRunning && engine.engineType === 'text_fade'"
+        class="game-container text-fade-container">
+        <div class="game-header">
+            <div class="timer" [class.countdown]="hasTimeLimit()" [class.urgent]="isTimeUrgent()">
+                <span class="material-icons">{{ hasTimeLimit() ? 'hourglass_empty' : 'timer' }}</span>
+                {{ hasTimeLimit() ? formatTime(getRemainingTimeMs()) : formatTime(engineState.timeElapsed) }}
+            </div>
+            <div class="progress-info">
+                <span>Kelime {{ engineState.currentStep }} / {{ engineState.totalSteps }}</span>
+                <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
+            </div>
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+                <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
+            </button>
+            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div class="text-display-area" [class.paused]="engineState.isPaused" #textFadeContainer>
+            <!-- Countdown Overlay -->
+            <div class="countdown-overlay" *ngIf="engineState.countdown !== undefined && engineState.countdown > 0">
+                <div class="countdown-number">{{ engineState.countdown }}</div>
+                <div class="countdown-label">Metin solmaya başlıyor...</div>
+            </div>
+
+            <div class="fading-text-container">
+                <span *ngFor="let word of getWords(); let i = index; trackBy: trackByIdx" class="fading-word-item"
+                    [ngClass]="'font-' + getFontSize()" [class.faded]="isWordFaded(i)"
+                    [class.active]="getActiveWordIndex() === i">
+                    {{ word }}
+                </span>
+            </div>
+        </div>
+
+        <div class="game-stats">
+            <div class="stat wpm-stat">
+                <span class="label">Hız</span>
+                <span class="value" [class.fast]="(engineState.currentWPM || 0) >= (engineState.targetWPM || 200)"
+                    [class.slow]="(engineState.currentWPM || 0) < ((engineState.targetWPM || 200) * 0.8)">
+                    {{ engineState.currentWPM || 0 }} <small>WPM</small>
+                </span>
+            </div>
+            <div class="stat target-stat">
+                <span class="label">Hedef</span>
+                <span class="value">{{ engineState.targetWPM || 0 }} <small>WPM</small></span>
+            </div>
+            <div class="stat">
+                <span class="label">İlerleme</span>
+                <span class="value">{{ getProgressPercent() | number:'1.0-0' }}%</span>
+            </div>
+            <div class="stat">
+                <span class="label">Süre</span>
+                <span class="value">{{ hasTimeLimit() ? formatTime(getRemainingTimeMs()) :
+                    formatTime(engineState.timeElapsed) }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise Running - Word Highlight -->
+    <div *ngIf="engine && engineState.isRunning && engine.engineType === 'word_highlight' && exercisePhase === 'reading'"
+        class="game-container word-highlight-container">
+        <div class="game-header">
+            <div class="timer" [class.countdown]="hasTimeLimit()" [class.urgent]="isTimeUrgent()">
+                <span class="material-icons">{{ hasTimeLimit() ? 'hourglass_empty' : 'timer' }}</span>
+                {{ hasTimeLimit() ? formatTime(getRemainingTimeMs()) : formatTime(engineState.timeElapsed) }}
+            </div>
+            <div class="progress-info">
+                <span>Kelime {{ engineState.currentStep }} / {{ engineState.totalSteps }}</span>
+                <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
+            </div>
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+                <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
+            </button>
+            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div class="highlight-display-area" [class.paused]="engineState.isPaused" #wordHighlightContainer>
+            <div class="text-content">
+                <ng-container *ngFor="let chunk of getChunksForDisplay(); let chunkIdx = index">
+                    <span class="chunk-group" [class.highlight]="chunkIdx === getCurrentChunkIndex()"
+                        [class.passed]="chunkIdx < getCurrentChunkIndex()"
+                        [class.upcoming]="chunkIdx > getCurrentChunkIndex()"
+                        [ngClass]="'font-' + getHighlightFontSize()">
+                        <span *ngFor="let word of chunk.words" class="word-item">{{ word }}</span>
+                    </span>
+                    <div *ngIf="chunk.hasNewline" class="line-break"></div>
+                </ng-container>
+            </div>
+        </div>
+
+        <div class="game-stats">
+            <div class="stat">
+                <span class="label">Hız</span>
+                <span class="value">{{ getWpm() || 200 }} WPM</span>
+            </div>
+            <div class="stat">
+                <span class="label">İlerleme</span>
+                <span class="value">{{ getProgressPercent() | number:'1.0-0' }}%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise Running - Reading Comprehension (Serbest Okuma + Anlama) -->
+    <div *ngIf="engine && engineState.isRunning && (engine.engineType === 'reading_comprehension' || engine.engineType === 'exam_simulation') && exercisePhase === 'reading'"
+        class="game-container reading-comprehension-container">
+        <div class="game-header">
+            <div class="timer" [class.countdown]="hasTimeLimit()" [class.urgent]="isTimeUrgent()">
+                <span class="material-icons">{{ hasTimeLimit() ? 'hourglass_empty' : 'timer' }}</span>
+                {{ hasTimeLimit() ? formatTime(getRemainingTimeMs()) : formatTime(engineState.timeElapsed) }}
+            </div>
+            <div class="word-count-badge">
+                <span class="material-icons">article</span>
+                {{ getComprehensionWordCount() }} kelime
+            </div>
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+                <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
+            </button>
+            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <!-- Reading Instructions -->
+        <div class="reading-instruction" *ngIf="!engineState.isPaused">
+            <span class="material-icons">menu_book</span>
+            <span>Metni kendi hızınızda okuyun. Okuma bitince "Okudum" butonuna basın.</span>
+        </div>
+
+        <!-- Text Reading Area -->
+        <div class="reading-text-area" [class.paused]="engineState.isPaused" #readingTextContainer
+            (scroll)="onReadingScroll($event)">
+            <div class="reading-text-content" [ngClass]="'font-' + getComprehensionFontSize()">
+                {{ getComprehensionText() }}
+            </div>
+        </div>
+
+        <!-- Reading Stats & Complete Button -->
+        <div class="reading-footer">
+            <div class="reading-stats">
+                <div class="stat-item">
+                    <span class="material-icons">speed</span>
+                    <span>~{{ getCurrentReadingWpm() }} WPM</span>
+                </div>
+                <div class="stat-item" *ngIf="getReadingScrollProgress() > 0">
+                    <span class="material-icons">vertical_align_bottom</span>
+                    <span>{{ getReadingScrollProgress() | number:'1.0-0' }}% kaydırıldı</span>
+                </div>
+            </div>
+
+            <button class="complete-reading-btn" (click)="completeReading()" [disabled]="engineState.isPaused">
+                <span class="material-icons">done</span>
+                Okudum, Sorulara Geç
+            </button>
+        </div>
+    </div>
+
+    <!-- Exercise Running - Visual Expansion -->
+    <div *ngIf="engine && engineState.isRunning && engine.engineType === 'visual_expansion'"
+        class="game-container visual-expansion-container">
+        <div class="game-header">
+            <div class="timer" [class.countdown]="hasTimeLimit()" [class.urgent]="isTimeUrgent()">
+                <span class="material-icons">{{ hasTimeLimit() ? 'hourglass_empty' : 'timer' }}</span>
+                {{ hasTimeLimit() ? formatTime(getRemainingTimeMs()) : formatTime(engineState.timeElapsed) }}
+            </div>
+            <div class="progress-info">
+                <span>Tur {{ engineState.currentStep }} / {{ engineState.totalSteps }}</span>
+                <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
+            </div>
+            <div class="score-badge" *ngIf="engineState.currentStep > 0">
+                <span class="correct-count">
+                    <span class="material-icons">check_circle</span>
+                    {{ getExpansionCorrectCount() }}
+                </span>
+                <span class="separator">/</span>
+                <span class="wrong-count">
+                    <span class="material-icons">cancel</span>
+                    {{ getExpansionWrongCount() }}
+                </span>
+            </div>
+
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+                <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
+            </button>
+            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div class="visual-expansion-area">
+            <!-- Merkez Fiksasyon Noktası -->
+            <div class="center-fixation">
+                <span class="material-icons" *ngIf="getCenterPointType() === 'cross'" class="center-icon">add</span>
+                <div *ngIf="getCenterPointType() === 'dot'" class="center-dot"></div>
+            </div>
+
+            <!-- Uyaranlar (Karakterler) -->
+            <div *ngFor="let stim of getExpansionStimuli(); trackBy: trackByIdx" class="expansion-stimulus"
+                [style.left.%]="stim.x" [style.top.%]="stim.y">
+                {{ stim.content }}
+            </div>
+
+            <!-- Cevap Giriş Alanı -->
+            <div class="expansion-answer-area" *ngIf="isExpansionWaitingInput()"
+                [class.wrong-answer]="expansionFeedback && !expansionFeedback.isCorrect">
+                <div class="answer-prompt">Gördüğünüz karakterleri yazın:</div>
+                <div class="answer-inputs">
+                    <input type="text" class="char-input" [(ngModel)]="expansionAnswerLeft" maxlength="1"
+                        placeholder="Sol" (input)="onExpansionInputChange('left', $event)"
+                        (keydown.enter)="submitExpansionAnswer()" #expansionLeftInput autofocus autocomplete="off"
+                        autocorrect="off" autocapitalize="characters" spellcheck="false"
+                        [class.invalid-input]="expansionFeedback && !expansionFeedback.isCorrect">
+                    <input type="text" class="char-input" [(ngModel)]="expansionAnswerRight" maxlength="1"
+                        placeholder="Sağ" (input)="onExpansionInputChange('right', $event)"
+                        (keydown.enter)="submitExpansionAnswer()" #expansionRightInput autocomplete="off"
+                        autocorrect="off" autocapitalize="characters" spellcheck="false"
+                        [class.invalid-input]="expansionFeedback && !expansionFeedback.isCorrect">
+                </div>
+                <button class="submit-answer-btn" (click)="submitExpansionAnswer()">
+                    <span class="material-icons">send</span>
+                    Onayla
+                </button>
+
+                <!-- Feedback (Sadece yanlışsa gösterilir) -->
+                <div *ngIf="expansionFeedback && !expansionFeedback.isCorrect" class="expansion-feedback wrong">
+                    <span class="material-icons">cancel</span>
+                    <span>Doğru: {{ expansionFeedback.correctAnswer }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-stats">
+            <div class="stat">
+                <span class="label">Görüş Açısı</span>
+                <span class="value">{{ getCurrentDegrees() | number:'1.1-1' }}°</span>
+            </div>
+            <div class="stat correct-stat">
+                <span class="label">Doğru</span>
+                <span class="value good">{{ getExpansionCorrectCount() }}</span>
+            </div>
+            <div class="stat wrong-stat">
+                <span class="label">Yanlış</span>
+                <span class="value bad">{{ getExpansionWrongCount() }}</span>
+            </div>
+            <div class="stat" *ngIf="engine?.engineType !== 'visual_expansion'">
+                <span class="label">Süre</span>
+                <span class="value">{{ hasTimeLimit() ? formatTime(getRemainingTimeMs()) :
+                    formatTime(engineState.timeElapsed) }}</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Exercise Running - Scan & Find -->
+    <div *ngIf="engine && engineState.isRunning && engine.engineType === 'scan_find'"
+        class="game-container scan-find-container">
+        <div class="game-header">
+            <div class="timer" [class.countdown]="hasTimeLimit()" [class.urgent]="isTimeUrgent()">
+                <span class="material-icons">{{ hasTimeLimit() ? 'hourglass_empty' : 'timer' }}</span>
+                {{ hasTimeLimit() ? formatTime(getRemainingTimeMs()) : formatTime(engineState.timeElapsed) }}
+            </div>
+            <div class="score-info">
+                Buldun: {{ engineState.currentStep }} / {{ engineState.totalSteps }}
+            </div>
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+                <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
+            </button>
+            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <!-- Target Words Panel - Show words to find -->
+        <div class="scan-targets-panel">
+            <div class="targets-header">
+                <span class="material-icons">search</span>
+                <span>Bu kelimeleri bul:</span>
+            </div>
+            <div class="targets-list">
+                <span *ngFor="let target of getScanTargets()" class="target-word"
+                    [class.found]="isScanTargetFound(target)">
+                    {{ target }}
+                    <span class="material-icons" *ngIf="isScanTargetFound(target)" class="found-icon">check_circle</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="scan-text-area">
+            <span *ngFor="let word of getScanWords(); let i = index; trackBy: trackByIdx" (click)="onScanWordClick(i)"
+                class="scan-word" [class.found]="word.found" [class.target]="word.isTarget"
+                [class.missed]="word.isTarget && !word.found && engineState.isCompleted">
+                {{ word.text }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Exercise Running - Error Analysis (Hata Analizi / Proofreading) -->
+    <div *ngIf="engine && engineState.isRunning && engine.engineType === 'error_analysis' && getErrorAnalysisPhase() === 'active'"
+        class="game-container error-analysis-container">
+        <div class="game-header">
+            <div class="timer">
+                <span class="material-icons">spellcheck</span>
+                Hata Analizi
+            </div>
+            <div class="progress-info">
+                <span>Bulunan: {{ getErrorAnalysisFoundCount() }} / {{ getErrorAnalysisErrorCount() }}</span>
+                <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="(getErrorAnalysisFoundCount() / getErrorAnalysisErrorCount()) * 100"></div></div>
+            </div>
+
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+                <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
+            </button>
+            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <!-- Instructions -->
+        <div class="error-instruction">
+            <span class="material-icons">touch_app</span>
+            <span>Metindeki <strong>{{ getErrorAnalysisErrorCount() }} hata</strong>yı bulun. Hatalı olduğunu
+                düşündüğünüz kelimelere tıklayın.</span>
+        </div>
+
+        <!-- Text Area with Clickable Words -->
+        <div class="error-text-area" [class.paused]="engineState.isPaused">
+            <div class="error-text-content">
+                <span *ngFor="let word of getErrorAnalysisWords(); let i = index; trackBy: trackByIdx"
+                    class="error-word" [class.selected]="isErrorWordSelected(i)"
+                    [class.found-error]="isErrorWordFoundError(i)" [class.false-alarm]="isErrorWordFalseAlarm(i)"
+                    [class.hint]="isErrorWordHint(i)" (click)="onErrorWordClick(i)">
+                    {{ word.text }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Stats Footer -->
+        <div class="error-analysis-footer">
+            <div class="stat-item">
+                <span class="material-icons">check_circle</span>
+                <span>Doğru: {{ getErrorAnalysisFoundCount() }}</span>
+            </div>
+            <div class="stat-item error-stat">
+                <span class="material-icons">cancel</span>
+                <span>Yanlış: {{ getErrorAnalysisFalseAlarmCount() }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="material-icons">timer</span>
+                <span>{{ hasTimeLimit() ? formatTime(getRemainingTimeMs()) : formatTime(engineState.timeElapsed)
+                    }}</span>
+            </div>
+
+            <button class="ep-btn ep-btn--ghost hint-btn" (click)="useErrorAnalysisHint()"
+                [disabled]="getErrorAnalysisFoundCount() === getErrorAnalysisErrorCount()">
+                <span class="material-icons">lightbulb</span>
+                İpucu
+            </button>
+
+
+        </div>
+    </div>
+
+    <!-- Exercise Running - Regression Reduction -->
+    <div *ngIf="engine && engineState.isRunning && engine.engineType === 'regression_reduction' && getRegressionPhase() === 'reading'"
+        class="game-container regression-reduction-container">
+        <div class="game-header">
+            <div class="timer" [class.countdown]="hasTimeLimit()" [class.urgent]="isTimeUrgent()">
+                <span class="material-icons">{{ hasTimeLimit() ? 'hourglass_empty' : 'timer' }}</span>
+                {{ hasTimeLimit() ? formatTime(getRemainingTimeMs()) : formatTime(engineState.timeElapsed) }}
+            </div>
+            <div class="progress-info">
+                <span>Kelime {{ getRegressionActiveIndex() + 1 }} / {{ getRegressionWords().length }}</span>
+                <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
+            </div>
+            <div class="regression-badge" [class.has-errors]="engineState.errors > 0">
+                <span class="material-icons">sync_problem</span>
+                <span>Geri Dönüş: {{ engineState.errors }}</span>
+            </div>
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+                <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
+            </button>
+            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div #regressionContainer class="regression-text-area" [class.paused]="engineState.isPaused">
+            <div class="regression-text-content">
+                <span *ngFor="let word of getRegressionWords(); let i = index; trackBy: trackByIdx"
+                    class="regression-word" [class.active]="isWordInActiveChunk(i)"
+                    [class.trailing-faded]="getRegressionMaskingType() === 'trailing' && isWordInTrailingMask(i)"
+                    [class.faded]="getRegressionMaskingType() === 'fade' && isWordInTrailingMask(i)"
+                    (click)="onRegressionWordClick(i)">
+                    {{ word }}
+                </span>
+            </div>
+        </div>
+
+        <div class="regression-footer">
+            <div class="wpm-info">
+                <span class="material-icons">speed</span>
+                <span>Hız: {{ getRegressionWpm() }} WPM</span>
+            </div>
+            <div class="masking-info">
+                <span class="material-icons">visibility_off</span>
+                <span>Maskeleme: {{ getRegressionMaskingType() | titlecase }}</span>
+            </div>
+            <div class="chunk-info" *ngIf="getRegressionChunkSize() > 1">
+                <span class="material-icons">format_list_numbered</span>
+                <span>Blok Okuma: {{ getRegressionChunkSize() }} kelime</span>
+            </div>
+            <div class="tip-info">
+                <span class="material-icons">info</span>
+                <span>{{ getRegressionChunkSize() > 1 ? 'Kelime gruplarına odaklanın. Geri bakmayın.' : 'Geriye bakmadan
+                    ilerleyin.' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise Running - Regression Reduction Answering Phase -->
+    <div *ngIf="engine && engineState.isRunning && engine.engineType === 'regression_reduction' && getRegressionPhase() === 'answering'"
+        class="game-container question-container regression-question-container">
+        <div class="game-header">
+            <div class="timer">
+                <span class="material-icons">psychology</span>
+                Anlama Kontrolü
+            </div>
+            <div class="progress-info">
+                <span>Soru {{ getRegressionCurrentQuestionIndex() + 1 }} / {{ getRegressionQuestionCount() }}</span>
+            </div>
+            <div class="regression-badge" [class.has-errors]="engineState.errors > 0">
+                <span class="material-icons">sync_problem</span>
+                <span>Geri Dönüş: {{ engineState.errors }}</span>
+            </div>
+        </div>
+
+        <div class="question-area" *ngIf="getRegressionCurrentQuestion() || questionFeedback?.question">
+            <div class="question-text">
+                {{ (questionFeedback?.question || getRegressionCurrentQuestion()).QuestionText ||
+                (questionFeedback?.question || getRegressionCurrentQuestion()).questionText }}
+            </div>
+
+            <div class="options-grid">
+                <button class="ep-btn ep-btn--primary" class="option-button" *ngFor="let option of ['A', 'B', 'C', 'D']"
+                    [class.selected]="selectedAnswer === option"
+                    [class.correct]="questionFeedback && questionFeedback.correctAnswer === option"
+                    [class.wrong]="questionFeedback && selectedAnswer === option && !questionFeedback.isCorrect"
+                    [disabled]="questionFeedback !== null" (click)="!questionFeedback && (selectedAnswer = option)">
+                    <span class="option-label">{{ option }}</span>
+                    <span class="option-text">{{ (questionFeedback?.question || getRegressionCurrentQuestion())['Option'
+                        + option] ||
+                        (questionFeedback?.question || getRegressionCurrentQuestion())['option' + option] }}</span>
+                </button>
+            </div>
+
+            <!-- Feedback Gösterimi -->
+            <!-- Feedback Gösterimi removed as per user request -->
+
+            <!-- Cevabı Gönder butonu - feedback yokken -->
+            <button class="ep-btn ep-btn--primary" class="submit-answer-btn" *ngIf="!questionFeedback"
+                [disabled]="!selectedAnswer" (click)="submitRegressionAnswer(selectedAnswer!)">
+                <span class="material-icons">check</span>
+                Cevabı Gönder
+            </button>
+
+            <!-- Sonraki Soru butonu - feedback varken -->
+            <button class="ep-btn ep-btn--primary" color="accent" class="next-question-btn" *ngIf="questionFeedback"
+                (click)="goToNextRegressionQuestion()">
+                <span class="material-icons">arrow_forward</span>
+                Sonraki Soru
+            </button>
+        </div>
+    </div>
+
+    <!-- Comprehension Questions Phase (Speed Reading) -->
+    <div *ngIf="exercisePhase === 'questions' && comprehensionQuestions.length > 0"
+        class="game-container question-container">
+        <div class="game-header">
+            <div class="timer">
+                <span class="material-icons">psychology</span>
+                Anlama Kontrolü
+            </div>
+            <div class="progress-info">
+                <span>Soru {{ currentQuestionIndex + 1 }} / {{ comprehensionQuestions.length }}</span>
+                <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="((currentQuestionIndex + 1) / comprehensionQuestions.length) * 100"></div></div>
+            </div>
+            <div class="countdown-timer" *ngIf="questionTimeRemaining > 0 && !questionFeedback"
+                [class.warning]="isQuestionTimeUrgent()" [class.critical]="isQuestionTimeCritical()">
+                <span class="material-icons">timer</span>
+                <span class="countdown-value">{{ questionTimeRemaining }}</span>
+                <span class="countdown-label">sn</span>
+            </div>
+            <!-- Show Target WPM for Exam Simulation -->
+            <div class="wpm-badge target" *ngIf="engine?.engineType === 'exam_simulation'">
+                <span class="material-icons">track_changes</span>
+                Hedef: {{ getTargetWpm() }} WPM
+            </div>
+            <!-- Show Actual WPM for other reading exercises -->
+            <div class="wpm-badge" *ngIf="engine?.engineType !== 'exam_simulation'">
+                <span class="material-icons">speed</span>
+                {{ readingWpm }} WPM
+            </div>
+        </div>
+
+        <div class="question-area">
+            <div class="question-card" [class.exam-simulation-card]="engine?.engineType === 'exam_simulation'">
+                <div class="question-number">Soru {{ currentQuestionIndex + 1 }}</div>
+
+                <!-- Exam Simulation: Show paragraph content above question -->
+                <div *ngIf="engine?.engineType === 'exam_simulation' && getQuestionContent()"
+                    class="exam-paragraph-content">
+                    <div class="paragraph-label">
+                        <span class="material-icons">article</span>
+                        <span>Paragraf</span>
+                    </div>
+                    <p class="paragraph-text">{{ getQuestionContent() }}</p>
+                </div>
+
+                <div class="question-text" [class.exam-question]="engine?.engineType === 'exam_simulation'">
+                    {{ getQuestionText() }}
+                </div>
+
+                <div class="answer-options">
+                    <button class="answer-option" *ngFor="let option of ['A', 'B', 'C', 'D']"
+                        [class.selected]="selectedAnswer === option"
+                        [class.correct]="questionFeedback && option === questionFeedback.correctAnswer"
+                        [class.wrong]="questionFeedback && selectedAnswer === option && !questionFeedback.isCorrect"
+                        [disabled]="questionFeedback !== null" (click)="selectAnswer(option)">
+                        <span class="option-letter">{{ option }}</span>
+                        <span class="option-text">{{ getOptionText(option) }}</span>
+                    </button>
+                </div>
+
+
+            </div>
+        </div>
+
+        <div class="question-actions">
+            <button class="btn-primary" *ngIf="questionFeedback" (click)="nextQuestion()">
+                <span class="material-icons">{{ isLastQuestion() ? 'done_all' : 'arrow_forward' }}</span>
+                {{ isLastQuestion() ? 'Sonuçları Gör' : 'Sonraki Soru' }}
+            </button>
+        </div>
+    </div>
+
+    <!-- Exercise Running - Subvocalization Reduction Reading Phase -->
+    <div *ngIf="engine && engineState.isRunning && engine.engineType === 'subvocalization_reduction' && getSubvocPhase() === 'reading'"
+        class="game-container subvoc-reduction-container">
+        <div class="game-header">
+            <div class="timer" [class.countdown]="hasTimeLimit()" [class.urgent]="isTimeUrgent()">
+                <span class="material-icons">{{ hasTimeLimit() ? 'hourglass_empty' : 'timer' }}</span>
+                {{ hasTimeLimit() ? formatTime(getRemainingTimeMs()) : formatTime(engineState.timeElapsed) }}
+            </div>
+
+            <div class="subvoc-pulse-rhythm">
+                <div *ngFor="let num of [1, 2, 3, 4]" class="rhythm-dot"
+                    [class.active]="(engineState.metronomeStep || 0) === num">
+                    {{ num }}
+                </div>
+            </div>
+
+            <!-- WPM Real-time -->
+            <div class="wpm-badge">
+                <span class="material-icons">speed</span>
+                <span>{{ getSubvocCurrentWpm() }} WPM</span>
+            </div>
+
+            <div *ngIf="isSubvocMetronomeBeat()" class="visual-metronome-indicator">
+                <span class="material-icons">music_note</span>
+            </div>
+
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+                <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
+            </button>
+            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div class="subvoc-display-area highlight-mode" #subvocDisplayArea [class.paused]="engineState.isPaused">
+            <div class="highlight-display">
+                <div class="highlight-text-content">
+                    <span *ngFor="let word of getSubvocWords(); let i = index; trackBy: trackByIdx" class="subvoc-word"
+                        [class.active]="i > (getSubvocCurrentWordIndex() - getSubvocChunkSize()) && i <= getSubvocCurrentWordIndex()"
+                        [class.passed]="i <= (getSubvocCurrentWordIndex() - getSubvocChunkSize())">
+                        {{ word }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="subvoc-footer">
+            <div class="mode-info">
+                <span class="material-icons">spatial_audio_off</span>
+                <span>Metot: Eşzamanlı Görev (Concurrent Task)</span>
+            </div>
+            <div class="target-info">
+                <span class="material-icons">trending_up</span>
+                <span>Hedef: {{ getSubvocTargetWpm() }} WPM</span>
+            </div>
+            <div class="tip-info">
+                <span class="material-icons">campaign</span>
+                <span>'1-2-3-4' diye saymak seslendirmeyi engeller.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise Running - Subvocalization Reduction Answering Phase -->
+    <div *ngIf="engine && engineState.isRunning && engine.engineType === 'subvocalization_reduction' && getSubvocPhase() === 'answering'"
+        class="game-container question-container visualization-question-container">
+
+        <!-- Reusing modern-header style from visualization -->
+        <div class="game-header modern-header">
+            <div class="header-left">
+                <div class="engine-badge">
+                    <span class="material-icons">psychology</span>
+                    <span>Anlama Kontrolü</span>
+                </div>
+            </div>
+
+            <div class="header-center">
+                <div class="score-display">
+                    <div class="score-item correct">
+                        <span class="material-icons">check_circle</span>
+                        <span>{{ engineState.score }} Puan</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="wpm-badge" style="background: rgba(255,255,255,0.2); box-shadow: none;">
+                    <span class="material-icons">speed</span>
+                    <span>{{ getSubvocCurrentWpm() }} WPM</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="question-progress-bar">
+            <div class="progress-text">
+                Soru {{ getSubvocCurrentQuestionIndex() + 1 }} / {{ getSubvocQuestionCount() }}
+            </div>
+            <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="((getSubvocCurrentQuestionIndex() + 1) / getSubvocQuestionCount()) * 100"></div></div>
+        </div>
+
+        <!-- Question Card -->
+        <div class="modern-question-card" *ngIf="getSubvocCurrentQuestion()">
+            <div class="question-icon">
+                <span class="material-icons">help_outline</span>
+            </div>
+
+            <div class="question-text">
+                {{ getSubvocCurrentQuestion().QuestionText || getSubvocCurrentQuestion().questionText }}
+            </div>
+
+            <!-- Answer Options (Learning Phase) -->
+            <div class="modern-options" *ngIf="!isSubvocShowingFeedback()">
+                <button *ngFor="let option of ['A', 'B', 'C', 'D']" class="modern-option-btn"
+                    (click)="submitSubvocAnswer(option)">
+                    <span class="option-letter">{{ option }}</span>
+                    <span class="option-text">{{ getSubvocCurrentQuestion()['Option' + option] ||
+                        getSubvocCurrentQuestion()['option' + option] }}</span>
+                    <span class="material-icons" class="option-arrow">chevron_right</span>
+                </button>
+            </div>
+
+            <!-- Feedback Phase -->
+            <div class="feedback-options" *ngIf="isSubvocShowingFeedback()">
+                <div *ngFor="let option of ['A', 'B', 'C', 'D']" class="feedback-option"
+                    [class.selected]="option === getSubvocLastAnswer()"
+                    [class.correct]="option === getSubvocCorrectAnswer()"
+                    [class.wrong]="option === getSubvocLastAnswer() && option !== getSubvocCorrectAnswer()">
+                    <span class="option-letter">{{ option }}</span>
+                    <span class="option-text">{{ getSubvocCurrentQuestion()['Option' + option] ||
+                        getSubvocCurrentQuestion()['option' + option] }}</span>
+                    <span class="material-icons" class="feedback-icon" *ngIf="option === getSubvocCorrectAnswer()">check_circle</span>
+                    <span class="material-icons feedback-icon"
+                        *ngIf="option === getSubvocLastAnswer() && option !== getSubvocCorrectAnswer()">cancel</span>
+                </div>
+            </div>
+
+            <!-- Next Button -->
+            <button class="ep-btn ep-btn--primary" class="next-question-btn" *ngIf="isSubvocShowingFeedback()"
+                (click)="nextSubvocQuestion()">
+                <span>{{ (getSubvocCurrentQuestionIndex() + 1) >= getSubvocQuestionCount() ? 'Tamamla' : 'Sonraki Soru'
+                    }}</span>
+                <span class="material-icons">arrow_forward</span>
+            </button>
+        </div>
+    </div>
+
+
+    <!-- ============================================ -->
+    <!-- VISUALIZATION ENGINE - SCENE PHASE -->
+    <!-- ============================================ -->
+    <div *ngIf="engine && engineState.isRunning && engine.engineType === 'visualization' && getVisualizationPhase() === 'scene'"
+        class="game-container visualization-container">
+        <div class="game-header">
+            <div class="timer">
+                <span class="material-icons">palette</span>
+                Görselleştirme
+            </div>
+            <div class="scene-progress">
+                Sahne {{ getVisualizationSceneProgress().current }} / {{ getVisualizationSceneProgress().total }}
+            </div>
+            <div class="countdown-badge countdown-timer" [class.warning]="getVisualizationSceneRemaining() <= 5"
+                [class.critical]="getVisualizationSceneRemaining() <= 3">
+                <span class="material-icons">timer</span>
+                <span class="countdown-value">{{ getVisualizationSceneRemaining() }}</span>
+                <span class="countdown-label">sn</span>
+            </div>
+            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+                <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
+            </button>
+            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div class="visualization-scene-area" [class.blurred]="engineState.isPaused">
+            <div class="scene-instruction">
+                <span class="material-icons">visibility</span>
+                <span>Aşağıdaki sahneyi zihninizde canlandırın...</span>
+            </div>
+
+            <div class="scene-description" *ngIf="getVisualizationCurrentScene()">
+                <ng-container *ngIf="getVisualizationMode() === 'guided'; else staticDesc">
+                    <div class="guided-step-text">
+                        {{ getVisualizationGuidedStepText() }}
+                    </div>
+                </ng-container>
+                <ng-template #staticDesc>
+                    {{ getVisualizationCurrentScene().description }}
+                </ng-template>
+            </div>
+
+            <div class="scene-countdown-visual">
+                <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="(getVisualizationSceneRemaining() / (getVisualizationCurrentScene()?.duration || 10)) * 100"></div></div>
+            </div>
+
+            <button class="ep-btn ep-btn--primary" (click)="skipVisualizationScene()" class="skip-scene-btn">
+                <span class="material-icons">skip_next</span>
+                Hazırım, Sorulara Geç
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- VISUALIZATION ENGINE - QUESTIONS PHASE -->
+    <!-- ============================================ -->
+    <div *ngIf="engine && engineState.isRunning && engine.engineType === 'visualization' && getVisualizationPhase() === 'questions'"
+        class="game-container question-container visualization-question-container">
+
+        <!-- Modern Header -->
+        <div class="game-header modern-header">
+            <div class="header-left">
+                <div class="engine-badge">
+                    <span class="material-icons">psychology</span>
+                    <span>Görselleştirme</span>
+                </div>
+                <div class="scene-badge">
+                    Sahne {{ getVisualizationSceneProgress().current }}/{{ getVisualizationSceneProgress().total }}
+                </div>
+            </div>
+
+            <div class="header-center">
+                <div class="score-display">
+                    <div class="score-item correct">
+                        <span class="material-icons">check_circle</span>
+                        <span>{{ engineState.score }}</span>
+                    </div>
+                    <div class="score-item wrong">
+                        <span class="material-icons">cancel</span>
+                        <span>{{ engineState.errors }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+                    <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
+                </button>
+                <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="question-progress-bar">
+            <div class="progress-text">
+                Soru {{ getVisualizationQuestionProgress().current }} / {{ getVisualizationQuestionProgress().total }}
+            </div>
+            <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="(getVisualizationQuestionProgress().current / getVisualizationQuestionProgress().total) * 100"></div></div>
+        </div>
+
+        <!-- Question Card -->
+        <div class="modern-question-card" *ngIf="getVisualizationCurrentQuestion()"
+            [class.blurred]="engineState.isPaused">
+            <div class="question-icon">
+                <span class="material-icons">help_outline</span>
+            </div>
+
+            <div class="question-text">
+                {{ getVisualizationCurrentQuestion().questionText }}
+            </div>
+
+            <!-- Answer Options -->
+            <div class="modern-options" *ngIf="!isVisualizationShowingFeedback()">
+                <button *ngFor="let option of getVisualizationCurrentQuestion().options; let i = index"
+                    class="modern-option-btn" (click)="submitVisualizationAnswer(option)">
+                    <span class="option-letter">{{ ['A', 'B', 'C', 'D'][i] }}</span>
+                    <span class="option-text">{{ option }}</span>
+                    <span class="material-icons" class="option-arrow">chevron_right</span>
+                </button>
+            </div>
+
+            <!-- Feedback State -->
+            <div class="feedback-options" *ngIf="isVisualizationShowingFeedback()">
+                <div *ngFor="let option of getVisualizationCurrentQuestion().options; let i = index"
+                    class="feedback-option" [class.selected]="option === getVisualizationLastAnswer()"
+                    [class.correct]="option === getVisualizationCorrectAnswer()"
+                    [class.wrong]="option === getVisualizationLastAnswer() && option !== getVisualizationCorrectAnswer()">
+                    <span class="option-letter">{{ ['A', 'B', 'C', 'D'][i] }}</span>
+                    <span class="option-text">{{ option }}</span>
+                    <span class="material-icons feedback-icon"
+                        *ngIf="option === getVisualizationCorrectAnswer()">check_circle</span>
+                    <span class="material-icons feedback-icon"
+                        *ngIf="option === getVisualizationLastAnswer() && option !== getVisualizationCorrectAnswer()">cancel</span>
+                </div>
+            </div>
+
+            <!-- Next Button -->
+            <button class="ep-btn ep-btn--primary" class="next-question-btn" *ngIf="isVisualizationShowingFeedback()"
+                (click)="nextVisualizationQuestion()">
+                <span>{{ getVisualizationQuestionProgress().current >= getVisualizationQuestionProgress().total ?
+                    'Sonraki Sahne' : 'Sonraki Soru' }}</span>
+                <span class="material-icons">arrow_forward</span>
+            </button>
+
+            <!-- Hint -->
+            <div class="hint-box"
+                *ngIf="getVisualizationCurrentQuestion().hintText && !isVisualizationShowingFeedback()">
+                <span class="material-icons">lightbulb</span>
+                <span>{{ getVisualizationCurrentQuestion().hintText }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MENTAL REGISTRATION (FOCUS) ENGINE - MULTI-MODE -->
+    <!-- ============================================ -->
+    <div *ngIf="engine && engineState.isRunning && !engineState.isCompleted && (engine.engineType === 'focus' || engine.engineType === 'attention_training')"
+        class="game-container mental-registration-container">
+
+        <div class="game-header extended-header">
+            <!-- Left: Title & Config -->
+            <div class="header-section left">
+                <div class="title-row">
+                    <span class="material-icons">psychology</span>
+                    <span class="title-text">Zihinsel Kayıt</span>
+                </div>
+                <div class="badges-row">
+                    <span class="level-badge" *ngIf="asFocusEngine?.nLevel">
+                        {{ asFocusEngine?.nLevel }}-Back
+                    </span>
+                    <span class="mode-badge" [ngClass]="getFocusModeClass()">
+                        {{ getFocusModeLabel() }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Center: Progress & Stats -->
+            <div class="header-section center">
+                <div class="progress-badge">
+                    <span class="material-icons">hourglass_bottom</span>
+                    <span>{{ (engineState.totalSteps || 0) - (engineState.currentStep || 0) }}</span>
+                </div>
+
+                <div class="focus-stats">
+                    <div class="stat-pill correct" [class.pulse]="hitsAnim">
+                        <span class="material-icons">check_circle</span>
+                        <span>{{ asFocusEngine?.hits || 0 }}</span>
+                    </div>
+                    <div class="stat-pill miss" [class.pulse]="missesAnim">
+                        <span class="material-icons">visibility_off</span>
+                        <span>{{ asFocusEngine?.misses || 0 }}</span>
+                    </div>
+                    <div class="stat-pill wrong" [class.pulse]="falseAlarmsAnim">
+                        <span class="material-icons">warning</span>
+                        <span>{{ asFocusEngine?.falseAlarms || 0 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Controls -->
+            <div class="header-section right">
+                <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+                    <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
+                </button>
+                <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="mental-game-area" [class.blurred]="engineState.isPaused">
+
+            <!-- POSITION MODE: Grid Display -->
+            <div class="focus-grid-container" *ngIf="asFocusEngine?.isPositionMode">
+                <div class="focus-grid" [ngClass]="'grid-' + (asFocusEngine?.gridSize || 3)">
+                    <div *ngFor="let cell of getFocusGridCells()" class="grid-cell"
+                        [class.active]="!asFocusEngine?.isTransitioning && asFocusEngine?.currentPosition === cell">
+                        <div class="cell-indicator"
+                            *ngIf="!asFocusEngine?.isTransitioning && asFocusEngine?.currentPosition === cell"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WORD MODE: Word Display -->
+            <div class="current-word-display" *ngIf="asFocusEngine?.isWordMode">
+                {{ asFocusEngine?.currentWord }}
+            </div>
+
+            <!-- SINGLE MODE BUTTONS -->
+            <div class="interaction-area" *ngIf="!asFocusEngine?.isDualMode">
+                <!-- Position Mode Button -->
+                <button *ngIf="asFocusEngine?.mode === 'position'" class="ep-btn ep-btn--primary" color="accent"
+                    class="match-btn big-btn" (click)="handlePositionMatchClick()" [disabled]="engineState.isPaused">
+                    <span class="material-icons">grid_on</span>
+                    KONUM EŞLEŞME (Space)
+                </button>
+
+                <!-- Word Mode Button -->
+                <button *ngIf="asFocusEngine?.mode === 'word'" class="ep-btn ep-btn--primary" color="accent"
+                    class="match-btn big-btn" (click)="handleWordMatchClick()" [disabled]="engineState.isPaused">
+                    <span class="material-icons">text_fields</span>
+                    KELİME EŞLEŞME (Space)
+                </button>
+            </div>
+
+            <!-- DUAL MODE BUTTONS -->
+            <div class="interaction-area dual-buttons" *ngIf="asFocusEngine?.isDualMode">
+                <button class="ep-btn ep-btn--primary" class="match-btn dual-btn position-btn"
+                    (click)="handlePositionMatchClick()" [disabled]="engineState.isPaused">
+                    <span class="material-icons">grid_on</span>
+                    KONUM (Q)
+                </button>
+                <button class="ep-btn ep-btn--primary" color="accent" class="match-btn dual-btn word-btn"
+                    (click)="handleWordMatchClick()" [disabled]="engineState.isPaused">
+                    <span class="material-icons">text_fields</span>
+                    KELİME (P)
+                </button>
+            </div>
+
+            <!-- Instructions based on mode -->
+            <div class="instruction-hint">
+                <ng-container *ngIf="asFocusEngine?.mode === 'position'">
+                    Grid'de nokta <strong>{{ asFocusEngine?.nLevel }} adım önceki</strong> konumla aynıysa basın!
+                </ng-container>
+                <ng-container *ngIf="asFocusEngine?.mode === 'word'">
+                    Kelime <strong>{{ asFocusEngine?.nLevel }} adım öncekiyle</strong> aynıysa basın!
+                </ng-container>
+                <ng-container *ngIf="asFocusEngine?.mode === 'dual'">
+                    <strong>Konum (Q)</strong> ve <strong>Kelime (P)</strong> için ayrı ayrı {{ asFocusEngine?.nLevel }}
+                    adım önceyi kontrol edin!
+                </ng-container>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- VOCABULARY BUILDER ENGINE -->
+    <!-- ============================================ -->
+    <div *ngIf="engine && engineState.isRunning && !engineState.isCompleted && engine.engineType === 'vocabulary_builder'"
+        class="game-container vocabulary-container">
+        <div class="game-header">
+            <div class="timer">
+                <span class="material-icons">{{ getVocabMode() === 'quiz' ? 'quiz' : 'menu_book' }}</span>
+                {{ getVocabMode() === 'quiz' ? 'Kelime Bilgisi Testi' : 'Kelime Öğrenme' }}
+            </div>
+            <div class="progress-info">
+                <span>{{ getVocabProgress().current }} / {{ getVocabProgress().total }}</span>
+                <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="(getVocabProgress().current / getVocabProgress().total) * 100"></div></div>
+            </div>
+            <div class="score-info" *ngIf="getVocabMode() === 'quiz'">
+                <span class="material-icons">stars</span>
+                Puan: {{ engineState.score }}
+            </div>
+            <!-- Countdown Timer for Quiz Mode -->
+            <div class="countdown-timer" *ngIf="hasVocabTimeLimit() && !isVocabShowingFeedback()"
+                [class.warning]="getVocabTimeRemaining() <= 5" [class.critical]="getVocabTimeRemaining() <= 3">
+                <span class="material-icons">timer</span>
+                <span class="countdown-value">{{ getVocabTimeRemaining() }}</span>
+                <span class="countdown-label">sn</span>
+            </div>
+            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <!-- LEARNING MODE UI -->
+        <div class="vocabulary-learning-area" [class.blurred]="engineState.isPaused"
+            *ngIf="getVocabMode() === 'learning' && getVocabCurrentWord()">
+            <div class="word-card-container">
+                <div class="word-card" [class.flipped]="isVocabDefinitionVisible()"
+                    (click)="!isVocabDefinitionVisible() && showVocabDefinition()">
+                    <div class="word-front">
+                        <div class="category-badge">{{ getVocabCurrentWord().category }}</div>
+                        <div class="leitner-box-indicator">
+                            <div class="box-dot" *ngFor="let i of [1,2,3,4,5]"
+                                [class.active]="getVocabWordBox(getVocabCurrentWord().id) >= i"
+                                [class.level-i]="getVocabWordBox(getVocabCurrentWord().id) >= i"></div>
+                        </div>
+                        <div class="word-text">{{ getVocabCurrentWord().word }}</div>
+                        <div class="click-hint" *ngIf="!isVocabDefinitionVisible()">
+                            <span class="material-icons">touch_app</span>
+                            Kartı Çevir
+                        </div>
+                    </div>
+                    <div class="word-back">
+                        <div class="definition-section">
+                            <h4>Anlamı:</h4>
+                            <p>{{ getVocabCurrentWord().definition }}</p>
+                        </div>
+
+                        <div class="example-section" *ngIf="getVocabCurrentWord().exampleSentence">
+                            <h4>Örnek Cümle:</h4>
+                            <p class="example-text">"{{ getVocabCurrentWord().exampleSentence }}"</p>
+                        </div>
+
+                        <div class="extra-info"
+                            *ngIf="getVocabCurrentWord().synonyms || getVocabCurrentWord().antonyms">
+                            <div class="info-row" *ngIf="getVocabCurrentWord().synonyms">
+                                <span class="label">Eşanlamlı:</span>
+                                <span class="value">{{ getVocabCurrentWord().synonyms }}</span>
+                            </div>
+                            <div class="info-row" *ngIf="getVocabCurrentWord().antonyms">
+                                <span class="label">Zıt Anlamlı:</span>
+                                <span class="value">{{ getVocabCurrentWord().antonyms }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modern Actions Panel outside the card -->
+            <div class="learning-actions-panel" [class.visible]="isVocabDefinitionVisible()">
+                <button class="action-btn unknown-btn" (click)="markVocabUnknown()">
+                    <span class="material-icons">close</span>
+                    Bilmiyorum
+                </button>
+                <button class="action-btn known-btn" (click)="markVocabKnown()">
+                    <span class="material-icons">check</span>
+                    Biliyorum
+                </button>
+            </div>
+        </div>
+
+        <!-- QUIZ MODE UI -->
+        <div class="vocabulary-quiz-area" [class.blurred]="engineState.isPaused"
+            *ngIf="getVocabMode() === 'quiz' && getVocabCurrentWord()">
+            <div class="quiz-question-card">
+                <div class="question-header">
+                    <div class="word-highlight">{{ getVocabQuizQuestion() }}</div>
+                    <div class="question-hint">
+                        {{ getVocabQuizQuestion() === getVocabCurrentWord().word ? 'kelimesinin anlamı nedir?' : 'bu
+                        tanım hangi kelimeye aittir?' }}
+                    </div>
+                </div>
+
+                <div class="options-grid" *ngIf="!isVocabShowingFeedback()">
+                    <button class="option-btn" *ngFor="let opt of getVocabQuizOptions()"
+                        (click)="submitVocabQuizAnswer(opt.letter)">
+                        <span class="option-letter">{{ opt.letter }}</span>
+                        <span class="option-content">{{ opt.text }}</span>
+                    </button>
+                </div>
+
+                <!-- Quiz Feedback -->
+                <div class="quiz-feedback" *ngIf="isVocabShowingFeedback()">
+                    <div class="feedback-banner" [class.correct]="isVocabAnswerCorrect()"
+                        [class.incorrect]="!isVocabAnswerCorrect()">
+                        <span class="material-icons">{{ isVocabAnswerCorrect() ? 'check_circle' : 'cancel' }}</span>
+                        <span>{{ isVocabAnswerCorrect() ? 'Doğru!' : 'Yanlış!' }}</span>
+                    </div>
+
+                    <div class="answer-reveal" *ngIf="!isVocabAnswerCorrect()">
+                        <p>Doğru Cevap: <strong>{{ getVocabCorrectAnswer() }}</strong></p>
+                        <p class="correct-definition">{{ getVocabCurrentWord().definition }}</p>
+                    </div>
+
+                    <button class="ep-btn ep-btn--primary" class="next-btn" (click)="nextVocabQuizQuestion()">
+                        Sonraki Kelime
+                        <span class="material-icons">arrow_forward</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Exercise Completed -->
+    <div *ngIf="(engineState.isCompleted && exercisePhase !== 'questions') || exercisePhase === 'completed'"
+        class="completed-state">
+        <div class="result-card-new">
+            <!-- Success Badge -->
+            <div class="success-badge">
+                <div class="badge-icon">
+                    <span class="material-icons">emoji_events</span>
+                </div>
+                <div class="badge-text">
+                    <span class="level-text">{{ result?.details?.performanceLevel || 'Tamamlandı!' }}</span>
+                    <span class="time-text" *ngIf="engine?.engineType !== 'exam_simulation'">{{
+                        formatTime(result?.totalTime || 0) }}</span>
+                </div>
+            </div>
+
+            <!-- Exercise Info Badges -->
+            <div class="exercise-info-badges">
+                <div class="info-tag age-tag" *ngIf="getAgeGroupLabel()">
+                    <span class="material-icons">people</span>
+                    <span>{{ getAgeGroupLabel() }}</span>
+                </div>
+                <div class="info-tag level-tag">
+                    <span class="material-icons">hotel_class</span>
+                    <span>Seviye {{ exercise?.difficultyLevel }} ({{ getDifficultyLabel(exercise?.difficultyLevel || 1)
+                        }})</span>
+                </div>
+            </div>
+
+
+            <!-- Main Stats Row - Hide for exam_simulation and reading exercises -->
+            <div class="stats-row" *ngIf="!result?.details?.wpm && engine?.engineType !== 'exam_simulation'">
+                <div class="stat-card primary">
+                    <div class="stat-value">{{ result?.score }}</div>
+                    <div class="stat-label">Skor</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ result?.accuracy | number:'1.0-0' }}%</div>
+                    <div class="stat-label">Doğruluk</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ formatTime(result?.totalTime || 0) }}</div>
+                    <div class="stat-label">Süre</div>
+                </div>
+                <div class="stat-card" [class.error-card]="(result?.errors || 0) > 0">
+                    <div class="stat-value">{{ result?.errors }}</div>
+                    <div class="stat-label">Hata</div>
+                </div>
+            </div>
+
+            <!-- XP and Level Row -->
+            <div class="rewards-row" *ngIf="sessionResult?.xpGained || sessionResult?.leveledUp">
+                <div class="xp-earned" *ngIf="sessionResult?.xpGained">
+                    <span class="material-icons">bolt</span>
+                    <span>+{{ sessionResult?.xpGained }} XP Kazandınız!</span>
+                </div>
+                <div class="level-up" *ngIf="sessionResult?.leveledUp">
+                    <span class="material-icons">stars</span>
+                    <span>Seviye {{ sessionResult?.newLevel }} oldunuz!</span>
+                </div>
+            </div>
+
+            <!-- Exam Simulation Results -->
+            <div class="speed-reading-results exam-results"
+                *ngIf="engine?.engineType === 'exam_simulation' && result?.details?.totalQuestions">
+                <!-- Comprehension Box -->
+                <div class="result-box comprehension-box">
+                    <span class="material-icons">psychology</span>
+                    <div class="result-value">{{ result?.details?.comprehensionScore }}%</div>
+                    <div class="result-label">Anlama Oranı</div>
+                </div>
+                <!-- Correct Answers -->
+                <div class="result-box questions-box">
+                    <span class="material-icons">quiz</span>
+                    <div class="result-value">{{ result?.details?.correctAnswers }}/{{ result?.details?.totalQuestions
+                        }}</div>
+                    <div class="result-label">Doğru Cevap</div>
+                </div>
+
+                <!-- Total Time -->
+                <div class="result-box time-box">
+                    <span class="material-icons">schedule</span>
+                    <div class="result-value">{{ formatTimeFromSeconds(result?.details?.totalTimeSpent) }}</div>
+                    <div class="result-label">Toplam Süre</div>
+                </div>
+
+
+
+                <!-- Timeout Count (if any) -->
+                <div class="result-box timeout-box" *ngIf="result?.details?.timeoutCount > 0">
+                    <span class="material-icons">timer_off</span>
+                    <div class="result-value">{{ result?.details?.timeoutCount }}</div>
+                    <div class="result-label">Süre Dolan</div>
+                </div>
+            </div>
+
+            <!-- Speed Reading / RSVP Results (WPM) -->
+            <div class="speed-reading-results" *ngIf="result?.details?.wpm && engine?.engineType !== 'exam_simulation'">
+                <!-- WPM Box -->
+                <div class="result-box wpm-box">
+                    <span class="material-icons">speed</span>
+                    <div class="result-value">{{ result?.details?.wpm }}</div>
+                    <div class="result-label">Okuma Hızı (WPM)</div>
+                </div>
+
+                <!-- Word Count Box (New for RSVP) -->
+                <div class="result-box" style="background: rgba(var(--text-color-rgb), 0.05);"
+                    *ngIf="result?.details?.readWordCount !== undefined">
+                    <span class="material-icons">text_snippet</span>
+                    <div class="result-value">{{ result?.details?.readWordCount }}{{ result?.details?.totalWordCount ?
+                        '/' + result?.details?.totalWordCount : '' }}</div>
+                    <div class="result-label">Okunan Kelime</div>
+                </div>
+
+                <!-- Comprehension Box (Only if available) -->
+                <div class="result-box comprehension-box" *ngIf="result?.details?.comprehensionScore !== undefined">
+                    <span class="material-icons">psychology</span>
+                    <div class="result-value">{{ result?.details?.comprehensionScore }}%</div>
+                    <div class="result-label">Anlama Oranı</div>
+                </div>
+
+                <!-- Questions Box (Only if available) -->
+                <div class="result-box questions-box" *ngIf="result?.details?.totalQuestions">
+                    <span class="material-icons">quiz</span>
+                    <div class="result-value">{{ result?.details?.correctAnswers }}/{{ result?.details?.totalQuestions
+                        }}</div>
+                    <div class="result-label">Doğru Cevap</div>
+                </div>
+
+                <!-- Total Time (Exam Simulation) -->
+                <div class="result-box time-box" *ngIf="result?.details?.totalTimeSpent !== undefined">
+                    <span class="material-icons">schedule</span>
+                    <div class="result-value">{{ result?.details?.totalTimeSpent }}sn</div>
+                    <div class="result-label">Toplam Süre</div>
+                </div>
+
+
+
+                <!-- Timeout Count (Exam Simulation) -->
+                <div class="result-box timeout-box" *ngIf="result?.details?.timeoutCount > 0">
+                    <span class="material-icons">timer_off</span>
+                    <div class="result-value">{{ result?.details?.timeoutCount }}</div>
+                    <div class="result-label">Süre Dolan</div>
+                </div>
+            </div>
+
+            <!-- Question Answers Detail (Exam Simulation) -->
+            <div class="question-answers-detail"
+                *ngIf="result?.details?.answers?.length > 0 && engine?.engineType === 'exam_simulation'">
+                <div class="answers-header">
+                    <span class="material-icons">list_alt</span>
+                    <span>Cevap Detayları</span>
+                    <span class="header-summary" style="margin-left: auto; font-size: 12px; opacity: 0.8;">
+                        {{ result?.details?.correctAnswers }}/{{ result?.details?.totalQuestions }} Doğru
+                    </span>
+                </div>
+                <div class="answers-list">
+                    <div class="answer-row" *ngFor="let answer of result?.details?.answers; let i = index"
+                        [class.correct]="answer.isCorrect" [class.wrong]="!answer.isCorrect">
+                        <div class="question-num">S{{ i + 1 }}</div>
+                        <div class="answer-info">
+                            <span class="your-answer">
+                                <span class="label">Cevabınız:</span>
+                                <span class="value" [class.timeout]="!answer.selectedAnswer">
+                                    {{ answer.selectedAnswer || 'Süre doldu' }}
+                                </span>
+                            </span>
+                            <span class="correct-answer" *ngIf="!answer.isCorrect">
+                                <span class="label">Doğru:</span>
+                                <span class="value">{{ getCorrectAnswerForIndex(i) }}</span>
+                            </span>
+                        </div>
+                        <div class="time-info">{{ answer.timeSpent }}sn</div>
+                        <span class="material-icons" class="status-icon" *ngIf="answer.isCorrect">check_circle</span>
+                        <span class="material-icons" class="status-icon" *ngIf="!answer.isCorrect">cancel</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mental Registration (Focus) Results -->
+            <div class="speed-reading-results focus-results"
+                *ngIf="engine?.engineType === 'focus' || engine?.engineType === 'attention_training'">
+                <div class="result-box correct-box">
+                    <span class="material-icons" style="color: #4caf50">check_circle</span>
+                    <div class="result-value">{{ result?.details?.hits || 0 }}</div>
+                    <div class="result-label">Doğru</div>
+                </div>
+                <div class="result-box wrong-box">
+                    <span class="material-icons" style="color: #f44336">error</span>
+                    <div class="result-value">{{ result?.details?.falseAlarms || 0 }}</div>
+                    <div class="result-label">Yanlış Alarm</div>
+                </div>
+                <div class="result-box miss-box">
+                    <span class="material-icons" style="color: #ff9800">rule</span>
+                    <div class="result-value">{{ result?.details?.misses || 0 }}</div>
+                    <div class="result-label">Kaçırılan</div>
+                </div>
+                <div class="result-box level-box">
+                    <span class="material-icons">layers</span>
+                    <div class="result-value">{{ result?.details?.nLevel }}-Back</div>
+                    <div class="result-label">Seviye</div>
+                </div>
+            </div>
+
+            <!-- Soru Detayları (Regression Reduction) -->
+            <div class="answers-summary"
+                *ngIf="result?.details?.answers && result?.details?.answers.length > 0 && engine?.engineType !== 'exam_simulation'">
+                <div class="section-header">
+                    <span class="material-icons">quiz</span>
+                    <span>Soru Sonuçları</span>
+                    <span class="section-hint">{{ result?.details?.correctAnswers }}/{{ result?.details?.totalQuestions
+                        }} doğru</span>
+                </div>
+                <div class="answers-list">
+                    <div class="answer-item" *ngFor="let answer of result?.details?.answers; let i = index"
+                        [class.correct]="answer.isCorrect" [class.wrong]="!answer.isCorrect">
+                        <div class="answer-icon">
+                            <span class="material-icons">{{ answer.isCorrect ? 'check_circle' : 'cancel' }}</span>
+                        </div>
+                        <div class="answer-content">
+                            <div class="answer-question">{{ i + 1 }}. {{ answer.questionText }}</div>
+                            <div class="answer-details">
+                                <span class="user-answer" [class.wrong]="!answer.isCorrect">
+                                    Cevabınız: {{ answer.selectedAnswer || 'Cüre Doldu' }}
+                                </span>
+                                <span class="correct-answer" *ngIf="!answer.isCorrect">
+                                    Doğru: {{ answer.correctAnswer }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Heatmap Section (Schulte only) -->
+            <div class="heatmap-section" *ngIf="result?.details?.heatmapData">
+                <div class="section-header">
+                    <span class="material-icons">grid_view</span>
+                    <span>Performans Haritası</span>
+                    <span class="section-hint">Hangi sayıları bulmakta zorlandınız?</span>
+                </div>
+                <div class="heatmap-wrapper">
+                    <div class="heatmap-grid-new"
+                        [style.grid-template-columns]="'repeat(' + (result?.details?.gridSize || 5) + ', 1fr)'">
+                        <div *ngFor="let value of result?.details?.heatmapData; let i = index; trackBy: trackByIdx"
+                            class="heatmap-cell-new" [style.background]="getHeatmapColor(value)">
+                            {{ i + 1 }}
+                        </div>
+                    </div>
+                    <div class="heatmap-info">
+                        <div class="legend-row">
+                            <span class="legend-item fast">● Hızlı</span>
+                            <span class="legend-item slow">● Yavaş</span>
+                        </div>
+                        <div class="benchmark-info" *ngIf="result?.details?.benchmarks">
+                            <div>Hedef süre: <strong>{{ formatTime(result?.details?.benchmarks?.intermediate || 0)
+                                    }}</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-row">
+                <button class="btn-primary" (click)="goBack()">
+                    <span class="material-icons">arrow_back</span>
+                    {{ isAssessmentMode ? 'Seviye Tespite Dön' : (assignmentId ? 'Ödevlere Dön' : 'Egzersizlere Dön') }}
+                </button>
+                <button class="btn-secondary" (click)="resetExercise()" *ngIf="!isAssessmentMode">
+                    <span class="material-icons">refresh</span>
+                    Tekrar Dene
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exit Confirmation Overlay -->
+    <div class="exit-confirm-overlay" *ngIf="showExitConfirm">
+        <div class="exit-confirm-card">
+            <span class="material-icons" class="exit-icon">warning</span>
+            <h3>Egzersizden Çıkmak İstiyor musunuz?</h3>
+            <p>İlerlemeniz kaydedilmeyecek.</p>
+            <div class="exit-actions">
+                <button class="btn-continue" (click)="cancelExit()">
+                    <span class="material-icons">play_arrow</span>
+                    Devam Et
+                </button>
+                <button class="btn-exit" (click)="confirmExit()">
+                    <span class="material-icons">exit_to_app</span>
+                    Çıkış Yap
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Program Completion Modal -->
+    <div class="program-completion-overlay" *ngIf="showProgramCompletionModal && programCompletionData">
+        <div class="completion-card">
+            <div class="confetti-bg"></div>
+
+            <div class="header-section">
+                <div class="trophy-icon-wrapper">
+                    <span class="material-icons" class="trophy-icon">emoji_events</span>
+                </div>
+                <h2>Tebrikler Mezun Oldunuz! 🎓</h2>
+                <p>Mevcut programınızı başarıyla tamamladınız.</p>
+            </div>
+
+            <div class="stats-grid" *ngIf="programCompletionData.completionStats as stats">
+                <div class="stat-item">
+                    <span class="value">{{ stats.totalDays }}</span>
+                    <span class="label">Gün</span>
+                </div>
+                <div class="stat-item">
+                    <span class="value">%{{ stats.averageSuccessRate | number:'1.0-0' }}</span>
+                    <span class="label">Ort. Başarı</span>
+                </div>
+                <div class="stat-item">
+                    <span class="value">{{ stats.longestStreak }}</span>
+                    <span class="label">En Uzun Seri</span>
+                </div>
+            </div>
+
+            <div class="next-program-card"
+                *ngIf="programCompletionData.recommendedNextProgram as nextProg; else completeAllTpl">
+                <h3>Sıradaki Tavsiyemiz 👇</h3>
+                <div class="program-preview">
+                    <div class="prog-icon">
+                        <span class="material-icons">rocket_launch</span>
+                    </div>
+                    <div class="prog-info">
+                        <h4>{{ nextProg.name }}</h4>
+                        <p>{{ nextProg.description }}</p>
+                        <span class="reason-badge">
+                            <span class="material-icons">psychology</span>
+                            {{ nextProg.recommendationReason }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <ng-template #completeAllTpl>
+                <div class="next-program-card ultimate-completion">
+                    <h3>Zirvedesiniz! 🏆</h3>
+                    <div class="program-preview">
+                        <div class="prog-icon gold">
+                            <span class="material-icons">military_tech</span>
+                        </div>
+                        <div class="prog-info">
+                            <h4>Tüm Seviyeler Tamamlandı</h4>
+                            <p>Kendi yaş grubunuzdaki tüm programları başarıyla bitirdiniz.</p>
+                            <span class="reason-badge gold">
+                                <span class="material-icons">star</span>
+                                Usta Okuyucu
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </ng-template>
+
+            <div class="action-buttons">
+                <button *ngIf="programCompletionData.recommendedNextProgram" class="ep-btn ep-btn--primary"
+                    class="btn-start-next" (click)="startNextProgram()" [disabled]="startingNextProgram">
+                    <div class="btn-content">
+                        <div class="ep-spinner" *ngIf="startingNextProgram"></div>
+                        <span class="material-icons" *ngIf="!startingNextProgram">play_circle</span>
+                        <span *ngIf="!startingNextProgram">YENİ PROGRAMA GEÇ</span>
+                        <span *ngIf="startingNextProgram">Başlatılıyor...</span>
+                    </div>
+                </button>
+
+                <button *ngIf="!programCompletionData.recommendedNextProgram" class="ep-btn ep-btn--primary"
+                    class="btn-start-next" (click)="cancelProgramTransition()">
+                    <div class="btn-content">
+                        <span class="material-icons">dashboard</span>
+                        <span>ANA SAYFAYA DÖN</span>
+                    </div>
+                </button>
+
+                <button class="ep-btn ep-btn--ghost" (click)="cancelProgramTransition()">
+                    Bu Modda Kal (Tekrar)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (toast()) {
+  <div class="ep-toast ep-toast--{{ toast()!.type }}">
+    <span>{{ toast()!.msg }}</span>
+  </div>
+}

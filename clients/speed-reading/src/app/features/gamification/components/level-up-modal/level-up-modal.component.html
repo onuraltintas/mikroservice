@@ -1,0 +1,76 @@
+<div class="level-up-modal">
+  <!-- Confetti Background -->
+  <div class="confetti-container">
+    <div class="confetti" *ngFor="let i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]"></div>
+  </div>
+
+  <!-- Celebration Burst -->
+  <div class="celebration-burst"></div>
+
+  <!-- Modal Header -->
+  <div class="modal-header">
+    <div class="level-icon-wrapper">
+      <div class="level-icon" [style.background]="getTierColor(data.newLevel)">
+        <span class="icon-emoji">{{ getTierIcon(data.newLevel) }}</span>
+        <div class="level-number">{{ data.newLevel }}</div>
+      </div>
+      <div class="glow-effect" [style.background]="getTierColor(data.newLevel)"></div>
+    </div>
+  </div>
+
+  <!-- Modal Body -->
+  <div class="modal-body">
+    <h1 class="title">Seviye Atladınız!</h1>
+    <p class="subtitle">Tebrikler! Yeni seviyeye ulaştınız</p>
+
+    <div class="level-info">
+      <div class="level-badge" [style.background]="getTierColor(data.newLevel)">
+        <span class="tier-name">{{ getTierName(data.newLevel) }}</span>
+      </div>
+      <h2 class="level-title">{{ data.levelTitle }}</h2>
+    </div>
+
+    <!-- XP Progress -->
+    <div class="xp-progress" *ngIf="data.isTierChange">
+      <div class="xp-item">
+        <span class="xp-label">Toplam XP</span>
+        <span class="xp-value">{{ formatXP(data.totalXP) }}</span>
+      </div>
+      <div class="xp-divider"></div>
+      <div class="xp-item">
+        <span class="xp-label">Kazanılan</span>
+        <span class="xp-value gained">+{{ formatXP(data.currentLevelXP) }}</span>
+      </div>
+    </div>
+
+    <!-- Achievements Unlocked -->
+    <div class="achievements-section" *ngIf="data.achievementsUnlocked && data.achievementsUnlocked.length > 0">
+      <h3 class="achievements-title">
+        <mat-icon>military_tech</mat-icon>
+        Yeni Başarılar Kazanıldı!
+      </h3>
+      <div class="achievements-grid">
+        <app-achievement-badge
+          *ngFor="let achievement of data.achievementsUnlocked"
+          [achievement]="achievement"
+          [unlocked]="true"
+          size="small">
+        </app-achievement-badge>
+      </div>
+    </div>
+
+    <!-- Tier Change Message -->
+    <div class="tier-change-message" *ngIf="data.isTierChange">
+      <mat-icon>upgrade</mat-icon>
+      <span>Yeni katmana yükseldiniz: <strong>{{ getTierName(data.newLevel) }}</strong></span>
+    </div>
+  </div>
+
+  <!-- Modal Footer -->
+  <div class="modal-footer">
+    <button mat-flat-button color="primary" class="continue-btn" (click)="close()">
+      <mat-icon>check_circle</mat-icon>
+      Harika! Devam Et
+    </button>
+  </div>
+</div>

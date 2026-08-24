@@ -1,0 +1,154 @@
+.assessment-config-container {
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+
+    .header-card {
+        margin-bottom: 24px;
+
+        mat-card-header {
+            align-items: center;
+        }
+
+        mat-icon[mat-card-avatar] {
+            width: 40px;
+            height: 40px;
+            font-size: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+    }
+
+    .config-card {
+        .age-group-selector {
+            margin-bottom: 32px;
+        }
+
+        .full-width {
+            width: 100%;
+        }
+
+        .template-form {
+            margin-top: 24px;
+
+            .filters-section {
+                background: #f8f9fa;
+                padding: 16px;
+                border-radius: 8px;
+                margin-bottom: 24px;
+                border: 1px solid #eee;
+
+                h4 {
+                    margin: 0 0 16px;
+                    color: #666;
+                    font-size: 14px;
+                    font-weight: 500;
+                }
+
+                .filters-row {
+                    display: flex;
+                    gap: 16px;
+
+                    mat-form-field {
+                        flex: 1;
+                        margin-bottom: 0;
+                    }
+                }
+            }
+
+            .section-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin: 24px 0 16px;
+
+                h3 {
+                    margin: 0;
+                    font-size: 18px;
+                    color: #333;
+                }
+
+                .exercise-selector {
+                    width: 400px;
+                }
+            }
+
+            .exercises-table {
+                width: 100%;
+                margin-top: 16px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+                .exercise-info {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+
+                    small {
+                        color: #999;
+                        font-size: 11px;
+                    }
+                }
+
+                mat-chip {
+                    font-size: 12px;
+                }
+
+                button {
+                    &[disabled] {
+                        opacity: 0.3;
+                    }
+                }
+            }
+
+            .empty-state {
+                text-align: center;
+                padding: 48px;
+                color: #999;
+
+                mat-icon {
+                    font-size: 64px;
+                    width: 64px;
+                    height: 64px;
+                    margin-bottom: 16px;
+                    color: #ddd;
+                }
+
+                p {
+                    margin: 0;
+                    font-size: 14px;
+                }
+            }
+
+            .actions {
+                display: flex;
+                justify-content: flex-end;
+                gap: 12px;
+                margin-top: 32px;
+                padding-top: 24px;
+                border-top: 1px solid #eee;
+
+                button {
+                    min-width: 120px;
+                }
+            }
+        }
+
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 64px;
+            color: #666;
+
+            p {
+                margin-top: 16px;
+                font-size: 14px;
+            }
+        }
+    }
+}

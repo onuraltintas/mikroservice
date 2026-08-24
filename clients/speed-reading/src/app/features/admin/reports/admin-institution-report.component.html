@@ -1,0 +1,129 @@
+<div class="institution-report">
+    @if (loading()) {
+    <div class="loading"><mat-spinner></mat-spinner></div>
+    } @else if (report()) {
+
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+        <mat-card>
+            <mat-card-content>
+                <div class="stat-label">Toplam Kurum</div>
+                <div class="stat-value">{{ report()!.totalInstitutions }}</div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-content>
+                <div class="stat-label">Aktif Kurum</div>
+                <div class="stat-value">{{ report()!.activeInstitutions }}</div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-content>
+                <div class="stat-label">Toplam Kullanıcı</div>
+                <div class="stat-value">{{ report()!.totalUsers }}</div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-content>
+                <div class="stat-label">Toplam Öğrenci</div>
+                <div class="stat-value">{{ report()!.totalStudents }}</div>
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+    <!-- Top Performing Institutions -->
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>En Başarılı Kurumlar</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <div class="top-institutions">
+                @for (top of report()!.topInstitutions; track top.institutionName) {
+                <div class="top-institution-card">
+                    <div class="institution-name">{{ top.institutionName }}</div>
+                    <div class="metrics">
+                        <div class="metric">
+                            <span class="label">Ortalama WPM:</span>
+                            <span class="value">{{ top.averageWPM }}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="label">Ortalama Anlama:</span>
+                            <span class="value">{{ top.averageComprehension }}%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="label">Aktif Öğrenci:</span>
+                            <span class="value">{{ top.activeStudents }}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="label">Toplam Aktivite:</span>
+                            <span class="value">{{ top.totalActivities }}</span>
+                        </div>
+                    </div>
+                </div>
+                }
+            </div>
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Institution Comparison Chart -->
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>Kurum Karşılaştırması</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <div class="chart">
+                <app-bar-chart [data]="getChartData()"></app-bar-chart>
+            </div>
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Detailed Comparison Table -->
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>Detaylı Karşılaştırma</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <table mat-table [dataSource]="report()!.institutionComparison" matSort>
+                <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Kurum</th>
+                    <td mat-cell *matCellDef="let i">{{ i.institutionName }}</td>
+                </ng-container>
+                <ng-container matColumnDef="users">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Toplam Kullanıcı</th>
+                    <td mat-cell *matCellDef="let i">{{ i.totalUsers }}</td>
+                </ng-container>
+                <ng-container matColumnDef="active">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Aktif</th>
+                    <td mat-cell *matCellDef="let i">{{ i.activeUsers }}</td>
+                </ng-container>
+                <ng-container matColumnDef="students">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Öğrenci</th>
+                    <td mat-cell *matCellDef="let i">{{ i.totalStudents }}</td>
+                </ng-container>
+                <ng-container matColumnDef="teachers">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Öğretmen</th>
+                    <td mat-cell *matCellDef="let i">{{ i.totalTeachers }}</td>
+                </ng-container>
+                <ng-container matColumnDef="activities">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Aktivite</th>
+                    <td mat-cell *matCellDef="let i">{{ i.totalActivities }}</td>
+                </ng-container>
+                <ng-container matColumnDef="wpm">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Ort. WPM</th>
+                    <td mat-cell *matCellDef="let i">{{ i.averageWPM }}</td>
+                </ng-container>
+                <ng-container matColumnDef="comprehension">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Ort. Anlama</th>
+                    <td mat-cell *matCellDef="let i">{{ i.averageComprehension }}%</td>
+                </ng-container>
+                <tr mat-header-row
+                    *matHeaderRowDef="['name','users','active','students','teachers','activities','wpm','comprehension']">
+                </tr>
+                <tr mat-row
+                    *matRowDef="let r; columns: ['name','users','active','students','teachers','activities','wpm','comprehension']">
+                </tr>
+            </table>
+        </mat-card-content>
+    </mat-card>
+    }
+</div>

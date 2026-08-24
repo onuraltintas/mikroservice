@@ -1,0 +1,114 @@
+<h2 mat-dialog-title>
+    <mat-icon>analytics</mat-icon>
+    {{ campaignName }} - İstatistikler
+</h2>
+
+<mat-dialog-content>
+    <div *ngIf="stats" class="stats-container">
+        <!-- Summary Cards -->
+        <div class="stats-grid">
+            <mat-card class="stat-card">
+                <div class="stat-icon recipients">
+                    <mat-icon>people</mat-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ stats.totalRecipients }}</div>
+                    <div class="stat-label">Toplam Alıcı</div>
+                </div>
+            </mat-card>
+
+            <mat-card class="stat-card">
+                <div class="stat-icon sent">
+                    <mat-icon>send</mat-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ stats.sentCount }}</div>
+                    <div class="stat-label">Gönderildi</div>
+                </div>
+            </mat-card>
+
+            <mat-card class="stat-card">
+                <div class="stat-icon opened">
+                    <mat-icon>drafts</mat-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ stats.openedCount }}</div>
+                    <div class="stat-label">Açıldı</div>
+                </div>
+            </mat-card>
+
+            <mat-card class="stat-card">
+                <div class="stat-icon clicked">
+                    <mat-icon>touch_app</mat-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ stats.clickedCount }}</div>
+                    <div class="stat-label">Tıklandı</div>
+                </div>
+            </mat-card>
+
+            <mat-card class="stat-card">
+                <div class="stat-icon failed">
+                    <mat-icon>error</mat-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ stats.failedCount }}</div>
+                    <div class="stat-label">Başarısız</div>
+                </div>
+            </mat-card>
+
+            <mat-card class="stat-card">
+                <div class="stat-icon pending">
+                    <mat-icon>schedule</mat-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ stats.pendingCount }}</div>
+                    <div class="stat-label">Beklemede</div>
+                </div>
+            </mat-card>
+        </div>
+
+        <!-- Progress Bars -->
+        <mat-card class="progress-card">
+            <h3>Gönderim İlerlemesi</h3>
+            <div class="progress-item">
+                <div class="progress-header">
+                    <span>Gönderildi</span>
+                    <span>{{ getSentPercentage() }}%</span>
+                </div>
+                <mat-progress-bar mode="determinate" [value]="getSentPercentage()" color="primary">
+                </mat-progress-bar>
+            </div>
+
+            <div class="progress-item">
+                <div class="progress-header">
+                    <span>Açılma Oranı</span>
+                    <span>{{ getOpenRate() }}%</span>
+                </div>
+                <mat-progress-bar mode="determinate" [value]="getOpenRate()" color="accent">
+                </mat-progress-bar>
+            </div>
+
+            <div class="progress-item">
+                <div class="progress-header">
+                    <span>Tıklama Oranı</span>
+                    <span>{{ getClickRate() }}%</span>
+                </div>
+                <mat-progress-bar mode="determinate" [value]="getClickRate()" color="warn">
+                </mat-progress-bar>
+            </div>
+        </mat-card>
+    </div>
+
+    <div *ngIf="loading()" class="loading">
+        Yükleniyor...
+    </div>
+
+    <div *ngIf="error" class="error">
+        {{ error }}
+    </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Kapat</button>
+</mat-dialog-actions>

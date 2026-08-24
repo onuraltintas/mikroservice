@@ -1,0 +1,53 @@
+<h2 mat-dialog-title>Schedule Report: {{ data.name }}</h2>
+<mat-dialog-content>
+    <form [formGroup]="form">
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Frequency</mat-label>
+            <mat-select formControlName="frequency" required>
+                <mat-option value="daily">Daily</mat-option>
+                <mat-option value="weekly">Weekly</mat-option>
+                <mat-option value="monthly">Monthly</mat-option>
+            </mat-select>
+        </mat-form-field>
+        @if (form.get('frequency')?.value === 'weekly') {
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Day of Week</mat-label>
+            <mat-select formControlName="dayOfWeek">
+                <mat-option [value]="0">Sunday</mat-option>
+                <mat-option [value]="1">Monday</mat-option>
+                <mat-option [value]="2">Tuesday</mat-option>
+                <mat-option [value]="3">Wednesday</mat-option>
+                <mat-option [value]="4">Thursday</mat-option>
+                <mat-option [value]="5">Friday</mat-option>
+                <mat-option [value]="6">Saturday</mat-option>
+            </mat-select>
+        </mat-form-field>
+        }
+        @if (form.get('frequency')?.value === 'monthly') {
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Day of Month</mat-label>
+            <input matInput type="number" formControlName="dayOfMonth" min="1" max="31">
+        </mat-form-field>
+        }
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Time (HH:MM)</mat-label>
+            <input matInput type="time" formControlName="time" required>
+        </mat-form-field>
+        <div class="delivery-options">
+            <h3>Delivery Options</h3>
+            <mat-checkbox formControlName="sendEmail">Send via Email</mat-checkbox>
+            @if (form.get('sendEmail')?.value) {
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Email Recipients (comma-separated)</mat-label>
+                <input matInput formControlName="recipients">
+            </mat-form-field>
+            }
+            <mat-checkbox formControlName="saveToDashboard">Save to Dashboard</mat-checkbox>
+        </div>
+        <mat-slide-toggle formControlName="isActive">Active</mat-slide-toggle>
+    </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+    <button mat-button (click)="cancel()">Cancel</button>
+    <button mat-raised-button color="primary" (click)="save()" [disabled]="!form.valid">Schedule</button>
+</mat-dialog-actions>

@@ -1,0 +1,169 @@
+<div class="reports-container">
+  <h1>Öğrenci Raporları</h1>
+
+  <mat-card class="student-selector">
+    <mat-card-content>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Öğrenci Seçin</mat-label>
+        <mat-select [formControl]="selectedStudentControl" (selectionChange)="onStudentSelect()">
+          <mat-option *ngFor="let student of mockStudents" [value]="student.id">
+            {{ student.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- KPI Summary Cards -->
+  <div class="kpi-cards" *ngIf="selectedStudentControl.value && !loading && activityReport">
+    <mat-card class="kpi-card">
+      <mat-card-content>
+        <div class="kpi-icon">📊</div>
+        <span class="kpi-label">Toplam Aktivite</span>
+        <span class="kpi-value">{{ activityReport.totalActivities }}</span>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="kpi-card">
+      <mat-card-content>
+        <div class="kpi-icon">⚡</div>
+        <span class="kpi-label">Ortalama Okuma Hızı</span>
+        <span class="kpi-value">{{ kdpReport?.averageWPM | number:'1.0-0' }}</span>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="kpi-card">
+      <mat-card-content>
+        <div class="kpi-icon">🎯</div>
+        <span class="kpi-label">Ortalama Anlama</span>
+        <span class="kpi-value">{{ comprehensionReport?.averageComprehension | number:'1.0-0' }}%</span>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="kpi-card">
+      <mat-card-content>
+        <div class="kpi-icon">🔥</div>
+        <span class="kpi-label">Günlük Seri</span>
+        <span class="kpi-value">{{ activityReport.currentStreak }}</span>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div *ngIf="selectedStudentControl.value && !loading">
+    <mat-tab-group>
+      <!-- KDP Trend Tab -->
+      <mat-tab label="KDP Trendi">
+        <div class="tab-content">
+          <mat-card>
+            <mat-card-header>
+              <mat-card-title>KDP Performans Grafiği (Son 30 Gün)</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="stats-summary" *ngIf="kdpReport">
+                <div class="stat">
+                  <span class="label">Ortalama Okuma Hızı:</span>
+                  <span class="value">{{ kdpReport.averageWPM | number:'1.0-0' }}</span>
+                </div>
+                <div class="stat">
+                  <span class="label">Maksimum Okuma Hızı:</span>
+                  <span class="value">{{ kdpReport.maxWPM | number:'1.0-0' }}</span>
+                </div>
+                <div class="stat">
+                  <span class="label">İyileşme:</span>
+                  <span class="value">{{ kdpReport.wpmImprovement > 0 ? '+' : '' }}{{ kdpReport.wpmImprovement |
+                    number:'1.0-1' }}%</span>
+                </div>
+              </div>
+
+              <app-line-chart [data]="kdpChartData" xAxisLabel="Tarih" yAxisLabel="KDP Değeri" [showLegend]="true">
+              </app-line-chart>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Comprehension Trend Tab -->
+      <mat-tab label="Anlama Skoru Trendi">
+        <div class="tab-content">
+          <mat-card>
+            <mat-card-header>
+              <mat-card-title>Anlama Skoru Grafiği (Son 30 Gün)</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <app-line-chart [data]="comprehensionChartData" xAxisLabel="Tarih" yAxisLabel="Anlama Skoru (%)"
+                [showLegend]="true">
+              </app-line-chart>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Detailed Report Tab -->
+      <mat-tab label="Detaylı Rapor">
+        <div class="tab-content" *ngIf="activityReport">
+          <mat-card class="summary-card">
+            <mat-card-header>
+              <mat-card-title>Genel Özet</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="summary-grid">
+                <div class="summary-item">
+                  <span class="label">Toplam Egzersiz:</span>
+                  <span class="kpi-value">{{ activityReport.totalActivities }}</span>
+                </div>
+                <div class="summary-item">
+                  <span class="label">Toplam Süre:</span>
+                  <span class="kpi-value">{{ activityReport.currentStreak }}</span>
+                </div>
+                <div class="summary-item">
+                  <span class="label">Ortalama KDP:</span>
+                  <span class="kpi-value">{{ kdpReport?.averageWPM | number:'1.0-0' }}</span>
+                </div>
+                <div class="summary-item">
+                  <span class="label">Ortalama Anlama:</span>
+                  <span class="kpi-value">{{ comprehensionReport?.averageComprehension | number:'1.0-0' }}%</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="exercise-types-card">
+            <mat-card-header>
+              <mat-card-title>Egzersiz Tipi İstatistikleri</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <table mat-table [dataSource]="activityReport.activityByType || []" class="type-stats-table">
+                <ng-container matColumnDef="type">
+                  <th mat-header-cell *matHeaderCellDef>Egzersiz Tipi</th>
+                  <td mat-cell *matCellDef="let element">{{ getExerciseTypeName(element.type) }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="count">
+                  <th mat-header-cell *matHeaderCellDef>Adet</th>
+                  <td mat-cell *matCellDef="let element">{{ element.count }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="averageKDP">
+                  <th mat-header-cell *matHeaderCellDef>Ortalama KDP</th>
+                  <td mat-cell *matCellDef="let element">{{ element.averageKDP | number:'1.0-0' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="averageComprehension">
+                  <th mat-header-cell *matHeaderCellDef>Ortalama Anlama (%)</th>
+                  <td mat-cell *matCellDef="let element">{{ element.averageComprehension | number:'1.0-0' }}</td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="typeStatsColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: typeStatsColumns;"></tr>
+              </table>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner></mat-spinner>
+  </div>
+</div>

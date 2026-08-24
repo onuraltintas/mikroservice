@@ -1,0 +1,111 @@
+@use '@angular/material' as mat;
+
+h2[mat-dialog-title] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #1a1a1a;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    background: #fff;
+    gap: 12px;
+
+    mat-icon {
+        color: #3f51b5;
+    }
+}
+
+mat-dialog-content {
+    padding: 20px 24px !important;
+    background-color: #fff;
+    max-height: 80vh;
+    min-width: 500px; // Keep some width but not excessive
+
+    @media (max-width: 600px) {
+        min-width: unset; // Allow shrinking on mobile
+        max-height: calc(100vh - 140px); // visible buttons
+    }
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 8px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    align-items: flex-start;
+
+    @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.full-width {
+    width: 100%;
+    grid-column: 1 / -1;
+}
+
+mat-form-field {
+    width: 100%;
+    // No broken overrides!
+}
+
+.password-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.password-errors {
+    padding-left: 4px;
+    margin-top: -8px;
+
+    small {
+        font-size: 11px;
+        line-height: 1.2;
+    }
+}
+
+.status-toggle {
+    display: flex;
+    align-items: center;
+    height: 56px;
+    grid-column: 1 / -1;
+}
+
+mat-dialog-actions {
+    padding: 16px 24px !important;
+    background: #fff;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    gap: 12px;
+}
+
+// Loading Overlay
+.saving-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 10;
+
+    p {
+        margin: 0;
+        font-size: 14px;
+        color: rgba(0, 0, 0, 0.6);
+    }
+}

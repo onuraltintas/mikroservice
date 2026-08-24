@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="tr">
+
+<head>
+  <meta charset="utf-8">
+  <title>Master Hızlı Okuma Platformu | Hızını Artır, Anlamanı Güçlendir</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- SEO Meta Tags -->
+  <meta name="description"
+    content="Master Hızlı Okuma Platformu ile okuma hızınızı artırın, anlama oranınızı yükseltin. Öğrenci ve profesyoneller için yapay zeka destekli kişisel gelişim platformu.">
+  <meta name="keywords"
+    content="hızlı okuma, hızlı okuma kursu, anlayarak hızlı okuma, okuma egzersizleri, kişisel gelişim, onural hızli okuma, speed reading, okuma hızı testi">
+  <meta name="author" content="Master Hızlı Okuma">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="googlebot" content="index, follow">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="msapplication-TileColor" content="#6366f1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Master Hızlı Okuma">
+  <meta name="format-detection" content="telephone=no">
+
+  <!-- Open Graph / Facebook / WhatsApp -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Master Hızlı Okuma Platformu">
+  <meta property="og:url" content="https://masterhizliokuma.com/">
+  <meta property="og:title" content="Master Hızlı Okuma Platformu | Hızını Artır, Anlamanı Güçlendir">
+  <meta property="og:description"
+    content="Yapay zeka destekli eğitimlerle okuma hızınızı ve anlama kapasitenizi en üst seviyeye çıkarın.">
+  <meta property="og:image" content="https://masterhizliokuma.com/assets/images/share-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Master Hızlı Okuma Platformu">
+  <meta property="og:locale" content="tr_TR">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@masterhizliokuma">
+  <meta name="twitter:creator" content="@masterhizliokuma">
+  <meta name="twitter:url" content="https://masterhizliokuma.com/">
+  <meta name="twitter:title" content="Master Hızlı Okuma Platformu | Hızını Artır, Anlamanı Güçlendir">
+  <meta name="twitter:description"
+    content="Yapay zeka destekli eğitimlerle okuma hızınızı ve anlama kapasitenizi en üst seviyeye çıkarın.">
+  <meta name="twitter:image" content="https://masterhizliokuma.com/assets/images/share-image.jpg">
+  <meta name="twitter:image:alt" content="Master Hızlı Okuma Platformu">
+
+  <!-- Favicon & Icons -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico?v=2">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=2">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png?v=2">
+  <link rel="icon" type="image/png" sizes="96x96" href="icons/icon-96x96.png?v=2">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
+  <link rel="canonical" href="https://masterhizliokuma.com/">
+
+  <!-- Preconnect for Performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link rel="preconnect" href="https://www.googletagmanager.com">
+  <link rel="preconnect" href="https://www.google-analytics.com">
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+
+  <!-- Fonts -->
+  <!-- Roboto: Angular Material (admin/teacher panels) -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <!-- Inter: Student panel yeni tasarım sistemi -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Google Analytics (GA4) - Optimized Configuration -->
+  <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-DJ9PNDMXL5"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-DJ9PNDMXL5', {
+      'anonymize_ip': true,              // GDPR/KVKK uyumu - IP anonimleştirme
+      'cookie_flags': 'SameSite=Lax;Secure',
+      'send_page_view': true,
+      'page_title': document.title,
+      'custom_map': {
+        'dimension1': 'user_type',       // Kullanıcı tipi (student, teacher, admin)
+        'dimension2': 'subscription_status' // Abonelik durumu
+      }
+    });
+
+    // SPA için sayfa görüntüleme takibi (Angular Router ile entegre edilebilir)
+    window.trackPageView = function (pagePath, pageTitle) {
+      gtag('event', 'page_view', {
+        page_path: pagePath,
+        page_title: pageTitle || document.title
+      });
+    };
+
+    // Önemli olayları takip et
+    window.trackEvent = function (eventName, category, label, value) {
+      gtag('event', eventName, {
+        'event_category': category,
+        'event_label': label,
+        'value': value
+      });
+    };
+  </script>
+
+  <!-- Structured Data - Organization -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Master Hızlı Okuma Platformu",
+    "alternateName": ["MasterHızlıOkuma", "Master Hızlı Okuma"],
+    "legalName": "OnAl Yazılım Otomasyon Eğitim ve Danışmanlık Ltd. Şti.",
+    "url": "https://masterhizliokuma.com",
+    "logo": "https://masterhizliokuma.com/assets/images/logo.png",
+    "description": "Yapay zeka destekli hızlı okuma ve anlama eğitimi platformu",
+    "foundingDate": "2024",
+    "founders": [{
+      "@type": "Person",
+      "name": "Onur Altıntaş"
+    }],
+    "parentOrganization": {
+      "@type": "Organization",
+      "name": "OnAl Yazılım Otomasyon Eğitim ve Danışmanlık Ltd. Şti.",
+      "legalName": "OnAl Yazılım Otomasyon Eğitim ve Danışmanlık Ltd. Şti."
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+90-505-707-2005",
+      "contactType": "customer service",
+      "availableLanguage": ["Turkish", "English"]
+    },
+    "sameAs": [
+      "https://www.facebook.com/masterhizliokuma",
+      "https://www.instagram.com/masterhizliokuma",     
+      "https://www.linkedin.com/company/masterhizliokuma"
+    ]
+  }
+  </script>
+
+  <!-- Structured Data - WebSite with SearchAction -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Master Hızlı Okuma Platformu",
+    "url": "https://masterhizliokuma.com",
+    "description": "Hızlı okuma teknikleri ve egzersizleri ile okuma hızınızı artırın",
+    "inLanguage": "tr-TR",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://masterhizliokuma.com/arama?q={search_term_string}"
+      },
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
+  <!-- Structured Data - EducationalOrganization -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "Master Hızlı Okuma Platformu",
+    "url": "https://masterhizliokuma.com",
+    "description": "Online hızlı okuma kursu ve egzersizleri",
+    "areaServed": {
+      "@type": "Country",
+      "name": "Türkiye"
+    },
+    "educationalCredentialAwarded": "Hızlı Okuma Sertifikası",
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Hızlı Okuma Programları",
+      "itemListElement": [
+        {
+          "@type": "Course",
+          "name": "Hızlı Okuma Başlangıç Kursu",
+          "description": "Temel hızlı okuma teknikleri ve egzersizleri"
+        },
+        {
+          "@type": "Course",
+          "name": "İleri Seviye Hızlı Okuma",
+          "description": "Gelişmiş okuma teknikleri ve anlama stratejileri"
+        }
+      ]
+    }
+  }
+  </script>
+
+  <!-- Structured Data - LocalBusiness (for Google Maps & Local SEO) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Master Hızlı Okuma Platformu",
+    "image": "https://masterhizliokuma.com/assets/images/logo.png",
+    "description": "Online hızlı okuma kursu ve eğitim platformu",
+    "priceRange": "$$",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Yozgat",
+      "addressRegion": "Yozgat",
+      "postalCode": "66000",
+      "addressCountry": "TR"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "39.8203",
+      "longitude": "34.8047"
+    },
+    "url": "https://masterhizliokuma.com",
+    "telephone": "+905057072005",
+    "email": "iletisim@masterhizliokuma.com",
+    "openingHoursSpecification": {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      "opens": "09:00",
+      "closes": "18:00"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "reviewCount": "127",
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    "sameAs": [
+      "https://www.facebook.com/masterhizliokuma",
+      "https://www.instagram.com/masterhizliokuma",
+      "https://www.linkedin.com/company/masterhizliokuma"
+    ]
+  }
+  </script>
+
+  <!-- Structured Data - FAQPage (for Rich Results) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Hızlı okuma nedir?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Hızlı okuma, bilimsel yöntemlerle okuma hızını artırırken anlama seviyesini koruyarak veya geliştirerek uygulanan bir tekniktir. Master Hızlı Okuma Platformu, yapay zeka destekli egzersizlerle okuma hızınızı 3 katına kadar çıkarmanıza yardımcı olur."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Hızlı okuma öğrenmek ne kadar sürer?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Düzenli egzersiz yapıldığında, 4-6 hafta içinde önemli iyileşmeler görülmeye başlar. Ortalama kullanıcılarımız 8 hafta içinde okuma hızlarını 2-3 katına çıkarmaktadır."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Platform ücretsiz mi?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "7 gün ücretsiz deneme sürümümüz bulunmaktadır. Deneme süresinde tüm özelliklere erişebilir, kredi kartı bilgisi vermeden platformu deneyebilirsiniz."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Hangi yaş grupları için uygun?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Platform, 3 yaş grubuna özel içerikler sunar: 6-12 yaş (çocuklar), 13-17 yaş (gençler) ve 18+ yaş (yetişkinler). Her yaş grubu için özel olarak tasarlanmış egzersizler ve içerikler mevcuttur."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Mobil cihazlardan kullanılabiliyor mu?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Evet, platformumuz mobil uyumludur ve tablet, telefon gibi tüm cihazlardan sorunsuz kullanılabilir. Responsive tasarımıyla her ekran boyutunda optimize deneyim sunar."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <!-- Structured Data - Product/Service (for Pricing) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Master Hızlı Okuma Premium Üyelik",
+    "description": "Kapsamlı hızlı okuma eğitimi ve yapay zeka destekli kişisel gelişim programı",
+    "brand": {
+      "@type": "Brand",
+      "name": "Master Hızlı Okuma"
+    },
+    "offers": {
+      "@type": "AggregateOffer",
+      "url": "https://masterhizliokuma.com/fiyatlandirma",
+      "priceCurrency": "TRY",
+      "lowPrice": "199",
+      "highPrice": "999",
+      "offerCount": "3",
+      "availability": "https://schema.org/InStock",
+      "priceValidUntil": "2025-12-31"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "reviewCount": "127",
+      "bestRating": "5",
+      "worstRating": "1"
+    }
+  }
+  </script>
+
+  <!-- Structured Data - BreadcrumbList (for Homepage) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Ana Sayfa",
+        "item": "https://masterhizliokuma.com/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- Structured Data - Review/Testimonials -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Review",
+    "itemReviewed": {
+      "@type": "Product",
+      "name": "Master Hızlı Okuma Platformu"
+    },
+    "reviewRating": {
+      "@type": "Rating",
+      "ratingValue": "5",
+      "bestRating": "5"
+    },
+    "author": {
+      "@type": "Person",
+      "name": "Ahmet Yılmaz"
+    },
+    "reviewBody": "Okuma hızım dakikada 200 kelimeden 600 kelimeye çıktı! Sınavlara hazırlanırken çok büyük avantaj sağladı. Platform çok kullanıcı dostu ve egzersizler eğlenceli."
+  }
+  </script>
+
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <!-- Additional SEO Meta Tags -->
+  <meta name="geo.region" content="TR-66">
+  <meta name="geo.placename" content="Yozgat">
+  <meta name="geo.position" content="39.8203;34.8047">
+  <meta name="ICBM" content="39.8203, 34.8047">
+  <meta name="language" content="Turkish">
+  <meta name="revisit-after" content="7 days">
+  <meta name="rating" content="general">
+  <meta name="distribution" content="global">
+  <meta name="coverage" content="Worldwide">
+  <meta name="target" content="all">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+
+  <!-- Verification Tags (add when available) -->
+  <!-- <meta name="google-site-verification" content="your-verification-code"> -->
+  <!-- <meta name="yandex-verification" content="your-verification-code"> -->
+  <!-- <meta name="msvalidate.01" content="your-verification-code"> -->
+
+</head>
+
+<body>
+  <app-root></app-root>
+  <noscript>Please enable JavaScript to continue using this application.</noscript>
+</body>
+
+</html>

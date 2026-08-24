@@ -1,0 +1,220 @@
+<div class="analytics-container">
+    <!-- Header -->
+    <div class="header-section">
+        <h1>
+            <mat-icon>analytics</mat-icon>
+            Program Analitiği
+        </h1>
+        <button mat-raised-button color="primary" (click)="refreshData()">
+            <mat-icon>refresh</mat-icon>
+            Yenile
+        </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading()" class="loading-state">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Analitik veriler yükleniyor...</p>
+    </div>
+
+    <!-- Analytics Content -->
+    <div *ngIf="!loading() && analytics()" class="content">
+        <!-- Platform Stats Cards -->
+        <div class="stats-grid">
+            <mat-card class="stat-card">
+                <mat-card-content>
+                    <div class="stat-icon students">
+                        <mat-icon>people</mat-icon>
+                    </div>
+                    <div class="stat-info">
+                        <h3>{{ analytics()?.platformStats?.totalActiveStudents || 0 }}</h3>
+                        <p>Aktif Öğrenci</p>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <mat-card class="stat-card">
+                <mat-card-content>
+                    <div class="stat-icon success">
+                        <mat-icon>check_circle</mat-icon>
+                    </div>
+                    <div class="stat-info">
+                        <h3>{{ (analytics()?.platformStats?.averageSuccessRate || 0).toFixed(1) }}%</h3>
+                        <p>Ortalama Başarı Oranı</p>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <mat-card class="stat-card">
+                <mat-card-content>
+                    <div class="stat-icon streak">
+                        <mat-icon>local_fire_department</mat-icon>
+                    </div>
+                    <div class="stat-info">
+                        <h3>{{ (analytics()?.platformStats?.averageCurrentStreak || 0).toFixed(1) }}</h3>
+                        <p>Ortalama Seri</p>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <mat-card class="stat-card">
+                <mat-card-content>
+                    <div class="stat-icon exercises">
+                        <mat-icon>fitness_center</mat-icon>
+                    </div>
+                    <div class="stat-info">
+                        <h3>{{ analytics()?.platformStats?.totalCompletedExercises || 0 }}</h3>
+                        <p>Tamamlanan Egzersiz</p>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-row">
+            <!-- Program Distribution -->
+            <mat-card class="chart-card">
+                <mat-card-header>
+                    <mat-card-title>Program Dağılımı</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="distribution-list">
+                        <div *ngFor="let program of analytics()!.programDistribution" class="distribution-item">
+                            <div class="distribution-header">
+                                <span class="program-name">{{ program.programName }}</span>
+                                <span class="program-count">{{ program.studentCount }} öğrenci</span>
+                            </div>
+                            <div class="distribution-bar">
+                                <div class="bar-fill" [style.width.%]="program.percentage"></div>
+                            </div>
+                            <div class="distribution-percentage">{{ program.percentage.toFixed(1) }}%</div>
+                        </div>
+
+                        <div *ngIf="analytics()!.programDistribution.length === 0" class="empty-state">
+                            <mat-icon>inbox</mat-icon>
+                            <p>Henüz program atanmamış</p>
+                        </div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <!-- Weekly Progress -->
+            <mat-card class="chart-card">
+                <mat-card-header>
+                    <mat-card-title>Haftalık İlerleme</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="weekly-progress-list">
+                        <div *ngFor="let week of analytics()!.weeklyProgress" class="week-item">
+                            <div class="week-header">
+                                <span class="week-label">Hafta {{ week.weekNumber }}</span>
+                                <span class="week-rate">{{ week.completionRate.toFixed(1) }}% tamamlama</span>
+                            </div>
+                            <div class="week-bar">
+                                <div class="bar-fill progress" [style.width.%]="week.averageProgress"
+                                    [attr.data-progress]="week.averageProgress.toFixed(0) + '%'">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div *ngIf="analytics()!.weeklyProgress.length === 0" class="empty-state">
+                            <mat-icon>inbox</mat-icon>
+                            <p>Henüz haftalık veri yok</p>
+                        </div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+
+        <!-- Recent Student Progress Table -->
+        <mat-card class="table-card">
+            <mat-card-header>
+                <mat-card-title>Son Öğrenci Aktiviteleri</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                <table mat-table [dataSource]="analytics()!.recentStudentProgress" class="students-table">
+                    <!-- Student Name Column -->
+                    <ng-container matColumnDef="student">
+                        <th mat-header-cell *matHeaderCellDef>Öğrenci</th>
+                        <td mat-cell *matCellDef="let student">
+                            <div class="student-info">
+                                <strong>{{ student.studentName }}</strong>
+                                <small>{{ student.studentEmail }}</small>
+                            </div>
+                        </td>
+                    </ng-container>
+
+                    <!-- Program Column -->
+                    <ng-container matColumnDef="program">
+                        <th mat-header-cell *matHeaderCellDef>Program</th>
+                        <td mat-cell *matCellDef="let student">
+                            <mat-chip>{{ student.programName }}</mat-chip>
+                        </td>
+                    </ng-container>
+
+                    <!-- Progress Column -->
+                    <ng-container matColumnDef="progress">
+                        <th mat-header-cell *matHeaderCellDef>İlerleme</th>
+                        <td mat-cell *matCellDef="let student">
+                            <div class="progress-info">
+                                <span>Hafta {{ student.currentWeek }}, Gün {{ student.currentDay }}</span>
+                                <small>Zorluk: {{ student.difficultyLevel }}</small>
+                            </div>
+                        </td>
+                    </ng-container>
+
+                    <!-- Streak Column -->
+                    <ng-container matColumnDef="streak">
+                        <th mat-header-cell *matHeaderCellDef>Seri</th>
+                        <td mat-cell *matCellDef="let student">
+                            <div class="streak-info">
+                                <span class="current-streak">
+                                    <mat-icon>local_fire_department</mat-icon>
+                                    {{ student.currentStreak }}
+                                </span>
+                                <small>En yüksek: {{ student.longestStreak }}</small>
+                            </div>
+                        </td>
+                    </ng-container>
+
+                    <!-- Success Rate Column -->
+                    <ng-container matColumnDef="successRate">
+                        <th mat-header-cell *matHeaderCellDef>Başarı</th>
+                        <td mat-cell *matCellDef="let student">
+                            <mat-chip [class]="getSuccessRateClass(student.successRate)">
+                                {{ student.successRate.toFixed(1) }}%
+                            </mat-chip>
+                        </td>
+                    </ng-container>
+
+                    <!-- Last Activity Column -->
+                    <ng-container matColumnDef="lastActivity">
+                        <th mat-header-cell *matHeaderCellDef>Son Aktivite</th>
+                        <td mat-cell *matCellDef="let student">
+                            {{ formatDate(student.lastActivityDate) }}
+                        </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                </table>
+
+                <div *ngIf="analytics()!.recentStudentProgress.length === 0" class="empty-table">
+                    <mat-icon>inbox</mat-icon>
+                    <p>Henüz öğrenci aktivitesi yok</p>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="!loading() && error()" class="error-state">
+        <mat-icon>error_outline</mat-icon>
+        <h3>Veri yüklenemedi</h3>
+        <p>{{ error() }}</p>
+        <button mat-raised-button color="primary" (click)="refreshData()">
+            <mat-icon>refresh</mat-icon>
+            Tekrar Dene
+        </button>
+    </div>
+</div>

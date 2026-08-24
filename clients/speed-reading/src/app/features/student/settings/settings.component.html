@@ -1,0 +1,234 @@
+<div class="settings-container">
+
+    <!-- 1. Hero Header -->
+    <div class="header-section">
+        <div class="title-area">
+            <h1>
+                <span class="material-icons">tune</span>
+                Ayarlar
+            </h1>
+            <div class="subtitle">Uygulama deneyimini kişiselleştir</div>
+        </div>
+    </div>
+
+    <div class="settings-content">
+        <div class="settings-card">
+            <!-- Tab Buttons -->
+            <div class="sp-tab-bar">
+                <button class="sp-tab-btn" [class.active]="activeTab === 0" (click)="activeTab = 0">Okuma Modu</button>
+                <button class="sp-tab-btn" [class.active]="activeTab === 1" (click)="activeTab = 1">Bildirimler</button>
+                <button class="sp-tab-btn" [class.active]="activeTab === 2" (click)="activeTab = 2">Gizlilik &amp; Hesap</button>
+            </div>
+
+            <!-- Tab 1: Reading Preferences -->
+            <div class="tab-content" *ngIf="activeTab === 0">
+                <div class="preferences-grid">
+
+                    <!-- Controls Column -->
+                    <div class="controls-column">
+                        <div class="section-title">Görünüm Ayarları</div>
+
+                        <!-- Font Size -->
+                        <div class="setting-group">
+                            <label>
+                                <span class="material-icons">format_size</span>
+                                Font Boyutu
+                            </label>
+                            <div class="slider-container">
+                                <input type="range" min="12" max="32" step="2" [(ngModel)]="settings.fontSize">
+                                <span class="value-badge">{{ settings.fontSize }}px</span>
+                            </div>
+                        </div>
+
+                        <!-- Font Family -->
+                        <div class="setting-group">
+                            <label>
+                                <span class="material-icons">font_download</span>
+                                Font Ailesi
+                            </label>
+                            <select class="sp-select full-width" [(ngModel)]="settings.fontFamily">
+                                <option value="Inter, sans-serif">Modern (Inter)</option>
+                                <option value="Georgia, serif">Klasik (Georgia)</option>
+                                <option value="'Courier New', monospace">Daktilo (Courier)</option>
+                                <option value="Verdana, sans-serif">Okunaklı (Verdana)</option>
+                            </select>
+                        </div>
+
+                        <!-- Theme -->
+                        <div class="setting-group">
+                            <label>
+                                <span class="material-icons">palette</span>
+                                Renk Teması
+                            </label>
+                            <div class="theme-picker">
+                                <button class="theme-option"
+                                    [class.theme-option--active]="themeService.theme() === 'light'"
+                                    (click)="onThemeChange('light')" type="button">
+                                    <span class="theme-option__preview theme-option__preview--light"></span>
+                                    <span class="theme-option__label">Aydınlık</span>
+                                    @if (themeService.theme() === 'light') {
+                                        <span class="material-icons theme-option__check">check_circle</span>
+                                    }
+                                </button>
+                                <button class="theme-option"
+                                    [class.theme-option--active]="themeService.theme() === 'dark'"
+                                    (click)="onThemeChange('dark')" type="button">
+                                    <span class="theme-option__preview theme-option__preview--dark"></span>
+                                    <span class="theme-option__label">Karanlık</span>
+                                    @if (themeService.theme() === 'dark') {
+                                        <span class="material-icons theme-option__check">check_circle</span>
+                                    }
+                                </button>
+                                <button class="theme-option"
+                                    [class.theme-option--active]="themeService.theme() === 'sepia'"
+                                    (click)="onThemeChange('sepia')" type="button">
+                                    <span class="theme-option__preview theme-option__preview--sepia"></span>
+                                    <span class="theme-option__label">Sepya</span>
+                                    @if (themeService.theme() === 'sepia') {
+                                        <span class="material-icons theme-option__check">check_circle</span>
+                                    }
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Spacing Controls -->
+                        <div class="setting-group">
+                            <label>
+                                <span class="material-icons">format_line_spacing</span>
+                                Satır Yüksekliği
+                            </label>
+                            <div class="slider-container">
+                                <input type="range" min="120" max="220" step="10" [(ngModel)]="settings.lineHeight">
+                                <span class="value-badge">%{{ settings.lineHeight }}</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Preview Column -->
+                    <div class="preview-column">
+                        <div class="section-title">Canlı Önizleme</div>
+
+                        <div class="preview-card" [class]="'theme-' + settings.theme"
+                            [style.fontSize.px]="settings.fontSize" [style.fontFamily]="settings.fontFamily"
+                            [style.lineHeight.%]="settings.lineHeight"
+                            [style.letterSpacing.px]="settings.letterSpacing">
+
+                            <div class="preview-header">
+                                <span class="material-icons">visibility</span>
+                                <span>Okuma Alanı</span>
+                            </div>
+
+                            <h4>Hızlı Okuma Nedir?</h4>
+                            <p>
+                                Hızlı okuma, metinleri daha kısa sürede, ancak anlam kaybı yaşamadan okuma
+                                becerisidir.
+                                Göz kaslarını eğiterek ve beynin algılama kapasitesini artırarak geliştirilir.
+                                Bu önizleme alanı, seçtiğiniz ayarların egzersizlerde nasıl görüneceğini size
+                                gösterir.
+                                Rahat bir okuma deneyimi için kendinize en uygun ayarları seçebilirsiniz.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Tab 2: Notifications -->
+            <div class="tab-content" *ngIf="activeTab === 1">
+                <div class="section-title">Bildirim Tercihleri</div>
+                <div class="toggles-list">
+
+                    <div class="toggle-card">
+                        <div class="info">
+                            <div class="icon-box"><span class="material-icons">schedule</span></div>
+                            <div class="text">
+                                <h4>Günlük Hatırlatma</h4>
+                                <p>Çalışma alışkanlığınızı korumak için hatırlatma alın.</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" [(ngModel)]="settings.dailyReminder">
+                    </div>
+
+                    @if (settings.dailyReminder) {
+                    <div class="toggle-card" style="margin-left: 2rem; border-left: 4px solid #6366f1;">
+                        <div class="info">
+                            <div class="text">
+                                <h4>Hatırlatma Saati</h4>
+                            </div>
+                        </div>
+                        <input type="time" [(ngModel)]="settings.reminderTime"
+                            style="width: auto; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px;">
+                    </div>
+                    }
+
+                    <div class="toggle-card">
+                        <div class="info">
+                            <div class="icon-box"><span class="material-icons">mail_outline</span></div>
+                            <div class="text">
+                                <h4>E-posta Bildirimleri</h4>
+                                <p>Önemli güncellemeler ve duyuruları e-posta ile alın.</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" [(ngModel)]="settings.emailNotifications">
+                    </div>
+
+                    <div class="toggle-card">
+                        <div class="info">
+                            <div class="icon-box"><span class="material-icons">emoji_events</span></div>
+                            <div class="text">
+                                <h4>Başarı Bildirimleri</h4>
+                                <p>Yeni bir rozet veya seviye kazandığınızda haberdar olun.</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" [(ngModel)]="settings.achievementNotifications">
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Tab 3: Privacy & Account -->
+            <div class="tab-content" *ngIf="activeTab === 2">
+                <div class="section-title">Gizlilik Ayarları</div>
+                <div class="toggles-list">
+
+                    <div class="toggle-card">
+                        <div class="info">
+                            <div class="icon-box"><span class="material-icons">school</span></div>
+                            <div class="text">
+                                <h4>Öğretmenle Paylaş</h4>
+                                <p>Gelişim raporlarının öğretmen tarafından görülmesine izin ver.</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" [(ngModel)]="settings.shareProgress">
+                    </div>
+
+                    <div class="toggle-card">
+                        <div class="info">
+                            <div class="icon-box"><span class="material-icons">analytics</span></div>
+                            <div class="text">
+                                <h4>Analitik Veriler</h4>
+                                <p>Uygulamayı geliştirmek için anonim kullanım verilerini paylaş.</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" [(ngModel)]="settings.allowAnalytics">
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="sp-btn sp-btn-warn" (click)="resetToDefaults()">
+                    <span class="material-icons">restart_alt</span>
+                    Varsayılana Dön
+                </button>
+                <button class="sp-btn sp-btn-primary" (click)="saveSettings()">
+                    <span class="material-icons">save_as</span>
+                    Değişiklikleri Kaydet
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>

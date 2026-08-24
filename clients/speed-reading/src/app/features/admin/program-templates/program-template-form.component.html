@@ -1,0 +1,205 @@
+<div class="form-container">
+    <!-- Header -->
+    <div class="header-section">
+        <button mat-icon-button (click)="goBack()">
+            <mat-icon>arrow_back</mat-icon>
+        </button>
+        <h1>{{ isEditMode ? 'Şablon Düzenle' : 'Yeni Şablon Oluştur' }}</h1>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading()" class="loading-state">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Yükleniyor...</p>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!loading()">
+        <mat-card>
+            <mat-card-header>
+                <mat-card-title>Genel Bilgiler</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                <div class="form-grid">
+                    <!-- Name -->
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Program Adı</mat-label>
+                        <input matInput formControlName="name" placeholder="Örn: 7-9 Yaş Temel Program">
+                        <mat-error *ngIf="form.get('name')?.hasError('required')">
+                            Program adı zorunludur
+                        </mat-error>
+                    </mat-form-field>
+
+                    <!-- Description -->
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Açıklama</mat-label>
+                        <textarea matInput formControlName="description" rows="3"
+                            placeholder="Program hakkında kısa açıklama"></textarea>
+                    </mat-form-field>
+
+                    <!-- Age Group -->
+                    <mat-form-field appearance="outline">
+                        <mat-label>Yaş Grubu</mat-label>
+                        <mat-select formControlName="targetAgeGroupId">
+                            @for (group of ageGroups(); track group.id) {
+                            <mat-option [value]="group.id">
+                                {{ group.displayName }} ({{ group.minAge }}-{{ group.maxAge ?? '∞' }} yaş)
+                            </mat-option>
+                            }
+                        </mat-select>
+                        <mat-hint *ngIf="ageGroups().length === 0">Yaş grupları yükleniyor...</mat-hint>
+                    </mat-form-field>
+
+                    <!-- Score Range -->
+                    <mat-form-field appearance="outline">
+                        <mat-label>Min Puan</mat-label>
+                        <input matInput type="number" formControlName="minAssessmentScore" min="0" max="100">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Max Puan</mat-label>
+                        <input matInput type="number" formControlName="maxAssessmentScore" min="0" max="100">
+                    </mat-form-field>
+
+                    <!-- Difficulty -->
+                    <mat-form-field appearance="outline">
+                        <mat-label>Başlangıç Zorluk</mat-label>
+                        <mat-select formControlName="initialDifficultyLevel">
+                            <mat-option [value]="1">Seviye 1</mat-option>
+                            <mat-option [value]="2">Seviye 2</mat-option>
+                            <mat-option [value]="3">Seviye 3</mat-option>
+                            <mat-option [value]="4">Seviye 4</mat-option>
+                            <mat-option [value]="5">Seviye 5</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Max Zorluk</mat-label>
+                        <mat-select formControlName="maxDifficultyLevel">
+                            <mat-option [value]="1">Seviye 1</mat-option>
+                            <mat-option [value]="2">Seviye 2</mat-option>
+                            <mat-option [value]="3">Seviye 3</mat-option>
+                            <mat-option [value]="4">Seviye 4</mat-option>
+                            <mat-option [value]="5">Seviye 5</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Kaç Haftada Zorluk Artar</mat-label>
+                        <input matInput type="number" formControlName="weeksPerDifficultyIncrease" min="1" max="10">
+                    </mat-form-field>
+
+                    <!-- Program Type -->
+                    <mat-form-field appearance="outline">
+                        <mat-label>Program Tipi</mat-label>
+                        <mat-select formControlName="programType" (selectionChange)="onProgramTypeChange()">
+                            <mat-option [value]="0">Standart Program</mat-option>
+                            <mat-option [value]="1">Sınav Hazırlık</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+
+                    <!-- Exam Type (only if ExamPrep) -->
+                    <mat-form-field appearance="outline" *ngIf="form.get('programType')?.value === 1">
+                        <mat-label>Sınav Türü</mat-label>
+                        <mat-select formControlName="examType">
+                            <mat-option value="LGS">LGS</mat-option>
+                            <mat-option value="LGS Yoğun">LGS Yoğun</mat-option>
+                            <mat-option value="YKS">YKS (TYT-AYT)</mat-option>
+                            <mat-option value="ALES">ALES</mat-option>
+                            <mat-option value="YDS">YDS</mat-option>
+                            <mat-option value="KPSS">KPSS</mat-option>
+                        </mat-select>
+                        <mat-hint>Sınav hazırlık programı için sınav türünü seçin</mat-hint>
+                    </mat-form-field>
+
+                    <!-- Display Order & Active -->
+                    <mat-form-field appearance="outline">
+                        <mat-label>Görüntüleme Sırası</mat-label>
+                        <input matInput type="number" formControlName="displayOrder" min="0">
+                    </mat-form-field>
+
+                    <div class="toggle-field">
+                        <mat-slide-toggle formControlName="isActive">
+                            Aktif
+                        </mat-slide-toggle>
+                    </div>
+
+                    <div class="toggle-field">
+                        <mat-slide-toggle formControlName="isAssessment">
+                            Seviye Tespit Sınavı Modu
+                        </mat-slide-toggle>
+                        <mat-icon
+                            style="font-size: 18px; width: 18px; height: 18px; margin-left: 8px; vertical-align: middle; cursor: help; opacity: 0.7;"
+                            matTooltip="Bu seçenek işaretlenirse, bu şablonun 1. Hafta/1. Gün egzersizleri seviye tespit sınavı olarak kullanılır.">
+                            help_outline
+                        </mat-icon>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+
+        <!-- Weekly Pattern Editor/JSON Toggle -->
+        <mat-card>
+            <mat-card-header>
+                <mat-card-title>Haftalık Egzersiz Pattern'i</mat-card-title>
+                <mat-button-toggle-group [(value)]="editorMode" (change)="onEditorModeChange()">
+                    <mat-button-toggle value="visual">
+                        <mat-icon>view_module</mat-icon>
+                        Görsel Editör
+                    </mat-button-toggle>
+                    <mat-button-toggle value="json">
+                        <mat-icon>code</mat-icon>
+                        JSON
+                    </mat-button-toggle>
+                </mat-button-toggle-group>
+            </mat-card-header>
+            <mat-card-content>
+                <!-- Visual Editor Mode -->
+                <div *ngIf="editorMode === 'visual'">
+                    <app-weekly-pattern-editor formControlName="weeklyPatternJson"
+                        [targetAgeGroupId]="form.get('targetAgeGroupId')?.value">
+                    </app-weekly-pattern-editor>
+                </div>
+
+                <!-- JSON Editor Mode -->
+                <div *ngIf="editorMode === 'json'">
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Weekly Pattern JSON</mat-label>
+                        <textarea matInput formControlName="weeklyPatternJson" rows="20"
+                            placeholder='{"week1": [...], "week2": [...], ...}'></textarea>
+                        <mat-error *ngIf="form.get('weeklyPatternJson')?.hasError('required')">
+                            Haftalık pattern zorunludur
+                        </mat-error>
+                        <mat-error *ngIf="form.get('weeklyPatternJson')?.hasError('invalidJson')">
+                            Geçersiz JSON formatı
+                        </mat-error>
+                    </mat-form-field>
+
+                    <button mat-raised-button type="button" (click)="loadDefaultPattern()">
+                        <mat-icon>settings_backup_restore</mat-icon>
+                        Varsayılan Pattern Yükle
+                    </button>
+
+                    <button mat-raised-button color="accent" type="button" (click)="validatePattern()"
+                        style="margin-left: 8px;">
+                        <mat-icon>check_circle</mat-icon>
+                        Pattern'i Doğrula
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button mat-button type="button" (click)="goBack()">
+                <mat-icon>cancel</mat-icon>
+                İptal
+            </button>
+            <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || saving">
+                <mat-spinner *ngIf="saving" diameter="20"></mat-spinner>
+                <mat-icon *ngIf="!saving">save</mat-icon>
+                {{ saving ? 'Kaydediliyor...' : 'Kaydet' }}
+            </button>
+        </div>
+    </form>
+</div>

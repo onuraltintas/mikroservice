@@ -1,0 +1,134 @@
+<div class="assessment-intro-page">
+  <!-- Animated Background -->
+  <div class="animated-background">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+  </div>
+
+  <div class="content-wrapper">
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <div class="hero-logo-container">
+        <img src="assets/images/logo.png" alt="Hızlı Okuma" class="hero-logo">
+      </div>
+
+      <h1 class="hero-title">Seviye Belirleme Testi <span class="title-emoji">🎯</span></h1>
+      <p class="hero-subtitle">Size en uygun öğrenme yolunu birlikte keşfedelim</p>
+    </div>
+
+    <!-- Info Cards -->
+    <div class="info-cards">
+      <div class="info-card">
+        <div class="card-icon timer">
+          <span class="material-icons">timer</span>
+        </div>
+        <h3>5-7 dk</h3>
+        <p>Kısa süre</p>
+      </div>
+
+      <div class="info-card">
+        <div class="card-icon exercises">
+          <span class="material-icons">assignment</span>
+        </div>
+        <h3>4 Test</h3>
+        <p>Hızlı ölçüm</p>
+      </div>
+
+      <div class="info-card">
+        <div class="card-icon personalized">
+          <span class="material-icons">stars</span>
+        </div>
+        <h3>Kişisel</h3>
+        <p>Özel plan</p>
+      </div>
+    </div>
+
+    <!-- Exercise Preview -->
+    <div class="exercise-preview-section">
+      <h2 class="section-title">
+        <span class="material-icons">checklist</span>
+        Ne Yapacaksınız?
+      </h2>
+
+      <div class="exercise-cards">
+        <div class="exercise-card">
+          <div class="exercise-badge">1</div>
+          <div class="exercise-icon comprehension">
+            <span class="material-icons">article</span>
+          </div>
+          <h3>Okuduğunu Anlama</h3>
+          <p>Kısa bir metni okuyup sorularını cevaplayacaksınız</p>
+          <div class="exercise-tag">~2 dakika</div>
+        </div>
+
+        <div class="exercise-card">
+          <div class="exercise-badge">2</div>
+          <div class="exercise-icon visual">
+            <span class="material-icons">visibility</span>
+          </div>
+          <h3>Görsel Genişleme</h3>
+          <p>Periferik görme alanınızı test edeceğiz</p>
+          <div class="exercise-tag">~2 dakika</div>
+        </div>
+
+        <div class="exercise-card">
+          <div class="exercise-badge">3</div>
+          <div class="exercise-icon focus">
+            <span class="material-icons">center_focus_strong</span>
+          </div>
+          <h3>Odaklanma</h3>
+          <p>Konsantrasyon becerilerinizi ölçeceğiz</p>
+          <div class="exercise-tag">~2 dakika</div>
+        </div>
+
+        <div class="exercise-card">
+          <div class="exercise-badge">4</div>
+          <div class="exercise-icon fixation">
+            <span class="material-icons">location_searching</span>
+          </div>
+          <h3>Göz Sıçrama</h3>
+          <p>Göz kaslarınızın çevikliğini test edeceğiz</p>
+          <div class="exercise-tag">~1 dakika</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Benefits Section -->
+    <div class="benefits-section">
+      <div class="benefit-item">
+        <span class="material-icons check-icon">check_circle</span>
+        <span>Seviyenize uygun egzersizlerle başlayın</span>
+      </div>
+      <div class="benefit-item">
+        <span class="material-icons check-icon">check_circle</span>
+        <span>Ne çok kolay ne çok zor - tam size göre</span>
+      </div>
+      <div class="benefit-item">
+        <span class="material-icons check-icon">check_circle</span>
+        <span>Sonuçları anında görün ve plan alın</span>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-section">
+      <button class="sp-btn start-btn" (click)="startAssessment()" [disabled]="loading">
+        <span class="material-icons">play_circle_filled</span>
+        Teste Başla
+      </button>
+
+      <button class="sp-btn skip-btn" (click)="skipAssessment()" [disabled]="loading">
+        Şimdilik Atla
+      </button>
+    </div>
+
+    <!-- Skip Info -->
+    <div class="skip-notice">
+      <span class="material-icons">info</span>
+      <p>
+        Testi atlarsanız başlangıç seviyesinden başlarsınız.
+        İstediğiniz zaman profilinizden teste girebilirsiniz.
+      </p>
+    </div>
+  </div>
+</div>

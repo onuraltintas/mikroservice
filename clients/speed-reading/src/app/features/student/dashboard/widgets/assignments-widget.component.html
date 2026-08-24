@@ -1,0 +1,72 @@
+<!-- Assignments Widget — Sprint 3 -->
+<div class="aw-widget" [class.aw-widget--pending]="getCardStatusClass() === 'status-pending'" [class.aw-widget--completed]="getCardStatusClass() === 'status-completed'">
+    <div class="aw-header">
+        <div class="aw-icon-wrap" [class.aw-icon-wrap--pending]="getCardStatusClass() === 'status-pending'" [class.aw-icon-wrap--completed]="getCardStatusClass() === 'status-completed'">
+            <span class="material-icons">{{ getStatusIcon() }}</span>
+        </div>
+        <div class="aw-header__text">
+            <h3 class="aw-header__title">Ödevlerim</h3>
+            @if (loading) {
+                <span class="aw-header__sub">Yükleniyor...</span>
+            } @else if (pendingCount > 0) {
+                <span class="aw-header__sub aw-header__sub--pending">{{ pendingCount }} Bekleyen Ödev</span>
+            } @else if (!loading && pendingCount === 0 && assignments.length > 0) {
+                <span class="aw-header__sub aw-header__sub--success">Tümü Tamamlandı!</span>
+            } @else {
+                <span class="aw-header__sub">Ödev Bulunmuyor</span>
+            }
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (loading) {
+        <div class="aw-loading">
+            <div class="aw-spinner"></div>
+        </div>
+    }
+
+    <!-- Empty State -->
+    @if (!loading && assignments.length === 0) {
+        <div class="aw-empty">
+            <div class="aw-empty__icon-wrap">
+                <span class="material-icons">assignment_turned_in</span>
+            </div>
+            <p class="aw-empty__text">Harika! Şu an bekleyen ödevin yok.</p>
+        </div>
+    }
+
+    <!-- Assignment List -->
+    @if (!loading && assignments.length > 0) {
+        <div class="aw-list">
+            @for (item of assignments; track item.studentAssignmentId) {
+                <div class="aw-item" [class.aw-item--completed]="item.isCompleted" (click)="!item.isCompleted ? startAssignment(item) : null">
+                    <div class="aw-item__strip" [class.aw-item__strip--overdue]="getAssignmentStatusClass(item) === 'status-overdue'" [class.aw-item__strip--soon]="getAssignmentStatusClass(item) === 'status-soon'" [class.aw-item__strip--normal]="getAssignmentStatusClass(item) === 'status-normal'" [class.aw-item__strip--done]="getAssignmentStatusClass(item) === 'status-done'"></div>
+                    <div class="aw-item__content">
+                        <div class="aw-item__main">
+                            <span class="aw-item__title">{{ item.title }}</span>
+                            <span class="aw-item__exercise">{{ item.exerciseTitle }}</span>
+                        </div>
+                        <div class="aw-item__meta">
+                            <span class="aw-item__due" [class.aw-item__due--error]="getDueDateClass(item) === 'text-error'" [class.aw-item__due--warning]="getDueDateClass(item) === 'text-warning'">
+                                <span class="material-icons">event</span>
+                                {{ formatDueDate(item.dueDate) }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="aw-item__action">
+                        @if (!item.isCompleted) {
+                            <span class="material-icons aw-item__play">play_circle_filled</span>
+                        } @else {
+                            <span class="material-icons aw-item__check">check_circle</span>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <button class="aw-view-all" (click)="viewAll()">
+            Tüm Ödev Geçmişi
+            <span class="material-icons">arrow_forward</span>
+        </button>
+    }
+</div>

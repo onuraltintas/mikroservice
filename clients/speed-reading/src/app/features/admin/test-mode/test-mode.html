@@ -1,0 +1,47 @@
+<div class="test-mode-container">
+    <div class="header">
+        <h1>🧪 Program Test Modu</h1>
+        <p>Bu sayfada kendinize bir program atayarak öğrenci deneyimini test edebilirsiniz.</p>
+    </div>
+
+    <div class="test-card">
+        <h2>1. Program Seçimi</h2>
+        <p class="hint">Test etmek istediğiniz programı seçin. Bu işlem mevcut aktif programınızı kapatacaktır.</p>
+
+        <mat-form-field appearance="outline" class="program-select">
+            <mat-label>Program Şablonu</mat-label>
+            <mat-select [(ngModel)]="selectedTemplateId">
+                <mat-option *ngFor="let template of templates" [value]="template.id">
+                    {{ template.name }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" class="start-btn" [disabled]="!selectedTemplateId || isLoading"
+            (click)="startTestProgram()">
+            <mat-icon>play_arrow</mat-icon>
+            {{ isLoading ? 'Başlatılıyor...' : 'Test Programını Başlat' }}
+        </button>
+    </div>
+
+    <div class="test-card success-card" *ngIf="programStarted">
+        <div class="success-content">
+            <mat-icon class="check-icon">check_circle</mat-icon>
+            <h2>Program Başarıyla Atandı!</h2>
+            <p>Şu anda bu programa kayıtlı bir öğrenci gibi davranabilirsiniz.</p>
+
+            <div class="action-buttons">
+                <button mat-raised-button color="accent" class="go-student-btn" (click)="goToStudentDashboard()">
+                    <mat-icon>school</mat-icon>
+                    Öğrenci Paneline Git
+                </button>
+            </div>
+
+            <div class="info-note">
+                <mat-icon>info</mat-icon>
+                <p>Öğrenci panelinde sadece adminlerin görebileceği <strong>"⚡ Günü Tamamla"</strong> butonunu
+                    kullanarak hızlıca ilerleyebilirsiniz.</p>
+            </div>
+        </div>
+    </div>
+</div>

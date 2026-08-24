@@ -1,0 +1,159 @@
+<!-- Loading -->
+<div class="loading-container" *ngIf="loading">
+  <mat-spinner diameter="48"></mat-spinner>
+  <p>Dashboard yükleniyor...</p>
+</div>
+
+<div class="teacher-dashboard" *ngIf="!loading">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-row">
+      <div class="header-text-group">
+        <h1>Sınıf Yönetimi Dashboard</h1>
+        <p class="subtitle">Öğrenci performans analizi ve sınıf istatistikleri</p>
+      </div>
+      <div class="institution-badge" *ngIf="institutionCode">
+        <mat-icon>vpn_key</mat-icon>
+        <div class="badge-content">
+          <span class="bad-label">Kurum Kodu</span>
+          <span class="bad-value">{{ institutionCode }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overview Stats -->
+  <div class="stats-grid">
+    <mat-card class="stat-card">
+      <div class="stat-icon students">
+        <mat-icon>people</mat-icon>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Toplam Öğrenci</span>
+        <span class="stat-value">{{ overview?.totalStudents ?? students.length }}</span>
+        <span class="stat-badge active">{{ overview?.activeStudents ?? 0 }} aktif</span>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-icon kdp">
+        <mat-icon>insights</mat-icon>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Sınıf Ort. KDP</span>
+        <span class="stat-value">{{ (overview?.classAverageWPM ?? 0) | number:'1.0-0' }}</span>
+        <span class="stat-description">Son 90 gün</span>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-icon comprehension">
+        <mat-icon>psychology</mat-icon>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Sınıf Ort. Kavrama</span>
+        <span class="stat-value">{{ (overview?.classAverageComprehension ?? 0) | number:'1.0-0' }}<small>%</small></span>
+        <span class="stat-description">{{ overview?.totalActivitiesCompleted ?? 0 }} egzersiz</span>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Class Distribution (from report) -->
+  <mat-card class="distribution-card" *ngIf="overview">
+    <div class="card-header">
+      <h2><mat-icon>pie_chart</mat-icon> Sınıf Performans Dağılımı</h2>
+    </div>
+    <div class="distribution-grid">
+      <div class="distribution-item excellent">
+        <div class="distribution-icon"><mat-icon>star</mat-icon></div>
+        <div class="distribution-info">
+          <span class="distribution-label">Ortalamanın Üstü</span>
+          <span class="distribution-count">{{ overview.studentsAboveAverage }} öğrenci</span>
+          <span class="distribution-percentage">{{ getDistributionPct(overview.studentsAboveAverage) }}%</span>
+        </div>
+      </div>
+      <div class="distribution-item good">
+        <div class="distribution-icon"><mat-icon>remove</mat-icon></div>
+        <div class="distribution-info">
+          <span class="distribution-label">Ortalamada</span>
+          <span class="distribution-count">{{ overview.studentsAtAverage }} öğrenci</span>
+          <span class="distribution-percentage">{{ getDistributionPct(overview.studentsAtAverage) }}%</span>
+        </div>
+      </div>
+      <div class="distribution-item needs-improvement">
+        <div class="distribution-icon"><mat-icon>trending_down</mat-icon></div>
+        <div class="distribution-info">
+          <span class="distribution-label">Desteğe İhtiyaç Duyuyor</span>
+          <span class="distribution-count">{{ overview.studentsBelowAverage }} öğrenci</span>
+          <span class="distribution-percentage">{{ getDistributionPct(overview.studentsBelowAverage) }}%</span>
+        </div>
+      </div>
+    </div>
+  </mat-card>
+
+  <!-- Student List -->
+  <mat-card class="students-table-card">
+    <div class="card-header">
+      <h2><mat-icon>leaderboard</mat-icon> Öğrenci Listesi</h2>
+    </div>
+
+    <div *ngIf="students.length === 0" class="empty-state">
+      <mat-icon>people_outline</mat-icon>
+      <p>Henüz öğrenci atanmamış.</p>
+      <button mat-raised-button color="primary" routerLink="/teacher/students">Öğrenci Ekle</button>
+    </div>
+
+    <div class="table-container" *ngIf="students.length > 0">
+      <table mat-table [dataSource]="students" class="performance-table">
+
+        <ng-container matColumnDef="studentName">
+          <th mat-header-cell *matHeaderCellDef>Öğrenci</th>
+          <td mat-cell *matCellDef="let s">
+            <div class="student-info">
+              <strong>{{ s.firstName }} {{ s.lastName }}</strong>
+              <span class="last-activity" *ngIf="s.lastLoginAt">
+                Son giriş: {{ formatDate(s.lastLoginAt) }}
+              </span>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="exercises">
+          <th mat-header-cell *matHeaderCellDef>Seviye</th>
+          <td mat-cell *matCellDef="let s">Seviye {{ s.currentLevel }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="kdp">
+          <th mat-header-cell *matHeaderCellDef>Hedef KDP</th>
+          <td mat-cell *matCellDef="let s">{{ s.targetWPM }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="comprehension">
+          <th mat-header-cell *matHeaderCellDef>Hedef Kavrama</th>
+          <td mat-cell *matCellDef="let s">{{ s.targetComprehension }}%</td>
+        </ng-container>
+
+        <ng-container matColumnDef="performance">
+          <th mat-header-cell *matHeaderCellDef>Durum</th>
+          <td mat-cell *matCellDef="let s">
+            <mat-chip [color]="s.isActive ? 'primary' : 'default'" selected>
+              {{ s.isActive ? 'Aktif' : 'Pasif' }}
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>İşlemler</th>
+          <td mat-cell *matCellDef="let s">
+            <button mat-icon-button (click)="viewStudentDetails(s.id)" title="Detayları Görüntüle">
+              <mat-icon>visibility</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </div>
+  </mat-card>
+</div>

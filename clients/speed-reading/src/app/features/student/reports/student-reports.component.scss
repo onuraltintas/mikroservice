@@ -1,0 +1,19 @@
+// Reports page
+.rp-page { max-width: var(--sp-content-max-width); }
+
+.rp-header { margin-bottom: 24px; }
+
+.rp-header__title {
+  font-family: var(--sp-font-sans);
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--sp-text-1);
+  margin: 0 0 4px;
+  letter-spacing: -0.02em;
+}
+
+.rp-header__sub {
+  font-size: 0.875rem;
+  color: var(--sp-text-2);
+  margin: 0;
+}

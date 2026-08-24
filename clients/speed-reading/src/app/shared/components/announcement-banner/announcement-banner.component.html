@@ -1,0 +1,31 @@
+<div *ngFor="let announcement of announcements" class="announcement-banner"
+    [class.announcement-pinned]="announcement.isPinned"
+    [class.announcement-urgent]="announcement.priority === Priority.Urgent"
+    [class.announcement-high]="announcement.priority === Priority.High"
+    [ngStyle]="{'background-color': announcement.colorTheme}">
+
+    <div class="announcement-content">
+        <div class="announcement-icon" *ngIf="announcement.icon">
+            <i [class]="announcement.icon"></i>
+        </div>
+
+        <div class="announcement-body">
+            <h3 class="announcement-title">
+                <span *ngIf="announcement.isPinned" class="pin-icon">📌</span>
+                {{ announcement.title }}
+            </h3>
+            <div class="announcement-text" [innerHTML]="announcement.content | safeHtml"></div>
+        </div>
+
+        <div class="announcement-actions">
+            <button *ngIf="announcement.actionUrl && announcement.actionText" class="action-button"
+                (click)="handleAction(announcement)">
+                {{ announcement.actionText }}
+            </button>
+
+            <button class="dismiss-button" (click)="dismiss(announcement)" title="Dismiss">
+                ✕
+            </button>
+        </div>
+    </div>
+</div>

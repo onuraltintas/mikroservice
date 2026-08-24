@@ -1,0 +1,149 @@
+<div class="health-report">
+    @if (loading()) {
+    <div class="loading"><mat-spinner></mat-spinner></div>
+    } @else if (report()) {
+
+    <!-- Overall Health Card -->
+    <mat-card class="health-card">
+        <mat-card-header>
+            <mat-card-title>Sistem Sağlık Durumu</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <div class="health-status">
+                <div class="health-gauge">
+                    <app-gauge-chart [value]="report()!.overallHealthScore" [min]="0" [max]="100"
+                        units=""></app-gauge-chart>
+                </div>
+                <div class="health-info">
+                    <h2 [class]="'status-' + report()!.healthStatus.toLowerCase()">{{ report()!.healthStatus }}</h2>
+                    <p class="health-score">Genel Sağlık Skoru: {{ report()!.overallHealthScore.toFixed(1) }}/100</p>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Platform Statistics -->
+    <div class="stats-grid">
+        <mat-card>
+            <mat-card-content>
+                <div class="stat">{{ report()!.averagePlatformWPM.toFixed(0) }}</div>
+                <div class="label">Ort. Platform WPM</div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-content>
+                <div class="stat">{{ report()!.averagePlatformComprehension.toFixed(1) }}%</div>
+                <div class="label">Ort. Anlama</div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-content>
+                <div class="stat">{{ report()!.userSatisfactionScore.toFixed(1) }}</div>
+                <div class="label">Kullanıcı Memnuniyeti</div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-content>
+                <div class="stat">{{ report()!.successRate.toFixed(1) }}%</div>
+                <div class="label">Başarı Oranı</div>
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+    <div class="stats-grid">
+        <mat-card>
+            <mat-card-content>
+                <div class="stat">{{ report()!.totalExercisesCompleted }}</div>
+                <div class="label">Tamamlanan Egzersiz</div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-content>
+                <div class="stat">{{ report()!.totalQuestionsAnswered }}</div>
+                <div class="label">Cevaplanan Soru</div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-content>
+                <div class="stat error">{{ report()!.errorRate.toFixed(2) }}%</div>
+                <div class="label">Hata Oranı</div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-content>
+                <div class="stat">{{ report()!.systemAlerts.length || 0 }}</div>
+                <div class="label">Sistem Uyarısı</div>
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+        <mat-card>
+            <mat-card-header>
+                <mat-card-title>Sağlık Trendi</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                @if (report()!.healthTrend && report()!.healthTrend.length > 0) {
+                <div class="chart"><app-line-chart [data]="transformChartData(report()!.healthTrend)"></app-line-chart>
+                </div>
+                } @else {
+                <p class="no-data">Sağlık trendi verisi bulunamadı</p>
+                }
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-header>
+                <mat-card-title>Performans Trendi</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                @if (report()!.performanceTrend && report()!.performanceTrend.length > 0) {
+                <div class="chart"><app-line-chart
+                        [data]="transformChartData(report()!.performanceTrend)"></app-line-chart></div>
+                } @else {
+                <p class="no-data">Performans verisi bulunamadı</p>
+                }
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+    <!-- System Alerts -->
+    @if (report()!.systemAlerts && report()!.systemAlerts.length > 0) {
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>Sistem Uyarıları</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <table mat-table [dataSource]="report()!.systemAlerts" class="alerts-table">
+                <ng-container matColumnDef="severity">
+                    <th mat-header-cell *matHeaderCellDef>Önem Derecesi</th>
+                    <td mat-cell *matCellDef="let alert">
+                        <mat-chip [class]="'severity-' + alert.severity.toLowerCase()">{{ alert.severity }}</mat-chip>
+                    </td>
+                </ng-container>
+                <ng-container matColumnDef="type">
+                    <th mat-header-cell *matHeaderCellDef>Tür</th>
+                    <td mat-cell *matCellDef="let alert">{{ alert.alertType }}</td>
+                </ng-container>
+                <ng-container matColumnDef="message">
+                    <th mat-header-cell *matHeaderCellDef>Mesaj</th>
+                    <td mat-cell *matCellDef="let alert">{{ alert.message }}</td>
+                </ng-container>
+                <ng-container matColumnDef="time">
+                    <th mat-header-cell *matHeaderCellDef>Tespit Zamanı</th>
+                    <td mat-cell *matCellDef="let alert">{{ alert.detectedAt | date:'short' }}</td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="['severity','type','message','time']"></tr>
+                <tr mat-row *matRowDef="let r; columns: ['severity','type','message','time']"></tr>
+            </table>
+        </mat-card-content>
+    </mat-card>
+    } @else {
+    <mat-card>
+        <mat-card-content>
+            <p class="no-alerts">✅ Sistem sağlıklı çalışıyor, aktif uyarı bulunmuyor.</p>
+        </mat-card-content>
+    </mat-card>
+    }
+    }
+</div>

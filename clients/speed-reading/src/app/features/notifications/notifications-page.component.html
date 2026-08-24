@@ -1,0 +1,90 @@
+<div class="notifications-page">
+  <div class="page-header">
+    <h1>Bildirimler</h1>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="markAllAsRead()"
+      [disabled]="unreadNotifications.length === 0">
+      <mat-icon>done_all</mat-icon>
+      Tümünü Okundu Olarak İşaretle
+    </button>
+  </div>
+
+  <mat-card class="notifications-card">
+    <mat-tab-group (selectedIndexChange)="onTabChange($event)" [selectedIndex]="selectedTab">
+      <mat-tab label="Tümü ({{ allNotifications.length }})"></mat-tab>
+      <mat-tab label="Okunmamış ({{ unreadNotifications.length }})"></mat-tab>
+      <mat-tab label="Okunmuş ({{ readNotifications.length }})"></mat-tab>
+    </mat-tab-group>
+
+    <div class="notifications-list" *ngIf="!loading && getCurrentList().length > 0">
+      <div
+        *ngFor="let notification of getCurrentList()"
+        class="notification-item"
+        [class.unread]="!notification.isRead"
+        [class.high-priority]="notification.priority === 3"
+        [class.urgent-priority]="notification.priority === 4"
+        (click)="onNotificationClick(notification)"
+      >
+        <div class="notification-icon" [style.color]="getPriorityColor(notification)">
+          <mat-icon>{{ getNotificationIcon(notification) }}</mat-icon>
+        </div>
+
+        <div class="notification-content">
+          <div class="notification-header">
+            <div class="notification-title-group">
+              <h3 class="notification-title">{{ notification.title }}</h3>
+              <mat-chip class="notification-type" size="small">
+                {{ getNotificationTypeLabel(notification.type) }}
+              </mat-chip>
+            </div>
+            <span class="notification-time">{{ getRelativeTime(notification.createdAt) }}</span>
+          </div>
+
+          <p class="notification-message">{{ notification.message }}</p>
+
+          <div class="notification-actions">
+            <button
+              mat-icon-button
+              *ngIf="!notification.isRead"
+              (click)="markAsRead(notification, $event)"
+              title="Okundu olarak işaretle"
+              class="action-btn">
+              <mat-icon>check</mat-icon>
+            </button>
+
+            <button
+              mat-icon-button
+              (click)="deleteNotification(notification, $event)"
+              title="Sil"
+              class="action-btn delete">
+              <mat-icon>delete</mat-icon>
+            </button>
+
+            <button
+              mat-icon-button
+              *ngIf="notification.actionUrl"
+              title="Görüntüle"
+              class="action-btn">
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="!loading && getCurrentList().length === 0">
+      <mat-icon>notifications_none</mat-icon>
+      <h2>Bildirim Bulunamadı</h2>
+      <p *ngIf="selectedTab === 1">Okunmamış bildiriminiz yok</p>
+      <p *ngIf="selectedTab === 2">Okunmuş bildiriminiz yok</p>
+      <p *ngIf="selectedTab === 0">Henüz hiç bildiriminiz yok</p>
+    </div>
+
+    <div class="loading-state" *ngIf="loading">
+      <mat-icon>hourglass_empty</mat-icon>
+      <p>Bildirimler yükleniyor...</p>
+    </div>
+  </mat-card>
+</div>

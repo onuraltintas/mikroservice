@@ -1,0 +1,168 @@
+<div class="legal-documents-container">
+  <div class="header">
+    <h2>Yasal Dokümanlar Yönetimi</h2>
+    <button class="btn btn-primary" (click)="openCreateForm()" [disabled]="loading">
+      <i class="fas fa-plus"></i> Yeni Doküman
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="filter-group">
+      <label>Tip:</label>
+      <select [(ngModel)]="filterType" (change)="applyFilters()">
+        <option value="all">Tümü</option>
+        <option [value]="LegalDocumentType.TermsOfService">Kullanım Koşulları</option>
+        <option [value]="LegalDocumentType.PrivacyPolicy">Gizlilik Politikası</option>
+        <option [value]="LegalDocumentType.KVKK">KVKK</option>
+        <option [value]="LegalDocumentType.CookiePolicy">Çerez Politikası</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Dil:</label>
+      <select [(ngModel)]="filterLanguage" (change)="applyFilters()">
+        <option value="all">Tümü</option>
+        <option value="tr">Türkçe</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Durum:</label>
+      <select [(ngModel)]="filterActive" (change)="applyFilters()">
+        <option value="all">Tümü</option>
+        <option value="active">Aktif</option>
+        <option value="inactive">Pasif</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading">
+    <i class="fas fa-spinner fa-spin"></i> Yükleniyor...
+  </div>
+
+  <!-- Documents Table -->
+  <div *ngIf="!loading && !showForm" class="table-container">
+    <table class="documents-table">
+      <thead>
+        <tr>
+          <th>Tip</th>
+          <th>Başlık</th>
+          <th>Versiyon</th>
+          <th>Dil</th>
+          <th>Yürürlük Tarihi</th>
+          <th>Durum</th>
+          <th>İşlemler</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let doc of filteredDocuments">
+          <td>
+            <span class="badge" [ngClass]="'badge-' + doc.type">
+              {{ getTypeLabel(doc.type) }}
+            </span>
+          </td>
+          <td>{{ doc.title }}</td>
+          <td>{{ doc.version }}</td>
+          <td>{{ doc.language.toUpperCase() }}</td>
+          <td>{{ doc.effectiveDate | date: 'dd.MM.yyyy' }}</td>
+          <td>
+            <span class="status" [ngClass]="doc.isActive ? 'active' : 'inactive'">
+              {{ doc.isActive ? 'Aktif' : 'Pasif' }}
+            </span>
+          </td>
+          <td class="actions">
+            <button class="btn btn-sm btn-info" (click)="openEditForm(doc)" title="Düzenle">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-sm" [ngClass]="doc.isActive ? 'btn-warning' : 'btn-success'"
+              (click)="toggleActive(doc)" [title]="doc.isActive ? 'Pasif Yap' : 'Aktif Yap'">
+              <i class="fas" [ngClass]="doc.isActive ? 'fa-eye-slash' : 'fa-eye'"></i>
+            </button>
+            <button class="btn btn-sm btn-danger" (click)="deleteDocument(doc)" title="Sil">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="filteredDocuments.length === 0">
+          <td colspan="7" class="no-data">Doküman bulunamadı</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Create/Edit Form -->
+  <div *ngIf="showForm" class="form-container">
+    <div class="form-header">
+      <h3>{{ editingDocument ? 'Doküman Düzenle' : 'Yeni Doküman' }}</h3>
+      <button class="btn btn-secondary" (click)="closeForm()">
+        <i class="fas fa-times"></i> İptal
+      </button>
+    </div>
+
+    <form (ngSubmit)="saveDocument()">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tip *</label>
+          <select [(ngModel)]="formData.type" name="type" required>
+            <option [ngValue]="LegalDocumentType.TermsOfService">Kullanım Koşulları</option>
+            <option [ngValue]="LegalDocumentType.PrivacyPolicy">Gizlilik Politikası</option>
+            <option [ngValue]="LegalDocumentType.KVKK">KVKK</option>
+            <option [ngValue]="LegalDocumentType.CookiePolicy">Çerez Politikası</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Versiyon *</label>
+          <input type="text" [(ngModel)]="formData.version" name="version" required placeholder="1.0">
+        </div>
+
+        <div class="form-group">
+          <label>Dil *</label>
+          <select [(ngModel)]="formData.language" name="language" required>
+            <option value="tr">Türkçe</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Yürürlük Tarihi *</label>
+          <input type="date" [(ngModel)]="formData.effectiveDate" name="effectiveDate" required>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" [(ngModel)]="formData.isActive" name="isActive">
+            Aktif
+          </label>
+          <small class="help-text">Aktif yapıldığında aynı tip ve dildeki diğer dokümanlar pasif olur</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Başlık *</label>
+        <input type="text" [(ngModel)]="formData.title" name="title" required placeholder="Kullanım Koşulları">
+      </div>
+
+      <div class="form-group">
+        <label>İçerik (HTML) *</label>
+        <textarea [(ngModel)]="formData.content" name="content" required rows="15"
+          placeholder="<h1>Başlık</h1><p>İçerik...</p>"></textarea>
+        <small class="help-text">HTML formatında içerik girebilirsiniz</small>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="loading">
+          <i class="fas fa-save"></i> {{ editingDocument ? 'Güncelle' : 'Oluştur' }}
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="closeForm()">
+          <i class="fas fa-times"></i> İptal
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

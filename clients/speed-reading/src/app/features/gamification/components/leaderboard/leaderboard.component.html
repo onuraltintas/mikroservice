@@ -1,0 +1,97 @@
+<div class="leaderboard-container">
+  <!-- Header -->
+  <div class="leaderboard-header">
+    <div class="header-content">
+      <mat-icon class="header-icon">emoji_events</mat-icon>
+      <h2 class="header-title">Liderlik Tablosu</h2>
+    </div>
+    <p class="header-subtitle">En iyi performans gösterenleri takip edin</p>
+  </div>
+
+  <!-- Type Filters -->
+  <div class="type-filters">
+    <div class="filter-chips">
+      <button
+        *ngFor="let typeOption of leaderboardTypes"
+        class="filter-chip"
+        [class.selected]="selectedType === typeOption.type"
+        (click)="selectType(typeOption.type)">
+        <mat-icon>{{ typeOption.icon }}</mat-icon>
+        <span>{{ typeOption.label }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Liderlik tablosu yükleniyor...</p>
+  </div>
+
+  <!-- Leaderboard List -->
+  <mat-card class="leaderboard-card" *ngIf="!isLoading">
+    <mat-card-content>
+      <div class="leaderboard-list">
+        <!-- Leaderboard Entry -->
+        <div
+          *ngFor="let entry of leaderboardEntries; let i = index"
+          class="leaderboard-entry"
+          [class.current-user]="isCurrentUser(entry.userId)"
+          [class.top-rank]="entry.rank <= 3">
+
+          <!-- Rank -->
+          <div class="rank-badge" [class]="getRankClass(entry.rank)">
+            <span class="rank-text">{{ getRankIcon(entry.rank) }}</span>
+          </div>
+
+          <!-- User Info -->
+          <div class="user-info">
+            <div class="user-header">
+              <div class="level-badge" [style.background]="getTierColor(entry.level)">
+                <span class="level-icon">{{ entry.levelIcon }}</span>
+                <span class="level-number">{{ entry.level }}</span>
+              </div>
+              <div class="user-details">
+                <h3 class="user-name">
+                  {{ entry.userName }}
+                  <mat-icon class="current-user-icon" *ngIf="isCurrentUser(entry.userId)">
+                    check_circle
+                  </mat-icon>
+                </h3>
+                <p class="level-title">{{ entry.levelTitle }}</p>
+              </div>
+            </div>
+
+            <!-- Showcased Achievements -->
+            <div class="showcased-achievements" *ngIf="entry.showcasedAchievements.length > 0">
+              <app-achievement-badge
+                *ngFor="let achievement of entry.showcasedAchievements"
+                [achievement]="achievement"
+                [unlocked]="true"
+                size="small">
+              </app-achievement-badge>
+            </div>
+          </div>
+
+          <!-- Value -->
+          <div class="entry-value">
+            <span class="value-number">{{ formatValue(entry.value) }}</span>
+            <span class="value-unit">{{ getValueUnit() }}</span>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="leaderboardEntries.length === 0">
+          <mat-icon>emoji_events</mat-icon>
+          <h3>Henüz veri yok</h3>
+          <p>Liderlik tablosunda görünmek için aktivite yapmaya başlayın!</p>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Footer Info -->
+  <div class="leaderboard-footer" *ngIf="!isLoading && leaderboardEntries.length > 0">
+    <p>Toplam {{ leaderboardEntries.length }} kullanıcı gösteriliyor</p>
+  </div>
+</div>

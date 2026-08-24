@@ -1,0 +1,102 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2><mat-icon>flag</mat-icon> Hedefler</h2>
+    <button mat-raised-button color="primary" (click)="openNewGoal()">
+      <mat-icon>add</mat-icon> Yeni Hedef
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Seviye</mat-label>
+          <mat-select [(ngModel)]="filterLevel" (selectionChange)="onFilter()">
+            <mat-option *ngFor="let o of levelOptions" [value]="o.value">{{ o.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Durum</mat-label>
+          <mat-select [(ngModel)]="filterStatus" (selectionChange)="onFilter()">
+            <mat-option *ngFor="let o of statusOptions" [value]="o.value">{{ o.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="loading()" class="loading-container"><mat-spinner diameter="40"></mat-spinner></div>
+      <div *ngIf="!loading() && goals.length === 0" class="empty-state">
+        <mat-icon>flag_outlined</mat-icon>
+        <p>Henüz hedef yok</p>
+      </div>
+
+      <table mat-table [dataSource]="goals" *ngIf="!loading() && goals.length > 0" class="full-width-table">
+        <ng-container matColumnDef="student">
+          <th mat-header-cell *matHeaderCellDef>Öğrenci</th>
+          <td mat-cell *matCellDef="let g">
+            <a [routerLink]="['/coaching/students', g.studentId]" class="student-link">
+              <mat-icon class="icon-sm">person</mat-icon>
+              {{ getStudentLabel(g.studentId) }}
+            </a>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef>Başlık</th>
+          <td mat-cell *matCellDef="let g">
+            <span [matTooltip]="g.successCriteria">{{ g.title }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="level">
+          <th mat-header-cell *matHeaderCellDef>Seviye</th>
+          <td mat-cell *matCellDef="let g">
+            <span class="level-badge level-{{ g.level.toLowerCase() }}">{{ levelLabels[g.level] }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="targetDate">
+          <th mat-header-cell *matHeaderCellDef>Hedef Tarih</th>
+          <td mat-cell *matCellDef="let g">{{ g.targetDate | date:'dd.MM.yyyy' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="progress">
+          <th mat-header-cell *matHeaderCellDef>İlerleme</th>
+          <td mat-cell *matCellDef="let g" style="min-width:140px">
+            <div class="progress-cell">
+              <mat-progress-bar mode="determinate" [value]="g.completionPercentage"></mat-progress-bar>
+              <span class="progress-label">%{{ g.completionPercentage | number:'1.0-0' }}</span>
+            </div>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Durum</th>
+          <td mat-cell *matCellDef="let g">
+            <span class="status-badge status-{{ g.status === 'Active' ? 'active' : g.status === 'Completed' ? 'completed' : 'cancelled' }}">
+              {{ statusLabels[g.status] }}
+            </span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let g">
+            <button mat-icon-button matTooltip="İlerleme Güncelle" (click)="checkIn(g)" *ngIf="g.status === 'Active'">
+              <mat-icon>update</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="delete">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let g">
+            <button mat-icon-button color="warn" matTooltip="Sil" (click)="deleteGoal(g)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <mat-paginator *ngIf="!loading() && total > 0"
+        [length]="total" [pageSize]="pageSize" [pageIndex]="page - 1"
+        [pageSizeOptions]="[10, 20, 50]" showFirstLastButtons
+        (page)="onPage($event)">
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

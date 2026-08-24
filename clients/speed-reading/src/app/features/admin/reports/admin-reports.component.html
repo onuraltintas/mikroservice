@@ -1,0 +1,37 @@
+<div class="reports-container">
+    <div class="reports-header">
+        <h1>Yönetici Raporları</h1>
+        @if (showGlobalControls()) {
+        <div class="controls">
+            <mat-form-field appearance="outline">
+                <mat-label>Tarih Aralığı</mat-label>
+                <mat-select [formControl]="dateRangeControl" (selectionChange)="onDateRangeChange()">
+                    <mat-option value="last7days">Son 7 Gün</mat-option>
+                    <mat-option value="last30days">Son 30 Gün</mat-option>
+                    <mat-option value="last3months">Son 3 Ay</mat-option>
+                    <mat-option value="custom">Özel</mat-option>
+                </mat-select>
+            </mat-form-field>
+            @if (dateRangeControl.value === 'custom') {
+            <mat-form-field appearance="outline">
+                <mat-label>Başlangıç</mat-label>
+                <input matInput [matDatepicker]="sp" [formControl]="startDateControl">
+                <mat-datepicker-toggle matSuffix [for]="sp"></mat-datepicker-toggle>
+                <mat-datepicker #sp></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+                <mat-label>Bitiş</mat-label>
+                <input matInput [matDatepicker]="ep" [formControl]="endDateControl">
+                <mat-datepicker-toggle matSuffix [for]="ep"></mat-datepicker-toggle>
+                <mat-datepicker #ep></mat-datepicker>
+            </mat-form-field>
+            }
+            <button mat-raised-button color="primary" (click)="exportReport()"><mat-icon>download</mat-icon>
+                Dışa Aktar</button>
+        </div>
+        }
+    </div>
+    <div class="report-content">
+        <router-outlet></router-outlet>
+    </div>
+</div>

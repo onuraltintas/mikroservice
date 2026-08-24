@@ -1,0 +1,257 @@
+<div class="learning-path-container">
+  <!-- Header -->
+  <div class="path-header">
+    <button class="sp-btn" (click)="goToDashboard()" class="back-button">
+      <span class="material-icons">arrow_back</span>
+    </button>
+    <h1 class="path-title">{{ pathProgress?.templateName || 'Öğrenme Yolum' }}</h1>
+    <button class="sp-btn" (click)="refreshPath()" class="refresh-button">
+      <span class="material-icons">refresh</span>
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="sp-bar"><div class="sp-bar-fill" style="width:100%"></div></div>
+    <p>Öğrenme yolu yükleniyor...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="error-container">
+    <span class="material-icons error-icon">error_outline</span>
+    <p>{{ error }}</p>
+    <button class="sp-btn" (click)="goToDashboard()">
+      Dashboard'a Dön
+    </button>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="pathProgress && !isLoading && !error" class="path-content">
+
+    <!-- Progress Statistics -->
+    <div class="sp-card statistics-card">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="material-icons stat-icon">emoji_events</span>
+          <div class="stat-value">{{ pathStatistics?.earnedPoints || 0 }}</div>
+          <div class="stat-label">Toplam Puan</div>
+        </div>
+
+        <div class="stat-item">
+          <span class="material-icons stat-icon">stars</span>
+          <div class="stat-value">{{ pathStatistics?.totalStars || 0 }}</div>
+          <div class="stat-label">Toplam Yıldız</div>
+        </div>
+
+        <div class="stat-item">
+          <span class="material-icons stat-icon">check_circle</span>
+          <div class="stat-value">{{ pathProgress.completedNodes }} / {{ pathProgress.totalNodes }}</div>
+          <div class="stat-label">Tamamlanan Node</div>
+        </div>
+
+        <div class="stat-item">
+          <span class="material-icons stat-icon">schedule</span>
+          <div class="stat-value">{{ pathStatistics?.timeSpentHours || 0 }}sa</div>
+          <div class="stat-label">Harcanan Süre</div>
+        </div>
+      </div>
+
+      <div class="progress-bar-container">
+        <div class="progress-label">
+          <span>Genel İlerleme</span>
+          <span class="progress-percentage">{{ pathProgress.completionPercentage | number:'1.0-0' }}%</span>
+        </div>
+        <div class="sp-bar path-progress-bar">
+          <div class="sp-bar-fill" [style.width.%]="pathProgress.completionPercentage"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Skill Tree SVG -->
+    <div class="sp-card skill-tree-card">
+      <div class="tree-legend">
+        <div class="legend-item">
+          <div class="legend-icon locked"></div>
+          <span>Kilitli</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-icon unlocked"></div>
+          <span>Açık</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-icon in-progress"></div>
+          <span>Devam Ediyor</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-icon completed"></div>
+          <span>Tamamlandı</span>
+        </div>
+      </div>
+
+      <div class="svg-container">
+        <svg [attr.viewBox]="'0 0 ' + svgWidth + ' ' + svgHeight"
+             xmlns="http://www.w3.org/2000/svg"
+             class="skill-tree-svg">
+
+          <!-- Connections (draw first, under nodes) -->
+          <g class="connections-layer">
+            <ng-container *ngFor="let node of pathProgress.nodes">
+              <ng-container *ngFor="let prerequisite of getNodeConnections(node)">
+                <path
+                  [attr.d]="getConnectionPath(prerequisite, node)"
+                  [attr.stroke]="node.status === 'Completed' ? '#4CAF50' : '#CCCCCC'"
+                  [attr.stroke-width]="node.status === 'Completed' ? 3 : 2"
+                  stroke-linecap="round"
+                  fill="none"
+                  [attr.opacity]="node.status === 'Locked' ? 0.3 : 0.7"
+                  class="connection-path"
+                />
+
+                <!-- Arrow head -->
+                <circle
+                  [attr.cx]="getNodePosition(node).x"
+                  [attr.cy]="getNodePosition(node).y - getNodeRadius(node)"
+                  r="5"
+                  [attr.fill]="node.status === 'Completed' ? '#4CAF50' : '#CCCCCC'"
+                  [attr.opacity]="node.status === 'Locked' ? 0.3 : 0.7"
+                />
+              </ng-container>
+            </ng-container>
+          </g>
+
+          <!-- Nodes -->
+          <g class="nodes-layer">
+            <ng-container *ngFor="let node of pathProgress.nodes">
+              <g [attr.transform]="'translate(' + getNodePosition(node).x + ',' + getNodePosition(node).y + ')'"
+                 class="node-group"
+                 [class.node-locked]="node.status === 'Locked'"
+                 [class.node-unlocked]="node.status === 'Unlocked'"
+                 [class.node-in-progress]="node.status === 'InProgress'"
+                 [class.node-completed]="node.status === 'Completed'"
+                 [attr.opacity]="getNodeOpacity(node)"
+                 (click)="onNodeClick(node)">
+
+                <!-- Outer glow for current node -->
+                <circle
+                  *ngIf="node.nodeId === pathProgress.currentNodeId"
+                  [attr.r]="getNodeRadius(node) + 10"
+                  fill="none"
+                  stroke="#FF9800"
+                  stroke-width="4"
+                  opacity="0.5"
+                  class="node-glow pulse-animation"
+                />
+
+                <!-- Main node circle -->
+                <circle
+                  [attr.r]="getNodeRadius(node)"
+                  [attr.fill]="getNodeFillColor(node)"
+                  [attr.stroke]="getNodeStrokeColor(node)"
+                  [attr.stroke-width]="getNodeStrokeWidth(node)"
+                  [style.cursor]="getNodeCursor(node)"
+                  class="node-circle"
+                />
+
+                <!-- Icon -->
+                <text
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                  fill="white"
+                  font-size="20"
+                  font-weight="bold"
+                  class="node-icon">
+                  {{ node.level }}
+                </text>
+
+                <!-- Stars (if completed) -->
+                <text
+                  *ngIf="node.status === 'Completed' && node.stars"
+                  text-anchor="middle"
+                  [attr.y]="getNodeRadius(node) + 20"
+                  font-size="16"
+                  class="node-stars">
+                  {{ NodeHelper.getStarIcon(node.stars) }}
+                </text>
+
+                <!-- Label -->
+                <text
+                  text-anchor="middle"
+                  [attr.y]="getNodeRadius(node) + 40"
+                  font-size="14"
+                  font-weight="500"
+                  fill="#333"
+                  class="node-label">
+                  {{ node.title }}
+                </text>
+
+                <!-- Completion percentage (if in progress) -->
+                <text
+                  *ngIf="node.status === 'InProgress'"
+                  text-anchor="middle"
+                  [attr.y]="getNodeRadius(node) + 56"
+                  font-size="12"
+                  fill="#666"
+                  class="node-percentage">
+                  {{ node.completionPercentage | number:'1.0-0' }}%
+                </text>
+              </g>
+            </ng-container>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Selected Node Details -->
+    <div *ngIf="selectedNode" class="sp-card node-details-card">
+      <div class="sp-card-header">
+        <div class="sp-card-title">
+          <span class="material-icons">{{ NodeHelper.getStatusIcon(selectedNode.status) }}</span>
+          {{ selectedNode.title }}
+        </div>
+        <button class="sp-btn" (click)="selectedNode = null">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div>
+        <p class="node-description">{{ selectedNode.description }}</p>
+
+        <div class="node-info-grid">
+          <div class="info-item">
+            <strong>Seviye:</strong> {{ selectedNode.level }}
+          </div>
+          <div class="info-item">
+            <strong>Durum:</strong>
+            <span class="sp-chip">{{ selectedNode.status }}</span>
+          </div>
+          <div class="info-item" *ngIf="selectedNode.score">
+            <strong>Skor:</strong> {{ selectedNode.score | number:'1.0-0' }}
+          </div>
+          <div class="info-item" *ngIf="selectedNode.stars">
+            <strong>Yıldız:</strong> {{ NodeHelper.getStarIcon(selectedNode.stars) }}
+          </div>
+        </div>
+
+        <div class="node-contents">
+          <h4>İçerikler ({{ selectedNode.completedContentCount }} / {{ selectedNode.totalContentCount }})</h4>
+          <div class="content-list">
+            <div *ngFor="let content of selectedNode.contents" class="content-item">
+              <span class="material-icons" [class.completed]="content.isCompleted">
+                {{ content.isCompleted ? 'check_circle' : 'radio_button_unchecked' }}
+              </span>
+              <span>{{ content.contentTitle || content.contentType }}</span>
+              <span *ngIf="content.isRequired" class="sp-chip">Zorunlu</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="node-actions" *ngIf="learningPathService.isNodeUnlocked(selectedNode)">
+          <button class="sp-btn" (click)="openNodeDetails(selectedNode)">
+            <span class="material-icons">play_arrow</span>
+            Başla
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

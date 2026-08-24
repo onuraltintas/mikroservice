@@ -1,0 +1,217 @@
+@use "sass:color";
+
+// Variables
+$primary-color: #3f51b5;
+$accent-color: #ff4081;
+$bg-color: #f5f7fa;
+$card-bg: #ffffff;
+$text-primary: #2c3e50;
+$text-secondary: #7f8c8d;
+$border-radius: 12px;
+$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+:host {
+    display: block;
+    background-color: $bg-color;
+    min-height: 100%;
+}
+
+.page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 2rem 4rem; // Extra bottom padding for overlap
+    position: relative;
+    margin-bottom: -2rem;
+
+    h1 {
+        font-size: 2rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        mat-icon {
+            transform: scale(1.2);
+        }
+    }
+
+    p {
+        opacity: 0.9;
+        font-size: 1.1rem;
+        max-width: 600px;
+    }
+}
+
+.content-container {
+    padding: 0 2rem 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.filter-card {
+    border-radius: $border-radius;
+    border: none;
+    box-shadow: $shadow-md;
+    margin-bottom: 2rem;
+    overflow: hidden;
+
+    mat-card-content {
+        padding: 1.5rem;
+    }
+}
+
+.filter-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 1rem;
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .filter-row {
+        grid-template-columns: 1fr; // Stack on mobile
+    }
+}
+
+.table-container {
+    background: $card-bg;
+    border-radius: $border-radius;
+    box-shadow: $shadow-md;
+    overflow: hidden;
+    position: relative;
+
+    .loading-shade {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.7);
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+table {
+    width: 100%;
+
+    th.mat-header-cell {
+        background-color: #f8f9fa;
+        color: $text-secondary;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1.2rem 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    td.mat-cell {
+        padding: 1rem;
+        color: $text-primary;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        font-size: 0.95rem;
+    }
+
+    tr.mat-row {
+        transition: background-color 0.2s ease;
+
+        &:hover {
+            background-color: rgba($primary-color, 0.04);
+        }
+    }
+}
+
+// Badges
+.badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    letter-spacing: 0.3px;
+
+    &.badge-exam {
+        background-color: rgba($primary-color, 0.1);
+        color: $primary-color;
+        border: 1px solid rgba($primary-color, 0.2);
+    }
+
+    &.badge-difficulty {
+        &-1 {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        // Green
+        &-2 {
+            background-color: #f1f8e9;
+            color: #558b2f;
+        }
+
+        // Light Green
+        &-3 {
+            background-color: #fff3e0;
+            color: #ef6c00;
+        }
+
+        // Orange
+        &-4 {
+            background-color: #fbe9e7;
+            color: #d84315;
+        }
+
+        // Deep Orange
+        &-5 {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        // Red
+    }
+}
+
+// Action Buttons
+.action-btn {
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    border-radius: 50%;
+
+    mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+    }
+}
+
+.dashboard-btn {
+    background-color: white !important;
+    color: $primary-color !important;
+    border: none;
+
+    &:hover {
+        background-color: #f5f5f5 !important;
+    }
+}
+
+// Responsive
+@media (max-width: 768px) {
+    .page-header {
+        padding: 1.5rem 1rem 3rem;
+    }
+
+    .content-container {
+        padding: 0 1rem 1rem;
+    }
+
+    .filter-card {
+        mat-card-content {
+            padding: 1rem;
+        }
+    }
+}

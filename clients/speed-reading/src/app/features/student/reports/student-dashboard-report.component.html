@@ -1,0 +1,283 @@
+<div class="modern-dashboard">
+    @if (loading()) {
+    <div class="loading-state">
+        <div class="rp-spinner"></div>
+        <p>Performans verileriniz yükleniyor...</p>
+    </div>
+    } @else if (report()) {
+
+    <!-- Hero Section with Key Metrics -->
+    <div class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">Hızlı Okuma ve Anlama Yolculuğunuz</h1>
+            <p class="hero-subtitle">İlerlemenizi takip edin ve başarılarınızı kutlayın</p>
+        </div>
+
+        <div class="key-metrics">
+            <div class="metric-card primary">
+                <div class="metric-icon">
+                    <span class="material-icons">local_fire_department</span>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-value">{{ report()?.streak || 0 }}</div>
+                    <div class="metric-label">Günlük Seri</div>
+                    <div class="metric-trend positive">Devam et! 🔥</div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <span class="material-icons">trending_up</span>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-value">{{ (report()?.averageComprehension || 0).toFixed(1) }}%</div>
+                    <div class="metric-label">Ortalama Kavrama</div>
+                    <div class="metric-trend">Genel skor</div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <span class="material-icons">emoji_events</span>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-value">{{ report()?.milestonesEarned || 0 }}</div>
+                    <div class="metric-label">Başarımlar</div>
+                    <div class="metric-trend">Kazanılan başarımlar</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="material-icons stat-icon activities">assignment</span>
+                <span class="stat-title">Toplam Aktivite</span>
+            </div>
+            <div class="stat-value">{{ report()?.totalActivities || 0 }}</div>
+            <div class="stat-footer">
+                <span class="stat-change">Tamamlanan egzersizler</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="material-icons stat-icon speed">speed</span>
+                <span class="stat-title">Okuma Hızı</span>
+            </div>
+            <div class="stat-value">{{ report()?.currentWPM || 0 }}</div>
+            <div class="stat-footer">
+                <span class="stat-change">Kelime/Dakika</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="material-icons stat-icon comprehension">school</span>
+                <span class="stat-title">Anlama Oranı</span>
+            </div>
+            <div class="stat-value">%{{ (report()?.averageComprehension || 0).toFixed(0) }}</div>
+            <div class="stat-footer">
+                <span class="stat-change">Genel Başarı</span>
+            </div>
+        </div>
+
+        <div class="stat-card"
+            title="Seviye atlamak için: Son 10 okumada hedef hız ve anlamayı geçmeli, en az 15 egzersiz yapmalısınız.">
+            <div class="stat-header">
+                <span class="material-icons stat-icon comprehension">psychology</span>
+                <span class="stat-title">Seviye</span>
+            </div>
+            <div class="stat-value">{{ report()?.currentLevel || 1 }}</div>
+            <div class="stat-footer">
+                <span class="stat-change">Mevcut seviyeniz</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise Distribution - Full Width -->
+    <div class="rp-card chart-card elevated full-width">
+        <div class="rp-card__header">
+            <div class="chart-header">
+                <div>
+                    <h3 class="rp-card__title">Egzersiz Dağılımı</h3>
+                    <p class="rp-card__sub">Egzersiz tiplerine göre</p>
+                </div>
+                <button class="rp-btn--icon">
+                    <span class="material-icons">more_vert</span>
+                </button>
+            </div>
+        </div>
+        <div class="rp-card__body">
+            <div class="chart-container large">
+                @if (pieChartData().length > 0) {
+                <app-pie-chart [data]="pieChartData()" [showLegend]="true" [height]="400" [legendFontSize]="16"
+                    [padding]="{ right: 50 }">
+                </app-pie-chart>
+                } @else {
+                <div class="chart-empty">
+                    <span class="material-icons">pie_chart</span>
+                    <p>Henüz dağılım verisi yok</p>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise Trend - Full Width -->
+    <div class="rp-card chart-card elevated full-width">
+        <div class="rp-card__header">
+            <div class="chart-header">
+                <div>
+                    <h3 class="rp-card__title">Egzersiz Trendi</h3>
+                    <p class="rp-card__sub">Günlük aktiviteleriniz</p>
+                </div>
+                <button class="rp-btn--icon">
+                    <span class="material-icons">more_vert</span>
+                </button>
+            </div>
+        </div>
+        <div class="rp-card__body">
+            <div class="chart-container large">
+                @if (activityTrendData().length > 0) {
+                <app-line-chart [data]="activityTrendData()" xAxisLabel="Tarih" yAxisLabel="Aktiviteler"
+                    [showLegend]="true" [height]="400">
+                </app-line-chart>
+                } @else {
+                <div class="chart-empty">
+                    <span class="material-icons">show_chart</span>
+                    <p>Henüz aktivite verisi yok</p>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Trend - Full Width -->
+    <div class="rp-card chart-card elevated full-width">
+        <div class="rp-card__header">
+            <div class="chart-header">
+                <div>
+                    <h3 class="rp-card__title">Okuma Hızı Trendi</h3>
+                    <p class="rp-card__sub">Zaman içindeki gelişiminizi takip edin</p>
+                </div>
+                <div class="chart-actions">
+                    <button class="rp-btn--icon">
+                        <span class="material-icons">more_vert</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="rp-card__body">
+            <div class="chart-container large">
+                @if (wpmProgressData().length > 0) {
+                <app-line-chart [data]="wpmProgressData()" xAxisLabel="Tarih" yAxisLabel="WPM" [showLegend]="true"
+                    [height]="400">
+                </app-line-chart>
+                } @else {
+                <div class="chart-empty">
+                    <span class="material-icons">trending_up</span>
+                    <p>Henüz performans verisi yok</p>
+                    <small>Daha fazla egzersiz tamamlayarak ilerlemenizi görün</small>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Comprehension Trend - Full Width -->
+    <div class="rp-card chart-card elevated full-width" style="margin-top: 24px;">
+        <div class="rp-card__header">
+            <div class="chart-header">
+                <div>
+                    <h3 class="rp-card__title">Anlama Oranı Trendi</h3>
+                    <p class="rp-card__sub">Okuduğunu anlama başarınızın değişimi</p>
+                </div>
+                <div class="chart-actions">
+                    <button class="rp-btn--icon">
+                        <span class="material-icons">more_vert</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="rp-card__body">
+            <div class="chart-container large">
+                @if (comprehensionTrendData().length > 0) {
+                <app-line-chart [data]="comprehensionTrendData()" xAxisLabel="Tarih" yAxisLabel="Anlama Oranı (%)"
+                    [showLegend]="true" [height]="400">
+                </app-line-chart>
+                } @else {
+                <div class="chart-empty">
+                    <span class="material-icons">psychology</span>
+                    <p>Henüz anlama oranı verisi yok</p>
+                    <small>Okuma egzersizlerini tamamlayarak verilerinizi oluşturun</small>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Milestones -->
+    <div class="rp-card milestones-section elevated">
+        <div class="rp-card__header">
+            <div class="section-header">
+                <div>
+                    <h3 class="rp-card__title">Son Başarımlar</h3>
+                    <p class="rp-card__sub">En son kazandığınız başarımlar</p>
+                </div>
+                <a class="rp-link" routerLink="/student/achievements">
+                    Tümünü Gör
+                    <span class="material-icons">arrow_forward</span>
+                </a>
+            </div>
+        </div>
+        <div class="rp-card__body">
+            @if (report()?.recentMilestones && report()!.recentMilestones!.length > 0) {
+            <div class="milestones-grid">
+                @for (milestone of report()!.recentMilestones; track milestone.id) {
+                <div class="milestone-item" [class]="'milestone-' + milestone.type">
+                    <div class="milestone-icon-wrapper">
+                        <span class="material-icons milestone-icon">{{ getMilestoneIcon(milestone.type) }}</span>
+                    </div>
+                    <div class="milestone-content">
+                        <h4 class="milestone-title">{{ milestone.title }}</h4>
+                        <p class="milestone-description">{{ milestone.description }}</p>
+                        <span class="milestone-date">
+                            <span class="material-icons">event</span>
+                            {{ formatDate(milestone.earnedAt) }}
+                        </span>
+                    </div>
+                    <div class="milestone-badge">
+                        <span class="material-icons">verified</span>
+                    </div>
+                </div>
+                }
+            </div>
+            } @else {
+            <div class="empty-milestones">
+                <span class="material-icons">emoji_events</span>
+                <h3>Henüz başarım yok</h3>
+                <p>İlk başarımınızı kazanmak için egzersiz yapmaya devam edin!</p>
+                <button class="rp-btn rp-btn--primary">
+                    Egzersizlere Başla
+                    <span class="material-icons">arrow_forward</span>
+                </button>
+            </div>
+            }
+        </div>
+    </div>
+
+    } @else {
+    <div class="empty-state">
+        <span class="material-icons">assessment</span>
+        <h2>Veri Bulunamadı</h2>
+        <p>İlerlemenizi burada görmek için egzersizleri tamamlamaya başlayın</p>
+        <button class="rp-btn rp-btn--primary">
+            <span class="material-icons">play_arrow</span>
+            İlk Egzersizinize Başlayın
+        </button>
+    </div>
+    }
+</div>

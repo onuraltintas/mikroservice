@@ -1,0 +1,200 @@
+<div class="reading-texts-container">
+    <div class="header">
+        <div>
+            <h1>Okuma Metinleri Yönetimi</h1>
+            <p class="subtitle">Metinleri ve sorularını yönetin</p>
+        </div>
+        <div class="header-actions">
+            <button mat-raised-button color="accent" (click)="openImportDialog()">
+                <mat-icon>upload_file</mat-icon>
+                CSV/Excel İçe Aktar
+            </button>
+            <button mat-raised-button [matMenuTriggerFor]="exportMenu" [disabled]="readingTexts.length === 0">
+                <mat-icon>download</mat-icon>
+                Dışa Aktar
+            </button>
+            <mat-menu #exportMenu="matMenu">
+                <button mat-menu-item (click)="exportAllToPdf()">
+                    <mat-icon>picture_as_pdf</mat-icon>
+                    <span>Tümünü PDF İndir</span>
+                </button>
+                <button mat-menu-item (click)="exportAllToDocx()">
+                    <mat-icon>description</mat-icon>
+                    <span>Tümünü DOCX İndir</span>
+                </button>
+            </mat-menu>
+            <button mat-raised-button color="primary" (click)="openTextDialog()">
+                <mat-icon>add</mat-icon>
+                Yeni Metin
+            </button>
+        </div>
+    </div>
+
+    <mat-card class="categories-info-card">
+        <mat-card-content>
+            <div class="categories-header">
+                <h3><mat-icon>category</mat-icon> Mevcut Kategoriler</h3>
+                <span class="category-count">{{ categories.length }} kategori</span>
+            </div>
+            <div class="categories-chips">
+                <mat-chip *ngFor="let cat of categoriesWithCount" class="category-chip">
+                    {{ cat.name }} ({{ cat.count }})
+                </mat-chip>
+                <div class="category-hint" *ngIf="categories.length === 0">
+                    <mat-icon>info</mat-icon>
+                    Henüz kategori yok. Yeni metin ekleyerek kategori oluşturabilirsiniz.
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+
+    <mat-card class="filters-card">
+        <mat-card-content>
+            <div class="filters">
+                <mat-form-field appearance="outline">
+                    <mat-label>Ara</mat-label>
+                    <input matInput [ngModel]="filters.search"
+                        (ngModelChange)="filters.search = $event; onFilterChange()" placeholder="Başlık ara...">
+                    <mat-icon matPrefix>search</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Kategori</mat-label>
+                    <mat-select [(ngModel)]="filters.category" (ngModelChange)="onFilterChange()">
+                        <mat-option [value]="''">Tümü</mat-option>
+                        <mat-option *ngFor="let cat of categories" [value]="cat">{{ cat }}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Seviye</mat-label>
+                    <mat-select [(ngModel)]="filters.level" (ngModelChange)="onFilterChange()">
+                        <mat-option [value]="undefined">Tümü</mat-option>
+                        <mat-option *ngFor="let level of levels" [value]="level">Seviye {{ level }}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Yaş Grubu</mat-label>
+                    <mat-select [(ngModel)]="filters.ageGroupId" (ngModelChange)="onFilterChange()">
+                        <mat-option [value]="''">Tümü</mat-option>
+                        <mat-option *ngFor="let group of ageGroups" [value]="group.id">{{ group.displayName
+                            }}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-checkbox [(ngModel)]="filters.activeOnly" (ngModelChange)="onFilterChange()">
+                    Sadece Aktif
+                </mat-checkbox>
+
+                <button mat-button (click)="clearFilters()" *ngIf="hasActiveFilters()">
+                    <mat-icon>clear</mat-icon>
+                    Filtreleri Temizle
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+        <mat-card-content>
+            <div *ngIf="loading()" class="loading">
+                <mat-spinner diameter="50"></mat-spinner>
+                <p>Yükleniyor...</p>
+            </div>
+
+            <table mat-table [dataSource]="paginatedTexts" class="reading-texts-table" *ngIf="!loading()">
+                <ng-container matColumnDef="index">
+                    <th mat-header-cell *matHeaderCellDef style="width: 60px;">#</th>
+                    <td mat-cell *matCellDef="let text; let i = index">
+                        {{ (pageNumber - 1) * pageSize + i + 1 }}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="title">
+                    <th mat-header-cell *matHeaderCellDef>Başlık</th>
+                    <td mat-cell *matCellDef="let text">
+                        <strong>{{ text.title }}</strong>
+                        <div class="text-meta">{{ text.wordCount }} kelime · ~{{ text.estimatedMinutes }} dk</div>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="category">
+                    <th mat-header-cell *matHeaderCellDef>Kategori</th>
+                    <td mat-cell *matCellDef="let text">
+                        <mat-chip>{{ text.category }}</mat-chip>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="level">
+                    <th mat-header-cell *matHeaderCellDef>Seviye</th>
+                    <td mat-cell *matCellDef="let text">
+                        <mat-chip [style.background-color]="getLevelColor(text.difficultyLevel)">
+                            Seviye {{ text.difficultyLevel }}
+                        </mat-chip>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="questions">
+                    <th mat-header-cell *matHeaderCellDef>Sorular</th>
+                    <td mat-cell *matCellDef="let text">
+                        <span class="question-count">{{ text.questionCount || 0 }}/10</span>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Durum</th>
+                    <td mat-cell *matCellDef="let text">
+                        <mat-slide-toggle [checked]="text.isActive" (change)="toggleActive(text)" color="primary">
+                            {{ text.isActive ? 'Aktif' : 'Pasif' }}
+                        </mat-slide-toggle>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef style="width: 180px; min-width: 180px;">İşlemler</th>
+                    <td mat-cell *matCellDef="let text" style="white-space: nowrap;">
+                        <button mat-icon-button (click)="openTextDialog(text)" matTooltip="Düzenle">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button color="primary" (click)="openQuestionsDialog(text)"
+                            matTooltip="Soruları Yönet">
+                            <mat-icon>quiz</mat-icon>
+                        </button>
+                        <button mat-icon-button [matMenuTriggerFor]="rowExportMenu" matTooltip="İndir">
+                            <mat-icon>download</mat-icon>
+                        </button>
+                        <mat-menu #rowExportMenu="matMenu">
+                            <button mat-menu-item (click)="exportToPdf(text)">
+                                <mat-icon>picture_as_pdf</mat-icon>
+                                <span>PDF İndir</span>
+                            </button>
+                            <button mat-menu-item (click)="exportToDocx(text)">
+                                <mat-icon>description</mat-icon>
+                                <span>DOCX İndir</span>
+                            </button>
+                        </mat-menu>
+                        <button mat-icon-button color="warn" (click)="deleteText(text)" matTooltip="Sil">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+
+            <mat-paginator *ngIf="readingTexts.length > 0" [length]="readingTexts.length" [pageSize]="pageSize"
+                [pageIndex]="pageNumber - 1" [pageSizeOptions]="[5, 10, 25, 50]" (page)="onPageChange($event)"
+                showFirstLastButtons>
+            </mat-paginator>
+
+            <div *ngIf="readingTexts.length === 0 && !loading()" class="no-data">
+                <mat-icon>menu_book</mat-icon>
+                <p>Henüz okuma metni eklenmemiş</p>
+                <button mat-raised-button color="primary" (click)="openTextDialog()">
+                    İlk Metni Ekle
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</div>

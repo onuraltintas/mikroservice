@@ -1,0 +1,21 @@
+<mat-card class="stats-card" [ngStyle]="gradientStyle">
+  <mat-card-content>
+    <div class="card-header">
+      <div class="icon-wrapper">
+        <mat-icon>{{ icon }}</mat-icon>
+      </div>
+      <div class="trend-indicator" *ngIf="trend">
+        <mat-icon class="trend-icon" [class]="'trend-' + trend">
+          {{ getTrendIcon() }}
+        </mat-icon>
+        <span class="trend-value" *ngIf="trendValue">{{ trendValue }}</span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <h3 class="stats-title">{{ title }}</h3>
+      <div class="stats-value">{{ value }}</div>
+      <p class="stats-subtitle" *ngIf="subtitle">{{ subtitle }}</p>
+    </div>
+  </mat-card-content>
+</mat-card>

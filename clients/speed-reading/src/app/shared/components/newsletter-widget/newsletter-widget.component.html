@@ -1,0 +1,30 @@
+<div class="newsletter-widget" [class.minimized]="isMinimized">
+    <div class="newsletter-header" (click)="toggleMinimize()">
+        <h4>Haftalık Bülten</h4>
+        <mat-icon>{{ isMinimized ? 'expand_more' : 'expand_less' }}</mat-icon>
+    </div>
+
+    <div class="newsletter-content" *ngIf="!isMinimized">
+        <p>En yeni içeriklerimizi e-posta ile alın.</p>
+
+        <form [formGroup]="newsletterForm" (ngSubmit)="onSubmit()">
+            <mat-form-field appearance="outline" class="email-field">
+                <mat-label>E-posta adresiniz</mat-label>
+                <input matInput type="email" formControlName="email" placeholder="ornek@email.com">
+                <mat-icon matPrefix>email</mat-icon>
+                <mat-error *ngIf="newsletterForm.get('email')?.hasError('required')">
+                    E-posta gereklidir
+                </mat-error>
+                <mat-error *ngIf="newsletterForm.get('email')?.hasError('email')">
+                    Geçerli bir e-posta adresi giriniz
+                </mat-error>
+            </mat-form-field>
+
+            <button mat-raised-button color="primary" type="submit" [disabled]="newsletterForm.invalid || loading"
+                class="subscribe-button">
+                <span *ngIf="!loading">Abone Ol</span>
+                <span *ngIf="loading">Abone Olunuyor...</span>
+            </button>
+        </form>
+    </div>
+</div>

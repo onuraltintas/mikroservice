@@ -1,0 +1,108 @@
+<app-navbar></app-navbar>
+
+<div class="contact-page">
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <h1>{{ heroTitle }}</h1>
+            <p>{{ heroSubtitle }}</p>
+        </div>
+    </section>
+
+    <main class="container">
+        <div class="content-grid">
+            <!-- Contact Form -->
+            <mat-card class="form-card">
+                <h2>Bize Ulaşın</h2>
+                <p class="subtitle">Formu doldurun, en kısa sürede size dönüş yapalım.</p>
+
+                <form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Adınız Soyadınız</mat-label>
+                        <input matInput formControlName="name" placeholder="Ahmet Yılmaz">
+                        <mat-icon matPrefix>person</mat-icon>
+                        <mat-error *ngIf="contactForm.get('name')?.hasError('required')">
+                            Ad soyad gereklidir
+                        </mat-error>
+                        <mat-error *ngIf="contactForm.get('name')?.hasError('minlength')">
+                            En az 2 karakter olmalıdır
+                        </mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>E-posta Adresiniz</mat-label>
+                        <input matInput type="email" formControlName="email" placeholder="ornek@email.com">
+                        <mat-icon matPrefix>email</mat-icon>
+                        <mat-error *ngIf="contactForm.get('email')?.hasError('required')">
+                            E-posta gereklidir
+                        </mat-error>
+                        <mat-error *ngIf="contactForm.get('email')?.hasError('email')">
+                            Geçerli bir e-posta adresi giriniz
+                        </mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Konu</mat-label>
+                        <input matInput formControlName="subject" placeholder="Nasıl yardımcı olabiliriz?">
+                        <mat-icon matPrefix>subject</mat-icon>
+                        <mat-error *ngIf="contactForm.get('subject')?.hasError('required')">
+                            Konu gereklidir
+                        </mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Mesajınız</mat-label>
+                        <textarea matInput formControlName="message" rows="6"
+                            placeholder="Mesajınızı buraya yazın..."></textarea>
+                        <mat-icon matPrefix>message</mat-icon>
+                        <mat-error *ngIf="contactForm.get('message')?.hasError('required')">
+                            Mesaj gereklidir
+                        </mat-error>
+                        <mat-error *ngIf="contactForm.get('message')?.hasError('minlength')">
+                            En az 10 karakter olmalıdır
+                        </mat-error>
+                    </mat-form-field>
+
+                    <button mat-raised-button color="primary" type="submit" [disabled]="!contactForm.valid || loading()"
+                        class="submit-button">
+                        <mat-spinner *ngIf="loading()" diameter="20" class="button-spinner"></mat-spinner>
+                        <mat-icon *ngIf="!loading()">send</mat-icon>
+                        {{ loading() ? 'Gönderiliyor...' : 'Gönder' }}
+                    </button>
+                </form>
+            </mat-card>
+
+            <!-- Contact Info -->
+            <div class="info-section">
+                <mat-card class="info-card" *ngIf="contactInfo.email">
+                    <mat-icon>email</mat-icon>
+                    <h3>E-posta</h3>
+                    <p>{{ contactInfo.email }}</p>
+                </mat-card>
+
+                <mat-card class="info-card" *ngIf="contactInfo.phone">
+                    <mat-icon>phone</mat-icon>
+                    <h3>Telefon</h3>
+                    <p>{{ contactInfo.phone }}</p>
+                </mat-card>
+
+                <mat-card class="info-card" *ngIf="contactInfo.address">
+                    <mat-icon>location_on</mat-icon>
+                    <h3>Adres</h3>
+                    <p>{{ contactInfo.address }}</p>
+                </mat-card>
+
+                <mat-card class="info-card" *ngIf="contactInfo.workingHours">
+                    <mat-icon>schedule</mat-icon>
+                    <h3>Çalışma Saatleri</h3>
+                    <p style="white-space: pre-line">{{ contactInfo.workingHours }}</p>
+                </mat-card>
+
+                <iframe *ngIf="mapUrl" [src]="mapUrl" width="100%" height="250" style="border:0; border-radius: 8px;"
+                    allowfullscreen="" loading="lazy"></iframe>
+            </div>
+        </div>
+    </main>
+</div>
+
+<app-footer></app-footer>

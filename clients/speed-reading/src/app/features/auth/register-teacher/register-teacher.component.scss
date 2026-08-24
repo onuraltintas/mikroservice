@@ -1,0 +1,227 @@
+@use 'sass:color';
+
+// Variables
+$primary-color: #3f51b5;
+$bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+$card-bg: #ffffff;
+
+$glass-border: 1px solid rgba(255, 255, 255, 0.3);
+$shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+$border-radius: 16px;
+
+.register-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    height: auto; // Remove fixed height to allow scrolling if needed
+    overflow: hidden; // Kill page scrollbar
+    background: $bg-gradient;
+    padding: 10px;
+    font-family: 'Roboto', 'Helvetica Neue', sans-serif;
+}
+
+.register-card {
+    max-width: 600px; // Slightly smaller max width for teacher form
+    width: 100%;
+    border-radius: $border-radius;
+    background-color: $card-bg;
+    backdrop-filter: blur(10px);
+    box-shadow: $shadow-lg;
+    border: $glass-border;
+    padding: 16px;
+    overflow: hidden;
+    zoom: 0.9; // Use Zoom for layout shrinking
+
+    mat-card-header {
+        display: flex;
+        justify-content: center;
+        padding-top: 8px;
+        padding-bottom: 12px;
+        background: rgba(63, 81, 181, 0.03); // Subtle background
+
+        .header-text {
+            font-size: 26px;
+            font-weight: 500;
+            color: #333;
+            text-align: center;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+    }
+
+    mat-card-content {
+        padding: 12px 24px 16px 24px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
+
+.section-title {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: $primary-color;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+    }
+}
+
+// Ensure dividers don't add too much space
+mat-divider {
+    margin: 8px 0 !important;
+}
+
+.full-width {
+    width: 100%;
+    margin-bottom: 2px;
+}
+
+.row {
+    display: flex;
+    gap: 8px;
+
+    @media (max-width: 600px) {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    >* {
+        flex: 1;
+    }
+}
+
+.divider-text {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: #666;
+    font-size: 12px;
+    margin: 12px 0;
+
+    &::before,
+    &::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    span {
+        padding: 0 10px;
+        background: transparent;
+    }
+}
+
+.institution-section {
+    background-color: rgba(63, 81, 181, 0.03);
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px dashed rgba(63, 81, 181, 0.2);
+    margin: 8px 0;
+
+    .section-hint {
+        font-size: 12px;
+        color: #666;
+        margin-left: 28px;
+        margin-top: -4px;
+        margin-bottom: 8px;
+    }
+}
+
+.actions-container {
+    margin-top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.submit-btn {
+    height: 52px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    border-radius: 12px;
+    margin-top: 8px;
+    background: linear-gradient(135deg, $primary-color 0%, #5e35b1 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 8px 20px rgba(63, 81, 181, 0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-transform: uppercase;
+
+    &:hover:not(:disabled) {
+        background: linear-gradient(135deg, color.adjust($primary-color, $lightness: -10%) 0%, #4527a0 100%) !important;
+        box-shadow: 0 12px 28px rgba(63, 81, 181, 0.5);
+        transform: translateY(-3px);
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(63, 81, 181, 0.4);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: linear-gradient(135deg, #a0a0a0 0%, #808080 100%) !important;
+    }
+}
+
+
+
+.login-link {
+    text-align: center;
+    color: #666;
+    font-size: 13px;
+    margin-top: 12px;
+
+    a {
+        color: $primary-color;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+
+        &:hover {
+            text-decoration: underline;
+            color: color.adjust($primary-color, $lightness: -10%);
+        }
+    }
+}
+
+.messages-container {
+    margin-bottom: 12px;
+
+    .success-msg,
+    .error-msg {
+        padding: 10px 16px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+    }
+
+    .success-msg {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        border: 1px solid #c8e6c9;
+    }
+
+    .error-msg {
+        background-color: #ffebee;
+        color: #c62828;
+        border: 1px solid #ffcdd2;
+    }
+}
+
+// Override angular material density
+::ng-deep .mat-mdc-form-field-subscript-wrapper {
+    margin-bottom: 4px;
+}

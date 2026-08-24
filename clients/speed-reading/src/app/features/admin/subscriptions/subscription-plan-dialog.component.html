@@ -1,0 +1,219 @@
+<!-- ── Dialog Header ──────────────────────────────────────────────── -->
+<div class="dialog-header">
+  <div class="header-left">
+    <div class="header-icon" [class.edit-mode]="isEditMode">
+      <mat-icon>{{ isEditMode ? 'edit' : 'add_circle' }}</mat-icon>
+    </div>
+    <div>
+      <h2>{{ isEditMode ? 'Planı Düzenle' : 'Yeni Plan Oluştur' }}</h2>
+      <p>{{ isEditMode ? 'Plan bilgilerini güncelleyin' : 'Abonelik planı tanımlayın' }}</p>
+    </div>
+  </div>
+  <button mat-icon-button class="close-btn" (click)="cancel()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<!-- ── Step Indicator ─────────────────────────────────────────────── -->
+<div class="step-bar">
+  <div class="step" [class.active]="step === 1" [class.done]="step > 1">
+    <div class="step-circle">
+      <mat-icon *ngIf="step > 1">check</mat-icon>
+      <span *ngIf="step <= 1">1</span>
+    </div>
+    <span class="step-label">Kimlik</span>
+  </div>
+  <div class="step-line" [class.done]="step > 1"></div>
+  <div class="step" [class.active]="step === 2">
+    <div class="step-circle">2</div>
+    <span class="step-label">Fiyat & Özellikler</span>
+  </div>
+</div>
+
+<mat-dialog-content>
+  <form [formGroup]="form">
+
+    <!-- ══ ADIM 1: Kimlik ══════════════════════════════════════════════ -->
+    <div *ngIf="step === 1" class="step-content">
+
+      <!-- Plan adı -->
+      <div class="field-group">
+        <label class="field-label">Plan Adı <span class="req">*</span></label>
+        <mat-form-field appearance="outline" class="full-width">
+          <input matInput formControlName="name" placeholder="Örn: Premium Aylık">
+          <mat-icon matPrefix>label</mat-icon>
+          <mat-error *ngIf="form.get('name')?.hasError('required')">Plan adı zorunludur</mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Açıklama -->
+      <div class="field-group">
+        <label class="field-label">Açıklama <span class="req">*</span></label>
+        <mat-form-field appearance="outline" class="full-width">
+          <textarea matInput formControlName="description"
+                    placeholder="Kullanıcılara gösterilecek kısa açıklama..."
+                    rows="2"></textarea>
+          <mat-error *ngIf="form.get('description')?.hasError('required')">Açıklama zorunludur</mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Slug -->
+      <div class="field-group">
+        <label class="field-label">Slug <span class="req">*</span></label>
+        <mat-form-field appearance="outline" class="full-width">
+          <input matInput formControlName="slug" placeholder="ornek-plan-adi">
+          <mat-icon matPrefix>tag</mat-icon>
+          <mat-hint>Plan adından otomatik oluşturulur</mat-hint>
+          <mat-error *ngIf="form.get('slug')?.hasError('required')">Slug zorunludur</mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Ürün seçimi -->
+      <div class="field-group">
+        <label class="field-label">Platform / Ürün <span class="req">*</span></label>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Ürün seçin</mat-label>
+          <mat-select formControlName="productId">
+            <mat-option *ngFor="let product of products" [value]="product.id">
+              <div class="product-option">
+                <mat-icon class="product-option-icon">{{ getProductIcon(product.slug) }}</mat-icon>
+                <div class="product-option-text">
+                  <span class="product-option-name">{{ product.name }}</span>
+                  <span class="product-option-slug">{{ product.slug }}</span>
+                </div>
+                <span *ngIf="product.includedProductSlugs.length > 0" class="product-option-bundle">
+                  Bundle
+                </span>
+              </div>
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="form.get('productId')?.hasError('required')">Ürün seçimi zorunludur</mat-error>
+          <mat-hint>Yeni platform = admin panelinden önce ürün oluşturun</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <!-- Fatura Dönemi -->
+      <div class="field-group">
+        <label class="field-label">Fatura Dönemi <span class="req">*</span></label>
+        <div class="billing-pills">
+          <button *ngFor="let bp of billingPeriods"
+                  type="button"
+                  class="billing-pill"
+                  [class.active]="form.get('billingPeriod')?.value === bp.value"
+                  (click)="form.get('billingPeriod')!.setValue(bp.value)">
+            {{ bp.label }}
+          </button>
+        </div>
+      </div>
+
+      <div class="step-actions">
+        <button mat-stroked-button type="button" (click)="cancel()">İptal</button>
+        <button mat-raised-button color="primary" type="button" (click)="goToStep2()"
+                [disabled]="!canGoToStep2()">
+          Devam
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ ADIM 2: Fiyat & Özellikler ════════════════════════════════ -->
+    <div *ngIf="step === 2" class="step-content">
+
+      <!-- Fiyat + Süre yan yana -->
+      <div class="price-duration-row">
+        <div class="field-group price-group">
+          <label class="field-label">Fiyat <span class="req">*</span></label>
+          <div class="price-input-wrap">
+            <mat-form-field appearance="outline" class="full-width">
+              <input matInput type="number" formControlName="price" min="0" placeholder="0">
+              <span matSuffix class="price-suffix">TL</span>
+              <mat-error *ngIf="form.get('price')?.hasError('min')">0'dan küçük olamaz</mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Süre (Gün)</label>
+          <mat-form-field appearance="outline" class="full-width">
+            <input matInput type="number" formControlName="durationDays" placeholder="Boş = sınırsız">
+            <mat-icon matPrefix>hourglass_empty</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <div class="field-group sort-group">
+          <label class="field-label">Sıra</label>
+          <mat-form-field appearance="outline" class="full-width">
+            <input matInput type="number" formControlName="sortOrder" placeholder="0">
+            <mat-icon matPrefix>sort</mat-icon>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Ayarlar toggleları -->
+      <div class="field-group">
+        <label class="field-label">Ayarlar</label>
+        <div class="toggle-cards">
+          <div class="toggle-card" [class.on]="form.get('isActive')?.value"
+               (click)="form.get('isActive')!.setValue(!form.get('isActive')!.value)">
+            <mat-icon>{{ form.get('isActive')?.value ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+            <div>
+              <span class="tc-title">Aktif</span>
+              <span class="tc-desc">Plan satışa açık</span>
+            </div>
+          </div>
+          <div class="toggle-card" [class.on]="form.get('isPublic')?.value"
+               (click)="form.get('isPublic')!.setValue(!form.get('isPublic')!.value)">
+            <mat-icon>{{ form.get('isPublic')?.value ? 'visibility' : 'visibility_off' }}</mat-icon>
+            <div>
+              <span class="tc-title">Herkese Açık</span>
+              <span class="tc-desc">Genel listede görünür</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Özellikler -->
+      <div class="field-group">
+        <label class="field-label">Özellikler</label>
+        <div class="features-area">
+          <div class="features-chips">
+            <div *ngFor="let f of features" class="feature-chip">
+              <mat-icon>check</mat-icon>
+              <span>{{ f }}</span>
+              <button type="button" class="remove-chip" (click)="removeFeature(f)">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          </div>
+          <mat-form-field appearance="outline" class="full-width feature-input-field">
+            <mat-label>Özellik ekle</mat-label>
+            <mat-chip-grid #chipGrid>
+              <mat-chip-row *ngFor="let f of []"></mat-chip-row>
+            </mat-chip-grid>
+            <input placeholder="Yazıp Enter'a basın..."
+                   [matChipInputFor]="chipGrid"
+                   [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                   (matChipInputTokenEnd)="addFeature($event)" />
+            <mat-icon matPrefix>add_circle_outline</mat-icon>
+            <mat-hint>Enter veya virgülle ekleyin</mat-hint>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <div class="step-actions">
+        <button mat-stroked-button type="button" (click)="step = 1">
+          <mat-icon>arrow_back</mat-icon>
+          Geri
+        </button>
+        <button mat-raised-button color="primary" type="button"
+                [disabled]="loading() || form.invalid"
+                (click)="save()">
+          <mat-spinner *ngIf="loading()" diameter="18" class="btn-spinner"></mat-spinner>
+          <mat-icon *ngIf="!loading()">{{ isEditMode ? 'save' : 'add_circle' }}</mat-icon>
+          {{ isEditMode ? 'Güncelle' : 'Oluştur' }}
+        </button>
+      </div>
+    </div>
+
+  </form>
+</mat-dialog-content>

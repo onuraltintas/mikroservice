@@ -1,0 +1,308 @@
+<h2 mat-dialog-title>
+    <mat-icon>groups</mat-icon>
+    {{ isEditMode ? 'Yaş Grubu Düzenle' : 'Yeni Yaş Grubu' }}
+</h2>
+
+<mat-dialog-content>
+    <form [formGroup]="ageGroupForm">
+        <!-- Basic Info Section -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <mat-icon>info</mat-icon>
+                Temel Bilgiler
+            </h3>
+
+            <!-- Name -->
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Kod Adı</mat-label>
+                <input matInput formControlName="name" placeholder="Örn: Child, Teen, Adult">
+                <mat-icon matPrefix>label</mat-icon>
+                <mat-hint>Sistem içinde kullanılacak tekil kod adı (İngilizce, boşluksuz)</mat-hint>
+                <mat-error *ngIf="ageGroupForm.get('name')?.hasError('required')">
+                    Kod adı zorunludur
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('name')?.hasError('minlength')">
+                    Kod adı en az 2 karakter olmalıdır
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('name')?.hasError('maxlength')">
+                    Kod adı en fazla 50 karakter olmalıdır
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('name')?.hasError('pattern')">
+                    Sadece küçük harf, rakam, tire ve alt çizgi kullanılabilir
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('name')?.hasError('serverError')">
+                    {{ ageGroupForm.get('name')?.getError('serverError') }}
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('name')?.hasError('nameConflict')">
+                    Bu kod adı zaten kullanılıyor
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Display Name -->
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Görünen Ad</mat-label>
+                <input matInput formControlName="displayName" placeholder="Örn: Çocuk, Genç, Yetişkin">
+                <mat-icon matPrefix>badge</mat-icon>
+                <mat-hint>Kullanıcılara gösterilecek Türkçe ad</mat-hint>
+                <mat-error *ngIf="ageGroupForm.get('displayName')?.hasError('required')">
+                    Görünen ad zorunludur
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('displayName')?.hasError('minlength')">
+                    Görünen ad en az 2 karakter olmalıdır
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('displayName')?.hasError('maxlength')">
+                    Görünen ad en fazla 100 karakter olmalıdır
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('displayName')?.hasError('serverError')">
+                    {{ ageGroupForm.get('displayName')?.getError('serverError') }}
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Description -->
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Açıklama</mat-label>
+                <textarea matInput formControlName="description" rows="2"
+                    placeholder="Bu yaş grubunun özelliklerini açıklayın"></textarea>
+                <mat-icon matPrefix>description</mat-icon>
+                <mat-error *ngIf="ageGroupForm.get('description')?.hasError('maxlength')">
+                    Açıklama en fazla 500 karakter olmalıdır
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('description')?.hasError('serverError')">
+                    {{ ageGroupForm.get('description')?.getError('serverError') }}
+                </mat-error>
+            </mat-form-field>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Age Range Section -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <mat-icon>calendar_today</mat-icon>
+                Yaş Aralığı
+            </h3>
+
+            <div class="age-range-fields">
+                <!-- Min Age -->
+                <mat-form-field appearance="outline" class="half-width">
+                    <mat-label>Minimum Yaş</mat-label>
+                    <input matInput type="number" formControlName="minAge" min="0" max="150">
+                    <mat-icon matPrefix>arrow_downward</mat-icon>
+                    <mat-error *ngIf="ageGroupForm.get('minAge')?.hasError('required')">
+                        Minimum yaş zorunludur
+                    </mat-error>
+                    <mat-error *ngIf="ageGroupForm.get('minAge')?.hasError('min')">
+                        Minimum yaş 1'den küçük olamaz
+                    </mat-error>
+                    <mat-error *ngIf="ageGroupForm.get('minAge')?.hasError('max')">
+                        Minimum yaş 150'den büyük olamaz
+                    </mat-error>
+                    <mat-error *ngIf="ageGroupForm.get('minAge')?.hasError('serverError')">
+                        {{ ageGroupForm.get('minAge')?.getError('serverError') }}
+                    </mat-error>
+                    <mat-error *ngIf="ageGroupForm.get('minAge')?.hasError('ageOverlap')">
+                        Yaş aralığı <strong>{{ ageGroupForm.get('minAge')?.getError('ageOverlap').groupName }}</strong>
+                        grubuyla çakışıyor
+                    </mat-error>
+                </mat-form-field>
+
+                <!-- Max Age -->
+                <mat-form-field appearance="outline" class="half-width">
+                    <mat-label>Maximum Yaş</mat-label>
+                    <input matInput type="number" formControlName="maxAge" min="0" max="150">
+                    <mat-icon matPrefix>arrow_upward</mat-icon>
+                    <mat-hint>Sınırsız için boş bırakın (Örn: 18+)</mat-hint>
+                    <mat-error *ngIf="ageGroupForm.get('maxAge')?.hasError('min')">
+                        Maximum yaş 1'den küçük olamaz
+                    </mat-error>
+                    <mat-error *ngIf="ageGroupForm.get('maxAge')?.hasError('max')">
+                        Maximum yaş 150'den büyük olamaz
+                    </mat-error>
+                    <mat-error *ngIf="ageGroupForm.get('maxAge')?.hasError('serverError')">
+                        {{ ageGroupForm.get('maxAge')?.getError('serverError') }}
+                    </mat-error>
+                    <mat-error *ngIf="ageGroupForm.get('maxAge')?.hasError('ageOverlap')">
+                        Yaş aralığı <strong>{{ ageGroupForm.get('maxAge')?.getError('ageOverlap').groupName }}</strong>
+                        grubuyla çakışıyor
+                    </mat-error>
+                </mat-form-field>
+            </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Recommended Values Section -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <mat-icon>tune</mat-icon>
+                Önerilen Değerler
+            </h3>
+
+            <!-- Recommended WPM -->
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Önerilen Okuma Hızı (WPM)</mat-label>
+                <input matInput type="number" formControlName="recommendedWPM" min="50" max="2000">
+                <mat-icon matPrefix>speed</mat-icon>
+                <mat-hint>Hedef/Optimal kelime/dakika</mat-hint>
+                <mat-error *ngIf="ageGroupForm.get('recommendedWPM')?.hasError('required')">
+                    Önerilen hız zorunludur
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('recommendedWPM')?.hasError('min')">
+                    Önerilen hız en az 50 WPM olmalıdır
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('recommendedWPM')?.hasError('max')">
+                    Önerilen hız en fazla 2000 WPM olmalıdır
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('recommendedWPM')?.hasError('serverError')">
+                    {{ ageGroupForm.get('recommendedWPM')?.getError('serverError') }}
+                </mat-error>
+            </mat-form-field>
+
+            <div class="wpm-range-fields">
+                <!-- Min WPM -->
+                <mat-form-field appearance="outline" class="half-width">
+                    <mat-label>Minimum WPM</mat-label>
+                    <input matInput type="number" formControlName="minWPM" min="50" max="2000">
+                    <mat-icon matPrefix>trending_down</mat-icon>
+                    <mat-hint>Bu hızın altında pratik gerekli</mat-hint>
+                    <mat-error *ngIf="ageGroupForm.get('minWPM')?.hasError('required')">
+                        Minimum WPM zorunludur
+                    </mat-error>
+                    <mat-error *ngIf="ageGroupForm.get('minWPM')?.hasError('min')">
+                        Minimum WPM en az 50 olmalıdır
+                    </mat-error>
+                </mat-form-field>
+
+                <!-- Max WPM -->
+                <mat-form-field appearance="outline" class="half-width">
+                    <mat-label>Maximum WPM</mat-label>
+                    <input matInput type="number" formControlName="maxWPM" min="50" max="2000">
+                    <mat-icon matPrefix>trending_up</mat-icon>
+                    <mat-hint>Bu hız mükemmel performans</mat-hint>
+                    <mat-error *ngIf="ageGroupForm.get('maxWPM')?.hasError('required')">
+                        Maximum WPM zorunludur
+                    </mat-error>
+                    <mat-error *ngIf="ageGroupForm.get('maxWPM')?.hasError('max')">
+                        Maximum WPM en fazla 2000 olmalıdır
+                    </mat-error>
+                </mat-form-field>
+            </div>
+
+            <!-- Recommended Comprehension -->
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Önerilen Kavrama Oranı (%)</mat-label>
+                <input matInput type="number" formControlName="recommendedComprehension" min="0" max="100">
+                <mat-icon matPrefix>psychology</mat-icon>
+                <mat-hint>Hedef kavrama yüzdesi (0-100)</mat-hint>
+                <mat-error *ngIf="ageGroupForm.get('recommendedComprehension')?.hasError('required')">
+                    Önerilen kavrama oranı zorunludur
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('recommendedComprehension')?.hasError('min')">
+                    Kavrama oranı 0'dan küçük olamaz
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('recommendedComprehension')?.hasError('max')">
+                    Kavrama oranı 100'den büyük olamaz
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('recommendedComprehension')?.hasError('serverError')">
+                    {{ ageGroupForm.get('recommendedComprehension')?.getError('serverError') }}
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Recommended Daily Minutes -->
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Önerilen Günlük Süre (dakika)</mat-label>
+                <input matInput type="number" formControlName="recommendedDailyMinutes" min="5" max="240">
+                <mat-icon matPrefix>schedule</mat-icon>
+                <mat-hint>Günlük çalışma süresi (1-300 dakika)</mat-hint>
+                <mat-error *ngIf="ageGroupForm.get('recommendedDailyMinutes')?.hasError('required')">
+                    Önerilen günlük süre zorunludur
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('recommendedDailyMinutes')?.hasError('min')">
+                    Günlük süre en az 1 dakika olmalıdır
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('recommendedDailyMinutes')?.hasError('max')">
+                    Günlük süre en fazla 300 dakika olmalıdır
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('recommendedDailyMinutes')?.hasError('serverError')">
+                    {{ ageGroupForm.get('recommendedDailyMinutes')?.getError('serverError') }}
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Default Difficulty Level -->
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Varsayılan Zorluk Seviyesi</mat-label>
+                <input matInput type="number" formControlName="defaultDifficultyLevel" min="1" max="5">
+                <mat-icon matPrefix>tune</mat-icon>
+                <mat-hint>Seviye tespiti için kullanılacak zorluk (1=Beginner, 2=Intermediate, 3=Advanced)</mat-hint>
+                <mat-error *ngIf="ageGroupForm.get('defaultDifficultyLevel')?.hasError('required')">
+                    Zorluk seviyesi zorunludur
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('defaultDifficultyLevel')?.hasError('min')">
+                    Zorluk seviyesi en az 1 olmalıdır
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('defaultDifficultyLevel')?.hasError('max')">
+                    Zorluk seviyesi en fazla 5 olmalıdır
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('defaultDifficultyLevel')?.hasError('serverError')">
+                    {{ ageGroupForm.get('defaultDifficultyLevel')?.getError('serverError') }}
+                </mat-error>
+            </mat-form-field>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Settings Section -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <mat-icon>settings</mat-icon>
+                Ayarlar
+            </h3>
+
+            <!-- Order Index -->
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Sıralama Numarası</mat-label>
+                <input matInput type="number" formControlName="orderIndex" min="0" max="100">
+                <mat-icon matPrefix>sort</mat-icon>
+                <mat-hint>Listede gösterilme sırası (0-100, küçükten büyüğe)</mat-hint>
+                <mat-error *ngIf="ageGroupForm.get('orderIndex')?.hasError('required')">
+                    Sıralama numarası zorunludur
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('orderIndex')?.hasError('min')">
+                    Sıralama numarası 1'den küçük olamaz
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('orderIndex')?.hasError('max')">
+                    Sıralama numarası 100'den büyük olamaz
+                </mat-error>
+                <mat-error *ngIf="ageGroupForm.get('orderIndex')?.hasError('serverError')">
+                    {{ ageGroupForm.get('orderIndex')?.getError('serverError') }}
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Status toggle (only in edit mode) -->
+            <div *ngIf="isEditMode" class="status-toggle">
+                <mat-slide-toggle formControlName="isActive" color="primary">
+                    <span class="toggle-label">
+                        <mat-icon>{{ ageGroupForm.get('isActive')?.value ? 'check_circle' : 'cancel' }}</mat-icon>
+                        {{ ageGroupForm.get('isActive')?.value ? 'Aktif' : 'Pasif' }}
+                    </span>
+                </mat-slide-toggle>
+            </div>
+        </div>
+    </form>
+
+    <!-- Loading -->
+    <div *ngIf="saving" class="saving-overlay">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Kaydediliyor...</p>
+    </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" [disabled]="saving">
+        İptal
+    </button>
+    <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!ageGroupForm.valid || saving">
+        <mat-icon>{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+        {{ isEditMode ? 'Güncelle' : 'Oluştur' }}
+    </button>
+</mat-dialog-actions>

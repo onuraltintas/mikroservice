@@ -1,0 +1,5 @@
+Backend Recommendation Logic:
+1. Excellent Performance (Avg >= 80%): Recommends Next Level program.
+2. Good Performance (Avg >= 60%): Recommends Different Type at Same Level (or Next Level fallback).
+3. Weak Performance (Avg < 60%): Recommends Repeating Current Program.
+4. Ultimate Completion: If no higher level/type exists, returns null, triggering 'Zirvedesiniz!' UI.

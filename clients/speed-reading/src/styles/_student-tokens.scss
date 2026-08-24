@@ -1,0 +1,202 @@
+// =============================================================================
+// STUDENT PANEL — DESIGN TOKENS
+// =============================================================================
+// Tüm değişkenler --sp- (student platform) prefix'i ile başlar.
+// Admin/teacher paneli etkilenmez — onlar eski --primary-* değişkenlerini kullanır.
+// Tailwind config'deki 'sp' renk anahtarları bu değişkenleri okur:
+//   bg-sp-primary → background: var(--sp-primary)
+//   text-sp-text-1 → color: var(--sp-text-1)
+// =============================================================================
+
+:root {
+  // ---------------------------------------------------------------------------
+  // PRIMARY — Indigo (konsantrasyon, güven, teknoloji)
+  // ---------------------------------------------------------------------------
+  --sp-primary:       #6366f1;
+  --sp-primary-light: #818cf8;
+  --sp-primary-dark:  #4f46e5;
+  --sp-primary-ghost: rgba(99, 102, 241, 0.12);
+  --sp-primary-ghost-hover: rgba(99, 102, 241, 0.18);
+
+  // ---------------------------------------------------------------------------
+  // SUCCESS — Emerald (başarı, tamamlama, ilerleme)
+  // ---------------------------------------------------------------------------
+  --sp-success:       #10b981;
+  --sp-success-light: rgba(16, 185, 129, 0.12);
+  --sp-success-dark:  #059669;
+  --sp-success-text:  #065f46;
+
+  // ---------------------------------------------------------------------------
+  // WARNING — Amber (dikkat, sıra, yarım tamamlanan)
+  // ---------------------------------------------------------------------------
+  --sp-warning:       #f59e0b;
+  --sp-warning-light: rgba(245, 158, 11, 0.12);
+  --sp-warning-dark:  #d97706;
+  --sp-warning-text:  #78350f;
+
+  // ---------------------------------------------------------------------------
+  // DANGER — Rose
+  // ---------------------------------------------------------------------------
+  --sp-danger:        #f43f5e;
+  --sp-danger-light:  rgba(244, 63, 94, 0.12);
+
+  // ---------------------------------------------------------------------------
+  // GAMIFICATION — Altın, XP, Ödül
+  // ---------------------------------------------------------------------------
+  --sp-xp:            #eab308;
+  --sp-xp-light:      rgba(234, 179, 8, 0.15);
+  --sp-streak:        #f97316;
+  --sp-streak-light:  rgba(249, 115, 22, 0.12);
+  --sp-diamond:       #06b6d4;
+  --sp-platinum:      #8b5cf6;
+  --sp-gold:          #f59e0b;
+  --sp-silver:        #94a3b8;
+  --sp-bronze:        #b45309;
+
+  // ---------------------------------------------------------------------------
+  // SURFACE — Arka plan katmanları
+  // ---------------------------------------------------------------------------
+  --sp-surface:       #ffffff;
+  --sp-surface-2:     #f8fafc;    // sayfa arka planı
+  --sp-surface-3:     #f1f5f9;    // içe gömülü section
+  --sp-surface-4:     #e2e8f0;    // disabled state
+
+  // ---------------------------------------------------------------------------
+  // BORDER
+  // ---------------------------------------------------------------------------
+  --sp-border:        #e2e8f0;
+  --sp-border-strong: #cbd5e1;
+  --sp-border-focus:  #6366f1;
+
+  // ---------------------------------------------------------------------------
+  // TEXT
+  // ---------------------------------------------------------------------------
+  --sp-text-1:        #0f172a;    // başlık, birincil metin
+  --sp-text-2:        #475569;    // ikincil metin, açıklama
+  --sp-text-3:        #94a3b8;    // placeholder, devre dışı
+  --sp-text-inv:      #ffffff;    // koyu arka plan üzerindeki metin
+
+  // ---------------------------------------------------------------------------
+  // SIDEBAR
+  // ---------------------------------------------------------------------------
+  --sp-sidebar-bg:          #1e1b4b;   // koyu indigo — odaklanmayı destekler
+  --sp-sidebar-bg-end:      #2d2a6e;   // gradient son noktası
+  --sp-sidebar-hover:       rgba(255, 255, 255, 0.07);
+  --sp-sidebar-active:      rgba(99, 102, 241, 0.25);
+  --sp-sidebar-active-bar:  #818cf8;   // active indicator çubuğu
+  --sp-sidebar-text:        #e0e7ff;   // ana nav text
+  --sp-sidebar-text-muted:  rgba(224, 231, 255, 0.55);
+  --sp-sidebar-icon:        #a5b4fc;
+  --sp-sidebar-width:       264px;
+  --sp-sidebar-width-collapsed: 72px;
+
+  // ---------------------------------------------------------------------------
+  // TYPOGRAPHY
+  // ---------------------------------------------------------------------------
+  --sp-font-sans:   'Inter', system-ui, -apple-system, sans-serif;
+  --sp-font-mono:   'JetBrains Mono', 'Fira Code', monospace;
+
+  // ---------------------------------------------------------------------------
+  // BORDER RADIUS
+  // ---------------------------------------------------------------------------
+  --sp-radius-xs:   4px;
+  --sp-radius-sm:   8px;
+  --sp-radius-md:   12px;
+  --sp-radius-lg:   16px;
+  --sp-radius-xl:   20px;
+  --sp-radius-2xl:  24px;
+  --sp-radius-card: 16px;
+  --sp-radius-full: 9999px;
+
+  // ---------------------------------------------------------------------------
+  // SHADOWS
+  // ---------------------------------------------------------------------------
+  --sp-shadow-xs:   0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --sp-shadow-sm:   0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07);
+  --sp-shadow-md:   0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+  --sp-shadow-lg:   0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+  --sp-shadow-xl:   0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --sp-shadow-card: 0 1px 3px rgb(0 0 0 / 0.06), 0 4px 16px rgb(0 0 0 / 0.08);
+  --sp-shadow-hover:0 4px 6px rgb(0 0 0 / 0.06), 0 12px 24px rgb(0 0 0 / 0.1);
+  --sp-shadow-glow: 0 0 0 3px var(--sp-primary-ghost);
+
+  // ---------------------------------------------------------------------------
+  // TRANSITIONS
+  // ---------------------------------------------------------------------------
+  --sp-transition-fast:   150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --sp-transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --sp-transition-slow:   400ms cubic-bezier(0.4, 0, 0.2, 1);
+  --sp-transition-spring: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  // ---------------------------------------------------------------------------
+  // LAYOUT
+  // ---------------------------------------------------------------------------
+  --sp-header-height:    64px;
+  --sp-content-max-width: 1280px;
+  --sp-content-padding:  24px;
+
+  // ---------------------------------------------------------------------------
+  // Z-INDEX STACK
+  // ---------------------------------------------------------------------------
+  --sp-z-base:    1;
+  --sp-z-card:    10;
+  --sp-z-header:  100;
+  --sp-z-sidebar: 200;
+  --sp-z-modal:   1000;
+  --sp-z-toast:   1100;
+}
+
+// =============================================================================
+// DARK THEME
+// =============================================================================
+[data-sp-theme='dark'] {
+  // Surface — slate renk skalası
+  --sp-surface:         #0f172a;   // kart arka planı
+  --sp-surface-2:       #1e293b;   // sayfa arka planı
+  --sp-surface-3:       #334155;   // hover, içe gömülü section
+  --sp-surface-4:       #475569;   // disabled
+
+  // Border
+  --sp-border:          #1e293b;
+  --sp-border-strong:   #334155;
+
+  // Text
+  --sp-text-1:          #f1f5f9;
+  --sp-text-2:          #94a3b8;
+  --sp-text-3:          #475569;
+  --sp-text-inv:        #0f172a;
+
+  // Primary — daha parlak göster
+  --sp-primary:         #818cf8;
+  --sp-primary-light:   #a5b4fc;
+  --sp-primary-dark:    #6366f1;
+  --sp-primary-ghost:   rgba(129, 140, 248, 0.15);
+  --sp-primary-ghost-hover: rgba(129, 140, 248, 0.22);
+
+  // Shadows — daha güçlü (koyu zemin üzerinde)
+  --sp-shadow-card:     0 1px 3px rgb(0 0 0 / 0.3), 0 4px 16px rgb(0 0 0 / 0.4);
+  --sp-shadow-hover:    0 4px 6px rgb(0 0 0 / 0.3), 0 12px 24px rgb(0 0 0 / 0.5);
+
+  // Sidebar — daha koyu
+  --sp-sidebar-bg:      #020617;
+  --sp-sidebar-bg-end:  #0f172a;
+
+  // Scrollbar
+  --sp-scrollbar-track: #1e293b;
+  --sp-scrollbar-thumb: #334155;
+}
+
+// =============================================================================
+// SEPIA THEME (Göz Dostu / Okuma Modu)
+// =============================================================================
+[data-sp-theme='sepia'] {
+  --sp-surface:       #fdf6e3;
+  --sp-surface-2:     #f5edd0;
+  --sp-surface-3:     #ede0ba;
+  --sp-surface-4:     #d4c5a0;
+  --sp-border:        #d4c5a0;
+  --sp-border-strong: #b9a880;
+  --sp-text-1:        #3d2b1f;
+  --sp-text-2:        #6b4c35;
+  --sp-text-3:        #9b7b5e;
+}

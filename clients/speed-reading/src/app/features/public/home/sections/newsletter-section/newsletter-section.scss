@@ -1,0 +1,169 @@
+.newsletter-section {
+    padding: 5rem 0;
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    color: white;
+
+    .container {
+        max-width: 75rem;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    .newsletter-content {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 3rem;
+        align-items: center;
+
+        @media (min-width: 48rem) {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    .newsletter-text {
+        h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+
+            @media (max-width: 48rem) {
+                font-size: 2rem;
+            }
+        }
+
+        p {
+            font-size: 1.125rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .benefits {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+
+            li {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                margin-bottom: 0.75rem;
+                font-size: 1rem;
+
+                mat-icon {
+                    color: #10b981;
+                    font-size: 1.25rem;
+                    width: 1.25rem;
+                    height: 1.25rem;
+                }
+            }
+        }
+    }
+
+    .newsletter-form-container {
+        .form-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 1.25rem 2.5rem rgba(0, 0, 0, 0.2);
+
+            form {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .email-field {
+                width: 100%;
+
+                ::ng-deep {
+                    .mat-mdc-text-field-wrapper {
+                        background: #f9fafb;
+                    }
+
+                    .mat-mdc-form-field-subscript-wrapper {
+                        height: 1.25rem;
+                    }
+                }
+            }
+
+            .subscribe-btn {
+                width: 100%;
+                padding: 0.875rem 1.5rem;
+                font-size: 1rem;
+                font-weight: 600;
+                background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+                color: white;
+                border: none;
+                border-radius: 0.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+
+                &:hover:not(:disabled) {
+                    transform: translateY(-2px);
+                    box-shadow: 0 0.625rem 1.25rem rgba(30, 58, 138, 0.3);
+                }
+
+                &:disabled {
+                    opacity: 0.7;
+                    cursor: not-allowed;
+                }
+            }
+
+            .error-message {
+                color: #ef4444;
+                font-size: 0.875rem;
+                text-align: center;
+            }
+
+            .privacy-note {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                font-size: 0.75rem;
+                color: #6b7280;
+                margin-top: 1rem;
+
+                mat-icon {
+                    font-size: 1rem;
+                    width: 1rem;
+                    height: 1rem;
+                }
+            }
+        }
+
+        .success-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 3rem 2rem;
+            text-align: center;
+            box-shadow: 0 1.25rem 2.5rem rgba(0, 0, 0, 0.2);
+
+            .success-icon {
+                font-size: 4rem;
+                width: 4rem;
+                height: 4rem;
+                color: #10b981;
+                margin-bottom: 1rem;
+            }
+
+            h3 {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: #1f2937;
+                margin-bottom: 0.75rem;
+            }
+
+            p {
+                color: #6b7280;
+                font-size: 1rem;
+                line-height: 1.6;
+            }
+        }
+    }
+}

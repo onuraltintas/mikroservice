@@ -1,0 +1,126 @@
+<!-- ── Header ──────────────────────────────────────────────────────── -->
+<div class="dialog-header">
+  <div class="header-left">
+    <div class="header-icon" [class.edit-mode]="isEditMode">
+      <mat-icon>{{ isEditMode ? 'edit' : 'add_circle' }}</mat-icon>
+    </div>
+    <div>
+      <h2>{{ isEditMode ? 'Platformu Düzenle' : 'Yeni Platform Oluştur' }}</h2>
+      <p>{{ isEditMode ? 'Platform bilgilerini güncelleyin' : 'Sisteme yeni bir platform ekleyin' }}</p>
+    </div>
+  </div>
+  <button mat-icon-button class="close-btn" (click)="cancel()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content>
+  <form [formGroup]="form" class="form-content">
+
+    <!-- Ad -->
+    <div class="field-group">
+      <label class="field-label">Platform Adı <span class="req">*</span></label>
+      <mat-form-field appearance="outline" class="full-width">
+        <input matInput formControlName="name" placeholder="Örn: Hızlı Okuma">
+        <mat-icon matPrefix>label</mat-icon>
+        <mat-error *ngIf="form.get('name')?.hasError('required')">Platform adı zorunludur</mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- Slug -->
+    <div class="field-group">
+      <label class="field-label">
+        Slug <span class="req">*</span>
+        <span class="label-hint" *ngIf="isEditMode">— değiştirilemez</span>
+      </label>
+      <mat-form-field appearance="outline" class="full-width">
+        <input matInput formControlName="slug" placeholder="hizliokuma">
+        <mat-icon matPrefix>tag</mat-icon>
+        <mat-hint *ngIf="!isEditMode">Yalnızca küçük harf, rakam ve tire. Erişim kontrolünde kullanılır.</mat-hint>
+        <mat-error *ngIf="form.get('slug')?.hasError('required')">Slug zorunludur</mat-error>
+        <mat-error *ngIf="form.get('slug')?.hasError('pattern')">Yalnızca a-z, 0-9, tire kullanılabilir</mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- Açıklama -->
+    <div class="field-group">
+      <label class="field-label">Açıklama</label>
+      <mat-form-field appearance="outline" class="full-width">
+        <textarea matInput formControlName="description" rows="2"
+          placeholder="Platformun kısa açıklaması..."></textarea>
+      </mat-form-field>
+    </div>
+
+    <!-- Bundle / Included Products -->
+    <div class="field-group" *ngIf="otherProducts.length > 0">
+      <label class="field-label">Bundle İçeriği</label>
+      <p class="bundle-hint">
+        Bu platform tek başına bir ürünse boş bırakın.
+        Combo/bundle ise hangi platformlara erişim sağladığını seçin.
+      </p>
+      <div class="bundle-cards">
+        <div class="bundle-card"
+             *ngFor="let p of otherProducts"
+             [class.selected]="isIncluded(p.slug)"
+             (click)="toggleIncluded(p.slug)">
+          <div class="bundle-card-icon">
+            <mat-icon>{{ getProductIcon(p.slug) }}</mat-icon>
+          </div>
+          <div class="bundle-card-body">
+            <span class="bundle-card-name">{{ p.name }}</span>
+            <span class="bundle-card-slug">{{ p.slug }}</span>
+          </div>
+          <mat-icon class="bundle-check" *ngIf="isIncluded(p.slug)">check_circle</mat-icon>
+        </div>
+      </div>
+      <p class="bundle-summary" *ngIf="selectedSlugs.size > 0">
+        Bu platform şunlara erişim verir:
+        <strong>{{ Array.from(selectedSlugs).join(', ') }}</strong>
+      </p>
+    </div>
+
+    <!-- Sıra -->
+    <div class="field-group">
+      <label class="field-label">Sıra</label>
+      <mat-form-field appearance="outline" style="width: 120px">
+        <input matInput type="number" formControlName="sortOrder" min="0" placeholder="0">
+        <mat-icon matPrefix>sort</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <!-- Toggle kartlar -->
+    <div class="field-group">
+      <label class="field-label">Ayarlar</label>
+      <div class="toggle-cards">
+        <div class="toggle-card" [class.on]="form.get('isActive')?.value"
+             (click)="form.get('isActive')!.setValue(!form.get('isActive')!.value)">
+          <mat-icon>{{ form.get('isActive')?.value ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+          <div>
+            <span class="tc-title">Aktif</span>
+            <span class="tc-desc">Platform kullanılabilir</span>
+          </div>
+        </div>
+        <div class="toggle-card" [class.on]="form.get('isPublic')?.value"
+             (click)="form.get('isPublic')!.setValue(!form.get('isPublic')!.value)">
+          <mat-icon>{{ form.get('isPublic')?.value ? 'visibility' : 'visibility_off' }}</mat-icon>
+          <div>
+            <span class="tc-title">Herkese Açık</span>
+            <span class="tc-desc">Genel listede görünür</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="dialog-actions">
+  <button mat-stroked-button (click)="cancel()">İptal</button>
+  <button mat-raised-button color="primary"
+          [disabled]="loading() || form.invalid"
+          (click)="save()">
+    <mat-spinner *ngIf="loading()" diameter="18" class="btn-spinner"></mat-spinner>
+    <mat-icon *ngIf="!loading()">{{ isEditMode ? 'save' : 'add_circle' }}</mat-icon>
+    {{ isEditMode ? 'Güncelle' : 'Oluştur' }}
+  </button>
+</mat-dialog-actions>

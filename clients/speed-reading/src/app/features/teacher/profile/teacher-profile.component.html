@@ -1,0 +1,173 @@
+<div class="page-container">
+    <!-- Header -->
+    <div class="header-section">
+        <div>
+            <h1 class="page-title">Profil Yönetimi</h1>
+            <p class="page-subtitle">Kişisel bilgilerinizi ve hesap ayarlarınızı buradan yönetebilirsiniz.</p>
+        </div>
+    </div>
+
+    <div class="profile-layout" *ngIf="loading()">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    </div>
+
+    <div class="profile-layout" *ngIf="!loading() && user() as userData">
+
+        <!-- Left Column: Summary Card -->
+        <div class="left-col">
+            <mat-card class="summary-card" appearance="outlined">
+                <div class="profile-header-bg"></div>
+                <div class="profile-avatar-wrapper">
+                    <div class="profile-avatar">
+                        {{ getInitials(userData.firstName, userData.lastName) }}
+                    </div>
+                </div>
+
+                <mat-card-content class="summary-content">
+                    <h2 class="user-name">{{ userData.firstName }} {{ userData.lastName }}</h2>
+                    <span class="user-role">Öğretmen</span>
+
+                    <div class="info-list">
+                        <div class="info-item" *ngIf="userData.institutionName">
+                            <mat-icon>business</mat-icon>
+                            <span>{{ userData.institutionName }}</span>
+                        </div>
+                        <div class="info-item">
+                            <mat-icon>email</mat-icon>
+                            <span>{{ userData.email }}</span>
+                        </div>
+                        <div class="info-item" *ngIf="userData.phoneNumber">
+                            <mat-icon>phone</mat-icon>
+                            <span>{{ userData.phoneNumber }}</span>
+                        </div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+
+        <!-- Right Column: Tabs -->
+        <div class="right-col">
+            <mat-card class="edit-card" appearance="outlined">
+                <mat-tab-group animationDuration="0ms">
+
+                    <!-- Tab 1: Profile -->
+                    <mat-tab label="Kişisel Bilgiler">
+                        <div class="tab-content">
+                            <form [formGroup]="profileForm" (ngSubmit)="updateProfile()" class="profile-form">
+
+                                <div class="form-row">
+                                    <mat-form-field appearance="outline" class="half-width">
+                                        <mat-label>Ad</mat-label>
+                                        <input matInput formControlName="firstName" placeholder="Adınız">
+                                        <mat-icon matSuffix>person</mat-icon>
+                                        <mat-error *ngIf="profileForm.get('firstName')?.hasError('required')">Ad
+                                            zorunludur</mat-error>
+                                    </mat-form-field>
+
+                                    <mat-form-field appearance="outline" class="half-width">
+                                        <mat-label>Soyad</mat-label>
+                                        <input matInput formControlName="lastName" placeholder="Soyadınız">
+                                        <mat-icon matSuffix>person</mat-icon>
+                                        <mat-error *ngIf="profileForm.get('lastName')?.hasError('required')">Soyad
+                                            zorunludur</mat-error>
+                                    </mat-form-field>
+                                </div>
+
+                                <div class="form-row">
+                                    <mat-form-field appearance="outline" class="full-width">
+                                        <mat-label>E-posta Adresi</mat-label>
+                                        <input matInput formControlName="email" type="email">
+                                        <mat-icon matSuffix>email</mat-icon>
+                                        <mat-hint>E-posta adresi değiştirilemez</mat-hint>
+                                    </mat-form-field>
+                                </div>
+
+                                <div class="form-row">
+                                    <mat-form-field appearance="outline" class="half-width">
+                                        <mat-label>Telefon Numarası</mat-label>
+                                        <input matInput formControlName="phoneNumber" placeholder="555 555 55 55">
+                                        <mat-icon matSuffix>phone</mat-icon>
+                                    </mat-form-field>
+
+                                    <mat-form-field appearance="outline" class="half-width">
+                                        <mat-label>Doğum Tarihi</mat-label>
+                                        <input matInput [matDatepicker]="picker" formControlName="dateOfBirth">
+                                        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                                        <mat-datepicker #picker></mat-datepicker>
+                                    </mat-form-field>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button mat-flat-button color="primary" type="submit"
+                                        [disabled]="profileForm.invalid || profileForm.pristine || saving()">
+                                        <mat-icon *ngIf="!saving()">save</mat-icon>
+                                        <mat-spinner diameter="20" *ngIf="saving()"></mat-spinner>
+                                        <span>{{ saving() ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet' }}</span>
+                                    </button>
+                                </div>
+
+                            </form>
+                        </div>
+                    </mat-tab>
+
+                    <!-- Tab 2: Security -->
+                    <mat-tab label="Güvenlik & Şifre">
+                        <div class="tab-content">
+                            <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="profile-form">
+
+                                <div class="form-row">
+                                    <mat-form-field appearance="outline" class="full-width">
+                                        <mat-label>Mevcut Şifre</mat-label>
+                                        <input matInput formControlName="currentPassword" type="password">
+                                        <mat-icon matSuffix>lock_open</mat-icon>
+                                        <mat-error
+                                            *ngIf="passwordForm.get('currentPassword')?.hasError('required')">Mevcut
+                                            şifre gereklidir</mat-error>
+                                    </mat-form-field>
+                                </div>
+
+                                <mat-divider class="my-4"></mat-divider>
+
+                                <div class="form-row">
+                                    <mat-form-field appearance="outline" class="half-width">
+                                        <mat-label>Yeni Şifre</mat-label>
+                                        <input matInput formControlName="newPassword" type="password">
+                                        <mat-icon matSuffix>lock</mat-icon>
+                                        <mat-error *ngIf="passwordForm.get('newPassword')?.hasError('required')">Yeni
+                                            şifre gereklidir</mat-error>
+                                        <mat-error *ngIf="passwordForm.get('newPassword')?.hasError('minlength')">En az
+                                            8 karakter olmalı</mat-error>
+                                        <mat-error *ngIf="passwordForm.get('newPassword')?.hasError('pattern')">
+                                            Büyük/küçük harf, rakam ve özel karakter
+                                        </mat-error>
+                                    </mat-form-field>
+
+                                    <mat-form-field appearance="outline" class="half-width">
+                                        <mat-label>Yeni Şifre (Tekrar)</mat-label>
+                                        <input matInput formControlName="confirmNewPassword" type="password">
+                                        <mat-icon matSuffix>lock_clock</mat-icon>
+                                        <mat-error
+                                            *ngIf="passwordForm.get('confirmNewPassword')?.hasError('required')">Şifre
+                                            tekrarı gereklidir</mat-error>
+                                        <mat-error *ngIf="passwordForm.hasError('mismatch')">Şifreler
+                                            uyuşmuyor</mat-error>
+                                    </mat-form-field>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button mat-flat-button color="warn" type="submit"
+                                        [disabled]="passwordForm.invalid || saving()">
+                                        <mat-icon *ngIf="!saving()">key</mat-icon>
+                                        <mat-spinner diameter="20" *ngIf="saving()"></mat-spinner>
+                                        <span>{{ saving() ? 'İşleniyor...' : 'Şifreyi Güncelle' }}</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </mat-tab>
+
+                </mat-tab-group>
+            </mat-card>
+        </div>
+    </div>
+</div>

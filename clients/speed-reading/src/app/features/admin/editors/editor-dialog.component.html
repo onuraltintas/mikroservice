@@ -1,0 +1,78 @@
+<h2 mat-dialog-title>
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <mat-icon>{{ isEditMode ? 'edit' : 'person_add' }}</mat-icon>
+        <span>{{ isEditMode ? 'Editör Düzenle' : 'Yeni Editör' }}</span>
+    </div>
+</h2>
+
+<mat-dialog-content>
+    <form [formGroup]="userForm">
+        <div class="form-grid">
+            <!-- First Name -->
+            <mat-form-field appearance="outline">
+                <mat-label>Ad</mat-label>
+                <input matInput formControlName="firstName" placeholder="Ad">
+                <mat-error *ngIf="userForm.get('firstName')?.hasError('required')">Zorunlu</mat-error>
+            </mat-form-field>
+
+            <!-- Last Name -->
+            <mat-form-field appearance="outline">
+                <mat-label>Soyad</mat-label>
+                <input matInput formControlName="lastName" placeholder="Soyad">
+                <mat-error *ngIf="userForm.get('lastName')?.hasError('required')">Zorunlu</mat-error>
+            </mat-form-field>
+
+            <!-- Email -->
+            <mat-form-field appearance="outline">
+                <mat-label>E-posta</mat-label>
+                <input matInput formControlName="email" type="email" placeholder="ornek@email.com">
+                <mat-icon matSuffix>email</mat-icon>
+                <mat-error *ngIf="userForm.get('email')?.hasError('required')">Zorunlu</mat-error>
+                <mat-error *ngIf="userForm.get('email')?.hasError('email')">Geçersiz</mat-error>
+            </mat-form-field>
+
+            <!-- Phone -->
+            <mat-form-field appearance="outline">
+                <mat-label>Telefon</mat-label>
+                <input matInput formControlName="phoneNumber" placeholder="0555...">
+                <mat-icon matSuffix>phone</mat-icon>
+            </mat-form-field>
+
+            <!-- Password (required for new, optional for edit) -->
+            <div class="password-group full-width">
+                <mat-form-field appearance="outline">
+                    <mat-label>{{ isEditMode ? 'Yeni Şifre (İsteğe Bağlı)' : 'Şifre' }}</mat-label>
+                    <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password"
+                        [placeholder]="isEditMode ? 'Değiştirmek için yeni şifre girin' : 'Şifre'">
+                    <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button"
+                        tabindex="-1">
+                        <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+                    </button>
+                    <mat-error *ngIf="userForm.get('password')?.hasError('required')">Zorunlu</mat-error>
+                </mat-form-field>
+
+                <div *ngIf="userForm.get('password')?.invalid && userForm.get('password')?.touched && userForm.get('password')?.value"
+                    class="password-errors">
+                    <small class="text-danger d-block" *ngFor="let error of passwordErrorMessages">
+                        <span *ngIf="userForm.get('password')?.hasError(error.type)">• {{error.message}}</span>
+                    </small>
+                </div>
+                <mat-hint *ngIf="isEditMode">Şifreyi değiştirmek istemiyorsanız boş bırakın</mat-hint>
+            </div>
+        </div>
+    </form>
+
+    <!-- Loading -->
+    <div *ngIf="saving" class="saving-overlay">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Kaydediliyor...</p>
+    </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" [disabled]="saving">İptal</button>
+    <button mat-raised-button color="primary" (click)="onSave()" [disabled]="userForm.invalid || saving">
+        <mat-spinner diameter="20" *ngIf="saving"></mat-spinner>
+        <span *ngIf="!saving">{{ isEditMode ? 'Güncelle' : 'Oluştur' }}</span>
+    </button>
+</mat-dialog-actions>

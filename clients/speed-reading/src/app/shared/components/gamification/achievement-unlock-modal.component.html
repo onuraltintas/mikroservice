@@ -1,0 +1,29 @@
+<div class="achievement-modal" [@fadeIn]>
+    <div class="stars">✨</div>
+
+    <h1 class="title" [@slideDown]>Rozet Kazandın!</h1>
+
+    <div class="achievements-container">
+        @for (achievement of data.achievements; track achievement.id) {
+        <div class="achievement-card" [@scaleIn]>
+            <div class="achievement-icon" [style.border-color]="getTierColor(achievement.tier)">
+                {{ achievement.iconEmoji }}
+            </div>
+            <div class="achievement-info">
+                <div class="achievement-name">{{ achievement.name }}</div>
+                <div class="achievement-tier" [style.color]="getTierColor(achievement.tier)">
+                    {{ getTierText(achievement.tier) }}
+                </div>
+                <div class="achievement-description">{{ achievement.description }}</div>
+                <div class="achievement-reward">
+                    <span class="xp-badge">+{{ achievement.xpReward }} XP</span>
+                </div>
+            </div>
+        </div>
+        }
+    </div>
+
+    <div mat-dialog-actions>
+        <button mat-raised-button color="primary" (click)="close()">Harika!</button>
+    </div>
+</div>

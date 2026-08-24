@@ -1,0 +1,30 @@
+.qw-widget {
+  background: linear-gradient(135deg, var(--sp-primary-ghost) 0%, rgba(139, 92, 246, 0.06) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: var(--sp-radius-card);
+  padding: 20px;
+  display: flex;
+  gap: 14px;
+}
+.qw-icon-wrap {
+  flex-shrink: 0;
+  .material-icons {
+    font-size: 28px;
+    color: var(--sp-primary-light);
+    opacity: 0.6;
+  }
+}
+.qw-quote { margin: 0; flex: 1; }
+.qw-text {
+  font-family: var(--sp-font-sans);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--sp-text-1);
+  margin: 0 0 8px;
+  font-style: italic;
+}
+.qw-author {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--sp-primary);
+}

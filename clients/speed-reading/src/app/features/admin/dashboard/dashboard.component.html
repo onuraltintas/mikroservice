@@ -1,0 +1,102 @@
+<div class="dashboard-container">
+    <!-- Başlık Bölümü -->
+    <div class="header-section">
+        <div class="welcome-banner">
+            <div class="welcome-content">
+                <h1>
+                    <mat-icon class="welcome-icon">dashboard</mat-icon>
+                    Yönetim Paneli
+                </h1>
+                <p class="welcome-subtitle">Hızlı Okuma platformunu buradan yönetebilirsiniz</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hızlı Erişim Kartları -->
+    <div class="quick-actions-section">
+        <h2 class="section-title">
+            <mat-icon>bolt</mat-icon>
+            Hızlı Erişim
+        </h2>
+        <div class="quick-actions-grid">
+            <mat-card *ngFor="let card of dashboardCards" class="dashboard-card" [class]="'card-' + card.color"
+                [routerLink]="card.route" matRipple>
+                <mat-card-header>
+                    <div class="card-icon-wrapper" [class]="'icon-' + card.color">
+                        <mat-icon class="card-icon">{{ card.icon }}</mat-icon>
+                    </div>
+                    <mat-card-title>{{ card.title }}</mat-card-title>
+                    <span *ngIf="card.badge" class="card-badge">{{ card.badge }}</span>
+                </mat-card-header>
+                <mat-card-content>
+                    <p>{{ card.description }}</p>
+                </mat-card-content>
+                <mat-card-actions>
+                    <button mat-button color="primary">
+                        Yönet
+                        <mat-icon>arrow_forward</mat-icon>
+                    </button>
+                </mat-card-actions>
+            </mat-card>
+        </div>
+    </div>
+
+    <!-- İçerik Yönetimi -->
+    <div class="content-management-section">
+        <h2 class="section-title">
+            <mat-icon>library_books</mat-icon>
+            İçerik Yönetimi
+        </h2>
+        <div class="content-grid">
+            <mat-card *ngFor="let item of contentManagement" class="content-card" [routerLink]="item.route" matRipple>
+                <div class="content-card-header">
+                    <mat-icon [style.color]="item.iconColor">{{ item.icon }}</mat-icon>
+                    <h3>{{ item.title }}</h3>
+                </div>
+                <p>{{ item.description }}</p>
+                <div class="content-card-footer">
+                    <mat-icon>arrow_forward</mat-icon>
+                </div>
+            </mat-card>
+        </div>
+    </div>
+
+    <!-- Sistem Yönetimi -->
+    <div class="system-management-section">
+        <h2 class="section-title">
+            <mat-icon>settings</mat-icon>
+            Sistem Yönetimi
+        </h2>
+        <div class="system-grid">
+            <mat-card *ngFor="let item of systemManagement" class="system-card" [routerLink]="item.route" matRipple>
+                <mat-icon class="system-icon">{{ item.icon }}</mat-icon>
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.description }}</p>
+            </mat-card>
+        </div>
+    </div>
+
+    <!-- Yardım Bölümü -->
+    <div class="help-section">
+        <mat-card class="help-card">
+            <mat-card-header>
+                <mat-icon class="help-icon">help_outline</mat-icon>
+                <mat-card-title>Yardıma mı ihtiyacınız var?</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                <p>Platform yönetimi hakkında sorularınız için dokümantasyonu inceleyebilir veya destek ekibiyle
+                    iletişime geçebilirsiniz.</p>
+                <div class="help-buttons">
+                    <button mat-raised-button color="primary">
+                        <mat-icon>description</mat-icon>
+                        Dokümantasyon
+                    </button>
+                    <button mat-raised-button>
+                        <mat-icon>support_agent</mat-icon>
+                        Destek
+                    </button>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </div>
+</div>

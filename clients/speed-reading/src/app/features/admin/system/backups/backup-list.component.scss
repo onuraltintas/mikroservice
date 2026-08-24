@@ -1,0 +1,60 @@
+.system-backups-container {
+    padding: 1.5rem;
+
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+    }
+
+    .settings-panel {
+        margin-bottom: 1.5rem;
+    }
+
+    .flex-row {
+        display: flex;
+    }
+
+    .align-center {
+        align-items: center;
+    }
+
+    .gap-16 {
+        gap: 1rem;
+    }
+
+    .mb-16 {
+        margin-bottom: 1rem;
+    }
+
+    .mt-16 {
+        margin-top: 1rem;
+    }
+
+    .mt-24 {
+        margin-top: 1.5rem;
+    }
+
+    .mr-8 {
+        margin-right: 0.5rem;
+    }
+
+    .mr-2 {
+        margin-right: 0.5rem;
+    }
+
+    .w-100 {
+        width: 100%;
+    }
+
+    .text-secondary {
+        color: rgba(0, 0, 0, 0.54);
+    }
+}

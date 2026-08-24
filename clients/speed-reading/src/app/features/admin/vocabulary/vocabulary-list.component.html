@@ -1,0 +1,180 @@
+<div class="vocabulary-container">
+    <div class="header">
+        <div>
+            <h1>Kelime Yönetimi</h1>
+            <p class="subtitle">Kelime havuzunu yönetin</p>
+        </div>
+        <div class="header-actions">
+            <button mat-raised-button (click)="downloadTemplate()">
+                <mat-icon>download</mat-icon>
+                Şablon İndir
+            </button>
+            <button mat-raised-button [matMenuTriggerFor]="importExportMenu">
+                <mat-icon>import_export</mat-icon>
+                İçe/Dışa Aktar
+            </button>
+            <mat-menu #importExportMenu="matMenu">
+                <button mat-menu-item (click)="fileInput.click()">
+                    <mat-icon>upload_file</mat-icon>
+                    <span>Dosyadan İçe Aktar</span>
+                </button>
+                <button mat-menu-item (click)="exportVocabulary()">
+                    <mat-icon>download</mat-icon>
+                    <span>Tüm Kelimeleri Dışa Aktar</span>
+                </button>
+                <mat-divider></mat-divider>
+                <button mat-menu-item (click)="exportFiltered()" [disabled]="!hasActiveFilters()">
+                    <mat-icon>filter_list</mat-icon>
+                    <span>Filtrelenmiş Listeyi Dışa Aktar</span>
+                </button>
+            </mat-menu>
+            <input #fileInput type="file" accept=".csv,.xlsx" style="display: none" (change)="onFileSelected($event)">
+            <button mat-raised-button color="primary" (click)="openVocabularyDialog()">
+                <mat-icon>add</mat-icon>
+                Yeni Kelime
+            </button>
+        </div>
+    </div>
+
+    <mat-card class="categories-info-card">
+        <mat-card-content>
+            <div class="categories-header">
+                <h3><mat-icon>category</mat-icon> Mevcut Kategoriler</h3>
+                <span class="category-count">{{ categories.length }} kategori</span>
+            </div>
+            <div class="categories-chips">
+                <mat-chip *ngFor="let cat of categoriesWithCount" class="category-chip">
+                    {{ cat.name }} ({{ cat.count }})
+                </mat-chip>
+                <div class="category-hint" *ngIf="categories.length === 0">
+                    <mat-icon>info</mat-icon>
+                    Henüz kategori yok. Yeni kelime ekleyerek kategori oluşturabilirsiniz.
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+
+    <mat-card class="filters-card">
+        <mat-card-content>
+            <div class="filters">
+                <mat-form-field appearance="outline">
+                    <mat-label>Ara</mat-label>
+                    <input matInput [(ngModel)]="filters.search" (ngModelChange)="onFilterChange()"
+                        placeholder="Kelime veya tanım ara...">
+                    <mat-icon matPrefix>search</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Kategori</mat-label>
+                    <mat-select [(ngModel)]="filters.category" (ngModelChange)="onFilterChange()">
+                        <mat-option [value]="''">Tümü</mat-option>
+                        <mat-option *ngFor="let cat of categories" [value]="cat">{{ cat }}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Zorluk Seviyesi</mat-label>
+                    <mat-select [(ngModel)]="filters.difficulty" (ngModelChange)="onFilterChange()">
+                        <mat-option [value]="undefined">Tümü</mat-option>
+                        <mat-option [value]="1">1 - Başlangıç</mat-option>
+                        <mat-option [value]="2">2 - Temel</mat-option>
+                        <mat-option [value]="3">3 - Orta</mat-option>
+                        <mat-option [value]="4">4 - İleri</mat-option>
+                        <mat-option [value]="5">5 - Uzman</mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Yaş Grubu</mat-label>
+                    <mat-select [(ngModel)]="filters.ageGroupId" (ngModelChange)="onFilterChange()">
+                        <mat-option [value]="''">Tümü</mat-option>
+                        <mat-option *ngFor="let group of ageGroups" [value]="group.id">
+                            {{ group.displayName }} ({{ ageGroupService.formatAgeRange(group) }})
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <button mat-button (click)="clearFilters()" *ngIf="hasActiveFilters()">
+                    <mat-icon>clear</mat-icon>
+                    Filtreleri Temizle
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+        <mat-card-content>
+            <div *ngIf="loading()" class="loading">
+                <mat-spinner diameter="50"></mat-spinner>
+                <p>Yükleniyor...</p>
+            </div>
+
+            <table mat-table [dataSource]="vocabularyItems" class="vocabulary-table" *ngIf="!loading()">
+                <ng-container matColumnDef="word">
+                    <th mat-header-cell *matHeaderCellDef>Kelime</th>
+                    <td mat-cell *matCellDef="let item">
+                        <strong>{{ item.word }}</strong>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="definition">
+                    <th mat-header-cell *matHeaderCellDef>Tanım</th>
+                    <td mat-cell *matCellDef="let item">
+                        <div class="definition-text">{{ item.definition }}</div>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="category">
+                    <th mat-header-cell *matHeaderCellDef>Kategori</th>
+                    <td mat-cell *matCellDef="let item">
+                        <mat-chip>{{ item.category }}</mat-chip>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="difficulty">
+                    <th mat-header-cell *matHeaderCellDef>Zorluk</th>
+                    <td mat-cell *matCellDef="let item">
+                        <mat-chip [style.background-color]="getDifficultyColor(item.difficultyLevel)">
+                            {{ getDifficultyLabel(item.difficultyLevel) }}
+                        </mat-chip>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="ageGroup">
+                    <th mat-header-cell *matHeaderCellDef>Yaş Grubu</th>
+                    <td mat-cell *matCellDef="let item">
+                        <mat-chip>{{ getAgeGroupLabel(item.targetAgeGroupId!) }}</mat-chip>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef>İşlemler</th>
+                    <td mat-cell *matCellDef="let item">
+                        <button mat-icon-button (click)="openVocabularyDialog(item)" matTooltip="Düzenle">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn" (click)="deleteVocabulary(item)" matTooltip="Sil">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+
+            <mat-paginator *ngIf="!loading() && totalCount > 0" [length]="totalCount" [pageSize]="pageSize"
+                [pageIndex]="pageNumber - 1" [pageSizeOptions]="[10, 25, 50, 100]" (page)="onPageChange($event)"
+                showFirstLastButtons>
+            </mat-paginator>
+
+            <div *ngIf="vocabularyItems.length === 0 && !loading()" class="no-data">
+                <mat-icon>book</mat-icon>
+                <p>Henüz kelime eklenmemiş</p>
+                <button mat-raised-button color="primary" (click)="openVocabularyDialog()">
+                    İlk Kelimeyi Ekle
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</div>

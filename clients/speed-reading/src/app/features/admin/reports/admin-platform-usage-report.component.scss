@@ -1,0 +1,210 @@
+.platform-report {
+    max-width: 87.5rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem;
+}
+
+// Summary Stats Grid
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+
+    mat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+
+        &:hover {
+            transform: translateY(-0.25rem);
+            box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.15);
+        }
+
+        mat-card-content {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat {
+            font-size: 2.625rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+
+            &.positive {
+                color: #4caf50;
+            }
+        }
+
+        .label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    }
+}
+
+// Charts Grid
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(31.25rem, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+// Activity Stats
+.activity-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+
+    mat-card {
+        background: #f8f9fa;
+        border-radius: 0.75rem;
+        border-left: 0.25rem solid #1976d2;
+        transition: all 0.2s;
+
+        &:hover {
+            background: #e9ecef;
+            transform: translateX(0.25rem);
+        }
+
+        mat-card-content {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .label {
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    }
+}
+
+// Feature Stats
+.feature-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(18.75rem, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+
+    .feature-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        background: #f5f5f5;
+        border-radius: 0.5rem;
+        transition: all 0.2s;
+
+        &:hover {
+            background: #e0e0e0;
+            transform: translateX(0.25rem);
+        }
+
+        .feature-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9375rem;
+        }
+
+        .feature-count {
+            font-weight: 700;
+            color: #1976d2;
+            font-size: 1rem;
+        }
+    }
+}
+
+// Chart
+.chart {
+    height: 25rem;
+    margin-top: 1rem;
+    padding: 1rem;
+}
+
+// No Data
+.no-data {
+    text-align: center;
+    padding: 3rem;
+    color: #999;
+    font-style: italic;
+}
+
+// Cards
+mat-card {
+    margin-bottom: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 0.5rem rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.2s;
+
+    &:hover {
+        box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.12);
+    }
+
+    mat-card-header {
+        margin-bottom: 1rem;
+
+        mat-card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+        }
+    }
+}
+
+.full-width-chart {
+    margin-bottom: 2rem;
+}
+
+.simple-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.625rem;
+
+    th,
+    td {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+
+    th {
+        font-weight: 600;
+        color: #666;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        background-color: #fafafa;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    tr:hover {
+        background-color: #f8f9fa;
+    }
+}

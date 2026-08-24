@@ -1,0 +1,260 @@
+<div class="home-page-editor" [formGroup]="homePageForm">
+    <div class="header">
+        <h2>Ana Sayfa Yönetimi</h2>
+        <div class="actions">
+            <button mat-button (click)="onCancel()" [disabled]="loading()">
+                <mat-icon>cancel</mat-icon>
+                İptal
+            </button>
+            <button mat-raised-button color="primary" (click)="onSave()"
+                [disabled]="homePageForm.get('hero')?.invalid || loading()">
+                <mat-spinner *ngIf="loading()" diameter="20" class="button-spinner"></mat-spinner>
+                <mat-icon *ngIf="!loading()">save</mat-icon>
+                {{ loading() ? 'Kaydediliyor...' : 'Kaydet' }}
+            </button>
+        </div>
+    </div>
+
+    <div class="loading-overlay" *ngIf="loading()"
+        style="display: flex; justify-content: center; align-items: center; padding: 4rem;">
+        <mat-spinner diameter="48"></mat-spinner>
+    </div>
+
+    <mat-tab-group animationDuration="0ms" *ngIf="!loading()">
+
+        <!-- HERO -->
+        <mat-tab label="Hero Section">
+            <div class="tab-content" formGroupName="hero">
+                <h3>Hero Section</h3>
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Başlık</mat-label>
+                    <input matInput formControlName="title">
+                    <mat-error>Başlık gereklidir</mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Alt Başlık</mat-label>
+                    <textarea matInput formControlName="subtitle" rows="3"></textarea>
+                    <mat-error>Alt başlık gereklidir</mat-error>
+                </mat-form-field>
+            </div>
+        </mat-tab>
+
+        <!-- ÖZELLİKLER -->
+        <mat-tab label="Özellikler">
+            <div class="tab-content" formGroupName="features">
+                <h3>Özellikler</h3>
+                <div formArrayName="list">
+                    <div *ngFor="let feature of featuresList.controls; let i = index; trackBy: trackByFn"
+                        class="form-array-item">
+                        <div [formGroup]="$any(feature)">
+                            <mat-form-field appearance="outline" class="full-width">
+                                <mat-label>Icon</mat-label>
+                                <mat-select formControlName="icon">
+                                    <mat-option *ngFor="let icon of iconOptions" [value]="icon.value">
+                                        <mat-icon>{{icon.value}}</mat-icon> {{icon.label}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                            <mat-form-field appearance="outline" class="full-width">
+                                <mat-label>Başlık</mat-label>
+                                <input matInput formControlName="title">
+                            </mat-form-field>
+                            <mat-form-field appearance="outline" class="full-width">
+                                <mat-label>Açıklama</mat-label>
+                                <textarea matInput formControlName="description" rows="3"></textarea>
+                            </mat-form-field>
+                            <button mat-icon-button color="warn" (click)="removeFeature(i)" class="delete-btn">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="empty-state" *ngIf="featuresList.controls.length === 0">
+                    <p>Henüz özellik eklenmemiş.</p>
+                </div>
+                <button mat-stroked-button (click)="addFeature()" class="add-btn">
+                    <mat-icon>add</mat-icon> Özellik Ekle
+                </button>
+            </div>
+        </mat-tab>
+
+        <!-- FİYATLANDIRMA -->
+        <mat-tab label="Fiyatlandırma">
+            <div class="tab-content" formGroupName="pricing">
+                <h3>Fiyatlandırma Bölümü</h3>
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Başlık</mat-label>
+                    <input matInput formControlName="title">
+                    <mat-error>Başlık gereklidir</mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Alt Başlık</mat-label>
+                    <textarea matInput formControlName="subtitle" rows="3"></textarea>
+                    <mat-error>Alt başlık gereklidir</mat-error>
+                </mat-form-field>
+
+                <div class="info-box">
+                    <mat-icon>info</mat-icon>
+                    <span>
+                        Abonelik planları (fiyat, özellik listesi vb.) artık
+                        <strong>Abonelikler &gt; Planlar</strong> bölümünden yönetilmektedir.
+                        Bu sekme yalnızca bölüm başlığını ve alt başlığını kontrol eder.
+                    </span>
+                </div>
+            </div>
+        </mat-tab>
+
+        <!-- İSTATİSTİKLER -->
+        <mat-tab label="İstatistikler">
+            <div class="tab-content">
+                <h3>İstatistikler</h3>
+                <p class="helper-text">Ana sayfada gösterilecek istatistik değerleri</p>
+                <div formArrayName="stats">
+                    <div *ngFor="let stat of statsList.controls; let i = index; trackBy: trackByFn"
+                        class="form-array-item"
+                        style="margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 1rem;">
+                        <div [formGroup]="$any(stat)">
+                            <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                                <mat-form-field appearance="outline" style="flex: 1">
+                                    <mat-label>Icon</mat-label>
+                                    <mat-select formControlName="icon">
+                                        <mat-option *ngFor="let icon of statIconOptions" [value]="icon.value">
+                                            <mat-icon>{{icon.value}}</mat-icon> {{icon.label}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                                <mat-form-field appearance="outline" style="flex: 1">
+                                    <mat-label>Etiket</mat-label>
+                                    <input matInput formControlName="label" placeholder="Örn: Aktif Kullanıcı">
+                                </mat-form-field>
+                                <mat-form-field appearance="outline" style="flex: 1">
+                                    <mat-label>Hedef Değer</mat-label>
+                                    <input matInput type="number" formControlName="target">
+                                </mat-form-field>
+                                <mat-form-field appearance="outline" style="flex: 1">
+                                    <mat-label>Format</mat-label>
+                                    <mat-select formControlName="format">
+                                        <mat-option *ngFor="let fmt of statFormatOptions" [value]="fmt.value">
+                                            {{fmt.label}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                            <button mat-icon-button color="warn" (click)="removeStat(i)">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="empty-state" *ngIf="statsList.controls.length === 0">
+                    <p>Henüz istatistik eklenmemiş.</p>
+                </div>
+                <button mat-stroked-button (click)="addStat()" class="add-btn">
+                    <mat-icon>add</mat-icon> İstatistik Ekle
+                </button>
+            </div>
+        </mat-tab>
+
+        <!-- SSS -->
+        <mat-tab label="SSS">
+            <div class="tab-content">
+                <h3>Sıkça Sorulan Sorular</h3>
+                <div formArrayName="faqs">
+                    <div *ngFor="let faq of faqList.controls; let i = index; trackBy: trackByFn"
+                        class="form-array-item"
+                        style="margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 1rem;">
+                        <div [formGroup]="$any(faq)">
+                            <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                                <mat-form-field appearance="outline" style="flex: 2">
+                                    <mat-label>Soru</mat-label>
+                                    <input matInput formControlName="question">
+                                </mat-form-field>
+                                <mat-form-field appearance="outline" style="flex: 1">
+                                    <mat-label>Kategori</mat-label>
+                                    <mat-select formControlName="category">
+                                        <mat-option *ngFor="let cat of faqCategoryOptions" [value]="cat">
+                                            {{cat}}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                            <mat-form-field appearance="outline" class="full-width">
+                                <mat-label>Cevap</mat-label>
+                                <textarea matInput formControlName="answer" rows="3"></textarea>
+                            </mat-form-field>
+                            <button mat-icon-button color="warn" (click)="removeFaq(i)">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="empty-state" *ngIf="faqList.controls.length === 0">
+                    <p>Henüz SSS eklenmemiş.</p>
+                </div>
+                <button mat-stroked-button (click)="addFaq()" class="add-btn">
+                    <mat-icon>add</mat-icon> Soru Ekle
+                </button>
+            </div>
+        </mat-tab>
+
+        <!-- CTA -->
+        <mat-tab label="CTA Bölümü">
+            <div class="tab-content" formGroupName="cta">
+                <h3>CTA (Harekete Geçirici Mesaj) Bölümü</h3>
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Başlık</mat-label>
+                    <input matInput formControlName="title" placeholder="Örn: Okuma Becerilerinizi Geliştirmeye Hazır mısınız?">
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Alt Başlık</mat-label>
+                    <textarea matInput formControlName="subtitle" rows="2"
+                        placeholder="Örn: Bugün başlayın ve 30 gün içinde okuma hızınızı ikiye katlayın"></textarea>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Buton Metni</mat-label>
+                    <input matInput formControlName="buttonText" placeholder="Örn: Hemen Başla">
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Alt Not</mat-label>
+                    <input matInput formControlName="smallText" placeholder="Örn: İlk 7 gün ücretsiz!">
+                </mat-form-field>
+            </div>
+        </mat-tab>
+
+        <!-- BLOG & NEWSLETTER -->
+        <mat-tab label="Blog & Newsletter">
+            <div class="tab-content">
+                <h3>Blog Bölümü</h3>
+                <div formGroupName="blog">
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Blog Bölümü Başlığı</mat-label>
+                        <input matInput formControlName="sectionTitle" placeholder="Örn: Blog & Kaynaklar">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Blog Bölümü Alt Başlığı</mat-label>
+                        <textarea matInput formControlName="sectionSubtitle" rows="2"></textarea>
+                    </mat-form-field>
+                </div>
+
+                <h3 style="margin-top: 2rem;">Newsletter Bölümü</h3>
+                <div formGroupName="newsletter">
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Başlık</mat-label>
+                        <input matInput formControlName="title" placeholder="Örn: Haftalık Bültenimize Abone Olun">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Açıklama</mat-label>
+                        <textarea matInput formControlName="description" rows="3"></textarea>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Faydalar (Her satıra bir tane)</mat-label>
+                        <textarea matInput formControlName="benefits" rows="4"
+                            placeholder="Her faydayı yeni bir satıra yazın&#10;Örn: Her hafta yeni teknikler ve ipuçları"></textarea>
+                        <mat-hint>Her satır ayrı bir liste maddesi olarak gösterilir</mat-hint>
+                    </mat-form-field>
+                </div>
+            </div>
+        </mat-tab>
+
+    </mat-tab-group>
+</div>

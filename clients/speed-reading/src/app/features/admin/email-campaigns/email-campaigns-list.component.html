@@ -1,0 +1,130 @@
+<div class="campaigns-page">
+    <div class="page-header">
+        <h1>E-posta Kampanyaları</h1>
+        <button mat-raised-button color="primary" (click)="createCampaign()">
+            <mat-icon>add</mat-icon>
+            Yeni Kampanya
+        </button>
+    </div>
+
+    <mat-card class="filters-card">
+        <div class="filters">
+            <mat-form-field>
+                <mat-label>Durum</mat-label>
+                <mat-select [(ngModel)]="selectedStatus" (ngModelChange)="loadCampaigns()">
+                    <mat-option [value]="undefined">Tümü</mat-option>
+                    <mat-option [value]="CampaignStatus.Draft">{{ getStatusLabel(CampaignStatus.Draft) }}</mat-option>
+                    <mat-option [value]="CampaignStatus.Scheduled">{{ getStatusLabel(CampaignStatus.Scheduled)
+                        }}</mat-option>
+                    <mat-option [value]="CampaignStatus.Sending">{{ getStatusLabel(CampaignStatus.Sending)
+                        }}</mat-option>
+                    <mat-option [value]="CampaignStatus.Sent">{{ getStatusLabel(CampaignStatus.Sent) }}</mat-option>
+                    <mat-option [value]="CampaignStatus.Cancelled">{{ getStatusLabel(CampaignStatus.Cancelled)
+                        }}</mat-option>
+                    <mat-option [value]="CampaignStatus.Failed">{{ getStatusLabel(CampaignStatus.Failed) }}</mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+    </mat-card>
+
+    <mat-card>
+        <div class="table-container">
+            <table mat-table [dataSource]="campaigns" class="campaigns-table">
+                <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef>Kampanya Adı</th>
+                    <td mat-cell *matCellDef="let campaign">
+                        <div class="campaign-info">
+                            <strong>{{ campaign.name }}</strong>
+                            <small>{{ campaign.subject }}</small>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Durum</th>
+                    <td mat-cell *matCellDef="let campaign">
+                        <mat-chip [class]="'status-' + campaign.status">
+                            {{ getStatusLabel(campaign.status) }}
+                        </mat-chip>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="targeting">
+                    <th mat-header-cell *matHeaderCellDef>Hedef Kitle</th>
+                    <td mat-cell *matCellDef="let campaign">
+                        <div class="targeting-info">
+                            <span *ngIf="campaign.includeAllUsers">Tüm Kullanıcılar</span>
+                            <span *ngIf="!campaign.includeAllUsers && campaign.targetRoles">
+                                {{ parseRoles(campaign.targetRoles) }}
+                            </span>
+                            <span *ngIf="!campaign.includeAllUsers && !campaign.targetRoles">Belirtilmemiş</span>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="stats">
+                    <th mat-header-cell *matHeaderCellDef>İstatistikler</th>
+                    <td mat-cell *matCellDef="let campaign">
+                        <div class="stats-info">
+                            <span
+                                *ngIf="campaign.status === CampaignStatus.Sent || campaign.status === CampaignStatus.Sending">
+                                {{ campaign.sentCount }}/{{ campaign.totalRecipients }} gönderildi
+                            </span>
+                            <span
+                                *ngIf="campaign.status === CampaignStatus.Draft || campaign.status === CampaignStatus.Scheduled">
+                                -
+                            </span>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="date">
+                    <th mat-header-cell *matHeaderCellDef>Tarih</th>
+                    <td mat-cell *matCellDef="let campaign">
+                        <div class="date-info">
+                            <span *ngIf="campaign.sentAt">
+                                Gönderildi: {{ campaign.sentAt | date:'dd/MM/yyyy HH:mm' }}
+                            </span>
+                            <span *ngIf="!campaign.sentAt && campaign.scheduledFor">
+                                Planlandı: {{ campaign.scheduledFor | date:'dd/MM/yyyy HH:mm' }}
+                            </span>
+                            <span *ngIf="!campaign.sentAt && !campaign.scheduledFor">
+                                Oluşturuldu: {{ campaign.createdAt | date:'dd/MM/yyyy HH:mm' }}
+                            </span>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef>İşlemler</th>
+                    <td mat-cell *matCellDef="let campaign">
+                        <button mat-icon-button (click)="viewStats(campaign)" title="İstatistikler"
+                            *ngIf="campaign.status === CampaignStatus.Sent || campaign.status === CampaignStatus.Sending">
+                            <mat-icon>analytics</mat-icon>
+                        </button>
+                        <button mat-icon-button (click)="editCampaign(campaign)" title="Düzenle"
+                            [disabled]="campaign.status !== CampaignStatus.Draft">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button color="primary" (click)="sendCampaign(campaign)" title="Gönder"
+                            [disabled]="campaign.status !== CampaignStatus.Draft && campaign.status !== CampaignStatus.Scheduled">
+                            <mat-icon>send</mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn" (click)="deleteCampaign(campaign)" title="Sil"
+                            [disabled]="campaign.status === CampaignStatus.Sending">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+        </div>
+
+        <div class="empty-state" *ngIf="campaigns.length === 0">
+            <mat-icon>email</mat-icon>
+            <p>Henüz kampanya oluşturulmamış</p>
+        </div>
+    </mat-card>
+</div>

@@ -1,0 +1,101 @@
+<!-- Performance Analysis Widget — Redesign -->
+<div class="pa-widget">
+  <div class="pa-widget__header">
+    <div class="pa-icon-wrap">
+      <span class="material-icons">analytics</span>
+    </div>
+    <div>
+      <h3 class="pa-widget__title">Performans Analizi</h3>
+      <p class="pa-widget__sub">Son egzersiz sonuçları</p>
+    </div>
+    <button class="pa-reports-btn" (click)="navigateToReports()" title="Tüm raporlar">
+      <span class="material-icons">arrow_forward</span>
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="pa-loading">
+      <div class="pa-spinner"></div>
+    </div>
+
+  } @else if (!hasRealData()) {
+    <div class="pa-empty">
+      <span class="material-icons pa-empty__icon">bar_chart</span>
+      <p class="pa-empty__title">Henüz veri yok</p>
+      <p class="pa-empty__hint">Egzersiz yaptıkça gelişimin burada görünecek.</p>
+    </div>
+
+  } @else if (performanceData()) {
+    @let data = performanceData()!;
+
+    <!-- 2x2 Metrik Kartları Gridi -->
+    <div class="pa-grid">
+
+      <!-- Okuma Hızı -->
+      <div class="pa-card pa-card--speed">
+        <svg class="pa-ring" viewBox="0 0 50 50" aria-hidden="true">
+          <circle class="pa-ring__track" cx="25" cy="25" r="20"/>
+          <circle class="pa-ring__fill pa-ring__fill--speed" cx="25" cy="25" r="20"
+            [attr.stroke-dasharray]="ringCircumference"
+            [attr.stroke-dashoffset]="getRingOffset(data.readingSpeed.percentage)"
+            transform="rotate(-90 25 25)"/>
+        </svg>
+        <div class="pa-card__body">
+          <span class="pa-card__value">{{ data.readingSpeed.current }}<small>kdk</small></span>
+          <span class="pa-card__label">Okuma Hızı</span>
+          <span class="pa-card__trend" [class.up]="data.readingSpeed.trend==='up'" [class.down]="data.readingSpeed.trend==='down'">
+            <span class="material-icons">{{ getTrendIcon(data.readingSpeed.trend) }}</span>
+            {{ data.readingSpeed.change !== 0 ? (data.readingSpeed.change > 0 ? '+' : '') + data.readingSpeed.change + '%' : 'Sabit' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Anlama -->
+      <div class="pa-card pa-card--comp">
+        <svg class="pa-ring" viewBox="0 0 50 50" aria-hidden="true">
+          <circle class="pa-ring__track" cx="25" cy="25" r="20"/>
+          <circle class="pa-ring__fill pa-ring__fill--comp" cx="25" cy="25" r="20"
+            [attr.stroke-dasharray]="ringCircumference"
+            [attr.stroke-dashoffset]="getRingOffset(data.comprehension.percentage)"
+            transform="rotate(-90 25 25)"/>
+        </svg>
+        <div class="pa-card__body">
+          <span class="pa-card__value">{{ data.comprehension.current }}<small>%</small></span>
+          <span class="pa-card__label">Anlama</span>
+          <span class="pa-card__sub-label">{{ data.comprehension.percentage >= 80 ? '🌟 Çok iyi' : data.comprehension.percentage >= 60 ? '👍 İyi' : '📚 Gelişiyor' }}</span>
+        </div>
+      </div>
+
+      <!-- Göz Hareketi -->
+      <div class="pa-card pa-card--eye">
+        <svg class="pa-ring" viewBox="0 0 50 50" aria-hidden="true">
+          <circle class="pa-ring__track" cx="25" cy="25" r="20"/>
+          <circle class="pa-ring__fill pa-ring__fill--eye" cx="25" cy="25" r="20"
+            [attr.stroke-dasharray]="ringCircumference"
+            [attr.stroke-dashoffset]="getRingOffset(data.eyeMovement.percentage)"
+            transform="rotate(-90 25 25)"/>
+        </svg>
+        <div class="pa-card__body">
+          <span class="pa-card__value">{{ data.eyeMovement.current }}<small>%</small></span>
+          <span class="pa-card__label">Göz Hareketi</span>
+        </div>
+      </div>
+
+      <!-- Konsantrasyon -->
+      <div class="pa-card pa-card--focus">
+        <svg class="pa-ring" viewBox="0 0 50 50" aria-hidden="true">
+          <circle class="pa-ring__track" cx="25" cy="25" r="20"/>
+          <circle class="pa-ring__fill pa-ring__fill--focus" cx="25" cy="25" r="20"
+            [attr.stroke-dasharray]="ringCircumference"
+            [attr.stroke-dashoffset]="getRingOffset(data.concentration.percentage)"
+            transform="rotate(-90 25 25)"/>
+        </svg>
+        <div class="pa-card__body">
+          <span class="pa-card__value">{{ data.concentration.current }}<small>%</small></span>
+          <span class="pa-card__label">Konsantrasyon</span>
+        </div>
+      </div>
+
+    </div>
+  }
+</div>

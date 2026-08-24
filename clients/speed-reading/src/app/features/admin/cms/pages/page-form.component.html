@@ -1,0 +1,184 @@
+<div class="page-container" [formGroup]="form">
+    <!-- Sticky Header -->
+    <div class="sticky-header">
+        <div class="header-content">
+            <div class="header-left">
+                <button mat-icon-button routerLink="/admin/cms/pages" class="back-btn">
+                    <mat-icon>arrow_back</mat-icon>
+                </button>
+                <div class="title-section">
+                    <h1 class="page-title">{{ isEditMode ? 'Sayfayı Düzenle' : 'Yeni Sayfa Oluştur' }}</h1>
+                    <div class="breadcrumb">
+                        <span>İçerik Yönetimi</span>
+                        <mat-icon>chevron_right</mat-icon>
+                        <span>Sayfalar</span>
+                        <mat-icon>chevron_right</mat-icon>
+                        <span class="current">{{ isEditMode ? 'Düzenle' : 'Oluştur' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <button mat-button class="btn-cancel" routerLink="/admin/cms/pages">
+                    İptal
+                </button>
+                <button mat-raised-button color="primary" class="btn-save" (click)="onSubmit()"
+                    [disabled]="form.invalid || loading()">
+                    <mat-spinner diameter="20" *ngIf="loading()"></mat-spinner>
+                    <span *ngIf="!loading()">
+                        {{ isEditMode ? 'Değişiklikleri Kaydet' : 'Kaydet ve Yayınla' }}
+                    </span>
+                    <mat-icon *ngIf="!loading()">save</mat-icon>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content-wrapper">
+        <div class="main-column">
+
+            <!-- Title & Slug Section -->
+            <div class="custom-card title-card">
+                <div class="form-group">
+                    <label class="form-label">Sayfa Başlığı</label>
+                    <input type="text" formControlName="title" class="modern-input title-input"
+                        placeholder="Sayfa başlığı girin..."
+                        [class.error]="form.get('title')?.invalid && form.get('title')?.touched">
+                    <div class="error-wrapper"
+                        *ngIf="form.get('title')?.invalid && (form.get('title')?.dirty || form.get('title')?.touched)">
+                        <span class="error-message" *ngIf="form.get('title')?.hasError('required')">
+                            Başlık zorunludur
+                        </span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="slug-input-wrapper" [class.disabled]="form.get('slug')?.disabled">
+                        <span class="slug-prefix">/sayfa/</span>
+                        <input type="text" formControlName="slug" class="slug-input" placeholder="url-yolu-slug">
+                        <mat-icon class="slug-icon">link</mat-icon>
+                    </div>
+                    <p class="helper-text">Otomatik oluşturulur, gerekirse düzenleyebilirsiniz.</p>
+                </div>
+            </div>
+
+            <!-- Content Editor -->
+            <div class="custom-card editor-card">
+                <div class="editor-header">
+                    <div class="editor-title-group">
+                        <div class="icon-box purple">
+                            <mat-icon>description</mat-icon>
+                        </div>
+                        <div class="texts">
+                            <h3>Sayfa İçeriği</h3>
+                            <p>Sayfanızın detaylarını buraya girin</p>
+                        </div>
+                    </div>
+
+                    <mat-button-toggle-group [value]="editorMode" (change)="onEditorModeChange($event)"
+                        class="mode-toggle">
+                        <mat-button-toggle value="edit">
+                            <mat-icon>edit</mat-icon> Düzenle
+                        </mat-button-toggle>
+                        <mat-button-toggle value="preview">
+                            <mat-icon>visibility</mat-icon> Önizleme
+                        </mat-button-toggle>
+                    </mat-button-toggle-group>
+                </div>
+
+                <div class="editor-body">
+                    <div class="editor-container" *ngIf="editorMode === 'edit'">
+                        <quill-editor formControlName="content" [modules]="quillConfig"
+                            placeholder="İçeriğinizi buraya yazın..." class="standard-quill-editor">
+                        </quill-editor>
+                    </div>
+
+                    <div class="preview-container" *ngIf="editorMode === 'preview'">
+                        <div class="prose max-w-none" [innerHTML]="previewContent"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEO Settings -->
+            <div class="custom-card seo-card" formGroupName="seoSettings">
+                <button type="button" (click)="seoExpanded = !seoExpanded" class="accordion-trigger">
+                    <div class="trigger-content">
+                        <div class="icon-box blue">
+                            <mat-icon>search</mat-icon>
+                        </div>
+                        <div class="texts">
+                            <h3>SEO Ayarları</h3>
+                            <p>Arama motoru optimizasyonu</p>
+                        </div>
+                    </div>
+                    <mat-icon class="chevron" [class.rotated]="seoExpanded">expand_more</mat-icon>
+                </button>
+
+                <div class="accordion-content" [class.expanded]="seoExpanded">
+                    <div class="seo-form-grid">
+                        <div class="form-group">
+                            <label class="form-label">SEO Başlığı (Meta Title)</label>
+                            <input type="text" formControlName="metaTitle" class="modern-input">
+                            <div class="char-count">
+                                {{ form.get('seoSettings.metaTitle')?.value?.length || 0 }}/60
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Meta Açıklama</label>
+                            <textarea formControlName="metaDescription" class="modern-textarea" rows="3"></textarea>
+                            <div class="char-count">
+                                {{ form.get('seoSettings.metaDescription')?.value?.length || 0 }}/160
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Anahtar Kelimeler</label>
+                            <div class="input-with-icon">
+                                <mat-icon>vpn_key</mat-icon>
+                                <input type="text" formControlName="metaKeywords" class="modern-input"
+                                    placeholder="Virgülle ayırın (örn: kurumsal, iletişim)">
+                            </div>
+                        </div>
+
+                        <div class="form-checkbox">
+                            <mat-checkbox formControlName="noIndex" color="warn">
+                                Arama motorlarına kapat (No-Index)
+                            </mat-checkbox>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="sidebar-column sticky-sidebar">
+
+            <!-- Publish Status -->
+            <div class="custom-card status-card">
+                <div class="card-header-simple">
+                    <h3>Yayın</h3>
+                    <span class="status-badge" [class.published]="form.get('isPublished')?.value"
+                        [class.draft]="!form.get('isPublished')?.value">
+                        {{ form.get('isPublished')?.value ? 'Yayında' : 'Taslak' }}
+                    </span>
+                </div>
+
+                <div class="publish-toggle">
+                    <mat-slide-toggle formControlName="isPublished" color="primary">
+                        Yayınla
+                    </mat-slide-toggle>
+                </div>
+
+                <div class="meta-info" *ngIf="isEditMode">
+                    <div class="info-row">
+                        <mat-icon>calendar_today</mat-icon>
+                        <span>Oluşturulma: bugün</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

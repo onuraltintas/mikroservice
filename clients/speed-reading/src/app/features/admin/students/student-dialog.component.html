@@ -1,0 +1,204 @@
+<h2 mat-dialog-title>
+    <mat-icon>school</mat-icon>
+    {{ isEditMode ? 'Öğrenci Düzenle' : 'Yeni Öğrenci' }}
+</h2>
+
+<mat-dialog-content>
+    <form [formGroup]="studentForm">
+        <div class="form-row">
+            <!-- First Name -->
+            <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Ad</mat-label>
+                <input matInput formControlName="firstName" placeholder="Ad">
+                <mat-icon matPrefix>person</mat-icon>
+                <mat-error *ngIf="studentForm.get('firstName')?.hasError('required')">
+                    Ad zorunludur
+                </mat-error>
+                <mat-error *ngIf="studentForm.get('firstName')?.hasError('minlength')">
+                    Ad en az 2 karakter olmalıdır
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Last Name -->
+            <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Soyad</mat-label>
+                <input matInput formControlName="lastName" placeholder="Soyad">
+                <mat-icon matPrefix>person</mat-icon>
+                <mat-error *ngIf="studentForm.get('lastName')?.hasError('required')">
+                    Soyad zorunludur
+                </mat-error>
+                <mat-error *ngIf="studentForm.get('lastName')?.hasError('minlength')">
+                    Soyad en az 2 karakter olmalıdır
+                </mat-error>
+            </mat-form-field>
+        </div>
+
+        <!-- Email -->
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>E-posta</mat-label>
+            <input matInput type="email" formControlName="email" placeholder="ornek@email.com">
+            <mat-icon matPrefix>email</mat-icon>
+            <mat-error *ngIf="studentForm.get('email')?.hasError('required')">
+                E-posta zorunludur
+            </mat-error>
+            <mat-error *ngIf="studentForm.get('email')?.hasError('email')">
+                Geçerli bir e-posta adresi giriniz
+            </mat-error>
+        </mat-form-field>
+
+        <!-- Password (only in create mode) -->
+        <!-- Password (required for new, optional for edit) -->
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>{{ isEditMode ? 'Yeni Şifre (İsteğe Bağlı)' : 'Şifre' }}</mat-label>
+            <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password"
+                [placeholder]="isEditMode ? 'Değiştirmek için yeni şifre girin' : 'Şifre'">
+            <mat-icon matPrefix>lock</mat-icon>
+            <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button" tabindex="-1">
+                <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="studentForm.get('password')?.hasError('required')">
+                Şifre zorunludur
+            </mat-error>
+            <mat-error *ngIf="studentForm.get('password')?.hasError('minlength')">
+                Şifre en az 6 karakter olmalıdır
+            </mat-error>
+            <mat-hint *ngIf="isEditMode">Şifreyi değiştirmek istemiyorsanız boş bırakın</mat-hint>
+        </mat-form-field>
+
+        <!-- Institution -->
+        <!-- Institution -->
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Kurum</mat-label>
+            <mat-select formControlName="institutionId" placeholder="Kurum seçin (isteğe bağlı)">
+                <mat-option [value]="null">Kurum yok</mat-option>
+                <mat-option *ngFor="let institution of institutions" [value]="institution.id">
+                    {{ institution.name }}
+                </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>business</mat-icon>
+        </mat-form-field>
+
+        <!-- Teacher -->
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Öğretmen</mat-label>
+            <mat-select formControlName="teacherId" placeholder="Öğretmen seçin (isteğe bağlı)">
+                <mat-option [value]="null">Öğretmen yok</mat-option>
+                <mat-option *ngFor="let teacher of teachers" [value]="teacher.id">
+                    {{ teacher.firstName }} {{ teacher.lastName }}
+                </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>school</mat-icon>
+            <mat-hint *ngIf="teachers.length === 0">
+                Sistemde henüz öğretmen bulunmuyor
+            </mat-hint>
+        </mat-form-field>
+
+        <!-- Speed Reading Profile Section -->
+        <div class="profile-section">
+            <h3 class="section-title">
+                <mat-icon>dashboard</mat-icon>
+                Hızlı Okuma Profili
+            </h3>
+
+            <div class="form-row">
+                <!-- Current Level -->
+                <mat-form-field appearance="outline" class="half-width">
+                    <mat-label>Mevcut Seviye</mat-label>
+                    <input matInput type="number" formControlName="currentLevel" placeholder="Seviye" min="1">
+                    <mat-icon matPrefix>trending_up</mat-icon>
+                    <mat-error *ngIf="studentForm.get('currentLevel')?.hasError('required')">
+                        Seviye zorunludur
+                    </mat-error>
+                    <mat-error *ngIf="studentForm.get('currentLevel')?.hasError('min')">
+                        Seviye en az 1 olmalıdır
+                    </mat-error>
+                </mat-form-field>
+
+                <!-- Target WPM -->
+                <mat-form-field appearance="outline" class="half-width">
+                    <mat-label>Hedef WPM</mat-label>
+                    <input matInput type="number" formControlName="targetWPM" placeholder="Kelime/dakika" min="0">
+                    <mat-icon matPrefix>speed</mat-icon>
+                    <mat-error *ngIf="studentForm.get('targetWPM')?.hasError('required')">
+                        Hedef WPM zorunludur
+                    </mat-error>
+                    <mat-error *ngIf="studentForm.get('targetWPM')?.hasError('min')">
+                        Hedef WPM en az 0 olmalıdır
+                    </mat-error>
+                </mat-form-field>
+            </div>
+
+            <div class="form-row">
+                <!-- Target Comprehension -->
+                <mat-form-field appearance="outline" class="half-width">
+                    <mat-label>Hedef Anlama (%)</mat-label>
+                    <input matInput type="number" formControlName="targetComprehension" placeholder="Anlama yüzdesi"
+                        min="0" max="100">
+                    <mat-icon matPrefix>psychology</mat-icon>
+                    <mat-error *ngIf="studentForm.get('targetComprehension')?.hasError('required')">
+                        Hedef anlama zorunludur
+                    </mat-error>
+                    <mat-error *ngIf="studentForm.get('targetComprehension')?.hasError('min')">
+                        Hedef anlama en az 0 olmalıdır
+                    </mat-error>
+                    <mat-error *ngIf="studentForm.get('targetComprehension')?.hasError('max')">
+                        Hedef anlama en fazla 100 olmalıdır
+                    </mat-error>
+                </mat-form-field>
+
+                <!-- Daily Goal Minutes -->
+                <mat-form-field appearance="outline" class="half-width">
+                    <mat-label>Günlük Hedef (Dakika)</mat-label>
+                    <input matInput type="number" formControlName="dailyGoalMinutes" placeholder="Dakika" min="5">
+                    <mat-icon matPrefix>schedule</mat-icon>
+                    <mat-error *ngIf="studentForm.get('dailyGoalMinutes')?.hasError('required')">
+                        Günlük hedef zorunludur
+                    </mat-error>
+                    <mat-error *ngIf="studentForm.get('dailyGoalMinutes')?.hasError('min')">
+                        Günlük hedef en az 5 dakika olmalıdır
+                    </mat-error>
+                </mat-form-field>
+            </div>
+
+            <!-- Learning Style -->
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Öğrenme Stili</mat-label>
+                <mat-select formControlName="learningStyle" placeholder="Öğrenme stili seçin">
+                    <mat-option value="visual">Görsel</mat-option>
+                    <mat-option value="auditory">İşitsel</mat-option>
+                    <mat-option value="kinesthetic">Kinestetik</mat-option>
+                </mat-select>
+                <mat-icon matPrefix>category</mat-icon>
+                <mat-error *ngIf="studentForm.get('learningStyle')?.hasError('required')">
+                    Öğrenme stili zorunludur
+                </mat-error>
+            </mat-form-field>
+        </div>
+
+        <!-- Status toggle (only in edit mode) -->
+        <div *ngIf="isEditMode" class="status-toggle">
+            <mat-slide-toggle formControlName="isActive" color="primary">
+                <span class="toggle-label">
+                    <mat-icon>{{ studentForm.get('isActive')?.value ? 'check_circle' : 'cancel' }}</mat-icon>
+                    {{ studentForm.get('isActive')?.value ? 'Aktif' : 'Pasif' }}
+                </span>
+            </mat-slide-toggle>
+        </div>
+    </form>
+
+    <!-- Loading -->
+    <div *ngIf="saving" class="saving-overlay">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Kaydediliyor...</p>
+    </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" [disabled]="saving">
+        İptal
+    </button>
+    <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!studentForm.valid || saving">
+        <mat-icon>{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+        {{ isEditMode ? 'Güncelle' : 'Oluştur' }}
+    </button>
+</mat-dialog-actions>

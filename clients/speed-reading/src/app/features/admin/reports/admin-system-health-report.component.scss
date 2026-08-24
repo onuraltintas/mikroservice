@@ -1,0 +1,208 @@
+.health-report {
+    max-width: 87.5rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem;
+}
+
+// Health Card
+.health-card {
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 1rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15);
+
+    mat-card-title {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .health-status {
+        display: flex;
+        align-items: center;
+        gap: 3rem;
+        padding: 1.5rem;
+
+        .health-gauge {
+            flex-shrink: 0;
+        }
+
+        .health-info {
+            flex: 1;
+
+            h2 {
+                font-size: 3rem;
+                font-weight: 700;
+                margin: 0 0 1rem 0;
+
+                &.status-mükemmel {
+                    color: #4caf50;
+                }
+
+                &.status-iyi,
+                &.status-İyi {
+                    color: #8bc34a;
+                }
+
+                &.status-orta {
+                    color: #ffc107;
+                }
+
+                &.status-zayıf {
+                    color: #f44336;
+                }
+            }
+
+            .health-score {
+                font-size: 1.125rem;
+                opacity: 0.9;
+                margin: 0;
+            }
+        }
+    }
+}
+
+// Stats Grid
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+
+    mat-card {
+        background: #f8f9fa;
+        border-radius: 0.75rem;
+        border-left: 0.25rem solid #1976d2;
+        transition: all 0.2s;
+
+        &:hover {
+            background: #e9ecef;
+            transform: translateX(0.25rem);
+        }
+
+        mat-card-content {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+
+            &.error {
+                color: #f44336;
+            }
+        }
+
+        .label {
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    }
+}
+
+// Charts Grid
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(31.25rem, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+// Chart
+.chart {
+    height: 25rem;
+    margin-top: 1rem;
+    padding: 1rem;
+}
+
+// No Data
+.no-data {
+    text-align: center;
+    padding: 3rem;
+    color: #999;
+    font-style: italic;
+}
+
+.no-alerts {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.125rem;
+    color: #4caf50;
+    font-weight: 500;
+}
+
+// Alerts Table
+.alerts-table {
+    width: 100%;
+    margin-top: 1rem;
+
+    th {
+        background: #f5f5f5;
+        font-weight: 600;
+        color: #333;
+    }
+
+    td {
+        padding: 0.75rem 1rem;
+    }
+
+    tr:hover {
+        background: #f9f9f9;
+    }
+
+    mat-chip {
+        font-weight: 600;
+        font-size: 0.75rem;
+
+        &.severity-yüksek {
+            background: #f44336;
+            color: white;
+        }
+
+        &.severity-orta {
+            background: #ff9800;
+            color: white;
+        }
+
+        &.severity-düşük {
+            background: #2196f3;
+            color: white;
+        }
+    }
+}
+
+// Cards
+mat-card {
+    margin-bottom: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 0.5rem rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.2s;
+
+    &:hover {
+        box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.12);
+    }
+
+    mat-card-header {
+        margin-bottom: 1rem;
+
+        mat-card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+        }
+    }
+}

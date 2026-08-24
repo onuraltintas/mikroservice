@@ -1,0 +1,127 @@
+<div class="adaptive-text-preview-dialog">
+  <h2 mat-dialog-title>
+    <mat-icon class="title-icon">auto_awesome</mat-icon>
+    Sizin İçin Önerilen Metin
+  </h2>
+
+  <mat-dialog-content>
+    <!-- Score Summary -->
+    <div class="score-summary">
+      <div class="score-card">
+        <div class="score-value">{{ recommendation.totalScore | number:'1.0-0' }}</div>
+        <div class="score-label">Toplam Puan</div>
+      </div>
+      <div class="score-card">
+        <div class="score-value">{{ recommendation.confidenceScore * 100 | number:'1.0-0' }}%</div>
+        <div class="score-label">{{ adaptiveTextService.getConfidenceDescription(recommendation.confidenceScore) }}
+        </div>
+      </div>
+    </div>
+
+    <mat-divider class="section-divider"></mat-divider>
+
+    <!-- Text Details -->
+    <div class="text-details">
+      <h3 class="text-title">{{ recommendation.title }}</h3>
+
+      <div class="meta-info">
+        <mat-chip-set>
+          <mat-chip [class]="getLevelBadgeClass(recommendation.difficultyLevel)">
+            <mat-icon>trending_up</mat-icon>
+            Seviye {{ recommendation.difficultyLevel }}
+          </mat-chip>
+          <mat-chip>
+            <mat-icon>category</mat-icon>
+            {{ recommendation.category }}
+          </mat-chip>
+          <mat-chip>
+            <mat-icon>text_fields</mat-icon>
+            {{ recommendation.wordCount }} kelime
+          </mat-chip>
+          <mat-chip>
+            <mat-icon>schedule</mat-icon>
+            ~{{ recommendation.estimatedReadingTimeMinutes }} dk
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+
+      <!-- Tags -->
+      <div class="tags" *ngIf="recommendation.tags.length > 0">
+        <mat-chip-set>
+          <mat-chip *ngFor="let tag of recommendation.tags" class="tag-chip">
+            {{ tag }}
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+
+      <!-- Reasoning -->
+      <div class="reasoning-card">
+        <div class="reasoning-header">
+          <mat-icon>lightbulb</mat-icon>
+          <strong>Neden Bu Metin?</strong>
+        </div>
+        <p class="reasoning-text">{{ recommendation.reasoning }}</p>
+      </div>
+
+      <!-- Content Preview -->
+      <div class="content-preview">
+        <h4>Metin İçeriği</h4>
+        <div class="content-text" [class.collapsed]="!showFullContent">
+          {{ getContentPreview() }}
+        </div>
+        <button mat-button color="primary" (click)="toggleContent()" *ngIf="recommendation.content.length > 300">
+          <mat-icon>{{ showFullContent ? 'expand_less' : 'expand_more' }}</mat-icon>
+          {{ showFullContent ? 'Daha Az Göster' : 'Tamamını Göster' }}
+        </button>
+      </div>
+
+      <mat-divider class="section-divider"></mat-divider>
+
+      <!-- Score Breakdown -->
+      <div class="score-breakdown">
+        <h4>Puan Detayları</h4>
+        <div class="breakdown-item" *ngFor="let item of scoreBreakdownData">
+          <div class="breakdown-header">
+            <span class="breakdown-name">{{ item.name }}</span>
+            <span class="breakdown-value">{{ item.value | number:'1.1-1' }}</span>
+          </div>
+          <mat-progress-bar mode="determinate" [value]="item.value" [color]="getScoreColor(item.value)">
+          </mat-progress-bar>
+        </div>
+      </div>
+
+      <!-- Statistics -->
+      <div class="statistics" *ngIf="recommendation.timesRead > 0">
+        <mat-divider class="section-divider"></mat-divider>
+        <h4>İstatistikler</h4>
+        <div class="stat-row">
+          <div class="stat-item">
+            <mat-icon>people</mat-icon>
+            <div class="stat-content">
+              <div class="stat-value">{{ recommendation.timesRead }}</div>
+              <div class="stat-label">Öğrenci Okudu</div>
+            </div>
+          </div>
+          <div class="stat-item" *ngIf="recommendation.averageComprehensionScore > 0">
+            <mat-icon>assessment</mat-icon>
+            <div class="stat-content">
+              <div class="stat-value">{{ recommendation.averageComprehensionScore | number:'1.0-0' }}%</div>
+              <div class="stat-label">Ort. Anlama Skoru</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onReject()" color="warn">
+      <mat-icon>close</mat-icon>
+      Reddet
+    </button>
+    <button mat-raised-button (click)="onAccept()" color="primary">
+      <mat-icon>check</mat-icon>
+      Bu Metni Seç ve Başla
+    </button>
+  </mat-dialog-actions>
+</div>

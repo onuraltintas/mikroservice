@@ -1,0 +1,183 @@
+<app-navbar [forceOpaque]="true"></app-navbar>
+
+<div *ngIf="post" class="blog-detail-page">
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-section">
+        <div class="container">
+            <nav class="breadcrumb">
+                <a routerLink="/">Ana Sayfa</a>
+                <mat-icon>chevron_right</mat-icon>
+                <a routerLink="/blog">Blog</a>
+                <mat-icon>chevron_right</mat-icon>
+                <span>{{ post.title }}</span>
+            </nav>
+        </div>
+    </div>
+
+    <main class="container">
+        <div class="content-grid">
+            <!-- Article -->
+            <article class="article-content">
+                <!-- Back Button -->
+                <a routerLink="/blog" class="back-button">
+                    <mat-icon>arrow_back</mat-icon>
+                    Tüm Yazılara Dön
+                </a>
+
+                <!-- Category Badge -->
+                <span class="category-badge" [ngClass]="getCategoryColor(getCategory(post.tags))">
+                    {{ getCategory(post.tags) }}
+                </span>
+
+                <!-- Title -->
+                <h1>{{ post.title }}</h1>
+
+                <!-- Meta Info -->
+                <div class="meta-info">
+                    <div class="author-section">
+                        <div class="avatar">{{ getAuthorInitials(post.author) }}</div>
+                        <div>
+                            <p class="author-name">{{ post.author }}</p>
+                            <p class="author-role">Yazar</p>
+                        </div>
+                    </div>
+                    <div class="metadata">
+                        <span><mat-icon>calendar_today</mat-icon>{{ formatDate(post.publishedAt) }}</span>
+                        <span><mat-icon>schedule</mat-icon>{{ getReadTime(post.content) }} okuma</span>
+                        <span><mat-icon>visibility</mat-icon>{{ post.viewCount }} görüntülenme</span>
+                    </div>
+                </div>
+
+                <!-- Featured Image -->
+                <div class="featured-image">
+                    <img *ngIf="post.coverImageUrl" [src]="post.coverImageUrl" [alt]="post.title" class="cover-image">
+                    <div *ngIf="!post.coverImageUrl" class="image-placeholder"></div>
+                </div>
+
+                <!-- Social Share -->
+                <div class="social-share">
+                    <span>Paylaş:</span>
+                    <div class="share-buttons">
+                        <button mat-icon-button class="facebook">
+                            <mat-icon>facebook</mat-icon>
+                        </button>
+                        <button mat-icon-button class="twitter">
+                            <mat-icon>tag</mat-icon>
+                        </button>
+                        <button mat-icon-button class="linkedin">
+                            <mat-icon>business</mat-icon>
+                        </button>
+                        <button mat-icon-button class="share">
+                            <mat-icon>share</mat-icon>
+                        </button>
+                        <button mat-icon-button class="bookmark">
+                            <mat-icon>bookmark_border</mat-icon>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Article Content -->
+                <div class="article-body">
+                    <p class="lead">{{ post.summary }}</p>
+                    <div [innerHTML]="post.content | safeHtml"></div>
+                </div>
+
+                <!-- Author Box -->
+                <div class="author-box">
+                    <div class="avatar-large">{{ getAuthorInitials(post.author) }}</div>
+                    <div>
+                        <p class="label">Yazı Yazarı</p>
+                        <h3>{{ post.author }}</h3>
+                        <p>{{ post.author || 'Anonim' }}</p>
+                    </div>
+                </div>
+
+                <!-- Post Navigation -->
+                <div class="post-navigation">
+                    <a *ngIf="prevPost" [routerLink]="['/blog', prevPost.slug]" class="nav-card prev">
+                        <div class="nav-label">
+                            <mat-icon>arrow_back</mat-icon>
+                            Önceki Yazı
+                        </div>
+                        <p>{{ prevPost.title }}</p>
+                    </a>
+                    <a *ngIf="nextPost" [routerLink]="['/blog', nextPost.slug]" class="nav-card next">
+                        <div class="nav-label">
+                            Sonraki Yazı
+                            <mat-icon>arrow_forward</mat-icon>
+                        </div>
+                        <p>{{ nextPost.title }}</p>
+                    </a>
+                </div>
+            </article>
+
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sticky-sidebar">
+                    <!-- Table of Contents -->
+                    <mat-card class="toc-card">
+                        <h3>
+                            <mat-icon>menu_book</mat-icon>
+                            İçindekiler
+                        </h3>
+                        <nav class="toc-links">
+                            <a href="#giris">Giriş</a>
+                            <a href="#temel-kavramlar">Temel Kavramlar</a>
+                            <a href="#uygulama">Uygulama Teknikleri</a>
+                            <a href="#sonuc">Sonuç</a>
+                        </nav>
+                    </mat-card>
+
+                    <!-- Related Posts -->
+                    <mat-card *ngIf="relatedPosts.length > 0" class="related-card">
+                        <h3>İlgili Yazılar</h3>
+                        <div class="related-posts">
+                            <a *ngFor="let related of relatedPosts" [routerLink]="['/blog', related.slug]"
+                                class="related-post">
+                                <div class="related-image">
+                                    <div class="image-placeholder"></div>
+                                </div>
+                                <div class="related-content">
+                                    <h4>{{ related.title }}</h4>
+                                    <p>{{ getReadTime(related.content) }}</p>
+                                </div>
+                            </a>
+                        </div>
+                    </mat-card>
+
+                    <!-- CTA Card -->
+                    <mat-card class="cta-card">
+                        <h3>Hızlı Okumayı Öğren</h3>
+                        <p>7 günlük ücretsiz deneme ile okuma hızınızı 2 katına çıkarın.</p>
+                        <button mat-raised-button color="primary" class="full-width" routerLink="/auth/register">
+                            Ücretsiz Başla
+                        </button>
+                    </mat-card>
+
+                    <!-- Tags -->
+                    <mat-card class="tags-card">
+                        <h3>Etiketler</h3>
+                        <div class="tags">
+                            <span
+                                *ngFor="let tag of ['Hızlı Okuma', 'Öğrenme', 'Beyin', 'Teknikler', 'Verimlilik', 'Eğitim']"
+                                class="tag">
+                                {{ tag }}
+                            </span>
+                        </div>
+                    </mat-card>
+                </div>
+            </aside>
+        </div>
+    </main>
+</div>
+
+<div *ngIf="!post" class="not-found">
+    <div class="container">
+        <mat-icon>article</mat-icon>
+        <h2>Yazı Bulunamadı</h2>
+        <p>Aradığınız blog yazısı bulunamadı.</p>
+        <button mat-raised-button color="primary" routerLink="/blog">
+            Blog Sayfasına Dön
+        </button>
+    </div>
+</div>

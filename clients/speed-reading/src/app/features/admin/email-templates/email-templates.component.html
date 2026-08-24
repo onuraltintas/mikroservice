@@ -1,0 +1,183 @@
+<div class="templates-page">
+    <div class="page-header">
+        <h1>E-posta Şablonları</h1>
+        <button mat-raised-button color="primary" (click)="openCreateDialog()">
+            <mat-icon>add</mat-icon>
+            Yeni Şablon Ekle
+        </button>
+    </div>
+
+    <mat-card>
+        <div class="table-container">
+            <table mat-table [dataSource]="templates" class="templates-table">
+                <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef>Şablon Adı</th>
+                    <td mat-cell *matCellDef="let template">
+                        <strong>{{ template.name }}</strong>
+                        <div class="code-badge">{{ template.code }}</div>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="subject">
+                    <th mat-header-cell *matHeaderCellDef>Konu</th>
+                    <td mat-cell *matCellDef="let template">
+                        {{ template.subject | slice:0:50 }}{{ template.subject.length > 50 ? '...' : '' }}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="variables">
+                    <th mat-header-cell *matHeaderCellDef>Değişkenler</th>
+                    <td mat-cell *matCellDef="let template">
+                        <mat-chip-set>
+                            <mat-chip *ngFor="let variable of getVariables(template.availableVariables)">
+                                {{ variable }}
+                            </mat-chip>
+                        </mat-chip-set>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Durum</th>
+                    <td mat-cell *matCellDef="let template">
+                        <span class="status-badge" [class.active]="template.isActive">
+                            {{ template.isActive ? 'Aktif' : 'Pasif' }}
+                        </span>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef>İşlemler</th>
+                    <td mat-cell *matCellDef="let template">
+                        <button mat-icon-button (click)="viewTemplate(template)" matTooltip="Görüntüle">
+                            <mat-icon>visibility</mat-icon>
+                        </button>
+                        <button mat-icon-button (click)="openEditDialog(template)" matTooltip="Düzenle">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button (click)="previewTemplate(template)" matTooltip="Önizle">
+                            <mat-icon>preview</mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn" (click)="deleteTemplate(template)" matTooltip="Sil">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+        </div>
+    </mat-card>
+
+    <!-- Create/Edit Dialog -->
+    <div class="dialog-overlay" *ngIf="showDialog" (click)="closeDialog()">
+        <div class="dialog-content" (click)="$event.stopPropagation()">
+            <h2>{{ editingTemplate ? 'Şablon Düzenle' : 'Yeni Şablon Oluştur' }}</h2>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Şablon Adı</mat-label>
+                <input matInput [(ngModel)]="formData.name" placeholder="Hoş Geldiniz E-postası">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Kod (Benzersiz)</mat-label>
+                <input matInput [(ngModel)]="formData.code" placeholder="WELCOME_EMAIL" [disabled]="!!editingTemplate">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Açıklama</mat-label>
+                <textarea matInput [(ngModel)]="formData.description" rows="2"></textarea>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>E-posta Konusu</mat-label>
+                <input matInput [(ngModel)]="formData.subject"
+                    [placeholder]="'Hoş Geldiniz ' + placeholderExample('UserName') + '!'">
+            </mat-form-field>
+
+
+            <div class="editor-wrapper" style="margin-bottom: 20px;">
+                <div class="editor-header"
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <mat-label style="font-weight: 500;">E-posta İçeriği</mat-label>
+                    <mat-button-toggle-group [(ngModel)]="editorMode" name="editorMode" aria-label="Editor Mode">
+                        <mat-button-toggle value="editor">
+                            <mat-icon>edit</mat-icon> Düzenle
+                        </mat-button-toggle>
+                        <mat-button-toggle value="preview">
+                            <mat-icon>visibility</mat-icon> Önizleme
+                        </mat-button-toggle>
+                    </mat-button-toggle-group>
+                </div>
+
+                <div class="editor-content" *ngIf="editorMode === 'editor'">
+                    <quill-editor [(ngModel)]="formData.body" [modules]="quillConfig" class="template-quill-editor"
+                        placeholder="Şablon içeriğini buraya oluşturun..." [styles]="{height: '400px'}">
+                    </quill-editor>
+                </div>
+
+                <div class="preview-content" *ngIf="editorMode === 'preview'"
+                    style="height: 400px; overflow-y: auto; background: white; border: 1px solid #ccc; padding: 20px; border-radius: 4px;">
+                    <div [innerHTML]="getPreviewBody()"></div>
+                </div>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Kullanılabilir Değişkenler (virgülle ayırın)</mat-label>
+                <input matInput [(ngModel)]="formData.availableVariables" placeholder="UserName, Email, Platform">
+                <mat-hint>Değişkenleri çift süslü parantez içinde kullanın</mat-hint>
+            </mat-form-field>
+
+            <div class="toggle-field">
+                <mat-slide-toggle [(ngModel)]="formData.isActive">
+                    Şablon Aktif
+                </mat-slide-toggle>
+            </div>
+
+            <div class="dialog-actions">
+                <button mat-button (click)="closeDialog()">İptal</button>
+                <button mat-raised-button color="primary" (click)="saveTemplate()">
+                    {{ editingTemplate ? 'Güncelle' : 'Oluştur' }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Dialog -->
+    <div class="dialog-overlay" *ngIf="showPreview" (click)="closePreview()">
+        <div class="dialog-content preview-dialog" (click)="$event.stopPropagation()">
+            <h2>Şablon Önizleme</h2>
+
+            <div class="preview-section">
+                <h3>Değişken Değerleri Girin</h3>
+                <div class="preview-variables">
+                    <mat-form-field appearance="outline" *ngFor="let variable of previewVariables">
+                        <mat-label>{{variable}}</mat-label>
+                        <input matInput [(ngModel)]="previewData[variable]" [placeholder]="'Örnek ' + variable">
+                    </mat-form-field>
+                </div>
+
+                <button mat-raised-button color="accent" (click)="generatePreview()" [disabled]="previewLoading">
+                    <mat-icon>refresh</mat-icon>
+                    Önizlemeyi Güncelle
+                </button>
+            </div>
+
+            <div class="preview-result" *ngIf="previewResult">
+                <h3>Önizleme</h3>
+                <div class="email-preview">
+                    <div class="email-subject">
+                        <strong>Konu:</strong> {{ previewResult.subject }}
+                    </div>
+                    <div class="email-body">
+                        <pre>{{ previewResult.body }}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dialog-actions">
+                <button mat-raised-button (click)="closePreview()">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,205 @@
+<div class="settings-page">
+    <div class="page-header">
+        <h1>Sistem Ayarları</h1>
+        <button mat-raised-button color="primary" (click)="saveSettings()" [disabled]="saving">
+            <mat-icon>save</mat-icon>
+            {{ saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet' }}
+        </button>
+    </div>
+
+    <mat-card *ngIf="loading()" class="loading-card">
+        <mat-spinner></mat-spinner>
+    </mat-card>
+
+    <mat-tab-group *ngIf="!loading()">
+        <!-- Email Settings -->
+        <mat-tab label="E-posta Ayarları">
+            <div class="tab-content">
+                <mat-card>
+                    <h2>SMTP Yapılandırması</h2>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>SMTP Sunucusu</mat-label>
+                        <input matInput [(ngModel)]="emailSettings['Email.SmtpHost']" placeholder="smtp.gmail.com">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>SMTP Port</mat-label>
+                        <input matInput type="number" [(ngModel)]="emailSettings['Email.SmtpPort']" placeholder="587">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>E-posta Adresi</mat-label>
+                        <input matInput type="email" [(ngModel)]="emailSettings['Email.FromAddress']"
+                            placeholder="noreply@speedreading.com">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Gönderen Adı</mat-label>
+                        <input matInput [(ngModel)]="emailSettings['Email.FromName']"
+                            placeholder="Speed Reading Platform">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Kullanıcı Adı</mat-label>
+                        <input matInput [(ngModel)]="emailSettings['Email.Username']">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Şifre</mat-label>
+                        <input matInput [type]="hidePassword ? 'password' : 'text'"
+                            [(ngModel)]="emailSettings['Email.Password']" placeholder="********">
+                        <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button"
+                            [attr.aria-label]="'Şifreyi ' + (hidePassword ? 'göster' : 'gizle')">
+                            <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+                        </button>
+                    </mat-form-field>
+
+                    <div class="form-row">
+                        <label>
+                            <input type="checkbox" [(ngModel)]="emailSettings['Email.EnableSsl']">
+                            SSL Kullan
+                        </label>
+                    </div>
+
+                    <button mat-stroked-button color="accent" (click)="testEmailConfiguration()">
+                        <mat-icon>email</mat-icon>
+                        E-posta Ayarlarını Test Et
+                    </button>
+                </mat-card>
+            </div>
+        </mat-tab>
+
+        <!-- Platform Settings -->
+        <mat-tab label="Platform Ayarları">
+            <div class="tab-content">
+                <mat-card>
+                    <h2>Genel Platform Ayarları</h2>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Platform Adı</mat-label>
+                        <input matInput [(ngModel)]="platformSettings['Platform.Name']"
+                            placeholder="Speed Reading Platform">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Platform URL</mat-label>
+                        <input matInput [(ngModel)]="platformSettings['Platform.Url']"
+                            placeholder="https://speedreading.com">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Destek E-postası</mat-label>
+                        <input matInput type="email" [(ngModel)]="platformSettings['Platform.SupportEmail']"
+                            placeholder="support@speedreading.com">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Varsayılan Dil</mat-label>
+                        <input matInput [(ngModel)]="platformSettings['Platform.DefaultLanguage']" placeholder="tr-TR">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Oturum Süresi (dakika)</mat-label>
+                        <input matInput type="number" [(ngModel)]="platformSettings['Platform.SessionTimeout']"
+                            placeholder="60">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Maksimum Dosya Boyutu (MB)</mat-label>
+                        <input matInput type="number" [(ngModel)]="platformSettings['Platform.MaxUploadSize']"
+                            placeholder="10">
+                    </mat-form-field>
+
+                    <div class="form-row">
+                        <label>
+                            <input type="checkbox" [(ngModel)]="platformSettings['Platform.EnableRegistration']">
+                            Yeni Kayıtlara İzin Ver
+                        </label>
+                    </div>
+
+                    <div class="form-row">
+                        <label>
+                            <input type="checkbox" [(ngModel)]="platformSettings['Platform.RequireEmailConfirmation']">
+                            E-posta Doğrulaması Zorunlu
+                        </label>
+                    </div>
+
+                    <div class="form-row">
+                        <label>
+                            <input type="checkbox" [(ngModel)]="platformSettings['Platform.EnableMaintenanceMode']">
+                            Bakım Modu
+                        </label>
+                    </div>
+                </mat-card>
+            </div>
+        </mat-tab>
+
+        <!-- Security Settings -->
+        <mat-tab label="Güvenlik Ayarları">
+            <div class="tab-content">
+                <mat-card>
+                    <h2>Güvenlik ve Kimlik Doğrulama</h2>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Minimum Şifre Uzunluğu</mat-label>
+                        <input matInput type="number" [(ngModel)]="securitySettings['Security.MinPasswordLength']"
+                            placeholder="8">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Maksimum Başarısız Giriş Denemesi</mat-label>
+                        <input matInput type="number" [(ngModel)]="securitySettings['Security.MaxFailedLoginAttempts']"
+                            placeholder="5">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Hesap Kilitleme Süresi (dakika)</mat-label>
+                        <input matInput type="number" [(ngModel)]="securitySettings['Security.LockoutDuration']"
+                            placeholder="30">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>JWT Token Süresi (dakika)</mat-label>
+                        <input matInput type="number" [(ngModel)]="securitySettings['Security.JwtExpirationMinutes']"
+                            placeholder="60">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Refresh Token Süresi (gün)</mat-label>
+                        <input matInput type="number"
+                            [(ngModel)]="securitySettings['Security.RefreshTokenExpirationDays']" placeholder="7">
+                    </mat-form-field>
+
+                    <div class="form-row">
+                        <label>
+                            <input type="checkbox" [(ngModel)]="securitySettings['Security.RequireUppercase']">
+                            Şifrede Büyük Harf Zorunlu
+                        </label>
+                    </div>
+
+                    <div class="form-row">
+                        <label>
+                            <input type="checkbox" [(ngModel)]="securitySettings['Security.RequireDigit']">
+                            Şifrede Rakam Zorunlu
+                        </label>
+                    </div>
+
+                    <div class="form-row">
+                        <label>
+                            <input type="checkbox" [(ngModel)]="securitySettings['Security.RequireSpecialChar']">
+                            Şifrede Özel Karakter Zorunlu
+                        </label>
+                    </div>
+
+                    <div class="form-row">
+                        <label>
+                            <input type="checkbox" [(ngModel)]="securitySettings['Security.Enable2FA']">
+                            İki Faktörlü Kimlik Doğrulama
+                        </label>
+                    </div>
+                </mat-card>
+            </div>
+        </mat-tab>
+    </mat-tab-group>
+</div>

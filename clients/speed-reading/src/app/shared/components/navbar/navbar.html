@@ -1,0 +1,49 @@
+<nav class="navbar" [class.scrolled]="isScrolled">
+    <div class="container">
+        <a routerLink="/" class="logo" (click)="onLogoClick($event)">
+            <div class="logo-icon" [class.scrolled]="isScrolled">
+                <img src="assets/icons/apple-touch-icon.png" alt="Hızlı Okuma Logo">
+            </div>
+            <span [class.scrolled]="isScrolled">Hızlı Okuma</span>
+        </a>
+
+        <!-- Desktop Navigation -->
+        <div class="nav-links desktop-only">
+            <a *ngFor="let link of navLinks" [routerLink]="link.fragment ? ['/'] : [link.href]"
+                [fragment]="link.fragment" (click)="onNavLinkClick($event, link)" [class.scrolled]="isScrolled">
+                {{ link.label }}
+            </a>
+            <div class="lang-switcher" [class.scrolled]="isScrolled">
+                <button (click)="switchLanguage('tr')" [class.active]="currentLanguage() === 'tr'">TR</button>
+                <span>|</span>
+                <button (click)="switchLanguage('en')" [class.active]="currentLanguage() === 'en'">EN</button>
+            </div>
+            <a routerLink="/auth/login" [class.scrolled]="isScrolled">Giriş Yap</a>
+            <button mat-raised-button [class.primary]="!isScrolled" [class.white]="isScrolled"
+                routerLink="/auth/register">
+                Ücretsiz Dene
+            </button>
+        </div>
+
+        <!-- Mobile Toggle -->
+        <button mat-icon-button class="mobile-toggle" (click)="toggleMobileMenu()">
+            <mat-icon [class.scrolled]="isScrolled">
+                {{ mobileMenuOpen ? 'close' : 'menu' }}
+            </mat-icon>
+        </button>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" [class.open]="mobileMenuOpen">
+        <div class="mobile-menu-content">
+            <a *ngFor="let link of navLinks" [routerLink]="link.fragment ? ['/'] : [link.href]"
+                [fragment]="link.fragment" (click)="onNavLinkClick($event, link)">
+                {{ link.label }}
+            </a>
+            <a routerLink="/auth/login" (click)="closeMobileMenu()">Giriş Yap</a>
+            <button mat-raised-button color="primary" routerLink="/auth/register" (click)="closeMobileMenu()">
+                Ücretsiz Dene
+            </button>
+        </div>
+    </div>
+</nav>

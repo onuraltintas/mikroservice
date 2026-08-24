@@ -1,0 +1,504 @@
+.leaderboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+// Header
+.leaderboard-header {
+  text-align: center;
+  margin-bottom: 32px;
+
+  .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 8px;
+
+    .header-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+      color: #FFD700;
+      animation: trophyBounce 2s infinite;
+    }
+
+    .header-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0;
+      background: var(--gradient-purple);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+  }
+
+  .header-subtitle {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+  }
+}
+
+@keyframes trophyBounce {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-5px) rotate(-5deg);
+  }
+  75% {
+    transform: translateY(-5px) rotate(5deg);
+  }
+}
+
+// Type Filters
+.type-filters {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
+
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .filter-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 2px solid #e0e0e0;
+    background: white;
+    color: #666;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    &.selected {
+      background: var(--gradient-purple);
+      border-color: var(--purple-color);
+      color: white;
+      box-shadow: 0 4px 12px var(--purple-shadow);
+    }
+
+    &:hover:not(.selected) {
+      background: #f0f0f0;
+      border-color: #ccc;
+      transform: translateY(-2px);
+    }
+  }
+}
+
+// Loading
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  gap: 16px;
+
+  p {
+    color: #666;
+    margin: 0;
+  }
+}
+
+// Leaderboard Card
+.leaderboard-card {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+
+  ::ng-deep .mat-mdc-card-content {
+    padding: 0;
+  }
+}
+
+.leaderboard-list {
+  display: flex;
+  flex-direction: column;
+}
+
+// Leaderboard Entry
+.leaderboard-entry {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.3s ease;
+  animation: entryFadeIn 0.5s ease-out backwards;
+
+  @for $i from 1 through 50 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * 0.03}s;
+    }
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: #f9f9f9;
+    transform: translateX(4px);
+  }
+
+  &.current-user {
+    background: linear-gradient(90deg, var(--purple-light) 0%, transparent 100%);
+    border-left: 4px solid var(--purple-color);
+    padding-left: 20px;
+  }
+
+  &.top-rank {
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.05) 0%, transparent 100%);
+  }
+}
+
+@keyframes entryFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Rank Badge
+.rank-badge {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f0f0f0;
+  flex-shrink: 0;
+
+  .rank-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: #666;
+  }
+
+  &.gold {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    box-shadow: 0 4px 16px rgba(255, 215, 0, 0.4);
+    animation: goldPulse 2s infinite;
+
+    .rank-text {
+      font-size: 24px;
+    }
+  }
+
+  &.silver {
+    background: linear-gradient(135deg, #C0C0C0 0%, #999999 100%);
+    box-shadow: 0 4px 16px rgba(192, 192, 192, 0.4);
+    animation: silverPulse 2s infinite 0.2s;
+
+    .rank-text {
+      font-size: 22px;
+    }
+  }
+
+  &.bronze {
+    background: linear-gradient(135deg, #CD7F32 0%, #A0522D 100%);
+    box-shadow: 0 4px 16px rgba(205, 127, 50, 0.4);
+    animation: bronzePulse 2s infinite 0.4s;
+
+    .rank-text {
+      font-size: 20px;
+    }
+  }
+}
+
+@keyframes goldPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 16px rgba(255, 215, 0, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+  }
+}
+
+@keyframes silverPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+@keyframes bronzePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+// User Info
+.user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.user-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.level-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+  .level-icon {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .level-number {
+    font-size: 10px;
+    font-weight: 700;
+    color: white;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1px 4px;
+    border-radius: 4px;
+    margin-top: 2px;
+  }
+}
+
+.user-details {
+  flex: 1;
+  min-width: 0;
+
+  .user-name {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #333;
+
+    .current-user-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: var(--purple-color);
+    }
+  }
+
+  .level-title {
+    font-size: 12px;
+    color: #666;
+    margin: 0;
+  }
+}
+
+// Showcased Achievements
+.showcased-achievements {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+// Entry Value
+.entry-value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+
+  .value-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: #333;
+    line-height: 1;
+  }
+
+  .value-unit {
+    font-size: 11px;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+// Empty State
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #ddd;
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #666;
+    margin: 0 0 8px;
+  }
+
+  p {
+    font-size: 14px;
+    color: #999;
+    margin: 0;
+  }
+}
+
+// Footer
+.leaderboard-footer {
+  text-align: center;
+  padding: 16px;
+  color: #999;
+  font-size: 13px;
+
+  p {
+    margin: 0;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .leaderboard-container {
+    padding: 16px;
+  }
+
+  .leaderboard-header {
+    margin-bottom: 24px;
+
+    .header-content {
+      .header-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+      }
+
+      .header-title {
+        font-size: 24px;
+      }
+    }
+  }
+
+  .type-filters {
+    mat-chip-option {
+      padding: 6px 12px;
+      font-size: 13px;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+
+  .leaderboard-entry {
+    padding: 12px 16px;
+    gap: 12px;
+
+    &.current-user {
+      padding-left: 12px;
+    }
+  }
+
+  .rank-badge {
+    width: 40px;
+    height: 40px;
+
+    .rank-text {
+      font-size: 16px;
+    }
+
+    &.gold .rank-text {
+      font-size: 20px;
+    }
+
+    &.silver .rank-text {
+      font-size: 18px;
+    }
+
+    &.bronze .rank-text {
+      font-size: 17px;
+    }
+  }
+
+  .level-badge {
+    width: 40px;
+    height: 40px;
+
+    .level-icon {
+      font-size: 16px;
+    }
+
+    .level-number {
+      font-size: 9px;
+    }
+  }
+
+  .user-details {
+    .user-name {
+      font-size: 14px;
+    }
+
+    .level-title {
+      font-size: 11px;
+    }
+  }
+
+  .entry-value {
+    .value-number {
+      font-size: 20px;
+    }
+
+    .value-unit {
+      font-size: 10px;
+    }
+  }
+
+  .showcased-achievements {
+    display: none;
+  }
+}

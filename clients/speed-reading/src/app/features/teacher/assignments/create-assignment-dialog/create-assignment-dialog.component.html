@@ -1,0 +1,123 @@
+<div class="dialog-container">
+    <div class="dialog-header">
+        <h2 mat-dialog-title>Yeni Ödev Ata</h2>
+        <button mat-icon-button mat-dialog-close tabindex="-1">
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+
+    <mat-dialog-content class="custom-scroll">
+        <form [formGroup]="form" class="assignment-form">
+
+            <!-- Section: Basic Info -->
+            <div class="form-section">
+                <h3 class="section-title">Genel Bilgiler</h3>
+
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Ödev Başlığı</mat-label>
+                    <input matInput formControlName="title" placeholder="Örn: Hafta Sonu Okuma Maratonu">
+                    <mat-error *ngIf="form.get('title')?.hasError('required')">Başlık gereklidir</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Açıklama (İsteğe Bağlı)</mat-label>
+                    <textarea matInput formControlName="description" rows="2"
+                        placeholder="Öğrenciler için kısa bir not..."></textarea>
+                </mat-form-field>
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <!-- Section: Exercise Selection -->
+            <div class="form-section">
+                <h3 class="section-title">Egzersiz Seçimi</h3>
+
+                <div class="grid-row">
+                    <mat-form-field appearance="outline" class="w-half">
+                        <mat-label>Egzersiz Türü</mat-label>
+                        <mat-select (selectionChange)="onTypeChange($event.value)">
+                            <mat-option *ngFor="let type of exerciseTypes" [value]="type.id">
+                                {{ type.name }}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="w-half">
+                        <mat-label>Egzersiz</mat-label>
+                        <mat-select formControlName="exerciseId">
+                            <!-- Loading State -->
+                            <mat-option *ngIf="loadingExercises" disabled>
+                                <span class="loading-text">Yükleniyor...</span>
+                            </mat-option>
+
+                            <mat-option *ngFor="let exercise of filteredExercises" [value]="exercise.id">
+                                <span class="exercise-option">
+                                    <span class="exercise-title">{{ exercise.title || exercise.name }}</span>
+                                    <span class="exercise-meta">Seviye {{ exercise.difficultyLevel }} - {{
+                                        getAgeGroupName(exercise) }}</span>
+                                </span>
+                            </mat-option>
+                        </mat-select>
+                        <mat-hint *ngIf="!selectedTypeId">Önce tür seçiniz</mat-hint>
+                        <mat-error *ngIf="form.get('exerciseId')?.hasError('required')">Egzersiz seçimi
+                            zorunludur</mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <!-- Section: Target & Timing -->
+            <div class="form-section">
+                <h3 class="section-title">Hedef & Zamanlama</h3>
+
+                <div class="grid-row">
+                    <div class="w-half student-select-wrapper">
+                        <mat-form-field appearance="outline" class="w-full">
+                            <mat-label>Öğrenciler</mat-label>
+                            <mat-select formControlName="studentIds" multiple>
+                                <div class="select-actions">
+                                    <button mat-button color="primary" (click)="selectAllStudents()">Tümünü Seç</button>
+                                </div>
+
+                                <!-- Search Input -->
+                                <div class="student-search-container" (click)="$event.stopPropagation()"
+                                    (keydown)="$event.stopPropagation()">
+                                    <mat-icon class="search-icon">search</mat-icon>
+                                    <input [formControl]="studentSearchControl" placeholder="Öğrenci ara..."
+                                        class="student-search-input" autocomplete="off">
+                                </div>
+
+                                <mat-select-trigger>
+                                    {{ form.get('studentIds')?.value?.length || 0 }} Öğrenci Seçildi
+                                </mat-select-trigger>
+                                <mat-option *ngFor="let student of filteredStudents" [value]="student.id">
+                                    {{ student.firstName }} {{ student.lastName }}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error *ngIf="form.get('studentIds')?.hasError('required')">Öğrenci seçimi
+                                zorunludur</mat-error>
+                        </mat-form-field>
+                    </div>
+
+                    <mat-form-field appearance="outline" class="w-half">
+                        <mat-label>Son Teslim Tarihi</mat-label>
+                        <input matInput [matDatepicker]="picker" formControlName="dueDate">
+                        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                        <mat-datepicker #picker></mat-datepicker>
+                        <mat-error *ngIf="form.get('dueDate')?.hasError('required')">Tarih gereklidir</mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+
+        </form>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end" class="dialog-actions">
+        <button mat-button mat-dialog-close>İptal</button>
+        <button mat-flat-button color="primary" [disabled]="form.invalid || loading" (click)="save()">
+            <mat-icon class="mr-1">save</mat-icon>
+            {{ loading ? 'Kaydediliyor...' : 'Ödevi Ata' }}
+        </button>
+    </mat-dialog-actions>
+</div>

@@ -1,0 +1,45 @@
+<mat-card
+  class="achievement-badge"
+  [class.unlocked]="unlocked"
+  [class.locked]="!unlocked"
+  [class.showcased]="showcased"
+  [class]="'size-' + size"
+  [class]="tierClass"
+  [matTooltip]="tooltipText"
+  matTooltipPosition="above">
+
+  <div class="badge-container">
+    <!-- Showcase indicator -->
+    <div class="showcase-badge" *ngIf="showcased">
+      <mat-icon>star</mat-icon>
+    </div>
+
+    <!-- Icon/Emoji -->
+    <div class="badge-icon">
+      <span class="emoji" *ngIf="achievement.iconEmoji">{{ achievement.iconEmoji }}</span>
+      <img *ngIf="!achievement.iconEmoji && achievement.iconUrl"
+           [src]="achievement.iconUrl"
+           [alt]="achievement.name" />
+      <mat-icon *ngIf="!achievement.iconEmoji && !achievement.iconUrl">emoji_events</mat-icon>
+    </div>
+
+    <!-- Lock overlay for locked achievements -->
+    <div class="lock-overlay" *ngIf="!unlocked">
+      <mat-icon>lock</mat-icon>
+    </div>
+
+    <!-- Tier badge -->
+    <div class="tier-badge" [style.background-color]="getTierColor(achievement.tier)">
+      {{ getTierText(achievement.tier) }}
+    </div>
+  </div>
+
+  <mat-card-content class="badge-info" *ngIf="size !== 'small'">
+    <h3 class="badge-name">{{ achievement.name }}</h3>
+    <p class="badge-description" *ngIf="size === 'large'">{{ achievement.description }}</p>
+    <div class="badge-xp">
+      <mat-icon class="xp-icon">stars</mat-icon>
+      <span>+{{ achievement.xpReward }} XP</span>
+    </div>
+  </mat-card-content>
+</mat-card>

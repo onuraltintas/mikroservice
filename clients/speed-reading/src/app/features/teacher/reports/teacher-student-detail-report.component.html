@@ -1,0 +1,134 @@
+<div class="student-detail">
+    <div class="controls-row">
+        <!-- Searchable Student Dropdown -->
+        <mat-form-field appearance="outline" class="student-search">
+            <mat-label>Öğrenci Seç</mat-label>
+            <input matInput [formControl]="studentSearchControl" [matAutocomplete]="auto"
+                placeholder="Tıklayın veya arayın..." (focus)="onInputFocus()">
+            <mat-icon matSuffix>arrow_drop_down</mat-icon>
+            <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayStudent"
+                (optionSelected)="onStudentSelected($event.option.value)">
+                @for (student of filteredStudents$ | async; track student.id) {
+                <mat-option [value]="student">
+                    <mat-icon>person</mat-icon>
+                    {{ student.name }}
+                </mat-option>
+                }
+                @if ((filteredStudents$ | async)?.length === 0) {
+                <mat-option disabled>Öğrenci bulunamadı</mat-option>
+                }
+            </mat-autocomplete>
+        </mat-form-field>
+
+        <!-- Date Range Filter -->
+        <mat-form-field appearance="outline" class="date-range-selector">
+            <mat-label>Tarih Aralığı</mat-label>
+            <mat-select [value]="selectedDateRange()"
+                (selectionChange)="selectedDateRange.set($event.value); onDateRangeChange()">
+                @for (option of dateRangeOptions; track option.value) {
+                <mat-option [value]="option.value">
+                    <mat-icon class="option-icon">{{ option.icon }}</mat-icon>
+                    {{ option.label }}
+                </mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+
+        <!-- Custom Date Range Picker -->
+        @if (showCustomDatePicker()) {
+        <div class="custom-date-range">
+            <mat-form-field appearance="outline" class="date-field">
+                <mat-label>Başlangıç</mat-label>
+                <input matInput [matDatepicker]="startPicker" [value]="customStartDate()"
+                    (dateChange)="customStartDate.set($event.value); onCustomDateChange()" [max]="maxDate">
+                <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+                <mat-datepicker #startPicker></mat-datepicker>
+            </mat-form-field>
+
+            <span class="date-separator">—</span>
+
+            <mat-form-field appearance="outline" class="date-field">
+                <mat-label>Bitiş</mat-label>
+                <input matInput [matDatepicker]="endPicker" [value]="customEndDate()"
+                    (dateChange)="customEndDate.set($event.value); onCustomDateChange()" [max]="maxDate"
+                    [min]="customStartDate()">
+                <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+                <mat-datepicker #endPicker></mat-datepicker>
+            </mat-form-field>
+        </div>
+        }
+
+        <button mat-icon-button (click)="loadReport()" matTooltip="Yenile" class="refresh-btn"
+            [disabled]="!selectedStudentId()">
+            <mat-icon>refresh</mat-icon>
+        </button>
+
+        <button mat-raised-button color="primary" (click)="exportReport()" matTooltip="Raporu PDF olarak dışa aktar"
+            [disabled]="!selectedStudentId() || !report()">
+            <mat-icon>download</mat-icon>
+            Dışa Aktar
+        </button>
+    </div>
+
+    @if (loading()) {
+    <div class="loading"><mat-spinner></mat-spinner></div>
+    } @else if (!selectedStudentId()) {
+    <div class="empty-state">
+        <mat-icon>person_search</mat-icon>
+        <h3>Öğrenci Seçin</h3>
+        <p>Raporu görüntülemek için yukarıdaki alandan bir öğrenci arayın ve seçin.</p>
+    </div>
+    } @else if (privacyRestricted()) {
+    <div class="privacy-restricted-container">
+        <div class="privacy-icon-wrapper">
+            <mat-icon class="privacy-icon">lock</mat-icon>
+        </div>
+        <h2>Veri Paylaşımı Kapalı</h2>
+        <p>Bu öğrenci, gelişim verilerini öğretmenleriyle paylaşmayı tercih etmemiştir.</p>
+        <p class="privacy-hint">Öğrenci, ayarlar menüsünden "Gelişimimi Öğretmenimle Paylaş" seçeneğini açarak
+            verilerini görünür yapabilir.</p>
+    </div>
+    } @else if (report() && report()?.comparisonChart) {
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>Performans Karşılaştırması</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <div class="chart"><app-radar-chart [data]="report()!.comparisonChart.data"></app-radar-chart></div>
+        </mat-card-content>
+    </mat-card>
+
+    <div class="insights-grid">
+        <mat-card>
+            <mat-card-header><mat-card-title>Güçlü Yönler</mat-card-title></mat-card-header>
+            <mat-card-content>
+                <mat-list>
+                    @for (s of (report()?.strengths || []); track s) {
+                    <mat-list-item><mat-icon color="primary">check_circle</mat-icon> {{ s }}</mat-list-item>
+                    }
+                </mat-list>
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-header><mat-card-title>Geliştirilecek Alanlar</mat-card-title></mat-card-header>
+            <mat-card-content>
+                <mat-list>
+                    @for (w of (report()?.weaknesses || []); track w) {
+                    <mat-list-item><mat-icon color="warn">flag</mat-icon> {{ w }}</mat-list-item>
+                    }
+                </mat-list>
+            </mat-card-content>
+        </mat-card>
+        <mat-card>
+            <mat-card-header><mat-card-title>Öneriler</mat-card-title></mat-card-header>
+            <mat-card-content>
+                <mat-list>
+                    @for (r of (report()?.recommendations || []); track r) {
+                    <mat-list-item><mat-icon color="accent">lightbulb</mat-icon> {{ r }}</mat-list-item>
+                    }
+                </mat-list>
+            </mat-card-content>
+        </mat-card>
+    </div>
+    }
+</div>

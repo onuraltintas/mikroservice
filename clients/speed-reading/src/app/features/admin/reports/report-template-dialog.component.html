@@ -1,0 +1,40 @@
+<h2 mat-dialog-title>{{ data ? 'Edit' : 'Create' }} Report Template</h2>
+<mat-dialog-content>
+    <form [formGroup]="form">
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Name</mat-label>
+            <input matInput formControlName="name" required>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Description</mat-label>
+            <textarea matInput formControlName="description" rows="3"></textarea>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Report Type</mat-label>
+            <mat-select formControlName="reportType" required>
+                <mat-option value="student-dashboard">Student Dashboard</mat-option>
+                <mat-option value="teacher-class">Teacher Class Overview</mat-option>
+                <mat-option value="admin-platform">Admin Platform Usage</mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Category</mat-label>
+            <mat-select formControlName="category" required>
+                <mat-option value="student">Student</mat-option>
+                <mat-option value="teacher">Teacher</mat-option>
+                <mat-option value="admin">Admin</mat-option>
+            </mat-select>
+        </mat-form-field>
+        <div class="metrics-section">
+            <label>Metrics</label>
+            @for (metric of availableMetrics; track metric) {
+            <mat-checkbox [checked]="isMetricSelected(metric)" (change)="toggleMetric(metric, $event.checked)">{{ metric
+                }}</mat-checkbox>
+            }
+        </div>
+    </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+    <button mat-button (click)="cancel()">Cancel</button>
+    <button mat-raised-button color="primary" (click)="save()" [disabled]="!form.valid">Save</button>
+</mat-dialog-actions>

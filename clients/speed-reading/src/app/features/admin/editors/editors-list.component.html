@@ -1,0 +1,130 @@
+<div class="editors-container">
+    <div class="header">
+        <div class="header-title">
+            <mat-icon class="header-icon">edit_note</mat-icon>
+            <h1>Editör Yönetimi</h1>
+        </div>
+        <button mat-raised-button color="primary" (click)="openDialog()">
+            <mat-icon>add</mat-icon>
+            Yeni Editör
+        </button>
+    </div>
+
+    <mat-card>
+        <mat-card-content>
+            <!-- Filters -->
+            <div class="filters">
+                <mat-form-field appearance="outline" class="search-field">
+                    <mat-label>Ara</mat-label>
+                    <input matInput [formControl]="searchControl" placeholder="Ad, soyad veya email ile ara...">
+                    <mat-icon matPrefix>search</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="filter-field">
+                    <mat-label>Durum</mat-label>
+                    <mat-select [formControl]="statusControl">
+                        <mat-option [value]="null">Tümü</mat-option>
+                        <mat-option [value]="true">Aktif</mat-option>
+                        <mat-option [value]="false">Pasif</mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+
+            <!-- Loading -->
+            <div *ngIf="loading()" class="loading">
+                <mat-spinner diameter="50"></mat-spinner>
+            </div>
+
+            <!-- Table -->
+            <div *ngIf="!loading()" class="table-container">
+                <table mat-table [dataSource]="dataSource" matSort class="items-table">
+                    <!-- Index Column -->
+                    <ng-container matColumnDef="index">
+                        <th mat-header-cell *matHeaderCellDef style="width: 60px;">#</th>
+                        <td mat-cell *matCellDef="let user; let i = index">
+                            {{ paginator ? (paginator.pageIndex * paginator.pageSize + i + 1) : (i + 1) }}
+                        </td>
+                    </ng-container>
+
+                    <!-- Name Column -->
+                    <ng-container matColumnDef="name">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header>Ad Soyad</th>
+                        <td mat-cell *matCellDef="let user">
+                            <div style="font-weight: 500;">{{ user.firstName }} {{ user.lastName }}</div>
+                        </td>
+                    </ng-container>
+
+                    <!-- Email Column -->
+                    <ng-container matColumnDef="email">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
+                        <td mat-cell *matCellDef="let user">
+                            {{ user.email }}
+                        </td>
+                    </ng-container>
+
+                    <!-- Status Column -->
+                    <ng-container matColumnDef="status">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header>Durum</th>
+                        <td mat-cell *matCellDef="let user">
+                            <span class="status-badge" [class.active]="user.isActive" [class.inactive]="!user.isActive">
+                                {{ user.isActive ? 'Aktif' : 'Pasif' }}
+                            </span>
+                        </td>
+                    </ng-container>
+
+                    <!-- Created Date Column -->
+                    <ng-container matColumnDef="createdAt">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header>Oluşturulma Tarihi</th>
+                        <td mat-cell *matCellDef="let user">
+                            {{ user.createdAt | date:'dd.MM.yyyy HH:mm' }}
+                        </td>
+                    </ng-container>
+
+                    <!-- Actions Column -->
+                    <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef></th>
+                        <td mat-cell *matCellDef="let user">
+                            <div class="actions-wrapper">
+                                <button mat-icon-button [matMenuTriggerFor]="menu" class="action-btn">
+                                    <mat-icon>more_vert</mat-icon>
+                                </button>
+                                <mat-menu #menu="matMenu">
+                                    <button mat-menu-item (click)="openDialog(user)">
+                                        <mat-icon>edit</mat-icon>
+                                        <span>Düzenle</span>
+                                    </button>
+                                    <button mat-menu-item (click)="toggleStatus(user)">
+                                        <mat-icon [color]="user.isActive ? 'warn' : 'primary'">{{ user.isActive ?
+                                            'block' : 'check_circle' }}</mat-icon>
+                                        <span>{{ user.isActive ? 'Devre Dışı Bırak' : 'Aktif Et' }}</span>
+                                    </button>
+                                    <mat-divider></mat-divider>
+                                    <button mat-menu-item (click)="deleteEditor(user)" class="delete-item">
+                                        <mat-icon color="warn">delete</mat-icon>
+                                        <span>Sil</span>
+                                    </button>
+                                </mat-menu>
+                            </div>
+                        </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                </table>
+
+                <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]" [pageSize]="10" showFirstLastButtons
+                    (page)="onPageChange($event)">
+                </mat-paginator>
+            </div>
+
+            <!-- No Data -->
+            <div *ngIf="!loading() && dataSource.data.length === 0" class="no-data">
+                <mat-icon>edit_off</mat-icon>
+                <p>Kayıtlı editör bulunamadı</p>
+                <button mat-raised-button color="primary" (click)="openDialog()">
+                    İlk Editörü Ekle
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</div>

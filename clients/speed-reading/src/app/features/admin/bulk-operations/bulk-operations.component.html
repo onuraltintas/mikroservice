@@ -1,0 +1,205 @@
+<div class="bulk-operations-page">
+    <div class="page-header">
+        <h1>Toplu İşlemler</h1>
+    </div>
+
+    <mat-tab-group>
+        <!-- CSV Import Tab -->
+        <mat-tab label="Kullanıcı İçe Aktar">
+            <div class="tab-content">
+                <mat-card>
+                    <h2>CSV Dosyası İle Toplu Kullanıcı Ekleme</h2>
+                    <p class="description">
+                        CSV dosyası kullanarak birden fazla kullanıcıyı tek seferde sisteme ekleyebilirsiniz.
+                    </p>
+
+                    <div class="file-upload-section">
+                        <button mat-stroked-button color="accent" (click)="downloadTemplate()">
+                            <mat-icon>download</mat-icon>
+                            Örnek CSV Şablonunu İndir
+                        </button>
+
+                        <div class="file-input-wrapper">
+                            <input type="file" #fileInput accept=".csv" (change)="onFileSelected($event)"
+                                style="display: none">
+                            <button mat-raised-button (click)="fileInput.click()">
+                                <mat-icon>upload_file</mat-icon>
+                                CSV Dosyası Seç
+                            </button>
+                            <span *ngIf="selectedFile" class="file-name">{{ selectedFile.name }}</span>
+                        </div>
+
+                        <button mat-raised-button color="primary" (click)="importUsers()"
+                            [disabled]="!selectedFile || importing">
+                            <mat-spinner *ngIf="importing" diameter="20"></mat-spinner>
+                            <mat-icon *ngIf="!importing">cloud_upload</mat-icon>
+                            {{ importing ? 'İçe Aktarılıyor...' : 'Kullanıcıları İçe Aktar' }}
+                        </button>
+                    </div>
+
+                    <div class="result-section" *ngIf="importResult">
+                        <h3>İçe Aktarma Sonucu</h3>
+                        <div class="result-stats">
+                            <div class="stat success">
+                                <span class="label">Başarılı:</span>
+                                <span class="value">{{ importResult.succeeded }}</span>
+                            </div>
+                            <div class="stat error">
+                                <span class="label">Başarısız:</span>
+                                <span class="value">{{ importResult.failed }}</span>
+                            </div>
+                        </div>
+
+                        <div class="errors-list" *ngIf="importResult.errors.length > 0">
+                            <h4>Hatalar:</h4>
+                            <ul>
+                                <li *ngFor="let error of importResult.errors">{{ error }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </mat-card>
+            </div>
+        </mat-tab>
+
+        <!-- CSV Export Tab -->
+        <mat-tab label="Kullanıcı Dışa Aktar">
+            <div class="tab-content">
+                <mat-card>
+                    <h2>Kullanıcıları CSV Olarak Dışa Aktar</h2>
+                    <p class="description">
+                        Sistemdeki kullanıcıları CSV dosyası olarak dışa aktarabilirsiniz.
+                    </p>
+
+                    <div class="export-filters">
+                        <mat-form-field appearance="outline">
+                            <mat-label>Rol Filtresi</mat-label>
+                            <mat-select [(ngModel)]="exportRole">
+                                <mat-option [value]="null">Tüm Roller</mat-option>
+                                <mat-option *ngFor="let role of roles" [value]="role.name">
+                                    {{ role.name }}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+
+                        <button mat-raised-button color="primary" (click)="exportUsers()" [disabled]="exporting">
+                            <mat-spinner *ngIf="exporting" diameter="20"></mat-spinner>
+                            <mat-icon *ngIf="!exporting">download</mat-icon>
+                            {{ exporting ? 'Dışa Aktarılıyor...' : 'CSV Olarak Dışa Aktar' }}
+                        </button>
+                    </div>
+                </mat-card>
+            </div>
+        </mat-tab>
+
+        <!-- Bulk Role Assignment Tab -->
+        <mat-tab label="Toplu Rol Ataması">
+            <div class="tab-content">
+                <mat-card>
+                    <h2>Birden Fazla Kullanıcıya Rol Ata</h2>
+                    <p class="description">
+                        Seçili kullanıcılara toplu olarak rol atayabilirsiniz.
+                    </p>
+
+                    <div class="role-assignment-section">
+                        <mat-form-field appearance="outline" class="full-width">
+                            <mat-label>Atanacak Rol</mat-label>
+                            <mat-select [(ngModel)]="selectedRoleForAssignment">
+                                <mat-option *ngFor="let role of roles" [value]="role.name">
+                                    {{ role.name }}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+
+                        <div class="checkbox-option">
+                            <mat-checkbox [(ngModel)]="removeExistingRoles">
+                                Mevcut rolleri kaldır (sadece seçili rolü ata)
+                            </mat-checkbox>
+                        </div>
+
+                        <button mat-raised-button (click)="loadUsers()" [disabled]="loadingUsers">
+                            <mat-spinner *ngIf="loadingUsers" diameter="20"></mat-spinner>
+                            <mat-icon *ngIf="!loadingUsers">refresh</mat-icon>
+                            {{ loadingUsers ? 'Yükleniyor...' : 'Kullanıcıları Yükle' }}
+                        </button>
+                    </div>
+
+                    <div class="users-table-section" *ngIf="users.length > 0">
+                        <div class="table-actions">
+                            <button mat-button (click)="toggleSelectAll()">
+                                {{ allSelected ? 'Tümünü Kaldır' : 'Tümünü Seç' }}
+                            </button>
+                            <span class="selected-count">
+                                {{ getSelectedCount() }} kullanıcı seçildi
+                            </span>
+                        </div>
+
+                        <div class="table-container">
+                            <table mat-table [dataSource]="users" class="users-table">
+                                <ng-container matColumnDef="select">
+                                    <th mat-header-cell *matHeaderCellDef></th>
+                                    <td mat-cell *matCellDef="let user">
+                                        <mat-checkbox [(ngModel)]="user.selected"
+                                            (change)="onUserSelectionChange()"></mat-checkbox>
+                                    </td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="email">
+                                    <th mat-header-cell *matHeaderCellDef>E-posta</th>
+                                    <td mat-cell *matCellDef="let user">{{ user.email }}</td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="name">
+                                    <th mat-header-cell *matHeaderCellDef>Ad Soyad</th>
+                                    <td mat-cell *matCellDef="let user">
+                                        {{ user.firstName }} {{ user.lastName }}
+                                    </td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="roles">
+                                    <th mat-header-cell *matHeaderCellDef>Mevcut Roller</th>
+                                    <td mat-cell *matCellDef="let user">
+                                        <span class="role-badge" *ngFor="let role of user.roles">
+                                            {{ role }}
+                                        </span>
+                                    </td>
+                                </ng-container>
+
+                                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                            </table>
+                        </div>
+
+                        <button mat-raised-button color="primary" (click)="bulkAssignRoles()"
+                            [disabled]="!selectedRoleForAssignment || getSelectedCount() === 0 || assigning"
+                            class="assign-button">
+                            <mat-spinner *ngIf="assigning" diameter="20"></mat-spinner>
+                            <mat-icon *ngIf="!assigning">group_add</mat-icon>
+                            {{ assigning ? 'Atanıyor...' : 'Seçili Kullanıcılara Rol Ata' }}
+                        </button>
+                    </div>
+
+                    <div class="result-section" *ngIf="assignmentResult">
+                        <h3>Rol Atama Sonucu</h3>
+                        <div class="result-stats">
+                            <div class="stat success">
+                                <span class="label">Başarılı:</span>
+                                <span class="value">{{ assignmentResult.succeeded }}</span>
+                            </div>
+                            <div class="stat error">
+                                <span class="label">Başarısız:</span>
+                                <span class="value">{{ assignmentResult.failed }}</span>
+                            </div>
+                        </div>
+
+                        <div class="errors-list" *ngIf="assignmentResult.errors.length > 0">
+                            <h4>Hatalar:</h4>
+                            <ul>
+                                <li *ngFor="let error of assignmentResult.errors">{{ error }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </mat-card>
+            </div>
+        </mat-tab>
+    </mat-tab-group>
+</div>

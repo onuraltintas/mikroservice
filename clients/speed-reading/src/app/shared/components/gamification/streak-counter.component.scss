@@ -1,0 +1,43 @@
+.streak-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+    border-radius: 12px;
+    color: white;
+    position: relative;
+}
+
+.streak-icon {
+    font-size: 32px;
+    line-height: 1;
+}
+
+.streak-info {
+    flex: 1;
+}
+
+.streak-value {
+    font-size: 24px;
+    font-weight: bold;
+    line-height: 1.2;
+}
+
+.streak-label {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.freeze-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #4ECDC4;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}

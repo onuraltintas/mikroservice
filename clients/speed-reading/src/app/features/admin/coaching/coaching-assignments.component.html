@@ -1,0 +1,110 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2><mat-icon>assignment</mat-icon> Ödevler</h2>
+    <div style="display:flex;gap:8px">
+      <button mat-stroked-button [color]="pendingReviewMode ? 'accent' : ''"
+        (click)="togglePendingReview()"
+        [matBadge]="pendingReviewCount > 0 ? pendingReviewCount : null"
+        matBadgeColor="warn" matBadgeSize="small">
+        <mat-icon>rate_review</mat-icon> İnceleme Bekleyenler
+      </button>
+      <button mat-raised-button color="primary" (click)="load()">
+        <mat-icon>refresh</mat-icon> Yenile
+      </button>
+    </div>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Durum</mat-label>
+          <mat-select [(ngModel)]="filterStatus" (selectionChange)="onFilter()">
+            <mat-option *ngFor="let o of statusOptions" [value]="o.value">{{ o.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="loading()" class="loading-container"><mat-spinner diameter="40"></mat-spinner></div>
+      <div *ngIf="!loading() && records.length === 0" class="empty-state">
+        <mat-icon>assignment_late</mat-icon><p>Ödev bulunamadı</p>
+      </div>
+
+      <table mat-table [dataSource]="records" *ngIf="!loading() && records.length > 0" class="full-width-table">
+        <ng-container matColumnDef="studentName">
+          <th mat-header-cell *matHeaderCellDef>Öğrenci</th>
+          <td mat-cell *matCellDef="let r">{{ r.studentName || (r.studentId | slice:0:8) + '...' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef>Ödev</th>
+          <td mat-cell *matCellDef="let r">
+            <div>
+              <strong [matTooltip]="r.description">{{ r.title }}</strong>
+              <div *ngIf="r.completionNote" class="text-muted" style="font-size:0.8em">{{ r.completionNote }}</div>
+            </div>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="dueDate">
+          <th mat-header-cell *matHeaderCellDef>Son Tarih</th>
+          <td mat-cell *matCellDef="let r">
+            <span [style.color]="isOverdue(r) ? '#f44336' : 'inherit'">
+              {{ r.dueDate | date:'dd.MM.yyyy' }}
+              <mat-icon *ngIf="isOverdue(r)" class="icon-sm" style="color:#f44336" matTooltip="Gecikti">warning</mat-icon>
+            </span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Durum</th>
+          <td mat-cell *matCellDef="let r">
+            <span class="status-badge status-{{ statusColors[r.status] }}">
+              {{ statusLabels[r.status] }}
+            </span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="approval">
+          <th mat-header-cell *matHeaderCellDef>Koç Onayı</th>
+          <td mat-cell *matCellDef="let r">
+            <mat-icon *ngIf="r.isApprovedByCoach === true" style="color:#4CAF50" matTooltip="Onaylandı">verified</mat-icon>
+            <mat-icon *ngIf="r.isApprovedByCoach === false" style="color:#f44336"
+              [matTooltip]="'Reddedildi' + (r.coachFeedback ? ': ' + r.coachFeedback : '')">unpublished</mat-icon>
+            <span *ngIf="(r.status === 'Completed' || r.status === 'PartiallyCompleted') && r.isApprovedByCoach == null"
+              style="color:#F57C00;font-size:12px">İnceleniyor</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="target">
+          <th mat-header-cell *matHeaderCellDef>Hedef</th>
+          <td mat-cell *matCellDef="let r">
+            <span *ngIf="r.targetQuestions">{{ r.targetQuestions }} soru</span>
+            <span *ngIf="r.targetMinutes"> / {{ r.targetMinutes }} dk</span>
+            <span *ngIf="!r.targetQuestions && !r.targetMinutes" class="text-muted">—</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="completedAt">
+          <th mat-header-cell *matHeaderCellDef>Tamamlandı</th>
+          <td mat-cell *matCellDef="let r">
+            <span *ngIf="r.completedAt">{{ r.completedAt | date:'dd.MM.yyyy' }}</span>
+            <span *ngIf="!r.completedAt" class="text-muted">—</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>İşlemler</th>
+          <td mat-cell *matCellDef="let r">
+            <button mat-icon-button color="warn"
+              *ngIf="r.status === 'Pending' || r.status === 'Overdue'"
+              matTooltip="İptal Et" (click)="cancelAssignment(r)">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <mat-paginator *ngIf="!loading() && total > 0"
+        [length]="total" [pageSize]="pageSize" [pageIndex]="page - 1"
+        [pageSizeOptions]="[10, 20, 50]" showFirstLastButtons
+        (page)="onPage($event)">
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

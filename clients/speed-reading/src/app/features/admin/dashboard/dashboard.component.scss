@@ -1,0 +1,355 @@
+.dashboard-container {
+    padding: 1.5rem;
+    max-width: 87.5rem;
+    margin: 0 auto;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+}
+
+/* Başlık Bölümü */
+.header-section {
+    margin-bottom: 2rem;
+}
+
+.welcome-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 1rem;
+    padding: 2rem;
+    color: white;
+    box-shadow: 0 0.625rem 1.875rem rgba(102, 126, 234, 0.3);
+}
+
+.welcome-content h1 {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0 0 0.75rem 0;
+    font-size: 2.25rem;
+    font-weight: 600;
+}
+
+.welcome-icon {
+    font-size: 2.625rem;
+    width: 2.625rem;
+    height: 2.625rem;
+}
+
+.welcome-subtitle {
+    margin: 0;
+    font-size: 1.125rem;
+    opacity: 0.9;
+}
+
+/* Bölüm Başlıkları */
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 1.25rem 0;
+}
+
+.section-title mat-icon {
+    font-size: 1.75rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    color: #667eea;
+}
+
+/* Hızlı Erişim Kartları */
+.quick-actions-section {
+    margin-bottom: 2.5rem;
+}
+
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1.5rem;
+}
+
+.dashboard-card {
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 2px 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-card:hover {
+    transform: translateY(-0.5rem);
+    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-card mat-card-header {
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+}
+
+.card-icon-wrapper {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.icon-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.icon-success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.icon-warning {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.icon-info {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.icon-accent {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.card-icon {
+    font-size: 2rem;
+    width: 2rem;
+    height: 2rem;
+    color: white;
+}
+
+.dashboard-card mat-card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0;
+    flex: 1;
+}
+
+.card-badge {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: #f56565;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.dashboard-card mat-card-content {
+    padding: 0 1.25rem 1rem;
+}
+
+.dashboard-card mat-card-content p {
+    margin: 0;
+    color: #718096;
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+.dashboard-card mat-card-actions {
+    padding: 0 1.25rem 1.25rem;
+    margin: 0;
+}
+
+.dashboard-card mat-card-actions button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* İçerik Yönetimi */
+.content-management-section {
+    margin-bottom: 2.5rem;
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1.25rem;
+}
+
+.content-card {
+    cursor: pointer;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 2px 0.5rem rgba(0, 0, 0, 0.08);
+}
+
+.content-card:hover {
+    transform: translateY(-0.25rem);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
+}
+
+.content-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.content-card-header mat-icon {
+    font-size: 1.75rem;
+    width: 1.75rem;
+    height: 1.75rem;
+}
+
+.content-card-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.content-card p {
+    margin: 0 0 0.75rem 0;
+    color: #718096;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.content-card-footer {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.content-card-footer mat-icon {
+    color: #667eea;
+    transition: transform 0.3s ease;
+}
+
+.content-card:hover .content-card-footer mat-icon {
+    transform: translateX(0.25rem);
+}
+
+/* Sistem Yönetimi */
+.system-management-section {
+    margin-bottom: 2.5rem;
+}
+
+.system-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: 1rem;
+}
+
+.system-card {
+    cursor: pointer;
+    padding: 1.25rem;
+    text-align: center;
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 2px 0.5rem rgba(0, 0, 0, 0.08);
+}
+
+.system-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
+}
+
+.system-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+    color: #667eea;
+    margin-bottom: 0.75rem;
+}
+
+.system-card h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.system-card p {
+    margin: 0;
+    color: #718096;
+    font-size: 0.8125rem;
+}
+
+/* Yardım Bölümü */
+.help-section {
+    margin-top: 2.5rem;
+}
+
+.help-card {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    border-radius: 0.75rem;
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+}
+
+.help-card mat-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.help-icon {
+    font-size: 2rem;
+    width: 2rem;
+    height: 2rem;
+    color: #c05621;
+}
+
+.help-card mat-card-title {
+    color: #744210;
+    font-weight: 600;
+}
+
+.help-card mat-card-content p {
+    color: #744210;
+    margin-bottom: 1.25rem;
+}
+
+.help-buttons {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.help-buttons button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 48rem) {
+    .dashboard-container {
+        padding: 1rem;
+    }
+
+    .welcome-banner {
+        padding: 1.5rem;
+    }
+
+    .welcome-content h1 {
+        font-size: 1.75rem;
+    }
+
+    .welcome-subtitle {
+        font-size: 1rem;
+    }
+
+    .quick-actions-grid,
+    .content-grid,
+    .system-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,112 @@
+<h2 mat-dialog-title>{{ isEditMode ? 'Kelime Düzenle' : 'Yeni Kelime Ekle' }}</h2>
+
+<mat-dialog-content>
+    <form [formGroup]="form">
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Kelime</mat-label>
+            <input matInput formControlName="word" placeholder="Kelimeyi girin">
+            <mat-error *ngIf="form.get('word')?.hasError('required')">
+                Kelime zorunludur
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Tanım</mat-label>
+            <textarea matInput formControlName="definition" rows="3" placeholder="Kelimenin tanımını girin"></textarea>
+            <mat-error *ngIf="form.get('definition')?.hasError('required')">
+                Tanım zorunludur
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Örnek Cümle</mat-label>
+            <textarea matInput formControlName="exampleSentence" rows="2"
+                placeholder="Kelimenin kullanıldığı örnek bir cümle (opsiyonel)"></textarea>
+        </mat-form-field>
+
+        <div class="form-row">
+            <mat-form-field appearance="outline">
+                <mat-label>Eş Anlamlılar</mat-label>
+                <input matInput formControlName="synonyms" placeholder="Virgülle ayırın">
+                <mat-hint>Örn: güzel, hoş, zarif</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Zıt Anlamlılar</mat-label>
+                <input matInput formControlName="antonyms" placeholder="Virgülle ayırın">
+                <mat-hint>Örn: çirkin, kötü</mat-hint>
+            </mat-form-field>
+        </div>
+
+        <div class="form-row">
+            <mat-form-field appearance="outline">
+                <mat-label>Kategori</mat-label>
+                <mat-select formControlName="category">
+                    <mat-option *ngFor="let cat of categories" [value]="cat">{{ cat }}</mat-option>
+                    <mat-option value="__new__">+ Yeni Kategori Ekle</mat-option>
+                </mat-select>
+                <mat-error *ngIf="form.get('category')?.hasError('required')">
+                    Kategori zorunludur
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" *ngIf="form.get('category')?.value === '__new__'">
+                <mat-label>Yeni Kategori Adı</mat-label>
+                <input matInput formControlName="newCategory" placeholder="Kategori adı girin">
+                <mat-error *ngIf="form.get('newCategory')?.hasError('required')">
+                    Kategori adı zorunludur
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" *ngIf="form.get('category')?.value !== '__new__'">
+                <mat-label>Zorluk Seviyesi</mat-label>
+                <mat-select formControlName="difficultyLevel">
+                    <mat-option [value]="1">1 - Başlangıç</mat-option>
+                    <mat-option [value]="2">2 - Temel</mat-option>
+                    <mat-option [value]="3">3 - Orta</mat-option>
+                    <mat-option [value]="4">4 - İleri</mat-option>
+                    <mat-option [value]="5">5 - Uzman</mat-option>
+                </mat-select>
+                <mat-error *ngIf="form.get('difficultyLevel')?.hasError('required')">
+                    Zorluk seviyesi zorunludur
+                </mat-error>
+            </mat-form-field>
+        </div>
+
+        <div class="form-row" *ngIf="form.get('category')?.value === '__new__'">
+            <mat-form-field appearance="outline">
+                <mat-label>Zorluk Seviyesi</mat-label>
+                <mat-select formControlName="difficultyLevel">
+                    <mat-option [value]="1">1 - Başlangıç</mat-option>
+                    <mat-option [value]="2">2 - Temel</mat-option>
+                    <mat-option [value]="3">3 - Orta</mat-option>
+                    <mat-option [value]="4">4 - İleri</mat-option>
+                    <mat-option [value]="5">5 - Uzman</mat-option>
+                </mat-select>
+                <mat-error *ngIf="form.get('difficultyLevel')?.hasError('required')">
+                    Zorluk seviyesi zorunludur
+                </mat-error>
+            </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Hedef Yaş Grubu</mat-label>
+            <mat-select formControlName="targetAgeGroupId">
+                <mat-option *ngFor="let group of ageGroups" [value]="group.id">
+                    {{ group.displayName }} ({{ ageGroupService.formatAgeRange(group) }})
+                </mat-option>
+            </mat-select>
+            <mat-error *ngIf="form.get('targetAgeGroupId')?.hasError('required')">
+                Yaş grubu seçimi zorunludur
+            </mat-error>
+        </mat-form-field>
+    </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" [disabled]="saving">İptal</button>
+    <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!form.valid || saving">
+        <mat-spinner diameter="20" *ngIf="saving"></mat-spinner>
+        <span *ngIf="!saving">{{ isEditMode ? 'Güncelle' : 'Kaydet' }}</span>
+    </button>
+</mat-dialog-actions>

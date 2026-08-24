@@ -1,0 +1,84 @@
+// Badge Card — sp-* design system
+@keyframes sp-badge-unlock {
+  0%   { opacity: 0; transform: scale(0.4) rotate(-15deg); }
+  60%  { transform: scale(1.15) rotate(4deg); }
+  80%  { transform: scale(0.95) rotate(-2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+
+.badge-card {
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-md);
+  cursor: default;
+  transition:
+    box-shadow var(--sp-transition-fast),
+    border-color var(--sp-transition-fast),
+    transform var(--sp-transition-fast);
+
+  &--unlocked {
+    border-color: rgba(234, 179, 8, 0.35);
+    background: rgba(234, 179, 8, 0.04);
+  }
+
+  &--locked {
+    opacity: 0.55;
+    filter: saturate(0.4);
+  }
+
+  &:hover {
+    box-shadow: var(--sp-shadow-sm);
+    transform: translateY(-2px);
+  }
+
+  // Yeni kazanılan rozet animasyonu — parent bileşen 'badge-card--new' sınıfını anlık ekler
+  &--new {
+    animation: sp-badge-unlock 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+}
+
+.badge-card__icon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 40px;
+  text-align: center;
+}
+
+.badge-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.badge-card__name {
+  font-family: var(--sp-font-sans);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--sp-text-1);
+}
+
+.badge-card__tier {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-card__xp {
+  font-size: 0.6875rem;
+  font-weight: 600;
+
+  &--locked  { color: var(--sp-text-3); }
+  &--earned  { color: var(--sp-xp); }
+}
+
+.badge-card__date {
+  font-size: 0.6875rem;
+  color: var(--sp-text-3);
+}

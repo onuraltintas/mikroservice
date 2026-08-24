@@ -1,0 +1,261 @@
+<div class="coaching-tab">
+
+  <!-- Loading -->
+  <div *ngIf="dataLoading" class="tab-loading">
+    <mat-spinner diameter="36"></mat-spinner>
+    <p>Koçluk verileri yükleniyor...</p>
+  </div>
+
+  <ng-container *ngIf="!dataLoading">
+
+    <!-- ══ İLİŞKİ YOK ════════════════════════════════════════════════════════ -->
+    <div *ngIf="!relationship" class="no-relationship">
+      <div class="no-rel-icon">
+        <mat-icon>supervisor_account</mat-icon>
+      </div>
+      <h3>Aktif koçluk ilişkisi yok</h3>
+      <p>Bu öğrenciyle koçluk ilişkisi başlatarak hedefler, seanslar ve ödevler yönetebilirsiniz.</p>
+      <button mat-raised-button color="primary" (click)="startRelationship()" [disabled]="startingRelationship">
+        <mat-spinner *ngIf="startingRelationship" diameter="16" class="btn-spinner"></mat-spinner>
+        <mat-icon *ngIf="!startingRelationship">add_circle</mat-icon>
+        Koçluk İlişkisi Başlat
+      </button>
+    </div>
+
+    <!-- ══ AKTİF İLİŞKİ ══════════════════════════════════════════════════════ -->
+    <div *ngIf="relationship" class="coaching-content">
+
+      <!-- İlişki durum kartı -->
+      <div class="relationship-banner">
+        <div class="rel-info">
+          <mat-icon class="rel-icon">handshake</mat-icon>
+          <div>
+            <span class="rel-label">Koçluk İlişkisi Aktif</span>
+            <span class="rel-since">{{ formatDate(relationship.startDate) }} tarihinden beri</span>
+          </div>
+        </div>
+        <div class="rel-stats">
+          <span class="rel-stat"><mat-icon>flag</mat-icon> {{ goals.length }} hedef</span>
+          <span class="rel-stat"><mat-icon>event</mat-icon> {{ sessions.length }} seans</span>
+          <span class="rel-stat" [class.warn]="pendingReviewCount > 0">
+            <mat-icon>assignment_late</mat-icon> {{ pendingReviewCount }} inceleme bekliyor
+          </span>
+        </div>
+        <button mat-stroked-button class="end-btn" (click)="endRelationship()">
+          <mat-icon>cancel</mat-icon>
+          İlişkiyi Sonlandır
+        </button>
+      </div>
+
+      <!-- ── Hedefler ──────────────────────────────────────────────────────── -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">
+            <mat-icon>flag</mat-icon>
+            <h3>Aktif Hedefler</h3>
+            <span class="count-badge">{{ goals.length }}</span>
+          </div>
+          <button mat-stroked-button class="add-btn" (click)="openGoalDialog()">
+            <mat-icon>add</mat-icon>
+            Hedef Ekle
+          </button>
+        </div>
+
+        <div *ngIf="goals.length === 0" class="empty-state-sm">
+          <mat-icon>flag_circle</mat-icon>
+          <span>Aktif hedef yok. İlk hedefi ekleyin.</span>
+        </div>
+
+        <div class="goals-list">
+          <div *ngFor="let goal of goals" class="goal-card">
+            <div class="goal-left">
+              <span class="level-badge" [class]="goalLevelClass(goal.level)">{{ goalLevelLabel(goal.level) }}</span>
+              <div class="goal-body">
+                <span class="goal-title">{{ goal.title }}</span>
+                <span class="goal-desc" *ngIf="goal.description">{{ goal.description }}</span>
+                <div class="goal-progress-row">
+                  <mat-progress-bar mode="determinate" [value]="goal.completionPercentage" class="goal-bar"></mat-progress-bar>
+                  <span class="pct-label">%{{ goal.completionPercentage }}</span>
+                </div>
+                <span class="goal-deadline">
+                  <mat-icon>event</mat-icon>
+                  {{ formatDate(goal.targetDate) }}
+                </span>
+              </div>
+            </div>
+            <div class="goal-actions">
+              <button mat-icon-button matTooltip="İlerleme Güncelle" (click)="checkInGoal(goal)">
+                <mat-icon>trending_up</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="Düzenle" (click)="openGoalDialog(goal)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="Sil" class="delete-btn" (click)="deleteGoal(goal)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- ── Seanslar ──────────────────────────────────────────────────────── -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">
+            <mat-icon>video_call</mat-icon>
+            <h3>Koçluk Seansları</h3>
+            <span class="count-badge">{{ sessions.length }}</span>
+          </div>
+          <button mat-stroked-button class="add-btn" (click)="openSessionDialog()">
+            <mat-icon>add</mat-icon>
+            Seans Planla
+          </button>
+        </div>
+
+        <div *ngIf="sessions.length === 0" class="empty-state-sm">
+          <mat-icon>event_available</mat-icon>
+          <span>Henüz seans planlanmamış.</span>
+        </div>
+
+        <div class="sessions-list">
+          <div *ngFor="let s of sessions" class="session-card">
+            <div class="session-date">
+              <span class="s-day">{{ s.scheduledAt | date:'d' }}</span>
+              <span class="s-month">{{ s.scheduledAt | date:'MMM' }}</span>
+            </div>
+            <div class="session-info">
+              <span class="session-type">{{ sessionTypeLabel(s.sessionType) }}</span>
+              <span class="session-time">{{ s.scheduledAt | date:'HH:mm' }} · {{ s.plannedDurationMinutes }} dk</span>
+              <span *ngIf="s.meetingLink" class="session-link">
+                <mat-icon>link</mat-icon> {{ s.meetingLink }}
+              </span>
+            </div>
+            <div class="session-right">
+              <span class="status-badge" [class]="sessionStatusClass(s.status)">
+                {{ sessionStatusLabel(s.status) }}
+              </span>
+              <div class="session-actions">
+                <button mat-icon-button matTooltip="Tamamlandı İşaretle"
+                        *ngIf="s.status === 'Scheduled'"
+                        (click)="completeSession(s)">
+                  <mat-icon>check_circle</mat-icon>
+                </button>
+                <button mat-icon-button matTooltip="Düzenle" (click)="openSessionDialog(s)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- ── Ödevler ───────────────────────────────────────────────────────── -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">
+            <mat-icon>assignment</mat-icon>
+            <h3>Koçluk Ödevleri</h3>
+            <span class="count-badge">{{ assignments.length }}</span>
+            <span class="review-badge" *ngIf="pendingReviewCount > 0">
+              {{ pendingReviewCount }} inceleme bekliyor
+            </span>
+          </div>
+          <button mat-stroked-button class="add-btn" (click)="openAssignmentDialog()">
+            <mat-icon>add</mat-icon>
+            Ödev Ver
+          </button>
+        </div>
+
+        <div *ngIf="assignments.length === 0" class="empty-state-sm">
+          <mat-icon>assignment_turned_in</mat-icon>
+          <span>Henüz ödev atanmamış.</span>
+        </div>
+
+        <div class="assignments-list">
+          <div *ngFor="let a of assignments" class="assignment-card" [class.overdue]="a.status === 'Pending' && isOverdue(a.dueDate)">
+            <div class="asgn-left">
+              <span class="status-badge" [class]="assignmentStatusClass(a.status)">
+                {{ assignmentStatusLabel(a.status) }}
+              </span>
+              <div class="asgn-body">
+                <span class="asgn-title">{{ a.title }}</span>
+                <span class="asgn-due">
+                  <mat-icon>event</mat-icon>
+                  Teslim: {{ formatDate(a.dueDate) }}
+                </span>
+                <span *ngIf="a.completionNote" class="asgn-note">
+                  <mat-icon>chat</mat-icon>
+                  {{ a.completionNote }}
+                </span>
+              </div>
+            </div>
+            <!-- İnceleme bekleyen ödevler için onay/ret butonları -->
+            <div class="asgn-review" *ngIf="(a.status === 'Completed' || a.status === 'PartiallyCompleted') && a.isApprovedByCoach === null">
+              <button mat-flat-button color="primary" class="approve-btn" (click)="reviewAssignment(a, true)">
+                <mat-icon>check</mat-icon> Onayla
+              </button>
+              <button mat-stroked-button color="warn" class="reject-btn" (click)="reviewAssignment(a, false)">
+                <mat-icon>close</mat-icon> Reddet
+              </button>
+            </div>
+            <div class="asgn-approved" *ngIf="a.isApprovedByCoach === true">
+              <mat-icon class="approved-icon">verified</mat-icon>
+            </div>
+            <div class="asgn-approved rejected" *ngIf="a.isApprovedByCoach === false">
+              <mat-icon class="rejected-icon">cancel</mat-icon>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- ── Sınav Sonuçları ───────────────────────────────────────────────── -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">
+            <mat-icon>quiz</mat-icon>
+            <h3>Sınav Sonuçları</h3>
+            <span class="count-badge">{{ exams.length }}</span>
+          </div>
+          <button mat-stroked-button class="add-btn" (click)="openExamDialog()">
+            <mat-icon>add</mat-icon>
+            Sınav Ekle
+          </button>
+        </div>
+
+        <div *ngIf="exams.length === 0" class="empty-state-sm">
+          <mat-icon>quiz</mat-icon>
+          <span>Henüz sınav sonucu girilmemiş.</span>
+        </div>
+
+        <div class="exams-list">
+          <div *ngFor="let e of exams" class="exam-card">
+            <div class="exam-info">
+              <span class="exam-name">{{ e.examName }}</span>
+              <span class="exam-date">{{ formatDate(e.examDate) }}</span>
+              <span class="exam-type-badge">{{ e.examType }}</span>
+            </div>
+            <div class="exam-scores">
+              <div class="score-item" *ngIf="e.totalNet !== null">
+                <span class="score-val">{{ e.totalNet | number:'1.0-1' }}</span>
+                <span class="score-lbl">Net</span>
+              </div>
+              <div class="score-item" *ngIf="e.estimatedScore !== null">
+                <span class="score-val">{{ e.estimatedScore | number:'1.0-0' }}</span>
+                <span class="score-lbl">Puan</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /coaching-content -->
+
+  </ng-container>
+
+</div>

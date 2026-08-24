@@ -1,0 +1,212 @@
+<div class="learning-path-page">
+    <div class="page-header">
+        <button class="sp-btn sp-btn-icon" (click)="goBack()">
+            <span class="material-icons">arrow_back</span>
+        </button>
+        <div class="header-content">
+            <h1>
+                <span class="material-icons">map</span>
+                Öğrenme Yolculuğum
+            </h1>
+            <p>Kişiselleştirilmiş öğrenme rotanı takip et</p>
+        </div>
+    </div>
+
+    <!-- Progress Summary -->
+    @if (progressSummary) {
+    <div class="sp-card progress-summary-card">
+        <div class="sp-card-content">
+            <div class="summary-stats">
+                <div class="stat-box">
+                    <div class="stat-icon">
+                        <span class="material-icons">format_list_numbered</span>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Toplam İçerik</div>
+                        <div class="stat-value">{{ progressSummary.totalItems }}</div>
+                    </div>
+                </div>
+
+                <div class="stat-box completed">
+                    <div class="stat-icon">
+                        <span class="material-icons">check_circle</span>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Tamamlanan</div>
+                        <div class="stat-value">{{ progressSummary.completedItems }}</div>
+                    </div>
+                </div>
+
+                <div class="stat-box remaining">
+                    <div class="stat-icon">
+                        <span class="material-icons">pending</span>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Kalan</div>
+                        <div class="stat-value">{{ progressSummary.remainingItems }}</div>
+                    </div>
+                </div>
+
+                <div class="stat-box progress">
+                    <div class="stat-icon">
+                        <span class="material-icons">trending_up</span>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">İlerleme</div>
+                        <div class="stat-value">%{{ progressSummary.completionPercentage | number:'1.0-1' }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sp-bar overall-progress">
+                <div class="sp-bar-fill" [style.width.%]="progressSummary.completionPercentage"></div>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- Filters -->
+    <div class="sp-card filters-card">
+        <div class="sp-card-content">
+            <div class="sp-tab-bar">
+                <button class="sp-tab-btn" [class.active]="selectedTabIndex === 0" (click)="onTabChange(0)">
+                    <span class="material-icons">pending</span>
+                    Tamamlanacaklar ({{ progressSummary?.remainingItems || 0 }})
+                </button>
+                <button class="sp-tab-btn" [class.active]="selectedTabIndex === 1" (click)="onTabChange(1)">
+                    <span class="material-icons">check_circle</span>
+                    Tamamlananlar ({{ progressSummary?.completedItems || 0 }})
+                </button>
+                <button class="sp-tab-btn" [class.active]="selectedTabIndex === 2" (click)="onTabChange(2)">
+                    <span class="material-icons">list</span>
+                    Tümü ({{ progressSummary?.totalItems || 0 }})
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (loading) {
+    <div class="loading-container">
+        <div class="sp-card">
+            <div class="sp-card-content">
+                <div class="loading-spinner">
+                    <span class="material-icons">hourglass_empty</span>
+                    <p>Öğrenme yolunuz yükleniyor...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- Learning Path Items -->
+    @if (!loading && learningPath) {
+    <div class="items-container">
+        @if (learningPath.items && learningPath.items.length > 0) {
+        <div class="items-grid">
+            @for (item of learningPath.items; track item.id) {
+            <div class="sp-card path-item-card" [class.completed]="item.isCompleted" [class.current]="isCurrentItem(item)"
+                (click)="navigateToItem(item)">
+
+                <div class="item-header">
+                    <div class="item-index">
+                        <span class="index-number">#{{ item.pathIndex + 1 }}</span>
+                        @if (item.isCompleted) {
+                        <span class="material-icons completed-badge">check_circle</span>
+                        } @else if (isCurrentItem(item)) {
+                        <span class="material-icons current-badge">play_circle</span>
+                        }
+                    </div>
+
+                    <span class="difficulty-chip" [style.background-color]="getDifficultyColor(item.difficultyLevel)">
+                        {{ getDifficultyLabel(item.difficultyLevel) }}
+                    </span>
+                </div>
+
+                <div class="sp-card-content">
+                    <div class="content-type-header">
+                        <span class="material-icons" [class]="'type-icon ' + getContentTypeClass(item.contentType)">
+                            {{ getContentTypeIcon(item.contentType) }}
+                        </span>
+                        <span class="type-label">{{ getContentTypeLabel(item.contentType) }}</span>
+                    </div>
+
+                    <h3 class="item-title">{{ item.contentTitle }}</h3>
+
+                    <div class="item-meta">
+                        <div class="meta-item">
+                            <span class="material-icons">schedule</span>
+                            <span>{{ formatDuration(item.estimatedDurationMinutes) }}</span>
+                        </div>
+
+                        @if (item.isCompleted && item.completedAt) {
+                        <div class="meta-item completed-info">
+                            <span class="material-icons">event</span>
+                            <span>{{ formatDate(item.completedAt) }}</span>
+                        </div>
+                        }
+
+                        @if (item.isCompleted && item.achievedScore !== null) {
+                        <div class="meta-item score-info">
+                            <span class="material-icons">grade</span>
+                            <span>%{{ item.achievedScore }}</span>
+                        </div>
+                        }
+                    </div>
+
+                    @if (item.recommendationReason) {
+                    <div class="recommendation-reason">
+                        <span class="material-icons">info</span>
+                        <p>{{ item.recommendationReason }}</p>
+                    </div>
+                    }
+                </div>
+
+                <div class="sp-card-actions">
+                    <button class="sp-btn sp-btn-primary"
+                        (click)="navigateToItem(item); $event.stopPropagation()">
+                        <span class="material-icons">{{ item.isCompleted ? 'replay' : 'play_arrow' }}</span>
+                        {{ item.isCompleted ? 'Tekrar Yap' : 'Başla' }}
+                    </button>
+                </div>
+            </div>
+            }
+        </div>
+
+        <!-- Pagination -->
+        @if (totalItems > pageSize) {
+        <div class="path-paginator">
+            <button class="sp-btn" [disabled]="currentPage === 0" (click)="onPageChange(currentPage - 1, pageSize)">
+                <span class="material-icons">chevron_left</span>
+            </button>
+            <span>{{ currentPage + 1 }} / {{ Math.ceil(totalItems / pageSize) }}</span>
+            <button class="sp-btn" [disabled]="(currentPage + 1) * pageSize >= totalItems" (click)="onPageChange(currentPage + 1, pageSize)">
+                <span class="material-icons">chevron_right</span>
+            </button>
+        </div>
+        }
+        } @else {
+        <!-- Empty State -->
+        <div class="sp-card empty-state">
+            <div class="sp-card-content">
+                <span class="material-icons">{{ progressSummary?.totalItems === 0 ? 'map' : 'info' }}</span>
+                <h2>{{ getEmptyStateTitle() }}</h2>
+                <p>{{ getEmptyStateMessage() }}</p>
+                @if (progressSummary?.totalItems === 0 && !generating) {
+                <button class="sp-btn sp-btn-primary" (click)="generatePath()" style="margin-top:16px">
+                    <span class="material-icons">auto_awesome</span>
+                    Öğrenme Yolumu Oluştur
+                </button>
+                }
+                @if (generating) {
+                <div style="margin-top:16px">
+                    <div class="sp-spinner" style="margin:0 auto"></div>
+                    <p style="color:#666;margin-top:8px">Kişisel yolun oluşturuluyor...</p>
+                </div>
+                }
+            </div>
+        </div>
+        }
+    </div>
+    }
+</div>

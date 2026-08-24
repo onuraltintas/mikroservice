@@ -1,0 +1,244 @@
+// =============================================================================
+// STUDENT PANEL — GLOBAL ANIMATIONS
+// Micro-animasyonlar, hover efektleri, sayı count-up, sayfa geçişleri
+// ve boş durum (empty state) stilleri.
+// =============================================================================
+
+// ── Utility Keyframes ────────────────────────────────────────────────────────
+
+@keyframes sp-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sp-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes sp-scale-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes sp-slide-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sp-slide-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sp-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes sp-pulse-scale {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+}
+
+@keyframes sp-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes sp-badge-unlock {
+  0%   { opacity: 0; transform: scale(0.4) rotate(-15deg); }
+  60%  { transform: scale(1.15) rotate(4deg); }
+  80%  { transform: scale(0.95) rotate(-2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+@keyframes sp-xp-glow {
+  0%, 100% { box-shadow: 0 0 4px rgba(234, 179, 8, 0.4); }
+  50%       { box-shadow: 0 0 12px rgba(234, 179, 8, 0.8), 0 0 24px rgba(234, 179, 8, 0.3); }
+}
+
+// ── Sayfa Geçiş Animasyonu ────────────────────────────────────────────────────
+// router-outlet'ten sonra çıkan ilk element bu class'ı alabilir.
+.sp-page-enter {
+  animation: sp-fade-up 0.25s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+// ── Kart Hover Lift ───────────────────────────────────────────────────────────
+// Dashboard widget'larına eklenir.
+.sp-card-lift {
+  transition:
+    transform var(--sp-transition-fast),
+    box-shadow var(--sp-transition-fast);
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--sp-shadow-md);
+  }
+
+  &:active {
+    transform: translateY(-1px);
+  }
+}
+
+// ── Buton Basma Efekti ────────────────────────────────────────────────────────
+.sp-btn-press {
+  transition: transform 0.1s ease;
+
+  &:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+}
+
+// ── Count-Up Sayı Görünümü ────────────────────────────────────────────────────
+// [appCountUp] direktifi bu sınıfı hedefler.
+.sp-count-up {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+
+// ── XP Bar ───────────────────────────────────────────────────────────────────
+.sp-xp-bar {
+  position: relative;
+  height: 8px;
+  background: var(--sp-surface-3);
+  border-radius: var(--sp-radius-full);
+  overflow: hidden;
+
+  &__fill {
+    height: 100%;
+    border-radius: var(--sp-radius-full);
+    background: linear-gradient(90deg, var(--sp-xp) 0%, #fbbf24 100%);
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: sp-xp-glow 2s ease-in-out infinite;
+
+    // Shimmer effect
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.35) 50%,
+        transparent 100%
+      );
+      background-size: 200% 100%;
+      animation: sp-shimmer 2s linear infinite;
+    }
+  }
+}
+
+// ── Rozet Unlock ─────────────────────────────────────────────────────────────
+.sp-badge-new {
+  animation: sp-badge-unlock 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+// ── Skeleton Shimmer (Loading Placeholder) ────────────────────────────────────
+.sp-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--sp-surface-2) 25%,
+    var(--sp-surface-3) 50%,
+    var(--sp-surface-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: sp-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--sp-radius-sm);
+}
+
+// ── Empty State ───────────────────────────────────────────────────────────────
+// Kullanım: <div class="sp-empty-state"><svg/><h3>...</h3><p>...</p></div>
+.sp-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  animation: sp-fade-up 0.3s ease both;
+
+  &__icon {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--sp-radius-full);
+    background: var(--sp-surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .material-icons {
+      font-size: 36px;
+      color: var(--sp-text-3);
+    }
+  }
+
+  &__title {
+    font-family: var(--sp-font-sans);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--sp-text-1);
+    margin: 0;
+  }
+
+  &__hint {
+    font-size: 0.875rem;
+    color: var(--sp-text-3);
+    margin: 0;
+    max-width: 280px;
+    line-height: 1.5;
+  }
+
+  &__action {
+    margin-top: 4px;
+  }
+}
+
+// ── Global Empty State alias (.empty-state) ───────────────────────────────────
+// Eski bileşenlerdeki .empty-state class'ına sp-* token'larını uygular
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 24px;
+  text-align: center;
+  animation: sp-fade-up 0.3s ease both;
+
+  .material-icons,
+  mat-icon {
+    font-size: 48px;
+    color: var(--sp-text-3);
+    margin-bottom: 4px;
+  }
+
+  h3 {
+    font-family: var(--sp-font-sans);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--sp-text-1);
+    margin: 0;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: var(--sp-text-3);
+    margin: 0;
+    max-width: 280px;
+    line-height: 1.5;
+  }
+}
+
+// ── Spinning Icon ─────────────────────────────────────────────────────────────
+.sp-spinning {
+  animation: sp-spin 0.8s linear infinite;
+}
+
+// ── Stagger giriş (liste öğeleri için) ───────────────────────────────────────
+// nth-child üzerinden stagger delay
+@for $i from 1 through 12 {
+  .sp-stagger > *:nth-child(#{$i}) {
+    animation: sp-fade-up 0.3s cubic-bezier(0.4, 0, 0.2, 1) #{($i - 1) * 50}ms both;
+  }
+}

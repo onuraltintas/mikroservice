@@ -1,0 +1,167 @@
+<div class="assessment-container">
+  @if (loading()) {
+  <div class="loading-state">
+    <div class="sp-spinner"></div>
+    <p>Hazırlanıyor...</p>
+  </div>
+  } @else if (showResult()) {
+  <!-- MODERN RESULT SCREEN -->
+  <div class="result-screen fade-in">
+    <div class="result-header">
+      <div class="success-icon-wrapper">
+        <span class="material-icons">emoji_events</span>
+      </div>
+      <h1>Tebrikler!</h1>
+      <p class="subtitle">Seviye belirleme testini başarıyla tamamladınız.</p>
+    </div>
+
+    <div class="result-grid">
+      <!-- Main Level Card -->
+      <div class="level-card">
+        <span class="label">Önerilen Seviye</span>
+        <div class="level-value">
+          <span class="material-icons">school</span>
+          <h2>{{ result()?.recommendedLevel }}</h2>
+        </div>
+      </div>
+
+      <!-- Average Score -->
+      <div class="score-card main-score">
+        <span class="label">Ortalama Başarı</span>
+        <div class="value">{{ result()?.averageScore | number:'1.0-0' }}%</div>
+        <div class="sp-bar"><div class="sp-bar-fill" [style.width.%]="result()?.averageScore"></div></div>
+      </div>
+
+      <!-- Detail Scores -->
+      <div class="detail-scores">
+        <div class="mini-score">
+          <span class="material-icons">menu_book</span>
+          <span class="label">Anlama</span>
+          <span class="value">{{ result()?.comprehensionScore }}%</span>
+        </div>
+        <div class="mini-score">
+          <span class="material-icons">flash_on</span>
+          <span class="label">Takistoskop</span>
+          <span class="value">{{ result()?.tachistoscopeScore }}%</span>
+        </div>
+        <div class="mini-score">
+          <span class="material-icons">visibility</span>
+          <span class="label">Görsel</span>
+          <span class="value">{{ result()?.visualExpansionScore }}%</span>
+        </div>
+        <div class="mini-score">
+          <span class="material-icons">my_location</span>
+          <span class="label">Sabitleme</span>
+          <span class="value">{{ result()?.fixationScore }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="message-box">
+      <span class="material-icons">tips_and_updates</span>
+      <p>{{ result()?.message }}</p>
+    </div>
+
+    @if (result()?.recommendedSeriesName) {
+    <div class="auto-assign-box">
+      <div class="icon-side">
+        <span class="material-icons">auto_awesome</span>
+      </div>
+      <div class="text-side">
+        <strong>{{ result()?.recommendedSeriesName }}</strong>
+        <span>Programınız otomatik olarak atandı. Hemen başlayabilirsiniz!</span>
+      </div>
+    </div>
+    }
+
+    <div class="actions">
+      <button class="sp-btn" (click)="goToDashboard()">
+        <span class="material-icons">dashboard</span>
+        Panele Git
+      </button>
+    </div>
+  </div>
+
+  } @else {
+  <!-- MAIN EXERCISE LIST (MODERN) -->
+  <div class="main-view fade-in">
+    <div class="top-bar">
+      <div class="title-group">
+        <div class="title-row">
+          <div class="title-icon-wrapper">
+            <span class="material-icons">analytics</span>
+          </div>
+          <h1>Seviye Tespit</h1>
+        </div>
+
+        <div class="progress-container">
+          <div class="progress-labels">
+            <span class="label">İlerleme</span>
+            <span class="value">%{{ progress() | number:'1.0-0' }}</span>
+          </div>
+          <div class="sp-bar"><div class="sp-bar-fill" [style.width.%]="progress()"></div></div>
+          <p class="sub-text">{{ completedCount() }}/{{ exercises().length }} Egzersiz Tamamlandı</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="exercise-grid">
+      @for (exercise of exercises(); track exercise.id; let i = $index) {
+      <div class="exercise-item" [class.completed]="exercise.completed"
+        [class.locked]="i > 0 && !exercises()[i-1].completed && !exercise.completed">
+
+        <div class="icon-box">
+          <span class="material-icons">{{ exercise.icon }}</span>
+          @if (exercise.completed) {
+          <div class="status-badge check">
+            <span class="material-icons">check</span>
+          </div>
+          } @else {
+          <div class="status-badge number">{{ i + 1 }}</div>
+          }
+        </div>
+
+        <div class="content">
+          <h3>{{ exercise.name }}</h3>
+          <p class="description">{{ exercise.description }}</p>
+
+          <!-- Exercise Metadata -->
+          <div class="exercise-metadata">
+            <span class="meta-badge type">
+              <span class="material-icons">category</span>
+              {{ getExerciseTypeLabel(exercise.typeName) }}
+            </span>
+            <span class="meta-badge level">
+              <span class="material-icons">signal_cellular_alt</span>
+              Seviye {{ exercise.difficultyLevel }}
+            </span>
+          </div>
+        </div>
+
+        <button class="sp-btn action-btn"
+          (click)="startExercise(i)" [disabled]="i > 0 && !exercises()[i-1].completed">
+          {{ exercise.completed ? 'Tekrar' : 'Başla' }}
+        </button>
+      </div>
+      }
+    </div>
+
+    <!-- Calculate Info -->
+    @if (exercises().length > 0 && completedCount() === exercises().length) {
+    <div class="calc-box fade-in">
+      <div class="info">
+        <span class="material-icons">check_circle</span>
+        <span>Tüm egzersizler tamamlandı!</span>
+      </div>
+      <button class="sp-btn" (click)="calculateLevel()" [disabled]="calculating()">
+        @if (calculating()) {
+        <div class="sp-spinner" style="width:20px;height:20px"></div>
+        } @else {
+        Seviyemi Hesapla
+        }
+      </button>
+    </div>
+    }
+  </div>
+  }
+</div>

@@ -1,0 +1,134 @@
+h2[mat-dialog-title] {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 16px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+    mat-icon {
+        color: #7c4dff;
+    }
+}
+
+mat-dialog-content {
+    padding: 0 !important;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.tab-content {
+    padding: 24px;
+}
+
+.form-row {
+    margin-bottom: 16px;
+
+    &.two-columns {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+
+        @media (max-width: 600px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .full-width {
+        width: 100%;
+    }
+}
+
+mat-form-field {
+    width: 100%;
+}
+
+.emoji-section {
+    margin-top: 16px;
+
+    label {
+        display: block;
+        margin-bottom: 8px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 14px;
+    }
+
+    .current-emoji {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+
+        .big-emoji {
+            font-size: 64px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+        }
+    }
+
+    .emoji-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+        gap: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        padding: 8px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+    }
+
+    .emoji-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 24px;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+        }
+
+        &.selected {
+            border-color: #7c4dff;
+            background: rgba(124, 77, 255, 0.2);
+        }
+    }
+}
+
+.toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 16px 0;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+
+    .hint {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+    }
+}
+
+mat-dialog-actions {
+    padding: 16px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 8px;
+
+    button {
+        min-width: 100px;
+
+        mat-spinner {
+            display: inline-block;
+        }
+    }
+}
+
+::ng-deep .mat-mdc-tab-body-wrapper {
+    background: rgba(0, 0, 0, 0.1);
+}

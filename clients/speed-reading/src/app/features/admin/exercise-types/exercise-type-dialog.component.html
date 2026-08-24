@@ -1,0 +1,68 @@
+<h2 mat-dialog-title>{{ isEditMode ? 'Egzersiz Tipi Düzenle' : 'Yeni Egzersiz Tipi' }}</h2>
+
+<mat-dialog-content>
+    <form [formGroup]="typeForm">
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Sistem Adı (Name)</mat-label>
+            <input matInput formControlName="name" placeholder="VisualExpansion">
+            <mat-hint>İngilizce, boşluksuz, CamelCase</mat-hint>
+            <mat-error *ngIf="typeForm.get('name')?.hasError('required')">
+                Sistem adı zorunludur
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Görünen Ad (Türkçe)</mat-label>
+            <input matInput formControlName="displayName" placeholder="Görsel Genişleme">
+            <mat-error *ngIf="typeForm.get('displayName')?.hasError('required')">
+                Görünen ad zorunludur
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Açıklama</mat-label>
+            <textarea matInput formControlName="description" rows="3" placeholder="Egzersiz tipi açıklaması"></textarea>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>İkon Adı (Material Icons)</mat-label>
+            <input matInput formControlName="iconName" placeholder="visibility">
+            <mat-hint>Material Icons'dan icon adı: visibility, speed, etc.</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Renk Kodu</mat-label>
+            <input matInput formControlName="colorCode" placeholder="#4CAF50" type="color">
+            <mat-hint>Hex renk kodu (örn: #4CAF50)</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Kategori</mat-label>
+            <mat-select formControlName="categoryId">
+                <mat-option [value]="null">Kategori Yok</mat-option>
+                <mat-option *ngFor="let category of categories" [value]="category.id">
+                    {{ category.displayName }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Sıra Numarası</mat-label>
+            <input matInput formControlName="sortOrder" type="number" placeholder="1">
+            <mat-error *ngIf="typeForm.get('sortOrder')?.hasError('required')">
+                Sıra numarası zorunludur
+            </mat-error>
+        </mat-form-field>
+
+        <mat-checkbox formControlName="isActive" class="full-width">
+            Aktif
+        </mat-checkbox>
+    </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">İptal</button>
+    <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!typeForm.valid || saving">
+        {{ saving ? 'Kaydediliyor...' : 'Kaydet' }}
+    </button>
+</mat-dialog-actions>

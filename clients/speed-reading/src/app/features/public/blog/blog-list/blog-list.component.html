@@ -1,0 +1,123 @@
+<app-navbar></app-navbar>
+
+<div class="blog-list-page">
+    <!-- Header -->
+    <header class="page-header">
+        <div class="container">
+            <nav class="breadcrumb">
+                <a routerLink="/">Ana Sayfa</a>
+                <mat-icon>chevron_right</mat-icon>
+                <span>Blog</span>
+            </nav>
+
+            <h1>Blog & Kaynaklar</h1>
+            <p>Hızlı okuma, öğrenme teknikleri ve başarı hikayeleri hakkında en güncel içerikler</p>
+
+            <!-- Search Bar -->
+            <div class="search-container">
+                <mat-icon>search</mat-icon>
+                <input type="text" placeholder="Blog yazılarında ara..." [(ngModel)]="searchQuery"
+                    (ngModelChange)="onSearchChange()" class="search-input">
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Featured Post -->
+        <section *ngIf="featuredPost && !searchQuery && selectedCategory === 'Tümü'" class="featured-section">
+            <h2>Öne Çıkan Yazı</h2>
+            <mat-card class="featured-card" [routerLink]="['/blog', featuredPost.slug]">
+                <div class="featured-grid">
+                    <div class="featured-image">
+                        <div class="image-placeholder"></div>
+                    </div>
+                    <div class="featured-content">
+                        <span class="category-badge" [ngClass]="getCategoryColor(getCategory(featuredPost.tags))">
+                            {{ getCategory(featuredPost.tags) }}
+                        </span>
+                        <h3>{{ featuredPost.title }}</h3>
+                        <p>{{ featuredPost.summary }}</p>
+                        <div class="metadata">
+                            <span><mat-icon>calendar_today</mat-icon>{{ formatDate(featuredPost.publishedAt) }}</span>
+                            <span><mat-icon>schedule</mat-icon>{{ getReadTime(featuredPost.content) }}</span>
+                        </div>
+                        <div class="author-info">
+                            <div class="avatar">{{ getAuthorInitials(featuredPost.author) }}</div>
+                            <span>{{ featuredPost.author || 'Anonim' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </mat-card>
+        </section>
+
+        <!-- Categories & Posts -->
+        <div class="content-grid">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sticky-sidebar">
+                    <h3>Kategoriler</h3>
+                    <div class="categories-list">
+                        <button *ngFor="let category of categories" (click)="selectCategory(category.name)"
+                            [class.active]="selectedCategory === category.name" class="category-button">
+                            <span>{{ category.name }}</span>
+                            <span class="count">{{ category.count }}</span>
+                        </button>
+                    </div>
+
+                    <!-- Newsletter Widget -->
+                    <app-newsletter-widget></app-newsletter-widget>
+                </div>
+            </aside>
+
+            <!-- Posts Grid -->
+            <div class="posts-section">
+                <div class="section-header">
+                    <h2>{{ selectedCategory === 'Tümü' ? 'Tüm Yazılar' : selectedCategory }}</h2>
+                    <span class="count">{{ filteredPosts.length }} yazı</span>
+                </div>
+
+                <div *ngIf="filteredPosts.length === 0" class="empty-state">
+                    <mat-icon>search_off</mat-icon>
+                    <p>Arama kriterlerinize uygun yazı bulunamadı.</p>
+                </div>
+
+                <div class="posts-grid">
+                    <mat-card *ngFor="let post of filteredPosts" class="post-card" [routerLink]="['/blog', post.slug]">
+                        <div class="image-container">
+                            <div class="image-placeholder"></div>
+                            <span class="category-badge" [ngClass]="getCategoryColor(getCategory(post.tags))">
+                                {{ getCategory(post.tags) }}
+                            </span>
+                        </div>
+
+                        <mat-card-content>
+                            <div class="metadata">
+                                <span><mat-icon>calendar_today</mat-icon>{{ formatDate(post.publishedAt) }}</span>
+                                <span><mat-icon>schedule</mat-icon>{{ getReadTime(post.content) }}</span>
+                            </div>
+
+                            <h3>{{ post.title }}</h3>
+                            <p>{{ post.summary }}</p>
+
+                            <div class="author">
+                                <div class="avatar">{{ getAuthorInitials(post.author) }}</div>
+                                <span>{{ post.author || 'Anonim' }}</span>
+                                <mat-icon class="arrow">arrow_forward</mat-icon>
+                            </div>
+                        </mat-card-content>
+                    </mat-card>
+                </div>
+
+                <!-- Load More -->
+                <div *ngIf="filteredPosts.length > 0" class="load-more">
+                    <button *ngIf="currentPage < totalPages" mat-stroked-button color="primary" (click)="loadMore()"
+                        [disabled]="loading">
+                        Daha Fazla Yükle
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<app-footer></app-footer>

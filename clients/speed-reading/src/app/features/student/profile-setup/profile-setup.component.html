@@ -1,0 +1,270 @@
+<div class="ps-container">
+
+  <!-- ── Başlık ────────────────────────────────────────────────────────── -->
+  <div class="ps-header">
+    <h1 class="ps-header__title">Profilinizi Oluşturun</h1>
+    <p class="ps-header__sub">Size özel öğrenme deneyimi için birkaç basit adım</p>
+  </div>
+
+  <!-- ── Adım Göstergesi ───────────────────────────────────────────────── -->
+  <div class="ps-steps" aria-label="Adımlar">
+    <div class="ps-step" [class.ps-step--active]="currentStep() >= 1" [class.ps-step--done]="currentStep() > 1">
+      <div class="ps-step__circle">
+        @if (currentStep() > 1) {
+          <span class="material-icons" style="font-size:16px">check</span>
+        } @else {
+          1
+        }
+      </div>
+      <span class="ps-step__label">Kişisel Bilgiler</span>
+    </div>
+
+    <div class="ps-step__line" [class.ps-step__line--done]="currentStep() > 1"></div>
+
+    <div class="ps-step" [class.ps-step--active]="currentStep() >= 2" [class.ps-step--done]="currentStep() > 2">
+      <div class="ps-step__circle">
+        @if (currentStep() > 2) {
+          <span class="material-icons" style="font-size:16px">check</span>
+        } @else {
+          2
+        }
+      </div>
+      <span class="ps-step__label">Hedefler</span>
+    </div>
+
+    <div class="ps-step__line" [class.ps-step__line--done]="currentStep() > 2"></div>
+
+    <div class="ps-step" [class.ps-step--active]="currentStep() >= 3">
+      <div class="ps-step__circle">3</div>
+      <span class="ps-step__label">Onay</span>
+    </div>
+  </div>
+
+  <!-- ── Kart ─────────────────────────────────────────────────────────── -->
+  <div class="ps-card">
+
+    <!-- ── Adım 1: Kişisel Bilgiler ─────────────────────────────────── -->
+    @if (currentStep() === 1) {
+      <form [formGroup]="basicInfoForm" class="ps-step-content" novalidate>
+
+        <div class="ps-step-head">
+          <span class="material-icons ps-step-head__icon">person</span>
+          <div>
+            <h2 class="ps-step-head__title">Sizi Tanıyalım</h2>
+          </div>
+        </div>
+
+        <!-- Doğum Tarihi -->
+        <div class="ps-field">
+          <label class="ps-label" for="dob">
+            <span class="material-icons">cake</span>
+            Doğum Tarihiniz
+          </label>
+          <input
+            id="dob"
+            type="date"
+            class="ps-input"
+            [max]="todayDateStr"
+            (change)="onNativeDateChange($event)"
+            [class.ps-input--error]="basicInfoForm.get('dateOfBirth')?.invalid && basicInfoForm.get('dateOfBirth')?.touched">
+
+          @if (basicInfoForm.get('dateOfBirth')?.hasError('required') && basicInfoForm.get('dateOfBirth')?.touched) {
+            <span class="ps-error">Doğum tarihi zorunludur</span>
+          }
+
+          <!-- Yaş grubu bilgisi -->
+          @if (calculatedAgeGroup) {
+            <div class="ps-info-card">
+              <span class="material-icons ps-info-card__icon">groups</span>
+              <div>
+                <span class="ps-info-card__label">Yaş Grubu</span>
+                <span class="ps-info-card__value">{{ getAgeGroupText(calculatedAgeGroup) }}</span>
+              </div>
+              <span class="ps-info-card__check material-icons">check_circle</span>
+            </div>
+          }
+        </div>
+
+        <!-- Öğrenme Stili -->
+        <div class="ps-field">
+          <label class="ps-label">
+            <span class="material-icons">psychology</span>
+            Öğrenme Stiliniz
+          </label>
+          <div class="ps-style-grid">
+            <button type="button" class="ps-style-card"
+              [class.ps-style-card--selected]="basicInfoForm.value.learningStyle === 'visual'"
+              (click)="basicInfoForm.patchValue({learningStyle: 'visual'})">
+              <span class="material-icons ps-style-card__icon">visibility</span>
+              <span class="ps-style-card__label">Görsel</span>
+            </button>
+            <button type="button" class="ps-style-card"
+              [class.ps-style-card--selected]="basicInfoForm.value.learningStyle === 'auditory'"
+              (click)="basicInfoForm.patchValue({learningStyle: 'auditory'})">
+              <span class="material-icons ps-style-card__icon">hearing</span>
+              <span class="ps-style-card__label">İşitsel</span>
+            </button>
+            <button type="button" class="ps-style-card"
+              [class.ps-style-card--selected]="basicInfoForm.value.learningStyle === 'kinesthetic'"
+              (click)="basicInfoForm.patchValue({learningStyle: 'kinesthetic'})">
+              <span class="material-icons ps-style-card__icon">touch_app</span>
+              <span class="ps-style-card__label">Kinestetik</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="ps-actions ps-actions--right">
+          <button type="button" class="ps-btn ps-btn--primary" (click)="nextStep()">
+            İleri
+            <span class="material-icons">arrow_forward</span>
+          </button>
+        </div>
+      </form>
+    }
+
+    <!-- ── Adım 2: Hedefler ──────────────────────────────────────────── -->
+    @if (currentStep() === 2) {
+      <form [formGroup]="goalsForm" class="ps-step-content" novalidate>
+
+        <div class="ps-step-head">
+          <span class="material-icons ps-step-head__icon">flag</span>
+          <div>
+            <h2 class="ps-step-head__title">Hedeflerinizi Belirleyin</h2>
+          </div>
+        </div>
+
+        <div class="ps-goals-grid">
+
+          <!-- Okuma Hızı -->
+          <div class="ps-goal-card">
+            <div class="ps-goal-card__icon-wrap">
+              <span class="material-icons">speed</span>
+            </div>
+            <h3 class="ps-goal-card__title">Okuma Hızı</h3>
+            <label class="ps-label-sm">Kelime/Dakika</label>
+            <input class="ps-input" type="number" formControlName="targetWPM" min="100" max="1000">
+            <div class="ps-rec">
+              <span class="material-icons ps-rec__icon">lightbulb</span>
+              Önerilen: <strong>{{ recommendedWPM }}</strong>
+            </div>
+          </div>
+
+          <!-- Anlama Oranı -->
+          <div class="ps-goal-card">
+            <div class="ps-goal-card__icon-wrap ps-goal-card__icon-wrap--amber">
+              <span class="material-icons">school</span>
+            </div>
+            <h3 class="ps-goal-card__title">Anlama Oranı</h3>
+            <label class="ps-label-sm">Yüzde (%)</label>
+            <input class="ps-input" type="number" formControlName="targetComprehension" min="60" max="100">
+            <div class="ps-rec">
+              <span class="material-icons ps-rec__icon">lightbulb</span>
+              Önerilen: <strong>{{ recommendedComprehension }}%</strong>
+            </div>
+          </div>
+
+          <!-- Günlük Çalışma -->
+          <div class="ps-goal-card">
+            <div class="ps-goal-card__icon-wrap ps-goal-card__icon-wrap--green">
+              <span class="material-icons">schedule</span>
+            </div>
+            <h3 class="ps-goal-card__title">Günlük Çalışma</h3>
+            <label class="ps-label-sm">Dakika</label>
+            <input class="ps-input" type="number" formControlName="dailyGoalMinutes" min="10" max="120">
+            <div class="ps-rec">
+              <span class="material-icons ps-rec__icon">lightbulb</span>
+              Önerilen: <strong>{{ recommendedDailyMinutes }}</strong> dk
+            </div>
+          </div>
+
+        </div>
+
+        <div class="ps-actions">
+          <button type="button" class="ps-btn ps-btn--ghost" (click)="prevStep()">
+            <span class="material-icons">arrow_back</span>
+            Geri
+          </button>
+          <button type="button" class="ps-btn ps-btn--primary" (click)="nextStep()">
+            İleri
+            <span class="material-icons">arrow_forward</span>
+          </button>
+        </div>
+      </form>
+    }
+
+    <!-- ── Adım 3: Özet & Onay ───────────────────────────────────────── -->
+    @if (currentStep() === 3) {
+      <div class="ps-step-content">
+
+        <div class="ps-step-head">
+          <span class="material-icons ps-step-head__icon ps-step-head__icon--success">check_circle</span>
+          <div>
+            <h2 class="ps-step-head__title">Her Şey Hazır!</h2>
+          </div>
+        </div>
+
+        <div class="ps-summary-grid">
+
+          <div class="ps-summary-card">
+            <div class="ps-summary-card__header">
+              <span class="material-icons">person</span>
+              <h3>Kişisel Bilgiler</h3>
+            </div>
+            <div class="ps-summary-row">
+              <span>Yaş Grubu</span>
+              <span>{{ getAgeGroupText(calculatedAgeGroup) }}</span>
+            </div>
+            <div class="ps-summary-row">
+              <span>Öğrenme Stili</span>
+              <span>{{ getLearningStyleText(basicInfoForm.value.learningStyle) }}</span>
+            </div>
+          </div>
+
+          <div class="ps-summary-card">
+            <div class="ps-summary-card__header">
+              <span class="material-icons">flag</span>
+              <h3>Hedefleriniz</h3>
+            </div>
+            <div class="ps-summary-row">
+              <span>Okuma Hızı</span>
+              <span class="ps-summary-row__hl">{{ goalsForm.value.targetWPM }} K/D</span>
+            </div>
+            <div class="ps-summary-row">
+              <span>Anlama Oranı</span>
+              <span class="ps-summary-row__hl">{{ goalsForm.value.targetComprehension }}%</span>
+            </div>
+            <div class="ps-summary-row">
+              <span>Günlük Hedef</span>
+              <span class="ps-summary-row__hl">{{ goalsForm.value.dailyGoalMinutes }} dk</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="ps-final-note">
+          <span class="material-icons">celebration</span>
+          <p>Profiliniz hazır! Seviye belirleme testine yönlendirileceksiniz.</p>
+        </div>
+
+        <div class="ps-actions">
+          <button type="button" class="ps-btn ps-btn--ghost" (click)="prevStep()">
+            <span class="material-icons">arrow_back</span>
+            Geri
+          </button>
+          <button type="button" class="ps-btn ps-btn--primary ps-btn--create"
+            (click)="saveProfile()" [disabled]="saving">
+            @if (saving) {
+              <span class="material-icons sp-spinning">sync</span>
+              Oluşturuluyor…
+            } @else {
+              <span class="material-icons">rocket_launch</span>
+              Profili Oluştur
+            }
+          </button>
+        </div>
+
+      </div>
+    }
+
+  </div><!-- /ps-card -->
+</div>

@@ -1,0 +1,195 @@
+<div class="content-analysis-container">
+    <div class="header">
+        <div class="title-section">
+            <h1>İçerik Analizi</h1>
+            <p class="subtitle" *ngIf="report()">
+                Okuma metinleri ve egzersiz türlerine göre detaylı analiz
+            </p>
+        </div>
+
+        <div class="controls">
+            <mat-form-field appearance="outline" class="date-range-selector">
+                <mat-label>Tarih Aralığı</mat-label>
+                <mat-select [value]="selectedDateRange()"
+                    (selectionChange)="selectedDateRange.set($event.value); onDateRangeChange()">
+                    <mat-option *ngFor="let option of dateRangeOptions" [value]="option.value">
+                        <mat-icon class="option-icon">{{ option.icon }}</mat-icon>
+                        {{ option.label }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <!-- Custom Date Range Picker -->
+            <div class="custom-date-range" *ngIf="showCustomDatePicker()">
+                <mat-form-field appearance="outline" class="date-field">
+                    <mat-label>Başlangıç</mat-label>
+                    <input matInput [matDatepicker]="startPicker" [value]="customStartDate()"
+                        (dateChange)="customStartDate.set($event.value); onCustomDateChange()" [max]="maxDate">
+                    <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #startPicker></mat-datepicker>
+                </mat-form-field>
+
+                <span class="date-separator">—</span>
+
+                <mat-form-field appearance="outline" class="date-field">
+                    <mat-label>Bitiş</mat-label>
+                    <input matInput [matDatepicker]="endPicker" [value]="customEndDate()"
+                        (dateChange)="customEndDate.set($event.value); onCustomDateChange()" [max]="maxDate"
+                        [min]="customStartDate()">
+                    <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #endPicker></mat-datepicker>
+                </mat-form-field>
+            </div>
+
+            <button mat-icon-button (click)="refreshReport()" matTooltip="Yenile" class="refresh-btn">
+                <mat-icon>refresh</mat-icon>
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading()" class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Analiz yükleniyor...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error() && !loading()" class="error-container">
+        <mat-icon>error_outline</mat-icon>
+        <p>{{ error() }}</p>
+        <button mat-raised-button color="primary" (click)="refreshReport()">Tekrar Dene</button>
+    </div>
+
+    <!-- Content -->
+    <div *ngIf="report() && !loading()" class="report-content">
+        <mat-tab-group animationDuration="0ms" class="custom-tabs">
+
+            <!-- READING TAB -->
+            <mat-tab label="Okuma Analizi">
+                <div class="tab-content">
+                    <!-- Chart -->
+                    <mat-card class="chart-card">
+                        <mat-card-header>
+                            <mat-card-title>Zorluk Seviyesi Performansı</mat-card-title>
+                            <mat-card-subtitle>Seviyelere göre KDP ve Anlama Oranı</mat-card-subtitle>
+                        </mat-card-header>
+                        <mat-card-content>
+                            <app-bar-chart *ngIf="readingPerformanceChart().length > 0"
+                                [data]="readingPerformanceChart()" [xAxisLabel]="'Zorluk Seviyesi'"
+                                [yAxisLabel]="'Değer'">
+                            </app-bar-chart>
+                            <div *ngIf="readingPerformanceChart().length === 0" class="no-data">
+                                <mat-icon>info</mat-icon>
+                                <p>Grafik için yeterli veri yok</p>
+                            </div>
+                        </mat-card-content>
+                    </mat-card>
+
+                    <!-- Table -->
+                    <mat-card class="table-card">
+                        <mat-card-header>
+                            <mat-card-title>
+                                <mat-icon class="title-icon">menu_book</mat-icon>
+                                Okuma Detayları
+                            </mat-card-title>
+                        </mat-card-header>
+                        <mat-card-content>
+                            <table mat-table [dataSource]="readingList()" class="data-table">
+                                <ng-container matColumnDef="level">
+                                    <th mat-header-cell *matHeaderCellDef>Seviye</th>
+                                    <td mat-cell *matCellDef="let element">Seviye {{ element.difficultyLevel }}</td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="reads">
+                                    <th mat-header-cell *matHeaderCellDef>Okunma Sayısı</th>
+                                    <td mat-cell *matCellDef="let element">{{ element.totalReads }}</td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="wpm">
+                                    <th mat-header-cell *matHeaderCellDef>Ort. KDP</th>
+                                    <td mat-cell *matCellDef="let element">{{ element.averageWPM | number:'1.0-0' }}
+                                    </td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="comp">
+                                    <th mat-header-cell *matHeaderCellDef>Ort. Anlama</th>
+                                    <td mat-cell *matCellDef="let element">%{{ element.averageComprehension |
+                                        number:'1.0-0' }}</td>
+                                </ng-container>
+
+                                <tr mat-header-row *matHeaderRowDef="['level', 'reads', 'wpm', 'comp']"></tr>
+                                <tr mat-row *matRowDef="let row; columns: ['level', 'reads', 'wpm', 'comp']"></tr>
+                            </table>
+                        </mat-card-content>
+                    </mat-card>
+                </div>
+            </mat-tab>
+
+            <!-- EXERCISE TAB -->
+            <mat-tab label="Egzersiz Analizi">
+                <div class="tab-content">
+                    <!-- Chart -->
+                    <mat-card class="chart-card">
+                        <mat-card-header>
+                            <mat-card-title>Egzersiz Kullanımı</mat-card-title>
+                            <mat-card-subtitle>Egzersiz türlerine göre tamamlanma sayıları</mat-card-subtitle>
+                        </mat-card-header>
+                        <mat-card-content>
+                            <app-bar-chart *ngIf="exerciseFrequencyChart().length > 0" [data]="exerciseFrequencyChart()"
+                                [xAxisLabel]="'Egzersiz Türü'" [yAxisLabel]="'Tamamlanma'">
+                            </app-bar-chart>
+                            <div *ngIf="exerciseFrequencyChart().length === 0" class="no-data">
+                                <mat-icon>info</mat-icon>
+                                <p>Grafik için yeterli veri yok</p>
+                            </div>
+                        </mat-card-content>
+                    </mat-card>
+
+                    <!-- Table -->
+                    <mat-card class="table-card">
+                        <mat-card-header>
+                            <mat-card-title>
+                                <mat-icon class="title-icon">fitness_center</mat-icon>
+                                Egzersiz Detayları
+                            </mat-card-title>
+                        </mat-card-header>
+                        <mat-card-content>
+                            <table mat-table [dataSource]="exerciseList()" class="data-table">
+                                <ng-container matColumnDef="type">
+                                    <th mat-header-cell *matHeaderCellDef>Egzersiz Türü</th>
+                                    <td mat-cell *matCellDef="let element">{{ element.exerciseTypeName }}</td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="completions">
+                                    <th mat-header-cell *matHeaderCellDef>Tamamlanma</th>
+                                    <td mat-cell *matCellDef="let element">{{ element.totalCompletions }}</td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="active">
+                                    <th mat-header-cell *matHeaderCellDef>Aktif Öğrenci</th>
+                                    <td mat-cell *matCellDef="let element">{{ element.activeStudents }}</td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="score">
+                                    <th mat-header-cell *matHeaderCellDef>Ort. Başarı</th>
+                                    <td mat-cell *matCellDef="let element">
+                                        <span class="score-badge" [class.high]="element.averageScore >= 70"
+                                            [class.medium]="element.averageScore >= 50 && element.averageScore < 70"
+                                            [class.low]="element.averageScore < 50">
+                                            %{{ element.averageScore | number:'1.0-0' }}
+                                        </span>
+                                    </td>
+                                </ng-container>
+
+                                <tr mat-header-row *matHeaderRowDef="['type', 'completions', 'active', 'score']"></tr>
+                                <tr mat-row *matRowDef="let row; columns: ['type', 'completions', 'active', 'score']">
+                                </tr>
+                            </table>
+                        </mat-card-content>
+                    </mat-card>
+                </div>
+            </mat-tab>
+
+        </mat-tab-group>
+    </div>
+</div>

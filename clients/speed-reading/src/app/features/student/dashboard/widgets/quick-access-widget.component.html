@@ -1,0 +1,15 @@
+<!-- Quick Access Widget — Sprint 3 -->
+<div class="qa-widget">
+  <h3 class="qa-widget__title">Hızlı Erişim</h3>
+  <div class="qa-links">
+    @for (link of quickLinks; track link.route) {
+      <button class="qa-link" (click)="navigate(link)">
+        <div class="qa-link__icon" [style.background]="link.color + '1a'">
+          <span class="material-icons" [style.color]="link.color">{{ link.icon }}</span>
+        </div>
+        <span class="qa-link__label">{{ link.label }}</span>
+        <span class="material-icons qa-link__arrow">chevron_right</span>
+      </button>
+    }
+  </div>
+</div>

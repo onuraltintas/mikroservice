@@ -1,0 +1,11 @@
+<div class="level-container">
+    <div class="level-badge" [style.border-color]="levelColor" [style.background]="levelGradient">
+        <span class="level-icon">{{ levelIcon }}</span>
+        <span class="level-number">{{ currentLevel }}</span>
+    </div>
+    <div class="progress-info">
+        <div class="level-title">{{ levelTitle }}</div>
+        <mat-progress-bar mode="determinate" [value]="progressPercentage" color="primary"></mat-progress-bar>
+        <span class="progress-text">{{ currentLevelXP | number }} / {{ nextLevelXP | number }} XP</span>
+    </div>
+</div>

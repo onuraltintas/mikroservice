@@ -1,0 +1,97 @@
+<div class="exercises-container">
+    <!-- Teacher Preview Mode Banner -->
+    @if (isTeacher) {
+    <div class="preview-banner">
+        <span class="material-icons">preview</span>
+        <span><strong>Öğretmen Önizleme Modu</strong> - Egzersizleri deneyebilirsiniz. Sonuçlar kaydedilmez.</span>
+    </div>
+    }
+
+    <div class="page-header">
+        <button *ngIf="!isTeacher" class="sp-btn back-button" (click)="goBack()">
+            <span class="material-icons">arrow_back</span>
+            <span>Dashboard'a Dön</span>
+        </button>
+        <div class="header-content">
+            <h1>
+                <span class="material-icons">fitness_center</span>
+                Egzersizler
+            </h1>
+            <p class="subtitle">Hızlı okuma becerilerini geliştirmek için tasarlanmış egzersizler</p>
+        </div>
+    </div>
+
+    <div class="category-tabs">
+        @for (cat of categories; track cat) {
+        <button class="sp-btn" [class.active]="selectedCategory === cat" (click)="filterByCategory(cat)">
+            <span class="material-icons">{{ getCategoryIcon(cat) }}</span>
+            {{ cat === 'all' ? 'Tümü (' + exercises.length + ')' : cat }}
+        </button>
+        }
+    </div>
+
+    @if (loading()) {
+    <div class="loading-container">
+        <div class="sp-spinner"></div>
+        <p>Egzersizler yükleniyor...</p>
+    </div>
+    } @else {
+    <div class="exercises-grid">
+        @for (exercise of filteredExercises; track exercise.exerciseTypeId) {
+        <div class="sp-card exercise-card" [class.featured]="exercise.difficulty === 'Kolay'">
+            <div class="card-header" [style.background]="exercise.color">
+                <span class="material-icons exercise-icon">{{ exercise.icon }}</span>
+                <span class="sp-chip difficulty-chip">{{ exercise.difficulty }}</span>
+            </div>
+
+            <div class="sp-card-content">
+                <h3>{{ exercise.name }}</h3>
+                <p class="description">{{ exercise.description }}</p>
+
+                <div class="meta-info">
+                    <div class="meta-item">
+                        <span class="material-icons">category</span>
+                        <span>{{ exercise.category }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="material-icons">schedule</span>
+                        <span>{{ exercise.estimatedTime }}</span>
+                    </div>
+                </div>
+
+                <div class="benefits">
+                    <h4><span class="material-icons">verified</span> Faydalar</h4>
+                    <ul>
+                        @for (benefit of exercise.benefits; track benefit) {
+                        <li>{{ benefit }}</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            <div class="sp-card-actions">
+                <button class="sp-btn start-button" (click)="startExercise(exercise)">
+                    <span class="material-icons">play_arrow</span>
+                    Başlat
+                </button>
+                <button class="sp-btn" title="Detaylı bilgi" (click)="showInfo(exercise)">
+                    <span class="material-icons">info</span>
+                </button>
+            </div>
+        </div>
+        }
+    </div>
+
+    @if (filteredExercises.length === 0) {
+    <div class="empty-state">
+        <span class="material-icons">search_off</span>
+        <h3>Bu kategoride egzersiz bulunamadı</h3>
+        <p>Tüm egzersizleri görmek için "Tümü" sekmesini seçin</p>
+        <button class="sp-btn" (click)="filterByCategory('all')">
+            <span class="material-icons">apps</span>
+            Tüm Egzersizleri Göster
+        </button>
+    </div>
+    }
+    }
+</div>

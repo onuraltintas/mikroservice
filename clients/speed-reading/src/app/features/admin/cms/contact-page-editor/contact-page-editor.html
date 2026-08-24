@@ -1,0 +1,82 @@
+<div class="contact-page-editor" [formGroup]="contactForm">
+    <div class="header">
+        <h2>İletişim Sayfası Yönetimi</h2>
+        <div class="actions">
+            <button mat-button (click)="onCancel()" [disabled]="loading()">
+                <mat-icon>cancel</mat-icon>
+                İptal
+            </button>
+            <button mat-raised-button color="primary" (click)="onSave()" [disabled]="contactForm.invalid || loading()">
+                <mat-spinner *ngIf="loading()" diameter="20" class="button-spinner"></mat-spinner>
+                <mat-icon *ngIf="!loading()">save</mat-icon>
+                {{ loading() ? 'Kaydediliyor...' : 'Kaydet' }}
+            </button>
+        </div>
+    </div>
+
+    <div class="content-wrapper">
+        <div class="section-card">
+            <h3>Hero Alanı</h3>
+            <p class="helper-text">Sayfanın en üstündeki başlık alanı.</p>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Başlık</mat-label>
+                <input matInput formControlName="heroTitle">
+                <mat-error>Başlık gereklidir</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Alt Başlık</mat-label>
+                <textarea matInput formControlName="heroSubtitle" rows="2"></textarea>
+                <mat-error>Alt başlık gereklidir</mat-error>
+            </mat-form-field>
+        </div>
+
+        <div class="section-card">
+            <h3>İletişim Bilgileri</h3>
+            <p class="helper-text">Kullanıcılara gösterilecek iletişim kanalları.</p>
+
+            <div class="form-row">
+                <mat-form-field appearance="outline">
+                    <mat-label>E-posta Adresi</mat-label>
+                    <input matInput formControlName="email" type="email">
+                    <mat-icon matPrefix>email</mat-icon>
+                    <mat-error>Geçerli bir e-posta gereklidir</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Telefon Numarası</mat-label>
+                    <input matInput formControlName="phone">
+                    <mat-icon matPrefix>phone</mat-icon>
+                    <mat-error>Telefon gereklidir</mat-error>
+                </mat-form-field>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Adres</mat-label>
+                <textarea matInput formControlName="address" rows="3"></textarea>
+                <mat-icon matPrefix>location_on</mat-icon>
+                <mat-error>Adres gereklidir</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Çalışma Saatleri</mat-label>
+                <textarea matInput formControlName="workingHours" rows="2"
+                    placeholder="Örn: Pazartesi - Cuma&#10;09:00 - 18:00"></textarea>
+                <mat-icon matPrefix>schedule</mat-icon>
+                <mat-error>Çalışma saatleri gereklidir</mat-error>
+            </mat-form-field>
+        </div>
+
+        <div class="section-card">
+            <h3>Harita</h3>
+            <p class="helper-text">Google Maps Embed URL'si.</p>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Harita URL (Embed src)</mat-label>
+                <input matInput formControlName="mapUrl" placeholder="https://www.google.com/maps/embed?...">
+                <mat-icon matPrefix>map</mat-icon>
+            </mat-form-field>
+        </div>
+    </div>
+</div>

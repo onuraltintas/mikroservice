@@ -1,0 +1,39 @@
+<div class="achievement-notification" [class]="data.type">
+  <div class="notification-content">
+    <!-- Achievement Icon -->
+    <div class="icon-container" *ngIf="data.achievement">
+      <div class="achievement-icon" [style.background-color]="getTierColor(data.achievement.tier)">
+        <span *ngIf="data.achievement.iconEmoji">{{ data.achievement.iconEmoji }}</span>
+        <img *ngIf="!data.achievement.iconEmoji && data.achievement.iconUrl"
+             [src]="data.achievement.iconUrl"
+             [alt]="data.achievement.name" />
+        <mat-icon *ngIf="!data.achievement.iconEmoji && !data.achievement.iconUrl">emoji_events</mat-icon>
+      </div>
+    </div>
+
+    <!-- Generic Icon -->
+    <div class="icon-container" *ngIf="!data.achievement && data.icon">
+      <mat-icon>{{ data.icon }}</mat-icon>
+    </div>
+
+    <!-- Text Content -->
+    <div class="text-content">
+      <div class="title">{{ data.title }}</div>
+      <div class="message">{{ data.message }}</div>
+      <div class="xp-reward" *ngIf="data.achievement">
+        <mat-icon class="xp-icon">stars</mat-icon>
+        <span>+{{ data.achievement.xpReward }} XP</span>
+      </div>
+    </div>
+
+    <!-- Close Button -->
+    <button mat-icon-button class="close-button" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Animation effects -->
+  <div class="confetti" *ngIf="data.type === 'achievement'">
+    <div class="confetti-piece" *ngFor="let i of [1,2,3,4,5,6,7,8]"></div>
+  </div>
+</div>

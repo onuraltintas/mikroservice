@@ -1,0 +1,485 @@
+.coaching-tab {
+  padding: 20px 0;
+}
+
+.tab-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px;
+  gap: 12px;
+  color: #9ca3af;
+}
+
+// ── No Relationship ────────────────────────────────────────────────────────
+.no-relationship {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 56px 32px;
+  text-align: center;
+  gap: 12px;
+
+  .no-rel-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #f0fdf4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    mat-icon {
+      font-size: 40px;
+      width: 40px;
+      height: 40px;
+      color: #22c55e;
+    }
+  }
+
+  h3 { margin: 0; font-size: 1.1rem; font-weight: 700; color: #111827; }
+  p  { margin: 0; color: #6b7280; max-width: 380px; font-size: 0.9rem; }
+}
+
+// ── Relationship Banner ────────────────────────────────────────────────────
+.relationship-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+
+  .rel-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 180px;
+
+    .rel-icon {
+      color: #16a34a;
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+
+    .rel-label {
+      display: block;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #15803d;
+    }
+
+    .rel-since {
+      display: block;
+      font-size: 0.78rem;
+      color: #4ade80;
+    }
+  }
+
+  .rel-stats {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+
+    .rel-stat {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #374151;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+        color: #6b7280;
+      }
+
+      &.warn {
+        color: #d97706;
+        mat-icon { color: #d97706; }
+      }
+    }
+  }
+
+  .end-btn {
+    font-size: 0.8rem;
+    height: 34px;
+    border-color: #d1d5db;
+    color: #6b7280;
+  }
+}
+
+// ── Section ────────────────────────────────────────────────────────────────
+.section {
+  padding: 16px 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    color: #6366f1;
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111827;
+  }
+}
+
+.count-badge {
+  background: #e0e7ff;
+  color: #4338ca;
+  border-radius: 99px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.review-badge {
+  background: #fef3c7;
+  color: #b45309;
+  border-radius: 99px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.add-btn {
+  height: 32px;
+  font-size: 0.8rem;
+  gap: 4px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.empty-state-sm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 16px;
+  background: #f9fafb;
+  border-radius: 10px;
+  color: #9ca3af;
+  font-size: 0.88rem;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #d1d5db;
+  }
+}
+
+// ── Goal Cards ─────────────────────────────────────────────────────────────
+.goals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.goal-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: white;
+  transition: box-shadow 0.15s;
+
+  &:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+}
+
+.goal-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+}
+
+.goal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.goal-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #111827;
+}
+
+.goal-desc {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.goal-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .goal-bar { flex: 1; height: 6px; border-radius: 3px; }
+  .pct-label { font-size: 0.75rem; font-weight: 700; color: #6366f1; white-space: nowrap; }
+}
+
+.goal-deadline {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.75rem;
+  color: #9ca3af;
+
+  mat-icon { font-size: 13px; width: 13px; height: 13px; }
+}
+
+.goal-actions {
+  display: flex;
+  gap: 2px;
+
+  .delete-btn { color: #d1d5db;
+    &:hover { color: #ef4444; }
+  }
+}
+
+// Level badges
+.level-badge {
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 2px;
+
+  &.level-yearly  { background: #e8eaf6; color: #283593; }
+  &.level-monthly { background: #e0f7fa; color: #006064; }
+  &.level-weekly  { background: #f3e5f5; color: #6a1b9a; }
+  &.level-daily   { background: #fff3e0; color: #e65100; }
+}
+
+// ── Sessions ───────────────────────────────────────────────────────────────
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.session-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: white;
+}
+
+.session-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 36px;
+  flex-shrink: 0;
+
+  .s-day   { font-size: 1.4rem; font-weight: 800; color: #111827; line-height: 1; }
+  .s-month { font-size: 0.7rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; }
+}
+
+.session-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+
+  .session-type { font-weight: 600; font-size: 0.88rem; color: #111827; }
+  .session-time { font-size: 0.78rem; color: #6b7280; }
+  .session-link {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.75rem;
+    color: #6366f1;
+    mat-icon { font-size: 13px; width: 13px; height: 13px; }
+  }
+}
+
+.session-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+
+  .session-actions { display: flex; gap: 2px; }
+}
+
+// ── Assignments ────────────────────────────────────────────────────────────
+.assignments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.assignment-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: white;
+  gap: 12px;
+
+  &.overdue { border-color: #fca5a5; background: #fff5f5; }
+}
+
+.asgn-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+}
+
+.asgn-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  .asgn-title { font-weight: 600; font-size: 0.88rem; color: #111827; }
+  .asgn-due {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.75rem;
+    color: #9ca3af;
+    mat-icon { font-size: 13px; width: 13px; height: 13px; }
+  }
+  .asgn-note {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.78rem;
+    color: #6b7280;
+    font-style: italic;
+    mat-icon { font-size: 13px; width: 13px; height: 13px; }
+  }
+}
+
+.asgn-review {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+
+  .approve-btn, .reject-btn {
+    height: 30px;
+    font-size: 0.78rem;
+    mat-icon { font-size: 16px; width: 16px; height: 16px; }
+  }
+}
+
+.asgn-approved {
+  .approved-icon { color: #22c55e; font-size: 28px; width: 28px; height: 28px; }
+  &.rejected .rejected-icon { color: #ef4444; font-size: 28px; width: 28px; height: 28px; }
+}
+
+// ── Exams ──────────────────────────────────────────────────────────────────
+.exams-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.exam-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: white;
+}
+
+.exam-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  .exam-name { font-weight: 600; font-size: 0.9rem; color: #111827; }
+  .exam-date { font-size: 0.78rem; color: #9ca3af; }
+}
+
+.exam-type-badge {
+  display: inline-block;
+  background: #ede9fe;
+  color: #5b21b6;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.exam-scores {
+  display: flex;
+  gap: 16px;
+}
+
+.score-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .score-val { font-size: 1.2rem; font-weight: 800; color: #6366f1; }
+  .score-lbl { font-size: 0.7rem; font-weight: 600; color: #9ca3af; }
+}
+
+// ── Status Badges ──────────────────────────────────────────────────────────
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &.status-scheduled   { background: #eff6ff; color: #1d4ed8; }
+  &.status-completed   { background: #f0fdf4; color: #15803d; }
+  &.status-cancelled   { background: #fef2f2; color: #dc2626; }
+  &.status-noshow      { background: #fdf4ff; color: #7e22ce; }
+  &.status-rescheduled { background: #fefce8; color: #a16207; }
+  &.status-pending     { background: #fef9c3; color: #a16207; }
+  &.status-trial       { background: #fff7ed; color: #c2410c; }
+  &.status-expired     { background: #fef2f2; color: #dc2626; }
+}
+
+.btn-spinner {
+  display: inline-flex;
+  margin-right: 6px;
+}

@@ -6,6 +6,11 @@ Gateway'i arkasında aynı servis kullanılabilir.
 
 ## Veri sahipliği ve geçiş güvenliği
 
+Kaynak frontend `clients/speed-reading` altında bağımsız istemci olarak
+izlenir. Production derlemesi statik bir Nginx image'ı ile paketlenebilir ve
+okuma/ilerleme sözleşmeleri için `/api/speed-reading` kullanır. Eski yazma
+kontratları, idempotency ve audit dilimi tamamlanana kadar ayrı tutulur.
+
 - Mevcut hızlı okuma veritabanı korunur; ilk entegrasyon aşamasında servis
   migration çalıştırmaz ve şemayı değiştirmez.
 - `ConnectionStrings:SpeedReading` veya `SPEED_READING_CONNECTION_STRING`

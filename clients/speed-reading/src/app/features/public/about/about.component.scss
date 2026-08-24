@@ -1,0 +1,125 @@
+.about-page {
+    min-height: 80vh;
+}
+
+.hero-section {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    color: white;
+    padding: 5rem 0;
+    text-align: center;
+
+    h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    p {
+        font-size: 1.25rem;
+        opacity: 0.9;
+        max-width: 37.5rem;
+        margin: 0 auto;
+    }
+}
+
+.container {
+    max-width: 75rem;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.content-container {
+    padding-top: 3.75rem;
+    padding-bottom: 5rem;
+}
+
+section {
+    margin-bottom: 3.75rem;
+
+    h2 {
+        font-size: 2rem;
+        color: #111827;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .rich-text {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: #374151;
+
+        ::ng-deep {
+            p {
+                margin-bottom: 1.5rem;
+            }
+
+            ul,
+            ol {
+                margin-bottom: 1.5rem;
+                padding-left: 1.5rem;
+            }
+
+            strong {
+                color: #111827;
+                font-weight: 600;
+            }
+        }
+    }
+}
+
+.testimonials-section {
+    .testimonials-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .testimonial-card {
+        background: #f9fafb;
+        padding: 2rem;
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+        transition: transform 0.2s;
+
+        &:hover {
+            transform: translateY(-0.25rem);
+            box-shadow: 0 0.625rem 0.9375rem -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .rating {
+            color: #d1d5db; // Empty star color
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+
+            .star.filled {
+                color: #fbbf24; // Gold
+            }
+        }
+
+        .text {
+            font-size: 1.1rem;
+            color: #374151;
+            margin-bottom: 1.5rem;
+            font-style: italic;
+            line-height: 1.6;
+        }
+
+        .author {
+            display: flex;
+            flex-direction: column;
+
+            strong {
+                color: #111827;
+                font-weight: 600;
+                font-size: 1.1rem;
+            }
+
+            span {
+                color: #6b7280;
+                font-size: 0.9rem;
+            }
+        }
+    }
+}

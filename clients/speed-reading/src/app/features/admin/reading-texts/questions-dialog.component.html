@@ -1,0 +1,160 @@
+<h2 mat-dialog-title>Soru Yönetimi: {{ text.title }}</h2>
+
+<mat-dialog-content>
+    <!-- Text Preview -->
+    <div class="text-preview">
+        <div class="preview-header">
+            <h3>Metin İçeriği</h3>
+            <mat-chip>{{ text.wordCount }} kelime</mat-chip>
+        </div>
+        <div class="preview-content">{{ text.content }}</div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Question Form -->
+    <div class="question-form">
+        <div class="form-header">
+            <h3>{{ editingQuestion ? 'Soru Düzenle' : 'Yeni Soru Ekle' }}</h3>
+            <mat-chip color="primary" selected>{{ questions.length }}/10 Soru</mat-chip>
+        </div>
+
+        <form [formGroup]="questionForm">
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Soru Metni</mat-label>
+                <textarea matInput formControlName="questionText" rows="2"
+                    placeholder="Soruyu buraya yazın..."></textarea>
+                <mat-error *ngIf="questionForm.get('questionText')?.hasError('required')">
+                    Soru metni zorunludur
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Soru Tipi</mat-label>
+                <mat-select formControlName="type">
+                    <mat-option [value]="QuestionType.Literal">{{ getTypeLabel(QuestionType.Literal) }}</mat-option>
+                    <mat-option [value]="QuestionType.Inferential">{{ getTypeLabel(QuestionType.Inferential)
+                        }}</mat-option>
+                    <mat-option [value]="QuestionType.Evaluative">{{ getTypeLabel(QuestionType.Evaluative)
+                        }}</mat-option>
+                </mat-select>
+                <mat-error *ngIf="questionForm.get('type')?.hasError('required')">
+                    Soru tipi zorunludur
+                </mat-error>
+            </mat-form-field>
+
+            <div class="options-grid">
+                <mat-form-field appearance="outline">
+                    <mat-label>Seçenek A</mat-label>
+                    <input matInput formControlName="optionA" placeholder="A şıkkı">
+                    <mat-error>Zorunlu</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Seçenek B</mat-label>
+                    <input matInput formControlName="optionB" placeholder="B şıkkı">
+                    <mat-error>Zorunlu</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Seçenek C</mat-label>
+                    <input matInput formControlName="optionC" placeholder="C şıkkı">
+                    <mat-error>Zorunlu</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Seçenek D</mat-label>
+                    <input matInput formControlName="optionD" placeholder="D şıkkı">
+                    <mat-error>Zorunlu</mat-error>
+                </mat-form-field>
+            </div>
+
+            <div class="correct-answer">
+                <label>Doğru Cevap:</label>
+                <mat-radio-group formControlName="correctAnswer">
+                    <mat-radio-button value="A">A</mat-radio-button>
+                    <mat-radio-button value="B">B</mat-radio-button>
+                    <mat-radio-button value="C">C</mat-radio-button>
+                    <mat-radio-button value="D">D</mat-radio-button>
+                </mat-radio-group>
+                <mat-error *ngIf="questionForm.get('correctAnswer')?.hasError('required')">
+                    Doğru cevap seçimi zorunludur
+                </mat-error>
+            </div>
+
+            <div class="form-actions">
+                <button mat-button type="button" *ngIf="editingQuestion" (click)="cancelEdit()">
+                    İptal
+                </button>
+                <button mat-raised-button color="primary" type="button" (click)="saveQuestion()"
+                    [disabled]="!questionForm.valid || questions.length >= 10 && !editingQuestion || saving">
+                    <mat-spinner diameter="20" *ngIf="saving"></mat-spinner>
+                    <span *ngIf="!saving">{{ editingQuestion ? 'Güncelle' : 'Soru Ekle' }}</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Questions List -->
+    <div class="questions-list">
+        <h3>Mevcut Sorular</h3>
+
+        <div *ngIf="loading()" class="loading">
+            <mat-spinner diameter="40"></mat-spinner>
+        </div>
+
+        <table mat-table [dataSource]="questions" class="questions-table" *ngIf="!loading()">
+            <ng-container matColumnDef="index">
+                <th mat-header-cell *matHeaderCellDef>#</th>
+                <td mat-cell *matCellDef="let question; let i = index">{{ i + 1 }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="question">
+                <th mat-header-cell *matHeaderCellDef>Soru</th>
+                <td mat-cell *matCellDef="let question">
+                    <div class="question-text">{{ question.questionText }}</div>
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="type">
+                <th mat-header-cell *matHeaderCellDef>Tip</th>
+                <td mat-cell *matCellDef="let question">
+                    <mat-chip>{{ question.typeDisplay || getTypeLabel(question.type) }}</mat-chip>
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="correct">
+                <th mat-header-cell *matHeaderCellDef>Doğru</th>
+                <td mat-cell *matCellDef="let question">
+                    <strong class="correct-answer">{{ question.correctAnswer }}</strong>
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>İşlemler</th>
+                <td mat-cell *matCellDef="let question">
+                    <button mat-icon-button (click)="editQuestion(question)" [disabled]="saving">
+                        <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" (click)="deleteQuestion(question)" [disabled]="saving">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <div *ngIf="questions.length === 0 && !loading()" class="no-questions">
+            <mat-icon>quiz</mat-icon>
+            <p>Henüz soru eklenmemiş</p>
+        </div>
+    </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-raised-button (click)="onClose()">Kapat</button>
+</mat-dialog-actions>

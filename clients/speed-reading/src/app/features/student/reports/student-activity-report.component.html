@@ -1,0 +1,64 @@
+<div class="activity-report">
+    @if (loading()) {
+    <div class="loading-container"><div class="rp-spinner"></div></div>
+    } @else if (report()) {
+    <div class="rp-card streak-card">
+        <div class="rp-card__body">
+            <div class="streak-container">
+                <span class="material-icons streak-icon">local_fire_department</span>
+                <div class="streak-info">
+                    <div class="streak-value">{{ report()!.currentStreak.days }} Days</div>
+                    <div class="streak-label">Current Streak</div>
+                    <div class="streak-record">Longest: {{ report()!.currentStreak.longestStreak }} days</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="rp-card">
+        <div class="rp-card__header"><h3 class="rp-card__title">Activity Heatmap</h3></div>
+        <div class="rp-card__body">
+            <div class="chart-container"><app-heatmap [data]="heatmapData()"></app-heatmap></div>
+        </div>
+    </div>
+
+    <div class="charts-row">
+        <div class="rp-card">
+            <div class="rp-card__header"><h3 class="rp-card__title">Hourly Distribution</h3></div>
+            <div class="rp-card__body">
+                <div class="chart-container"><app-bar-chart [data]="report()!.hourlyDistributionChart.data"
+                        xAxisLabel="Hour" yAxisLabel="Activities"></app-bar-chart></div>
+            </div>
+        </div>
+
+        <div class="rp-card">
+            <div class="rp-card__header"><h3 class="rp-card__title">Daily Distribution</h3></div>
+            <div class="rp-card__body">
+                <div class="chart-container"><app-bar-chart [data]="report()!.dailyDistributionChart.data"
+                        xAxisLabel="Day" yAxisLabel="Activities"></app-bar-chart></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="rp-card"><div class="rp-card__body">
+                <div class="stat-value">{{ formatMinutes(report()!.studyTime.totalMinutes) }}</div>
+                <div class="stat-label">Total Study Time</div>
+            </div></div>
+        <div class="rp-card"><div class="rp-card__body">
+                <div class="stat-value">{{ report()!.studyTime.averageSessionLength }} min</div>
+                <div class="stat-label">Avg Session</div>
+            </div></div>
+        <div class="rp-card"><div class="rp-card__body">
+                <div class="stat-value">{{ report()!.studyTime.totalSessions }}</div>
+                <div class="stat-label">Total Sessions</div>
+            </div></div>
+        <div class="rp-card"><div class="rp-card__body">
+                <div class="stat-value">{{ report()!.studyTime.mostActiveHour }}:00</div>
+                <div class="stat-label">Peak Hour</div>
+            </div></div>
+    </div>
+    } @else {
+    <div class="empty-state">No activity data available</div>
+    }
+</div>

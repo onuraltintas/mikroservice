@@ -1,0 +1,129 @@
+<div class="campaign-dialog">
+    <div class="dialog-header">
+        <div class="header-content">
+            <mat-icon>{{ isEditMode ? 'edit' : 'campaign' }}</mat-icon>
+            <h1>{{ isEditMode ? 'Kampanya Düzenle' : 'Yeni E-posta Kampanyası' }}</h1>
+        </div>
+        <button mat-icon-button mat-dialog-close class="close-btn">
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+
+    <form [formGroup]="campaignForm" class="dialog-body">
+        <!-- Left Sidebar - Campaign Settings -->
+        <div class="sidebar">
+            <div class="section">
+                <h3><mat-icon>info</mat-icon> Temel Bilgiler</h3>
+                <mat-form-field appearance="outline">
+                    <mat-label>Kampanya Adı</mat-label>
+                    <input matInput formControlName="name" placeholder="Örn: Ocak 2025 Bülteni">
+                    <mat-error>Kampanya adı gerekli</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>E-posta Konusu</mat-label>
+                    <input matInput formControlName="subject" placeholder="E-posta konu satırı">
+                    <mat-error>Konu gerekli</mat-error>
+                </mat-form-field>
+            </div>
+
+            <div class="section">
+                <h3><mat-icon>people</mat-icon> Hedef Kitle</h3>
+                <mat-checkbox formControlName="includeAllUsers" (change)="onIncludeAllUsersChange()"
+                    class="all-users-checkbox">
+                    <strong>Tüm Kullanıcılara Gönder</strong>
+                </mat-checkbox>
+
+                <mat-checkbox formControlName="includeSubscribers" class="all-users-checkbox"
+                    style="margin-left: 0; display: block; margin-bottom: 15px;">
+                    <strong>Bülten Abonelerini Dahil Et</strong>
+                </mat-checkbox>
+
+                <mat-form-field appearance="outline" *ngIf="!campaignForm.get('includeAllUsers')?.value">
+                    <mat-label>Hedef Roller</mat-label>
+                    <mat-select formControlName="targetRoles" multiple>
+                        <mat-option value="Student">👨‍🎓 Öğrenci</mat-option>
+                        <mat-option value="Teacher">👨‍🏫 Öğretmen</mat-option>
+                        <mat-option value="Admin">👨‍💼 Admin</mat-option>
+                    </mat-select>
+                    <mat-hint>Birden fazla rol seçebilirsiniz</mat-hint>
+                </mat-form-field>
+
+                <div class="info-box"
+                    *ngIf="campaignForm.get('targetRoles')?.value?.length > 0 && !campaignForm.get('includeAllUsers')?.value">
+                    <mat-icon>check_circle</mat-icon>
+                    <span>{{ campaignForm.get('targetRoles')?.value?.length }} rol seçildi</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3><mat-icon>schedule</mat-icon> Zamanlama</h3>
+                <mat-form-field appearance="outline">
+                    <mat-label>Gönderim Tarihi</mat-label>
+                    <input matInput [matDatepicker]="picker" formControlName="scheduledFor" placeholder="Hemen gönder">
+                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                    <mat-hint>Boş bırakırsanız taslak olarak kaydedilir</mat-hint>
+                </mat-form-field>
+
+                <div class="info-box success" *ngIf="campaignForm.get('scheduledFor')?.value">
+                    <mat-icon>event</mat-icon>
+                    <span>{{ campaignForm.get('scheduledFor')?.value | date:'dd MMMM yyyy' }} tarihinde
+                        gönderilecek</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content - Email Editor -->
+        <div class="main-content">
+            <div class="editor-section">
+                <div class="editor-header">
+                    <h2><mat-icon>edit_note</mat-icon> E-posta İçeriği</h2>
+                    <!-- RESTORED: Toggle for Editor/Preview as requested -->
+                    <mat-button-toggle-group #editorMode="matButtonToggleGroup" value="editor">
+                        <mat-button-toggle value="editor">
+                            <mat-icon>edit</mat-icon> Düzenle
+                        </mat-button-toggle>
+                        <mat-button-toggle value="preview">
+                            <mat-icon>visibility</mat-icon> Önizleme
+                        </mat-button-toggle>
+                    </mat-button-toggle-group>
+                </div>
+
+                <!-- Editor Mode -->
+                <div class="editor-container h-full" *ngIf="editorMode.value === 'editor'">
+                    <quill-editor formControlName="body" [modules]="quillConfig" class="campaign-quill-editor"
+                        placeholder="E-posta içeriğinizi buraya oluşturun...">
+                    </quill-editor>
+                </div>
+
+                <!-- Preview Mode -->
+                <div class="preview-container" *ngIf="editorMode.value === 'preview'">
+                    <div class="preview-content" [innerHTML]="getHtmlPreview()"></div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="dialog-footer">
+        <div class="footer-info">
+            <mat-icon>info</mat-icon>
+            <span *ngIf="!isEditMode">Kampanya taslak olarak kaydedilecek</span>
+            <span *ngIf="isEditMode">Değişiklikler kaydedilecek</span>
+        </div>
+        <div class="footer-actions">
+            <button mat-button mat-dialog-close>
+                <mat-icon>close</mat-icon> İptal
+            </button>
+            <button mat-raised-button color="primary" (click)="save()" [disabled]="campaignForm.invalid || loading()">
+                <mat-icon>{{ isEditMode ? 'save' : 'add_circle' }}</mat-icon>
+                {{ isEditMode ? 'Güncelle' : 'Oluştur' }}
+            </button>
+        </div>
+    </div>
+
+    <div *ngIf="loading()" class="loading-overlay">
+        <mat-spinner diameter="60"></mat-spinner>
+        <p>İşleniyor...</p>
+    </div>
+</div>

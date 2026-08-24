@@ -1,0 +1,131 @@
+<div class="preferences-container">
+  <mat-card>
+    <mat-card-header>
+      <button mat-icon-button (click)="goBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <mat-card-title>
+        <mat-icon>notifications</mat-icon>
+        Bildirim Tercihleri
+      </mat-card-title>
+      <mat-card-subtitle>
+        Hangi bildirimler almak istediğinizi seçin
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Loading State -->
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Yükleniyor...</p>
+      </div>
+
+      <!-- Preferences Content -->
+      <div *ngIf="!loading" class="preferences-content">
+        <!-- Bulk Actions -->
+        <div class="bulk-actions">
+          <div class="action-group">
+            <span class="action-label">Uygulama İçi:</span>
+            <button mat-button (click)="enableAllInApp()">
+              <mat-icon>check_circle</mat-icon>
+              Tümünü Aç
+            </button>
+            <button mat-button (click)="disableAllInApp()">
+              <mat-icon>cancel</mat-icon>
+              Tümünü Kapat
+            </button>
+          </div>
+          <div class="action-group">
+            <span class="action-label">E-posta:</span>
+            <button mat-button (click)="enableAllEmail()">
+              <mat-icon>check_circle</mat-icon>
+              Tümünü Aç
+            </button>
+            <button mat-button (click)="disableAllEmail()">
+              <mat-icon>cancel</mat-icon>
+              Tümünü Kapat
+            </button>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Notification Groups -->
+        <div *ngFor="let group of notificationGroups; let isLast = last" class="notification-group">
+          <div class="group-header">
+            <mat-icon [class]="'group-icon-' + group.icon">{{ group.icon }}</mat-icon>
+            <div class="group-info">
+              <h3>{{ group.title }}</h3>
+              <p>{{ group.description }}</p>
+            </div>
+          </div>
+
+          <div class="notification-items">
+            <div *ngFor="let type of group.types" class="notification-item">
+              <div class="notification-info">
+                <div class="notification-header">
+                  <mat-icon class="notification-icon">{{ getNotificationIcon(type) }}</mat-icon>
+                  <strong>{{ getNotificationTypeLabel(type) }}</strong>
+                </div>
+                <p class="notification-description">{{ getNotificationDescription(type) }}</p>
+              </div>
+
+              <div class="notification-toggles">
+                <div class="toggle-wrapper">
+                  <mat-slide-toggle
+                    [(ngModel)]="getPreference(type)!.enableInApp"
+                    color="primary">
+                    <span class="toggle-label">
+                      <mat-icon class="small-icon">phone_iphone</mat-icon>
+                      Uygulama İçi
+                    </span>
+                  </mat-slide-toggle>
+                </div>
+
+                <div class="toggle-wrapper">
+                  <mat-slide-toggle
+                    [(ngModel)]="getPreference(type)!.enableEmail"
+                    color="accent">
+                    <span class="toggle-label">
+                      <mat-icon class="small-icon">email</mat-icon>
+                      E-posta
+                    </span>
+                  </mat-slide-toggle>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <mat-divider *ngIf="!isLast"></mat-divider>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+          <mat-icon>info</mat-icon>
+          <div>
+            <p><strong>Not:</strong> Bazı kritik bildirimler (örneğin geciken ödevler) sistem güvenliği nedeniyle devre dışı bırakılamaz.</p>
+            <p>E-posta bildirimleri, profil ayarlarınızda kayıtlı e-posta adresinize gönderilecektir.</p>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+
+    <!-- Action Buttons -->
+    <mat-card-actions *ngIf="!loading">
+      <div class="action-buttons">
+        <button mat-button (click)="goBack()">
+          <mat-icon>close</mat-icon>
+          İptal
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="savePreferences()"
+          [disabled]="saving">
+          <mat-icon>{{ saving ? 'hourglass_empty' : 'save' }}</mat-icon>
+          {{ saving ? 'Kaydediliyor...' : 'Kaydet' }}
+        </button>
+      </div>
+    </mat-card-actions>
+  </mat-card>
+</div>

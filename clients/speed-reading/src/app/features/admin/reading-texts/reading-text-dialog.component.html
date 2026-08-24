@@ -1,0 +1,88 @@
+<h2 mat-dialog-title>{{ isEditMode ? 'Okuma Metni Düzenle' : 'Yeni Okuma Metni' }}</h2>
+
+<mat-dialog-content>
+    <form [formGroup]="form">
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Başlık</mat-label>
+            <input matInput formControlName="title" placeholder="Metin başlığını girin">
+            <mat-error *ngIf="form.get('title')?.hasError('required')">
+                Başlık zorunludur
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Metin İçeriği</mat-label>
+            <textarea matInput formControlName="content" rows="12" (input)="calculateWordCount()"
+                placeholder="Okuma metnini buraya yapıştırın..."></textarea>
+            <mat-hint>{{ calculatedWordCount }} kelime · Tahmini {{ estimatedMinutes }} dakika</mat-hint>
+            <mat-error *ngIf="form.get('content')?.hasError('required')">
+                Metin içeriği zorunludur
+            </mat-error>
+        </mat-form-field>
+
+        <div class="form-row">
+            <mat-form-field appearance="outline">
+                <mat-label>Kategori</mat-label>
+                <mat-select formControlName="category">
+                    <mat-option *ngFor="let cat of categories" [value]="cat">{{ cat }}</mat-option>
+                    <mat-option value="__new__">+ Yeni Kategori Ekle</mat-option>
+                </mat-select>
+                <mat-error *ngIf="form.get('category')?.hasError('required')">
+                    Kategori zorunludur
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" *ngIf="form.get('category')?.value === '__new__'">
+                <mat-label>Yeni Kategori Adı</mat-label>
+                <input matInput formControlName="newCategory" placeholder="Kategori adı girin">
+                <mat-error *ngIf="form.get('newCategory')?.hasError('required')">
+                    Kategori adı zorunludur
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" *ngIf="form.get('category')?.value !== '__new__'">
+                <mat-label>Zorluk Seviyesi</mat-label>
+                <mat-select formControlName="difficultyLevel">
+                    <mat-option *ngFor="let level of levels" [value]="level">Seviye {{ level }}</mat-option>
+                </mat-select>
+                <mat-error *ngIf="form.get('difficultyLevel')?.hasError('required')">
+                    Zorluk seviyesi zorunludur
+                </mat-error>
+            </mat-form-field>
+        </div>
+
+        <div class="form-row" *ngIf="form.get('category')?.value === '__new__'">
+            <mat-form-field appearance="outline">
+                <mat-label>Zorluk Seviyesi</mat-label>
+                <mat-select formControlName="difficultyLevel">
+                    <mat-option *ngFor="let level of levels" [value]="level">Seviye {{ level }}</mat-option>
+                </mat-select>
+                <mat-error *ngIf="form.get('difficultyLevel')?.hasError('required')">
+                    Zorluk seviyesi zorunludur
+                </mat-error>
+            </mat-form-field>
+        </div>
+
+        <div class="form-row">
+            <mat-form-field appearance="outline">
+                <mat-label>Dil</mat-label>
+                <mat-select formControlName="language">
+                    <mat-option value="tr">Türkçe</mat-option>
+                    <mat-option value="en">İngilizce</mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <div class="checkbox-field" *ngIf="isEditMode">
+                <mat-checkbox formControlName="isActive">Aktif</mat-checkbox>
+            </div>
+        </div>
+    </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" [disabled]="saving">İptal</button>
+    <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!form.valid || saving">
+        <mat-spinner diameter="20" *ngIf="saving"></mat-spinner>
+        <span *ngIf="!saving">{{ isEditMode ? 'Güncelle' : 'Kaydet' }}</span>
+    </button>
+</mat-dialog-actions>

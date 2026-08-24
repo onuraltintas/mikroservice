@@ -1,0 +1,28 @@
+<div class="legal-container">
+  <div class="legal-header">
+    <h1>{{ title }}</h1>
+  </div>
+
+  <mat-card class="legal-card">
+    <mat-card-content>
+      <div *ngIf="loading" class="loading">
+        <p>Yükleniyor...</p>
+      </div>
+
+      <div *ngIf="error && !loading" class="error">
+        <p>Doküman yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.</p>
+      </div>
+
+      <div *ngIf="!loading && !error" class="legal-content" [innerHTML]="content"></div>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="action-buttons">
+    <button mat-raised-button routerLink="/auth/register">
+      Kayıt Sayfasına Dön
+    </button>
+    <button mat-raised-button color="primary" routerLink="/auth/register">
+      Kabul Ediyorum ve Kayıt Ol
+    </button>
+  </div>
+</div>

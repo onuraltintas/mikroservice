@@ -1,0 +1,464 @@
+// Variables - Verified Color Palette
+$primary-light: #6366f1; // Indigo 500
+$primary-dark: #4f46e5; // Indigo 600
+$secondary-light: #a855f7; // Purple 500
+$secondary-dark: #9333ea; // Purple 600
+$accent-light: #10b981; // Emerald 500
+$text-main: #1f2937; // Gray 800
+$text-secondary: #6b7280; // Gray 500
+$bg-light: #f3f4f6; // Gray 100
+$surface-white: #ffffff;
+$glass-bg: rgba(255, 255, 255, 0.95);
+$glass-border: 1px solid rgba(255, 255, 255, 0.2);
+$transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+:host {
+    display: block;
+    min-height: 100vh;
+    background-color: #f9fafb;
+    padding-bottom: 2rem;
+}
+
+.settings-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    animation: fadeIn 0.5s ease-out;
+}
+
+// 1. Hero Header
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+    position: relative;
+    z-index: 1;
+
+    .title-area {
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: $text-main;
+            margin: 0;
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+
+            mat-icon {
+                color: $primary-light;
+                width: 36px;
+                height: 36px;
+                font-size: 36px;
+            }
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: $text-secondary;
+            margin-top: 0.5rem;
+            font-weight: 500;
+            padding-left: 3.5rem;
+        }
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+    }
+}
+
+// 2. Main Content Grid
+.settings-content {
+    display: grid;
+    gap: 2rem;
+}
+
+// 3. Settings Card (Common)
+.settings-card {
+    background: $glass-bg;
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+    border: $glass-border;
+    overflow: hidden;
+
+    // Custom Tab Styling
+    ::ng-deep .mat-mdc-tab-header {
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 0 1.5rem;
+    }
+
+    ::ng-deep .mat-mdc-tab-label-container {
+        padding: 0.5rem 0;
+    }
+
+    ::ng-deep .mat-mdc-tab {
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        color: $text-secondary;
+        opacity: 1 !important;
+
+        &.mdc-tab--active {
+            color: $primary-dark !important;
+
+            .mdc-tab__text-label {
+                color: $primary-dark !important;
+            }
+        }
+    }
+
+    ::ng-deep .mat-mdc-tab-indicator .mat-mdc-focus-indicator {
+        display: none; // Hide focus indicator
+    }
+
+    ::ng-deep .mat-mdc-tab-indicator .mdc-tab-indicator__content--underline {
+        border-color: $primary-light !important;
+        border-top-width: 3px !important;
+    }
+
+    .tab-content {
+        padding: 2.5rem;
+    }
+}
+
+// 4. Section Styling
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: $text-main;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &::before {
+        content: '';
+        display: block;
+        width: 4px;
+        height: 1.25em;
+        background: linear-gradient(to bottom, $primary-light, $secondary-light);
+        border-radius: 2px;
+    }
+}
+
+// 5. Reading Preferences Grid
+.preferences-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+
+    @media (max-width: 900px) {
+        grid-template-columns: 1fr;
+    }
+
+    .controls-column {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .preview-column {
+        position: relative;
+    }
+}
+
+// 6. Form Controls
+.setting-group {
+    margin-bottom: 1.5rem;
+
+    label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: $text-main;
+        margin-bottom: 0.75rem;
+
+        mat-icon {
+            font-size: 1.1rem;
+            width: 1.1rem;
+            height: 1.1rem;
+            color: $text-secondary;
+        }
+    }
+}
+
+.slider-container {
+    background: #f9fafb;
+    padding: 1rem 1.5rem;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border: 1px solid #e5e7eb;
+
+    mat-slider {
+        flex: 1;
+    }
+
+    .value-badge {
+        background: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.5rem;
+        font-weight: 700;
+        color: $primary-dark;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        min-width: 3.5rem;
+        text-align: center;
+        border: 1px solid #f3f4f6;
+    }
+}
+
+// 7. Preview Box
+.preview-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 1.5rem;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 2rem;
+    transition: $transition;
+    min-height: 300px;
+
+    // Theme Variants
+    &.theme-light {
+        background: #ffffff;
+        color: #1f2937;
+        border-color: #e5e7eb;
+    }
+
+    &.theme-dark {
+        background: #1f2937;
+        color: #e5e7eb;
+        border-color: #374151;
+    }
+
+    &.theme-sepia {
+        background: #fbf0d9;
+        color: #5f4b32;
+        border-color: #e6dbbf;
+    }
+
+    .preview-header {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        span {
+            font-weight: 600;
+            opacity: 0.6;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    }
+
+    p {
+        margin: 0;
+        transition: all 0.3s ease;
+    }
+}
+
+// 8. Toggles List
+.toggles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.toggle-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 1rem;
+    transition: $transition;
+
+    &:hover {
+        border-color: $primary-light;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+    }
+
+    .info {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+
+        .icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: $text-secondary;
+            transition: $transition;
+
+            mat-icon {
+                font-size: 24px;
+                width: 24px;
+                height: 24px;
+            }
+        }
+
+        .text {
+            h4 {
+                margin: 0;
+                font-size: 1rem;
+                font-weight: 600;
+                color: $text-main;
+            }
+
+            p {
+                margin: 0.25rem 0 0 0;
+                font-size: 0.85rem;
+                color: $text-secondary;
+            }
+        }
+    }
+
+    // Active state for icon
+    &:hover .icon-box {
+        background: rgba(99, 102, 241, 0.1);
+        color: $primary-dark;
+    }
+}
+
+// 9. Buttons
+.action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+
+    button {
+        padding: 0.5rem 1.5rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        height: 48px;
+
+        mat-icon {
+            margin-right: 0.5rem;
+        }
+    }
+}
+
+// 10. Animations
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// Responsive
+@media (max-width: 600px) {
+    .header-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+
+        .subtitle {
+            padding-left: 0 !important;
+        }
+    }
+
+    .toggle-card {
+        padding: 1rem;
+
+        .info .icon-box {
+            display: none;
+        }
+    }
+}
+// ── Tema Seçici ──────────────────────────────────────────────────────────────
+.theme-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.theme-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  border: 2px solid var(--sp-border, #e2e8f0);
+  background: var(--sp-surface, #fff);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover { border-color: var(--sp-primary, #6366f1); transform: translateY(-2px); }
+
+  &--active {
+    border-color: var(--sp-primary, #6366f1);
+    background: var(--sp-primary-ghost, rgba(99,102,241,.1));
+  }
+
+  &__preview {
+    width: 100%;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+
+    &--light { background: #f8fafc; border: 1px solid #e2e8f0; }
+    &--dark  { background: #0f172a; border: 1px solid #1e293b; }
+    &--sepia { background: #fdf6e3; border: 1px solid #d4c5a0; }
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--sp-text-2, #475569);
+  }
+
+  &--active &__label { color: var(--sp-primary, #6366f1); }
+
+  &__check {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    font-size: 18px;
+    color: var(--sp-primary, #6366f1);
+    background: var(--sp-surface, #fff);
+    border-radius: 50%;
+  }
+}
+
+// ── Dark mode uyumu (settings sayfası) ──────────────────────────────────────
+:host-context([data-sp-theme='dark']) {
+  .settings-container { background: transparent; }
+  .settings-card { background: var(--sp-surface, #0f172a); border-color: var(--sp-border, #1e293b); color: var(--sp-text-1, #f1f5f9); }
+  .header-section { background: transparent; }
+  .preview-card { background: var(--sp-surface-3, #334155); color: var(--sp-text-1, #f1f5f9); }
+  .sp-tab-btn { color: var(--sp-text-2, #94a3b8); &.active { color: var(--sp-primary, #818cf8); border-bottom-color: var(--sp-primary, #818cf8); } }
+  .toggle-card { background: var(--sp-surface-3, #1e293b); border-color: var(--sp-border, #334155); }
+  .setting-group label { color: var(--sp-text-2, #94a3b8); }
+}

@@ -1,0 +1,32 @@
+.page-list-container {
+    .header {
+        margin-bottom: 1.5rem;
+    }
+
+    .table-container {
+        position: relative;
+        min-height: 12.5rem;
+    }
+
+    .loading-shade {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.7);
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    table {
+        width: 100%;
+    }
+
+    .mat-column-actions {
+        width: 7.5rem;
+        text-align: right;
+    }
+}

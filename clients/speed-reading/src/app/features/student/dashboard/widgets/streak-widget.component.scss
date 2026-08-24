@@ -1,0 +1,202 @@
+// =============================================================================
+// STREAK WIDGET — Sprint 3
+// =============================================================================
+
+.sw-widget {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-card);
+  box-shadow: var(--sp-shadow-card);
+  padding: 20px;
+}
+
+.sw-widget__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.sw-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--sp-radius-sm);
+  background: var(--sp-streak-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sw-icon {
+  font-size: 20px;
+  color: var(--sp-streak);
+}
+
+.sw-widget__title {
+  font-family: var(--sp-font-sans);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--sp-text-1);
+  margin: 0 0 2px;
+}
+
+.sw-widget__sub {
+  font-size: 0.75rem;
+  color: var(--sp-text-3);
+  margin: 0;
+}
+
+// Main streak display
+.sw-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(234, 179, 8, 0.06) 100%);
+  border-radius: var(--sp-radius-md);
+  border: 1px solid rgba(249, 115, 22, 0.15);
+}
+
+.sw-streak-value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.sw-streak-num {
+  font-family: var(--sp-font-sans);
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--sp-text-3);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  transition: color var(--sp-transition-normal);
+
+  &--active { color: var(--sp-streak); }
+}
+
+.sw-streak-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--sp-text-3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+// Fire icons
+.sw-fires {
+  display: flex;
+  gap: 2px;
+}
+
+.sw-fire {
+  font-size: 22px;
+  transition: color var(--sp-transition-fast);
+
+  &--lit  { color: var(--sp-streak); }
+  &--dim  { color: var(--sp-surface-4); }
+}
+
+// Stats row
+.sw-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.sw-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--sp-surface-2);
+  border-radius: var(--sp-radius-sm);
+  padding: 10px 12px;
+  cursor: default;
+}
+
+.sw-stat--freeze .sw-stat__icon { color: #60a5fa; }
+
+.sw-stat__icon {
+  font-size: 18px;
+  color: var(--sp-xp);
+  flex-shrink: 0;
+}
+
+.sw-stat__info { display: flex; flex-direction: column; }
+
+.sw-stat__label {
+  font-size: 0.6875rem;
+  color: var(--sp-text-3);
+  font-weight: 500;
+}
+
+.sw-stat__value {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--sp-text-1);
+}
+
+// ── Haftalık aktivite grid'i ──────────────────────────────────────────────────
+.sw-week {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 4px 10px;
+  border-top: 1px solid var(--sp-border);
+  border-bottom: 1px solid var(--sp-border);
+  margin-bottom: 12px;
+}
+.sw-week__day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+}
+.sw-week__dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--sp-surface-3);
+  border: 2px solid var(--sp-border);
+  transition: all var(--sp-transition-normal);
+
+  &--active {
+    background: var(--sp-streak);
+    border-color: var(--sp-streak);
+    box-shadow: 0 0 8px rgba(249, 115, 22, 0.4);
+  }
+  &--today {
+    border-color: var(--sp-primary);
+    &.sw-week__dot--active { box-shadow: 0 0 12px rgba(249, 115, 22, 0.6); }
+  }
+}
+.sw-week__label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--sp-text-3);
+  text-transform: uppercase;
+}
+
+// ── Ateş ikonları animasyonu ─────────────────────────────────────────────────
+.sw-fire--lit {
+  animation: sw-pulse-fire 2s ease-in-out infinite;
+}
+@keyframes sw-pulse-fire {
+  0%, 100% { transform: scale(1);   opacity: 1;    }
+  50%       { transform: scale(1.1); opacity: 0.85; }
+}
+
+// ── Motivasyon mesajı ────────────────────────────────────────────────────────
+.sw-motivation {
+  font-size: 0.8125rem;
+  color: var(--sp-text-2);
+  text-align: center;
+  margin: 0 0 14px;
+  line-height: 1.4;
+}
+
+// ── Freeze ikonu rengi ────────────────────────────────────────────────────────
+.sw-stat__icon--freeze { color: #60a5fa; }

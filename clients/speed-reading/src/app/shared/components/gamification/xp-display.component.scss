@@ -1,0 +1,24 @@
+.xp-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.xp-icon {
+    font-size: 20px;
+}
+
+.xp-value {
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.xp-gain {
+    position: absolute;
+    right: -40px;
+    color: #FFD700;
+    font-weight: bold;
+    font-size: 16px;
+}

@@ -1,0 +1,20 @@
+<div class="celebration-container">
+    <div class="icon-wrapper" [ngClass]="data.type">
+        <mat-icon *ngIf="data.type === 'week'">calendar_today</mat-icon>
+        <mat-icon *ngIf="data.type === 'level'">trending_up</mat-icon>
+        <mat-icon *ngIf="data.type === 'program'">emoji_events</mat-icon>
+    </div>
+
+    <h2 mat-dialog-title>{{ data.title }}</h2>
+
+    <div mat-dialog-content>
+        <p class="message">{{ data.message }}</p>
+        <div *ngIf="data.xpEarned" class="xp-badge">
+            <mat-icon>star</mat-icon> +{{ data.xpEarned }} XP
+        </div>
+    </div>
+
+    <div mat-dialog-actions align="center">
+        <button mat-flat-button color="primary" (click)="close()">Harika!</button>
+    </div>
+</div>

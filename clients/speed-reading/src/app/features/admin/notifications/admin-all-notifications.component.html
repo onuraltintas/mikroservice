@@ -1,0 +1,211 @@
+<div class="admin-notifications-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <mat-icon>notifications</mat-icon>
+                Tüm Sistem Bildirimleri
+            </h1>
+            <p class="subtitle">Sistemdeki tüm bildirimleri görüntüleyin ve yönetin</p>
+        </div>
+        <button mat-raised-button color="primary" (click)="navigateToBulkSend()">
+            <mat-icon>send</mat-icon>
+            Toplu Bildirim Gönder
+        </button>
+    </div>
+
+    <!-- Filters -->
+    <mat-card class="filter-card">
+        <mat-card-content>
+            <div class="filters-grid">
+                <mat-form-field appearance="outline">
+                    <mat-label>Ara</mat-label>
+                    <input matInput [(ngModel)]="searchTerm" placeholder="Başlık, mesaj veya kullanıcı ara...">
+                    <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Rol</mat-label>
+                    <mat-select [(ngModel)]="selectedRole" (selectionChange)="onSearch()">
+                        @for (role of roles; track role.value) {
+                        <mat-option [value]="role.value">{{ role.label }}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Bildirim Tipi</mat-label>
+                    <mat-select [(ngModel)]="selectedType" (selectionChange)="onSearch()">
+                        @for (type of notificationTypes; track type.value) {
+                        <mat-option [value]="type.value">{{ type.label }}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Durum</mat-label>
+                    <mat-select [(ngModel)]="selectedReadStatus" (selectionChange)="onSearch()">
+                        @for (status of readStatuses; track status.value) {
+                        <mat-option [value]="status.value">{{ status.label }}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Başlangıç Tarihi</mat-label>
+                    <input matInput [matDatepicker]="fromPicker" [(ngModel)]="fromDate" (dateChange)="onSearch()">
+                    <mat-datepicker-toggle matIconSuffix [for]="fromPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #fromPicker></mat-datepicker>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Bitiş Tarihi</mat-label>
+                    <input matInput [matDatepicker]="toPicker" [(ngModel)]="toDate" (dateChange)="onSearch()">
+                    <mat-datepicker-toggle matIconSuffix [for]="toPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #toPicker></mat-datepicker>
+                </mat-form-field>
+            </div>
+
+            <div class="filter-actions">
+                <button mat-button (click)="onSearch()">
+                    <mat-icon>search</mat-icon>
+                    Ara
+                </button>
+                <button mat-button color="warn" (click)="clearFilters()">
+                    <mat-icon>clear</mat-icon>
+                    Filtreleri Temizle
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Stats & Bulk Actions -->
+    <div class="stats-bar">
+        <span class="total-count">Toplam: <strong>{{ totalCount() }}</strong> bildirim</span>
+        @if (selection.selected.length > 0) {
+        <button mat-raised-button color="warn" (click)="deleteSelectedNotifications()">
+            <mat-icon>delete_sweep</mat-icon>
+            Seçilenleri Sil ({{ selection.selected.length }})
+        </button>
+        }
+    </div>
+
+    <!-- Loading -->
+    @if (loading()) {
+    <div class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span>Yükleniyor...</span>
+    </div>
+    } @else {
+    <!-- Notifications Table -->
+    <mat-card class="table-card">
+        <table mat-table [dataSource]="notifications()" class="notifications-table">
+
+            <!-- Checkbox Column -->
+            <ng-container matColumnDef="select">
+                <th mat-header-cell *matHeaderCellDef>
+                    <mat-checkbox (change)="$event ? masterToggle() : null"
+                        [checked]="selection.hasValue() && isAllSelected()"
+                        [indeterminate]="selection.hasValue() && !isAllSelected()">
+                    </mat-checkbox>
+                </th>
+                <td mat-cell *matCellDef="let row">
+                    <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null"
+                        [checked]="selection.isSelected(row)">
+                    </mat-checkbox>
+                </td>
+            </ng-container>
+
+            <!-- User Column -->
+            <ng-container matColumnDef="user">
+                <th mat-header-cell *matHeaderCellDef>Kullanıcı</th>
+                <td mat-cell *matCellDef="let notification">
+                    <div class="user-info">
+                        <span class="user-name">{{ notification.userName }}</span>
+                        <span class="user-email">{{ notification.userEmail }}</span>
+                        <mat-chip [color]="getRoleColor(notification.userRole)" selected>
+                            {{ notification.userRole }}
+                        </mat-chip>
+                    </div>
+                </td>
+            </ng-container>
+
+            <!-- Type Column -->
+            <ng-container matColumnDef="type">
+                <th mat-header-cell *matHeaderCellDef>Tip</th>
+                <td mat-cell *matCellDef="let notification">
+                    <div class="type-badge">
+                        <mat-icon>{{ getNotificationIcon(notification.type) }}</mat-icon>
+                        <span>{{ getNotificationTypeLabel(notification.type) }}</span>
+                    </div>
+                </td>
+            </ng-container>
+
+            <!-- Title Column -->
+            <ng-container matColumnDef="title">
+                <th mat-header-cell *matHeaderCellDef>İçerik</th>
+                <td mat-cell *matCellDef="let notification">
+                    <div class="notification-content">
+                        <span class="title">{{ notification.title }}</span>
+                        <span class="message">{{ notification.message | slice:0:100 }}{{ notification.message.length >
+                            100 ? '...' : '' }}</span>
+                    </div>
+                </td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Durum</th>
+                <td mat-cell *matCellDef="let notification">
+                    <mat-chip-set>
+                        <mat-chip [style.backgroundColor]="notification.isRead ? '#27ae60' : '#e74c3c'"
+                            style="color: white; --mdc-chip-label-text-color: white;" selected>
+                            {{notification.isRead ? 'Okundu' : 'Okunmadı'}}
+                        </mat-chip>
+                    </mat-chip-set>
+                </td>
+            </ng-container>
+
+            <!-- Created At Column -->
+            <ng-container matColumnDef="createdAt">
+                <th mat-header-cell *matHeaderCellDef>Tarih</th>
+                <td mat-cell *matCellDef="let notification">
+                    <span class="date">{{ getRelativeTime(notification.createdAt) }}</span>
+                </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>İşlem</th>
+                <td mat-cell *matCellDef="let notification" (click)="$event.stopPropagation()">
+                    <div class="action-buttons">
+                        <button mat-icon-button color="primary" (click)="openDetail(notification)"
+                            matTooltip="Detayı Görüntüle">
+                            <mat-icon>visibility</mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn" (click)="deleteNotification(notification, $event)"
+                            matTooltip="Sil">
+                            <mat-icon>delete_outline</mat-icon>
+                        </button>
+                    </div>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openDetail(row)"
+                class="clickable-row"></tr>
+        </table>
+
+        @if (notifications().length === 0) {
+        <div class="empty-state">
+            <mat-icon>notifications_off</mat-icon>
+            <p>Bildirim bulunamadı</p>
+        </div>
+        }
+
+        <mat-paginator [length]="totalCount()" [pageSize]="pageSize" [pageSizeOptions]="[10, 20, 50, 100]"
+            (page)="onPageChange($event)" showFirstLastButtons>
+        </mat-paginator>
+    </mat-card>
+    }
+</div>

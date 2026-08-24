@@ -1,0 +1,108 @@
+<div class="deleted-records-container">
+    <div class="header">
+        <h2>Silinen Kayıtlar</h2>
+        <div class="header-actions">
+            <button mat-raised-button color="warn"
+                *ngIf="selection.hasValue()"
+                [disabled]="bulkDeleting"
+                (click)="bulkHardDelete()">
+                <mat-spinner *ngIf="bulkDeleting" diameter="18" style="display:inline-block;margin-right:6px"></mat-spinner>
+                <mat-icon *ngIf="!bulkDeleting">delete_forever</mat-icon>
+                {{ bulkDeleting ? 'Siliniyor...' : selection.selected.length + ' Kaydı Kalıcı Sil' }}
+            </button>
+            <button mat-raised-button color="primary" (click)="loadRecords()" [disabled]="loading || bulkDeleting">
+                <mat-icon>refresh</mat-icon> Yenile
+            </button>
+        </div>
+    </div>
+
+    <mat-card>
+        <mat-card-content>
+            <div class="filters">
+                <mat-form-field appearance="outline">
+                    <mat-label>Entity Tipi</mat-label>
+                    <mat-select [(ngModel)]="selectedEntityType" (selectionChange)="onFilterChange()"
+                        [disabled]="loading">
+                        <mat-option *ngFor="let type of entityTypes" [value]="type.value">
+                            {{ type.label }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+
+            <div *ngIf="loading" class="loading">Yükleniyor...</div>
+
+            <div *ngIf="!loading && records.length === 0" class="empty-state"
+                style="text-align:center;padding:20px">
+                Silinen kayıt bulunamadı
+            </div>
+
+            <table mat-table [dataSource]="records" class="records-table"
+                *ngIf="!loading && records.length > 0">
+
+                <ng-container matColumnDef="select">
+                    <th mat-header-cell *matHeaderCellDef>
+                        <mat-checkbox
+                            [checked]="isAllSelected()"
+                            [indeterminate]="isIndeterminate()"
+                            (change)="toggleAllRows()">
+                        </mat-checkbox>
+                    </th>
+                    <td mat-cell *matCellDef="let record">
+                        <mat-checkbox
+                            [checked]="selection.isSelected(record)"
+                            (change)="selection.toggle(record)">
+                        </mat-checkbox>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="entityType">
+                    <th mat-header-cell *matHeaderCellDef>Tip</th>
+                    <td mat-cell *matCellDef="let record">{{ getEntityTypeLabel(record.entityType) }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="displayName">
+                    <th mat-header-cell *matHeaderCellDef>İsim</th>
+                    <td mat-cell *matCellDef="let record">{{ record.displayName }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="deletedAt">
+                    <th mat-header-cell *matHeaderCellDef>Silinme Tarihi</th>
+                    <td mat-cell *matCellDef="let record">{{ record.deletedAt | date:'dd.MM.yyyy HH:mm' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="deletedBy">
+                    <th mat-header-cell *matHeaderCellDef>Silen Kullanıcı</th>
+                    <td mat-cell *matCellDef="let record">{{ record.deletedBy }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef>İşlemler</th>
+                    <td mat-cell *matCellDef="let record">
+                        <button mat-icon-button color="primary" (click)="restoreRecord(record)" title="Geri Yükle">
+                            <mat-icon>restore</mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn" (click)="hardDeleteRecord(record)" title="Kalıcı Sil">
+                            <mat-icon>delete_forever</mat-icon>
+                        </button>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+                    [class.selected-row]="selection.isSelected(row)">
+                </tr>
+            </table>
+
+            <mat-paginator
+                *ngIf="!loading && totalCount > 0"
+                [length]="totalCount"
+                [pageSize]="pageSize"
+                [pageIndex]="pageIndex"
+                [pageSizeOptions]="pageSizeOptions"
+                [showFirstLastButtons]="true"
+                (page)="handlePageEvent($event)">
+            </mat-paginator>
+        </mat-card-content>
+    </mat-card>
+</div>

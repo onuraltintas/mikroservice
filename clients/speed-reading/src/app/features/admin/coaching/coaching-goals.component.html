@@ -1,0 +1,92 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2><mat-icon>flag</mat-icon> Hedefler</h2>
+    <button mat-raised-button color="primary" (click)="load()">
+      <mat-icon>refresh</mat-icon> Yenile
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Seviye</mat-label>
+          <mat-select [(ngModel)]="filterLevel" (selectionChange)="onFilter()">
+            <mat-option *ngFor="let o of levelOptions" [value]="o.value">{{ o.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Durum</mat-label>
+          <mat-select [(ngModel)]="filterStatus" (selectionChange)="onFilter()">
+            <mat-option *ngFor="let o of statusOptions" [value]="o.value">{{ o.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="loading()" class="loading-container"><mat-spinner diameter="40"></mat-spinner></div>
+
+      <div *ngIf="!loading() && records.length === 0" class="empty-state">
+        <mat-icon>flag_outlined</mat-icon>
+        <p>Hedef bulunamadı</p>
+      </div>
+
+      <table mat-table [dataSource]="records" *ngIf="!loading() && records.length > 0" class="full-width-table">
+        <ng-container matColumnDef="studentName">
+          <th mat-header-cell *matHeaderCellDef>Öğrenci</th>
+          <td mat-cell *matCellDef="let r">{{ r.studentName || (r.studentId | slice:0:8) + '...' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef>Başlık</th>
+          <td mat-cell *matCellDef="let r">
+            <span matTooltip="{{ r.successCriteria }}">{{ r.title }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="level">
+          <th mat-header-cell *matHeaderCellDef>Seviye</th>
+          <td mat-cell *matCellDef="let r">
+            <span class="level-badge level-{{ r.level.toLowerCase() }}">{{ levelLabels[r.level] }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Durum</th>
+          <td mat-cell *matCellDef="let r">
+            <span class="status-badge status-{{ r.status.toLowerCase() }}">{{ statusLabels[r.status] }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="targetDate">
+          <th mat-header-cell *matHeaderCellDef>Hedef Tarih</th>
+          <td mat-cell *matCellDef="let r">{{ r.targetDate | date:'dd.MM.yyyy' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="progress">
+          <th mat-header-cell *matHeaderCellDef>İlerleme</th>
+          <td mat-cell *matCellDef="let r" style="min-width:140px">
+            <div class="progress-cell">
+              <mat-progress-bar mode="determinate" [value]="r.completionPercentage"></mat-progress-bar>
+              <span class="progress-label">%{{ r.completionPercentage | number:'1.0-0' }}</span>
+            </div>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="subGoals">
+          <th mat-header-cell *matHeaderCellDef>Alt Hedefler</th>
+          <td mat-cell *matCellDef="let r">{{ r.subGoalCount }}</td>
+        </ng-container>
+        <ng-container matColumnDef="createdBy">
+          <th mat-header-cell *matHeaderCellDef>Oluşturan</th>
+          <td mat-cell *matCellDef="let r">
+            <mat-icon [matTooltip]="r.isCreatedByCoach ? 'Koç oluşturdu' : 'Öğrenci oluşturdu'" class="icon-sm">
+              {{ r.isCreatedByCoach ? 'sports' : 'person' }}
+            </mat-icon>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <mat-paginator *ngIf="!loading() && total > 0"
+        [length]="total" [pageSize]="pageSize" [pageIndex]="page - 1"
+        [pageSizeOptions]="[10, 20, 50]" showFirstLastButtons
+        (page)="onPage($event)">
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

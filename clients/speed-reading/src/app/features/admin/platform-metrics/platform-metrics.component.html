@@ -1,0 +1,200 @@
+<div class="metrics-container">
+    <div class="metrics-header">
+        <h2>📊 Platform Metrikleri</h2>
+
+        <div class="controls">
+            <mat-form-field appearance="outline">
+                <mat-label>Dönem</mat-label>
+                <mat-select [(value)]="selectedPeriod" (selectionChange)="onPeriodChange()">
+                    <mat-option value="7">Son 7 gün</mat-option>
+                    <mat-option value="30">Son 30 gün</mat-option>
+                    <mat-option value="90">Son 90 gün</mat-option>
+                    <mat-option value="custom">Özel Aralık</mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <button mat-raised-button color="primary" (click)="collectMetrics()" [disabled]="isCollecting">
+                <mat-icon>refresh</mat-icon>
+                Metrikleri Topla
+            </button>
+        </div>
+    </div>
+
+    <div *ngIf="loading()" class="loading">
+        <mat-spinner></mat-spinner>
+        <p>Metrikler yükleniyor...</p>
+    </div>
+
+    <div *ngIf="!loading() && metrics?.totals && metrics?.trends" class="metrics-content">
+        <!-- Summary Cards -->
+        <div class="metrics-grid">
+            <mat-card class="metric-card">
+                <mat-card-header>
+                    <mat-icon class="metric-icon user">people</mat-icon>
+                    <div>
+                        <h3>Toplam Kullanıcı</h3>
+                        <p class="metric-value">{{ metrics?.totals?.totalUsers | number }}</p>
+                    </div>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="metric-change" [class.positive]="(metrics?.trends?.userGrowthRate ?? 0) > 0">
+                        <mat-icon>{{ (metrics?.trends?.userGrowthRate ?? 0) > 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
+                        {{ metrics?.trends?.userGrowthRate | number:'1.1-1' }}%
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <mat-card class="metric-card">
+                <mat-card-header>
+                    <mat-icon class="metric-icon active">how_to_reg</mat-icon>
+                    <div>
+                        <h3>Ort. Günlük Aktif</h3>
+                        <p class="metric-value">{{ metrics?.totals?.averageDailyActiveUsers | number:'1.0-0' }}</p>
+                    </div>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="metric-detail">
+                        {{ metrics?.trends?.activeUserRate | number:'1.1-1' }}% aktif oran
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <mat-card class="metric-card">
+                <mat-card-header>
+                    <mat-icon class="metric-icon new">person_add</mat-icon>
+                    <div>
+                        <h3>Yeni Kullanıcı</h3>
+                        <p class="metric-value">{{ metrics?.totals?.totalNewUsers | number }}</p>
+                    </div>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="metric-detail">
+                        {{ ((metrics?.totals?.totalNewUsers ?? 0) / getDayCount()) | number:'1.1-1' }} günlük
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <mat-card class="metric-card">
+                <mat-card-header>
+                    <mat-icon class="metric-icon activity">assignment</mat-icon>
+                    <div>
+                        <h3>Toplam Aktivite</h3>
+                        <p class="metric-value">{{ metrics?.totals?.totalActivities | number }}</p>
+                    </div>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="metric-change" [class.positive]="(metrics?.trends?.activityGrowthRate ?? 0) > 0">
+                        <mat-icon>{{ (metrics?.trends?.activityGrowthRate ?? 0) > 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
+                        {{ metrics?.trends?.activityGrowthRate | number:'1.1-1' }}%
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <mat-card class="metric-card">
+                <mat-card-header>
+                    <mat-icon class="metric-icon exercise">fitness_center</mat-icon>
+                    <div>
+                        <h3>Egzersizler</h3>
+                        <p class="metric-value">{{ metrics?.totals?.totalExercises | number }}</p>
+                    </div>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="metric-detail">
+                        {{ (metrics?.totals?.totalActivities ?? 0) > 0 ? ((metrics?.totals?.totalExercises ?? 0) / (metrics?.totals?.totalActivities ?? 1) * 100 | number:'1.0-0') : '0' }}%
+                        aktivite
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <mat-card class="metric-card">
+                <mat-card-header>
+                    <mat-icon class="metric-icon reading">menu_book</mat-icon>
+                    <div>
+                        <h3>Okuma Oturumu</h3>
+                        <p class="metric-value">{{ metrics?.totals?.totalReadingSessions | number }}</p>
+                    </div>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="metric-detail">
+                        {{ (metrics?.totals?.totalActivities ?? 0) > 0 ? ((metrics?.totals?.totalReadingSessions ?? 0) / (metrics?.totals?.totalActivities ?? 1) * 100 | number:'1.0-0') : '0' }}%
+                        aktivite
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <mat-card class="metric-card">
+                <mat-card-header>
+                    <mat-icon class="metric-icon time">schedule</mat-icon>
+                    <div>
+                        <h3>Ort. Süre</h3>
+                        <p class="metric-value">{{ metrics?.totals?.averageSessionDuration | number:'1.1-1' }} dk</p>
+                    </div>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="metric-detail">
+                        Oturum başına
+                    </div>
+                </mat-card-content>
+            </mat-card>
+
+            <mat-card class="metric-card">
+                <mat-card-header>
+                    <mat-icon class="metric-icon performance">star</mat-icon>
+                    <div>
+                        <h3>Ort. Performans</h3>
+                        <p class="metric-value">{{ metrics?.totals?.averagePerformance | number:'1.1-1' }}</p>
+                    </div>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="metric-change" [class.positive]="(metrics?.trends?.performanceImprovement ?? 0) > 0">
+                        <mat-icon>{{ (metrics?.trends?.performanceImprovement ?? 0) > 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
+                        {{ metrics?.trends?.performanceImprovement | number:'1.1-1' }} değişim
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+
+        <!-- Daily Trends -->
+        <mat-card class="trends-card">
+            <mat-card-header>
+                <h3>📈 Günlük Trendler</h3>
+            </mat-card-header>
+            <mat-card-content>
+                <div class="trends-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Toplam Kullanıcı</th>
+                                <th>Aktif Kullanıcı</th>
+                                <th>Yeni Kullanıcı</th>
+                                <th>Aktiviteler</th>
+                                <th>Ort. Performans</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let day of reversedDailyMetrics">
+                                <td>{{ day.date | date:'dd/MM/yyyy' }}</td>
+                                <td>{{ day.totalUsers | number }}</td>
+                                <td>{{ day.activeUsers | number }}</td>
+                                <td>{{ day.newUsers | number }}</td>
+                                <td>{{ day.totalActivities | number }}</td>
+                                <td>{{ day.averagePerformance | number:'1.1-1' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+    <div *ngIf="!loading() && !error && metrics && !metrics?.totals" class="empty-state">
+        <mat-icon>bar_chart</mat-icon>
+        <p>Seçilen dönem için metrik verisi bulunamadı.</p>
+    </div>
+
+    <div *ngIf="error" class="error">
+        <mat-icon>error</mat-icon>
+        {{ error }}
+    </div>
+</div>

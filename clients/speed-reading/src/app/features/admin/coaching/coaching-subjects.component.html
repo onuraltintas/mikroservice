@@ -1,0 +1,61 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2><mat-icon>menu_book</mat-icon> Dersler & Konular</h2>
+    <button mat-raised-button color="primary" (click)="load()">
+      <mat-icon>refresh</mat-icon> Yenile
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Sınav Tipi</mat-label>
+          <mat-select [(ngModel)]="filterExamType" (selectionChange)="onFilter()">
+            <mat-option *ngFor="let o of examTypeOptions" [value]="o.value">{{ o.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="loading()" class="loading-container"><mat-spinner diameter="40"></mat-spinner></div>
+      <div *ngIf="!loading() && records.length === 0" class="empty-state">
+        <mat-icon>auto_stories</mat-icon><p>Ders bulunamadı</p>
+      </div>
+
+      <mat-accordion *ngIf="!loading() && groupedSubjects.length > 0" multi>
+        <mat-expansion-panel *ngFor="let group of groupedSubjects">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <span class="group-badge" [style.background-color]="examTypeColors[group.examType]">
+                {{ examTypeLabels[group.examType] }}
+              </span>
+              <span style="margin-left:8px">{{ group.subjects.length }} ders</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+
+          <div class="subjects-grid">
+            <mat-card *ngFor="let s of group.subjects" class="subject-card">
+              <mat-card-header>
+                <div mat-card-avatar class="subject-avatar"
+                  [style.background-color]="s.color ?? examTypeColors[s.examType]">
+                  <mat-icon style="color:white">book</mat-icon>
+                </div>
+                <mat-card-title>{{ s.name }}</mat-card-title>
+                <mat-card-subtitle>
+                  <span *ngIf="s.totalQuestionsInExam">{{ s.totalQuestionsInExam }} soru</span>
+                  <mat-chip *ngIf="s.isSystem" style="margin-left:4px;font-size:0.7em">Sistem</mat-chip>
+                </mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content *ngIf="s.topics && s.topics.length > 0">
+                <div class="topics-list">
+                  <span *ngFor="let t of s.topics" class="topic-chip">{{ t.name }}</span>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </mat-expansion-panel>
+      </mat-accordion>
+
+    </mat-card-content>
+  </mat-card>
+</div>

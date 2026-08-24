@@ -1,0 +1,174 @@
+<div class="bulk-notification-container">
+    <!-- Header -->
+    <div class="page-header">
+        <button mat-icon-button (click)="navigateBack()" class="back-button">
+            <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div class="header-content">
+            <h1>
+                <mat-icon>send</mat-icon>
+                Toplu Bildirim Gönder
+            </h1>
+            <p class="subtitle">Tüm kullanıcılara veya belirli bir role bildirim gönderin</p>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <!-- Form -->
+        <mat-card class="form-card">
+            <mat-card-header>
+                <mat-card-title>Bildirim İçeriği</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                <div class="form-grid">
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Başlık *</mat-label>
+                        <input matInput [(ngModel)]="title" placeholder="Bildirim başlığı" maxlength="100">
+                        <mat-hint>{{ title.length }}/100</mat-hint>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Mesaj *</mat-label>
+                        <textarea matInput [(ngModel)]="message" placeholder="Bildirim mesajı" rows="4"
+                            maxlength="500"></textarea>
+                        <mat-hint>{{ message.length }}/500</mat-hint>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Öncelik</mat-label>
+                        <mat-select [(ngModel)]="priority">
+                            @for (p of priorities; track p.value) {
+                            <mat-option [value]="p.value">
+                                <mat-icon [style.color]="p.color">{{ p.icon }}</mat-icon>
+                                {{ p.label }}
+                            </mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Tıklanınca Git (URL)</mat-label>
+                        <input matInput [(ngModel)]="actionUrl" placeholder="/dashboard">
+                        <mat-hint>Opsiyonel - bildirime tıklanınca gidilecek sayfa</mat-hint>
+                    </mat-form-field>
+                </div>
+
+                <div class="target-section">
+                    <h3>Hedef Kitle</h3>
+                    <mat-radio-group [(ngModel)]="targetType" class="target-radio-group">
+                        <mat-radio-button value="All">
+                            <mat-icon>groups</mat-icon>
+                            Tüm Kullanıcılar
+                        </mat-radio-button>
+                        <mat-radio-button value="Role">
+                            <mat-icon>badge</mat-icon>
+                            Belirli Rol
+                        </mat-radio-button>
+                    </mat-radio-group>
+
+                    @if (targetType === 'Role') {
+                    <mat-form-field appearance="outline" class="role-select">
+                        <mat-label>Rol Seçin *</mat-label>
+                        <mat-select [(ngModel)]="targetRole">
+                            @for (role of roles; track role.value) {
+                            <mat-option [value]="role.value">{{ role.label }}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+                    }
+                </div>
+
+                <div class="email-section">
+                    <mat-checkbox [(ngModel)]="sendEmail">
+                        <mat-icon>email</mat-icon>
+                        Email bildirimi de gönder
+                    </mat-checkbox>
+                    <p class="email-hint">Email adresi olan kullanıcılara ayrıca email gönderilir</p>
+                </div>
+            </mat-card-content>
+
+            <mat-card-actions align="end">
+                <button mat-button (click)="resetForm()">
+                    <mat-icon>refresh</mat-icon>
+                    Sıfırla
+                </button>
+                <button mat-raised-button color="primary" (click)="sendNotification()"
+                    [disabled]="!isValid || sending()">
+                    @if (sending()) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                    <span>Gönderiliyor...</span>
+                    } @else {
+                    <ng-container>
+                        <mat-icon>send</mat-icon>
+                        <span>Gönder</span>
+                    </ng-container>
+                    }
+                </button>
+            </mat-card-actions>
+        </mat-card>
+
+        <!-- Preview / Result -->
+        <mat-card class="preview-card">
+            <mat-card-header>
+                <mat-card-title>
+                    @if (result()) {
+                    Sonuç
+                    } @else {
+                    Önizleme
+                    }
+                </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                @if (result(); as res) {
+                <div class="result-content" [class.success]="res.success" [class.warning]="!res.success">
+                    <div class="result-icon">
+                        <mat-icon>{{ res.success ? 'check_circle' : 'warning' }}</mat-icon>
+                    </div>
+                    <div class="result-stats">
+                        <div class="stat">
+                            <span class="value">{{ res.totalSent }}</span>
+                            <span class="label">Bildirim Gönderildi</span>
+                        </div>
+                        @if (sendEmail) {
+                        <div class="stat">
+                            <span class="value">{{ res.emailsSent }}</span>
+                            <span class="label">Email Gönderildi</span>
+                        </div>
+                        }
+                    </div>
+                    @if (res.errors.length > 0) {
+                    <div class="errors">
+                        <h4>Hatalar:</h4>
+                        @for (error of res.errors; track error) {
+                        <p class="error-item">{{ error }}</p>
+                        }
+                    </div>
+                    }
+                </div>
+                } @else {
+                <div class="preview-content">
+                    <div class="preview-notification">
+                        <div class="notification-header">
+                            <mat-icon>{{ priorities[priority - 1]?.icon || 'notifications' }}</mat-icon>
+                            <span class="title">{{ title || 'Bildirim başlığı' }}</span>
+                        </div>
+                        <p class="message">{{ message || 'Bildirim mesajı buraya gelecek...' }}</p>
+                        <div class="preview-meta">
+                            <span class="target">
+                                <mat-icon>{{ targetType === 'All' ? 'groups' : 'badge' }}</mat-icon>
+                                {{ targetType === 'All' ? 'Tüm Kullanıcılar' : (targetRole || 'Rol seçilmedi') }}
+                            </span>
+                            @if (sendEmail) {
+                            <span class="email-badge">
+                                <mat-icon>email</mat-icon>
+                                +Email
+                            </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+                }
+            </mat-card-content>
+        </mat-card>
+    </div>
+</div>

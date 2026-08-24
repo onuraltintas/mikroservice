@@ -1,0 +1,198 @@
+<!-- ============================================================
+     STUDENT SHELL — Sprint 1
+     Pure Tailwind layout, zero Angular Material components.
+     ============================================================ -->
+
+<!-- Exercise player: full-screen, no chrome -->
+@if (!showHeader()) {
+  <router-outlet />
+} @else {
+  <div class="sp-shell">
+
+    <!-- ══════════════════════════════════════════════════
+         MOBILE OVERLAY
+         ══════════════════════════════════════════════════ -->
+    @if (sidebarOpen()) {
+      <div
+        class="sp-overlay"
+        (click)="toggleSidebar()"
+        aria-hidden="true">
+      </div>
+    }
+
+    <!-- ══════════════════════════════════════════════════
+         SIDEBAR
+         ══════════════════════════════════════════════════ -->
+    <aside
+      class="sp-sidebar"
+      [class.sp-sidebar--open]="sidebarOpen()"
+      aria-label="Ana navigasyon">
+
+      <!-- Brand -->
+      <div class="sp-sidebar__brand">
+        <div class="sp-sidebar__logo">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="28" height="28" rx="8" fill="#818cf8" fill-opacity="0.2"/>
+            <path d="M7 9h14M7 14h10M7 19h12" stroke="#818cf8" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="sp-sidebar__brand-text">
+          <span class="sp-sidebar__brand-name">HızlıOku</span>
+          @if (isTeacherPreview()) {
+            <span class="sp-sidebar__brand-sub">Önizleme</span>
+          } @else {
+            <span class="sp-sidebar__brand-sub">Öğrenci Paneli</span>
+          }
+        </div>
+      </div>
+
+      <!-- Nav Items -->
+      <nav class="sp-sidebar__nav" role="navigation">
+        @for (item of menuItems(); track item.route) {
+          <a
+            [routerLink]="item.route"
+            class="sp-nav-item"
+            [class.sp-nav-item--active]="isActive(item.route)"
+            (click)="sidebarOpen.set(false)"
+            [attr.aria-current]="isActive(item.route) ? 'page' : null">
+
+            <!-- Active indicator bar -->
+            @if (isActive(item.route)) {
+              <span class="sp-nav-item__bar" aria-hidden="true"></span>
+            }
+
+            <!-- Icon -->
+            <span class="sp-nav-item__icon material-icons" aria-hidden="true">
+              {{ item.icon }}
+            </span>
+
+            <!-- Label -->
+            <span class="sp-nav-item__label">{{ item.label }}</span>
+
+            <!-- Badge -->
+            @if (item.badge) {
+              <span class="sp-nav-item__badge">{{ item.badge }}</span>
+            }
+          </a>
+        }
+      </nav>
+
+      <!-- Sidebar footer — user info -->
+      <div class="sp-sidebar__footer">
+        <div class="sp-sidebar__divider"></div>
+        <div class="sp-sidebar__user">
+          <div class="sp-avatar sp-avatar--sm" aria-hidden="true">{{ avatarLetters() }}</div>
+          <div class="sp-sidebar__user-info">
+            <span class="sp-sidebar__user-name">
+              {{ user()?.firstName }} {{ user()?.lastName }}
+            </span>
+            <span class="sp-sidebar__user-email">{{ user()?.email }}</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ══════════════════════════════════════════════════
+         MAIN AREA
+         ══════════════════════════════════════════════════ -->
+    <div class="sp-main">
+
+      <!-- Top Header -->
+      <header class="sp-header" role="banner">
+        <!-- Hamburger (mobile) -->
+        <button
+          class="sp-hamburger"
+          (click)="toggleSidebar()"
+          [attr.aria-expanded]="sidebarOpen()"
+          aria-label="Menüyü aç/kapat">
+          <span class="material-icons">{{ sidebarOpen() ? 'close' : 'menu' }}</span>
+        </button>
+
+        <!-- Breadcrumb / Page title area — kept empty, pages set their own titles -->
+        <div class="flex-1"></div>
+
+        <!-- Header actions -->
+        <div class="sp-header__actions">
+
+          <!-- Dark / Light toggle -->
+          <button
+            class="sp-header__icon-btn sp-theme-toggle"
+            (click)="themeService.toggle()"
+            [attr.aria-label]="themeService.isDark ? 'Aydınlık moda geç' : 'Karanlık moda geç'"
+            [title]="themeService.isDark ? 'Aydınlık mod' : 'Karanlık mod'">
+            <span class="material-icons">
+              {{ themeService.isDark ? 'light_mode' : 'dark_mode' }}
+            </span>
+          </button>
+
+          <!-- Notifications -->
+          <a
+            routerLink="/student/notifications"
+            class="sp-header__icon-btn"
+            aria-label="Bildirimler">
+            <span class="material-icons">notifications_none</span>
+          </a>
+
+          <!-- User menu -->
+          <div class="user-menu-container sp-header__user-menu">
+            <button
+              class="sp-avatar sp-avatar--md"
+              (click)="toggleUserMenu()"
+              [attr.aria-expanded]="userMenuOpen()"
+              aria-label="Kullanıcı menüsü">
+              {{ avatarLetters() }}
+            </button>
+
+            <!-- Dropdown -->
+            @if (userMenuOpen()) {
+              <div
+                class="sp-dropdown"
+                role="menu"
+                aria-label="Kullanıcı seçenekleri">
+
+                <div class="sp-dropdown__header">
+                  <p class="sp-dropdown__name">{{ user()?.firstName }} {{ user()?.lastName }}</p>
+                  <p class="sp-dropdown__email">{{ user()?.email }}</p>
+                </div>
+
+                <div class="sp-dropdown__divider"></div>
+
+                <a
+                  routerLink="/student/profile"
+                  class="sp-dropdown__item"
+                  role="menuitem"
+                  (click)="closeUserMenu()">
+                  <span class="material-icons sp-dropdown__item-icon">person_outline</span>
+                  Profilim
+                </a>
+                <a
+                  routerLink="/student/settings"
+                  class="sp-dropdown__item"
+                  role="menuitem"
+                  (click)="closeUserMenu()">
+                  <span class="material-icons sp-dropdown__item-icon">settings</span>
+                  Ayarlar
+                </a>
+
+                <div class="sp-dropdown__divider"></div>
+
+                <button
+                  class="sp-dropdown__item sp-dropdown__item--danger"
+                  role="menuitem"
+                  (click)="logout()">
+                  <span class="material-icons sp-dropdown__item-icon">logout</span>
+                  Çıkış Yap
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      </header>
+
+      <!-- Page content -->
+      <main class="sp-content" id="main-content" tabindex="-1">
+        <router-outlet />
+      </main>
+    </div>
+  </div>
+}

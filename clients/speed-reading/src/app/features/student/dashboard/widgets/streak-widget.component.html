@@ -1,0 +1,67 @@
+<!-- Streak Widget — Redesign -->
+<div class="sw-widget">
+
+  <!-- Header -->
+  <div class="sw-widget__header">
+    <div class="sw-icon-wrap">
+      <span class="material-icons sw-icon">local_fire_department</span>
+    </div>
+    <div class="sw-header-text">
+      <h3 class="sw-widget__title">Günlük Seri</h3>
+      <p class="sw-widget__sub">İstikrarını koru!</p>
+    </div>
+  </div>
+
+  <!-- Ana streak sayısı + ateş ikonları -->
+  <div class="sw-main">
+    <div class="sw-streak-value">
+      <span class="sw-streak-num" [class.sw-streak-num--active]="currentStreak() > 0"
+        [appCountUp]="currentStreak()" [cuDuration]="1200">
+      </span>
+      <span class="sw-streak-label">GÜN</span>
+    </div>
+    <div class="sw-fires" aria-hidden="true">
+      @for (i of getFireIcons(); track i) {
+        <span class="material-icons sw-fire sw-fire--lit">local_fire_department</span>
+      }
+      @for (i of getRemainingFireIcons(); track i) {
+        <span class="material-icons sw-fire sw-fire--dim">local_fire_department</span>
+      }
+    </div>
+  </div>
+
+  <!-- Son 7 gün aktivite grid'i -->
+  <div class="sw-week" aria-label="Son 7 günlük aktivite">
+    @for (day of getLast7Days(); track day.label) {
+      <div class="sw-week__day">
+        <div class="sw-week__dot"
+          [class.sw-week__dot--active]="day.active"
+          [class.sw-week__dot--today]="day.isToday">
+        </div>
+        <span class="sw-week__label">{{ day.label }}</span>
+      </div>
+    }
+  </div>
+
+  <!-- Motivasyon mesajı -->
+  <p class="sw-motivation">{{ getMotivationMessage() }}</p>
+
+  <!-- İstatistikler -->
+  <div class="sw-stats">
+    <div class="sw-stat">
+      <span class="material-icons sw-stat__icon">emoji_events</span>
+      <div class="sw-stat__info">
+        <span class="sw-stat__label">Rekor</span>
+        <span class="sw-stat__value"><span [appCountUp]="longestStreak()"></span> gün</span>
+      </div>
+    </div>
+    <div class="sw-stat">
+      <span class="material-icons sw-stat__icon sw-stat__icon--freeze">ac_unit</span>
+      <div class="sw-stat__info">
+        <span class="sw-stat__label">Dondurma</span>
+        <span class="sw-stat__value">{{ streakFreezeCount() }} hak</span>
+      </div>
+    </div>
+  </div>
+
+</div>

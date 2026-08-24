@@ -1,0 +1,57 @@
+<footer class="footer">
+    <div class="footer-content">
+        <div class="container">
+            <div class="footer-grid">
+                <!-- Column 1: Logo & Social -->
+                <div class="footer-column">
+                    <div class="logo">
+                        <mat-icon>menu_book</mat-icon>
+                        <span>{{ logoText }}</span>
+                    </div>
+                    <p class="tagline">{{ tagline }}</p>
+                    <div class="social-links">
+                        <a *ngFor="let social of socialLinks" [href]="social.url" target="_blank" rel="noopener"
+                            class="social-link">
+                            <i [class]="'fab fa-' + social.icon"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Column 2: Product -->
+                <div class="footer-column">
+                    <h4>Ürün</h4>
+                    <ul>
+                        <li *ngFor="let link of productLinks">
+                            <a [routerLink]="link.route" [fragment]="link.fragment">{{ link.label }}</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Column 3: Support -->
+                <div class="footer-column">
+                    <h4>Destek</h4>
+                    <ul>
+                        <li *ngFor="let link of supportLinks">
+                            <a [routerLink]="link.route" [fragment]="link.fragment">{{ link.label }}</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Column 4: Legal -->
+                <div class="footer-column">
+                    <h4>Yasal</h4>
+                    <ul>
+                        <li *ngFor="let link of legalLinks">
+                            <a [routerLink]="link.route" [fragment]="link.fragment">{{ link.label }}</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Bar -->
+            <div class="footer-bottom">
+                <p>&copy; {{ currentYear }} {{ copyrightText }}</p>
+            </div>
+        </div>
+    </div>
+</footer>

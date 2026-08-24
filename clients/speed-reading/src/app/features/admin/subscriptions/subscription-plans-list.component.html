@@ -1,0 +1,150 @@
+<div class="plans-wrapper">
+  <div class="section-header">
+    <div>
+      <h2>Abonelik Planları</h2>
+      <p class="section-subtitle">Sistemdeki tüm abonelik planlarını yönetin</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="openDialog()">
+      <mat-icon>add</mat-icon>
+      Yeni Plan
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Planlar yükleniyor...</p>
+  </div>
+
+  <!-- Plans Table -->
+  <mat-card class="table-card" *ngIf="!loading()">
+    <div class="table-responsive">
+      <table mat-table [dataSource]="plans" *ngIf="!loading() && plans.length > 0" class="plans-table">
+
+        <!-- Name Column -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Plan Adı</th>
+          <td mat-cell *matCellDef="let plan">
+            <div class="plan-info">
+              <span class="plan-name">{{ plan.name }}</span>
+              <span class="plan-desc">{{ plan.description }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Slug Column -->
+        <ng-container matColumnDef="slug">
+          <th mat-header-cell *matHeaderCellDef>Slug</th>
+          <td mat-cell *matCellDef="let plan">
+            <code class="slug-code">{{ plan.slug }}</code>
+          </td>
+        </ng-container>
+
+        <!-- Product Column -->
+        <ng-container matColumnDef="product">
+          <th mat-header-cell *matHeaderCellDef>Platform</th>
+          <td mat-cell *matCellDef="let plan">
+            <div class="product-cell">
+              <mat-icon class="product-icon" [class]="getProductClass(plan.productSlug)">
+                {{ getProductIcon(plan.productSlug) }}
+              </mat-icon>
+              <div class="product-info">
+                <span class="product-name">{{ plan.productName || plan.productSlug }}</span>
+                <span *ngIf="plan.includedProductSlugs?.length > 0" class="product-bundle-hint">
+                  Bundle: {{ plan.includedProductSlugs.join(', ') }}
+                </span>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Price Column -->
+        <ng-container matColumnDef="price">
+          <th mat-header-cell *matHeaderCellDef>Fiyat</th>
+          <td mat-cell *matCellDef="let plan">
+            <span class="price-text">{{ plan.price | currency:'TRY':'symbol':'1.0-2':'tr' }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Billing Period Column -->
+        <ng-container matColumnDef="billingPeriod">
+          <th mat-header-cell *matHeaderCellDef>Dönem</th>
+          <td mat-cell *matCellDef="let plan">
+            <span class="period-badge">{{ getBillingPeriodLabel(plan.billingPeriod) }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Duration Days Column -->
+        <ng-container matColumnDef="durationDays">
+          <th mat-header-cell *matHeaderCellDef>Süre (Gün)</th>
+          <td mat-cell *matCellDef="let plan">
+            <span class="duration-text">{{ plan.durationDays != null ? plan.durationDays : '∞' }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Is Active Column -->
+        <ng-container matColumnDef="isActive">
+          <th mat-header-cell *matHeaderCellDef>Aktif</th>
+          <td mat-cell *matCellDef="let plan">
+            <mat-slide-toggle
+              [checked]="plan.isActive"
+              (change)="toggleActive(plan)"
+              color="primary">
+            </mat-slide-toggle>
+          </td>
+        </ng-container>
+
+        <!-- Is Public Column -->
+        <ng-container matColumnDef="isPublic">
+          <th mat-header-cell *matHeaderCellDef>Herkese Açık</th>
+          <td mat-cell *matCellDef="let plan">
+            <span class="status-badge" [class.active]="plan.isPublic" [class.inactive]="!plan.isPublic">
+              <span class="status-dot"></span>
+              {{ plan.isPublic ? 'Evet' : 'Hayır' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Sort Order Column -->
+        <ng-container matColumnDef="sortOrder">
+          <th mat-header-cell *matHeaderCellDef>Sıra</th>
+          <td mat-cell *matCellDef="let plan">
+            <span class="sort-order">{{ plan.sortOrder }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let plan">
+            <div class="actions-wrapper">
+              <button mat-icon-button color="primary" (click)="openDialog(plan)" matTooltip="Düzenle">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="deactivatePlan(plan)" matTooltip="Devre Dışı Bırak">
+                <mat-icon>block</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="plan-row"></tr>
+      </table>
+
+      <!-- Empty State -->
+      <div *ngIf="!loading() && plans.length === 0" class="no-data">
+        <div class="no-data-content">
+          <div class="icon-circle">
+            <mat-icon>workspace_premium</mat-icon>
+          </div>
+          <h3>Plan Bulunamadı</h3>
+          <p>Henüz abonelik planı oluşturulmamış.</p>
+          <button mat-stroked-button color="primary" (click)="openDialog()">
+            İlk Planı Oluştur
+          </button>
+        </div>
+      </div>
+    </div>
+  </mat-card>
+</div>

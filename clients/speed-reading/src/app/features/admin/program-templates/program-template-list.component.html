@@ -1,0 +1,226 @@
+<div class="program-templates-container">
+    <!-- Header -->
+    <div class="header-section">
+        <div class="title-area">
+            <h1>
+                <mat-icon class="title-icon">settings_applications</mat-icon>
+                Egzersiz Programı Şablonları
+            </h1>
+            <p class="subtitle">Yaş gruplarına özel egzersiz programlarını yönetin</p>
+        </div>
+
+        <button mat-raised-button color="primary" (click)="createTemplate()">
+            <mat-icon>add</mat-icon>
+            Yeni Şablon Oluştur
+        </button>
+    </div>
+
+    <!-- Filters -->
+    <mat-card class="filter-card">
+        <div class="filter-container">
+            <mat-form-field appearance="outline" class="search-field">
+                <mat-label>Ara</mat-label>
+                <input matInput [(ngModel)]="searchText" (keyup)="applyFilters()" placeholder="Şablon adı ara...">
+                <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Yaş Grubu</mat-label>
+                <mat-select [(ngModel)]="selectedAgeGroupId" (selectionChange)="applyFilters()">
+                    <mat-option [value]="null">Tümü</mat-option>
+                    <mat-option *ngFor="let group of ageGroups" [value]="group.id">
+                        {{ getAgeGroupLabel(group) }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Zorluk Seviyesi</mat-label>
+                <mat-select [(ngModel)]="selectedDifficulty" (selectionChange)="applyFilters()">
+                    <mat-option [value]="null">Tümü</mat-option>
+                    <mat-option [value]="1">Seviye 1 (Başlangıç)</mat-option>
+                    <mat-option [value]="2">Seviye 2</mat-option>
+                    <mat-option [value]="3">Seviye 3</mat-option>
+                    <mat-option [value]="4">Seviye 4</mat-option>
+                    <mat-option [value]="5">Seviye 5 (Zor)</mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <button mat-button color="warn" (click)="clearFilters()"
+                *ngIf="searchText || selectedAgeGroupId || selectedDifficulty">
+                <mat-icon>clear</mat-icon>
+                Filtreleri Temizle
+            </button>
+        </div>
+    </mat-card>
+
+    <!-- Loading State -->
+    <div *ngIf="loading()" class="loading-state">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Şablonlar yükleniyor...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error()" class="error-state">
+        <mat-icon color="warn">error_outline</mat-icon>
+        <p>{{ error() }}</p>
+        <button mat-raised-button color="primary" (click)="loadTemplates()">
+            <mat-icon>refresh</mat-icon>
+            Tekrar Dene
+        </button>
+    </div>
+
+    <!-- Templates Table -->
+    <mat-card *ngIf="!loading() && !error()">
+        <table mat-table [dataSource]="dataSource" matSort class="templates-table">
+
+            <!-- Name Column -->
+            <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Program Adı</th>
+                <td mat-cell *matCellDef="let template">
+                    <div class="template-name">
+                        <strong>{{ template.name }}</strong>
+                        <small>{{ template.description }}</small>
+                    </div>
+                </td>
+            </ng-container>
+
+            <!-- Age Group Column -->
+            <ng-container matColumnDef="ageGroup">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Yaş Grubu</th>
+                <td mat-cell *matCellDef="let template">
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <mat-chip [highlighted]="true">
+                            {{ getAgeGroupName(template) }}
+                        </mat-chip>
+                        <mat-chip *ngIf="template.programType === 1" color="accent">
+                            <mat-icon
+                                style="font-size: 16px; width: 16px; height: 16px; margin-right: 4px;">school</mat-icon>
+                            {{ template.examType }}
+                        </mat-chip>
+                        <mat-chip *ngIf="template.isAssessment" color="warn"
+                            matTooltip="Bu bir seviye tespit sınavı şablonudur">
+                            <mat-icon
+                                style="font-size: 16px; width: 16px; height: 16px; margin-right: 4px;">assignment_turned_in</mat-icon>
+                            Seviye Tespit
+                        </mat-chip>
+                    </div>
+                </td>
+            </ng-container>
+
+            <!-- Score Range Column -->
+            <ng-container matColumnDef="scoreRange">
+                <th mat-header-cell *matHeaderCellDef
+                    matTooltip="Seviye tespit sınavında bu puan aralığında olan ve ilgili yaş grubundaki öğrenciler otomatik olarak bu programa atanır">
+                    Puan Aralığı
+                    <mat-icon
+                        style="font-size: 16px; height: 16px; width: 16px; vertical-align: middle; opacity: 0.7;">help_outline</mat-icon>
+                </th>
+                <td mat-cell *matCellDef="let template">
+                    <div class="score-range">
+                        <mat-icon class="small-icon">analytics</mat-icon>
+                        {{ template.minAssessmentScore }} - {{ template.maxAssessmentScore }}
+                    </div>
+                </td>
+            </ng-container>
+
+            <!-- Difficulty Column -->
+            <ng-container matColumnDef="difficulty">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Zorluk</th>
+                <td mat-cell *matCellDef="let template">
+                    <div class="difficulty-info">
+                        <span class="difficulty-badge" [class.level-1]="template.initialDifficultyLevel === 1"
+                            [class.level-2]="template.initialDifficultyLevel === 2"
+                            [class.level-3]="template.initialDifficultyLevel === 3">
+                            Başlangıç: {{ template.initialDifficultyLevel }}
+                        </span>
+                        <span class="small-text">Max: {{ template.maxDifficultyLevel }}</span>
+                    </div>
+                </td>
+            </ng-container>
+
+            <!-- Student Count Column -->
+            <ng-container matColumnDef="studentCount">
+                <th mat-header-cell *matHeaderCellDef>Öğrenci Sayısı</th>
+                <td mat-cell *matCellDef="let template">
+                    <div class="student-count">
+                        <mat-icon class="small-icon">people</mat-icon>
+                        {{ getStudentCount(template.id) !== null ? getStudentCount(template.id) : '...' }}
+                    </div>
+                </td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Durum</th>
+                <td mat-cell *matCellDef="let template">
+                    <mat-slide-toggle [checked]="template.isActive" (change)="toggleStatus(template, $event.checked)"
+                        [disabled]="updatingStatus.has(template.id)">
+                        {{ template.isActive ? 'Aktif' : 'Pasif' }}
+                    </mat-slide-toggle>
+                </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>İşlemler</th>
+                <td mat-cell *matCellDef="let template">
+                    <div class="action-buttons">
+                        <button mat-icon-button color="primary" (click)="viewTemplate(template)" matTooltip="Görüntüle">
+                            <mat-icon>visibility</mat-icon>
+                        </button>
+                        <button mat-icon-button color="accent" (click)="editTemplate(template)" matTooltip="Düzenle">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button style="color: #607d8b;" (click)="cloneTemplate(template)"
+                            matTooltip="Kopyala">
+                            <mat-icon>content_copy</mat-icon>
+                        </button>
+                        <span
+                            [matTooltip]="template.isActive ? 'Aktif şablon silinemez. Önce pasif konuma getirin.' : 'Sil'">
+                            <button mat-icon-button color="warn" (click)="deleteTemplate(template)"
+                                [disabled]="template.isActive">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </span>
+                    </div>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <!-- Paginator -->
+        <mat-paginator [pageSizeOptions]="[5, 10, 20, 50]" [pageSize]="10" showFirstLastButtons
+            aria-label="Şablonları listele">
+        </mat-paginator>
+
+        <!-- Empty State -->
+        <div *ngIf="templates().length === 0" class="empty-state">
+            <mat-icon>inbox</mat-icon>
+            <h3>Henüz şablon yok</h3>
+            <p>Yeni bir egzersiz programı şablonu oluşturun</p>
+            <button mat-raised-button color="primary" (click)="createTemplate()">
+                <mat-icon>add</mat-icon>
+                Şablon Oluştur
+            </button>
+        </div>
+    </mat-card>
+
+    <!-- Info Cards -->
+    <div class="info-section" *ngIf="templates().length > 0">
+        <mat-card class="info-card">
+            <mat-icon>info</mat-icon>
+            <div class="info-content">
+                <h4>Şablon Nasıl Çalışır?</h4>
+                <ul>
+                    <li>Her şablon bir yaş grubuna ve puan aralığına atanır</li>
+                    <li>Öğrenciler seviye tespitinde otomatik olarak uygun şablona atanır</li>
+                    <li>Haftalık pattern'ler egzersiz türü, sayı ve zorluk seviyesini belirler</li>
+                    <li>Sistem her gün bu pattern'e göre random egzersizler seçer</li>
+                </ul>
+            </div>
+        </mat-card>
+    </div>
+</div>

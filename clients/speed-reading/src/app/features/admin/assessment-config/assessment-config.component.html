@@ -1,0 +1,177 @@
+<div class="assessment-config-container">
+    <mat-card class="header-card">
+        <mat-card-header>
+            <mat-icon mat-card-avatar>settings</mat-icon>
+            <mat-card-title>Seviye Tespit Ayarları</mat-card-title>
+            <mat-card-subtitle>Yaş gruplarına göre assessment egzersizlerini yönetin</mat-card-subtitle>
+        </mat-card-header>
+    </mat-card>
+
+    <mat-card class="config-card">
+        <mat-card-content>
+            <div class="age-group-selector">
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Yaş Grubu Seç</mat-label>
+                    <mat-select [(ngModel)]="selectedAgeGroupId" (selectionChange)="onAgeGroupChange()">
+                        @for (ageGroup of ageGroups(); track ageGroup.id) {
+                        <mat-option [value]="ageGroup.id">
+                            {{ ageGroup.displayName }} ({{ ageGroup.minAge }}@if (ageGroup.maxAge) {-{{ ageGroup.maxAge
+                            }}} yaş)
+                        </mat-option>
+                        }
+                    </mat-select>
+                    <mat-hint>Assessment yapılandırmak istediğiniz yaş grubunu seçin</mat-hint>
+                </mat-form-field>
+            </div>
+
+            @if (selectedAgeGroupId() && !loading()) {
+            <div class="template-form">
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Template Adı</mat-label>
+                    <input matInput [(ngModel)]="templateName" placeholder="Örn: Temel Seviye Tespit - Child">
+                    <mat-hint>Bu template için açıklayıcı bir isim girin</mat-hint>
+                </mat-form-field>
+
+                <div class="exercise-selection">
+                    <div class="filters-section">
+                        <h4>Egzersizleri Filtrele</h4>
+                        <div class="filters-row">
+                            <mat-form-field appearance="outline">
+                                <mat-label>Egzersiz Türü</mat-label>
+                                <mat-select [(ngModel)]="selectedExerciseType" (selectionChange)="onFilterChange()">
+                                    <mat-option value="">Tümü</mat-option>
+                                    @for (type of exerciseTypes(); track type.id) {
+                                    <mat-option [value]="type.id">
+                                        {{ type.displayName }}
+                                    </mat-option>
+                                    }
+                                </mat-select>
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline">
+                                <mat-label>Zorluk Seviyesi</mat-label>
+                                <mat-select [(ngModel)]="selectedDifficultyLevel" (selectionChange)="onFilterChange()">
+                                    <mat-option [value]="null">Tümü</mat-option>
+                                    @for (level of difficultyLevels; track level) {
+                                    <mat-option [value]="level">Level {{ level }}</mat-option>
+                                    }
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+                    </div>
+
+                    <div class="section-header">
+                        <h3>Mevcut Egzersizler ({{ selectedExercises().length }})</h3>
+                        <mat-form-field appearance="outline" class="exercise-selector">
+                            <mat-label>Egzersiz Ekle</mat-label>
+                            <mat-select #exerciseSelect
+                                (selectionChange)="addExercise(exerciseSelect.value); exerciseSelect.value = ''">
+                                @for (exercise of availableExercises(); track exercise.id) {
+                                <mat-option [value]="exercise.id">
+                                    {{ exercise.title }} ({{ exercise.exerciseTypeDisplayName }}) - Lvl {{ exercise.difficultyLevel }}
+                                </mat-option>
+                                }
+                            </mat-select>
+                            <mat-hint>
+                                @if (selectedDifficultyLevel() === 2) {
+                                Level 2 egzersizler (Assessment standart seviyesi)
+                                } @else if (selectedDifficultyLevel()) {
+                                Level {{ selectedDifficultyLevel() }} egzersizler listeleniyor
+                                } @else {
+                                Tüm zorluk seviyeleri listeleniyor
+                                }
+                            </mat-hint>
+                        </mat-form-field>
+                    </div>
+
+                    @if (selectedExercises().length > 0) {
+                    <table mat-table [dataSource]="selectedExercises()" class="exercises-table">
+                        <!-- Order Column -->
+                        <ng-container matColumnDef="order">
+                            <th mat-header-cell *matHeaderCellDef>Sıra</th>
+                            <td mat-cell *matCellDef="let element; let i = index">
+                                <mat-chip>{{ i + 1 }}</mat-chip>
+                            </td>
+                        </ng-container>
+
+                        <!-- Title Column -->
+                        <ng-container matColumnDef="title">
+                            <th mat-header-cell *matHeaderCellDef>Egzersiz Adı</th>
+                            <td mat-cell *matCellDef="let element">
+                                <div class="exercise-info">
+                                    <strong>{{ element.customTitle || element.originalTitle }}</strong>
+                                    @if (element.customTitle && element.customTitle !== element.originalTitle) {
+                                    <small>(Özel Başlık)</small>
+                                    }
+                                </div>
+                            </td>
+                        </ng-container>
+
+                        <!-- Type Column -->
+                        <ng-container matColumnDef="type">
+                            <th mat-header-cell *matHeaderCellDef>Tür</th>
+                            <td mat-cell *matCellDef="let element">
+                                <mat-chip color="primary">{{ element.exerciseType }}</mat-chip>
+                            </td>
+                        </ng-container>
+
+                        <!-- Difficulty Column -->
+                        <ng-container matColumnDef="difficulty">
+                            <th mat-header-cell *matHeaderCellDef>Zorluk</th>
+                            <td mat-cell *matCellDef="let element">
+                                Level {{ element.difficultyLevel }}
+                            </td>
+                        </ng-container>
+
+                        <!-- Actions Column -->
+                        <ng-container matColumnDef="actions">
+                            <th mat-header-cell *matHeaderCellDef>İşlemler</th>
+                            <td mat-cell *matCellDef="let element; let i = index">
+                                <button mat-icon-button (click)="moveUp(i)" [disabled]="i === 0"
+                                    matTooltip="Yukarı Taşı">
+                                    <mat-icon>arrow_upward</mat-icon>
+                                </button>
+                                <button mat-icon-button (click)="moveDown(i)"
+                                    [disabled]="i === selectedExercises().length - 1" matTooltip="Aşağı Taşı">
+                                    <mat-icon>arrow_downward</mat-icon>
+                                </button>
+                                <button mat-icon-button color="warn" (click)="removeExercise(i)" matTooltip="Kaldır">
+                                    <mat-icon>delete</mat-icon>
+                                </button>
+                            </td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                    </table>
+                    } @else {
+                    <div class="empty-state">
+                        <mat-icon>info</mat-icon>
+                        <p>Henüz egzersiz eklenmemiş. Yukarıdaki dropdown'dan egzersiz seçin.</p>
+                    </div>
+                    }
+                </div>
+
+                <div class="actions">
+                    <button mat-raised-button (click)="cancel()">
+                        <mat-icon>cancel</mat-icon>
+                        İptal
+                    </button>
+                    <button mat-raised-button color="primary" (click)="save()"
+                        [disabled]="selectedExercises().length === 0 || !templateName()">
+                        <mat-icon>save</mat-icon>
+                        Kaydet
+                    </button>
+                </div>
+            </div>
+            }
+
+            @if (loading()) {
+            <div class="loading-state">
+                <mat-spinner diameter="50"></mat-spinner>
+                <p>Yükleniyor...</p>
+            </div>
+            }
+        </mat-card-content>
+    </mat-card>
+</div>

@@ -1,0 +1,49 @@
+<div class="faq-page">
+    <app-navbar></app-navbar>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <h1>Sıkça Sorulan Sorular</h1>
+            <p>Merak ettiğiniz tüm soruların cevapları burada</p>
+        </div>
+    </section>
+
+    <!-- Category Filter -->
+    <section class="filter-section">
+        <div class="container">
+            <div class="category-buttons">
+                <button *ngFor="let category of categories" [class.active]="selectedCategory === category"
+                    (click)="selectCategory(category)">
+                    {{ category }}
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ List -->
+    <section class="faq-list-section">
+        <div class="container">
+            <mat-accordion class="faq-accordion" multi>
+                <mat-expansion-panel *ngFor="let faq of filteredFaqs">
+                    <mat-expansion-panel-header>
+                        <mat-panel-title>
+                            <div class="faq-header-content">
+                                <span class="category-badge">{{ faq.category }}</span>
+                                <span class="question-text">{{ faq.question }}</span>
+                            </div>
+                        </mat-panel-title>
+                    </mat-expansion-panel-header>
+                    <p>{{ faq.answer }}</p>
+                </mat-expansion-panel>
+            </mat-accordion>
+
+            <div class="empty-state" *ngIf="filteredFaqs.length === 0">
+                <mat-icon>help_outline</mat-icon>
+                <p>Bu kategoride henüz soru bulunmuyor.</p>
+            </div>
+        </div>
+    </section>
+
+    <app-footer></app-footer>
+</div>

@@ -1,0 +1,114 @@
+h2[mat-dialog-title] {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+mat-dialog-content {
+    min-width: 500px;
+    max-height: 80vh;
+    padding: 24px;
+    position: relative;
+}
+
+.form-row {
+    display: flex;
+    gap: 16px;
+}
+
+.full-width {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.half-width {
+    flex: 1;
+    margin-bottom: 16px;
+}
+
+.profile-section {
+    margin-top: 24px;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 20px 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.87);
+}
+
+.section-title mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: rgba(0, 0, 0, 0.54);
+}
+
+.status-toggle {
+    margin-bottom: 16px;
+    padding: 12px;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 4px;
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.toggle-label mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+}
+
+mat-dialog-actions {
+    padding: 16px 24px;
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.saving-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 10;
+}
+
+.saving-overlay p {
+    margin: 0;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.6);
+}
+
+@media (max-width: 768px) {
+    mat-dialog-content {
+        min-width: unset;
+        width: 100%;
+        max-height: calc(100vh - 140px);
+    }
+
+    .form-row {
+        flex-direction: column;
+    }
+}

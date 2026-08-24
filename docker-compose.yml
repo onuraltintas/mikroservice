@@ -241,6 +241,22 @@ services:
     networks:
       - edu-network
 
+  # Standalone Speed Reading web client. Keep it behind the edge in staging and
+  # production; the profile makes the base stack opt-in for local development.
+  speed-reading-frontend:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/speed-reading-frontend:${RELEASE_TAG:-dev}
+    profiles: ["speed-reading"]
+    build:
+      context: ./clients/speed-reading
+      dockerfile: Dockerfile
+    expose:
+      - "80"
+    depends_on:
+      api-gateway:
+        condition: service_started
+    networks:
+      - edu-network
+
   # Notification Service
   notification-service:
     image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/notification-service:${RELEASE_TAG:-dev}

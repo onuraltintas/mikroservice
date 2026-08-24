@@ -1,0 +1,136 @@
+<div class="payment-page">
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <ng-container *ngIf="pageContent; else defaultHero">
+        <h1>{{ pageContent.title }}</h1>
+      </ng-container>
+      <ng-template #defaultHero>
+        <h1>Abonelik Planları</h1>
+        <p>Size en uygun planı seçin ve hızlı okuma yolculuğunuza başlayın</p>
+      </ng-template>
+    </div>
+  </section>
+
+  <main class="container">
+
+    <!-- Ödeme sistemi devre dışı -->
+    <mat-card *ngIf="paymentDisabled()" class="disabled-notice">
+      <mat-icon>schedule</mat-icon>
+      <div>
+        <h3>Ödeme Sistemi Yakında Aktif Olacak</h3>
+        <p>Şu an abonelik satın almak için lütfen bizimle iletişime geçin.</p>
+        <a mat-raised-button color="primary" routerLink="/iletisim">İletişime Geç</a>
+      </div>
+    </mat-card>
+
+    <!-- Yükleniyor -->
+    <div *ngIf="plansLoading()" class="plans-loading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <!-- Checkout formu görünürken sadece form göster -->
+    <ng-container *ngIf="checkoutFormContent && !paymentDisabled()">
+      <div class="checkout-wrapper">
+        <div class="checkout-header">
+          <h2>Ödeme</h2>
+          <p>Seçilen plan: <strong>{{ selectedPlan?.name }}</strong> — {{ formatPrice(selectedPlan!) }}</p>
+        </div>
+        <div class="checkout-form" [innerHTML]="checkoutFormContent"></div>
+        <button mat-stroked-button (click)="cancelCheckout()" class="cancel-btn">
+          <mat-icon>arrow_back</mat-icon> Geri Dön
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- Plan listesi (checkout formu yokken) -->
+    <ng-container *ngIf="!checkoutFormContent && !paymentDisabled()">
+
+      <div *ngIf="!plansLoading() && plans.length > 0" class="pricing-grid">
+        <mat-card *ngFor="let plan of plans" class="pricing-card"
+          [class.highlighted]="isPopular(plan)"
+          [class.selected]="selectedPlan?.id === plan.id"
+          (click)="selectPlan(plan)">
+
+          <div *ngIf="isPopular(plan)" class="badge">En Avantajlı</div>
+
+          <div class="card-header">
+            <h3>{{ plan.name }}</h3>
+            <p class="description">{{ plan.description }}</p>
+            <div class="price">
+              <span class="amount">{{ formatPrice(plan) }}</span>
+              <span class="period">{{ getPeriodLabel(plan) }}</span>
+            </div>
+          </div>
+
+          <ul class="features-list" *ngIf="plan.features && plan.features.length > 0">
+            <li *ngFor="let feature of plan.features">
+              <mat-icon>check</mat-icon>
+              <span>{{ feature }}</span>
+            </li>
+          </ul>
+
+          <button mat-raised-button [color]="isPopular(plan) ? 'primary' : 'accent'"
+            (click)="selectPlan(plan); $event.stopPropagation()" class="select-button">
+            {{ selectedPlan?.id === plan.id ? 'Seçildi ✓' : 'Planı Seç' }}
+          </button>
+        </mat-card>
+      </div>
+
+      <!-- Seçili plan — ödeme butonu -->
+      <mat-card *ngIf="selectedPlan" class="checkout-cta">
+        <div class="cta-content">
+          <div class="cta-info">
+            <h2>{{ selectedPlan.name }}</h2>
+            <p class="cta-price">{{ formatPrice(selectedPlan) }}<span class="cta-period">{{ getPeriodLabel(selectedPlan) }}</span></p>
+          </div>
+
+          <div class="cta-actions">
+            <!-- Hata mesajı -->
+            <p *ngIf="checkoutError()" class="error-msg">
+              <mat-icon>error_outline</mat-icon> {{ checkoutError() }}
+            </p>
+
+            <button mat-raised-button color="primary" class="pay-button"
+              [disabled]="checkoutLoading()"
+              (click)="checkout()">
+              <mat-spinner *ngIf="checkoutLoading()" diameter="20"></mat-spinner>
+              <ng-container *ngIf="!checkoutLoading()">
+                <mat-icon>lock</mat-icon>
+                Güvenli Ödeme Yap
+              </ng-container>
+            </button>
+
+            <p class="security-note">
+              <mat-icon>security</mat-icon>
+              SSL şifrelemeli güvenli ödeme · Iyzico altyapısı
+            </p>
+          </div>
+        </div>
+      </mat-card>
+
+    </ng-container>
+
+    <!-- CMS İçeriği -->
+    <div *ngIf="!loading() && pageContent" class="cms-content" [innerHTML]="safeContent"></div>
+
+    <!-- Fallback FAQ -->
+    <div *ngIf="!loading() && !pageContent" class="faq-section">
+      <h2>Sıkça Sorulan Sorular</h2>
+      <mat-card class="faq-card">
+        <h3>İptal politikanız nedir?</h3>
+        <p>İlk 7 gün içinde %100 para iadesi garantisi sunuyoruz.</p>
+      </mat-card>
+      <mat-card class="faq-card">
+        <h3>Planımı değiştirebilir miyim?</h3>
+        <p>Evet, istediğiniz zaman planınızı yükseltebilir veya düşürebilirsiniz.</p>
+      </mat-card>
+      <mat-card class="faq-card">
+        <h3>Hangi ödeme yöntemlerini kabul ediyorsunuz?</h3>
+        <p>Kredi kartı, banka kartı ve havale ile ödeme kabul ediyoruz.</p>
+      </mat-card>
+    </div>
+
+  </main>
+</div>

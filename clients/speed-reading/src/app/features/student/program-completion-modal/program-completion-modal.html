@@ -1,0 +1,89 @@
+<div class="completion-modal-overlay">
+  <div class="completion-modal">
+    <!-- Header -->
+    <div class="modal-header">
+      <h1 class="celebration-title">🎉 Tebrikler!</h1>
+      <p class="program-name">{{ data.completedProgramName }} Tamamlandı</p>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="stats-section">
+      <h2>📊 İstatistikleriniz</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-icon">✅</span>
+          <span class="stat-value">{{ data.stats.totalDays }}</span>
+          <span class="stat-label">Gün Tamamlandı</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">⭐</span>
+          <span class="stat-value">{{ data.stats.averageSuccessRate | number:'1.0-0' }}%</span>
+          <span class="stat-label">Ortalama Başarı</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">🔥</span>
+          <span class="stat-value">{{ data.stats.longestStreak }}</span>
+          <span class="stat-label">En Uzun Streak</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">🏆</span>
+          <span class="stat-value">{{ data.stats.totalExercises }}</span>
+          <span class="stat-label">Toplam Egzersiz</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recommendation Section -->
+    <div class="recommendation-section" *ngIf="data.recommendedProgram">
+      <h2>🚀 Bir Sonraki Adım</h2>
+      <div class="program-card">
+        <h3>{{ data.recommendedProgram.name }}</h3>
+        <p class="description">{{ data.recommendedProgram.description }}</p>
+
+        <div class="program-details">
+          <span class="detail-item">
+            <span class="material-icons">calendar_today</span>
+            {{ data.recommendedProgram.totalDays }} gün
+          </span>
+          <span class="detail-item">
+            <span class="material-icons">trending_up</span>
+            Zorluk: {{ data.recommendedProgram.difficultyRange }}
+          </span>
+          <span class="detail-item">
+            <span class="material-icons">school</span>
+            {{ data.recommendedProgram.programType }}
+          </span>
+        </div>
+
+        <div class="recommendation-reason">
+          <span class="material-icons">info</span>
+          <p>{{ data.recommendedProgram.recommendationReason }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Recommendation -->
+    <div class="max-level-section" *ngIf="!data.recommendedProgram">
+      <span class="material-icons trophy-icon">emoji_events</span>
+      <h2>🏆 Maksimum Seviyeye Ulaştınız!</h2>
+      <p>Tebrikler! Tüm programları tamamladınız.</p>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="sp-btn sp-btn--primary start-btn" *ngIf="data.recommendedProgram"
+        (click)="startProgram()" [disabled]="isLoading">
+        @if (!isLoading) {
+          <span class="material-icons">play_arrow</span>
+        }
+        @if (isLoading) {
+          <div class="sp-spinner" style="width:20px;height:20px;border-width:2px"></div>
+        }
+        {{ isLoading ? 'Başlatılıyor...' : 'Programa Başla' }}
+      </button>
+      <button class="sp-btn later-btn" (click)="later()" [disabled]="isLoading">
+        Daha Sonra
+      </button>
+    </div>
+  </div>
+</div>

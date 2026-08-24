@@ -1,0 +1,65 @@
+.metronome-container {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.metronome-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #3f51b5;
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.1s ease;
+    cursor: pointer;
+}
+
+.metronome-indicator:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.metronome-indicator.beat {
+    transform: scale(1.2);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.metronome-indicator mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    margin-bottom: 4px;
+}
+
+.bpm-label {
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+@media (max-width: 768px) {
+    .metronome-container {
+        top: 70px;
+        right: 10px;
+    }
+
+    .metronome-indicator {
+        width: 60px;
+        height: 60px;
+    }
+
+    .metronome-indicator mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+    }
+
+    .bpm-label {
+        font-size: 10px;
+    }
+}

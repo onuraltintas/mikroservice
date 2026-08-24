@@ -1,0 +1,107 @@
+<div class="templates-page">
+    <div class="page-header">
+        <div>
+            <h1>Rapor Şablonları</h1>
+            <p class="subtitle">Rapor şablonlarını oluşturun ve yönetin</p>
+        </div>
+        <button mat-raised-button color="primary" (click)="createTemplate()">
+            <mat-icon>add</mat-icon>
+            Yeni Şablon
+        </button>
+    </div>
+
+    <mat-card>
+        <div class="table-container">
+            <table mat-table [dataSource]="templates" class="templates-table">
+                <!-- Name Column -->
+                <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef>Şablon Adı</th>
+                    <td mat-cell *matCellDef="let template">
+                        <div class="template-info">
+                            <strong>{{ template.name }}</strong>
+                            <small *ngIf="template.description">{{ template.description }}</small>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Type Column -->
+                <ng-container matColumnDef="type">
+                    <th mat-header-cell *matHeaderCellDef>Tip</th>
+                    <td mat-cell *matCellDef="let template">
+                        <mat-chip [class]="'type-' + template.reportType">
+                            {{ formatReportType(template.reportType) }}
+                        </mat-chip>
+                    </td>
+                </ng-container>
+
+                <!-- Category Column -->
+                <ng-container matColumnDef="category">
+                    <th mat-header-cell *matHeaderCellDef>Kategori</th>
+                    <td mat-cell *matCellDef="let template">
+                        <mat-chip [class]="'category-' + template.category">
+                            {{ template.category | titlecase }}
+                        </mat-chip>
+                    </td>
+                </ng-container>
+
+                <!-- Metrics Column -->
+                <ng-container matColumnDef="metrics">
+                    <th mat-header-cell *matHeaderCellDef>Metrikler</th>
+                    <td mat-cell *matCellDef="let template">
+                        <span class="metrics-count">{{ getMetricsCount(template) }} metrik</span>
+                    </td>
+                </ng-container>
+
+                <!-- Created Column -->
+                <ng-container matColumnDef="created">
+                    <th mat-header-cell *matHeaderCellDef>Oluşturulma</th>
+                    <td mat-cell *matCellDef="let template">
+                        {{ template.createdAt | date:'dd/MM/yyyy' }}
+                    </td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef>İşlemler</th>
+                    <td mat-cell *matCellDef="let template">
+                        <button mat-icon-button [matMenuTriggerFor]="menu">
+                            <mat-icon>more_vert</mat-icon>
+                        </button>
+                        <mat-menu #menu="matMenu">
+                            <button mat-menu-item (click)="editTemplate(template)">
+                                <mat-icon>edit</mat-icon>
+                                <span>Düzenle</span>
+                            </button>
+                            <button mat-menu-item (click)="scheduleReport(template)">
+                                <mat-icon>schedule</mat-icon>
+                                <span>Zamanla</span>
+                            </button>
+                            <button mat-menu-item (click)="generateSnapshot(template)">
+                                <mat-icon>photo_camera</mat-icon>
+                                <span>Anlık Görüntü</span>
+                            </button>
+                            <button mat-menu-item (click)="deleteTemplate(template)" class="delete-action">
+                                <mat-icon>delete</mat-icon>
+                                <span>Sil</span>
+                            </button>
+                        </mat-menu>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+
+            <div *ngIf="loading()" class="loading-state">
+                <mat-icon>hourglass_empty</mat-icon>
+                <p>Şablonlar yükleniyor...</p>
+            </div>
+
+            <div *ngIf="!loading() && templates.length === 0" class="empty-state">
+                <mat-icon>description</mat-icon>
+                <h3>Henüz şablon yok</h3>
+                <p>Yeni bir rapor şablonu oluşturmak için yukarıdaki butona tıklayın</p>
+            </div>
+        </div>
+    </mat-card>
+</div>

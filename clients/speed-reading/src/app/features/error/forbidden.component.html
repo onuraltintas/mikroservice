@@ -1,0 +1,20 @@
+<div class="error-container">
+    <mat-card class="error-card">
+        <div class="error-icon">
+            <mat-icon>lock</mat-icon>
+        </div>
+        <h1>403</h1>
+        <h2>Erişim Engellendi</h2>
+        <p>Bu sayfaya erişim yetkiniz bulunmuyor. Lütfen sistem yöneticinizle iletişime geçin.</p>
+        <div class="actions">
+            <button mat-raised-button color="primary" routerLink="/">
+                <mat-icon>home</mat-icon>
+                Ana Sayfaya Dön
+            </button>
+            <button mat-button (click)="goBack()">
+                <mat-icon>arrow_back</mat-icon>
+                Geri Dön
+            </button>
+        </div>
+    </mat-card>
+</div>

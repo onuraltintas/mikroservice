@@ -135,6 +135,23 @@ services:
     networks:
       - edu-network
 
+  speed-reading-frontend:
+    profiles: !reset []
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/speed-reading-frontend:${RELEASE_TAG:?RELEASE_TAG must be set for production}
+    build:
+      context: ./clients/speed-reading
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+    expose:
+      - "80"
+    restart: unless-stopped
+    depends_on:
+      api-gateway:
+        condition: service_started
+    networks:
+      - edu-network
+
   notification-service:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/notification-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     environment:

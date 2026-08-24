@@ -1,0 +1,103 @@
+<div class="exercise-container" @fadeIn>
+  <!-- MINIMAL HEADER (40px) -->
+    <!-- MINIMAL HEADER (40px) -->
+  <header class="exercise-header" role="banner">
+    <!-- Exit Button -->
+    <button
+      mat-icon-button
+      (click)="onExit()"
+      [matTooltip]="'Çıkış (ESC)'"
+      aria-label="Egzersizden çık"
+      class="exit-button">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+
+    <!-- Exercise Info (Left side, align right towards center) -->
+    <div class="exercise-info">
+      <span class="exercise-title">{{ exerciseName }}</span>
+      <span class="exercise-subtitle" *ngIf="!isMobile && exerciseDescription">
+        {{ exerciseDescription }}
+      </span>
+    </div>
+
+    <!-- Stats (Right side, align left towards center) -->
+    <div class="exercise-stats" *ngIf="showStats">
+      <div class="stat-item timer" [class.warning]="timeRemaining && timeRemaining < 10">
+        <mat-icon>timer</mat-icon>
+        <span>{{ formatTime(timeElapsed) }}</span>
+      </div>
+      <div class="stat-item progress" *ngIf="totalSteps">
+        <mat-icon>check_circle</mat-icon>
+        <span>{{ currentStep }}/{{ totalSteps }}</span>
+      </div>
+    </div>
+
+    <!-- Fullscreen Toggle -->
+    <button
+      mat-icon-button
+      (click)="toggleFullscreen()"
+      [matTooltip]="isFullscreen ? 'Tam Ekrandan Çık (F11)' : 'Tam Ekran (F11)'"
+      aria-label="Tam ekran aç/kapat"
+      class="fullscreen-button">
+      <mat-icon>{{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
+    </button>
+  </header>
+
+  <!-- PROGRESS BAR (2px - subtle) -->
+  <mat-progress-bar
+    *ngIf="totalSteps"
+    mode="determinate"
+    [value]="progressPercentage"
+    class="exercise-progress-bar"
+    role="progressbar"
+    [attr.aria-valuenow]="progressPercentage"
+    [attr.aria-valuemin]="0"
+    [attr.aria-valuemax]="100"
+    [attr.aria-label]="'İlerleme: yüzde ' + progressPercentage">
+  </mat-progress-bar>
+
+  <!-- EXERCISE CONTENT (full height - 42px) -->
+  <main class="exercise-content" role="main">
+    <ng-content></ng-content>
+  </main>
+
+  <!-- FLOATING CONTROLS (opsiyonel - auto-hide) -->
+  <div class="floating-controls" *ngIf="showControls && !isMobile" [@autoHide]="controlsVisible">
+    <button
+      mat-mini-fab
+      (click)="onPauseToggle()"
+      [matTooltip]="isPaused ? 'Devam Et (SPACE)' : 'Duraklat (SPACE)'"
+      color="primary"
+      class="control-button pause-button">
+      <mat-icon>{{ isPaused ? 'play_arrow' : 'pause' }}</mat-icon>
+    </button>
+
+    <button
+      mat-mini-fab
+      (click)="onStop()"
+      matTooltip="Egzersizi Bitir (Kaydetme)"
+      color="warn"
+      class="control-button stop-button">
+      <mat-icon>stop</mat-icon>
+    </button>
+
+    <button
+      *ngIf="hasSettings"
+      mat-mini-fab
+      (click)="onSettingsClick()"
+      matTooltip="Ayarlar"
+      color="accent"
+      class="control-button settings-button">
+      <mat-icon>settings</mat-icon>
+    </button>
+  </div>
+
+  <!-- KEYBOARD SHORTCUTS HINT (ilk kullanımda) -->
+  <div class="shortcut-hint" *ngIf="showShortcutHint && !isMobile" @fadeOut>
+    <mat-icon>keyboard</mat-icon>
+    <span>💡 İpucu: <kbd>ESC</kbd> ile çık, <kbd>SPACE</kbd> ile duraklat</span>
+    <button mat-icon-button (click)="hideShortcutHint()" aria-label="Kapat">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+</div>

@@ -101,6 +101,22 @@ services:
     networks:
       - edu-network
 
+  speed-reading-frontend:
+    profiles: !reset []
+    build:
+      context: ./clients/speed-reading
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+    expose:
+      - "80"
+    restart: unless-stopped
+    depends_on:
+      api-gateway:
+        condition: service_started
+    networks:
+      - edu-network
+
   notification-service:
     environment:
       ASPNETCORE_ENVIRONMENT: Staging

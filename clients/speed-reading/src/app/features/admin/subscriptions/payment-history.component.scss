@@ -1,0 +1,174 @@
+.payments-wrapper {
+  background-color: #f8f9fa;
+  min-height: 20rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+
+  h2 { margin: 0; font-size: 1.25rem; font-weight: 600; color: #1a1a1a; }
+  .section-subtitle { margin: 0.25rem 0 0; color: #666; font-size: 0.875rem; }
+}
+
+.filter-card {
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  border: none;
+  box-shadow: 0 0.125rem 0.5rem rgba(0,0,0,0.05);
+  margin-bottom: 1.25rem;
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+
+  .search-field { flex: 1; min-width: 200px; }
+  .status-field { width: 180px; }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3.75rem;
+  gap: 1rem;
+  color: #666;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 2px 0.75rem rgba(0, 0, 0, 0.04);
+}
+
+.table-card {
+  border-radius: 1rem;
+  border: none;
+  box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  padding: 0;
+}
+
+.table-responsive { overflow-x: auto; }
+
+.payments-table {
+  width: 100%;
+
+  th {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    background: #fff;
+  }
+
+  td {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid #f5f5f5;
+    font-size: 0.875rem;
+    color: #333;
+  }
+}
+
+.payment-row {
+  transition: background-color 0.15s ease;
+  &:hover { background-color: #f8f9fa; }
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-name  { font-weight: 600; color: #2c3e50; font-size: 0.9rem; }
+.user-email { font-size: 0.75rem; color: #999; }
+
+.plan-name { font-weight: 500; color: #2c3e50; }
+
+.amount-text { font-weight: 600; color: #2e7d32; font-size: 0.9375rem; }
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+
+  .status-icon { font-size: 0.9rem; width: 0.9rem; height: 0.9rem; }
+
+  &.status-success  { background: #f0fdf4; color: #166534; border: 1px solid #dcfce7; }
+  &.status-pending  { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+  &.status-failed   { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
+  &.status-cancelled{ background: #f9fafb; color: #6b7280; border: 1px solid #e5e7eb; }
+}
+
+.error-hint {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.72rem;
+  color: #dc2626;
+  margin: 3px 0 0;
+  cursor: pointer;
+  mat-icon { font-size: 0.75rem; width: 0.75rem; height: 0.75rem; }
+}
+
+.provider-badge {
+  display: inline-block;
+  background: #f0f0f0;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.8rem;
+  font-family: monospace;
+  color: #555;
+}
+
+.provider-id {
+  display: block;
+  font-size: 0.72rem;
+  color: #999;
+  margin-top: 2px;
+  font-family: monospace;
+}
+
+.subscription-ok   { display: flex; align-items: center; gap: 4px; color: #166534; font-size: 0.8125rem; mat-icon { font-size: 1rem; width: 1rem; height: 1rem; } }
+.subscription-warn { display: flex; align-items: center; gap: 4px; color: #d97706; font-size: 0.8125rem; mat-icon { font-size: 1rem; width: 1rem; height: 1rem; } }
+.subscription-none { color: #ccc; }
+
+.date-text { font-size: 0.8125rem; color: #555; white-space: nowrap; }
+
+.no-data {
+  padding: 3.75rem 1.25rem;
+  text-align: center;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.05);
+}
+
+.no-data-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  max-width: 18.75rem;
+  margin: 0 auto;
+
+  .icon-circle {
+    width: 5rem; height: 5rem; border-radius: 50%;
+    background: #f5f5f5;
+    display: flex; align-items: center; justify-content: center;
+    mat-icon { font-size: 2.5rem; width: 2.5rem; height: 2.5rem; color: #bdbdbd; }
+  }
+
+  h3 { margin: 0; font-size: 1.125rem; font-weight: 600; color: #333; }
+  p  { margin: 0; color: #666; font-size: 0.875rem; line-height: 1.5; }
+}

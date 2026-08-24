@@ -1,0 +1,144 @@
+<h2 mat-dialog-title>Toplu Metin İçe Aktarma</h2>
+
+<mat-dialog-content>
+    <mat-tab-group>
+        <mat-tab label="CSV Yükle">
+            <div class="tab-content">
+                <div class="upload-info">
+                    <h3>CSV Formatı:</h3>
+                    <pre>Title,Content,Level,Category,Q1_Text,Q1_Type,Q1_A,Q1_B,Q1_C,Q1_D,Q1_Correct,...</pre>
+                    <p>Not: En fazla 10 soru eklenebilir. Type değerleri: 1=Gerçek Anlam, 2=Çıkarım, 3=Değerlendirme</p>
+                </div>
+
+                <div class="upload-area" *ngIf="!selectedFile">
+                    <input type="file" #fileInput accept=".csv" (change)="onFileSelected($event, 'csv')"
+                        style="display: none">
+                    <button mat-raised-button color="primary" (click)="fileInput.click()">
+                        <mat-icon>upload_file</mat-icon>
+                        CSV Dosyası Seç
+                    </button>
+                </div>
+
+                <div class="file-selected" *ngIf="selectedFile && !parsedTexts.length">
+                    <mat-icon>description</mat-icon>
+                    <span>{{ selectedFile.name }}</span>
+                    <button mat-icon-button (click)="clearFile()">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                    <button mat-raised-button color="primary" (click)="parseFile()" [disabled]="loading()">
+                        <mat-spinner diameter="20" *ngIf="loading()"></mat-spinner>
+                        <span *ngIf="!loading()">Dosyayı Analiz Et</span>
+                    </button>
+                </div>
+            </div>
+        </mat-tab>
+
+        <mat-tab label="Excel Yükle">
+            <div class="tab-content">
+                <div class="upload-info">
+                    <h3>Excel Formatı:</h3>
+                    <p>Excel dosyanız CSV ile aynı formatta olmalıdır.</p>
+                    <p>Kolonlar: Title, Content, Level, Category, Q1_Text, Q1_Type, Q1_A, Q1_B, Q1_C, Q1_D, Q1_Correct,
+                        ...</p>
+                </div>
+
+                <div class="upload-area" *ngIf="!selectedFile">
+                    <input type="file" #excelInput accept=".xlsx,.xls" (change)="onFileSelected($event, 'excel')"
+                        style="display: none">
+                    <button mat-raised-button color="primary" (click)="excelInput.click()">
+                        <mat-icon>upload_file</mat-icon>
+                        Excel Dosyası Seç
+                    </button>
+                </div>
+
+                <div class="file-selected" *ngIf="selectedFile && !parsedTexts.length">
+                    <mat-icon>description</mat-icon>
+                    <span>{{ selectedFile.name }}</span>
+                    <button mat-icon-button (click)="clearFile()">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                    <button mat-raised-button color="primary" (click)="parseFile()" [disabled]="loading()">
+                        <mat-spinner diameter="20" *ngIf="loading()"></mat-spinner>
+                        <span *ngIf="!loading()">Dosyayı Analiz Et</span>
+                    </button>
+                </div>
+            </div>
+        </mat-tab>
+    </mat-tab-group>
+
+    <!-- Preview Table -->
+    <div class="preview-section" *ngIf="parsedTexts.length > 0">
+        <h3>Önizleme ({{ parsedTexts.length }} metin bulundu)</h3>
+
+        <table mat-table [dataSource]="parsedTexts" class="preview-table">
+            <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Durum</th>
+                <td mat-cell *matCellDef="let text">
+                    <mat-icon *ngIf="text.status === 'pending'" color="primary">pending</mat-icon>
+                    <mat-icon *ngIf="text.status === 'success'" style="color: #4caf50">check_circle</mat-icon>
+                    <mat-icon *ngIf="text.status === 'error'" color="warn">error</mat-icon>
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="title">
+                <th mat-header-cell *matHeaderCellDef>Başlık</th>
+                <td mat-cell *matCellDef="let text">{{ text.title }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="category">
+                <th mat-header-cell *matHeaderCellDef>Kategori</th>
+                <td mat-cell *matCellDef="let text">{{ text.category }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="level">
+                <th mat-header-cell *matHeaderCellDef>Seviye</th>
+                <td mat-cell *matCellDef="let text">{{ text.level }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="questions">
+                <th mat-header-cell *matHeaderCellDef>Soru Sayısı</th>
+                <td mat-cell *matCellDef="let text">{{ text.questionCount }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="message">
+                <th mat-header-cell *matHeaderCellDef>Mesaj</th>
+                <td mat-cell *matCellDef="let text">
+                    <span class="error-message" *ngIf="text.error">{{ text.error }}</span>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="previewColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: previewColumns;"></tr>
+        </table>
+
+        <div class="import-actions">
+            <button mat-button (click)="clearFile()">İptal</button>
+            <button mat-raised-button color="primary" (click)="importTexts()"
+                [disabled]="loading() || parsedTexts.length === 0">
+                <mat-spinner diameter="20" *ngIf="loading()"></mat-spinner>
+                <span *ngIf="!loading()">{{ parsedTexts.length }} Metni İçe Aktar</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Import Results -->
+    <div class="results-section" *ngIf="importComplete">
+        <h3>İçe Aktarma Tamamlandı</h3>
+        <div class="results-summary">
+            <div class="result-item success">
+                <mat-icon>check_circle</mat-icon>
+                <span>{{ successCount }} başarılı</span>
+            </div>
+            <div class="result-item error" *ngIf="errorCount > 0">
+                <mat-icon>error</mat-icon>
+                <span>{{ errorCount }} hata</span>
+            </div>
+        </div>
+    </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-raised-button (click)="onClose()">
+        {{ importComplete ? 'Kapat' : 'İptal' }}
+    </button>
+</mat-dialog-actions>

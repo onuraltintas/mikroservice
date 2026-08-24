@@ -1,0 +1,265 @@
+<mat-card class="editor-card">
+    <mat-card-header>
+        <mat-card-title>
+            <mat-icon>calendar_month</mat-icon>
+            Haftalık Egzersiz Pattern Editörü
+        </mat-card-title>
+        <button mat-icon-button color="primary" type="button" (click)="addWeek()" matTooltip="Yeni hafta ekle">
+            <mat-icon>add_circle</mat-icon>
+        </button>
+    </mat-card-header>
+    <mat-card-content>
+        <!-- Week Tabs (Dynamic) -->
+        <mat-tab-group [(selectedIndex)]="selectedWeekIndex" (selectedIndexChange)="onWeekChange()">
+            <mat-tab *ngFor="let weekKey of weekKeys()" [label]="'Hafta ' + getWeekNumber(weekKey)">
+                <div class="week-content">
+                    <div class="week-header">
+                        <h3>Hafta {{ getWeekNumber(weekKey) }}</h3>
+                        <div class="week-actions">
+                            <button mat-stroked-button color="warn" type="button" (click)="removeWeek(weekKey)"
+                                *ngIf="weekKeys().length > 1">
+                                <mat-icon>delete</mat-icon>
+                                Haftayı Sil
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Day Tabs (Nested) -->
+                    <mat-tab-group [(selectedIndex)]="selectedDayIndex" (selectedIndexChange)="onDayChange()"
+                        class="day-tabs" mat-stretch-tabs="false" mat-align-tabs="start">
+                        <mat-tab *ngFor="let dayKey of getDayKeys(weekKey)" [label]="'Gün ' + getDayNumber(dayKey)">
+                            <div class="day-content" style="padding: 16px 0;">
+                                <div class="day-header"
+                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                    <h4 style="margin: 0;">{{ getDayNumber(dayKey) }}. Gün - {{ getDayExercises(weekKey,
+                                        dayKey).length }} Egzersiz</h4>
+                                    <button mat-raised-button color="primary" type="button"
+                                        (click)="addExerciseToDay(weekKey, dayKey)">
+                                        <mat-icon>add</mat-icon>
+                                        Egzersiz Ekle
+                                    </button>
+                                </div>
+
+                                <div class="exercise-list">
+                                    <mat-expansion-panel
+                                        *ngFor="let exercise of getDayExercises(weekKey, dayKey); let i = index"
+                                        class="exercise-panel">
+                                        <mat-expansion-panel-header>
+                                            <mat-panel-title>
+                                                <mat-icon>fitness_center</mat-icon>
+                                                <span>{{ i + 1 }}. {{ exercise.title || exercise.type }}</span>
+                                            </mat-panel-title>
+                                            <mat-panel-description>
+                                                <span class="difficulty-badge level-{{exercise.difficulty}}">
+                                                    Zorluk {{ exercise.difficulty }}
+                                                </span>
+                                            </mat-panel-description>
+                                        </mat-expansion-panel-header>
+
+                                        <div class="exercise-details">
+                                            <!-- Description (if exists) -->
+                                            <div class="description-card" *ngIf="exercise.description">
+                                                <div class="info-label">
+                                                    <mat-icon
+                                                        style="font-size: 14px; width: 14px; height: 14px;">description</mat-icon>
+                                                    Açıklama
+                                                </div>
+                                                <div class="description-text">{{ exercise.description }}</div>
+                                            </div>
+
+                                            <!-- Info Grid -->
+                                            <div class="info-grid">
+                                                <!-- Title -->
+                                                <div class="info-card primary" *ngIf="exercise.title">
+                                                    <div class="info-header">
+                                                        <mat-icon class="info-icon">title</mat-icon>
+                                                        <span class="info-label">Başlık</span>
+                                                    </div>
+                                                    <div class="info-value">{{ exercise.title }}</div>
+                                                </div>
+
+                                                <!-- Exercise Type -->
+                                                <div class="info-card">
+                                                    <div class="info-header">
+                                                        <mat-icon class="info-icon">category</mat-icon>
+                                                        <span class="info-label">Egzersiz Tipi</span>
+                                                    </div>
+                                                    <div class="info-value">
+                                                        {{ exercise.exerciseTypeDisplayName || exercise.type }}
+                                                        <div class="info-subtitle"
+                                                            *ngIf="exercise.exerciseTypeDisplayName && exercise.type">
+                                                            {{ exercise.type }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Age Group -->
+                                                <div class="info-card" *ngIf="exercise.targetAgeGroupId">
+                                                    <div class="info-header">
+                                                        <mat-icon class="info-icon">groups</mat-icon>
+                                                        <span class="info-label">Yaş Grubu</span>
+                                                    </div>
+                                                    <div class="info-value">
+                                                        <span class="age-group-badge">{{
+                                                            getAgeGroupName(exercise.targetAgeGroupId) }}</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Difficulty -->
+                                                <div class="info-card warning">
+                                                    <div class="info-header">
+                                                        <mat-icon class="info-icon">trending_up</mat-icon>
+                                                        <span class="info-label">Zorluk</span>
+                                                    </div>
+                                                    <div class="info-value">
+                                                        <span class="difficulty-badge level-{{exercise.difficulty}}">
+                                                            Seviye {{ exercise.difficulty }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Estimated Time -->
+                                                <div class="info-card success"
+                                                    *ngIf="exercise.metadata?.estimatedMinutes">
+                                                    <div class="info-header">
+                                                        <mat-icon class="info-icon">schedule</mat-icon>
+                                                        <span class="info-label">Süre</span>
+                                                    </div>
+                                                    <div class="info-value">{{ exercise.metadata!.estimatedMinutes }} dk
+                                                    </div>
+                                                </div>
+
+                                                <!-- XP Reward -->
+                                                <div class="info-card success" *ngIf="exercise.metadata?.xpReward">
+                                                    <div class="info-header">
+                                                        <mat-icon class="info-icon">stars</mat-icon>
+                                                        <span class="info-label">XP</span>
+                                                    </div>
+                                                    <div class="info-value">{{ exercise.metadata!.xpReward }} XP</div>
+                                                </div>
+
+                                                <!-- Speed (WPM) -->
+                                                <div class="info-card"
+                                                    *ngIf="exercise.metadata?.speedWpm || exercise.metadata?.['targetWpm']">
+                                                    <div class="info-header">
+                                                        <mat-icon class="info-icon">speed</mat-icon>
+                                                        <span class="info-label">Hız</span>
+                                                    </div>
+                                                    <div class="info-value">{{ exercise.metadata!.speedWpm ||
+                                                        exercise.metadata!['targetWpm'] }} WPM</div>
+                                                </div>
+
+                                                <!-- Points Count -->
+                                                <div class="info-card" *ngIf="exercise.metadata?.points">
+                                                    <div class="info-header">
+                                                        <mat-icon class="info-icon">scatter_plot</mat-icon>
+                                                        <span class="info-label">Nokta</span>
+                                                    </div>
+                                                    <div class="info-value">{{ exercise.metadata!.points }}</div>
+                                                </div>
+
+                                                <!-- Hold Time -->
+                                                <div class="info-card" *ngIf="exercise.metadata?.holdMs">
+                                                    <div class="info-header">
+                                                        <mat-icon class="info-icon">timer</mat-icon>
+                                                        <span class="info-label">Bekleme</span>
+                                                    </div>
+                                                    <div class="info-value">{{ exercise.metadata!.holdMs }} ms</div>
+                                                </div>
+
+                                                <!-- Engine Type -->
+                                                <div class="info-card" *ngIf="exercise.metadata?.['engineType']">
+                                                    <div class="info-header">
+                                                        <mat-icon class="info-icon">settings</mat-icon>
+                                                        <span class="info-label">Motor</span>
+                                                    </div>
+                                                    <div class="info-value">
+                                                        <span class="code-text">{{ exercise.metadata!['engineType']
+                                                            }}</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Repetition Count -->
+                                                <div class="info-card primary">
+                                                    <div class="info-header">
+                                                        <mat-icon class="info-icon">repeat</mat-icon>
+                                                        <span class="info-label">Tekrar</span>
+                                                    </div>
+                                                    <div class="count-stepper-compact">
+                                                        <button mat-icon-button
+                                                            (click)="decrementCount(weekKey, dayKey, i)"
+                                                            [disabled]="exercise.count <= 1">
+                                                            <mat-icon>remove</mat-icon>
+                                                        </button>
+                                                        <input type="number" [(ngModel)]="exercise.count"
+                                                            (ngModelChange)="onPatternChange()" min="1" max="10"
+                                                            class="count-input-compact">
+                                                        <button mat-icon-button
+                                                            (click)="incrementCount(weekKey, dayKey, i)"
+                                                            [disabled]="exercise.count >= 10">
+                                                            <mat-icon>add</mat-icon>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="detail-actions">
+                                                <button mat-stroked-button color="warn" type="button"
+                                                    (click)="removeExerciseFromDay(weekKey, dayKey, i)">
+                                                    <mat-icon>delete</mat-icon>
+                                                    Egzersizi Kaldır
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </mat-expansion-panel>
+                                </div>
+
+                                <div *ngIf="getDayExercises(weekKey, dayKey).length === 0" class="empty-state">
+                                    <mat-icon>inbox</mat-icon>
+                                    <p>Bu gün için egzersiz yok</p>
+                                    <button mat-raised-button color="primary" type="button"
+                                        (click)="addExerciseToDay(weekKey, dayKey)">
+                                        <mat-icon>add</mat-icon>
+                                        Egzersiz Ekle
+                                    </button>
+                                </div>
+                            </div>
+                        </mat-tab>
+                    </mat-tab-group>
+                </div>
+            </mat-tab>
+        </mat-tab-group>
+
+        <mat-divider></mat-divider>
+
+        <!-- JSON Preview -->
+        <mat-expansion-panel class="json-preview">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <mat-icon>code</mat-icon>
+                    JSON Önizleme
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+            <pre class="json-viewer">{{ getJsonString() }}</pre>
+        </mat-expansion-panel>
+
+        <!-- Summary -->
+        <div class="summary">
+            <h4>Özet</h4>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="label">Toplam Hafta:</span>
+                    <span class="value">4</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Toplam Egzersiz:</span>
+                    <span class="value">{{ getTotalExerciseCount() }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Ortalama Zorluk:</span>
+                    <span class="value">{{ getAverageDifficulty() }}</span>
+                </div>
+            </div>
+        </div>
+    </mat-card-content>
+</mat-card>

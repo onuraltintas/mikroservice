@@ -1,0 +1,165 @@
+<h2 mat-dialog-title>
+    <div class="title-group">
+        <mat-icon>{{ isEditMode ? 'edit' : 'add_business' }}</mat-icon>
+        <span>{{ isEditMode ? 'Kurumu Düzenle' : 'Yeni Kurum Ekle' }}</span>
+    </div>
+</h2>
+
+<mat-dialog-content>
+    <form [formGroup]="institutionForm">
+
+        <!-- SECTION: INSTITUTION INFO -->
+        <h3 class="section-title" *ngIf="!isEditMode">Kurum Bilgileri</h3>
+
+        <div class="form-grid">
+            <!-- Name -->
+            <mat-form-field appearance="outline">
+                <mat-label>Kurum Adı</mat-label>
+                <ng-container *ngIf="isEditMode; else createName">
+                    <input matInput formControlName="name" placeholder="Örn: Atatürk Lisesi">
+                </ng-container>
+                <ng-template #createName>
+                    <input matInput formControlName="schoolName" placeholder="Örn: Atatürk Lisesi">
+                </ng-template>
+                <mat-error *ngIf="institutionForm.get(isEditMode ? 'name' : 'schoolName')?.hasError('required')">Zorunlu
+                    alan</mat-error>
+            </mat-form-field>
+
+            <!-- Email -->
+            <mat-form-field appearance="outline">
+                <mat-label>İletişim E-posta</mat-label>
+                <input matInput formControlName="contactEmail" placeholder="iletisim@okul.com" type="email">
+                <mat-icon matSuffix>email</mat-icon>
+                <mat-error *ngIf="institutionForm.get('contactEmail')?.hasError('required')">Zorunlu alan</mat-error>
+                <mat-error *ngIf="institutionForm.get('contactEmail')?.hasError('email')">Geçersiz e-posta</mat-error>
+            </mat-form-field>
+
+            <!-- Phone -->
+            <mat-form-field appearance="outline">
+                <mat-label>Telefon</mat-label>
+                <input matInput formControlName="phoneNumber" placeholder="0555 123 45 67">
+                <mat-icon matSuffix>phone</mat-icon>
+                <mat-error *ngIf="institutionForm.get('phoneNumber')?.hasError('required')">Zorunlu alan</mat-error>
+            </mat-form-field>
+
+            <!-- City -->
+            <mat-form-field appearance="outline">
+                <mat-label>İl</mat-label>
+                <mat-select formControlName="cityId">
+                    <mat-option *ngFor="let city of cities" [value]="city.id">{{city.name}}</mat-option>
+                </mat-select>
+                <mat-error *ngIf="institutionForm.get('cityId')?.hasError('required')">Seçiniz</mat-error>
+            </mat-form-field>
+
+            <!-- District -->
+            <mat-form-field appearance="outline">
+                <mat-label>İlçe</mat-label>
+                <mat-select formControlName="districtId">
+                    <mat-option *ngFor="let dist of districts" [value]="dist.id">{{dist.name}}</mat-option>
+                </mat-select>
+                <mat-spinner *ngIf="institutionForm.get('districtId')?.disabled && institutionForm.get('cityId')?.value"
+                    diameter="20" matSuffix></mat-spinner>
+                <mat-error *ngIf="institutionForm.get('districtId')?.hasError('required')">Seçiniz</mat-error>
+            </mat-form-field>
+
+            <!-- Address -->
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Adres (İsteğe Bağlı)</mat-label>
+                <input matInput formControlName="address" placeholder="Mahalle, Cadde, No...">
+            </mat-form-field>
+        </div>
+
+        <!-- NEW FIELDS SECTION: ADMIN INFO -->
+        <ng-container *ngIf="!isEditMode">
+            <h3 class="section-title">Yönetici Bilgileri</h3>
+
+            <div class="form-grid">
+                <!-- First Name -->
+                <mat-form-field appearance="outline">
+                    <mat-label>Yönetici Adı</mat-label>
+                    <input matInput formControlName="firstName" placeholder="Ad">
+                    <mat-error *ngIf="institutionForm.get('firstName')?.hasError('required')">Zorunlu alan</mat-error>
+                </mat-form-field>
+
+                <!-- Last Name -->
+                <mat-form-field appearance="outline">
+                    <mat-label>Yönetici Soyadı</mat-label>
+                    <input matInput formControlName="lastName" placeholder="Soyad">
+                    <mat-error *ngIf="institutionForm.get('lastName')?.hasError('required')">Zorunlu alan</mat-error>
+                </mat-form-field>
+
+                <!-- Admin Email -->
+                <mat-form-field appearance="outline">
+                    <mat-label>Yönetici E-posta</mat-label>
+                    <input matInput formControlName="adminEmail" placeholder="yonetici@okul.com" type="email">
+                    <mat-icon matSuffix>person</mat-icon>
+                    <mat-error *ngIf="institutionForm.get('adminEmail')?.hasError('required')">Zorunlu alan</mat-error>
+                </mat-form-field>
+
+                <!-- Password -->
+                <div class="password-group"> <!-- Wrapper for password error list logic -->
+                    <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>Yönetici Şifresi</mat-label>
+                        <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password">
+                        <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword"
+                            [attr.aria-label]="'Şifreyi göster'" type="button">
+                            <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+                        </button>
+                        <mat-error *ngIf="institutionForm.get('password')?.hasError('required')">Zorunlu</mat-error>
+                    </mat-form-field>
+
+                    <div *ngIf="institutionForm.get('password')?.invalid && institutionForm.get('password')?.touched && institutionForm.get('password')?.value"
+                        class="password-errors">
+                        <small class="text-danger d-block" *ngFor="let error of passwordErrorMessages">
+                            <span *ngIf="institutionForm.get('password')?.hasError(error.type)">•
+                                {{error.message}}</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+
+        <!-- Edit Mode: Admin Password Reset (Visible if Admin Linked) -->
+        <div class="form-grid" *ngIf="isEditMode && relatedAdminUserId">
+            <h3 class="section-title full-width">Yönetici Hesabı İşlemleri</h3>
+
+            <div class="password-group full-width">
+                <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Yönetici Şifresini Sıfırla (İsteğe Bağlı)</mat-label>
+                    <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password"
+                        placeholder="Değiştirmek için yeni şifre girin">
+                    <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword"
+                        [attr.aria-label]="'Şifreyi göster'" type="button">
+                        <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+                    </button>
+                </mat-form-field>
+                <mat-hint>Yönetici şifresini değiştirmek istemiyorsanız bu alanı boş bırakın.</mat-hint>
+
+                <div *ngIf="institutionForm.get('password')?.invalid && institutionForm.get('password')?.touched && institutionForm.get('password')?.value"
+                    class="password-errors">
+                    <small class="text-danger d-block" *ngFor="let error of passwordErrorMessages">
+                        <span *ngIf="institutionForm.get('password')?.hasError(error.type)">• {{error.message}}</span>
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Mode Only Fields -->
+        <div class="form-grid" *ngIf="isEditMode">
+            <div class="status-toggle">
+                <mat-slide-toggle formControlName="isActive" color="primary">
+                    Aktif Durumda
+                </mat-slide-toggle>
+            </div>
+        </div>
+
+    </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" [disabled]="saving">İptal</button>
+    <button mat-raised-button color="primary" (click)="onSave()" [disabled]="institutionForm.invalid || saving">
+        <mat-spinner diameter="20" *ngIf="saving"></mat-spinner>
+        <span *ngIf="!saving">{{ isEditMode ? 'Güncelle' : 'Oluştur' }}</span>
+    </button>
+</mat-dialog-actions>

@@ -1,0 +1,76 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2><mat-icon>analytics</mat-icon> Sınav Sonuçları</h2>
+    <button mat-raised-button color="primary" (click)="openNewExam()">
+      <mat-icon>add</mat-icon> Sonuç Gir
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Sınav Tipi</mat-label>
+          <mat-select [(ngModel)]="filterExamType" (selectionChange)="onFilter()">
+            <mat-option *ngFor="let o of examTypeOptions" [value]="o.value">{{ o.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="loading()" class="loading-container"><mat-spinner diameter="40"></mat-spinner></div>
+      <div *ngIf="!loading() && examResults.length === 0" class="empty-state">
+        <mat-icon>quiz</mat-icon>
+        <p>Henüz sınav sonucu yok</p>
+      </div>
+
+      <table mat-table [dataSource]="examResults" *ngIf="!loading() && examResults.length > 0" class="full-width-table">
+        <ng-container matColumnDef="student">
+          <th mat-header-cell *matHeaderCellDef>Öğrenci</th>
+          <td mat-cell *matCellDef="let e">
+            <a [routerLink]="['/coaching/students', e.studentId]" class="student-link">
+              <mat-icon class="icon-sm">person</mat-icon>
+              {{ getStudentLabel(e.studentId) }}
+            </a>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="examName">
+          <th mat-header-cell *matHeaderCellDef>Sınav</th>
+          <td mat-cell *matCellDef="let e"><strong>{{ e.examName }}</strong></td>
+        </ng-container>
+        <ng-container matColumnDef="examDate">
+          <th mat-header-cell *matHeaderCellDef>Tarih</th>
+          <td mat-cell *matCellDef="let e">{{ e.examDate | date:'dd.MM.yyyy' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="examType">
+          <th mat-header-cell *matHeaderCellDef>Tip</th>
+          <td mat-cell *matCellDef="let e">
+            <span class="status-badge status-active">{{ examTypeLabels[e.examType] }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="totalNet">
+          <th mat-header-cell *matHeaderCellDef>Toplam Net</th>
+          <td mat-cell *matCellDef="let e">
+            <span *ngIf="e.totalNet != null">{{ e.totalNet | number:'1.2-2' }}</span>
+            <span *ngIf="e.totalNet == null" class="text-muted">—</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let e">
+            <button mat-icon-button color="warn" matTooltip="Sil" (click)="deleteResult(e)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <mat-paginator *ngIf="!loading() && total > 0"
+        [length]="total" [pageSize]="pageSize" [pageIndex]="page - 1"
+        [pageSizeOptions]="[10, 20, 50]" showFirstLastButtons
+        (page)="onPage($event)">
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -1,0 +1,80 @@
+<div class="achievement-grid-container">
+  <!-- Header with stats -->
+  <div class="grid-header">
+    <h2>Başarılar</h2>
+    <div class="stats">
+      <div class="stat-item">
+        <span class="stat-value">{{ stats.unlocked }}</span>
+        <span class="stat-label">/ {{ stats.total }} Kazanıldı</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">{{ stats.percentage }}%</span>
+        <span class="stat-label">Tamamlandı</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">{{ stats.showcased }}</span>
+        <span class="stat-label">Vitrinde</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="filter-group">
+      <label>Kategori:</label>
+      <mat-chip-listbox class="filter-chips">
+        <mat-chip-option
+          *ngFor="let category of categories"
+          [selected]="selectedCategory === category"
+          (click)="filterByCategory(category)">
+          {{ getCategoryIcon(category) }} {{ getCategoryText(category) }}
+        </mat-chip-option>
+      </mat-chip-listbox>
+    </div>
+
+    <div class="filter-group">
+      <label>Seviye:</label>
+      <mat-chip-listbox class="filter-chips">
+        <mat-chip-option
+          *ngFor="let tier of tiers"
+          [selected]="selectedTier === tier"
+          (click)="filterByTier(tier)">
+          {{ getTierText(tier) }}
+        </mat-chip-option>
+      </mat-chip-listbox>
+    </div>
+
+    <button mat-stroked-button
+            *ngIf="selectedCategory || selectedTier"
+            (click)="clearFilters()"
+            class="clear-button">
+      Filtreleri Temizle
+    </button>
+  </div>
+
+  <!-- Loading state -->
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Başarılar yükleniyor...</p>
+  </div>
+
+  <!-- Achievement grid -->
+  <div class="achievement-grid" *ngIf="!loading && filteredAchievements.length > 0">
+    <app-achievement-badge
+      *ngFor="let achievement of filteredAchievements"
+      [achievement]="achievement"
+      [unlocked]="achievement.unlocked"
+      [unlockedAt]="achievement.unlockedAt"
+      [showcased]="achievement.showcased"
+      size="medium">
+    </app-achievement-badge>
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty-state" *ngIf="!loading && filteredAchievements.length === 0">
+    <mat-icon>emoji_events</mat-icon>
+    <h3>Başarı Bulunamadı</h3>
+    <p *ngIf="selectedCategory || selectedTier">Filtrelere uygun başarı yok. Filtreleri temizleyerek tekrar deneyin.</p>
+    <p *ngIf="!selectedCategory && !selectedTier">Henüz başarı tanımlanmamış.</p>
+  </div>
+</div>

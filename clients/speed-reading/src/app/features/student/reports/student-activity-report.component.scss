@@ -1,0 +1,89 @@
+.activity-report {
+    max-width: 87.5rem;
+    margin: 0 auto;
+}
+
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 25rem;
+}
+
+.streak-card {
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    color: white;
+}
+
+.streak-container {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.streak-icon {
+    font-size: 4.5rem;
+    width: 4.5rem;
+    height: 4.5rem;
+}
+
+.streak-value {
+    font-size: 3rem;
+    font-weight: 700;
+}
+
+.streak-label {
+    font-size: 1.125rem;
+    margin-top: 0.5rem;
+}
+
+.streak-record {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    opacity: 0.9;
+}
+
+.charts-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.chart-container {
+    height: 18.75rem;
+    margin-top: 1rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.stat-label {
+    text-align: center;
+    color: #666;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+}
+
+@media (max-width: 48rem) {
+    .charts-row, .stats-grid { grid-template-columns: 1fr; }
+}
+
+// rp-* utilities
+.rp-spinner { width:36px;height:36px;border:3px solid #e5e7eb;border-top-color:#6366f1;border-radius:50%;animation:rp-spin .8s linear infinite;margin:auto; }
+@keyframes rp-spin { to { transform:rotate(360deg); } }
+.rp-card { background:var(--sp-surface,#fff);border:1px solid var(--sp-border,#e5e7eb);border-radius:16px;margin-bottom:1.5rem;overflow:hidden; }
+.rp-card__header { padding:1.25rem 1.5rem 0; }
+.rp-card__title { font-size:1.1rem;font-weight:700;color:var(--sp-text-1,#1a1a1a);margin:0 0 .25rem; }
+.rp-card__body { padding:1.25rem 1.5rem 1.5rem; }
+.loading-container { display:flex;justify-content:center;align-items:center;min-height:400px; }

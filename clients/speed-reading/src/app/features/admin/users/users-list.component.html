@@ -1,0 +1,203 @@
+<div class="users-container">
+    <div class="header">
+        <div>
+            <h1>Kullanıcı Yönetimi</h1>
+            <p class="subtitle">Platform kullanıcılarını yönetin, rol atayın ve durumlarını güncelleyin</p>
+        </div>
+        <button mat-raised-button color="primary" (click)="openDialog()">
+            <mat-icon>add</mat-icon>
+            Yeni Kullanıcı
+        </button>
+    </div>
+
+    <!-- Filters Card -->
+    <mat-card class="filters-card">
+        <mat-card-content>
+            <div class="filters-wrapper">
+                <mat-form-field appearance="outline" class="search-field">
+                    <mat-label>Kullanıcı Ara</mat-label>
+                    <mat-icon matPrefix>search</mat-icon>
+                    <input matInput [formControl]="searchControl" placeholder="İsim veya e-posta ile ara...">
+                </mat-form-field>
+
+                <div class="filter-group">
+                    <mat-form-field appearance="outline" class="filter-field">
+                        <mat-label>Rol Filtrele</mat-label>
+                        <mat-select [formControl]="roleControl">
+                            <mat-option value="">Tümü</mat-option>
+                            <mat-option *ngFor="let role of roles" [value]="role.name">
+                                {{ getRoleLabel(role.name) }}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="filter-field">
+                        <mat-label>Durum</mat-label>
+                        <mat-select [formControl]="statusControl">
+                            <mat-option [value]="null">Tümü</mat-option>
+                            <mat-option [value]="true">Aktif</mat-option>
+                            <mat-option [value]="false">Pasif</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Loading State -->
+    <div *ngIf="loading()" class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Kullanıcılar yükleniyor...</p>
+    </div>
+
+    <!-- Users Table Card -->
+    <mat-card class="table-card" *ngIf="!loading()">
+        <div class="table-responsive">
+            <table mat-table [dataSource]="dataSource" matSort class="users-table">
+                <!-- Index Column -->
+                <ng-container matColumnDef="index">
+                    <th mat-header-cell *matHeaderCellDef style="width: 60px;">#</th>
+                    <td mat-cell *matCellDef="let item; let i = index" class="index-cell">
+                        {{ paginator ? (paginator.pageIndex * paginator.pageSize + i + 1) : (i + 1) }}
+                    </td>
+                </ng-container>
+
+                <!-- Avatar Column -->
+                <ng-container matColumnDef="avatar">
+                    <th mat-header-cell *matHeaderCellDef style="width: 60px;"></th>
+                    <td mat-cell *matCellDef="let user">
+                        <div class="avatar" [style.background]="getAvatarBackground(user)">
+                            {{ getInitials(user.firstName, user.lastName) }}
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Full Name Column -->
+                <ng-container matColumnDef="fullName">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Kullanıcı</th>
+                    <td mat-cell *matCellDef="let user">
+                        <div class="user-info">
+                            <span class="user-name">{{ user.firstName }} {{ user.lastName }}</span>
+                            <span class="user-email-sm">{{ user.email }}</span>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Email Column -->
+                <ng-container matColumnDef="email">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>E-posta & Durum</th>
+                    <td mat-cell *matCellDef="let user">
+                        <div class="email-cell">
+                            <span class="email-text">{{ user.email }}</span>
+                            <mat-icon *ngIf="user.emailConfirmed" class="verified-icon"
+                                matTooltip="E-posta doğrulandı">verified</mat-icon>
+                            <mat-icon *ngIf="!user.emailConfirmed" class="unverified-icon"
+                                matTooltip="E-posta doğrulanmadı">error_outline</mat-icon>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Roles Column -->
+                <ng-container matColumnDef="roles">
+                    <th mat-header-cell *matHeaderCellDef>Roller</th>
+                    <td mat-cell *matCellDef="let user">
+                        <div class="role-chips">
+                            <span *ngFor="let role of user.roles" class="role-badge" [class]="role.toLowerCase()">
+                                {{ getRoleLabel(role) }}
+                            </span>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Institution Column -->
+                <ng-container matColumnDef="institution">
+                    <th mat-header-cell *matHeaderCellDef>Kurum</th>
+                    <td mat-cell *matCellDef="let user">
+                        <span class="institution-text">{{ user.institutionName || '-' }}</span>
+                    </td>
+                </ng-container>
+
+                <!-- Status Column -->
+                <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Hesap Durumu</th>
+                    <td mat-cell *matCellDef="let user">
+                        <span class="status-badge" [class.active]="user.isActive" [class.inactive]="!user.isActive">
+                            <span class="status-dot"></span>
+                            {{ user.isActive ? 'Aktif' : 'Pasif' }}
+                        </span>
+                    </td>
+                </ng-container>
+
+                <!-- Last Login Column -->
+                <ng-container matColumnDef="lastLogin">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Son Giriş</th>
+                    <td mat-cell *matCellDef="let user">
+                        <span class="last-login">{{ user.lastLoginAt ? (user.lastLoginAt | date:'dd MMM yyyy HH:mm') :
+                            '-' }}</span>
+                    </td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef></th>
+                    <td mat-cell *matCellDef="let user">
+                        <div class="actions-wrapper">
+                            <button mat-icon-button [matMenuTriggerFor]="menu" class="action-btn">
+                                <mat-icon>more_vert</mat-icon>
+                            </button>
+                            <mat-menu #menu="matMenu">
+                                <button mat-menu-item (click)="viewUser(user)">
+                                    <mat-icon>visibility</mat-icon>
+                                    <span>Detaylar</span>
+                                </button>
+                                <button mat-menu-item (click)="openDialog(user)">
+                                    <mat-icon>edit</mat-icon>
+                                    <span>Düzenle</span>
+                                </button>
+                                <button mat-menu-item (click)="openRoleDialog(user)">
+                                    <mat-icon>admin_panel_settings</mat-icon>
+                                    <span>Rol Yönetimi</span>
+                                </button>
+                                <mat-divider></mat-divider>
+                                <button mat-menu-item (click)="toggleEmailConfirmation(user)">
+                                    <mat-icon>{{ user.emailConfirmed ? 'mark_email_unread' : 'mark_email_read'
+                                        }}</mat-icon>
+                                    <span>{{ user.emailConfirmed ? 'Onayı Kaldır' : 'E-postayı Onayla' }}</span>
+                                </button>
+                                <button mat-menu-item (click)="toggleUserStatus(user)">
+                                    <mat-icon [color]="user.isActive ? 'warn' : 'primary'">{{ user.isActive ? 'block' :
+                                        'check_circle' }}</mat-icon>
+                                    <span>{{ user.isActive ? 'Devre Dışı Bırak' : 'Aktif Et' }}</span>
+                                </button>
+                                <mat-divider></mat-divider>
+                                <button mat-menu-item (click)="deleteUser(user)" class="delete-item">
+                                    <mat-icon color="warn">delete</mat-icon>
+                                    <span>Kullanıcıyı Sil</span>
+                                </button>
+                            </mat-menu>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="user-row"></tr>
+            </table>
+
+            <div *ngIf="dataSource.data.length === 0" class="no-data">
+                <div class="no-data-content">
+                    <div class="icon-circle">
+                        <mat-icon>search_off</mat-icon>
+                    </div>
+                    <h3>Kullanıcı Bulunamadı</h3>
+                    <p>Arama kriterlerinize uygun kullanıcı kaydı mevcut değil.</p>
+                    <button mat-stroked-button color="primary"
+                        (click)="searchControl.setValue(''); roleControl.setValue(''); statusControl.setValue(null)">
+                        Filtreleri Temizle
+                    </button>
+                </div>
+            </div>
+
+            <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]" [pageSize]="25" showFirstLastButtons></mat-paginator>
+        </div>
+    </mat-card>
+</div>

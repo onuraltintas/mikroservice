@@ -1,0 +1,142 @@
+<div class="payments-wrapper p-6">
+
+  <!-- Header -->
+  <div class="section-header">
+    <div>
+      <h2>Ödeme Geçmişi</h2>
+      <p class="section-subtitle">Tüm ödeme işlemlerini görüntüleyin</p>
+    </div>
+  </div>
+
+  <!-- Filtreler -->
+  <mat-card class="filter-card">
+    <div class="filters">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Kullanıcı ara</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [formControl]="searchControl" placeholder="E-posta veya ad">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="status-field">
+        <mat-label>Durum</mat-label>
+        <mat-select [formControl]="statusControl">
+          <mat-option *ngFor="let opt of statusOptions" [value]="opt.value">
+            {{ opt.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </mat-card>
+
+  <!-- Loading -->
+  <div *ngIf="loading()" class="loading-container">
+    <mat-spinner diameter="36"></mat-spinner>
+    <span>Yükleniyor…</span>
+  </div>
+
+  <!-- Tablo -->
+  <mat-card *ngIf="!loading() && records.length > 0" class="table-card">
+    <div class="table-responsive">
+      <table mat-table [dataSource]="records" class="payments-table">
+
+        <!-- Kullanıcı -->
+        <ng-container matColumnDef="user">
+          <th mat-header-cell *matHeaderCellDef>Kullanıcı</th>
+          <td mat-cell *matCellDef="let p">
+            <div class="user-info">
+              <span class="user-name">{{ getUserDisplay(p) }}</span>
+              <span class="user-email">{{ p.userEmail }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Plan -->
+        <ng-container matColumnDef="plan">
+          <th mat-header-cell *matHeaderCellDef>Plan</th>
+          <td mat-cell *matCellDef="let p">
+            <span class="plan-name">{{ p.planName }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Tutar -->
+        <ng-container matColumnDef="amount">
+          <th mat-header-cell *matHeaderCellDef>Tutar</th>
+          <td mat-cell *matCellDef="let p">
+            <span class="amount-text">{{ formatAmount(p) }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Durum -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Durum</th>
+          <td mat-cell *matCellDef="let p">
+            <span class="status-badge" [ngClass]="getStatusClass(p.status)">
+              <mat-icon class="status-icon">{{ getStatusIcon(p.status) }}</mat-icon>
+              {{ getStatusLabel(p.status) }}
+            </span>
+            <p *ngIf="p.errorMessage" class="error-hint" [matTooltip]="p.errorMessage">
+              <mat-icon>info_outline</mat-icon> Hata detayı
+            </p>
+          </td>
+        </ng-container>
+
+        <!-- Provider -->
+        <ng-container matColumnDef="provider">
+          <th mat-header-cell *matHeaderCellDef>Sağlayıcı</th>
+          <td mat-cell *matCellDef="let p">
+            <span class="provider-badge">{{ p.provider }}</span>
+            <span *ngIf="p.providerPaymentId" class="provider-id" [matTooltip]="'Provider ID: ' + p.providerPaymentId">
+              #{{ p.providerPaymentId | slice:0:10 }}…
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Abonelik -->
+        <ng-container matColumnDef="subscriptionId">
+          <th mat-header-cell *matHeaderCellDef>Abonelik</th>
+          <td mat-cell *matCellDef="let p">
+            <span *ngIf="p.subscriptionId" class="subscription-ok">
+              <mat-icon>check_circle</mat-icon> Oluşturuldu
+            </span>
+            <span *ngIf="!p.subscriptionId && p.status === 'Success'" class="subscription-warn">
+              <mat-icon>warning</mat-icon> Eksik
+            </span>
+            <span *ngIf="!p.subscriptionId && p.status !== 'Success'" class="subscription-none">—</span>
+          </td>
+        </ng-container>
+
+        <!-- Tarih -->
+        <ng-container matColumnDef="createdAt">
+          <th mat-header-cell *matHeaderCellDef>Tarih</th>
+          <td mat-cell *matCellDef="let p">
+            <span class="date-text">{{ p.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="payment-row"></tr>
+      </table>
+    </div>
+
+    <mat-paginator
+      [length]="totalCount"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[10, 20, 50]"
+      [pageIndex]="page - 1"
+      (page)="onPage($event)"
+      showFirstLastButtons>
+    </mat-paginator>
+  </mat-card>
+
+  <!-- Boş durum -->
+  <div *ngIf="!loading() && records.length === 0" class="no-data">
+    <div class="no-data-content">
+      <div class="icon-circle">
+        <mat-icon>receipt_long</mat-icon>
+      </div>
+      <h3>Ödeme kaydı bulunamadı</h3>
+      <p>Seçilen filtrelere göre ödeme işlemi bulunamadı.</p>
+    </div>
+  </div>
+
+</div>

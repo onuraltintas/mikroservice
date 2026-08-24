@@ -1,0 +1,68 @@
+<h2 mat-dialog-title>
+    <mat-icon>admin_panel_settings</mat-icon>
+    Rol Yönetimi
+</h2>
+
+<mat-dialog-content>
+    <div class="user-info">
+        <div class="avatar">
+            {{ getInitials() }}
+        </div>
+        <div class="details">
+            <h3>{{ user.firstName }} {{ user.lastName }}</h3>
+            <p>{{ user.email }}</p>
+        </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Current Roles -->
+    <div class="section">
+        <h3 class="section-title">Mevcut Roller</h3>
+        <div class="current-roles">
+            <mat-chip-set *ngIf="user.roles.length > 0">
+                <mat-chip *ngFor="let role of user.roles" [style.background-color]="getRoleInfo(role).color"
+                    [removable]="!processing" (removed)="removeRole(role)">
+                    <mat-icon matChipAvatar>{{ getRoleInfo(role).icon }}</mat-icon>
+                    {{ getRoleInfo(role).label }}
+                    <mat-icon matChipRemove *ngIf="!processing">cancel</mat-icon>
+                </mat-chip>
+            </mat-chip-set>
+            <p *ngIf="user.roles.length === 0" class="no-roles">
+                Bu kullanıcıya henüz rol atanmamış
+            </p>
+        </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Available Roles -->
+    <div class="section">
+        <h3 class="section-title">Kullanılabilir Roller</h3>
+        <mat-list class="roles-list">
+            <mat-list-item *ngFor="let roleInfo of availableRoles" [class.disabled]="processing">
+                <mat-icon matListItemIcon [style.color]="roleInfo.color">
+                    {{ roleInfo.icon }}
+                </mat-icon>
+                <div matListItemTitle>{{ roleInfo.label }}</div>
+                <div matListItemLine class="role-description">{{ roleInfo.description }}</div>
+                <button mat-icon-button [color]="hasRole(roleInfo.name) ? 'warn' : 'primary'"
+                    (click)="toggleRole(roleInfo.name)" [disabled]="processing" matListItemMeta>
+                    <mat-icon>{{ hasRole(roleInfo.name) ? 'remove_circle' : 'add_circle' }}</mat-icon>
+                </button>
+            </mat-list-item>
+        </mat-list>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="processing" class="processing-overlay">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>İşleniyor...</p>
+    </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="onClose()" [disabled]="processing">
+        Kapat
+    </button>
+</mat-dialog-actions>

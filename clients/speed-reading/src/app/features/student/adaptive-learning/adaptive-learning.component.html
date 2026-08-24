@@ -1,0 +1,464 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2><span class="material-icons">psychology</span> Akıllı Analiz</h2>
+    <span class="text-muted" style="font-size:13px">Okuma verilerine göre kişiselleştirilmiş analiz</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading()" class="loading-container"><div class="sp-spinner"></div></div>
+
+  <!-- Veri Yok State -->
+  <div *ngIf="!loading() && !hasData" class="sp-card" style="text-align:center;padding:56px 24px">
+    <span class="material-icons" style="font-size:72px;color:#e0e0e0">psychology</span>
+    <h3 style="color:#666;margin-top:16px">Henüz yeterli veri yok</h3>
+    <p style="color:#999;max-width:400px;margin:0 auto 24px">
+      Egzersiz ve okuma seansı tamamladıkça Bloom analizi, zayıf alanlar ve kişisel öneriler burada görünecektir.
+    </p>
+    <button class="sp-btn sp-btn--primary" routerLink="/student/daily-exercises">
+      <span class="material-icons">fitness_center</span> Egzersize Başla
+    </button>
+  </div>
+
+  <!-- Ana İçerik -->
+  <ng-container *ngIf="!loading() && hasData && dashboard">
+    <div class="sp-card">
+      <div style="padding:0">
+
+        <!-- Tab Buttons -->
+        <div class="sp-tabs" style="display:flex;border-bottom:1px solid #e0e0e0;padding:0 16px;flex-wrap:wrap">
+          <button (click)="activeTab=0"
+            style="padding:12px 16px;border:none;background:none;cursor:pointer;font-size:14px;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px"
+            [style.border-bottom-color]="activeTab===0 ? '#1976D2' : 'transparent'"
+            [style.color]="activeTab===0 ? '#1976D2' : '#666'">
+            <span class="material-icons" style="font-size:18px">dashboard</span>Genel Bakış
+          </button>
+          <button (click)="activeTab=1"
+            style="padding:12px 16px;border:none;background:none;cursor:pointer;font-size:14px;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px"
+            [style.border-bottom-color]="activeTab===1 ? '#1976D2' : 'transparent'"
+            [style.color]="activeTab===1 ? '#1976D2' : '#666'">
+            <span class="material-icons" style="font-size:18px">bar_chart</span>Bloom Analizi
+          </button>
+          <button (click)="activeTab=2"
+            style="padding:12px 16px;border:none;background:none;cursor:pointer;font-size:14px;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px"
+            [style.border-bottom-color]="activeTab===2 ? '#1976D2' : 'transparent'"
+            [style.color]="activeTab===2 ? '#1976D2' : '#666'">
+            <span class="material-icons" style="font-size:18px">recommend</span>Önerilen İçerikler
+          </button>
+          <button (click)="activeTab=3"
+            style="padding:12px 16px;border:none;background:none;cursor:pointer;font-size:14px;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px"
+            [style.border-bottom-color]="activeTab===3 ? '#1976D2' : 'transparent'"
+            [style.color]="activeTab===3 ? '#1976D2' : '#666'">
+            <span class="material-icons" style="font-size:18px">person</span>Okuma Profili
+          </button>
+        </div>
+
+        <!-- ═══════════ SEKME 0: GENEL BAKIŞ ═══════════ -->
+        @if (activeTab === 0) {
+          <div style="padding:20px">
+
+            <!-- Üst Satır: Günlük Hedef + Profil Özet -->
+            <div class="dashboard-stats" style="margin-bottom:24px;align-items:stretch">
+
+              <!-- Günlük Hedef Kartı -->
+              <div class="sp-card stat-card" style="flex:1.5;min-width:260px;padding:0">
+                <div style="padding:16px 16px 8px;display:flex;align-items:center;gap:8px">
+                  <span class="material-icons" style="color:#1976D2">today</span>
+                  <div>
+                    <div style="font-size:15px;font-weight:600">Bugünün Hedefi</div>
+                    <div *ngIf="dashboard.todayGoal?.motivationalMessage" style="font-size:13px;color:#666">
+                      {{ dashboard.todayGoal.motivationalMessage }}
+                    </div>
+                  </div>
+                </div>
+                <div style="padding:0 16px 16px">
+                  <!-- Büyük yüzde gösterimi -->
+                  <div style="text-align:center;margin:8px 0 16px">
+                    <div [style.color]="dailyGoalPct >= 100 ? '#388E3C' : dailyGoalPct >= 50 ? '#F57C00' : '#1976D2'"
+                         style="font-size:48px;font-weight:700;line-height:1">
+                      %{{ dailyGoalPct | number:'1.0-0' }}
+                    </div>
+                    <div style="color:#666;font-size:13px">tamamlandı</div>
+                  </div>
+                  <!-- 3 alt hedef -->
+                  <div style="display:flex;flex-direction:column;gap:10px">
+                    <div>
+                      <div style="display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:4px">
+                        <span><span class="material-icons" style="font-size:14px;vertical-align:middle;color:#1976D2">schedule</span> Dakika</span>
+                        <span>{{ dashboard.todayGoal.actualMinutes }} / {{ dashboard.todayGoal.targetMinutes }}</span>
+                      </div>
+                      <div class="sp-bar"><div class="sp-bar-fill" [style.width.%]="minutesPct"></div></div>
+                    </div>
+                    <div>
+                      <div style="display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:4px">
+                        <span><span class="material-icons" style="font-size:14px;vertical-align:middle;color:#388E3C">menu_book</span> Okuma Seansı</span>
+                        <span>{{ dashboard.todayGoal.actualReadingSessions }} / {{ dashboard.todayGoal.targetReadingSessions }}</span>
+                      </div>
+                      <div class="sp-bar"><div class="sp-bar-fill sp-bar-fill--accent" [style.width.%]="sessionsPct"></div></div>
+                    </div>
+                    <div>
+                      <div style="display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:4px">
+                        <span><span class="material-icons" style="font-size:14px;vertical-align:middle;color:#7B1FA2">fitness_center</span> Egzersiz</span>
+                        <span>{{ dashboard.todayGoal.actualExercises }} / {{ dashboard.todayGoal.targetExercises }}</span>
+                      </div>
+                      <div class="sp-bar"><div class="sp-bar-fill sp-bar-fill--warn" [style.width.%]="exercisesPct"></div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Profil Özet Kartı -->
+              <div class="sp-card stat-card" style="flex:2;min-width:260px;padding:0">
+                <div style="padding:16px 16px 8px;display:flex;align-items:center;gap:8px">
+                  <span class="material-icons" style="color:#388E3C">person</span>
+                  <div style="font-size:15px;font-weight:600">Profil Özeti</div>
+                </div>
+                <div style="padding:0 16px 16px">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
+                    <div style="text-align:center;padding:8px;background:#f5f5f5;border-radius:8px">
+                      <div style="font-size:28px;font-weight:700;color:#1976D2">
+                        {{ dashboard.profile.averageWPM | number:'1.0-0' }}
+                      </div>
+                      <div style="font-size:11px;color:#666">ort. KDK</div>
+                      <div style="font-size:11px;color:#999">{{ getSpeedLabel(dashboard.profile.averageWPM) }}</div>
+                    </div>
+                    <div style="text-align:center;padding:8px;background:#f5f5f5;border-radius:8px">
+                      <div style="font-size:28px;font-weight:700;color:#388E3C">
+                        %{{ dashboard.profile.averageComprehension | number:'1.0-0' }}
+                      </div>
+                      <div style="font-size:11px;color:#666">ort. anlama</div>
+                    </div>
+                    <div style="text-align:center;padding:8px;background:#f5f5f5;border-radius:8px">
+                      <div style="font-size:28px;font-weight:700;color:#7B1FA2">
+                        {{ dashboard.profile.currentDifficultyLevel }}<span style="font-size:14px">/10</span>
+                      </div>
+                      <div style="font-size:11px;color:#666">seviye</div>
+                      <div style="font-size:11px;color:#999">{{ getDifficultyLabel(dashboard.profile.currentDifficultyLevel) }}</div>
+                    </div>
+                    <div style="text-align:center;padding:8px;background:#f5f5f5;border-radius:8px">
+                      <div style="font-size:28px;font-weight:700;color:#F57C00">
+                        {{ dashboard.currentStreak }}
+                        <span style="font-size:18px">🔥</span>
+                      </div>
+                      <div style="font-size:11px;color:#666">günlük seri</div>
+                    </div>
+                  </div>
+                  <div style="margin-top:12px;padding:8px 12px;background:#f5f5f5;border-radius:8px;display:flex;justify-content:space-between">
+                    <span style="font-size:12px;color:#666">Toplam çalışma süresi</span>
+                    <span style="font-size:12px;font-weight:600">{{ totalMinutesFormatted }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Top 3 Zayıf Alan -->
+            <div *ngIf="weakAreas.length > 0" style="margin-bottom:24px">
+              <h3 style="margin:0 0 12px;font-size:15px;color:#333;display:flex;align-items:center;gap:6px">
+                <span class="material-icons" style="color:#F57C00">warning</span> Gelişim Gereken Alanlar
+              </h3>
+              <div style="display:flex;flex-wrap:wrap;gap:12px">
+                <div *ngFor="let w of weakAreas.slice(0,3)" class="sp-card" style="flex:1;min-width:200px;border-left:4px solid #F57C00">
+                  <div style="padding:12px">
+                    <div style="font-weight:600;font-size:14px;margin-bottom:4px">{{ w.bloomLevelName }}</div>
+                    <div style="margin-bottom:8px">
+                      <div class="sp-bar"><div class="sp-bar-fill sp-bar-fill--warn" [style.width.%]="w.currentScore"></div></div>
+                      <span style="font-size:12px;color:#F57C00">%{{ w.currentScore | number:'1.0-0' }}</span>
+                    </div>
+                    <div style="font-size:12px;color:#666;line-height:1.4">{{ w.recommendation }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Top 5 Öneri -->
+            <div *ngIf="recommendations.length > 0">
+              <h3 style="margin:0 0 12px;font-size:15px;color:#333;display:flex;align-items:center;gap:6px">
+                <span class="material-icons" style="color:#1976D2">recommend</span> Senin İçin Önerilen İçerikler
+              </h3>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div *ngFor="let r of recommendations.slice(0,5)" class="sp-card" style="border-left:4px solid #1976D2">
+                  <div style="padding:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                    <div style="flex:1;min-width:180px">
+                      <div style="font-weight:600;font-size:14px">{{ r.title }}</div>
+                      <div style="font-size:12px;color:#666;margin-top:2px">
+                        <span class="status-badge status-active" style="font-size:11px">{{ r.category }}</span>
+                        <span style="margin-left:8px">Seviye {{ r.difficultyLevel }}/10</span>
+                        <span style="margin-left:8px">{{ r.wordCount }} kelime</span>
+                      </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span *ngIf="r.isCompleted" class="material-icons" style="color:#388E3C" title="Tamamlandı">check_circle</span>
+                      <span *ngIf="r.isStarted && !r.isCompleted" class="material-icons" style="color:#F57C00" title="Devam ediyor">play_circle</span>
+                      <span *ngIf="r.isViewed && !r.isStarted" class="material-icons" style="color:#1976D2" title="Görüldü">visibility</span>
+                      <button class="sp-btn sp-btn--primary" [disabled]="r.isCompleted" style="height:32px;font-size:12px"
+                        [routerLink]="['/student/exercises/universal-player', r.readingTextId]">
+                        {{ r.isCompleted ? 'Tamamlandı' : r.isStarted ? 'Devam Et' : 'Okumaya Başla' }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        }
+
+        <!-- ═══════════ SEKME 1: BLOOM ANALİZİ ═══════════ -->
+        @if (activeTab === 1) {
+          <div style="padding:20px">
+            <p style="color:#666;margin:0 0 20px;font-size:14px">
+              Bloom Taksonomisi, okuduğunu anlama sorularını 6 bilişsel seviyeye göre değerlendirir.
+              <strong>%70 altı</strong> → gelişim gerektiren alan.
+            </p>
+
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div *ngFor="let level of bloomLevels"
+                [style.border-left]="getBloomScore(level) === 0 ? '4px solid #e0e0e0' : isWeakBloom(level) ? '4px solid #F57C00' : '4px solid #388E3C'"
+                style="background:#fafafa;border-radius:8px;padding:16px">
+
+                <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+                  <!-- Seviye numarası rozet -->
+                  <div [style.background]="getBloomScore(level) === 0 ? '#e0e0e0' : isWeakBloom(level) ? '#F57C00' : '#388E3C'"
+                       style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;flex-shrink:0">
+                    {{ level }}
+                  </div>
+
+                  <!-- İçerik -->
+                  <div style="flex:1;min-width:200px">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                      <span style="font-weight:700;font-size:15px">{{ bloomNames[level] }}</span>
+                      <span *ngIf="isStrongBloom(level)" class="material-icons"
+                        style="color:#388E3C;font-size:18px" title="Güçlü alan">check_circle</span>
+                      <span *ngIf="isWeakBloom(level)" class="material-icons"
+                        style="color:#F57C00;font-size:18px" title="Gelişim gerekiyor">warning</span>
+                      <span *ngIf="getBloomScore(level) === 0" class="material-icons"
+                        style="color:#ccc;font-size:18px" title="Henüz veri yok">help_outline</span>
+                    </div>
+                    <div style="font-size:12px;color:#888;margin-bottom:10px">{{ bloomDescriptions[level] }}</div>
+
+                    <!-- Progress bar -->
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div class="sp-bar" style="flex:1">
+                        <div class="sp-bar-fill"
+                          [class.sp-bar-fill--warn]="isWeakBloom(level)"
+                          [style.width.%]="getBloomScore(level)">
+                        </div>
+                      </div>
+                      <span style="width:44px;text-align:right;font-weight:600;font-size:14px"
+                        [style.color]="getBloomScore(level) === 0 ? '#ccc' : isWeakBloom(level) ? '#F57C00' : '#388E3C'">
+                        {{ getBloomScore(level) === 0 ? '—' : '%' + (getBloomScore(level) | number:'1.0-0') }}
+                      </span>
+                    </div>
+
+                    <!-- Eşik çizgisi açıklaması -->
+                    <div *ngIf="getBloomScore(level) > 0" style="margin-top:6px">
+                      <span *ngIf="isWeakBloom(level)" style="font-size:12px;color:#F57C00">
+                        ⚠ Hedef %70'in {{ 70 - getBloomScore(level) | number:'1.0-0' }} puan altında
+                      </span>
+                      <span *ngIf="isStrongBloom(level)" style="font-size:12px;color:#388E3C">
+                        ✓ Hedefi {{ getBloomScore(level) - 70 | number:'1.0-0' }} puan aşıyor
+                      </span>
+                    </div>
+
+                    <!-- Tavsiye (sadece zayıf alanlarda) -->
+                    <div *ngIf="getBloomWeakArea(level) as wa" style="margin-top:10px;padding:10px;background:white;border-radius:6px;border:1px solid #FFE0B2">
+                      <div style="font-size:12px;font-weight:600;color:#E65100;margin-bottom:4px">
+                        <span class="material-icons" style="font-size:14px;vertical-align:middle">lightbulb</span> Tavsiye
+                      </div>
+                      <div style="font-size:13px;color:#666;line-height:1.5">{{ wa.recommendation }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- ═══════════ SEKME 2: ÖNERİLEN İÇERİKLER ═══════════ -->
+        @if (activeTab === 2) {
+          <div style="padding:20px">
+            <div *ngIf="recommendations.length === 0" class="empty-state">
+              <span class="material-icons">recommend</span>
+              <p>Henüz öneri oluşturulmadı. Birkaç okuma seansı tamamladıktan sonra kişisel öneriler burada görünecek.</p>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:16px" *ngIf="recommendations.length > 0">
+              <div *ngFor="let r of recommendations; let i = index" class="sp-card">
+                <div style="padding:12px 16px 0;display:flex;align-items:flex-start;gap:12px">
+                  <div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:#E3F2FD;border-radius:50%;color:#1976D2;font-weight:700;flex-shrink:0">
+                    {{ i + 1 }}
+                  </div>
+                  <div style="flex:1">
+                    <div style="font-size:15px;font-weight:600">{{ r.title }}</div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+                      <span class="status-badge status-active">{{ r.category }}</span>
+                      <span class="status-badge status-scheduled">Seviye {{ r.difficultyLevel }}/10</span>
+                      <span class="status-badge" *ngIf="r.isCompleted" style="background:#E8F5E9;color:#388E3C">Tamamlandı</span>
+                      <span class="status-badge" *ngIf="r.isStarted && !r.isCompleted" style="background:#FFF3E0;color:#F57C00">Devam Ediyor</span>
+                    </div>
+                  </div>
+                </div>
+                <div style="padding:12px 16px">
+
+                  <!-- Öneri Skoru -->
+                  <div style="margin-bottom:12px">
+                    <div style="display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:4px">
+                      <span>Uygunluk Skoru</span>
+                      <span style="font-weight:600;color:#1976D2">{{ r.recommendationScore }}/100</span>
+                    </div>
+                    <div class="sp-bar"><div class="sp-bar-fill" [style.width.%]="r.recommendationScore"></div></div>
+                  </div>
+
+                  <!-- Detaylar -->
+                  <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:12px">
+                    <div style="font-size:12px;color:#666">
+                      <span class="material-icons" style="font-size:14px;vertical-align:middle">text_fields</span>
+                      {{ r.wordCount }} kelime
+                    </div>
+                    <div style="font-size:12px;color:#666">
+                      <span class="material-icons" style="font-size:14px;vertical-align:middle">schedule</span>
+                      {{ estimatedReadingTime(r.wordCount, dashboard.profile.averageWPM) }}
+                    </div>
+                    <div style="font-size:12px;color:#666">
+                      <span class="material-icons" style="font-size:14px;vertical-align:middle">event</span>
+                      Son geçerlilik: {{ r.expiresAt | date:'dd.MM.yyyy' }}
+                    </div>
+                  </div>
+
+                  <!-- Neden Önerildi -->
+                  <div style="padding:10px;background:#F3E5F5;border-radius:6px;margin-bottom:12px">
+                    <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#7B1FA2;margin-bottom:4px">
+                      <span class="material-icons" style="font-size:14px">{{ recommendationTypeIcons[r.recommendationType] }}</span>
+                      {{ recommendationTypeLabels[r.recommendationType] }}
+                    </div>
+                    <div style="font-size:13px;color:#555;line-height:1.5">{{ r.reason }}</div>
+                  </div>
+
+                  <!-- Buton -->
+                  <button class="sp-btn sp-btn--primary" style="width:100%"
+                    [disabled]="r.isCompleted"
+                    [routerLink]="['/student/exercises/universal-player', r.readingTextId]">
+                    <span class="material-icons">{{ r.isCompleted ? 'check' : r.isStarted ? 'play_arrow' : 'menu_book' }}</span>
+                    {{ r.isCompleted ? 'Tamamlandı' : r.isStarted ? 'Okumaya Devam Et' : 'Okumaya Başla' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- ═══════════ SEKME 3: OKUMA PROFİLİ ═══════════ -->
+        @if (activeTab === 3) {
+          <div style="padding:20px;display:flex;flex-direction:column;gap:20px">
+
+            <!-- Hız ve Seviye -->
+            <div class="sp-card">
+              <div style="padding:16px 16px 0;display:flex;align-items:center;gap:8px">
+                <span class="material-icons" style="color:#1976D2">speed</span>
+                <div style="font-size:16px;font-weight:600">Okuma Hızı ve Seviye</div>
+              </div>
+              <div style="padding:16px">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px">
+                  <div style="text-align:center;padding:16px;background:#E3F2FD;border-radius:12px">
+                    <div style="font-size:42px;font-weight:700;color:#1976D2">{{ dashboard.profile.averageWPM | number:'1.0-0' }}</div>
+                    <div style="font-size:13px;color:#666;font-weight:500">Kelime / Dakika</div>
+                    <div style="font-size:12px;color:#1976D2;margin-top:4px">{{ getSpeedLabel(dashboard.profile.averageWPM) }}</div>
+                  </div>
+                  <div style="text-align:center;padding:16px;background:#E8F5E9;border-radius:12px">
+                    <div style="font-size:42px;font-weight:700;color:#388E3C">%{{ dashboard.profile.averageComprehension | number:'1.0-0' }}</div>
+                    <div style="font-size:13px;color:#666;font-weight:500">Anlama Oranı</div>
+                  </div>
+                  <div style="text-align:center;padding:16px;background:#F3E5F5;border-radius:12px">
+                    <div style="font-size:42px;font-weight:700;color:#7B1FA2">{{ dashboard.profile.currentDifficultyLevel }}<span style="font-size:20px">/10</span></div>
+                    <div style="font-size:13px;color:#666;font-weight:500">Zorluk Seviyesi</div>
+                    <div style="font-size:12px;color:#7B1FA2;margin-top:4px">{{ getDifficultyLabel(dashboard.profile.currentDifficultyLevel) }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Kategori Performansı -->
+            <div class="sp-card" *ngIf="readingProfile">
+              <div style="padding:16px 16px 0;display:flex;align-items:center;gap:8px">
+                <span class="material-icons" style="color:#388E3C">category</span>
+                <div>
+                  <div style="font-size:16px;font-weight:600">Kategori Performansı</div>
+                  <div style="font-size:13px;color:#666">Hangi konularda güçlü, hangi konularda gelişim gerekiyor</div>
+                </div>
+              </div>
+              <div style="padding:16px">
+                <div *ngIf="readingProfile?.preferredCategories?.length" style="margin-bottom:16px">
+                  <div style="font-size:13px;font-weight:600;color:#388E3C;margin-bottom:8px;display:flex;align-items:center;gap:4px">
+                    <span class="material-icons" style="font-size:16px">thumb_up</span> Güçlü Kategoriler
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:8px">
+                    <span *ngFor="let cat of readingProfile.preferredCategories"
+                      class="sp-chip" style="background:#E8F5E9;color:#388E3C">
+                      <span class="material-icons" style="font-size:14px;vertical-align:middle">check</span> {{ cat }}
+                    </span>
+                  </div>
+                </div>
+                <hr *ngIf="readingProfile?.preferredCategories?.length && readingProfile?.difficultCategories?.length" style="margin:12px 0;border:none;border-top:1px solid #e0e0e0">
+                <div *ngIf="readingProfile?.difficultCategories?.length">
+                  <div style="font-size:13px;font-weight:600;color:#F57C00;margin-bottom:8px;display:flex;align-items:center;gap:4px">
+                    <span class="material-icons" style="font-size:16px">trending_up</span> Gelişim Gereken Kategoriler
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:8px">
+                    <span *ngFor="let cat of readingProfile.difficultCategories"
+                      class="sp-chip" style="background:#FFF3E0;color:#F57C00">
+                      <span class="material-icons" style="font-size:14px;vertical-align:middle">warning</span> {{ cat }}
+                    </span>
+                  </div>
+                </div>
+                <div *ngIf="!readingProfile.preferredCategories?.length && !readingProfile.difficultCategories?.length"
+                  style="color:#999;font-size:13px;text-align:center;padding:16px">
+                  Daha fazla metin okudukça kategori analizi burada görünecektir.
+                </div>
+              </div>
+            </div>
+
+            <!-- İstatistikler -->
+            <div class="sp-card">
+              <div style="padding:16px 16px 0;display:flex;align-items:center;gap:8px">
+                <span class="material-icons" style="color:#F57C00">bar_chart</span>
+                <div style="font-size:16px;font-weight:600">Genel İstatistikler</div>
+              </div>
+              <div style="padding:16px">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
+                  <div style="padding:12px;background:#f5f5f5;border-radius:8px;text-align:center">
+                    <div style="font-size:24px;font-weight:700;color:#333">{{ dashboard.profile.totalReadingSessions }}</div>
+                    <div style="font-size:12px;color:#666">Okuma Seansı</div>
+                  </div>
+                  <div style="padding:12px;background:#f5f5f5;border-radius:8px;text-align:center">
+                    <div style="font-size:24px;font-weight:700;color:#333">{{ dashboard.profile.totalExerciseSessions }}</div>
+                    <div style="font-size:12px;color:#666">Egzersiz Seansı</div>
+                  </div>
+                  <div style="padding:12px;background:#f5f5f5;border-radius:8px;text-align:center">
+                    <div style="font-size:24px;font-weight:700;color:#333">{{ readingProfile?.totalTextsRead ?? 0 }}</div>
+                    <div style="font-size:12px;color:#666">Okunan Metin</div>
+                  </div>
+                  <div style="padding:12px;background:#f5f5f5;border-radius:8px;text-align:center">
+                    <div style="font-size:20px;font-weight:700;color:#333">{{ totalMinutesFormatted }}</div>
+                    <div style="font-size:12px;color:#666">Toplam Çalışma</div>
+                  </div>
+                  <div style="padding:12px;background:#f5f5f5;border-radius:8px;text-align:center">
+                    <div style="font-size:24px;font-weight:700;color:#F57C00">{{ dashboard.profile.currentStreak }} 🔥</div>
+                    <div style="font-size:12px;color:#666">Günlük Seri</div>
+                  </div>
+                  <div style="padding:12px;background:#f5f5f5;border-radius:8px;text-align:center">
+                    <div style="font-size:24px;font-weight:700;color:#333">{{ dashboard.profile.longestStreak }}</div>
+                    <div style="font-size:12px;color:#666">En Uzun Seri</div>
+                  </div>
+                </div>
+                <div *ngIf="readingProfile?.lastCalculatedAt" style="margin-top:12px;text-align:right;font-size:11px;color:#bbb">
+                  Son güncelleme: {{ readingProfile?.lastCalculatedAt | date:'dd.MM.yyyy HH:mm' }}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        }
+
+      </div>
+    </div>
+  </ng-container>
+</div>

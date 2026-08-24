@@ -1,0 +1,184 @@
+<mat-sidenav-container class="sidenav-container" fullscreen>
+  <!-- Mobile Sidenav -->
+  <mat-sidenav #drawer class="sidenav" fixedInViewport [attr.role]="'dialog'" [mode]="'over'" [opened]="false">
+    <mat-toolbar color="primary">
+      <span class="logo-text">Hızlı Okuma</span>
+    </mat-toolbar>
+    <mat-nav-list>
+      <ng-container *ngFor="let item of menuItems">
+        <!-- Menu Item without Children -->
+        <a mat-list-item *ngIf="!item.children" [routerLink]="item.route" [queryParams]="item.queryParams"
+          (click)="drawer.close()" [class.active]="isActive(item.route!)">
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label }}</span>
+        </a>
+
+        <!-- Menu Item with Children (Group) -->
+        <ng-container *ngIf="item.children">
+          <div mat-subheader>{{ item.label }}</div>
+          <a mat-list-item *ngFor="let child of item.children" [routerLink]="getRouterLink(child.route)"
+            [queryParams]="child.queryParams" (click)="drawer.close(); handleItemClick($event, child)"
+            [class.active]="child.route && isActive(child.route)">
+            <mat-icon matListItemIcon>{{ child.icon }}</mat-icon>
+            <span matListItemTitle>{{ child.label }}</span>
+          </a>
+          <mat-divider></mat-divider>
+        </ng-container>
+      </ng-container>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <div class="main-layout">
+      <!-- Toolbar / Header -->
+      <mat-toolbar color="primary" class="toolbar" *ngIf="showHeader">
+
+        <!-- Mobile Toggle Button -->
+        <button type="button" mat-icon-button (click)="drawer.toggle()" *ngIf="isHandset$ | async"
+          class="mobile-menu-btn">
+          <mat-icon>menu</mat-icon>
+        </button>
+
+        <!-- Logo Area -->
+        <div class="logo-container" [routerLink]="'/' + role + '/dashboard'">
+          <img src="assets/icons/apple-touch-icon.png" alt="OnAl Logo" class="logo-image">
+          <span class="logo-text">Hızlı Okuma</span>
+        </div>
+
+        <!-- Desktop Navigation -->
+        <nav class="top-nav" *ngIf="!(isHandset$ | async)">
+          <ng-container *ngFor="let item of menuItems">
+            <!-- Menu item without children -->
+            <a *ngIf="!item.children" mat-button [routerLink]="item.route" [queryParams]="item.queryParams"
+              [class.active]="isActive(item.route!)" class="nav-link">
+              <mat-icon>{{ item.icon }}</mat-icon>
+              <span>{{ item.label }}</span>
+              <span *ngIf="item.badge" class="badge" [class]="'badge-' + (item.badgeColor || 'primary')">
+                {{ item.badge }}
+              </span>
+            </a>
+
+            <!-- Menu item with children (Dropdown) -->
+            <button *ngIf="item.children" mat-button [matMenuTriggerFor]="submenu" class="nav-link"
+              [class.active]="isParentActive(item)">
+              <mat-icon>{{ item.icon }}</mat-icon>
+              <span>{{ item.label }}</span>
+              <mat-icon iconPositionEnd>arrow_drop_down</mat-icon>
+            </button>
+
+            <mat-menu #submenu="matMenu">
+              <a *ngFor="let child of item.children" mat-menu-item [routerLink]="getRouterLink(child.route)"
+                [queryParams]="child.queryParams" [class.active]="child.route && isActive(child.route)"
+                (click)="handleItemClick($event, child)">
+                <mat-icon>{{ child.icon }}</mat-icon>
+                <span>{{ child.label }}</span>
+              </a>
+            </mat-menu>
+          </ng-container>
+        </nav>
+
+        <span class="toolbar-spacer"></span>
+
+        <!-- Admin Context Switcher -->
+        <!-- Admin Context Switcher Buttons Removed (Moved to Sidebar Menu) -->
+
+        <!-- Active Context Indicator -->
+        <!-- Active Context Indicator -->
+        <div class="context-badge" *ngIf="isImpersonatingInst()">
+          <mat-icon>school</mat-icon>
+          <span class="badge-value">{{ instName() }}</span>
+        </div>
+
+        <div class="context-badge" *ngIf="isImpersonatingTeacher()">
+          <mat-icon>person</mat-icon>
+          <span class="badge-value">{{ teacherName() }}</span>
+        </div>
+
+        <!-- Admin Panel Return Button -->
+        <button mat-flat-button *ngIf="isAdmin() && role !== 'admin' && !(isHandset$ | async)"
+          (click)="exitImpersonation()" color="warn" class="admin-switch-btn">
+          <mat-icon>admin_panel_settings</mat-icon>
+          <span>Admin Panele Dön</span>
+        </button>
+
+        <!-- Extra Header Content (Injected from parent) -->
+        <ng-content select="[extra-header-content]"></ng-content>
+
+        <!-- Notifications -->
+        <app-notification-bell *ngIf="!isOnlyEditor()"></app-notification-bell>
+
+
+        <!-- User Menu -->
+        <button mat-icon-button [matMenuTriggerFor]="userMenu" class="user-button">
+          <div class="avatar">{{ getAvatarLetters() }}</div>
+        </button>
+
+        <!-- User Menu Dropdown -->
+        <mat-menu #userMenu="matMenu" xPosition="before" class="user-profile-menu">
+          <div class="user-menu-header">
+            <div class="avatar-large">{{ getAvatarLetters() }}</div>
+            <div class="user-info">
+              <div class="user-name">{{ getUserDisplayName() }}</div>
+              <div class="user-role">{{ getUserRole() }}</div>
+            </div>
+          </div>
+          <mat-divider></mat-divider>
+          <!-- Admin Switch in Profile Menu for Mobile -->
+          <button mat-menu-item *ngIf="isAdmin() && role !== 'admin'" routerLink="/admin/dashboard">
+            <mat-icon color="warn">admin_panel_settings</mat-icon>
+            <span>Admin Paneli</span>
+          </button>
+          <!-- Coach Panel Link -->
+          <button mat-menu-item *ngIf="isCoach() && role !== 'teacher'" routerLink="/coaching/dashboard">
+            <mat-icon style="color:#388E3C">sports</mat-icon>
+            <span>Koç Paneli</span>
+          </button>
+
+          <button mat-menu-item [routerLink]="'/' + role + '/profile'" *ngIf="!isInstitutionAdmin()">
+            <mat-icon>person</mat-icon>
+            <span>Profilim</span>
+          </button>
+
+          <!-- Institution Admin Settings -->
+          <button mat-menu-item routerLink="/teacher/institution-settings" *ngIf="isInstitutionAdmin()">
+            <mat-icon>settings</mat-icon>
+            <span>Kurum Ayarları</span>
+          </button>
+
+          <!-- Student/Admin Settings (Hidden for regular Teachers) -->
+          <button mat-menu-item [routerLink]="'/' + role + '/settings'" *ngIf="role === 'student' || role === 'admin'">
+            <mat-icon>settings</mat-icon>
+            <span>Ayarlar</span>
+          </button>
+          <button mat-menu-item (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            <span>Çıkış Yap</span>
+          </button>
+        </mat-menu>
+
+      </mat-toolbar>
+
+      <!-- Page Content -->
+      <div class="page-content">
+        <div class="content-container">
+          <router-outlet></router-outlet>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="footer">
+        <div class="footer-content">
+          <span>&copy; 2025 Hızlı Okuma Platformu. Tüm hakları saklıdır.</span>
+          <div class="footer-links">
+            <a routerLink="/legal/terms" target="_blank">Kullanım Koşulları</a>
+            <a routerLink="/legal/privacy" target="_blank">Gizlilik Politikası</a>
+            <a routerLink="/legal/kvkk" target="_blank">KVKK</a>
+            <a routerLink="/legal/cookies" target="_blank">Çerez Politikası</a>
+          </div>
+        </div>
+      </footer>
+
+      <!-- Bottom Navigation Removed -->
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

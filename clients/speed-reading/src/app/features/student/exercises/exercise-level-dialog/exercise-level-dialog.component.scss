@@ -1,0 +1,134 @@
+.dialog-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+
+    .title-icon {
+        color: #3f51b5;
+    }
+
+    .subtitle {
+        font-size: 14px;
+        color: #666;
+        font-weight: normal;
+        margin-left: auto;
+    }
+}
+
+.level-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.level-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border-radius: 8px;
+    background-color: #f5f5f5;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+
+    &:hover {
+        background-color: #e8eaf6;
+        border-color: #c5cae9;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+
+        .play-btn {
+            transform: scale(1.1);
+        }
+    }
+
+    .level-info {
+        flex: 1;
+
+        .level-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 4px;
+        }
+
+        .level-title {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .level-desc {
+            margin: 0;
+            font-size: 13px;
+            color: #666;
+        }
+    }
+
+    .level-badge {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 12px;
+
+        &.easy {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        &.medium {
+            background-color: #fff3e0;
+            color: #ef6c00;
+        }
+
+        &.hard {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+    }
+
+    .age-badge {
+        font-size: 12px;
+        font-weight: 500;
+        padding: 4px 8px;
+        border-radius: 12px;
+
+        // Varsayılan - mavi
+        background-color: #e1f5fe;
+        color: #0277bd;
+        border: 1px solid #b3e5fc;
+
+        // Çocuk - mor/pembe
+        &.child {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+            border-color: #ce93d8;
+        }
+
+        // Genç - turuncu
+        &.teen {
+            background-color: #fff3e0;
+            color: #ef6c00;
+            border-color: #ffcc80;
+        }
+
+        // Yetişkin - mavi/yeşil
+        &.adult {
+            background-color: #e0f2f1;
+            color: #00796b;
+            border-color: #80cbc4;
+        }
+    }
+
+    .play-btn {
+        transition: transform 0.2s ease;
+
+        mat-icon {
+            font-size: 32px;
+            width: 32px;
+            height: 32px;
+        }
+    }
+}

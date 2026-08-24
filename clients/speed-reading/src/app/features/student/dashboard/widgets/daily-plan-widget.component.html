@@ -1,0 +1,127 @@
+<!-- Daily Plan Widget — Sprint 3 Redesign -->
+<div class="dp-widget">
+
+  <!-- Header -->
+  <div class="dp-widget__header">
+    <div class="dp-widget__header-left">
+      <div class="dp-widget__icon-wrap">
+        <span class="material-icons">today</span>
+      </div>
+      <div>
+        <h3 class="dp-widget__title">Bugünkü Planın</h3>
+        <p class="dp-widget__date">{{ formattedDate() }}</p>
+      </div>
+    </div>
+    @if (todaysPlan() && !todaysPlan()!.isCompleted) {
+      <div class="dp-widget__progress-chip" [class.dp-widget__progress-chip--done]="todaysPlan()!.isCompleted">
+        {{ todaysPlan()!.completedItems }}/{{ todaysPlan()!.totalItems }}
+      </div>
+    }
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="dp-widget__loading">
+      <div class="dp-widget__spinner"></div>
+      <p>Plan yükleniyor…</p>
+    </div>
+
+  <!-- Error -->
+  } @else if (error()) {
+    <div class="dp-widget__empty">
+      <span class="material-icons dp-widget__empty-icon dp-widget__empty-icon--err">error_outline</span>
+      <p>{{ error() }}</p>
+      <button class="dp-widget__btn dp-widget__btn--ghost" (click)="refresh()">
+        <span class="material-icons">refresh</span>
+        Tekrar Dene
+      </button>
+    </div>
+
+  <!-- Exercises list -->
+  } @else if (todaysPlan()) {
+    <!-- Progress bar -->
+    <div class="dp-widget__progress-bar-wrap">
+      <div class="dp-widget__progress-bar">
+        <div class="dp-widget__progress-fill"
+          [style.width.%]="todaysPlan()!.progressPercentage"></div>
+      </div>
+      <span class="dp-widget__progress-pct">{{ todaysPlan()!.progressPercentage | number:'1.0-0' }}%</span>
+    </div>
+
+    <!-- Timeline -->
+    <ol class="dp-timeline" aria-label="Egzersiz listesi">
+      @for (exercise of todaysPlan()!.exercises; track exercise.id; let i = $index; let last = $last) {
+        <li class="dp-timeline__item"
+          [class.dp-timeline__item--done]="exercise.completed"
+          [class.dp-timeline__item--active]="!exercise.completed && (i === 0 || todaysPlan()!.exercises![i-1]?.completed)">
+
+          <!-- Connector line -->
+          @if (!last) {
+            <span class="dp-timeline__line"
+              [class.dp-timeline__line--done]="exercise.completed"></span>
+          }
+
+          <!-- Status dot -->
+          <div class="dp-timeline__dot" aria-hidden="true">
+            @if (exercise.completed) {
+              <span class="material-icons dp-timeline__check">check</span>
+            } @else {
+              <span class="dp-timeline__num">{{ i + 1 }}</span>
+            }
+          </div>
+
+          <!-- Card -->
+          <div class="dp-timeline__card">
+            <div class="dp-timeline__card-top">
+              <span class="dp-timeline__type">{{ exercise.exerciseType }}</span>
+              <span class="dp-timeline__duration">~5 dk</span>
+            </div>
+            <h4 class="dp-timeline__name">{{ exercise.name }}</h4>
+            <div class="dp-timeline__meta">
+              <span class="dp-timeline__meta-pill">
+                <span class="material-icons">signal_cellular_alt</span>
+                Seviye {{ exercise.difficultyLevel }}
+              </span>
+              @if (exercise.ageGroup) {
+                <span class="dp-timeline__meta-pill">
+                  <span class="material-icons">groups</span>
+                  {{ exercise.ageGroup }}
+                </span>
+              }
+            </div>
+            @if (!exercise.completed && (i === 0 || todaysPlan()!.exercises![i-1]?.completed)) {
+              <button class="dp-widget__btn dp-widget__btn--primary" (click)="continuePlan()">
+                <span class="material-icons">play_arrow</span>
+                Başla
+              </button>
+            }
+          </div>
+        </li>
+      }
+    </ol>
+
+    <!-- Completion message -->
+    @if (todaysPlan()!.isCompleted) {
+      <div class="dp-widget__complete">
+        <span class="dp-widget__complete-emoji">🎉</span>
+        <p>Harika! Bugünün tüm görevlerini tamamladın.</p>
+        <button class="dp-widget__btn dp-widget__btn--ghost" (click)="repeatExercises()">
+          <span class="material-icons">replay</span>
+          Tekrar Yap
+        </button>
+      </div>
+    }
+
+  <!-- No plan -->
+  } @else {
+    <div class="dp-widget__empty">
+      <span class="material-icons dp-widget__empty-icon">event_busy</span>
+      <p class="dp-widget__empty-title">Bugün için aktif plan bulunamadı</p>
+      <p class="dp-widget__empty-hint">Bir eğitim serisine kayıt olarak günlük planını oluşturabilirsin.</p>
+      <button class="dp-widget__btn dp-widget__btn--primary" (click)="goToSeries()">
+        <span class="material-icons">school</span>
+        Serilere Git
+      </button>
+    </div>
+  }
+</div>

@@ -1,0 +1,246 @@
+<div class="review-container">
+    <!-- Hero Header -->
+    <div class="hero-header">
+        <div class="hero-content">
+            <h1>
+                <span class="material-icons hero-icon">refresh</span>
+                Tekrar Egzersizleri
+            </h1>
+            <p class="hero-subtitle">Öğrendiklerinizi pekiştirmek için düzenli aralıklarla tekrar yapın</p>
+        </div>
+
+        <!-- Statistics Overview -->
+        <div class="stats-overview" *ngIf="statistics()">
+            <div class="stat-card primary">
+                <span class="material-icons">event_available</span>
+                <div class="stat-info">
+                    <span class="stat-value">{{ statistics()!.totalDueToday }}</span>
+                    <span class="stat-label">Bugün Yapılacak</span>
+                </div>
+            </div>
+            <div class="stat-card warning">
+                <span class="material-icons">event_busy</span>
+                <div class="stat-info">
+                    <span class="stat-value">{{ statistics()!.totalOverdue }}</span>
+                    <span class="stat-label">Gecikmiş</span>
+                </div>
+            </div>
+            <div class="stat-card success">
+                <span class="material-icons">verified</span>
+                <div class="stat-info">
+                    <span class="stat-value">{{ statistics()!.masteredCount }}</span>
+                    <span class="stat-label">Uzmanlaşılan</span>
+                </div>
+            </div>
+            <div class="stat-card info">
+                <span class="material-icons">trending_up</span>
+                <div class="stat-info">
+                    <span class="stat-value">{{ statistics()!.averageReviewScore.toFixed(1) }}%</span>
+                    <span class="stat-label">Ortalama Başarı</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="content-section">
+        <!-- Tab Buttons -->
+        <div class="sp-tab-bar">
+            <button class="sp-tab-btn" [class.active]="activeTab === 0" (click)="activeTab = 0">
+                <span class="material-icons">event</span>
+                Yapılacaklar
+                <span class="tab-badge" *ngIf="dueReviews().length > 0">{{ dueReviews().length }}</span>
+            </button>
+            <button class="sp-tab-btn" [class.active]="activeTab === 1" (click)="activeTab = 1">
+                <span class="material-icons">analytics</span>
+                İstatistikler
+            </button>
+        </div>
+
+        <!-- Due Reviews Tab -->
+        <div class="tab-content" *ngIf="activeTab === 0">
+            <!-- Review Cards -->
+            <div class="reviews-grid" *ngIf="dueReviews().length > 0">
+                <div *ngFor="let review of dueReviews()" class="sp-card review-card">
+                    <!-- Overdue Badge -->
+                    <div class="overdue-badge" *ngIf="review.isOverdue">
+                        <span class="material-icons">warning</span>
+                        {{ review.daysOverdue }} gün geç
+                    </div>
+
+                    <!-- Mastered Badge -->
+                    <div class="mastered-badge" *ngIf="review.isMastered">
+                        <span class="material-icons">verified</span>
+                        Uzmanlaşıldı
+                    </div>
+
+                    <div class="sp-card-header">
+                        <div class="exercise-icon" [style.background]="getExerciseColor(review.exerciseType)">
+                            <span class="material-icons">{{ getExerciseIcon(review.exerciseType) }}</span>
+                        </div>
+                        <div class="header-content">
+                            <div class="sp-card-title">{{ review.exerciseTitle }}</div>
+                            <div class="sp-card-subtitle">{{ review.seriesTitle }}</div>
+                        </div>
+                    </div>
+
+                    <div class="sp-card-content">
+                        <!-- Review Stats -->
+                        <div class="review-stats">
+                            <div class="stat-item">
+                                <span class="material-icons">repeat</span>
+                                <span>{{ review.reviewCount }} tekrar</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="material-icons">schedule</span>
+                                <span>{{ review.currentIntervalDays }} günlük aralık</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="material-icons">star</span>
+                                <span>{{ review.averageReviewScore.toFixed(1) }}% ortalama</span>
+                            </div>
+                        </div>
+
+                        <!-- Easiness Factor -->
+                        <div class="easiness-section">
+                            <div class="easiness-header">
+                                <span>Kolaylık Faktörü</span>
+                                <span class="easiness-value">{{ review.easinessFactor.toFixed(2) }}</span>
+                            </div>
+                            <div class="sp-bar easiness-bar">
+                                <div class="sp-bar-fill" [style.width.%]="(review.easinessFactor - 1.3) / (2.5 - 1.3) * 100"></div>
+                            </div>
+                            <p class="easiness-hint">Yüksek faktör = Daha uzun aralıklar</p>
+                        </div>
+
+                        <!-- Next Review Info -->
+                        <div class="next-review-info">
+                            <span class="material-icons">event</span>
+                            <span>
+                                <strong>Son Tekrar:</strong> {{ review.lastReviewedAt | date:'dd.MM.yyyy HH:mm' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="sp-card-actions">
+                        <button class="sp-btn sp-btn-primary" (click)="startReview(review)">
+                            <span class="material-icons">play_arrow</span>
+                            Tekrar Yap
+                        </button>
+                        <button class="sp-btn" (click)="viewHistory(review)">
+                            <span class="material-icons">history</span>
+                            Geçmiş
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="dueReviews().length === 0" class="empty-state">
+                <div class="empty-illustration">
+                    <span class="material-icons">check_circle</span>
+                </div>
+                <h2>Tebrikler!</h2>
+                <p>Bugün için yapılacak tekrar egzersizi yok. Yeni içerikler öğrenmeye devam edebilirsiniz.</p>
+            </div>
+        </div>
+
+        <!-- Statistics Tab -->
+        <div class="tab-content" *ngIf="activeTab === 1 && statistics()">
+            <div class="statistics-grid">
+                <!-- Total Reviews Card -->
+                <div class="sp-card stat-detail-card">
+                    <div class="sp-card-header">
+                        <div class="card-icon primary">
+                            <span class="material-icons">inventory</span>
+                        </div>
+                        <div class="sp-card-title">Toplam İçerik</div>
+                    </div>
+                    <div class="sp-card-content">
+                        <div class="big-number">{{ statistics()!.totalInReviewQueue }}</div>
+                        <p class="description">Tekrar kuyruğundaki toplam içerik sayısı</p>
+                    </div>
+                </div>
+
+                <!-- Average Score Card -->
+                <div class="sp-card stat-detail-card">
+                    <div class="sp-card-header">
+                        <div class="card-icon success">
+                            <span class="material-icons">trending_up</span>
+                        </div>
+                        <div class="sp-card-title">Ortalama Başarı</div>
+                    </div>
+                    <div class="sp-card-content">
+                        <div class="big-number">{{ statistics()!.averageReviewScore.toFixed(1) }}%</div>
+                        <div class="sp-bar">
+                            <div class="sp-bar-fill sp-bar-fill--accent" [style.width.%]="statistics()!.averageReviewScore"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Average Interval Card -->
+                <div class="sp-card stat-detail-card">
+                    <div class="sp-card-header">
+                        <div class="card-icon info">
+                            <span class="material-icons">schedule</span>
+                        </div>
+                        <div class="sp-card-title">Ortalama Aralık</div>
+                    </div>
+                    <div class="sp-card-content">
+                        <div class="big-number">{{ statistics()!.averageInterval.toFixed(0) }}</div>
+                        <p class="description">gün</p>
+                    </div>
+                </div>
+
+                <!-- Mastered Items Card -->
+                <div class="sp-card stat-detail-card">
+                    <div class="sp-card-header">
+                        <div class="card-icon success">
+                            <span class="material-icons">verified</span>
+                        </div>
+                        <div class="sp-card-title">Uzmanlaşılan</div>
+                    </div>
+                    <div class="sp-card-content">
+                        <div class="big-number">{{ statistics()!.masteredCount }}</div>
+                        <p class="description">/ {{ statistics()!.totalInReviewQueue }} içerik</p>
+                        <div class="sp-bar">
+                            <div class="sp-bar-fill" [style.width.%]="(statistics()!.masteredCount / statistics()!.totalInReviewQueue) * 100"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Completed Card -->
+                <div class="sp-card stat-detail-card">
+                    <div class="sp-card-header">
+                        <div class="card-icon primary">
+                            <span class="material-icons">assignment_turned_in</span>
+                        </div>
+                        <div class="sp-card-title">Toplam Tamamlanan</div>
+                    </div>
+                    <div class="sp-card-content">
+                        <div class="big-number">{{ statistics()!.totalCompletedReviews }}</div>
+                        <p class="description">tekrar yapıldı</p>
+                    </div>
+                </div>
+
+                <!-- Next Review Card -->
+                <div class="sp-card stat-detail-card">
+                    <div class="sp-card-header">
+                        <div class="card-icon warning">
+                            <span class="material-icons">event</span>
+                        </div>
+                        <div class="sp-card-title">Sonraki Tekrar</div>
+                    </div>
+                    <div class="sp-card-content">
+                        <div class="big-number" *ngIf="statistics()!.nextReviewDate">
+                            {{ statistics()!.nextReviewDate | date:'dd.MM' }}
+                        </div>
+                        <p class="description" *ngIf="statistics()!.nextReviewDate">
+                            {{ statistics()!.nextReviewDate | date:'EEEE' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
