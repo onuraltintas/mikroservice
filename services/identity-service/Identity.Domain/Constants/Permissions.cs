@@ -44,6 +44,17 @@ public static class Permissions
         public const string Manage = PlatformPermissions.Coaching.Manage;
     }
 
+    public static class SpeedReading
+    {
+        public const string View = PlatformPermissions.SpeedReading.View;
+        public const string ContentManage = PlatformPermissions.SpeedReading.ContentManage;
+        public const string ProgramManage = PlatformPermissions.SpeedReading.ProgramManage;
+        public const string ProgressView = PlatformPermissions.SpeedReading.ProgressView;
+        public const string ReportView = PlatformPermissions.SpeedReading.ReportView;
+        public const string GamificationManage = PlatformPermissions.SpeedReading.GamificationManage;
+        public const string SettingsManage = PlatformPermissions.SpeedReading.SettingsManage;
+    }
+
     public static class Support
     {
         public const string View = PlatformPermissions.Support.View;

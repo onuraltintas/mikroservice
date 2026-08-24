@@ -215,6 +215,32 @@ services:
     networks:
       - edu-network
 
+  # Speed Reading Service. It is optional in the base stack because it can
+  # point at the existing Hızlı Okuma database rather than the platform DB.
+  # Production/staging overlays remove the profile when the service is enabled.
+  speed-reading-service:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/speed-reading-service:${RELEASE_TAG:-dev}
+    profiles: ["speed-reading"]
+    build:
+      context: .
+      dockerfile: services/speed-reading-service/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT:?ENVIRONMENT must be set to Development, Staging or Production}
+      - ConnectionStrings__SpeedReading=${SPEED_READING_CONNECTION_STRING:-}
+      - SpeedReading__Mode=${SPEED_READING_MODE:-Standalone}
+      - SpeedReading__CoachingIntegrationEnabled=${SPEED_READING_COACHING_INTEGRATION_ENABLED:-false}
+      - SpeedReading__NotificationIntegrationEnabled=${SPEED_READING_NOTIFICATION_INTEGRATION_ENABLED:-false}
+      - SpeedReading__SubscriptionIntegrationEnabled=${SPEED_READING_SUBSCRIPTION_INTEGRATION_ENABLED:-false}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ISSUER=${JWT_ISSUER}
+      - JWT_AUDIENCE=${JWT_AUDIENCE}
+      - JWT_KEY_ID=${JWT_KEY_ID:-}
+      - JWT_PREVIOUS_SECRETS=${JWT_PREVIOUS_SECRETS:-}
+      - JWT_PREVIOUS_KEY_IDS=${JWT_PREVIOUS_KEY_IDS:-}
+      - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY}
+    networks:
+      - edu-network
+
   # Notification Service
   notification-service:
     image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/notification-service:${RELEASE_TAG:-dev}
@@ -269,6 +295,7 @@ services:
       - ReverseProxy__Clusters__identity-cluster__Destinations__destination1__Address=http://identity-service:8080
       - ReverseProxy__Clusters__coaching-cluster__Destinations__destination1__Address=http://coaching-service:8080
       - ReverseProxy__Clusters__notification-cluster__Destinations__destination1__Address=http://notification-service:8080
+      - ReverseProxy__Clusters__speed-reading-cluster__Destinations__destination1__Address=http://speed-reading-service:8080
       - JWT_SECRET=${JWT_SECRET}
       - JWT_ISSUER=${JWT_ISSUER}
       - JWT_AUDIENCE=${JWT_AUDIENCE}

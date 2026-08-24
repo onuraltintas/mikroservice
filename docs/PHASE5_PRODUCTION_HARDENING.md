@@ -334,6 +334,7 @@ dotnet build services/identity-service/Identity.API/Identity.API.csproj -c Relea
 dotnet build services/coaching-service/Coaching.API/Coaching.API.csproj -c Release
 dotnet build services/api-gateway/EduPlatform.Gateway.csproj -c Release
 dotnet build services/notification-service/Notification.API/Notification.API.csproj -c Release
+dotnet build services/speed-reading-service/SpeedReading.API/SpeedReading.API.csproj -c Release
 dotnet test tests/Integration/Identity.API.IntegrationTests/Identity.API.IntegrationTests.csproj -c Release
 git diff --check
 ```

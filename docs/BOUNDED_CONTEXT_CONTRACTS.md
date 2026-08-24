@@ -8,6 +8,7 @@ Servisler veri sahibi sınırlarını korur. Bir servis başka bir servisin Post
 | --- | --- | --- |
 | Identity | kullanıcı, rol/permission, kurum ve profile üyelikleri | `/api/auth`, `/api/users`, `/api/institutions`, internal coaching authorization |
 | Coaching | assignment, exam/result, coaching session, academic goal | `/api/assignments`, `/api/exams`, `/api/sessions`, `/api/goals` |
+| Speed Reading | mevcut hızlı okuma içeriği, programları, ilerleme ve ölçüm verileri | `/api/speed-reading` |
 | Notification | notification, support request, e-mail template/delivery, SignalR | `/api/notifications`, `/api/support`, `/api/email-templates` |
 | Gateway | route, edge rate limit, maintenance ve trusted proxy | yalnızca dış API entry point; domain verisi yok |
 

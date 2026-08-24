@@ -6,7 +6,7 @@ güncellenir.
 
 ## API versioning
 
-Identity, Coaching ve Notification API'leri v1 olarak işaretlidir. Mevcut
+Identity, Coaching, Speed Reading ve Notification API'leri v1 olarak işaretlidir. Mevcut
 route'lar geriye dönük olarak çalışmaya devam eder; sürüm belirtilmezse `1.0`
 varsayılır. İstemciler sürüm seçmek için aşağıdaki okuyuculardan birini
 kullanabilir:

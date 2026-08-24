@@ -25,14 +25,14 @@ Kapılar sırasıyla:
 2. JSON ve Docker Compose base/scale/production/observability yapı doğrulaması.
 3. Angular admin paneli için locked `npm ci`, yüksek önem seviyesinde npm audit,
    unit test ve browser/SSR production build.
-4. Dört .NET 9 servisi için restore ve `Release --warnaserror` build.
+4. Beş .NET 9 servisi için restore ve `Release --warnaserror` build.
 5. Docker-backed integration test suite ve coverage artifact'i.
 6. Ayrı Gateway process'i ile gerçek `/health` smoke testi.
 7. Identity, Coaching ve Notification EF modellerinde unapplied migration drift
    kontrolü.
 8. Tüm uygulama projelerinde NuGet vulnerability taraması.
 9. Monitoring Compose, Prometheus/Alertmanager/OTel/Tempo/Blackbox config doğrulaması.
-10. Dört Docker image'ının push edilmeden reproducible build edilmesi.
+10. Beş servis ve bir admin-panel Docker image'ının push edilmeden reproducible build edilmesi.
 
 `.github/workflows/performance.yml` ayrıca yalnızca manuel olarak ve `staging`
 environment onayıyla çalışır. `PERF_BASE_URL` HTTPS staging secret'ı zorunludur;

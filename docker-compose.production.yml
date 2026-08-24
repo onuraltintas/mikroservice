@@ -121,6 +121,20 @@ services:
     networks:
       - edu-network
 
+  speed-reading-service:
+    profiles: !reset []
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/speed-reading-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__SpeedReading: ${SPEED_READING_CONNECTION_STRING:?SPEED_READING_CONNECTION_STRING must be set for production}
+      SpeedReading__Mode: ${SPEED_READING_MODE:-Standalone}
+      SpeedReading__CoachingIntegrationEnabled: ${SPEED_READING_COACHING_INTEGRATION_ENABLED:-false}
+      SpeedReading__NotificationIntegrationEnabled: ${SPEED_READING_NOTIFICATION_INTEGRATION_ENABLED:-false}
+      SpeedReading__SubscriptionIntegrationEnabled: ${SPEED_READING_SUBSCRIPTION_INTEGRATION_ENABLED:-false}
+    restart: unless-stopped
+    networks:
+      - edu-network
+
   notification-service:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/notification-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     environment:
@@ -171,6 +185,9 @@ services:
     secrets:
       - source: dataprotection_certificate
         target: eduplatform-dataprotection.pfx
+    depends_on:
+      speed-reading-service:
+        condition: service_started
 
   # The Angular SSR application remains private; the dedicated LiteSpeed
   # overlay publishes it through production-edge on loopback only.

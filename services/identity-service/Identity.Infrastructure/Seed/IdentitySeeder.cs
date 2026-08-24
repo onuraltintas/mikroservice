@@ -93,7 +93,10 @@ public static class IdentitySeeder
                 Identity.Domain.Constants.Permissions.Users.View,
                 Identity.Domain.Constants.Permissions.Institutions.View,
                 Identity.Domain.Constants.Permissions.Institutions.Manage,
-                Identity.Domain.Constants.Permissions.Coaching.View
+                Identity.Domain.Constants.Permissions.Coaching.View,
+                Identity.Domain.Constants.Permissions.SpeedReading.View,
+                Identity.Domain.Constants.Permissions.SpeedReading.ProgressView,
+                Identity.Domain.Constants.Permissions.SpeedReading.ReportView
             };
 
             // Coaching admin read access is tenant-scoped by the Coaching API and

@@ -61,7 +61,9 @@ outbox kaydı aynı PostgreSQL transaction'ında tamamlanır.
 ## Operasyon
 
 Production Compose overlay'ı web container'larından önce Identity, Coaching ve
-Notification için one-shot `*-migrations` container'ları çalıştırır. Bu
+Notification için one-shot `*-migrations` container'ları çalıştırır. Speed Reading
+mevcut veritabanını koruduğu için ilk entegrasyon fazında migration job'ı çalıştırmaz.
+Bu
 container'lar yalnızca ilgili `dotnet <Service>.API.dll --migrate-only`
 komutunu yürütür ve yalnız DbContext kaydeder; RabbitMQ, Redis, SMTP veya HTTP
 bağımlılıklarını başlatmaz. Migration başarılı olmadan web replica'ları

@@ -22,6 +22,7 @@ mikroservice/
 ├── services/              # Mikroservisler
 │   ├── identity-service/  # Kullanıcı yönetimi
 │   ├── coaching-service/  # Koçluk servisi
+│   ├── speed-reading-service/ # Bağımsız hızlı okuma bounded context'i
 │   ├── notification-service/ # Bildirim servisi
 │   └── api-gateway/       # YARP API Gateway
 ├── clients/
@@ -72,6 +73,12 @@ cd services/coaching-service/Coaching.API
 dotnet run
 ```
 
+#### Speed Reading Service:
+```bash
+cd services/speed-reading-service/SpeedReading.API
+dotnet run
+```
+
 #### Notification Service:
 ```bash
 cd services/notification-service/Notification.API
@@ -98,7 +105,7 @@ npm run start
 | Servis | URL | Port |
 |--------|-----|------|
 | API Gateway | http://localhost:5000 | 5000 |
-| Identity / Coaching / Notification | Gateway üzerinden erişilir | İç ağ |
+| Identity / Coaching / Speed Reading / Notification | Gateway üzerinden erişilir | İç ağ |
 
 Docker Compose kullanımında mikroservis portları host'a açılmaz; dış istemciler yalnızca API Gateway'e bağlanır. Servisleri ayrı ayrı `dotnet run` ile başlatırken ilgili `launchSettings.json` portları kullanılabilir.
 
@@ -124,6 +131,11 @@ Aşağıdaki veritabanları otomatik oluşturuldu:
 - `identity_db` - Identity Service
 - `coaching_db` - Coaching Service
 - `notification_db` - Notification Service
+
+Hızlı okuma veritabanı mevcut uygulamanın veri kaynağı olarak korunur ve
+`SPEED_READING_CONNECTION_STRING` ile ayrıca bağlanır; ilk entegrasyon aşaması
+bu veritabanında migration çalıştırmaz. Ayrıntı için
+`docs/SPEED_READING_SERVICE.md` belgesine bakın.
 
 ### Veritabanına Bağlanma:
 

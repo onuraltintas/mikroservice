@@ -30,6 +30,12 @@ export const DASHBOARD_ROUTES: Routes = [
         loadComponent: () => import('./pages/coaching-assignments').then(m => m.CoachingAssignmentsComponent)
     },
     {
+        path: 'speed-reading',
+        canActivate: [permissionGuard],
+        data: { permission: ADMIN_PERMISSIONS.speedReadingView },
+        loadComponent: () => import('./pages/speed-reading-overview').then(m => m.SpeedReadingOverviewComponent)
+    },
+    {
         path: 'coaching/assignments/:id/edit',
         canActivate: [permissionGuard],
         data: { permission: ADMIN_PERMISSIONS.coachingManage },

@@ -60,11 +60,11 @@ if ([string]::IsNullOrWhiteSpace($registry) -or [string]::IsNullOrWhiteSpace($ar
 }
 
 $composeProject = 'eduplatform-release'
-$composeArgs = @('--project-name', $composeProject, '--env-file', '.env.example')
+$composeArgs = @('--project-name', $composeProject, '--env-file', '.env.example', '--profile', 'speed-reading')
 Invoke-Native -Description 'Build release images' -Command {
   docker compose @composeArgs build --pull
 } | Out-Host
-$services = @('identity-service', 'coaching-service', 'notification-service', 'api-gateway')
+$services = @('identity-service', 'coaching-service', 'speed-reading-service', 'notification-service', 'api-gateway')
 $manifestPath = Join-Path $artifactRoot "eduplatform-$sha-images.json"
 $manifest = foreach ($service in $services) {
   $imageId = (@(Invoke-Native -Description "Locate the $service image" -Command {

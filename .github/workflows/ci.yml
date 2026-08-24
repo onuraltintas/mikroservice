@@ -98,6 +98,8 @@ jobs:
             project: services/coaching-service/Coaching.API/Coaching.API.csproj
           - name: notification
             project: services/notification-service/Notification.API/Notification.API.csproj
+          - name: speed-reading
+            project: services/speed-reading-service/SpeedReading.API/SpeedReading.API.csproj
           - name: gateway
             project: services/api-gateway/EduPlatform.Gateway.csproj
     steps:
@@ -284,9 +286,12 @@ jobs:
       - name: Validate development and scale configurations
         run: |
           docker compose --env-file .env.example config --quiet
+          docker compose --env-file .env.example --profile speed-reading config --quiet
           docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.scale.yml config --quiet
 
       - name: Validate staging VPS configuration
+        env:
+          SPEED_READING_CONNECTION_STRING: 'Host=ci-speed-reading;Port=5432;Database=speedreading;Username=ci;Password=ci-only'
         run: |
           docker compose --env-file .env.example \
             -f docker-compose.yml \
@@ -298,6 +303,8 @@ jobs:
           DATAPROTECTION_CERTIFICATE_HOST_PATH: ${{ runner.temp }}/dataprotection-ci.pfx
           DATAPROTECTION_CERTIFICATE_PASSWORD: ci-config-only
           GRAFANA_ADMIN_PASSWORD: ci-config-only
+          RELEASE_TAG: ci
+          SPEED_READING_CONNECTION_STRING: 'Host=ci-speed-reading;Port=5432;Database=speedreading;Username=ci;Password=ci-only'
         run: |
           docker compose --env-file .env.example \
             -f docker-compose.yml \
@@ -357,6 +364,7 @@ jobs:
             services/identity-service/Identity.API/Identity.API.csproj
             services/coaching-service/Coaching.API/Coaching.API.csproj
             services/notification-service/Notification.API/Notification.API.csproj
+            services/speed-reading-service/SpeedReading.API/SpeedReading.API.csproj
             services/api-gateway/EduPlatform.Gateway.csproj
           )
           for project in "${projects[@]}"; do
@@ -387,6 +395,9 @@ jobs:
           - name: notification
             context: .
             dockerfile: services/notification-service/Dockerfile
+          - name: speed-reading
+            context: .
+            dockerfile: services/speed-reading-service/Dockerfile
           - name: gateway
             context: .
             dockerfile: services/api-gateway/Dockerfile
