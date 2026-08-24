@@ -106,6 +106,9 @@ tablosunu uygular.
   oturum açmış kullanıcının yalnızca kendi snapshot geçmişini ve ayrıntısını
   döndürür; kullanıcı kimliği route/query üzerinden alınmaz. Çok büyük
   `DataJson` cevapları 1 MB sınırında açıkça `DataJsonTruncated` olarak işaretlenir.
+  Speed-reading istemcisinin snapshot okuma çağrıları bu merkezi uçları kullanır;
+  üretim/export çağrısı, rapor üretim bağımlılıkları taşınana kadar legacy
+  uyumluluk köprüsünde tutulur.
 - `GET /api/speed-reading/reports/scheduled` — `ReportView` yetkisi olan
   kullanıcının kendi zamanlanmış raporlarını döndürür.
 - `GET /api/speed-reading/reports/scheduled/{id}` — token sahibinin tek

@@ -104,15 +104,20 @@ export class ReportTemplatesService {
   // ==================== SNAPSHOTS ====================
 
   getSnapshots(reportType?: string): Observable<ReportSnapshot[]> {
-    let params = new HttpParams();
-    if (reportType) {
-      params = params.set('reportType', reportType);
-    }
-    return this.http.get<ReportSnapshot[]>(`${this.legacyApiUrl}/snapshots`, { params });
+    // Snapshot reads are centralized; generation remains a compatibility bridge
+    // until the legacy report/export pipeline is migrated.
+    return this.http.get<CentralReportSnapshot[]>(`${this.reportsApiUrl}/snapshots`, {
+      params: new HttpParams().set('limit', 100)
+    }).pipe(
+      map(items => items
+        .map(item => this.toSnapshot(item))
+        .filter(item => !reportType || item.reportType === reportType))
+    );
   }
 
   getSnapshotById(snapshotId: string): Observable<ReportSnapshot> {
-    return this.http.get<ReportSnapshot>(`${this.legacyApiUrl}/snapshots/${snapshotId}`);
+    return this.http.get<CentralReportSnapshotDetail>(`${this.reportsApiUrl}/snapshots/${snapshotId}`)
+      .pipe(map(item => this.toSnapshot(item)));
   }
 
   createSnapshot(snapshot: Omit<ReportSnapshot, 'id' | 'generatedAt'>): Observable<ReportSnapshot> {
@@ -206,6 +211,26 @@ export class ReportTemplatesService {
       }
     };
   }
+
+  private toSnapshot(item: CentralReportSnapshot | CentralReportSnapshotDetail): ReportSnapshot {
+    let data: unknown = {};
+    if ('dataJson' in item && item.dataJson) {
+      try {
+        data = JSON.parse(item.dataJson);
+      } catch {
+        data = {};
+      }
+    }
+
+    return {
+      id: item.id,
+      reportType: item.reportTemplateName,
+      templateId: item.reportTemplateId,
+      data,
+      generatedAt: new Date(item.generatedAt),
+      generatedBy: 'self'
+    };
+  }
 }
 
 interface CentralReportTemplate {
@@ -237,6 +262,25 @@ interface CentralScheduledReport {
   sendEmail: boolean;
   saveToDashboard: boolean;
   emailRecipients?: string | null;
+}
+
+interface CentralReportSnapshot {
+  id: string;
+  reportTemplateId: string;
+  reportTemplateName: string;
+  generatedAt: string;
+  reportStartDate: string;
+  reportEndDate: string;
+  pdfFileUrl?: string | null;
+  excelFileUrl?: string | null;
+  isViewed: boolean;
+  viewedAt?: string | null;
+}
+
+interface CentralReportSnapshotDetail extends CentralReportSnapshot {
+  generatedForUserId: string;
+  dataJson: string;
+  dataJsonTruncated: boolean;
 }
 
 interface ScheduleInput {

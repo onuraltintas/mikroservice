@@ -124,7 +124,9 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
 - `GET /api/speed-reading/reports/snapshots` ve
   `GET /api/speed-reading/reports/snapshots/{id}` — `ReportView` yetkisi ile
   yalnızca token sahibinin `ReportSnapshots` kayıtları; 1 MB üzeri JSON gövdesi
-  cevapta açıkça kırpılmış olarak işaretlenir
+  cevapta açıkça kırpılmış olarak işaretlenir. İstemcinin snapshot okuma
+  çağrıları bu merkezi uçları kullanır; üretim/export eski rapor pipeline'ına
+  bağlı olduğu için sonraki yazma dilimine bırakılmıştır.
 - `GET /api/speed-reading/reports/scheduled` — `ReportView` yetkisi ile
   token sahibinin `ScheduledReports` kayıtları
 - `GET /api/speed-reading/reports/scheduled/{id}` — yalnızca token sahibinin
