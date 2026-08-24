@@ -103,4 +103,47 @@ describe('TeacherReportService', () => {
     expect(report.comprehensionOverTime[0].series[0].value).toBe(78);
     expect(report.weakAreas).toEqual(['Paragraf']);
   });
+
+  it('loads a token-scoped student activity report from the central service', () => {
+    let report: any;
+    service.getStudentActivityReport('student-1').subscribe(value => report = value);
+
+    const request = http.expectOne(
+      candidate => candidate.url === '/api/speed-reading/analytics/teacher/students/student-1/activity');
+    request.flush({
+      userId: 'student-1',
+      dateFrom: '2026-01-01T00:00:00.000Z',
+      dateTo: '2026-01-31T00:00:00.000Z',
+      dataAvailable: true,
+      unavailableReason: null,
+      currentStreak: {
+        days: 4,
+        longestStreak: 9,
+        lastActivityDate: '2026-01-30T00:00:00.000Z',
+        isActive: true
+      },
+      heatmap: [
+        { date: '2026-01-29', value: 2, level: 1 },
+        { date: '2026-01-30', value: 3, level: 2 }
+      ],
+      hourlyDistribution: [{ label: '10:00', value: 2 }],
+      dailyDistribution: [{ label: 'Cuma', value: 3 }],
+      studyTime: {
+        totalMinutes: 120,
+        averageSessionLength: 30,
+        totalSessions: 4,
+        mostActiveHour: 10,
+        mostActiveDay: 'Cuma',
+        consistency: 50
+      }
+    });
+
+    expect(report.totalActivities).toBe(4);
+    expect(report.totalReadingMinutes).toBe(120);
+    expect(report.daysActive).toBe(2);
+    expect(report.currentStreak).toBe(4);
+    expect(report.longestStreak).toBe(9);
+    expect(report.activityByType[0].series[0].value).toBe(2);
+    expect(report.dailyActivity[1].series[0].value).toBe(3);
+  });
 });
