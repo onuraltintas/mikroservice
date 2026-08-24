@@ -66,6 +66,33 @@ public sealed record UpdateReadingTextRequest(
     int RecommendedMaxLevel,
     Guid? ExerciseId);
 
+public sealed record CreateReadingQuestionRequest(
+    Guid ReadingTextId,
+    string QuestionText,
+    int Type,
+    int BloomLevel,
+    int DifficultyLevel,
+    string? Explanation,
+    string OptionA,
+    string OptionB,
+    string OptionC,
+    string OptionD,
+    string CorrectAnswer,
+    int OrderIndex);
+
+public sealed record UpdateReadingQuestionRequest(
+    string QuestionText,
+    int Type,
+    int BloomLevel,
+    int DifficultyLevel,
+    string? Explanation,
+    string OptionA,
+    string OptionB,
+    string OptionC,
+    string OptionD,
+    string CorrectAnswer,
+    int OrderIndex);
+
 public interface ISpeedReadingContentAdminWriter
 {
     Task<ExerciseTypeSummary> CreateExerciseTypeAsync(
@@ -122,6 +149,25 @@ public interface ISpeedReadingContentAdminWriter
     Task DeleteReadingTextAsync(
         Guid actorId,
         Guid readingTextId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<ReadingQuestionSummary> CreateReadingQuestionAsync(
+        Guid actorId,
+        CreateReadingQuestionRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<ReadingQuestionSummary> UpdateReadingQuestionAsync(
+        Guid actorId,
+        Guid questionId,
+        UpdateReadingQuestionRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteReadingQuestionAsync(
+        Guid actorId,
+        Guid questionId,
         string idempotencyKey,
         CancellationToken cancellationToken = default);
 }

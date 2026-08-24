@@ -75,6 +75,8 @@ tablosunu uygular.
 - `POST|PUT|DELETE /api/speed-reading/exercises` (`ContentManage`)
 - `POST|PUT|DELETE /api/speed-reading/reading-texts` (`ContentManage`; sorusu
   bulunan metinler silinemez)
+- `POST|PUT|DELETE /api/speed-reading/reading-questions` (`ContentManage`; dört
+  seçenek ve A-D doğru cevap doğrulaması)
 - `GET /api/speed-reading/progress/active-exercise-sessions`
 - `GET /api/speed-reading/program-templates`
 - `GET /api/speed-reading/progress/programs`

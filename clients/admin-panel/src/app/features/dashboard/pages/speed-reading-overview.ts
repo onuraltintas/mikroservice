@@ -12,7 +12,10 @@ import {
   SpeedReadingExerciseType,
   SpeedReadingExerciseTypeRequest,
   SpeedReadingReadingText,
-  SpeedReadingReadingTextRequest
+  SpeedReadingReadingTextRequest,
+  SpeedReadingReadingQuestion,
+  SpeedReadingReadingQuestionRequest,
+  SpeedReadingReadingQuestionUpdateRequest
 } from '../../../core/services/speed-reading-admin.service';
 
 @Component({
@@ -318,6 +321,7 @@ import {
                   </div>
                   @if (canManageContent()) {
                     <div class="mt-3 flex gap-2">
+                      <button type="button" (click)="manageReadingTextQuestions(text)" class="rounded border border-indigo-300 px-2 py-1 text-xs text-indigo-700">Soruları yönet</button>
                       <button type="button" (click)="startEditReadingText(text)" class="rounded border border-gray-300 px-2 py-1 text-xs">Düzenle</button>
                       <button type="button" (click)="deleteReadingText(text)" class="rounded border border-red-300 px-2 py-1 text-xs text-red-700">Sil</button>
                     </div>
@@ -327,6 +331,111 @@ import {
             </div>
           } @else if (!loading()) {
             <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Katalogda gösterilecek okuma metni bulunamadı.</p>
+          }
+
+          @if (canManageContent() && selectedReadingTextId !== null) {
+            <div class="mt-5 rounded-lg border border-indigo-200 bg-indigo-50/50 p-4">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 class="font-semibold text-gray-900 dark:text-white">Metin soruları</h3>
+                  <p class="text-sm text-gray-600 dark:text-gray-300">{{ selectedReadingTextTitle }} · {{ readingQuestions().length }} soru</p>
+                </div>
+                <div class="flex gap-2">
+                  <button type="button" (click)="startCreateQuestion()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white">Yeni soru</button>
+                  <button type="button" (click)="closeQuestionManager()" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">Kapat</button>
+                </div>
+              </div>
+
+              @if (questionEditingId !== null) {
+                <form class="mt-4 grid grid-cols-1 gap-3 rounded-lg border border-indigo-200 bg-white p-4 sm:grid-cols-2" (ngSubmit)="saveQuestion()">
+                  <label class="text-sm text-gray-700 dark:text-gray-200 sm:col-span-2">Soru
+                    <textarea name="questionText" [(ngModel)]="questionDraft.questionText" required maxlength="2000" rows="3"
+                      class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800"></textarea>
+                  </label>
+                  <label class="text-sm text-gray-700 dark:text-gray-200">Soru türü
+                    <select name="questionType" [(ngModel)]="questionDraft.type" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800">
+                      <option [ngValue]="1">Gerçek anlam</option>
+                      <option [ngValue]="2">Çıkarım</option>
+                      <option [ngValue]="3">Değerlendirme</option>
+                    </select>
+                  </label>
+                  <label class="text-sm text-gray-700 dark:text-gray-200">Bloom seviyesi
+                    <select name="bloomLevel" [(ngModel)]="questionDraft.bloomLevel" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800">
+                      <option [ngValue]="1">Hatırlama</option>
+                      <option [ngValue]="2">Anlama</option>
+                      <option [ngValue]="3">Uygulama</option>
+                      <option [ngValue]="4">Analiz</option>
+                      <option [ngValue]="5">Değerlendirme</option>
+                      <option [ngValue]="6">Yaratma</option>
+                    </select>
+                  </label>
+                  <label class="text-sm text-gray-700 dark:text-gray-200">Zorluk (0-10)
+                    <input type="number" name="questionDifficulty" [(ngModel)]="questionDraft.difficultyLevel" min="0" max="10"
+                      class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                  </label>
+                  <label class="text-sm text-gray-700 dark:text-gray-200">Sıra
+                    <input type="number" name="questionOrder" [(ngModel)]="questionDraft.orderIndex" min="0" max="10000"
+                      class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                  </label>
+                  <label class="text-sm text-gray-700 dark:text-gray-200">A şıkkı
+                    <input name="optionA" [(ngModel)]="questionDraft.optionA" required maxlength="500"
+                      class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                  </label>
+                  <label class="text-sm text-gray-700 dark:text-gray-200">B şıkkı
+                    <input name="optionB" [(ngModel)]="questionDraft.optionB" required maxlength="500"
+                      class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                  </label>
+                  <label class="text-sm text-gray-700 dark:text-gray-200">C şıkkı
+                    <input name="optionC" [(ngModel)]="questionDraft.optionC" required maxlength="500"
+                      class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                  </label>
+                  <label class="text-sm text-gray-700 dark:text-gray-200">D şıkkı
+                    <input name="optionD" [(ngModel)]="questionDraft.optionD" required maxlength="500"
+                      class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                  </label>
+                  <label class="text-sm text-gray-700 dark:text-gray-200">Doğru cevap
+                    <select name="correctAnswer" [(ngModel)]="questionDraft.correctAnswer" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800">
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                      <option value="C">C</option>
+                      <option value="D">D</option>
+                    </select>
+                  </label>
+                  <label class="text-sm text-gray-700 dark:text-gray-200 sm:col-span-2">Açıklama
+                    <textarea name="questionExplanation" [(ngModel)]="questionDraft.explanation" maxlength="2000" rows="2"
+                      class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800"></textarea>
+                  </label>
+                  <div class="flex justify-end gap-2 sm:col-span-2">
+                    <button type="button" (click)="cancelQuestionEdit()" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">Vazgeç</button>
+                    <button type="submit" [disabled]="saving()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50">
+                      {{ saving() ? 'Kaydediliyor…' : (questionEditingId === 'new' ? 'Oluştur' : 'Kaydet') }}
+                    </button>
+                  </div>
+                </form>
+              }
+
+              @if (readingQuestions().length) {
+                <div class="mt-4 grid grid-cols-1 gap-3">
+                  @for (question of readingQuestions(); track question.id) {
+                    <article class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+                      <div class="flex items-start justify-between gap-3">
+                        <div>
+                          <p class="font-medium text-gray-900 dark:text-white">{{ question.orderIndex + 1 }}. {{ question.questionText }}</p>
+                          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Tür {{ question.type }} · Bloom {{ question.bloomLevel }} · Zorluk {{ question.difficultyLevel }} · Doğru: {{ question.correctAnswer }}</p>
+                        </div>
+                        <div class="flex shrink-0 gap-2">
+                          <button type="button" (click)="startEditQuestion(question)" class="rounded border border-gray-300 px-2 py-1 text-xs">Düzenle</button>
+                          <button type="button" (click)="deleteQuestion(question)" class="rounded border border-red-300 px-2 py-1 text-xs text-red-700">Sil</button>
+                        </div>
+                      </div>
+                      <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">A) {{ question.optionA }} · B) {{ question.optionB }} · C) {{ question.optionC }} · D) {{ question.optionD }}</p>
+                    </article>
+                  }
+                </div>
+              } @else if (!loading()) {
+                <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Bu metin için henüz soru yok.</p>
+              }
+            </div>
           }
         </div>
       }
@@ -343,6 +452,7 @@ export class SpeedReadingOverviewComponent implements OnInit {
   readonly exerciseTypes = signal<SpeedReadingExerciseType[]>([]);
   readonly exercises = signal<SpeedReadingExercise[]>([]);
   readonly readingTexts = signal<SpeedReadingReadingText[]>([]);
+  readonly readingQuestions = signal<SpeedReadingReadingQuestion[]>([]);
   readonly saving = signal(false);
   readonly canManageContent = computed(() =>
     this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingContentManage));
@@ -352,6 +462,10 @@ export class SpeedReadingOverviewComponent implements OnInit {
   exerciseDraft: SpeedReadingExerciseRequest = this.emptyExerciseDraft();
   readingTextEditingId: string | null = null;
   readingTextDraft: SpeedReadingReadingTextRequest = this.emptyReadingTextDraft();
+  selectedReadingTextId: string | null = null;
+  selectedReadingTextTitle = '';
+  questionEditingId: string | null = null;
+  questionDraft: SpeedReadingReadingQuestionRequest = this.emptyQuestionDraft('');
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
@@ -530,8 +644,118 @@ export class SpeedReadingOverviewComponent implements OnInit {
   deleteReadingText(text: SpeedReadingReadingText) {
     if (!globalThis.confirm(`“${text.title}” okuma metni silinsin mi?`)) return;
     this.service.deleteReadingText(text.id).subscribe({
-      next: () => this.load(),
+      next: () => {
+        if (this.selectedReadingTextId === text.id) {
+          this.closeQuestionManager();
+        }
+        this.load();
+      },
       error: () => this.error.set('Okuma metni silinemedi. Bağlı soruları kontrol edin.')
+    });
+  }
+
+  manageReadingTextQuestions(text: SpeedReadingReadingText) {
+    this.selectedReadingTextId = text.id;
+    this.selectedReadingTextTitle = text.title;
+    this.questionEditingId = null;
+    this.service.getReadingText(text.id).subscribe({
+      next: details => this.readingQuestions.set(details.questions),
+      error: () => this.error.set('Okuma metni soruları yüklenemedi.')
+    });
+  }
+
+  closeQuestionManager() {
+    this.selectedReadingTextId = null;
+    this.selectedReadingTextTitle = '';
+    this.questionEditingId = null;
+    this.readingQuestions.set([]);
+  }
+
+  startCreateQuestion() {
+    if (this.selectedReadingTextId === null) return;
+    this.questionEditingId = 'new';
+    this.questionDraft = this.emptyQuestionDraft(this.selectedReadingTextId);
+  }
+
+  startEditQuestion(question: SpeedReadingReadingQuestion) {
+    if (this.selectedReadingTextId === null) return;
+    this.questionEditingId = question.id;
+    this.questionDraft = {
+      readingTextId: this.selectedReadingTextId,
+      questionText: question.questionText,
+      type: question.type,
+      bloomLevel: question.bloomLevel,
+      difficultyLevel: question.difficultyLevel,
+      explanation: question.explanation,
+      optionA: question.optionA,
+      optionB: question.optionB,
+      optionC: question.optionC,
+      optionD: question.optionD,
+      correctAnswer: question.correctAnswer,
+      orderIndex: question.orderIndex
+    };
+  }
+
+  cancelQuestionEdit() {
+    this.questionEditingId = null;
+  }
+
+  saveQuestion() {
+    if (this.questionEditingId === null || this.selectedReadingTextId === null) return;
+    this.saving.set(true);
+    const updateRequest: SpeedReadingReadingQuestionUpdateRequest = {
+      questionText: this.questionDraft.questionText,
+      type: this.questionDraft.type,
+      bloomLevel: this.questionDraft.bloomLevel,
+      difficultyLevel: this.questionDraft.difficultyLevel,
+      explanation: this.questionDraft.explanation,
+      optionA: this.questionDraft.optionA,
+      optionB: this.questionDraft.optionB,
+      optionC: this.questionDraft.optionC,
+      optionD: this.questionDraft.optionD,
+      correctAnswer: this.questionDraft.correctAnswer,
+      orderIndex: this.questionDraft.orderIndex
+    };
+    const request$ = this.questionEditingId === 'new'
+      ? this.service.createReadingQuestion({ ...this.questionDraft, readingTextId: this.selectedReadingTextId })
+      : this.service.updateReadingQuestion(this.questionEditingId, updateRequest);
+
+    request$.pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => {
+        this.questionEditingId = null;
+        this.manageReadingTextQuestions({
+          id: this.selectedReadingTextId!,
+          title: this.selectedReadingTextTitle,
+          wordCount: 0,
+          category: '',
+          difficultyLevel: 0,
+          language: '',
+          isActive: true,
+          exerciseId: null
+        });
+      },
+      error: () => this.error.set('Okuma sorusu kaydedilemedi.')
+    });
+  }
+
+  deleteQuestion(question: SpeedReadingReadingQuestion) {
+    if (!globalThis.confirm(`“${question.questionText}” sorusu silinsin mi?`)) return;
+    this.service.deleteReadingQuestion(question.id).subscribe({
+      next: () => {
+        if (this.selectedReadingTextId !== null) {
+          this.manageReadingTextQuestions({
+            id: this.selectedReadingTextId,
+            title: this.selectedReadingTextTitle,
+            wordCount: 0,
+            category: '',
+            difficultyLevel: 0,
+            language: '',
+            isActive: true,
+            exerciseId: null
+          });
+        }
+      },
+      error: () => this.error.set('Okuma sorusu silinemedi.')
     });
   }
 
@@ -574,6 +798,23 @@ export class SpeedReadingOverviewComponent implements OnInit {
       recommendedMinLevel: 0,
       recommendedMaxLevel: 100,
       exerciseId: null
+    };
+  }
+
+  private emptyQuestionDraft(readingTextId: string): SpeedReadingReadingQuestionRequest {
+    return {
+      readingTextId,
+      questionText: '',
+      type: 1,
+      bloomLevel: 2,
+      difficultyLevel: 0,
+      explanation: '',
+      optionA: '',
+      optionB: '',
+      optionC: '',
+      optionD: '',
+      correctAnswer: 'A',
+      orderIndex: this.readingQuestions().length
     };
   }
 }

@@ -93,7 +93,41 @@ export interface SpeedReadingReadingTextDetails extends SpeedReadingReadingText 
   tags: string[];
   recommendedMinLevel: number;
   recommendedMaxLevel: number;
+  questions: SpeedReadingReadingQuestion[];
 }
+
+export interface SpeedReadingReadingQuestion {
+  id: string;
+  questionText: string;
+  type: number;
+  bloomLevel: number;
+  difficultyLevel: number;
+  explanation: string | null;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correctAnswer: string;
+  orderIndex: number;
+}
+
+export interface SpeedReadingReadingQuestionRequest {
+  readingTextId: string;
+  questionText: string;
+  type: number;
+  bloomLevel: number;
+  difficultyLevel: number;
+  explanation?: string | null;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correctAnswer: string;
+  orderIndex: number;
+}
+
+export interface SpeedReadingReadingQuestionUpdateRequest
+  extends Omit<SpeedReadingReadingQuestionRequest, 'readingTextId'> {}
 
 @Injectable({ providedIn: 'root' })
 export class SpeedReadingAdminService {
@@ -215,6 +249,33 @@ export class SpeedReadingAdminService {
   deleteReadingText(id: string, idempotencyKey?: string) {
     return this.http.delete<void>(
       `${this.url}/reading-texts/${id}`,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  createReadingQuestion(request: SpeedReadingReadingQuestionRequest, idempotencyKey?: string) {
+    return this.http.post<SpeedReadingReadingQuestion>(
+      `${this.url}/reading-questions`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  updateReadingQuestion(
+    id: string,
+    request: SpeedReadingReadingQuestionUpdateRequest,
+    idempotencyKey?: string
+  ) {
+    return this.http.put<SpeedReadingReadingQuestion>(
+      `${this.url}/reading-questions/${id}`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  deleteReadingQuestion(id: string, idempotencyKey?: string) {
+    return this.http.delete<void>(
+      `${this.url}/reading-questions/${id}`,
       { headers: this.idempotencyHeaders(idempotencyKey) }
     );
   }

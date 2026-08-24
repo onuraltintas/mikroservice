@@ -109,7 +109,8 @@ describe('SpeedReadingAdminService', () => {
     detailRequest.flush({
       id: 'text-1', title: 'Metin', content: 'İçerik', wordCount: 1, category: 'Genel',
       difficultyLevel: 1, language: 'tr', isActive: true, exerciseId: null,
-      targetAgeGroupConfigurationId: null, tags: [], recommendedMinLevel: 0, recommendedMaxLevel: 10
+      targetAgeGroupConfigurationId: null, tags: [], recommendedMinLevel: 0, recommendedMaxLevel: 10,
+      questions: []
     });
 
     const request = {
@@ -143,6 +144,53 @@ describe('SpeedReadingAdminService', () => {
     const deleteRequest = http.expectOne('/api/speed-reading/reading-texts/text-1');
     expect(deleteRequest.request.method).toBe('DELETE');
     expect(deleteRequest.request.headers.get('Idempotency-Key')).toBe('reading-text-delete-123456');
+    deleteRequest.flush(null);
+  });
+
+  it('writes reading questions through the dedicated route with idempotency', () => {
+    const request = {
+      readingTextId: 'text-1',
+      questionText: 'Ana fikir nedir?',
+      type: 1,
+      bloomLevel: 2,
+      difficultyLevel: 1,
+      explanation: 'Metnin ana düşüncesi.',
+      optionA: 'A',
+      optionB: 'B',
+      optionC: 'C',
+      optionD: 'D',
+      correctAnswer: 'A',
+      orderIndex: 0
+    };
+
+    service.createReadingQuestion(request, 'question-create-key-123456').subscribe();
+    const createRequest = http.expectOne('/api/speed-reading/reading-questions');
+    expect(createRequest.request.method).toBe('POST');
+    expect(createRequest.request.headers.get('Idempotency-Key')).toBe('question-create-key-123456');
+    createRequest.flush({ id: 'question-1' });
+
+    service.updateReadingQuestion('question-1', {
+      questionText: 'Güncellenen soru',
+      type: request.type,
+      bloomLevel: request.bloomLevel,
+      difficultyLevel: request.difficultyLevel,
+      explanation: request.explanation,
+      optionA: request.optionA,
+      optionB: request.optionB,
+      optionC: request.optionC,
+      optionD: request.optionD,
+      correctAnswer: request.correctAnswer,
+      orderIndex: request.orderIndex
+    }, 'question-update-key-123456').subscribe();
+    const updateRequest = http.expectOne('/api/speed-reading/reading-questions/question-1');
+    expect(updateRequest.request.method).toBe('PUT');
+    expect(updateRequest.request.headers.get('Idempotency-Key')).toBe('question-update-key-123456');
+    updateRequest.flush({ id: 'question-1' });
+
+    service.deleteReadingQuestion('question-1', 'question-delete-key-123456').subscribe();
+    const deleteRequest = http.expectOne('/api/speed-reading/reading-questions/question-1');
+    expect(deleteRequest.request.method).toBe('DELETE');
+    expect(deleteRequest.request.headers.get('Idempotency-Key')).toBe('question-delete-key-123456');
     deleteRequest.flush(null);
   });
 });
