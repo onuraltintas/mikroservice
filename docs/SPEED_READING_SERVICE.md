@@ -96,6 +96,18 @@ tablosunu uygular.
 - `GET /api/speed-reading/analytics/student/summary` — oturum açmış öğrencinin
   en fazla 366 günlük okuma/egzersiz özetini ve gün bazlı serisini döndürür;
   başka kullanıcı kimliği kabul etmez.
+- `GET /api/speed-reading/reports/templates` ve
+  `GET /api/speed-reading/reports/templates/{id}` — `ReportView` yetkisiyle
+  mevcut rapor şablonlarını değiştirmeden merkezi servisten okur; SystemAdmin
+  dışındaki rollere Admin türü şablonlar gösterilmez, özel şablonlar yalnızca
+  sahibine görünür ve liste üst sınırı 100'dür.
+- `GET /api/speed-reading/reports/snapshots` ve
+  `GET /api/speed-reading/reports/snapshots/{id}` — `ReportView` yetkisi olan
+  oturum açmış kullanıcının yalnızca kendi snapshot geçmişini ve ayrıntısını
+  döndürür; kullanıcı kimliği route/query üzerinden alınmaz. Çok büyük
+  `DataJson` cevapları 1 MB sınırında açıkça `DataJsonTruncated` olarak işaretlenir.
+- `GET /api/speed-reading/reports/scheduled` — `ReportView` yetkisi olan
+  kullanıcının kendi zamanlanmış raporlarını döndürür.
 - `GET /api/speed-reading/learning-paths/templates`
 - `GET /api/speed-reading/learning-paths/progress`
 - `GET /api/speed-reading/learning-paths/personalized`

@@ -35,6 +35,9 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     internal DbSet<LegacyUserAchievement> UserAchievements => Set<LegacyUserAchievement>();
     internal DbSet<LegacyUserGamification> UserGamifications => Set<LegacyUserGamification>();
     internal DbSet<LegacyUser> Users => Set<LegacyUser>();
+    internal DbSet<LegacyReportTemplate> ReportTemplates => Set<LegacyReportTemplate>();
+    internal DbSet<LegacyReportSnapshot> ReportSnapshots => Set<LegacyReportSnapshot>();
+    internal DbSet<LegacyScheduledReport> ScheduledReports => Set<LegacyScheduledReport>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -254,6 +257,35 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
         {
             entity.ToTable("Users");
             entity.HasKey(item => item.Id);
+        });
+
+        modelBuilder.Entity<LegacyReportTemplate>(entity =>
+        {
+            entity.ToTable("ReportTemplates");
+            entity.HasKey(item => item.Id);
+            // The legacy entity hides BaseEntity.CreatedBy behind a User
+            // navigation, so the audit column is named CreatedById.
+            entity.Property(item => item.CreatedBy)
+                .HasColumnName("CreatedById")
+                .IsRequired(false);
+            entity.HasIndex(item => item.CreatedAt);
+            entity.HasIndex(item => new { item.Type, item.IsActive });
+        });
+
+        modelBuilder.Entity<LegacyReportSnapshot>(entity =>
+        {
+            entity.ToTable("ReportSnapshots");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => new { item.GeneratedForUserId, item.GeneratedAt });
+            entity.HasIndex(item => item.ReportTemplateId);
+        });
+
+        modelBuilder.Entity<LegacyScheduledReport>(entity =>
+        {
+            entity.ToTable("ScheduledReports");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => new { item.UserId, item.IsActive });
+            entity.HasIndex(item => item.ReportTemplateId);
         });
     }
 }

@@ -53,6 +53,9 @@ uç noktası için additive bir ledger ile başlatılmıştır:
 | `NodeContents` / `NodePrerequisites` | Düğüm içeriği ve ön koşulları |
 | `StudentPathProgresses` / `StudentNodeProgresses` | Öğrenci yolu ve düğüm ilerlemesi |
 | `PersonalizedLearningPaths` | Kişiselleştirilmiş öğrenci yolu öğeleri |
+| `ReportTemplates` | Rapor şablonları (salt-okunur merkezi sınır) |
+| `ReportSnapshots` | Kullanıcıya ait oluşturulmuş rapor snapshot'ları |
+| `ScheduledReports` | Kullanıcıya ait zamanlanmış rapor ayarları |
 
 ## Yeni servis uçları
 
@@ -113,6 +116,17 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
 - `GET /api/speed-reading/progress/daily-exercise-logs` — günlük tamamlanma kayıtları
 - `GET /api/speed-reading/analytics/student/summary` — öğrencinin en fazla 366
   günlük okuma/egzersiz analitik özeti ve gün serisi
+- `GET /api/speed-reading/reports/templates` ve
+  `GET /api/speed-reading/reports/templates/{id}` — mevcut
+  `ReportTemplates` tablosundan `ReportView` yetkili salt-okunur şablon okuma;
+  SystemAdmin dışındaki roller Admin türü şablonları göremez ve özel şablonlar
+  yalnızca oluşturucusuna görünür
+- `GET /api/speed-reading/reports/snapshots` ve
+  `GET /api/speed-reading/reports/snapshots/{id}` — `ReportView` yetkisi ile
+  yalnızca token sahibinin `ReportSnapshots` kayıtları; 1 MB üzeri JSON gövdesi
+  cevapta açıkça kırpılmış olarak işaretlenir
+- `GET /api/speed-reading/reports/scheduled` — `ReportView` yetkisi ile
+  token sahibinin `ScheduledReports` kayıtları
 - `GET /api/speed-reading/learning-paths/templates` — aktif öğrenme yolu şablonları
 - `GET /api/speed-reading/learning-paths/progress` — öğrencinin yolu ve düğüm durumları
 - `GET /api/speed-reading/learning-paths/personalized` — kişiselleştirilmiş yol öğeleri
@@ -155,7 +169,7 @@ gamification okuma ve admin kazanım çağrıları yeni `/api/speed-reading` yol
 
 Sıradaki dilimler, her biri test ve geri dönüş kontrolüyle ayrı ayrı taşınır:
 
-1. Analitik rapor sözleşmelerinin ve rapor snapshot okuma/yazma sınırlarının taşınması.
+1. Rapor template/snapshot/schedule yazma sözleşmelerinin ve admin ekranlarının taşınması.
 2. Oyunlaştırma XP/streak yazma akışlarının event/idempotency geri dönüş testleri.
 3. Mevcut `speed-reading-frontend` uygulamasının bağımsız servis Gateway'ine
    geçirilmesi ve gerçek veritabanıyla uçtan uca doğrulanması.
