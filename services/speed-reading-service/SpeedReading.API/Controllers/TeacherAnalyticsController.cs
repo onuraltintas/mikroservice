@@ -68,6 +68,34 @@ public sealed class TeacherAnalyticsController(
             cancellationToken));
     }
 
+    [HttpGet("students/{studentId:guid}/activity")]
+    public async Task<ActionResult<StudentActivityAnalytics>> GetStudentActivity(
+        Guid studentId,
+        [FromQuery] DateTime? dateFrom,
+        [FromQuery] DateTime? dateTo,
+        CancellationToken cancellationToken = default)
+    {
+        var viewerUserId = GetCurrentUserId();
+        if (viewerUserId is null)
+        {
+            return Unauthorized();
+        }
+
+        if (!await teacherAccess.CanReadStudentAsync(
+                viewerUserId.Value,
+                studentId,
+                cancellationToken))
+        {
+            return Forbid();
+        }
+
+        return Ok(await analytics.GetStudentActivityAsync(
+            studentId,
+            dateFrom,
+            dateTo,
+            cancellationToken));
+    }
+
     private Guid? GetCurrentUserId()
     {
         var value = User.FindFirstValue(ClaimTypes.NameIdentifier)

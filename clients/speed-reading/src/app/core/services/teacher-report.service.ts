@@ -69,6 +69,8 @@ export interface TeacherStudentActivityReport {
         generatedFor: string;
         totalDays: number;
     };
+    dataAvailable?: boolean;
+    unavailableReason?: string;
     totalActivities: number;
     totalReadingMinutes: number;
     daysActive: number;
@@ -84,9 +86,6 @@ export interface TeacherStudentActivityReport {
         series: Array<{ name: string; value: number }>;
     }>;
     mostActiveDay: string;
-    dailyGoalMinutes: number;
-    daysGoalMet: number;
-    goalAchievementRate: number;
 }
 
 @Injectable({
@@ -120,14 +119,13 @@ export class TeacherReportService {
     }
 
     getStudentActivityReport(studentId: string, startDate?: Date, endDate?: Date): Observable<TeacherStudentActivityReport> {
-        let url = `${this.API_URL}/students/${studentId}/activity-report`;
-        const params: string[] = [];
-
-        if (startDate) params.push(`startDate=${startDate.toISOString()}`);
-        if (endDate) params.push(`endDate=${endDate.toISOString()}`);
-        if (params.length > 0) url += `?${params.join('&')}`;
-
-        return this.http.get<TeacherStudentActivityReport>(url);
+        let params = new HttpParams();
+        if (startDate) params = params.set('dateFrom', startDate.toISOString());
+        if (endDate) params = params.set('dateTo', endDate.toISOString());
+        return this.http.get<StudentActivityAnalytics>(
+            `${this.speedReadingAnalyticsUrl}/students/${studentId}/activity`,
+            { params }
+        ).pipe(map(value => this.toTeacherActivityReport(value, studentId)));
     }
 
     getContentAnalysisReport(teacherId: string, startDate?: Date, endDate?: Date): Observable<TeacherContentAnalysisReport> {
@@ -214,6 +212,39 @@ export class TeacherReportService {
         };
     }
 
+    private toTeacherActivityReport(
+        value: StudentActivityAnalytics,
+        studentId: string
+    ): TeacherStudentActivityReport {
+        const activeDays = (value.heatmap ?? []).filter(point => point.value > 0).length;
+        return {
+            metadata: this.toTeacherMetadata(
+                'Öğrenci Aktivite Raporu',
+                'TeacherStudentActivity',
+                studentId,
+                value.dateFrom,
+                value.dateTo
+            ),
+            dataAvailable: value.dataAvailable,
+            unavailableReason: value.unavailableReason ?? undefined,
+            totalActivities: value.studyTime.totalSessions,
+            totalReadingMinutes: value.studyTime.totalMinutes,
+            daysActive: activeDays,
+            averageDailyMinutes: activeDays > 0 ? value.studyTime.totalMinutes / activeDays : 0,
+            currentStreak: value.currentStreak.days,
+            longestStreak: value.currentStreak.longestStreak,
+            activityByType: (value.hourlyDistribution ?? []).map(point => ({
+                name: point.label,
+                series: [{ name: 'Aktivite', value: point.value }]
+            })),
+            dailyActivity: (value.heatmap ?? []).map(point => ({
+                name: point.date,
+                series: [{ name: 'Aktivite', value: point.value }]
+            })),
+            mostActiveDay: value.studyTime.mostActiveDay
+        };
+    }
+
     private toTeacherMetadata(
         reportTitle: string,
         reportType: string,
@@ -259,6 +290,44 @@ interface StudentComprehensionAnalytics {
     trend: StudentAnalyticsTrendPoint[];
     weakAreas: string[];
     strongAreas: string[];
+}
+
+interface StudentActivityAnalytics {
+    dateFrom: string;
+    dateTo: string;
+    dataAvailable: boolean;
+    unavailableReason?: string | null;
+    currentStreak: StudentActivityStreak;
+    heatmap: StudentActivityHeatmapPoint[];
+    hourlyDistribution: StudentActivityDistributionPoint[];
+    studyTime: StudentActivityStudyTime;
+}
+
+interface StudentActivityStreak {
+    days: number;
+    longestStreak: number;
+    lastActivityDate?: string | null;
+    isActive: boolean;
+}
+
+interface StudentActivityHeatmapPoint {
+    date: string;
+    value: number;
+    level: number;
+}
+
+interface StudentActivityDistributionPoint {
+    label: string;
+    value: number;
+}
+
+interface StudentActivityStudyTime {
+    totalMinutes: number;
+    averageSessionLength: number;
+    totalSessions: number;
+    mostActiveHour: number;
+    mostActiveDay: string;
+    consistency: number;
 }
 
 interface StudentAnalyticsTrendPoint {

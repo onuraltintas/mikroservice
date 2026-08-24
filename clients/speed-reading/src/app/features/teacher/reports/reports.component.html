@@ -15,12 +15,12 @@
   </mat-card>
 
   <!-- KPI Summary Cards -->
-  <div class="kpi-cards" *ngIf="selectedStudentControl.value && !loading && activityReport">
+  <div class="kpi-cards" *ngIf="selectedStudentControl.value && !loading && activityReport?.dataAvailable !== false">
     <mat-card class="kpi-card">
       <mat-card-content>
         <div class="kpi-icon">📊</div>
         <span class="kpi-label">Toplam Aktivite</span>
-        <span class="kpi-value">{{ activityReport.totalActivities }}</span>
+        <span class="kpi-value">{{ activityReport?.totalActivities }}</span>
       </mat-card-content>
     </mat-card>
 
@@ -44,12 +44,16 @@
       <mat-card-content>
         <div class="kpi-icon">🔥</div>
         <span class="kpi-label">Günlük Seri</span>
-        <span class="kpi-value">{{ activityReport.currentStreak }}</span>
+        <span class="kpi-value">{{ activityReport?.currentStreak }}</span>
       </mat-card-content>
     </mat-card>
   </div>
 
-  <div *ngIf="selectedStudentControl.value && !loading">
+  <div class="empty-state" *ngIf="selectedStudentControl.value && !loading && activityReport?.dataAvailable === false">
+    {{ activityReport?.unavailableReason || 'Bu tarih aralığında aktivite verisi bulunamadı.' }}
+  </div>
+
+  <div *ngIf="selectedStudentControl.value && !loading && activityReport?.dataAvailable !== false">
     <mat-tab-group>
       <!-- KDP Trend Tab -->
       <mat-tab label="KDP Trendi">
@@ -113,7 +117,7 @@
                 </div>
                 <div class="summary-item">
                   <span class="label">Toplam Süre:</span>
-                  <span class="kpi-value">{{ activityReport.currentStreak }}</span>
+                  <span class="kpi-value">{{ activityReport.totalReadingMinutes }}</span>
                 </div>
                 <div class="summary-item">
                   <span class="label">Ortalama KDP:</span>
@@ -129,32 +133,22 @@
 
           <mat-card class="exercise-types-card">
             <mat-card-header>
-              <mat-card-title>Egzersiz Tipi İstatistikleri</mat-card-title>
+              <mat-card-title>Saatlik Aktivite Dağılımı</mat-card-title>
             </mat-card-header>
             <mat-card-content>
               <table mat-table [dataSource]="activityReport.activityByType || []" class="type-stats-table">
                 <ng-container matColumnDef="type">
-                  <th mat-header-cell *matHeaderCellDef>Egzersiz Tipi</th>
-                  <td mat-cell *matCellDef="let element">{{ getExerciseTypeName(element.type) }}</td>
+                  <th mat-header-cell *matHeaderCellDef>Saat</th>
+                  <td mat-cell *matCellDef="let element">{{ element.name }}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="count">
                   <th mat-header-cell *matHeaderCellDef>Adet</th>
-                  <td mat-cell *matCellDef="let element">{{ element.count }}</td>
+                  <td mat-cell *matCellDef="let element">{{ element.series?.[0]?.value || 0 }}</td>
                 </ng-container>
 
-                <ng-container matColumnDef="averageKDP">
-                  <th mat-header-cell *matHeaderCellDef>Ortalama KDP</th>
-                  <td mat-cell *matCellDef="let element">{{ element.averageKDP | number:'1.0-0' }}</td>
-                </ng-container>
-
-                <ng-container matColumnDef="averageComprehension">
-                  <th mat-header-cell *matHeaderCellDef>Ortalama Anlama (%)</th>
-                  <td mat-cell *matCellDef="let element">{{ element.averageComprehension | number:'1.0-0' }}</td>
-                </ng-container>
-
-                <tr mat-header-row *matHeaderRowDef="typeStatsColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: typeStatsColumns;"></tr>
+                <tr mat-header-row *matHeaderRowDef="['type', 'count']"></tr>
+                <tr mat-row *matRowDef="let row; columns: ['type', 'count'];"></tr>
               </table>
             </mat-card-content>
           </mat-card>

@@ -47,8 +47,6 @@ export class ReportsComponent implements OnInit {
   comprehensionReport: TeacherStudentComprehensionReport | null = null;
   activityReport: TeacherStudentActivityReport | null = null;
 
-  typeStatsColumns = ['type', 'count', 'averageKDP', 'averageComprehension'];
-
   mockStudents: any[] = [];
 
   kdpChartData: any[] = [];
@@ -132,14 +130,4 @@ export class ReportsComponent implements OnInit {
     }
   }
 
-  getExerciseTypeName(type: string): string {
-    const types: { [key: string]: string } = {
-      '0': 'Hızlı Okuma',
-      '1': 'Göz Takibi',
-      '2': 'Kelime Algılama',
-      '3': 'Odaklanma',
-      '4': 'Hafıza'
-    };
-    return types[type] || type;
-  }
 }
