@@ -1,6 +1,10 @@
 <div class="activity-report">
     @if (loading()) {
     <div class="loading-container"><div class="rp-spinner"></div></div>
+    } @else if (report()?.dataAvailable === false) {
+    <div class="empty-state">
+        {{ report()?.unavailableReason || 'Bu tarih aralığında aktivite verisi bulunamadı.' }}
+    </div>
     } @else if (report()) {
     <div class="rp-card streak-card">
         <div class="rp-card__body">

@@ -62,18 +62,20 @@ export class ReportsService {
 
   getStudentSeriesReport(studentId: string, startDate: Date, endDate: Date): Observable<StudentSeriesReport> {
     const params = new HttpParams()
-      .set('studentId', studentId)
-      .set('startDate', startDate.toISOString())
-      .set('endDate', endDate.toISOString());
-    return this.http.get<StudentSeriesReport>(`${this.apiUrl}/student/series`, { params });
+      .set('dateFrom', this.normalizeAnalyticsStart(startDate, endDate).toISOString())
+      .set('dateTo', endDate.toISOString());
+    void studentId;
+    return this.http.get<StudentSeriesAnalytics>(`${this.speedReadingApiUrl}/student/series`, { params })
+      .pipe(map(value => this.toStudentSeriesReport(value)));
   }
 
   getStudentActivityReport(studentId: string, startDate: Date, endDate: Date): Observable<StudentActivityReport> {
     const params = new HttpParams()
-      .set('studentId', studentId)
-      .set('startDate', startDate.toISOString())
-      .set('endDate', endDate.toISOString());
-    return this.http.get<StudentActivityReport>(`${this.apiUrl}/student/activity`, { params });
+      .set('dateFrom', this.normalizeAnalyticsStart(startDate, endDate).toISOString())
+      .set('dateTo', endDate.toISOString());
+    void studentId;
+    return this.http.get<StudentActivityAnalytics>(`${this.speedReadingApiUrl}/student/activity`, { params })
+      .pipe(map(value => this.toStudentActivityReport(value)));
   }
 
   getAdaptivePerformanceReport(
@@ -252,6 +254,101 @@ export class ReportsService {
     };
   }
 
+  private toStudentSeriesReport(value: StudentSeriesAnalytics): StudentSeriesReport {
+    const timeline = value.completionTimeline ?? [];
+    return {
+      metadata: this.toReportMetadata('student-series', value.dateFrom, value.dateTo),
+      dataAvailable: value.dataAvailable !== false,
+      unavailableReason: value.unavailableReason ?? undefined,
+      summary: {
+        totalSeriesStarted: value.totalSeriesStarted,
+        seriesCompleted: value.seriesCompleted,
+        seriesInProgress: value.seriesInProgress,
+        totalMilestones: value.totalMilestones
+      },
+      activeSeries: (value.activeSeries ?? []).map(series => ({
+        seriesId: series.seriesId,
+        seriesName: series.seriesName,
+        progress: series.progress,
+        daysCompleted: series.daysCompleted,
+        totalDays: series.totalDays,
+        startedAt: new Date(series.startedAt),
+        lastActivityAt: series.lastActivityAt ? new Date(series.lastActivityAt) : null,
+        averageScore: series.averageScore
+      })),
+      completionTimelineChart: {
+        data: timeline.map(point => ({
+          name: point.date,
+          value: point.value
+        })),
+        labels: timeline.map(point => point.date)
+      },
+      milestones: (value.milestones ?? []).map(milestone => ({
+        id: milestone.id,
+        title: milestone.title,
+        description: milestone.description,
+        earnedAt: new Date(milestone.earnedAt),
+        seriesId: milestone.seriesId ?? '',
+        seriesName: milestone.seriesName,
+        type: milestone.type,
+        icon: milestone.icon || undefined
+      })),
+      performanceStats: {
+        averageCompletionTime: value.performanceStats.averageCompletionTime,
+        averageScore: value.performanceStats.averageScore,
+        consistencyScore: value.performanceStats.consistencyScore,
+        engagementLevel: this.toEngagementLevel(value.performanceStats.engagementLevel)
+      }
+    };
+  }
+
+  private toStudentActivityReport(value: StudentActivityAnalytics): StudentActivityReport {
+    return {
+      metadata: this.toReportMetadata('student-activity', value.dateFrom, value.dateTo),
+      dataAvailable: value.dataAvailable !== false,
+      unavailableReason: value.unavailableReason ?? undefined,
+      currentStreak: {
+        days: value.currentStreak.days,
+        longestStreak: value.currentStreak.longestStreak,
+        lastActivityDate: value.currentStreak.lastActivityDate
+          ? new Date(value.currentStreak.lastActivityDate)
+          : null,
+        isActive: value.currentStreak.isActive
+      },
+      activityHeatmap: {
+        data: (value.heatmap ?? []).map(point => ({
+          date: point.date,
+          value: point.value,
+          level: Math.max(0, Math.min(4, point.level)) as 0 | 1 | 2 | 3 | 4
+        }))
+      },
+      hourlyDistributionChart: {
+        data: (value.hourlyDistribution ?? []).map(point => ({
+          name: point.label,
+          series: [{ name: 'Aktivite', value: point.value }]
+        }))
+      },
+      dailyDistributionChart: {
+        data: (value.dailyDistribution ?? []).map(point => ({
+          name: point.label,
+          series: [{ name: 'Aktivite', value: point.value }]
+        }))
+      },
+      studyTime: {
+        totalMinutes: value.studyTime.totalMinutes,
+        averageSessionLength: value.studyTime.averageSessionLength,
+        totalSessions: value.studyTime.totalSessions,
+        mostActiveHour: value.studyTime.mostActiveHour,
+        mostActiveDay: value.studyTime.mostActiveDay,
+        consistency: value.studyTime.consistency
+      }
+    };
+  }
+
+  private toEngagementLevel(value: string): 'high' | 'medium' | 'low' {
+    return value === 'high' || value === 'medium' ? value : 'low';
+  }
+
   private toReportMetadata(reportId: string, dateFrom: string, dateTo: string): ReportMetadata {
     return {
       reportId,
@@ -426,6 +523,89 @@ interface StudentComprehensionAnalytics {
   benchmark: StudentAnalyticsBenchmark;
   weakAreas: string[];
   strongAreas: string[];
+}
+
+interface StudentSeriesAnalytics {
+  dateFrom: string;
+  dateTo: string;
+  dataAvailable: boolean;
+  unavailableReason?: string | null;
+  totalSeriesStarted: number;
+  seriesCompleted: number;
+  seriesInProgress: number;
+  totalMilestones: number;
+  activeSeries: StudentSeriesItem[];
+  completionTimeline: StudentAnalyticsTrendPoint[];
+  milestones: StudentSeriesMilestone[];
+  performanceStats: StudentSeriesPerformanceStats;
+}
+
+interface StudentSeriesItem {
+  seriesId: string;
+  seriesName: string;
+  progress: number;
+  daysCompleted: number;
+  totalDays: number;
+  startedAt: string;
+  lastActivityAt?: string | null;
+  averageScore: number;
+}
+
+interface StudentSeriesMilestone {
+  id: string;
+  title: string;
+  description: string;
+  earnedAt: string;
+  seriesId?: string | null;
+  seriesName: string;
+  type: string;
+  icon: string;
+}
+
+interface StudentSeriesPerformanceStats {
+  averageCompletionTime: number;
+  averageScore: number;
+  consistencyScore: number;
+  engagementLevel: string;
+}
+
+interface StudentActivityAnalytics {
+  dateFrom: string;
+  dateTo: string;
+  dataAvailable: boolean;
+  unavailableReason?: string | null;
+  currentStreak: StudentActivityStreak;
+  heatmap: StudentActivityHeatmapPoint[];
+  hourlyDistribution: StudentActivityDistributionPoint[];
+  dailyDistribution: StudentActivityDistributionPoint[];
+  studyTime: StudentActivityStudyTime;
+}
+
+interface StudentActivityStreak {
+  days: number;
+  longestStreak: number;
+  lastActivityDate?: string | null;
+  isActive: boolean;
+}
+
+interface StudentActivityHeatmapPoint {
+  date: string;
+  value: number;
+  level: number;
+}
+
+interface StudentActivityDistributionPoint {
+  label: string;
+  value: number;
+}
+
+interface StudentActivityStudyTime {
+  totalMinutes: number;
+  averageSessionLength: number;
+  totalSessions: number;
+  mostActiveHour: number;
+  mostActiveDay: string;
+  consistency: number;
 }
 
 interface StudentAnalyticsDailyPoint {

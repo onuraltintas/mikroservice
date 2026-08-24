@@ -108,6 +108,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasIndex(item => item.UserId);
             entity.HasIndex(item => item.ReadingTextId);
             entity.HasIndex(item => new { item.IsDeleted, item.CompletedAt, item.UserId });
+            entity.HasIndex(item => new { item.IsDeleted, item.UserId, item.CompletedAt });
         });
 
         modelBuilder.Entity<LegacyExerciseProgramTemplate>(entity =>
@@ -123,6 +124,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasKey(item => item.Id);
             entity.HasIndex(item => item.UserId);
             entity.HasIndex(item => item.ProgramTemplateId);
+            entity.HasIndex(item => new { item.IsDeleted, item.UserId, item.AssignedDate });
         });
 
         modelBuilder.Entity<LegacyDailyExerciseLog>(entity =>
@@ -133,6 +135,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasIndex(item => item.StudentProgramProgressId);
             entity.HasIndex(item => item.ExerciseId);
             entity.HasIndex(item => item.ExerciseTypeId);
+            entity.HasIndex(item => new { item.IsDeleted, item.UserId, item.CompletedDate });
         });
 
         modelBuilder.Entity<LegacyLearningPathTemplate>(entity =>

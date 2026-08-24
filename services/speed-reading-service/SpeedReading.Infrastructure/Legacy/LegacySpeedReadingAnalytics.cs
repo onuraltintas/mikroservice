@@ -386,6 +386,322 @@ internal sealed class LegacySpeedReadingAnalytics(SpeedReadingDbContext db, IMem
             strongAreas);
     }
 
+    public async Task<StudentSeriesAnalytics> GetStudentSeriesAsync(
+        Guid userId,
+        DateTime? dateFrom,
+        DateTime? dateTo,
+        CancellationToken cancellationToken = default)
+    {
+        var (start, end) = NormalizeRange(dateFrom, dateTo);
+        var progressRows = await db.StudentProgramProgresses
+            .AsNoTracking()
+            .Where(item => item.UserId == userId
+                && !item.IsDeleted
+                && item.AssignedDate <= end
+                && (!item.CompletedDate.HasValue
+                    || item.CompletedDate >= start
+                    || item.IsActive))
+            .Select(item => new ProgramProgressRow(
+                item.Id,
+                item.ProgramTemplateId,
+                item.AssignedDate,
+                item.DaysCompleted,
+                item.ExercisesCompleted,
+                item.LastCompletionDate,
+                item.IsActive,
+                item.CompletedDate,
+                item.AverageSuccessRate,
+                item.CurrentStreak))
+            .ToListAsync(cancellationToken);
+
+        var templateIds = progressRows
+            .Select(item => item.ProgramTemplateId)
+            .Distinct()
+            .ToArray();
+        var templates = await db.ExerciseProgramTemplates
+            .AsNoTracking()
+            .Where(item => templateIds.Contains(item.Id))
+            .Select(item => new
+            {
+                item.Id,
+                item.Name,
+                item.TotalDays
+            })
+            .ToDictionaryAsync(
+                item => item.Id,
+                item => new ProgramTemplateInfo(item.Name, item.TotalDays),
+                cancellationToken);
+        var progressIds = progressRows.Select(item => item.Id).ToArray();
+        var dailyProgressRows = progressIds.Length == 0
+            ? []
+            : await db.DailyExerciseLogs
+                .AsNoTracking()
+                .Where(item => progressIds.Contains(item.StudentProgramProgressId)
+                    && !item.IsDeleted
+                    && item.CompletedDate >= start
+                    && item.CompletedDate <= end)
+                .Select(item => new StudentSeriesLogRow(
+                    item.StudentProgramProgressId,
+                    item.CompletedDate,
+                    item.DayNumber))
+                .ToListAsync(cancellationToken);
+
+        var activeSeries = progressRows
+            .Where(item => item.IsActive && !item.CompletedDate.HasValue)
+            .Select(item =>
+            {
+                templates.TryGetValue(item.ProgramTemplateId, out var template);
+                var totalDays = Math.Max(0, template?.TotalDays ?? 0);
+                var progress = totalDays > 0
+                    ? Math.Clamp((decimal)item.DaysCompleted / totalDays * 100, 0, 100)
+                    : 0;
+                return new StudentSeriesItem(
+                    item.Id,
+                    template?.Name ?? "Okuma programı",
+                    Math.Round(progress, 2),
+                    item.DaysCompleted,
+                    totalDays,
+                    NormalizeUtc(item.AssignedDate),
+                    item.LastCompletionDate.HasValue
+                        ? NormalizeUtc(item.LastCompletionDate.Value)
+                        : null,
+                    item.AverageSuccessRate);
+            })
+            .OrderByDescending(item => item.LastActivityAt ?? item.StartedAt)
+            .ToList();
+
+        var timeline = dailyProgressRows
+            .GroupBy(item => DateOnly.FromDateTime(NormalizeUtc(item.CompletedDate)))
+            .OrderBy(group => group.Key)
+            .Select(group => new StudentAnalyticsTrendPoint(
+                group.Key,
+                Math.Round(group
+                    .Select(item => GetProgramProgress(
+                        item.DayNumber,
+                        item.ProgressId,
+                        progressRows,
+                        templates))
+                    .DefaultIfEmpty(0)
+                    .Average(), 2)))
+            .ToList();
+        if (timeline.Count == 0)
+        {
+            timeline = progressRows
+                .Select(item => new
+                {
+                    Date = item.LastCompletionDate ?? item.CompletedDate,
+                    Progress = GetProgramProgress(item.DaysCompleted, item.ProgramTemplateId, templates)
+                })
+                .Where(item => item.Date.HasValue && item.Date >= start && item.Date <= end)
+                .GroupBy(item => DateOnly.FromDateTime(NormalizeUtc(item.Date!.Value)))
+                .OrderBy(group => group.Key)
+                .Select(group => new StudentAnalyticsTrendPoint(
+                    group.Key,
+                    Math.Round(group.Average(item => item.Progress), 2)))
+                .ToList();
+        }
+
+        var completedRows = progressRows
+            .Where(item => item.CompletedDate >= start && item.CompletedDate <= end)
+            .ToList();
+        var averageCompletionTime = completedRows.Count > 0
+            ? Math.Round(completedRows
+                .Average(item => (decimal)(NormalizeUtc(item.CompletedDate!.Value)
+                    - NormalizeUtc(item.AssignedDate)).TotalDays), 2)
+            : 0;
+        var averageScore = progressRows.Count > 0
+            ? Math.Round(progressRows.Average(item => item.AverageSuccessRate), 2)
+            : 0;
+        var consistencyScore = progressRows
+            .Where(item => item.DaysCompleted > 0)
+            .Select(item => Math.Min(100m, (decimal)item.CurrentStreak / item.DaysCompleted * 100))
+            .DefaultIfEmpty(0)
+            .Average();
+
+        // The legacy database has program progress but no series-specific
+        // milestone relation. Returning an empty list is safer than treating
+        // generic achievements as milestones for the wrong program.
+        var milestones = Array.Empty<StudentSeriesMilestone>();
+        var dataAvailable = progressRows.Count > 0;
+        return new StudentSeriesAnalytics(
+            userId,
+            start,
+            end,
+            dataAvailable,
+            dataAvailable ? null : "Bu tarih aralığında atanmış bir okuma programı bulunamadı.",
+            progressRows.Count,
+            completedRows.Count,
+            progressRows.Count(item => item.IsActive && !item.CompletedDate.HasValue),
+            milestones.Length,
+            activeSeries,
+            timeline,
+            milestones,
+            new StudentSeriesPerformanceStats(
+                averageCompletionTime,
+                averageScore,
+                Math.Round(consistencyScore, 2),
+                MapEngagementLevel(consistencyScore)));
+    }
+
+    public async Task<StudentActivityAnalytics> GetStudentActivityAsync(
+        Guid userId,
+        DateTime? dateFrom,
+        DateTime? dateTo,
+        CancellationToken cancellationToken = default)
+    {
+        var (start, end) = NormalizeRange(dateFrom, dateTo);
+        var readingQuery = ReadingSessionsFor(userId, start, end);
+        var exerciseQuery = db.DailyExerciseLogs
+            .AsNoTracking()
+            .Where(item => item.UserId == userId
+                && !item.IsDeleted
+                && item.CompletedDate >= start
+                && item.CompletedDate <= end);
+
+        var readingAggregate = await readingQuery
+            .GroupBy(_ => 1)
+            .Select(group => new
+            {
+                Count = group.Count(),
+                TotalSeconds = group.Sum(item => (long)item.ReadingTimeSeconds),
+                LastActivity = group.Max(item => (DateTime?)item.CompletedAt)
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+        var exerciseAggregate = await exerciseQuery
+            .GroupBy(_ => 1)
+            .Select(group => new
+            {
+                Count = group.Count(),
+                TotalSeconds = group.Sum(item => (long)item.TimeSpentSeconds),
+                LastActivity = group.Max(item => (DateTime?)item.CompletedDate)
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        var readingDaily = await readingQuery
+            .GroupBy(item => item.CompletedAt.Date)
+            .Select(group => new
+            {
+                Date = group.Key,
+                Count = group.Count()
+            })
+            .ToListAsync(cancellationToken);
+        var exerciseDaily = await exerciseQuery
+            .GroupBy(item => item.CompletedDate.Date)
+            .Select(group => new
+            {
+                Date = group.Key,
+                Count = group.Count()
+            })
+            .ToListAsync(cancellationToken);
+        var readingHourly = await readingQuery
+            .GroupBy(item => item.CompletedAt.Hour)
+            .Select(group => new { Hour = group.Key, Count = group.Count() })
+            .ToListAsync(cancellationToken);
+        var exerciseHourly = await exerciseQuery
+            .GroupBy(item => item.CompletedDate.Hour)
+            .Select(group => new { Hour = group.Key, Count = group.Count() })
+            .ToListAsync(cancellationToken);
+        var readingWeekdays = await readingQuery
+            .GroupBy(item => item.CompletedAt.DayOfWeek)
+            .Select(group => new { Day = group.Key, Count = group.Count() })
+            .ToListAsync(cancellationToken);
+        var exerciseWeekdays = await exerciseQuery
+            .GroupBy(item => item.CompletedDate.DayOfWeek)
+            .Select(group => new { Day = group.Key, Count = group.Count() })
+            .ToListAsync(cancellationToken);
+
+        var dailyCounts = new Dictionary<DateOnly, int>();
+        foreach (var item in readingDaily)
+        {
+            AddDailyActivity(
+                dailyCounts,
+                DateOnly.FromDateTime(NormalizeUtc(item.Date)),
+                item.Count);
+        }
+
+        foreach (var item in exerciseDaily)
+        {
+            AddDailyActivity(
+                dailyCounts,
+                DateOnly.FromDateTime(NormalizeUtc(item.Date)),
+                item.Count);
+        }
+
+        var firstDate = DateOnly.FromDateTime(start);
+        var lastDate = DateOnly.FromDateTime(end);
+        var heatmap = new List<StudentActivityHeatmapPoint>();
+        for (var date = firstDate; date <= lastDate; date = date.AddDays(1))
+        {
+            dailyCounts.TryGetValue(date, out var count);
+            heatmap.Add(new StudentActivityHeatmapPoint(date, count, GetHeatmapLevel(count)));
+        }
+
+        var hourlyCounts = readingHourly
+            .Concat(exerciseHourly.Select(item => new { Hour = item.Hour, Count = item.Count }))
+            .GroupBy(item => item.Hour)
+            .ToDictionary(group => group.Key, group => group.Sum(item => item.Count));
+        var weekdayCounts = readingWeekdays
+            .Concat(exerciseWeekdays.Select(item => new { Day = item.Day, Count = item.Count }))
+            .GroupBy(item => item.Day)
+            .ToDictionary(group => group.Key, group => group.Sum(item => item.Count));
+        var hourlyDistribution = hourlyCounts
+            .OrderBy(item => item.Key)
+            .Select(item => new StudentActivityDistributionPoint($"{item.Key:00}:00", item.Value))
+            .ToList();
+        var dailyDistribution = weekdayCounts
+            .OrderBy(item => item.Key)
+            .Select(item => new StudentActivityDistributionPoint(MapDayName(item.Key), item.Value))
+            .ToList();
+
+        var activityDates = dailyCounts.Keys.OrderBy(item => item).ToArray();
+        var currentStreak = GetTrailingStreak(activityDates);
+        var longestStreak = GetLongestStreak(activityDates);
+        var lastActivity = new[]
+            {
+                readingAggregate?.LastActivity,
+                exerciseAggregate?.LastActivity
+            }
+            .Where(item => item.HasValue)
+            .Select(item => (DateTime?)NormalizeUtc(item!.Value))
+            .OrderByDescending(item => item)
+            .FirstOrDefault();
+        var totalSessions = (readingAggregate?.Count ?? 0) + (exerciseAggregate?.Count ?? 0);
+        var totalSeconds = (readingAggregate?.TotalSeconds ?? 0) + (exerciseAggregate?.TotalSeconds ?? 0);
+        var totalMinutes = (int)Math.Round(totalSeconds / 60m, MidpointRounding.AwayFromZero);
+        var activeDays = activityDates.Length;
+        var rangeDays = Math.Max(1, lastDate.DayNumber - firstDate.DayNumber + 1);
+        var mostActiveHour = hourlyCounts.Count > 0
+            ? hourlyCounts.OrderByDescending(item => item.Value).ThenBy(item => item.Key).First().Key
+            : 0;
+        var mostActiveDay = weekdayCounts.Count > 0
+            ? MapDayName(weekdayCounts.OrderByDescending(item => item.Value).ThenBy(item => item.Key).First().Key)
+            : "—";
+        var dataAvailable = totalSessions > 0;
+        var isActive = lastActivity.HasValue && lastActivity.Value.Date >= end.Date.AddDays(-1);
+
+        return new StudentActivityAnalytics(
+            userId,
+            start,
+            end,
+            dataAvailable,
+            dataAvailable ? null : "Bu tarih aralığında okuma veya egzersiz aktivitesi bulunamadı.",
+            new StudentActivityStreak(
+                isActive ? currentStreak : 0,
+                longestStreak,
+                lastActivity.HasValue ? lastActivity : null,
+                isActive),
+            heatmap,
+            hourlyDistribution,
+            dailyDistribution,
+            new StudentActivityStudyTime(
+                totalMinutes,
+                totalSessions > 0 ? Math.Round(totalSeconds / 60m / totalSessions, 2) : 0,
+                totalSessions,
+                mostActiveHour,
+                mostActiveDay,
+                Math.Round((decimal)activeDays / rangeDays * 100, 2)));
+    }
+
     private static DateTime NormalizeUtc(DateTime value) => value.Kind switch
     {
         DateTimeKind.Utc => value,
@@ -421,6 +737,104 @@ internal sealed class LegacySpeedReadingAnalytics(SpeedReadingDbContext db, IMem
                 && !item.IsDeleted
                 && item.CompletedAt >= start
                 && item.CompletedAt <= end);
+
+    private static decimal GetProgramProgress(
+        int daysCompleted,
+        Guid programTemplateId,
+        IReadOnlyDictionary<Guid, ProgramTemplateInfo> templates)
+    {
+        if (!templates.TryGetValue(programTemplateId, out var template)
+            || template.TotalDays <= 0)
+        {
+            return 0;
+        }
+
+        return Math.Clamp((decimal)daysCompleted / template.TotalDays * 100, 0, 100);
+    }
+
+    private static decimal GetProgramProgress(
+        int daysCompleted,
+        Guid progressId,
+        IReadOnlyList<ProgramProgressRow> progressRows,
+        IReadOnlyDictionary<Guid, ProgramTemplateInfo> templates)
+    {
+        var progress = progressRows.FirstOrDefault(item => item.Id == progressId);
+        return progress is null
+            ? 0
+            : GetProgramProgress(daysCompleted, progress.ProgramTemplateId, templates);
+    }
+
+    private static string MapEngagementLevel(decimal consistencyScore) => consistencyScore switch
+    {
+        >= 75 => "high",
+        >= 40 => "medium",
+        _ => "low"
+    };
+
+    private static void AddDailyActivity(
+        IDictionary<DateOnly, int> dailyCounts,
+        DateOnly date,
+        int count)
+    {
+        dailyCounts.TryGetValue(date, out var existingCount);
+        dailyCounts[date] = existingCount + count;
+    }
+
+    private static int GetHeatmapLevel(int count) => count switch
+    {
+        <= 0 => 0,
+        1 => 1,
+        2 => 2,
+        3 => 3,
+        _ => 4
+    };
+
+    private static int GetTrailingStreak(IReadOnlyList<DateOnly> dates)
+    {
+        if (dates.Count == 0)
+        {
+            return 0;
+        }
+
+        var streak = 1;
+        for (var index = dates.Count - 1; index > 0; index--)
+        {
+            if (dates[index - 1] != dates[index].AddDays(-1))
+            {
+                break;
+            }
+
+            streak++;
+        }
+
+        return streak;
+    }
+
+    private static int GetLongestStreak(IReadOnlyList<DateOnly> dates)
+    {
+        var longest = 0;
+        var current = 0;
+        DateOnly? previous = null;
+        foreach (var date in dates)
+        {
+            current = previous.HasValue && date == previous.Value.AddDays(1) ? current + 1 : 1;
+            longest = Math.Max(longest, current);
+            previous = date;
+        }
+
+        return longest;
+    }
+
+    private static string MapDayName(DayOfWeek day) => day switch
+    {
+        DayOfWeek.Monday => "Pazartesi",
+        DayOfWeek.Tuesday => "Salı",
+        DayOfWeek.Wednesday => "Çarşamba",
+        DayOfWeek.Thursday => "Perşembe",
+        DayOfWeek.Friday => "Cuma",
+        DayOfWeek.Saturday => "Cumartesi",
+        _ => "Pazar"
+    };
 
     private static async Task<decimal> AverageWpmAsync(
         IQueryable<LegacyReadingSession> query,
@@ -641,4 +1055,23 @@ internal sealed class LegacySpeedReadingAnalytics(SpeedReadingDbContext db, IMem
         decimal AverageWpm,
         decimal AverageComprehension,
         decimal AverageSuccessRate);
+
+    private sealed record ProgramTemplateInfo(string Name, int TotalDays);
+
+    private sealed record ProgramProgressRow(
+        Guid Id,
+        Guid ProgramTemplateId,
+        DateTime AssignedDate,
+        int DaysCompleted,
+        int ExercisesCompleted,
+        DateTime? LastCompletionDate,
+        bool IsActive,
+        DateTime? CompletedDate,
+        decimal AverageSuccessRate,
+        int CurrentStreak);
+
+    private sealed record StudentSeriesLogRow(
+        Guid ProgressId,
+        DateTime CompletedDate,
+        int DayNumber);
 }

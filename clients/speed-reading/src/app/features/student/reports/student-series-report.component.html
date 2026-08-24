@@ -1,6 +1,10 @@
 <div class="series-report">
   @if (loading()) {
     <div class="loading-container"><div class="rp-spinner"></div></div>
+  } @else if (report()?.dataAvailable === false) {
+    <div class="empty-state">
+      {{ report()?.unavailableReason || 'Bu tarih aralığında seri verisi bulunamadı.' }}
+    </div>
   } @else if (report()) {
     <div class="summary-cards">
       <div class="rp-card">
@@ -39,7 +43,7 @@
             <li class="rp-list__item">
               <div class="series-info">
                 <div class="series-name">{{ series.seriesName }}</div>
-                <div class="series-stats">{{ series.exercisesCompleted }}/{{ series.totalExercises }} exercises - Avg: {{ series.averageScore }}%</div>
+                <div class="series-stats">{{ series.daysCompleted }}/{{ series.totalDays }} gün - Ort.: {{ series.averageScore }}%</div>
                 <div class="rp-progress-bar">
                   <div class="rp-progress-bar__fill" [style.width.%]="series.progress"></div>
                 </div>
@@ -72,6 +76,8 @@
               <span class="material-icons">emoji_events</span>
               {{ milestone.title }} - {{ formatDate(milestone.earnedAt) }}
             </span>
+          } @empty {
+            <span class="empty-state">Bu programlar için seri-özel kilometre taşı verisi bulunmuyor.</span>
           }
         </div>
       </div>

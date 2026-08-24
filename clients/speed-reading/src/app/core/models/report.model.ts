@@ -155,6 +155,8 @@ export interface ImprovementArea {
 // 4. Student Series Report
 export interface StudentSeriesReport {
   metadata: ReportMetadata;
+  dataAvailable?: boolean;
+  unavailableReason?: string;
   summary: {
     totalSeriesStarted: number;
     seriesCompleted: number;
@@ -171,10 +173,10 @@ export interface ActiveSeries {
   seriesId: string;
   seriesName: string;
   progress: number;
-  exercisesCompleted: number;
-  totalExercises: number;
+  daysCompleted: number;
+  totalDays: number;
   startedAt: Date;
-  lastActivityAt: Date;
+  lastActivityAt: Date | null;
   averageScore: number;
 }
 
@@ -205,6 +207,8 @@ export interface SeriesPerformanceStats {
 // 5. Student Activity Report
 export interface StudentActivityReport {
   metadata: ReportMetadata;
+  dataAvailable?: boolean;
+  unavailableReason?: string;
   currentStreak: CurrentStreak;
   activityHeatmap: ActivityHeatmap;
   hourlyDistributionChart: HourlyDistributionChart;
@@ -215,7 +219,7 @@ export interface StudentActivityReport {
 export interface CurrentStreak {
   days: number;
   longestStreak: number;
-  lastActivityDate: Date;
+  lastActivityDate: Date | null;
   isActive: boolean;
 }
 

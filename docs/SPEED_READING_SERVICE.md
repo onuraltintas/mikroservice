@@ -98,10 +98,6 @@ tablosunu uygular.
   başka kullanıcı kimliği kabul etmez. Özet ayrıca son WPM/anlama değeri,
   gamification seviyesi/serisi/XP ve kazanım sayısını, öğrencinin günlük hedefi
   ile tarih aralığındaki hedef tamamlama oranını ve son beş başarımı içerir.
-  Öğrenci rapor ekranlarındaki seri ve aktivite ayrıntıları henüz bu özetin
-  kapsamına alınmadı; ilgili istemci çağrıları geçici legacy uyumluluk
-  köprüsündedir ve merkezi sözleşmeleri tamamlanmadan eski uçlar
-  kapatılmamalıdır.
 - `GET /api/speed-reading/analytics/student/reading-speed` ve
   `GET /api/speed-reading/analytics/student/comprehension` — token sahibinin
   en fazla 366 günlük okuma hızı/anlama ayrıntılarını, trendlerini, kurum ve
@@ -110,7 +106,23 @@ tablosunu uygular.
   döner; merkezi cevap olayı taşınmadan sahte değer üretilmez. Kurum/platform
   benchmarkları 5 dakikalık zaman kovası anahtarı ve 5 dakikalık TTL ile sınırlı
   memory cache’te korunur (4.096 kayıt üst sınırı); analytics indexleri
-  migration-only başlangıç scriptiyle idempotent olarak hazırlanır.
+  `003_analytics_indexes.sql` ve öğrenci kapsamlı sorgu indexleri
+  `004_student_analytics_indexes.sql` ile migration-only başlangıçta
+  idempotent olarak hazırlanır.
+- `GET /api/speed-reading/analytics/student/series` — token sahibinin en fazla
+  366 günlük program ilerlemesini, aktif programlarını ve tamamlanma trendini
+  döndürür. Seri verisi `StudentProgramProgresses`, program şablonları ve
+  `DailyExerciseLogs` içindeki gerçek gün ilerlemelerinden hesaplanır; arayüzde
+  birimler egzersiz sayısı değil tamamlanan/toplam program günü olarak
+  gösterilir. Legacy şemada seri-özel kilometre taşı ilişkisi bulunmadığı için
+  kilometre taşı listesi boş ve açıkça eksik veri olarak kalır; genel
+  başarımlar seri kilometre taşı gibi gösterilmez.
+- `GET /api/speed-reading/analytics/student/activity` — token sahibinin en
+  fazla 366 günlük okuma oturumları ile günlük egzersiz kayıtlarını birleştirir;
+  aktivite ısı haritası, saat/gün dağılımı, gerçek çalışma süresi ve aralık içi
+  streak değerlerini döndürür. Veri yoksa `DataAvailable=false` ve açıklama
+  döner; boş grafikler başarı gibi yorumlanmaz. Her iki uç da öğrenci kimliğini
+  query parametresinden almaz.
 - `GET /api/speed-reading/reports/templates` ve
   `GET /api/speed-reading/reports/templates/{id}` — `ReportView` yetkisiyle
   mevcut rapor şablonlarını değiştirmeden merkezi servisten okur; SystemAdmin

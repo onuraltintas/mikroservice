@@ -118,13 +118,22 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
   günlük okuma/egzersiz analitik özeti ve gün serisi; son okuma metrikleri ile
   gamification özeti, günlük çalışma hedefi/hedef tamamlama oranı ve son beş
   başarım da aynı token kapsamındaki cevapta yer alır
-  Öğrencinin ayrıntılı seri ve aktivite raporları henüz merkezi sözleşmeye
-  taşınmadı; bu iki okuma legacy köprüde tutuluyor.
 - `GET /api/speed-reading/analytics/student/reading-speed` ve
   `GET /api/speed-reading/analytics/student/comprehension` artık öğrenci
   istemcisinin ayrıntılı hız/anlama ekranları için token kapsamlı merkezi
   okumalardır. Soru türü ayrıntısı legacy oturumlarda bulunmadığından cevapta
   boş tutulur ve veri uydurulmaz.
+- `GET /api/speed-reading/analytics/student/series` ve
+  `GET /api/speed-reading/analytics/student/activity` öğrenci seri/aktivite
+  ekranlarının merkezi, token kapsamlı okumalarıdır. Seri raporu mevcut
+  `StudentProgramProgresses`, program şablonları ve `DailyExerciseLogs` içindeki
+  gerçek günlük ilerlemelerden hesaplanır; legacy şemada seri-özel milestone
+  bağı bulunmadığı için bu alan boş kalır. Aktivite
+  raporu `ReadingSessions` ile `DailyExerciseLogs` kayıtlarını birleştirir ve
+  veri yokluğunu `DataAvailable=false` ile açıkça bildirir. Her iki uçta da
+  `studentId` parametresi yoktur ve tarih aralığı 366 günle sınırlıdır.
+  Öğrenci kapsamlı sorgular için `004_student_analytics_indexes.sql` idempotent
+  bileşik indexleri sağlar.
 - `GET /api/speed-reading/reports/templates` ve
   `GET /api/speed-reading/reports/templates/{id}` — mevcut
   `ReportTemplates` tablosundan `ReportView` yetkili salt-okunur şablon okuma;

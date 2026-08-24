@@ -67,6 +67,44 @@ public sealed class AnalyticsController(ILegacySpeedReadingAnalytics analytics) 
             cancellationToken));
     }
 
+    [HttpGet("student/series")]
+    public async Task<ActionResult<StudentSeriesAnalytics>> GetStudentSeries(
+        [FromQuery] DateTime? dateFrom,
+        [FromQuery] DateTime? dateTo,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = GetCurrentUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        return Ok(await analytics.GetStudentSeriesAsync(
+            userId.Value,
+            dateFrom,
+            dateTo,
+            cancellationToken));
+    }
+
+    [HttpGet("student/activity")]
+    public async Task<ActionResult<StudentActivityAnalytics>> GetStudentActivity(
+        [FromQuery] DateTime? dateFrom,
+        [FromQuery] DateTime? dateTo,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = GetCurrentUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        return Ok(await analytics.GetStudentActivityAsync(
+            userId.Value,
+            dateFrom,
+            dateTo,
+            cancellationToken));
+    }
+
     private Guid? GetCurrentUserId()
     {
         var value = User.FindFirstValue(ClaimTypes.NameIdentifier)

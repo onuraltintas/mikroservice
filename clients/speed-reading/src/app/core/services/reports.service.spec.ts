@@ -190,10 +190,10 @@ describe('ReportsService', () => {
         seriesId: 'program-1',
         seriesName: 'Başlangıç Programı',
         progress: 50,
-        exercisesCompleted: 5,
-        totalExercises: 10,
+        daysCompleted: 5,
+        totalDays: 10,
         startedAt: '2026-01-10T10:00:00.000Z',
-        lastActivityAt: '2026-01-15T10:00:00.000Z',
+        lastActivityAt: null,
         averageScore: 72
       }],
       completionTimeline: [{ date: '2026-01-15', value: 50 }],
@@ -208,7 +208,9 @@ describe('ReportsService', () => {
 
     expect(report.summary.totalSeriesStarted).toBe(1);
     expect(report.activeSeries[0].startedAt).toEqual(new Date('2026-01-10T10:00:00.000Z'));
-    expect(report.completionTimelineChart.data[0].series[0].value).toBe(50);
+    expect(report.activeSeries[0].lastActivityAt).toBeNull();
+    expect(report.completionTimelineChart.data[0].name).toBe('2026-01-15');
+    expect(report.completionTimelineChart.data[0].value).toBe(50);
   });
 
   it('loads activity analytics from the token-scoped endpoint and maps distributions', () => {
