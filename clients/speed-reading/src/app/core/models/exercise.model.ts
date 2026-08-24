@@ -25,6 +25,7 @@ export interface ExerciseType {
   colorCode?: string;
   sortOrder: number;
   isActive: boolean;
+  engineType?: string;
   categoryId?: string;
   categoryName?: string;
   categoryDisplayName?: string;

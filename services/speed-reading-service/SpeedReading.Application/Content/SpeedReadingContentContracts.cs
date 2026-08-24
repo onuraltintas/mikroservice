@@ -18,6 +18,14 @@ public sealed record ExerciseTypeSummary(
     string EngineType,
     Guid? CategoryId);
 
+public sealed record ExerciseTypeCategorySummary(
+    Guid Id,
+    string Name,
+    string DisplayName,
+    string Description,
+    int SortOrder,
+    bool IsActive);
+
 public sealed record ExerciseSummary(
     Guid Id,
     string Title,
@@ -70,6 +78,9 @@ public sealed record ReadingTextDetails(
 
 public interface ILegacySpeedReadingCatalog
 {
+    Task<IReadOnlyList<ExerciseTypeCategorySummary>> GetExerciseTypeCategoriesAsync(
+        CancellationToken cancellationToken = default);
+
     Task<SpeedReadingPage<ExerciseTypeSummary>> GetExerciseTypesAsync(
         Guid? categoryId,
         bool? isActive,

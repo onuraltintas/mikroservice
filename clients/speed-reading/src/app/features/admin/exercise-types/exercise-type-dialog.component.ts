@@ -37,6 +37,7 @@ export class ExerciseTypeDialogComponent extends BaseComponent implements OnInit
   isEditMode = false;
   saving = false;
   categories: ExerciseTypeCategory[] = [];
+  private saveIdempotencyKey?: string;
 
   constructor(
     public dialogRef: MatDialogRef<ExerciseTypeDialogComponent>,
@@ -50,6 +51,7 @@ export class ExerciseTypeDialogComponent extends BaseComponent implements OnInit
       description: [data?.description || ''],
       iconName: [data?.iconName || ''],
       colorCode: [data?.colorCode || '#4CAF50'],
+      engineType: [data?.engineType || data?.name || ''],
       categoryId: [data?.categoryId || null],
       sortOrder: [data?.sortOrder || 0, Validators.required],
       isActive: [data?.isActive !== undefined ? data.isActive : true]
@@ -90,10 +92,11 @@ export class ExerciseTypeDialogComponent extends BaseComponent implements OnInit
     const typeData = {
       ...this.typeForm.value
     };
+    this.saveIdempotencyKey ??= this.exerciseTypeService.newIdempotencyKey();
 
     const operation = this.isEditMode
-      ? this.exerciseTypeService.updateExerciseType(this.data!.id, typeData)
-      : this.exerciseTypeService.createExerciseType(typeData);
+      ? this.exerciseTypeService.updateExerciseType(this.data!.id, typeData, this.saveIdempotencyKey)
+      : this.exerciseTypeService.createExerciseType(typeData, this.saveIdempotencyKey);
 
     operation
       .pipe(
@@ -105,6 +108,7 @@ export class ExerciseTypeDialogComponent extends BaseComponent implements OnInit
           this.handleSuccess(
             this.isEditMode ? 'Egzersiz tipi güncellendi' : 'Egzersiz tipi oluşturuldu'
           );
+          this.saveIdempotencyKey = undefined;
           this.dialogRef.close(true);
         },
         error: (error) => {

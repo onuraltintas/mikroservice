@@ -5,6 +5,22 @@ namespace SpeedReading.Infrastructure.Legacy;
 
 internal sealed class LegacySpeedReadingCatalog(SpeedReadingDbContext db) : ILegacySpeedReadingCatalog
 {
+    public async Task<IReadOnlyList<ExerciseTypeCategorySummary>> GetExerciseTypeCategoriesAsync(
+        CancellationToken cancellationToken = default) =>
+        await db.ExerciseTypeCategories
+            .AsNoTracking()
+            .Where(item => !item.IsDeleted)
+            .OrderBy(item => item.SortOrder)
+            .ThenBy(item => item.DisplayName)
+            .Select(item => new ExerciseTypeCategorySummary(
+                item.Id,
+                item.Name,
+                item.DisplayName,
+                item.Description,
+                item.SortOrder,
+                item.IsActive))
+            .ToListAsync(cancellationToken);
+
     public async Task<SpeedReadingPage<ExerciseTypeSummary>> GetExerciseTypesAsync(
         Guid? categoryId,
         bool? isActive,

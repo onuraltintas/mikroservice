@@ -19,8 +19,6 @@ export class ExerciseTypeService {
   private http = inject(HttpClient);
   /** Read operations are served by the dedicated Speed Reading service. */
   private apiUrl = `${environment.speedReadingApiUrl}/exercise-types`;
-  /** Write routes stay on the legacy contract until the command slice is migrated. */
-  private legacyApiUrl = `${environment.apiUrl}/exercisetypes`;
 
   /**
    * Get exercise types with pagination and filters
@@ -60,8 +58,10 @@ export class ExerciseTypeService {
    * Backend returns: ApiResponse<ExerciseType>
    * Service receives: ExerciseType (auto-unwrapped)
    */
-  createExerciseType(exerciseType: Partial<ExerciseType>): Observable<ExerciseType> {
-    return this.http.post<ExerciseType>(this.legacyApiUrl, exerciseType);
+  createExerciseType(exerciseType: Partial<ExerciseType>, idempotencyKey?: string): Observable<ExerciseType> {
+    return this.http.post<ExerciseType>(this.apiUrl, this.toExerciseTypeRequest(exerciseType), {
+      headers: this.idempotencyHeaders(idempotencyKey)
+    });
   }
 
   /**
@@ -69,8 +69,10 @@ export class ExerciseTypeService {
    * Backend returns: ApiResponse<ExerciseType>
    * Service receives: ExerciseType (auto-unwrapped)
    */
-  updateExerciseType(id: string, exerciseType: Partial<ExerciseType>): Observable<ExerciseType> {
-    return this.http.put<ExerciseType>(`${this.legacyApiUrl}/${id}`, exerciseType);
+  updateExerciseType(id: string, exerciseType: Partial<ExerciseType>, idempotencyKey?: string): Observable<ExerciseType> {
+    return this.http.put<ExerciseType>(`${this.apiUrl}/${id}`, this.toExerciseTypeRequest(exerciseType), {
+      headers: this.idempotencyHeaders(idempotencyKey)
+    });
   }
 
   /**
@@ -78,8 +80,10 @@ export class ExerciseTypeService {
    * Backend returns: ApiResponse<void>
    * Service receives: void (auto-unwrapped)
    */
-  deleteExerciseType(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.legacyApiUrl}/${id}`);
+  deleteExerciseType(id: string, idempotencyKey?: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, {
+      headers: this.idempotencyHeaders(idempotencyKey)
+    });
   }
 
   /**
@@ -97,7 +101,7 @@ export class ExerciseTypeService {
    * Service receives: ExerciseTypeCategory[] (auto-unwrapped)
    */
   getCategories(): Observable<ExerciseTypeCategory[]> {
-    return this.http.get<ExerciseTypeCategory[]>(`${this.legacyApiUrl}/categories`);
+    return this.http.get<ExerciseTypeCategory[]>(`${this.apiUrl}/categories`);
   }
 
   /**
@@ -121,5 +125,30 @@ export class ExerciseTypeService {
         }
       });
     });
+  }
+
+  newIdempotencyKey(): string {
+    return `speed-reading-${globalThis.crypto?.randomUUID?.()
+      ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`}`;
+  }
+
+  private idempotencyHeaders(idempotencyKey?: string) {
+    return { 'Idempotency-Key': idempotencyKey ?? this.newIdempotencyKey() };
+  }
+
+  private toExerciseTypeRequest(exerciseType: Partial<ExerciseType>): Record<string, unknown> {
+    return {
+      name: exerciseType.name ?? '',
+      displayName: exerciseType.displayName ?? '',
+      description: exerciseType.description ?? null,
+      iconName: exerciseType.iconName ?? null,
+      colorCode: exerciseType.colorCode ?? null,
+      sortOrder: exerciseType.sortOrder ?? 0,
+      isActive: exerciseType.isActive ?? true,
+      engineType: exerciseType.engineType?.trim()
+        || exerciseType.name?.trim()
+        || 'custom',
+      categoryId: exerciseType.categoryId ?? null
+    };
   }
 }

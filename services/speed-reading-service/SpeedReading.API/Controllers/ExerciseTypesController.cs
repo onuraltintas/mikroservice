@@ -14,6 +14,12 @@ public sealed class ExerciseTypesController(
     ILegacySpeedReadingCatalog catalog,
     ISpeedReadingContentAdminWriter adminWriter) : ControllerBase
 {
+    [HttpGet("categories")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyList<ExerciseTypeCategorySummary>>> GetCategories(
+        CancellationToken cancellationToken = default) =>
+        Ok(await catalog.GetExerciseTypeCategoriesAsync(cancellationToken));
+
     [HttpGet]
     [AllowAnonymous]
     public async Task<ActionResult<SpeedReadingPage<ExerciseTypeSummary>>> GetExerciseTypes(

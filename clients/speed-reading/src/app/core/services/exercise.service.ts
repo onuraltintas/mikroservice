@@ -90,8 +90,10 @@ export class ExerciseService {
    * Backend returns: ApiResponse<Exercise>
    * Service receives: Exercise (auto-unwrapped)
    */
-  createExercise(exercise: Partial<Exercise>): Observable<Exercise> {
-    return this.http.post<Exercise>(`${this.LEGACY_API_URL}/v1/exercises`, exercise);
+  createExercise(exercise: Partial<Exercise>, idempotencyKey?: string): Observable<Exercise> {
+    return this.http.post<Exercise>(`${this.API_URL}/exercises`, this.toExerciseRequest(exercise), {
+      headers: this.idempotencyHeaders(idempotencyKey)
+    });
   }
 
   /**
@@ -99,8 +101,10 @@ export class ExerciseService {
    * Backend returns: ApiResponse<Exercise>
    * Service receives: Exercise (auto-unwrapped)
    */
-  updateExercise(id: string, exercise: Partial<Exercise>): Observable<Exercise> {
-    return this.http.put<Exercise>(`${this.LEGACY_API_URL}/v1/exercises/${id}`, exercise);
+  updateExercise(id: string, exercise: Partial<Exercise>, idempotencyKey?: string): Observable<Exercise> {
+    return this.http.put<Exercise>(`${this.API_URL}/exercises/${id}`, this.toExerciseRequest(exercise), {
+      headers: this.idempotencyHeaders(idempotencyKey)
+    });
   }
 
   /**
@@ -108,8 +112,10 @@ export class ExerciseService {
    * Backend returns: ApiResponse<void>
    * Service receives: void (auto-unwrapped)
    */
-  deleteExercise(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.LEGACY_API_URL}/v1/exercises/${id}`);
+  deleteExercise(id: string, idempotencyKey?: string): Observable<void> {
+    return this.http.delete<void>(`${this.API_URL}/exercises/${id}`, {
+      headers: this.idempotencyHeaders(idempotencyKey)
+    });
   }
 
   // ============ Reading Text Methods ============
@@ -199,14 +205,29 @@ export class ExerciseService {
       readingMovementsJson: result.readingMovementsJson
     };
     const headers = new HttpHeaders({
-      'Idempotency-Key': idempotencyKey ?? this.createIdempotencyKey()
+      'Idempotency-Key': idempotencyKey ?? this.newIdempotencyKey()
     });
 
     return this.http.post<any>(`${this.API_URL}/progress/exercise-results`, payload, { headers });
   }
 
-  private createIdempotencyKey(): string {
-    return globalThis.crypto?.randomUUID?.()
-      ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  newIdempotencyKey(): string {
+    return `speed-reading-${globalThis.crypto?.randomUUID?.()
+      ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`}`;
+  }
+
+  private idempotencyHeaders(idempotencyKey?: string): HttpHeaders {
+    return new HttpHeaders({ 'Idempotency-Key': idempotencyKey ?? this.newIdempotencyKey() });
+  }
+
+  private toExerciseRequest(exercise: Partial<Exercise>): Record<string, unknown> {
+    return {
+      title: exercise.title ?? '',
+      description: exercise.description ?? null,
+      difficultyLevel: exercise.difficultyLevel ?? 1,
+      exerciseTypeId: exercise.exerciseTypeId,
+      configurationJson: exercise.configurationJson ?? '{}',
+      targetAgeGroupConfigurationId: exercise.targetAgeGroupId ?? null
+    };
   }
 }

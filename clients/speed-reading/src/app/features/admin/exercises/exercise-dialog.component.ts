@@ -41,6 +41,7 @@ export class ExerciseDialogComponent extends BaseComponent implements OnInit {
   exerciseForm: FormGroup;
   isEditMode = false;
   saving = false;
+  private saveIdempotencyKey?: string;
   exerciseTypes: ExerciseType[] = [];
   groupedTypes: { [key: string]: ExerciseType[] } = {};
   ageGroups: AgeGroupConfiguration[] = [];
@@ -327,8 +328,13 @@ export class ExerciseDialogComponent extends BaseComponent implements OnInit {
     // targetAgeGroupId is now part of the form, so it will be included in exerciseData automatically
 
     const operation = this.isEditMode
-      ? this.exerciseService.updateExercise(this.data!.id, exerciseData)
-      : this.exerciseService.createExercise(exerciseData);
+      ? this.exerciseService.updateExercise(
+        this.data!.id,
+        exerciseData,
+        this.saveIdempotencyKey ??= this.exerciseService.newIdempotencyKey())
+      : this.exerciseService.createExercise(
+        exerciseData,
+        this.saveIdempotencyKey ??= this.exerciseService.newIdempotencyKey());
 
     operation
       .pipe(
@@ -340,6 +346,7 @@ export class ExerciseDialogComponent extends BaseComponent implements OnInit {
           this.handleSuccess(
             this.isEditMode ? 'Egzersiz güncellendi' : 'Egzersiz oluşturuldu'
           );
+          this.saveIdempotencyKey = undefined;
           this.dialogRef.close(true);
         },
         error: (error) => {
