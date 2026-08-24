@@ -70,7 +70,10 @@ public sealed class SpeedReadingServiceOptionsTests
             "ReadingQuestions",
             "ExerciseSessions",
             "StudentExerciseResults",
-            "ReadingSessions"
+            "ReadingSessions",
+            "ExerciseProgramTemplates",
+            "StudentProgramProgresses",
+            "DailyExerciseLogs"
         });
         context.Database.ProviderName.Should().Contain("Npgsql");
 

@@ -28,6 +28,7 @@ public static class DependencyInjection
 
         services.AddScoped<ILegacySpeedReadingCatalog, LegacySpeedReadingCatalog>();
         services.AddScoped<ILegacySpeedReadingProgress, LegacySpeedReadingProgress>();
+        services.AddScoped<ILegacySpeedReadingPrograms, LegacySpeedReadingPrograms>();
 
         return services;
     }

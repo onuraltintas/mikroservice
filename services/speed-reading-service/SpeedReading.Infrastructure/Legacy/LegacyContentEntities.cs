@@ -125,3 +125,64 @@ internal sealed class LegacyReadingSession : LegacyBaseEntity
     public decimal EfficiencyScore { get; set; }
     public DateTime CompletedAt { get; set; }
 }
+
+internal sealed class LegacyExerciseProgramTemplate : LegacyBaseEntity
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public Guid TargetAgeGroupConfigurationId { get; set; }
+    public int MinAssessmentScore { get; set; }
+    public int MaxAssessmentScore { get; set; }
+    public string WeeklyPatternJson { get; set; } = string.Empty;
+    public int InitialDifficultyLevel { get; set; }
+    public int WeeksPerDifficultyIncrease { get; set; }
+    public int MaxDifficultyLevel { get; set; }
+    public int TotalWeeks { get; set; }
+    public int TotalDays { get; set; }
+    public bool IsActive { get; set; }
+    public int DisplayOrder { get; set; }
+    public int ProgramType { get; set; }
+    public string? ExamType { get; set; }
+    public bool IsAssessment { get; set; }
+}
+
+internal sealed class LegacyStudentProgramProgress : LegacyBaseEntity
+{
+    public Guid UserId { get; set; }
+    public Guid ProgramTemplateId { get; set; }
+    public DateTime AssignedDate { get; set; }
+    public int CurrentDay { get; set; }
+    public int CurrentWeek { get; set; }
+    public int CurrentDifficultyLevel { get; set; }
+    public int DaysCompleted { get; set; }
+    public int ExercisesCompleted { get; set; }
+    public DateTime? LastCompletionDate { get; set; }
+    public bool IsActive { get; set; }
+    public DateTime? CompletedDate { get; set; }
+    public decimal AverageSuccessRate { get; set; }
+    public int CurrentStreak { get; set; }
+    public int LongestStreak { get; set; }
+}
+
+internal sealed class LegacyDailyExerciseLog : LegacyBaseEntity
+{
+    public Guid UserId { get; set; }
+    public Guid StudentProgramProgressId { get; set; }
+    public Guid ExerciseId { get; set; }
+    public Guid ExerciseTypeId { get; set; }
+    public int DayNumber { get; set; }
+    public int WeekNumber { get; set; }
+    public int DifficultyLevel { get; set; }
+    public DateTime CompletedDate { get; set; }
+    public int TimeSpentSeconds { get; set; }
+    public decimal SuccessRate { get; set; }
+    public bool IsPassed { get; set; }
+    public int AttemptNumber { get; set; }
+    public bool IsRetry { get; set; }
+    public string DevicePlatform { get; set; } = string.Empty;
+    public int CorrectCount { get; set; }
+    public int IncorrectCount { get; set; }
+    public int TotalAttempts { get; set; }
+    public decimal? AverageWPM { get; set; }
+    public decimal? AverageComprehension { get; set; }
+}

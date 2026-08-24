@@ -60,6 +60,9 @@ servis `postgres` migration/depends-on zincirine eklenmez.
 - `GET /api/speed-reading/progress/reading-statistics`
 - `GET /api/speed-reading/progress/exercise-results`
 - `GET /api/speed-reading/progress/active-exercise-sessions`
+- `GET /api/speed-reading/program-templates`
+- `GET /api/speed-reading/progress/programs`
+- `GET /api/speed-reading/progress/daily-exercise-logs`
 
 ## Yetki sınırı
 

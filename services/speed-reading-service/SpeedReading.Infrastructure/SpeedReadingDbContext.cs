@@ -18,6 +18,9 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     internal DbSet<LegacyExerciseSession> ExerciseSessions => Set<LegacyExerciseSession>();
     internal DbSet<LegacyStudentExerciseResult> StudentExerciseResults => Set<LegacyStudentExerciseResult>();
     internal DbSet<LegacyReadingSession> ReadingSessions => Set<LegacyReadingSession>();
+    internal DbSet<LegacyExerciseProgramTemplate> ExerciseProgramTemplates => Set<LegacyExerciseProgramTemplate>();
+    internal DbSet<LegacyStudentProgramProgress> StudentProgramProgresses => Set<LegacyStudentProgramProgress>();
+    internal DbSet<LegacyDailyExerciseLog> DailyExerciseLogs => Set<LegacyDailyExerciseLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -87,6 +90,31 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasKey(item => item.Id);
             entity.HasIndex(item => item.UserId);
             entity.HasIndex(item => item.ReadingTextId);
+        });
+
+        modelBuilder.Entity<LegacyExerciseProgramTemplate>(entity =>
+        {
+            entity.ToTable("ExerciseProgramTemplates");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.TargetAgeGroupConfigurationId);
+        });
+
+        modelBuilder.Entity<LegacyStudentProgramProgress>(entity =>
+        {
+            entity.ToTable("StudentProgramProgresses");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.UserId);
+            entity.HasIndex(item => item.ProgramTemplateId);
+        });
+
+        modelBuilder.Entity<LegacyDailyExerciseLog>(entity =>
+        {
+            entity.ToTable("DailyExerciseLogs");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.UserId);
+            entity.HasIndex(item => item.StudentProgramProgressId);
+            entity.HasIndex(item => item.ExerciseId);
+            entity.HasIndex(item => item.ExerciseTypeId);
         });
     }
 }

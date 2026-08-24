@@ -10,7 +10,9 @@ namespace SpeedReading.API.Controllers;
 [ApiVersion(1.0)]
 [Route("api/speed-reading/progress")]
 [Authorize]
-public sealed class ProgressController(ILegacySpeedReadingProgress progress) : ControllerBase
+public sealed class ProgressController(
+    ILegacySpeedReadingProgress progress,
+    ILegacySpeedReadingPrograms programs) : ControllerBase
 {
     [HttpGet("reading-history")]
     public async Task<ActionResult<IReadOnlyList<ReadingSessionSummary>>> GetReadingHistory(
@@ -72,6 +74,38 @@ public sealed class ProgressController(ILegacySpeedReadingProgress progress) : C
         }
 
         return Ok(await progress.GetActiveExerciseSessionsAsync(userId, cancellationToken));
+    }
+
+    [HttpGet("programs")]
+    public async Task<ActionResult<IReadOnlyList<StudentProgramProgressSummary>>> GetPrograms(
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        return Ok(await programs.GetStudentProgressAsync(userId, cancellationToken));
+    }
+
+    [HttpGet("daily-exercise-logs")]
+    public async Task<ActionResult<IReadOnlyList<DailyExerciseLogSummary>>> GetDailyExerciseLogs(
+        [FromQuery] DateTime? dateFrom,
+        [FromQuery] DateTime? dateTo,
+        [FromQuery] int limit = 50,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        return Ok(await programs.GetDailyExerciseLogsAsync(
+            userId,
+            dateFrom,
+            dateTo,
+            limit,
+            cancellationToken));
     }
 
     private bool TryGetCurrentUserId(out Guid userId)

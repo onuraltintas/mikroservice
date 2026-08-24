@@ -162,3 +162,72 @@ public interface ILegacySpeedReadingProgress
         Guid studentId,
         CancellationToken cancellationToken = default);
 }
+
+public sealed record ExerciseProgramTemplateSummary(
+    Guid Id,
+    string Name,
+    string Description,
+    int MinAssessmentScore,
+    int MaxAssessmentScore,
+    int InitialDifficultyLevel,
+    int MaxDifficultyLevel,
+    int TotalWeeks,
+    int TotalDays,
+    bool IsActive,
+    int DisplayOrder,
+    int ProgramType,
+    string? ExamType,
+    bool IsAssessment);
+
+public sealed record StudentProgramProgressSummary(
+    Guid Id,
+    Guid ProgramTemplateId,
+    DateTime AssignedDate,
+    int CurrentDay,
+    int CurrentWeek,
+    int CurrentDifficultyLevel,
+    int DaysCompleted,
+    int ExercisesCompleted,
+    DateTime? LastCompletionDate,
+    bool IsActive,
+    DateTime? CompletedDate,
+    decimal AverageSuccessRate,
+    int CurrentStreak,
+    int LongestStreak);
+
+public sealed record DailyExerciseLogSummary(
+    Guid Id,
+    Guid ExerciseId,
+    Guid ExerciseTypeId,
+    int DayNumber,
+    int WeekNumber,
+    int DifficultyLevel,
+    DateTime CompletedDate,
+    int TimeSpentSeconds,
+    decimal SuccessRate,
+    bool IsPassed,
+    int AttemptNumber,
+    bool IsRetry,
+    string DevicePlatform,
+    int CorrectCount,
+    int IncorrectCount,
+    int TotalAttempts,
+    decimal? AverageWpm,
+    decimal? AverageComprehension);
+
+public interface ILegacySpeedReadingPrograms
+{
+    Task<IReadOnlyList<ExerciseProgramTemplateSummary>> GetProgramTemplatesAsync(
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<StudentProgramProgressSummary>> GetStudentProgressAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<DailyExerciseLogSummary>> GetDailyExerciseLogsAsync(
+        Guid userId,
+        DateTime? dateFrom,
+        DateTime? dateTo,
+        int limit,
+        CancellationToken cancellationToken = default);
+}

@@ -35,6 +35,9 @@ okunur bir uyumluluk katmanıdır:
 | `ExerciseSessions` | Devam eden/bitmiş egzersiz oturumları |
 | `StudentExerciseResults` | Öğrenci egzersiz performans sonuçları |
 | `ReadingSessions` | Okuma hızı ve anlama geçmişi |
+| `ExerciseProgramTemplates` | Günlük egzersiz program şablonları |
+| `StudentProgramProgresses` | Öğrencinin program ilerleme durumu |
+| `DailyExerciseLogs` | Günlük egzersiz tamamlanma kayıtları |
 
 ## Yeni servis uçları
 
@@ -49,6 +52,9 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
 - `GET /api/speed-reading/progress/reading-statistics` — oturum açmış kullanıcının özet istatistikleri
 - `GET /api/speed-reading/progress/exercise-results` — sayfalı egzersiz sonuçları
 - `GET /api/speed-reading/progress/active-exercise-sessions` — aktif/paused oturumlar
+- `GET /api/speed-reading/program-templates` — aktif program şablonları
+- `GET /api/speed-reading/progress/programs` — oturum açmış kullanıcının programları
+- `GET /api/speed-reading/progress/daily-exercise-logs` — günlük tamamlanma kayıtları
 
 Yazma uçları bu aşamada bilerek açılmadı. İçerik yönetimi açılmadan önce eski
 uygulamanın yazıcıları durdurulmalı ve tek veri sahibine geçiş doğrulanmalıdır.
@@ -72,8 +78,7 @@ uygulamanın yazıcıları durdurulmalı ve tek veri sahibine geçiş doğrulanm
 
 Sıradaki dilimler, her biri test ve geri dönüş kontrolüyle ayrı ayrı taşınır:
 
-1. Program/öğrenme yolu (`ExerciseProgramTemplates`, `DailyExerciseLogs`,
-   `LearningPath*`).
+1. Öğrenme yolu (`LearningPath*`).
 2. Analitik, gamification ve rapor snapshot'ları.
 3. Admin içerik CRUD uçları ve audit event'leri.
 4. Mevcut `speed-reading-frontend` uygulamasının bağımsız servis Gateway'ine
