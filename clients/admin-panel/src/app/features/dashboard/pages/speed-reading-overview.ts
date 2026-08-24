@@ -1,7 +1,7 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Component, OnInit, PLATFORM_ID, computed, inject, signal } from '@angular/core';
-import { finalize, forkJoin } from 'rxjs';
+import { finalize, forkJoin, of } from 'rxjs';
 import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import { AuthService } from '../../../core/auth/auth.service';
 import {
@@ -15,7 +15,9 @@ import {
   SpeedReadingReadingTextRequest,
   SpeedReadingReadingQuestion,
   SpeedReadingReadingQuestionRequest,
-  SpeedReadingReadingQuestionUpdateRequest
+  SpeedReadingReadingQuestionUpdateRequest,
+  SpeedReadingProgramTemplate,
+  SpeedReadingProgramTemplateRequest
 } from '../../../core/services/speed-reading-admin.service';
 
 @Component({
@@ -438,6 +440,94 @@ import {
             </div>
           }
         </div>
+
+        @if (canManagePrograms()) {
+          <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Program şablonları</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Öğrenci programlarının seviye, süre ve haftalık plan ayarları.</p>
+              </div>
+              <button type="button" (click)="startCreateProgram()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white">Yeni program</button>
+            </div>
+
+            @if (programEditingId !== null) {
+              <form class="mt-4 grid grid-cols-1 gap-3 rounded-lg border border-indigo-200 bg-indigo-50/50 p-4 sm:grid-cols-2" (ngSubmit)="saveProgram()">
+                <label class="text-sm text-gray-700 dark:text-gray-200">Ad
+                  <input name="programName" [(ngModel)]="programDraft.name" required maxlength="200" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Hedef yaş grubu kimliği
+                  <input name="programAgeGroup" [(ngModel)]="programDraft.targetAgeGroupConfigurationId" required class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Min. değerlendirme puanı
+                  <input type="number" name="programMinScore" [(ngModel)]="programDraft.minAssessmentScore" min="0" max="100" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Maks. değerlendirme puanı
+                  <input type="number" name="programMaxScore" [(ngModel)]="programDraft.maxAssessmentScore" min="0" max="100" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Başlangıç zorluğu (0-10)
+                  <input type="number" name="programInitialDifficulty" [(ngModel)]="programDraft.initialDifficultyLevel" min="0" max="10" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Maksimum zorluk (0-10)
+                  <input type="number" name="programMaxDifficulty" [(ngModel)]="programDraft.maxDifficultyLevel" min="0" max="10" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Zorluk artış aralığı (hafta)
+                  <input type="number" name="programIncreaseWeeks" [(ngModel)]="programDraft.weeksPerDifficultyIncrease" min="1" max="52" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Toplam hafta
+                  <input type="number" name="programTotalWeeks" [(ngModel)]="programDraft.totalWeeks" min="1" max="520" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Toplam gün
+                  <input type="number" name="programTotalDays" [(ngModel)]="programDraft.totalDays" min="1" max="3650" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Sıra
+                  <input type="number" name="programDisplayOrder" [(ngModel)]="programDraft.displayOrder" min="0" max="10000" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Program tipi
+                  <input type="number" name="programType" [(ngModel)]="programDraft.programType" min="0" max="100" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Sınav türü
+                  <input name="programExamType" [(ngModel)]="programDraft.examType" maxlength="100" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200 sm:col-span-2">Açıklama
+                  <textarea name="programDescription" [(ngModel)]="programDraft.description" maxlength="5000" rows="2" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800"></textarea>
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200 sm:col-span-2">Haftalık plan JSON
+                  <textarea name="weeklyPatternJson" [(ngModel)]="programDraft.weeklyPatternJson" required rows="4" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-xs dark:border-gray-600 dark:bg-gray-800"></textarea>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200"><input type="checkbox" name="programIsActive" [(ngModel)]="programDraft.isActive" /> Aktif</label>
+                <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200"><input type="checkbox" name="programIsAssessment" [(ngModel)]="programDraft.isAssessment" /> Değerlendirme programı</label>
+                <div class="flex justify-end gap-2 sm:col-span-2">
+                  <button type="button" (click)="cancelProgramEdit()" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">Vazgeç</button>
+                  <button type="submit" [disabled]="saving()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50">{{ saving() ? 'Kaydediliyor…' : (programEditingId === 'new' ? 'Oluştur' : 'Kaydet') }}</button>
+                </div>
+              </form>
+            }
+
+            @if (programTemplates().length) {
+              <div class="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+                @for (program of programTemplates(); track program.id) {
+                  <article class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                    <div class="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 class="font-medium text-gray-900 dark:text-white">{{ program.name }}</h3>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ program.totalWeeks }} hafta · {{ program.totalDays }} gün · Zorluk {{ program.initialDifficultyLevel }}-{{ program.maxDifficultyLevel }}</p>
+                      </div>
+                      <span class="rounded-full px-2 py-1 text-xs" [class.bg-emerald-100]="program.isActive" [class.text-emerald-700]="program.isActive" [class.bg-gray-100]="!program.isActive" [class.text-gray-600]="!program.isActive">{{ program.isActive ? 'Aktif' : 'Pasif' }}</span>
+                    </div>
+                    <p class="mt-2 line-clamp-2 text-sm text-gray-600 dark:text-gray-300">{{ program.description }}</p>
+                    <div class="mt-3 flex gap-2">
+                      <button type="button" (click)="startEditProgram(program)" class="rounded border border-gray-300 px-2 py-1 text-xs">Düzenle</button>
+                      <button type="button" (click)="deleteProgram(program)" class="rounded border border-red-300 px-2 py-1 text-xs text-red-700">Sil</button>
+                    </div>
+                  </article>
+                }
+              </div>
+            } @else if (!loading()) {
+              <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Henüz program şablonu bulunamadı.</p>
+            }
+          </div>
+        }
       }
     </section>
   `
@@ -453,9 +543,12 @@ export class SpeedReadingOverviewComponent implements OnInit {
   readonly exercises = signal<SpeedReadingExercise[]>([]);
   readonly readingTexts = signal<SpeedReadingReadingText[]>([]);
   readonly readingQuestions = signal<SpeedReadingReadingQuestion[]>([]);
+  readonly programTemplates = signal<SpeedReadingProgramTemplate[]>([]);
   readonly saving = signal(false);
   readonly canManageContent = computed(() =>
     this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingContentManage));
+  readonly canManagePrograms = computed(() =>
+    this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingProgramManage));
   editingId: string | null = null;
   draft: SpeedReadingExerciseTypeRequest = this.emptyDraft();
   exerciseEditingId: string | null = null;
@@ -466,6 +559,8 @@ export class SpeedReadingOverviewComponent implements OnInit {
   selectedReadingTextTitle = '';
   questionEditingId: string | null = null;
   questionDraft: SpeedReadingReadingQuestionRequest = this.emptyQuestionDraft('');
+  programEditingId: string | null = null;
+  programDraft: SpeedReadingProgramTemplateRequest = this.emptyProgramDraft();
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
@@ -480,13 +575,15 @@ export class SpeedReadingOverviewComponent implements OnInit {
       capabilities: this.service.getCapabilities(),
       exerciseTypes: this.service.getExerciseTypes(),
       exercises: this.service.getExercises(),
-      readingTexts: this.service.getReadingTexts()
+      readingTexts: this.service.getReadingTexts(),
+      programTemplates: this.canManagePrograms() ? this.service.getProgramTemplates() : of([])
     }).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: value => {
         this.capabilities.set(value.capabilities);
         this.exerciseTypes.set(value.exerciseTypes.items);
         this.exercises.set(value.exercises.items);
         this.readingTexts.set(value.readingTexts);
+        this.programTemplates.set(value.programTemplates);
       },
       error: () => this.error.set('Hızlı okuma servis bilgisi yüklenemedi.')
     });
@@ -759,6 +856,61 @@ export class SpeedReadingOverviewComponent implements OnInit {
     });
   }
 
+  startCreateProgram() {
+    this.programEditingId = 'new';
+    this.programDraft = this.emptyProgramDraft();
+  }
+
+  startEditProgram(program: SpeedReadingProgramTemplate) {
+    this.programEditingId = program.id;
+    this.programDraft = {
+      name: program.name,
+      description: program.description,
+      targetAgeGroupConfigurationId: program.targetAgeGroupConfigurationId,
+      minAssessmentScore: program.minAssessmentScore,
+      maxAssessmentScore: program.maxAssessmentScore,
+      weeklyPatternJson: program.weeklyPatternJson,
+      initialDifficultyLevel: program.initialDifficultyLevel,
+      weeksPerDifficultyIncrease: program.weeksPerDifficultyIncrease,
+      maxDifficultyLevel: program.maxDifficultyLevel,
+      totalWeeks: program.totalWeeks,
+      totalDays: program.totalDays,
+      isActive: program.isActive,
+      displayOrder: program.displayOrder,
+      programType: program.programType,
+      examType: program.examType,
+      isAssessment: program.isAssessment
+    };
+  }
+
+  cancelProgramEdit() {
+    this.programEditingId = null;
+  }
+
+  saveProgram() {
+    if (this.programEditingId === null) return;
+    this.saving.set(true);
+    const request$ = this.programEditingId === 'new'
+      ? this.service.createProgramTemplate(this.programDraft)
+      : this.service.updateProgramTemplate(this.programEditingId, this.programDraft);
+
+    request$.pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => {
+        this.programEditingId = null;
+        this.load();
+      },
+      error: () => this.error.set('Program şablonu kaydedilemedi.')
+    });
+  }
+
+  deleteProgram(program: SpeedReadingProgramTemplate) {
+    if (!globalThis.confirm(`“${program.name}” program şablonu silinsin mi?`)) return;
+    this.service.deleteProgramTemplate(program.id).subscribe({
+      next: () => this.load(),
+      error: () => this.error.set('Program şablonu silinemedi. Bağlı öğrenci ilerlemesini kontrol edin.')
+    });
+  }
+
   private emptyDraft(): SpeedReadingExerciseTypeRequest {
     return {
       name: '',
@@ -815,6 +967,27 @@ export class SpeedReadingOverviewComponent implements OnInit {
       optionD: '',
       correctAnswer: 'A',
       orderIndex: this.readingQuestions().length
+    };
+  }
+
+  private emptyProgramDraft(): SpeedReadingProgramTemplateRequest {
+    return {
+      name: '',
+      description: '',
+      targetAgeGroupConfigurationId: '',
+      minAssessmentScore: 0,
+      maxAssessmentScore: 100,
+      weeklyPatternJson: '{}',
+      initialDifficultyLevel: 0,
+      weeksPerDifficultyIncrease: 1,
+      maxDifficultyLevel: 10,
+      totalWeeks: 1,
+      totalDays: 7,
+      isActive: true,
+      displayOrder: 0,
+      programType: 0,
+      examType: '',
+      isAssessment: false
     };
   }
 }

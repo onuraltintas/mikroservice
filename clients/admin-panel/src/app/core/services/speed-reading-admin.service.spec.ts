@@ -193,4 +193,48 @@ describe('SpeedReadingAdminService', () => {
     expect(deleteRequest.request.headers.get('Idempotency-Key')).toBe('question-delete-key-123456');
     deleteRequest.flush(null);
   });
+
+  it('loads and writes program templates through the ProgramManage route', () => {
+    service.getProgramTemplates().subscribe(value => expect(value).toEqual([]));
+    const listRequest = http.expectOne('/api/speed-reading/program-templates/admin');
+    expect(listRequest.request.method).toBe('GET');
+    listRequest.flush([]);
+
+    const request = {
+      name: 'Temel program',
+      description: 'Başlangıç programı',
+      targetAgeGroupConfigurationId: 'age-1',
+      minAssessmentScore: 0,
+      maxAssessmentScore: 100,
+      weeklyPatternJson: '{}',
+      initialDifficultyLevel: 0,
+      weeksPerDifficultyIncrease: 1,
+      maxDifficultyLevel: 10,
+      totalWeeks: 4,
+      totalDays: 28,
+      isActive: true,
+      displayOrder: 1,
+      programType: 0,
+      examType: null,
+      isAssessment: false
+    };
+
+    service.createProgramTemplate(request, 'program-create-key-123456').subscribe();
+    const createRequest = http.expectOne('/api/speed-reading/program-templates');
+    expect(createRequest.request.method).toBe('POST');
+    expect(createRequest.request.headers.get('Idempotency-Key')).toBe('program-create-key-123456');
+    createRequest.flush({ id: 'program-1' });
+
+    service.updateProgramTemplate('program-1', request, 'program-update-key-123456').subscribe();
+    const updateRequest = http.expectOne('/api/speed-reading/program-templates/program-1');
+    expect(updateRequest.request.method).toBe('PUT');
+    expect(updateRequest.request.headers.get('Idempotency-Key')).toBe('program-update-key-123456');
+    updateRequest.flush({ id: 'program-1' });
+
+    service.deleteProgramTemplate('program-1', 'program-delete-key-123456').subscribe();
+    const deleteRequest = http.expectOne('/api/speed-reading/program-templates/program-1');
+    expect(deleteRequest.request.method).toBe('DELETE');
+    expect(deleteRequest.request.headers.get('Idempotency-Key')).toBe('program-delete-key-123456');
+    deleteRequest.flush(null);
+  });
 });

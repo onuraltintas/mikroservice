@@ -129,6 +129,45 @@ export interface SpeedReadingReadingQuestionRequest {
 export interface SpeedReadingReadingQuestionUpdateRequest
   extends Omit<SpeedReadingReadingQuestionRequest, 'readingTextId'> {}
 
+export interface SpeedReadingProgramTemplate {
+  id: string;
+  name: string;
+  description: string;
+  targetAgeGroupConfigurationId: string;
+  minAssessmentScore: number;
+  maxAssessmentScore: number;
+  weeklyPatternJson: string;
+  initialDifficultyLevel: number;
+  weeksPerDifficultyIncrease: number;
+  maxDifficultyLevel: number;
+  totalWeeks: number;
+  totalDays: number;
+  isActive: boolean;
+  displayOrder: number;
+  programType: number;
+  examType: string | null;
+  isAssessment: boolean;
+}
+
+export interface SpeedReadingProgramTemplateRequest {
+  name: string;
+  description: string;
+  targetAgeGroupConfigurationId: string;
+  minAssessmentScore: number;
+  maxAssessmentScore: number;
+  weeklyPatternJson: string;
+  initialDifficultyLevel: number;
+  weeksPerDifficultyIncrease: number;
+  maxDifficultyLevel: number;
+  totalWeeks: number;
+  totalDays: number;
+  isActive: boolean;
+  displayOrder: number;
+  programType: number;
+  examType?: string | null;
+  isAssessment: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SpeedReadingAdminService {
   private readonly http = inject(HttpClient);
@@ -276,6 +315,37 @@ export class SpeedReadingAdminService {
   deleteReadingQuestion(id: string, idempotencyKey?: string) {
     return this.http.delete<void>(
       `${this.url}/reading-questions/${id}`,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  getProgramTemplates() {
+    return this.http.get<SpeedReadingProgramTemplate[]>(`${this.url}/program-templates/admin`);
+  }
+
+  createProgramTemplate(request: SpeedReadingProgramTemplateRequest, idempotencyKey?: string) {
+    return this.http.post<SpeedReadingProgramTemplate>(
+      `${this.url}/program-templates`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  updateProgramTemplate(
+    id: string,
+    request: SpeedReadingProgramTemplateRequest,
+    idempotencyKey?: string
+  ) {
+    return this.http.put<SpeedReadingProgramTemplate>(
+      `${this.url}/program-templates/${id}`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  deleteProgramTemplate(id: string, idempotencyKey?: string) {
+    return this.http.delete<void>(
+      `${this.url}/program-templates/${id}`,
       { headers: this.idempotencyHeaders(idempotencyKey) }
     );
   }

@@ -77,6 +77,9 @@ tablosunu uygular.
   bulunan metinler silinemez)
 - `POST|PUT|DELETE /api/speed-reading/reading-questions` (`ContentManage`; dört
   seçenek ve A-D doğru cevap doğrulaması)
+- `GET /api/speed-reading/program-templates/admin` ve
+  `POST|PUT|DELETE /api/speed-reading/program-templates` (`ProgramManage`;
+  ilerlemesi bulunan şablonlar silinemez)
 - `GET /api/speed-reading/progress/active-exercise-sessions`
 - `GET /api/speed-reading/program-templates`
 - `GET /api/speed-reading/progress/programs`

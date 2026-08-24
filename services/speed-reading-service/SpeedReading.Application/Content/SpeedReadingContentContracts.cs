@@ -222,6 +222,9 @@ public interface ILegacySpeedReadingPrograms
     Task<IReadOnlyList<ExerciseProgramTemplateSummary>> GetProgramTemplatesAsync(
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<ExerciseProgramTemplateAdminSummary>> GetProgramTemplateAdminSummariesAsync(
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<StudentProgramProgressSummary>> GetStudentProgressAsync(
         Guid userId,
         CancellationToken cancellationToken = default);

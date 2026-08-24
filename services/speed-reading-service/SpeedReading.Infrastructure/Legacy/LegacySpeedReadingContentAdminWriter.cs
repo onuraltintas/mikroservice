@@ -531,6 +531,146 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         }
     }
 
+    public async Task<ExerciseProgramTemplateAdminSummary> CreateExerciseProgramTemplateAsync(
+        Guid actorId,
+        CreateExerciseProgramTemplateRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequest(actorId, request, idempotencyKey);
+        idempotencyKey = NormalizeKey(idempotencyKey);
+        const string scope = "speed-reading.program-templates.create";
+        var requestHash = CreateRequestHash(actorId, scope, Guid.Empty, request);
+        var existing = await GetLedgerAsync(scope, idempotencyKey, cancellationToken);
+        if (existing is not null)
+        {
+            return await ReplayProgramTemplateAsync(existing, requestHash, cancellationToken);
+        }
+
+        var now = DateTime.UtcNow;
+        var template = new LegacyExerciseProgramTemplate
+        {
+            Id = Guid.NewGuid(),
+            Name = request.Name.Trim(),
+            Description = request.Description.Trim(),
+            TargetAgeGroupConfigurationId = request.TargetAgeGroupConfigurationId,
+            MinAssessmentScore = request.MinAssessmentScore,
+            MaxAssessmentScore = request.MaxAssessmentScore,
+            WeeklyPatternJson = request.WeeklyPatternJson,
+            InitialDifficultyLevel = request.InitialDifficultyLevel,
+            WeeksPerDifficultyIncrease = request.WeeksPerDifficultyIncrease,
+            MaxDifficultyLevel = request.MaxDifficultyLevel,
+            TotalWeeks = request.TotalWeeks,
+            TotalDays = request.TotalDays,
+            IsActive = request.IsActive,
+            DisplayOrder = request.DisplayOrder,
+            ProgramType = request.ProgramType,
+            ExamType = request.ExamType?.Trim(),
+            IsAssessment = request.IsAssessment,
+            CreatedAt = now,
+            CreatedBy = actorId
+        };
+
+        db.ExerciseProgramTemplates.Add(template);
+        AddLedger(scope, idempotencyKey, requestHash, template.Id, now);
+        await SaveOrReplayAsync(template.Id, scope, idempotencyKey, requestHash, cancellationToken);
+        return ToAdminSummary(template);
+    }
+
+    public async Task<ExerciseProgramTemplateAdminSummary> UpdateExerciseProgramTemplateAsync(
+        Guid actorId,
+        Guid programTemplateId,
+        UpdateExerciseProgramTemplateRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequest(actorId, request, idempotencyKey);
+        idempotencyKey = NormalizeKey(idempotencyKey);
+        const string scope = "speed-reading.program-templates.update";
+        var requestHash = CreateRequestHash(actorId, scope, programTemplateId, request);
+        var existing = await GetLedgerAsync(scope, idempotencyKey, cancellationToken);
+        if (existing is not null)
+        {
+            return await ReplayProgramTemplateAsync(existing, requestHash, cancellationToken);
+        }
+
+        var template = await db.ExerciseProgramTemplates
+            .SingleOrDefaultAsync(item => item.Id == programTemplateId && !item.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException("ExerciseProgramTemplate", programTemplateId);
+        template.Name = request.Name.Trim();
+        template.Description = request.Description.Trim();
+        template.TargetAgeGroupConfigurationId = request.TargetAgeGroupConfigurationId;
+        template.MinAssessmentScore = request.MinAssessmentScore;
+        template.MaxAssessmentScore = request.MaxAssessmentScore;
+        template.WeeklyPatternJson = request.WeeklyPatternJson;
+        template.InitialDifficultyLevel = request.InitialDifficultyLevel;
+        template.WeeksPerDifficultyIncrease = request.WeeksPerDifficultyIncrease;
+        template.MaxDifficultyLevel = request.MaxDifficultyLevel;
+        template.TotalWeeks = request.TotalWeeks;
+        template.TotalDays = request.TotalDays;
+        template.IsActive = request.IsActive;
+        template.DisplayOrder = request.DisplayOrder;
+        template.ProgramType = request.ProgramType;
+        template.ExamType = request.ExamType?.Trim();
+        template.IsAssessment = request.IsAssessment;
+        template.UpdatedAt = DateTime.UtcNow;
+        template.UpdatedBy = actorId;
+
+        AddLedger(scope, idempotencyKey, requestHash, template.Id, DateTime.UtcNow);
+        await SaveOrReplayAsync(template.Id, scope, idempotencyKey, requestHash, cancellationToken);
+        return ToAdminSummary(template);
+    }
+
+    public async Task DeleteExerciseProgramTemplateAsync(
+        Guid actorId,
+        Guid programTemplateId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateIdempotency(actorId, idempotencyKey);
+        idempotencyKey = NormalizeKey(idempotencyKey);
+        const string scope = "speed-reading.program-templates.delete";
+        var requestHash = SpeedReadingRequestHasher.Create(
+            actorId.ToString("D"), scope, programTemplateId.ToString("D"));
+        var existing = await GetLedgerAsync(scope, idempotencyKey, cancellationToken);
+        if (existing is not null)
+        {
+            EnsureReplayMatches(existing, requestHash);
+            return;
+        }
+
+        var template = await db.ExerciseProgramTemplates
+            .SingleOrDefaultAsync(item => item.Id == programTemplateId && !item.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException("ExerciseProgramTemplate", programTemplateId);
+        if (await db.StudentProgramProgresses.AnyAsync(
+                item => item.ProgramTemplateId == programTemplateId && !item.IsDeleted,
+                cancellationToken))
+        {
+            throw new BusinessRuleException(
+                "ProgramTemplate.HasProgress",
+                "Program şablonu, bağlı öğrenci ilerlemesi kaldırılmadan silinemez.");
+        }
+
+        var now = DateTime.UtcNow;
+        template.IsDeleted = true;
+        template.DeletedAt = now;
+        template.DeletedBy = actorId;
+        template.UpdatedAt = now;
+        template.UpdatedBy = actorId;
+        AddLedger(scope, idempotencyKey, requestHash, template.Id, now);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (IsIdempotencyConflict(exception))
+        {
+            db.ChangeTracker.Clear();
+            var concurrent = await db.IdempotencyRecords
+                .SingleAsync(item => item.Scope == scope && item.Key == idempotencyKey, cancellationToken);
+            EnsureReplayMatches(concurrent, requestHash);
+        }
+    }
+
     private async Task<ExerciseTypeSummary> ReplayAsync(
         LegacyIdempotencyRecord record,
         string requestHash,
@@ -586,6 +726,21 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
                 "Idempotency.ResourceMissing",
                 "Idempotency kaydına ait soru bulunamadı; yeni bir anahtar kullanın.");
         return ToSummary(question);
+    }
+
+    private async Task<ExerciseProgramTemplateAdminSummary> ReplayProgramTemplateAsync(
+        LegacyIdempotencyRecord record,
+        string requestHash,
+        CancellationToken cancellationToken)
+    {
+        EnsureReplayMatches(record, requestHash);
+        var template = await db.ExerciseProgramTemplates
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == record.ResourceId && !item.IsDeleted, cancellationToken)
+            ?? throw new BusinessRuleException(
+                "Idempotency.ResourceMissing",
+                "Idempotency kaydına ait program şablonu bulunamadı; yeni bir anahtar kullanın.");
+        return ToAdminSummary(template);
     }
 
     private async Task SaveOrReplayAsync(
@@ -892,6 +1047,79 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         NormalizeCorrectAnswer(correctAnswer);
     }
 
+    private static void ValidateRequest(
+        Guid actorId,
+        CreateExerciseProgramTemplateRequest request,
+        string idempotencyKey) =>
+        ValidateProgramTemplateRequest(actorId, idempotencyKey, request.Name, request.Description,
+            request.TargetAgeGroupConfigurationId, request.MinAssessmentScore,
+            request.MaxAssessmentScore, request.WeeklyPatternJson, request.InitialDifficultyLevel,
+            request.WeeksPerDifficultyIncrease, request.MaxDifficultyLevel, request.TotalWeeks,
+            request.TotalDays, request.DisplayOrder, request.ProgramType, request.ExamType);
+
+    private static void ValidateRequest(
+        Guid actorId,
+        UpdateExerciseProgramTemplateRequest request,
+        string idempotencyKey) =>
+        ValidateProgramTemplateRequest(actorId, idempotencyKey, request.Name, request.Description,
+            request.TargetAgeGroupConfigurationId, request.MinAssessmentScore,
+            request.MaxAssessmentScore, request.WeeklyPatternJson, request.InitialDifficultyLevel,
+            request.WeeksPerDifficultyIncrease, request.MaxDifficultyLevel, request.TotalWeeks,
+            request.TotalDays, request.DisplayOrder, request.ProgramType, request.ExamType);
+
+    private static void ValidateProgramTemplateRequest(
+        Guid actorId,
+        string idempotencyKey,
+        string name,
+        string description,
+        Guid targetAgeGroupConfigurationId,
+        int minAssessmentScore,
+        int maxAssessmentScore,
+        string weeklyPatternJson,
+        int initialDifficultyLevel,
+        int weeksPerDifficultyIncrease,
+        int maxDifficultyLevel,
+        int totalWeeks,
+        int totalDays,
+        int displayOrder,
+        int programType,
+        string? examType)
+    {
+        ValidateIdempotency(actorId, idempotencyKey);
+        if (targetAgeGroupConfigurationId == Guid.Empty
+            || string.IsNullOrWhiteSpace(name) || name.Trim().Length > 200
+            || (description?.Length ?? 0) > 5_000
+            || minAssessmentScore is < 0 or > 100
+            || maxAssessmentScore is < 0 or > 100
+            || maxAssessmentScore < minAssessmentScore
+            || string.IsNullOrWhiteSpace(weeklyPatternJson) || weeklyPatternJson.Length > 1_048_576
+            || initialDifficultyLevel is < 0 or > 10
+            || weeksPerDifficultyIncrease is < 1 or > 52
+            || maxDifficultyLevel is < 0 or > 10
+            || maxDifficultyLevel < initialDifficultyLevel
+            || totalWeeks is < 1 or > 520
+            || totalDays is < 1 or > 3_650
+            || displayOrder is < 0 or > 10_000
+            || programType is < 0 or > 100
+            || (examType?.Length ?? 0) > 100)
+        {
+            throw new ArgumentException("Program şablonu alanları geçersiz.", nameof(name));
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(weeklyPatternJson);
+            if (document.RootElement.ValueKind is not (JsonValueKind.Object or JsonValueKind.Array))
+            {
+                throw new ArgumentException("WeeklyPatternJson nesne veya dizi olmalıdır.", nameof(weeklyPatternJson));
+            }
+        }
+        catch (JsonException exception)
+        {
+            throw new ArgumentException("WeeklyPatternJson geçerli JSON değil.", nameof(weeklyPatternJson), exception);
+        }
+    }
+
     private static string NormalizeCorrectAnswer(string correctAnswer)
     {
         var normalized = correctAnswer?.Trim().ToUpperInvariant();
@@ -980,6 +1208,44 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
             request.OptionA, request.OptionB, request.OptionC, request.OptionD,
             NormalizeCorrectAnswer(request.CorrectAnswer),
             request.OrderIndex.ToString(CultureInfo.InvariantCulture));
+
+    private static string CreateRequestHash(
+        Guid actorId,
+        string scope,
+        Guid resourceId,
+        CreateExerciseProgramTemplateRequest request) =>
+        SpeedReadingRequestHasher.Create(
+            actorId.ToString("D"), scope, resourceId.ToString("D"), request.Name,
+            request.Description, request.TargetAgeGroupConfigurationId.ToString("D"),
+            request.MinAssessmentScore.ToString(CultureInfo.InvariantCulture),
+            request.MaxAssessmentScore.ToString(CultureInfo.InvariantCulture), request.WeeklyPatternJson,
+            request.InitialDifficultyLevel.ToString(CultureInfo.InvariantCulture),
+            request.WeeksPerDifficultyIncrease.ToString(CultureInfo.InvariantCulture),
+            request.MaxDifficultyLevel.ToString(CultureInfo.InvariantCulture),
+            request.TotalWeeks.ToString(CultureInfo.InvariantCulture),
+            request.TotalDays.ToString(CultureInfo.InvariantCulture), request.IsActive.ToString(),
+            request.DisplayOrder.ToString(CultureInfo.InvariantCulture),
+            request.ProgramType.ToString(CultureInfo.InvariantCulture), request.ExamType,
+            request.IsAssessment.ToString());
+
+    private static string CreateRequestHash(
+        Guid actorId,
+        string scope,
+        Guid resourceId,
+        UpdateExerciseProgramTemplateRequest request) =>
+        SpeedReadingRequestHasher.Create(
+            actorId.ToString("D"), scope, resourceId.ToString("D"), request.Name,
+            request.Description, request.TargetAgeGroupConfigurationId.ToString("D"),
+            request.MinAssessmentScore.ToString(CultureInfo.InvariantCulture),
+            request.MaxAssessmentScore.ToString(CultureInfo.InvariantCulture), request.WeeklyPatternJson,
+            request.InitialDifficultyLevel.ToString(CultureInfo.InvariantCulture),
+            request.WeeksPerDifficultyIncrease.ToString(CultureInfo.InvariantCulture),
+            request.MaxDifficultyLevel.ToString(CultureInfo.InvariantCulture),
+            request.TotalWeeks.ToString(CultureInfo.InvariantCulture),
+            request.TotalDays.ToString(CultureInfo.InvariantCulture), request.IsActive.ToString(),
+            request.DisplayOrder.ToString(CultureInfo.InvariantCulture),
+            request.ProgramType.ToString(CultureInfo.InvariantCulture), request.ExamType,
+            request.IsAssessment.ToString());
 
     private static string CreateRequestHash(
         Guid actorId,
@@ -1081,4 +1347,24 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         question.OptionD,
         question.CorrectAnswer,
         question.OrderIndex);
+
+    private static ExerciseProgramTemplateAdminSummary ToAdminSummary(
+        LegacyExerciseProgramTemplate template) => new(
+        template.Id,
+        template.Name,
+        template.Description,
+        template.TargetAgeGroupConfigurationId,
+        template.MinAssessmentScore,
+        template.MaxAssessmentScore,
+        template.WeeklyPatternJson,
+        template.InitialDifficultyLevel,
+        template.WeeksPerDifficultyIncrease,
+        template.MaxDifficultyLevel,
+        template.TotalWeeks,
+        template.TotalDays,
+        template.IsActive,
+        template.DisplayOrder,
+        template.ProgramType,
+        template.ExamType,
+        template.IsAssessment);
 }

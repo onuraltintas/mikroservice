@@ -93,6 +93,61 @@ public sealed record UpdateReadingQuestionRequest(
     string CorrectAnswer,
     int OrderIndex);
 
+public sealed record ExerciseProgramTemplateAdminSummary(
+    Guid Id,
+    string Name,
+    string Description,
+    Guid TargetAgeGroupConfigurationId,
+    int MinAssessmentScore,
+    int MaxAssessmentScore,
+    string WeeklyPatternJson,
+    int InitialDifficultyLevel,
+    int WeeksPerDifficultyIncrease,
+    int MaxDifficultyLevel,
+    int TotalWeeks,
+    int TotalDays,
+    bool IsActive,
+    int DisplayOrder,
+    int ProgramType,
+    string? ExamType,
+    bool IsAssessment);
+
+public sealed record CreateExerciseProgramTemplateRequest(
+    string Name,
+    string Description,
+    Guid TargetAgeGroupConfigurationId,
+    int MinAssessmentScore,
+    int MaxAssessmentScore,
+    string WeeklyPatternJson,
+    int InitialDifficultyLevel,
+    int WeeksPerDifficultyIncrease,
+    int MaxDifficultyLevel,
+    int TotalWeeks,
+    int TotalDays,
+    bool IsActive,
+    int DisplayOrder,
+    int ProgramType,
+    string? ExamType,
+    bool IsAssessment);
+
+public sealed record UpdateExerciseProgramTemplateRequest(
+    string Name,
+    string Description,
+    Guid TargetAgeGroupConfigurationId,
+    int MinAssessmentScore,
+    int MaxAssessmentScore,
+    string WeeklyPatternJson,
+    int InitialDifficultyLevel,
+    int WeeksPerDifficultyIncrease,
+    int MaxDifficultyLevel,
+    int TotalWeeks,
+    int TotalDays,
+    bool IsActive,
+    int DisplayOrder,
+    int ProgramType,
+    string? ExamType,
+    bool IsAssessment);
+
 public interface ISpeedReadingContentAdminWriter
 {
     Task<ExerciseTypeSummary> CreateExerciseTypeAsync(
@@ -168,6 +223,25 @@ public interface ISpeedReadingContentAdminWriter
     Task DeleteReadingQuestionAsync(
         Guid actorId,
         Guid questionId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<ExerciseProgramTemplateAdminSummary> CreateExerciseProgramTemplateAsync(
+        Guid actorId,
+        CreateExerciseProgramTemplateRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<ExerciseProgramTemplateAdminSummary> UpdateExerciseProgramTemplateAsync(
+        Guid actorId,
+        Guid programTemplateId,
+        UpdateExerciseProgramTemplateRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteExerciseProgramTemplateAsync(
+        Guid actorId,
+        Guid programTemplateId,
         string idempotencyKey,
         CancellationToken cancellationToken = default);
 }

@@ -29,6 +29,33 @@ internal sealed class LegacySpeedReadingPrograms(SpeedReadingDbContext db) : ILe
                 item.IsAssessment))
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<ExerciseProgramTemplateAdminSummary>> GetProgramTemplateAdminSummariesAsync(
+        CancellationToken cancellationToken = default) =>
+        await db.ExerciseProgramTemplates
+            .AsNoTracking()
+            .Where(item => !item.IsDeleted)
+            .OrderBy(item => item.DisplayOrder)
+            .ThenBy(item => item.Name)
+            .Select(item => new ExerciseProgramTemplateAdminSummary(
+                item.Id,
+                item.Name,
+                item.Description,
+                item.TargetAgeGroupConfigurationId,
+                item.MinAssessmentScore,
+                item.MaxAssessmentScore,
+                item.WeeklyPatternJson,
+                item.InitialDifficultyLevel,
+                item.WeeksPerDifficultyIncrease,
+                item.MaxDifficultyLevel,
+                item.TotalWeeks,
+                item.TotalDays,
+                item.IsActive,
+                item.DisplayOrder,
+                item.ProgramType,
+                item.ExamType,
+                item.IsAssessment))
+            .ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<StudentProgramProgressSummary>> GetStudentProgressAsync(
         Guid userId,
         CancellationToken cancellationToken = default) =>
