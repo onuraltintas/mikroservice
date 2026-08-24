@@ -98,6 +98,10 @@ tablosunu uygular.
   başka kullanıcı kimliği kabul etmez. Özet ayrıca son WPM/anlama değeri,
   gamification seviyesi/serisi/XP ve kazanım sayısını, öğrencinin günlük hedefi
   ile tarih aralığındaki hedef tamamlama oranını ve son beş başarımı içerir.
+  Öğrenci rapor ekranlarındaki okuma hızı, anlama, seri ve aktivite ayrıntıları
+  henüz bu özetin kapsamına alınmadı; ilgili istemci çağrıları geçici legacy
+  uyumluluk köprüsündedir ve merkezi sözleşmeleri tamamlanmadan eski uçlar
+  kapatılmamalıdır.
 - `GET /api/speed-reading/reports/templates` ve
   `GET /api/speed-reading/reports/templates/{id}` — `ReportView` yetkisiyle
   mevcut rapor şablonlarını değiştirmeden merkezi servisten okur; SystemAdmin

@@ -118,6 +118,8 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
   günlük okuma/egzersiz analitik özeti ve gün serisi; son okuma metrikleri ile
   gamification özeti, günlük çalışma hedefi/hedef tamamlama oranı ve son beş
   başarım da aynı token kapsamındaki cevapta yer alır
+  Öğrencinin ayrıntılı okuma hızı, anlama, seri ve aktivite raporları henüz
+  merkezi sözleşmeye taşınmadı; bu dört okuma legacy köprüde tutuluyor.
 - `GET /api/speed-reading/reports/templates` ve
   `GET /api/speed-reading/reports/templates/{id}` — mevcut
   `ReportTemplates` tablosundan `ReportView` yetkili salt-okunur şablon okuma;
