@@ -380,13 +380,15 @@ describe('ReportsService', () => {
       errorRateDataAvailable: false,
       healthTrend: [],
       performanceTrend: [{ name: '2026-01-01', series: [{ name: 'Anlama', value: 81 }] }],
-      systemAlerts: []
+      systemAlerts: [],
+      systemAlertsDataAvailable: false
     });
 
     expect(report.metadata.reportType).toBe('Admin');
     expect(report.averagePlatformWPM).toBe(280);
     expect(report.overallHealthDataAvailable).toBeFalse();
     expect(report.userSatisfactionDataAvailable).toBeFalse();
+    expect(report.systemAlertsDataAvailable).toBeFalse();
     expect(report.performanceTrend[0].series[0].value).toBe(81);
   });
 });

@@ -539,14 +539,18 @@ export interface ContentUsageData {
 export interface AdminSystemHealthReport {
   metadata: ReportMetadata;
   overallHealthScore: number;
+  overallHealthDataAvailable?: boolean;
   healthStatus: string;
   averagePlatformWPM: number;
   averagePlatformComprehension: number;
   userSatisfactionScore: number;
+  userSatisfactionDataAvailable?: boolean;
   totalExercisesCompleted: number;
   totalQuestionsAnswered: number;
   successRate: number;
   errorRate: number;
+  errorRateDataAvailable?: boolean;
+  systemAlertsDataAvailable?: boolean;
   healthTrend: ChartData[];
   performanceTrend: ChartData[];
   systemAlerts: SystemAlert[];

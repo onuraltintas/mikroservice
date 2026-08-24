@@ -81,6 +81,32 @@ public sealed record AdminContentAnalysisAnalytics(
     IReadOnlyList<AdminAnalyticsChartData> ReadingPerformanceChart,
     IReadOnlyList<AdminAnalyticsChartData> ExerciseFrequencyChart);
 
+public sealed record AdminSystemAlert(
+    string Severity,
+    string AlertType,
+    string Message,
+    DateTime DetectedAt);
+
+public sealed record AdminSystemHealthAnalytics(
+    DateTime DateFrom,
+    DateTime DateTo,
+    decimal OverallHealthScore,
+    bool OverallHealthDataAvailable,
+    string HealthStatus,
+    decimal AveragePlatformWpm,
+    decimal AveragePlatformComprehension,
+    decimal UserSatisfactionScore,
+    bool UserSatisfactionDataAvailable,
+    int TotalExercisesCompleted,
+    int TotalQuestionsAnswered,
+    decimal SuccessRate,
+    decimal ErrorRate,
+    bool ErrorRateDataAvailable,
+    IReadOnlyList<AdminAnalyticsChartData> HealthTrend,
+    IReadOnlyList<AdminAnalyticsChartData> PerformanceTrend,
+    IReadOnlyList<AdminSystemAlert> SystemAlerts,
+    bool SystemAlertsDataAvailable);
+
 public interface ILegacySpeedReadingAdminAnalytics
 {
     Task<AdminPlatformUsageAnalytics> GetPlatformUsageAsync(
@@ -89,6 +115,11 @@ public interface ILegacySpeedReadingAdminAnalytics
         CancellationToken cancellationToken = default);
 
     Task<AdminContentAnalysisAnalytics> GetContentAnalysisAsync(
+        DateTime? dateFrom,
+        DateTime? dateTo,
+        CancellationToken cancellationToken = default);
+
+    Task<AdminSystemHealthAnalytics> GetSystemHealthAsync(
         DateTime? dateFrom,
         DateTime? dateTo,
         CancellationToken cancellationToken = default);

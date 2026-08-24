@@ -172,9 +172,12 @@ export class ReportsService {
 
   getAdminSystemHealthReport(startDate: Date, endDate: Date): Observable<AdminSystemHealthReport> {
     const params = new HttpParams()
-      .set('startDate', startDate.toISOString())
-      .set('endDate', endDate.toISOString());
-    return this.http.get<AdminSystemHealthReport>(`${this.apiUrl}/admin/system-health`, { params });
+      .set('dateFrom', this.normalizeAnalyticsStart(startDate, endDate).toISOString())
+      .set('dateTo', endDate.toISOString());
+    return this.http.get<AdminSystemHealthAnalytics>(
+      `${this.speedReadingApiUrl}/admin/system-health`,
+      { params })
+      .pipe(map(value => this.toAdminSystemHealthReport(value)));
   }
 
   // ==================== EXPORT ====================
@@ -433,6 +436,37 @@ export class ReportsService {
     };
   }
 
+  private toAdminSystemHealthReport(value: AdminSystemHealthAnalytics): AdminSystemHealthReport {
+    return {
+      metadata: this.toReportMetadata(
+        'admin-system-health',
+        value.dateFrom,
+        value.dateTo,
+        'Admin'),
+      overallHealthScore: value.overallHealthScore,
+      overallHealthDataAvailable: value.overallHealthDataAvailable,
+      healthStatus: value.healthStatus,
+      averagePlatformWPM: value.averagePlatformWpm,
+      averagePlatformComprehension: value.averagePlatformComprehension,
+      userSatisfactionScore: value.userSatisfactionScore,
+      userSatisfactionDataAvailable: value.userSatisfactionDataAvailable,
+      totalExercisesCompleted: value.totalExercisesCompleted,
+      totalQuestionsAnswered: value.totalQuestionsAnswered,
+      successRate: value.successRate,
+      errorRate: value.errorRate,
+      errorRateDataAvailable: value.errorRateDataAvailable,
+      healthTrend: value.healthTrend ?? [],
+      performanceTrend: value.performanceTrend ?? [],
+      systemAlerts: (value.systemAlerts ?? []).map(alert => ({
+        severity: alert.severity,
+        alertType: alert.alertType,
+        message: alert.message,
+        detectedAt: new Date(alert.detectedAt)
+      })),
+      systemAlertsDataAvailable: value.systemAlertsDataAvailable
+    };
+  }
+
   private toStudentDashboardReport(summary: StudentAnalyticsSummary): StudentDashboardReport {
     const daily = summary.daily ?? [];
     const metadataStart = new Date(summary.dateFrom);
@@ -573,6 +607,34 @@ interface AdminReadingLevelAnalysis {
   totalReads: number;
   averageWpm: number;
   averageComprehension: number;
+}
+
+interface AdminSystemHealthAnalytics {
+  dateFrom: string;
+  dateTo: string;
+  overallHealthScore: number;
+  overallHealthDataAvailable?: boolean;
+  healthStatus: string;
+  averagePlatformWpm: number;
+  averagePlatformComprehension: number;
+  userSatisfactionScore: number;
+  userSatisfactionDataAvailable?: boolean;
+  totalExercisesCompleted: number;
+  totalQuestionsAnswered: number;
+  successRate: number;
+  errorRate: number;
+  errorRateDataAvailable?: boolean;
+  healthTrend: ChartData[];
+  performanceTrend: ChartData[];
+  systemAlerts: AdminSystemAlert[];
+  systemAlertsDataAvailable?: boolean;
+}
+
+interface AdminSystemAlert {
+  severity: string;
+  alertType: string;
+  message: string;
+  detectedAt: string;
 }
 
 interface StudentAnalyticsMilestone {

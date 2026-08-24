@@ -29,4 +29,13 @@ public sealed class AdminAnalyticsController(ILegacySpeedReadingAdminAnalytics a
     {
         return Ok(await analytics.GetContentAnalysisAsync(dateFrom, dateTo, cancellationToken));
     }
+
+    [HttpGet("system-health")]
+    public async Task<ActionResult<AdminSystemHealthAnalytics>> GetSystemHealth(
+        [FromQuery] DateTime? dateFrom,
+        [FromQuery] DateTime? dateTo,
+        CancellationToken cancellationToken = default)
+    {
+        return Ok(await analytics.GetSystemHealthAsync(dateFrom, dateTo, cancellationToken));
+    }
 }

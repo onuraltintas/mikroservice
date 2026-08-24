@@ -157,6 +157,12 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
   `DailyExerciseLogs` + `ExerciseTypes` üzerinden hesaplanır; atama ve eski
   eğitim serisi tabloları kaynakta olmadığı için `AssignmentDataAvailable=false`
   olarak açıkça işaretlenir.
+- `GET /api/speed-reading/analytics/admin/system-health` gerçek hızlı okuma
+  öğrenme metriklerini (WPM, anlama, egzersiz tamamlanması, cevap ve başarı)
+  merkezi okur. Legacy şemada operasyonel hata/satisfaction/telemetri kaynağı
+  bulunmadığından health score, error rate ve system alerts veri yokluğu
+  bayraklarıyla boş tutulur; operasyonel görünürlük OpenTelemetry/monitoring
+  katmanından sağlanmalıdır.
 - `GET /api/speed-reading/reports/templates` ve
   `GET /api/speed-reading/reports/templates/{id}` — mevcut
   `ReportTemplates` tablosundan `ReportView` yetkili salt-okunur şablon okuma;

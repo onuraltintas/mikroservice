@@ -152,6 +152,13 @@ tablosunu uygular.
   okuma kategorilerini döndürür. Atama ve eğitim serisi tabloları bu bounded
   context'in legacy şemasında bulunmadığı için `AssignmentDataAvailable=false`
   ve ilgili desteklenmeyen alanlar tahmin edilmeden boş/0 döner.
+- `GET /api/speed-reading/analytics/admin/system-health` —
+  `PlatformAnalyticsView` ile korunan öğrenme performansı özeti; WPM/anlama,
+  tamamlanan egzersiz, cevaplanan soru, başarı oranı ve günlük performans
+  trendini döndürür. Hızlı okuma legacy veritabanında operasyonel hata,
+  kullanıcı memnuniyeti veya sağlık telemetrisi tutulmadığı için bu alanlar
+  `...DataAvailable=false` ile açıkça işaretlenir; sahte bir sağlık skoru,
+  hata oranı veya uyarı üretilmez.
 - `GET /api/speed-reading/reports/templates` ve
   `GET /api/speed-reading/reports/templates/{id}` — `ReportView` yetkisiyle
   mevcut rapor şablonlarını değiştirmeden merkezi servisten okur; SystemAdmin

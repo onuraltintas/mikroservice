@@ -10,13 +10,19 @@
         </mat-card-header>
         <mat-card-content>
             <div class="health-status">
+                @if (report()!.overallHealthDataAvailable !== false) {
                 <div class="health-gauge">
                     <app-gauge-chart [value]="report()!.overallHealthScore" [min]="0" [max]="100"
                         units=""></app-gauge-chart>
                 </div>
+                } @else {
+                <div class="no-data">Operasyonel sağlık telemetrisi bu serviste bulunmuyor.</div>
+                }
                 <div class="health-info">
                     <h2 [class]="'status-' + report()!.healthStatus.toLowerCase()">{{ report()!.healthStatus }}</h2>
+                    @if (report()!.overallHealthDataAvailable !== false) {
                     <p class="health-score">Genel Sağlık Skoru: {{ report()!.overallHealthScore.toFixed(1) }}/100</p>
+                    }
                 </div>
             </div>
         </mat-card-content>
@@ -38,7 +44,11 @@
         </mat-card>
         <mat-card>
             <mat-card-content>
+                @if (report()!.userSatisfactionDataAvailable !== false) {
                 <div class="stat">{{ report()!.userSatisfactionScore.toFixed(1) }}</div>
+                } @else {
+                <div class="stat">—</div>
+                }
                 <div class="label">Kullanıcı Memnuniyeti</div>
             </mat-card-content>
         </mat-card>
@@ -65,7 +75,11 @@
         </mat-card>
         <mat-card>
             <mat-card-content>
+                @if (report()!.errorRateDataAvailable !== false) {
                 <div class="stat error">{{ report()!.errorRate.toFixed(2) }}%</div>
+                } @else {
+                <div class="stat">—</div>
+                }
                 <div class="label">Hata Oranı</div>
             </mat-card-content>
         </mat-card>
@@ -108,7 +122,7 @@
     </div>
 
     <!-- System Alerts -->
-    @if (report()!.systemAlerts && report()!.systemAlerts.length > 0) {
+    @if (report()!.systemAlertsDataAvailable !== false && report()!.systemAlerts && report()!.systemAlerts.length > 0) {
     <mat-card>
         <mat-card-header>
             <mat-card-title>Sistem Uyarıları</mat-card-title>
@@ -136,6 +150,12 @@
                 <tr mat-header-row *matHeaderRowDef="['severity','type','message','time']"></tr>
                 <tr mat-row *matRowDef="let r; columns: ['severity','type','message','time']"></tr>
             </table>
+        </mat-card-content>
+    </mat-card>
+    } @else if (report()!.systemAlertsDataAvailable === false) {
+    <mat-card>
+        <mat-card-content>
+            <p class="no-alerts">Uyarı telemetrisi bu serviste bulunmuyor.</p>
         </mat-card-content>
     </mat-card>
     } @else {
