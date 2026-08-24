@@ -1,5 +1,7 @@
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.Configuration;
+using SpeedReading.Infrastructure;
 
 namespace SpeedReading.Application.UnitTests;
 
@@ -45,5 +47,26 @@ public sealed class SpeedReadingServiceOptionsTests
         var action = () => options.Validate();
 
         action.Should().NotThrow();
+    }
+
+    [Fact]
+    public void Legacy_content_model_uses_existing_tables_without_creating_a_new_schema()
+    {
+        var options = new DbContextOptionsBuilder<SpeedReadingDbContext>()
+            .UseNpgsql("Host=unused;Database=unused;Username=unused;Password=unused")
+            .Options;
+
+        using var context = new SpeedReadingDbContext(options);
+        var tables = context.Model.GetEntityTypes()
+            .Select(entity => entity.GetTableName())
+            .Where(table => table is not null)
+            .ToArray();
+
+        tables.Should().Contain(new[] { "ExerciseTypes", "Exercises", "ReadingTexts", "ReadingQuestions" });
+        context.Database.ProviderName.Should().Contain("Npgsql");
+
+        var readingText = context.Model.GetEntityTypes()
+            .Single(entity => entity.GetTableName() == "ReadingTexts");
+        readingText.FindProperty("Tags")!.GetColumnType().Should().Be("text");
     }
 }

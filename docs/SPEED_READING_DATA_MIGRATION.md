@@ -1,0 +1,78 @@
+# Hızlı Okuma Veri Taşıma ve Uyumluluk Planı
+
+## Kaynak uygulama kararı
+
+Taşınacak kaynak `onuraltintas/HizliOkuma` reposudur. `HizliOkuma_DDD`
+repo'su 23 Kasım 2024 tarihli tek uygulamalı Clean Architecture sürümüdür;
+`HizliOkuma` ise güncel mikroservis yapısını, Gateway'i, Content servisini ve
+2026 tarihli migration/operasyon dokümanlarını içerir. Bu nedenle yeni servis
+eski DDD reposundan yeniden üretilmeyecek; güncel Content veritabanı sözleşmesi
+esas alınacaktır.
+
+## Veri kaybını önleyen ilk aşama
+
+İlk aşamada hızlı okuma servisi mevcut PostgreSQL veritabanına bağlanan salt-
+okunur bir uyumluluk katmanıdır:
+
+- EF Core migration dosyası eklenmez ve `EnsureCreated`/`Migrate` çağrılmaz.
+- Bağlantı `ConnectionStrings:SpeedReading` veya
+  `SPEED_READING_CONNECTION_STRING` ile dışarıdan verilir.
+- Tablo ve kolon adları mevcut Content şemasındaki PascalCase adlarıyla birebir
+  eşleştirilir.
+- Tüm sorgular `AsNoTracking` ve `IsDeleted = false` filtresiyle çalışır.
+- Mevcut uygulama yazmaya devam ederken yeni servis yalnızca doğrulanmış
+  okuma trafiği alır.
+
+İlk dikey dilimde taşınan tablolar:
+
+| Tablo | Kullanım |
+| --- | --- |
+| `ExerciseTypeCategories` | Egzersiz türü kategori referansı |
+| `ExerciseTypes` | Egzersiz motoru ve görünen katalog bilgileri |
+| `Exercises` | Zorluk, tür ve JSON konfigürasyonu |
+| `ReadingTexts` | Okuma metni ve seviye bilgileri |
+| `ReadingQuestions` | Metne bağlı anlama soruları |
+
+## Yeni servis uçları
+
+Gateway üzerinden aşağıdaki sözleşmeler sunulur:
+
+- `GET /api/speed-reading/capabilities` — servis modu ve entegrasyon durumu
+- `GET /api/speed-reading/exercise-types` — sayfalı egzersiz türü kataloğu
+- `GET /api/speed-reading/exercises` — kimlik doğrulamalı, filtrelenebilir egzersiz listesi
+- `GET /api/speed-reading/reading-texts` — kimlik doğrulamalı metin listesi
+- `GET /api/speed-reading/reading-texts/{id}` — metin ve isteğe bağlı soruları
+
+Yazma uçları bu aşamada bilerek açılmadı. İçerik yönetimi açılmadan önce eski
+uygulamanın yazıcıları durdurulmalı ve tek veri sahibine geçiş doğrulanmalıdır.
+
+## Geçiş kontrol listesi
+
+1. Üretim veritabanının geri yüklenebilir yedeğini ve tablo satır sayısı
+   snapshot'ını al.
+2. Yeni servisi aynı veritabanına salt-okunur kullanıcıyla bağla.
+3. Eski API ile yeni API'nin aynı kimlikler için döndürdüğü katalog/soru
+   sonuçlarını karşılaştır; farkları raporla.
+4. En az bir gözlem periyodu boyunca hata, gecikme ve satır sayısı metriklerini
+   izle.
+5. Yeni servisi platform ve bağımsız frontend'lerde kademeli olarak aç.
+6. Yazma yetkisini yalnızca yeni servisin veritabanı kullanıcısına ver; eski
+   uygulamanın write endpoint'lerini kapat.
+7. Sorun halinde Gateway rotasını eski uygulamaya geri al; veritabanına geri
+   alma/migration çalıştırma.
+
+## Sonraki taşıma dilimleri
+
+Sıradaki dilimler, her biri test ve geri dönüş kontrolüyle ayrı ayrı taşınır:
+
+1. Egzersiz oturumu ve sonuçları (`ExerciseSessions`,
+   `StudentExerciseResults`, `ReadingSessions`).
+2. Program/öğrenme yolu (`ExerciseProgramTemplates`, `DailyExerciseLogs`,
+   `LearningPath*`).
+3. Analitik, gamification ve rapor snapshot'ları.
+4. Admin içerik CRUD uçları ve audit event'leri.
+5. Mevcut `speed-reading-frontend` uygulamasının bağımsız servis Gateway'ine
+   geçirilmesi.
+
+Her dilimde mevcut şema korunacak; yeni tablo veya kolon ihtiyacı varsa önce
+ayrı bir versiyonlanmış migration ve geri dönüş planı hazırlanacaktır.

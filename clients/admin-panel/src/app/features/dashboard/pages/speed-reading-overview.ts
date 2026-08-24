@@ -1,9 +1,10 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import {
   SpeedReadingAdminService,
-  SpeedReadingCapabilities
+  SpeedReadingCapabilities,
+  SpeedReadingExerciseType
 } from '../../../core/services/speed-reading-admin.service';
 
 @Component({
@@ -56,7 +57,36 @@ import {
         </div>
 
         <div class="rounded-xl border border-indigo-100 bg-indigo-50 p-5 text-sm text-indigo-900 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-200">
-          İçerik, program, ilerleme ve rapor ekranları servis sözleşmeleri tamamlandıkça bu menü altında ayrı yetki kontrolleriyle açılacaktır. Bu ekran servis modunu ve entegrasyon sınırını doğrular.
+          Mevcut hızlı okuma veritabanı korunarak içerik kataloğu bu servisten okunuyor. Yazma ve program yönetimi ekranları, veri sahipliği ve geri dönüş kontrolleri tamamlandıktan sonra ayrı yetkilerle açılacaktır.
+        </div>
+
+        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Egzersiz türleri</h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Mevcut hızlı okuma kataloğundan salt-okunur görünüm.</p>
+            </div>
+            <span class="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+              {{ exerciseTypes().length }} tür
+            </span>
+          </div>
+
+          @if (exerciseTypes().length) {
+            <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              @for (type of exerciseTypes(); track type.id) {
+                <article class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                  <div class="flex items-center gap-3">
+                    <span class="h-3 w-3 rounded-full" [style.backgroundColor]="type.colorCode"></span>
+                    <h3 class="font-medium text-gray-900 dark:text-white">{{ type.displayName || type.name }}</h3>
+                  </div>
+                  <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ type.engineType || 'Genel egzersiz' }}</p>
+                  <p class="mt-2 line-clamp-2 text-sm text-gray-600 dark:text-gray-300">{{ type.description }}</p>
+                </article>
+              }
+            </div>
+          } @else if (!loading()) {
+            <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Katalogda gösterilecek aktif egzersiz türü bulunamadı.</p>
+          }
         </div>
       }
     </section>
@@ -68,6 +98,7 @@ export class SpeedReadingOverviewComponent implements OnInit {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly capabilities = signal<SpeedReadingCapabilities | null>(null);
+  readonly exerciseTypes = signal<SpeedReadingExerciseType[]>([]);
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
@@ -78,8 +109,14 @@ export class SpeedReadingOverviewComponent implements OnInit {
   load() {
     this.loading.set(true);
     this.error.set(null);
-    this.service.getCapabilities().pipe(finalize(() => this.loading.set(false))).subscribe({
-      next: value => this.capabilities.set(value),
+    forkJoin({
+      capabilities: this.service.getCapabilities(),
+      exerciseTypes: this.service.getExerciseTypes()
+    }).pipe(finalize(() => this.loading.set(false))).subscribe({
+      next: value => {
+        this.capabilities.set(value.capabilities);
+        this.exerciseTypes.set(value.exerciseTypes.items);
+      },
       error: () => this.error.set('Hızlı okuma servis bilgisi yüklenemedi.')
     });
   }

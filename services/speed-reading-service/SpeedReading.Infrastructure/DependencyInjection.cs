@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SpeedReading.Application.Content;
+using SpeedReading.Infrastructure.Legacy;
 
 namespace SpeedReading.Infrastructure;
 
@@ -23,6 +25,8 @@ public static class DependencyInjection
         services.AddDbContext<SpeedReadingDbContext>(options =>
             options.UseNpgsql(connectionString, npgsql =>
                 npgsql.EnableRetryOnFailure()));
+
+        services.AddScoped<ILegacySpeedReadingCatalog, LegacySpeedReadingCatalog>();
 
         return services;
     }

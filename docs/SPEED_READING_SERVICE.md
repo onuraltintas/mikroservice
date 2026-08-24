@@ -14,6 +14,11 @@ Gateway'i arkasında aynı servis kullanılabilir.
   yolları kapatılmalı, önce salt-okunur doğrulama ve geri dönüş planı
   tamamlanmalıdır.
 
+Kaynak repo ve tablo eşleştirmesi için [Hızlı Okuma Veri Taşıma ve Uyumluluk
+Planı](./SPEED_READING_DATA_MIGRATION.md) takip edilir. İlk sürüm mevcut
+`ExerciseTypes`, `Exercises`, `ReadingTexts` ve `ReadingQuestions` tablolarını
+değiştirmeden okur; yeni migration üretmez.
+
 ## Çalışma modları
 
 `SpeedReading:Mode` iki değerden biridir:
@@ -44,6 +49,13 @@ Staging ve production overlay'leri profili kaldırır; bu ortamlar için
 `SPEED_READING_CONNECTION_STRING` deployment secret olarak verilmelidir.
 Hızlı okuma veritabanı platform PostgreSQL container'ına taşınmadığı sürece
 servis `postgres` migration/depends-on zincirine eklenmez.
+
+İlk içerik API'leri:
+
+- `GET /api/speed-reading/exercise-types`
+- `GET /api/speed-reading/exercises`
+- `GET /api/speed-reading/reading-texts`
+- `GET /api/speed-reading/reading-texts/{id}`
 
 ## Yetki sınırı
 
