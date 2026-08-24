@@ -17,7 +17,9 @@ import {
   SpeedReadingReadingQuestionRequest,
   SpeedReadingReadingQuestionUpdateRequest,
   SpeedReadingProgramTemplate,
-  SpeedReadingProgramTemplateRequest
+  SpeedReadingProgramTemplateRequest,
+  SpeedReadingLearningPathTemplate,
+  SpeedReadingLearningPathTemplateRequest
 } from '../../../core/services/speed-reading-admin.service';
 
 @Component({
@@ -528,6 +530,63 @@ import {
             }
           </div>
         }
+
+        @if (canManagePrograms()) {
+          <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Öğrenme yolu şablonları</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Düğümler ve önkoşullar için üst seviye şablon yönetimi.</p>
+              </div>
+              <button type="button" (click)="startCreateLearningPathTemplate()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white">Yeni yol</button>
+            </div>
+
+            @if (learningPathEditingId !== null) {
+              <form class="mt-4 grid grid-cols-1 gap-3 rounded-lg border border-indigo-200 bg-indigo-50/50 p-4 sm:grid-cols-2" (ngSubmit)="saveLearningPathTemplate()">
+                <label class="text-sm text-gray-700 dark:text-gray-200">Ad
+                  <input name="pathName" [(ngModel)]="learningPathDraft.name" required maxlength="200" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Hedef yaş grubu kimliği (isteğe bağlı)
+                  <input name="pathAgeGroup" [(ngModel)]="learningPathDraft.targetAgeGroupConfigurationId" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Tahmini gün
+                  <input type="number" name="pathEstimatedDays" [(ngModel)]="learningPathDraft.estimatedDays" min="1" max="3650" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="flex items-center gap-2 self-end text-sm text-gray-700 dark:text-gray-200"><input type="checkbox" name="pathIsActive" [(ngModel)]="learningPathDraft.isActive" /> Aktif</label>
+                <label class="text-sm text-gray-700 dark:text-gray-200 sm:col-span-2">Açıklama
+                  <textarea name="pathDescription" [(ngModel)]="learningPathDraft.description" maxlength="5000" rows="2" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800"></textarea>
+                </label>
+                <div class="flex justify-end gap-2 sm:col-span-2">
+                  <button type="button" (click)="cancelLearningPathTemplateEdit()" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">Vazgeç</button>
+                  <button type="submit" [disabled]="saving()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50">{{ saving() ? 'Kaydediliyor…' : (learningPathEditingId === 'new' ? 'Oluştur' : 'Kaydet') }}</button>
+                </div>
+              </form>
+            }
+
+            @if (learningPathTemplates().length) {
+              <div class="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+                @for (template of learningPathTemplates(); track template.id) {
+                  <article class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                    <div class="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 class="font-medium text-gray-900 dark:text-white">{{ template.name }}</h3>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ template.totalNodes }} düğüm · {{ template.estimatedDays }} gün</p>
+                      </div>
+                      <span class="rounded-full px-2 py-1 text-xs" [class.bg-emerald-100]="template.isActive" [class.text-emerald-700]="template.isActive" [class.bg-gray-100]="!template.isActive" [class.text-gray-600]="!template.isActive">{{ template.isActive ? 'Aktif' : 'Pasif' }}</span>
+                    </div>
+                    <p class="mt-2 line-clamp-2 text-sm text-gray-600 dark:text-gray-300">{{ template.description }}</p>
+                    <div class="mt-3 flex gap-2">
+                      <button type="button" (click)="startEditLearningPathTemplate(template)" class="rounded border border-gray-300 px-2 py-1 text-xs">Düzenle</button>
+                      <button type="button" (click)="deleteLearningPathTemplate(template)" class="rounded border border-red-300 px-2 py-1 text-xs text-red-700">Sil</button>
+                    </div>
+                  </article>
+                }
+              </div>
+            } @else if (!loading()) {
+              <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Henüz öğrenme yolu şablonu bulunamadı.</p>
+            }
+          </div>
+        }
       }
     </section>
   `
@@ -544,6 +603,7 @@ export class SpeedReadingOverviewComponent implements OnInit {
   readonly readingTexts = signal<SpeedReadingReadingText[]>([]);
   readonly readingQuestions = signal<SpeedReadingReadingQuestion[]>([]);
   readonly programTemplates = signal<SpeedReadingProgramTemplate[]>([]);
+  readonly learningPathTemplates = signal<SpeedReadingLearningPathTemplate[]>([]);
   readonly saving = signal(false);
   readonly canManageContent = computed(() =>
     this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingContentManage));
@@ -561,6 +621,8 @@ export class SpeedReadingOverviewComponent implements OnInit {
   questionDraft: SpeedReadingReadingQuestionRequest = this.emptyQuestionDraft('');
   programEditingId: string | null = null;
   programDraft: SpeedReadingProgramTemplateRequest = this.emptyProgramDraft();
+  learningPathEditingId: string | null = null;
+  learningPathDraft: SpeedReadingLearningPathTemplateRequest = this.emptyLearningPathDraft();
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
@@ -576,7 +638,8 @@ export class SpeedReadingOverviewComponent implements OnInit {
       exerciseTypes: this.service.getExerciseTypes(),
       exercises: this.service.getExercises(),
       readingTexts: this.service.getReadingTexts(),
-      programTemplates: this.canManagePrograms() ? this.service.getProgramTemplates() : of([])
+      programTemplates: this.canManagePrograms() ? this.service.getProgramTemplates() : of([]),
+      learningPathTemplates: this.canManagePrograms() ? this.service.getLearningPathTemplates() : of([])
     }).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: value => {
         this.capabilities.set(value.capabilities);
@@ -584,6 +647,7 @@ export class SpeedReadingOverviewComponent implements OnInit {
         this.exercises.set(value.exercises.items);
         this.readingTexts.set(value.readingTexts);
         this.programTemplates.set(value.programTemplates);
+        this.learningPathTemplates.set(value.learningPathTemplates);
       },
       error: () => this.error.set('Hızlı okuma servis bilgisi yüklenemedi.')
     });
@@ -911,6 +975,50 @@ export class SpeedReadingOverviewComponent implements OnInit {
     });
   }
 
+  startCreateLearningPathTemplate() {
+    this.learningPathEditingId = 'new';
+    this.learningPathDraft = this.emptyLearningPathDraft();
+  }
+
+  startEditLearningPathTemplate(template: SpeedReadingLearningPathTemplate) {
+    this.learningPathEditingId = template.id;
+    this.learningPathDraft = {
+      name: template.name,
+      targetAgeGroupConfigurationId: template.targetAgeGroupConfigurationId,
+      description: template.description,
+      estimatedDays: template.estimatedDays,
+      isActive: template.isActive
+    };
+  }
+
+  cancelLearningPathTemplateEdit() {
+    this.learningPathEditingId = null;
+  }
+
+  saveLearningPathTemplate() {
+    if (this.learningPathEditingId === null) return;
+    this.saving.set(true);
+    const request$ = this.learningPathEditingId === 'new'
+      ? this.service.createLearningPathTemplate(this.learningPathDraft)
+      : this.service.updateLearningPathTemplate(this.learningPathEditingId, this.learningPathDraft);
+
+    request$.pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => {
+        this.learningPathEditingId = null;
+        this.load();
+      },
+      error: () => this.error.set('Öğrenme yolu şablonu kaydedilemedi.')
+    });
+  }
+
+  deleteLearningPathTemplate(template: SpeedReadingLearningPathTemplate) {
+    if (!globalThis.confirm(`“${template.name}” öğrenme yolu silinsin mi?`)) return;
+    this.service.deleteLearningPathTemplate(template.id).subscribe({
+      next: () => this.load(),
+      error: () => this.error.set('Öğrenme yolu silinemedi. Bağlı düğüm ve ilerlemeleri kontrol edin.')
+    });
+  }
+
   private emptyDraft(): SpeedReadingExerciseTypeRequest {
     return {
       name: '',
@@ -988,6 +1096,16 @@ export class SpeedReadingOverviewComponent implements OnInit {
       programType: 0,
       examType: '',
       isAssessment: false
+    };
+  }
+
+  private emptyLearningPathDraft(): SpeedReadingLearningPathTemplateRequest {
+    return {
+      name: '',
+      targetAgeGroupConfigurationId: null,
+      description: '',
+      estimatedDays: 1,
+      isActive: true
     };
   }
 }

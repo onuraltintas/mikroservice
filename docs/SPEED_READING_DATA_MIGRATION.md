@@ -94,6 +94,11 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
 - `POST /api/speed-reading/program-templates` / `PUT /api/speed-reading/program-templates/{id}` /
   `DELETE /api/speed-reading/program-templates/{id}` — `ProgramManage` yetkili
   program şablonu yönetimi. Öğrenci ilerlemesi bulunan şablonlar silinemez.
+- `GET /api/speed-reading/learning-paths/templates/admin` — `ProgramManage`
+  yetkili aktif/pasif öğrenme yolu şablonlarını döndürür.
+- `POST|PUT|DELETE /api/speed-reading/learning-paths/templates` — `ProgramManage`
+  yetkili öğrenme yolu şablonu yönetimi. Bağlı düğüm veya öğrenci ilerlemesi
+  olan şablonlar silinemez.
 - `GET /api/speed-reading/progress/active-exercise-sessions` — aktif/paused oturumlar
 - `GET /api/speed-reading/program-templates` — aktif program şablonları
 - `GET /api/speed-reading/progress/programs` — oturum açmış kullanıcının programları
@@ -129,7 +134,7 @@ kapatılmalıdır.
 
 Sıradaki dilimler, her biri test ve geri dönüş kontrolüyle ayrı ayrı taşınır:
 
-1. Öğrenme yolu node/içerik yönetiminin admin yetki sınırlarıyla taşınması.
+1. Öğrenme yolu düğüm/içerik/önkoşul yönetiminin admin yetki sınırlarıyla taşınması.
 2. Analitik, gamification ve rapor snapshot'larının yazma/geri dönüş testleri.
 3. Mevcut `speed-reading-frontend` uygulamasının bağımsız servis Gateway'ine
    geçirilmesi ve gerçek veritabanıyla uçtan uca doğrulanması.

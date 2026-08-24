@@ -19,6 +19,22 @@ internal sealed class LegacySpeedReadingLearningPaths(SpeedReadingDbContext db) 
                 item.EstimatedDays))
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<LearningPathTemplateAdminSummary>> GetTemplateAdminSummariesAsync(
+        CancellationToken cancellationToken = default) =>
+        await db.LearningPathTemplates
+            .AsNoTracking()
+            .Where(item => !item.IsDeleted)
+            .OrderBy(item => item.Name)
+            .Select(item => new LearningPathTemplateAdminSummary(
+                item.Id,
+                item.Name,
+                item.TargetAgeGroupConfigurationId,
+                item.Description,
+                item.TotalNodes,
+                item.EstimatedDays,
+                item.IsActive))
+            .ToListAsync(cancellationToken);
+
     public async Task<LearningPathProgressSummary?> GetProgressAsync(
         Guid studentId,
         Guid? templateId,

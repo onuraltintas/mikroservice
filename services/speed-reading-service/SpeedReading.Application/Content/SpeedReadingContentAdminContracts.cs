@@ -148,6 +148,29 @@ public sealed record UpdateExerciseProgramTemplateRequest(
     string? ExamType,
     bool IsAssessment);
 
+public sealed record LearningPathTemplateAdminSummary(
+    Guid Id,
+    string Name,
+    Guid? TargetAgeGroupConfigurationId,
+    string? Description,
+    int TotalNodes,
+    int EstimatedDays,
+    bool IsActive);
+
+public sealed record CreateLearningPathTemplateRequest(
+    string Name,
+    Guid? TargetAgeGroupConfigurationId,
+    string? Description,
+    int EstimatedDays,
+    bool IsActive);
+
+public sealed record UpdateLearningPathTemplateRequest(
+    string Name,
+    Guid? TargetAgeGroupConfigurationId,
+    string? Description,
+    int EstimatedDays,
+    bool IsActive);
+
 public interface ISpeedReadingContentAdminWriter
 {
     Task<ExerciseTypeSummary> CreateExerciseTypeAsync(
@@ -242,6 +265,25 @@ public interface ISpeedReadingContentAdminWriter
     Task DeleteExerciseProgramTemplateAsync(
         Guid actorId,
         Guid programTemplateId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<LearningPathTemplateAdminSummary> CreateLearningPathTemplateAsync(
+        Guid actorId,
+        CreateLearningPathTemplateRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<LearningPathTemplateAdminSummary> UpdateLearningPathTemplateAsync(
+        Guid actorId,
+        Guid templateId,
+        UpdateLearningPathTemplateRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteLearningPathTemplateAsync(
+        Guid actorId,
+        Guid templateId,
         string idempotencyKey,
         CancellationToken cancellationToken = default);
 }

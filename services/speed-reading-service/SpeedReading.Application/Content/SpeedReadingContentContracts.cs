@@ -295,6 +295,9 @@ public interface ILegacySpeedReadingLearningPaths
     Task<IReadOnlyList<LearningPathTemplateSummary>> GetTemplatesAsync(
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<LearningPathTemplateAdminSummary>> GetTemplateAdminSummariesAsync(
+        CancellationToken cancellationToken = default);
+
     Task<LearningPathProgressSummary?> GetProgressAsync(
         Guid studentId,
         Guid? templateId,

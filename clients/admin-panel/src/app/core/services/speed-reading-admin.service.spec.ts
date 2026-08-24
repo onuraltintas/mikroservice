@@ -237,4 +237,37 @@ describe('SpeedReadingAdminService', () => {
     expect(deleteRequest.request.headers.get('Idempotency-Key')).toBe('program-delete-key-123456');
     deleteRequest.flush(null);
   });
+
+  it('loads and writes learning path templates through the ProgramManage route', () => {
+    service.getLearningPathTemplates().subscribe(value => expect(value).toEqual([]));
+    const listRequest = http.expectOne('/api/speed-reading/learning-paths/templates/admin');
+    expect(listRequest.request.method).toBe('GET');
+    listRequest.flush([]);
+
+    const request = {
+      name: 'Temel yol',
+      targetAgeGroupConfigurationId: null,
+      description: 'Başlangıç yolu',
+      estimatedDays: 14,
+      isActive: true
+    };
+
+    service.createLearningPathTemplate(request, 'path-create-key-123456').subscribe();
+    const createRequest = http.expectOne('/api/speed-reading/learning-paths/templates');
+    expect(createRequest.request.method).toBe('POST');
+    expect(createRequest.request.headers.get('Idempotency-Key')).toBe('path-create-key-123456');
+    createRequest.flush({ id: 'path-1' });
+
+    service.updateLearningPathTemplate('path-1', request, 'path-update-key-123456').subscribe();
+    const updateRequest = http.expectOne('/api/speed-reading/learning-paths/templates/path-1');
+    expect(updateRequest.request.method).toBe('PUT');
+    expect(updateRequest.request.headers.get('Idempotency-Key')).toBe('path-update-key-123456');
+    updateRequest.flush({ id: 'path-1' });
+
+    service.deleteLearningPathTemplate('path-1', 'path-delete-key-123456').subscribe();
+    const deleteRequest = http.expectOne('/api/speed-reading/learning-paths/templates/path-1');
+    expect(deleteRequest.request.method).toBe('DELETE');
+    expect(deleteRequest.request.headers.get('Idempotency-Key')).toBe('path-delete-key-123456');
+    deleteRequest.flush(null);
+  });
 });

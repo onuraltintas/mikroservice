@@ -168,6 +168,24 @@ export interface SpeedReadingProgramTemplateRequest {
   isAssessment: boolean;
 }
 
+export interface SpeedReadingLearningPathTemplate {
+  id: string;
+  name: string;
+  targetAgeGroupConfigurationId: string | null;
+  description: string | null;
+  totalNodes: number;
+  estimatedDays: number;
+  isActive: boolean;
+}
+
+export interface SpeedReadingLearningPathTemplateRequest {
+  name: string;
+  targetAgeGroupConfigurationId?: string | null;
+  description?: string | null;
+  estimatedDays: number;
+  isActive: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SpeedReadingAdminService {
   private readonly http = inject(HttpClient);
@@ -346,6 +364,37 @@ export class SpeedReadingAdminService {
   deleteProgramTemplate(id: string, idempotencyKey?: string) {
     return this.http.delete<void>(
       `${this.url}/program-templates/${id}`,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  getLearningPathTemplates() {
+    return this.http.get<SpeedReadingLearningPathTemplate[]>(`${this.url}/learning-paths/templates/admin`);
+  }
+
+  createLearningPathTemplate(request: SpeedReadingLearningPathTemplateRequest, idempotencyKey?: string) {
+    return this.http.post<SpeedReadingLearningPathTemplate>(
+      `${this.url}/learning-paths/templates`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  updateLearningPathTemplate(
+    id: string,
+    request: SpeedReadingLearningPathTemplateRequest,
+    idempotencyKey?: string
+  ) {
+    return this.http.put<SpeedReadingLearningPathTemplate>(
+      `${this.url}/learning-paths/templates/${id}`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  deleteLearningPathTemplate(id: string, idempotencyKey?: string) {
+    return this.http.delete<void>(
+      `${this.url}/learning-paths/templates/${id}`,
       { headers: this.idempotencyHeaders(idempotencyKey) }
     );
   }

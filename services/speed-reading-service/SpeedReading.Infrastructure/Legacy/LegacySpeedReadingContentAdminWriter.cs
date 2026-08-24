@@ -671,6 +671,130 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         }
     }
 
+    public async Task<LearningPathTemplateAdminSummary> CreateLearningPathTemplateAsync(
+        Guid actorId,
+        CreateLearningPathTemplateRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequest(actorId, request, idempotencyKey);
+        idempotencyKey = NormalizeKey(idempotencyKey);
+        const string scope = "speed-reading.learning-path-templates.create";
+        var requestHash = CreateRequestHash(actorId, scope, Guid.Empty, request);
+        var existing = await GetLedgerAsync(scope, idempotencyKey, cancellationToken);
+        if (existing is not null)
+        {
+            return await ReplayLearningPathTemplateAsync(existing, requestHash, cancellationToken);
+        }
+
+        var now = DateTime.UtcNow;
+        var template = new LegacyLearningPathTemplate
+        {
+            Id = Guid.NewGuid(),
+            Name = request.Name.Trim(),
+            TargetAgeGroupConfigurationId = request.TargetAgeGroupConfigurationId,
+            Description = request.Description?.Trim(),
+            TotalNodes = 0,
+            EstimatedDays = request.EstimatedDays,
+            IsActive = request.IsActive,
+            CreatedAt = now,
+            CreatedBy = actorId
+        };
+
+        db.LearningPathTemplates.Add(template);
+        AddLedger(scope, idempotencyKey, requestHash, template.Id, now);
+        await SaveOrReplayAsync(template.Id, scope, idempotencyKey, requestHash, cancellationToken);
+        return ToAdminSummary(template);
+    }
+
+    public async Task<LearningPathTemplateAdminSummary> UpdateLearningPathTemplateAsync(
+        Guid actorId,
+        Guid templateId,
+        UpdateLearningPathTemplateRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequest(actorId, request, idempotencyKey);
+        idempotencyKey = NormalizeKey(idempotencyKey);
+        const string scope = "speed-reading.learning-path-templates.update";
+        var requestHash = CreateRequestHash(actorId, scope, templateId, request);
+        var existing = await GetLedgerAsync(scope, idempotencyKey, cancellationToken);
+        if (existing is not null)
+        {
+            return await ReplayLearningPathTemplateAsync(existing, requestHash, cancellationToken);
+        }
+
+        var template = await db.LearningPathTemplates
+            .SingleOrDefaultAsync(item => item.Id == templateId && !item.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException("LearningPathTemplate", templateId);
+        template.Name = request.Name.Trim();
+        template.TargetAgeGroupConfigurationId = request.TargetAgeGroupConfigurationId;
+        template.Description = request.Description?.Trim();
+        template.EstimatedDays = request.EstimatedDays;
+        template.IsActive = request.IsActive;
+        template.TotalNodes = await db.LearningPathNodes
+            .CountAsync(item => item.TemplateId == templateId && !item.IsDeleted, cancellationToken);
+        template.UpdatedAt = DateTime.UtcNow;
+        template.UpdatedBy = actorId;
+
+        AddLedger(scope, idempotencyKey, requestHash, template.Id, DateTime.UtcNow);
+        await SaveOrReplayAsync(template.Id, scope, idempotencyKey, requestHash, cancellationToken);
+        return ToAdminSummary(template);
+    }
+
+    public async Task DeleteLearningPathTemplateAsync(
+        Guid actorId,
+        Guid templateId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateIdempotency(actorId, idempotencyKey);
+        idempotencyKey = NormalizeKey(idempotencyKey);
+        const string scope = "speed-reading.learning-path-templates.delete";
+        var requestHash = SpeedReadingRequestHasher.Create(
+            actorId.ToString("D"), scope, templateId.ToString("D"));
+        var existing = await GetLedgerAsync(scope, idempotencyKey, cancellationToken);
+        if (existing is not null)
+        {
+            EnsureReplayMatches(existing, requestHash);
+            return;
+        }
+
+        var template = await db.LearningPathTemplates
+            .SingleOrDefaultAsync(item => item.Id == templateId && !item.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException("LearningPathTemplate", templateId);
+        if (await db.LearningPathNodes.AnyAsync(
+                item => item.TemplateId == templateId && !item.IsDeleted,
+                cancellationToken)
+            || await db.StudentPathProgresses.AnyAsync(
+                item => item.TemplateId == templateId && !item.IsDeleted,
+                cancellationToken))
+        {
+            throw new BusinessRuleException(
+                "LearningPathTemplate.HasDependents",
+                "Öğrenme yolu şablonu, bağlı düğüm veya öğrenci ilerlemesi kaldırılmadan silinemez.");
+        }
+
+        var now = DateTime.UtcNow;
+        template.IsDeleted = true;
+        template.DeletedAt = now;
+        template.DeletedBy = actorId;
+        template.UpdatedAt = now;
+        template.UpdatedBy = actorId;
+        AddLedger(scope, idempotencyKey, requestHash, template.Id, now);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (IsIdempotencyConflict(exception))
+        {
+            db.ChangeTracker.Clear();
+            var concurrent = await db.IdempotencyRecords
+                .SingleAsync(item => item.Scope == scope && item.Key == idempotencyKey, cancellationToken);
+            EnsureReplayMatches(concurrent, requestHash);
+        }
+    }
+
     private async Task<ExerciseTypeSummary> ReplayAsync(
         LegacyIdempotencyRecord record,
         string requestHash,
@@ -740,6 +864,21 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
             ?? throw new BusinessRuleException(
                 "Idempotency.ResourceMissing",
                 "Idempotency kaydına ait program şablonu bulunamadı; yeni bir anahtar kullanın.");
+        return ToAdminSummary(template);
+    }
+
+    private async Task<LearningPathTemplateAdminSummary> ReplayLearningPathTemplateAsync(
+        LegacyIdempotencyRecord record,
+        string requestHash,
+        CancellationToken cancellationToken)
+    {
+        EnsureReplayMatches(record, requestHash);
+        var template = await db.LearningPathTemplates
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == record.ResourceId && !item.IsDeleted, cancellationToken)
+            ?? throw new BusinessRuleException(
+                "Idempotency.ResourceMissing",
+                "Idempotency kaydına ait öğrenme yolu şablonu bulunamadı; yeni bir anahtar kullanın.");
         return ToAdminSummary(template);
     }
 
@@ -1120,6 +1259,36 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         }
     }
 
+    private static void ValidateRequest(
+        Guid actorId,
+        CreateLearningPathTemplateRequest request,
+        string idempotencyKey) =>
+        ValidateLearningPathTemplateRequest(actorId, idempotencyKey, request.Name,
+            request.Description, request.EstimatedDays);
+
+    private static void ValidateRequest(
+        Guid actorId,
+        UpdateLearningPathTemplateRequest request,
+        string idempotencyKey) =>
+        ValidateLearningPathTemplateRequest(actorId, idempotencyKey, request.Name,
+            request.Description, request.EstimatedDays);
+
+    private static void ValidateLearningPathTemplateRequest(
+        Guid actorId,
+        string idempotencyKey,
+        string name,
+        string? description,
+        int estimatedDays)
+    {
+        ValidateIdempotency(actorId, idempotencyKey);
+        if (string.IsNullOrWhiteSpace(name) || name.Trim().Length > 200
+            || (description?.Length ?? 0) > 5_000
+            || estimatedDays is < 1 or > 3_650)
+        {
+            throw new ArgumentException("Öğrenme yolu şablonu alanları geçersiz.", nameof(name));
+        }
+    }
+
     private static string NormalizeCorrectAnswer(string correctAnswer)
     {
         var normalized = correctAnswer?.Trim().ToUpperInvariant();
@@ -1251,6 +1420,26 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         Guid actorId,
         string scope,
         Guid resourceId,
+        CreateLearningPathTemplateRequest request) =>
+        SpeedReadingRequestHasher.Create(
+            actorId.ToString("D"), scope, resourceId.ToString("D"), request.Name,
+            request.TargetAgeGroupConfigurationId?.ToString("D"), request.Description,
+            request.EstimatedDays.ToString(CultureInfo.InvariantCulture), request.IsActive.ToString());
+
+    private static string CreateRequestHash(
+        Guid actorId,
+        string scope,
+        Guid resourceId,
+        UpdateLearningPathTemplateRequest request) =>
+        SpeedReadingRequestHasher.Create(
+            actorId.ToString("D"), scope, resourceId.ToString("D"), request.Name,
+            request.TargetAgeGroupConfigurationId?.ToString("D"), request.Description,
+            request.EstimatedDays.ToString(CultureInfo.InvariantCulture), request.IsActive.ToString());
+
+    private static string CreateRequestHash(
+        Guid actorId,
+        string scope,
+        Guid resourceId,
         UpdateReadingTextRequest request) =>
         SpeedReadingRequestHasher.Create(
             actorId.ToString("D"), scope, resourceId.ToString("D"), request.Title,
@@ -1367,4 +1556,14 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         template.ProgramType,
         template.ExamType,
         template.IsAssessment);
+
+    private static LearningPathTemplateAdminSummary ToAdminSummary(
+        LegacyLearningPathTemplate template) => new(
+        template.Id,
+        template.Name,
+        template.TargetAgeGroupConfigurationId,
+        template.Description,
+        template.TotalNodes,
+        template.EstimatedDays,
+        template.IsActive);
 }
