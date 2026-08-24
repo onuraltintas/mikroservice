@@ -41,6 +41,7 @@ internal sealed class LegacyReportTemplate : LegacyBaseEntity
     public string ConfigurationJson { get; set; } = "{}";
     public bool IsSystemTemplate { get; set; }
     public Guid? CreatedByUserId { get; set; }
+    public Guid? CreatedById { get; set; }
     public bool IsActive { get; set; }
 }
 

@@ -56,6 +56,19 @@ public sealed record ScheduledReportSummary(
     bool SaveToDashboard,
     string? EmailRecipients);
 
+public sealed record CreateReportTemplateRequest(
+    string Name,
+    string Description,
+    int Type,
+    int Category,
+    string ConfigurationJson);
+
+public sealed record UpdateReportTemplateRequest(
+    string Name,
+    string Description,
+    string ConfigurationJson,
+    bool IsActive);
+
 public interface ILegacySpeedReadingReports
 {
     Task<IReadOnlyList<ReportTemplateSummary>> GetTemplatesAsync(
@@ -85,5 +98,30 @@ public interface ILegacySpeedReadingReports
     Task<IReadOnlyList<ScheduledReportSummary>> GetUserScheduledReportsAsync(
         Guid userId,
         int limit,
+        CancellationToken cancellationToken = default);
+}
+
+public interface ISpeedReadingReportsAdminWriter
+{
+    Task<ReportTemplateSummary> CreateTemplateAsync(
+        Guid actorId,
+        bool isGlobalAdministrator,
+        CreateReportTemplateRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<ReportTemplateSummary> UpdateTemplateAsync(
+        Guid actorId,
+        bool isGlobalAdministrator,
+        Guid templateId,
+        UpdateReportTemplateRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteTemplateAsync(
+        Guid actorId,
+        bool isGlobalAdministrator,
+        Guid templateId,
+        string idempotencyKey,
         CancellationToken cancellationToken = default);
 }

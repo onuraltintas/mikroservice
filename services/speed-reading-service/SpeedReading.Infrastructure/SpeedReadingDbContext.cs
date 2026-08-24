@@ -263,11 +263,11 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
         {
             entity.ToTable("ReportTemplates");
             entity.HasKey(item => item.Id);
-            // The legacy entity hides BaseEntity.CreatedBy behind a User
-            // navigation, so the audit column is named CreatedById.
-            entity.Property(item => item.CreatedBy)
-                .HasColumnName("CreatedById")
-                .IsRequired(false);
+            // The legacy entity hides BaseEntity.CreatedBy behind a nullable
+            // User navigation. Keep the nullable CreatedById column explicit
+            // and do not map the non-nullable audit base property here.
+            entity.Ignore(item => item.CreatedBy);
+            entity.Property(item => item.CreatedById).HasColumnName("CreatedById");
             entity.HasIndex(item => item.CreatedAt);
             entity.HasIndex(item => new { item.Type, item.IsActive });
         });

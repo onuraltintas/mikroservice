@@ -10,7 +10,9 @@ namespace SpeedReading.API.Controllers;
 [ApiController]
 [Route("api/speed-reading/reports")]
 [Authorize]
-public sealed class ReportsController(ILegacySpeedReadingReports reports) : ControllerBase
+public sealed class ReportsController(
+    ILegacySpeedReadingReports reports,
+    ISpeedReadingReportsAdminWriter adminWriter) : ControllerBase
 {
     [HttpGet("templates")]
     [HasPermission(PlatformPermissions.SpeedReading.ReportView)]
@@ -51,6 +53,69 @@ public sealed class ReportsController(ILegacySpeedReadingReports reports) : Cont
             User.IsInRole("SystemAdmin"),
             cancellationToken);
         return template is null ? NotFound() : Ok(template);
+    }
+
+    [HttpPost("templates")]
+    [HasPermission(PlatformPermissions.SpeedReading.ReportManage)]
+    public async Task<ActionResult<ReportTemplateSummary>> CreateTemplate(
+        [FromBody] CreateReportTemplateRequest? request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (request is null || !TryGetCurrentUserId(out var actorId))
+        {
+            return request is null ? BadRequest("Request body is required.") : Unauthorized();
+        }
+
+        return Ok(await adminWriter.CreateTemplateAsync(
+            actorId,
+            User.IsInRole("SystemAdmin"),
+            request,
+            idempotencyKey ?? string.Empty,
+            cancellationToken));
+    }
+
+    [HttpPut("templates/{templateId:guid}")]
+    [HasPermission(PlatformPermissions.SpeedReading.ReportManage)]
+    public async Task<ActionResult<ReportTemplateSummary>> UpdateTemplate(
+        Guid templateId,
+        [FromBody] UpdateReportTemplateRequest? request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (request is null || !TryGetCurrentUserId(out var actorId))
+        {
+            return request is null ? BadRequest("Request body is required.") : Unauthorized();
+        }
+
+        return Ok(await adminWriter.UpdateTemplateAsync(
+            actorId,
+            User.IsInRole("SystemAdmin"),
+            templateId,
+            request,
+            idempotencyKey ?? string.Empty,
+            cancellationToken));
+    }
+
+    [HttpDelete("templates/{templateId:guid}")]
+    [HasPermission(PlatformPermissions.SpeedReading.ReportManage)]
+    public async Task<IActionResult> DeleteTemplate(
+        Guid templateId,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId))
+        {
+            return Unauthorized();
+        }
+
+        await adminWriter.DeleteTemplateAsync(
+            actorId,
+            User.IsInRole("SystemAdmin"),
+            templateId,
+            idempotencyKey ?? string.Empty,
+            cancellationToken);
+        return NoContent();
     }
 
     [HttpGet("snapshots")]

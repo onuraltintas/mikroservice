@@ -565,6 +565,9 @@ export interface ReportTemplate {
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
+  isActive?: boolean;
+  configurationJson?: string;
+  type?: string;
 }
 
 export interface ScheduledReport {

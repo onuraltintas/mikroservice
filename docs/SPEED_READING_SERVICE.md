@@ -137,6 +137,7 @@ Identity permission seed'i aşağıdaki bağımsız anahtarları sağlar:
 - `Permissions.SpeedReading.ProgramManage`
 - `Permissions.SpeedReading.ProgressView`
 - `Permissions.SpeedReading.ReportView`
+- `Permissions.SpeedReading.ReportManage`
 - `Permissions.SpeedReading.LeaderboardView`
 - `Permissions.SpeedReading.GamificationManage`
 - `Permissions.SpeedReading.SettingsManage`

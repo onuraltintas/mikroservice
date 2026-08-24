@@ -101,7 +101,6 @@ internal sealed class LegacySpeedReadingReports(SpeedReadingDbContext db)
                 on snapshot.ReportTemplateId equals template.Id
             where snapshot.GeneratedForUserId == userId
                 && !snapshot.IsDeleted
-                && !template.IsDeleted
             orderby snapshot.GeneratedAt descending
             select new ReportSnapshotSummary(
                 snapshot.Id,
@@ -129,7 +128,6 @@ internal sealed class LegacySpeedReadingReports(SpeedReadingDbContext db)
             where snapshot.Id == snapshotId
                 && snapshot.GeneratedForUserId == userId
                 && !snapshot.IsDeleted
-                && !template.IsDeleted
             select new ReportSnapshotDetail(
                 snapshot.Id,
                 snapshot.GeneratedForUserId,
@@ -158,7 +156,6 @@ internal sealed class LegacySpeedReadingReports(SpeedReadingDbContext db)
                 on scheduled.ReportTemplateId equals template.Id
             where scheduled.UserId == userId
                 && !scheduled.IsDeleted
-                && !template.IsDeleted
             orderby scheduled.IsActive descending, scheduled.NextRunAt
             select new ScheduledReportSummary(
                 scheduled.Id,
