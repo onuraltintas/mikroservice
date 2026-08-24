@@ -513,6 +513,7 @@ export interface AdminContentAnalysisReport {
   totalTrainingSeries: number; // Legacy - kept for backward compatibility
   totalProgramTemplates?: number; // New system
   totalAssignments: number;
+  assignmentDataAvailable?: boolean;
   mostUsedContent: ContentUsageData[];
   leastUsedContent: ContentUsageData[];
   performanceByContentType: ChartData[];

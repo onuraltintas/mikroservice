@@ -20,4 +20,13 @@ public sealed class AdminAnalyticsController(ILegacySpeedReadingAdminAnalytics a
     {
         return Ok(await analytics.GetPlatformUsageAsync(dateFrom, dateTo, cancellationToken));
     }
+
+    [HttpGet("content-analysis")]
+    public async Task<ActionResult<AdminContentAnalysisAnalytics>> GetContentAnalysis(
+        [FromQuery] DateTime? dateFrom,
+        [FromQuery] DateTime? dateTo,
+        CancellationToken cancellationToken = default)
+    {
+        return Ok(await analytics.GetContentAnalysisAsync(dateFrom, dateTo, cancellationToken));
+    }
 }

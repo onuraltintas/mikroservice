@@ -40,9 +40,55 @@ public sealed record AdminPlatformUsageAnalytics(
     IReadOnlyList<AdminPlatformInstitutionActivity> TopInstitutions,
     IReadOnlyDictionary<string, int> FeatureUsageStats);
 
+public sealed record AdminContentUsageData(
+    Guid ContentId,
+    string ContentType,
+    string Title,
+    int UsageCount,
+    decimal AverageScore,
+    decimal AverageComprehension);
+
+public sealed record AdminReadingLevelAnalysis(
+    int DifficultyLevel,
+    int TotalReads,
+    decimal AverageWpm,
+    decimal AverageComprehension);
+
+public sealed record AdminExerciseTypeAnalysis(
+    string ExerciseTypeName,
+    int TotalCompletions,
+    int ActiveStudents,
+    decimal AverageScore,
+    string PerformanceLevel);
+
+public sealed record AdminContentAnalysisAnalytics(
+    DateTime DateFrom,
+    DateTime DateTo,
+    int TotalExercises,
+    int TotalReadingTexts,
+    int TotalTrainingSeries,
+    int TotalProgramTemplates,
+    int TotalAssignments,
+    bool AssignmentDataAvailable,
+    IReadOnlyList<AdminContentUsageData> MostUsedContent,
+    IReadOnlyList<AdminContentUsageData> LeastUsedContent,
+    IReadOnlyList<AdminAnalyticsChartData> PerformanceByContentType,
+    IReadOnlyList<AdminAnalyticsChartData> EngagementByContentType,
+    IReadOnlyList<string> ContentGaps,
+    IReadOnlyList<string> PopularTopics,
+    IReadOnlyList<AdminReadingLevelAnalysis> ReadingAnalysis,
+    IReadOnlyList<AdminExerciseTypeAnalysis> ExerciseAnalysis,
+    IReadOnlyList<AdminAnalyticsChartData> ReadingPerformanceChart,
+    IReadOnlyList<AdminAnalyticsChartData> ExerciseFrequencyChart);
+
 public interface ILegacySpeedReadingAdminAnalytics
 {
     Task<AdminPlatformUsageAnalytics> GetPlatformUsageAsync(
+        DateTime? dateFrom,
+        DateTime? dateTo,
+        CancellationToken cancellationToken = default);
+
+    Task<AdminContentAnalysisAnalytics> GetContentAnalysisAsync(
         DateTime? dateFrom,
         DateTime? dateTo,
         CancellationToken cancellationToken = default);

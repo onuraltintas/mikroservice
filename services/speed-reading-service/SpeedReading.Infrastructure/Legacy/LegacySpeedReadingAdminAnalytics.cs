@@ -4,7 +4,7 @@ using SpeedReading.Application.Analytics;
 
 namespace SpeedReading.Infrastructure.Legacy;
 
-internal sealed class LegacySpeedReadingAdminAnalytics(SpeedReadingDbContext db)
+internal sealed partial class LegacySpeedReadingAdminAnalytics(SpeedReadingDbContext db)
     : ILegacySpeedReadingAdminAnalytics
 {
     private const int MaxRangeDays = 366;

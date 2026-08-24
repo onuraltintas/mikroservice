@@ -145,6 +145,13 @@ tablosunu uygular.
   kayıt oluşturma zamanı ve kurum adı bulunmadığı için yeni kullanıcı büyümesi
   `NewUserDataAvailable=false`, kurum listesi ise boş döner; bu alanlar
   Identity raporlama sözleşmesi tamamlanmadan tahmin edilmez veya uydurulmaz.
+- `GET /api/speed-reading/analytics/admin/content-analysis` —
+  `PlatformAnalyticsView` ile korunan içerik analizi; aktif egzersiz/okuma
+  katalog sayılarını, seçilen aralıktaki gerçek kullanım ve performanslarını,
+  zorluk/tür kırılımlarını, en çok/en az kullanılan içerikleri ve popüler
+  okuma kategorilerini döndürür. Atama ve eğitim serisi tabloları bu bounded
+  context'in legacy şemasında bulunmadığı için `AssignmentDataAvailable=false`
+  ve ilgili desteklenmeyen alanlar tahmin edilmeden boş/0 döner.
 - `GET /api/speed-reading/reports/templates` ve
   `GET /api/speed-reading/reports/templates/{id}` — `ReportView` yetkisiyle
   mevcut rapor şablonlarını değiştirmeden merkezi servisten okur; SystemAdmin

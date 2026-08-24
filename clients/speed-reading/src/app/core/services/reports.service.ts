@@ -23,7 +23,9 @@ import {
   AdaptivePerformanceReport,
   ChartData,
   PopularContent,
-  InstitutionActivity
+  InstitutionActivity,
+  ContentUsageData,
+  ExerciseTypeAnalysis
 } from '../models/report.model';
 
 @Injectable({ providedIn: 'root' })
@@ -160,9 +162,12 @@ export class ReportsService {
 
   getAdminContentAnalysisReport(startDate: Date, endDate: Date): Observable<AdminContentAnalysisReport> {
     const params = new HttpParams()
-      .set('startDate', startDate.toISOString())
-      .set('endDate', endDate.toISOString());
-    return this.http.get<AdminContentAnalysisReport>(`${this.apiUrl}/admin/content-analysis`, { params });
+      .set('dateFrom', this.normalizeAnalyticsStart(startDate, endDate).toISOString())
+      .set('dateTo', endDate.toISOString());
+    return this.http.get<AdminContentAnalysisAnalytics>(
+      `${this.speedReadingApiUrl}/admin/content-analysis`,
+      { params })
+      .pipe(map(value => this.toAdminContentAnalysisReport(value)));
   }
 
   getAdminSystemHealthReport(startDate: Date, endDate: Date): Observable<AdminSystemHealthReport> {
@@ -397,6 +402,37 @@ export class ReportsService {
     };
   }
 
+  private toAdminContentAnalysisReport(value: AdminContentAnalysisAnalytics): AdminContentAnalysisReport {
+    return {
+      metadata: this.toReportMetadata(
+        'admin-content-analysis',
+        value.dateFrom,
+        value.dateTo,
+        'Admin'),
+      totalExercises: value.totalExercises,
+      totalReadingTexts: value.totalReadingTexts,
+      totalTrainingSeries: value.totalTrainingSeries,
+      totalProgramTemplates: value.totalProgramTemplates,
+      totalAssignments: value.totalAssignments,
+      assignmentDataAvailable: value.assignmentDataAvailable,
+      mostUsedContent: value.mostUsedContent ?? [],
+      leastUsedContent: value.leastUsedContent ?? [],
+      performanceByContentType: value.performanceByContentType ?? [],
+      engagementByContentType: value.engagementByContentType ?? [],
+      contentGaps: value.contentGaps ?? [],
+      popularTopics: value.popularTopics ?? [],
+      readingAnalysis: (value.readingAnalysis ?? []).map(item => ({
+        difficultyLevel: item.difficultyLevel,
+        totalReads: item.totalReads,
+        averageWPM: item.averageWpm,
+        averageComprehension: item.averageComprehension
+      })),
+      exerciseAnalysis: value.exerciseAnalysis ?? [],
+      readingPerformanceChart: value.readingPerformanceChart ?? [],
+      exerciseFrequencyChart: value.exerciseFrequencyChart ?? []
+    };
+  }
+
   private toStudentDashboardReport(summary: StudentAnalyticsSummary): StudentDashboardReport {
     const daily = summary.daily ?? [];
     const metadataStart = new Date(summary.dateFrom);
@@ -509,6 +545,34 @@ interface AdminPlatformUsageAnalytics {
   popularContent: PopularContent[];
   topInstitutions: InstitutionActivity[];
   featureUsageStats: Record<string, number>;
+}
+
+interface AdminContentAnalysisAnalytics {
+  dateFrom: string;
+  dateTo: string;
+  totalExercises: number;
+  totalReadingTexts: number;
+  totalTrainingSeries: number;
+  totalProgramTemplates: number;
+  totalAssignments: number;
+  assignmentDataAvailable?: boolean;
+  mostUsedContent: ContentUsageData[];
+  leastUsedContent: ContentUsageData[];
+  performanceByContentType: ChartData[];
+  engagementByContentType: ChartData[];
+  contentGaps: string[];
+  popularTopics: string[];
+  readingAnalysis: AdminReadingLevelAnalysis[];
+  exerciseAnalysis: ExerciseTypeAnalysis[];
+  readingPerformanceChart: ChartData[];
+  exerciseFrequencyChart: ChartData[];
+}
+
+interface AdminReadingLevelAnalysis {
+  difficultyLevel: number;
+  totalReads: number;
+  averageWpm: number;
+  averageComprehension: number;
 }
 
 interface StudentAnalyticsMilestone {

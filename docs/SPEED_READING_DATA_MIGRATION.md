@@ -151,6 +151,12 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
   ve kurum metrikleri veri yokluğu bayraklarıyla açıkça belirtilir; kayıt tarihi
   veya kurum adı tahmin edilmez. Bu iki alan için sonraki adım Identity'nin
   merkezi admin raporlama sözleşmesidir.
+- `GET /api/speed-reading/analytics/admin/content-analysis`
+  `PlatformAnalyticsView` ile içerik katalog ve kullanım metriklerini merkezi
+  okur. Okuma analizi `ReadingSessions` + `ReadingTexts`, egzersiz analizi
+  `DailyExerciseLogs` + `ExerciseTypes` üzerinden hesaplanır; atama ve eski
+  eğitim serisi tabloları kaynakta olmadığı için `AssignmentDataAvailable=false`
+  olarak açıkça işaretlenir.
 - `GET /api/speed-reading/reports/templates` ve
   `GET /api/speed-reading/reports/templates/{id}` — mevcut
   `ReportTemplates` tablosundan `ReportView` yetkili salt-okunur şablon okuma;
