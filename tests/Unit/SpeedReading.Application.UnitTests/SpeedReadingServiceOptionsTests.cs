@@ -73,7 +73,14 @@ public sealed class SpeedReadingServiceOptionsTests
             "ReadingSessions",
             "ExerciseProgramTemplates",
             "StudentProgramProgresses",
-            "DailyExerciseLogs"
+            "DailyExerciseLogs",
+            "LearningPathTemplates",
+            "LearningPathNodes",
+            "NodeContents",
+            "NodePrerequisites",
+            "StudentPathProgresses",
+            "StudentNodeProgresses",
+            "PersonalizedLearningPaths"
         });
         context.Database.ProviderName.Should().Contain("Npgsql");
 

@@ -231,3 +231,73 @@ public interface ILegacySpeedReadingPrograms
         int limit,
         CancellationToken cancellationToken = default);
 }
+
+public sealed record LearningPathTemplateSummary(
+    Guid Id,
+    string Name,
+    string? Description,
+    int TotalNodes,
+    int EstimatedDays);
+
+public sealed record LearningPathNodeContentSummary(
+    Guid Id,
+    Guid? ExerciseId,
+    Guid? ReadingTextId,
+    string? Description);
+
+public sealed record LearningPathNodeSummary(
+    Guid Id,
+    Guid? ParentNodeId,
+    string NodeType,
+    string Title,
+    string? ContentType,
+    Guid? ContentId,
+    int Order,
+    IReadOnlyList<LearningPathNodeContentSummary> Contents,
+    IReadOnlyList<Guid> PrerequisiteNodeIds);
+
+public sealed record LearningPathNodeProgressSummary(
+    Guid NodeId,
+    string Status,
+    decimal? Score,
+    DateTime? CompletedAt);
+
+public sealed record LearningPathProgressSummary(
+    Guid Id,
+    Guid TemplateId,
+    decimal Progress,
+    bool IsCompleted,
+    Guid? CurrentNodeId,
+    IReadOnlyList<LearningPathNodeSummary> Nodes,
+    IReadOnlyList<LearningPathNodeProgressSummary> NodeProgress);
+
+public sealed record PersonalizedLearningPathItemSummary(
+    Guid Id,
+    int PathIndex,
+    string ContentType,
+    Guid? ContentId,
+    string ContentTitle,
+    int DifficultyLevel,
+    int EstimatedDurationMinutes,
+    bool IsCompleted,
+    DateTime? CompletedAt,
+    decimal? AchievedScore,
+    string? RecommendationReason,
+    bool IsUnlocked);
+
+public interface ILegacySpeedReadingLearningPaths
+{
+    Task<IReadOnlyList<LearningPathTemplateSummary>> GetTemplatesAsync(
+        CancellationToken cancellationToken = default);
+
+    Task<LearningPathProgressSummary?> GetProgressAsync(
+        Guid studentId,
+        Guid? templateId,
+        CancellationToken cancellationToken = default);
+
+    Task<SpeedReadingPage<PersonalizedLearningPathItemSummary>> GetPersonalizedPathAsync(
+        Guid studentId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+}

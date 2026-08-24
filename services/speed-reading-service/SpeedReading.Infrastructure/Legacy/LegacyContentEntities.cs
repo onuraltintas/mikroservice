@@ -186,3 +186,73 @@ internal sealed class LegacyDailyExerciseLog : LegacyBaseEntity
     public decimal? AverageWPM { get; set; }
     public decimal? AverageComprehension { get; set; }
 }
+
+internal sealed class LegacyLearningPathTemplate : LegacyBaseEntity
+{
+    public string Name { get; set; } = string.Empty;
+    public Guid? TargetAgeGroupConfigurationId { get; set; }
+    public string? Description { get; set; }
+    public int TotalNodes { get; set; }
+    public int EstimatedDays { get; set; }
+    public bool IsActive { get; set; }
+}
+
+internal sealed class LegacyLearningPathNode : LegacyBaseEntity
+{
+    public Guid TemplateId { get; set; }
+    public Guid? ParentNodeId { get; set; }
+    public string NodeType { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string? ContentType { get; set; }
+    public Guid? ContentId { get; set; }
+    public int Order { get; set; }
+}
+
+internal sealed class LegacyNodeContent : LegacyBaseEntity
+{
+    public Guid NodeId { get; set; }
+    public Guid? ExerciseId { get; set; }
+    public Guid? ReadingTextId { get; set; }
+    public string? Description { get; set; }
+}
+
+internal sealed class LegacyNodePrerequisite : LegacyBaseEntity
+{
+    public Guid NodeId { get; set; }
+    public Guid PrerequisiteNodeId { get; set; }
+}
+
+internal sealed class LegacyStudentPathProgress : LegacyBaseEntity
+{
+    public Guid StudentId { get; set; }
+    public Guid TemplateId { get; set; }
+    public Guid? CurrentNodeId { get; set; }
+    public decimal Progress { get; set; }
+    public bool IsCompleted { get; set; }
+}
+
+internal sealed class LegacyStudentNodeProgress : LegacyBaseEntity
+{
+    public Guid StudentId { get; set; }
+    public Guid NodeId { get; set; }
+    public string Status { get; set; } = "Pending";
+    public decimal? Score { get; set; }
+    public DateTime? CompletedAt { get; set; }
+}
+
+internal sealed class LegacyPersonalizedLearningPath : LegacyBaseEntity
+{
+    public Guid StudentId { get; set; }
+    public Guid? TemplateId { get; set; }
+    public int PathIndex { get; set; }
+    public string ContentType { get; set; } = "Exercise";
+    public Guid? ContentId { get; set; }
+    public string ContentTitle { get; set; } = string.Empty;
+    public int DifficultyLevel { get; set; }
+    public int EstimatedDurationMinutes { get; set; }
+    public bool IsCompleted { get; set; }
+    public DateTime? CompletedAt { get; set; }
+    public decimal? AchievedScore { get; set; }
+    public string? RecommendationReason { get; set; }
+    public bool IsUnlocked { get; set; }
+}

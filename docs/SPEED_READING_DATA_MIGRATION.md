@@ -38,6 +38,11 @@ okunur bir uyumluluk katmanıdır:
 | `ExerciseProgramTemplates` | Günlük egzersiz program şablonları |
 | `StudentProgramProgresses` | Öğrencinin program ilerleme durumu |
 | `DailyExerciseLogs` | Günlük egzersiz tamamlanma kayıtları |
+| `LearningPathTemplates` | Öğrenme yolu şablonları |
+| `LearningPathNodes` | Şablon düğümleri |
+| `NodeContents` / `NodePrerequisites` | Düğüm içeriği ve ön koşulları |
+| `StudentPathProgresses` / `StudentNodeProgresses` | Öğrenci yolu ve düğüm ilerlemesi |
+| `PersonalizedLearningPaths` | Kişiselleştirilmiş öğrenci yolu öğeleri |
 
 ## Yeni servis uçları
 
@@ -55,6 +60,9 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
 - `GET /api/speed-reading/program-templates` — aktif program şablonları
 - `GET /api/speed-reading/progress/programs` — oturum açmış kullanıcının programları
 - `GET /api/speed-reading/progress/daily-exercise-logs` — günlük tamamlanma kayıtları
+- `GET /api/speed-reading/learning-paths/templates` — aktif öğrenme yolu şablonları
+- `GET /api/speed-reading/learning-paths/progress` — öğrencinin yolu ve düğüm durumları
+- `GET /api/speed-reading/learning-paths/personalized` — kişiselleştirilmiş yol öğeleri
 
 Yazma uçları bu aşamada bilerek açılmadı. İçerik yönetimi açılmadan önce eski
 uygulamanın yazıcıları durdurulmalı ve tek veri sahibine geçiş doğrulanmalıdır.
@@ -78,10 +86,9 @@ uygulamanın yazıcıları durdurulmalı ve tek veri sahibine geçiş doğrulanm
 
 Sıradaki dilimler, her biri test ve geri dönüş kontrolüyle ayrı ayrı taşınır:
 
-1. Öğrenme yolu (`LearningPath*`).
-2. Analitik, gamification ve rapor snapshot'ları.
-3. Admin içerik CRUD uçları ve audit event'leri.
-4. Mevcut `speed-reading-frontend` uygulamasının bağımsız servis Gateway'ine
+1. Analitik, gamification ve rapor snapshot'ları.
+2. Admin içerik CRUD uçları ve audit event'leri.
+3. Mevcut `speed-reading-frontend` uygulamasının bağımsız servis Gateway'ine
    geçirilmesi.
 
 Her dilimde mevcut şema korunacak; yeni tablo veya kolon ihtiyacı varsa önce

@@ -21,6 +21,13 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     internal DbSet<LegacyExerciseProgramTemplate> ExerciseProgramTemplates => Set<LegacyExerciseProgramTemplate>();
     internal DbSet<LegacyStudentProgramProgress> StudentProgramProgresses => Set<LegacyStudentProgramProgress>();
     internal DbSet<LegacyDailyExerciseLog> DailyExerciseLogs => Set<LegacyDailyExerciseLog>();
+    internal DbSet<LegacyLearningPathTemplate> LearningPathTemplates => Set<LegacyLearningPathTemplate>();
+    internal DbSet<LegacyLearningPathNode> LearningPathNodes => Set<LegacyLearningPathNode>();
+    internal DbSet<LegacyNodeContent> NodeContents => Set<LegacyNodeContent>();
+    internal DbSet<LegacyNodePrerequisite> NodePrerequisites => Set<LegacyNodePrerequisite>();
+    internal DbSet<LegacyStudentPathProgress> StudentPathProgresses => Set<LegacyStudentPathProgress>();
+    internal DbSet<LegacyStudentNodeProgress> StudentNodeProgresses => Set<LegacyStudentNodeProgress>();
+    internal DbSet<LegacyPersonalizedLearningPath> PersonalizedLearningPaths => Set<LegacyPersonalizedLearningPath>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -115,6 +122,59 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasIndex(item => item.StudentProgramProgressId);
             entity.HasIndex(item => item.ExerciseId);
             entity.HasIndex(item => item.ExerciseTypeId);
+        });
+
+        modelBuilder.Entity<LegacyLearningPathTemplate>(entity =>
+        {
+            entity.ToTable("LearningPathTemplates");
+            entity.HasKey(item => item.Id);
+        });
+
+        modelBuilder.Entity<LegacyLearningPathNode>(entity =>
+        {
+            entity.ToTable("LearningPathNodes");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.TemplateId);
+            entity.HasIndex(item => item.ParentNodeId);
+        });
+
+        modelBuilder.Entity<LegacyNodeContent>(entity =>
+        {
+            entity.ToTable("NodeContents");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.NodeId);
+        });
+
+        modelBuilder.Entity<LegacyNodePrerequisite>(entity =>
+        {
+            entity.ToTable("NodePrerequisites");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.NodeId);
+            entity.HasIndex(item => item.PrerequisiteNodeId);
+        });
+
+        modelBuilder.Entity<LegacyStudentPathProgress>(entity =>
+        {
+            entity.ToTable("StudentPathProgresses");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.StudentId);
+            entity.HasIndex(item => item.TemplateId);
+        });
+
+        modelBuilder.Entity<LegacyStudentNodeProgress>(entity =>
+        {
+            entity.ToTable("StudentNodeProgresses");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.StudentId);
+            entity.HasIndex(item => item.NodeId);
+        });
+
+        modelBuilder.Entity<LegacyPersonalizedLearningPath>(entity =>
+        {
+            entity.ToTable("PersonalizedLearningPaths");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.StudentId);
+            entity.HasIndex(item => item.TemplateId);
         });
     }
 }
