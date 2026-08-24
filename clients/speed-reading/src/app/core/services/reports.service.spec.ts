@@ -297,6 +297,64 @@ describe('ReportsService', () => {
     expect(report.popularContent[0].title).toBe('Bilim');
   });
 
+  it('loads admin institution analytics from the central endpoint and preserves tenant metrics', () => {
+    const startDate = new Date('2026-01-01T00:00:00.000Z');
+    const endDate = new Date('2026-01-31T00:00:00.000Z');
+    let report: any;
+
+    service.getAdminInstitutionReport(startDate, endDate)
+      .subscribe(value => report = value);
+
+    const request = http.expectOne(
+      candidate => candidate.url === '/api/speed-reading/analytics/admin/institutions');
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('dateFrom')).toBe(startDate.toISOString());
+    expect(request.request.params.get('dateTo')).toBe(endDate.toISOString());
+
+    request.flush({
+      dateFrom: startDate.toISOString(),
+      dateTo: endDate.toISOString(),
+      totalInstitutions: 1,
+      activeInstitutions: 1,
+      totalUsers: 3,
+      totalStudents: 2,
+      totalTeachers: 1,
+      institutionComparison: [{
+        institutionId: 'institution-1',
+        institutionName: 'Örnek Kolej',
+        totalUsers: 3,
+        activeUsers: 2,
+        totalStudents: 2,
+        totalTeachers: 1,
+        totalActivities: 5,
+        averageWpm: 280,
+        averageComprehension: 82,
+        averagePerformance: 81,
+        engagementRate: 66.67
+      }],
+      institutionComparisonChart: {
+        name: 'Kurumlar',
+        series: [{ name: 'Kullanıcı', value: 3 }]
+      },
+      usersByInstitution: [],
+      activityByInstitution: [],
+      performanceByInstitution: [],
+      topInstitutions: [{
+        institutionName: 'Örnek Kolej',
+        averageWpm: 280,
+        averageComprehension: 82,
+        activeStudents: 2,
+        totalActivities: 5
+      }]
+    });
+
+    expect(report.totalInstitutions).toBe(1);
+    expect(report.institutionComparison[0].totalStudents).toBe(2);
+    expect(report.institutionComparison[0].averageWPM).toBe(280);
+    expect(report.institutionComparison[0].averageComprehension).toBe(82);
+    expect(report.topInstitutions[0].averageWPM).toBe(280);
+  });
+
   it('loads admin content analysis from the central analytics endpoint', () => {
     const startDate = new Date('2026-01-01T00:00:00.000Z');
     const endDate = new Date('2026-01-31T00:00:00.000Z');
