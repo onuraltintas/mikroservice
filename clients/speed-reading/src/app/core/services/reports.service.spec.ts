@@ -252,4 +252,45 @@ describe('ReportsService', () => {
     expect(report.dailyDistributionChart.data[0].name).toBe('Çarşamba');
     expect(report.studyTime.totalMinutes).toBe(45);
   });
+
+  it('loads admin platform usage from the central analytics endpoint', () => {
+    const startDate = new Date('2026-01-01T00:00:00.000Z');
+    const endDate = new Date('2026-01-31T00:00:00.000Z');
+    let report: any;
+
+    service.getAdminPlatformUsageReport(startDate, endDate)
+      .subscribe(value => report = value);
+
+    const request = http.expectOne(
+      candidate => candidate.url === '/api/speed-reading/analytics/admin/platform-usage');
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('dateFrom')).toBe(startDate.toISOString());
+    expect(request.request.params.get('dateTo')).toBe(endDate.toISOString());
+    request.flush({
+      dateFrom: startDate.toISOString(),
+      dateTo: endDate.toISOString(),
+      totalUsers: 10,
+      activeUsers: 4,
+      newUsers: 2,
+      totalActivities: 20,
+      totalReadingSessions: 8,
+      averageSessionDuration: 12.5,
+      userGrowthRate: 20,
+      engagementRate: 40,
+      retentionRate: 25,
+      userGrowth: [{ name: '2026-01-01', series: [{ name: 'Yeni kullanıcı', value: 2 }] }],
+      dailyActiveUsers: [{ name: '2026-01-01', series: [{ name: 'Aktif kullanıcı', value: 4 }] }],
+      activityVolume: [{ name: '2026-01-01', series: [{ name: 'Aktivite', value: 5 }] }],
+      hourlyActivity: [{ name: '18:00', series: [{ name: 'Aktivite', value: 3 }] }],
+      popularContent: [{ title: 'Bilim', type: 'ReadingText', usageCount: 7 }],
+      topInstitutions: [],
+      featureUsageStats: { reading: 8, exercise: 12 }
+    });
+
+    expect(report.totalUsers).toBe(10);
+    expect(report.averageSessionDuration).toBe(12.5);
+    expect(report.metadata.startDate).toEqual(startDate);
+    expect(report.userGrowth[0].series[0].value).toBe(2);
+    expect(report.popularContent[0].title).toBe('Bilim');
+  });
 });
