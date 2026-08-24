@@ -147,9 +147,12 @@ export class ReportsService {
 
   getAdminInstitutionReport(startDate: Date, endDate: Date): Observable<AdminInstitutionReport> {
     const params = new HttpParams()
-      .set('startDate', startDate.toISOString())
-      .set('endDate', endDate.toISOString());
-    return this.http.get<AdminInstitutionReport>(`${this.apiUrl}/admin/institutions`, { params });
+      .set('dateFrom', this.normalizeAnalyticsStart(startDate, endDate).toISOString())
+      .set('dateTo', endDate.toISOString());
+    return this.http.get<AdminInstitutionAnalytics>(
+      `${this.speedReadingApiUrl}/admin/institutions`,
+      { params })
+      .pipe(map(value => this.toAdminInstitutionReport(value)));
   }
 
   getAdminPlatformUsageReport(startDate: Date, endDate: Date): Observable<AdminPlatformUsageReport> {
@@ -405,6 +408,53 @@ export class ReportsService {
     };
   }
 
+  private toAdminInstitutionReport(value: AdminInstitutionAnalytics): AdminInstitutionReport {
+    return {
+      metadata: this.toReportMetadata(
+        'admin-institution-analytics',
+        value.dateFrom,
+        value.dateTo,
+        'Admin'),
+      totalInstitutions: value.totalInstitutions,
+      activeInstitutions: value.activeInstitutions,
+      totalUsers: value.totalUsers,
+      totalStudents: value.totalStudents,
+      totalTeachers: value.totalTeachers,
+      institutionComparison: (value.institutionComparison ?? []).map(item => ({
+        institutionId: item.institutionId,
+        institutionName: item.institutionName,
+        totalUsers: item.totalUsers,
+        activeUsers: item.activeUsers,
+        totalStudents: item.totalStudents,
+        totalTeachers: item.totalTeachers,
+        totalActivities: item.totalActivities,
+        averageWPM: item.averageWpm,
+        averageWPMDataAvailable: item.averageWpmDataAvailable,
+        averageComprehension: item.averageComprehension,
+        averageComprehensionDataAvailable: item.averageComprehensionDataAvailable,
+        averagePerformance: item.averagePerformance,
+        engagementRate: item.engagementRate
+      })),
+      institutionComparisonChart: value.institutionComparisonChart ?? {
+        name: 'Kurumlar',
+        series: []
+      },
+      usersByInstitution: value.usersByInstitution ?? [],
+      activityByInstitution: value.activityByInstitution ?? [],
+      performanceByInstitution: value.performanceByInstitution ?? [],
+      topInstitutions: (value.topInstitutions ?? []).map(item => ({
+        institutionName: item.institutionName,
+        averageWPM: item.averageWpm,
+        averageWPMDataAvailable: item.averageWpmDataAvailable,
+        averageComprehension: item.averageComprehension,
+        averageComprehensionDataAvailable: item.averageComprehensionDataAvailable,
+        activeStudents: item.activeStudents,
+        activeStudentsDataAvailable: item.activeStudentsDataAvailable,
+        totalActivities: item.totalActivities
+      }))
+    };
+  }
+
   private toAdminContentAnalysisReport(value: AdminContentAnalysisAnalytics): AdminContentAnalysisReport {
     return {
       metadata: this.toReportMetadata(
@@ -579,6 +629,49 @@ interface AdminPlatformUsageAnalytics {
   popularContent: PopularContent[];
   topInstitutions: InstitutionActivity[];
   featureUsageStats: Record<string, number>;
+}
+
+interface AdminInstitutionAnalytics {
+  dateFrom: string;
+  dateTo: string;
+  totalInstitutions: number;
+  activeInstitutions: number;
+  totalUsers: number;
+  totalStudents: number;
+  totalTeachers: number;
+  institutionComparison: AdminInstitutionComparisonAnalytics[];
+  institutionComparisonChart: ChartData;
+  usersByInstitution: ChartData[];
+  activityByInstitution: ChartData[];
+  performanceByInstitution: ChartData[];
+  topInstitutions: AdminTopInstitutionAnalytics[];
+}
+
+interface AdminInstitutionComparisonAnalytics {
+  institutionId: string;
+  institutionName: string;
+  totalUsers: number;
+  activeUsers: number;
+  totalStudents: number;
+  totalTeachers: number;
+  totalActivities: number;
+  averageWpm: number;
+  averageWpmDataAvailable?: boolean;
+  averageComprehension: number;
+  averageComprehensionDataAvailable?: boolean;
+  averagePerformance: number;
+  engagementRate: number;
+}
+
+interface AdminTopInstitutionAnalytics {
+  institutionName: string;
+  averageWpm: number;
+  averageWpmDataAvailable?: boolean;
+  averageComprehension: number;
+  averageComprehensionDataAvailable?: boolean;
+  activeStudents: number;
+  activeStudentsDataAvailable?: boolean;
+  totalActivities: number;
 }
 
 interface AdminContentAnalysisAnalytics {

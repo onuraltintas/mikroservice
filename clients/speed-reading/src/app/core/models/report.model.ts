@@ -452,7 +452,13 @@ export interface InstitutionComparisonData {
   institutionName: string;
   totalUsers: number;
   activeUsers: number;
+  totalStudents: number;
+  totalTeachers: number;
   totalActivities: number;
+  averageWPM: number;
+  averageWPMDataAvailable?: boolean;
+  averageComprehension: number;
+  averageComprehensionDataAvailable?: boolean;
   averagePerformance: number;
   engagementRate: number;
 }
@@ -465,8 +471,11 @@ export interface InstitutionComparisonChart {
 export interface TopInstitution {
   institutionName: string;
   averageWPM: number;
+  averageWPMDataAvailable?: boolean;
   averageComprehension: number;
+  averageComprehensionDataAvailable?: boolean;
   activeStudents: number;
+  activeStudentsDataAvailable?: boolean;
   totalActivities: number;
 }
 

@@ -148,9 +148,8 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
   kullanımını okur. Bu endpoint `PlatformAnalyticsView` ile korunur; kurum
   yöneticilerinin kurum kapsamı olmayan global metriklere erişimi yoktur.
   `Users` tablosunda kayıt tarihi ve kurum adı bulunmadığı için yeni kullanıcı
-  ve kurum metrikleri veri yokluğu bayraklarıyla açıkça belirtilir; kayıt tarihi
-  veya kurum adı tahmin edilmez. Bu iki alan için sonraki adım Identity'nin
-  merkezi admin raporlama sözleşmesidir.
+  metrikleri veri yokluğu bayrağıyla açıkça belirtilir; kayıt tarihi tahmin
+  edilmez. Kurum karşılaştırması ayrı kurum kapsam sözleşmesiyle çözülür.
 - `GET /api/speed-reading/analytics/admin/content-analysis`
   `PlatformAnalyticsView` ile içerik katalog ve kullanım metriklerini merkezi
   okur. Okuma analizi `ReadingSessions` + `ReadingTexts`, egzersiz analizi
@@ -163,6 +162,14 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
   bulunmadığından health score, error rate ve system alerts veri yokluğu
   bayraklarıyla boş tutulur; operasyonel görünürlük OpenTelemetry/monitoring
   katmanından sağlanmalıdır.
+- `GET /api/speed-reading/analytics/admin/institutions` gerçek kurum
+  karşılaştırmasını döndürür. Identity kurum dizini
+  `/api/internal/reporting/speed-reading/institutions` üzerinden servis anahtarı
+  ile çağrılır; kurum adları, aktiflik ve rol sayıları Identity'ye, aktivite ve
+  performans metrikleri hızlı okuma veritabanına aittir. İstemciden kurum kimliği
+  alınmadığı için global rapor yalnızca `PlatformAnalyticsView` yetkili
+  SystemAdmin kullanıcılarına açıktır. Legacy `Users` tablosunda rol bilgisi
+  bulunmadığından aktif öğrenci metriği veri yokluğu bayrağıyla gösterilir.
 - `GET /api/speed-reading/reports/templates` ve
   `GET /api/speed-reading/reports/templates/{id}` — mevcut
   `ReportTemplates` tablosundan `ReportView` yetkili salt-okunur şablon okuma;

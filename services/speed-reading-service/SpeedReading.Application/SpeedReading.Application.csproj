@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../SpeedReading.Domain/SpeedReading.Domain.csproj" />
+    <ProjectReference Include="../../../shared/EduPlatform.Shared.Contracts/EduPlatform.Shared.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

@@ -9,6 +9,7 @@ using Identity.Application.Queries.GetUserProfile;
 using Identity.Application.Queries.GetTeacherStudents;
 using Identity.Application.DTOs.Institutions;
 using Identity.Domain.Enums;
+using EduPlatform.Shared.Contracts.Reporting;
 
 namespace Identity.Infrastructure.Repositories;
 
@@ -300,6 +301,22 @@ public class InstitutionRepository : IInstitutionRepository
     public async Task AddAdminAsync(InstitutionAdmin admin, CancellationToken cancellationToken)
     {
         await _context.InstitutionAdmins.AddAsync(admin, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<SpeedReadingInstitutionScopeItem>> GetSpeedReadingInstitutionScopeAsync(
+        CancellationToken cancellationToken)
+    {
+        return await _context.Institutions
+            .AsNoTracking()
+            .OrderBy(institution => institution.Id)
+            .Select(institution => new SpeedReadingInstitutionScopeItem(
+                institution.Id,
+                institution.Name,
+                institution.IsActive,
+                institution.Students.Count(student => student.IsActive && student.User.IsActive),
+                institution.Teachers.Count(teacher => teacher.IsActive && teacher.User.IsActive),
+                institution.Admins.Count(admin => admin.IsActive && admin.User.IsActive)))
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<PagedList<InstitutionDto>> GetAllAsync(

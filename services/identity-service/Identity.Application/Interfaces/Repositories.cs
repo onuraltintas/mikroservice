@@ -5,6 +5,7 @@ using Identity.Application.Queries.GetAllUsers;
 using Identity.Application.Queries.GetUserProfile;
 using Identity.Application.DTOs.Institutions;
 using Identity.Domain.Enums;
+using EduPlatform.Shared.Contracts.Reporting;
 
 namespace Identity.Application.Interfaces;
 
@@ -84,6 +85,8 @@ public interface IInstitutionRepository
         int? gradeLevel,
         int pageNumber,
         int pageSize,
+        CancellationToken cancellationToken);
+    Task<IReadOnlyList<SpeedReadingInstitutionScopeItem>> GetSpeedReadingInstitutionScopeAsync(
         CancellationToken cancellationToken);
 }
 

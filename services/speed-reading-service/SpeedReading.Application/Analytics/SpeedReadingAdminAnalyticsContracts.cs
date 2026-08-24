@@ -1,5 +1,7 @@
 namespace SpeedReading.Application.Analytics;
 
+using EduPlatform.Shared.Contracts.Reporting;
+
 public sealed record AdminAnalyticsChartSeries(
     string Name,
     decimal Value);
@@ -107,6 +109,52 @@ public sealed record AdminSystemHealthAnalytics(
     IReadOnlyList<AdminSystemAlert> SystemAlerts,
     bool SystemAlertsDataAvailable);
 
+public sealed record AdminInstitutionComparison(
+    Guid InstitutionId,
+    string InstitutionName,
+    int TotalUsers,
+    int ActiveUsers,
+    int TotalStudents,
+    int TotalTeachers,
+    int TotalActivities,
+    decimal AverageWpm,
+    bool AverageWpmDataAvailable,
+    decimal AverageComprehension,
+    bool AverageComprehensionDataAvailable,
+    decimal AveragePerformance,
+    decimal EngagementRate);
+
+public sealed record AdminTopInstitution(
+    string InstitutionName,
+    decimal AverageWpm,
+    bool AverageWpmDataAvailable,
+    decimal AverageComprehension,
+    bool AverageComprehensionDataAvailable,
+    int ActiveStudents,
+    bool ActiveStudentsDataAvailable,
+    int TotalActivities);
+
+public sealed record AdminInstitutionAnalytics(
+    DateTime DateFrom,
+    DateTime DateTo,
+    int TotalInstitutions,
+    int ActiveInstitutions,
+    int TotalUsers,
+    int TotalStudents,
+    int TotalTeachers,
+    IReadOnlyList<AdminInstitutionComparison> InstitutionComparison,
+    AdminAnalyticsChartData InstitutionComparisonChart,
+    IReadOnlyList<AdminAnalyticsChartData> UsersByInstitution,
+    IReadOnlyList<AdminAnalyticsChartData> ActivityByInstitution,
+    IReadOnlyList<AdminAnalyticsChartData> PerformanceByInstitution,
+    IReadOnlyList<AdminTopInstitution> TopInstitutions);
+
+public interface ISpeedReadingInstitutionDirectory
+{
+    Task<SpeedReadingInstitutionScopeResponse> GetInstitutionsAsync(
+        CancellationToken cancellationToken = default);
+}
+
 public interface ILegacySpeedReadingAdminAnalytics
 {
     Task<AdminPlatformUsageAnalytics> GetPlatformUsageAsync(
@@ -120,6 +168,11 @@ public interface ILegacySpeedReadingAdminAnalytics
         CancellationToken cancellationToken = default);
 
     Task<AdminSystemHealthAnalytics> GetSystemHealthAsync(
+        DateTime? dateFrom,
+        DateTime? dateTo,
+        CancellationToken cancellationToken = default);
+
+    Task<AdminInstitutionAnalytics> GetInstitutionAnalyticsAsync(
         DateTime? dateFrom,
         DateTime? dateTo,
         CancellationToken cancellationToken = default);

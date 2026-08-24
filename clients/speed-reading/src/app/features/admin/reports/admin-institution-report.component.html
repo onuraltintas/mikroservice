@@ -44,15 +44,27 @@
                     <div class="metrics">
                         <div class="metric">
                             <span class="label">Ortalama WPM:</span>
+                            @if (top.averageWPMDataAvailable !== false) {
                             <span class="value">{{ top.averageWPM }}</span>
+                            } @else {
+                            <span class="value">—</span>
+                            }
                         </div>
                         <div class="metric">
                             <span class="label">Ortalama Anlama:</span>
+                            @if (top.averageComprehensionDataAvailable !== false) {
                             <span class="value">{{ top.averageComprehension }}%</span>
+                            } @else {
+                            <span class="value">—</span>
+                            }
                         </div>
                         <div class="metric">
                             <span class="label">Aktif Öğrenci:</span>
+                            @if (top.activeStudentsDataAvailable !== false) {
                             <span class="value">{{ top.activeStudents }}</span>
+                            } @else {
+                            <span class="value">—</span>
+                            }
                         </div>
                         <div class="metric">
                             <span class="label">Toplam Aktivite:</span>
@@ -110,11 +122,15 @@
                 </ng-container>
                 <ng-container matColumnDef="wpm">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>Ort. WPM</th>
-                    <td mat-cell *matCellDef="let i">{{ i.averageWPM }}</td>
+                    <td mat-cell *matCellDef="let i">
+                        @if (i.averageWPMDataAvailable !== false) { {{ i.averageWPM }} } @else { — }
+                    </td>
                 </ng-container>
                 <ng-container matColumnDef="comprehension">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>Ort. Anlama</th>
-                    <td mat-cell *matCellDef="let i">{{ i.averageComprehension }}%</td>
+                    <td mat-cell *matCellDef="let i">
+                        @if (i.averageComprehensionDataAvailable !== false) { {{ i.averageComprehension }}% } @else { — }
+                    </td>
                 </ng-container>
                 <tr mat-header-row
                     *matHeaderRowDef="['name','users','active','students','teachers','activities','wpm','comprehension']">

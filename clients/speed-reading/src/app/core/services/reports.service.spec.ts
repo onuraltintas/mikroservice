@@ -328,7 +328,9 @@ describe('ReportsService', () => {
         totalTeachers: 1,
         totalActivities: 5,
         averageWpm: 280,
+        averageWpmDataAvailable: true,
         averageComprehension: 82,
+        averageComprehensionDataAvailable: true,
         averagePerformance: 81,
         engagementRate: 66.67
       }],
@@ -342,8 +344,11 @@ describe('ReportsService', () => {
       topInstitutions: [{
         institutionName: 'Örnek Kolej',
         averageWpm: 280,
+        averageWpmDataAvailable: false,
         averageComprehension: 82,
+        averageComprehensionDataAvailable: false,
         activeStudents: 2,
+        activeStudentsDataAvailable: false,
         totalActivities: 5
       }]
     });
@@ -353,6 +358,9 @@ describe('ReportsService', () => {
     expect(report.institutionComparison[0].averageWPM).toBe(280);
     expect(report.institutionComparison[0].averageComprehension).toBe(82);
     expect(report.topInstitutions[0].averageWPM).toBe(280);
+    expect(report.topInstitutions[0].averageWPMDataAvailable).toBeFalse();
+    expect(report.topInstitutions[0].averageComprehensionDataAvailable).toBeFalse();
+    expect(report.topInstitutions[0].activeStudentsDataAvailable).toBeFalse();
   });
 
   it('loads admin content analysis from the central analytics endpoint', () => {

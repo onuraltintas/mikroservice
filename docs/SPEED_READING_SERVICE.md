@@ -143,8 +143,8 @@ tablosunu uygular.
   en fazla 366 gündür ve kimlik/kurum kapsamı query parametresinden alınmaz;
   admin yetkisi access token'dan değerlendirilir. Legacy `Users` tablosunda
   kayıt oluşturma zamanı ve kurum adı bulunmadığı için yeni kullanıcı büyümesi
-  `NewUserDataAvailable=false`, kurum listesi ise boş döner; bu alanlar
-  Identity raporlama sözleşmesi tamamlanmadan tahmin edilmez veya uydurulmaz.
+  `NewUserDataAvailable=false`; kayıt tarihi Identity'den ayrıca taşınmadığı
+  için bu alan tahmin edilmez veya uydurulmaz.
 - `GET /api/speed-reading/analytics/admin/content-analysis` —
   `PlatformAnalyticsView` ile korunan içerik analizi; aktif egzersiz/okuma
   katalog sayılarını, seçilen aralıktaki gerçek kullanım ve performanslarını,
@@ -159,6 +159,16 @@ tablosunu uygular.
   kullanıcı memnuniyeti veya sağlık telemetrisi tutulmadığı için bu alanlar
   `...DataAvailable=false` ile açıkça işaretlenir; sahte bir sağlık skoru,
   hata oranı veya uyarı üretilmez.
+- `GET /api/speed-reading/analytics/admin/institutions` —
+  `PlatformAnalyticsView` ile korunan kurum karşılaştırma raporu. Kurum adı,
+  aktiflik ve öğrenci/öğretmen/admin sayıları Identity'nin yalnızca iç ağda
+  `GET /api/internal/reporting/speed-reading/institutions` sözleşmesinden;
+  kullanıcı, aktivite ve performans metrikleri ise hızlı okuma veritabanından
+  gelir. Kurum adı veya kullanıcı rolü hızlı okuma veritabanından türetilmez;
+  Identity çağrısı `INTERNAL_SERVICE_API_KEY` ile doğrulanır. Tarih aralığı
+  en fazla 366 gündür. Legacy `Users` tablosunda rol bulunmadığı için dönemsel
+  aktif öğrenci sayısı veri yokluğu olarak işaretlenir; arayüzde sahte toplam
+  öğrenci değeri gösterilmez.
 - `GET /api/speed-reading/reports/templates` ve
   `GET /api/speed-reading/reports/templates/{id}` — `ReportView` yetkisiyle
   mevcut rapor şablonlarını değiştirmeden merkezi servisten okur; SystemAdmin
