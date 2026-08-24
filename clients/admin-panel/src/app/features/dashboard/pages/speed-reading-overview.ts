@@ -19,7 +19,10 @@ import {
   SpeedReadingProgramTemplate,
   SpeedReadingProgramTemplateRequest,
   SpeedReadingLearningPathTemplate,
-  SpeedReadingLearningPathTemplateRequest
+  SpeedReadingLearningPathTemplateRequest,
+  SpeedReadingLearningPathNode,
+  SpeedReadingLearningPathNodeRequest,
+  SpeedReadingLearningPathNodeUpdateRequest
 } from '../../../core/services/speed-reading-admin.service';
 
 @Component({
@@ -576,6 +579,7 @@ import {
                     </div>
                     <p class="mt-2 line-clamp-2 text-sm text-gray-600 dark:text-gray-300">{{ template.description }}</p>
                     <div class="mt-3 flex gap-2">
+                      <button type="button" (click)="manageLearningPathNodes(template)" class="rounded border border-indigo-300 px-2 py-1 text-xs text-indigo-700">Düğümleri yönet</button>
                       <button type="button" (click)="startEditLearningPathTemplate(template)" class="rounded border border-gray-300 px-2 py-1 text-xs">Düzenle</button>
                       <button type="button" (click)="deleteLearningPathTemplate(template)" class="rounded border border-red-300 px-2 py-1 text-xs text-red-700">Sil</button>
                     </div>
@@ -584,6 +588,76 @@ import {
               </div>
             } @else if (!loading()) {
               <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Henüz öğrenme yolu şablonu bulunamadı.</p>
+            }
+
+            @if (selectedLearningPathId !== null) {
+              <div class="mt-5 rounded-lg border border-indigo-200 bg-indigo-50/50 p-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 class="font-semibold text-gray-900 dark:text-white">Öğrenme yolu düğümleri</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">{{ selectedLearningPathTitle }} · {{ learningPathNodes().length }} düğüm</p>
+                  </div>
+                  <div class="flex gap-2">
+                    <button type="button" (click)="startCreateLearningPathNode()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white">Yeni düğüm</button>
+                    <button type="button" (click)="closeLearningPathNodes()" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">Kapat</button>
+                  </div>
+                </div>
+
+                @if (learningPathNodeEditingId !== null) {
+                  <form class="mt-4 grid grid-cols-1 gap-3 rounded-lg border border-indigo-200 bg-white p-4 sm:grid-cols-2" (ngSubmit)="saveLearningPathNode()">
+                    <label class="text-sm text-gray-700 dark:text-gray-200">Başlık
+                      <input name="nodeTitle" [(ngModel)]="learningPathNodeDraft.title" required maxlength="250" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                    </label>
+                    <label class="text-sm text-gray-700 dark:text-gray-200">Düğüm tipi
+                      <input name="nodeType" [(ngModel)]="learningPathNodeDraft.nodeType" required maxlength="100" placeholder="Exercise" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                    </label>
+                    <label class="text-sm text-gray-700 dark:text-gray-200">Ebeveyn düğüm
+                      <select name="parentNodeId" [(ngModel)]="learningPathNodeDraft.parentNodeId" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800">
+                        <option [ngValue]="null">Kök düğüm</option>
+                        @for (parent of learningPathNodes(); track parent.id) {
+                          @if (parent.id !== learningPathNodeEditingId) {
+                            <option [ngValue]="parent.id">{{ parent.title }}</option>
+                          }
+                        }
+                      </select>
+                    </label>
+                    <label class="text-sm text-gray-700 dark:text-gray-200">Sıra
+                      <input type="number" name="nodeOrder" [(ngModel)]="learningPathNodeDraft.order" min="0" max="10000" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                    </label>
+                    <label class="text-sm text-gray-700 dark:text-gray-200">İçerik tipi (isteğe bağlı)
+                      <input name="nodeContentType" [(ngModel)]="learningPathNodeDraft.contentType" maxlength="100" placeholder="ReadingText" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                    </label>
+                    <label class="text-sm text-gray-700 dark:text-gray-200">İçerik kimliği (isteğe bağlı)
+                      <input name="nodeContentId" [(ngModel)]="learningPathNodeDraft.contentId" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                    </label>
+                    <div class="flex justify-end gap-2 sm:col-span-2">
+                      <button type="button" (click)="cancelLearningPathNodeEdit()" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">Vazgeç</button>
+                      <button type="submit" [disabled]="saving()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50">{{ saving() ? 'Kaydediliyor…' : (learningPathNodeEditingId === 'new' ? 'Oluştur' : 'Kaydet') }}</button>
+                    </div>
+                  </form>
+                }
+
+                @if (learningPathNodes().length) {
+                  <div class="mt-4 grid grid-cols-1 gap-3">
+                    @for (node of learningPathNodes(); track node.id) {
+                      <article class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+                        <div class="flex items-start justify-between gap-3">
+                          <div>
+                            <p class="font-medium text-gray-900 dark:text-white">{{ node.order + 1 }}. {{ node.title }}</p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ node.nodeType }} · {{ node.parentNodeId ? 'Alt düğüm' : 'Kök' }} · {{ node.contents.length }} içerik · {{ node.prerequisiteNodeIds.length }} önkoşul</p>
+                          </div>
+                          <div class="flex shrink-0 gap-2">
+                            <button type="button" (click)="startEditLearningPathNode(node)" class="rounded border border-gray-300 px-2 py-1 text-xs">Düzenle</button>
+                            <button type="button" (click)="deleteLearningPathNode(node)" class="rounded border border-red-300 px-2 py-1 text-xs text-red-700">Sil</button>
+                          </div>
+                        </div>
+                      </article>
+                    }
+                  </div>
+                } @else if (!loading()) {
+                  <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Bu şablonda henüz düğüm yok.</p>
+                }
+              </div>
             }
           </div>
         }
@@ -604,6 +678,7 @@ export class SpeedReadingOverviewComponent implements OnInit {
   readonly readingQuestions = signal<SpeedReadingReadingQuestion[]>([]);
   readonly programTemplates = signal<SpeedReadingProgramTemplate[]>([]);
   readonly learningPathTemplates = signal<SpeedReadingLearningPathTemplate[]>([]);
+  readonly learningPathNodes = signal<SpeedReadingLearningPathNode[]>([]);
   readonly saving = signal(false);
   readonly canManageContent = computed(() =>
     this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingContentManage));
@@ -623,6 +698,10 @@ export class SpeedReadingOverviewComponent implements OnInit {
   programDraft: SpeedReadingProgramTemplateRequest = this.emptyProgramDraft();
   learningPathEditingId: string | null = null;
   learningPathDraft: SpeedReadingLearningPathTemplateRequest = this.emptyLearningPathDraft();
+  selectedLearningPathId: string | null = null;
+  selectedLearningPathTitle = '';
+  learningPathNodeEditingId: string | null = null;
+  learningPathNodeDraft: SpeedReadingLearningPathNodeRequest = this.emptyLearningPathNodeDraft('');
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
@@ -1019,6 +1098,99 @@ export class SpeedReadingOverviewComponent implements OnInit {
     });
   }
 
+  manageLearningPathNodes(template: SpeedReadingLearningPathTemplate) {
+    this.selectedLearningPathId = template.id;
+    this.selectedLearningPathTitle = template.name;
+    this.learningPathNodeEditingId = null;
+    this.service.getLearningPathTemplateDetails(template.id).subscribe({
+      next: details => this.learningPathNodes.set(details.nodes),
+      error: () => this.error.set('Öğrenme yolu düğümleri yüklenemedi.')
+    });
+  }
+
+  closeLearningPathNodes() {
+    this.selectedLearningPathId = null;
+    this.selectedLearningPathTitle = '';
+    this.learningPathNodeEditingId = null;
+    this.learningPathNodes.set([]);
+  }
+
+  startCreateLearningPathNode() {
+    if (this.selectedLearningPathId === null) return;
+    this.learningPathNodeEditingId = 'new';
+    this.learningPathNodeDraft = this.emptyLearningPathNodeDraft(this.selectedLearningPathId);
+  }
+
+  startEditLearningPathNode(node: SpeedReadingLearningPathNode) {
+    if (this.selectedLearningPathId === null) return;
+    this.learningPathNodeEditingId = node.id;
+    this.learningPathNodeDraft = {
+      templateId: this.selectedLearningPathId,
+      parentNodeId: node.parentNodeId,
+      nodeType: node.nodeType,
+      title: node.title,
+      contentType: node.contentType,
+      contentId: node.contentId,
+      order: node.order
+    };
+  }
+
+  cancelLearningPathNodeEdit() {
+    this.learningPathNodeEditingId = null;
+  }
+
+  saveLearningPathNode() {
+    if (this.learningPathNodeEditingId === null || this.selectedLearningPathId === null) return;
+    this.saving.set(true);
+    const updateRequest: SpeedReadingLearningPathNodeUpdateRequest = {
+      parentNodeId: this.learningPathNodeDraft.parentNodeId,
+      nodeType: this.learningPathNodeDraft.nodeType,
+      title: this.learningPathNodeDraft.title,
+      contentType: this.learningPathNodeDraft.contentType,
+      contentId: this.learningPathNodeDraft.contentId,
+      order: this.learningPathNodeDraft.order
+    };
+    const request$ = this.learningPathNodeEditingId === 'new'
+      ? this.service.createLearningPathNode({ ...this.learningPathNodeDraft, templateId: this.selectedLearningPathId })
+      : this.service.updateLearningPathNode(this.learningPathNodeEditingId, updateRequest);
+
+    request$.pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => {
+        this.learningPathNodeEditingId = null;
+        this.manageLearningPathNodes({
+          id: this.selectedLearningPathId!,
+          name: this.selectedLearningPathTitle,
+          targetAgeGroupConfigurationId: null,
+          description: null,
+          totalNodes: 0,
+          estimatedDays: 1,
+          isActive: true
+        });
+      },
+      error: () => this.error.set('Öğrenme yolu düğümü kaydedilemedi.')
+    });
+  }
+
+  deleteLearningPathNode(node: SpeedReadingLearningPathNode) {
+    if (!globalThis.confirm(`“${node.title}” düğümü silinsin mi?`)) return;
+    this.service.deleteLearningPathNode(node.id).subscribe({
+      next: () => {
+        if (this.selectedLearningPathId !== null) {
+          this.manageLearningPathNodes({
+            id: this.selectedLearningPathId,
+            name: this.selectedLearningPathTitle,
+            targetAgeGroupConfigurationId: null,
+            description: null,
+            totalNodes: 0,
+            estimatedDays: 1,
+            isActive: true
+          });
+        }
+      },
+      error: () => this.error.set('Öğrenme yolu düğümü silinemedi. Bağlı öğeleri kontrol edin.')
+    });
+  }
+
   private emptyDraft(): SpeedReadingExerciseTypeRequest {
     return {
       name: '',
@@ -1106,6 +1278,18 @@ export class SpeedReadingOverviewComponent implements OnInit {
       description: '',
       estimatedDays: 1,
       isActive: true
+    };
+  }
+
+  private emptyLearningPathNodeDraft(templateId: string): SpeedReadingLearningPathNodeRequest {
+    return {
+      templateId,
+      parentNodeId: null,
+      nodeType: 'Exercise',
+      title: '',
+      contentType: null,
+      contentId: null,
+      order: this.learningPathNodes().length
     };
   }
 }

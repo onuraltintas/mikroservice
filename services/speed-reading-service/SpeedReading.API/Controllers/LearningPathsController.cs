@@ -27,6 +27,16 @@ public sealed class LearningPathsController(
         CancellationToken cancellationToken = default) =>
         paths.GetTemplateAdminSummariesAsync(cancellationToken);
 
+    [HttpGet("templates/{id:guid}/admin")]
+    [HasPermission(PlatformPermissions.SpeedReading.ProgramManage)]
+    public async Task<ActionResult<LearningPathTemplateAdminDetails>> GetTemplateDetailsForAdmin(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await paths.GetTemplateAdminDetailsAsync(id, cancellationToken);
+        return result is null ? NotFound() : Ok(result);
+    }
+
     [HttpPost("templates")]
     [HasPermission(PlatformPermissions.SpeedReading.ProgramManage)]
     public async Task<ActionResult<LearningPathTemplateAdminSummary>> CreateTemplate(
@@ -80,6 +90,66 @@ public sealed class LearningPathsController(
         }
 
         await adminWriter.DeleteLearningPathTemplateAsync(
+            actorId,
+            id,
+            idempotencyKey ?? string.Empty,
+            cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPost("nodes")]
+    [HasPermission(PlatformPermissions.SpeedReading.ProgramManage)]
+    public async Task<ActionResult<LearningPathNodeAdminSummary>> CreateNode(
+        [FromBody] CreateLearningPathNodeRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId))
+        {
+            return Unauthorized();
+        }
+
+        return Ok(await adminWriter.CreateLearningPathNodeAsync(
+            actorId,
+            request,
+            idempotencyKey ?? string.Empty,
+            cancellationToken));
+    }
+
+    [HttpPut("nodes/{id:guid}")]
+    [HasPermission(PlatformPermissions.SpeedReading.ProgramManage)]
+    public async Task<ActionResult<LearningPathNodeAdminSummary>> UpdateNode(
+        Guid id,
+        [FromBody] UpdateLearningPathNodeRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId))
+        {
+            return Unauthorized();
+        }
+
+        return Ok(await adminWriter.UpdateLearningPathNodeAsync(
+            actorId,
+            id,
+            request,
+            idempotencyKey ?? string.Empty,
+            cancellationToken));
+    }
+
+    [HttpDelete("nodes/{id:guid}")]
+    [HasPermission(PlatformPermissions.SpeedReading.ProgramManage)]
+    public async Task<IActionResult> DeleteNode(
+        Guid id,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId))
+        {
+            return Unauthorized();
+        }
+
+        await adminWriter.DeleteLearningPathNodeAsync(
             actorId,
             id,
             idempotencyKey ?? string.Empty,

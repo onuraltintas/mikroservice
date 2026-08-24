@@ -35,6 +35,75 @@ internal sealed class LegacySpeedReadingLearningPaths(SpeedReadingDbContext db) 
                 item.IsActive))
             .ToListAsync(cancellationToken);
 
+    public async Task<LearningPathTemplateAdminDetails?> GetTemplateAdminDetailsAsync(
+        Guid templateId,
+        CancellationToken cancellationToken = default)
+    {
+        var template = await db.LearningPathTemplates
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == templateId && !item.IsDeleted, cancellationToken);
+        if (template is null)
+        {
+            return null;
+        }
+
+        var nodes = await db.LearningPathNodes
+            .AsNoTracking()
+            .Where(item => item.TemplateId == templateId && !item.IsDeleted)
+            .OrderBy(item => item.Order)
+            .ThenBy(item => item.Title)
+            .ToListAsync(cancellationToken);
+        var nodeIds = nodes.Select(item => item.Id).ToArray();
+        var contents = await db.NodeContents
+            .AsNoTracking()
+            .Where(item => nodeIds.Contains(item.NodeId) && !item.IsDeleted)
+            .ToListAsync(cancellationToken);
+        var prerequisites = await db.NodePrerequisites
+            .AsNoTracking()
+            .Where(item => nodeIds.Contains(item.NodeId) && !item.IsDeleted)
+            .ToListAsync(cancellationToken);
+
+        var contentByNode = contents
+            .GroupBy(item => item.NodeId)
+            .ToDictionary(
+                group => group.Key,
+                group => (IReadOnlyList<LearningPathNodeContentSummary>)group
+                    .Select(item => new LearningPathNodeContentSummary(
+                        item.Id,
+                        item.ExerciseId,
+                        item.ReadingTextId,
+                        item.Description))
+                    .ToList());
+        var prerequisiteByNode = prerequisites
+            .GroupBy(item => item.NodeId)
+            .ToDictionary(
+                group => group.Key,
+                group => (IReadOnlyList<Guid>)group.Select(item => item.PrerequisiteNodeId).ToList());
+
+        var nodeSummaries = nodes
+            .Select(node => new LearningPathNodeAdminSummary(
+                node.Id,
+                node.TemplateId,
+                node.ParentNodeId,
+                node.NodeType,
+                node.Title,
+                node.ContentType,
+                node.ContentId,
+                node.Order,
+                contentByNode.GetValueOrDefault(node.Id, []),
+                prerequisiteByNode.GetValueOrDefault(node.Id, [])))
+            .ToList();
+        var templateSummary = new LearningPathTemplateAdminSummary(
+            template.Id,
+            template.Name,
+            template.TargetAgeGroupConfigurationId,
+            template.Description,
+            nodes.Count,
+            template.EstimatedDays,
+            template.IsActive);
+        return new LearningPathTemplateAdminDetails(templateSummary, nodeSummaries);
+    }
+
     public async Task<LearningPathProgressSummary?> GetProgressAsync(
         Guid studentId,
         Guid? templateId,

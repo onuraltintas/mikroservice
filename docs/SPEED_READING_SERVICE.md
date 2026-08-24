@@ -83,6 +83,9 @@ tablosunu uygular.
 - `GET /api/speed-reading/learning-paths/templates/admin` ve
   `POST|PUT|DELETE /api/speed-reading/learning-paths/templates` (`ProgramManage`;
   düğüm veya ilerlemesi bulunan şablonlar silinemez)
+- `GET /api/speed-reading/learning-paths/templates/{id}/admin` ve
+  `POST|PUT|DELETE /api/speed-reading/learning-paths/nodes` (`ProgramManage`;
+  ebeveyn şablon/döngü doğrulaması)
 - `GET /api/speed-reading/progress/active-exercise-sessions`
 - `GET /api/speed-reading/program-templates`
 - `GET /api/speed-reading/progress/programs`

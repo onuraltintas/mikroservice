@@ -270,4 +270,41 @@ describe('SpeedReadingAdminService', () => {
     expect(deleteRequest.request.headers.get('Idempotency-Key')).toBe('path-delete-key-123456');
     deleteRequest.flush(null);
   });
+
+  it('loads learning path nodes and writes node mutations idempotently', () => {
+    service.getLearningPathTemplateDetails('path-1').subscribe(value => expect(value.nodes).toEqual([]));
+    const detailRequest = http.expectOne('/api/speed-reading/learning-paths/templates/path-1/admin');
+    expect(detailRequest.request.method).toBe('GET');
+    detailRequest.flush({
+      template: {
+        id: 'path-1', name: 'Yol', targetAgeGroupConfigurationId: null,
+        description: null, totalNodes: 0, estimatedDays: 1, isActive: true
+      },
+      nodes: []
+    });
+
+    service.createLearningPathNode({
+      templateId: 'path-1', parentNodeId: null, nodeType: 'Exercise', title: 'Başlangıç',
+      contentType: null, contentId: null, order: 0
+    }, 'node-create-key-123456').subscribe();
+    const createRequest = http.expectOne('/api/speed-reading/learning-paths/nodes');
+    expect(createRequest.request.method).toBe('POST');
+    expect(createRequest.request.headers.get('Idempotency-Key')).toBe('node-create-key-123456');
+    createRequest.flush({ id: 'node-1' });
+
+    service.updateLearningPathNode('node-1', {
+      parentNodeId: null, nodeType: 'Exercise', title: 'Güncel', contentType: null,
+      contentId: null, order: 1
+    }, 'node-update-key-123456').subscribe();
+    const updateRequest = http.expectOne('/api/speed-reading/learning-paths/nodes/node-1');
+    expect(updateRequest.request.method).toBe('PUT');
+    expect(updateRequest.request.headers.get('Idempotency-Key')).toBe('node-update-key-123456');
+    updateRequest.flush({ id: 'node-1' });
+
+    service.deleteLearningPathNode('node-1', 'node-delete-key-123456').subscribe();
+    const deleteRequest = http.expectOne('/api/speed-reading/learning-paths/nodes/node-1');
+    expect(deleteRequest.request.method).toBe('DELETE');
+    expect(deleteRequest.request.headers.get('Idempotency-Key')).toBe('node-delete-key-123456');
+    deleteRequest.flush(null);
+  });
 });

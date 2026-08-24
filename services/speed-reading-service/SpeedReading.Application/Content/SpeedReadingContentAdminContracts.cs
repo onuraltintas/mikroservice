@@ -171,6 +171,39 @@ public sealed record UpdateLearningPathTemplateRequest(
     int EstimatedDays,
     bool IsActive);
 
+public sealed record LearningPathNodeAdminSummary(
+    Guid Id,
+    Guid TemplateId,
+    Guid? ParentNodeId,
+    string NodeType,
+    string Title,
+    string? ContentType,
+    Guid? ContentId,
+    int Order,
+    IReadOnlyList<LearningPathNodeContentSummary> Contents,
+    IReadOnlyList<Guid> PrerequisiteNodeIds);
+
+public sealed record LearningPathTemplateAdminDetails(
+    LearningPathTemplateAdminSummary Template,
+    IReadOnlyList<LearningPathNodeAdminSummary> Nodes);
+
+public sealed record CreateLearningPathNodeRequest(
+    Guid TemplateId,
+    Guid? ParentNodeId,
+    string NodeType,
+    string Title,
+    string? ContentType,
+    Guid? ContentId,
+    int Order);
+
+public sealed record UpdateLearningPathNodeRequest(
+    Guid? ParentNodeId,
+    string NodeType,
+    string Title,
+    string? ContentType,
+    Guid? ContentId,
+    int Order);
+
 public interface ISpeedReadingContentAdminWriter
 {
     Task<ExerciseTypeSummary> CreateExerciseTypeAsync(
@@ -284,6 +317,25 @@ public interface ISpeedReadingContentAdminWriter
     Task DeleteLearningPathTemplateAsync(
         Guid actorId,
         Guid templateId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<LearningPathNodeAdminSummary> CreateLearningPathNodeAsync(
+        Guid actorId,
+        CreateLearningPathNodeRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<LearningPathNodeAdminSummary> UpdateLearningPathNodeAsync(
+        Guid actorId,
+        Guid nodeId,
+        UpdateLearningPathNodeRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteLearningPathNodeAsync(
+        Guid actorId,
+        Guid nodeId,
         string idempotencyKey,
         CancellationToken cancellationToken = default);
 }

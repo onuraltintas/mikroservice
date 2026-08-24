@@ -186,6 +186,37 @@ export interface SpeedReadingLearningPathTemplateRequest {
   isActive: boolean;
 }
 
+export interface SpeedReadingLearningPathNode {
+  id: string;
+  templateId: string;
+  parentNodeId: string | null;
+  nodeType: string;
+  title: string;
+  contentType: string | null;
+  contentId: string | null;
+  order: number;
+  contents: unknown[];
+  prerequisiteNodeIds: string[];
+}
+
+export interface SpeedReadingLearningPathTemplateDetails {
+  template: SpeedReadingLearningPathTemplate;
+  nodes: SpeedReadingLearningPathNode[];
+}
+
+export interface SpeedReadingLearningPathNodeRequest {
+  templateId: string;
+  parentNodeId?: string | null;
+  nodeType: string;
+  title: string;
+  contentType?: string | null;
+  contentId?: string | null;
+  order: number;
+}
+
+export interface SpeedReadingLearningPathNodeUpdateRequest
+  extends Omit<SpeedReadingLearningPathNodeRequest, 'templateId'> {}
+
 @Injectable({ providedIn: 'root' })
 export class SpeedReadingAdminService {
   private readonly http = inject(HttpClient);
@@ -395,6 +426,39 @@ export class SpeedReadingAdminService {
   deleteLearningPathTemplate(id: string, idempotencyKey?: string) {
     return this.http.delete<void>(
       `${this.url}/learning-paths/templates/${id}`,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  getLearningPathTemplateDetails(id: string) {
+    return this.http.get<SpeedReadingLearningPathTemplateDetails>(
+      `${this.url}/learning-paths/templates/${id}/admin`
+    );
+  }
+
+  createLearningPathNode(request: SpeedReadingLearningPathNodeRequest, idempotencyKey?: string) {
+    return this.http.post<SpeedReadingLearningPathNode>(
+      `${this.url}/learning-paths/nodes`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  updateLearningPathNode(
+    id: string,
+    request: SpeedReadingLearningPathNodeUpdateRequest,
+    idempotencyKey?: string
+  ) {
+    return this.http.put<SpeedReadingLearningPathNode>(
+      `${this.url}/learning-paths/nodes/${id}`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  deleteLearningPathNode(id: string, idempotencyKey?: string) {
+    return this.http.delete<void>(
+      `${this.url}/learning-paths/nodes/${id}`,
       { headers: this.idempotencyHeaders(idempotencyKey) }
     );
   }

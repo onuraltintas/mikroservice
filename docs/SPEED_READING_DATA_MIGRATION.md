@@ -99,6 +99,10 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
 - `POST|PUT|DELETE /api/speed-reading/learning-paths/templates` — `ProgramManage`
   yetkili öğrenme yolu şablonu yönetimi. Bağlı düğüm veya öğrenci ilerlemesi
   olan şablonlar silinemez.
+- `GET /api/speed-reading/learning-paths/templates/{id}/admin` ve
+  `POST|PUT|DELETE /api/speed-reading/learning-paths/nodes` — `ProgramManage`
+  yetkili düğüm yönetimi. Ebeveyn farklı şablondan seçilemez, hiyerarşi döngüsü
+  engellenir; bağlı öğeleri bulunan düğümler silinemez.
 - `GET /api/speed-reading/progress/active-exercise-sessions` — aktif/paused oturumlar
 - `GET /api/speed-reading/program-templates` — aktif program şablonları
 - `GET /api/speed-reading/progress/programs` — oturum açmış kullanıcının programları
