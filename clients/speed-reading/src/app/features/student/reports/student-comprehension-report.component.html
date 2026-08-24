@@ -25,7 +25,15 @@
             <div class="rp-card__header"><h3 class="rp-card__title">Question Type Analysis</h3></div>
             <div class="rp-card__body">
                 <div class="chart-container">
+                    @if (report()!.questionTypeChart.data.length > 0) {
                     <app-radar-chart [data]="report()!.questionTypeChart.data"></app-radar-chart>
+                    } @else {
+                    <div class="chart-empty">
+                        <span class="material-icons">quiz</span>
+                        <p>Soru türü bazlı veri henüz bulunmuyor</p>
+                        <small>Bu rapor, soru cevap ayrıntıları merkezi servise taşındığında güncellenecek.</small>
+                    </div>
+                    }
                 </div>
             </div>
         </div>

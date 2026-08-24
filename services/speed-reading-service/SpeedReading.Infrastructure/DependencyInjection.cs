@@ -30,6 +30,7 @@ public static class DependencyInjection
         services.AddDbContext<SpeedReadingDbContext>(options =>
             options.UseNpgsql(connectionString, npgsql =>
                 npgsql.EnableRetryOnFailure()));
+        services.AddMemoryCache(options => options.SizeLimit = 4_096);
 
         services.AddScoped<ILegacySpeedReadingCatalog, LegacySpeedReadingCatalog>();
         services.AddScoped<ISpeedReadingContentAdminWriter, LegacySpeedReadingContentAdminWriter>();

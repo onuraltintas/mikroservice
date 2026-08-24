@@ -98,10 +98,19 @@ tablosunu uygular.
   başka kullanıcı kimliği kabul etmez. Özet ayrıca son WPM/anlama değeri,
   gamification seviyesi/serisi/XP ve kazanım sayısını, öğrencinin günlük hedefi
   ile tarih aralığındaki hedef tamamlama oranını ve son beş başarımı içerir.
-  Öğrenci rapor ekranlarındaki okuma hızı, anlama, seri ve aktivite ayrıntıları
-  henüz bu özetin kapsamına alınmadı; ilgili istemci çağrıları geçici legacy
-  uyumluluk köprüsündedir ve merkezi sözleşmeleri tamamlanmadan eski uçlar
+  Öğrenci rapor ekranlarındaki seri ve aktivite ayrıntıları henüz bu özetin
+  kapsamına alınmadı; ilgili istemci çağrıları geçici legacy uyumluluk
+  köprüsündedir ve merkezi sözleşmeleri tamamlanmadan eski uçlar
   kapatılmamalıdır.
+- `GET /api/speed-reading/analytics/student/reading-speed` ve
+  `GET /api/speed-reading/analytics/student/comprehension` — token sahibinin
+  en fazla 366 günlük okuma hızı/anlama ayrıntılarını, trendlerini, kurum ve
+  platform karşılaştırmalarını döndürür. Soru türü bazlı anlama verisi, legacy
+  `ReadingSessions` tablosunda cevap ayrıntısı bulunmadığı için açıkça boş
+  döner; merkezi cevap olayı taşınmadan sahte değer üretilmez. Kurum/platform
+  benchmarkları 5 dakikalık zaman kovası anahtarı ve 5 dakikalık TTL ile sınırlı
+  memory cache’te korunur (4.096 kayıt üst sınırı); analytics indexleri
+  migration-only başlangıç scriptiyle idempotent olarak hazırlanır.
 - `GET /api/speed-reading/reports/templates` ve
   `GET /api/speed-reading/reports/templates/{id}` — `ReportView` yetkisiyle
   mevcut rapor şablonlarını değiştirmeden merkezi servisten okur; SystemAdmin

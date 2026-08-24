@@ -107,6 +107,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasKey(item => item.Id);
             entity.HasIndex(item => item.UserId);
             entity.HasIndex(item => item.ReadingTextId);
+            entity.HasIndex(item => new { item.IsDeleted, item.CompletedAt, item.UserId });
         });
 
         modelBuilder.Entity<LegacyExerciseProgramTemplate>(entity =>
@@ -257,6 +258,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
         {
             entity.ToTable("Users");
             entity.HasKey(item => item.Id);
+            entity.HasIndex(item => new { item.IsDeleted, item.InstitutionId, item.Id });
         });
 
         modelBuilder.Entity<LegacyReportTemplate>(entity =>

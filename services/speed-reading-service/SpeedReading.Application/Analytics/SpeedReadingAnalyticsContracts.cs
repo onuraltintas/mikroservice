@@ -17,6 +17,65 @@ public sealed record StudentAnalyticsMilestone(
     string Type,
     string Icon);
 
+public sealed record StudentAnalyticsTrendPoint(DateOnly Date, decimal Value);
+
+public sealed record StudentAnalyticsBenchmark(
+    decimal StudentValue,
+    decimal InstitutionAverage,
+    decimal PlatformAverage,
+    string PerformanceLevel);
+
+public sealed record StudentAnalyticsCategoryPoint(
+    string CategoryName,
+    decimal Value,
+    int QuestionsAttempted,
+    int CorrectAnswers,
+    string PerformanceLevel);
+
+public sealed record StudentAnalyticsQuestionTypePoint(
+    string Type,
+    decimal Value,
+    int QuestionsAttempted,
+    int CorrectAnswers);
+
+public sealed record StudentReadingSpeedAnalytics(
+    Guid UserId,
+    DateTime DateFrom,
+    DateTime DateTo,
+    decimal CurrentWpm,
+    decimal AverageWpm,
+    decimal MedianWpm,
+    decimal MinWpm,
+    decimal MaxWpm,
+    decimal StandardDeviation,
+    decimal ImprovementRate,
+    IReadOnlyList<StudentAnalyticsTrendPoint> Trend,
+    IReadOnlyList<StudentAnalyticsCategoryPoint> Categories,
+    StudentAnalyticsBenchmark Benchmark,
+    int SessionsBelow200Wpm,
+    int Sessions200To400Wpm,
+    int SessionsAbove400Wpm,
+    IReadOnlyList<string> Recommendations);
+
+public sealed record StudentComprehensionAnalytics(
+    Guid UserId,
+    DateTime DateFrom,
+    DateTime DateTo,
+    decimal CurrentComprehension,
+    decimal AverageComprehension,
+    decimal MaxComprehension,
+    decimal MinComprehension,
+    decimal ImprovementRate,
+    IReadOnlyList<StudentAnalyticsTrendPoint> Trend,
+    IReadOnlyList<StudentAnalyticsCategoryPoint> Categories,
+    IReadOnlyList<StudentAnalyticsQuestionTypePoint> QuestionTypes,
+    int TotalQuestionsAttempted,
+    int CorrectAnswers,
+    decimal SuccessRate,
+    StudentAnalyticsBenchmark Benchmark,
+    IReadOnlyList<string> WeakAreas,
+    IReadOnlyList<string> StrongAreas);
+
 public sealed record StudentAnalyticsSummary(
     Guid UserId,
     DateTime DateFrom,
@@ -44,6 +103,18 @@ public sealed record StudentAnalyticsSummary(
 public interface ILegacySpeedReadingAnalytics
 {
     Task<StudentAnalyticsSummary> GetStudentSummaryAsync(
+        Guid userId,
+        DateTime? dateFrom,
+        DateTime? dateTo,
+        CancellationToken cancellationToken = default);
+
+    Task<StudentReadingSpeedAnalytics> GetStudentReadingSpeedAsync(
+        Guid userId,
+        DateTime? dateFrom,
+        DateTime? dateTo,
+        CancellationToken cancellationToken = default);
+
+    Task<StudentComprehensionAnalytics> GetStudentComprehensionAsync(
         Guid userId,
         DateTime? dateFrom,
         DateTime? dateTo,
