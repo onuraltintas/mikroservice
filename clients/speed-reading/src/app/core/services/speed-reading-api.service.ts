@@ -110,7 +110,26 @@ export interface SpeedReadingStudentAnalyticsSummary {
   exercisesCompleted: number;
   exercisesPassed: number;
   averageSuccessRate: number;
+  latestWpm: number;
+  latestComprehension: number;
+  currentLevel: number;
+  currentStreak: number;
+  longestStreak: number;
+  totalXp: number;
+  milestonesEarned: number;
+  dailyGoalMinutes: number;
+  goalCompletionRate: number;
+  recentMilestones: SpeedReadingStudentAnalyticsMilestone[];
   daily: SpeedReadingStudentAnalyticsDailyPoint[];
+}
+
+export interface SpeedReadingStudentAnalyticsMilestone {
+  id: string;
+  title: string;
+  description: string;
+  earnedAt: string;
+  type: string;
+  icon: string;
 }
 
 @Injectable({ providedIn: 'root' })

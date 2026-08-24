@@ -9,6 +9,14 @@ public sealed record StudentAnalyticsDailyPoint(
     decimal AverageComprehension,
     decimal AverageSuccessRate);
 
+public sealed record StudentAnalyticsMilestone(
+    Guid Id,
+    string Title,
+    string Description,
+    DateTime EarnedAt,
+    string Type,
+    string Icon);
+
 public sealed record StudentAnalyticsSummary(
     Guid UserId,
     DateTime DateFrom,
@@ -21,6 +29,16 @@ public sealed record StudentAnalyticsSummary(
     int ExercisesCompleted,
     int ExercisesPassed,
     decimal AverageSuccessRate,
+    decimal LatestWpm,
+    decimal LatestComprehension,
+    int CurrentLevel,
+    int CurrentStreak,
+    int LongestStreak,
+    long TotalXp,
+    int MilestonesEarned,
+    int DailyGoalMinutes,
+    decimal GoalCompletionRate,
+    IReadOnlyList<StudentAnalyticsMilestone> RecentMilestones,
     IReadOnlyList<StudentAnalyticsDailyPoint> Daily);
 
 public interface ILegacySpeedReadingAnalytics

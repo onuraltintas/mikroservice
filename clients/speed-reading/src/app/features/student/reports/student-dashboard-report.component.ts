@@ -46,7 +46,8 @@ export class StudentDashboardReportComponent implements OnInit {
 
     const studentId = currentUser.id;
     const endDate = new Date();
-    const startDate = new Date(0); // 1970-01-01
+    // The central analytics endpoint intentionally caps the range at 366 days.
+    const startDate = new Date(endDate.getTime() - 366 * 24 * 60 * 60 * 1000);
 
     // Load main report
     this.reportsService.getStudentDashboardReport(studentId, startDate, endDate).subscribe({

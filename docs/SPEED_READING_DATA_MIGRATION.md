@@ -115,7 +115,9 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
 - `GET /api/speed-reading/progress/programs` — oturum açmış kullanıcının programları
 - `GET /api/speed-reading/progress/daily-exercise-logs` — günlük tamamlanma kayıtları
 - `GET /api/speed-reading/analytics/student/summary` — öğrencinin en fazla 366
-  günlük okuma/egzersiz analitik özeti ve gün serisi
+  günlük okuma/egzersiz analitik özeti ve gün serisi; son okuma metrikleri ile
+  gamification özeti, günlük çalışma hedefi/hedef tamamlama oranı ve son beş
+  başarım da aynı token kapsamındaki cevapta yer alır
 - `GET /api/speed-reading/reports/templates` ve
   `GET /api/speed-reading/reports/templates/{id}` — mevcut
   `ReportTemplates` tablosundan `ReportView` yetkili salt-okunur şablon okuma;

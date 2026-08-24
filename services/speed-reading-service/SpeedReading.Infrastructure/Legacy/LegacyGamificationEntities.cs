@@ -51,6 +51,7 @@ internal sealed class LegacyUser
     public string? Email { get; set; }
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
+    public int DailyGoalMinutes { get; set; }
     public Guid? InstitutionId { get; set; }
     public bool IsDeleted { get; set; }
 }
