@@ -7,6 +7,8 @@ import { AuthService } from '../../../core/auth/auth.service';
 import {
   SpeedReadingAdminService,
   SpeedReadingCapabilities,
+  SpeedReadingExercise,
+  SpeedReadingExerciseRequest,
   SpeedReadingExerciseType,
   SpeedReadingExerciseTypeRequest
 } from '../../../core/services/speed-reading-admin.service';
@@ -147,6 +149,80 @@ import {
             <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Katalogda gösterilecek aktif egzersiz türü bulunamadı.</p>
           }
         </div>
+
+        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Egzersizler</h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Egzersiz başlığı, zorluk seviyesi ve motor konfigürasyonu.</p>
+            </div>
+            @if (canManageContent()) {
+              <button type="button" (click)="startCreateExercise()"
+                class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white">Yeni egzersiz</button>
+            }
+          </div>
+
+          @if (canManageContent() && exerciseEditingId !== null) {
+            <form class="mt-4 grid grid-cols-1 gap-3 rounded-lg border border-indigo-200 bg-indigo-50/50 p-4 sm:grid-cols-2"
+              (ngSubmit)="saveExercise()">
+              <label class="text-sm text-gray-700 dark:text-gray-200">Başlık
+                <input name="exerciseTitle" [(ngModel)]="exerciseDraft.title" required maxlength="200"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200">Egzersiz türü
+                <select name="exerciseTypeId" [(ngModel)]="exerciseDraft.exerciseTypeId" required
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800">
+                  <option value="">Tür seçin</option>
+                  @for (type of exerciseTypes(); track type.id) {
+                    <option [value]="type.id">{{ type.displayName || type.name }}</option>
+                  }
+                </select>
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200">Zorluk (0-10)
+                <input type="number" name="difficultyLevel" [(ngModel)]="exerciseDraft.difficultyLevel" min="0" max="10"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200 sm:col-span-2">Açıklama
+                <textarea name="exerciseDescription" [(ngModel)]="exerciseDraft.description" maxlength="2000" rows="2"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800"></textarea>
+              </label>
+              <label class="text-sm text-gray-700 dark:text-gray-200 sm:col-span-2">Konfigürasyon JSON
+                <textarea name="configurationJson" [(ngModel)]="exerciseDraft.configurationJson" required rows="4"
+                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-xs dark:border-gray-600 dark:bg-gray-800"></textarea>
+              </label>
+              <div class="flex justify-end gap-2 sm:col-span-2">
+                <button type="button" (click)="cancelExerciseEdit()" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">Vazgeç</button>
+                <button type="submit" [disabled]="saving()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50">
+                  {{ saving() ? 'Kaydediliyor…' : (exerciseEditingId === 'new' ? 'Oluştur' : 'Kaydet') }}
+                </button>
+              </div>
+            </form>
+          }
+
+          @if (exercises().length) {
+            <div class="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+              @for (exercise of exercises(); track exercise.id) {
+                <article class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 class="font-medium text-gray-900 dark:text-white">{{ exercise.title }}</h3>
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ exercise.exerciseTypeName }} · Zorluk {{ exercise.difficultyLevel }}</p>
+                    </div>
+                    @if (canManageContent()) {
+                      <div class="flex shrink-0 gap-2">
+                        <button type="button" (click)="startEditExercise(exercise)" class="rounded border border-gray-300 px-2 py-1 text-xs">Düzenle</button>
+                        <button type="button" (click)="deleteExercise(exercise)" class="rounded border border-red-300 px-2 py-1 text-xs text-red-700">Sil</button>
+                      </div>
+                    }
+                  </div>
+                  <p class="mt-2 line-clamp-2 text-sm text-gray-600 dark:text-gray-300">{{ exercise.description }}</p>
+                </article>
+              }
+            </div>
+          } @else if (!loading()) {
+            <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Katalogda gösterilecek egzersiz bulunamadı.</p>
+          }
+        </div>
       }
     </section>
   `
@@ -159,11 +235,14 @@ export class SpeedReadingOverviewComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly capabilities = signal<SpeedReadingCapabilities | null>(null);
   readonly exerciseTypes = signal<SpeedReadingExerciseType[]>([]);
+  readonly exercises = signal<SpeedReadingExercise[]>([]);
   readonly saving = signal(false);
   readonly canManageContent = computed(() =>
     this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingContentManage));
   editingId: string | null = null;
   draft: SpeedReadingExerciseTypeRequest = this.emptyDraft();
+  exerciseEditingId: string | null = null;
+  exerciseDraft: SpeedReadingExerciseRequest = this.emptyExerciseDraft();
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
@@ -176,11 +255,13 @@ export class SpeedReadingOverviewComponent implements OnInit {
     this.error.set(null);
     forkJoin({
       capabilities: this.service.getCapabilities(),
-      exerciseTypes: this.service.getExerciseTypes()
+      exerciseTypes: this.service.getExerciseTypes(),
+      exercises: this.service.getExercises()
     }).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: value => {
         this.capabilities.set(value.capabilities);
         this.exerciseTypes.set(value.exerciseTypes.items);
+        this.exercises.set(value.exercises.items);
       },
       error: () => this.error.set('Hızlı okuma servis bilgisi yüklenemedi.')
     });
@@ -234,6 +315,51 @@ export class SpeedReadingOverviewComponent implements OnInit {
     });
   }
 
+  startCreateExercise() {
+    this.exerciseEditingId = 'new';
+    this.exerciseDraft = this.emptyExerciseDraft();
+  }
+
+  startEditExercise(exercise: SpeedReadingExercise) {
+    this.exerciseEditingId = exercise.id;
+    this.exerciseDraft = {
+      title: exercise.title,
+      description: exercise.description,
+      difficultyLevel: exercise.difficultyLevel,
+      exerciseTypeId: exercise.exerciseTypeId,
+      configurationJson: exercise.configurationJson,
+      targetAgeGroupConfigurationId: exercise.targetAgeGroupConfigurationId
+    };
+  }
+
+  cancelExerciseEdit() {
+    this.exerciseEditingId = null;
+  }
+
+  saveExercise() {
+    if (this.exerciseEditingId === null) return;
+    this.saving.set(true);
+    const request$ = this.exerciseEditingId === 'new'
+      ? this.service.createExercise(this.exerciseDraft)
+      : this.service.updateExercise(this.exerciseEditingId, this.exerciseDraft);
+
+    request$.pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => {
+        this.exerciseEditingId = null;
+        this.load();
+      },
+      error: () => this.error.set('Egzersiz kaydedilemedi.')
+    });
+  }
+
+  deleteExercise(exercise: SpeedReadingExercise) {
+    if (!globalThis.confirm(`“${exercise.title}” egzersizi silinsin mi?`)) return;
+    this.service.deleteExercise(exercise.id).subscribe({
+      next: () => this.load(),
+      error: () => this.error.set('Egzersiz silinemedi. Bağlı okuma metinlerini kontrol edin.')
+    });
+  }
+
   private emptyDraft(): SpeedReadingExerciseTypeRequest {
     return {
       name: '',
@@ -245,6 +371,17 @@ export class SpeedReadingOverviewComponent implements OnInit {
       isActive: true,
       engineType: '',
       categoryId: null
+    };
+  }
+
+  private emptyExerciseDraft(): SpeedReadingExerciseRequest {
+    return {
+      title: '',
+      description: '',
+      difficultyLevel: 0,
+      exerciseTypeId: '',
+      configurationJson: '{}',
+      targetAgeGroupConfigurationId: null
     };
   }
 }

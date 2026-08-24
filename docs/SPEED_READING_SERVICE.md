@@ -71,6 +71,8 @@ tablosunu uygular.
 - `GET /api/speed-reading/progress/exercise-results`
 - `POST /api/speed-reading/progress/exercise-results` (`Idempotency-Key`
   başlığı ile; tekrar istekler güvenli biçimde replay edilir)
+- `POST|PUT|DELETE /api/speed-reading/exercise-types` (`ContentManage`)
+- `POST|PUT|DELETE /api/speed-reading/exercises` (`ContentManage`)
 - `GET /api/speed-reading/progress/active-exercise-sessions`
 - `GET /api/speed-reading/program-templates`
 - `GET /api/speed-reading/progress/programs`

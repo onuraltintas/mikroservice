@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
@@ -112,6 +114,14 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         var exerciseType = await db.ExerciseTypes
             .SingleOrDefaultAsync(item => item.Id == exerciseTypeId && !item.IsDeleted, cancellationToken)
             ?? throw new NotFoundException("ExerciseType", exerciseTypeId);
+        if (await db.Exercises.AnyAsync(
+                item => item.ExerciseTypeId == exerciseTypeId && !item.IsDeleted,
+                cancellationToken))
+        {
+            throw new BusinessRuleException(
+                "ExerciseType.HasExercises",
+                "Egzersiz türü, bağlı egzersizler kaldırılmadan silinemez.");
+        }
         var now = DateTime.UtcNow;
         exerciseType.IsDeleted = true;
         exerciseType.DeletedAt = now;
@@ -133,6 +143,137 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         }
     }
 
+    public async Task<ExerciseSummary> CreateExerciseAsync(
+        Guid actorId,
+        CreateExerciseRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequest(actorId, request, idempotencyKey);
+        idempotencyKey = NormalizeKey(idempotencyKey);
+        var requestHash = CreateRequestHash(actorId, "speed-reading.exercises.create", Guid.Empty, request);
+        var existing = await GetLedgerAsync("speed-reading.exercises.create", idempotencyKey, cancellationToken);
+        if (existing is not null)
+        {
+            return await ReplayExerciseAsync(existing, requestHash, cancellationToken);
+        }
+
+        var exerciseType = await GetExerciseTypeAsync(request.ExerciseTypeId, cancellationToken);
+        var now = DateTime.UtcNow;
+        var exercise = new LegacyExercise
+        {
+            Id = Guid.NewGuid(),
+            Title = request.Title.Trim(),
+            Description = request.Description?.Trim() ?? string.Empty,
+            DifficultyLevel = request.DifficultyLevel,
+            ExerciseTypeId = request.ExerciseTypeId,
+            ConfigurationJson = request.ConfigurationJson,
+            TargetAgeGroupConfigurationId = request.TargetAgeGroupConfigurationId,
+            CreatorId = actorId,
+            CreatedAt = now,
+            CreatedBy = actorId
+        };
+
+        db.Exercises.Add(exercise);
+        AddLedger("speed-reading.exercises.create", idempotencyKey, requestHash, exercise.Id, now);
+        await SaveOrReplayAsync(
+            exercise.Id,
+            "speed-reading.exercises.create",
+            idempotencyKey,
+            requestHash,
+            cancellationToken);
+        return ToSummary(exercise, exerciseType.DisplayName);
+    }
+
+    public async Task<ExerciseSummary> UpdateExerciseAsync(
+        Guid actorId,
+        Guid exerciseId,
+        UpdateExerciseRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequest(actorId, request, idempotencyKey);
+        idempotencyKey = NormalizeKey(idempotencyKey);
+        var requestHash = CreateRequestHash(actorId, "speed-reading.exercises.update", exerciseId, request);
+        var existing = await GetLedgerAsync("speed-reading.exercises.update", idempotencyKey, cancellationToken);
+        if (existing is not null)
+        {
+            return await ReplayExerciseAsync(existing, requestHash, cancellationToken);
+        }
+
+        var exercise = await db.Exercises
+            .SingleOrDefaultAsync(item => item.Id == exerciseId && !item.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException("Exercise", exerciseId);
+        var exerciseType = await GetExerciseTypeAsync(request.ExerciseTypeId, cancellationToken);
+        exercise.Title = request.Title.Trim();
+        exercise.Description = request.Description?.Trim() ?? string.Empty;
+        exercise.DifficultyLevel = request.DifficultyLevel;
+        exercise.ExerciseTypeId = request.ExerciseTypeId;
+        exercise.ConfigurationJson = request.ConfigurationJson;
+        exercise.TargetAgeGroupConfigurationId = request.TargetAgeGroupConfigurationId;
+        exercise.UpdatedAt = DateTime.UtcNow;
+        exercise.UpdatedBy = actorId;
+
+        AddLedger("speed-reading.exercises.update", idempotencyKey, requestHash, exercise.Id, DateTime.UtcNow);
+        await SaveOrReplayAsync(
+            exercise.Id,
+            "speed-reading.exercises.update",
+            idempotencyKey,
+            requestHash,
+            cancellationToken);
+        return ToSummary(exercise, exerciseType.DisplayName);
+    }
+
+    public async Task DeleteExerciseAsync(
+        Guid actorId,
+        Guid exerciseId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateIdempotency(actorId, idempotencyKey);
+        idempotencyKey = NormalizeKey(idempotencyKey);
+        const string scope = "speed-reading.exercises.delete";
+        var requestHash = SpeedReadingRequestHasher.Create(
+            actorId.ToString("D"), scope, exerciseId.ToString("D"));
+        var existing = await GetLedgerAsync(scope, idempotencyKey, cancellationToken);
+        if (existing is not null)
+        {
+            EnsureReplayMatches(existing, requestHash);
+            return;
+        }
+
+        var exercise = await db.Exercises
+            .SingleOrDefaultAsync(item => item.Id == exerciseId && !item.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException("Exercise", exerciseId);
+        if (await db.ReadingTexts.AnyAsync(
+                item => item.ExerciseId == exerciseId && !item.IsDeleted,
+                cancellationToken))
+        {
+            throw new BusinessRuleException(
+                "Exercise.HasReadingTexts",
+                "Egzersiz, bağlı okuma metinleri kaldırılmadan silinemez.");
+        }
+
+        var now = DateTime.UtcNow;
+        exercise.IsDeleted = true;
+        exercise.DeletedAt = now;
+        exercise.DeletedBy = actorId;
+        exercise.UpdatedAt = now;
+        exercise.UpdatedBy = actorId;
+        AddLedger(scope, idempotencyKey, requestHash, exercise.Id, now);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (IsIdempotencyConflict(exception))
+        {
+            db.ChangeTracker.Clear();
+            var concurrent = await db.IdempotencyRecords
+                .SingleAsync(item => item.Scope == scope && item.Key == idempotencyKey, cancellationToken);
+            EnsureReplayMatches(concurrent, requestHash);
+        }
+    }
+
     private async Task<ExerciseTypeSummary> ReplayAsync(
         LegacyIdempotencyRecord record,
         string requestHash,
@@ -146,6 +287,18 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
                 "Idempotency.ResourceMissing",
                 "Idempotency kaydına ait egzersiz türü bulunamadı; yeni bir anahtar kullanın.");
         return ToSummary(exerciseType);
+    }
+
+    private async Task<ExerciseSummary> ReplayExerciseAsync(
+        LegacyIdempotencyRecord record,
+        string requestHash,
+        CancellationToken cancellationToken)
+    {
+        EnsureReplayMatches(record, requestHash);
+        return await GetExerciseSummaryAsync(record.ResourceId, cancellationToken)
+            ?? throw new BusinessRuleException(
+                "Idempotency.ResourceMissing",
+                "Idempotency kaydına ait egzersiz bulunamadı; yeni bir anahtar kullanın.");
     }
 
     private async Task SaveOrReplayAsync(
@@ -208,6 +361,32 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         }
     }
 
+    private async Task<LegacyExerciseType> GetExerciseTypeAsync(
+        Guid exerciseTypeId,
+        CancellationToken cancellationToken) =>
+        await db.ExerciseTypes
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == exerciseTypeId && !item.IsDeleted && item.IsActive, cancellationToken)
+        ?? throw new NotFoundException("ExerciseType", exerciseTypeId);
+
+    private async Task<ExerciseSummary?> GetExerciseSummaryAsync(
+        Guid exerciseId,
+        CancellationToken cancellationToken) =>
+        await (from exercise in db.Exercises.AsNoTracking()
+               join type in db.ExerciseTypes.AsNoTracking()
+                   on exercise.ExerciseTypeId equals type.Id
+               where exercise.Id == exerciseId && !exercise.IsDeleted && !type.IsDeleted
+               select new ExerciseSummary(
+                   exercise.Id,
+                   exercise.Title,
+                   exercise.Description,
+                   exercise.DifficultyLevel,
+                   exercise.ExerciseTypeId,
+                   type.DisplayName,
+                   exercise.ConfigurationJson,
+                   exercise.TargetAgeGroupConfigurationId))
+            .SingleOrDefaultAsync(cancellationToken);
+
     private static void ValidateRequest(
         Guid actorId,
         CreateExerciseTypeRequest request,
@@ -251,6 +430,58 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         }
     }
 
+    private static void ValidateRequest(
+        Guid actorId,
+        CreateExerciseRequest request,
+        string idempotencyKey)
+    {
+        ValidateExerciseRequest(actorId, idempotencyKey, request.Title, request.Description,
+            request.DifficultyLevel, request.ExerciseTypeId, request.ConfigurationJson);
+    }
+
+    private static void ValidateRequest(
+        Guid actorId,
+        UpdateExerciseRequest request,
+        string idempotencyKey)
+    {
+        ValidateExerciseRequest(actorId, idempotencyKey, request.Title, request.Description,
+            request.DifficultyLevel, request.ExerciseTypeId, request.ConfigurationJson);
+    }
+
+    private static void ValidateExerciseRequest(
+        Guid actorId,
+        string idempotencyKey,
+        string title,
+        string? description,
+        int difficultyLevel,
+        Guid exerciseTypeId,
+        string configurationJson)
+    {
+        ValidateIdempotency(actorId, idempotencyKey);
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length > 200
+            || (description?.Length ?? 0) > 2_000
+            || difficultyLevel is < 0 or > 10
+            || exerciseTypeId == Guid.Empty
+            || string.IsNullOrWhiteSpace(configurationJson)
+            || configurationJson.Length > 1_048_576)
+        {
+            throw new ArgumentException("Egzersiz alanları geçersiz.", nameof(title));
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(configurationJson);
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                throw new ArgumentException("ConfigurationJson bir JSON nesnesi olmalıdır.", nameof(configurationJson));
+            }
+        }
+        catch (JsonException exception)
+        {
+            throw new ArgumentException("ConfigurationJson geçerli JSON değil.", nameof(configurationJson), exception);
+        }
+    }
+
     private static void ValidateIdempotency(Guid actorId, string idempotencyKey)
     {
         if (actorId == Guid.Empty || !Regex.IsMatch(idempotencyKey?.Trim() ?? string.Empty, IdempotencyKeyPattern))
@@ -273,6 +504,28 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
             request.DisplayName, request.Description, request.IconName, request.ColorCode,
             request.SortOrder.ToString(), request.IsActive.ToString(), request.EngineType,
             request.CategoryId?.ToString("D"));
+
+    private static string CreateRequestHash(
+        Guid actorId,
+        string scope,
+        Guid resourceId,
+        CreateExerciseRequest request) =>
+        SpeedReadingRequestHasher.Create(
+            actorId.ToString("D"), scope, resourceId.ToString("D"), request.Title,
+            request.Description, request.DifficultyLevel.ToString(CultureInfo.InvariantCulture),
+            request.ExerciseTypeId.ToString("D"), request.ConfigurationJson,
+            request.TargetAgeGroupConfigurationId?.ToString("D"));
+
+    private static string CreateRequestHash(
+        Guid actorId,
+        string scope,
+        Guid resourceId,
+        UpdateExerciseRequest request) =>
+        SpeedReadingRequestHasher.Create(
+            actorId.ToString("D"), scope, resourceId.ToString("D"), request.Title,
+            request.Description, request.DifficultyLevel.ToString(CultureInfo.InvariantCulture),
+            request.ExerciseTypeId.ToString("D"), request.ConfigurationJson,
+            request.TargetAgeGroupConfigurationId?.ToString("D"));
 
     private static string CreateRequestHash(
         Guid actorId,
@@ -314,4 +567,14 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         type.IsActive,
         type.EngineType,
         type.CategoryId);
+
+    private static ExerciseSummary ToSummary(LegacyExercise exercise, string exerciseTypeName) => new(
+        exercise.Id,
+        exercise.Title,
+        exercise.Description,
+        exercise.DifficultyLevel,
+        exercise.ExerciseTypeId,
+        exerciseTypeName,
+        exercise.ConfigurationJson,
+        exercise.TargetAgeGroupConfigurationId);
 }

@@ -75,6 +75,12 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
   sonucunu mevcut `StudentExerciseResults` tablosuna yazar; `Idempotency-Key`
   başlığı zorunludur. Aynı anahtar aynı payload ile tekrarlandığında mevcut
   sonuç döner, farklı payload ile kullanıldığında `409` döner.
+- `POST /api/speed-reading/exercise-types` / `PUT /api/speed-reading/exercise-types/{id}` /
+  `DELETE /api/speed-reading/exercise-types/{id}` — `ContentManage` yetkili
+  admin içerik yönetimi.
+- `POST /api/speed-reading/exercises` / `PUT /api/speed-reading/exercises/{id}` /
+  `DELETE /api/speed-reading/exercises/{id}` — `ContentManage` yetkili
+  egzersiz yönetimi. Bağlı okuma metni olan egzersizler silinemez.
 - `GET /api/speed-reading/progress/active-exercise-sessions` — aktif/paused oturumlar
 - `GET /api/speed-reading/program-templates` — aktif program şablonları
 - `GET /api/speed-reading/progress/programs` — oturum açmış kullanıcının programları

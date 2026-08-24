@@ -76,4 +76,24 @@ describe('SpeedReadingAdminService', () => {
     expect(request.request.headers.get('Idempotency-Key')).toBe('admin-type-key-123456');
     request.flush({ id: 'type-1' });
   });
+
+  it('loads exercises with paging and writes through the dedicated route', () => {
+    service.getExercises(2, 10).subscribe();
+    const listRequest = http.expectOne('/api/speed-reading/exercises?pageNumber=2&pageSize=10');
+    expect(listRequest.request.method).toBe('GET');
+    listRequest.flush({ items: [], pageNumber: 2, pageSize: 10, totalCount: 0 });
+
+    service.createExercise({
+      title: 'Odak egzersizi',
+      description: 'Kısa açıklama',
+      difficultyLevel: 2,
+      exerciseTypeId: 'type-1',
+      configurationJson: '{}',
+      targetAgeGroupConfigurationId: null
+    }, 'exercise-key-123456').subscribe();
+    const createRequest = http.expectOne('/api/speed-reading/exercises');
+    expect(createRequest.request.method).toBe('POST');
+    expect(createRequest.request.headers.get('Idempotency-Key')).toBe('exercise-key-123456');
+    createRequest.flush({ id: 'exercise-1' });
+  });
 });

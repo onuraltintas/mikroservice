@@ -41,6 +41,26 @@ export interface SpeedReadingExerciseTypeRequest {
   categoryId?: string | null;
 }
 
+export interface SpeedReadingExercise {
+  id: string;
+  title: string;
+  description: string;
+  difficultyLevel: number;
+  exerciseTypeId: string;
+  exerciseTypeName: string;
+  configurationJson: string;
+  targetAgeGroupConfigurationId: string | null;
+}
+
+export interface SpeedReadingExerciseRequest {
+  title: string;
+  description?: string | null;
+  difficultyLevel: number;
+  exerciseTypeId: string;
+  configurationJson: string;
+  targetAgeGroupConfigurationId?: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SpeedReadingAdminService {
   private readonly http = inject(HttpClient);
@@ -84,6 +104,39 @@ export class SpeedReadingAdminService {
   deleteExerciseType(id: string, idempotencyKey?: string) {
     return this.http.delete<void>(
       `${this.url}/exercise-types/${id}`,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  getExercises(pageNumber = 1, pageSize = 50) {
+    const params = new HttpParams()
+      .set('pageNumber', pageNumber)
+      .set('pageSize', pageSize);
+    return this.http.get<SpeedReadingPage<SpeedReadingExercise>>(
+      `${this.url}/exercises`,
+      { params }
+    );
+  }
+
+  createExercise(request: SpeedReadingExerciseRequest, idempotencyKey?: string) {
+    return this.http.post<SpeedReadingExercise>(
+      `${this.url}/exercises`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  updateExercise(id: string, request: SpeedReadingExerciseRequest, idempotencyKey?: string) {
+    return this.http.put<SpeedReadingExercise>(
+      `${this.url}/exercises/${id}`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  deleteExercise(id: string, idempotencyKey?: string) {
+    return this.http.delete<void>(
+      `${this.url}/exercises/${id}`,
       { headers: this.idempotencyHeaders(idempotencyKey) }
     );
   }
