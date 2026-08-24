@@ -20,7 +20,10 @@ import {
   AdminPlatformUsageReport,
   AdminContentAnalysisReport,
   AdminSystemHealthReport,
-  AdaptivePerformanceReport
+  AdaptivePerformanceReport,
+  ChartData,
+  PopularContent,
+  InstitutionActivity
 } from '../models/report.model';
 
 @Injectable({ providedIn: 'root' })
@@ -149,9 +152,10 @@ export class ReportsService {
 
   getAdminPlatformUsageReport(startDate: Date, endDate: Date): Observable<AdminPlatformUsageReport> {
     const params = new HttpParams()
-      .set('startDate', startDate.toISOString())
-      .set('endDate', endDate.toISOString());
-    return this.http.get<AdminPlatformUsageReport>(`${this.apiUrl}/admin/platform-usage`, { params });
+      .set('dateFrom', this.normalizeAnalyticsStart(startDate, endDate).toISOString())
+      .set('dateTo', endDate.toISOString());
+    return this.http.get<AdminPlatformUsageAnalytics>(`${this.speedReadingApiUrl}/admin/platform-usage`, { params })
+      .pipe(map(value => this.toAdminPlatformUsageReport(value)));
   }
 
   getAdminContentAnalysisReport(startDate: Date, endDate: Date): Observable<AdminContentAnalysisReport> {
@@ -349,14 +353,47 @@ export class ReportsService {
     return value === 'high' || value === 'medium' ? value : 'low';
   }
 
-  private toReportMetadata(reportId: string, dateFrom: string, dateTo: string): ReportMetadata {
+  private toReportMetadata(
+    reportId: string,
+    dateFrom: string,
+    dateTo: string,
+    reportType = 'Student'
+  ): ReportMetadata {
     return {
       reportId,
-      reportType: 'Student',
+      reportType,
       generatedAt: new Date(),
       generatedBy: 'self',
       startDate: new Date(dateFrom),
       endDate: new Date(dateTo)
+    };
+  }
+
+  private toAdminPlatformUsageReport(value: AdminPlatformUsageAnalytics): AdminPlatformUsageReport {
+    return {
+      metadata: this.toReportMetadata(
+        'admin-platform-usage',
+        value.dateFrom,
+        value.dateTo,
+        'Admin'),
+      totalUsers: value.totalUsers,
+      activeUsers: value.activeUsers,
+      newUsers: value.newUsers,
+      newUserDataAvailable: value.newUserDataAvailable,
+      totalActivities: value.totalActivities,
+      totalReadingSessions: value.totalReadingSessions,
+      averageSessionDuration: value.averageSessionDuration,
+      userGrowthRate: value.userGrowthRate,
+      userGrowthRateDataAvailable: value.userGrowthRateDataAvailable,
+      engagementRate: value.engagementRate,
+      retentionRate: value.retentionRate,
+      userGrowth: value.userGrowth ?? [],
+      dailyActiveUsers: value.dailyActiveUsers ?? [],
+      activityVolume: value.activityVolume ?? [],
+      hourlyActivity: value.hourlyActivity ?? [],
+      popularContent: value.popularContent ?? [],
+      topInstitutions: value.topInstitutions ?? [],
+      featureUsageStats: value.featureUsageStats ?? {}
     };
   }
 
@@ -449,6 +486,29 @@ interface StudentAnalyticsSummary {
   goalCompletionRate: number;
   recentMilestones: StudentAnalyticsMilestone[];
   daily: StudentAnalyticsDailyPoint[];
+}
+
+interface AdminPlatformUsageAnalytics {
+  dateFrom: string;
+  dateTo: string;
+  totalUsers: number;
+  activeUsers: number;
+  newUsers: number;
+  newUserDataAvailable?: boolean;
+  totalActivities: number;
+  totalReadingSessions: number;
+  averageSessionDuration: number;
+  userGrowthRate: number;
+  userGrowthRateDataAvailable?: boolean;
+  engagementRate: number;
+  retentionRate: number;
+  userGrowth: ChartData[];
+  dailyActiveUsers: ChartData[];
+  activityVolume: ChartData[];
+  hourlyActivity: ChartData[];
+  popularContent: PopularContent[];
+  topInstitutions: InstitutionActivity[];
+  featureUsageStats: Record<string, number>;
 }
 
 interface StudentAnalyticsMilestone {

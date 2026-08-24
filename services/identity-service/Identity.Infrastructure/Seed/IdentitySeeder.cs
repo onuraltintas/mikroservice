@@ -115,7 +115,8 @@ public static class IdentitySeeder
                 Identity.Domain.Constants.Permissions.Users.Delete,
                 Identity.Domain.Constants.Permissions.Users.ChangePassword,
                 Identity.Domain.Constants.Permissions.Users.Activate,
-                Identity.Domain.Constants.Permissions.Users.ConfirmEmail
+                Identity.Domain.Constants.Permissions.Users.ConfirmEmail,
+                Identity.Domain.Constants.Permissions.SpeedReading.PlatformAnalyticsView
             };
             
             var rolePermissionsMap = new Dictionary<string, List<string>>

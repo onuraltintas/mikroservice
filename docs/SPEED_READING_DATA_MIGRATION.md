@@ -140,6 +140,17 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
   `authorize-student-read` çağrısı tarafından doğrulanır; yetkisiz öğrenci için
   okuma sorgusu çalıştırılmaz. `INTERNAL_SERVICE_API_KEY` ile servisler arası
   çağrı yapılır ve tarih aralığı 366 günle sınırlıdır.
+- `GET /api/speed-reading/analytics/teacher/students/{studentId}/activity`
+  aynı Identity öğrenci kapsamıyla öğretmen aktivite ekranını merkezi okur;
+  okuma oturumları ve günlük egzersiz kayıtları birleştirilir.
+- `GET /api/speed-reading/analytics/admin/platform-usage` `PlatformAnalyticsView`
+  yetkili SystemAdmin kullanıcıların hızlı okuma veritabanından platform
+  kullanımını okur. Bu endpoint `PlatformAnalyticsView` ile korunur; kurum
+  yöneticilerinin kurum kapsamı olmayan global metriklere erişimi yoktur.
+  `Users` tablosunda kayıt tarihi ve kurum adı bulunmadığı için yeni kullanıcı
+  ve kurum metrikleri veri yokluğu bayraklarıyla açıkça belirtilir; kayıt tarihi
+  veya kurum adı tahmin edilmez. Bu iki alan için sonraki adım Identity'nin
+  merkezi admin raporlama sözleşmesidir.
 - `GET /api/speed-reading/reports/templates` ve
   `GET /api/speed-reading/reports/templates/{id}` — mevcut
   `ReportTemplates` tablosundan `ReportView` yetkili salt-okunur şablon okuma;

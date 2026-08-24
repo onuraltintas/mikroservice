@@ -42,6 +42,7 @@ public static class DependencyInjection
         services.AddScoped<ILegacySpeedReadingGamification, LegacySpeedReadingGamification>();
         services.AddScoped<ISpeedReadingGamificationAdminWriter, LegacySpeedReadingGamificationAdminWriter>();
         services.AddScoped<ILegacySpeedReadingAnalytics, LegacySpeedReadingAnalytics>();
+        services.AddScoped<ILegacySpeedReadingAdminAnalytics, LegacySpeedReadingAdminAnalytics>();
         services.AddHttpClient<ISpeedReadingTeacherAccess, IdentityTeacherAccessClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);

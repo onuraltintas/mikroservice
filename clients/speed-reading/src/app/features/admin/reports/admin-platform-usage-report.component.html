@@ -19,7 +19,11 @@
         </mat-card>
         <mat-card>
             <mat-card-content>
+                @if (report()!.newUserDataAvailable !== false) {
                 <div class="stat positive">+{{ report()!.newUsers }}</div>
+                } @else {
+                <div class="stat">—</div>
+                }
                 <div class="label">Yeni Kullanıcı</div>
             </mat-card-content>
         </mat-card>

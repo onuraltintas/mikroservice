@@ -25,6 +25,7 @@ public static class PlatformPermissions
         public const string ProgramManage = "Permissions.SpeedReading.ProgramManage";
         public const string ProgressView = "Permissions.SpeedReading.ProgressView";
         public const string ReportView = "Permissions.SpeedReading.ReportView";
+        public const string PlatformAnalyticsView = "Permissions.SpeedReading.PlatformAnalyticsView";
         public const string ReportManage = "Permissions.SpeedReading.ReportManage";
         public const string LeaderboardView = "Permissions.SpeedReading.LeaderboardView";
         public const string GamificationManage = "Permissions.SpeedReading.GamificationManage";
@@ -58,6 +59,7 @@ public static class PlatformPermissions
         SpeedReading.ProgramManage,
         SpeedReading.ProgressView,
         SpeedReading.ReportView,
+        SpeedReading.PlatformAnalyticsView,
         SpeedReading.ReportManage,
         SpeedReading.LeaderboardView,
         SpeedReading.GamificationManage,

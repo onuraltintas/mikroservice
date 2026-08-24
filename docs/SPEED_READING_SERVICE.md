@@ -132,6 +132,19 @@ tablosunu uygular.
   öğretmen/kurum/veli kapsamının seçtiği öğrencinin en fazla 366 günlük raporunu
   döndürür. `studentId` tek başına yetki sağlamaz; servis her istekte token
   sahibini Identity'nin `authorize-student-read` sözleşmesiyle doğrular.
+- `GET /api/speed-reading/analytics/teacher/students/{studentId}/activity` —
+  aynı Identity kapsam kontrolüyle öğretmen/kurum/veli için öğrencinin okuma ve
+  günlük egzersiz aktivitesini döndürür. Öğrenci kimliği yalnızca route filtresidir;
+  yetki kontrolü tamamlanmadan analitik sorgu çalıştırılmaz.
+- `GET /api/speed-reading/analytics/admin/platform-usage` — `PlatformAnalyticsView`
+  yetkisiyle platform genelindeki gerçek hızlı okuma kullanım metriklerini
+  döndürür: toplam/aktif kullanıcı, okuma oturumu, aktivite hacmi, günlük ve
+  saatlik dağılım, elde tutma oranı ve popüler okuma metinleri. Tarih aralığı
+  en fazla 366 gündür ve kimlik/kurum kapsamı query parametresinden alınmaz;
+  admin yetkisi access token'dan değerlendirilir. Legacy `Users` tablosunda
+  kayıt oluşturma zamanı ve kurum adı bulunmadığı için yeni kullanıcı büyümesi
+  `NewUserDataAvailable=false`, kurum listesi ise boş döner; bu alanlar
+  Identity raporlama sözleşmesi tamamlanmadan tahmin edilmez veya uydurulmaz.
 - `GET /api/speed-reading/reports/templates` ve
   `GET /api/speed-reading/reports/templates/{id}` — `ReportView` yetkisiyle
   mevcut rapor şablonlarını değiştirmeden merkezi servisten okur; SystemAdmin
@@ -183,6 +196,7 @@ Identity permission seed'i aşağıdaki bağımsız anahtarları sağlar:
 - `Permissions.SpeedReading.ProgramManage`
 - `Permissions.SpeedReading.ProgressView`
 - `Permissions.SpeedReading.ReportView`
+- `Permissions.SpeedReading.PlatformAnalyticsView` (yalnızca SystemAdmin)
 - `Permissions.SpeedReading.ReportManage`
 - `Permissions.SpeedReading.LeaderboardView`
 - `Permissions.SpeedReading.GamificationManage`

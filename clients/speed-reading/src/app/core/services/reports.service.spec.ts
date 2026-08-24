@@ -271,14 +271,16 @@ describe('ReportsService', () => {
       dateTo: endDate.toISOString(),
       totalUsers: 10,
       activeUsers: 4,
-      newUsers: 2,
+      newUsers: 0,
+      newUserDataAvailable: false,
       totalActivities: 20,
       totalReadingSessions: 8,
       averageSessionDuration: 12.5,
-      userGrowthRate: 20,
+      userGrowthRate: 0,
+      userGrowthRateDataAvailable: false,
       engagementRate: 40,
       retentionRate: 25,
-      userGrowth: [{ name: '2026-01-01', series: [{ name: 'Yeni kullanıcı', value: 2 }] }],
+      userGrowth: [],
       dailyActiveUsers: [{ name: '2026-01-01', series: [{ name: 'Aktif kullanıcı', value: 4 }] }],
       activityVolume: [{ name: '2026-01-01', series: [{ name: 'Aktivite', value: 5 }] }],
       hourlyActivity: [{ name: '18:00', series: [{ name: 'Aktivite', value: 3 }] }],
@@ -290,7 +292,8 @@ describe('ReportsService', () => {
     expect(report.totalUsers).toBe(10);
     expect(report.averageSessionDuration).toBe(12.5);
     expect(report.metadata.startDate).toEqual(startDate);
-    expect(report.userGrowth[0].series[0].value).toBe(2);
+    expect(report.newUserDataAvailable).toBeFalse();
+    expect(report.userGrowth).toEqual([]);
     expect(report.popularContent[0].title).toBe('Bilim');
   });
 });

@@ -476,10 +476,12 @@ export interface AdminPlatformUsageReport {
   totalUsers: number;
   activeUsers: number;
   newUsers: number;
+  newUserDataAvailable?: boolean;
   totalActivities: number;
   totalReadingSessions: number;
   averageSessionDuration: number;
   userGrowthRate: number;
+  userGrowthRateDataAvailable?: boolean;
   engagementRate: number;
   retentionRate: number;
   userGrowth: ChartData[];
