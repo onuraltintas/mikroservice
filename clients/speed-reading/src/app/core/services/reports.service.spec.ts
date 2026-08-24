@@ -349,4 +349,44 @@ describe('ReportsService', () => {
     expect(report.mostUsedContent[0].averageComprehension).toBe(82);
     expect(report.assignmentDataAvailable).toBeFalse();
   });
+
+  it('loads admin learning health metrics without fabricating operational telemetry', () => {
+    const startDate = new Date('2026-01-01T00:00:00.000Z');
+    const endDate = new Date('2026-01-31T00:00:00.000Z');
+    let report: any;
+
+    service.getAdminSystemHealthReport(startDate, endDate)
+      .subscribe(value => report = value);
+
+    const request = http.expectOne(
+      candidate => candidate.url === '/api/speed-reading/analytics/admin/system-health');
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('dateFrom')).toBe(startDate.toISOString());
+    expect(request.request.params.get('dateTo')).toBe(endDate.toISOString());
+    request.flush({
+      dateFrom: startDate.toISOString(),
+      dateTo: endDate.toISOString(),
+      overallHealthScore: 0,
+      overallHealthDataAvailable: false,
+      healthStatus: 'Operasyonel telemetri yok',
+      averagePlatformWpm: 280,
+      averagePlatformComprehension: 81,
+      userSatisfactionScore: 0,
+      userSatisfactionDataAvailable: false,
+      totalExercisesCompleted: 12,
+      totalQuestionsAnswered: 20,
+      successRate: 76,
+      errorRate: 0,
+      errorRateDataAvailable: false,
+      healthTrend: [],
+      performanceTrend: [{ name: '2026-01-01', series: [{ name: 'Anlama', value: 81 }] }],
+      systemAlerts: []
+    });
+
+    expect(report.metadata.reportType).toBe('Admin');
+    expect(report.averagePlatformWPM).toBe(280);
+    expect(report.overallHealthDataAvailable).toBeFalse();
+    expect(report.userSatisfactionDataAvailable).toBeFalse();
+    expect(report.performanceTrend[0].series[0].value).toBe(81);
+  });
 });
