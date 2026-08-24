@@ -42,6 +42,7 @@ public static class DependencyInjection
         services.AddScoped<ILegacySpeedReadingAnalytics, LegacySpeedReadingAnalytics>();
         services.AddScoped<ILegacySpeedReadingReports, LegacySpeedReadingReports>();
         services.AddScoped<ISpeedReadingReportsAdminWriter, LegacySpeedReadingReportsAdminWriter>();
+        services.AddScoped<ISpeedReadingReportsScheduleWriter, LegacySpeedReadingReportsScheduleWriter>();
         services.AddSingleton<IAdminAuditWriter, SpeedReadingAdminAuditWriter>();
 
         return services;

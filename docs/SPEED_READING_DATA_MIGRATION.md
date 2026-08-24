@@ -127,8 +127,14 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
   cevapta açıkça kırpılmış olarak işaretlenir
 - `GET /api/speed-reading/reports/scheduled` — `ReportView` yetkisi ile
   token sahibinin `ScheduledReports` kayıtları
+- `GET /api/speed-reading/reports/scheduled/{id}` — yalnızca token sahibinin
+  tek zamanlama kaydı
 - `POST|PUT|DELETE /api/speed-reading/reports/templates` — `ReportManage`
   yetkisiyle idempotency ve sahiplik kuralları uygulanarak şablon yönetimi
+- `POST|PUT|DELETE /api/speed-reading/reports/scheduled` ve
+  `PATCH /api/speed-reading/reports/scheduled/{id}/status` — `ReportManage`
+  yetkisiyle kullanıcı sahipliği, aktif şablon doğrulaması, UTC saklama ve
+  idempotent zamanlama yönetimi
 - `GET /api/speed-reading/learning-paths/templates` — aktif öğrenme yolu şablonları
 - `GET /api/speed-reading/learning-paths/progress` — öğrencinin yolu ve düğüm durumları
 - `GET /api/speed-reading/learning-paths/personalized` — kişiselleştirilmiş yol öğeleri

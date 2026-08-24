@@ -108,6 +108,13 @@ tablosunu uygular.
   `DataJson` cevapları 1 MB sınırında açıkça `DataJsonTruncated` olarak işaretlenir.
 - `GET /api/speed-reading/reports/scheduled` — `ReportView` yetkisi olan
   kullanıcının kendi zamanlanmış raporlarını döndürür.
+- `GET /api/speed-reading/reports/scheduled/{id}` — token sahibinin tek
+  zamanlanmış raporu; başka kullanıcıların kayıtları `404` döner.
+- `POST|PUT|DELETE /api/speed-reading/reports/scheduled` ve
+  `PATCH /api/speed-reading/reports/scheduled/{id}/status` — `ReportManage`
+  yetkisi, kullanıcı sahipliği, aktif şablon kontrolü ve `Idempotency-Key`
+  ile zamanlama yönetimi. Zamanlar Europe/Istanbul yerel saati olarak alınır
+  ve UTC saklanır; soft-delete edilen kayıtlar geçmişi korur.
 - `GET /api/speed-reading/learning-paths/templates`
 - `GET /api/speed-reading/learning-paths/progress`
 - `GET /api/speed-reading/learning-paths/personalized`

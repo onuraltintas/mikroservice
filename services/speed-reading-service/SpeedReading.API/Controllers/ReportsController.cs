@@ -12,7 +12,8 @@ namespace SpeedReading.API.Controllers;
 [Authorize]
 public sealed class ReportsController(
     ILegacySpeedReadingReports reports,
-    ISpeedReadingReportsAdminWriter adminWriter) : ControllerBase
+    ISpeedReadingReportsAdminWriter adminWriter,
+    ISpeedReadingReportsScheduleWriter scheduleWriter) : ControllerBase
 {
     [HttpGet("templates")]
     [HasPermission(PlatformPermissions.SpeedReading.ReportView)]
@@ -159,6 +160,107 @@ public sealed class ReportsController(
         }
 
         return Ok(await reports.GetUserScheduledReportsAsync(userId, limit, cancellationToken));
+    }
+
+    [HttpGet("scheduled/{scheduleId:guid}")]
+    [HasPermission(PlatformPermissions.SpeedReading.ReportView)]
+    public async Task<ActionResult<ScheduledReportSummary>> GetScheduledReport(
+        Guid scheduleId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var schedule = await reports.GetUserScheduledReportAsync(userId, scheduleId, cancellationToken);
+        return schedule is null ? NotFound() : Ok(schedule);
+    }
+
+    [HttpPost("scheduled")]
+    [HasPermission(PlatformPermissions.SpeedReading.ReportManage)]
+    public async Task<ActionResult<ScheduledReportSummary>> CreateScheduledReport(
+        [FromBody] CreateScheduledReportRequest? request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (request is null || !TryGetCurrentUserId(out var actorId))
+        {
+            return request is null ? BadRequest("Request body is required.") : Unauthorized();
+        }
+
+        var result = await scheduleWriter.CreateScheduledReportAsync(
+            actorId,
+            User.IsInRole("SystemAdmin"),
+            request,
+            idempotencyKey ?? string.Empty,
+            cancellationToken);
+        return CreatedAtAction(nameof(GetScheduledReport), new { scheduleId = result.Id }, result);
+    }
+
+    [HttpPut("scheduled/{scheduleId:guid}")]
+    [HasPermission(PlatformPermissions.SpeedReading.ReportManage)]
+    public async Task<ActionResult<ScheduledReportSummary>> UpdateScheduledReport(
+        Guid scheduleId,
+        [FromBody] UpdateScheduledReportRequest? request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (request is null || !TryGetCurrentUserId(out var actorId))
+        {
+            return request is null ? BadRequest("Request body is required.") : Unauthorized();
+        }
+
+        return Ok(await scheduleWriter.UpdateScheduledReportAsync(
+            actorId,
+            User.IsInRole("SystemAdmin"),
+            scheduleId,
+            request,
+            idempotencyKey ?? string.Empty,
+            cancellationToken));
+    }
+
+    [HttpPatch("scheduled/{scheduleId:guid}/status")]
+    [HasPermission(PlatformPermissions.SpeedReading.ReportManage)]
+    public async Task<ActionResult<ScheduledReportSummary>> UpdateScheduledReportStatus(
+        Guid scheduleId,
+        [FromBody] UpdateScheduledReportStatusRequest? request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (request is null || !TryGetCurrentUserId(out var actorId))
+        {
+            return request is null ? BadRequest("Request body is required.") : Unauthorized();
+        }
+
+        return Ok(await scheduleWriter.UpdateScheduledReportStatusAsync(
+            actorId,
+            User.IsInRole("SystemAdmin"),
+            scheduleId,
+            request,
+            idempotencyKey ?? string.Empty,
+            cancellationToken));
+    }
+
+    [HttpDelete("scheduled/{scheduleId:guid}")]
+    [HasPermission(PlatformPermissions.SpeedReading.ReportManage)]
+    public async Task<IActionResult> DeleteScheduledReport(
+        Guid scheduleId,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId))
+        {
+            return Unauthorized();
+        }
+
+        await scheduleWriter.DeleteScheduledReportAsync(
+            actorId,
+            User.IsInRole("SystemAdmin"),
+            scheduleId,
+            idempotencyKey ?? string.Empty,
+            cancellationToken);
+        return NoContent();
     }
 
     private bool TryGetCurrentUserId(out Guid userId)

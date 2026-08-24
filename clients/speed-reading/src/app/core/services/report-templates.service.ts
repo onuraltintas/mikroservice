@@ -61,27 +61,44 @@ export class ReportTemplatesService {
   // ==================== SCHEDULED REPORTS ====================
 
   getScheduledReports(): Observable<ScheduledReport[]> {
-    return this.http.get<ScheduledReport[]>(`${this.legacyApiUrl}/scheduled`);
+    return this.http.get<CentralScheduledReport[]>(`${this.reportsApiUrl}/scheduled`, {
+      params: new HttpParams().set('limit', 100)
+    }).pipe(map(items => items.map(item => this.toScheduledReport(item))));
   }
 
   getScheduledReportById(scheduleId: string): Observable<ScheduledReport> {
-    return this.http.get<ScheduledReport>(`${this.legacyApiUrl}/scheduled/${scheduleId}`);
+    return this.http.get<CentralScheduledReport>(`${this.reportsApiUrl}/scheduled/${scheduleId}`)
+      .pipe(map(item => this.toScheduledReport(item)));
   }
 
   createScheduledReport(schedule: Omit<ScheduledReport, 'id' | 'lastRun' | 'nextRun'>): Observable<ScheduledReport> {
-    return this.http.post<ScheduledReport>(`${this.legacyApiUrl}/scheduled`, schedule);
+    return this.http.post<CentralScheduledReport>(
+      `${this.reportsApiUrl}/scheduled`,
+      this.toScheduledRequest(schedule),
+      { headers: this.idempotencyHeaders() })
+      .pipe(map(item => this.toScheduledReport(item)));
   }
 
   updateScheduledReport(scheduleId: string, schedule: Partial<ScheduledReport>): Observable<ScheduledReport> {
-    return this.http.put<ScheduledReport>(`${this.legacyApiUrl}/scheduled/${scheduleId}`, schedule);
+    return this.http.put<CentralScheduledReport>(
+      `${this.reportsApiUrl}/scheduled/${scheduleId}`,
+      this.toScheduledRequest(schedule),
+      { headers: this.idempotencyHeaders() })
+      .pipe(map(item => this.toScheduledReport(item)));
   }
 
   deleteScheduledReport(scheduleId: string): Observable<void> {
-    return this.http.delete<void>(`${this.legacyApiUrl}/scheduled/${scheduleId}`);
+    return this.http.delete<void>(
+      `${this.reportsApiUrl}/scheduled/${scheduleId}`,
+      { headers: this.idempotencyHeaders() });
   }
 
   toggleScheduledReport(scheduleId: string, isActive: boolean): Observable<ScheduledReport> {
-    return this.http.patch<ScheduledReport>(`${this.legacyApiUrl}/scheduled/${scheduleId}/toggle`, { isActive });
+    return this.http.patch<CentralScheduledReport>(
+      `${this.reportsApiUrl}/scheduled/${scheduleId}/status`,
+      { isActive },
+      { headers: this.idempotencyHeaders() })
+      .pipe(map(item => this.toScheduledReport(item)));
   }
 
   // ==================== SNAPSHOTS ====================
@@ -139,6 +156,56 @@ export class ReportTemplatesService {
       type: item.type
     } as ReportTemplate;
   }
+
+  private toScheduledRequest(schedule: ScheduleInput): Record<string, unknown> {
+    const frequency = typeof schedule.frequency === 'number'
+      ? schedule.frequency
+      : ({ daily: 0, weekly: 1, monthly: 2 } as Record<string, number>)[String(schedule.frequency ?? 'daily').toLowerCase()] ?? 0;
+    const deliveryTime = schedule.time ?? schedule.deliveryTime ?? '09:00:00';
+    const recipients = Array.isArray(schedule.recipients)
+      ? schedule.recipients.join(',')
+      : (schedule.emailRecipients ?? null);
+    const options = schedule.deliveryOptions ?? {};
+
+    return {
+      reportTemplateId: schedule.templateId ?? schedule.reportTemplateId,
+      frequency,
+      dayOfWeek: schedule.dayOfWeek ?? null,
+      dayOfMonth: schedule.dayOfMonth ?? null,
+      deliveryTime: String(deliveryTime).length === 5 ? `${deliveryTime}:00` : deliveryTime,
+      isActive: schedule.isActive ?? true,
+      sendEmail: schedule.sendEmail ?? options.sendEmail ?? true,
+      saveToDashboard: schedule.saveToDashboard ?? options.saveToDashboard ?? true,
+      emailRecipients: recipients
+    };
+  }
+
+  private toScheduledReport(item: CentralScheduledReport): ScheduledReport {
+    const frequency = typeof item.frequency === 'number'
+      ? ({ 0: 'daily', 1: 'weekly', 2: 'monthly' } as Record<number, ScheduledReport['frequency']>)[item.frequency] ?? 'daily'
+      : String(item.frequency).toLowerCase() as ScheduledReport['frequency'];
+    const dayOfWeek = typeof item.dayOfWeek === 'number'
+      ? item.dayOfWeek
+      : item.dayOfWeek == null ? undefined : ({ sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 } as Record<string, number>)[String(item.dayOfWeek).toLowerCase()];
+
+    return {
+      id: item.id,
+      templateId: item.reportTemplateId,
+      name: item.reportTemplateName,
+      frequency,
+      dayOfWeek,
+      dayOfMonth: item.dayOfMonth ?? undefined,
+      time: String(item.deliveryTime).slice(0, 5),
+      recipients: item.emailRecipients ? item.emailRecipients.split(',').map(value => value.trim()).filter(Boolean) : [],
+      isActive: item.isActive,
+      lastRun: item.lastRunAt ? new Date(item.lastRunAt) : undefined,
+      nextRun: item.nextRunAt ? new Date(item.nextRunAt) : new Date(0),
+      deliveryOptions: {
+        sendEmail: item.sendEmail,
+        saveToDashboard: item.saveToDashboard
+      }
+    };
+  }
 }
 
 interface CentralReportTemplate {
@@ -152,4 +219,41 @@ interface CentralReportTemplate {
   createdByUserId?: string;
   createdAt: string;
   isActive: boolean;
+}
+
+interface CentralScheduledReport {
+  id: string;
+  reportTemplateId: string;
+  reportTemplateName: string;
+  frequency: string | number;
+  dayOfWeek?: string | number | null;
+  dayOfMonth?: number | null;
+  deliveryTime: string;
+  isActive: boolean;
+  lastRunAt?: string | null;
+  nextRunAt?: string | null;
+  successCount: number;
+  failureCount: number;
+  sendEmail: boolean;
+  saveToDashboard: boolean;
+  emailRecipients?: string | null;
+}
+
+interface ScheduleInput {
+  templateId?: string;
+  reportTemplateId?: string;
+  frequency?: ScheduledReport['frequency'] | number;
+  dayOfWeek?: number | null;
+  dayOfMonth?: number | null;
+  time?: string;
+  deliveryTime?: string;
+  isActive?: boolean;
+  sendEmail?: boolean;
+  saveToDashboard?: boolean;
+  recipients?: string[];
+  emailRecipients?: string | null;
+  deliveryOptions?: {
+    sendEmail?: boolean;
+    saveToDashboard?: boolean;
+  };
 }

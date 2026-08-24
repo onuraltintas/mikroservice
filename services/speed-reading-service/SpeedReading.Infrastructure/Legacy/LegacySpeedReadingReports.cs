@@ -175,4 +175,33 @@ internal sealed class LegacySpeedReadingReports(SpeedReadingDbContext db)
                 scheduled.EmailRecipients))
             .Take(Math.Clamp(limit, 1, 100))
             .ToListAsync(cancellationToken);
+
+    public async Task<ScheduledReportSummary?> GetUserScheduledReportAsync(
+        Guid userId,
+        Guid scheduleId,
+        CancellationToken cancellationToken = default) =>
+        await (
+            from scheduled in db.ScheduledReports.AsNoTracking()
+            join template in db.ReportTemplates.AsNoTracking()
+                on scheduled.ReportTemplateId equals template.Id
+            where scheduled.Id == scheduleId
+                && scheduled.UserId == userId
+                && !scheduled.IsDeleted
+            select new ScheduledReportSummary(
+                scheduled.Id,
+                scheduled.ReportTemplateId,
+                template.Name,
+                scheduled.Frequency.ToString(),
+                scheduled.DayOfWeek,
+                scheduled.DayOfMonth,
+                scheduled.DeliveryTime,
+                scheduled.IsActive,
+                scheduled.LastRunAt,
+                scheduled.NextRunAt,
+                scheduled.SuccessCount,
+                scheduled.FailureCount,
+                scheduled.SendEmail,
+                scheduled.SaveToDashboard,
+                scheduled.EmailRecipients))
+            .SingleOrDefaultAsync(cancellationToken);
 }

@@ -69,6 +69,28 @@ public sealed record UpdateReportTemplateRequest(
     string ConfigurationJson,
     bool IsActive);
 
+public sealed record CreateScheduledReportRequest(
+    Guid ReportTemplateId,
+    int Frequency,
+    DayOfWeek? DayOfWeek,
+    int? DayOfMonth,
+    TimeSpan DeliveryTime,
+    bool SendEmail,
+    bool SaveToDashboard,
+    string? EmailRecipients);
+
+public sealed record UpdateScheduledReportRequest(
+    int Frequency,
+    DayOfWeek? DayOfWeek,
+    int? DayOfMonth,
+    TimeSpan DeliveryTime,
+    bool IsActive,
+    bool SendEmail,
+    bool SaveToDashboard,
+    string? EmailRecipients);
+
+public sealed record UpdateScheduledReportStatusRequest(bool IsActive);
+
 public interface ILegacySpeedReadingReports
 {
     Task<IReadOnlyList<ReportTemplateSummary>> GetTemplatesAsync(
@@ -99,6 +121,11 @@ public interface ILegacySpeedReadingReports
         Guid userId,
         int limit,
         CancellationToken cancellationToken = default);
+
+    Task<ScheduledReportSummary?> GetUserScheduledReportAsync(
+        Guid userId,
+        Guid scheduleId,
+        CancellationToken cancellationToken = default);
 }
 
 public interface ISpeedReadingReportsAdminWriter
@@ -122,6 +149,39 @@ public interface ISpeedReadingReportsAdminWriter
         Guid actorId,
         bool isGlobalAdministrator,
         Guid templateId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+}
+
+public interface ISpeedReadingReportsScheduleWriter
+{
+    Task<ScheduledReportSummary> CreateScheduledReportAsync(
+        Guid actorId,
+        bool isGlobalAdministrator,
+        CreateScheduledReportRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<ScheduledReportSummary> UpdateScheduledReportAsync(
+        Guid actorId,
+        bool isGlobalAdministrator,
+        Guid scheduleId,
+        UpdateScheduledReportRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<ScheduledReportSummary> UpdateScheduledReportStatusAsync(
+        Guid actorId,
+        bool isGlobalAdministrator,
+        Guid scheduleId,
+        UpdateScheduledReportStatusRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteScheduledReportAsync(
+        Guid actorId,
+        bool isGlobalAdministrator,
+        Guid scheduleId,
         string idempotencyKey,
         CancellationToken cancellationToken = default);
 }
