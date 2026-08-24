@@ -296,4 +296,57 @@ describe('ReportsService', () => {
     expect(report.userGrowth).toEqual([]);
     expect(report.popularContent[0].title).toBe('Bilim');
   });
+
+  it('loads admin content analysis from the central analytics endpoint', () => {
+    const startDate = new Date('2026-01-01T00:00:00.000Z');
+    const endDate = new Date('2026-01-31T00:00:00.000Z');
+    let report: any;
+
+    service.getAdminContentAnalysisReport(startDate, endDate)
+      .subscribe(value => report = value);
+
+    const request = http.expectOne(
+      candidate => candidate.url === '/api/speed-reading/analytics/admin/content-analysis');
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('dateFrom')).toBe(startDate.toISOString());
+    expect(request.request.params.get('dateTo')).toBe(endDate.toISOString());
+    request.flush({
+      dateFrom: startDate.toISOString(),
+      dateTo: endDate.toISOString(),
+      totalExercises: 5,
+      totalReadingTexts: 2,
+      totalTrainingSeries: 0,
+      totalProgramTemplates: 1,
+      totalAssignments: 0,
+      assignmentDataAvailable: false,
+      mostUsedContent: [{
+        contentId: 'text-1',
+        contentType: 'ReadingText',
+        title: 'Bilim',
+        usageCount: 4,
+        averageScore: 82,
+        averageComprehension: 82
+      }],
+      leastUsedContent: [],
+      performanceByContentType: [],
+      engagementByContentType: [],
+      contentGaps: [],
+      popularTopics: ['Bilim'],
+      readingAnalysis: [{
+        difficultyLevel: 2,
+        totalReads: 4,
+        averageWpm: 285,
+        averageComprehension: 82
+      }],
+      exerciseAnalysis: [],
+      readingPerformanceChart: [],
+      exerciseFrequencyChart: []
+    });
+
+    expect(report.totalExercises).toBe(5);
+    expect(report.metadata.reportType).toBe('Admin');
+    expect(report.readingAnalysis[0].averageWPM).toBe(285);
+    expect(report.mostUsedContent[0].averageComprehension).toBe(82);
+    expect(report.assignmentDataAvailable).toBeFalse();
+  });
 });
