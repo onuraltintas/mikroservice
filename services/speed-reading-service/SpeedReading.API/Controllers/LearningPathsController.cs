@@ -157,6 +157,108 @@ public sealed class LearningPathsController(
         return NoContent();
     }
 
+    [HttpPost("node-contents")]
+    [HasPermission(PlatformPermissions.SpeedReading.ProgramManage)]
+    public async Task<ActionResult<LearningPathNodeContentSummary>> CreateNodeContent(
+        [FromBody] CreateLearningPathNodeContentRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId))
+        {
+            return Unauthorized();
+        }
+
+        return Ok(await adminWriter.CreateLearningPathNodeContentAsync(
+            actorId,
+            request,
+            idempotencyKey ?? string.Empty,
+            cancellationToken));
+    }
+
+    [HttpPut("node-contents/{id:guid}")]
+    [HasPermission(PlatformPermissions.SpeedReading.ProgramManage)]
+    public async Task<ActionResult<LearningPathNodeContentSummary>> UpdateNodeContent(
+        Guid id,
+        [FromBody] UpdateLearningPathNodeContentRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId))
+        {
+            return Unauthorized();
+        }
+
+        return Ok(await adminWriter.UpdateLearningPathNodeContentAsync(
+            actorId,
+            id,
+            request,
+            idempotencyKey ?? string.Empty,
+            cancellationToken));
+    }
+
+    [HttpDelete("node-contents/{id:guid}")]
+    [HasPermission(PlatformPermissions.SpeedReading.ProgramManage)]
+    public async Task<IActionResult> DeleteNodeContent(
+        Guid id,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId))
+        {
+            return Unauthorized();
+        }
+
+        await adminWriter.DeleteLearningPathNodeContentAsync(
+            actorId,
+            id,
+            idempotencyKey ?? string.Empty,
+            cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPost("prerequisites")]
+    [HasPermission(PlatformPermissions.SpeedReading.ProgramManage)]
+    public async Task<IActionResult> CreatePrerequisite(
+        [FromBody] CreateLearningPathPrerequisiteRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId))
+        {
+            return Unauthorized();
+        }
+
+        await adminWriter.CreateLearningPathPrerequisiteAsync(
+            actorId,
+            request,
+            idempotencyKey ?? string.Empty,
+            cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("prerequisites/{nodeId:guid}/{prerequisiteNodeId:guid}")]
+    [HasPermission(PlatformPermissions.SpeedReading.ProgramManage)]
+    public async Task<IActionResult> DeletePrerequisite(
+        Guid nodeId,
+        Guid prerequisiteNodeId,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId))
+        {
+            return Unauthorized();
+        }
+
+        await adminWriter.DeleteLearningPathPrerequisiteAsync(
+            actorId,
+            nodeId,
+            prerequisiteNodeId,
+            idempotencyKey ?? string.Empty,
+            cancellationToken);
+        return NoContent();
+    }
+
     [HttpGet("progress")]
     public async Task<ActionResult<LearningPathProgressSummary>> GetProgress(
         [FromQuery] Guid? templateId,

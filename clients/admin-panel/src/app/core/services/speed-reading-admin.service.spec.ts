@@ -307,4 +307,40 @@ describe('SpeedReadingAdminService', () => {
     expect(deleteRequest.request.headers.get('Idempotency-Key')).toBe('node-delete-key-123456');
     deleteRequest.flush(null);
   });
+
+  it('writes learning path node content and prerequisites through dedicated routes', () => {
+    service.createLearningPathNodeContent({
+      nodeId: 'node-1', exerciseId: 'exercise-1', readingTextId: null, description: 'İçerik'
+    }, 'node-content-create-key-123456').subscribe();
+    const contentRequest = http.expectOne('/api/speed-reading/learning-paths/node-contents');
+    expect(contentRequest.request.method).toBe('POST');
+    expect(contentRequest.request.headers.get('Idempotency-Key')).toBe('node-content-create-key-123456');
+    contentRequest.flush({ id: 'content-1' });
+
+    service.updateLearningPathNodeContent('content-1', {
+      exerciseId: null, readingTextId: 'text-1', description: 'Güncel'
+    }, 'node-content-update-key-123456').subscribe();
+    const updateContentRequest = http.expectOne('/api/speed-reading/learning-paths/node-contents/content-1');
+    expect(updateContentRequest.request.method).toBe('PUT');
+    expect(updateContentRequest.request.headers.get('Idempotency-Key')).toBe('node-content-update-key-123456');
+    updateContentRequest.flush({ id: 'content-1' });
+
+    service.createLearningPathPrerequisite({ nodeId: 'node-2', prerequisiteNodeId: 'node-1' }, 'prereq-create-key-123456').subscribe();
+    const prerequisiteRequest = http.expectOne('/api/speed-reading/learning-paths/prerequisites');
+    expect(prerequisiteRequest.request.method).toBe('POST');
+    expect(prerequisiteRequest.request.headers.get('Idempotency-Key')).toBe('prereq-create-key-123456');
+    prerequisiteRequest.flush(null);
+
+    service.deleteLearningPathPrerequisite('node-2', 'node-1', 'prereq-delete-key-123456').subscribe();
+    const deletePrerequisiteRequest = http.expectOne('/api/speed-reading/learning-paths/prerequisites/node-2/node-1');
+    expect(deletePrerequisiteRequest.request.method).toBe('DELETE');
+    expect(deletePrerequisiteRequest.request.headers.get('Idempotency-Key')).toBe('prereq-delete-key-123456');
+    deletePrerequisiteRequest.flush(null);
+
+    service.deleteLearningPathNodeContent('content-1', 'node-content-delete-key-123456').subscribe();
+    const deleteContentRequest = http.expectOne('/api/speed-reading/learning-paths/node-contents/content-1');
+    expect(deleteContentRequest.request.method).toBe('DELETE');
+    expect(deleteContentRequest.request.headers.get('Idempotency-Key')).toBe('node-content-delete-key-123456');
+    deleteContentRequest.flush(null);
+  });
 });

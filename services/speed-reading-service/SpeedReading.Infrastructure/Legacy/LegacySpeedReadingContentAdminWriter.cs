@@ -941,6 +941,200 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         }
     }
 
+    public async Task<LearningPathNodeContentSummary> CreateLearningPathNodeContentAsync(
+        Guid actorId,
+        CreateLearningPathNodeContentRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequest(actorId, request, idempotencyKey);
+        idempotencyKey = NormalizeKey(idempotencyKey);
+        const string scope = "speed-reading.learning-path-node-content.create";
+        var requestHash = CreateRequestHash(actorId, scope, Guid.Empty, request);
+        var existing = await GetLedgerAsync(scope, idempotencyKey, cancellationToken);
+        if (existing is not null)
+        {
+            return await ReplayLearningPathNodeContentAsync(existing, requestHash, cancellationToken);
+        }
+
+        await EnsureNodeExistsAsync(request.NodeId, cancellationToken);
+        await EnsureContentReferenceExistsAsync(request.ExerciseId, request.ReadingTextId, cancellationToken);
+        var now = DateTime.UtcNow;
+        var content = new LegacyNodeContent
+        {
+            Id = Guid.NewGuid(),
+            NodeId = request.NodeId,
+            ExerciseId = request.ExerciseId,
+            ReadingTextId = request.ReadingTextId,
+            Description = request.Description?.Trim(),
+            CreatedAt = now,
+            CreatedBy = actorId
+        };
+        db.NodeContents.Add(content);
+        AddLedger(scope, idempotencyKey, requestHash, content.Id, now);
+        await SaveOrReplayAsync(content.Id, scope, idempotencyKey, requestHash, cancellationToken);
+        return ToContentSummary(content);
+    }
+
+    public async Task<LearningPathNodeContentSummary> UpdateLearningPathNodeContentAsync(
+        Guid actorId,
+        Guid contentId,
+        UpdateLearningPathNodeContentRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequest(actorId, request, idempotencyKey);
+        idempotencyKey = NormalizeKey(idempotencyKey);
+        const string scope = "speed-reading.learning-path-node-content.update";
+        var requestHash = CreateRequestHash(actorId, scope, contentId, request);
+        var existing = await GetLedgerAsync(scope, idempotencyKey, cancellationToken);
+        if (existing is not null)
+        {
+            return await ReplayLearningPathNodeContentAsync(existing, requestHash, cancellationToken);
+        }
+
+        var content = await db.NodeContents
+            .SingleOrDefaultAsync(item => item.Id == contentId && !item.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException("LearningPathNodeContent", contentId);
+        await EnsureNodeExistsAsync(content.NodeId, cancellationToken);
+        await EnsureContentReferenceExistsAsync(request.ExerciseId, request.ReadingTextId, cancellationToken);
+        content.ExerciseId = request.ExerciseId;
+        content.ReadingTextId = request.ReadingTextId;
+        content.Description = request.Description?.Trim();
+        content.UpdatedAt = DateTime.UtcNow;
+        content.UpdatedBy = actorId;
+        AddLedger(scope, idempotencyKey, requestHash, content.Id, DateTime.UtcNow);
+        await SaveOrReplayAsync(content.Id, scope, idempotencyKey, requestHash, cancellationToken);
+        return ToContentSummary(content);
+    }
+
+    public async Task DeleteLearningPathNodeContentAsync(
+        Guid actorId,
+        Guid contentId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateIdempotency(actorId, idempotencyKey);
+        idempotencyKey = NormalizeKey(idempotencyKey);
+        const string scope = "speed-reading.learning-path-node-content.delete";
+        var requestHash = SpeedReadingRequestHasher.Create(
+            actorId.ToString("D"), scope, contentId.ToString("D"));
+        var existing = await GetLedgerAsync(scope, idempotencyKey, cancellationToken);
+        if (existing is not null)
+        {
+            EnsureReplayMatches(existing, requestHash);
+            return;
+        }
+
+        var content = await db.NodeContents
+            .SingleOrDefaultAsync(item => item.Id == contentId && !item.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException("LearningPathNodeContent", contentId);
+        var now = DateTime.UtcNow;
+        content.IsDeleted = true;
+        content.DeletedAt = now;
+        content.DeletedBy = actorId;
+        content.UpdatedAt = now;
+        content.UpdatedBy = actorId;
+        AddLedger(scope, idempotencyKey, requestHash, content.Id, now);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (IsIdempotencyConflict(exception))
+        {
+            db.ChangeTracker.Clear();
+            var concurrent = await db.IdempotencyRecords
+                .SingleAsync(item => item.Scope == scope && item.Key == idempotencyKey, cancellationToken);
+            EnsureReplayMatches(concurrent, requestHash);
+        }
+    }
+
+    public async Task CreateLearningPathPrerequisiteAsync(
+        Guid actorId,
+        CreateLearningPathPrerequisiteRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequest(actorId, request, idempotencyKey);
+        idempotencyKey = NormalizeKey(idempotencyKey);
+        const string scope = "speed-reading.learning-path-prerequisites.create";
+        var requestHash = CreateRequestHash(actorId, scope, Guid.Empty, request);
+        var existing = await GetLedgerAsync(scope, idempotencyKey, cancellationToken);
+        if (existing is not null)
+        {
+            EnsureReplayMatches(existing, requestHash);
+            return;
+        }
+
+        await EnsurePrerequisiteValidAsync(request.NodeId, request.PrerequisiteNodeId, cancellationToken);
+        if (await db.NodePrerequisites.AnyAsync(
+                item => item.NodeId == request.NodeId
+                    && item.PrerequisiteNodeId == request.PrerequisiteNodeId
+                    && !item.IsDeleted,
+                cancellationToken))
+        {
+            throw new BusinessRuleException(
+                "LearningPathPrerequisite.Exists",
+                "Bu önkoşul bağlantısı zaten mevcut.");
+        }
+
+        var now = DateTime.UtcNow;
+        var prerequisite = new LegacyNodePrerequisite
+        {
+            Id = Guid.NewGuid(),
+            NodeId = request.NodeId,
+            PrerequisiteNodeId = request.PrerequisiteNodeId,
+            CreatedAt = now,
+            CreatedBy = actorId
+        };
+        db.NodePrerequisites.Add(prerequisite);
+        AddLedger(scope, idempotencyKey, requestHash, prerequisite.Id, now);
+        await SaveOrReplayAsync(prerequisite.Id, scope, idempotencyKey, requestHash, cancellationToken);
+    }
+
+    public async Task DeleteLearningPathPrerequisiteAsync(
+        Guid actorId,
+        Guid nodeId,
+        Guid prerequisiteNodeId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateIdempotency(actorId, idempotencyKey);
+        idempotencyKey = NormalizeKey(idempotencyKey);
+        const string scope = "speed-reading.learning-path-prerequisites.delete";
+        var requestHash = SpeedReadingRequestHasher.Create(
+            actorId.ToString("D"), scope, nodeId.ToString("D"), prerequisiteNodeId.ToString("D"));
+        var existing = await GetLedgerAsync(scope, idempotencyKey, cancellationToken);
+        if (existing is not null)
+        {
+            EnsureReplayMatches(existing, requestHash);
+            return;
+        }
+
+        var prerequisite = await db.NodePrerequisites
+            .SingleOrDefaultAsync(item => item.NodeId == nodeId
+                && item.PrerequisiteNodeId == prerequisiteNodeId && !item.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException("LearningPathPrerequisite", nodeId);
+        var now = DateTime.UtcNow;
+        prerequisite.IsDeleted = true;
+        prerequisite.DeletedAt = now;
+        prerequisite.DeletedBy = actorId;
+        prerequisite.UpdatedAt = now;
+        prerequisite.UpdatedBy = actorId;
+        AddLedger(scope, idempotencyKey, requestHash, prerequisite.Id, now);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (IsIdempotencyConflict(exception))
+        {
+            db.ChangeTracker.Clear();
+            var concurrent = await db.IdempotencyRecords
+                .SingleAsync(item => item.Scope == scope && item.Key == idempotencyKey, cancellationToken);
+            EnsureReplayMatches(concurrent, requestHash);
+        }
+    }
+
     private async Task<ExerciseTypeSummary> ReplayAsync(
         LegacyIdempotencyRecord record,
         string requestHash,
@@ -1041,6 +1235,21 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
                 "Idempotency.ResourceMissing",
                 "Idempotency kaydına ait öğrenme yolu düğümü bulunamadı; yeni bir anahtar kullanın.");
         return await ToLearningPathNodeSummaryAsync(node, cancellationToken);
+    }
+
+    private async Task<LearningPathNodeContentSummary> ReplayLearningPathNodeContentAsync(
+        LegacyIdempotencyRecord record,
+        string requestHash,
+        CancellationToken cancellationToken)
+    {
+        EnsureReplayMatches(record, requestHash);
+        var content = await db.NodeContents
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == record.ResourceId && !item.IsDeleted, cancellationToken)
+            ?? throw new BusinessRuleException(
+                "Idempotency.ResourceMissing",
+                "Idempotency kaydına ait düğüm içeriği bulunamadı; yeni bir anahtar kullanın.");
+        return ToContentSummary(content);
     }
 
     private async Task SaveOrReplayAsync(
@@ -1487,6 +1696,161 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         }
     }
 
+    private static void ValidateRequest(
+        Guid actorId,
+        CreateLearningPathNodeContentRequest request,
+        string idempotencyKey)
+    {
+        ValidateIdempotency(actorId, idempotencyKey);
+        ValidateNodeContentFields(request.NodeId, request.ExerciseId, request.ReadingTextId, request.Description);
+    }
+
+    private static void ValidateRequest(
+        Guid actorId,
+        UpdateLearningPathNodeContentRequest request,
+        string idempotencyKey)
+    {
+        ValidateIdempotency(actorId, idempotencyKey);
+        ValidateNodeContentFields(null, request.ExerciseId, request.ReadingTextId, request.Description);
+    }
+
+    private static void ValidateNodeContentFields(
+        Guid? nodeId,
+        Guid? exerciseId,
+        Guid? readingTextId,
+        string? description)
+    {
+        if ((nodeId.HasValue && nodeId.Value == Guid.Empty)
+            || (exerciseId.HasValue && exerciseId.Value == Guid.Empty)
+            || (readingTextId.HasValue && readingTextId.Value == Guid.Empty)
+            || (exerciseId.HasValue == readingTextId.HasValue)
+            || (description?.Length ?? 0) > 1_000)
+        {
+            throw new ArgumentException(
+                "Düğüm içeriği tam olarak bir egzersiz veya okuma metnine bağlanmalıdır.",
+                nameof(exerciseId));
+        }
+    }
+
+    private static void ValidateRequest(
+        Guid actorId,
+        CreateLearningPathPrerequisiteRequest request,
+        string idempotencyKey)
+    {
+        ValidateIdempotency(actorId, idempotencyKey);
+        if (request.NodeId == Guid.Empty || request.PrerequisiteNodeId == Guid.Empty
+            || request.NodeId == request.PrerequisiteNodeId)
+        {
+            throw new ArgumentException("Önkoşul düğümleri geçersiz.", nameof(request));
+        }
+    }
+
+    private async Task EnsureNodeExistsAsync(Guid nodeId, CancellationToken cancellationToken) =>
+        _ = await db.LearningPathNodes
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == nodeId && !item.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException("LearningPathNode", nodeId);
+
+    private async Task EnsureContentReferenceExistsAsync(
+        Guid? exerciseId,
+        Guid? readingTextId,
+        CancellationToken cancellationToken)
+    {
+        if (exerciseId.HasValue)
+        {
+            var exists = await db.Exercises.AsNoTracking()
+                .AnyAsync(item => item.Id == exerciseId && !item.IsDeleted, cancellationToken);
+            if (!exists)
+            {
+                throw new NotFoundException("Exercise", exerciseId.Value);
+            }
+        }
+        else if (readingTextId.HasValue)
+        {
+            var exists = await db.ReadingTexts.AsNoTracking()
+                .AnyAsync(item => item.Id == readingTextId && !item.IsDeleted, cancellationToken);
+            if (!exists)
+            {
+                throw new NotFoundException("ReadingText", readingTextId.Value);
+            }
+        }
+    }
+
+    private async Task EnsurePrerequisiteValidAsync(
+        Guid nodeId,
+        Guid prerequisiteNodeId,
+        CancellationToken cancellationToken)
+    {
+        var node = await db.LearningPathNodes.AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == nodeId && !item.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException("LearningPathNode", nodeId);
+        var prerequisite = await db.LearningPathNodes.AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == prerequisiteNodeId && !item.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException("LearningPathNode", prerequisiteNodeId);
+        if (node.TemplateId != prerequisite.TemplateId)
+        {
+            throw new BusinessRuleException(
+                "LearningPathPrerequisite.TemplateMismatch",
+                "Önkoşul düğümü aynı öğrenme yolu şablonunda olmalıdır.");
+        }
+
+        var pending = new Queue<Guid>([prerequisiteNodeId]);
+        var visited = new HashSet<Guid>();
+        while (pending.Count > 0)
+        {
+            var current = pending.Dequeue();
+            if (current == nodeId)
+            {
+                throw new BusinessRuleException(
+                    "LearningPathPrerequisite.Cycle",
+                    "Önkoşul bağlantıları döngü oluşturamaz.");
+            }
+
+            if (!visited.Add(current) || visited.Count > 500)
+            {
+                throw new BusinessRuleException(
+                    "LearningPathPrerequisite.InvalidGraph",
+                    "Önkoşul grafiği geçersiz veya çok derin.");
+            }
+
+            var next = await db.NodePrerequisites.AsNoTracking()
+                .Where(item => item.NodeId == current && !item.IsDeleted)
+                .Select(item => item.PrerequisiteNodeId)
+                .ToListAsync(cancellationToken);
+            foreach (var item in next)
+            {
+                pending.Enqueue(item);
+            }
+        }
+    }
+
+    private static string CreateRequestHash(
+        Guid actorId,
+        string scope,
+        Guid resourceId,
+        CreateLearningPathNodeContentRequest request) =>
+        SpeedReadingRequestHasher.Create(
+            actorId.ToString("D"), scope, resourceId.ToString("D"), request.NodeId.ToString("D"),
+            request.ExerciseId?.ToString("D"), request.ReadingTextId?.ToString("D"), request.Description);
+
+    private static string CreateRequestHash(
+        Guid actorId,
+        string scope,
+        Guid resourceId,
+        UpdateLearningPathNodeContentRequest request) =>
+        SpeedReadingRequestHasher.Create(
+            actorId.ToString("D"), scope, resourceId.ToString("D"),
+            request.ExerciseId?.ToString("D"), request.ReadingTextId?.ToString("D"), request.Description);
+
+    private static string CreateRequestHash(
+        Guid actorId,
+        string scope,
+        Guid resourceId,
+        CreateLearningPathPrerequisiteRequest request) =>
+        SpeedReadingRequestHasher.Create(
+            actorId.ToString("D"), scope, resourceId.ToString("D"),
+            request.NodeId.ToString("D"), request.PrerequisiteNodeId.ToString("D"));
+
     private async Task EnsureParentValidAsync(
         Guid templateId,
         Guid nodeId,
@@ -1871,4 +2235,10 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         template.TotalNodes,
         template.EstimatedDays,
         template.IsActive);
+
+    private static LearningPathNodeContentSummary ToContentSummary(LegacyNodeContent content) => new(
+        content.Id,
+        content.ExerciseId,
+        content.ReadingTextId,
+        content.Description);
 }

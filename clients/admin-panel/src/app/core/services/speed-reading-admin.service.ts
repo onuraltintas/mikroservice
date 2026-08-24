@@ -195,8 +195,15 @@ export interface SpeedReadingLearningPathNode {
   contentType: string | null;
   contentId: string | null;
   order: number;
-  contents: unknown[];
+  contents: SpeedReadingLearningPathNodeContent[];
   prerequisiteNodeIds: string[];
+}
+
+export interface SpeedReadingLearningPathNodeContent {
+  id: string;
+  exerciseId: string | null;
+  readingTextId: string | null;
+  description: string | null;
 }
 
 export interface SpeedReadingLearningPathTemplateDetails {
@@ -216,6 +223,21 @@ export interface SpeedReadingLearningPathNodeRequest {
 
 export interface SpeedReadingLearningPathNodeUpdateRequest
   extends Omit<SpeedReadingLearningPathNodeRequest, 'templateId'> {}
+
+export interface SpeedReadingLearningPathNodeContentRequest {
+  nodeId: string;
+  exerciseId?: string | null;
+  readingTextId?: string | null;
+  description?: string | null;
+}
+
+export interface SpeedReadingLearningPathNodeContentUpdateRequest
+  extends Omit<SpeedReadingLearningPathNodeContentRequest, 'nodeId'> {}
+
+export interface SpeedReadingLearningPathPrerequisiteRequest {
+  nodeId: string;
+  prerequisiteNodeId: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class SpeedReadingAdminService {
@@ -459,6 +481,58 @@ export class SpeedReadingAdminService {
   deleteLearningPathNode(id: string, idempotencyKey?: string) {
     return this.http.delete<void>(
       `${this.url}/learning-paths/nodes/${id}`,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  createLearningPathNodeContent(
+    request: SpeedReadingLearningPathNodeContentRequest,
+    idempotencyKey?: string
+  ) {
+    return this.http.post<unknown>(
+      `${this.url}/learning-paths/node-contents`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  updateLearningPathNodeContent(
+    id: string,
+    request: SpeedReadingLearningPathNodeContentUpdateRequest,
+    idempotencyKey?: string
+  ) {
+    return this.http.put<unknown>(
+      `${this.url}/learning-paths/node-contents/${id}`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  deleteLearningPathNodeContent(id: string, idempotencyKey?: string) {
+    return this.http.delete<void>(
+      `${this.url}/learning-paths/node-contents/${id}`,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  createLearningPathPrerequisite(
+    request: SpeedReadingLearningPathPrerequisiteRequest,
+    idempotencyKey?: string
+  ) {
+    return this.http.post<void>(
+      `${this.url}/learning-paths/prerequisites`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  deleteLearningPathPrerequisite(
+    nodeId: string,
+    prerequisiteNodeId: string,
+    idempotencyKey?: string
+  ) {
+    return this.http.delete<void>(
+      `${this.url}/learning-paths/prerequisites/${nodeId}/${prerequisiteNodeId}`,
       { headers: this.idempotencyHeaders(idempotencyKey) }
     );
   }

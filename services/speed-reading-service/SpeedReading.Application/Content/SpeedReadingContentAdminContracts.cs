@@ -204,6 +204,21 @@ public sealed record UpdateLearningPathNodeRequest(
     Guid? ContentId,
     int Order);
 
+public sealed record CreateLearningPathNodeContentRequest(
+    Guid NodeId,
+    Guid? ExerciseId,
+    Guid? ReadingTextId,
+    string? Description);
+
+public sealed record UpdateLearningPathNodeContentRequest(
+    Guid? ExerciseId,
+    Guid? ReadingTextId,
+    string? Description);
+
+public sealed record CreateLearningPathPrerequisiteRequest(
+    Guid NodeId,
+    Guid PrerequisiteNodeId);
+
 public interface ISpeedReadingContentAdminWriter
 {
     Task<ExerciseTypeSummary> CreateExerciseTypeAsync(
@@ -336,6 +351,38 @@ public interface ISpeedReadingContentAdminWriter
     Task DeleteLearningPathNodeAsync(
         Guid actorId,
         Guid nodeId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<LearningPathNodeContentSummary> CreateLearningPathNodeContentAsync(
+        Guid actorId,
+        CreateLearningPathNodeContentRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<LearningPathNodeContentSummary> UpdateLearningPathNodeContentAsync(
+        Guid actorId,
+        Guid contentId,
+        UpdateLearningPathNodeContentRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteLearningPathNodeContentAsync(
+        Guid actorId,
+        Guid contentId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task CreateLearningPathPrerequisiteAsync(
+        Guid actorId,
+        CreateLearningPathPrerequisiteRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteLearningPathPrerequisiteAsync(
+        Guid actorId,
+        Guid nodeId,
+        Guid prerequisiteNodeId,
         string idempotencyKey,
         CancellationToken cancellationToken = default);
 }

@@ -103,6 +103,10 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
   `POST|PUT|DELETE /api/speed-reading/learning-paths/nodes` — `ProgramManage`
   yetkili düğüm yönetimi. Ebeveyn farklı şablondan seçilemez, hiyerarşi döngüsü
   engellenir; bağlı öğeleri bulunan düğümler silinemez.
+- `POST|PUT|DELETE /api/speed-reading/learning-paths/node-contents` ve
+  `POST|DELETE /api/speed-reading/learning-paths/prerequisites` — `ProgramManage`
+  yetkili düğüm içerik/önkoşul yönetimi. İçerik tek bir aktif egzersiz veya
+  okuma metnine bağlanır; önkoşul grafiğinde şablon ve döngü doğrulaması yapılır.
 - `GET /api/speed-reading/progress/active-exercise-sessions` — aktif/paused oturumlar
 - `GET /api/speed-reading/program-templates` — aktif program şablonları
 - `GET /api/speed-reading/progress/programs` — oturum açmış kullanıcının programları

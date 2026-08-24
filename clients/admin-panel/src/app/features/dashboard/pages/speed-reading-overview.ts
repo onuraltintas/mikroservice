@@ -22,7 +22,8 @@ import {
   SpeedReadingLearningPathTemplateRequest,
   SpeedReadingLearningPathNode,
   SpeedReadingLearningPathNodeRequest,
-  SpeedReadingLearningPathNodeUpdateRequest
+  SpeedReadingLearningPathNodeUpdateRequest,
+  SpeedReadingLearningPathNodeContentRequest
 } from '../../../core/services/speed-reading-admin.service';
 
 @Component({
@@ -647,6 +648,7 @@ import {
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ node.nodeType }} · {{ node.parentNodeId ? 'Alt düğüm' : 'Kök' }} · {{ node.contents.length }} içerik · {{ node.prerequisiteNodeIds.length }} önkoşul</p>
                           </div>
                           <div class="flex shrink-0 gap-2">
+                            <button type="button" (click)="manageLearningPathNodeRelations(node)" class="rounded border border-indigo-300 px-2 py-1 text-xs text-indigo-700">İlişkiler</button>
                             <button type="button" (click)="startEditLearningPathNode(node)" class="rounded border border-gray-300 px-2 py-1 text-xs">Düzenle</button>
                             <button type="button" (click)="deleteLearningPathNode(node)" class="rounded border border-red-300 px-2 py-1 text-xs text-red-700">Sil</button>
                           </div>
@@ -656,6 +658,78 @@ import {
                   </div>
                 } @else if (!loading()) {
                   <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Bu şablonda henüz düğüm yok.</p>
+                }
+
+                @if (selectedLearningPathNodeId !== null) {
+                  <div class="mt-5 rounded-lg border border-indigo-200 bg-white p-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h4 class="font-semibold text-gray-900 dark:text-white">Düğüm içerikleri ve önkoşulları</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-300">{{ selectedLearningPathNodeTitle }}</p>
+                      </div>
+                      <button type="button" (click)="closeLearningPathNodeRelations()" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">Kapat</button>
+                    </div>
+                    <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <label class="text-sm text-gray-700 dark:text-gray-200">İçerik türü
+                        <select name="relationContentKind" [(ngModel)]="relationContentKind" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800">
+                          <option value="exercise">Egzersiz</option>
+                          <option value="readingText">Okuma metni</option>
+                        </select>
+                      </label>
+                      @if (relationContentKind === 'exercise') {
+                        <label class="text-sm text-gray-700 dark:text-gray-200">Egzersiz
+                          <select name="relationExerciseId" [(ngModel)]="relationContentDraft.exerciseId" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800">
+                            <option [ngValue]="null">Seçin</option>
+                            @for (exercise of exercises(); track exercise.id) { <option [ngValue]="exercise.id">{{ exercise.title }}</option> }
+                          </select>
+                        </label>
+                      } @else {
+                        <label class="text-sm text-gray-700 dark:text-gray-200">Okuma metni
+                          <select name="relationReadingTextId" [(ngModel)]="relationContentDraft.readingTextId" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800">
+                            <option [ngValue]="null">Seçin</option>
+                            @for (text of readingTexts(); track text.id) { <option [ngValue]="text.id">{{ text.title }}</option> }
+                          </select>
+                        </label>
+                      }
+                      <label class="text-sm text-gray-700 dark:text-gray-200">Açıklama
+                        <input name="relationDescription" [(ngModel)]="relationContentDraft.description" maxlength="1000" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                      </label>
+                    </div>
+                    <div class="mt-3 flex justify-end">
+                      <button type="button" (click)="addLearningPathNodeContent()" [disabled]="saving()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50">İçerik ekle</button>
+                    </div>
+                    @if (selectedLearningPathNode()?.contents?.length) {
+                      <div class="mt-3 space-y-2">
+                        @for (content of selectedLearningPathNode()?.contents ?? []; track content.id) {
+                          <div class="flex items-center justify-between rounded border border-gray-200 px-3 py-2 text-sm dark:border-gray-700">
+                            <span>{{ content.exerciseId ? 'Egzersiz: ' + content.exerciseId : 'Okuma metni: ' + content.readingTextId }}{{ content.description ? ' · ' + content.description : '' }}</span>
+                            <button type="button" (click)="deleteLearningPathNodeContent(content.id)" class="rounded border border-red-300 px-2 py-1 text-xs text-red-700">Sil</button>
+                          </div>
+                        }
+                      </div>
+                    }
+                    <div class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
+                      <label class="text-sm text-gray-700 dark:text-gray-200">Önkoşul düğümü
+                        <select name="relationPrerequisiteNodeId" [(ngModel)]="relationPrerequisiteNodeId" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800">
+                          <option [ngValue]="null">Seçin</option>
+                          @for (candidate of learningPathNodes(); track candidate.id) {
+                            @if (candidate.id !== selectedLearningPathNodeId) { <option [ngValue]="candidate.id">{{ candidate.title }}</option> }
+                          }
+                        </select>
+                      </label>
+                      <button type="button" (click)="addLearningPathPrerequisite()" [disabled]="saving()" class="self-end rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50">Önkoşul ekle</button>
+                    </div>
+                    @if (selectedLearningPathNode()?.prerequisiteNodeIds?.length) {
+                      <div class="mt-3 space-y-2">
+                        @for (prerequisiteId of selectedLearningPathNode()?.prerequisiteNodeIds ?? []; track prerequisiteId) {
+                          <div class="flex items-center justify-between rounded border border-gray-200 px-3 py-2 text-sm dark:border-gray-700">
+                            <span>Önkoşul: {{ learningPathNodeTitle(prerequisiteId) }}</span>
+                            <button type="button" (click)="deleteLearningPathPrerequisite(prerequisiteId)" class="rounded border border-red-300 px-2 py-1 text-xs text-red-700">Sil</button>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
                 }
               </div>
             }
@@ -702,6 +776,11 @@ export class SpeedReadingOverviewComponent implements OnInit {
   selectedLearningPathTitle = '';
   learningPathNodeEditingId: string | null = null;
   learningPathNodeDraft: SpeedReadingLearningPathNodeRequest = this.emptyLearningPathNodeDraft('');
+  selectedLearningPathNodeId: string | null = null;
+  selectedLearningPathNodeTitle = '';
+  relationContentKind: 'exercise' | 'readingText' = 'exercise';
+  relationContentDraft: SpeedReadingLearningPathNodeContentRequest = this.emptyLearningPathNodeContentDraft('');
+  relationPrerequisiteNodeId: string | null = null;
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
@@ -1113,6 +1192,7 @@ export class SpeedReadingOverviewComponent implements OnInit {
     this.selectedLearningPathTitle = '';
     this.learningPathNodeEditingId = null;
     this.learningPathNodes.set([]);
+    this.closeLearningPathNodeRelations();
   }
 
   startCreateLearningPathNode() {
@@ -1188,6 +1268,88 @@ export class SpeedReadingOverviewComponent implements OnInit {
         }
       },
       error: () => this.error.set('Öğrenme yolu düğümü silinemedi. Bağlı öğeleri kontrol edin.')
+    });
+  }
+
+  manageLearningPathNodeRelations(node: SpeedReadingLearningPathNode) {
+    this.selectedLearningPathNodeId = node.id;
+    this.selectedLearningPathNodeTitle = node.title;
+    this.relationContentKind = 'exercise';
+    this.relationContentDraft = this.emptyLearningPathNodeContentDraft(node.id);
+    this.relationPrerequisiteNodeId = null;
+  }
+
+  closeLearningPathNodeRelations() {
+    this.selectedLearningPathNodeId = null;
+    this.selectedLearningPathNodeTitle = '';
+    this.relationPrerequisiteNodeId = null;
+  }
+
+  selectedLearningPathNode(): SpeedReadingLearningPathNode | undefined {
+    return this.learningPathNodes().find(item => item.id === this.selectedLearningPathNodeId);
+  }
+
+  learningPathNodeTitle(nodeId: string): string {
+    return this.learningPathNodes().find(item => item.id === nodeId)?.title ?? nodeId;
+  }
+
+  addLearningPathNodeContent() {
+    if (this.selectedLearningPathNodeId === null) return;
+    const request: SpeedReadingLearningPathNodeContentRequest = {
+      nodeId: this.selectedLearningPathNodeId,
+      exerciseId: this.relationContentKind === 'exercise' ? this.relationContentDraft.exerciseId : null,
+      readingTextId: this.relationContentKind === 'readingText' ? this.relationContentDraft.readingTextId : null,
+      description: this.relationContentDraft.description
+    };
+    this.saving.set(true);
+    this.service.createLearningPathNodeContent(request).pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => {
+        this.relationContentDraft = this.emptyLearningPathNodeContentDraft(this.selectedLearningPathNodeId!);
+        this.reloadLearningPathNodes();
+      },
+      error: () => this.error.set('Düğüm içeriği eklenemedi.')
+    });
+  }
+
+  deleteLearningPathNodeContent(contentId: string) {
+    if (!globalThis.confirm('Bu düğüm içeriği silinsin mi?')) return;
+    this.service.deleteLearningPathNodeContent(contentId).subscribe({
+      next: () => this.reloadLearningPathNodes(),
+      error: () => this.error.set('Düğüm içeriği silinemedi.')
+    });
+  }
+
+  addLearningPathPrerequisite() {
+    if (this.selectedLearningPathNodeId === null || this.relationPrerequisiteNodeId === null) return;
+    this.saving.set(true);
+    this.service.createLearningPathPrerequisite({
+      nodeId: this.selectedLearningPathNodeId,
+      prerequisiteNodeId: this.relationPrerequisiteNodeId
+    }).pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => {
+        this.relationPrerequisiteNodeId = null;
+        this.reloadLearningPathNodes();
+      },
+      error: () => this.error.set('Önkoşul eklenemedi. Aynı şablon ve döngü kurallarını kontrol edin.')
+    });
+  }
+
+  deleteLearningPathPrerequisite(prerequisiteNodeId: string) {
+    if (this.selectedLearningPathNodeId === null || !globalThis.confirm('Bu önkoşul silinsin mi?')) return;
+    this.service.deleteLearningPathPrerequisite(
+      this.selectedLearningPathNodeId,
+      prerequisiteNodeId
+    ).subscribe({
+      next: () => this.reloadLearningPathNodes(),
+      error: () => this.error.set('Önkoşul silinemedi.')
+    });
+  }
+
+  private reloadLearningPathNodes() {
+    if (this.selectedLearningPathId === null) return;
+    this.service.getLearningPathTemplateDetails(this.selectedLearningPathId).subscribe({
+      next: details => this.learningPathNodes.set(details.nodes),
+      error: () => this.error.set('Öğrenme yolu düğümleri yenilenemedi.')
     });
   }
 
@@ -1290,6 +1452,15 @@ export class SpeedReadingOverviewComponent implements OnInit {
       contentType: null,
       contentId: null,
       order: this.learningPathNodes().length
+    };
+  }
+
+  private emptyLearningPathNodeContentDraft(nodeId: string): SpeedReadingLearningPathNodeContentRequest {
+    return {
+      nodeId,
+      exerciseId: null,
+      readingTextId: null,
+      description: ''
     };
   }
 }
