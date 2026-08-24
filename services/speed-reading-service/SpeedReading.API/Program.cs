@@ -54,12 +54,9 @@ var runtimeOptions = builder.Configuration
     ?? new SpeedReadingServiceOptions();
 runtimeOptions.Validate();
 
-if (runtimeOptions.CoachingIntegrationEnabled
-    || runtimeOptions.NotificationIntegrationEnabled
-    || runtimeOptions.SubscriptionIntegrationEnabled)
-{
-    InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
-}
+// Teacher analytics resolve student scope through Identity on every request,
+// so the shared service key is required even when optional integrations are off.
+InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
 
 builder.Services.AddSingleton(runtimeOptions);
 builder.Host.UseCustomSerilog();

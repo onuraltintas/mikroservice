@@ -134,6 +134,12 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
   `studentId` parametresi yoktur ve tarih aralığı 366 günle sınırlıdır.
   Öğrenci kapsamlı sorgular için `004_student_analytics_indexes.sql` idempotent
   bileşik indexleri sağlar.
+- `GET /api/speed-reading/analytics/teacher/students/{studentId}/reading-speed`
+  ve `/comprehension` öğretmen rapor ekranlarının ilk merkezi dilimidir. Öğrenci
+  kimliği route'ta bulunsa da yetki token sahibinden alınır ve Identity'nin
+  `authorize-student-read` çağrısı tarafından doğrulanır; yetkisiz öğrenci için
+  okuma sorgusu çalıştırılmaz. `INTERNAL_SERVICE_API_KEY` ile servisler arası
+  çağrı yapılır ve tarih aralığı 366 günle sınırlıdır.
 - `GET /api/speed-reading/reports/templates` ve
   `GET /api/speed-reading/reports/templates/{id}` — mevcut
   `ReportTemplates` tablosundan `ReportView` yetkili salt-okunur şablon okuma;

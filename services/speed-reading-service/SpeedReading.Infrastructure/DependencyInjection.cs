@@ -7,6 +7,7 @@ using SpeedReading.Application.Progress;
 using SpeedReading.Application.Gamification;
 using SpeedReading.Application.Analytics;
 using SpeedReading.Application.Reports;
+using SpeedReading.Infrastructure.ExternalServices;
 using SpeedReading.Infrastructure.Legacy;
 
 namespace SpeedReading.Infrastructure;
@@ -41,6 +42,10 @@ public static class DependencyInjection
         services.AddScoped<ILegacySpeedReadingGamification, LegacySpeedReadingGamification>();
         services.AddScoped<ISpeedReadingGamificationAdminWriter, LegacySpeedReadingGamificationAdminWriter>();
         services.AddScoped<ILegacySpeedReadingAnalytics, LegacySpeedReadingAnalytics>();
+        services.AddHttpClient<ISpeedReadingTeacherAccess, IdentityTeacherAccessClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
+        }).AddCorrelationIdPropagation();
         services.AddScoped<ILegacySpeedReadingReports, LegacySpeedReadingReports>();
         services.AddScoped<ISpeedReadingReportsAdminWriter, LegacySpeedReadingReportsAdminWriter>();
         services.AddScoped<ISpeedReadingReportsScheduleWriter, LegacySpeedReadingReportsScheduleWriter>();

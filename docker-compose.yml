@@ -109,7 +109,7 @@ services:
       - JWT_PREVIOUS_SECRETS=${JWT_PREVIOUS_SECRETS:-}
       - JWT_PREVIOUS_KEY_IDS=${JWT_PREVIOUS_KEY_IDS:-}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID must be set}
-      - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY}
+      - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY:?INTERNAL_SERVICE_API_KEY must be set}
       # One-time production bootstrap. Clear BOOTSTRAP_ADMIN_PASSWORD after
       # the first successful identity-service start.
       - BOOTSTRAP_ADMIN_EMAIL=${BOOTSTRAP_ADMIN_EMAIL:-admin@eduivme.com}
@@ -254,7 +254,8 @@ services:
       - JWT_KEY_ID=${JWT_KEY_ID:-}
       - JWT_PREVIOUS_SECRETS=${JWT_PREVIOUS_SECRETS:-}
       - JWT_PREVIOUS_KEY_IDS=${JWT_PREVIOUS_KEY_IDS:-}
-      - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY}
+      - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY:?INTERNAL_SERVICE_API_KEY must be set}
+      - Services__IdentityService=http://identity-service:8080
     networks:
       - edu-network
     depends_on:

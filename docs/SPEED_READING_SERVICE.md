@@ -55,6 +55,10 @@ docker compose --profile speed-reading up -d speed-reading-service
 
 Staging ve production overlay'leri profili kaldırır; bu ortamlar için
 `SPEED_READING_CONNECTION_STRING` deployment secret olarak verilmelidir.
+Öğretmen/veli kurum kapsamı Identity üzerinden doğrulandığı için aynı
+ortamlarda `INTERNAL_SERVICE_API_KEY` zorunludur; Compose bu anahtarı
+`http://identity-service:8080` adresine giden çağrılar için sağlar. Servis
+container'ında `localhost` Identity adresi olarak kullanılmaz.
 Hızlı okuma veritabanı platform PostgreSQL container'ına taşınmadığı sürece
 business tabloları platform migration zincirine dahil edilmez; one-shot
 container yalnızca platform PostgreSQL'in hazır olmasını bekleyip ek ledger
@@ -123,6 +127,11 @@ tablosunu uygular.
   streak değerlerini döndürür. Veri yoksa `DataAvailable=false` ve açıklama
   döner; boş grafikler başarı gibi yorumlanmaz. Her iki uç da öğrenci kimliğini
   query parametresinden almaz.
+- `GET /api/speed-reading/analytics/teacher/students/{studentId}/reading-speed`
+  ve `/comprehension` — Identity tarafından öğrenci okumaya yetkilendirilmiş
+  öğretmen/kurum/veli kapsamının seçtiği öğrencinin en fazla 366 günlük raporunu
+  döndürür. `studentId` tek başına yetki sağlamaz; servis her istekte token
+  sahibini Identity'nin `authorize-student-read` sözleşmesiyle doğrular.
 - `GET /api/speed-reading/reports/templates` ve
   `GET /api/speed-reading/reports/templates/{id}` — `ReportView` yetkisiyle
   mevcut rapor şablonlarını değiştirmeden merkezi servisten okur; SystemAdmin

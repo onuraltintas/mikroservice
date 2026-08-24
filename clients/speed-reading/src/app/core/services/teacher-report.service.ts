@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
     TeacherContentAnalysisReport,
@@ -94,17 +95,28 @@ export interface TeacherStudentActivityReport {
 export class TeacherReportService {
     private readonly http = inject(HttpClient);
     private readonly API_URL = `${environment.apiUrl}/v1/teachers`;
+    private readonly speedReadingAnalyticsUrl = `${environment.speedReadingApiUrl}/analytics/teacher`;
 
     getStudentReadingSpeedTrend(studentId: string, days: number = 30): Observable<TeacherStudentReadingSpeedReport> {
-        return this.http.get<TeacherStudentReadingSpeedReport>(
-            `${this.API_URL}/students/${studentId}/reading-speed-trend?days=${days}`
-        );
+        const { dateFrom, dateTo } = this.getDateRange(days);
+        const params = new HttpParams()
+            .set('dateFrom', dateFrom.toISOString())
+            .set('dateTo', dateTo.toISOString());
+        return this.http.get<StudentReadingSpeedAnalytics>(
+            `${this.speedReadingAnalyticsUrl}/students/${studentId}/reading-speed`,
+            { params }
+        ).pipe(map(value => this.toTeacherReadingSpeedReport(value, studentId)));
     }
 
     getStudentComprehensionTrend(studentId: string, days: number = 30): Observable<TeacherStudentComprehensionReport> {
-        return this.http.get<TeacherStudentComprehensionReport>(
-            `${this.API_URL}/students/${studentId}/comprehension-trend?days=${days}`
-        );
+        const { dateFrom, dateTo } = this.getDateRange(days);
+        const params = new HttpParams()
+            .set('dateFrom', dateFrom.toISOString())
+            .set('dateTo', dateTo.toISOString());
+        return this.http.get<StudentComprehensionAnalytics>(
+            `${this.speedReadingAnalyticsUrl}/students/${studentId}/comprehension`,
+            { params }
+        ).pipe(map(value => this.toTeacherComprehensionReport(value, studentId)));
     }
 
     getStudentActivityReport(studentId: string, startDate?: Date, endDate?: Date): Observable<TeacherStudentActivityReport> {
@@ -139,4 +151,122 @@ export class TeacherReportService {
 
         return this.http.get<TeacherTimeBasedProgressReport>(url);
     }
+
+    private getDateRange(days: number): { dateFrom: Date; dateTo: Date } {
+        const dateTo = new Date();
+        const rangeDays = Math.min(Math.max(Math.trunc(days) || 1, 1), 366);
+        const dateFrom = new Date(dateTo.getTime() - rangeDays * 24 * 60 * 60 * 1000);
+        return { dateFrom, dateTo };
+    }
+
+    private toTeacherReadingSpeedReport(
+        value: StudentReadingSpeedAnalytics,
+        studentId: string
+    ): TeacherStudentReadingSpeedReport {
+        return {
+            metadata: this.toTeacherMetadata(
+                'Öğrenci Okuma Hızı Raporu',
+                'TeacherStudentReadingSpeed',
+                studentId,
+                value.dateFrom,
+                value.dateTo
+            ),
+            currentWPM: value.currentWpm,
+            averageWPM: value.averageWpm,
+            maxWPM: value.maxWpm,
+            minWPM: value.minWpm,
+            wpmImprovement: value.improvementRate,
+            wpmOverTime: (value.trend ?? []).map(point => ({
+                name: point.date,
+                series: [{ name: 'WPM', value: point.value }]
+            })),
+            wpmByExerciseType: (value.categories ?? []).map(category => ({
+                name: category.categoryName,
+                series: [{ name: 'WPM', value: category.value }]
+            })),
+            recommendations: value.recommendations ?? []
+        };
+    }
+
+    private toTeacherComprehensionReport(
+        value: StudentComprehensionAnalytics,
+        studentId: string
+    ): TeacherStudentComprehensionReport {
+        return {
+            metadata: this.toTeacherMetadata(
+                'Öğrenci Anlama Raporu',
+                'TeacherStudentComprehension',
+                studentId,
+                value.dateFrom,
+                value.dateTo
+            ),
+            currentComprehension: value.currentComprehension,
+            averageComprehension: value.averageComprehension,
+            maxComprehension: value.maxComprehension,
+            minComprehension: value.minComprehension,
+            comprehensionImprovement: value.improvementRate,
+            comprehensionOverTime: (value.trend ?? []).map(point => ({
+                name: point.date,
+                series: [{ name: 'Anlama', value: point.value }]
+            })),
+            weakAreas: value.weakAreas ?? [],
+            strongAreas: value.strongAreas ?? []
+        };
+    }
+
+    private toTeacherMetadata(
+        reportTitle: string,
+        reportType: string,
+        studentId: string,
+        dateFrom: string,
+        dateTo: string
+    ) {
+        const startDate = new Date(dateFrom);
+        const endDate = new Date(dateTo);
+        return {
+            reportTitle,
+            reportType,
+            generatedAt: new Date(),
+            startDate,
+            endDate,
+            generatedFor: studentId,
+            totalDays: Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)))
+        };
+    }
+}
+
+interface StudentReadingSpeedAnalytics {
+    dateFrom: string;
+    dateTo: string;
+    currentWpm: number;
+    averageWpm: number;
+    maxWpm: number;
+    minWpm: number;
+    improvementRate: number;
+    trend: StudentAnalyticsTrendPoint[];
+    categories: StudentAnalyticsCategoryPoint[];
+    recommendations: string[];
+}
+
+interface StudentComprehensionAnalytics {
+    dateFrom: string;
+    dateTo: string;
+    currentComprehension: number;
+    averageComprehension: number;
+    maxComprehension: number;
+    minComprehension: number;
+    improvementRate: number;
+    trend: StudentAnalyticsTrendPoint[];
+    weakAreas: string[];
+    strongAreas: string[];
+}
+
+interface StudentAnalyticsTrendPoint {
+    date: string;
+    value: number;
+}
+
+interface StudentAnalyticsCategoryPoint {
+    categoryName: string;
+    value: number;
 }
