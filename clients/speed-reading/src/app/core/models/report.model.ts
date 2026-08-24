@@ -257,6 +257,9 @@ export interface TeacherClassOverviewReport {
   metadata: ReportMetadata;
   totalStudents: number;
   activeStudents: number;
+  activeStudentsDataAvailable?: boolean;
+  classAverageWpmDataAvailable?: boolean;
+  classAverageComprehensionDataAvailable?: boolean;
   classAverageWPM: number;
   classAverageComprehension: number;
   totalActivitiesCompleted: number;
@@ -337,6 +340,8 @@ export interface StudentComparisonChart {
 // 3. Teacher Assignment Report
 export interface TeacherAssignmentReport {
   metadata: ReportMetadata;
+  dataAvailable?: boolean;
+  unavailableReason?: string;
   assignmentInfo: {
     assignmentId: string;
     title: string;

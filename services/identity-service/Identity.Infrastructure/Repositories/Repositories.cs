@@ -1022,6 +1022,128 @@ public class TeacherRepository : ITeacherRepository
         return GetByUserIdAsync(userId, null, cancellationToken);
     }
 
+    public async Task<SpeedReadingTeacherStudentScopeResponse?> GetSpeedReadingTeacherStudentScopeAsync(
+        Guid viewerUserId,
+        Guid? targetTeacherUserId,
+        CancellationToken cancellationToken)
+    {
+        var viewer = await _context.Users
+            .AsNoTracking()
+            .Where(user => user.Id == viewerUserId && user.IsActive)
+            .Select(user => new
+            {
+                Roles = user.Roles
+                    .Where(userRole => !userRole.Role.IsDeleted)
+                    .Select(userRole => userRole.Role.Name)
+                    .ToList()
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (viewer is null)
+        {
+            return null;
+        }
+
+        var isSystemAdministrator = viewer.Roles.Any(role =>
+            string.Equals(role, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
+        var isInstitutionAdministrator = viewer.Roles.Any(role =>
+            string.Equals(role, "InstitutionAdmin", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(role, "InstitutionOwner", StringComparison.OrdinalIgnoreCase));
+        var teacherUserId = targetTeacherUserId ?? viewerUserId;
+        var teacher = await _context.TeacherProfiles
+            .AsNoTracking()
+            .Where(profile => profile.UserId == teacherUserId
+                && profile.IsActive
+                && profile.User.IsActive
+                && profile.User.Roles.Any(userRole =>
+                    !userRole.Role.IsDeleted
+                    && userRole.Role.Name == "Teacher")
+                && (!profile.InstitutionId.HasValue
+                    || (profile.Institution != null && profile.Institution.IsActive)))
+            .Select(profile => new
+            {
+                profile.Id,
+                profile.InstitutionId,
+                profile.CanViewAllInstitutionStudents
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (teacher is null)
+        {
+            return null;
+        }
+
+        if (targetTeacherUserId.HasValue && targetTeacherUserId.Value != viewerUserId)
+        {
+            if (!isSystemAdministrator && !isInstitutionAdministrator)
+            {
+                return null;
+            }
+
+            if (!isSystemAdministrator)
+            {
+                var hasInstitutionScope = teacher.InstitutionId.HasValue
+                    && await _context.InstitutionAdmins
+                        .AsNoTracking()
+                        .AnyAsync(admin => admin.UserId == viewerUserId
+                            && admin.InstitutionId == teacher.InstitutionId.Value
+                            && admin.IsActive
+                            && admin.User.IsActive
+                            && admin.Institution.IsActive,
+                            cancellationToken);
+                if (!hasInstitutionScope)
+                {
+                    return null;
+                }
+            }
+        }
+
+        var institutionIds = teacher.CanViewAllInstitutionStudents && teacher.InstitutionId.HasValue
+            ? new[] { teacher.InstitutionId.Value }
+            : Array.Empty<Guid>();
+        var teacherIds = new[] { teacher.Id };
+        var assignedStudentUserIds = await (
+            from assignment in _context.TeacherStudentAssignments.AsNoTracking()
+            join student in _context.StudentProfiles.AsNoTracking()
+                on assignment.StudentId equals student.Id
+            where assignment.IsActive
+                && teacherIds.Contains(assignment.TeacherId)
+                && student.IsActive
+                && student.User.IsActive
+                && (!teacher.InstitutionId.HasValue
+                    || assignment.InstitutionId == teacher.InstitutionId)
+                && student.InstitutionId == assignment.InstitutionId
+                && (!student.InstitutionId.HasValue
+                    || (student.Institution != null && student.Institution.IsActive))
+                && (!assignment.InstitutionId.HasValue
+                    || (assignment.Institution != null && assignment.Institution.IsActive))
+                && student.User.Roles.Any(userRole =>
+                    !userRole.Role.IsDeleted
+                    && userRole.Role.Name == "Student")
+            select student.UserId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var studentQuery = _context.StudentProfiles
+            .AsNoTracking()
+            .Where(student => student.IsActive
+                && student.User.IsActive
+                && student.User.Roles.Any(userRole =>
+                    !userRole.Role.IsDeleted
+                    && userRole.Role.Name == "Student")
+                && (!student.InstitutionId.HasValue
+                    || (student.Institution != null && student.Institution.IsActive))
+                && ((student.InstitutionId.HasValue
+                        && institutionIds.Contains(student.InstitutionId.Value))
+                    || assignedStudentUserIds.Contains(student.UserId)));
+        var totalStudents = await studentQuery.CountAsync(cancellationToken);
+
+        return new SpeedReadingTeacherStudentScopeResponse(
+            institutionIds,
+            assignedStudentUserIds,
+            totalStudents);
+    }
+
     public async Task<TeacherProfile?> GetByUserIdAsync(Guid userId, Guid? institutionId, CancellationToken cancellationToken)
     {
         IQueryable<TeacherProfile> query = _context.TeacherProfiles

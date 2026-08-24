@@ -383,6 +383,8 @@ describe('ReportsService', () => {
       totalStudents: 2,
       activeStudents: 1,
       activeStudentsDataAvailable: false,
+      classAverageWpmDataAvailable: true,
+      classAverageComprehensionDataAvailable: true,
       classAverageWpm: 280,
       classAverageComprehension: 82,
       totalActivitiesCompleted: 5,
@@ -403,6 +405,42 @@ describe('ReportsService', () => {
     expect(report.totalStudents).toBe(2);
     expect(report.classAverageWPM).toBe(280);
     expect(report.topPerformers[0].averageWPM).toBe(300);
+    expect(report.activeStudentsDataAvailable).toBeFalse();
+    expect(report.classAverageWpmDataAvailable).toBeTrue();
+    expect(report.classAverageComprehensionDataAvailable).toBeTrue();
+  });
+
+  it('loads an admin-targeted teacher class overview without relying on the viewer teacher id', () => {
+    const teacherId = 'teacher-1';
+    const startDate = new Date('2026-01-01T00:00:00.000Z');
+    const endDate = new Date('2026-01-31T00:00:00.000Z');
+    let report: any;
+
+    service.getAdminTeacherClassOverviewReport(teacherId, startDate, endDate)
+      .subscribe(value => report = value);
+
+    const request = http.expectOne(
+      candidate => candidate.url === `/api/speed-reading/analytics/admin/teachers/${teacherId}/class-overview`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.has('teacherId')).toBeFalse();
+    expect(request.request.params.get('dateFrom')).toBe(startDate.toISOString());
+    request.flush({
+      dateFrom: startDate.toISOString(),
+      dateTo: endDate.toISOString(),
+      totalStudents: 1,
+      activeStudents: 0,
+      activeStudentsDataAvailable: false,
+      classAverageWpm: 0,
+      classAverageComprehension: 0,
+      totalActivitiesCompleted: 0,
+      studentsAboveAverage: 0,
+      studentsAtAverage: 0,
+      studentsBelowAverage: 0,
+      topPerformers: [],
+      studentsNeedingSupport: []
+    });
+
+    expect(report.totalStudents).toBe(1);
     expect(report.activeStudentsDataAvailable).toBeFalse();
   });
 

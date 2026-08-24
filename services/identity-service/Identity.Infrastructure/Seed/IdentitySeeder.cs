@@ -105,6 +105,12 @@ public static class IdentitySeeder
                 Identity.Domain.Constants.Permissions.SpeedReading.LeaderboardView
             };
 
+            var teacherPermissions = new List<string>
+            {
+                Identity.Domain.Constants.Permissions.SpeedReading.LeaderboardView,
+                Identity.Domain.Constants.Permissions.SpeedReading.ReportView
+            };
+
             // Coaching admin read access is tenant-scoped by the Coaching API and
             // Identity membership checks. Coaching.Manage remains SystemAdmin-only.
             var institutionRolePermissionsToRemove = new HashSet<string>(StringComparer.Ordinal)
@@ -125,7 +131,7 @@ public static class IdentitySeeder
                 { Identity.Domain.Enums.UserRole.InstitutionOwner.ToString(), institutionPermissions },
                 { Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(), institutionPermissions }, // Simplify: same for now
                 { Identity.Domain.Enums.UserRole.Student.ToString(), learnerLeaderboardPermissions },
-                { Identity.Domain.Enums.UserRole.Teacher.ToString(), learnerLeaderboardPermissions },
+                { Identity.Domain.Enums.UserRole.Teacher.ToString(), teacherPermissions },
                 { Identity.Domain.Enums.UserRole.Parent.ToString(), learnerLeaderboardPermissions }
             };
 

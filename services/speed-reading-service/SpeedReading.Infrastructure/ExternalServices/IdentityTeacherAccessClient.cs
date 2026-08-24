@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using EduPlatform.Shared.Contracts.Reporting;
 using EduPlatform.Shared.Security.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -87,6 +88,62 @@ public sealed class IdentityTeacherAccessClient : ISpeedReadingTeacherAccess
                 viewerUserId,
                 studentUserId);
             throw new InvalidOperationException("Identity authorization service timed out.", ex);
+        }
+    }
+
+    public async Task<SpeedReadingTeacherStudentScopeResponse?> GetStudentScopeAsync(
+        Guid viewerUserId,
+        Guid? targetTeacherUserId = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (viewerUserId == Guid.Empty)
+        {
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(serviceApiKey))
+        {
+            throw new InvalidOperationException("Internal service API key is not configured.");
+        }
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"{baseUrl.TrimEnd('/')}/api/internal/reporting/speed-reading/teacher-students")
+        {
+            Content = JsonContent.Create(new
+            {
+                ViewerUserId = viewerUserId,
+                TargetTeacherUserId = targetTeacherUserId
+            })
+        };
+        request.Headers.Add(InternalServiceAuthentication.HeaderName, serviceApiKey);
+
+        try
+        {
+            using var response = await httpClient.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken);
+
+            if (response.StatusCode is System.Net.HttpStatusCode.Forbidden
+                or System.Net.HttpStatusCode.Unauthorized)
+            {
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<SpeedReadingTeacherStudentScopeResponse>(
+                cancellationToken: cancellationToken);
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogError(ex, "Identity teacher report scope failed for viewer {ViewerUserId}", viewerUserId);
+            throw new InvalidOperationException("Identity teacher report scope is unavailable.", ex);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogError(ex, "Identity teacher report scope timed out for viewer {ViewerUserId}", viewerUserId);
+            throw new InvalidOperationException("Identity teacher report scope timed out.", ex);
         }
     }
 

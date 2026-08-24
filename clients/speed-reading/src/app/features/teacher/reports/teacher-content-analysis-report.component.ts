@@ -136,7 +136,11 @@ export class TeacherContentAnalysisReportComponent implements OnInit {
 
     const { startDate, endDate } = this.calculateDateRange();
 
-    this.teacherReportService.getContentAnalysisReport(teacherId, startDate, endDate)
+    const reportRequest = this.route.snapshot.queryParamMap.has('teacherId')
+      ? this.teacherReportService.getAdminContentAnalysisReport(teacherId, startDate, endDate)
+      : this.teacherReportService.getContentAnalysisReport(teacherId, startDate, endDate);
+
+    reportRequest
       .subscribe({
         next: (data) => {
           this.report.set(data);
@@ -194,4 +198,3 @@ export class TeacherContentAnalysisReportComponent implements OnInit {
     return { startDate, endDate };
   }
 }
-

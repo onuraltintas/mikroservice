@@ -115,6 +115,10 @@ public interface ITeacherRepository
         int pageSize,
         string? searchTerm,
         CancellationToken cancellationToken);
+    Task<SpeedReadingTeacherStudentScopeResponse?> GetSpeedReadingTeacherStudentScopeAsync(
+        Guid viewerUserId,
+        Guid? targetTeacherUserId,
+        CancellationToken cancellationToken);
     Task AddStudentAssignmentAsync(TeacherStudentAssignment assignment, CancellationToken cancellationToken);
     Task<TeacherStudentAssignment?> GetAssignmentAsync(Guid teacherId, Guid studentId, CancellationToken cancellationToken);
 }

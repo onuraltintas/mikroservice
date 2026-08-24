@@ -73,7 +73,9 @@
                     <div class="kpi-details">
                         <div class="kpi-value">{{ report()!.totalStudents }}</div>
                         <div class="kpi-label">Toplam Öğrenci</div>
-                        <div class="kpi-badge">{{ report()!.activeStudents }} aktif</div>
+                        <div class="kpi-badge">
+                            {{ report()!.activeStudentsDataAvailable === false ? '—' : report()!.activeStudents + ' aktif' }}
+                        </div>
                     </div>
                 </mat-card-content>
             </mat-card>
@@ -82,7 +84,9 @@
                 <mat-card-content>
                     <div class="kpi-icon">⚡</div>
                     <div class="kpi-details">
-                        <div class="kpi-value">{{ report()!.classAverageWPM | number:'1.0-0' }}</div>
+                        <div class="kpi-value">
+                            {{ report()!.classAverageWpmDataAvailable === false ? '—' : (report()!.classAverageWPM | number:'1.0-0') }}
+                        </div>
                         <div class="kpi-label">Ortalama Okuma Hızı</div>
                         <div class="kpi-unit">kelime/dakika</div>
                     </div>
@@ -93,7 +97,9 @@
                 <mat-card-content>
                     <div class="kpi-icon">🎯</div>
                     <div class="kpi-details">
-                        <div class="kpi-value">{{ report()!.classAverageComprehension | number:'1.0-0' }}%</div>
+                        <div class="kpi-value">
+                            {{ report()!.classAverageComprehensionDataAvailable === false ? '—' : (report()!.classAverageComprehension | number:'1.0-0') + '%' }}
+                        </div>
                         <div class="kpi-label">Ortalama Anlama</div>
                         <div class="kpi-unit">başarı oranı</div>
                     </div>

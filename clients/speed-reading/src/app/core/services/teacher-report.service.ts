@@ -6,7 +6,8 @@ import { environment } from '../../../environments/environment';
 import {
     TeacherContentAnalysisReport,
     TeacherTimeBasedProgressReport,
-    TeacherClassOverviewReport
+    TeacherClassOverviewReport,
+    ChartData
 } from '../models/report.model';
 
 // Teacher-specific report interfaces matching backend DTOs
@@ -93,7 +94,6 @@ export interface TeacherStudentActivityReport {
 })
 export class TeacherReportService {
     private readonly http = inject(HttpClient);
-    private readonly API_URL = `${environment.apiUrl}/v1/teachers`;
     private readonly speedReadingAnalyticsUrl = `${environment.speedReadingApiUrl}/analytics/teacher`;
 
     getStudentReadingSpeedTrend(studentId: string, days: number = 30): Observable<TeacherStudentReadingSpeedReport> {
@@ -129,25 +129,45 @@ export class TeacherReportService {
     }
 
     getContentAnalysisReport(teacherId: string, startDate?: Date, endDate?: Date): Observable<TeacherContentAnalysisReport> {
-        let url = `${this.API_URL}/${teacherId}/content-analysis`;
-        const params: string[] = [];
+        let params = new HttpParams();
+        if (startDate) params = params.set('dateFrom', startDate.toISOString());
+        if (endDate) params = params.set('dateTo', endDate.toISOString());
+        void teacherId;
+        return this.http.get<TeacherContentAnalysisAnalytics>(
+            `${this.speedReadingAnalyticsUrl}/content-analysis`,
+            { params }
+        ).pipe(map(value => this.toTeacherContentAnalysisReport(value)));
+    }
 
-        if (startDate) params.push(`startDate=${startDate.toISOString()}`);
-        if (endDate) params.push(`endDate=${endDate.toISOString()}`);
-        if (params.length > 0) url += `?${params.join('&')}`;
-
-        return this.http.get<TeacherContentAnalysisReport>(url);
+    getAdminContentAnalysisReport(teacherId: string, startDate?: Date, endDate?: Date): Observable<TeacherContentAnalysisReport> {
+        let params = new HttpParams();
+        if (startDate) params = params.set('dateFrom', startDate.toISOString());
+        if (endDate) params = params.set('dateTo', endDate.toISOString());
+        return this.http.get<TeacherContentAnalysisAnalytics>(
+            `${environment.speedReadingApiUrl}/analytics/admin/teachers/${teacherId}/content-analysis`,
+            { params }
+        ).pipe(map(value => this.toTeacherContentAnalysisReport(value)));
     }
 
     getTimeBasedProgressReport(teacherId: string, startDate?: Date, endDate?: Date): Observable<TeacherTimeBasedProgressReport> {
-        let url = `${this.API_URL}/${teacherId}/progress-report`;
-        const params: string[] = [];
+        let params = new HttpParams();
+        if (startDate) params = params.set('dateFrom', startDate.toISOString());
+        if (endDate) params = params.set('dateTo', endDate.toISOString());
+        void teacherId;
+        return this.http.get<TeacherTimeProgressAnalytics>(
+            `${this.speedReadingAnalyticsUrl}/time-progress`,
+            { params }
+        ).pipe(map(value => this.toTeacherTimeProgressReport(value)));
+    }
 
-        if (startDate) params.push(`startDate=${startDate.toISOString()}`);
-        if (endDate) params.push(`endDate=${endDate.toISOString()}`);
-        if (params.length > 0) url += `?${params.join('&')}`;
-
-        return this.http.get<TeacherTimeBasedProgressReport>(url);
+    getAdminTimeBasedProgressReport(teacherId: string, startDate?: Date, endDate?: Date): Observable<TeacherTimeBasedProgressReport> {
+        let params = new HttpParams();
+        if (startDate) params = params.set('dateFrom', startDate.toISOString());
+        if (endDate) params = params.set('dateTo', endDate.toISOString());
+        return this.http.get<TeacherTimeProgressAnalytics>(
+            `${environment.speedReadingApiUrl}/analytics/admin/teachers/${teacherId}/time-progress`,
+            { params }
+        ).pipe(map(value => this.toTeacherTimeProgressReport(value)));
     }
 
     private getDateRange(days: number): { dateFrom: Date; dateTo: Date } {
@@ -255,13 +275,65 @@ export class TeacherReportService {
         const startDate = new Date(dateFrom);
         const endDate = new Date(dateTo);
         return {
+            reportId: `${reportType}-${Date.now()}`,
             reportTitle,
             reportType,
             generatedAt: new Date(),
+            generatedBy: 'teacher',
             startDate,
             endDate,
             generatedFor: studentId,
             totalDays: Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)))
+        };
+    }
+
+    private toTeacherContentAnalysisReport(value: TeacherContentAnalysisAnalytics): TeacherContentAnalysisReport {
+        return {
+            metadata: this.toTeacherMetadata(
+                'Öğretmen İçerik Analizi',
+                'Teacher',
+                'teacher',
+                value.dateFrom,
+                value.dateTo),
+            exerciseAnalysis: value.exerciseAnalysis ?? [],
+            exerciseFrequencyChart: value.exerciseFrequencyChart ?? [],
+            readingAnalysis: (value.readingAnalysis ?? []).map(item => ({
+                difficultyLevel: item.difficultyLevel,
+                totalReads: item.totalReads,
+                averageWPM: item.averageWpm,
+                averageComprehension: item.averageComprehension
+            })),
+            readingPerformanceChart: value.readingPerformanceChart ?? []
+        };
+    }
+
+    private toTeacherTimeProgressReport(value: TeacherTimeProgressAnalytics): TeacherTimeBasedProgressReport {
+        return {
+            metadata: this.toTeacherMetadata(
+                'Öğretmen Zaman Bazlı İlerleme',
+                'Teacher',
+                'teacher',
+                value.dateFrom,
+                value.dateTo),
+            weeklyProgressChart: value.weeklyProgressChart ?? [],
+            monthlyProgressChart: value.monthlyProgressChart ?? [],
+            activityIntensityChart: value.activityIntensityChart ?? [],
+            improvingStudents: (value.improvingStudents ?? []).map(item => ({
+                studentId: item.studentId,
+                studentName: item.studentName,
+                previousScore: item.previousScore,
+                currentScore: item.currentScore,
+                improvement: item.improvement,
+                trend: item.trend === 'declining' ? 'declining' : 'improving'
+            })),
+            decliningStudents: (value.decliningStudents ?? []).map(item => ({
+                studentId: item.studentId,
+                studentName: item.studentName,
+                previousScore: item.previousScore,
+                currentScore: item.currentScore,
+                improvement: item.improvement,
+                trend: 'declining'
+            }))
         };
     }
 }
@@ -328,6 +400,49 @@ interface StudentActivityStudyTime {
     mostActiveHour: number;
     mostActiveDay: string;
     consistency: number;
+}
+
+interface TeacherContentAnalysisAnalytics {
+    dateFrom: string;
+    dateTo: string;
+    exerciseAnalysis: TeacherExerciseAnalysis[];
+    exerciseFrequencyChart: ChartData[];
+    readingAnalysis: TeacherReadingAnalysis[];
+    readingPerformanceChart: ChartData[];
+}
+
+interface TeacherExerciseAnalysis {
+    exerciseTypeName: string;
+    totalCompletions: number;
+    activeStudents: number;
+    averageScore: number;
+    performanceLevel: string;
+}
+
+interface TeacherReadingAnalysis {
+    difficultyLevel: number;
+    totalReads: number;
+    averageWpm: number;
+    averageComprehension: number;
+}
+
+interface TeacherTimeProgressAnalytics {
+    dateFrom: string;
+    dateTo: string;
+    weeklyProgressChart: ChartData[];
+    monthlyProgressChart: ChartData[];
+    activityIntensityChart: ChartData[];
+    improvingStudents: TeacherProgressStudentAnalytics[];
+    decliningStudents: TeacherProgressStudentAnalytics[];
+}
+
+interface TeacherProgressStudentAnalytics {
+    studentId: string;
+    studentName: string;
+    previousScore: number;
+    currentScore: number;
+    improvement: number;
+    trend: string;
 }
 
 interface StudentAnalyticsTrendPoint {

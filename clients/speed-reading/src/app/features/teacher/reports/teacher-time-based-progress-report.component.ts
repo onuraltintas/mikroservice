@@ -142,7 +142,11 @@ export class TeacherTimeBasedProgressReportComponent implements OnInit {
 
     const { startDate, endDate } = this.calculateDateRange();
 
-    this.teacherReportService.getTimeBasedProgressReport(teacherId, startDate, endDate)
+    const reportRequest = this.route.snapshot.queryParamMap.has('teacherId')
+      ? this.teacherReportService.getAdminTimeBasedProgressReport(teacherId, startDate, endDate)
+      : this.teacherReportService.getTimeBasedProgressReport(teacherId, startDate, endDate);
+
+    reportRequest
       .subscribe({
         next: (data) => {
           this.report.set(data);
@@ -200,4 +204,3 @@ export class TeacherTimeBasedProgressReportComponent implements OnInit {
     return { startDate, endDate };
   }
 }
-

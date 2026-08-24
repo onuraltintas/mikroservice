@@ -143,6 +143,28 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
 - `GET /api/speed-reading/analytics/teacher/students/{studentId}/activity`
   aynı Identity öğrenci kapsamıyla öğretmen aktivite ekranını merkezi okur;
   okuma oturumları ve günlük egzersiz kayıtları birleştirilir.
+- `GET /api/speed-reading/analytics/teacher/class-overview` öğretmenin
+  Identity'den çözülen kurum/atama öğrenci kapsamındaki sınıf özetini merkezi
+  okur. `teacherId` istemciden kabul edilmez; tarih aralığı 366 günle sınırlıdır.
+  Legacy `Users` rol taşımadığı için aktif öğrenci metriği
+  `ActiveStudentsDataAvailable=false` olarak işaretlenir. Okuma/anlama oturumu
+  olmayan dönemlerde WPM/anlama ortalamaları da
+  `ClassAverageWpmDataAvailable` ve
+  `ClassAverageComprehensionDataAvailable` bayraklarıyla veri yokluğu olarak
+  gösterilir.
+- `GET /api/speed-reading/analytics/teacher/assignments` merkezi atama raporu
+  sözleşmesidir. Kaynak hızlı okuma şemasında atama tabloları bulunmadığı için
+  `DataAvailable=false` döner; boş sonuç gerçek sıfır gibi yorumlanmamalıdır.
+- `GET /api/speed-reading/analytics/teacher/content-analysis` ve
+  `/time-progress` Identity öğrenci kapsamı içinde gerçek içerik ve zaman
+  ilerlemesi metriklerini döndürür. Identity kapsamı iç ağdaki
+  `POST /api/internal/reporting/speed-reading/teacher-students` sözleşmesinden
+  servis anahtarıyla alınır; istemciden `teacherId` veya öğrenci listesi alınmaz.
+- `GET /api/speed-reading/analytics/admin/teachers/{teacherId}/class-overview`,
+  `/assignments`, `/content-analysis` ve `/time-progress` admin ekranında seçilen
+  öğretmeni hedefler. Endpoint'ler `ReportView` izniyle korunur; Identity, hedef
+  öğretmen ve kurum yöneticisi arasındaki aktif kurum kapsamını doğrulamadan
+  hızlı okuma sorgusunu çalıştırmaz.
 - `GET /api/speed-reading/analytics/admin/platform-usage` `PlatformAnalyticsView`
   yetkili SystemAdmin kullanıcıların hızlı okuma veritabanından platform
   kullanımını okur. Bu endpoint `PlatformAnalyticsView` ile korunur; kurum

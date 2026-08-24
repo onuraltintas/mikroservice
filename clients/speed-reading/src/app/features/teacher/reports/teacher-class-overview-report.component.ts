@@ -70,7 +70,7 @@ export class TeacherClassOverviewReportComponent implements OnInit {
   // Computed values for display
   performanceChartData = computed(() => {
     const r = this.report();
-    if (!r) return [];
+    if (!r || r.classAverageWpmDataAvailable === false) return [];
     return [
       { name: 'Ortalamanın Üstü', value: r.studentsAboveAverage },
       { name: 'Ortalama', value: r.studentsAtAverage },
@@ -110,7 +110,11 @@ export class TeacherClassOverviewReportComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.reportsService.getTeacherClassOverviewReport(teacherId, startDate, endDate)
+    const reportRequest = teacherIdParam
+      ? this.reportsService.getAdminTeacherClassOverviewReport(teacherId, startDate, endDate)
+      : this.reportsService.getTeacherClassOverviewReport(teacherId, startDate, endDate);
+
+    reportRequest
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (data) => this.report.set(data),

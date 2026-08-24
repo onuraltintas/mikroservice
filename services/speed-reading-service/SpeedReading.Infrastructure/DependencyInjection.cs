@@ -52,6 +52,7 @@ public static class DependencyInjection
             client.Timeout = TimeSpan.FromSeconds(5);
         }).AddCorrelationIdPropagation();
         services.AddScoped<ILegacySpeedReadingReports, LegacySpeedReadingReports>();
+        services.AddScoped<ILegacySpeedReadingTeacherReports, LegacySpeedReadingTeacherReports>();
         services.AddScoped<ISpeedReadingReportsAdminWriter, LegacySpeedReadingReportsAdminWriter>();
         services.AddScoped<ISpeedReadingReportsScheduleWriter, LegacySpeedReadingReportsScheduleWriter>();
         services.AddSingleton<IAdminAuditWriter, SpeedReadingAdminAuditWriter>();

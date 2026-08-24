@@ -146,4 +146,75 @@ describe('TeacherReportService', () => {
     expect(report.activityByType[0].series[0].value).toBe(2);
     expect(report.dailyActivity[1].series[0].value).toBe(3);
   });
+
+  it('loads teacher content analysis from the central service', () => {
+    let report: any;
+    const startDate = new Date('2026-01-01T00:00:00.000Z');
+    const endDate = new Date('2026-01-31T00:00:00.000Z');
+    service.getContentAnalysisReport('ignored-teacher-id', startDate, endDate)
+      .subscribe(value => report = value);
+
+    const request = http.expectOne(
+      candidate => candidate.url === '/api/speed-reading/analytics/teacher/content-analysis');
+    expect(request.request.params.has('teacherId')).toBeFalse();
+    request.flush({
+      dateFrom: startDate.toISOString(),
+      dateTo: endDate.toISOString(),
+      exerciseAnalysis: [],
+      exerciseFrequencyChart: [],
+      readingAnalysis: [{ difficultyLevel: 2, totalReads: 3, averageWpm: 275, averageComprehension: 80 }],
+      readingPerformanceChart: []
+    });
+
+    expect(report.readingAnalysis[0].averageWPM).toBe(275);
+    expect(report.metadata.reportType).toBe('Teacher');
+  });
+
+  it('loads admin-targeted teacher content analysis through the scoped endpoint', () => {
+    let report: any;
+    const teacherId = 'teacher-1';
+    const startDate = new Date('2026-01-01T00:00:00.000Z');
+    const endDate = new Date('2026-01-31T00:00:00.000Z');
+    service.getAdminContentAnalysisReport(teacherId, startDate, endDate)
+      .subscribe(value => report = value);
+
+    const request = http.expectOne(
+      candidate => candidate.url === `/api/speed-reading/analytics/admin/teachers/${teacherId}/content-analysis`);
+    expect(request.request.params.has('teacherId')).toBeFalse();
+    request.flush({
+      dateFrom: startDate.toISOString(),
+      dateTo: endDate.toISOString(),
+      exerciseAnalysis: [],
+      exerciseFrequencyChart: [],
+      readingAnalysis: [],
+      readingPerformanceChart: []
+    });
+
+    expect(report.exerciseAnalysis).toEqual([]);
+    expect(report.metadata.reportType).toBe('Teacher');
+  });
+
+  it('loads teacher time progress from the central service', () => {
+    let report: any;
+    const startDate = new Date('2026-01-01T00:00:00.000Z');
+    const endDate = new Date('2026-01-31T00:00:00.000Z');
+    service.getTimeBasedProgressReport('ignored-teacher-id', startDate, endDate)
+      .subscribe(value => report = value);
+
+    const request = http.expectOne(
+      candidate => candidate.url === '/api/speed-reading/analytics/teacher/time-progress');
+    expect(request.request.params.has('teacherId')).toBeFalse();
+    request.flush({
+      dateFrom: startDate.toISOString(),
+      dateTo: endDate.toISOString(),
+      weeklyProgressChart: [],
+      monthlyProgressChart: [],
+      activityIntensityChart: [],
+      improvingStudents: [],
+      decliningStudents: []
+    });
+
+    expect(report.weeklyProgressChart).toEqual([]);
+    expect(report.metadata.reportType).toBe('Teacher');
+  });
 });

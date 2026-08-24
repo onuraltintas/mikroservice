@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using EduPlatform.Shared.Contracts.Authorization;
+using EduPlatform.Shared.Security.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SpeedReading.Application.Analytics;
@@ -8,10 +10,72 @@ namespace SpeedReading.API.Controllers;
 [ApiController]
 [Route("api/speed-reading/analytics/teacher")]
 [Authorize]
+[HasPermission(PlatformPermissions.SpeedReading.ReportView)]
 public sealed class TeacherAnalyticsController(
     ILegacySpeedReadingAnalytics analytics,
+    ILegacySpeedReadingTeacherReports teacherReports,
     ISpeedReadingTeacherAccess teacherAccess) : ControllerBase
 {
+    [HttpGet("class-overview")]
+    public async Task<ActionResult<TeacherClassOverviewAnalytics>> GetClassOverview(
+        [FromQuery] DateTime? dateFrom,
+        [FromQuery] DateTime? dateTo,
+        CancellationToken cancellationToken = default)
+    {
+        var scope = await GetTeacherScopeAsync(cancellationToken);
+        if (scope is null)
+        {
+            return User.Identity?.IsAuthenticated == true ? Forbid() : Unauthorized();
+        }
+
+        return Ok(await teacherReports.GetClassOverviewAsync(scope, dateFrom, dateTo, cancellationToken));
+    }
+
+    [HttpGet("assignments")]
+    public async Task<ActionResult<TeacherAssignmentAnalytics>> GetAssignments(
+        [FromQuery] DateTime? dateFrom,
+        [FromQuery] DateTime? dateTo,
+        CancellationToken cancellationToken = default)
+    {
+        var scope = await GetTeacherScopeAsync(cancellationToken);
+        if (scope is null)
+        {
+            return User.Identity?.IsAuthenticated == true ? Forbid() : Unauthorized();
+        }
+
+        return Ok(await teacherReports.GetAssignmentsAsync(scope, dateFrom, dateTo, cancellationToken));
+    }
+
+    [HttpGet("content-analysis")]
+    public async Task<ActionResult<TeacherContentAnalysisAnalytics>> GetContentAnalysis(
+        [FromQuery] DateTime? dateFrom,
+        [FromQuery] DateTime? dateTo,
+        CancellationToken cancellationToken = default)
+    {
+        var scope = await GetTeacherScopeAsync(cancellationToken);
+        if (scope is null)
+        {
+            return User.Identity?.IsAuthenticated == true ? Forbid() : Unauthorized();
+        }
+
+        return Ok(await teacherReports.GetContentAnalysisAsync(scope, dateFrom, dateTo, cancellationToken));
+    }
+
+    [HttpGet("time-progress")]
+    public async Task<ActionResult<TeacherTimeProgressAnalytics>> GetTimeProgress(
+        [FromQuery] DateTime? dateFrom,
+        [FromQuery] DateTime? dateTo,
+        CancellationToken cancellationToken = default)
+    {
+        var scope = await GetTeacherScopeAsync(cancellationToken);
+        if (scope is null)
+        {
+            return User.Identity?.IsAuthenticated == true ? Forbid() : Unauthorized();
+        }
+
+        return Ok(await teacherReports.GetTimeProgressAsync(scope, dateFrom, dateTo, cancellationToken));
+    }
+
     [HttpGet("students/{studentId:guid}/reading-speed")]
     public async Task<ActionResult<StudentReadingSpeedAnalytics>> GetStudentReadingSpeed(
         Guid studentId,
@@ -101,5 +165,14 @@ public sealed class TeacherAnalyticsController(
         var value = User.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? User.FindFirstValue("sub");
         return Guid.TryParse(value, out var userId) ? userId : null;
+    }
+
+    private Task<EduPlatform.Shared.Contracts.Reporting.SpeedReadingTeacherStudentScopeResponse?> GetTeacherScopeAsync(
+        CancellationToken cancellationToken)
+    {
+        var viewerUserId = GetCurrentUserId();
+        return viewerUserId is null
+            ? Task.FromResult<EduPlatform.Shared.Contracts.Reporting.SpeedReadingTeacherStudentScopeResponse?>(null)
+            : teacherAccess.GetStudentScopeAsync(viewerUserId.Value, cancellationToken: cancellationToken);
     }
 }

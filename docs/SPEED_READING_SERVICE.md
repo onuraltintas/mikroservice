@@ -136,6 +136,28 @@ tablosunu uygular.
   aynı Identity kapsam kontrolüyle öğretmen/kurum/veli için öğrencinin okuma ve
   günlük egzersiz aktivitesini döndürür. Öğrenci kimliği yalnızca route filtresidir;
   yetki kontrolü tamamlanmadan analitik sorgu çalıştırılmaz.
+- `GET /api/speed-reading/analytics/teacher/class-overview` — token sahibinin
+  Identity'den çözülen kurum/atama öğrenci kapsamındaki sınıf özetini döndürür.
+  İstemciden `teacherId` alınmaz; tarih aralığı en fazla 366 gündür. Legacy hızlı
+  okuma `Users` tablosunda rol bulunmadığı için dönemsel aktif öğrenci metriği
+  `ActiveStudentsDataAvailable=false` ile açıkça veri yokluğu olarak gösterilir;
+  okuma/anlama oturumu olmayan aralıklarda sınıf ortalaması ve performans dağılımı
+  da `ClassAverageWpmDataAvailable` ve
+  `ClassAverageComprehensionDataAvailable` bayraklarıyla `—` gösterilir.
+- `GET /api/speed-reading/analytics/teacher/assignments` — aynı merkezi öğretmen
+  kapsamıyla atama raporu sözleşmesini döndürür. Atama tabloları hızlı okuma
+  bounded context'inde henüz bulunmadığından `DataAvailable=false` ve açıklama
+  alanı döner; eksik veri tahmin edilmez.
+- `GET /api/speed-reading/analytics/teacher/content-analysis` ve
+  `/time-progress` — Identity öğrenci kapsamı içinde gerçek egzersiz/okuma içerik
+  analizini ve günlük/haftalık/aylık ilerleme trendlerini döndürür. Her iki uçta
+  da `teacherId` query parametresi yoktur; servis erişimi token + `INTERNAL_SERVICE_API_KEY`
+  ile doğrulanır.
+- `GET /api/speed-reading/analytics/admin/teachers/{teacherId}/class-overview`,
+  `/assignments`, `/content-analysis` ve `/time-progress` — `ReportView` yetkili
+  kurum yöneticisi/SystemAdmin'ın seçtiği öğretmen için raporları döndürür.
+  Identity hedef öğretmenin aktif kurumunu ve yöneticinin kurum üyeliğini ayrıca
+  doğrular; öğretmenler yalnızca kendi kimlikleri için bu kapsamı kullanabilir.
 - `GET /api/speed-reading/analytics/admin/platform-usage` — `PlatformAnalyticsView`
   yetkisiyle platform genelindeki gerçek hızlı okuma kullanım metriklerini
   döndürür: toplam/aktif kullanıcı, okuma oturumu, aktivite hacmi, günlük ve

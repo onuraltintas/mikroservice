@@ -104,10 +104,23 @@ export class ReportsService {
 
   getTeacherClassOverviewReport(teacherId: string, startDate: Date, endDate: Date): Observable<TeacherClassOverviewReport> {
     const params = new HttpParams()
-      .set('teacherId', teacherId)
-      .set('startDate', startDate.toISOString())
-      .set('endDate', endDate.toISOString());
-    return this.http.get<TeacherClassOverviewReport>(`${this.apiUrl}/teacher/class-overview`, { params });
+      .set('dateFrom', this.normalizeAnalyticsStart(startDate, endDate).toISOString())
+      .set('dateTo', endDate.toISOString());
+    void teacherId;
+    return this.http.get<TeacherClassOverviewAnalytics>(
+      `${this.speedReadingApiUrl}/teacher/class-overview`,
+      { params })
+      .pipe(map(value => this.toTeacherClassOverviewReport(value)));
+  }
+
+  getAdminTeacherClassOverviewReport(teacherId: string, startDate: Date, endDate: Date): Observable<TeacherClassOverviewReport> {
+    const params = new HttpParams()
+      .set('dateFrom', this.normalizeAnalyticsStart(startDate, endDate).toISOString())
+      .set('dateTo', endDate.toISOString());
+    return this.http.get<TeacherClassOverviewAnalytics>(
+      `${this.speedReadingApiUrl}/admin/teachers/${teacherId}/class-overview`,
+      { params })
+      .pipe(map(value => this.toTeacherClassOverviewReport(value)));
   }
 
   getTeacherStudentDetailReport(teacherId: string, studentId: string, startDate: Date, endDate: Date): Observable<TeacherStudentDetailReport> {
@@ -121,26 +134,35 @@ export class ReportsService {
 
   getTeacherAssignmentReport(teacherId: string, startDate: Date, endDate: Date): Observable<TeacherAssignmentReport> {
     const params = new HttpParams()
-      .set('teacherId', teacherId)
-      .set('startDate', startDate.toISOString())
-      .set('endDate', endDate.toISOString());
-    return this.http.get<TeacherAssignmentReport>(`${this.apiUrl}/teacher/assignments`, { params });
+      .set('dateFrom', this.normalizeAnalyticsStart(startDate, endDate).toISOString())
+      .set('dateTo', endDate.toISOString());
+    void teacherId;
+    return this.http.get<TeacherAssignmentAnalytics>(
+      `${this.speedReadingApiUrl}/teacher/assignments`,
+      { params })
+      .pipe(map(value => this.toTeacherAssignmentReport(value)));
   }
 
   getTeacherContentAnalysisReport(teacherId: string, startDate: Date, endDate: Date): Observable<TeacherContentAnalysisReport> {
     const params = new HttpParams()
-      .set('teacherId', teacherId)
-      .set('startDate', startDate.toISOString())
-      .set('endDate', endDate.toISOString());
-    return this.http.get<TeacherContentAnalysisReport>(`${this.apiUrl}/teacher/content-analysis`, { params });
+      .set('dateFrom', this.normalizeAnalyticsStart(startDate, endDate).toISOString())
+      .set('dateTo', endDate.toISOString());
+    void teacherId;
+    return this.http.get<TeacherContentAnalysisAnalytics>(
+      `${this.speedReadingApiUrl}/teacher/content-analysis`,
+      { params })
+      .pipe(map(value => this.toTeacherContentAnalysisReport(value)));
   }
 
   getTeacherTimeBasedProgressReport(teacherId: string, startDate: Date, endDate: Date): Observable<TeacherTimeBasedProgressReport> {
     const params = new HttpParams()
-      .set('teacherId', teacherId)
-      .set('startDate', startDate.toISOString())
-      .set('endDate', endDate.toISOString());
-    return this.http.get<TeacherTimeBasedProgressReport>(`${this.apiUrl}/teacher/time-progress`, { params });
+      .set('dateFrom', this.normalizeAnalyticsStart(startDate, endDate).toISOString())
+      .set('dateTo', endDate.toISOString());
+    void teacherId;
+    return this.http.get<TeacherTimeProgressAnalytics>(
+      `${this.speedReadingApiUrl}/teacher/time-progress`,
+      { params })
+      .pipe(map(value => this.toTeacherTimeProgressReport(value)));
   }
 
   // ==================== ADMIN REPORTS ====================
@@ -405,6 +427,120 @@ export class ReportsService {
       popularContent: value.popularContent ?? [],
       topInstitutions: value.topInstitutions ?? [],
       featureUsageStats: value.featureUsageStats ?? {}
+    };
+  }
+
+  private toTeacherClassOverviewReport(value: TeacherClassOverviewAnalytics): TeacherClassOverviewReport {
+    return {
+      metadata: this.toReportMetadata('teacher-class-overview', value.dateFrom, value.dateTo, 'Teacher'),
+      totalStudents: value.totalStudents,
+      activeStudents: value.activeStudents,
+      activeStudentsDataAvailable: value.activeStudentsDataAvailable,
+      classAverageWpmDataAvailable: value.classAverageWpmDataAvailable,
+      classAverageComprehensionDataAvailable: value.classAverageComprehensionDataAvailable,
+      classAverageWPM: value.classAverageWpm,
+      classAverageComprehension: value.classAverageComprehension,
+      totalActivitiesCompleted: value.totalActivitiesCompleted,
+      studentsAboveAverage: value.studentsAboveAverage,
+      studentsAtAverage: value.studentsAtAverage,
+      studentsBelowAverage: value.studentsBelowAverage,
+      topPerformers: (value.topPerformers ?? []).map(item => ({
+        studentIdentifier: item.studentIdentifier,
+        averageWPM: item.averageWpm,
+        averageComprehension: item.averageComprehension,
+        activitiesCompleted: item.activitiesCompleted,
+        totalMinutes: item.totalMinutes,
+        performanceLevel: item.performanceLevel
+      })),
+      studentsNeedingSupport: (value.studentsNeedingSupport ?? []).map(item => ({
+        studentIdentifier: item.studentIdentifier,
+        averageWPM: item.averageWpm,
+        averageComprehension: item.averageComprehension,
+        activitiesCompleted: item.activitiesCompleted,
+        totalMinutes: item.totalMinutes,
+        performanceLevel: item.performanceLevel
+      }))
+    };
+  }
+
+  private toTeacherAssignmentReport(value: TeacherAssignmentAnalytics): TeacherAssignmentReport {
+    const assignment = value.assignmentInfo;
+    const completion = value.completionStats;
+    const performance = value.performanceStats;
+    const time = value.timeStats;
+    return {
+      metadata: this.toReportMetadata('teacher-assignments', value.dateFrom, value.dateTo, 'Teacher'),
+      dataAvailable: value.dataAvailable,
+      unavailableReason: value.unavailableReason ?? undefined,
+      assignmentInfo: assignment ? {
+        assignmentId: assignment.assignmentId,
+        title: assignment.title,
+        description: assignment.description,
+        dueDate: new Date(assignment.dueDate),
+        assignedDate: new Date(assignment.assignedDate)
+      } : { assignmentId: '', title: '', description: '', dueDate: new Date(0), assignedDate: new Date(0) },
+      completionStats: completion ?? {
+        totalStudents: 0, completed: 0, inProgress: 0, notStarted: 0, completionRate: 0
+      },
+      performanceStats: performance ?? {
+        averageScore: 0, medianScore: 0, highestScore: 0, lowestScore: 0, standardDeviation: 0
+      },
+      scoreDistribution: { data: value.scoreDistribution ?? [] },
+      studentBreakdown: (value.studentBreakdown ?? []).map(item => ({
+        studentId: item.studentId,
+        studentName: item.studentName,
+        status: this.toAssignmentStatus(item.status),
+        score: item.score ?? undefined,
+        completionTime: item.completionTime ?? undefined,
+        submittedAt: item.submittedAt ? new Date(item.submittedAt) : undefined
+      })),
+      timeStats: time ?? {
+        averageCompletionTime: 0, medianCompletionTime: 0, fastestCompletion: 0, slowestCompletion: 0
+      }
+    };
+  }
+
+  private toAssignmentStatus(value: string): 'completed' | 'in-progress' | 'not-started' {
+    return value === 'completed' || value === 'in-progress' ? value : 'not-started';
+  }
+
+  private toTeacherContentAnalysisReport(value: TeacherContentAnalysisAnalytics): TeacherContentAnalysisReport {
+    return {
+      metadata: this.toReportMetadata('teacher-content-analysis', value.dateFrom, value.dateTo, 'Teacher'),
+      exerciseAnalysis: value.exerciseAnalysis ?? [],
+      exerciseFrequencyChart: value.exerciseFrequencyChart ?? [],
+      readingAnalysis: (value.readingAnalysis ?? []).map(item => ({
+        difficultyLevel: item.difficultyLevel,
+        totalReads: item.totalReads,
+        averageWPM: item.averageWpm,
+        averageComprehension: item.averageComprehension
+      })),
+      readingPerformanceChart: value.readingPerformanceChart ?? []
+    };
+  }
+
+  private toTeacherTimeProgressReport(value: TeacherTimeProgressAnalytics): TeacherTimeBasedProgressReport {
+    return {
+      metadata: this.toReportMetadata('teacher-time-progress', value.dateFrom, value.dateTo, 'Teacher'),
+      weeklyProgressChart: value.weeklyProgressChart ?? [],
+      monthlyProgressChart: value.monthlyProgressChart ?? [],
+      activityIntensityChart: value.activityIntensityChart ?? [],
+      improvingStudents: (value.improvingStudents ?? []).map(item => ({
+        studentId: item.studentId,
+        studentName: item.studentName,
+        previousScore: item.previousScore,
+        currentScore: item.currentScore,
+        improvement: item.improvement,
+        trend: item.trend === 'declining' ? 'declining' : 'improving'
+      })),
+      decliningStudents: (value.decliningStudents ?? []).map(item => ({
+        studentId: item.studentId,
+        studentName: item.studentName,
+        previousScore: item.previousScore,
+        currentScore: item.currentScore,
+        improvement: item.improvement,
+        trend: 'declining'
+      }))
     };
   }
 
@@ -721,6 +857,114 @@ interface AdminSystemHealthAnalytics {
   performanceTrend: ChartData[];
   systemAlerts: AdminSystemAlert[];
   systemAlertsDataAvailable?: boolean;
+}
+
+interface TeacherClassOverviewAnalytics {
+  dateFrom: string;
+  dateTo: string;
+  totalStudents: number;
+  activeStudents: number;
+  activeStudentsDataAvailable?: boolean;
+  classAverageWpmDataAvailable?: boolean;
+  classAverageComprehensionDataAvailable?: boolean;
+  classAverageWpm: number;
+  classAverageComprehension: number;
+  totalActivitiesCompleted: number;
+  studentsAboveAverage: number;
+  studentsAtAverage: number;
+  studentsBelowAverage: number;
+  topPerformers: TeacherStudentPerformanceAnalytics[];
+  studentsNeedingSupport: TeacherStudentPerformanceAnalytics[];
+}
+
+interface TeacherStudentPerformanceAnalytics {
+  studentIdentifier: string;
+  averageWpm: number;
+  averageComprehension: number;
+  activitiesCompleted: number;
+  totalMinutes: number;
+  performanceLevel: string;
+}
+
+interface TeacherAssignmentAnalytics {
+  dateFrom: string;
+  dateTo: string;
+  dataAvailable?: boolean;
+  unavailableReason?: string | null;
+  assignmentInfo: TeacherAssignmentInfoAnalytics | null;
+  completionStats: TeacherAssignmentCompletionAnalytics | null;
+  performanceStats: TeacherAssignmentPerformanceAnalytics | null;
+  scoreDistribution: ChartData[];
+  studentBreakdown: TeacherAssignmentStudentAnalytics[];
+  timeStats: TeacherAssignmentTimeAnalytics | null;
+}
+
+interface TeacherAssignmentInfoAnalytics {
+  assignmentId: string;
+  title: string;
+  description: string;
+  dueDate: string;
+  assignedDate: string;
+}
+
+interface TeacherAssignmentCompletionAnalytics {
+  totalStudents: number;
+  completed: number;
+  inProgress: number;
+  notStarted: number;
+  completionRate: number;
+}
+
+interface TeacherAssignmentPerformanceAnalytics {
+  averageScore: number;
+  medianScore: number;
+  highestScore: number;
+  lowestScore: number;
+  standardDeviation: number;
+}
+
+interface TeacherAssignmentStudentAnalytics {
+  studentId: string;
+  studentName: string;
+  status: string;
+  score?: number | null;
+  completionTime?: number | null;
+  submittedAt?: string | null;
+}
+
+interface TeacherAssignmentTimeAnalytics {
+  averageCompletionTime: number;
+  medianCompletionTime: number;
+  fastestCompletion: number;
+  slowestCompletion: number;
+}
+
+interface TeacherContentAnalysisAnalytics {
+  dateFrom: string;
+  dateTo: string;
+  exerciseAnalysis: ExerciseTypeAnalysis[];
+  exerciseFrequencyChart: ChartData[];
+  readingAnalysis: AdminReadingLevelAnalysis[];
+  readingPerformanceChart: ChartData[];
+}
+
+interface TeacherTimeProgressAnalytics {
+  dateFrom: string;
+  dateTo: string;
+  weeklyProgressChart: ChartData[];
+  monthlyProgressChart: ChartData[];
+  activityIntensityChart: ChartData[];
+  improvingStudents: TeacherProgressStudentAnalytics[];
+  decliningStudents: TeacherProgressStudentAnalytics[];
+}
+
+interface TeacherProgressStudentAnalytics {
+  studentId: string;
+  studentName: string;
+  previousScore: number;
+  currentScore: number;
+  improvement: number;
+  trend: string;
 }
 
 interface AdminSystemAlert {
