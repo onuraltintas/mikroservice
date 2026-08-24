@@ -165,4 +165,89 @@ describe('ReportsService', () => {
     expect(report.questionTypeChart.data).toEqual([]);
     expect(report.improvementAreas[0].priority).toBe('high');
   });
+
+  it('loads series analytics from the token-scoped endpoint and maps program progress', () => {
+    const startDate = new Date('2026-01-01T00:00:00.000Z');
+    const endDate = new Date('2026-01-31T00:00:00.000Z');
+    let report: any;
+
+    service.getStudentSeriesReport('another-student-id', startDate, endDate)
+      .subscribe(value => report = value);
+
+    const request = http.expectOne(
+      candidate => candidate.url === '/api/speed-reading/analytics/student/series');
+    expect(request.request.params.has('studentId')).toBeFalse();
+    request.flush({
+      dateFrom: startDate.toISOString(),
+      dateTo: endDate.toISOString(),
+      dataAvailable: true,
+      unavailableReason: null,
+      totalSeriesStarted: 1,
+      seriesCompleted: 0,
+      seriesInProgress: 1,
+      totalMilestones: 0,
+      activeSeries: [{
+        seriesId: 'program-1',
+        seriesName: 'Başlangıç Programı',
+        progress: 50,
+        exercisesCompleted: 5,
+        totalExercises: 10,
+        startedAt: '2026-01-10T10:00:00.000Z',
+        lastActivityAt: '2026-01-15T10:00:00.000Z',
+        averageScore: 72
+      }],
+      completionTimeline: [{ date: '2026-01-15', value: 50 }],
+      milestones: [],
+      performanceStats: {
+        averageCompletionTime: 0,
+        averageScore: 72,
+        consistencyScore: 50,
+        engagementLevel: 'medium'
+      }
+    });
+
+    expect(report.summary.totalSeriesStarted).toBe(1);
+    expect(report.activeSeries[0].startedAt).toEqual(new Date('2026-01-10T10:00:00.000Z'));
+    expect(report.completionTimelineChart.data[0].series[0].value).toBe(50);
+  });
+
+  it('loads activity analytics from the token-scoped endpoint and maps distributions', () => {
+    const startDate = new Date('2026-01-01T00:00:00.000Z');
+    const endDate = new Date('2026-01-31T00:00:00.000Z');
+    let report: any;
+
+    service.getStudentActivityReport('another-student-id', startDate, endDate)
+      .subscribe(value => report = value);
+
+    const request = http.expectOne(
+      candidate => candidate.url === '/api/speed-reading/analytics/student/activity');
+    expect(request.request.params.has('studentId')).toBeFalse();
+    request.flush({
+      dateFrom: startDate.toISOString(),
+      dateTo: endDate.toISOString(),
+      currentStreak: {
+        days: 3,
+        longestStreak: 5,
+        lastActivityDate: '2026-01-15T18:00:00.000Z',
+        isActive: true
+      },
+      heatmap: [{ date: '2026-01-15', value: 45, level: 3 }],
+      hourlyDistribution: [{ label: '18:00', value: 2 }],
+      dailyDistribution: [{ label: 'Çarşamba', value: 3 }],
+      studyTime: {
+        totalMinutes: 45,
+        averageSessionLength: 15,
+        totalSessions: 3,
+        mostActiveHour: 18,
+        mostActiveDay: 'Çarşamba',
+        consistency: 60
+      }
+    });
+
+    expect(report.currentStreak.days).toBe(3);
+    expect(report.activityHeatmap.data[0].level).toBe(3);
+    expect(report.hourlyDistributionChart.data[0].series[0].value).toBe(2);
+    expect(report.dailyDistributionChart.data[0].name).toBe('Çarşamba');
+    expect(report.studyTime.totalMinutes).toBe(45);
+  });
 });
