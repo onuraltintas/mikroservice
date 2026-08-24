@@ -96,3 +96,69 @@ public interface ILegacySpeedReadingCatalog
         bool includeQuestions,
         CancellationToken cancellationToken = default);
 }
+
+public sealed record ReadingSessionSummary(
+    Guid Id,
+    Guid ReadingTextId,
+    int CalculatedWpm,
+    decimal ComprehensionRate,
+    decimal EfficiencyScore,
+    int ReadingTimeSeconds,
+    int CorrectAnswers,
+    int TotalQuestions,
+    DateTime CompletedAt);
+
+public sealed record ReadingStatistics(
+    int TotalSessions,
+    decimal AverageWpm,
+    decimal AverageComprehension,
+    int TotalMinutes,
+    int BestWpm);
+
+public sealed record ExerciseResultSummary(
+    Guid Id,
+    Guid ExerciseId,
+    Guid? ReadingTextId,
+    int WordsRead,
+    int TimeSpentSeconds,
+    decimal RawWpm,
+    decimal ComprehensionScore,
+    decimal WeightedKdp,
+    DateTime CompletedAt);
+
+public sealed record ExerciseSessionSummary(
+    Guid Id,
+    Guid ExerciseId,
+    Guid? ReadingTextId,
+    int Status,
+    DateTime StartTime,
+    DateTime? EndTime,
+    int CurrentStep,
+    int TotalSteps,
+    int CorrectCount,
+    int IncorrectCount,
+    int TotalPausedSeconds);
+
+public interface ILegacySpeedReadingProgress
+{
+    Task<IReadOnlyList<ReadingSessionSummary>> GetReadingHistoryAsync(
+        Guid userId,
+        Guid? readingTextId,
+        DateTime? dateFrom,
+        DateTime? dateTo,
+        CancellationToken cancellationToken = default);
+
+    Task<ReadingStatistics> GetReadingStatisticsAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task<SpeedReadingPage<ExerciseResultSummary>> GetExerciseResultsAsync(
+        Guid studentId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ExerciseSessionSummary>> GetActiveExerciseSessionsAsync(
+        Guid studentId,
+        CancellationToken cancellationToken = default);
+}

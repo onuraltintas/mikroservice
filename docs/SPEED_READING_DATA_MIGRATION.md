@@ -32,6 +32,9 @@ okunur bir uyumluluk katmanıdır:
 | `Exercises` | Zorluk, tür ve JSON konfigürasyonu |
 | `ReadingTexts` | Okuma metni ve seviye bilgileri |
 | `ReadingQuestions` | Metne bağlı anlama soruları |
+| `ExerciseSessions` | Devam eden/bitmiş egzersiz oturumları |
+| `StudentExerciseResults` | Öğrenci egzersiz performans sonuçları |
+| `ReadingSessions` | Okuma hızı ve anlama geçmişi |
 
 ## Yeni servis uçları
 
@@ -42,6 +45,10 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
 - `GET /api/speed-reading/exercises` — kimlik doğrulamalı, filtrelenebilir egzersiz listesi
 - `GET /api/speed-reading/reading-texts` — kimlik doğrulamalı metin listesi
 - `GET /api/speed-reading/reading-texts/{id}` — metin ve isteğe bağlı soruları
+- `GET /api/speed-reading/progress/reading-history` — oturum açmış kullanıcının okuma geçmişi
+- `GET /api/speed-reading/progress/reading-statistics` — oturum açmış kullanıcının özet istatistikleri
+- `GET /api/speed-reading/progress/exercise-results` — sayfalı egzersiz sonuçları
+- `GET /api/speed-reading/progress/active-exercise-sessions` — aktif/paused oturumlar
 
 Yazma uçları bu aşamada bilerek açılmadı. İçerik yönetimi açılmadan önce eski
 uygulamanın yazıcıları durdurulmalı ve tek veri sahibine geçiş doğrulanmalıdır.
@@ -65,13 +72,11 @@ uygulamanın yazıcıları durdurulmalı ve tek veri sahibine geçiş doğrulanm
 
 Sıradaki dilimler, her biri test ve geri dönüş kontrolüyle ayrı ayrı taşınır:
 
-1. Egzersiz oturumu ve sonuçları (`ExerciseSessions`,
-   `StudentExerciseResults`, `ReadingSessions`).
-2. Program/öğrenme yolu (`ExerciseProgramTemplates`, `DailyExerciseLogs`,
+1. Program/öğrenme yolu (`ExerciseProgramTemplates`, `DailyExerciseLogs`,
    `LearningPath*`).
-3. Analitik, gamification ve rapor snapshot'ları.
-4. Admin içerik CRUD uçları ve audit event'leri.
-5. Mevcut `speed-reading-frontend` uygulamasının bağımsız servis Gateway'ine
+2. Analitik, gamification ve rapor snapshot'ları.
+3. Admin içerik CRUD uçları ve audit event'leri.
+4. Mevcut `speed-reading-frontend` uygulamasının bağımsız servis Gateway'ine
    geçirilmesi.
 
 Her dilimde mevcut şema korunacak; yeni tablo veya kolon ihtiyacı varsa önce

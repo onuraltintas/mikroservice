@@ -15,6 +15,9 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     internal DbSet<LegacyExercise> Exercises => Set<LegacyExercise>();
     internal DbSet<LegacyReadingText> ReadingTexts => Set<LegacyReadingText>();
     internal DbSet<LegacyReadingQuestion> ReadingQuestions => Set<LegacyReadingQuestion>();
+    internal DbSet<LegacyExerciseSession> ExerciseSessions => Set<LegacyExerciseSession>();
+    internal DbSet<LegacyStudentExerciseResult> StudentExerciseResults => Set<LegacyStudentExerciseResult>();
+    internal DbSet<LegacyReadingSession> ReadingSessions => Set<LegacyReadingSession>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -54,6 +57,35 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
         {
             entity.ToTable("ReadingQuestions");
             entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.ReadingTextId);
+        });
+
+        modelBuilder.Entity<LegacyExerciseSession>(entity =>
+        {
+            entity.ToTable("ExerciseSessions");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.StudentId);
+            entity.HasIndex(item => item.ExerciseId);
+            entity.HasIndex(item => item.ReadingTextId);
+            entity.HasIndex(item => item.StudentAssignmentId);
+        });
+
+        modelBuilder.Entity<LegacyStudentExerciseResult>(entity =>
+        {
+            entity.ToTable("StudentExerciseResults");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.StudentId);
+            entity.HasIndex(item => item.ExerciseId);
+            entity.HasIndex(item => item.ReadingTextId);
+            entity.Property(item => item.RawWPM).HasPrecision(18, 2);
+            entity.Property(item => item.ComprehensionScore).HasPrecision(18, 2);
+        });
+
+        modelBuilder.Entity<LegacyReadingSession>(entity =>
+        {
+            entity.ToTable("ReadingSessions");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.UserId);
             entity.HasIndex(item => item.ReadingTextId);
         });
     }

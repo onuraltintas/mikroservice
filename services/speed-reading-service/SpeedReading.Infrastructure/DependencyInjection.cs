@@ -27,6 +27,7 @@ public static class DependencyInjection
                 npgsql.EnableRetryOnFailure()));
 
         services.AddScoped<ILegacySpeedReadingCatalog, LegacySpeedReadingCatalog>();
+        services.AddScoped<ILegacySpeedReadingProgress, LegacySpeedReadingProgress>();
 
         return services;
     }

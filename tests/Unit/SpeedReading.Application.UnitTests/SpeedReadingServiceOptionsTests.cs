@@ -62,11 +62,28 @@ public sealed class SpeedReadingServiceOptionsTests
             .Where(table => table is not null)
             .ToArray();
 
-        tables.Should().Contain(new[] { "ExerciseTypes", "Exercises", "ReadingTexts", "ReadingQuestions" });
+        tables.Should().Contain(new[]
+        {
+            "ExerciseTypes",
+            "Exercises",
+            "ReadingTexts",
+            "ReadingQuestions",
+            "ExerciseSessions",
+            "StudentExerciseResults",
+            "ReadingSessions"
+        });
         context.Database.ProviderName.Should().Contain("Npgsql");
 
         var readingText = context.Model.GetEntityTypes()
             .Single(entity => entity.GetTableName() == "ReadingTexts");
         readingText.FindProperty("Tags")!.GetColumnType().Should().Be("text");
+
+        var exerciseResult = context.Model.GetEntityTypes()
+            .Single(entity => entity.GetTableName() == "StudentExerciseResults");
+        exerciseResult.FindProperty("RawWPM")!.GetColumnType().Should().Be("numeric(18,2)");
+
+        var exerciseSession = context.Model.GetEntityTypes()
+            .Single(entity => entity.GetTableName() == "ExerciseSessions");
+        exerciseSession.FindProperty("Status")!.GetColumnType().Should().Be("integer");
     }
 }

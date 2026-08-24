@@ -79,3 +79,49 @@ internal sealed class LegacyReadingQuestion : LegacyBaseEntity
     public string CorrectAnswer { get; set; } = string.Empty;
     public int OrderIndex { get; set; }
 }
+
+internal sealed class LegacyExerciseSession : LegacyBaseEntity
+{
+    public Guid StudentId { get; set; }
+    public Guid ExerciseId { get; set; }
+    public int Status { get; set; }
+    public DateTime StartTime { get; set; }
+    public DateTime? EndTime { get; set; }
+    public int TotalPausedSeconds { get; set; }
+    public string SessionDataJson { get; set; } = string.Empty;
+    public string? CustomDataJson { get; set; }
+    public int CurrentStep { get; set; }
+    public int TotalSteps { get; set; }
+    public int CorrectCount { get; set; }
+    public int IncorrectCount { get; set; }
+    public Guid? ReadingTextId { get; set; }
+    public Guid? StudentAssignmentId { get; set; }
+}
+
+internal sealed class LegacyStudentExerciseResult : LegacyBaseEntity
+{
+    public Guid StudentId { get; set; }
+    public Guid ExerciseId { get; set; }
+    public Guid? ReadingTextId { get; set; }
+    public int WordsRead { get; set; }
+    public int TimeSpentSeconds { get; set; }
+    public decimal RawWPM { get; set; }
+    public decimal ComprehensionScore { get; set; }
+    public decimal WeightedKDP { get; set; }
+    public string QuestionAnswersJson { get; set; } = "[]";
+    public string ReadingMovementsJson { get; set; } = "[]";
+    public DateTime CompletedAt { get; set; }
+}
+
+internal sealed class LegacyReadingSession : LegacyBaseEntity
+{
+    public Guid UserId { get; set; }
+    public Guid ReadingTextId { get; set; }
+    public int ReadingTimeSeconds { get; set; }
+    public int CalculatedWPM { get; set; }
+    public int CorrectAnswers { get; set; }
+    public int TotalQuestions { get; set; }
+    public decimal ComprehensionRate { get; set; }
+    public decimal EfficiencyScore { get; set; }
+    public DateTime CompletedAt { get; set; }
+}
