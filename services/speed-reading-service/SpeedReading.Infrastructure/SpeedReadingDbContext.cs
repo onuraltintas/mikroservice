@@ -31,6 +31,10 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     internal DbSet<LegacyPersonalizedLearningPath> PersonalizedLearningPaths => Set<LegacyPersonalizedLearningPath>();
     internal DbSet<LegacyIdempotencyRecord> IdempotencyRecords => Set<LegacyIdempotencyRecord>();
     internal DbSet<AdminAuditRecord> AdminAuditRecords => Set<AdminAuditRecord>();
+    internal DbSet<LegacyAchievement> Achievements => Set<LegacyAchievement>();
+    internal DbSet<LegacyUserAchievement> UserAchievements => Set<LegacyUserAchievement>();
+    internal DbSet<LegacyUserGamification> UserGamifications => Set<LegacyUserGamification>();
+    internal DbSet<LegacyUser> Users => Set<LegacyUser>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -214,6 +218,42 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasIndex(item => new { item.OccurredAt, item.Id });
             entity.HasIndex(item => new { item.ActorUserId, item.OccurredAt });
             entity.HasIndex(item => new { item.ResourceType, item.ResourceId, item.OccurredAt });
+        });
+
+        modelBuilder.Entity<LegacyAchievement>(entity =>
+        {
+            entity.ToTable("Achievements");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.Category);
+            entity.HasIndex(item => item.Tier);
+            entity.HasIndex(item => item.IsActive);
+            entity.HasIndex(item => item.SortOrder);
+        });
+
+        modelBuilder.Entity<LegacyUserAchievement>(entity =>
+        {
+            entity.ToTable("UserAchievements");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => new { item.UserId, item.AchievementId }).IsUnique();
+            entity.HasIndex(item => item.UserId);
+            entity.HasIndex(item => item.UnlockedAt);
+            entity.HasIndex(item => new { item.UserId, item.IsShowcased });
+        });
+
+        modelBuilder.Entity<LegacyUserGamification>(entity =>
+        {
+            entity.ToTable("UserGameifications");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.UserId).IsUnique();
+            entity.HasIndex(item => item.TotalXP);
+            entity.HasIndex(item => item.CurrentLevel);
+            entity.HasIndex(item => item.CurrentStreak);
+        });
+
+        modelBuilder.Entity<LegacyUser>(entity =>
+        {
+            entity.ToTable("Users");
+            entity.HasKey(item => item.Id);
         });
     }
 }

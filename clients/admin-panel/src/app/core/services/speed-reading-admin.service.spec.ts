@@ -343,4 +343,46 @@ describe('SpeedReadingAdminService', () => {
     expect(deleteContentRequest.request.headers.get('Idempotency-Key')).toBe('node-content-delete-key-123456');
     deleteContentRequest.flush(null);
   });
+
+  it('loads and writes achievement definitions through the GamificationManage route', () => {
+    service.getAchievementsForAdmin(2, 10).subscribe(value => expect(value.items).toEqual([]));
+    const listRequest = http.expectOne('/api/speed-reading/achievements/admin?pageNumber=2&pageSize=10');
+    expect(listRequest.request.method).toBe('GET');
+    listRequest.flush({ items: [], pageNumber: 2, pageSize: 10, totalCount: 0 });
+
+    const request = {
+      name: 'İlk hafta',
+      description: 'Yedi gün düzenli çalışma',
+      category: 'Streak',
+      tier: 'Bronze',
+      iconUrl: null,
+      iconEmoji: '🔥',
+      criteriaType: 'streak',
+      criteriaValue: '{"days":7}',
+      triggerType: 'StreakMilestone',
+      triggerValue: 7,
+      isRepeatable: false,
+      xpReward: 50,
+      isActive: true,
+      sortOrder: 1
+    };
+
+    service.createAchievement(request, 'achievement-create-key-123456').subscribe();
+    const createRequest = http.expectOne('/api/speed-reading/achievements');
+    expect(createRequest.request.method).toBe('POST');
+    expect(createRequest.request.headers.get('Idempotency-Key')).toBe('achievement-create-key-123456');
+    createRequest.flush({ id: 'achievement-1' });
+
+    service.updateAchievement('achievement-1', request, 'achievement-update-key-123456').subscribe();
+    const updateRequest = http.expectOne('/api/speed-reading/achievements/achievement-1');
+    expect(updateRequest.request.method).toBe('PUT');
+    expect(updateRequest.request.headers.get('Idempotency-Key')).toBe('achievement-update-key-123456');
+    updateRequest.flush({ id: 'achievement-1' });
+
+    service.deleteAchievement('achievement-1', 'achievement-delete-key-123456').subscribe();
+    const deleteRequest = http.expectOne('/api/speed-reading/achievements/achievement-1');
+    expect(deleteRequest.request.method).toBe('DELETE');
+    expect(deleteRequest.request.headers.get('Idempotency-Key')).toBe('achievement-delete-key-123456');
+    deleteRequest.flush(null);
+  });
 });

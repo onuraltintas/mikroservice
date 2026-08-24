@@ -23,7 +23,9 @@ import {
   SpeedReadingLearningPathNode,
   SpeedReadingLearningPathNodeRequest,
   SpeedReadingLearningPathNodeUpdateRequest,
-  SpeedReadingLearningPathNodeContentRequest
+  SpeedReadingLearningPathNodeContentRequest,
+  SpeedReadingAchievement,
+  SpeedReadingAchievementRequest
 } from '../../../core/services/speed-reading-admin.service';
 
 @Component({
@@ -735,6 +737,78 @@ import {
             }
           </div>
         }
+
+        @if (canManageGamification()) {
+          <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Oyunlaştırma kazanımları</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Öğrencilerin açabileceği başarı tanımlarını yönetin.</p>
+              </div>
+              <button type="button" (click)="startCreateAchievement()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white">Yeni kazanım</button>
+            </div>
+
+            @if (achievementEditingId !== null) {
+              <form class="mt-4 grid grid-cols-1 gap-3 rounded-lg border border-indigo-200 bg-indigo-50/50 p-4 sm:grid-cols-2" (ngSubmit)="saveAchievement()">
+                <label class="text-sm text-gray-700 dark:text-gray-200">Ad
+                  <input name="achievementName" [(ngModel)]="achievementDraft.name" required maxlength="200" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Kategori
+                  <input name="achievementCategory" [(ngModel)]="achievementDraft.category" required maxlength="50" placeholder="Reading" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Seviye
+                  <input name="achievementTier" [(ngModel)]="achievementDraft.tier" required maxlength="50" placeholder="Bronze" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">XP ödülü
+                  <input type="number" name="achievementXp" [(ngModel)]="achievementDraft.xpReward" min="0" max="1000000" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200 sm:col-span-2">Açıklama
+                  <textarea name="achievementDescription" [(ngModel)]="achievementDraft.description" required maxlength="500" rows="2" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800"></textarea>
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Kriter tipi
+                  <input name="achievementCriteriaType" [(ngModel)]="achievementDraft.criteriaType" required maxlength="100" placeholder="streak" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Kriter JSON
+                  <input name="achievementCriteriaValue" [(ngModel)]="achievementDraft.criteriaValue" required placeholder="{&quot;days&quot;:7}" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-xs dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Emoji
+                  <input name="achievementIconEmoji" [(ngModel)]="achievementDraft.iconEmoji" maxlength="10" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="text-sm text-gray-700 dark:text-gray-200">Sıra
+                  <input type="number" name="achievementSortOrder" [(ngModel)]="achievementDraft.sortOrder" min="0" max="100000" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
+                </label>
+                <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200"><input type="checkbox" name="achievementActive" [(ngModel)]="achievementDraft.isActive" /> Aktif</label>
+                <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200"><input type="checkbox" name="achievementRepeatable" [(ngModel)]="achievementDraft.isRepeatable" /> Tekrarlanabilir</label>
+                <div class="flex justify-end gap-2 sm:col-span-2">
+                  <button type="button" (click)="cancelAchievementEdit()" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">Vazgeç</button>
+                  <button type="submit" [disabled]="saving()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50">{{ saving() ? 'Kaydediliyor…' : (achievementEditingId === 'new' ? 'Oluştur' : 'Kaydet') }}</button>
+                </div>
+              </form>
+            }
+
+            @if (achievements().length) {
+              <div class="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+                @for (achievement of achievements(); track achievement.id) {
+                  <article class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                    <div class="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 class="font-medium text-gray-900 dark:text-white">{{ achievement.iconEmoji }} {{ achievement.name }}</h3>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ achievement.category }} · {{ achievement.tier }} · {{ achievement.xpReward }} XP · {{ achievement.unlockedByUsersCount }} açan öğrenci</p>
+                      </div>
+                      <div class="flex shrink-0 gap-2">
+                        <button type="button" (click)="startEditAchievement(achievement)" class="rounded border border-gray-300 px-2 py-1 text-xs">Düzenle</button>
+                        <button type="button" (click)="deleteAchievement(achievement)" class="rounded border border-red-300 px-2 py-1 text-xs text-red-700">Sil</button>
+                      </div>
+                    </div>
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{ achievement.description }}</p>
+                  </article>
+                }
+              </div>
+            } @else if (!loading()) {
+              <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Henüz kazanım tanımlanmamış.</p>
+            }
+          </div>
+        }
       }
     </section>
   `
@@ -753,11 +827,14 @@ export class SpeedReadingOverviewComponent implements OnInit {
   readonly programTemplates = signal<SpeedReadingProgramTemplate[]>([]);
   readonly learningPathTemplates = signal<SpeedReadingLearningPathTemplate[]>([]);
   readonly learningPathNodes = signal<SpeedReadingLearningPathNode[]>([]);
+  readonly achievements = signal<SpeedReadingAchievement[]>([]);
   readonly saving = signal(false);
   readonly canManageContent = computed(() =>
     this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingContentManage));
   readonly canManagePrograms = computed(() =>
     this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingProgramManage));
+  readonly canManageGamification = computed(() =>
+    this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingGamificationManage));
   editingId: string | null = null;
   draft: SpeedReadingExerciseTypeRequest = this.emptyDraft();
   exerciseEditingId: string | null = null;
@@ -781,6 +858,8 @@ export class SpeedReadingOverviewComponent implements OnInit {
   relationContentKind: 'exercise' | 'readingText' = 'exercise';
   relationContentDraft: SpeedReadingLearningPathNodeContentRequest = this.emptyLearningPathNodeContentDraft('');
   relationPrerequisiteNodeId: string | null = null;
+  achievementEditingId: string | null = null;
+  achievementDraft: SpeedReadingAchievementRequest = this.emptyAchievementDraft();
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
@@ -797,7 +876,8 @@ export class SpeedReadingOverviewComponent implements OnInit {
       exercises: this.service.getExercises(),
       readingTexts: this.service.getReadingTexts(),
       programTemplates: this.canManagePrograms() ? this.service.getProgramTemplates() : of([]),
-      learningPathTemplates: this.canManagePrograms() ? this.service.getLearningPathTemplates() : of([])
+      learningPathTemplates: this.canManagePrograms() ? this.service.getLearningPathTemplates() : of([]),
+      achievements: this.canManageGamification() ? this.service.getAchievementsForAdmin() : of({ items: [], pageNumber: 1, pageSize: 50, totalCount: 0 })
     }).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: value => {
         this.capabilities.set(value.capabilities);
@@ -806,6 +886,7 @@ export class SpeedReadingOverviewComponent implements OnInit {
         this.readingTexts.set(value.readingTexts);
         this.programTemplates.set(value.programTemplates);
         this.learningPathTemplates.set(value.learningPathTemplates);
+        this.achievements.set(value.achievements.items);
       },
       error: () => this.error.set('Hızlı okuma servis bilgisi yüklenemedi.')
     });
@@ -1345,12 +1426,83 @@ export class SpeedReadingOverviewComponent implements OnInit {
     });
   }
 
+  startCreateAchievement() {
+    this.achievementEditingId = 'new';
+    this.achievementDraft = this.emptyAchievementDraft();
+  }
+
+  startEditAchievement(achievement: SpeedReadingAchievement) {
+    this.achievementEditingId = achievement.id;
+    this.achievementDraft = {
+      name: achievement.name,
+      description: achievement.description,
+      category: achievement.category,
+      tier: achievement.tier,
+      iconUrl: achievement.iconUrl,
+      iconEmoji: achievement.iconEmoji,
+      criteriaType: achievement.criteriaType,
+      criteriaValue: achievement.criteriaValue,
+      triggerType: achievement.triggerType,
+      triggerValue: achievement.triggerValue,
+      isRepeatable: achievement.isRepeatable,
+      xpReward: achievement.xpReward,
+      isActive: achievement.isActive,
+      sortOrder: achievement.sortOrder
+    };
+  }
+
+  cancelAchievementEdit() {
+    this.achievementEditingId = null;
+  }
+
+  saveAchievement() {
+    if (this.achievementEditingId === null) return;
+    this.saving.set(true);
+    const request$ = this.achievementEditingId === 'new'
+      ? this.service.createAchievement(this.achievementDraft)
+      : this.service.updateAchievement(this.achievementEditingId, this.achievementDraft);
+    request$.pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => {
+        this.achievementEditingId = null;
+        this.load();
+      },
+      error: () => this.error.set('Kazanım kaydedilemedi. Kriter JSON ve bağlı öğrenci kayıtlarını kontrol edin.')
+    });
+  }
+
+  deleteAchievement(achievement: SpeedReadingAchievement) {
+    if (!globalThis.confirm(`“${achievement.name}” kazanımı silinsin mi?`)) return;
+    this.service.deleteAchievement(achievement.id).subscribe({
+      next: () => this.load(),
+      error: () => this.error.set('Kazanım silinemedi. Öğrenci kazanım kayıtları varsa pasif hale getirin.')
+    });
+  }
+
   private reloadLearningPathNodes() {
     if (this.selectedLearningPathId === null) return;
     this.service.getLearningPathTemplateDetails(this.selectedLearningPathId).subscribe({
       next: details => this.learningPathNodes.set(details.nodes),
       error: () => this.error.set('Öğrenme yolu düğümleri yenilenemedi.')
     });
+  }
+
+  private emptyAchievementDraft(): SpeedReadingAchievementRequest {
+    return {
+      name: '',
+      description: '',
+      category: 'Reading',
+      tier: 'Bronze',
+      iconUrl: '',
+      iconEmoji: '🏅',
+      criteriaType: 'activity_count',
+      criteriaValue: '{}',
+      triggerType: null,
+      triggerValue: null,
+      isRepeatable: false,
+      xpReward: 0,
+      isActive: true,
+      sortOrder: 0
+    };
   }
 
   private emptyDraft(): SpeedReadingExerciseTypeRequest {

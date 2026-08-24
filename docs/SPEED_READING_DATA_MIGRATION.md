@@ -114,11 +114,22 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
 - `GET /api/speed-reading/learning-paths/templates` — aktif öğrenme yolu şablonları
 - `GET /api/speed-reading/learning-paths/progress` — öğrencinin yolu ve düğüm durumları
 - `GET /api/speed-reading/learning-paths/personalized` — kişiselleştirilmiş yol öğeleri
+- `GET /api/speed-reading/gamification/user` — XP, seviye ve streak özeti
+- `GET /api/speed-reading/gamification/achievements` — aktif kazanım kataloğu
+- `GET /api/speed-reading/gamification/achievements/user` — kullanıcının açtığı kazanımlar
+- `GET /api/speed-reading/gamification/leaderboard` — `LeaderboardView` yetkili;
+  SystemAdmin global, diğer kullanıcılar kurum kapsamlı liderlik tablosu
+- `GET /api/speed-reading/achievements/admin` — `GamificationManage` yetkili sayfalı yönetim listesi
+- `POST /api/speed-reading/achievements`, `PUT|DELETE /api/speed-reading/achievements/{id}` —
+  `GamificationManage` yetkili kazanım CRUD'u
 
-Yazma uç noktaları idempotency ve audit ile korunur. Eski uygulamanın aynı
-sonucu veya içeriği yazan yolları, üretimde yeni servis tek veri sahibi olarak
-doğrulanana kadar kapatılmamalıdır; geçiş tamamlanınca eski yazma yolları
-kapatılmalıdır.
+Yazma uç noktaları idempotency ve audit ile korunur. Öğrenci istemcisindeki
+`awardXP`, `checkAchievements`, streak ve showcase yazıları, merkezi gamification
+yazma sözleşmesi tamamlanana kadar eski `/v1/gamification` uyumluluk köprüsünde
+tutulur. Bu geçici köprü dokümante edilmiş bir geçiş kararıdır; merkezi yazma
+uç noktaları ve rollback testleri geçmeden eski yollar kapatılmamalıdır. Tüm
+gamification okuma ve admin kazanım çağrıları yeni `/api/speed-reading` yolundadır;
+öğrenci yazma köprüsü dışında eski achievement endpoint'i kullanılmaz.
 
 ## Geçiş kontrol listesi
 
@@ -142,8 +153,8 @@ kapatılmalıdır.
 
 Sıradaki dilimler, her biri test ve geri dönüş kontrolüyle ayrı ayrı taşınır:
 
-1. Öğrenme yolu düğüm/içerik/önkoşul yönetiminin admin yetki sınırlarıyla taşınması.
-2. Analitik, gamification ve rapor snapshot'larının yazma/geri dönüş testleri.
+1. Analitik rapor sözleşmelerinin ve rapor snapshot okuma/yazma sınırlarının taşınması.
+2. Oyunlaştırma XP/streak yazma akışlarının event/idempotency geri dönüş testleri.
 3. Mevcut `speed-reading-frontend` uygulamasının bağımsız servis Gateway'ine
    geçirilmesi ve gerçek veritabanıyla uçtan uca doğrulanması.
 

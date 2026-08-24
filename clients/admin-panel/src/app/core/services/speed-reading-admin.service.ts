@@ -239,6 +239,44 @@ export interface SpeedReadingLearningPathPrerequisiteRequest {
   prerequisiteNodeId: string;
 }
 
+export interface SpeedReadingAchievement {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  tier: string;
+  iconUrl: string;
+  iconEmoji: string;
+  criteriaType: string;
+  criteriaValue: string;
+  triggerType: string | null;
+  triggerValue: number | null;
+  isRepeatable: boolean;
+  xpReward: number;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string | null;
+  unlockedByUsersCount: number;
+}
+
+export interface SpeedReadingAchievementRequest {
+  name: string;
+  description: string;
+  category: string;
+  tier: string;
+  iconUrl?: string | null;
+  iconEmoji: string;
+  criteriaType: string;
+  criteriaValue: string;
+  triggerType?: string | null;
+  triggerValue?: number | null;
+  isRepeatable: boolean;
+  xpReward: number;
+  isActive: boolean;
+  sortOrder: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SpeedReadingAdminService {
   private readonly http = inject(HttpClient);
@@ -533,6 +571,39 @@ export class SpeedReadingAdminService {
   ) {
     return this.http.delete<void>(
       `${this.url}/learning-paths/prerequisites/${nodeId}/${prerequisiteNodeId}`,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  getAchievementsForAdmin(pageNumber = 1, pageSize = 50) {
+    const params = new HttpParams()
+      .set('pageNumber', pageNumber)
+      .set('pageSize', pageSize);
+    return this.http.get<SpeedReadingPage<SpeedReadingAchievement>>(
+      `${this.url}/achievements/admin`,
+      { params }
+    );
+  }
+
+  createAchievement(request: SpeedReadingAchievementRequest, idempotencyKey?: string) {
+    return this.http.post<SpeedReadingAchievement>(
+      `${this.url}/achievements`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  updateAchievement(id: string, request: SpeedReadingAchievementRequest, idempotencyKey?: string) {
+    return this.http.put<SpeedReadingAchievement>(
+      `${this.url}/achievements/${id}`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    );
+  }
+
+  deleteAchievement(id: string, idempotencyKey?: string) {
+    return this.http.delete<void>(
+      `${this.url}/achievements/${id}`,
       { headers: this.idempotencyHeaders(idempotencyKey) }
     );
   }

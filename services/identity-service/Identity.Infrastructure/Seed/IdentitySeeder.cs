@@ -96,7 +96,13 @@ public static class IdentitySeeder
                 Identity.Domain.Constants.Permissions.Coaching.View,
                 Identity.Domain.Constants.Permissions.SpeedReading.View,
                 Identity.Domain.Constants.Permissions.SpeedReading.ProgressView,
-                Identity.Domain.Constants.Permissions.SpeedReading.ReportView
+                Identity.Domain.Constants.Permissions.SpeedReading.ReportView,
+                Identity.Domain.Constants.Permissions.SpeedReading.LeaderboardView
+            };
+
+            var learnerLeaderboardPermissions = new List<string>
+            {
+                Identity.Domain.Constants.Permissions.SpeedReading.LeaderboardView
             };
 
             // Coaching admin read access is tenant-scoped by the Coaching API and
@@ -116,7 +122,10 @@ public static class IdentitySeeder
             {
                 { Identity.Domain.Enums.UserRole.SystemAdmin.ToString(), allPermissions },
                 { Identity.Domain.Enums.UserRole.InstitutionOwner.ToString(), institutionPermissions },
-                { Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(), institutionPermissions } // Simplify: same for now
+                { Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(), institutionPermissions }, // Simplify: same for now
+                { Identity.Domain.Enums.UserRole.Student.ToString(), learnerLeaderboardPermissions },
+                { Identity.Domain.Enums.UserRole.Teacher.ToString(), learnerLeaderboardPermissions },
+                { Identity.Domain.Enums.UserRole.Parent.ToString(), learnerLeaderboardPermissions }
             };
 
             foreach (var roleName in rolePermissionsMap.Keys)

@@ -1,7 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../../environments/environment';
+import { GamificationService } from '../../../../core/services/gamification.service';
 
 interface Achievement {
   id: string;
@@ -21,8 +20,7 @@ interface Achievement {
   styleUrls: ['./recent-achievements-widget.component.scss']
 })
 export class RecentAchievementsWidgetComponent implements OnInit {
-  private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/v1/gamification/achievements/user`;
+  private gamificationService = inject(GamificationService);
 
   achievements = signal<Achievement[]>([]);
 
@@ -31,9 +29,8 @@ export class RecentAchievementsWidgetComponent implements OnInit {
   }
 
   loadAchievements(): void {
-    this.http.get<any>(this.apiUrl).subscribe({
-      next: (data: any) => {
-        const list = Array.isArray(data) ? data : [];
+    this.gamificationService.getUserAchievements().subscribe({
+      next: (list) => {
 
         if (list.length > 0) {
           const mappedAchievements: Achievement[] = list.map((ua: any) => ({

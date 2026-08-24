@@ -96,6 +96,22 @@ tablosunu uygular.
 - `GET /api/speed-reading/learning-paths/templates`
 - `GET /api/speed-reading/learning-paths/progress`
 - `GET /api/speed-reading/learning-paths/personalized`
+- `GET /api/speed-reading/gamification/user` — oturum açmış öğrencinin XP,
+  seviye ve streak özeti; kayıt yoksa varsayılan boş özet döner, tabloya yazmaz.
+- `GET /api/speed-reading/gamification/achievements` ve
+  `GET /api/speed-reading/gamification/achievements/user` — aktif kazanım
+  kataloğu ve öğrencinin açtığı kazanımlar.
+- `GET /api/speed-reading/gamification/leaderboard` — `LeaderboardView` yetkisi ile
+  sayfalı XP/seviye/streak liderlik tablosu. SystemAdmin global listeyi görür;
+  diğer kullanıcılar yalnızca legacy `Users.InstitutionId` ile çözülen kendi
+  kurumlarının listesini görür. Kurum kapsamı çözülemeyen kullanıcıya global
+  veri döndürülmez.
+- `GET /api/speed-reading/achievements/admin` ve
+  `POST /api/speed-reading/achievements`, `PUT|DELETE
+  /api/speed-reading/achievements/{id}` —
+  `GamificationManage` yetkisi ile kazanım yönetimi; idempotency ve audit
+  kuralları uygulanır, öğrenci tarafından açılmış kazanımlar fiziksel olarak
+  silinmez.
 
 ## Yetki sınırı
 
@@ -106,9 +122,21 @@ Identity permission seed'i aşağıdaki bağımsız anahtarları sağlar:
 - `Permissions.SpeedReading.ProgramManage`
 - `Permissions.SpeedReading.ProgressView`
 - `Permissions.SpeedReading.ReportView`
+- `Permissions.SpeedReading.LeaderboardView`
 - `Permissions.SpeedReading.GamificationManage`
 - `Permissions.SpeedReading.SettingsManage`
 
-Kurum rolleri varsayılan olarak yalnızca görünürlük, ilerleme ve rapor okuma
+Kurum rolleri varsayılan olarak yalnızca görünürlük, ilerleme, rapor ve kurum
+kapsamlı liderlik tablosu okuma
 yetkilerini alır; içerik/program/ayar değişiklikleri SystemAdmin veya açıkça
 atanmış yetki gerektirir.
+
+Gamification yazma uç noktaları idempotency ve audit ile korunur. Öğrenci
+istemcisindeki `awardXP`, `checkAchievements`, streak ve showcase çağrıları bir
+sonraki geçiş diliminde merkezi yazma uç noktalarına taşınana kadar eski
+`/v1/gamification` uyumluluk köprüsünü kullanır. Eski speed-reading admin
+ekranının kazanım servisi de artık `/api/speed-reading/achievements` uçlarını
+kullanır. Bu geçici öğrenci yazma köprüsü, merkezi yazma
+ve rollback testleri tamamlanmadan kapatılmamalıdır; gamification okuma yolları
+(`user`, `achievements`, `achievements/user`, `leaderboard`) artık yalnızca yeni
+servisi kullanır.

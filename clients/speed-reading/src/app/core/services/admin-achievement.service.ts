@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -56,7 +56,7 @@ export interface UpdateAchievementRequest extends CreateAchievementRequest { }
     providedIn: 'root'
 })
 export class AdminAchievementService {
-    private apiUrl = `${environment.apiUrl}/v1/admin/achievements`;
+    private apiUrl = `${environment.apiUrl}/speed-reading/achievements`;
 
     constructor(private http: HttpClient) { }
 
@@ -81,7 +81,7 @@ export class AdminAchievementService {
         if (tier) params = params.set('tier', tier);
         if (isActive !== undefined) params = params.set('isActive', isActive.toString());
 
-        return this.http.get<any>(this.apiUrl, { params })
+        return this.http.get<any>(`${this.apiUrl}/admin`, { params })
             .pipe(map(response => {
                 // Handle both wrapped and unwrapped responses
                 const data = response?.data || response;
@@ -96,19 +96,25 @@ export class AdminAchievementService {
     }
 
     getAchievementById(id: string): Observable<Achievement> {
-        return this.http.get<Achievement>(`${this.apiUrl}/${id}`);
+        return this.http.get<Achievement>(`${this.apiUrl}/admin/${id}`);
     }
 
     createAchievement(request: CreateAchievementRequest): Observable<Achievement> {
-        return this.http.post<Achievement>(this.apiUrl, request);
+        return this.http.post<Achievement>(this.apiUrl, request, {
+            headers: this.idempotencyHeaders()
+        });
     }
 
     updateAchievement(id: string, request: UpdateAchievementRequest): Observable<Achievement> {
-        return this.http.put<Achievement>(`${this.apiUrl}/${id}`, request);
+        return this.http.put<Achievement>(`${this.apiUrl}/${id}`, request, {
+            headers: this.idempotencyHeaders()
+        });
     }
 
     deleteAchievement(id: string): Observable<void> {
-        return this.http.delete<void>(`${this.apiUrl}/${id}`);
+        return this.http.delete<void>(`${this.apiUrl}/${id}`, {
+            headers: this.idempotencyHeaders()
+        });
     }
 
     getCategories(): Observable<string[]> {
@@ -122,7 +128,7 @@ export class AdminAchievementService {
     }
 
     getStats(): Observable<AchievementStats> {
-        return this.http.get<any>(`${this.apiUrl}/stats`)
+        return this.http.get<any>(`${this.apiUrl}/admin/stats`)
             .pipe(map(response => {
                 const data = response?.data || response;
                 return {
@@ -136,6 +142,12 @@ export class AdminAchievementService {
                     categoryCounts: data?.categoryCounts || {}
                 };
             }));
+    }
+
+    private idempotencyHeaders(): HttpHeaders {
+        const key = globalThis.crypto?.randomUUID?.()
+            ?? `achievement-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        return new HttpHeaders({ 'Idempotency-Key': key });
     }
 }
 
