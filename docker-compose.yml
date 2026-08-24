@@ -218,6 +218,23 @@ services:
   # Speed Reading Service. It is optional in the base stack because it can
   # point at the existing Hızlı Okuma database rather than the platform DB.
   # Production/staging overlays remove the profile when the service is enabled.
+  speed-reading-migrations:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/speed-reading-service:${RELEASE_TAG:-dev}
+    profiles: ["speed-reading"]
+    build:
+      context: .
+      dockerfile: services/speed-reading-service/Dockerfile
+    command: ["--migrate-only"]
+    restart: "no"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT:?ENVIRONMENT must be set to Development, Staging or Production}
+      - ConnectionStrings__SpeedReading=${SPEED_READING_CONNECTION_STRING:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - edu-network
+
   speed-reading-service:
     image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/speed-reading-service:${RELEASE_TAG:-dev}
     profiles: ["speed-reading"]
@@ -240,6 +257,9 @@ services:
       - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY}
     networks:
       - edu-network
+    depends_on:
+      speed-reading-migrations:
+        condition: service_completed_successfully
 
   # Standalone Speed Reading web client. Keep it behind the edge in staging and
   # production; the profile makes the base stack opt-in for local development.

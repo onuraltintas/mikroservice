@@ -12,9 +12,11 @@ esas alınacaktır.
 ## Veri kaybını önleyen ilk aşama
 
 İlk aşamada hızlı okuma servisi mevcut PostgreSQL veritabanına bağlanan salt-
-okunur bir uyumluluk katmanıdır:
+okunur bir uyumluluk katmanıdır. Yazma geçişi yalnızca öğrenci egzersiz sonucu
+uç noktası için additive bir ledger ile başlatılmıştır:
 
-- EF Core migration dosyası eklenmez ve `EnsureCreated`/`Migrate` çağrılmaz.
+- Mevcut business tabloları için EF Core migration dosyası eklenmez ve
+  `EnsureCreated` çağrılmaz.
 - Bağlantı `ConnectionStrings:SpeedReading` veya
   `SPEED_READING_CONNECTION_STRING` ile dışarıdan verilir.
 - Tablo ve kolon adları mevcut Content şemasındaki PascalCase adlarıyla birebir
@@ -22,6 +24,11 @@ okunur bir uyumluluk katmanıdır:
 - Tüm sorgular `AsNoTracking` ve `IsDeleted = false` filtresiyle çalışır.
 - Mevcut uygulama yazmaya devam ederken yeni servis yalnızca doğrulanmış
   okuma trafiği alır.
+- Yeni servisin sahip olduğu tek ek tablo `SpeedReadingIdempotencyRecords`'tır.
+  Bu tablo aynı `Idempotency-Key` ile gelen tekrarların ikinci sonuç kaydı
+  üretmesini engeller; eski tabloları değiştirmez. `CreatedAt` index'i,
+  operasyon ekibinin 7 günlük replay penceresinden eski kayıtları güvenle
+  temizleyebilmesi için eklenir.
 
 İlk dikey dilimde taşınan tablolar:
 
@@ -61,6 +68,10 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
 - `GET /api/speed-reading/progress/reading-history` — oturum açmış kullanıcının okuma geçmişi
 - `GET /api/speed-reading/progress/reading-statistics` — oturum açmış kullanıcının özet istatistikleri
 - `GET /api/speed-reading/progress/exercise-results` — sayfalı egzersiz sonuçları
+- `POST /api/speed-reading/progress/exercise-results` — öğrencinin egzersiz
+  sonucunu mevcut `StudentExerciseResults` tablosuna yazar; `Idempotency-Key`
+  başlığı zorunludur. Aynı anahtar aynı payload ile tekrarlandığında mevcut
+  sonuç döner, farklı payload ile kullanıldığında `409` döner.
 - `GET /api/speed-reading/progress/active-exercise-sessions` — aktif/paused oturumlar
 - `GET /api/speed-reading/program-templates` — aktif program şablonları
 - `GET /api/speed-reading/progress/programs` — oturum açmış kullanıcının programları
@@ -69,8 +80,10 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
 - `GET /api/speed-reading/learning-paths/progress` — öğrencinin yolu ve düğüm durumları
 - `GET /api/speed-reading/learning-paths/personalized` — kişiselleştirilmiş yol öğeleri
 
-Yazma uçları bu aşamada bilerek açılmadı. İçerik yönetimi açılmadan önce eski
-uygulamanın yazıcıları durdurulmalı ve tek veri sahibine geçiş doğrulanmalıdır.
+Bu yazma uç noktası yalnızca öğrenci sonucunu taşımak için açılmıştır. Eski
+uygulamanın aynı sonucu yazan yolu, üretimde yeni servis tek veri sahibi olarak
+doğrulanana kadar kapatılmamalıdır. İçerik yönetimi ve admin CRUD'u sonraki
+dilimdir.
 
 ## Geçiş kontrol listesi
 
@@ -82,18 +95,21 @@ uygulamanın yazıcıları durdurulmalı ve tek veri sahibine geçiş doğrulanm
 4. En az bir gözlem periyodu boyunca hata, gecikme ve satır sayısı metriklerini
    izle.
 5. Yeni servisi platform ve bağımsız frontend'lerde kademeli olarak aç.
-6. Yazma yetkisini yalnızca yeni servisin veritabanı kullanıcısına ver; eski
-   uygulamanın write endpoint'lerini kapat.
-7. Sorun halinde Gateway rotasını eski uygulamaya geri al; veritabanına geri
+6. `speed-reading-migrations` one-shot container'ı ile yalnızca
+   `001_write_support.sql` scriptini çalıştır; tablo ve unique index'i doğrula.
+7. Yazma yetkisini yalnızca yeni servisin veritabanı kullanıcısına ver; eski
+   uygulamanın aynı sonuç write endpoint'ini kapat.
+8. Sorun halinde Gateway rotasını eski uygulamaya geri al; veritabanına geri
    alma/migration çalıştırma.
 
 ## Sonraki taşıma dilimleri
 
 Sıradaki dilimler, her biri test ve geri dönüş kontrolüyle ayrı ayrı taşınır:
 
-1. Analitik, gamification ve rapor snapshot'ları.
-2. Admin içerik CRUD uçları ve audit event'leri.
-3. Mevcut `speed-reading-frontend` uygulamasının bağımsız servis Gateway'ine
+1. Sonuç yazma uç noktasının entegrasyon/geri dönüş testleri ve audit event'i.
+2. Analitik, gamification ve rapor snapshot'ları.
+3. Admin içerik CRUD uçları ve audit event'leri.
+4. Mevcut `speed-reading-frontend` uygulamasının bağımsız servis Gateway'ine
    geçirilmesi.
 
 Her dilimde mevcut şema korunacak; yeni tablo veya kolon ihtiyacı varsa önce

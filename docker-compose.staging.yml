@@ -98,6 +98,25 @@ services:
       SpeedReading__NotificationIntegrationEnabled: ${SPEED_READING_NOTIFICATION_INTEGRATION_ENABLED:-false}
       SpeedReading__SubscriptionIntegrationEnabled: ${SPEED_READING_SUBSCRIPTION_INTEGRATION_ENABLED:-false}
     restart: unless-stopped
+    depends_on:
+      speed-reading-migrations:
+        condition: service_completed_successfully
+    networks:
+      - edu-network
+
+  speed-reading-migrations:
+    profiles: !reset []
+    build:
+      context: .
+      dockerfile: services/speed-reading-service/Dockerfile
+    command: ["--migrate-only"]
+    restart: "no"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Staging
+      ConnectionStrings__SpeedReading: ${SPEED_READING_CONNECTION_STRING:?SPEED_READING_CONNECTION_STRING must be set for speed-reading}
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - edu-network
 

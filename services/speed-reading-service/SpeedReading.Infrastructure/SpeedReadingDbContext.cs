@@ -28,6 +28,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     internal DbSet<LegacyStudentPathProgress> StudentPathProgresses => Set<LegacyStudentPathProgress>();
     internal DbSet<LegacyStudentNodeProgress> StudentNodeProgresses => Set<LegacyStudentNodeProgress>();
     internal DbSet<LegacyPersonalizedLearningPath> PersonalizedLearningPaths => Set<LegacyPersonalizedLearningPath>();
+    internal DbSet<LegacyIdempotencyRecord> IdempotencyRecords => Set<LegacyIdempotencyRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -175,6 +176,20 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasKey(item => item.Id);
             entity.HasIndex(item => item.StudentId);
             entity.HasIndex(item => item.TemplateId);
+        });
+
+        modelBuilder.Entity<LegacyIdempotencyRecord>(entity =>
+        {
+            entity.ToTable("SpeedReadingIdempotencyRecords");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Scope).HasMaxLength(128).IsRequired();
+            entity.Property(item => item.Key).HasMaxLength(128).IsRequired();
+            entity.Property(item => item.RequestHash).HasMaxLength(64).IsRequired();
+            entity.HasIndex(item => new { item.Scope, item.Key })
+                .HasDatabaseName("UX_SpeedReadingIdempotencyRecords_Scope_Key")
+                .IsUnique();
+            entity.HasIndex(item => item.CreatedAt)
+                .HasDatabaseName("IX_SpeedReadingIdempotencyRecords_CreatedAt");
         });
     }
 }

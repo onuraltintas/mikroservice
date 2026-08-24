@@ -3,6 +3,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SpeedReading.Application.Content;
+using SpeedReading.Application.Progress;
 
 namespace SpeedReading.API.Controllers;
 
@@ -12,8 +13,34 @@ namespace SpeedReading.API.Controllers;
 [Authorize]
 public sealed class ProgressController(
     ILegacySpeedReadingProgress progress,
-    ILegacySpeedReadingPrograms programs) : ControllerBase
+    ILegacySpeedReadingPrograms programs,
+    ISpeedReadingProgressWriter progressWriter) : ControllerBase
 {
+    [HttpPost("exercise-results")]
+    public async Task<ActionResult<ExerciseResultSummary>> CreateExerciseResult(
+        [FromBody] CreateExerciseResultRequest? request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        if (request is null)
+        {
+            return BadRequest("Request body is required.");
+        }
+
+        var result = await progressWriter.CreateExerciseResultAsync(
+            userId,
+            request,
+            idempotencyKey ?? string.Empty,
+            cancellationToken);
+
+        return Ok(result);
+    }
+
     [HttpGet("reading-history")]
     public async Task<ActionResult<IReadOnlyList<ReadingSessionSummary>>> GetReadingHistory(
         [FromQuery] Guid? readingTextId,

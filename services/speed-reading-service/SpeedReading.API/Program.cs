@@ -17,6 +17,29 @@ if (File.Exists(envPath))
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
+var migrationOnly = args.Any(argument =>
+    string.Equals(argument, "--migrate-only", StringComparison.OrdinalIgnoreCase));
+
+// The legacy speed-reading schema is not managed by EF migrations. This
+// one-shot mode applies only additive objects owned by the new service before
+// web replicas start, leaving all existing content tables untouched.
+if (migrationOnly)
+{
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
+
+    await using var migrationApp = builder.Build();
+    await using var migrationScope = migrationApp.Services.CreateAsyncScope();
+    var migrationDb = migrationScope.ServiceProvider.GetRequiredService<SpeedReadingDbContext>();
+    var scriptPath = Path.Combine(AppContext.BaseDirectory, "Database", "001_write_support.sql");
+    if (!File.Exists(scriptPath))
+    {
+        throw new FileNotFoundException("Speed Reading write-support migration script is missing.", scriptPath);
+    }
+
+    var script = await File.ReadAllTextAsync(scriptPath);
+    await migrationDb.Database.ExecuteSqlRawAsync(script);
+    return;
+}
 
 var runtimeOptions = builder.Configuration
     .GetSection(SpeedReadingServiceOptions.SectionName)
@@ -43,6 +66,7 @@ builder.Services.AddEduPlatformOpenTelemetry(
     "EduPlatform.SpeedReading");
 builder.Services.AddGlobalExceptionHandler();
 builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
+builder.Services.AddHostedService<SpeedReadingIdempotencyCleanupWorker>();
 builder.Services.AddCustomAuthentication(builder.Configuration);
 builder.Services.AddCustomAuthorization();
 

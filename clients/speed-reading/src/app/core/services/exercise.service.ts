@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -186,7 +186,27 @@ export class ExerciseService {
    * Backend returns: ApiResponse<any>
    * Service receives: any (auto-unwrapped)
    */
-  submitExerciseResult(result: ExerciseResult): Observable<any> {
-    return this.http.post<any>(`${this.LEGACY_API_URL}/v1/exercise-results`, result);
+  submitExerciseResult(result: ExerciseResult, idempotencyKey?: string): Observable<any> {
+    const payload = {
+      exerciseId: result.exerciseId,
+      readingTextId: result.readingTextId ?? null,
+      wordsRead: result.wordsRead,
+      timeSpentSeconds: result.timeSpentSeconds,
+      rawWpm: result.rawWPM ?? 0,
+      comprehensionScore: result.comprehensionScore ?? 0,
+      weightedKdp: result.weightedKDP ?? 0,
+      questionAnswersJson: result.questionAnswersJson,
+      readingMovementsJson: result.readingMovementsJson
+    };
+    const headers = new HttpHeaders({
+      'Idempotency-Key': idempotencyKey ?? this.createIdempotencyKey()
+    });
+
+    return this.http.post<any>(`${this.API_URL}/progress/exercise-results`, payload, { headers });
+  }
+
+  private createIdempotencyKey(): string {
+    return globalThis.crypto?.randomUUID?.()
+      ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   }
 }

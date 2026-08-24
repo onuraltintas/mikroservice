@@ -50,7 +50,7 @@ public sealed class SpeedReadingServiceOptionsTests
     }
 
     [Fact]
-    public void Legacy_content_model_uses_existing_tables_without_creating_a_new_schema()
+    public void Legacy_content_model_preserves_existing_tables_and_adds_only_the_write_ledger()
     {
         var options = new DbContextOptionsBuilder<SpeedReadingDbContext>()
             .UseNpgsql("Host=unused;Database=unused;Username=unused;Password=unused")
@@ -80,7 +80,8 @@ public sealed class SpeedReadingServiceOptionsTests
             "NodePrerequisites",
             "StudentPathProgresses",
             "StudentNodeProgresses",
-            "PersonalizedLearningPaths"
+            "PersonalizedLearningPaths",
+            "SpeedReadingIdempotencyRecords"
         });
         context.Database.ProviderName.Should().Contain("Npgsql");
 
@@ -95,5 +96,12 @@ public sealed class SpeedReadingServiceOptionsTests
         var exerciseSession = context.Model.GetEntityTypes()
             .Single(entity => entity.GetTableName() == "ExerciseSessions");
         exerciseSession.FindProperty("Status")!.GetColumnType().Should().Be("integer");
+
+        var idempotencyLedger = context.Model.GetEntityTypes()
+            .Single(entity => entity.GetTableName() == "SpeedReadingIdempotencyRecords");
+        idempotencyLedger.GetIndexes()
+            .Should().Contain(index => index.IsUnique
+                && index.Properties.Select(property => property.Name)
+                    .SequenceEqual(new[] { "Scope", "Key" }));
     }
 }

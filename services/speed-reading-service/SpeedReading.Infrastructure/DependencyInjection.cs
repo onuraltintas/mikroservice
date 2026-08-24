@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SpeedReading.Application.Content;
+using SpeedReading.Application.Progress;
 using SpeedReading.Infrastructure.Legacy;
 
 namespace SpeedReading.Infrastructure;
@@ -28,6 +29,7 @@ public static class DependencyInjection
 
         services.AddScoped<ILegacySpeedReadingCatalog, LegacySpeedReadingCatalog>();
         services.AddScoped<ILegacySpeedReadingProgress, LegacySpeedReadingProgress>();
+        services.AddScoped<ISpeedReadingProgressWriter, LegacySpeedReadingProgressWriter>();
         services.AddScoped<ILegacySpeedReadingPrograms, LegacySpeedReadingPrograms>();
         services.AddScoped<ILegacySpeedReadingLearningPaths, LegacySpeedReadingLearningPaths>();
 

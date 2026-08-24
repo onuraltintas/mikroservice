@@ -18,6 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Database\001_write_support.sql" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../SpeedReading.Application/SpeedReading.Application.csproj" />
     <ProjectReference Include="../SpeedReading.Infrastructure/SpeedReading.Infrastructure.csproj" />
     <ProjectReference Include="../../../shared/EduPlatform.Shared.Contracts/EduPlatform.Shared.Contracts.csproj" />
