@@ -45,4 +45,29 @@ describe('SpeedReadingApiService', () => {
     expect(request.request.method).toBe('GET');
     request.flush({ items: [], pageNumber: 2, pageSize: 10, totalCount: 0 });
   });
+
+  it('loads the scoped student analytics summary with an optional date range', () => {
+    service.getStudentAnalyticsSummary({
+      dateFrom: '2026-08-01T00:00:00Z',
+      dateTo: '2026-08-24T23:59:59Z'
+    }).subscribe();
+
+    const request = http.expectOne(
+      '/api/speed-reading/analytics/student/summary?dateFrom=2026-08-01T00:00:00Z&dateTo=2026-08-24T23:59:59Z');
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      userId: 'student-1',
+      dateFrom: '2026-08-01T00:00:00Z',
+      dateTo: '2026-08-24T23:59:59Z',
+      readingSessions: 0,
+      averageWpm: 0,
+      averageComprehension: 0,
+      totalReadingMinutes: 0,
+      bestWpm: 0,
+      exercisesCompleted: 0,
+      exercisesPassed: 0,
+      averageSuccessRate: 0,
+      daily: []
+    });
+  });
 });

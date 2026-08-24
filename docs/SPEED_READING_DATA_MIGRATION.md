@@ -111,6 +111,8 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
 - `GET /api/speed-reading/program-templates` — aktif program şablonları
 - `GET /api/speed-reading/progress/programs` — oturum açmış kullanıcının programları
 - `GET /api/speed-reading/progress/daily-exercise-logs` — günlük tamamlanma kayıtları
+- `GET /api/speed-reading/analytics/student/summary` — öğrencinin en fazla 366
+  günlük okuma/egzersiz analitik özeti ve gün serisi
 - `GET /api/speed-reading/learning-paths/templates` — aktif öğrenme yolu şablonları
 - `GET /api/speed-reading/learning-paths/progress` — öğrencinin yolu ve düğüm durumları
 - `GET /api/speed-reading/learning-paths/personalized` — kişiselleştirilmiş yol öğeleri

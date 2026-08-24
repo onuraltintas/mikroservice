@@ -93,6 +93,9 @@ tablosunu uygular.
 - `GET /api/speed-reading/program-templates`
 - `GET /api/speed-reading/progress/programs`
 - `GET /api/speed-reading/progress/daily-exercise-logs`
+- `GET /api/speed-reading/analytics/student/summary` — oturum açmış öğrencinin
+  en fazla 366 günlük okuma/egzersiz özetini ve gün bazlı serisini döndürür;
+  başka kullanıcı kimliği kabul etmez.
 - `GET /api/speed-reading/learning-paths/templates`
 - `GET /api/speed-reading/learning-paths/progress`
 - `GET /api/speed-reading/learning-paths/personalized`

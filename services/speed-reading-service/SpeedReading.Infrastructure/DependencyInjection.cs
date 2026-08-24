@@ -5,6 +5,7 @@ using EduPlatform.Shared.Infrastructure.Middleware;
 using SpeedReading.Application.Content;
 using SpeedReading.Application.Progress;
 using SpeedReading.Application.Gamification;
+using SpeedReading.Application.Analytics;
 using SpeedReading.Infrastructure.Legacy;
 
 namespace SpeedReading.Infrastructure;
@@ -37,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<ILegacySpeedReadingLearningPaths, LegacySpeedReadingLearningPaths>();
         services.AddScoped<ILegacySpeedReadingGamification, LegacySpeedReadingGamification>();
         services.AddScoped<ISpeedReadingGamificationAdminWriter, LegacySpeedReadingGamificationAdminWriter>();
+        services.AddScoped<ILegacySpeedReadingAnalytics, LegacySpeedReadingAnalytics>();
         services.AddSingleton<IAdminAuditWriter, SpeedReadingAdminAuditWriter>();
 
         return services;

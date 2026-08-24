@@ -88,6 +88,31 @@ export interface SpeedReadingPersonalizedPathItem {
   isUnlocked: boolean;
 }
 
+export interface SpeedReadingStudentAnalyticsDailyPoint {
+  date: string;
+  readingSessions: number;
+  exerciseCount: number;
+  readingMinutes: number;
+  averageWpm: number;
+  averageComprehension: number;
+  averageSuccessRate: number;
+}
+
+export interface SpeedReadingStudentAnalyticsSummary {
+  userId: string;
+  dateFrom: string;
+  dateTo: string;
+  readingSessions: number;
+  averageWpm: number;
+  averageComprehension: number;
+  totalReadingMinutes: number;
+  bestWpm: number;
+  exercisesCompleted: number;
+  exercisesPassed: number;
+  averageSuccessRate: number;
+  daily: SpeedReadingStudentAnalyticsDailyPoint[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class SpeedReadingApiService {
   private readonly http = inject(HttpClient);
@@ -134,6 +159,18 @@ export class SpeedReadingApiService {
     if (options?.dateTo) params = params.set('dateTo', options.dateTo);
     if (options?.limit !== undefined) params = params.set('limit', options.limit);
     return this.http.get<unknown[]>(`${this.baseUrl}/progress/daily-exercise-logs`, { params });
+  }
+
+  getStudentAnalyticsSummary(options?: {
+    dateFrom?: string;
+    dateTo?: string;
+  }): Observable<SpeedReadingStudentAnalyticsSummary> {
+    let params = new HttpParams();
+    if (options?.dateFrom) params = params.set('dateFrom', options.dateFrom);
+    if (options?.dateTo) params = params.set('dateTo', options.dateTo);
+    return this.http.get<SpeedReadingStudentAnalyticsSummary>(
+      `${this.baseUrl}/analytics/student/summary`,
+      { params });
   }
 
   getPersonalizedLearningPath(pageNumber = 1, pageSize = 20): Observable<SpeedReadingPage<SpeedReadingPersonalizedPathItem>> {
