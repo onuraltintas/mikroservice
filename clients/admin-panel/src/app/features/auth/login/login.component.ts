@@ -1,4 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -35,6 +36,7 @@ export class LoginComponent {
     private router = inject(Router);
     private toaster = inject(ToasterService);
     private socialAuthService = inject(SocialAuthService);
+    private destroyRef = inject(DestroyRef);
 
     isLoading = signal(false);
     errorMessage = signal<string | null>(null);
@@ -58,11 +60,13 @@ export class LoginComponent {
 
     constructor() {
         // Listen for Google Login
-        this.socialAuthService.authState.subscribe((user) => {
-            if (user && user.idToken) {
-                this.handleGoogleLogin(user.idToken);
-            }
-        });
+        this.socialAuthService.authState
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((user) => {
+                if (user && user.idToken) {
+                    void this.handleGoogleLogin(user.idToken);
+                }
+            });
     }
 
     async handleGoogleLogin(idToken: string) {

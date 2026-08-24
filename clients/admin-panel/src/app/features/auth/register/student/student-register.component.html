@@ -76,6 +76,19 @@
                     </p>
                 </div>
 
+                <div class="mb-8 flex flex-col items-center gap-3">
+                    <asl-google-signin-button type="standard" size="large" [width]="320"></asl-google-signin-button>
+                    <p class="text-center text-xs text-gray-500 dark:text-gray-400">
+                        Yeni Google hesapları öğrenci hesabı olarak oluşturulur.
+                    </p>
+                </div>
+
+                <div class="mb-8 flex items-center gap-4">
+                    <div class="h-px bg-gray-200 dark:bg-gray-700 flex-1"></div>
+                    <span class="text-xs font-medium uppercase text-gray-400">veya e-posta ile kayıt ol</span>
+                    <div class="h-px bg-gray-200 dark:bg-gray-700 flex-1"></div>
+                </div>
+
                 <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
 
                     <div class="grid grid-cols-2 gap-5">

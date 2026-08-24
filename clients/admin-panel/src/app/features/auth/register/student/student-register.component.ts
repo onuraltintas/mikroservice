@@ -1,4 +1,6 @@
-import { Component, inject, signal, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, DestroyRef, inject, signal, OnInit, PLATFORM_ID } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-social-login';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { HttpClient } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -12,7 +14,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import { environment } from '../../../../../environments/environment.development';
+import { environment } from '../../../../../environments/environment';
+import { AuthService } from '../../../../core/auth/auth.service';
 import { ConfigurationService } from '../../../../core/services/settings/configuration.service';
 
 @Component({
@@ -20,7 +23,8 @@ import { ConfigurationService } from '../../../../core/services/settings/configu
     standalone: true,
     imports: [
         CommonModule, ReactiveFormsModule, RouterLink,
-        MatCardModule, MatInputModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule
+        MatCardModule, MatInputModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule,
+        GoogleSigninButtonModule
     ],
     templateUrl: './student-register.component.html'
 })
@@ -31,6 +35,9 @@ export class StudentRegisterComponent implements OnInit {
     private toaster = inject(ToasterService);
     private configService = inject(ConfigurationService);
     private platformId = inject(PLATFORM_ID);
+    private authService = inject(AuthService);
+    private socialAuthService = inject(SocialAuthService);
+    private destroyRef = inject(DestroyRef);
 
     isLoading = signal(false);
     errorMessage = signal<string | null>(null);
@@ -43,6 +50,16 @@ export class StudentRegisterComponent implements OnInit {
         password: ['', [Validators.required, strongPasswordValidator()]],
         confirmPassword: ['', Validators.required]
     }, { validators: passwordMatchValidator });
+
+    constructor() {
+        this.socialAuthService.authState
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(user => {
+                if (user?.idToken) {
+                    void this.handleGoogleRegistration(user.idToken);
+                }
+            });
+    }
 
     ngOnInit() {
         if (!isPlatformBrowser(this.platformId)) {
@@ -92,6 +109,39 @@ export class StudentRegisterComponent implements OnInit {
                 this.errorMessage.set(msg);
             }
         });
+    }
+
+    private async handleGoogleRegistration(idToken: string) {
+        if (this.isLoading()) return;
+
+        this.isLoading.set(true);
+        this.errorMessage.set(null);
+
+        try {
+            const result = await this.authService.loginWithGoogle(idToken);
+            if (result.requiresMfa) {
+                this.toaster.info('Bu Google hesabı mevcut. Güvenli giriş için giriş sayfasını kullanın.');
+                await this.router.navigate(['/auth/login']);
+                return;
+            }
+
+            this.toaster.success('Google hesabınızla devam edildi.');
+        } catch (error: any) {
+            const errorCode = error.error?.code;
+            const errorMessage = error.error?.message
+                || error.error?.description
+                || 'Google ile kayıt başarısız oldu.';
+
+            if (errorCode === 'Identity.RegistrationDisabled') {
+                this.toaster.info('Yeni kullanıcı kayıtları şu an kapalıdır.');
+            } else {
+                this.toaster.error(errorMessage);
+            }
+
+            this.errorMessage.set(errorMessage);
+        } finally {
+            this.isLoading.set(false);
+        }
     }
 
     togglePassword(e: Event) {
