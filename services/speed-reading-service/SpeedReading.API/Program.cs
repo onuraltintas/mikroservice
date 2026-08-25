@@ -21,8 +21,8 @@ var migrationOnly = args.Any(argument =>
     string.Equals(argument, "--migrate-only", StringComparison.OrdinalIgnoreCase));
 
 // The legacy speed-reading schema is not managed by EF migrations. This
-// one-shot mode applies only additive objects owned by the new service before
-// web replicas start, leaving all existing content tables untouched.
+// one-shot mode applies only idempotent additive compatibility objects before
+// web replicas start, leaving existing business rows untouched.
 if (migrationOnly)
 {
     builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);

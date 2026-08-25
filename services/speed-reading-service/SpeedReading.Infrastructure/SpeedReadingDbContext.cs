@@ -6,8 +6,8 @@ namespace SpeedReading.Infrastructure;
 
 /// <summary>
 /// Access boundary for the existing Hızlı Okuma database.
-/// The first integration phase intentionally does not run migrations: the
-/// existing schema is treated as production data and remains the source of truth.
+/// The existing schema remains the source of truth. The service only applies
+/// idempotent additive compatibility scripts before replicas start.
 /// </summary>
 public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext> options) : DbContext(options)
 {
