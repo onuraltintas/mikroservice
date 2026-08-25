@@ -287,7 +287,7 @@ export class LearningPathService {
    * Sıradaki item'ı getir
    */
   getNextPersonalizedItem(): Observable<any> {
-    return this.http.get(`${this.legacyApiUrl}/personalized/next`);
+    return this.http.get(`${this.apiUrl}/personalized/next`);
   }
 
   /**

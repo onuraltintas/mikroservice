@@ -228,6 +228,31 @@ internal sealed class LegacySpeedReadingLearningPaths(SpeedReadingDbContext db) 
         return new SpeedReadingPage<PersonalizedLearningPathItemSummary>(items, page, size, totalCount);
     }
 
+    public Task<PersonalizedLearningPathItemSummary?> GetNextPersonalizedPathItemAsync(
+        Guid studentId,
+        CancellationToken cancellationToken = default) =>
+        db.PersonalizedLearningPaths
+            .AsNoTracking()
+            .Where(item => item.StudentId == studentId
+                && !item.IsDeleted
+                && !item.IsCompleted
+                && item.IsUnlocked)
+            .OrderBy(item => item.PathIndex)
+            .Select(item => new PersonalizedLearningPathItemSummary(
+                item.Id,
+                item.PathIndex,
+                item.ContentType,
+                item.ContentId,
+                item.ContentTitle,
+                item.DifficultyLevel,
+                item.EstimatedDurationMinutes,
+                item.IsCompleted,
+                item.CompletedAt,
+                item.AchievedScore,
+                item.RecommendationReason,
+                item.IsUnlocked))
+            .FirstOrDefaultAsync(cancellationToken);
+
     private static (int Page, int Size) NormalizePage(int pageNumber, int pageSize) =>
         (Math.Max(pageNumber, 1), Math.Clamp(pageSize, 1, 100));
 }

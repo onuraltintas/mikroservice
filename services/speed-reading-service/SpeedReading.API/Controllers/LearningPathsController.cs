@@ -291,6 +291,19 @@ public sealed class LearningPathsController(
             cancellationToken));
     }
 
+    [HttpGet("personalized/next")]
+    public async Task<ActionResult<PersonalizedLearningPathItemSummary>> GetNextPersonalized(
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await paths.GetNextPersonalizedPathItemAsync(userId, cancellationToken);
+        return result is null ? NoContent() : Ok(result);
+    }
+
     private bool TryGetCurrentUserId(out Guid userId)
     {
         var value = User.FindFirstValue(ClaimTypes.NameIdentifier)

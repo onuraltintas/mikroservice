@@ -217,6 +217,8 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
 - `GET /api/speed-reading/learning-paths/templates` — aktif öğrenme yolu şablonları
 - `GET /api/speed-reading/learning-paths/progress` — öğrencinin yolu ve düğüm durumları
 - `GET /api/speed-reading/learning-paths/personalized` — kişiselleştirilmiş yol öğeleri
+- `GET /api/speed-reading/learning-paths/personalized/next` — tamamlanmamış ve kilidi
+  açık ilk öneriyi döndürür; uygun öğe yoksa `204`
 - `GET /api/speed-reading/gamification/user` — XP, seviye ve streak özeti
 - `GET /api/speed-reading/gamification/achievements` — aktif kazanım kataloğu
 - `GET /api/speed-reading/gamification/achievements/user` — kullanıcının açtığı kazanımlar

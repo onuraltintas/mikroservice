@@ -228,6 +228,8 @@ bu çağrılar ayrıca taşınmalıdır.
 - `GET /api/speed-reading/learning-paths/templates`
 - `GET /api/speed-reading/learning-paths/progress`
 - `GET /api/speed-reading/learning-paths/personalized`
+- `GET /api/speed-reading/learning-paths/personalized/next` — ilk sıradaki aktif,
+  kilidi açılmış ve tamamlanmamış kişiselleştirilmiş içerik; uygun kayıt yoksa `204`.
 - `GET /api/speed-reading/gamification/user` — oturum açmış öğrencinin XP,
   seviye ve streak özeti; kayıt yoksa varsayılan boş özet döner, tabloya yazmaz.
 - `GET /api/speed-reading/gamification/achievements` ve

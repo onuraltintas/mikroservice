@@ -354,4 +354,8 @@ public interface ILegacySpeedReadingLearningPaths
         int pageNumber,
         int pageSize,
         CancellationToken cancellationToken = default);
+
+    Task<PersonalizedLearningPathItemSummary?> GetNextPersonalizedPathItemAsync(
+        Guid studentId,
+        CancellationToken cancellationToken = default);
 }
