@@ -373,6 +373,7 @@ volumes:
   minio_data:
   notification_data_protection:
   gateway_data_protection:
+  speed_reading_data_protection:
 
 
 networks:

@@ -133,6 +133,14 @@ services:
       SpeedReading__SubscriptionIntegrationEnabled: ${SPEED_READING_SUBSCRIPTION_INTEGRATION_ENABLED:-false}
       INTERNAL_SERVICE_API_KEY: ${INTERNAL_SERVICE_API_KEY:?INTERNAL_SERVICE_API_KEY must be set for speed-reading}
       Services__IdentityService: http://identity-service:8080
+      DataProtection__KeysPath: /var/lib/eduplatform/data-protection-keys
+      DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
+      DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?DATAPROTECTION_CERTIFICATE_PASSWORD must be set}
+    volumes:
+      - speed_reading_data_protection:/var/lib/eduplatform/data-protection-keys
+    secrets:
+      - source: dataprotection_certificate
+        target: eduplatform-dataprotection.pfx
     restart: unless-stopped
     depends_on:
       speed-reading-migrations:
