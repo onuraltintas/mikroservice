@@ -4,6 +4,18 @@ Speed Reading, Coaching'e bağlı olmayan ayrı bir bounded context olarak çal�
 `masterhizliokuma.com` gibi bağımsız bir uygulama veya Eduİvme platformunun
 Gateway'i arkasında aynı servis kullanılabilir.
 
+Production'da bağımsız yayın için `speed-reading-service`,
+`speed-reading-frontend` ve `speed-reading-edge` ayrı container'lar olarak
+çalışır. LiteSpeed yalnızca `masterhizliokuma.com` vhost'unu loopback'teki
+SpeedReading edge'ine yönlendirir; `eduivme.com` vhost'u platform edge'inde
+kalır.
+
+Bağımsız edge, Gateway'in tamamını dışarı açmaz. `/api/speed-reading` ve
+SpeedReading'in kimlik/rol ile ilgili sınırlı `/api/v1` uyumluluk yolları
+allowlist'tedir; edge bu yolları Gateway'in canonical `/api` sözleşmesine
+çevirir. Coaching, ödeme, bildirim, yedekleme ve diğer platform yönetim
+uçları bu domain üzerinden kapalıdır.
+
 ## Veri sahipliği ve geçiş güvenliği
 
 Kaynak frontend `clients/speed-reading` altında bağımsız istemci olarak

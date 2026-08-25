@@ -8,7 +8,7 @@ services:
     ports: !reset []
     environment:
       ForwardedHeaders__ForwardLimit: "1"
-      ForwardedHeaders__KnownProxies: ${FORWARDED_HEADERS_KNOWN_PROXIES:-172.31.0.20}
+      ForwardedHeaders__KnownProxies: ${FORWARDED_HEADERS_KNOWN_PROXIES:-172.31.0.20,172.31.0.21}
       ForwardedHeaders__KnownNetworks: ${FORWARDED_HEADERS_KNOWN_NETWORKS:-}
 
   production-edge:
@@ -36,9 +36,37 @@ services:
         # addresses so it cannot collide with the gateway or app containers.
         ipv4_address: 172.31.0.20
 
+  # Independent Hızlı Okuma edge. LiteSpeed routes only
+  # masterhizliokuma.com to this loopback listener; eduivme.com continues to
+  # use production-edge above.
+  speed-reading-edge:
+    image: caddy:2.9.1-alpine
+    ports:
+      - "127.0.0.1:5201:80"
+    volumes:
+      - ./infrastructure/caddy/Caddyfile.speed-reading.litespeed:/etc/caddy/Caddyfile:ro
+      - speed_reading_caddy_data:/data
+      - speed_reading_caddy_config:/config
+    depends_on:
+      speed-reading-frontend:
+        condition: service_healthy
+      api-gateway:
+        condition: service_started
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--no-verbose", "http://127.0.0.1/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    networks:
+      edu-network:
+        ipv4_address: 172.31.0.21
+
 volumes:
   production_caddy_data:
   production_caddy_config:
+  speed_reading_caddy_data:
+  speed_reading_caddy_config:
 
 networks:
   edu-network:

@@ -221,11 +221,11 @@ Mevcut VPS'te LiteSpeed 80/443 portlarını kullandığı için production edge
 yalnızca loopback'te çalışır. Bu overlay, Eduİvme için `127.0.0.1:5200` portunu
 kullanır; diğer sitelerin vhost/listener ayarlarına dokunulmaz:
 
-Production Docker ağı `172.31.0.0/16`, edge container'ı `172.31.0.10` sabit
-adresini kullanır. LiteSpeed'in Docker köprü adresi `172.31.0.1/32` olarak
-güvenilir; aynı ağdaki diğer container'lar forwarded header üretemez. Bu
-değerler Gateway'in forwarded-header güveni ve rate-limit istemci IP'si için
-birlikte ayarlanmıştır. VPS'te bu subnet başka bir ağla çakışıyorsa
+Production Docker ağı `172.31.0.0/16`, Eduİvme edge'i `172.31.0.20` ve bağımsız
+Hızlı Okuma edge'i `172.31.0.21` sabit adreslerini kullanır. LiteSpeed'in Docker
+köprü adresi `172.31.0.1/32` olarak güvenilir; aynı ağdaki diğer container'lar
+forwarded header üretemez. Bu değerler Gateway'in forwarded-header güveni ve
+rate-limit istemci IP'si için birlikte ayarlanmıştır. VPS'te bu subnet başka bir ağla çakışıyorsa
 `PRODUCTION_NETWORK_SUBNET`, `PRODUCTION_NETWORK_NAME`,
 `FORWARDED_HEADERS_KNOWN_PROXIES` ve Caddyfile içindeki `trusted_proxies`
 adresi aynı değişiklikle güncellenmelidir.
@@ -326,6 +326,53 @@ Ardından aşağıdaki smoke testleri çalıştırın:
 curl --fail --silent https://eduivme.com/health/live
 curl --fail --silent https://eduivme.com/health/ready
 ```
+
+### Bağımsız Hızlı Okuma domaini
+
+`masterhizliokuma.com` ayrı uygulama olarak yayınlanacaksa aynı release ile
+`docker-compose.production.litespeed.yml` overlay'i de kullanılmalıdır. Bu
+overlay, yalnızca `speed-reading-edge` için host loopback `127.0.0.1:5201`
+portunu açar ve sabit Docker IP'si `172.31.0.21` kullanır. Gateway'in güvenilen
+proxy listesinde hem Eduİvme edge'i (`172.31.0.20`) hem de bu edge bulunmalıdır.
+LiteSpeed vhost'u bu sabit porta yönlenir; portu env ile değiştirmeyin.
+
+Deploy öncesi yalnızca hızlı okuma vhost'unun ve edge release bilgilerinin
+yedeğini alın:
+
+```bash
+install -d -m 0750 /root/backups/speedreading-deploy/<commit>
+cp /usr/local/lsws/conf/vhosts/masterhizliokuma.com/vhost.conf \
+  /root/backups/speedreading-deploy/<commit>/masterhizliokuma.com.vhost.conf
+cp /opt/eduivme/.env /root/backups/speedreading-deploy/<commit>/eduivme.env
+```
+
+`infrastructure/litespeed/masterhizliokuma.com.vhost.conf` dosyasını yalnızca
+bu vhost'a kurun. Sertifika dosyaları deploy öncesi mevcut olmalı; yoksa önce
+challenge docroot'unu oluşturup HTTP-01 ile alın:
+
+```bash
+mkdir -p /home/masterhizliokuma.com/public_html/.well-known/acme-challenge
+certbot certonly --webroot \
+  -w /home/masterhizliokuma.com/public_html \
+  -d masterhizliokuma.com -d www.masterhizliokuma.com \
+  --email <sertifika-iletisim-adresi> --agree-tos --no-eff-email
+```
+
+Vhost'taki `/.well-known/acme-challenge` context'i HTTPS redirect'inden
+muaf tutulmuştur; böylece yenileme sırasında challenge dosyası Caddy'ye
+proxylenmez. Kurulumdan sonra yapılandırmayı ve domain akışını doğrulayın:
+
+```bash
+/usr/local/lsws/bin/lshttpd -t
+/usr/local/lsws/bin/lswsctrl reload
+curl --fail --silent https://masterhizliokuma.com/health/live
+curl --fail --silent https://masterhizliokuma.com/health/ready
+curl --fail --silent https://masterhizliokuma.com/api/speed-reading/exercise-types?pageNumber=1\&pageSize=1
+```
+
+Geri alma gerekiyorsa yeni SpeedReading edge/service'i durdurun, yalnızca
+yedeklenen hızlı okuma vhost'unu geri yükleyin, ardından `lshttpd -t` ve
+`lswsctrl reload` çalıştırın. Eduİvme vhost'una ve diğer sitelere dokunmayın.
 
 ## 6. CI release kapıları
 

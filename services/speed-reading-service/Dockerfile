@@ -6,6 +6,7 @@ COPY ["services/speed-reading-service/SpeedReading.Application/SpeedReading.Appl
 COPY ["services/speed-reading-service/SpeedReading.Domain/SpeedReading.Domain.csproj", "services/speed-reading-service/SpeedReading.Domain/"]
 COPY ["services/speed-reading-service/SpeedReading.Infrastructure/SpeedReading.Infrastructure.csproj", "services/speed-reading-service/SpeedReading.Infrastructure/"]
 COPY ["shared/EduPlatform.Shared.Kernel/EduPlatform.Shared.Kernel.csproj", "shared/EduPlatform.Shared.Kernel/"]
+COPY ["shared/EduPlatform.Shared.Contracts/EduPlatform.Shared.Contracts.csproj", "shared/EduPlatform.Shared.Contracts/"]
 COPY ["shared/EduPlatform.Shared.Infrastructure/EduPlatform.Shared.Infrastructure.csproj", "shared/EduPlatform.Shared.Infrastructure/"]
 COPY ["shared/EduPlatform.Shared.Security/EduPlatform.Shared.Security.csproj", "shared/EduPlatform.Shared.Security/"]
 
