@@ -314,7 +314,7 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         db.ReadingTexts.Add(readingText);
         AddLedger(scope, idempotencyKey, requestHash, readingText.Id, now);
         await SaveOrReplayAsync(readingText.Id, scope, idempotencyKey, requestHash, cancellationToken);
-        return ToSummary(readingText);
+        return await ToSummaryAsync(readingText, cancellationToken);
     }
 
     public async Task<ReadingTextSummary> UpdateReadingTextAsync(
@@ -355,7 +355,7 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
 
         AddLedger(scope, idempotencyKey, requestHash, readingText.Id, DateTime.UtcNow);
         await SaveOrReplayAsync(readingText.Id, scope, idempotencyKey, requestHash, cancellationToken);
-        return ToSummary(readingText);
+        return await ToSummaryAsync(readingText, cancellationToken);
     }
 
     public async Task DeleteReadingTextAsync(
@@ -1174,7 +1174,7 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
             ?? throw new BusinessRuleException(
                 "Idempotency.ResourceMissing",
                 "Idempotency kaydına ait okuma metni bulunamadı; yeni bir anahtar kullanın.");
-        return ToSummary(readingText);
+        return await ToSummaryAsync(readingText, cancellationToken);
     }
 
     private async Task<ReadingQuestionSummary> ReplayQuestionAsync(
@@ -2182,15 +2182,29 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         exercise.ConfigurationJson,
         exercise.TargetAgeGroupConfigurationId);
 
-    private static ReadingTextSummary ToSummary(LegacyReadingText text) => new(
-        text.Id,
-        text.Title,
-        text.WordCount,
-        text.Category,
-        text.DifficultyLevel,
-        text.Language,
-        text.IsActive,
-        text.ExerciseId);
+    private async Task<ReadingTextSummary> ToSummaryAsync(
+        LegacyReadingText text,
+        CancellationToken cancellationToken)
+    {
+        var questionCount = await db.ReadingQuestions.CountAsync(
+            question => question.ReadingTextId == text.Id && !question.IsDeleted,
+            cancellationToken);
+        return new ReadingTextSummary(
+            text.Id,
+            text.Title,
+            text.WordCount,
+            text.Category,
+            text.DifficultyLevel,
+            text.Language,
+            text.IsActive,
+            text.ExerciseId,
+            text.TargetAgeGroupConfigurationId,
+            questionCount)
+        {
+            CreatedAt = text.CreatedAt,
+            UpdatedAt = text.UpdatedAt
+        };
+    }
 
     private static ReadingQuestionSummary ToSummary(LegacyReadingQuestion question) => new(
         question.Id,

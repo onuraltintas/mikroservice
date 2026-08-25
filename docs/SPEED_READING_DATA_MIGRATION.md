@@ -87,7 +87,8 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
 - `POST /api/speed-reading/reading-texts` / `PUT /api/speed-reading/reading-texts/{id}` /
   `DELETE /api/speed-reading/reading-texts/{id}` — `ContentManage` yetkili
   okuma metni yönetimi. Sorusu bulunan metinler silinemez; metin ayrıntısı
-  güncellemede mevcut içerik ve etiketler korunarak açıkça gönderilmelidir.
+  güncellemesinde frontend mevcut merkezi ayrıntıyı okuyup içerik, hedef yaş,
+  etiket, önerilen seviye ve egzersiz bağını koruyan tam gövdeyi gönderir.
 - `POST /api/speed-reading/reading-questions` / `PUT /api/speed-reading/reading-questions/{id}` /
   `DELETE /api/speed-reading/reading-questions/{id}` — `ContentManage` yetkili
   soru yönetimi. Sorular metin kimliğine bağlıdır; dört farklı seçenek, A-D

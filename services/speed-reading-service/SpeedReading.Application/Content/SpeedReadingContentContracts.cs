@@ -44,7 +44,20 @@ public sealed record ReadingTextSummary(
     int DifficultyLevel,
     string Language,
     bool IsActive,
-    Guid? ExerciseId);
+    Guid? ExerciseId,
+    Guid? TargetAgeGroupConfigurationId,
+    int QuestionCount)
+{
+    public DateTime CreatedAt { get; init; }
+    public DateTime? UpdatedAt { get; init; }
+}
+
+public sealed record ShortReadingTextSummary(
+    Guid Id,
+    string Title,
+    string Content,
+    int WordCount,
+    string Category);
 
 public sealed record ReadingQuestionSummary(
     Guid Id,
@@ -57,7 +70,7 @@ public sealed record ReadingQuestionSummary(
     string OptionB,
     string OptionC,
     string OptionD,
-    string CorrectAnswer,
+    string? CorrectAnswer,
     int OrderIndex);
 
 public sealed record ReadingTextDetails(
@@ -74,7 +87,11 @@ public sealed record ReadingTextDetails(
     Guid? ExerciseId,
     IReadOnlyList<ReadingQuestionSummary> Questions,
     int RecommendedMinLevel,
-    int RecommendedMaxLevel);
+    int RecommendedMaxLevel)
+{
+    public DateTime CreatedAt { get; init; }
+    public DateTime? UpdatedAt { get; init; }
+}
 
 public interface ILegacySpeedReadingCatalog
 {
@@ -102,11 +119,25 @@ public interface ILegacySpeedReadingCatalog
         int? difficultyLevel,
         string? searchTerm,
         bool onlyWithQuestions,
+        Guid? targetAgeGroupId,
+        bool? isActive,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<string>> GetReadingTextCategoriesAsync(
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<int>> GetReadingTextDifficultyLevelsAsync(
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ShortReadingTextSummary>> GetShortReadingTextsAsync(
+        int limit,
         CancellationToken cancellationToken = default);
 
     Task<ReadingTextDetails?> GetReadingTextAsync(
         Guid id,
         bool includeQuestions,
+        bool includeInactive,
+        bool includeAnswers,
         CancellationToken cancellationToken = default);
 }
 

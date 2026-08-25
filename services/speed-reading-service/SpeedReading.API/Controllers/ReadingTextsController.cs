@@ -21,15 +21,42 @@ public sealed class ReadingTextsController(
         [FromQuery] string? category,
         [FromQuery] int? difficultyLevel,
         [FromQuery] string? searchTerm,
+        [FromQuery] Guid? targetAgeGroupId,
+        [FromQuery] bool? isActive,
         [FromQuery] bool onlyWithQuestions = false,
-        CancellationToken cancellationToken = default) =>
-        catalog.GetReadingTextsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var canManageContent = User.Claims.Any(claim =>
+            claim.Type == "permission" &&
+            claim.Value == PlatformPermissions.SpeedReading.ContentManage);
+        var effectiveIsActive = canManageContent ? isActive : true;
+
+        return catalog.GetReadingTextsAsync(
             exerciseId,
             category,
             difficultyLevel,
             searchTerm,
             onlyWithQuestions,
+            targetAgeGroupId,
+            effectiveIsActive,
             cancellationToken);
+    }
+
+    [HttpGet("categories")]
+    public async Task<ActionResult<IReadOnlyList<string>>> GetCategories(
+        CancellationToken cancellationToken = default) =>
+        Ok(await catalog.GetReadingTextCategoriesAsync(cancellationToken));
+
+    [HttpGet("levels")]
+    public async Task<ActionResult<IReadOnlyList<int>>> GetLevels(
+        CancellationToken cancellationToken = default) =>
+        Ok(await catalog.GetReadingTextDifficultyLevelsAsync(cancellationToken));
+
+    [HttpGet("short")]
+    public async Task<ActionResult<IReadOnlyList<ShortReadingTextSummary>>> GetShortReadingTexts(
+        [FromQuery] int limit = 10,
+        CancellationToken cancellationToken = default) =>
+        Ok(await catalog.GetShortReadingTextsAsync(limit, cancellationToken));
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ReadingTextDetails>> GetReadingText(
@@ -37,7 +64,15 @@ public sealed class ReadingTextsController(
         [FromQuery] bool includeQuestions = true,
         CancellationToken cancellationToken = default)
     {
-        var result = await catalog.GetReadingTextAsync(id, includeQuestions, cancellationToken);
+        var canManageContent = User.Claims.Any(claim =>
+            claim.Type == "permission" &&
+            claim.Value == PlatformPermissions.SpeedReading.ContentManage);
+        var result = await catalog.GetReadingTextAsync(
+            id,
+            includeQuestions,
+            canManageContent,
+            canManageContent,
+            cancellationToken);
         return result is null ? NotFound() : Ok(result);
     }
 

@@ -89,4 +89,53 @@ describe('ExerciseService', () => {
     expect(deleteRequest.request.headers.get('Idempotency-Key')).toBe('exercise-delete-key');
     deleteRequest.flush(null);
   });
+
+  it('uses the central reading-text commands instead of the legacy exercise route', () => {
+    service.createReadingText({
+      title: 'Bilim metni',
+      content: 'Bir iki üç',
+      wordCount: 99,
+      category: 'Bilim',
+      difficultyLevel: 2
+    }, 'reading-create-key').subscribe();
+
+    const createRequest = http.expectOne('/api/speed-reading/reading-texts');
+    expect(createRequest.request.method).toBe('POST');
+    expect(createRequest.request.headers.get('Idempotency-Key')).toBe('reading-create-key');
+    expect(createRequest.request.body).toEqual({
+      title: 'Bilim metni',
+      content: 'Bir iki üç',
+      wordCount: 3,
+      category: 'Bilim',
+      difficultyLevel: 2,
+      targetAgeGroupConfigurationId: null,
+      language: 'tr',
+      isActive: true,
+      tags: null,
+      recommendedMinLevel: 1,
+      recommendedMaxLevel: 10,
+      exerciseId: null
+    });
+    createRequest.flush({ id: 'reading-1' });
+
+    service.updateReadingText('reading-1', { title: 'Bilim metni 2' }, 'reading-update-key').subscribe();
+    const detailsRequest = http.expectOne('/api/speed-reading/reading-texts/reading-1?includeQuestions=false');
+    detailsRequest.flush({
+      id: 'reading-1', title: 'Bilim metni', content: 'Bir iki üç', wordCount: 3,
+      category: 'Bilim', difficultyLevel: 2, targetAgeGroupConfigurationId: null,
+      language: 'tr', isActive: true, tags: [], exerciseId: null,
+      recommendedMinLevel: 1, recommendedMaxLevel: 10, questions: []
+    });
+    const updateRequest = http.expectOne('/api/speed-reading/reading-texts/reading-1');
+    expect(updateRequest.request.method).toBe('PUT');
+    expect(updateRequest.request.headers.get('Idempotency-Key')).toBe('reading-update-key');
+    expect(updateRequest.request.body.title).toBe('Bilim metni 2');
+    updateRequest.flush({ id: 'reading-1' });
+
+    service.deleteReadingText('reading-1', 'reading-delete-key').subscribe();
+    const deleteRequest = http.expectOne('/api/speed-reading/reading-texts/reading-1');
+    expect(deleteRequest.request.method).toBe('DELETE');
+    expect(deleteRequest.request.headers.get('Idempotency-Key')).toBe('reading-delete-key');
+    deleteRequest.flush(null);
+  });
 });

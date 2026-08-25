@@ -9,7 +9,8 @@ Gateway'i arkasında aynı servis kullanılabilir.
 Kaynak frontend `clients/speed-reading` altında bağımsız istemci olarak
 izlenir. Production derlemesi statik bir Nginx image'ı ile paketlenebilir ve
 okuma/ilerleme sözleşmeleri için `/api/speed-reading` kullanır. Eski yazma
-kontratları, idempotency ve audit dilimi tamamlanana kadar ayrı tutulur.
+kontratlarının okuma metni/egzersiz yolları da merkezi uçlara taşınmıştır;
+idempotency ve audit sözleşmeleri tüm içerik komutlarında korunur.
 
 - Mevcut hızlı okuma veritabanı korunur; servis mevcut business tabloları için
   migration çalıştırmaz ve şemayı değiştirmez. Yazma dilimi için ayrı
@@ -66,10 +67,21 @@ tablosunu uygular.
 
 İlk içerik API'leri:
 
-- `GET /api/speed-reading/exercise-types`
+- `GET /api/speed-reading/exercise-types` ve `/exercise-types/categories`
 - `GET /api/speed-reading/exercises`
-- `GET /api/speed-reading/reading-texts`
-- `GET /api/speed-reading/reading-texts/{id}`
+- `GET /api/speed-reading/reading-texts` — `category`, `difficultyLevel`,
+  `targetAgeGroupId`, `searchTerm`, `onlyWithQuestions` ve `isActive` filtreleri
+- `GET /api/speed-reading/reading-texts/categories` ve `/levels`
+- `GET /api/speed-reading/reading-texts/short?limit=10` — aktif, 200 kelimeyi
+  geçmeyen RSVP metinleri (limit 1–50 aralığında sınırlandırılır)
+- `GET /api/speed-reading/reading-texts/{id}?includeQuestions=true` — içerik
+  yönetim yetkisi olmayan kullanıcılar pasif metinleri göremez.
+
+CSV/Excel içe aktarma ve PDF/DOCX dışa aktarma uçları henüz merkezi servise
+taşınmamıştır; frontend bu dört işlem için geçici olarak legacy
+`/api/v1/reading-texts` sözleşmesini kullanır. Bu legacy backend kapatılmadan
+önce merkezi serviste dosya doğrulama, idempotency ve çıktı üretimi tamamlanıp
+bu çağrılar ayrıca taşınmalıdır.
 - `GET /api/speed-reading/progress/reading-history`
 - `GET /api/speed-reading/progress/reading-statistics`
 - `GET /api/speed-reading/progress/exercise-results`

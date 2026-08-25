@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Exercise, ReadingText, ExerciseResult } from '../models/exercise.model';
 import { PagedResult } from '../models/paged-result.model';
@@ -20,7 +20,6 @@ import { PagedResult } from '../models/paged-result.model';
 export class ExerciseService {
   private readonly http = inject(HttpClient);
   private readonly API_URL = `${environment.speedReadingApiUrl}`;
-  private readonly LEGACY_API_URL = `${environment.apiUrl}`;
 
   /**
    * Get all exercises with pagination
@@ -165,8 +164,10 @@ export class ExerciseService {
    * Backend returns: ApiResponse<ReadingText>
    * Service receives: ReadingText (auto-unwrapped)
    */
-  createReadingText(readingText: Partial<ReadingText>): Observable<ReadingText> {
-    return this.http.post<ReadingText>(`${this.LEGACY_API_URL}/v1/reading-texts/exercise`, readingText);
+  createReadingText(readingText: Partial<ReadingText>, idempotencyKey?: string): Observable<ReadingText> {
+    return this.http.post<ReadingText>(`${this.API_URL}/reading-texts`, this.toReadingTextRequest(readingText), {
+      headers: this.idempotencyHeaders(idempotencyKey)
+    });
   }
 
   /**
@@ -174,8 +175,12 @@ export class ExerciseService {
    * Backend returns: ApiResponse<ReadingText>
    * Service receives: ReadingText (auto-unwrapped)
    */
-  updateReadingText(id: string, readingText: Partial<ReadingText>): Observable<ReadingText> {
-    return this.http.put<ReadingText>(`${this.LEGACY_API_URL}/v1/reading-texts/exercise/${id}`, readingText);
+  updateReadingText(id: string, readingText: Partial<ReadingText>, idempotencyKey?: string): Observable<ReadingText> {
+    return this.http.get<CentralReadingTextDetails>(`${this.API_URL}/reading-texts/${id}?includeQuestions=false`).pipe(
+      switchMap(existing => this.http.put<ReadingText>(`${this.API_URL}/reading-texts/${id}`, this.toReadingTextRequest(readingText, existing), {
+        headers: this.idempotencyHeaders(idempotencyKey)
+      }))
+    );
   }
 
   /**
@@ -183,8 +188,10 @@ export class ExerciseService {
    * Backend returns: ApiResponse<void>
    * Service receives: void (auto-unwrapped)
    */
-  deleteReadingText(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.LEGACY_API_URL}/v1/reading-texts/exercise/${id}`);
+  deleteReadingText(id: string, idempotencyKey?: string): Observable<void> {
+    return this.http.delete<void>(`${this.API_URL}/reading-texts/${id}`, {
+      headers: this.idempotencyHeaders(idempotencyKey)
+    });
   }
 
   /**
@@ -230,4 +237,44 @@ export class ExerciseService {
       targetAgeGroupConfigurationId: exercise.targetAgeGroupId ?? null
     };
   }
+
+  private toReadingTextRequest(
+    readingText: Partial<ReadingText>,
+    existing?: CentralReadingTextDetails
+  ): Record<string, unknown> {
+    const content = readingText.content ?? existing?.content ?? '';
+    return {
+      title: readingText.title ?? existing?.title ?? '',
+      content,
+      wordCount: content.trim().split(/\s+/).filter(Boolean).length,
+      category: readingText.category ?? existing?.category ?? '',
+      difficultyLevel: readingText.difficultyLevel ?? existing?.difficultyLevel ?? 1,
+      targetAgeGroupConfigurationId: existing?.targetAgeGroupConfigurationId ?? null,
+      language: existing?.language ?? 'tr',
+      isActive: existing?.isActive ?? true,
+      tags: existing?.tags?.join(',') || null,
+      recommendedMinLevel: existing?.recommendedMinLevel ?? 1,
+      recommendedMaxLevel: existing?.recommendedMaxLevel ?? 10,
+      exerciseId: readingText.exerciseId ?? existing?.exerciseId ?? null
+    };
+  }
+}
+
+interface CentralReadingTextDetails {
+  id: string;
+  title: string;
+  content: string;
+  wordCount: number;
+  category: string;
+  difficultyLevel: number;
+  targetAgeGroupConfigurationId: string | null;
+  language: string;
+  isActive: boolean;
+  tags: string[];
+  exerciseId: string | null;
+  recommendedMinLevel: number;
+  recommendedMaxLevel: number;
+  questions: unknown[];
+  createdAt: string;
+  updatedAt: string | null;
 }

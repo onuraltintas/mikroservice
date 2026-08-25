@@ -133,8 +133,12 @@ export interface CreateReadingQuestionDto {
 }
 
 export interface UpdateReadingQuestionDto {
+  readingTextId: string;
   questionText?: string;
   type?: QuestionType;
+  bloomLevel?: BloomLevel;
+  difficultyLevel?: number;
+  explanation?: string;
   optionA?: string;
   optionB?: string;
   optionC?: string;

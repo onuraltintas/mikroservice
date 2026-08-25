@@ -121,11 +121,18 @@ internal sealed class LegacySpeedReadingCatalog(SpeedReadingDbContext db) : ILeg
         int? difficultyLevel,
         string? searchTerm,
         bool onlyWithQuestions,
+        Guid? targetAgeGroupId,
+        bool? isActive,
         CancellationToken cancellationToken = default)
     {
         var query = db.ReadingTexts
             .AsNoTracking()
-            .Where(item => !item.IsDeleted && item.IsActive);
+            .Where(item => !item.IsDeleted);
+
+        if (isActive.HasValue)
+        {
+            query = query.Where(item => item.IsActive == isActive.Value);
+        }
 
         if (exerciseId.HasValue)
         {
@@ -140,6 +147,11 @@ internal sealed class LegacySpeedReadingCatalog(SpeedReadingDbContext db) : ILeg
         if (difficultyLevel.HasValue)
         {
             query = query.Where(item => item.DifficultyLevel == difficultyLevel);
+        }
+
+        if (targetAgeGroupId.HasValue)
+        {
+            query = query.Where(item => item.TargetAgeGroupConfigurationId == targetAgeGroupId);
         }
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -166,18 +178,66 @@ internal sealed class LegacySpeedReadingCatalog(SpeedReadingDbContext db) : ILeg
                 item.DifficultyLevel,
                 item.Language,
                 item.IsActive,
-                item.ExerciseId))
+                item.ExerciseId,
+                item.TargetAgeGroupConfigurationId,
+                db.ReadingQuestions.Count(question =>
+                    question.ReadingTextId == item.Id && !question.IsDeleted))
+            {
+                CreatedAt = item.CreatedAt,
+                UpdatedAt = item.UpdatedAt
+            })
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<string>> GetReadingTextCategoriesAsync(
+        CancellationToken cancellationToken = default) =>
+        await db.ReadingTexts
+            .AsNoTracking()
+            .Where(item => !item.IsDeleted && item.IsActive && item.Category != string.Empty)
+            .Select(item => item.Category)
+            .Distinct()
+            .OrderBy(item => item)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<int>> GetReadingTextDifficultyLevelsAsync(
+        CancellationToken cancellationToken = default) =>
+        await db.ReadingTexts
+            .AsNoTracking()
+            .Where(item => !item.IsDeleted && item.IsActive)
+            .Select(item => item.DifficultyLevel)
+            .Distinct()
+            .OrderBy(item => item)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<ShortReadingTextSummary>> GetShortReadingTextsAsync(
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        var boundedLimit = Math.Clamp(limit, 1, 50);
+        return await db.ReadingTexts
+            .AsNoTracking()
+            .Where(item => !item.IsDeleted && item.IsActive && item.WordCount > 0 && item.WordCount <= 200)
+            .OrderByDescending(item => item.CreatedAt)
+            .Take(boundedLimit)
+            .Select(item => new ShortReadingTextSummary(
+                item.Id,
+                item.Title,
+                item.Content,
+                item.WordCount,
+                item.Category))
             .ToListAsync(cancellationToken);
     }
 
     public async Task<ReadingTextDetails?> GetReadingTextAsync(
         Guid id,
         bool includeQuestions,
+        bool includeInactive,
+        bool includeAnswers,
         CancellationToken cancellationToken = default)
     {
         var text = await db.ReadingTexts
             .AsNoTracking()
-            .Where(item => item.Id == id && !item.IsDeleted)
+            .Where(item => item.Id == id && !item.IsDeleted && (includeInactive || item.IsActive))
             .Select(item => new
             {
                 item.Id,
@@ -192,7 +252,9 @@ internal sealed class LegacySpeedReadingCatalog(SpeedReadingDbContext db) : ILeg
                 item.Tags,
                 item.ExerciseId,
                 item.RecommendedMinLevel,
-                item.RecommendedMaxLevel
+                item.RecommendedMaxLevel,
+                item.CreatedAt,
+                item.UpdatedAt
             })
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -217,7 +279,7 @@ internal sealed class LegacySpeedReadingCatalog(SpeedReadingDbContext db) : ILeg
                     item.OptionB,
                     item.OptionC,
                     item.OptionD,
-                    item.CorrectAnswer,
+                    includeAnswers ? item.CorrectAnswer : null,
                     item.OrderIndex))
                 .ToListAsync(cancellationToken)
             : [];
@@ -236,7 +298,11 @@ internal sealed class LegacySpeedReadingCatalog(SpeedReadingDbContext db) : ILeg
             text.ExerciseId,
             questions,
             text.RecommendedMinLevel,
-            text.RecommendedMaxLevel);
+            text.RecommendedMaxLevel)
+        {
+            CreatedAt = text.CreatedAt,
+            UpdatedAt = text.UpdatedAt
+        };
     }
 
     private static (int Page, int Size) NormalizePage(int pageNumber, int pageSize) =>
