@@ -43,7 +43,8 @@ if (migrationOnly)
     foreach (var scriptPath in scriptPaths)
     {
         var script = await File.ReadAllTextAsync(scriptPath);
-        await migrationDb.Database.ExecuteSqlRawAsync(script);
+        await migrationDb.Database.ExecuteSqlRawAsync(
+            script.Replace("{", "{{").Replace("}", "}}"));
     }
     return;
 }
