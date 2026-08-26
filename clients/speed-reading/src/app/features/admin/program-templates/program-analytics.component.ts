@@ -86,7 +86,7 @@ export class ProgramAnalyticsComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    const url = `${environment.apiUrl}/student-progress/analytics/dashboard`;
+    const url = `${environment.speedReadingApiUrl}/analytics/admin/programs`;
 
     this.http.get<AnalyticsResponse>(url)
       .subscribe({

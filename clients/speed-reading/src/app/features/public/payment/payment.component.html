@@ -37,7 +37,7 @@
           <h2>Ödeme</h2>
           <p>Seçilen plan: <strong>{{ selectedPlan?.name }}</strong> — {{ formatPrice(selectedPlan!) }}</p>
         </div>
-        <div class="checkout-form" [innerHTML]="checkoutFormContent"></div>
+        <div #checkoutHost id="iyzipay-checkout-form" class="checkout-form responsive"></div>
         <button mat-stroked-button (click)="cancelCheckout()" class="cancel-btn">
           <mat-icon>arrow_back</mat-icon> Geri Dön
         </button>
@@ -87,6 +87,32 @@
           </div>
 
           <div class="cta-actions">
+            <div class="buyer-fields">
+              <label>
+                Telefon
+                <input type="tel" [(ngModel)]="buyerDetails.phoneNumber" placeholder="05xxxxxxxxx" autocomplete="tel">
+              </label>
+              <label>
+                T.C. kimlik no
+                <input type="text" inputmode="numeric" maxlength="11" [(ngModel)]="buyerDetails.identityNumber" placeholder="11 haneli kimlik numarası" autocomplete="off">
+              </label>
+              <label>
+                Fatura adresi
+                <textarea rows="2" [(ngModel)]="buyerDetails.billingAddress" placeholder="Açık adres" autocomplete="street-address"></textarea>
+              </label>
+              <div class="buyer-fields-row">
+                <label>
+                  İl
+                  <input type="text" [(ngModel)]="buyerDetails.city" placeholder="İstanbul" autocomplete="address-level2">
+                </label>
+                <label>
+                  Posta kodu
+                  <input type="text" [(ngModel)]="buyerDetails.zipCode" placeholder="34000" autocomplete="postal-code">
+                </label>
+              </div>
+              <p class="privacy-note">Bu bilgiler yalnızca ödeme sağlayıcısına iletilir; uygulamada saklanmaz.</p>
+            </div>
+
             <!-- Hata mesajı -->
             <p *ngIf="checkoutError()" class="error-msg">
               <mat-icon>error_outline</mat-icon> {{ checkoutError() }}

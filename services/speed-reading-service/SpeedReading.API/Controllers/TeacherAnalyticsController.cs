@@ -16,6 +16,56 @@ public sealed class TeacherAnalyticsController(
     ILegacySpeedReadingTeacherReports teacherReports,
     ISpeedReadingTeacherAccess teacherAccess) : ControllerBase
 {
+    [HttpGet("students/{studentId:guid}/summary")]
+    public async Task<ActionResult<StudentAnalyticsSummary>> GetStudentSummary(
+        Guid studentId,
+        [FromQuery] DateTime? dateFrom,
+        [FromQuery] DateTime? dateTo,
+        CancellationToken cancellationToken = default)
+    {
+        var access = await CanReadStudentAsync(studentId, cancellationToken);
+        if (!access.HasIdentity)
+        {
+            return Unauthorized();
+        }
+
+        if (!access.Allowed)
+        {
+            return Forbid();
+        }
+
+        return Ok(await analytics.GetStudentSummaryAsync(
+            studentId,
+            dateFrom,
+            dateTo,
+            cancellationToken));
+    }
+
+    [HttpGet("students/{studentId:guid}/series")]
+    public async Task<ActionResult<StudentSeriesAnalytics>> GetStudentSeries(
+        Guid studentId,
+        [FromQuery] DateTime? dateFrom,
+        [FromQuery] DateTime? dateTo,
+        CancellationToken cancellationToken = default)
+    {
+        var access = await CanReadStudentAsync(studentId, cancellationToken);
+        if (!access.HasIdentity)
+        {
+            return Unauthorized();
+        }
+
+        if (!access.Allowed)
+        {
+            return Forbid();
+        }
+
+        return Ok(await analytics.GetStudentSeriesAsync(
+            studentId,
+            dateFrom,
+            dateTo,
+            cancellationToken));
+    }
+
     [HttpGet("class-overview")]
     public async Task<ActionResult<TeacherClassOverviewAnalytics>> GetClassOverview(
         [FromQuery] DateTime? dateFrom,
@@ -83,16 +133,13 @@ public sealed class TeacherAnalyticsController(
         [FromQuery] DateTime? dateTo,
         CancellationToken cancellationToken = default)
     {
-        var viewerUserId = GetCurrentUserId();
-        if (viewerUserId is null)
+        var access = await CanReadStudentAsync(studentId, cancellationToken);
+        if (!access.HasIdentity)
         {
             return Unauthorized();
         }
 
-        if (!await teacherAccess.CanReadStudentAsync(
-                viewerUserId.Value,
-                studentId,
-                cancellationToken))
+        if (!access.Allowed)
         {
             return Forbid();
         }
@@ -111,16 +158,13 @@ public sealed class TeacherAnalyticsController(
         [FromQuery] DateTime? dateTo,
         CancellationToken cancellationToken = default)
     {
-        var viewerUserId = GetCurrentUserId();
-        if (viewerUserId is null)
+        var access = await CanReadStudentAsync(studentId, cancellationToken);
+        if (!access.HasIdentity)
         {
             return Unauthorized();
         }
 
-        if (!await teacherAccess.CanReadStudentAsync(
-                viewerUserId.Value,
-                studentId,
-                cancellationToken))
+        if (!access.Allowed)
         {
             return Forbid();
         }
@@ -139,16 +183,13 @@ public sealed class TeacherAnalyticsController(
         [FromQuery] DateTime? dateTo,
         CancellationToken cancellationToken = default)
     {
-        var viewerUserId = GetCurrentUserId();
-        if (viewerUserId is null)
+        var access = await CanReadStudentAsync(studentId, cancellationToken);
+        if (!access.HasIdentity)
         {
             return Unauthorized();
         }
 
-        if (!await teacherAccess.CanReadStudentAsync(
-                viewerUserId.Value,
-                studentId,
-                cancellationToken))
+        if (!access.Allowed)
         {
             return Forbid();
         }
@@ -165,6 +206,19 @@ public sealed class TeacherAnalyticsController(
         var value = User.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? User.FindFirstValue("sub");
         return Guid.TryParse(value, out var userId) ? userId : null;
+    }
+
+    private async Task<(bool HasIdentity, bool Allowed)> CanReadStudentAsync(
+        Guid studentId,
+        CancellationToken cancellationToken)
+    {
+        var viewerUserId = GetCurrentUserId();
+        return viewerUserId is null
+            ? (false, false)
+            : (true, await teacherAccess.CanReadStudentAsync(
+                viewerUserId.Value,
+                studentId,
+                cancellationToken));
     }
 
     private Task<EduPlatform.Shared.Contracts.Reporting.SpeedReadingTeacherStudentScopeResponse?> GetTeacherScopeAsync(

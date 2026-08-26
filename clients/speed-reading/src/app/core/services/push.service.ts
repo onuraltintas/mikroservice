@@ -10,7 +10,7 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class PushService {
     private readonly VAPID_PUBLIC_KEY = environment.vapidPublicKey;
-    private readonly apiUrl = `${environment.apiUrl}/notifications/subscribe`;
+    private readonly apiUrl = `${environment.speedReadingApiUrl}/notifications/subscribe`;
 
     constructor(
         private swPush: SwPush,

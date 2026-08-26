@@ -50,7 +50,7 @@ export interface ImportResult {
     providedIn: 'root'
 })
 export class VisualizationAdminService {
-    private apiUrl = `${environment.apiUrl}/v1/admin/visualization-scenes`;
+    private apiUrl = `${environment.speedReadingApiUrl}/admin/visualization-scenes`;
 
     constructor(private http: HttpClient) { }
 
@@ -79,9 +79,9 @@ export class VisualizationAdminService {
             map((data: any) => {
                 // Backend returns { scene: {...}, questions: [...] } after ApiResponse unwrap
                 const scene = data.scene || data;
-                const questions = (data.questions || []).map((q: any) => ({
+                const questions = (data.questions || scene.questions || []).map((q: any) => ({
                     ...q,
-                    options: q.optionsJson ? JSON.parse(q.optionsJson) : []
+                    options: q.options || (q.optionsJson ? JSON.parse(q.optionsJson) : [])
                 }));
                 return { ...scene, questions } as VisualizationScene;
             })
@@ -110,31 +110,4 @@ export class VisualizationAdminService {
         return this.http.post<ImportResult>(`${this.apiUrl}/import/csv`, formData);
     }
 
-    // Export methods
-    exportToPdf(id: string): Observable<Blob> {
-        return this.http.get(`${this.apiUrl}/${id}/export/pdf`, { responseType: 'blob' });
-    }
-
-    exportToDocx(id: string): Observable<Blob> {
-        return this.http.get(`${this.apiUrl}/${id}/export/docx`, { responseType: 'blob' });
-    }
-
-    exportMultipleToPdf(ids: string[]): Observable<Blob> {
-        return this.http.post(`${this.apiUrl}/export/pdf`, { ids }, { responseType: 'blob' });
-    }
-
-    exportMultipleToDocx(ids: string[]): Observable<Blob> {
-        return this.http.post(`${this.apiUrl}/export/docx`, { ids }, { responseType: 'blob' });
-    }
-
-    downloadFile(blob: Blob, fileName: string): void {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-    }
 }

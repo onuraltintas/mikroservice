@@ -149,6 +149,123 @@ public sealed record AdminInstitutionAnalytics(
     IReadOnlyList<AdminAnalyticsChartData> PerformanceByInstitution,
     IReadOnlyList<AdminTopInstitution> TopInstitutions);
 
+public sealed record SpeedReadingProgramPlatformStats(
+    int TotalActiveStudents,
+    decimal AverageSuccessRate,
+    decimal AverageCurrentStreak,
+    int TotalCompletedExercises);
+
+public sealed record SpeedReadingProgramDistribution(
+    string ProgramName,
+    int StudentCount,
+    decimal Percentage);
+
+public sealed record SpeedReadingWeeklyProgress(
+    int WeekNumber,
+    decimal AverageProgress,
+    decimal CompletionRate);
+
+public sealed record SpeedReadingRecentStudentProgress(
+    string StudentName,
+    string StudentEmail,
+    string ProgramName,
+    int CurrentWeek,
+    int CurrentDay,
+    int CurrentStreak,
+    int LongestStreak,
+    decimal SuccessRate,
+    int DifficultyLevel,
+    DateTime LastActivityDate);
+
+public sealed record SpeedReadingProgramAnalytics(
+    SpeedReadingProgramPlatformStats PlatformStats,
+    IReadOnlyList<SpeedReadingProgramDistribution> ProgramDistribution,
+    IReadOnlyList<SpeedReadingWeeklyProgress> WeeklyProgress,
+    IReadOnlyList<SpeedReadingRecentStudentProgress> RecentStudentProgress);
+
+public sealed record SpeedReadingProgramAnalyticsRow(
+    Guid UserId,
+    string FirstName,
+    string LastName,
+    string? Email,
+    Guid ProgramTemplateId,
+    string ProgramName,
+    int CurrentWeek,
+    int CurrentDay,
+    int CurrentStreak,
+    int LongestStreak,
+    decimal SuccessRate,
+    int DifficultyLevel,
+    DateTime LastActivityDate,
+    int DaysCompleted,
+    int ExercisesCompleted,
+    bool IsActive);
+
+public static class SpeedReadingProgramAnalyticsCalculator
+{
+    public static SpeedReadingProgramAnalytics Calculate(
+        IReadOnlyList<SpeedReadingProgramAnalyticsRow> rows)
+    {
+        var activeRows = rows.Where(item => item.IsActive).ToArray();
+        var platformStats = new SpeedReadingProgramPlatformStats(
+            activeRows.Select(item => item.UserId).Distinct().Count(),
+            Round(activeRows.Select(item => item.SuccessRate).DefaultIfEmpty().Average()),
+            Round(activeRows.Select(item => (decimal)item.CurrentStreak).DefaultIfEmpty().Average()),
+            activeRows.Sum(item => item.ExercisesCompleted));
+
+        var activeCount = activeRows.Length;
+        var programDistribution = activeRows
+            .GroupBy(item => new { item.ProgramTemplateId, item.ProgramName })
+            .Select(group => new SpeedReadingProgramDistribution(
+                string.IsNullOrWhiteSpace(group.Key.ProgramName) ? "Bilinmeyen Program" : group.Key.ProgramName,
+                group.Select(item => item.UserId).Distinct().Count(),
+                activeCount == 0 ? 0 : Math.Round((decimal)group.Count() / activeCount * 100, 1)))
+            .OrderByDescending(item => item.StudentCount)
+            .ThenBy(item => item.ProgramName)
+            .ToArray();
+
+        var weeklyProgress = activeRows
+            .GroupBy(item => item.CurrentWeek)
+            .OrderBy(group => group.Key)
+            .Take(12)
+            .Select(group => new SpeedReadingWeeklyProgress(
+                group.Key,
+                Round(group.Select(item => item.SuccessRate).Average()),
+                Math.Round((decimal)group.Count(item => item.DaysCompleted >= item.CurrentWeek * 5) / group.Count() * 100, 1)))
+            .ToArray();
+
+        var recentStudentProgress = activeRows
+            .OrderByDescending(item => item.LastActivityDate)
+            .Take(20)
+            .Select(item => new SpeedReadingRecentStudentProgress(
+                BuildStudentName(item.FirstName, item.LastName),
+                item.Email ?? string.Empty,
+                string.IsNullOrWhiteSpace(item.ProgramName) ? "Bilinmeyen Program" : item.ProgramName,
+                item.CurrentWeek,
+                item.CurrentDay,
+                item.CurrentStreak,
+                item.LongestStreak,
+                item.SuccessRate,
+                item.DifficultyLevel,
+                item.LastActivityDate))
+            .ToArray();
+
+        return new SpeedReadingProgramAnalytics(
+            platformStats,
+            programDistribution,
+            weeklyProgress,
+            recentStudentProgress);
+    }
+
+    private static decimal Round(decimal value) => Math.Round(value, 1);
+
+    private static string BuildStudentName(string firstName, string lastName)
+    {
+        var name = $"{firstName} {lastName}".Trim();
+        return string.IsNullOrWhiteSpace(name) ? "Bilinmeyen" : name;
+    }
+}
+
 public interface ISpeedReadingInstitutionDirectory
 {
     Task<SpeedReadingInstitutionScopeResponse> GetInstitutionsAsync(
@@ -175,5 +292,8 @@ public interface ILegacySpeedReadingAdminAnalytics
     Task<AdminInstitutionAnalytics> GetInstitutionAnalyticsAsync(
         DateTime? dateFrom,
         DateTime? dateTo,
+        CancellationToken cancellationToken = default);
+
+    Task<SpeedReadingProgramAnalytics> GetProgramAnalyticsAsync(
         CancellationToken cancellationToken = default);
 }

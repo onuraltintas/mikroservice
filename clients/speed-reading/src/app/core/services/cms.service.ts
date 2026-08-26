@@ -17,23 +17,28 @@ import {
     providedIn: 'root'
 })
 export class CmsService {
-    private apiUrl = environment.apiUrl + '/v1/admin/cms';
+    private apiUrl = environment.speedReadingApiUrl + '/admin/cms';
 
     constructor(private http: HttpClient) { }
 
     // --- Landing Page & Content Blocks ---
     getLandingContentForAdmin(group: string = 'HomePage'): Observable<ContentBlock[]> {
-        return this.http.get<ContentBlock[]>(`${this.apiUrl}/landing`, { params: { group } });
+        return this.http.get<any>(`${this.apiUrl}/landing`, { params: { group } }).pipe(
+            map(result => result?.data ?? result ?? [])
+        );
     }
 
     updateLandingContent(blocks: { [key: string]: string }, group: string = 'HomePage'): Observable<void> {
-        return this.http.put<void>(`${this.apiUrl}/landing`, { blocks, group });
+        return this.http.put<any>(`${this.apiUrl}/landing`, { blocks, group }).pipe(map(() => undefined));
     }
 
     // --- Newsletter ---
     getNewsletterSubscribers(): Observable<NewsletterSubscriber[]> {
         return this.http.get<any>(`${this.apiUrl}/newsletter/subscribers`).pipe(
-            map(result => Array.isArray(result) ? result : (result?.items ?? []))
+            map(result => {
+                const data = result?.data ?? result;
+                return Array.isArray(data) ? data : (data?.items ?? []);
+            })
         );
     }
 
@@ -46,20 +51,27 @@ export class CmsService {
     // --- Pages ---
     getPages(): Observable<Page[]> {
         return this.http.get<any>(`${this.apiUrl}/pages`).pipe(
-            map(result => Array.isArray(result) ? result : (result?.items ?? []))
+            map(result => {
+                const data = result?.data ?? result;
+                return Array.isArray(data) ? data : (data?.items ?? []);
+            })
         );
     }
 
     getPageById(id: string): Observable<Page> {
-        return this.http.get<Page>(`${this.apiUrl}/pages/${id}`);
+        return this.http.get<any>(`${this.apiUrl}/pages/${id}`).pipe(
+            map(result => result?.data ?? result)
+        );
     }
 
     createPage(data: CreatePageRequest): Observable<string> {
-        return this.http.post<string>(`${this.apiUrl}/pages`, data);
+        return this.http.post<any>(`${this.apiUrl}/pages`, data).pipe(
+            map(result => result?.data?.id ?? result?.id ?? '')
+        );
     }
 
     updatePage(id: string, data: UpdatePageRequest): Observable<void> {
-        return this.http.put<void>(`${this.apiUrl}/pages/${id}`, data);
+        return this.http.put<any>(`${this.apiUrl}/pages/${id}`, data).pipe(map(() => undefined));
     }
 
     deletePage(id: string): Observable<void> {
@@ -69,23 +81,30 @@ export class CmsService {
     // --- Blog ---
     getBlogPosts(): Observable<BlogPost[]> {
         return this.http.get<any>(`${this.apiUrl}/blog`).pipe(
-            map(result => Array.isArray(result) ? result : (result?.items ?? []))
+            map(result => {
+                const data = result?.data ?? result;
+                return Array.isArray(data) ? data : (data?.items ?? []);
+            })
         );
     }
 
     getBlogPostById(id: string): Observable<BlogPost> {
-        return this.http.get<BlogPost>(`${this.apiUrl}/blog/${id}`);
+        return this.http.get<any>(`${this.apiUrl}/blog/${id}`).pipe(
+            map(result => result?.data ?? result)
+        );
     }
 
     createBlogPost(data: CreateBlogPostRequest): Observable<string> {
-        return this.http.post<string>(`${this.apiUrl}/blog`, data);
+        return this.http.post<any>(`${this.apiUrl}/blog`, data).pipe(
+            map(result => result?.data?.id ?? result?.id ?? '')
+        );
     }
 
     updateBlogPost(id: string, data: CreateBlogPostRequest): Observable<void> {
         // Note: Backend might expect UpdateBlogPostRequest but structures are almost identical
         // We can reuse CreateBlogPostRequest interface or create a new one if strict ID is needed
         // Usually Update has ID in body too for safety
-        return this.http.put<void>(`${this.apiUrl}/blog/${id}`, { id, ...data });
+        return this.http.put<any>(`${this.apiUrl}/blog/${id}`, { id, ...data }).pipe(map(() => undefined));
     }
 
     deleteBlogPost(id: string): Observable<void> {
@@ -105,19 +124,23 @@ export class CmsService {
         if (isRead !== undefined) params.isRead = isRead;
         if (isReplied !== undefined) params.isReplied = isReplied;
 
-        return this.http.get<import('../models/cms.models').ContactMessageListResponse>(`${this.apiUrl}/contact-messages`, { params });
+        return this.http.get<any>(`${this.apiUrl}/contact-messages`, { params }).pipe(
+            map(result => result?.data ?? result)
+        );
     }
 
     getUnreadContactMessageCount(): Observable<number> {
-        return this.http.get<number>(`${this.apiUrl}/contact-messages/unread-count`);
+        return this.http.get<any>(`${this.apiUrl}/contact-messages/unread-count`).pipe(
+            map(result => result?.data ?? result ?? 0)
+        );
     }
 
     replyToContactMessage(messageId: string, replyContent: string): Observable<void> {
-        return this.http.post<void>(`${this.apiUrl}/contact-messages/reply`, { messageId, replyContent });
+        return this.http.post<any>(`${this.apiUrl}/contact-messages/reply`, { messageId, replyContent }).pipe(map(() => undefined));
     }
 
     markContactMessageAsRead(id: string, isRead: boolean): Observable<void> {
-        return this.http.put<void>(`${this.apiUrl}/contact-messages/${id}/read`, { id, isRead });
+        return this.http.put<any>(`${this.apiUrl}/contact-messages/${id}/read`, { id, isRead }).pipe(map(() => undefined));
     }
 
     deleteContactMessage(id: string): Observable<void> {

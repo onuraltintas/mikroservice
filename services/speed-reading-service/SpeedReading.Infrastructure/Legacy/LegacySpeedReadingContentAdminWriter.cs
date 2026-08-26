@@ -671,6 +671,60 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         }
     }
 
+    public async Task<ExerciseProgramTemplateAdminSummary> CloneExerciseProgramTemplateAsync(
+        Guid actorId,
+        Guid programTemplateId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateIdempotency(actorId, idempotencyKey);
+        idempotencyKey = NormalizeKey(idempotencyKey);
+        const string scope = "speed-reading.program-templates.clone";
+        var requestHash = SpeedReadingRequestHasher.Create(
+            actorId.ToString("D"),
+            scope,
+            programTemplateId.ToString("D"));
+        var existing = await GetLedgerAsync(scope, idempotencyKey, cancellationToken);
+        if (existing is not null)
+        {
+            return await ReplayProgramTemplateAsync(existing, requestHash, cancellationToken);
+        }
+
+        var source = await db.ExerciseProgramTemplates
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == programTemplateId && !item.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException("ExerciseProgramTemplate", programTemplateId);
+        var now = DateTime.UtcNow;
+        var clone = new LegacyExerciseProgramTemplate
+        {
+            Id = Guid.NewGuid(),
+            Name = $"{source.Name} - Kopya",
+            Description = source.Description,
+            TargetAgeGroupConfigurationId = source.TargetAgeGroupConfigurationId,
+            MinAssessmentScore = source.MinAssessmentScore,
+            MaxAssessmentScore = source.MaxAssessmentScore,
+            WeeklyPatternJson = source.WeeklyPatternJson,
+            InitialDifficultyLevel = source.InitialDifficultyLevel,
+            WeeksPerDifficultyIncrease = source.WeeksPerDifficultyIncrease,
+            MaxDifficultyLevel = source.MaxDifficultyLevel,
+            TotalWeeks = source.TotalWeeks,
+            TotalDays = source.TotalDays,
+            IsActive = false,
+            DisplayOrder = source.DisplayOrder + 1,
+            ProgramType = source.ProgramType,
+            ExamType = source.ExamType,
+            IsAssessment = source.IsAssessment,
+            CreatedAt = now,
+            CreatedBy = actorId,
+            IsDeleted = false
+        };
+
+        db.ExerciseProgramTemplates.Add(clone);
+        AddLedger(scope, idempotencyKey, requestHash, clone.Id, now);
+        await SaveOrReplayAsync(clone.Id, scope, idempotencyKey, requestHash, cancellationToken);
+        return ToAdminSummary(clone);
+    }
+
     public async Task<LearningPathTemplateAdminSummary> CreateLearningPathTemplateAsync(
         Guid actorId,
         CreateLearningPathTemplateRequest request,
@@ -1496,8 +1550,7 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
             || string.IsNullOrWhiteSpace(category) || category.Trim().Length > 100
             || difficultyLevel is < 0 or > 10
             || string.IsNullOrWhiteSpace(language) || language.Trim().Length > 10
-            || recommendedMinLevel < 0 || recommendedMaxLevel < recommendedMinLevel
-            || exerciseId == Guid.Empty)
+            || recommendedMinLevel < 0 || recommendedMaxLevel < recommendedMinLevel)
         {
             throw new ArgumentException("Okuma metni alanları geçersiz.", nameof(title));
         }

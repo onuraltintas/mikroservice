@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   SeriesAccessDto,
@@ -13,7 +13,7 @@ import {
 })
 export class SeriesAccessService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/v1/series-access`;
+  private apiUrl = `${environment.speedReadingApiUrl}/series-access`;
 
   // Signals for reactive state
   availableSeries = signal<SeriesAccessDto[]>([]);
@@ -28,11 +28,10 @@ export class SeriesAccessService {
     this.error.set(null);
 
     return this.http.get<any>(`${this.apiUrl}/available`).pipe(
+      map(response => Array.isArray(response) ? response : (response?.data ?? [])),
       tap({
         next: (response) => {
-          if (response.success && response.data) {
-            this.availableSeries.set(response.data);
-          }
+          this.availableSeries.set(response);
           this.loading.set(false);
         },
         error: (error) => {
@@ -48,14 +47,18 @@ export class SeriesAccessService {
    * Checks if student has access to a specific series
    */
   checkAccess(seriesId: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${seriesId}/access`);
+    return this.http.get<any>(`${this.apiUrl}/${seriesId}/access`).pipe(
+      map(response => response?.data ?? response)
+    );
   }
 
   /**
    * Checks prerequisites for a specific series
    */
   checkPrerequisites(seriesId: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${seriesId}/prerequisites`);
+    return this.http.get<any>(`${this.apiUrl}/${seriesId}/prerequisites`).pipe(
+      map(response => response?.data ?? response)
+    );
   }
 
   /**
@@ -63,9 +66,10 @@ export class SeriesAccessService {
    */
   unlockSeries(seriesId: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/${seriesId}/unlock`, {}).pipe(
+      map(response => response?.data ?? response),
       tap({
         next: (response) => {
-          if (response.success) {
+          if (response?.success) {
             // Refresh available series after unlock
             this.getAvailableSeries().subscribe();
           }

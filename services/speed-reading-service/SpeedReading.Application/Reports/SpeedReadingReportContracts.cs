@@ -1,3 +1,6 @@
+using System.Globalization;
+using System.Text.Json;
+
 namespace SpeedReading.Application.Reports;
 
 public sealed record ReportTemplateSummary(
@@ -90,6 +93,21 @@ public sealed record UpdateScheduledReportRequest(
     string? EmailRecipients);
 
 public sealed record UpdateScheduledReportStatusRequest(bool IsActive);
+
+public sealed record CreateReportSnapshotRequest(
+    Guid ReportTemplateId,
+    DateTime? ReportStartDate,
+    DateTime? ReportEndDate,
+    JsonElement? Data);
+
+public sealed record ReportExportRequest(
+    string? ReportType,
+    string? Title,
+    DateTime? StartDate,
+    DateTime? EndDate,
+    JsonElement? Data);
+
+public sealed record ReportExportRow(string Field, string Value);
 
 public interface ILegacySpeedReadingReports
 {
@@ -184,4 +202,219 @@ public interface ISpeedReadingReportsScheduleWriter
         Guid scheduleId,
         string idempotencyKey,
         CancellationToken cancellationToken = default);
+}
+
+public interface ISpeedReadingReportsSnapshotWriter
+{
+    Task<ReportSnapshotDetail> CreateSnapshotAsync(
+        Guid actorId,
+        bool isGlobalAdministrator,
+        CreateReportSnapshotRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteSnapshotAsync(
+        Guid actorId,
+        Guid snapshotId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+}
+
+public interface ISpeedReadingReportExporter
+{
+    byte[] GeneratePdf(ReportExportRequest request);
+
+    byte[] GenerateExcel(ReportExportRequest request);
+}
+
+public static class SpeedReadingReportExportRules
+{
+    public const int MaxRows = 1_000;
+
+    public static ReportExportRequest Normalize(JsonElement? payload)
+    {
+        if (!payload.HasValue || payload.Value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+        {
+            return new ReportExportRequest(null, null, null, null, null);
+        }
+
+        var value = payload.Value;
+        if (value.GetRawText().Length > SpeedReadingReportSnapshotRules.MaxDataJsonLength)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(payload),
+                $"Rapor verisi {SpeedReadingReportSnapshotRules.MaxDataJsonLength} karakteri aşamaz.");
+        }
+
+        if (value.ValueKind != JsonValueKind.Object)
+        {
+            return new ReportExportRequest(null, null, null, null, value);
+        }
+
+        var data = TryGetProperty(value, "data", out var nestedData) ? nestedData : value;
+        return new ReportExportRequest(
+            GetString(value, "reportType"),
+            GetString(value, "title"),
+            GetDate(value, "startDate"),
+            GetDate(value, "endDate"),
+            data);
+    }
+
+    public static string ResolveTitle(ReportExportRequest request) =>
+        string.IsNullOrWhiteSpace(request.Title)
+            ? string.IsNullOrWhiteSpace(request.ReportType)
+                ? "Hızlı Okuma Raporu"
+                : $"Hızlı Okuma Raporu - {request.ReportType}"
+            : request.Title.Trim();
+
+    public static IReadOnlyList<ReportExportRow> Flatten(JsonElement? data)
+    {
+        if (!data.HasValue || data.Value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+        {
+            return Array.Empty<ReportExportRow>();
+        }
+
+        var rows = new List<ReportExportRow>();
+        FlattenValue(data.Value, string.Empty, rows, 0);
+        return rows;
+    }
+
+    private static void FlattenValue(JsonElement value, string path, List<ReportExportRow> rows, int depth)
+    {
+        if (rows.Count >= MaxRows)
+        {
+            throw new ArgumentOutOfRangeException(nameof(rows), $"Rapor en fazla {MaxRows} alan içerebilir.");
+        }
+
+        if (depth > 8)
+        {
+            rows.Add(new ReportExportRow(path, value.GetRawText()));
+            return;
+        }
+
+        switch (value.ValueKind)
+        {
+            case JsonValueKind.Object:
+                foreach (var property in value.EnumerateObject())
+                {
+                    FlattenValue(property.Value, JoinPath(path, property.Name), rows, depth + 1);
+                }
+
+                if (path.Length > 0 && value.EnumerateObject().Count() == 0)
+                {
+                    rows.Add(new ReportExportRow(path, "{}"));
+                }
+
+                break;
+            case JsonValueKind.Array:
+                var index = 0;
+                foreach (var item in value.EnumerateArray())
+                {
+                    FlattenValue(item, $"{path}[{index}]", rows, depth + 1);
+                    index++;
+                }
+
+                if (path.Length > 0 && index == 0)
+                {
+                    rows.Add(new ReportExportRow(path, "[]"));
+                }
+
+                break;
+            case JsonValueKind.String:
+                rows.Add(new ReportExportRow(path.Length == 0 ? "value" : path, value.GetString() ?? string.Empty));
+                break;
+            case JsonValueKind.Null:
+                rows.Add(new ReportExportRow(path.Length == 0 ? "value" : path, ""));
+                break;
+            default:
+                rows.Add(new ReportExportRow(path.Length == 0 ? "value" : path, value.GetRawText()));
+                break;
+        }
+    }
+
+    private static string JoinPath(string path, string propertyName) =>
+        path.Length == 0 ? propertyName : $"{path}.{propertyName}";
+
+    private static string? GetString(JsonElement value, string propertyName) =>
+        TryGetProperty(value, propertyName, out var property)
+        && property.ValueKind == JsonValueKind.String
+            ? property.GetString()
+            : null;
+
+    private static bool TryGetProperty(JsonElement value, string propertyName, out JsonElement property)
+    {
+        if (value.TryGetProperty(propertyName, out property))
+        {
+            return true;
+        }
+
+        foreach (var candidate in value.EnumerateObject())
+        {
+            if (string.Equals(candidate.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+            {
+                property = candidate.Value;
+                return true;
+            }
+        }
+
+        property = default;
+        return false;
+    }
+
+    private static DateTime? GetDate(JsonElement value, string propertyName)
+    {
+        var text = GetString(value, propertyName);
+        return DateTimeOffset.TryParse(
+            text,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+            out var parsed)
+            ? parsed.UtcDateTime
+            : null;
+    }
+}
+
+public static class SpeedReadingReportSnapshotRules
+{
+    public const int MaxDataJsonLength = 1_000_000;
+
+    public static string NormalizeDataJson(JsonElement? data)
+    {
+        if (!data.HasValue || data.Value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+        {
+            return "{}";
+        }
+
+        var json = data.Value.GetRawText();
+        if (json.Length > MaxDataJsonLength)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(data),
+                $"Snapshot verisi {MaxDataJsonLength} karakteri aşamaz.");
+        }
+
+        return json;
+    }
+
+    public static (DateTime Start, DateTime End) ResolveDateRange(
+        DateTime? start,
+        DateTime? end,
+        DateTime utcNow)
+    {
+        var resolvedEnd = end ?? utcNow;
+        var resolvedStart = start ?? resolvedEnd.AddDays(-30);
+        if (resolvedStart > resolvedEnd)
+        {
+            throw new ArgumentException("Rapor başlangıç tarihi bitiş tarihinden sonra olamaz.");
+        }
+
+        if (resolvedEnd - resolvedStart > TimeSpan.FromDays(366))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(start),
+                "Snapshot tarih aralığı 366 günden uzun olamaz.");
+        }
+
+        return (resolvedStart, resolvedEnd);
+    }
 }

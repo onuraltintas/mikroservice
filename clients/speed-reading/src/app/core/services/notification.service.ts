@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject, interval, of } from 'rxjs';
-import { tap, switchMap, catchError, filter } from 'rxjs/operators';
+import { tap, switchMap, catchError, filter, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 
@@ -64,7 +64,7 @@ export interface UnreadCount {
 export class NotificationService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
-  private apiUrl = `${environment.apiUrl}/v1/notifications`;
+  private apiUrl = `${environment.speedReadingApiUrl}/notifications`;
 
   private unreadCountSubject = new BehaviorSubject<UnreadCount>({ total: 0, high: 0, urgent: 0 });
   public unreadCount$ = this.unreadCountSubject.asObservable();
@@ -73,9 +73,7 @@ export class NotificationService {
   public notifications$ = this.notificationsSubject.asObservable();
 
   constructor() {
-    // Poll for new notifications every 30 seconds
-    // Poll for new notifications every 30 seconds
-    // Poll for new notifications every 30 seconds
+    // Poll for new notifications every 30 seconds.
     interval(30000)
       .pipe(
         filter(() => this.authService.isAuthenticated),
@@ -99,7 +97,8 @@ export class NotificationService {
       params = params.set('isRead', isRead.toString());
     }
 
-    return this.http.get<Notification[]>(this.apiUrl, { params }).pipe(
+    return this.http.get<any>(this.apiUrl, { params }).pipe(
+      map(response => Array.isArray(response) ? response : (response?.items ?? [])),
       tap(notifications => this.notificationsSubject.next(notifications))
     );
   }

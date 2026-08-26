@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
-import { environment } from '../../../../environments/environment';
+import { PublicCmsService } from '../../../core/services/public-cms.service';
 
 @Component({
     selector: 'app-newsletter-unsubscribe',
@@ -59,7 +58,7 @@ export class UnsubscribeComponent implements OnInit {
 
     constructor(
         private route: ActivatedRoute,
-        private http: HttpClient
+        private cmsService: PublicCmsService
     ) { }
 
     ngOnInit(): void {
@@ -76,8 +75,7 @@ export class UnsubscribeComponent implements OnInit {
     }
 
     unsubscribe(): void {
-        const apiUrl = `${environment.apiUrl}/cms/newsletter/unsubscribe`;
-        this.http.post(apiUrl, { token: this.token }).subscribe({
+        this.cmsService.unsubscribeNewsletter(this.token!).subscribe({
             next: () => {
                 this.loading = false;
                 this.success = true;

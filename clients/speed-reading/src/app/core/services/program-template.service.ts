@@ -115,7 +115,7 @@ export interface SaveProgramTemplateRequest {
 })
 export class ProgramTemplateService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiUrl}/v1/program-templates`;
+  private readonly baseUrl = `${environment.speedReadingApiUrl}/program-templates`;
 
   /**
    * Extract data from ApiResponse wrapper

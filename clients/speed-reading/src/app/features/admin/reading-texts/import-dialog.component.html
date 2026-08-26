@@ -19,15 +19,15 @@
                     </button>
                 </div>
 
-                <div class="file-selected" *ngIf="selectedFile && !parsedTexts.length">
+                <div class="file-selected" *ngIf="selectedFile && !importComplete">
                     <mat-icon>description</mat-icon>
                     <span>{{ selectedFile.name }}</span>
                     <button mat-icon-button (click)="clearFile()">
                         <mat-icon>close</mat-icon>
                     </button>
-                    <button mat-raised-button color="primary" (click)="parseFile()" [disabled]="loading()">
+                    <button mat-raised-button color="primary" (click)="importTexts()" [disabled]="loading()">
                         <mat-spinner diameter="20" *ngIf="loading()"></mat-spinner>
-                        <span *ngIf="!loading()">Dosyayı Analiz Et</span>
+                        <span *ngIf="!loading()">İçe Aktarmayı Başlat</span>
                     </button>
                 </div>
             </div>
@@ -37,13 +37,13 @@
             <div class="tab-content">
                 <div class="upload-info">
                     <h3>Excel Formatı:</h3>
-                    <p>Excel dosyanız CSV ile aynı formatta olmalıdır.</p>
+                    <p>XLSX dosyanız CSV ile aynı formatta olmalıdır.</p>
                     <p>Kolonlar: Title, Content, Level, Category, Q1_Text, Q1_Type, Q1_A, Q1_B, Q1_C, Q1_D, Q1_Correct,
                         ...</p>
                 </div>
 
                 <div class="upload-area" *ngIf="!selectedFile">
-                    <input type="file" #excelInput accept=".xlsx,.xls" (change)="onFileSelected($event, 'excel')"
+                    <input type="file" #excelInput accept=".xlsx" (change)="onFileSelected($event, 'excel')"
                         style="display: none">
                     <button mat-raised-button color="primary" (click)="excelInput.click()">
                         <mat-icon>upload_file</mat-icon>
@@ -51,15 +51,15 @@
                     </button>
                 </div>
 
-                <div class="file-selected" *ngIf="selectedFile && !parsedTexts.length">
+                <div class="file-selected" *ngIf="selectedFile && !importComplete">
                     <mat-icon>description</mat-icon>
                     <span>{{ selectedFile.name }}</span>
                     <button mat-icon-button (click)="clearFile()">
                         <mat-icon>close</mat-icon>
                     </button>
-                    <button mat-raised-button color="primary" (click)="parseFile()" [disabled]="loading()">
+                    <button mat-raised-button color="primary" (click)="importTexts()" [disabled]="loading()">
                         <mat-spinner diameter="20" *ngIf="loading()"></mat-spinner>
-                        <span *ngIf="!loading()">Dosyayı Analiz Et</span>
+                        <span *ngIf="!loading()">İçe Aktarmayı Başlat</span>
                     </button>
                 </div>
             </div>

@@ -1,10 +1,11 @@
 export enum ExamType {
-    LGS = 0,
-    YKS = 1,
-    KPSS = 2,
-    ALES = 3,
-    DGS = 4,
-    General = 5
+    None = 0,
+    LGS = 1,
+    YKS = 2,
+    KPSS = 3,
+    ALES = 4,
+    DGS = 5,
+    General = 6
 }
 
 export enum QuestionCategory {
@@ -16,7 +17,16 @@ export enum QuestionCategory {
     Coherence = 5,          // Anlam Bütünlüğü
     Title = 6,              // Başlık
     AuthorPurpose = 7,      // Yazarın Amacı
-    NarrativeTechniques = 8 // Anlatım Teknikleri
+    NarrativeTechniques = 8, // Anlatım Teknikleri
+    AuthorAttitude = 9,
+    FlowBreaker = 10,
+    SentenceCompletion = 11,
+    Philosophy = 12,
+    Judgment = 13,
+    Logic = 14,
+    Ordering = 15,
+    CauseAndEffect = 16,
+    ThinkingProcess = 17
 }
 
 export interface ExamQuestion {

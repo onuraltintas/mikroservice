@@ -11,6 +11,194 @@ namespace SpeedReading.Infrastructure.Legacy;
 internal sealed class LegacySpeedReadingGamification(SpeedReadingDbContext db)
     : ILegacySpeedReadingGamification
 {
+    public async Task<GamificationLevelUpResult> AwardXpAsync(
+        Guid userId,
+        AwardXpRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("A valid authenticated user is required.", nameof(userId));
+        }
+
+        if (request.Amount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(request.Amount), "XP amount must be greater than 0.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Source))
+        {
+            throw new ArgumentException("Source is required.", nameof(request.Source));
+        }
+
+        var stats = await GetOrCreateStatsAsync(userId, cancellationToken);
+        var oldLevel = Math.Max(stats.CurrentLevel, 1);
+        var oldTier = SpeedReadingGamificationRules.GetTier(oldLevel);
+        stats.TotalXP += request.Amount;
+        ApplyLevel(stats);
+        stats.UpdatedAt = DateTime.UtcNow;
+        stats.UpdatedBy = userId;
+        await db.SaveChangesAsync(cancellationToken);
+
+        var newTier = SpeedReadingGamificationRules.GetTier(stats.CurrentLevel);
+        return new GamificationLevelUpResult(
+            stats.CurrentLevel > oldLevel,
+            oldLevel,
+            stats.CurrentLevel,
+            oldTier,
+            newTier,
+            newTier != oldTier,
+            stats.LevelTitle,
+            stats.LevelIcon,
+            [],
+            stats.TotalXP,
+            stats.CurrentLevelXP,
+            stats.NextLevelXP);
+    }
+
+    public async Task<IReadOnlyList<AchievementSummary>> CheckAchievementsAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var stats = await db.UserGamifications
+            .SingleOrDefaultAsync(item => item.UserId == userId && !item.IsDeleted, cancellationToken);
+        if (stats is null)
+        {
+            return [];
+        }
+
+        var unlockedIds = await db.UserAchievements
+            .Where(item => item.UserId == userId && !item.IsDeleted)
+            .Select(item => item.AchievementId)
+            .ToListAsync(cancellationToken);
+        var achievements = await db.Achievements
+            .Where(item => item.IsActive && !item.IsDeleted && !unlockedIds.Contains(item.Id))
+            .OrderBy(item => item.SortOrder)
+            .ThenBy(item => item.Name)
+            .ToListAsync(cancellationToken);
+
+        var now = DateTime.UtcNow;
+        var unlocked = new List<AchievementSummary>();
+        foreach (var achievement in achievements)
+        {
+            if (!MeetsCriteria(achievement, stats))
+            {
+                continue;
+            }
+
+            db.UserAchievements.Add(new LegacyUserAchievement
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                AchievementId = achievement.Id,
+                UnlockedAt = now,
+                IsShowcased = false,
+                CreatedAt = now,
+                CreatedBy = userId
+            });
+            stats.TotalXP += achievement.XPReward;
+            unlocked.Add(ToSummary(achievement));
+        }
+
+        if (unlocked.Count == 0)
+        {
+            return [];
+        }
+
+        ApplyLevel(stats);
+        stats.UpdatedAt = now;
+        stats.UpdatedBy = userId;
+        await db.SaveChangesAsync(cancellationToken);
+        return unlocked;
+    }
+
+    public async Task<bool> UpdateShowcaseAsync(
+        Guid userId,
+        IReadOnlyList<Guid> achievementIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (achievementIds.Count > 5)
+        {
+            throw new InvalidOperationException("Cannot showcase more than 5 achievements.");
+        }
+
+        var stats = await db.UserGamifications
+            .SingleOrDefaultAsync(item => item.UserId == userId && !item.IsDeleted, cancellationToken)
+            ?? throw new InvalidOperationException("User gamification stats not found.");
+        var requestedIds = achievementIds.Distinct().ToArray();
+        var unlocked = await db.UserAchievements
+            .Where(item => item.UserId == userId && !item.IsDeleted)
+            .ToListAsync(cancellationToken);
+        if (requestedIds.Any(id => unlocked.All(item => item.AchievementId != id)))
+        {
+            throw new InvalidOperationException("Only unlocked achievements can be showcased.");
+        }
+
+        foreach (var item in unlocked)
+        {
+            item.IsShowcased = false;
+            item.ShowcaseOrder = null;
+            if (Array.IndexOf(requestedIds, item.AchievementId) >= 0)
+            {
+                item.IsShowcased = true;
+                item.ShowcaseOrder = Array.IndexOf(requestedIds, item.AchievementId) + 1;
+                item.UpdatedAt = DateTime.UtcNow;
+                item.UpdatedBy = userId;
+            }
+        }
+
+        stats.UpdatedAt = DateTime.UtcNow;
+        stats.UpdatedBy = userId;
+        await db.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task UpdateStreakAsync(
+        Guid userId,
+        UpdateGamificationStreakRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request.DurationMinutes < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(request.DurationMinutes));
+        }
+
+        var stats = await db.UserGamifications
+            .SingleOrDefaultAsync(item => item.UserId == userId && !item.IsDeleted, cancellationToken)
+            ?? throw new InvalidOperationException("User gamification stats not found.");
+        var activityDate = request.ActivityDate == default ? DateTime.UtcNow : request.ActivityDate;
+        stats.CurrentStreak = SpeedReadingGamificationRules.CalculateNextStreak(
+            stats.LastActivityDate,
+            activityDate,
+            stats.CurrentStreak);
+        stats.LongestStreak = Math.Max(stats.LongestStreak, stats.CurrentStreak);
+        stats.TotalReadingMinutes += request.DurationMinutes;
+        stats.LastActivityDate = activityDate;
+        stats.UpdatedAt = DateTime.UtcNow;
+        stats.UpdatedBy = userId;
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<bool> UseStreakFreezeAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var stats = await db.UserGamifications
+            .SingleOrDefaultAsync(item => item.UserId == userId && !item.IsDeleted, cancellationToken)
+            ?? throw new InvalidOperationException("User gamification stats not found.");
+        if (stats.StreakFreezeCount <= 0)
+        {
+            throw new InvalidOperationException("No streak freezes available.");
+        }
+
+        stats.StreakFreezeCount--;
+        stats.LastActivityDate = DateTime.UtcNow;
+        stats.UpdatedAt = DateTime.UtcNow;
+        stats.UpdatedBy = userId;
+        await db.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
     public async Task<GamificationSummary> GetUserGamificationAsync(
         Guid userId,
         CancellationToken cancellationToken = default)
@@ -276,6 +464,112 @@ internal sealed class LegacySpeedReadingGamification(SpeedReadingDbContext db)
         "readingminutes" => item.TotalReadingMinutes,
         _ => item.TotalXP
     };
+
+    private async Task<LegacyUserGamification> GetOrCreateStatsAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var stats = await db.UserGamifications
+            .SingleOrDefaultAsync(item => item.UserId == userId && !item.IsDeleted, cancellationToken);
+        if (stats is not null)
+        {
+            return stats;
+        }
+
+        stats = new LegacyUserGamification
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            CurrentLevel = 1,
+            CurrentLevelXP = 0,
+            NextLevelXP = 100,
+            LevelTitle = SpeedReadingGamificationRules.GetLevelTitle(1),
+            LevelIcon = SpeedReadingGamificationRules.GetLevelIcon(1),
+            StreakFreezeCount = 3,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = userId
+        };
+        db.UserGamifications.Add(stats);
+        return stats;
+    }
+
+    private static void ApplyLevel(LegacyUserGamification stats)
+    {
+        stats.CurrentLevel = SpeedReadingGamificationRules.CalculateLevel(stats.TotalXP);
+        stats.CurrentLevelXP = SpeedReadingGamificationRules.GetCurrentLevelXp(
+            stats.TotalXP,
+            stats.CurrentLevel);
+        stats.NextLevelXP = 100;
+        stats.LevelTitle = SpeedReadingGamificationRules.GetLevelTitle(stats.CurrentLevel);
+        stats.LevelIcon = SpeedReadingGamificationRules.GetLevelIcon(stats.CurrentLevel);
+    }
+
+    private static bool MeetsCriteria(LegacyAchievement achievement, LegacyUserGamification stats)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(achievement.CriteriaValue);
+            var criteria = document.RootElement;
+            return achievement.CriteriaType.Trim().ToLowerInvariant() switch
+            {
+                "streak" => MeetsInt(criteria, "days", stats.CurrentStreak),
+                "level_reached" => MeetsInt(criteria, "level", stats.CurrentLevel),
+                "activity_count" => MeetsInt(criteria, "count", stats.TotalActivitiesCompleted),
+                "total_xp" => MeetsLong(criteria, "xp", stats.TotalXP),
+                "reading_minutes" => MeetsInt(criteria, "minutes", stats.TotalReadingMinutes),
+                "wpm_reached" => MeetsInt(criteria, "wpm", stats.MaxWPM),
+                "comprehension_score" => MeetsDecimal(criteria, "score", stats.MaxComprehensionScore),
+                "reading_count" or "rsvp_count" => MeetsInt(criteria, "count", stats.TotalReadingSessionsCompleted),
+                "exercise_count" => MeetsInt(criteria, "count", stats.TotalExercisesCompleted),
+                "vocabulary_learned" => MeetsInt(criteria, "count", stats.TotalVocabularyWordsLearned),
+                "vocabulary_box" => MeetsInt(criteria, "box", stats.MaxVocabularyBoxReached),
+                "vocabulary_streak" => MeetsInt(criteria, "count", stats.MaxVocabularyStreak),
+                "vocabulary_categories" => MeetsInt(
+                    criteria,
+                    "count",
+                    JsonSerializer.Deserialize<List<string>>(stats.LearnedVocabularyCategoriesJson)?.Count ?? 0),
+                "rsvp_wpm" => MeetsInt(criteria, "wpm", stats.MaxRSVPWPM),
+                "rsvp_comprehension" => MeetsDecimal(criteria, "score", stats.MaxRSVPComprehension),
+                "exercise_type_first" => MeetsType(criteria, stats.CompletedExerciseTypesJson),
+                "exercise_variety" => MeetsInt(
+                    criteria,
+                    "types",
+                    JsonSerializer.Deserialize<List<string>>(stats.CompletedExerciseTypesJson)?.Count ?? 0),
+                _ => false
+            };
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static bool MeetsInt(JsonElement criteria, string propertyName, int current) =>
+        criteria.TryGetProperty(propertyName, out var value)
+        && value.TryGetInt32(out var target)
+        && current >= target;
+
+    private static bool MeetsLong(JsonElement criteria, string propertyName, long current) =>
+        criteria.TryGetProperty(propertyName, out var value)
+        && value.TryGetInt64(out var target)
+        && current >= target;
+
+    private static bool MeetsDecimal(JsonElement criteria, string propertyName, decimal current) =>
+        criteria.TryGetProperty(propertyName, out var value)
+        && value.TryGetDecimal(out var target)
+        && current >= target;
+
+    private static bool MeetsType(JsonElement criteria, string jsonTypes)
+    {
+        if (!criteria.TryGetProperty("type", out var value)
+            || value.ValueKind != JsonValueKind.String)
+        {
+            return false;
+        }
+
+        return JsonSerializer.Deserialize<List<string>>(jsonTypes)?
+            .Contains(value.GetString() ?? string.Empty, StringComparer.OrdinalIgnoreCase) == true;
+    }
 
     private static string DisplayName(LegacyUser user)
     {

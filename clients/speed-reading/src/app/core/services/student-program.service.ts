@@ -65,7 +65,7 @@ export interface StudentProgramInfo {
 })
 export class StudentProgramService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = `${environment.apiUrl}/v1/student-program`;
+  private readonly apiUrl = `${environment.speedReadingApiUrl}/student-program`;
 
   // Signals for reactive state
   currentProgram = signal<StudentProgramInfo | null>(null);

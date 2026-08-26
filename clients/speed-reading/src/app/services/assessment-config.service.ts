@@ -75,7 +75,7 @@ interface ApiResponse<T> {
 })
 export class AssessmentConfigService {
     private http = inject(HttpClient);
-    private apiUrl = `${environment.apiUrl}/v1/admin/assessment-templates`;
+    private apiUrl = `${environment.speedReadingApiUrl}/admin/assessment-templates`;
 
     getAllTemplates(): Observable<ApiResponse<AssessmentTemplateDto[]>> {
         return this.http.get<ApiResponse<AssessmentTemplateDto[]>>(this.apiUrl);
@@ -99,11 +99,11 @@ export class AssessmentConfigService {
 
     // Helper endpoints
     getAgeGroups(): Observable<ApiResponse<AgeGroupDto[]>> {
-        return this.http.get<ApiResponse<AgeGroupDto[]>>(`${environment.apiUrl}/v1/age-group-configurations`);
+        return this.http.get<ApiResponse<AgeGroupDto[]>>(`${environment.speedReadingApiUrl}/age-group-configurations`);
     }
 
     getExerciseTypes(): Observable<any[]> {
-        return this.http.get<any>(`${environment.apiUrl}/exercisetypes?pageSize=500`).pipe(
+        return this.http.get<any>(`${environment.speedReadingApiUrl}/exercise-types?pageSize=500`).pipe(
             map(result => Array.isArray(result) ? result : (result?.items ?? []))
         );
     }
@@ -113,7 +113,7 @@ export class AssessmentConfigService {
         if (difficultyLevel) params.push(`difficultyLevel=${difficultyLevel}`);
         if (exerciseTypeId) params.push(`exerciseTypeId=${exerciseTypeId}`);
         if (ageGroupId) params.push(`targetAgeGroupId=${ageGroupId}`);
-        const url = `${environment.apiUrl}/v1/exercises?${params.join('&')}`;
+        const url = `${environment.speedReadingApiUrl}/exercises?${params.join('&')}`;
         return this.http.get<any>(url).pipe(
             map(result => Array.isArray(result) ? result : (result?.items ?? []))
         );

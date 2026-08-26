@@ -316,6 +316,12 @@ public interface ISpeedReadingContentAdminWriter
         string idempotencyKey,
         CancellationToken cancellationToken = default);
 
+    Task<ExerciseProgramTemplateAdminSummary> CloneExerciseProgramTemplateAsync(
+        Guid actorId,
+        Guid programTemplateId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
     Task<LearningPathTemplateAdminSummary> CreateLearningPathTemplateAsync(
         Guid actorId,
         CreateLearningPathTemplateRequest request,

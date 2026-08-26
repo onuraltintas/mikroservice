@@ -1,5 +1,6 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MatButtonModule } from '@angular/material/button';
@@ -16,6 +17,7 @@ import { PaymentService } from '../../../core/services/payment.service';
     standalone: true,
     imports: [
         CommonModule,
+        FormsModule,
         RouterModule,
         MatButtonModule,
         MatIconModule,
@@ -31,13 +33,16 @@ export class PaymentComponent implements OnInit {
     private subscriptionService = inject(SubscriptionService);
     private paymentService      = inject(PaymentService);
     private sanitizer           = inject(DomSanitizer);
+    private changeDetector      = inject(ChangeDetectorRef);
+
+    @ViewChild('checkoutHost') private checkoutHost?: ElementRef<HTMLElement>;
 
     plans:        SubscriptionPlan[] = [];
     pageContent:  PageDto | null     = null;
     selectedPlan: SubscriptionPlan | null = null;
 
     // Checkout form content — Iyzico'dan gelen HTML (iframe yaklaşımı)
-    checkoutFormContent: SafeHtml | null = null;
+    checkoutFormContent: string | null = null;
 
     loading        = signal(true);
     plansLoading   = signal(true);
@@ -45,6 +50,14 @@ export class PaymentComponent implements OnInit {
     checkoutError  = signal<string | null>(null);
     // Ödeme devre dışıysa true — 503 geldiğinde set edilir
     paymentDisabled = signal(false);
+
+    buyerDetails = {
+        phoneNumber: '',
+        identityNumber: '',
+        billingAddress: '',
+        city: '',
+        zipCode: ''
+    };
 
     readonly billingPeriodLabel: Record<string, string> = {
         Monthly:  '/ay',
@@ -93,10 +106,15 @@ export class PaymentComponent implements OnInit {
     checkout() {
         if (!this.selectedPlan) return;
 
+        if (Object.values(this.buyerDetails).some(value => !value.trim())) {
+            this.checkoutError.set('Ödeme için telefon, T.C. kimlik ve fatura adresi bilgileri gereklidir.');
+            return;
+        }
+
         this.checkoutLoading.set(true);
         this.checkoutError.set(null);
 
-        this.paymentService.initializePayment(this.selectedPlan.id).subscribe({
+        this.paymentService.initializePayment(this.selectedPlan.id, this.buyerDetails).subscribe({
             next: (res) => {
                 this.checkoutLoading.set(false);
 
@@ -108,7 +126,9 @@ export class PaymentComponent implements OnInit {
 
                 // Tercih 2: checkout form HTML varsa embed et
                 if (res.checkoutFormContent) {
-                    this.checkoutFormContent = this.sanitizer.bypassSecurityTrustHtml(res.checkoutFormContent);
+                    this.checkoutFormContent = res.checkoutFormContent;
+                    this.changeDetector.detectChanges();
+                    this.mountCheckoutForm(res.checkoutFormContent);
                     return;
                 }
 
@@ -127,6 +147,7 @@ export class PaymentComponent implements OnInit {
     }
 
     cancelCheckout() {
+        this.clearCheckoutForm();
         this.checkoutFormContent = null;
         this.checkoutError.set(null);
         this.selectedPlan = null;
@@ -147,5 +168,31 @@ export class PaymentComponent implements OnInit {
 
     get safeContent(): SafeHtml {
         return this.sanitizer.bypassSecurityTrustHtml(this.pageContent?.content ?? '');
+    }
+
+    private mountCheckoutForm(content: string) {
+        const host = this.checkoutHost?.nativeElement;
+        if (!host) return;
+
+        host.replaceChildren();
+        const template = document.createElement('template');
+        template.innerHTML = content;
+
+        for (const node of Array.from(template.content.childNodes)) {
+            if (node instanceof HTMLScriptElement) {
+                const script = document.createElement('script');
+                for (const attribute of Array.from(node.attributes)) {
+                    script.setAttribute(attribute.name, attribute.value);
+                }
+                script.text = node.textContent ?? '';
+                host.appendChild(script);
+            } else {
+                host.appendChild(node.cloneNode(true));
+            }
+        }
+    }
+
+    private clearCheckoutForm() {
+        this.checkoutHost?.nativeElement.replaceChildren();
     }
 }

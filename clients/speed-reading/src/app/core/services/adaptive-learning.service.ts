@@ -94,7 +94,7 @@ export interface UpdateDailyProgressRequest {
   providedIn: 'root'
 })
 export class AdaptiveLearningService {
-  private apiUrl = `${environment.apiUrl}/v1/adaptive-learning`;
+  private apiUrl = `${environment.speedReadingApiUrl}/adaptive-learning`;
 
   constructor(private http: HttpClient) {}
 
@@ -110,12 +110,17 @@ export class AdaptiveLearningService {
     const bloomNames: Record<number, string> = { 1: 'Hatırlama', 2: 'Anlama', 3: 'Uygulama', 4: 'Analiz', 5: 'Değerlendirme', 6: 'Yaratma' };
     return this.http.get<any>(`${this.apiUrl}/weak-areas`).pipe(
       map((r: any) => {
-        const levels: number[] = Array.isArray(r) ? r : (Array.isArray(r?.weakAreas) ? r.weakAreas : []);
+        if (Array.isArray(r)) return r;
+
+        const scores = r?.bloomScores ?? {};
+        const levels: number[] = Array.isArray(r?.weakAreas) ? r.weakAreas : [];
         return levels.map(level => ({
           bloomLevel: level,
           bloomLevelName: bloomNames[level] ?? `Seviye ${level}`,
-          currentScore: 0,
-          recommendation: ''
+          currentScore: Number(scores[level] ?? 0),
+          recommendation: Number(scores[level] ?? 0) > 0
+            ? 'Bu seviyedeki sorularda doğruluk oranınızı artırmaya odaklanın.'
+            : 'Bu bilişsel seviyede daha fazla soru çözerek veri oluşturun.'
         }));
       })
     );

@@ -9,7 +9,7 @@ import { ExamQuestion, ExamType, QuestionCategory } from '../models/exam-questio
     providedIn: 'root'
 })
 export class QuestionBankService {
-    private apiUrl = `${environment.apiUrl}/v1/exam-questions`;
+    private apiUrl = `${environment.speedReadingApiUrl}/exam-questions`;
 
     constructor(private http: HttpClient) { }
 

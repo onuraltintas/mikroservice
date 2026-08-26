@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface EmailTemplate {
@@ -41,18 +42,24 @@ export interface UpdateEmailTemplateRequest {
 })
 export class EmailTemplatesService {
     private readonly http = inject(HttpClient);
-    private readonly API_URL = `${environment.apiUrl}/v1/email-templates`;
+    private readonly API_URL = `${environment.speedReadingApiUrl}/email-templates`;
 
     getTemplates(): Observable<EmailTemplate[]> {
-        return this.http.get<EmailTemplate[]>(this.API_URL);
+        return this.http.get<any>(this.API_URL).pipe(
+            map(response => Array.isArray(response) ? response : (response?.items ?? []))
+        );
     }
 
     getTemplate(id: string): Observable<EmailTemplate> {
-        return this.http.get<EmailTemplate>(`${this.API_URL}/${id}`);
+        return this.http.get<any>(`${this.API_URL}/${id}`).pipe(
+            map(response => response?.data ?? response)
+        );
     }
 
     createTemplate(request: CreateEmailTemplateRequest): Observable<EmailTemplate> {
-        return this.http.post<EmailTemplate>(this.API_URL, request);
+        return this.http.post<any>(this.API_URL, request).pipe(
+            map(response => response?.data ?? response)
+        );
     }
 
     updateTemplate(id: string, request: UpdateEmailTemplateRequest): Observable<void> {
@@ -64,6 +71,8 @@ export class EmailTemplatesService {
     }
 
     previewTemplate(id: string, data: Record<string, string>): Observable<any> {
-        return this.http.post<any>(`${this.API_URL}/${id}/preview`, data);
+        return this.http.post<any>(`${this.API_URL}/${id}/preview`, data).pipe(
+            map(response => response?.data ?? response)
+        );
     }
 }

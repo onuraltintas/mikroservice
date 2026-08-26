@@ -89,6 +89,12 @@ import { ToasterService } from '../../../core/services/toaster.service';
                                                 <mat-option [value]="3">
                                                     <span class="level-option level-3">Seviye 3 - İleri</span>
                                                 </mat-option>
+                                                <mat-option [value]="4">
+                                                    <span class="level-option level-4">Seviye 4 - Zor</span>
+                                                </mat-option>
+                                                <mat-option [value]="5">
+                                                    <span class="level-option level-5">Seviye 5 - Çok Zor</span>
+                                                </mat-option>
                                             </mat-select>
                                         </mat-form-field>
 
@@ -195,6 +201,10 @@ import { ToasterService } from '../../../core/services/toaster.service';
                                                     <div class="correct-answer-display" *ngIf="question.get('correctAnswer')?.value">
                                                         Doğru Cevap: <strong>{{ question.get('correctAnswer')?.value }}</strong>
                                                     </div>
+                                                    <mat-form-field appearance="outline" class="full-width">
+                                                        <mat-label>İpucu (opsiyonel)</mat-label>
+                                                        <input matInput formControlName="hintText" placeholder="Kullanıcıya yardımcı olacak kısa ipucu">
+                                                    </mat-form-field>
                                                     <div class="validation-error" *ngIf="question.invalid && question.touched">
                                                         * Lütfen soru metnini, şıkları ve doğru cevabı kontrol ediniz.
                                                     </div>
@@ -695,7 +705,8 @@ export class VisualizationSceneDialogComponent implements OnInit, OnDestroy {
             option2: [data?.options?.[2] || ''],
             option3: [data?.options?.[3] || ''],
             correctAnswer: [data?.correctAnswer || '', Validators.required],
-            questionType: [data?.questionType || 'detail', Validators.required]
+            questionType: [data?.questionType || 'detail', Validators.required],
+            hintText: [data?.hintText || '']
         });
 
         this.questions.push(group);
@@ -744,7 +755,8 @@ export class VisualizationSceneDialogComponent implements OnInit, OnDestroy {
                 options: [q.option0, q.option1, q.option2, q.option3].filter((o: string) => !!o),
                 correctAnswer: q.correctAnswer,
                 questionType: q.questionType,
-                displayOrder: idx + 1
+                displayOrder: idx + 1,
+                hintText: q.hintText || null
             }))
         };
 

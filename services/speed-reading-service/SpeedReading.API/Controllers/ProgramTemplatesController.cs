@@ -26,6 +26,15 @@ public sealed class ProgramTemplatesController(
         CancellationToken cancellationToken = default) =>
         programs.GetProgramTemplateAdminSummariesAsync(cancellationToken);
 
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<ExerciseProgramTemplateAdminSummary>> GetProgramTemplate(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await programs.GetProgramTemplateAsync(id, cancellationToken);
+        return result is null ? NotFound() : Ok(result);
+    }
+
     [HttpPost]
     [HasPermission(PlatformPermissions.SpeedReading.ProgramManage)]
     public async Task<ActionResult<ExerciseProgramTemplateAdminSummary>> CreateProgramTemplate(
@@ -84,6 +93,25 @@ public sealed class ProgramTemplatesController(
             idempotencyKey ?? string.Empty,
             cancellationToken);
         return NoContent();
+    }
+
+    [HttpPost("{id:guid}/clone")]
+    [HasPermission(PlatformPermissions.SpeedReading.ProgramManage)]
+    public async Task<ActionResult<ExerciseProgramTemplateAdminSummary>> CloneProgramTemplate(
+        Guid id,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId))
+        {
+            return Unauthorized();
+        }
+
+        return Ok(await adminWriter.CloneExerciseProgramTemplateAsync(
+            actorId,
+            id,
+            idempotencyKey ?? string.Empty,
+            cancellationToken));
     }
 
     private bool TryGetCurrentUserId(out Guid userId)

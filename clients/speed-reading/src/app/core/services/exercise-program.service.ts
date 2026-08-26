@@ -112,7 +112,7 @@ export interface StudentProgressSummary {
 })
 export class ExerciseProgramService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiUrl}/v1/daily-progress`;
+  private readonly baseUrl = `${environment.speedReadingApiUrl}/daily-progress`;
   private readonly speedReadingApiUrl = environment.speedReadingApiUrl;
 
   /**

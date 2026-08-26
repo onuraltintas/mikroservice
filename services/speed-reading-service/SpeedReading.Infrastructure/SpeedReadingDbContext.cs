@@ -12,12 +12,23 @@ namespace SpeedReading.Infrastructure;
 public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext> options) : DbContext(options)
 {
     internal DbSet<LegacyExerciseTypeCategory> ExerciseTypeCategories => Set<LegacyExerciseTypeCategory>();
+    internal DbSet<LegacyContentBlock> ContentBlocks => Set<LegacyContentBlock>();
+    internal DbSet<LegacyPage> Pages => Set<LegacyPage>();
+    internal DbSet<LegacyBlogPost> BlogPosts => Set<LegacyBlogPost>();
+    internal DbSet<LegacyContactMessage> ContactMessages => Set<LegacyContactMessage>();
+    internal DbSet<LegacyNewsletterSubscriber> NewsletterSubscribers => Set<LegacyNewsletterSubscriber>();
+    internal DbSet<LegacyProduct> Products => Set<LegacyProduct>();
+    internal DbSet<LegacySubscriptionPlan> SubscriptionPlans => Set<LegacySubscriptionPlan>();
+    internal DbSet<LegacyUserSubscription> UserSubscriptions => Set<LegacyUserSubscription>();
+    internal DbSet<LegacyPayment> Payments => Set<LegacyPayment>();
     internal DbSet<LegacyExerciseType> ExerciseTypes => Set<LegacyExerciseType>();
     internal DbSet<LegacyExercise> Exercises => Set<LegacyExercise>();
     internal DbSet<LegacyReadingText> ReadingTexts => Set<LegacyReadingText>();
     internal DbSet<LegacyReadingQuestion> ReadingQuestions => Set<LegacyReadingQuestion>();
     internal DbSet<LegacyExerciseSession> ExerciseSessions => Set<LegacyExerciseSession>();
     internal DbSet<LegacyStudentExerciseResult> StudentExerciseResults => Set<LegacyStudentExerciseResult>();
+    internal DbSet<LegacyAssignment> Assignments => Set<LegacyAssignment>();
+    internal DbSet<LegacyStudentAssignment> StudentAssignments => Set<LegacyStudentAssignment>();
     internal DbSet<LegacyReadingSession> ReadingSessions => Set<LegacyReadingSession>();
     internal DbSet<LegacyExerciseProgramTemplate> ExerciseProgramTemplates => Set<LegacyExerciseProgramTemplate>();
     internal DbSet<LegacyStudentProgramProgress> StudentProgramProgresses => Set<LegacyStudentProgramProgress>();
@@ -38,11 +49,163 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     internal DbSet<LegacyReportTemplate> ReportTemplates => Set<LegacyReportTemplate>();
     internal DbSet<LegacyReportSnapshot> ReportSnapshots => Set<LegacyReportSnapshot>();
     internal DbSet<LegacyScheduledReport> ScheduledReports => Set<LegacyScheduledReport>();
+    internal DbSet<LegacyStudentLearningProfile> StudentLearningProfiles => Set<LegacyStudentLearningProfile>();
+    internal DbSet<LegacyContentRecommendation> ContentRecommendations => Set<LegacyContentRecommendation>();
+    internal DbSet<LegacyDailyGoal> DailyGoals => Set<LegacyDailyGoal>();
+    internal DbSet<LegacyStudentReadingProfile> StudentReadingProfiles => Set<LegacyStudentReadingProfile>();
+    internal DbSet<LegacyTextRecommendationHistory> TextRecommendationHistories => Set<LegacyTextRecommendationHistory>();
+    internal DbSet<LegacyUserContentFeedback> UserContentFeedbacks => Set<LegacyUserContentFeedback>();
+    internal DbSet<LegacyVisualizationScene> VisualizationScenes => Set<LegacyVisualizationScene>();
+    internal DbSet<LegacyVisualizationQuestion> VisualizationQuestions => Set<LegacyVisualizationQuestion>();
+    internal DbSet<LegacyVocabularyItem> VocabularyItems => Set<LegacyVocabularyItem>();
+    internal DbSet<LegacyUserVocabularyProgress> UserVocabularyProgresses => Set<LegacyUserVocabularyProgress>();
+    internal DbSet<LegacyAgeGroupConfiguration> AgeGroupConfigurations => Set<LegacyAgeGroupConfiguration>();
+    internal DbSet<LegacyExamQuestion> ExamQuestions => Set<LegacyExamQuestion>();
+    internal DbSet<LegacyRsvpSession> RsvpSessions => Set<LegacyRsvpSession>();
+    internal DbSet<LegacyExerciseReviewItem> ExerciseReviewItems => Set<LegacyExerciseReviewItem>();
+    internal DbSet<LegacyUserNotification> Notifications => Set<LegacyUserNotification>();
+    internal DbSet<LegacyNotificationPreference> NotificationPreferences => Set<LegacyNotificationPreference>();
+    internal DbSet<LegacyNotificationTypePreference> NotificationTypePreferences => Set<LegacyNotificationTypePreference>();
+    internal DbSet<LegacyPushSubscription> PushSubscriptions => Set<LegacyPushSubscription>();
+    internal DbSet<LegacyAnnouncement> Announcements => Set<LegacyAnnouncement>();
+    internal DbSet<LegacyAnnouncementUserInteraction> AnnouncementUserInteractions => Set<LegacyAnnouncementUserInteraction>();
+    internal DbSet<LegacyEmailTemplate> EmailTemplates => Set<LegacyEmailTemplate>();
+    internal DbSet<LegacyEmailCampaign> EmailCampaigns => Set<LegacyEmailCampaign>();
+    internal DbSet<LegacyEmailCampaignLog> EmailCampaignLogs => Set<LegacyEmailCampaignLog>();
+    internal DbSet<LegacyUserRoleLink> UserRoleLinks => Set<LegacyUserRoleLink>();
+    internal DbSet<LegacyRoleLookup> Roles => Set<LegacyRoleLookup>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // This context is a compatibility reader for the existing database. It
         // deliberately has no EF migrations and never calls EnsureCreated.
+        modelBuilder.Entity<LegacyContentBlock>(entity =>
+        {
+            entity.ToTable("ContentBlocks");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Key).HasColumnName("Key").HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Group).HasColumnName("Group").HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Label).HasMaxLength(200);
+            entity.Property(item => item.Value).HasColumnName("Value").IsRequired();
+            entity.HasIndex(item => item.Group).HasDatabaseName("IX_ContentBlocks_Group");
+            entity.HasIndex(item => item.Key).HasDatabaseName("IX_ContentBlocks_Key");
+        });
+
+        modelBuilder.Entity<LegacyPage>(entity =>
+        {
+            entity.ToTable("Pages");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Title).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Slug).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Content).IsRequired();
+            entity.Property(item => item.MetaTitle).HasMaxLength(200);
+            entity.Property(item => item.MetaDescription).HasMaxLength(500);
+            entity.Property(item => item.MetaKeywords).HasMaxLength(500);
+            entity.Property(item => item.CanonicalUrl).HasMaxLength(500);
+            entity.Property(item => item.OgTitle).HasMaxLength(200);
+            entity.Property(item => item.OgDescription).HasMaxLength(500);
+            entity.Property(item => item.OgImage).HasMaxLength(500);
+            entity.Property(item => item.SeoSettingsNoIndex).HasColumnName("SeoSettings_NoIndex");
+            entity.HasIndex(item => item.Slug).HasDatabaseName("IX_Pages_Slug");
+        });
+
+        modelBuilder.Entity<LegacyBlogPost>(entity =>
+        {
+            entity.ToTable("BlogPosts");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Title).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Slug).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Summary).HasMaxLength(500);
+            entity.Property(item => item.CoverImageUrl).HasMaxLength(500);
+            entity.Property(item => item.Tags).HasMaxLength(500);
+            entity.Property(item => item.Author).HasMaxLength(100);
+            entity.Property(item => item.MetaTitle).HasMaxLength(200);
+            entity.Property(item => item.MetaDescription).HasMaxLength(500);
+            entity.Property(item => item.MetaKeywords).HasMaxLength(500);
+            entity.Property(item => item.CanonicalUrl).HasMaxLength(500);
+            entity.Property(item => item.OgTitle).HasMaxLength(200);
+            entity.Property(item => item.OgDescription).HasMaxLength(500);
+            entity.Property(item => item.OgImage).HasMaxLength(500);
+            entity.Property(item => item.SeoSettingsNoIndex).HasColumnName("SeoSettings_NoIndex");
+            entity.HasIndex(item => item.PublishedAt).HasDatabaseName("IX_BlogPosts_PublishedAt");
+            entity.HasIndex(item => item.Slug).HasDatabaseName("IX_BlogPosts_Slug");
+        });
+
+        modelBuilder.Entity<LegacyContactMessage>(entity =>
+        {
+            entity.ToTable("ContactMessages");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Name).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Email).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Subject).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Message).IsRequired();
+            entity.Property(item => item.ReplyContent);
+            entity.HasIndex(item => item.CreatedAt).HasDatabaseName("IX_ContactMessages_CreatedAt");
+            entity.HasIndex(item => item.IsRead).HasDatabaseName("IX_ContactMessages_IsRead");
+        });
+
+        modelBuilder.Entity<LegacyNewsletterSubscriber>(entity =>
+        {
+            entity.ToTable("NewsletterSubscribers");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Email).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Source).HasMaxLength(50);
+            entity.HasIndex(item => item.Email).HasDatabaseName("IX_NewsletterSubscribers_Email");
+        });
+
+        modelBuilder.Entity<LegacyProduct>(entity =>
+        {
+            entity.ToTable("Products");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Slug).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Name).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Description).HasMaxLength(1000).IsRequired();
+            entity.Property(item => item.IncludedProductSlugsJson).HasColumnName("IncludedProductSlugs").IsRequired();
+            entity.HasIndex(item => item.Slug).IsUnique();
+        });
+
+        modelBuilder.Entity<LegacySubscriptionPlan>(entity =>
+        {
+            entity.ToTable("SubscriptionPlans");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Name).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Description).HasMaxLength(1000).IsRequired();
+            entity.Property(item => item.Slug).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Price).HasPrecision(10, 2);
+            entity.Property(item => item.BillingPeriod).IsRequired();
+            entity.HasIndex(item => item.ProductId);
+            entity.HasIndex(item => item.Slug).IsUnique();
+        });
+
+        modelBuilder.Entity<LegacyUserSubscription>(entity =>
+        {
+            entity.ToTable("UserSubscriptions");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Status).IsRequired();
+            entity.HasIndex(item => new { item.UserId, item.Status });
+            entity.HasIndex(item => new { item.UserId, item.PlanId });
+            entity.HasIndex(item => new { item.UserId, item.ProductId });
+        });
+
+        modelBuilder.Entity<LegacyPayment>(entity =>
+        {
+            entity.ToTable("Payments");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.UserEmail).HasMaxLength(255).IsRequired();
+            entity.Property(item => item.UserName).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Amount).HasPrecision(10, 2);
+            entity.Property(item => item.Provider).HasMaxLength(50).IsRequired();
+            entity.Property(item => item.Status).IsRequired();
+            entity.HasIndex(item => item.UserId);
+            entity.HasIndex(item => item.ProviderToken);
+            entity.HasIndex(item => item.ProviderToken)
+                .IsUnique()
+                .HasDatabaseName("IX_Payments_ProviderToken_Unique")
+                .HasFilter("\"ProviderToken\" IS NOT NULL");
+            entity.HasIndex(item => item.Status);
+            entity.HasIndex(item => item.PlanId);
+        });
+
         modelBuilder.Entity<LegacyExerciseTypeCategory>(entity =>
         {
             entity.ToTable("ExerciseTypeCategories");
@@ -63,6 +226,185 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasIndex(item => item.ExerciseTypeId);
             entity.HasIndex(item => item.TargetAgeGroupConfigurationId);
             entity.HasIndex(item => item.CreatorId);
+        });
+
+        modelBuilder.Entity<LegacyVisualizationScene>(entity =>
+        {
+            entity.ToTable("VisualizationScenes");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.ExerciseId);
+            entity.HasIndex(item => item.TargetAgeGroupConfigurationId);
+        });
+
+        modelBuilder.Entity<LegacyVisualizationQuestion>(entity =>
+        {
+            entity.ToTable("VisualizationQuestions");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.SceneId);
+        });
+
+        modelBuilder.Entity<LegacyVocabularyItem>(entity =>
+        {
+            entity.ToTable("VocabularyItems");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.TargetAgeGroupConfigurationId);
+        });
+
+        modelBuilder.Entity<LegacyUserVocabularyProgress>(entity =>
+        {
+            entity.ToTable("UserVocabularyProgresses");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.UserId);
+            entity.HasIndex(item => item.VocabularyItemId);
+        });
+
+        modelBuilder.Entity<LegacyAgeGroupConfiguration>(entity =>
+        {
+            entity.ToTable("AgeGroupConfigurations");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.Name);
+        });
+
+        modelBuilder.Entity<LegacyExamQuestion>(entity =>
+        {
+            entity.ToTable("ExamQuestions");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.TargetAgeGroupConfigurationId);
+            entity.HasIndex(item => item.ExamType);
+            entity.HasIndex(item => item.Category);
+        });
+
+        modelBuilder.Entity<LegacyRsvpSession>(entity =>
+        {
+            entity.ToTable("RSVPSessions");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.UserId);
+            entity.HasIndex(item => new { item.UserId, item.CreatedAt });
+        });
+
+        modelBuilder.Entity<LegacyExerciseReviewItem>(entity =>
+        {
+            entity.ToTable("ExerciseReviewItems");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.UserId);
+            entity.HasIndex(item => item.ExerciseId);
+            entity.HasIndex(item => item.ProgramTemplateId);
+            entity.Property(item => item.EasinessFactor).HasColumnType("double precision");
+            entity.Property(item => item.LastScore).HasColumnType("double precision");
+        });
+
+        modelBuilder.Entity<LegacyUserNotification>(entity =>
+        {
+            entity.ToTable("Notifications");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Title).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Message).HasMaxLength(1000).IsRequired();
+            entity.Property(item => item.UserName).HasMaxLength(200);
+            entity.Property(item => item.UserEmail).HasMaxLength(256);
+            entity.Property(item => item.UserRole).HasMaxLength(50);
+            entity.HasIndex(item => item.UserId);
+            entity.HasIndex(item => new { item.UserId, item.Status });
+        });
+
+        modelBuilder.Entity<LegacyNotificationPreference>(entity =>
+        {
+            entity.ToTable("NotificationPreferences");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.EmailEnabled).HasColumnName("EmailEnabled");
+            entity.Property(item => item.PushEnabled).HasColumnName("PushEnabled");
+            entity.Property(item => item.InAppEnabled).HasColumnName("InAppEnabled");
+            entity.Property(item => item.SmsEnabled).HasColumnName("SmsEnabled");
+            entity.Property(item => item.AchievementsEnabled).HasColumnName("AchievementsEnabled");
+            entity.Property(item => item.LevelUpEnabled).HasColumnName("LevelUpEnabled");
+            entity.Property(item => item.DailyReminderEnabled).HasColumnName("DailyReminderEnabled");
+            entity.Property(item => item.StreakMilestoneEnabled).HasColumnName("StreakMilestoneEnabled");
+            entity.Property(item => item.Email).HasMaxLength(256);
+            entity.Property(item => item.PhoneNumber).HasMaxLength(20);
+            entity.HasIndex(item => item.UserId).IsUnique();
+        });
+
+        modelBuilder.Entity<LegacyNotificationTypePreference>(entity =>
+        {
+            entity.ToTable("NotificationTypePreferences");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.PreferredTime).HasMaxLength(10);
+            entity.HasIndex(item => new { item.UserId, item.NotificationType }).IsUnique();
+        });
+
+        modelBuilder.Entity<LegacyPushSubscription>(entity =>
+        {
+            entity.ToTable("PushSubscriptions");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Endpoint).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.P256DH).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Auth).HasMaxLength(200).IsRequired();
+            entity.HasIndex(item => item.Endpoint);
+            entity.HasIndex(item => item.UserId);
+        });
+
+        modelBuilder.Entity<LegacyAnnouncement>(entity =>
+        {
+            entity.ToTable("Announcements");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Title).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Content).IsRequired();
+            entity.Property(item => item.Type).HasMaxLength(20).IsRequired();
+            entity.Property(item => item.TargetAudience).HasMaxLength(50).IsRequired();
+            entity.Property(item => item.TargetRoles).HasMaxLength(200);
+            entity.Property(item => item.ActionUrl).HasMaxLength(500);
+            entity.Property(item => item.ImageUrl).HasMaxLength(500);
+            entity.Property(item => item.ColorTheme).HasMaxLength(50);
+            entity.Property(item => item.ActionText).HasMaxLength(100);
+            entity.HasIndex(item => item.IsActive);
+        });
+
+        modelBuilder.Entity<LegacyAnnouncementUserInteraction>(entity =>
+        {
+            entity.ToTable("AnnouncementUserInteractions");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => new { item.AnnouncementId, item.UserId }).IsUnique();
+        });
+
+        modelBuilder.Entity<LegacyEmailTemplate>(entity =>
+        {
+            entity.ToTable("EmailTemplates");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Name).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Subject).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.Description).HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<LegacyEmailCampaign>(entity =>
+        {
+            entity.ToTable("EmailCampaigns");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Name).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Subject).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.Status).HasMaxLength(20).IsRequired();
+            entity.Property(item => item.TargetRoles).HasMaxLength(200);
+            entity.HasIndex(item => item.TemplateId);
+        });
+
+        modelBuilder.Entity<LegacyEmailCampaignLog>(entity =>
+        {
+            entity.ToTable("EmailCampaignLogs");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.RecipientEmail).HasMaxLength(256).IsRequired();
+            entity.Property(item => item.Status).HasMaxLength(20).IsRequired();
+            entity.HasIndex(item => item.CampaignId);
+        });
+
+        modelBuilder.Entity<LegacyUserRoleLink>(entity =>
+        {
+            entity.ToTable("UserRoles");
+            entity.HasKey(item => new { item.UserId, item.RoleId });
+        });
+
+        modelBuilder.Entity<LegacyRoleLookup>(entity =>
+        {
+            entity.ToTable("Roles");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Name).HasMaxLength(256);
         });
 
         modelBuilder.Entity<LegacyReadingText>(entity =>
@@ -88,6 +430,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasIndex(item => item.ExerciseId);
             entity.HasIndex(item => item.ReadingTextId);
             entity.HasIndex(item => item.StudentAssignmentId);
+            entity.Property(item => item.ProcessedActionsJson).IsRequired();
         });
 
         modelBuilder.Entity<LegacyStudentExerciseResult>(entity =>
@@ -97,8 +440,33 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasIndex(item => item.StudentId);
             entity.HasIndex(item => item.ExerciseId);
             entity.HasIndex(item => item.ReadingTextId);
+            entity.HasIndex(item => item.SessionId)
+                .IsUnique()
+                .HasFilter("\"SessionId\" IS NOT NULL");
             entity.Property(item => item.RawWPM).HasPrecision(18, 2);
             entity.Property(item => item.ComprehensionScore).HasPrecision(18, 2);
+        });
+
+        modelBuilder.Entity<LegacyAssignment>(entity =>
+        {
+            entity.ToTable("Assignments");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.TeacherId);
+            entity.HasIndex(item => item.ExerciseId);
+            entity.HasIndex(item => item.ReadingTextId);
+            entity.HasIndex(item => new { item.IsDeleted, item.TeacherId, item.CreatedAt });
+        });
+
+        modelBuilder.Entity<LegacyStudentAssignment>(entity =>
+        {
+            entity.ToTable("StudentAssignments");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.AssignmentId);
+            entity.HasIndex(item => item.StudentId);
+            entity.HasIndex(item => item.ResultId);
+            entity.HasIndex(item => new { item.IsDeleted, item.StudentId, item.CreatedAt });
+            entity.Property(item => item.Score).HasPrecision(18, 2);
+            entity.Property(item => item.KeyPerformanceMetric).HasPrecision(18, 2);
         });
 
         modelBuilder.Entity<LegacyReadingSession>(entity =>
@@ -136,6 +504,17 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasIndex(item => item.ExerciseId);
             entity.HasIndex(item => item.ExerciseTypeId);
             entity.HasIndex(item => new { item.IsDeleted, item.UserId, item.CompletedDate });
+            entity.Property(item => item.ResultDataJson).IsRequired();
+            entity.Property(item => item.DevicePlatform).HasMaxLength(50).IsRequired();
+            entity.Property(item => item.AverageResponseTimeMs).HasPrecision(18, 2);
+            entity.Property(item => item.MedianResponseTimeMs).HasPrecision(18, 2);
+            entity.Property(item => item.StdDevResponseTimeMs).HasPrecision(18, 2);
+            entity.Property(item => item.PerformanceTrend).HasPrecision(18, 2);
+            entity.Property(item => item.PreviousAverageScore).HasPrecision(18, 2);
+            entity.Property(item => item.EngagementScore).HasPrecision(18, 2);
+            entity.Property(item => item.FrustrationScore).HasPrecision(18, 2);
+            entity.Property(item => item.LearningRate).HasPrecision(18, 2);
+            entity.Property(item => item.ConsistencyScore).HasPrecision(18, 2);
         });
 
         modelBuilder.Entity<LegacyLearningPathTemplate>(entity =>
@@ -255,13 +634,67 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasIndex(item => item.TotalXP);
             entity.HasIndex(item => item.CurrentLevel);
             entity.HasIndex(item => item.CurrentStreak);
+            entity.Property(item => item.MaxComprehensionScore).HasPrecision(18, 2);
+            entity.Property(item => item.MaxRSVPComprehension).HasPrecision(18, 2);
         });
 
         modelBuilder.Entity<LegacyUser>(entity =>
         {
             entity.ToTable("Users");
             entity.HasKey(item => item.Id);
+            // The legacy Users table has Email but no separate UserName column.
+            entity.Ignore(item => item.UserName);
             entity.HasIndex(item => new { item.IsDeleted, item.InstitutionId, item.Id });
+        });
+
+        modelBuilder.Entity<LegacyStudentLearningProfile>(entity =>
+        {
+            entity.ToTable("StudentLearningProfiles");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.StudentId);
+        });
+
+        modelBuilder.Entity<LegacyContentRecommendation>(entity =>
+        {
+            entity.ToTable("ContentRecommendations");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.ConfidenceScore).HasPrecision(18, 2);
+            entity.HasIndex(item => item.StudentId);
+            entity.HasIndex(item => item.ReadingTextId);
+        });
+
+        modelBuilder.Entity<LegacyDailyGoal>(entity =>
+        {
+            entity.ToTable("DailyGoals");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => new { item.StudentId, item.Date });
+        });
+
+        modelBuilder.Entity<LegacyStudentReadingProfile>(entity =>
+        {
+            entity.ToTable("StudentReadingProfiles");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.PreferredCategories).HasColumnType("text[]");
+            entity.Property(item => item.DifficultCategories).HasColumnType("text[]");
+            entity.HasIndex(item => item.StudentId);
+        });
+
+        modelBuilder.Entity<LegacyTextRecommendationHistory>(entity =>
+        {
+            entity.ToTable("TextRecommendationHistories");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.ReadingTextId);
+            entity.HasIndex(item => item.StudentId);
+        });
+
+        modelBuilder.Entity<LegacyUserContentFeedback>(entity =>
+        {
+            entity.ToTable("UserContentFeedbacks");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.ContentType).HasMaxLength(50).IsRequired();
+            entity.Property(item => item.DeviceType).HasMaxLength(50).IsRequired();
+            entity.HasIndex(item => new { item.UserId, item.SessionDate });
+            entity.HasIndex(item => new { item.UserId, item.ContentType, item.ContentId });
         });
 
         modelBuilder.Entity<LegacyReportTemplate>(entity =>

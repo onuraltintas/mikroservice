@@ -17,8 +17,7 @@ import {
 })
 export class GamificationService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/speed-reading/gamification`;
-  private legacyApiUrl = `${environment.apiUrl}/v1/gamification`;
+  private apiUrl = `${environment.speedReadingApiUrl}/gamification`;
 
   // State management
   private userGamificationSubject = new BehaviorSubject<UserGameification | null>(null);
@@ -34,7 +33,7 @@ export class GamificationService {
   }
 
   awardXP(amount: number, source: string, sourceId?: string): Observable<LevelUpResult> {
-    return this.http.post<LevelUpResult>(`${this.legacyApiUrl}/award-xp`, {
+    return this.http.post<LevelUpResult>(`${this.apiUrl}/award-xp`, {
       amount,
       source,
       sourceId
@@ -68,24 +67,24 @@ export class GamificationService {
   }
 
   checkAchievements(): Observable<Achievement[]> {
-    return this.http.post<Achievement[]>(`${this.legacyApiUrl}/achievements/check`, {});
+    return this.http.post<Achievement[]>(`${this.apiUrl}/achievements/check`, {});
   }
 
   updateShowcase(achievementIds: string[]): Observable<{ success: boolean }> {
-    return this.http.put<{ success: boolean }>(`${this.legacyApiUrl}/achievements/showcase`, {
+    return this.http.put<{ success: boolean }>(`${this.apiUrl}/achievements/showcase`, {
       achievementIds
     });
   }
 
   updateStreak(activityDate: Date, durationMinutes: number): Observable<{ success: boolean }> {
-    return this.http.post<{ success: boolean }>(`${this.legacyApiUrl}/streak/update`, {
+    return this.http.post<{ success: boolean }>(`${this.apiUrl}/streak/update`, {
       activityDate,
       durationMinutes
     });
   }
 
   useStreakFreeze(): Observable<{ success: boolean }> {
-    return this.http.post<{ success: boolean }>(`${this.legacyApiUrl}/streak/use-freeze`, {});
+    return this.http.post<{ success: boolean }>(`${this.apiUrl}/streak/use-freeze`, {});
   }
 
   getLeaderboard(type: LeaderboardType = LeaderboardType.TotalXP, skip: number = 0, take: number = 100): Observable<LeaderboardEntry[]> {

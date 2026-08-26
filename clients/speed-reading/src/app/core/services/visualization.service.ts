@@ -28,7 +28,7 @@ export interface VisualizationScene {
   providedIn: 'root'
 })
 export class VisualizationService {
-  private apiUrl = `${environment.apiUrl}/v1/visualization`;
+  private apiUrl = `${environment.speedReadingApiUrl}/visualization`;
 
   constructor(private http: HttpClient) {}
 

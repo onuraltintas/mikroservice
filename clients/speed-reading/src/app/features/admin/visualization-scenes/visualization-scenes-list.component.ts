@@ -13,7 +13,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatMenuModule } from '@angular/material/menu';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { VisualizationAdminService, VisualizationScene } from '../../../core/services/visualization-admin.service';
@@ -38,8 +37,7 @@ import { VisualizationImportDialogComponent } from './visualization-import-dialo
         MatSelectModule,
         MatTooltipModule,
         MatProgressSpinnerModule,
-        MatPaginatorModule,
-        MatMenuModule
+        MatPaginatorModule
     ],
     templateUrl: './visualization-scenes-list.component.html',
     styleUrls: ['./visualization-scenes-list.component.scss']
@@ -64,7 +62,9 @@ export class VisualizationScenesListComponent implements OnInit, OnDestroy {
     difficultyLevels = [
         { value: 1, label: 'Seviye 1 - Temel' },
         { value: 2, label: 'Seviye 2 - Orta' },
-        { value: 3, label: 'Seviye 3 - İleri' }
+        { value: 3, label: 'Seviye 3 - İleri' },
+        { value: 4, label: 'Seviye 4 - Zor' },
+        { value: 5, label: 'Seviye 5 - Çok Zor' }
     ];
 
     constructor(
@@ -187,77 +187,6 @@ export class VisualizationScenesListComponent implements OnInit, OnDestroy {
                     }
                 });
         }
-    }
-
-    // Export Methods
-    exportToPdf(scene: VisualizationScene): void {
-        this.loading.set(true);
-        this.service.exportToPdf(scene.id)
-            .pipe(
-                takeUntil(this.destroy$),
-                finalize(() => this.loading.set(false))
-            )
-            .subscribe({
-                next: (blob) => {
-                    this.service.downloadFile(blob, `Sahne_${scene.difficultyLevel}_${scene.displayOrder}.pdf`);
-                    this.toaster.success('PDF başarıyla indirildi');
-                },
-                error: () => this.toaster.error('PDF oluşturulurken hata oluştu')
-            });
-    }
-
-    exportToDocx(scene: VisualizationScene): void {
-        this.loading.set(true);
-        this.service.exportToDocx(scene.id)
-            .pipe(
-                takeUntil(this.destroy$),
-                finalize(() => this.loading.set(false))
-            )
-            .subscribe({
-                next: (blob) => {
-                    this.service.downloadFile(blob, `Sahne_${scene.difficultyLevel}_${scene.displayOrder}.docx`);
-                    this.toaster.success('DOCX başarıyla indirildi');
-                },
-                error: () => this.toaster.error('DOCX oluşturulurken hata oluştu')
-            });
-    }
-
-    exportAllToPdf(): void {
-        if (this.scenes.length === 0) return;
-
-        this.loading.set(true);
-        const ids = this.scenes.map(s => s.id);
-        this.service.exportMultipleToPdf(ids)
-            .pipe(
-                takeUntil(this.destroy$),
-                finalize(() => this.loading.set(false))
-            )
-            .subscribe({
-                next: (blob) => {
-                    this.service.downloadFile(blob, `GorselSahneler_${new Date().toISOString().slice(0, 10)}.pdf`);
-                    this.toaster.success(`${this.scenes.length} sahne PDF olarak indirildi`);
-                },
-                error: () => this.toaster.error('PDF oluşturulurken hata oluştu')
-            });
-    }
-
-    exportAllToDocx(): void {
-        if (this.scenes.length === 0) return;
-
-        this.loading.set(true);
-        const ids = this.scenes.map(s => s.id);
-        this.service.exportMultipleToDocx(ids)
-            .pipe(
-                takeUntil(this.destroy$),
-                finalize(() => this.loading.set(false))
-            )
-            .subscribe({
-                next: (blob) => {
-                    this.service.downloadFile(blob, `GorselSahneler_${new Date().toISOString().slice(0, 10)}.docx`);
-                    this.toaster.success(`${this.scenes.length} sahne DOCX olarak indirildi`);
-                },
-                error: () => this.toaster.error('DOCX oluşturulurken hata oluştu')
-            });
     }
 
     getDifficultyLabel(level: number): string {

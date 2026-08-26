@@ -65,7 +65,7 @@ export interface UserVocabulary {
   providedIn: 'root'
 })
 export class VocabularyService {
-  private apiUrl = `${environment.apiUrl}/v1/vocabulary`;
+  private apiUrl = `${environment.speedReadingApiUrl}/vocabulary`;
 
   constructor(private http: HttpClient) { }
 
@@ -107,11 +107,11 @@ export class VocabularyService {
   }
 
   createVocabularyItem(request: CreateVocabularyItemRequest): Observable<VocabularyItem> {
-    return this.http.post<VocabularyItem>(this.apiUrl, request);
+    return this.http.post<VocabularyItem>(this.apiUrl, this.toApiRequest(request));
   }
 
   updateVocabularyItem(id: string, request: UpdateVocabularyItemRequest): Observable<VocabularyItem> {
-    return this.http.put<VocabularyItem>(`${this.apiUrl}/${id}`, request);
+    return this.http.put<VocabularyItem>(`${this.apiUrl}/${id}`, this.toApiRequest(request));
   }
 
   deleteVocabularyItem(id: string): Observable<void> {
@@ -183,6 +183,14 @@ export class VocabularyService {
 
   downloadTemplate(): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/download-template`, { responseType: 'blob' });
+  }
+
+  private toApiRequest(request: CreateVocabularyItemRequest | UpdateVocabularyItemRequest): object {
+    const { targetAgeGroupId, ...rest } = request;
+    return {
+      ...rest,
+      targetAgeGroupId: targetAgeGroupId || null
+    };
   }
 }
 

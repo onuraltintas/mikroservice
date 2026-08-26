@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { PagedResult } from '../models/paged-result.model';
 
@@ -67,14 +67,19 @@ export interface AssignmentDetailDto {
 })
 export class AssignmentService {
     private http = inject(HttpClient);
-    private apiUrl = `${environment.apiUrl}/assignments`;
+    private apiUrl = `${environment.speedReadingApiUrl}/assignments`;
 
     createAssignment(request: CreateAssignmentRequest): Observable<string> {
         return this.http.post<string>(this.apiUrl, request);
     }
 
     getMyAssignments(): Observable<AssignmentDto[]> {
-        return this.http.get<AssignmentDto[]>(`${this.apiUrl}/my-assignments`);
+        return this.http.get<AssignmentDto[]>(`${this.apiUrl}/my-assignments`).pipe(
+            map(items => items.map(item => ({
+                ...item,
+                studentAssignmentId: item.studentAssignmentId || item.id
+            })))
+        );
     }
 
     getTeacherAssignments(pageNumber = 1, pageSize = 10, searchTerm?: string, isActive?: boolean, exerciseTypeId?: string): Observable<PagedResult<TeacherAssignmentDto>> {

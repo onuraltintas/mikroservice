@@ -68,8 +68,6 @@ export class AdminAllNotificationsComponent implements OnInit {
     private toaster = inject(ToasterService);
     private router = inject(Router);
     private dialog = inject(MatDialog);
-    private apiUrl = environment.apiUrl;
-
     notifications = signal<AdminNotification[]>([]);
     loading = signal(false);
     totalCount = signal(0);
@@ -133,7 +131,7 @@ export class AdminAllNotificationsComponent implements OnInit {
         if (this.fromDate) params = params.set('fromDate', this.fromDate.toISOString());
         if (this.toDate) params = params.set('toDate', this.toDate.toISOString());
 
-        this.http.get<any>(`${this.apiUrl}/v1/notifications/all`, { params }).subscribe({
+        this.http.get<any>(`${environment.speedReadingApiUrl}/notifications/all`, { params }).subscribe({
             next: (response: any) => {
                 const data = response?.data || response;
                 if (data && data.items) {

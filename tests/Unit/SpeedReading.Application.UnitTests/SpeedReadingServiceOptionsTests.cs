@@ -97,6 +97,28 @@ public sealed class SpeedReadingServiceOptionsTests
         var exerciseSession = context.Model.GetEntityTypes()
             .Single(entity => entity.GetTableName() == "ExerciseSessions");
         exerciseSession.FindProperty("Status")!.GetColumnType().Should().Be("integer");
+        exerciseSession.FindProperty("ProcessedActionsJson")!.IsNullable.Should().BeFalse();
+        exerciseSession.FindProperty("TimeLimitSeconds")!.IsNullable.Should().BeTrue();
+
+        exerciseResult.FindProperty("SessionId")!.IsNullable.Should().BeTrue();
+        exerciseResult.GetIndexes()
+            .Should().Contain(index => index.IsUnique
+                && index.Properties.Select(property => property.Name)
+                .SequenceEqual(new[] { "SessionId" }));
+
+        var dailyExerciseLog = context.Model.GetEntityTypes()
+            .Single(entity => entity.GetTableName() == "DailyExerciseLogs");
+        dailyExerciseLog.FindProperty("ResultDataJson")!.IsNullable.Should().BeFalse();
+        dailyExerciseLog.FindProperty("AverageResponseTimeMs")!.GetColumnType()
+            .Should().Be("numeric(18,2)");
+        dailyExerciseLog.FindProperty("TimeOfDay")!.GetColumnType()
+            .Should().Be("interval");
+
+        var gamification = context.Model.GetEntityTypes()
+            .Single(entity => entity.GetTableName() == "UserGameifications");
+        gamification.FindProperty("MaxWPM").Should().NotBeNull();
+        gamification.FindProperty("MaxComprehensionScore")!.GetColumnType()
+            .Should().Be("numeric(18,2)");
 
         var idempotencyLedger = context.Model.GetEntityTypes()
             .Single(entity => entity.GetTableName() == "SpeedReadingIdempotencyRecords");

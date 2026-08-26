@@ -25,7 +25,7 @@ interface CalculateLevelRequest {
 })
 export class AssessmentService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/v1/assessment`;
+  private apiUrl = `${environment.speedReadingApiUrl}/assessment`;
 
   // Public signals for external components
   assessmentResult = signal<AssessmentResultDto | null>(null);

@@ -29,7 +29,7 @@ import {
 })
 export class ExerciseSessionService {
   private readonly http = inject(HttpClient);
-  private readonly API_URL = `${environment.apiUrl}/v1/exercise-sessions`;
+  private readonly API_URL = `${environment.speedReadingApiUrl}/exercise-sessions`;
   private readonly speedReadingApiUrl = environment.speedReadingApiUrl;
 
   /**
@@ -52,7 +52,12 @@ export class ExerciseSessionService {
    * @returns Validation result with feedback
    */
   validateAction(sessionId: string, action: ActionData): Observable<ValidationResponse> {
-    return this.http.post<ValidationResponse>(`${this.API_URL}/${sessionId}/validate`, action);
+    const request: ActionData = {
+      ...action,
+      actionId: action.actionId ?? crypto.randomUUID(),
+      timestamp: action.timestamp ?? new Date()
+    };
+    return this.http.post<ValidationResponse>(`${this.API_URL}/${sessionId}/validate`, request);
   }
 
   /**

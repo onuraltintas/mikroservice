@@ -13,7 +13,6 @@ import {
 export class ReportTemplatesService {
   private http = inject(HttpClient);
   private reportsApiUrl = `${environment.speedReadingApiUrl}/reports`;
-  private legacyApiUrl = `${environment.apiUrl}/v1/reporttemplates`;
 
   // ==================== TEMPLATES ====================
 
@@ -121,11 +120,22 @@ export class ReportTemplatesService {
   }
 
   createSnapshot(snapshot: Omit<ReportSnapshot, 'id' | 'generatedAt'>): Observable<ReportSnapshot> {
-    return this.http.post<ReportSnapshot>(`${this.legacyApiUrl}/snapshots`, snapshot);
+    return this.http.post<CentralReportSnapshotDetail>(
+      `${this.reportsApiUrl}/snapshots`,
+      {
+        reportTemplateId: snapshot.templateId,
+        data: snapshot.data,
+        reportStartDate: null,
+        reportEndDate: null
+      },
+      { headers: this.idempotencyHeaders() })
+      .pipe(map(item => this.toSnapshot(item)));
   }
 
   deleteSnapshot(snapshotId: string): Observable<void> {
-    return this.http.delete<void>(`${this.legacyApiUrl}/snapshots/${snapshotId}`);
+    return this.http.delete<void>(
+      `${this.reportsApiUrl}/snapshots/${snapshotId}`,
+      { headers: this.idempotencyHeaders() });
   }
 
   private idempotencyHeaders(): HttpHeaders {

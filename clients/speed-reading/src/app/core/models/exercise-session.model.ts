@@ -28,6 +28,7 @@ export interface StartSessionResponse {
 }
 
 export interface ActionData {
+  actionId?: string;
   // Common fields
   action?: string;  // For RSVP, SpeedReading (start_reading, finish_reading, answer_question, etc.)
   number?: number;  // For Schulte Table

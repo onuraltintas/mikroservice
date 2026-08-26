@@ -14,7 +14,7 @@ import {
   providedIn: 'root'
 })
 export class ContentFeedbackService {
-  private apiUrl = `${environment.apiUrl}/v1/contentfeedback`;
+  private apiUrl = `${environment.speedReadingApiUrl}/content-feedback`;
 
   constructor(private http: HttpClient) { }
 

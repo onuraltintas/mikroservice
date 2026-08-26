@@ -42,6 +42,21 @@ internal sealed class LegacyUserGamification : LegacyBaseEntity
     public int StreakFreezeCount { get; set; }
     public int TotalActivitiesCompleted { get; set; }
     public int TotalReadingMinutes { get; set; }
+    public int MaxWPM { get; set; }
+    public decimal MaxComprehensionScore { get; set; }
+    public int TotalExercisesCompleted { get; set; }
+    public int TotalReadingSessionsCompleted { get; set; }
+    public string CompletedExerciseTypesJson { get; set; } = "[]";
+    public int MaxRSVPWPM { get; set; }
+    public decimal MaxRSVPComprehension { get; set; }
+    public int TotalVocabularyWordsLearned { get; set; }
+    public int MaxVocabularyBoxReached { get; set; }
+    public int TotalVocabularyQuestionsAnswered { get; set; }
+    public int VocabularyMasteryLevel { get; set; }
+    public int MaxVocabularyStreak { get; set; }
+    public string LearnedVocabularyCategoriesJson { get; set; } = "[]";
+    public string LearnedVocabularyCategoriesMapJson { get; set; } = "{}";
+    public string LearnedVocabularyDifficultiesJson { get; set; } = "{}";
 }
 
 internal sealed class LegacyUser
@@ -51,7 +66,11 @@ internal sealed class LegacyUser
     public string? Email { get; set; }
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
+    public int CurrentLevel { get; set; }
+    public int TargetWPM { get; set; }
+    public decimal TargetComprehension { get; set; }
     public int DailyGoalMinutes { get; set; }
+    public Guid? AgeGroupConfigurationId { get; set; }
     public Guid? InstitutionId { get; set; }
     public bool IsDeleted { get; set; }
 }

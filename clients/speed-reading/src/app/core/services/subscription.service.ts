@@ -167,25 +167,25 @@ export interface UserSearchResult {
 @Injectable({ providedIn: 'root' })
 export class SubscriptionService {
   private readonly http = inject(HttpClient);
-  private readonly productsUrl = `${environment.apiUrl}/v1/products`;
-  private readonly plansUrl    = `${environment.apiUrl}/v1/subscription-plans`;
-  private readonly subsUrl     = `${environment.apiUrl}/v1/subscriptions`;
+  private readonly productsUrl = `${environment.speedReadingApiUrl}/products`;
+  private readonly plansUrl    = `${environment.speedReadingApiUrl}/subscription-plans`;
+  private readonly subsUrl     = `${environment.speedReadingApiUrl}/subscriptions`;
 
   // ── Products ──────────────────────────────────────────────────────────────
   getPublicProducts(): Observable<Product[]> {
-    return this.http.get<Product[]>(this.productsUrl);
+    return this.http.get<any>(this.productsUrl).pipe(map(result => result?.data ?? result ?? []));
   }
 
   getAllProducts(): Observable<Product[]> {
-    return this.http.get<Product[]>(`${this.productsUrl}/all`);
+    return this.http.get<any>(`${this.productsUrl}/all`).pipe(map(result => result?.data ?? result ?? []));
   }
 
   createProduct(request: CreateProductRequest): Observable<Product> {
-    return this.http.post<Product>(this.productsUrl, request);
+    return this.http.post<any>(this.productsUrl, request).pipe(map(result => result?.data ?? result));
   }
 
   updateProduct(id: string, request: UpdateProductRequest): Observable<Product> {
-    return this.http.put<Product>(`${this.productsUrl}/${id}`, request);
+    return this.http.put<any>(`${this.productsUrl}/${id}`, request).pipe(map(result => result?.data ?? result));
   }
 
   deactivateProduct(id: string): Observable<void> {
@@ -194,19 +194,19 @@ export class SubscriptionService {
 
   // ── Plans ─────────────────────────────────────────────────────────────────
   getPublicPlans(): Observable<SubscriptionPlan[]> {
-    return this.http.get<SubscriptionPlan[]>(this.plansUrl);
+    return this.http.get<any>(this.plansUrl).pipe(map(result => result?.data ?? result ?? []));
   }
 
   getAllPlans(): Observable<SubscriptionPlan[]> {
-    return this.http.get<SubscriptionPlan[]>(`${this.plansUrl}/all`);
+    return this.http.get<any>(`${this.plansUrl}/all`).pipe(map(result => result?.data ?? result ?? []));
   }
 
   createPlan(request: CreatePlanRequest): Observable<SubscriptionPlan> {
-    return this.http.post<SubscriptionPlan>(this.plansUrl, request);
+    return this.http.post<any>(this.plansUrl, request).pipe(map(result => result?.data ?? result));
   }
 
   updatePlan(id: string, request: UpdatePlanRequest): Observable<SubscriptionPlan> {
-    return this.http.put<SubscriptionPlan>(`${this.plansUrl}/${id}`, request);
+    return this.http.put<any>(`${this.plansUrl}/${id}`, request).pipe(map(result => result?.data ?? result));
   }
 
   deactivatePlan(id: string): Observable<void> {
@@ -240,19 +240,21 @@ export class SubscriptionService {
     if (params?.status)    httpParams = httpParams.set('status', params.status);
     if (params?.page)      httpParams = httpParams.set('page', params.page.toString());
     if (params?.pageSize)  httpParams = httpParams.set('pageSize', params.pageSize.toString());
-    return this.http.get<SubscriptionPagedResult>(this.subsUrl, { params: httpParams });
+    return this.http.get<any>(this.subsUrl, { params: httpParams }).pipe(
+      map(result => result?.data ?? result)
+    );
   }
 
   getUserSubscriptions(userId: string): Observable<UserSubscription[]> {
-    return this.http.get<UserSubscription[]>(`${this.subsUrl}/user/${userId}`);
+    return this.http.get<any>(`${this.subsUrl}/user/${userId}`).pipe(map(result => result?.data ?? result ?? []));
   }
 
   createSubscription(request: CreateSubscriptionRequest): Observable<UserSubscription> {
-    return this.http.post<UserSubscription>(this.subsUrl, request);
+    return this.http.post<any>(this.subsUrl, request).pipe(map(result => result?.data ?? result));
   }
 
   updateSubscription(id: string, request: UpdateSubscriptionRequest): Observable<UserSubscription> {
-    return this.http.put<UserSubscription>(`${this.subsUrl}/${id}`, request);
+    return this.http.put<any>(`${this.subsUrl}/${id}`, request).pipe(map(result => result?.data ?? result));
   }
 
   deleteSubscription(id: string): Observable<void> {
@@ -262,11 +264,11 @@ export class SubscriptionService {
   // ── Access ────────────────────────────────────────────────────────────────
   /** Yeni erişim endpoint'i — ürün slug'larına dayalı */
   getMyAccess(): Observable<UserAccess> {
-    return this.http.get<UserAccess>(`${this.subsUrl}/my-access`);
+    return this.http.get<any>(`${this.subsUrl}/my-access`).pipe(map(result => result?.data ?? result));
   }
 
   /** Geriye dönük uyumluluk */
   getMyModules(): Observable<UserModules> {
-    return this.http.get<UserModules>(`${this.subsUrl}/my-modules`);
+    return this.http.get<any>(`${this.subsUrl}/my-modules`).pipe(map(result => result?.data ?? result));
   }
 }

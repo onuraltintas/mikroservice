@@ -18,7 +18,7 @@ import {
   providedIn: 'root'
 })
 export class AdaptiveTextService {
-  private readonly apiUrl = `${environment.apiUrl}/v1/adaptivetexts`;
+  private readonly apiUrl = `${environment.speedReadingApiUrl}/adaptive-texts`;
 
   // Cache student profile for performance
   private profileCache$ = new BehaviorSubject<StudentReadingProfile | null>(null);

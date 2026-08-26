@@ -37,7 +37,7 @@ interface TodaysPlan {
 export class DailyPlanWidgetComponent implements OnInit {
   private http = inject(HttpClient);
   private router = inject(Router);
-  private apiUrl = `${environment.apiUrl}/v1/daily-progress`;
+  private apiUrl = `${environment.speedReadingApiUrl}/daily-progress`;
 
   todaysPlan = signal<TodaysPlan | null>(null);
   loading = signal(true);

@@ -77,6 +77,10 @@ import { ToasterService } from '../../../core/services/toaster.service';
                     <p>CSV dosyanız aşağıdaki sütunları içermelidir:</p>
                     <table class="format-table">
                         <tr>
+                            <td><code>ExerciseId</code></td>
+                            <td>Bağlı egzersizin GUID değeri (zorunlu)</td>
+                        </tr>
+                        <tr>
                             <td><code>Description</code></td>
                             <td>Sahne açıklaması (zorunlu)</td>
                         </tr>

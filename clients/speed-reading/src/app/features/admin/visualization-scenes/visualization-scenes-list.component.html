@@ -9,20 +9,6 @@
                 <mat-icon>upload_file</mat-icon>
                 CSV İçe Aktar
             </button>
-            <button mat-raised-button [matMenuTriggerFor]="exportMenu" [disabled]="scenes.length === 0">
-                <mat-icon>download</mat-icon>
-                Dışa Aktar
-            </button>
-            <mat-menu #exportMenu="matMenu">
-                <button mat-menu-item (click)="exportAllToPdf()">
-                    <mat-icon>picture_as_pdf</mat-icon>
-                    <span>Tümünü PDF İndir</span>
-                </button>
-                <button mat-menu-item (click)="exportAllToDocx()">
-                    <mat-icon>description</mat-icon>
-                    <span>Tümünü DOCX İndir</span>
-                </button>
-            </mat-menu>
             <button mat-raised-button color="primary" (click)="openSceneDialog()">
                 <mat-icon>add</mat-icon>
                 Yeni Sahne
@@ -169,19 +155,6 @@
                         <button mat-icon-button (click)="openSceneDialog(scene)" matTooltip="Düzenle">
                             <mat-icon>edit</mat-icon>
                         </button>
-                        <button mat-icon-button [matMenuTriggerFor]="rowExportMenu" matTooltip="İndir">
-                            <mat-icon>download</mat-icon>
-                        </button>
-                        <mat-menu #rowExportMenu="matMenu">
-                            <button mat-menu-item (click)="exportToPdf(scene)">
-                                <mat-icon>picture_as_pdf</mat-icon>
-                                <span>PDF İndir</span>
-                            </button>
-                            <button mat-menu-item (click)="exportToDocx(scene)">
-                                <mat-icon>description</mat-icon>
-                                <span>DOCX İndir</span>
-                            </button>
-                        </mat-menu>
                         <button mat-icon-button color="warn" (click)="deleteScene(scene)" matTooltip="Sil">
                             <mat-icon>delete</mat-icon>
                         </button>

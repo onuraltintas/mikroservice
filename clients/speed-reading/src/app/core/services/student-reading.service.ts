@@ -18,7 +18,7 @@ import {
 })
 export class StudentReadingService {
   private readonly http = inject(HttpClient);
-  private readonly API_URL = `${environment.apiUrl}/v1/student-reading`;
+  private readonly API_URL = `${environment.speedReadingApiUrl}/student-reading`;
 
   // Get available categories for students
   getCategories(): Observable<string[]> {
@@ -41,7 +41,15 @@ export class StudentReadingService {
 
   // Get text details with questions - Start a reading session
   getTextWithQuestions(textId: string): Observable<ReadingText> {
-    return this.http.get<ReadingText>(`${this.API_URL}/${textId}/start`);
+    return this.http.get<any>(`${this.API_URL}/${textId}/start`).pipe(
+      map((response: any) => {
+        const text = response?.data ?? response;
+        return {
+          ...text,
+          readingQuestions: text?.readingQuestions ?? text?.questions ?? []
+        } as ReadingText;
+      })
+    );
   }
 
   // Get questions for a text (fallback - use start endpoint)
@@ -60,7 +68,12 @@ export class StudentReadingService {
 
   // Complete a reading session
   completeSession(textId: string, dto: CompleteReadingSessionDto): Observable<ReadingSessionResult> {
-    return this.http.post<ReadingSessionResult>(`${this.API_URL}/${textId}/complete`, dto);
+    return this.http.post<ReadingSessionResult>(`${this.API_URL}/${textId}/complete`, {
+      timeSpentSeconds: dto.readingTimeSeconds,
+      // The API calculates the score from submitted answers when available.
+      comprehensionScore: 0,
+      answers: dto.answers
+    });
   }
 
   // Get reading history
@@ -79,7 +92,12 @@ export class StudentReadingService {
 
   // Get session details
   getSessionDetails(sessionId: string): Observable<ReadingSessionResult> {
-    return this.http.get<ReadingSessionResult>(`${this.API_URL}/sessions/${sessionId}`);
+    return this.http.get<any>(`${this.API_URL}/sessions/${sessionId}`).pipe(
+      map((response: any) => {
+        const session = response?.data ?? response;
+        return { ...session, sessionId: session?.sessionId ?? session?.id } as ReadingSessionResult;
+      })
+    );
   }
 
   // Get statistics

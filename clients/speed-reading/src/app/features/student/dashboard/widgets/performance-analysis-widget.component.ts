@@ -32,7 +32,7 @@ interface PerformanceData {
 })
 export class PerformanceAnalysisWidgetComponent implements OnInit {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/v1/daily-progress`;
+  private apiUrl = `${environment.speedReadingApiUrl}/daily-progress`;
 
   loading = signal(true);
   performanceData = signal<PerformanceData | null>(null);

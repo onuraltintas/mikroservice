@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   ReviewExerciseDto,
@@ -14,7 +14,7 @@ import {
 })
 export class ReviewService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/v1/review`;
+  private apiUrl = `${environment.speedReadingApiUrl}/review`;
 
   // Signals for reactive state
   dueReviews = signal<ReviewExerciseDto[]>([]);
@@ -34,7 +34,8 @@ export class ReviewService {
       params = params.set('seriesId', seriesId);
     }
 
-    return this.http.get<ReviewExerciseDto[]>(`${this.apiUrl}/due`, { params }).pipe(
+    return this.http.get<any>(`${this.apiUrl}/due`, { params }).pipe(
+      map(response => Array.isArray(response) ? response : (response?.items ?? response?.data ?? [])),
       tap({
         next: (data) => {
           this.dueReviews.set(Array.isArray(data) ? data : []);
@@ -58,7 +59,8 @@ export class ReviewService {
       params = params.set('seriesId', seriesId);
     }
 
-    return this.http.get<ReviewStatisticsDto>(`${this.apiUrl}/statistics`, { params }).pipe(
+    return this.http.get<any>(`${this.apiUrl}/statistics`, { params }).pipe(
+      map(response => response?.data ?? response),
       tap({
         next: (data) => {
           this.statistics.set(data);
@@ -74,7 +76,8 @@ export class ReviewService {
    * Submits a review result
    */
   submitReview(reviewItemId: string, score: number): Observable<SubmitReviewResult> {
-    return this.http.post<SubmitReviewResult>(`${this.apiUrl}/${reviewItemId}/submit`, { score }).pipe(
+    return this.http.post<any>(`${this.apiUrl}/${reviewItemId}/submit`, { score }).pipe(
+      map(response => response?.data ?? response),
       tap({
         next: () => {
           this.getDueReviews().subscribe();
@@ -90,8 +93,10 @@ export class ReviewService {
   /**
    * Gets review history for a specific exercise
    */
-  getReviewHistory(exerciseId: string): Observable<ReviewHistoryDto> {
-    return this.http.get<ReviewHistoryDto>(`${this.apiUrl}/exercise/${exerciseId}/history`);
+  getReviewHistory(exerciseId: string): Observable<ReviewHistoryDto[]> {
+    return this.http.get<any>(`${this.apiUrl}/exercise/${exerciseId}/history`).pipe(
+      map(response => Array.isArray(response) ? response : (response?.data ?? []))
+    );
   }
 
   /**

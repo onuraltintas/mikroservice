@@ -47,4 +47,11 @@ public sealed class AdminAnalyticsController(ILegacySpeedReadingAdminAnalytics a
     {
         return Ok(await analytics.GetInstitutionAnalyticsAsync(dateFrom, dateTo, cancellationToken));
     }
+
+    [HttpGet("programs")]
+    public async Task<ActionResult<SpeedReadingProgramAnalytics>> GetPrograms(
+        CancellationToken cancellationToken = default)
+    {
+        return Ok(await analytics.GetProgramAnalyticsAsync(cancellationToken));
+    }
 }

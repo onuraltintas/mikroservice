@@ -272,9 +272,11 @@ export class TeacherStudentDetailReportComponent implements OnInit {
 
     this.reportsService.exportReportToPdf({
       reportType: 'student-detail',
+      title: `${studentName} - Öğrenci Raporu`,
       studentId,
       startDate,
-      endDate
+      endDate,
+      data: this.report()
     }).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
@@ -290,4 +292,3 @@ export class TeacherStudentDetailReportComponent implements OnInit {
     });
   }
 }
-

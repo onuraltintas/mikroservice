@@ -28,6 +28,336 @@
         }
     }
 
+    # Keep the legacy CMS URLs working while the standalone client moves to
+    # the bounded-context route above.
+    @legacyCmsApi path /api/v1/cms /api/v1/cms/*
+    handle @legacyCmsApi {
+        uri replace /api/v1/cms /api/speed-reading/cms
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyCmsAdminApi path /api/v1/admin/cms /api/v1/admin/cms/*
+    handle @legacyCmsAdminApi {
+        uri replace /api/v1/admin/cms /api/speed-reading/admin/cms
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyProductsApi path /api/v1/products /api/v1/products/*
+    handle @legacyProductsApi {
+        uri replace /api/v1/products /api/speed-reading/products
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyPlansApi path /api/v1/subscription-plans /api/v1/subscription-plans/*
+    handle @legacyPlansApi {
+        uri replace /api/v1/subscription-plans /api/speed-reading/subscription-plans
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacySubscriptionsApi path /api/v1/subscriptions /api/v1/subscriptions/*
+    handle @legacySubscriptionsApi {
+        uri replace /api/v1/subscriptions /api/speed-reading/subscriptions
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyPaymentApi path /api/v1/payment /api/v1/payment/*
+    handle @legacyPaymentApi {
+        uri replace /api/v1/payment /api/speed-reading/payment
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyAdaptiveLearningApi path /api/v1/adaptive-learning /api/v1/adaptive-learning/*
+    handle @legacyAdaptiveLearningApi {
+        uri replace /api/v1/adaptive-learning /api/speed-reading/adaptive-learning
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyAdaptiveTextApi path /api/v1/adaptivetexts /api/v1/adaptivetexts/*
+    handle @legacyAdaptiveTextApi {
+        uri replace /api/v1/adaptivetexts /api/speed-reading/adaptive-texts
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyContentFeedbackApi path /api/v1/contentfeedback /api/v1/contentfeedback/*
+    handle @legacyContentFeedbackApi {
+        uri replace /api/v1/contentfeedback /api/speed-reading/content-feedback
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyVisualizationApi path /api/v1/visualization /api/v1/visualization/*
+    handle @legacyVisualizationApi {
+        uri replace /api/v1/visualization /api/speed-reading/visualization
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyVisualizationAdminApi path /api/v1/admin/visualization-scenes /api/v1/admin/visualization-scenes/*
+    handle @legacyVisualizationAdminApi {
+        uri replace /api/v1/admin/visualization-scenes /api/speed-reading/admin/visualization-scenes
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyVocabularyApi path /api/v1/vocabulary /api/v1/vocabulary/*
+    handle @legacyVocabularyApi {
+        uri replace /api/v1/vocabulary /api/speed-reading/vocabulary
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyExamQuestionsApi path /api/v1/exam-questions /api/v1/exam-questions/*
+    handle @legacyExamQuestionsApi {
+        uri replace /api/v1/exam-questions /api/speed-reading/exam-questions
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyStudentProgramApi path /api/v1/student-program /api/v1/student-program/*
+    handle @legacyStudentProgramApi {
+        uri replace /api/v1/student-program /api/speed-reading/student-program
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyRsvpApi path /api/v1/rsvp-sessions /api/v1/rsvp-sessions/*
+    handle @legacyRsvpApi {
+        uri replace /api/v1/rsvp-sessions /api/speed-reading/rsvp-sessions
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyNotificationsApi path /api/v1/notifications /api/v1/notifications/* /api/notifications /api/notifications/*
+    handle @legacyNotificationsApi {
+        uri replace /api/v1/notifications /api/speed-reading/notifications
+        uri replace /api/notifications /api/speed-reading/notifications
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyAnnouncementsApi path /api/v1/announcements /api/v1/announcements/* /api/announcements /api/announcements/*
+    handle @legacyAnnouncementsApi {
+        uri replace /api/v1/announcements /api/speed-reading/announcements
+        uri replace /api/announcements /api/speed-reading/announcements
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyEmailTemplatesApi path /api/v1/email-templates /api/v1/email-templates/* /api/email-templates /api/email-templates/*
+    handle @legacyEmailTemplatesApi {
+        uri replace /api/v1/email-templates /api/speed-reading/email-templates
+        uri replace /api/email-templates /api/speed-reading/email-templates
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyEmailCampaignsApi path /api/v1/email-campaigns /api/v1/email-campaigns/* /api/email-campaigns /api/email-campaigns/*
+    handle @legacyEmailCampaignsApi {
+        uri replace /api/v1/email-campaigns /api/speed-reading/email-campaigns
+        uri replace /api/email-campaigns /api/speed-reading/email-campaigns
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyAgeGroupsApi path /api/v1/age-group-configurations /api/v1/age-group-configurations/* /api/age-group-configurations /api/age-group-configurations/*
+    handle @legacyAgeGroupsApi {
+        uri replace /api/v1/age-group-configurations /api/speed-reading/age-group-configurations
+        uri replace /api/age-group-configurations /api/speed-reading/age-group-configurations
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyAssessmentApi path /api/v1/assessment /api/v1/assessment/* /api/assessment /api/assessment/*
+    handle @legacyAssessmentApi {
+        uri replace /api/v1/assessment /api/speed-reading/assessment
+        uri replace /api/assessment /api/speed-reading/assessment
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyAssessmentAdminApi path /api/v1/admin/assessment-templates /api/v1/admin/assessment-templates/* /api/admin/assessment-templates /api/admin/assessment-templates/*
+    handle @legacyAssessmentAdminApi {
+        uri replace /api/v1/admin/assessment-templates /api/speed-reading/admin/assessment-templates
+        uri replace /api/admin/assessment-templates /api/speed-reading/admin/assessment-templates
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyReviewApi path /api/v1/review /api/v1/review/* /api/review /api/review/*
+    handle @legacyReviewApi {
+        uri replace /api/v1/review /api/speed-reading/review
+        uri replace /api/review /api/speed-reading/review
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacySeriesAccessApi path /api/v1/series-access /api/v1/series-access/* /api/series-access /api/series-access/*
+    handle @legacySeriesAccessApi {
+        uri replace /api/v1/series-access /api/speed-reading/series-access
+        uri replace /api/series-access /api/speed-reading/series-access
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyStudentReadingApi path /api/v1/student-reading /api/v1/student-reading/* /api/v1/studentreading /api/v1/studentreading/* /api/student-reading /api/student-reading/* /api/studentreading /api/studentreading/*
+    handle @legacyStudentReadingApi {
+        uri replace /api/v1/student-reading /api/speed-reading/student-reading
+        uri replace /api/v1/studentreading /api/speed-reading/student-reading
+        uri replace /api/student-reading /api/speed-reading/student-reading
+        uri replace /api/studentreading /api/speed-reading/student-reading
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyExerciseSessionsApi path /api/v1/exercise-sessions /api/v1/exercise-sessions/* /api/exercise-sessions /api/exercise-sessions/*
+    handle @legacyExerciseSessionsApi {
+        uri replace /api/v1/exercise-sessions /api/speed-reading/exercise-sessions
+        uri replace /api/exercise-sessions /api/speed-reading/exercise-sessions
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyDailyProgressApi path /api/v1/daily-progress /api/v1/daily-progress/* /api/daily-progress /api/daily-progress/*
+    handle @legacyDailyProgressApi {
+        uri replace /api/v1/daily-progress /api/speed-reading/daily-progress
+        uri replace /api/daily-progress /api/speed-reading/daily-progress
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyProgramTemplatesApi path /api/v1/program-templates /api/v1/program-templates/* /api/program-templates /api/program-templates/*
+    handle @legacyProgramTemplatesApi {
+        uri replace /api/v1/program-templates /api/speed-reading/program-templates
+        uri replace /api/program-templates /api/speed-reading/program-templates
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyProgramAnalyticsApi path /api/v1/student-progress/analytics/dashboard /api/student-progress/analytics/dashboard
+    handle @legacyProgramAnalyticsApi {
+        uri replace /api/v1/student-progress/analytics/dashboard /api/speed-reading/analytics/admin/programs
+        uri replace /api/student-progress/analytics/dashboard /api/speed-reading/analytics/admin/programs
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyStudentProgressApi path /api/v1/student-progress /api/v1/student-progress/* /api/student-progress /api/student-progress/*
+    handle @legacyStudentProgressApi {
+        uri replace /api/v1/student-progress /api/speed-reading/student-progress
+        uri replace /api/student-progress /api/speed-reading/student-progress
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyAssignmentsApi path /api/v1/assignments /api/v1/assignments/* /api/assignments /api/assignments/*
+    handle @legacyAssignmentsApi {
+        uri replace /api/v1/assignments /api/speed-reading/assignments
+        uri replace /api/assignments /api/speed-reading/assignments
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyLearningPathApi path /api/v1/learningpath /api/v1/learningpath/* /api/learningpath /api/learningpath/*
+    handle @legacyLearningPathApi {
+        uri replace /api/v1/learningpath /api/speed-reading/learning-paths
+        uri replace /api/learningpath /api/speed-reading/learning-paths
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyReadingTextsApi path /api/v1/reading-texts /api/v1/reading-texts/* /api/reading-texts /api/reading-texts/*
+    handle @legacyReadingTextsApi {
+        uri replace /api/v1/reading-texts /api/speed-reading/reading-texts
+        uri replace /api/reading-texts /api/speed-reading/reading-texts
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyReadingQuestionsApi path /api/v1/reading-questions /api/v1/reading-questions/* /api/reading-questions /api/reading-questions/*
+    handle @legacyReadingQuestionsApi {
+        uri replace /api/v1/reading-questions /api/speed-reading/reading-questions
+        uri replace /api/reading-questions /api/speed-reading/reading-questions
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyGamificationApi path /api/v1/gamification /api/v1/gamification/* /api/gamification /api/gamification/*
+    handle @legacyGamificationApi {
+        uri replace /api/v1/gamification /api/speed-reading/gamification
+        uri replace /api/gamification /api/speed-reading/gamification
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyReportSnapshotsApi path /api/v1/reporttemplates/snapshots /api/v1/reporttemplates/snapshots/* /api/reporttemplates/snapshots /api/reporttemplates/snapshots/*
+    handle @legacyReportSnapshotsApi {
+        uri replace /api/v1/reporttemplates/snapshots /api/speed-reading/reports/snapshots
+        uri replace /api/reporttemplates/snapshots /api/speed-reading/reports/snapshots
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @legacyReportTemplatesApi path /api/v1/reporttemplates /api/v1/reporttemplates/* /api/reporttemplates /api/reporttemplates/*
+    handle @legacyReportTemplatesApi {
+        uri replace /api/v1/reporttemplates /api/speed-reading/reports/templates
+        uri replace /api/reporttemplates /api/speed-reading/reports/templates
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    @sitemap path /sitemap.xml
+    handle @sitemap {
+        uri replace /sitemap.xml /api/speed-reading/sitemap.xml
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
     # The existing frontend still emits /api/v1 for a small, explicit set of
     # SpeedReading and identity routes while the Gateway contract is /api.
     # Strip only this allowlisted compatibility surface before proxying.

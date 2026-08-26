@@ -71,37 +71,6 @@ export class ImportDialogComponent extends BaseComponent {
     this.errorCount = 0;
   }
 
-  parseFile() {
-    if (!this.selectedFile) return;
-
-    this.loading.set(true);
-
-    // For demonstration, we'll show a mock parse
-    // In real implementation, you would parse CSV/Excel on frontend or send to backend
-    setTimeout(() => {
-      this.parsedTexts = [
-        {
-          title: 'Örnek Metin 1',
-          content: 'Bu bir örnek metin içeriğidir...',
-          category: 'Bilim',
-          level: 3,
-          questionCount: 5,
-          status: 'pending'
-        },
-        {
-          title: 'Örnek Metin 2',
-          content: 'İkinci örnek metin...',
-          category: 'Tarih',
-          level: 5,
-          questionCount: 7,
-          status: 'pending'
-        }
-      ];
-      this.loading.set(false);
-      this.toaster.info(`${this.parsedTexts.length} metin bulundu`);
-    }, 1500);
-  }
-
   importTexts() {
     if (!this.selectedFile) return;
 

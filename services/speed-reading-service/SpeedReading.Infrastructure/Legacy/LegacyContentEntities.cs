@@ -12,6 +12,73 @@ internal abstract class LegacyBaseEntity
     public Guid? DeletedBy { get; set; }
 }
 
+internal sealed class LegacyContentBlock : LegacyBaseEntity
+{
+    public string Key { get; set; } = string.Empty;
+    public string Group { get; set; } = string.Empty;
+    public string? Label { get; set; }
+    public int Type { get; set; }
+    public string Value { get; set; } = string.Empty;
+}
+
+internal sealed class LegacyPage : LegacyBaseEntity
+{
+    public string Title { get; set; } = string.Empty;
+    public string Slug { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
+    public bool IsPublished { get; set; }
+    public string? MetaTitle { get; set; }
+    public string? MetaDescription { get; set; }
+    public string? MetaKeywords { get; set; }
+    public string? CanonicalUrl { get; set; }
+    public string? OgTitle { get; set; }
+    public string? OgDescription { get; set; }
+    public string? OgImage { get; set; }
+    public bool SeoSettingsNoIndex { get; set; }
+}
+
+internal sealed class LegacyBlogPost : LegacyBaseEntity
+{
+    public string Title { get; set; } = string.Empty;
+    public string Slug { get; set; } = string.Empty;
+    public string? Summary { get; set; }
+    public string Content { get; set; } = string.Empty;
+    public string? CoverImageUrl { get; set; }
+    public string? Tags { get; set; }
+    public string? Author { get; set; }
+    public int ViewCount { get; set; }
+    public bool IsPublished { get; set; }
+    public DateTime? PublishedAt { get; set; }
+    public string? MetaTitle { get; set; }
+    public string? MetaDescription { get; set; }
+    public string? MetaKeywords { get; set; }
+    public string? CanonicalUrl { get; set; }
+    public string? OgTitle { get; set; }
+    public string? OgDescription { get; set; }
+    public string? OgImage { get; set; }
+    public bool SeoSettingsNoIndex { get; set; }
+}
+
+internal sealed class LegacyContactMessage : LegacyBaseEntity
+{
+    public string Name { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Subject { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+    public bool IsRead { get; set; }
+    public bool IsReplied { get; set; }
+    public DateTime? RepliedAt { get; set; }
+    public Guid? RepliedBy { get; set; }
+    public string? ReplyContent { get; set; }
+}
+
+internal sealed class LegacyNewsletterSubscriber : LegacyBaseEntity
+{
+    public string Email { get; set; } = string.Empty;
+    public bool IsActive { get; set; }
+    public string? Source { get; set; }
+}
+
 internal sealed class LegacyExerciseTypeCategory : LegacyBaseEntity
 {
     public string Name { get; set; } = string.Empty;
@@ -96,12 +163,16 @@ internal sealed class LegacyExerciseSession : LegacyBaseEntity
     public int IncorrectCount { get; set; }
     public Guid? ReadingTextId { get; set; }
     public Guid? StudentAssignmentId { get; set; }
+    public DateTime? PausedAt { get; set; }
+    public int? TimeLimitSeconds { get; set; }
+    public string ProcessedActionsJson { get; set; } = "{}";
 }
 
 internal sealed class LegacyStudentExerciseResult : LegacyBaseEntity
 {
     public Guid StudentId { get; set; }
     public Guid ExerciseId { get; set; }
+    public Guid? SessionId { get; set; }
     public Guid? ReadingTextId { get; set; }
     public int WordsRead { get; set; }
     public int TimeSpentSeconds { get; set; }
@@ -177,6 +248,7 @@ internal sealed class LegacyDailyExerciseLog : LegacyBaseEntity
     public int TimeSpentSeconds { get; set; }
     public decimal SuccessRate { get; set; }
     public bool IsPassed { get; set; }
+    public string ResultDataJson { get; set; } = string.Empty;
     public int AttemptNumber { get; set; }
     public bool IsRetry { get; set; }
     public string DevicePlatform { get; set; } = string.Empty;
@@ -185,6 +257,21 @@ internal sealed class LegacyDailyExerciseLog : LegacyBaseEntity
     public int TotalAttempts { get; set; }
     public decimal? AverageWPM { get; set; }
     public decimal? AverageComprehension { get; set; }
+    public int DayOfWeek { get; set; }
+    public TimeSpan TimeOfDay { get; set; }
+    public decimal AverageResponseTimeMs { get; set; }
+    public decimal MedianResponseTimeMs { get; set; }
+    public decimal StdDevResponseTimeMs { get; set; }
+    public int PauseCount { get; set; }
+    public int TotalPausedSeconds { get; set; }
+    public decimal PerformanceTrend { get; set; }
+    public bool IsPersonalBest { get; set; }
+    public decimal PreviousAverageScore { get; set; }
+    public int CurrentStreak { get; set; }
+    public decimal EngagementScore { get; set; }
+    public decimal FrustrationScore { get; set; }
+    public decimal LearningRate { get; set; }
+    public decimal ConsistencyScore { get; set; }
 }
 
 internal sealed class LegacyLearningPathTemplate : LegacyBaseEntity

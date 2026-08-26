@@ -33,7 +33,7 @@ export interface DailyLearningContext {
 export class SeriesExerciseHelperService {
   private http = inject(HttpClient);
   private router = inject(Router);
-  private apiUrl = `${environment.apiUrl}/v1/daily-progress`;
+  private apiUrl = `${environment.speedReadingApiUrl}/daily-progress`;
 
   detectSeriesMode(state: any): SeriesContext | null {
     // Legacy method - always returns null

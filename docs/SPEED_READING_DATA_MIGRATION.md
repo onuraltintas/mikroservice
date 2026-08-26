@@ -53,7 +53,7 @@ uç noktası için additive bir ledger ile başlatılmıştır:
 | `NodeContents` / `NodePrerequisites` | Düğüm içeriği ve ön koşulları |
 | `StudentPathProgresses` / `StudentNodeProgresses` | Öğrenci yolu ve düğüm ilerlemesi |
 | `PersonalizedLearningPaths` | Kişiselleştirilmiş öğrenci yolu öğeleri |
-| `ReportTemplates` | Rapor şablonları (salt-okunur merkezi sınır) |
+| `ReportTemplates` | Rapor şablonları ve merkezi yönetim yazma uçları |
 | `ReportSnapshots` | Kullanıcıya ait oluşturulmuş rapor snapshot'ları |
 | `ScheduledReports` | Kullanıcıya ait zamanlanmış rapor ayarları |
 
@@ -154,8 +154,10 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
   `ClassAverageComprehensionDataAvailable` bayraklarıyla veri yokluğu olarak
   gösterilir.
 - `GET /api/speed-reading/analytics/teacher/assignments` merkezi atama raporu
-  sözleşmesidir. Kaynak hızlı okuma şemasında atama tabloları bulunmadığı için
-  `DataAvailable=false` döner; boş sonuç gerçek sıfır gibi yorumlanmamalıdır.
+  sözleşmesidir. Atama CRUD tabloları artık merkezi serviste bulunmasına rağmen
+  kaynak `ReportsController` içinde bu ayrıntılı raporun karşılığı yoktur;
+  endpoint bu nedenle `DataAvailable=false` döner ve boş sonuç gerçek sıfır
+  gibi yorumlanmamalıdır.
 - `GET /api/speed-reading/analytics/teacher/content-analysis` ve
   `/time-progress` Identity öğrenci kapsamı içinde gerçek içerik ve zaman
   ilerlemesi metriklerini döndürür. Identity kapsamı iç ağdaki
@@ -193,6 +195,20 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
   alınmadığı için global rapor yalnızca `PlatformAnalyticsView` yetkili
   SystemAdmin kullanıcılarına açıktır. Legacy `Users` tablosunda rol bilgisi
   bulunmadığından aktif öğrenci metriği veri yokluğu bayrağıyla gösterilir.
+- `GET /api/speed-reading/analytics/admin/programs` kaynak projedeki program
+  analitiği dashboard'unu merkezi servise taşır. Aktif program ilerlemeleri,
+  program dağılımı, haftalık ilerleme ve son öğrenci hareketleri aynı legacy
+  tablolar üzerinden hesaplanır; eski frontend yolu için Caddy uyumluluk
+  alias'ı bırakılmıştır.
+- `GET /api/speed-reading/student-progress`, `GET /{id}` ve `POST /{id}/reset`
+  kaynak admin öğrenci ilerleme operasyonlarını merkezi servise taşır. Liste
+  araması kullanıcı adı/e-postası ve program adına göre yapılır; sıfırlama
+  `ProgramManage` yetkisi ve audit actor bilgisiyle kaydedilir.
+- `POST /api/speed-reading/assignments`, `GET /assignments/my-assignments`,
+  `GET /assignments/teacher-assignments`, detay, silme ve öğrenci ilişki
+  uçları merkezi servise taşındı. Oluşturma sırasında frontend'in gönderdiği
+  `studentIds` artık gerçekten `StudentAssignments` kayıtlarına yazılır;
+  egzersiz türü filtresi de uygulanır.
 - `GET /api/speed-reading/reports/templates` ve
   `GET /api/speed-reading/reports/templates/{id}` — mevcut
   `ReportTemplates` tablosundan `ReportView` yetkili salt-okunur şablon okuma;
@@ -202,8 +218,12 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
   `GET /api/speed-reading/reports/snapshots/{id}` — `ReportView` yetkisi ile
   yalnızca token sahibinin `ReportSnapshots` kayıtları; 1 MB üzeri JSON gövdesi
   cevapta açıkça kırpılmış olarak işaretlenir. İstemcinin snapshot okuma
-  çağrıları bu merkezi uçları kullanır; üretim/export eski rapor pipeline'ına
-  bağlı olduğu için sonraki yazma dilimine bırakılmıştır.
+  çağrıları bu merkezi uçları kullanır. `POST|DELETE
+  /api/speed-reading/reports/snapshots` kullanıcının kendi snapshot kaydını
+  idempotency ve sahiplik kontrolüyle yönetir; okuma metni PDF/DOCX üretimi de
+  merkezi içerik export servisine alınmıştır. Rapor snapshot PDF/DOCX üretimi
+  legacy rapor pipeline'ına bağlı olduğu için bu ayrı dosya export uçları
+  henüz taşınmamıştır.
 - `GET /api/speed-reading/reports/scheduled` — `ReportView` yetkisi ile
   token sahibinin `ScheduledReports` kayıtları
 - `GET /api/speed-reading/reports/scheduled/{id}` — yalnızca token sahibinin
@@ -229,12 +249,10 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
   `GamificationManage` yetkili kazanım CRUD'u
 
 Yazma uç noktaları idempotency ve audit ile korunur. Öğrenci istemcisindeki
-`awardXP`, `checkAchievements`, streak ve showcase yazıları, merkezi gamification
-yazma sözleşmesi tamamlanana kadar eski `/v1/gamification` uyumluluk köprüsünde
-tutulur. Bu geçici köprü dokümante edilmiş bir geçiş kararıdır; merkezi yazma
-uç noktaları ve rollback testleri geçmeden eski yollar kapatılmamalıdır. Tüm
-gamification okuma ve admin kazanım çağrıları yeni `/api/speed-reading` yolundadır;
-öğrenci yazma köprüsü dışında eski achievement endpoint'i kullanılmaz.
+`awardXP`, `checkAchievements`, streak ve showcase yazıları artık merkezi
+`/api/speed-reading/gamification` uçlarını kullanır. Eski istemciler için
+`/v1/gamification` Caddy alias'ı geçiş uyumluluğu sağlar; yeni frontend bu alias'a
+bağlanmaz.
 
 ## Geçiş kontrol listesi
 
@@ -254,14 +272,20 @@ gamification okuma ve admin kazanım çağrıları yeni `/api/speed-reading` yol
 8. Sorun halinde Gateway rotasını eski uygulamaya geri al; veritabanına geri
    alma/migration çalıştırma.
 
-## Sonraki taşıma dilimleri
+## Kalan taşıma dilimleri
 
-Sıradaki dilimler, her biri test ve geri dönüş kontrolüyle ayrı ayrı taşınır:
+Tamamen kapatılmamış uyumluluk işleri şunlardır:
 
-1. Rapor template/snapshot/schedule yazma sözleşmelerinin ve admin ekranlarının taşınması.
-2. Oyunlaştırma XP/streak yazma akışlarının event/idempotency geri dönüş testleri.
-3. Mevcut `speed-reading-frontend` uygulamasının bağımsız servis Gateway'ine
-   geçirilmesi ve gerçek veritabanıyla uçtan uca doğrulanması.
+1. Görselleştirme ekranındaki PDF/DOCX yardımcılarının kaynak backend'de de
+   karşılığı olmadığı doğrulandı; 404 üreten butonlar frontend'den kaldırıldı.
+2. Gerçek veritabanı, Gateway ve bağımsız frontend ile uçtan uca smoke test;
+   geçiş öncesi satır sayısı ve geri dönüş kontrolü.
+
+Rapor `export/pdf` ve `export/excel` artık merkezi serviste gerçek PDF/XLSX
+üretir. Newsletter abonelikten çıkış da merkezi CMS altında
+`POST /api/speed-reading/cms/newsletter/unsubscribe` ile tamamlanmıştır.
+Adaptive-performance yardımcı fonksiyonu hedef frontend'de kullanılmayan eski
+bir servis metodudur; merkezi analytics ekranlarında aktif bir çağrısı yoktur.
 
 Her dilimde mevcut şema korunacak; yeni tablo veya kolon ihtiyacı varsa önce
 ayrı bir versiyonlanmış migration ve geri dönüş planı hazırlanacaktır.

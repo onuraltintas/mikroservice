@@ -93,6 +93,17 @@ public sealed record ReadingTextDetails(
     public DateTime? UpdatedAt { get; init; }
 }
 
+public interface ISpeedReadingReadingTextExporter
+{
+    byte[] GeneratePdf(ReadingTextDetails text);
+
+    byte[] GenerateMultiplePdf(IReadOnlyList<ReadingTextDetails> texts);
+
+    byte[] GenerateDocx(ReadingTextDetails text);
+
+    byte[] GenerateMultipleDocx(IReadOnlyList<ReadingTextDetails> texts);
+}
+
 public interface ILegacySpeedReadingCatalog
 {
     Task<IReadOnlyList<ExerciseTypeCategorySummary>> GetExerciseTypeCategoriesAsync(
@@ -207,6 +218,45 @@ public interface ILegacySpeedReadingProgress
         CancellationToken cancellationToken = default);
 }
 
+public interface ILegacySpeedReadingPrograms
+{
+    Task<IReadOnlyList<ExerciseProgramTemplateSummary>> GetProgramTemplatesAsync(
+        CancellationToken cancellationToken = default);
+
+    Task<ExerciseProgramTemplateAdminSummary?> GetProgramTemplateAsync(
+        Guid templateId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ExerciseProgramTemplateAdminSummary>> GetProgramTemplateAdminSummariesAsync(
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<StudentProgramProgressSummary>> GetStudentProgressAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task<SpeedReadingPage<AdminStudentProgressSummary>> GetAdminStudentProgressAsync(
+        int pageNumber,
+        int pageSize,
+        string? searchTerm,
+        CancellationToken cancellationToken = default);
+
+    Task<AdminStudentProgressDetails?> GetAdminStudentProgressDetailsAsync(
+        Guid progressId,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> ResetStudentProgressAsync(
+        Guid progressId,
+        Guid actorId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<DailyExerciseLogSummary>> GetDailyExerciseLogsAsync(
+        Guid userId,
+        DateTime? dateFrom,
+        DateTime? dateTo,
+        int limit,
+        CancellationToken cancellationToken = default);
+}
+
 public sealed record ExerciseProgramTemplateSummary(
     Guid Id,
     string Name,
@@ -239,6 +289,19 @@ public sealed record StudentProgramProgressSummary(
     int CurrentStreak,
     int LongestStreak);
 
+public sealed record AdminStudentProgressSummary(
+    Guid Id,
+    Guid UserId,
+    Guid ProgramTemplateId,
+    int CurrentDay,
+    int DaysCompleted,
+    int ExercisesCompleted,
+    DateTime AssignedDate);
+
+public sealed record AdminStudentProgressDetails(
+    StudentProgramProgressSummary Progress,
+    IReadOnlyList<DailyExerciseLogSummary> RecentLogs);
+
 public sealed record DailyExerciseLogSummary(
     Guid Id,
     Guid ExerciseId,
@@ -258,26 +321,6 @@ public sealed record DailyExerciseLogSummary(
     int TotalAttempts,
     decimal? AverageWpm,
     decimal? AverageComprehension);
-
-public interface ILegacySpeedReadingPrograms
-{
-    Task<IReadOnlyList<ExerciseProgramTemplateSummary>> GetProgramTemplatesAsync(
-        CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<ExerciseProgramTemplateAdminSummary>> GetProgramTemplateAdminSummariesAsync(
-        CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<StudentProgramProgressSummary>> GetStudentProgressAsync(
-        Guid userId,
-        CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<DailyExerciseLogSummary>> GetDailyExerciseLogsAsync(
-        Guid userId,
-        DateTime? dateFrom,
-        DateTime? dateTo,
-        int limit,
-        CancellationToken cancellationToken = default);
-}
 
 public sealed record LearningPathTemplateSummary(
     Guid Id,
@@ -332,6 +375,23 @@ public sealed record PersonalizedLearningPathItemSummary(
     string? RecommendationReason,
     bool IsUnlocked);
 
+public sealed record PersonalizedLearningPathProgressSummary(
+    int TotalItems,
+    int CompletedItems,
+    int RemainingItems,
+    decimal CompletionPercentage,
+    int CurrentIndex,
+    PersonalizedLearningPathItemSummary? NextItem);
+
+public sealed record StartLearningPathRequest(Guid TemplateId);
+
+public sealed record CompleteLearningPathNodeRequest(
+    decimal? Score,
+    int? TimeSpentMinutes,
+    IReadOnlyList<Guid>? CompletedContentIds);
+
+public sealed record CompletePersonalizedPathItemRequest(decimal? AchievedScore);
+
 public interface ILegacySpeedReadingLearningPaths
 {
     Task<IReadOnlyList<LearningPathTemplateSummary>> GetTemplatesAsync(
@@ -356,6 +416,36 @@ public interface ILegacySpeedReadingLearningPaths
         CancellationToken cancellationToken = default);
 
     Task<PersonalizedLearningPathItemSummary?> GetNextPersonalizedPathItemAsync(
+        Guid studentId,
+        CancellationToken cancellationToken = default);
+
+    Task<Guid> StartPathAsync(
+        Guid studentId,
+        Guid templateId,
+        CancellationToken cancellationToken = default);
+
+    Task CompleteNodeAsync(
+        Guid studentId,
+        Guid nodeId,
+        decimal? score,
+        CancellationToken cancellationToken = default);
+
+    Task<LearningPathNodeSummary?> GetNodeDetailsAsync(
+        Guid studentId,
+        Guid nodeId,
+        CancellationToken cancellationToken = default);
+
+    Task<int> GeneratePersonalizedPathAsync(
+        Guid studentId,
+        CancellationToken cancellationToken = default);
+
+    Task CompletePersonalizedPathItemAsync(
+        Guid studentId,
+        Guid pathItemId,
+        decimal? achievedScore,
+        CancellationToken cancellationToken = default);
+
+    Task<PersonalizedLearningPathProgressSummary> GetPersonalizedProgressAsync(
         Guid studentId,
         CancellationToken cancellationToken = default);
 }

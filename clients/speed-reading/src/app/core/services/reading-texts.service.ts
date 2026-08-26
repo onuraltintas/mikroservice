@@ -21,7 +21,6 @@ import {
 export class ReadingTextsService {
   private readonly http = inject(HttpClient);
   private apiUrl = `${environment.speedReadingApiUrl}/reading-texts`;
-  private legacyApiUrl = `${environment.apiUrl}/v1/reading-texts`;
 
 
 
@@ -54,7 +53,7 @@ export class ReadingTextsService {
 
   // Get active age groups
   getAgeGroups(): Observable<{ id: string, name: string, displayName: string }[]> {
-    return this.http.get<{ id: string, name: string, displayName: string }[]>(`${environment.apiUrl}/v1/age-group-configurations/active`);
+    return this.http.get<{ id: string, name: string, displayName: string }[]>(`${environment.speedReadingApiUrl}/age-group-configurations/active`);
   }
 
   // Simplified method for compatibility - Uses exercise endpoint for students
@@ -171,40 +170,46 @@ export class ReadingTextsService {
   importFromCsv(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post(`${this.legacyApiUrl}/import/csv`, formData);
+    return this.http.post(`${this.apiUrl}/import/csv`, formData, {
+      headers: this.idempotencyHeaders(this.newIdempotencyKey())
+    });
   }
 
   importFromExcel(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post(`${this.legacyApiUrl}/import/excel`, formData);
+    return this.http.post(`${this.apiUrl}/import/excel`, formData, {
+      headers: this.idempotencyHeaders(this.newIdempotencyKey())
+    });
   }
 
   importBulk(texts: ImportReadingTextDto[]): Observable<any> {
-    return this.http.post(`${this.legacyApiUrl}/import/bulk`, texts);
+    return this.http.post(`${this.apiUrl}/import/bulk`, texts, {
+      headers: this.idempotencyHeaders(this.newIdempotencyKey())
+    });
   }
 
   // Export functionality
   exportToPdf(id: string): Observable<Blob> {
-    return this.http.get(`${this.legacyApiUrl}/${id}/export/pdf`, {
+    return this.http.get(`${this.apiUrl}/${id}/export/pdf`, {
       responseType: 'blob'
     });
   }
 
   exportToDocx(id: string): Observable<Blob> {
-    return this.http.get(`${this.legacyApiUrl}/${id}/export/docx`, {
+    return this.http.get(`${this.apiUrl}/${id}/export/docx`, {
       responseType: 'blob'
     });
   }
 
   exportMultipleToPdf(ids: string[]): Observable<Blob> {
-    return this.http.post(`${this.legacyApiUrl}/export/pdf`, { ids }, {
+    return this.http.post(`${this.apiUrl}/export/pdf`, { ids }, {
       responseType: 'blob'
     });
   }
 
   exportMultipleToDocx(ids: string[]): Observable<Blob> {
-    return this.http.post(`${this.legacyApiUrl}/export/docx`, { ids }, {
+    return this.http.post(`${this.apiUrl}/export/docx`, { ids }, {
       responseType: 'blob'
     });
   }

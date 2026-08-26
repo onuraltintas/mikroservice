@@ -23,7 +23,6 @@ import {
 })
 export class LearningPathService {
   private apiUrl = `${environment.speedReadingApiUrl}/learning-paths`;
-  private legacyApiUrl = `${environment.apiUrl}/v1/learningpath`;
 
   // Current path progress state
   private currentPathProgressSubject = new BehaviorSubject<PathProgress | null>(null);
@@ -92,7 +91,7 @@ export class LearningPathService {
    */
   startPath(templateId: string): Observable<StartPathResult> {
     const request: StartPathRequest = { templateId };
-    return this.http.post<StartPathResult>(`${this.legacyApiUrl}/start`, request).pipe(
+    return this.http.post<StartPathResult>(`${this.apiUrl}/start`, request).pipe(
       tap(result => {
         // Start edince progress'i refresh et
         this.getProgress(templateId).subscribe();
@@ -117,7 +116,7 @@ export class LearningPathService {
     };
 
     return this.http.post<CompleteNodeResult>(
-      `${this.legacyApiUrl}/node/${nodeId}/complete`,
+      `${this.apiUrl}/node/${nodeId}/complete`,
       request
     ).pipe(
       tap(result => {
@@ -134,7 +133,7 @@ export class LearningPathService {
    * Specific node detaylarını getir
    */
   getNodeDetails(nodeId: string): Observable<NodeProgress> {
-    return this.http.get<NodeProgress>(`${this.legacyApiUrl}/node/${nodeId}`);
+    return this.http.get<NodeProgress>(`${this.apiUrl}/node/${nodeId}`);
   }
 
   /**
@@ -294,7 +293,7 @@ export class LearningPathService {
    * Personalized path auto-generate (ilk kez kullanımda)
    */
   generatePersonalizedPath(): Observable<any> {
-    return this.http.post<any>(`${this.legacyApiUrl}/personalized/generate`, {}).pipe(
+    return this.http.post<any>(`${this.apiUrl}/personalized/generate`, {}).pipe(
       tap(() => this.getPersonalizedLearningPathProgress().subscribe())
     );
   }
@@ -309,7 +308,7 @@ export class LearningPathService {
     const request: CompletePathItemRequest = { achievedScore };
 
     return this.http.post<CompletePathItemResponse>(
-      `${this.legacyApiUrl}/personalized/${pathItemId}/complete`,
+      `${this.apiUrl}/personalized/${pathItemId}/complete`,
       request
     ).pipe(
       tap(() => {

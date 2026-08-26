@@ -18,6 +18,7 @@ import { environment } from '../../../../environments/environment';
 interface BulkNotificationRequest {
     title: string;
     message: string;
+    type: number;
     priority: number;
     targetType: string;
     targetRole?: string;
@@ -61,8 +62,6 @@ export class BulkNotificationComponent {
     private http = inject(HttpClient);
     private toaster = inject(ToasterService);
     private router = inject(Router);
-    private apiUrl = environment.apiUrl;
-
     sending = signal(false);
     result = signal<BulkNotificationResult | null>(null);
 
@@ -113,6 +112,7 @@ export class BulkNotificationComponent {
         const request: BulkNotificationRequest = {
             title: this.title.trim(),
             message: this.message.trim(),
+            type: 9,
             priority: this.priority,
             targetType: this.targetType,
             targetRole: this.targetType === 'Role' ? this.targetRole : undefined,
@@ -120,7 +120,7 @@ export class BulkNotificationComponent {
             sendEmail: this.sendEmail
         };
 
-        this.http.post<BulkNotificationResult>(`${this.apiUrl}/v1/notifications/bulk`, request).subscribe({
+        this.http.post<BulkNotificationResult>(`${environment.speedReadingApiUrl}/notifications/bulk`, request).subscribe({
             next: (response) => {
                 this.result.set(response);
                 this.sending.set(false);

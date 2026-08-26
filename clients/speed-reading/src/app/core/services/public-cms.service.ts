@@ -67,7 +67,7 @@ export interface NewsletterSubscribeRequest {
     providedIn: 'root'
 })
 export class PublicCmsService {
-    private apiUrl = environment.apiUrl + '/v1/cms';
+    private apiUrl = environment.speedReadingApiUrl + '/cms';
     private languageService = inject(LanguageService);
 
     constructor(private http: HttpClient) { }
@@ -75,40 +75,68 @@ export class PublicCmsService {
     // Landing Page & Content Blocks
     getLandingContent(group: string = 'HomePage', language?: string): Observable<LandingContentVm> {
         const lang = language ?? this.languageService.currentLanguage();
-        return this.http.get<any[]>(`${this.apiUrl}/landing`, { params: { group, language: lang } }).pipe(
-            map(items => ({
+        return this.http.get<any>(`${this.apiUrl}/landing`, { params: { group, language: lang } }).pipe(
+            map(response => {
+                const items = Array.isArray(response) ? response : (response?.data ?? []);
+                return {
                 blocks: Object.fromEntries(
-                    (items || []).map((item: any) => [item.blockKey, item.blockValue])
+                    items.map((item: any) => [item.key ?? item.blockKey, item.value ?? item.blockValue])
                 ) as { [key: string]: string }
-            }))
+                };
+            })
         );
     }
 
     // Pages
     getPage(slug: string): Observable<PageDto> {
-        return this.http.get<PageDto>(`${this.apiUrl}/pages/${slug}`);
+        return this.http.get<any>(`${this.apiUrl}/pages/${slug}`).pipe(
+            map(response => response?.data ?? response)
+        );
     }
 
     // Blog
     getBlogPosts(page: number = 1, tag?: string): Observable<BlogListVm> {
-        let params = new HttpParams().set('page', page.toString());
+        let params = new HttpParams().set('pageNumber', page.toString()).set('pageSize', '10');
         if (tag) {
             params = params.set('tag', tag);
         }
-        return this.http.get<BlogListVm>(`${this.apiUrl}/blog`, { params });
+        return this.http.get<any>(`${this.apiUrl}/blog`, { params }).pipe(
+            map(response => {
+                const result = response?.data ?? response;
+                return {
+                    posts: result?.items ?? [],
+                    totalCount: result?.totalCount ?? 0,
+                    pageNumber: result?.pageNumber ?? page,
+                    pageSize: result?.pageSize ?? 10,
+                    totalPages: result?.totalPages ?? 0
+                };
+            })
+        );
     }
 
     getBlogPost(slug: string): Observable<BlogPostDto> {
-        return this.http.get<BlogPostDto>(`${this.apiUrl}/blog/${slug}`);
+        return this.http.get<any>(`${this.apiUrl}/blog/${slug}`).pipe(
+            map(response => response?.data ?? response)
+        );
     }
 
     // Contact
     submitContact(data: ContactMessageRequest): Observable<string> {
-        return this.http.post<string>(`${this.apiUrl}/contact`, data);
+        return this.http.post<any>(`${this.apiUrl}/contact`, data).pipe(
+            map(response => response?.message ?? response?.data?.id ?? '')
+        );
     }
 
     // Newsletter
     subscribeNewsletter(data: NewsletterSubscribeRequest): Observable<string> {
-        return this.http.post<string>(`${this.apiUrl}/newsletter/subscribe`, data);
+        return this.http.post<any>(`${this.apiUrl}/newsletter/subscribe`, data).pipe(
+            map(response => response?.message ?? '')
+        );
+    }
+
+    unsubscribeNewsletter(token: string): Observable<string> {
+        return this.http.post<any>(`${this.apiUrl}/newsletter/unsubscribe`, { token }).pipe(
+            map(response => response?.message ?? '')
+        );
     }
 }

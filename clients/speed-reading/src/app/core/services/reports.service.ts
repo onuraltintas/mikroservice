@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, forkJoin, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   StudentDashboardReport,
@@ -32,6 +31,7 @@ import {
 export class ReportsService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/v1/reports`;
+  private reportExportApiUrl = `${environment.speedReadingApiUrl}/reports`;
   private speedReadingApiUrl = `${environment.speedReadingApiUrl}/analytics`;
 
   // ==================== STUDENT REPORTS ====================
@@ -125,11 +125,47 @@ export class ReportsService {
 
   getTeacherStudentDetailReport(teacherId: string, studentId: string, startDate: Date, endDate: Date): Observable<TeacherStudentDetailReport> {
     const params = new HttpParams()
-      .set('teacherId', teacherId)
-      .set('studentId', studentId)
-      .set('startDate', startDate.toISOString())
-      .set('endDate', endDate.toISOString());
-    return this.http.get<TeacherStudentDetailReport>(`${this.apiUrl}/teacher/student-detail`, { params });
+      .set('dateFrom', this.normalizeAnalyticsStart(startDate, endDate).toISOString())
+      .set('dateTo', endDate.toISOString());
+    void teacherId;
+
+    const baseUrl = `${this.speedReadingApiUrl}/teacher/students/${studentId}`;
+    return forkJoin({
+      dashboard: this.http.get<StudentAnalyticsSummary>(`${baseUrl}/summary`, { params }),
+      readingSpeed: this.http.get<StudentReadingSpeedAnalytics>(`${baseUrl}/reading-speed`, { params }),
+      comprehension: this.http.get<StudentComprehensionAnalytics>(`${baseUrl}/comprehension`, { params }),
+      series: this.http.get<StudentSeriesAnalytics>(`${baseUrl}/series`, { params }),
+      activity: this.http.get<StudentActivityAnalytics>(`${baseUrl}/activity`, { params })
+    }).pipe(map(value => {
+      const dashboard = this.toStudentDashboardReport(value.dashboard);
+      const readingSpeed = this.toStudentReadingSpeedReport(value.readingSpeed);
+      const comprehension = this.toStudentComprehensionReport(value.comprehension);
+      const series = this.toStudentSeriesReport(value.series);
+      const activity = this.toStudentActivityReport(value.activity);
+
+      return {
+        metadata: this.toReportMetadata('teacher-student-detail', value.dashboard.dateFrom, value.dashboard.dateTo, 'Teacher'),
+        studentInfo: {
+          studentId,
+          studentName: '',
+          enrollmentDate: new Date(0),
+          lastActivity: activity.currentStreak.lastActivityDate ?? new Date(0)
+        },
+        comparisonChart: {
+          data: [
+            { name: 'WPM', value: readingSpeed.currentWPM },
+            { name: 'Anlama', value: comprehension.overallComprehension },
+            { name: 'Aktivite', value: dashboard.totalActivities },
+            { name: 'Seri', value: series.summary.seriesCompleted }
+          ],
+          labels: ['WPM', 'Anlama', 'Aktivite', 'Seri']
+        },
+        studentReports: { dashboard, readingSpeed, comprehension, series, activity },
+        strengths: value.comprehension.strongAreas ?? [],
+        weaknesses: value.comprehension.weakAreas ?? [],
+        recommendations: value.readingSpeed.recommendations ?? []
+      } as TeacherStudentDetailReport;
+    }));
   }
 
   getTeacherAssignmentReport(teacherId: string, startDate: Date, endDate: Date): Observable<TeacherAssignmentReport> {
@@ -208,11 +244,11 @@ export class ReportsService {
   // ==================== EXPORT ====================
 
   exportReportToPdf(reportData: any): Observable<Blob> {
-    return this.http.post(`${this.apiUrl}/export/pdf`, reportData, { responseType: 'blob' });
+    return this.http.post(`${this.reportExportApiUrl}/export/pdf`, reportData, { responseType: 'blob' });
   }
 
   exportReportToExcel(reportData: any): Observable<Blob> {
-    return this.http.post(`${this.apiUrl}/export/excel`, reportData, { responseType: 'blob' });
+    return this.http.post(`${this.reportExportApiUrl}/export/excel`, reportData, { responseType: 'blob' });
   }
 
   private normalizeAnalyticsStart(startDate: Date, endDate: Date): Date {

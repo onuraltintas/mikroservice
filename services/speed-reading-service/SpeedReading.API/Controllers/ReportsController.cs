@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using EduPlatform.Shared.Contracts.Authorization;
 using EduPlatform.Shared.Security.Authorization;
 using Microsoft.AspNetCore.Authorization;
@@ -13,7 +14,9 @@ namespace SpeedReading.API.Controllers;
 public sealed class ReportsController(
     ILegacySpeedReadingReports reports,
     ISpeedReadingReportsAdminWriter adminWriter,
-    ISpeedReadingReportsScheduleWriter scheduleWriter) : ControllerBase
+    ISpeedReadingReportsScheduleWriter scheduleWriter,
+    ISpeedReadingReportsSnapshotWriter snapshotWriter,
+    ISpeedReadingReportExporter exporter) : ControllerBase
 {
     [HttpGet("templates")]
     [HasPermission(PlatformPermissions.SpeedReading.ReportView)]
@@ -146,6 +149,82 @@ public sealed class ReportsController(
 
         var snapshot = await reports.GetUserSnapshotAsync(userId, snapshotId, cancellationToken);
         return snapshot is null ? NotFound() : Ok(snapshot);
+    }
+
+    [HttpPost("snapshots")]
+    [HasPermission(PlatformPermissions.SpeedReading.ReportManage)]
+    public async Task<ActionResult<ReportSnapshotDetail>> CreateSnapshot(
+        [FromBody] CreateReportSnapshotRequest? request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (request is null || !TryGetCurrentUserId(out var actorId))
+        {
+            return request is null ? BadRequest("Request body is required.") : Unauthorized();
+        }
+
+        return Ok(await snapshotWriter.CreateSnapshotAsync(
+            actorId,
+            User.IsInRole("SystemAdmin"),
+            request,
+            idempotencyKey ?? string.Empty,
+            cancellationToken));
+    }
+
+    [HttpDelete("snapshots/{snapshotId:guid}")]
+    [HasPermission(PlatformPermissions.SpeedReading.ReportManage)]
+    public async Task<IActionResult> DeleteSnapshot(
+        Guid snapshotId,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId))
+        {
+            return Unauthorized();
+        }
+
+        await snapshotWriter.DeleteSnapshotAsync(
+            actorId,
+            snapshotId,
+            idempotencyKey ?? string.Empty,
+            cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPost("export/pdf")]
+    [HasPermission(PlatformPermissions.SpeedReading.ReportView)]
+    public IActionResult ExportPdf([FromBody] JsonElement? reportData)
+    {
+        try
+        {
+            var request = SpeedReadingReportExportRules.Normalize(reportData);
+            return File(
+                exporter.GeneratePdf(request),
+                "application/pdf",
+                $"speed-reading-report-{DateTime.UtcNow:yyyyMMdd}.pdf");
+        }
+        catch (ArgumentOutOfRangeException exception)
+        {
+            return BadRequest(new { success = false, message = exception.Message });
+        }
+    }
+
+    [HttpPost("export/excel")]
+    [HasPermission(PlatformPermissions.SpeedReading.ReportView)]
+    public IActionResult ExportExcel([FromBody] JsonElement? reportData)
+    {
+        try
+        {
+            var request = SpeedReadingReportExportRules.Normalize(reportData);
+            return File(
+                exporter.GenerateExcel(request),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"speed-reading-report-{DateTime.UtcNow:yyyyMMdd}.xlsx");
+        }
+        catch (ArgumentOutOfRangeException exception)
+        {
+            return BadRequest(new { success = false, message = exception.Message });
+        }
     }
 
     [HttpGet("scheduled")]

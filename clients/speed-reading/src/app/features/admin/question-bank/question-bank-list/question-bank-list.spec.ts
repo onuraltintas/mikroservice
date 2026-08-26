@@ -21,7 +21,7 @@ describe('QuestionBankListComponent', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
     http = TestBed.inject(HttpTestingController);
-    const request = http.expectOne('/api/v1/exam-questions?pageNumber=1&pageSize=10');
+    const request = http.expectOne('/api/speed-reading/exam-questions?pageNumber=1&pageSize=10');
     request.flush({ items: [], totalCount: 0, pageNumber: 1, pageSize: 10 });
   });
 

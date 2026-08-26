@@ -616,4 +616,26 @@ describe('ReportsService', () => {
     expect(report.systemAlertsDataAvailable).toBeFalse();
     expect(report.performanceTrend[0].series[0].value).toBe(81);
   });
+
+  it('exports reports through the central speed-reading endpoint', () => {
+    const payload = {
+      reportType: 'student-detail',
+      title: 'Öğrenci Raporu',
+      startDate: '2026-08-01T00:00:00.000Z',
+      endDate: '2026-08-26T00:00:00.000Z',
+      data: { score: 82 }
+    };
+
+    service.exportReportToPdf(payload).subscribe();
+    let request = http.expectOne('/api/speed-reading/reports/export/pdf');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(payload);
+    request.flush(new Blob(['%PDF-'], { type: 'application/pdf' }));
+
+    service.exportReportToExcel(payload).subscribe();
+    request = http.expectOne('/api/speed-reading/reports/export/excel');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(payload);
+    request.flush(new Blob(['xlsx'], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  });
 });

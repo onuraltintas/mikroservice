@@ -89,11 +89,12 @@ tablosunu uygular.
 - `GET /api/speed-reading/reading-texts/{id}?includeQuestions=true` — içerik
   yönetim yetkisi olmayan kullanıcılar pasif metinleri göremez.
 
-CSV/Excel içe aktarma ve PDF/DOCX dışa aktarma uçları henüz merkezi servise
-taşınmamıştır; frontend bu dört işlem için geçici olarak legacy
-`/api/v1/reading-texts` sözleşmesini kullanır. Bu legacy backend kapatılmadan
-önce merkezi serviste dosya doğrulama, idempotency ve çıktı üretimi tamamlanıp
-bu çağrılar ayrıca taşınmalıdır.
+- `POST /api/speed-reading/reading-texts/import/csv`, `/import/excel` ve
+  `/import/bulk` — yönetici yetkisiyle 10 MB/500 satır sınırları, soru kolonları,
+  satır bazlı sonuç ve idempotency desteğiyle merkezi içe aktarma.
+- `GET /api/speed-reading/reading-texts/{id}/export/pdf|docx` ve
+  `POST /api/speed-reading/reading-texts/export/pdf|docx` — içerik yönetim
+  yetkisiyle gerçek PDF/DOCX çıktısı, tekli/toplu seçim ve dosya adı temizleme.
 - `GET /api/speed-reading/progress/reading-history`
 - `GET /api/speed-reading/progress/reading-statistics`
 - `GET /api/speed-reading/progress/exercise-results`
@@ -169,9 +170,10 @@ bu çağrılar ayrıca taşınmalıdır.
   da `ClassAverageWpmDataAvailable` ve
   `ClassAverageComprehensionDataAvailable` bayraklarıyla `—` gösterilir.
 - `GET /api/speed-reading/analytics/teacher/assignments` — aynı merkezi öğretmen
-  kapsamıyla atama raporu sözleşmesini döndürür. Atama tabloları hızlı okuma
-  bounded context'inde henüz bulunmadığından `DataAvailable=false` ve açıklama
-  alanı döner; eksik veri tahmin edilmez.
+  kapsamıyla mevcut öğretmen atama raporu sözleşmesini döndürür. Atama CRUD
+  akışı `/api/speed-reading/assignments` altında taşınmış olsa da bu eski
+  rapor sözleşmesinin kaynak `ReportsController` karşılığı bulunmadığından
+  `DataAvailable=false` döner; eksik rapor verisi tahmin edilmez.
 - `GET /api/speed-reading/analytics/teacher/content-analysis` ve
   `/time-progress` — Identity öğrenci kapsamı içinde gerçek egzersiz/okuma içerik
   analizini ve günlük/haftalık/aylık ilerleme trendlerini döndürür. Her iki uçta
@@ -215,6 +217,19 @@ bu çağrılar ayrıca taşınmalıdır.
   en fazla 366 gündür. Legacy `Users` tablosunda rol bulunmadığı için dönemsel
   aktif öğrenci sayısı veri yokluğu olarak işaretlenir; arayüzde sahte toplam
   öğrenci değeri gösterilmez.
+- `GET /api/speed-reading/analytics/admin/programs` — `PlatformAnalyticsView`
+  ile korunan program analitiği. Aktif öğrenci, program dağılımı, haftalık
+  ilerleme ve son öğrenci aktiviteleri merkezi servisten hesaplanır; kaynak
+  projedeki `/student-progress/analytics/dashboard` çağrısı bu endpoint'e
+  taşınmıştır.
+- `GET /api/speed-reading/student-progress` ve `/{id}` — `ReportView` ile
+  korunan sayfalı admin ilerleme listesi ve son 30 günlük egzersiz detayları;
+  `POST /{id}/reset` yalnızca `ProgramManage` yetkisiyle ilerlemeyi sıfırlar.
+- `POST /api/speed-reading/assignments`, `GET /assignments/my-assignments` ve
+  `GET /assignments/teacher-assignments` — öğretmen/öğrenci ödev akışı;
+  assignment ve student-assignment kayıtları mevcut legacy şemada korunur.
+  Öğretmen detay, silme ve öğrenci ekleme/çıkarma uçları da aynı merkezi
+  route altında çalışır.
 - `GET /api/speed-reading/reports/templates` ve
   `GET /api/speed-reading/reports/templates/{id}` — `ReportView` yetkisiyle
   mevcut rapor şablonlarını değiştirmeden merkezi servisten okur; SystemAdmin
@@ -226,8 +241,17 @@ bu çağrılar ayrıca taşınmalıdır.
   döndürür; kullanıcı kimliği route/query üzerinden alınmaz. Çok büyük
   `DataJson` cevapları 1 MB sınırında açıkça `DataJsonTruncated` olarak işaretlenir.
   Speed-reading istemcisinin snapshot okuma çağrıları bu merkezi uçları kullanır;
-  üretim/export çağrısı, rapor üretim bağımlılıkları taşınana kadar legacy
-  uyumluluk köprüsünde tutulur.
+  `POST|DELETE /api/speed-reading/reports/snapshots` ise kullanıcının kendi
+  snapshot kayıtlarını idempotency ve sahiplik kontrolüyle yönetir. Rapor
+  snapshot PDF/DOCX üretimi ise eski rapor pipeline'ına bağlı kaldığı için
+  frontend'de hâlâ legacy uyumluluk yolundadır.
+- `POST /api/speed-reading/reports/export/pdf` ve
+  `POST /api/speed-reading/reports/export/excel` — `ReportView` yetkisiyle
+  istemcinin rapor verisini gerçek PDF veya OpenXML XLSX dosyasına dönüştürür;
+  veri 1 MB ve 1.000 alan sınırlarıyla işlenir.
+- `POST /api/speed-reading/cms/newsletter/unsubscribe` — public unsubscribe
+  linkindeki subscriber `Guid` token'ını doğrular ve kaydı pasifleştirir;
+  tekrar istekleri idempotenttir.
 - `GET /api/speed-reading/reports/scheduled` — `ReportView` yetkisi olan
   kullanıcının kendi zamanlanmış raporlarını döndürür.
 - `GET /api/speed-reading/reports/scheduled/{id}` — token sahibinin tek
@@ -280,11 +304,9 @@ yetkilerini alır; içerik/program/ayar değişiklikleri SystemAdmin veya açık
 atanmış yetki gerektirir.
 
 Gamification yazma uç noktaları idempotency ve audit ile korunur. Öğrenci
-istemcisindeki `awardXP`, `checkAchievements`, streak ve showcase çağrıları bir
-sonraki geçiş diliminde merkezi yazma uç noktalarına taşınana kadar eski
-`/v1/gamification` uyumluluk köprüsünü kullanır. Eski speed-reading admin
-ekranının kazanım servisi de artık `/api/speed-reading/achievements` uçlarını
-kullanır. Bu geçici öğrenci yazma köprüsü, merkezi yazma
-ve rollback testleri tamamlanmadan kapatılmamalıdır; gamification okuma yolları
-(`user`, `achievements`, `achievements/user`, `leaderboard`) artık yalnızca yeni
-servisi kullanır.
+istemcisindeki `awardXP`, `checkAchievements`, streak ve showcase çağrıları da
+`/api/speed-reading/gamification` altındaki merkezi uçları kullanır; eski
+`/v1/gamification` yolu için Caddy uyumluluk alias'ı yalnızca geçişteki eski
+istemcileri destekler. Gamification okuma yolları (`user`, `achievements`,
+`achievements/user`, `leaderboard`) ve admin kazanım çağrıları yeni servisi
+kullanır.

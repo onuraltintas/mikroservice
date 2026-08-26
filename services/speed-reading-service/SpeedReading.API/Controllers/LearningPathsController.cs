@@ -273,6 +273,93 @@ public sealed class LearningPathsController(
         return result is null ? NoContent() : Ok(result);
     }
 
+    [HttpPost("start")]
+    public async Task<ActionResult<object>> StartPath(
+        [FromBody] StartLearningPathRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var id = await paths.StartPathAsync(userId, request.TemplateId, cancellationToken);
+        return Ok(new { id });
+    }
+
+    [HttpPost("node/{nodeId:guid}/complete")]
+    public async Task<IActionResult> CompleteNode(
+        Guid nodeId,
+        [FromBody] CompleteLearningPathNodeRequest? request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        await paths.CompleteNodeAsync(userId, nodeId, request?.Score, cancellationToken);
+        return Ok(new { message = "Node completed" });
+    }
+
+    [HttpGet("node/{nodeId:guid}")]
+    public async Task<ActionResult<LearningPathNodeSummary>> GetNodeDetails(
+        Guid nodeId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await paths.GetNodeDetailsAsync(userId, nodeId, cancellationToken);
+        return result is null ? NotFound() : Ok(result);
+    }
+
+    [HttpPost("personalized/generate")]
+    public async Task<ActionResult<object>> GeneratePersonalizedPath(
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var itemsCreated = await paths.GeneratePersonalizedPathAsync(userId, cancellationToken);
+        return Ok(new { itemsCreated });
+    }
+
+    [HttpPost("personalized/{pathItemId:guid}/complete")]
+    public async Task<IActionResult> CompletePersonalizedPathItem(
+        Guid pathItemId,
+        [FromBody] CompletePersonalizedPathItemRequest? request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        await paths.CompletePersonalizedPathItemAsync(
+            userId,
+            pathItemId,
+            request?.AchievedScore,
+            cancellationToken);
+        return Ok(new { message = "Path item completed" });
+    }
+
+    [HttpGet("personalized/progress")]
+    public async Task<ActionResult<PersonalizedLearningPathProgressSummary>> GetPersonalizedProgress(
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        return Ok(await paths.GetPersonalizedProgressAsync(userId, cancellationToken));
+    }
+
     [HttpGet("personalized")]
     public async Task<ActionResult<SpeedReadingPage<PersonalizedLearningPathItemSummary>>> GetPersonalized(
         [FromQuery] int pageNumber = 1,

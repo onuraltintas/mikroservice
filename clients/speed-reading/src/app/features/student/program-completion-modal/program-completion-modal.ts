@@ -1,8 +1,8 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
+import { firstValueFrom } from 'rxjs';
+import { StudentProgramService } from '../../../core/services/student-program.service';
 
 export interface ProgramCompletionData {
   completedProgramName: string;
@@ -36,10 +36,10 @@ export interface ProgramCompletionData {
 export class ProgramCompletionModalComponent {
   isLoading = false;
 
-  constructor(
+    constructor(
     @Inject(MAT_DIALOG_DATA) public data: ProgramCompletionData,
     private dialogRef: MatDialogRef<ProgramCompletionModalComponent>,
-    private http: HttpClient
+    private studentProgramService: StudentProgramService
   ) { }
 
   async startProgram() {
@@ -48,10 +48,9 @@ export class ProgramCompletionModalComponent {
     this.isLoading = true;
 
     try {
-      const response: any = await this.http.post(
-        `${environment.apiUrl}/student-program/start`,
-        { templateId: this.data.recommendedProgram.templateId }
-      ).toPromise();
+      const response = await firstValueFrom(
+        this.studentProgramService.startProgram(this.data.recommendedProgram.templateId)
+      );
 
       // Show success feedback inline (snackbar removed)
       console.log(response.message || 'Program başlatıldı!');

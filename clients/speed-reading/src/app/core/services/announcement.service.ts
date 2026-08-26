@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { Observable, BehaviorSubject, tap, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   AnnouncementDto,
@@ -16,7 +16,7 @@ import {
 })
 export class AnnouncementService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/v1/announcements`;
+  private apiUrl = `${environment.speedReadingApiUrl}/announcements`;
 
   private unreadCountSubject = new BehaviorSubject<number>(0);
   public unreadCount$ = this.unreadCountSubject.asObservable();
@@ -61,7 +61,9 @@ export class AnnouncementService {
     if (options?.includeExpired) params = params.set('includeExpired', 'true');
     if (options?.take) params = params.set('take', String(options.take));
 
-    return this.http.get<AnnouncementDetailDto[]>(this.apiUrl, { params });
+    return this.http.get<any>(this.apiUrl, { params }).pipe(
+      map(response => Array.isArray(response) ? response : (response?.items ?? []))
+    );
   }
 
   /**
@@ -75,7 +77,9 @@ export class AnnouncementService {
    * Create new announcement
    */
   createAnnouncement(request: CreateAnnouncementRequest): Observable<string> {
-    return this.http.post<string>(this.apiUrl, request);
+    return this.http.post<any>(this.apiUrl, request).pipe(
+      map(response => response?.id ?? response?.data?.id ?? response)
+    );
   }
 
   /**

@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   AgeGroupConfiguration,
@@ -14,7 +15,7 @@ import {
 })
 export class AgeGroupConfigurationService {
   private readonly http = inject(HttpClient);
-  private readonly API_URL = `${environment.apiUrl}/v1/age-group-configurations`;
+  private readonly API_URL = `${environment.speedReadingApiUrl}/age-group-configurations`;
 
   /**
    * Get all age group configurations (Admin only)
@@ -70,7 +71,9 @@ export class AgeGroupConfigurationService {
    * @returns Observable of created age group ID
    */
   create(request: CreateAgeGroupConfiguration): Observable<string> {
-    return this.http.post<string>(this.API_URL, request);
+    return this.http.post<any>(this.API_URL, request).pipe(
+      map(response => response?.id ?? response?.data?.id ?? response)
+    );
   }
 
   /**

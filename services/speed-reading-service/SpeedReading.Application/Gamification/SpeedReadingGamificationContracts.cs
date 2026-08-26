@@ -2,12 +2,32 @@ using SpeedReading.Application.Content;
 
 namespace SpeedReading.Application.Gamification;
 
+public sealed record AwardXpRequest(int Amount, string Source, Guid? SourceId = null);
+
+public sealed record UpdateGamificationStreakRequest(DateTime ActivityDate, int DurationMinutes);
+
+public sealed record UpdateGamificationShowcaseRequest(IReadOnlyList<Guid> AchievementIds);
+
+public sealed record GamificationLevelUpResult(
+    bool LeveledUp,
+    int OldLevel,
+    int NewLevel,
+    int OldTier,
+    int NewTier,
+    bool IsTierChange,
+    string LevelTitle,
+    string LevelIcon,
+    IReadOnlyList<AchievementSummary> AchievementsUnlocked,
+    long TotalXP,
+    int CurrentLevelXP,
+    int NextLevelXP);
+
 public sealed record GamificationSummary(
     Guid UserId,
-    long TotalXp,
+    long TotalXP,
     int CurrentLevel,
-    int CurrentLevelXp,
-    int NextLevelXp,
+    int CurrentLevelXP,
+    int NextLevelXP,
     string LevelTitle,
     string LevelIcon,
     int CurrentStreak,
@@ -120,6 +140,29 @@ public sealed record UpdateAchievementRequest(
 
 public interface ILegacySpeedReadingGamification
 {
+    Task<GamificationLevelUpResult> AwardXpAsync(
+        Guid userId,
+        AwardXpRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<AchievementSummary>> CheckAchievementsAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> UpdateShowcaseAsync(
+        Guid userId,
+        IReadOnlyList<Guid> achievementIds,
+        CancellationToken cancellationToken = default);
+
+    Task UpdateStreakAsync(
+        Guid userId,
+        UpdateGamificationStreakRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> UseStreakFreezeAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
     Task<GamificationSummary> GetUserGamificationAsync(
         Guid userId,
         CancellationToken cancellationToken = default);
@@ -176,4 +219,59 @@ public interface ISpeedReadingGamificationAdminWriter
         Guid achievementId,
         string idempotencyKey,
         CancellationToken cancellationToken = default);
+}
+
+public static class SpeedReadingGamificationRules
+{
+    public static int CalculateLevel(long totalXp) =>
+        Math.Max(1, checked((int)(totalXp / 100)));
+
+    public static int GetCurrentLevelXp(long totalXp, int level) =>
+        Math.Clamp(checked((int)(totalXp - ((long)Math.Max(level, 1) - 1) * 100)), 0, 100);
+
+    public static int GetTier(int level) => level switch
+    {
+        <= 5 => 1,
+        <= 10 => 2,
+        <= 15 => 3,
+        _ => 4
+    };
+
+    public static string GetLevelTitle(int level) => GetTier(level) switch
+    {
+        1 => "Başlangıç Okuyucu",
+        2 => "Gelişen Okuyucu",
+        3 => "İleri Okuyucu",
+        _ => "Master Okuyucu"
+    };
+
+    public static string GetLevelIcon(int level) => GetTier(level) switch
+    {
+        1 => "📖",
+        2 => "📗",
+        3 => "📘",
+        _ => "📕"
+    };
+
+    public static int CalculateNextStreak(
+        DateTime? lastActivityDate,
+        DateTime activityDate,
+        int currentStreak)
+    {
+        if (!lastActivityDate.HasValue)
+        {
+            return 1;
+        }
+
+        var lastDate = lastActivityDate.Value.ToUniversalTime().Date;
+        var currentDate = activityDate.ToUniversalTime().Date;
+        if (lastDate == currentDate)
+        {
+            return Math.Max(currentStreak, 1);
+        }
+
+        return lastDate == currentDate.AddDays(-1)
+            ? Math.Max(currentStreak, 1) + 1
+            : 1;
+    }
 }

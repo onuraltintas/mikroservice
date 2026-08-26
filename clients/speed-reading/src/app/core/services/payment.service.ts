@@ -5,6 +5,11 @@ import { environment } from '../../../environments/environment';
 
 export interface InitPaymentRequest {
     planId: string;
+    phoneNumber?: string;
+    identityNumber?: string;
+    billingAddress?: string;
+    city?: string;
+    zipCode?: string;
 }
 
 export interface InitPaymentResponse {
@@ -47,13 +52,16 @@ export interface PaymentPagedResult {
 @Injectable({ providedIn: 'root' })
 export class PaymentService {
     private http   = inject(HttpClient);
-    private apiUrl = `${environment.apiUrl}/v1/payment`;
+    private apiUrl = `${environment.speedReadingApiUrl}/payment`;
 
     /** Ödeme başlatır — Iyzico token'ı döner */
-    initializePayment(planId: string): Observable<InitPaymentResponse> {
+    initializePayment(
+        planId: string,
+        buyer?: Omit<InitPaymentRequest, 'planId'>
+    ): Observable<InitPaymentResponse> {
         return this.http.post<InitPaymentResponse>(
             `${this.apiUrl}/initialize`,
-            { planId } satisfies InitPaymentRequest
+            { planId, ...buyer } satisfies InitPaymentRequest
         );
     }
 

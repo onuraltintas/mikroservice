@@ -37,11 +37,19 @@ export interface UpdateRSVPSessionRequest {
   completed: boolean;
 }
 
+export interface RsvpStatistics {
+  totalSessions: number;
+  completedSessions: number;
+  averageWpm: number;
+  totalWords: number;
+  totalMinutes: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class RsvpService {
-  private apiUrl = `${environment.apiUrl}/v1/rsvp-sessions`;
+  private apiUrl = `${environment.speedReadingApiUrl}/rsvp-sessions`;
 
   constructor(private http: HttpClient) { }
 
@@ -63,5 +71,11 @@ export class RsvpService {
 
   deleteSession(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  getStatistics(days: number = 30): Observable<RsvpStatistics> {
+    return this.http.get<RsvpStatistics>(`${this.apiUrl}/statistics`, {
+      params: { days: days.toString() }
+    });
   }
 }

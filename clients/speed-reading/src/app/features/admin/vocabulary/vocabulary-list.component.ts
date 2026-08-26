@@ -243,8 +243,8 @@ export class VocabularyListComponent extends BaseComponent implements OnInit {
 
     // Validate file type
     const fileName = file.name.toLowerCase();
-    if (!fileName.endsWith('.csv') && !fileName.endsWith('.xlsx')) {
-      this.handleError(new Error('Invalid file type'), 'Sadece CSV ve Excel (.xlsx) dosyaları desteklenmektedir');
+    if (!fileName.endsWith('.csv')) {
+      this.handleError(new Error('Invalid file type'), 'Sadece CSV dosyaları desteklenmektedir');
       return;
     }
 
