@@ -35,6 +35,9 @@ CREATE TABLE IF NOT EXISTS "UserVocabularyProgresses" (
     "DeletedBy" uuid NULL
 );
 
+ALTER TABLE IF EXISTS "VocabularyItems"
+    ADD COLUMN IF NOT EXISTS "TargetAgeGroupConfigurationId" uuid NULL;
+
 CREATE INDEX IF NOT EXISTS "IX_VocabularyItems_TargetAgeGroupConfigurationId"
     ON "VocabularyItems" ("TargetAgeGroupConfigurationId");
 CREATE INDEX IF NOT EXISTS "IX_UserVocabularyProgresses_UserId"

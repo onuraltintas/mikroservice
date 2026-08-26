@@ -35,6 +35,9 @@ CREATE TABLE IF NOT EXISTS "VisualizationQuestions" (
     "DeletedBy" uuid NULL
 );
 
+ALTER TABLE IF EXISTS "VisualizationScenes"
+    ADD COLUMN IF NOT EXISTS "TargetAgeGroupConfigurationId" uuid NULL;
+
 CREATE INDEX IF NOT EXISTS "IX_VisualizationScenes_ExerciseId"
     ON "VisualizationScenes" ("ExerciseId");
 CREATE INDEX IF NOT EXISTS "IX_VisualizationScenes_TargetAgeGroupConfigurationId"

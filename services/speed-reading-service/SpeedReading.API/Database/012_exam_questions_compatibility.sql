@@ -24,6 +24,9 @@ CREATE TABLE IF NOT EXISTS "ExamQuestions" (
     "DeletedBy" uuid NULL
 );
 
+ALTER TABLE IF EXISTS "ExamQuestions"
+    ADD COLUMN IF NOT EXISTS "TargetAgeGroupConfigurationId" uuid NULL;
+
 CREATE INDEX IF NOT EXISTS "IX_ExamQuestions_TargetAgeGroupConfigurationId"
     ON "ExamQuestions" ("TargetAgeGroupConfigurationId");
 CREATE INDEX IF NOT EXISTS "IX_ExamQuestions_ExamType"
