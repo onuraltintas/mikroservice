@@ -159,6 +159,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("google-login")]
+    [HttpPost("google")]
     [AllowAnonymous]
     public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest? request)
     {

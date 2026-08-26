@@ -198,7 +198,7 @@ export class AuthService {
     if (role) {
       payload.role = role;
     }
-    return this.http.post<AuthResponse>(`${this.API_URL}/v1/auth/google`, payload).pipe(
+    return this.http.post<AuthResponse>(`${this.API_URL}/v1/auth/google-login`, payload).pipe(
       tap(response => {
         this.setUser(response);
       })
