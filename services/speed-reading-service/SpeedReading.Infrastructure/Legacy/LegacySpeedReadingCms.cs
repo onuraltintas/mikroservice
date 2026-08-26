@@ -29,7 +29,11 @@ public sealed class LegacySpeedReadingCms(
             .ToListAsync(cancellationToken);
         var blocks = blockRows.Select(ToSummary).ToList();
 
-        cache.Set(cacheKey, blocks, LandingCacheDuration);
+        cache.Set(cacheKey, blocks, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = LandingCacheDuration,
+            Size = 1
+        });
         return blocks;
     }
 
