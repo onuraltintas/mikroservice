@@ -1,14 +1,11 @@
-import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, catchError, of } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { UserSettings, DEFAULT_SETTINGS } from '../models/settings.model';
 
 @Injectable({
     providedIn: 'root'
 })
 export class SettingsService {
-    private http = inject(HttpClient);
     private readonly STORAGE_KEY = 'user-settings';
 
     private settingsSubject = new BehaviorSubject<UserSettings>(this.loadFromCache());
@@ -30,20 +27,10 @@ export class SettingsService {
      * Load settings from backend
      */
     loadSettings(): Observable<UserSettings> {
-        return this.http.get<UserSettings>(`${environment.apiUrl}/user-settings`).pipe(
-            tap(settings => {
-                this.settingsSubject.next(settings);
-                this.saveToCache(settings);
-                this.applySettings(settings);
-            }),
-            catchError(error => {
-                console.error('Failed to load settings from backend:', error);
-                // Use cached or default settings
-                const cachedSettings = this.loadFromCache();
-                this.applySettings(cachedSettings);
-                return of(cachedSettings);
-            })
-        );
+        const settings = this.loadFromCache();
+        this.settingsSubject.next(settings);
+        this.applySettings(settings);
+        return of(settings);
     }
 
     /**
@@ -52,17 +39,10 @@ export class SettingsService {
     updateSettings(settings: Partial<UserSettings>): Observable<void> {
         const updatedSettings = { ...this.settingsSubject.value, ...settings };
 
-        return this.http.put<void>(`${environment.apiUrl}/user-settings`, updatedSettings).pipe(
-            tap(() => {
-                this.settingsSubject.next(updatedSettings);
-                this.saveToCache(updatedSettings);
-                this.applySettings(updatedSettings);
-            }),
-            catchError(error => {
-                console.error('Failed to update settings:', error);
-                throw error;
-            })
-        );
+        this.settingsSubject.next(updatedSettings);
+        this.saveToCache(updatedSettings);
+        this.applySettings(updatedSettings);
+        return of(void 0);
     }
 
     /**
@@ -85,17 +65,10 @@ export class SettingsService {
      * Reset settings to defaults
      */
     resetToDefaults(): Observable<void> {
-        return this.http.post<void>(`${environment.apiUrl}/user-settings/reset`, {}).pipe(
-            tap(() => {
-                this.settingsSubject.next(DEFAULT_SETTINGS);
-                this.saveToCache(DEFAULT_SETTINGS);
-                this.applySettings(DEFAULT_SETTINGS);
-            }),
-            catchError(error => {
-                console.error('Failed to reset settings:', error);
-                throw error;
-            })
-        );
+        this.settingsSubject.next(DEFAULT_SETTINGS);
+        this.saveToCache(DEFAULT_SETTINGS);
+        this.applySettings(DEFAULT_SETTINGS);
+        return of(void 0);
     }
 
     /**
