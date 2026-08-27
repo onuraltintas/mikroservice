@@ -95,7 +95,6 @@ public sealed class OwnedSpeedReadingLearningPathBackfill(
             readingTextIds,
             ageGroupIds);
 
-        await using var transaction = await owned.Database.BeginTransactionAsync(cancellationToken);
         var existingRows = 0;
         var templatesInserted = 0;
         var nodesInserted = 0;
@@ -316,7 +315,6 @@ public sealed class OwnedSpeedReadingLearningPathBackfill(
         }
 
         await owned.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
 
         return new OwnedSpeedReadingLearningPathBackfillResult(
             templatesInserted,

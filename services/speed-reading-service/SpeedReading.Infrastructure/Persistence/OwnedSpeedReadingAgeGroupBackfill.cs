@@ -33,7 +33,6 @@ public sealed class OwnedSpeedReadingAgeGroupBackfill(
         if (sourceRows.GroupBy(item => item.Name, StringComparer.OrdinalIgnoreCase).Any(group => group.Count() > 1))
             throw new InvalidOperationException("Age group source contains duplicate names.");
 
-        await using var transaction = await owned.Database.BeginTransactionAsync(cancellationToken);
         var existingIds = await owned.AgeGroupConfigurations
             .AsNoTracking()
             .Select(item => item.Id)
@@ -75,7 +74,6 @@ public sealed class OwnedSpeedReadingAgeGroupBackfill(
         }
 
         await owned.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
 
         return new OwnedSpeedReadingAgeGroupBackfillResult(
             inserted,

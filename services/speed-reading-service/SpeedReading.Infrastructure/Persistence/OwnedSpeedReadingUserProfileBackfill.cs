@@ -45,7 +45,6 @@ public sealed class OwnedSpeedReadingUserProfileBackfill(
             }
         }
 
-        await using var transaction = await owned.Database.BeginTransactionAsync(cancellationToken);
         var existingIds = await owned.UserProfiles
             .AsNoTracking()
             .Select(item => item.UserId)
@@ -79,7 +78,6 @@ public sealed class OwnedSpeedReadingUserProfileBackfill(
         }
 
         await owned.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
 
         return new OwnedSpeedReadingUserProfileBackfillResult(
             inserted,

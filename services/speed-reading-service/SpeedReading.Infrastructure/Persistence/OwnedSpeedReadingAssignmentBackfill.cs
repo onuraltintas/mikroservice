@@ -50,7 +50,6 @@ public sealed class OwnedSpeedReadingAssignmentBackfill(
             .ToHashSetAsync(cancellationToken);
         ValidateReferences(assignments, studentAssignments, exerciseIds, readingTextIds, resultIds);
 
-        await using var transaction = await owned.Database.BeginTransactionAsync(cancellationToken);
         var existingRows = 0;
         var assignmentsInserted = 0;
         var studentAssignmentsInserted = 0;
@@ -113,7 +112,6 @@ public sealed class OwnedSpeedReadingAssignmentBackfill(
         }
 
         await owned.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
 
         return new OwnedSpeedReadingAssignmentBackfillResult(
             assignmentsInserted,

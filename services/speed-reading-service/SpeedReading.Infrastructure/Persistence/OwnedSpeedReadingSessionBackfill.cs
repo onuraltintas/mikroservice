@@ -63,7 +63,6 @@ public sealed class OwnedSpeedReadingSessionBackfill(
             .ToDictionary(group => group.Key, group => group.First());
         var sourceSessionIds = sessions.Select(item => item.Id).ToHashSet();
 
-        await using var transaction = await owned.Database.BeginTransactionAsync(cancellationToken);
         var existingRows = 0;
         var sessionsInserted = 0;
         var answersInserted = 0;
@@ -207,7 +206,6 @@ public sealed class OwnedSpeedReadingSessionBackfill(
         }
 
         await owned.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
 
         return new OwnedSpeedReadingSessionBackfillResult(
             sessionsInserted,

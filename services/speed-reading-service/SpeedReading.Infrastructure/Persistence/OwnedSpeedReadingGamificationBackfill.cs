@@ -36,7 +36,6 @@ public sealed class OwnedSpeedReadingGamificationBackfill(
         var userGamificationIds = userGamification.Select(item => item.Id).ToHashSet();
         ValidateReferences(achievements, userGamification, userAchievements, achievementIds);
 
-        await using var transaction = await owned.Database.BeginTransactionAsync(cancellationToken);
         var existingRows = 0;
         var achievementCount = 0;
         var gamificationCount = 0;
@@ -162,7 +161,6 @@ public sealed class OwnedSpeedReadingGamificationBackfill(
         }
 
         await owned.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
         return new OwnedSpeedReadingGamificationBackfillResult(
             achievementCount,
             gamificationCount,

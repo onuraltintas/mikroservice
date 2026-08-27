@@ -60,7 +60,6 @@ public sealed class OwnedSpeedReadingProgramBackfill(
             exerciseIds,
             exerciseTypeIds);
 
-        await using var transaction = await owned.Database.BeginTransactionAsync(cancellationToken);
         var existingRows = 0;
         var templatesInserted = 0;
         var progressInserted = 0;
@@ -197,7 +196,6 @@ public sealed class OwnedSpeedReadingProgramBackfill(
         }
 
         await owned.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
 
         return new OwnedSpeedReadingProgramBackfillResult(
             templatesInserted,
