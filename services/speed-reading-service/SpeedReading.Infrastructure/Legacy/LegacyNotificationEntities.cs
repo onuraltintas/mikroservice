@@ -91,6 +91,7 @@ internal sealed class LegacyAnnouncement : LegacyNotificationBase
     public bool IsActive { get; set; }
     public string? ActionUrl { get; set; }
     public string? ImageUrl { get; set; }
+    public Guid CreatedBy { get; set; }
     public Guid CreatedByUserId { get; set; }
 
     // Additive fields used by the current client. EndDate/ImageUrl/Type stay
@@ -142,6 +143,7 @@ internal sealed class LegacyEmailCampaign : LegacyNotificationBase
     public int TotalRecipients { get; set; }
     public int SentCount { get; set; }
     public int FailedCount { get; set; }
+    public Guid CreatedBy { get; set; }
     public Guid CreatedByUserId { get; set; }
     public string? PlainTextBody { get; set; }
     public bool IncludeAllUsers { get; set; }

@@ -683,7 +683,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.StreakMilestoneEnabled).HasColumnName("streak_milestone_enabled");
             entity.Property(item => item.Email).HasColumnName("email").HasMaxLength(256);
             entity.Property(item => item.PhoneNumber).HasColumnName("phone_number").HasMaxLength(20);
-            entity.HasIndex(item => item.UserId).IsUnique();
+            entity.HasIndex(item => new { item.UserId, item.NotificationType }).IsUnique();
         });
         modelBuilder.Entity<LegacyNotificationTypePreference>(entity =>
         {
@@ -724,6 +724,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.IsActive).HasColumnName("is_active");
             entity.Property(item => item.ActionUrl).HasColumnName("action_url").HasMaxLength(500);
             entity.Property(item => item.ImageUrl).HasColumnName("image_url").HasMaxLength(1_000);
+            entity.Ignore(item => item.CreatedBy);
             entity.Property(item => item.CreatedByUserId).HasColumnName("created_by_user_id");
             entity.Property(item => item.PlainTextContent).HasColumnName("plain_text_content");
             entity.Property(item => item.ExpiresAt).HasColumnName("expires_at");
@@ -776,6 +777,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.TotalRecipients).HasColumnName("total_recipients");
             entity.Property(item => item.SentCount).HasColumnName("sent_count");
             entity.Property(item => item.FailedCount).HasColumnName("failed_count");
+            entity.Ignore(item => item.CreatedBy);
             entity.Property(item => item.CreatedByUserId).HasColumnName("created_by_user_id");
             entity.Property(item => item.PlainTextBody).HasColumnName("plain_text_body");
             entity.Property(item => item.IncludeAllUsers).HasColumnName("include_all_users");

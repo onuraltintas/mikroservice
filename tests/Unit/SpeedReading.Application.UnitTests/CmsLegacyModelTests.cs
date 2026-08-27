@@ -294,15 +294,27 @@ public sealed class CmsLegacyModelTests
             .Single(entity => entity.ClrType.Name == "LegacyPushSubscription");
         pushSubscription.FindProperty("IsActive").Should().BeNull();
 
+        var interaction = context.Model.GetEntityTypes()
+            .Single(entity => entity.ClrType.Name == "LegacyAnnouncementUserInteraction");
+        interaction.FindProperty("ViewedAt")!.GetColumnName().Should().Be("LastViewedAt");
+
+        var templateModel = context.Model.GetEntityTypes()
+            .Single(entity => entity.ClrType.Name == "LegacyEmailTemplate");
+        templateModel.FindProperty("Variables").Should().BeNull();
+        templateModel.FindProperty("IsSystem").Should().BeNull();
+
         var announcement = context.Model.GetEntityTypes()
             .Single(entity => entity.GetTableName() == "Announcements");
-        announcement.FindProperty("EndDate")!.GetColumnName().Should().Be("EndDate");
+        announcement.FindProperty("EndDate").Should().BeNull();
         announcement.FindProperty("ExpiresAt")!.GetColumnName().Should().Be("ExpiresAt");
         announcement.FindProperty("DisplayType")!.GetColumnName().Should().Be("DisplayType");
+        announcement.FindProperty("CreatedBy")!.GetColumnName().Should().Be("CreatedBy");
+        announcement.FindProperty("CreatedByUserId").Should().BeNull();
 
         var template = context.Model.GetEntityTypes()
             .Single(entity => entity.GetTableName() == "EmailTemplates");
-        template.FindProperty("Variables")!.GetColumnName().Should().Be("Variables");
+        template.FindProperty("Variables").Should().BeNull();
+        template.FindProperty("AvailableVariables")!.GetColumnName().Should().Be("AvailableVariables");
         template.FindProperty("Code")!.GetColumnName().Should().Be("Code");
 
         var campaign = context.Model.GetEntityTypes()

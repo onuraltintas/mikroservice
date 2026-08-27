@@ -391,11 +391,13 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasKey(item => item.Id);
             entity.Property(item => item.Title).HasMaxLength(200).IsRequired();
             entity.Property(item => item.Content).IsRequired();
-            entity.Property(item => item.Type).HasMaxLength(20).IsRequired();
+            entity.Ignore(item => item.Type);
             entity.Property(item => item.TargetAudience).HasMaxLength(50).IsRequired();
             entity.Property(item => item.TargetRoles).HasMaxLength(200);
-            entity.Property(item => item.ActionUrl).HasMaxLength(500);
-            entity.Property(item => item.ImageUrl).HasMaxLength(500);
+            entity.Property(item => item.StartDate).HasColumnName("StartDate");
+            entity.Ignore(item => item.EndDate);
+            entity.Ignore(item => item.ImageUrl);
+            entity.Ignore(item => item.CreatedByUserId);
             entity.Property(item => item.ColorTheme).HasMaxLength(50);
             entity.Property(item => item.ActionText).HasMaxLength(100);
             entity.HasIndex(item => item.IsActive);
@@ -405,6 +407,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
         {
             entity.ToTable("AnnouncementUserInteractions");
             entity.HasKey(item => item.Id);
+            entity.Property(item => item.ViewedAt).HasColumnName("LastViewedAt");
             entity.HasIndex(item => new { item.AnnouncementId, item.UserId }).IsUnique();
         });
 
@@ -415,6 +418,8 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.Property(item => item.Name).HasMaxLength(200).IsRequired();
             entity.Property(item => item.Subject).HasMaxLength(500).IsRequired();
             entity.Property(item => item.Description).HasMaxLength(500);
+            entity.Ignore(item => item.Variables);
+            entity.Ignore(item => item.IsSystem);
         });
 
         modelBuilder.Entity<LegacyEmailCampaign>(entity =>
@@ -425,7 +430,8 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.Property(item => item.Subject).HasMaxLength(500).IsRequired();
             entity.Property(item => item.Status).HasMaxLength(20).IsRequired();
             entity.Property(item => item.TargetRoles).HasMaxLength(200);
-            entity.HasIndex(item => item.TemplateId);
+            entity.Ignore(item => item.TemplateId);
+            entity.Ignore(item => item.CreatedByUserId);
         });
 
         modelBuilder.Entity<LegacyEmailCampaignLog>(entity =>

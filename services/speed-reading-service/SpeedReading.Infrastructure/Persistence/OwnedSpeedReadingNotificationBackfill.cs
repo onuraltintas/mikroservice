@@ -41,9 +41,19 @@ public sealed class OwnedSpeedReadingNotificationBackfill(
         foreach (var subscription in sourcePushSubscriptions)
             subscription.IsActive = !subscription.IsDeleted;
         var sourceAnnouncements = await legacy.Announcements.AsNoTracking().ToListAsync(cancellationToken);
+        foreach (var announcement in sourceAnnouncements)
+        {
+            announcement.Type = "Banner";
+            announcement.EndDate = announcement.ExpiresAt;
+            announcement.CreatedByUserId = announcement.CreatedBy;
+        }
         var sourceInteractions = await legacy.AnnouncementUserInteractions.AsNoTracking().ToListAsync(cancellationToken);
         var sourceTemplates = await legacy.EmailTemplates.AsNoTracking().ToListAsync(cancellationToken);
+        foreach (var template in sourceTemplates)
+            template.Variables = template.AvailableVariables;
         var sourceCampaigns = await legacy.EmailCampaigns.AsNoTracking().ToListAsync(cancellationToken);
+        foreach (var campaign in sourceCampaigns)
+            campaign.CreatedByUserId = campaign.CreatedBy;
         var sourceCampaignLogs = await legacy.EmailCampaignLogs.AsNoTracking().ToListAsync(cancellationToken);
 
         var announcementIds = sourceAnnouncements.Select(item => item.Id).ToHashSet();
