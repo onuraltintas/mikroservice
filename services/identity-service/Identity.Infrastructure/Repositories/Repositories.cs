@@ -54,7 +54,10 @@ public class UserRepository : IUserRepository
                 user.Id,
                 user.FirstName,
                 user.LastName,
-                user.IsActive))
+                user.IsActive)
+            {
+                Email = user.Email
+            })
             .ToListAsync(cancellationToken);
     }
 

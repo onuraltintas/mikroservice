@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using EduPlatform.Shared.Kernel.Primitives;
 using SpeedReading.Domain.Assignments;
 using SpeedReading.Domain.Catalog;
+using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Sessions;
 
 namespace SpeedReading.Infrastructure.Persistence;
@@ -24,6 +25,9 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<ReadingSession> ReadingSessions => Set<ReadingSession>();
     public DbSet<Assignment> Assignments => Set<Assignment>();
     public DbSet<StudentAssignment> StudentAssignments => Set<StudentAssignment>();
+    public DbSet<ProgramTemplate> ProgramTemplates => Set<ProgramTemplate>();
+    public DbSet<StudentProgramProgress> StudentProgramProgresses => Set<StudentProgramProgress>();
+    public DbSet<DailyExerciseLog> DailyExerciseLogs => Set<DailyExerciseLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,6 +45,9 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<ReadingSession>());
         ConfigureEntity(modelBuilder.Entity<Assignment>());
         ConfigureEntity(modelBuilder.Entity<StudentAssignment>());
+        ConfigureEntity(modelBuilder.Entity<ProgramTemplate>());
+        ConfigureEntity(modelBuilder.Entity<StudentProgramProgress>());
+        ConfigureEntity(modelBuilder.Entity<DailyExerciseLog>());
 
         modelBuilder.Entity<Exercise>(entity =>
         {
@@ -217,6 +224,62 @@ public sealed class OwnedSpeedReadingDbContext(
 
         modelBuilder.Entity<ExerciseSession>()
             .HasIndex(item => item.StudentAssignmentId);
+
+        modelBuilder.Entity<ProgramTemplate>(entity =>
+        {
+            entity.ToTable("program_templates");
+            entity.Property(item => item.Name).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Description).HasMaxLength(4_000).IsRequired();
+            entity.Property(item => item.WeeklyPatternJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(item => item.ExamType).HasMaxLength(100);
+            entity.HasIndex(item => new { item.IsActive, item.DisplayOrder });
+        });
+
+        modelBuilder.Entity<StudentProgramProgress>(entity =>
+        {
+            entity.ToTable("student_program_progress");
+            entity.Property(item => item.AverageSuccessRate).HasPrecision(5, 2);
+            entity.HasIndex(item => new { item.UserId, item.IsActive, item.AssignedDate });
+            entity.HasIndex(item => item.ProgramTemplateId);
+            entity.HasOne<ProgramTemplate>()
+                .WithMany()
+                .HasForeignKey(item => item.ProgramTemplateId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<DailyExerciseLog>(entity =>
+        {
+            entity.ToTable("daily_exercise_logs");
+            entity.Property(item => item.ResultDataJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(item => item.SuccessRate).HasPrecision(5, 2);
+            entity.Property(item => item.AverageWPM).HasPrecision(10, 2);
+            entity.Property(item => item.AverageComprehension).HasPrecision(5, 2);
+            entity.Property(item => item.AverageResponseTimeMs).HasPrecision(10, 2);
+            entity.Property(item => item.MedianResponseTimeMs).HasPrecision(10, 2);
+            entity.Property(item => item.StdDevResponseTimeMs).HasPrecision(10, 2);
+            entity.Property(item => item.PerformanceTrend).HasPrecision(10, 2);
+            entity.Property(item => item.PreviousAverageScore).HasPrecision(5, 2);
+            entity.Property(item => item.EngagementScore).HasPrecision(10, 2);
+            entity.Property(item => item.FrustrationScore).HasPrecision(10, 2);
+            entity.Property(item => item.LearningRate).HasPrecision(10, 2);
+            entity.Property(item => item.ConsistencyScore).HasPrecision(10, 2);
+            entity.Property(item => item.DevicePlatform).HasMaxLength(50).IsRequired();
+            entity.HasIndex(item => new { item.UserId, item.CompletedDate });
+            entity.HasIndex(item => new { item.StudentProgramProgressId, item.WeekNumber, item.DayNumber });
+            entity.HasIndex(item => item.ExerciseId);
+            entity.HasOne<StudentProgramProgress>()
+                .WithMany()
+                .HasForeignKey(item => item.StudentProgramProgressId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<Exercise>()
+                .WithMany()
+                .HasForeignKey(item => item.ExerciseId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<ExerciseType>()
+                .WithMany()
+                .HasForeignKey(item => item.ExerciseTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
     }
 
     private static void ConfigureEntity<TEntity>(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<TEntity> entity)

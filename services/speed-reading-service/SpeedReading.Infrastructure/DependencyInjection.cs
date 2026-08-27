@@ -73,6 +73,7 @@ public static class DependencyInjection
             services.AddScoped<OwnedSpeedReadingCatalogBackfill>();
             services.AddScoped<OwnedSpeedReadingSessionBackfill>();
             services.AddScoped<OwnedSpeedReadingAssignmentBackfill>();
+            services.AddScoped<OwnedSpeedReadingProgramBackfill>();
         }
 
         services.AddMemoryCache(options => options.SizeLimit = 4_096);
@@ -113,18 +114,19 @@ public static class DependencyInjection
         services.AddScoped<ISpeedReadingContentAdminWriter, LegacySpeedReadingContentAdminWriter>();
         services.AddScoped<ILegacySpeedReadingProgress, LegacySpeedReadingProgress>();
         services.AddScoped<ISpeedReadingProgressWriter, LegacySpeedReadingProgressWriter>();
-        services.AddScoped<ILegacySpeedReadingPrograms, LegacySpeedReadingPrograms>();
         services.AddScoped<ILegacySpeedReadingLearningPaths, LegacySpeedReadingLearningPaths>();
         services.AddScoped<ISpeedReadingDailyProgress, LegacySpeedReadingDailyProgress>();
         if (ownedDataEnabled)
         {
             services.AddScoped<ISpeedReadingExerciseSessions, OwnedSpeedReadingExerciseSessions>();
             services.AddScoped<ISpeedReadingAssignments, OwnedSpeedReadingAssignments>();
+            services.AddScoped<ILegacySpeedReadingPrograms, OwnedSpeedReadingPrograms>();
         }
         else
         {
             services.AddScoped<ISpeedReadingExerciseSessions, LegacySpeedReadingExerciseSessions>();
             services.AddScoped<ISpeedReadingAssignments, LegacySpeedReadingAssignments>();
+            services.AddScoped<ILegacySpeedReadingPrograms, LegacySpeedReadingPrograms>();
         }
         services.AddScoped<ILegacySpeedReadingGamification, LegacySpeedReadingGamification>();
         services.AddScoped<ISpeedReadingGamificationAdminWriter, LegacySpeedReadingGamificationAdminWriter>();

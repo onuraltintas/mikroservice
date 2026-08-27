@@ -101,7 +101,8 @@ public sealed class SpeedReadingOwnedDomainTests
             .Should()
             .Contain("20260827110000_CreateOwnedSpeedReadingCore")
             .And.Contain("20260827120000_AddOwnedReadingSessionHistory")
-            .And.Contain("20260827130000_AddOwnedAssignments");
+            .And.Contain("20260827130000_AddOwnedAssignments")
+            .And.Contain("20260827140000_AddOwnedProgramsAndDailyProgress");
     }
 
     [Fact]

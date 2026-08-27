@@ -7,7 +7,10 @@ public sealed record SpeedReadingUserDirectoryItem(
     Guid UserId,
     string FirstName,
     string LastName,
-    bool IsActive);
+    bool IsActive)
+{
+    public string? Email { get; init; }
+}
 
 public sealed record SpeedReadingUserDirectoryResponse(
     IReadOnlyList<SpeedReadingUserDirectoryItem> Users);

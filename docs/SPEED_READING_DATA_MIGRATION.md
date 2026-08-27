@@ -27,7 +27,7 @@ verilecektir:
 | --- | --- | --- |
 | Baseline ve auth/session hizalama | Tamamlandı | 48 frontend test GREEN; canonical auth ve HttpOnly session akışı |
 | Yeni owned şema ve migration altyapısı | Kod tamamlandı | Yeni DB, EF migration geçmişi, katalog modeli ve backfill runner |
-| Core exercise/session/progress iş mantığı | Kısmi / flag arkasında | Owned session/assignment implementation ve backfill runner hazır; program bağlantısı, parity ve E2E hâlâ gerekli |
+| Core exercise/session/progress iş mantığı | Kısmi / flag arkasında | Owned session/assignment/program read-reset implementation ve backfill runner hazır; daily progress write, parity ve E2E hâlâ gerekli |
 | Content/program/report/gamification slice’ları | Bekliyor | Her slice için backfill ve parity raporu |
 | Frontend/gateway legacy endpoint temizliği | Bekliyor | Standalone domain’de 404 üreten çağrı kalmaması |
 | Shadow read ve write cutover | Bekliyor | Eski DB yazma yetkisi kaldırılmış, rollback kanıtlı |
@@ -71,6 +71,12 @@ yapılmadı:
   aktif öğrenci üyeliği için `(assignment_id, student_id)` filtresiyle unique
   indeks kullanılır. Identity kullanıcı profilleri bu servise kopyalanmaz;
   yalnızca stable user ID tutulur.
+- Program geçişi `--backfill-owned-programs` komutuyla assignment/catalog
+  backfill'lerinden sonra çalıştırılır. Program şablonları, öğrenci ilerlemeleri
+  ve günlük egzersiz logları aynı UUID'lerle owned store'a insert-only olarak
+  taşınır; her foreign-key referansı önceden doğrulanır ve eksik referans varsa
+  işlem durur. Bu adım mevcut veriyi taşır; günlük ilerleme tamamlama yazarı ve
+  program şablonu admin CRUD'ı sonraki cutover diliminde owned store'a alınacaktır.
 - Owned assignment runtime'ı öğrenci varlığı ve adını eski `Users` tablosundan
   okumaz; Identity'nin internal `POST /api/internal/reporting/speed-reading/users`
   sözleşmesini servis anahtarıyla çağırır. Identity erişilemezse assignment
@@ -82,6 +88,13 @@ yapılmadı:
   artık owned store'dadır; gamification yan etkileri ve program bağlantısı
   henüz taşınmadığı için production flag'i yine parity/E2E onayı olmadan
   açılmamalıdır.
+- Aynı flag açıkken program listesi, öğrenci programları, günlük loglar ve admin
+  öğrenci ilerleme/reset uçları `OwnedSpeedReadingPrograms` üzerinden owned
+  store'u kullanır. Admin araması kullanıcı adı/e-postası için Identity'nin
+  internal user-directory sözleşmesini çağırır; legacy `Users` tablosuna SQL
+  erişimi yapılmaz. Program şablonu admin yazma ve günlük egzersiz tamamlama
+  akışları henüz legacy writer'a bağlı olduğundan nihai bağımsızlık kapısı
+  henüz kapanmış sayılmaz.
 - `SPEED_READING_CONNECTION_STRING` geçiş tamamlanana kadar legacy kaynak
   bağlantısıdır. Bu nedenle bu adım tek başına “tamamen taşındı” anlamına
   gelmez; backfill, parity ve runtime write cutover sonraki kapılardır.
