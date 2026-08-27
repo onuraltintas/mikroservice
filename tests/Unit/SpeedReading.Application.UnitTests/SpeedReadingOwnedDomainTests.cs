@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Domain.Assignments;
 using SpeedReading.Domain.Catalog;
+using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Sessions;
 using SpeedReading.Infrastructure.Persistence;
 
@@ -27,6 +28,9 @@ public sealed class SpeedReadingOwnedDomainTests
         context.Model.FindEntityType(typeof(ReadingSession))!.GetTableName().Should().Be("reading_sessions");
         context.Model.FindEntityType(typeof(Assignment))!.GetTableName().Should().Be("assignments");
         context.Model.FindEntityType(typeof(StudentAssignment))!.GetTableName().Should().Be("student_assignments");
+        context.Model.FindEntityType(typeof(ProgramTemplate))!.GetTableName().Should().Be("program_templates");
+        context.Model.FindEntityType(typeof(StudentProgramProgress))!.GetTableName().Should().Be("student_program_progress");
+        context.Model.FindEntityType(typeof(DailyExerciseLog))!.GetTableName().Should().Be("daily_exercise_logs");
     }
 
     [Fact]
@@ -274,6 +278,43 @@ public sealed class SpeedReadingOwnedDomainTests
         studentAssignment.Score.Should().Be(85);
         studentAssignment.KeyPerformanceMetric.Should().Be(80);
         studentAssignment.CompletionDate.Should().Be(completedAt);
+    }
+
+    [Fact]
+    public void Student_program_progress_reset_clears_runtime_progress()
+    {
+        var progress = StudentProgramProgress.Import(
+            id: Guid.NewGuid(),
+            userId: Guid.NewGuid(),
+            programTemplateId: Guid.NewGuid(),
+            assignedDate: DateTime.UtcNow.AddDays(-10),
+            currentDay: 8,
+            currentWeek: 2,
+            currentDifficultyLevel: 3,
+            daysCompleted: 7,
+            exercisesCompleted: 18,
+            lastCompletionDate: DateTime.UtcNow.AddDays(-1),
+            isActive: true,
+            completedDate: null,
+            averageSuccessRate: 82,
+            currentStreak: 4,
+            longestStreak: 6,
+            createdAt: DateTime.UtcNow.AddDays(-10),
+            createdBy: null,
+            updatedAt: null,
+            updatedBy: null);
+
+        progress.Reset(Guid.NewGuid(), DateTime.UtcNow);
+
+        progress.CurrentDay.Should().Be(1);
+        progress.CurrentWeek.Should().Be(1);
+        progress.DaysCompleted.Should().Be(0);
+        progress.ExercisesCompleted.Should().Be(0);
+        progress.AverageSuccessRate.Should().Be(0);
+        progress.CurrentStreak.Should().Be(0);
+        progress.LongestStreak.Should().Be(0);
+        progress.IsActive.Should().BeTrue();
+        progress.CompletedDate.Should().BeNull();
     }
 
     [Fact]
