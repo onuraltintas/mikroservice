@@ -80,6 +80,8 @@ public static class DependencyInjection
             services.AddScoped<OwnedSpeedReadingAdminAuditBackfill>();
             services.AddScoped<OwnedSpeedReadingGamificationBackfill>();
             services.AddScoped<OwnedSpeedReadingQuestionBackfill>();
+            services.AddScoped<OwnedSpeedReadingVisualizationBackfill>();
+            services.AddScoped<OwnedSpeedReadingVocabularyBackfill>();
         }
 
         services.AddMemoryCache(options => options.SizeLimit = 4_096);
@@ -139,6 +141,8 @@ public static class DependencyInjection
             services.AddScoped<ILegacySpeedReadingLearningPaths, OwnedSpeedReadingLearningPaths>();
             services.AddScoped<ISpeedReadingLearningPathAdminWriter, OwnedSpeedReadingLearningPathAdminWriter>();
             services.AddScoped<ISpeedReadingQuestionBank, OwnedSpeedReadingQuestionBank>();
+            services.AddScoped<ISpeedReadingVisualization, OwnedSpeedReadingVisualization>();
+            services.AddScoped<ISpeedReadingVocabulary, OwnedSpeedReadingVocabulary>();
             services.AddScoped<ISpeedReadingIdempotencyCleaner, OwnedSpeedReadingIdempotencyCleaner>();
         }
         else

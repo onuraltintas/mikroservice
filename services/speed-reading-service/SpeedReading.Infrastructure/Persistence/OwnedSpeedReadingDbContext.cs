@@ -7,6 +7,8 @@ using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.LearningPaths;
 using SpeedReading.Domain.Gamification;
 using SpeedReading.Domain.QuestionBank;
+using SpeedReading.Domain.Visualization;
+using SpeedReading.Domain.Vocabulary;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Profiles;
 using SpeedReading.Domain.Sessions;
@@ -48,6 +50,10 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<UserAchievement> UserAchievements => Set<UserAchievement>();
     public DbSet<UserGamification> UserGamifications => Set<UserGamification>();
     public DbSet<ExamQuestion> ExamQuestions => Set<ExamQuestion>();
+    public DbSet<VisualizationScene> VisualizationScenes => Set<VisualizationScene>();
+    public DbSet<VisualizationQuestion> VisualizationQuestions => Set<VisualizationQuestion>();
+    public DbSet<VocabularyItem> VocabularyItems => Set<VocabularyItem>();
+    public DbSet<UserVocabularyProgress> UserVocabularyProgresses => Set<UserVocabularyProgress>();
     internal DbSet<OwnedIdempotencyRecord> IdempotencyRecords => Set<OwnedIdempotencyRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -82,6 +88,10 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<UserAchievement>());
         ConfigureEntity(modelBuilder.Entity<UserGamification>());
         ConfigureEntity(modelBuilder.Entity<ExamQuestion>());
+        ConfigureEntity(modelBuilder.Entity<VisualizationScene>());
+        ConfigureEntity(modelBuilder.Entity<VisualizationQuestion>());
+        ConfigureEntity(modelBuilder.Entity<VocabularyItem>());
+        ConfigureEntity(modelBuilder.Entity<UserVocabularyProgress>());
         modelBuilder.Entity<AdminAuditRecord>(entity =>
         {
             entity.ToTable("admin_audit_records");
@@ -170,6 +180,50 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.HasIndex(item => new { item.ExamType, item.Difficulty, item.Category });
             entity.HasIndex(item => item.TargetAgeGroupId);
             entity.HasIndex(item => item.CreatedAt);
+        });
+        modelBuilder.Entity<VisualizationScene>(entity =>
+        {
+            entity.ToTable("visualization_scenes");
+            entity.Property(item => item.Description).HasMaxLength(4_000).IsRequired();
+            entity.Property(item => item.ImageUrl).HasMaxLength(1_000);
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.HasIndex(item => new { item.ExerciseId, item.IsDeleted, item.DisplayOrder });
+            entity.HasIndex(item => item.TargetAgeGroupId);
+        });
+        modelBuilder.Entity<VisualizationQuestion>(entity =>
+        {
+            entity.ToTable("visualization_questions");
+            entity.Property(item => item.QuestionText).IsRequired();
+            entity.Property(item => item.OptionsJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(item => item.CorrectAnswer).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.QuestionType).HasMaxLength(50).IsRequired();
+            entity.Property(item => item.HintText).HasMaxLength(2_000);
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.HasIndex(item => new { item.SceneId, item.IsDeleted, item.DisplayOrder });
+            entity.HasOne<VisualizationScene>().WithMany().HasForeignKey(item => item.SceneId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<VocabularyItem>(entity =>
+        {
+            entity.ToTable("vocabulary_items");
+            entity.Property(item => item.Word).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Definition).HasMaxLength(2_000).IsRequired();
+            entity.Property(item => item.ExampleSentence).HasMaxLength(2_000);
+            entity.Property(item => item.Synonyms).HasMaxLength(2_000);
+            entity.Property(item => item.Antonyms).HasMaxLength(2_000);
+            entity.Property(item => item.Category).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.HasIndex(item => new { item.Category, item.DifficultyLevel, item.IsDeleted });
+            entity.HasIndex(item => item.TargetAgeGroupId);
+        });
+        modelBuilder.Entity<UserVocabularyProgress>(entity =>
+        {
+            entity.ToTable("user_vocabulary_progress");
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.HasIndex(item => new { item.UserId, item.VocabularyItemId, item.IsDeleted });
+            entity.HasIndex(item => new { item.UserId, item.NextReviewDate, item.IsDeleted });
+            entity.HasOne<VocabularyItem>().WithMany().HasForeignKey(item => item.VocabularyItemId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
         modelBuilder.Entity<OwnedIdempotencyRecord>(entity =>
         {

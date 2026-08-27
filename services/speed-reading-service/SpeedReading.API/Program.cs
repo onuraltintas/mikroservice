@@ -41,6 +41,10 @@ var backfillOwnedGamification = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-gamification", StringComparison.OrdinalIgnoreCase));
 var backfillOwnedQuestions = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-questions", StringComparison.OrdinalIgnoreCase));
+var backfillOwnedVisualization = args.Any(argument =>
+    string.Equals(argument, "--backfill-owned-visualization", StringComparison.OrdinalIgnoreCase));
+var backfillOwnedVocabulary = args.Any(argument =>
+    string.Equals(argument, "--backfill-owned-vocabulary", StringComparison.OrdinalIgnoreCase));
 
 // The legacy speed-reading schema is not managed by EF migrations. This
 // one-shot mode applies only idempotent additive compatibility objects before
@@ -215,6 +219,28 @@ if (backfillOwnedQuestions)
             "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-questions.");
     var backfillResult = await backfill.RunAsync();
     Console.WriteLine(JsonSerializer.Serialize(backfillResult));
+    return;
+}
+
+if (backfillOwnedVisualization)
+{
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
+    await using var backfillApp = builder.Build();
+    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
+    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingVisualizationBackfill>()
+        ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-visualization.");
+    Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
+    return;
+}
+
+if (backfillOwnedVocabulary)
+{
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
+    await using var backfillApp = builder.Build();
+    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
+    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingVocabularyBackfill>()
+        ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-vocabulary.");
+    Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
     return;
 }
 

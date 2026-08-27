@@ -8,6 +8,8 @@ using SpeedReading.Domain.Gamification;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Profiles;
 using SpeedReading.Domain.QuestionBank;
+using SpeedReading.Domain.Visualization;
+using SpeedReading.Domain.Vocabulary;
 using SpeedReading.Domain.Sessions;
 using SpeedReading.Infrastructure.Persistence;
 
@@ -65,6 +67,14 @@ public sealed class SpeedReadingOwnedDomainTests
             .Should().Be("user_gamification");
         context.Model.FindEntityType(typeof(ExamQuestion))!.GetTableName()
             .Should().Be("exam_questions");
+        context.Model.FindEntityType(typeof(VisualizationScene))!.GetTableName()
+            .Should().Be("visualization_scenes");
+        context.Model.FindEntityType(typeof(VisualizationQuestion))!.GetTableName()
+            .Should().Be("visualization_questions");
+        context.Model.FindEntityType(typeof(VocabularyItem))!.GetTableName()
+            .Should().Be("vocabulary_items");
+        context.Model.FindEntityType(typeof(UserVocabularyProgress))!.GetTableName()
+            .Should().Be("user_vocabulary_progress");
         context.Model.GetEntityTypes()
             .Should()
             .Contain(entity => entity.GetTableName() == "idempotency_records");
@@ -147,7 +157,8 @@ public sealed class SpeedReadingOwnedDomainTests
             .And.Contain("20260827145000_AddOwnedLearningPaths")
             .And.Contain("20260827146000_AddOwnedAdminAudit")
             .And.Contain("20260827147000_AddOwnedGamification")
-            .And.Contain("20260827148000_AddOwnedQuestionBank");
+            .And.Contain("20260827148000_AddOwnedQuestionBank")
+            .And.Contain("20260827149000_AddOwnedVisualizationAndVocabulary");
     }
 
     [Fact]
@@ -301,6 +312,20 @@ public sealed class SpeedReadingOwnedDomainTests
 
         question.CorrectOption.Should().Be("C");
         question.WordCount.Should().Be(3);
+    }
+
+    [Fact]
+    public void Vocabulary_progress_advances_boxes_and_is_reactivatable()
+    {
+        var userId = Guid.NewGuid();
+        var progress = UserVocabularyProgress.Create(Guid.NewGuid(), userId, Guid.NewGuid(), DateTime.UtcNow);
+
+        progress.Review(true, userId, DateTime.UtcNow);
+        progress.Box.Should().Be(2);
+        progress.NextReviewDate.Should().BeAfter(progress.LastReviewedAt);
+
+        progress.Review(false, userId, DateTime.UtcNow);
+        progress.Box.Should().Be(1);
     }
 
     [Fact]
