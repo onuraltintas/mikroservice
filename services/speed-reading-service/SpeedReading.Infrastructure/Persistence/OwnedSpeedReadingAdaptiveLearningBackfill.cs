@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SpeedReading.Infrastructure.Legacy;
 
 namespace SpeedReading.Infrastructure.Persistence;
 
@@ -9,9 +10,26 @@ public sealed class OwnedSpeedReadingAdaptiveLearningBackfill(
     public async Task<OwnedAdaptiveLearningBackfillResult> RunAsync(
         CancellationToken cancellationToken = default)
     {
-        var sourceProfiles = await legacy.StudentLearningProfiles.AsNoTracking().ToListAsync(cancellationToken);
-        var sourceRecommendations = await legacy.ContentRecommendations.AsNoTracking().ToListAsync(cancellationToken);
-        var sourceGoals = await legacy.DailyGoals.AsNoTracking().ToListAsync(cancellationToken);
+        var sourceProfiles = await legacy.Database.SqlQueryRaw<LegacyStudentLearningProfileSource>("""
+            SELECT "Id", "StudentId", "CurrentDifficultyLevel", "AverageWPM" AS "AverageWpm",
+                   "AverageComprehension", "TotalReadingSessions", "TotalExerciseSessions",
+                   "CurrentStreak", "LongestStreak", "LastActiveDate", "BloomPerformanceJson",
+                   "CategoryPreferencesJson", "WeakAreasJson", "RecentlyReadMaterialIdsJson",
+                   "TotalMinutesSpent", "CreatedAt", "UpdatedAt"
+            FROM "StudentLearningProfiles"
+            """).ToListAsync(cancellationToken);
+        var sourceRecommendations = await legacy.Database.SqlQueryRaw<LegacyContentRecommendationSource>("""
+            SELECT "Id", "StudentId", "ReadingTextId", "RecommendationScore", "Reason",
+                   "RecommendationType", "IsViewed", "IsStarted", "IsCompleted", "ViewedAt",
+                   "StartedAt", "CompletedAt", "CreatedAt", "ExpiresAt"
+            FROM "ContentRecommendations"
+            """).ToListAsync(cancellationToken);
+        var sourceGoals = await legacy.Database.SqlQueryRaw<LegacyDailyGoalSource>("""
+            SELECT "Id", "StudentId", "Date", "TargetMinutes", "TargetReadingSessions",
+                   "TargetExercises", "ActualMinutes", "ActualReadingSessions", "ActualExercises",
+                   "IsAchieved", "AchievedAt", "CreatedAt", "UpdatedAt"
+            FROM "DailyGoals"
+            """).ToListAsync(cancellationToken);
         var recommendationTextIds = sourceRecommendations.Select(item => item.ReadingTextId).Distinct().ToArray();
         var ownedTextIds = await owned.ReadingTexts
             .IgnoreQueryFilters()
@@ -36,17 +54,52 @@ public sealed class OwnedSpeedReadingAdaptiveLearningBackfill(
         var imported = 0;
         foreach (var item in sourceProfiles.Where(item => existingProfileIds.Add(item.Id)))
         {
-            owned.AdaptiveLearningProfiles.Add(item);
+            owned.AdaptiveLearningProfiles.Add(new LegacyStudentLearningProfile
+            {
+                Id = item.Id,
+                StudentId = item.StudentId,
+                ProficiencyLevel = item.CurrentDifficultyLevel.ToString(),
+                PreferredContentTypes = item.CategoryPreferencesJson,
+                LearningPace = "Normal",
+                WeakAreas = item.WeakAreasJson,
+                StrongAreas = item.BloomPerformanceJson,
+                CreatedAt = item.CreatedAt,
+                CreatedBy = item.StudentId,
+                UpdatedAt = item.UpdatedAt,
+                IsDeleted = false
+            });
             imported++;
         }
         foreach (var item in sourceRecommendations.Where(item => existingRecommendationIds.Add(item.Id)))
         {
-            owned.AdaptiveContentRecommendations.Add(item);
+            owned.AdaptiveContentRecommendations.Add(new LegacyContentRecommendation
+            {
+                Id = item.Id,
+                StudentId = item.StudentId,
+                ReadingTextId = item.ReadingTextId,
+                ConfidenceScore = item.RecommendationScore,
+                RecommendationReason = item.Reason,
+                CreatedAt = item.CreatedAt,
+                CreatedBy = item.StudentId,
+                IsDeleted = false
+            });
             imported++;
         }
         foreach (var item in sourceGoals.Where(item => existingGoalIds.Add(item.Id)))
         {
-            owned.AdaptiveDailyGoals.Add(item);
+            owned.AdaptiveDailyGoals.Add(new LegacyDailyGoal
+            {
+                Id = item.Id,
+                StudentId = item.StudentId,
+                Date = item.Date,
+                TargetMinutes = item.TargetMinutes,
+                ActualMinutes = item.ActualMinutes,
+                IsCompleted = item.IsAchieved,
+                CreatedAt = item.CreatedAt,
+                CreatedBy = item.StudentId,
+                UpdatedAt = item.UpdatedAt,
+                IsDeleted = false
+            });
             imported++;
         }
 

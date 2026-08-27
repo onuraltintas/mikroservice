@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace SpeedReading.Infrastructure.Persistence;
 
@@ -10,6 +11,11 @@ public sealed class OwnedSpeedReadingAdaptiveTextBackfill(
         CancellationToken cancellationToken = default)
     {
         var sourceProfiles = await legacy.StudentReadingProfiles.AsNoTracking().ToListAsync(cancellationToken);
+        foreach (var profile in sourceProfiles)
+        {
+            profile.PreferredCategories = ParseCategories(profile.PreferredCategoriesSource);
+            profile.DifficultCategories = ParseCategories(profile.DifficultCategoriesSource);
+        }
         var sourceHistory = await legacy.TextRecommendationHistories.AsNoTracking().ToListAsync(cancellationToken);
         var historyTextIds = sourceHistory.Select(item => item.ReadingTextId).Distinct().ToArray();
         var ownedTextIds = await owned.ReadingTexts
@@ -44,6 +50,21 @@ public sealed class OwnedSpeedReadingAdaptiveTextBackfill(
             await owned.SaveChangesAsync(cancellationToken);
 
         return new OwnedAdaptiveTextBackfillResult(sourceProfiles.Count + sourceHistory.Count, imported);
+    }
+
+    private static List<string> ParseCategories(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return [];
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(value) ?? [];
+        }
+        catch (JsonException)
+        {
+            return value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+        }
     }
 }
 

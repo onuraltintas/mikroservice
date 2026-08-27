@@ -10,6 +10,8 @@ internal sealed class LegacyStudentReadingProfile : LegacyBaseEntity
     public int TotalReadingTimeSeconds { get; set; }
     public List<string> PreferredCategories { get; set; } = [];
     public List<string> DifficultCategories { get; set; } = [];
+    public string? PreferredCategoriesSource { get; set; }
+    public string? DifficultCategoriesSource { get; set; }
     public DateTime LastCalculatedAt { get; set; }
 }
 

@@ -302,6 +302,19 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
         {
             entity.ToTable("RSVPSessions");
             entity.HasKey(item => item.Id);
+            entity.Ignore(item => item.TextId);
+            entity.Property(item => item.TextContent).HasColumnName("Text");
+            entity.Ignore(item => item.WordsPerMinute);
+            entity.Property(item => item.SourceAverageWpm).HasColumnName("AverageWPM");
+            entity.Ignore(item => item.FontFamily);
+            entity.Ignore(item => item.FontSize);
+            entity.Ignore(item => item.BackgroundColor);
+            entity.Ignore(item => item.TextColor);
+            entity.Ignore(item => item.CompletedWords);
+            entity.Property(item => item.CompletionPercentage).HasColumnName("CompletionPercentage");
+            entity.Property(item => item.SessionDuration).HasColumnName("DurationSeconds");
+            entity.Ignore(item => item.Completed);
+            entity.Property(item => item.CompletedAt).HasColumnName("EndTime");
             entity.HasIndex(item => item.UserId);
             entity.HasIndex(item => new { item.UserId, item.CreatedAt });
         });
@@ -748,8 +761,10 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
         {
             entity.ToTable("StudentReadingProfiles");
             entity.HasKey(item => item.Id);
-            entity.Property(item => item.PreferredCategories).HasColumnType("text[]");
-            entity.Property(item => item.DifficultCategories).HasColumnType("text[]");
+            entity.Ignore(item => item.PreferredCategories);
+            entity.Ignore(item => item.DifficultCategories);
+            entity.Property(item => item.PreferredCategoriesSource).HasColumnName("PreferredCategories");
+            entity.Property(item => item.DifficultCategoriesSource).HasColumnName("DifficultCategories");
             entity.HasIndex(item => item.StudentId);
         });
 

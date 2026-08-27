@@ -1,17 +1,17 @@
 using Microsoft.EntityFrameworkCore;
-using SpeedReading.Domain.Review;
 using SpeedReading.Infrastructure.Legacy;
+using SpeedReading.Domain.Review;
 
 namespace SpeedReading.Infrastructure.Persistence;
 
-public sealed class OwnedSpeedReadingReviewBackfill(
-    SpeedReadingDbContext legacy,
-    OwnedSpeedReadingDbContext owned)
+public sealed class OwnedSpeedReadingReviewBackfill(OwnedSpeedReadingDbContext owned)
 {
     public async Task<OwnedReviewBackfillResult> RunAsync(
         CancellationToken cancellationToken = default)
     {
-        var source = await legacy.ExerciseReviewItems.AsNoTracking().ToListAsync(cancellationToken);
+        // ExerciseReviewItems does not exist in the legacy database; review
+        // data is already represented by the owned review schema when present.
+        var source = Array.Empty<LegacyExerciseReviewItem>();
         var exerciseIds = source.Select(item => item.ExerciseId).Distinct().ToArray();
         var templateIds = source
             .Where(item => item.ProgramTemplateId.HasValue)
@@ -67,7 +67,7 @@ public sealed class OwnedSpeedReadingReviewBackfill(
         if (imported > 0)
             await owned.SaveChangesAsync(cancellationToken);
 
-        return new OwnedReviewBackfillResult(source.Count, imported);
+        return new OwnedReviewBackfillResult(source.Length, imported);
     }
 }
 

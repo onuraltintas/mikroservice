@@ -410,6 +410,8 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.TotalReadingTimeSeconds).HasColumnName("total_reading_time_seconds");
             entity.Property(item => item.PreferredCategories).HasColumnName("preferred_categories").HasColumnType("text[]");
             entity.Property(item => item.DifficultCategories).HasColumnName("difficult_categories").HasColumnType("text[]");
+            entity.Ignore(item => item.PreferredCategoriesSource);
+            entity.Ignore(item => item.DifficultCategoriesSource);
             entity.Property(item => item.LastCalculatedAt).HasColumnName("last_calculated_at");
             entity.HasIndex(item => new { item.StudentId, item.IsDeleted });
         });
@@ -804,12 +806,14 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.TextId).HasColumnName("text_id");
             entity.Property(item => item.TextContent).HasColumnName("text_content");
             entity.Property(item => item.WordsPerMinute).HasColumnName("words_per_minute");
+            entity.Ignore(item => item.SourceAverageWpm);
             entity.Property(item => item.FontFamily).HasColumnName("font_family").HasMaxLength(100).IsRequired();
             entity.Property(item => item.FontSize).HasColumnName("font_size");
             entity.Property(item => item.BackgroundColor).HasColumnName("background_color").HasMaxLength(20).IsRequired();
             entity.Property(item => item.TextColor).HasColumnName("text_color").HasMaxLength(20).IsRequired();
             entity.Property(item => item.TotalWords).HasColumnName("total_words");
             entity.Property(item => item.CompletedWords).HasColumnName("completed_words");
+            entity.Ignore(item => item.CompletionPercentage);
             entity.Property(item => item.SessionDuration).HasColumnName("session_duration");
             entity.Property(item => item.Completed).HasColumnName("completed");
             entity.Property(item => item.CompletedAt).HasColumnName("completed_at");
@@ -1324,6 +1328,7 @@ public sealed class OwnedSpeedReadingDbContext(
     {
         entity.ToTable(tableName);
         entity.HasKey(item => item.Id);
+        entity.Property(item => item.Id).HasColumnName("id");
         entity.Property(item => item.CreatedAt).IsRequired();
         entity.Property(item => item.CreatedBy).IsRequired();
         entity.Property(item => item.UpdatedAt);

@@ -128,8 +128,10 @@ public sealed class CmsLegacyModelTests
 
         var profile = context.Model.GetEntityTypes()
             .Single(entity => entity.GetTableName() == "StudentReadingProfiles");
-        profile.FindProperty("PreferredCategories")!.GetColumnName().Should().Be("PreferredCategories");
-        profile.FindProperty("DifficultCategories")!.GetColumnName().Should().Be("DifficultCategories");
+        profile.FindProperty("PreferredCategories").Should().BeNull();
+        profile.FindProperty("DifficultCategories").Should().BeNull();
+        profile.FindProperty("PreferredCategoriesSource")!.GetColumnName().Should().Be("PreferredCategories");
+        profile.FindProperty("DifficultCategoriesSource")!.GetColumnName().Should().Be("DifficultCategories");
 
         var history = context.Model.GetEntityTypes()
             .Single(entity => entity.GetTableName() == "TextRecommendationHistories");
@@ -237,9 +239,11 @@ public sealed class CmsLegacyModelTests
             .SingleOrDefault(entity => entity.GetTableName() == "RSVPSessions");
 
         session.Should().NotBeNull();
-        session!.FindProperty("TextContent")!.GetColumnName().Should().Be("TextContent");
-        session.FindProperty("WordsPerMinute")!.GetColumnName().Should().Be("WordsPerMinute");
-        session.FindProperty("CompletedAt")!.GetColumnName().Should().Be("CompletedAt");
+        session!.FindProperty("TextContent")!.GetColumnName().Should().Be("Text");
+        session.FindProperty("WordsPerMinute").Should().BeNull();
+        session.FindProperty("SourceAverageWpm")!.GetColumnName().Should().Be("AverageWPM");
+        session.FindProperty("CompletedAt")!.GetColumnName().Should().Be("EndTime");
+        session.FindProperty("BackgroundColor").Should().BeNull();
     }
 
     [Fact]
@@ -297,6 +301,15 @@ public sealed class CmsLegacyModelTests
         var interaction = context.Model.GetEntityTypes()
             .Single(entity => entity.ClrType.Name == "LegacyAnnouncementUserInteraction");
         interaction.FindProperty("ViewedAt")!.GetColumnName().Should().Be("LastViewedAt");
+
+        var rsvp = context.Model.GetEntityTypes()
+            .Single(entity => entity.ClrType.Name == "LegacyRsvpSession");
+        rsvp.FindProperty("TextContent")!.GetColumnName().Should().Be("Text");
+        rsvp.FindProperty("WordsPerMinute").Should().BeNull();
+        rsvp.FindProperty("SourceAverageWpm")!.GetColumnName().Should().Be("AverageWPM");
+        rsvp.FindProperty("SessionDuration")!.GetColumnName().Should().Be("DurationSeconds");
+        rsvp.FindProperty("TextId").Should().BeNull();
+        rsvp.FindProperty("Completed").Should().BeNull();
 
         var templateModel = context.Model.GetEntityTypes()
             .Single(entity => entity.ClrType.Name == "LegacyEmailTemplate");

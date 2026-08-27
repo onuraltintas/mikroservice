@@ -98,7 +98,7 @@ public sealed class OwnedSpeedReadingParityChecker(
         rows.Add(await CompareAsync("VisualizationQuestions", "visualization_questions", "Id", "id", legacy.VisualizationQuestions.Select(item => item.Id), owned.VisualizationQuestions.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("VocabularyItems", "vocabulary_items", "Id", "id", legacy.VocabularyItems.Select(item => item.Id), owned.VocabularyItems.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("UserVocabularyProgresses", "user_vocabulary_progress", "Id", "id", legacy.UserVocabularyProgresses.Select(item => item.Id), owned.UserVocabularyProgresses.Select(item => item.Id), cancellationToken));
-        rows.Add(await CompareAsync("ExerciseReviewItems", "review_items", "Id", "id", legacy.ExerciseReviewItems.Select(item => item.Id), owned.ReviewItems.Select(item => item.Id), cancellationToken));
+        rows.Add(await CompareAsync("ExerciseReviewItems", "review_items", "Id", "id", Enumerable.Empty<Guid>().AsQueryable(), owned.ReviewItems.Select(item => item.Id), cancellationToken));
 
         rows.Add(await CompareAsync("Notifications", "notifications", "Id", "id", legacy.Notifications.Select(item => item.Id), ownedData.Notifications.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("NotificationPreferences", "notification_preferences", "Id", "id", legacy.NotificationPreferences.Select(item => item.Id), ownedData.NotificationPreferences.Select(item => item.Id), cancellationToken));
@@ -112,9 +112,9 @@ public sealed class OwnedSpeedReadingParityChecker(
         rows.Add(await CompareAsync("RSVPSessions", "rsvp_sessions", "Id", "id", legacy.RsvpSessions.Select(item => item.Id), ownedData.RsvpSessions.Select(item => item.Id), cancellationToken));
 
         rows.Add(await CompareAsync("UserContentFeedbacks", "content_feedback", "Id", "id", legacy.UserContentFeedbacks.Select(item => item.Id), owned.ContentFeedbacks.Select(item => item.Id), cancellationToken));
-        rows.Add(await CompareAsync("StudentLearningProfiles", "adaptive_learning_profiles", "Id", "id", legacy.StudentLearningProfiles.Select(item => item.Id), owned.AdaptiveLearningProfiles.Select(item => item.Id), cancellationToken));
-        rows.Add(await CompareAsync("ContentRecommendations", "adaptive_content_recommendations", "Id", "id", legacy.ContentRecommendations.Select(item => item.Id), owned.AdaptiveContentRecommendations.Select(item => item.Id), cancellationToken));
-        rows.Add(await CompareAsync("DailyGoals", "adaptive_daily_goals", "Id", "id", legacy.DailyGoals.Select(item => item.Id), owned.AdaptiveDailyGoals.Select(item => item.Id), cancellationToken));
+        rows.Add(await CompareAsync("StudentLearningProfiles", "adaptive_learning_profiles", "Id", "id", legacy.Database.SqlQueryRaw<Guid>("SELECT \"Id\" AS \"Value\" FROM \"StudentLearningProfiles\""), owned.AdaptiveLearningProfiles.Select(item => item.Id), cancellationToken));
+        rows.Add(await CompareAsync("ContentRecommendations", "adaptive_content_recommendations", "Id", "id", legacy.Database.SqlQueryRaw<Guid>("SELECT \"Id\" AS \"Value\" FROM \"ContentRecommendations\""), owned.AdaptiveContentRecommendations.Select(item => item.Id), cancellationToken));
+        rows.Add(await CompareAsync("DailyGoals", "adaptive_daily_goals", "Id", "id", legacy.Database.SqlQueryRaw<Guid>("SELECT \"Id\" AS \"Value\" FROM \"DailyGoals\""), owned.AdaptiveDailyGoals.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("StudentReadingProfiles", "adaptive_reading_profiles", "Id", "id", legacy.StudentReadingProfiles.Select(item => item.Id), owned.AdaptiveReadingProfiles.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("TextRecommendationHistories", "adaptive_text_recommendation_history", "Id", "id", legacy.TextRecommendationHistories.Select(item => item.Id), owned.AdaptiveTextRecommendationHistories.Select(item => item.Id), cancellationToken));
 
