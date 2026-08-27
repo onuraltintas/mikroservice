@@ -38,26 +38,31 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddSpeedReadingInfrastructure(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        bool includeLegacyData = true)
     {
+        var ownedDataEnabled = configuration.GetValue<bool>("SpeedReading:OwnedDataEnabled");
         var connectionString = configuration.GetConnectionString("SpeedReading")
             ?? configuration["SPEED_READING_CONNECTION_STRING"]
             ?? Environment.GetEnvironmentVariable("SPEED_READING_CONNECTION_STRING");
 
-        if (string.IsNullOrWhiteSpace(connectionString))
+        var legacyDataEnabled = includeLegacyData || !ownedDataEnabled;
+        if (legacyDataEnabled && string.IsNullOrWhiteSpace(connectionString))
         {
             throw new InvalidOperationException(
                 "ConnectionStrings:SpeedReading or SPEED_READING_CONNECTION_STRING must be configured.");
         }
 
-        services.AddDbContext<SpeedReadingDbContext>(options =>
-            options.UseNpgsql(connectionString, npgsql =>
-                npgsql.EnableRetryOnFailure()));
+        if (legacyDataEnabled)
+        {
+            services.AddDbContext<SpeedReadingDbContext>(options =>
+                options.UseNpgsql(connectionString, npgsql =>
+                    npgsql.EnableRetryOnFailure()));
+        }
 
         var ownedConnectionString = configuration.GetConnectionString("SpeedReadingOwned")
             ?? configuration["SPEED_READING_OWNED_CONNECTION_STRING"]
             ?? Environment.GetEnvironmentVariable("SPEED_READING_OWNED_CONNECTION_STRING");
-        var ownedDataEnabled = configuration.GetValue<bool>("SpeedReading:OwnedDataEnabled");
         if (ownedDataEnabled && string.IsNullOrWhiteSpace(ownedConnectionString))
         {
             throw new InvalidOperationException(

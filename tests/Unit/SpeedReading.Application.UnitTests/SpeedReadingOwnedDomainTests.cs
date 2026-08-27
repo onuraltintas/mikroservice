@@ -1,4 +1,6 @@
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Domain.AgeGroups;
 using SpeedReading.Domain.Assignments;
@@ -13,11 +15,30 @@ using SpeedReading.Domain.Visualization;
 using SpeedReading.Domain.Vocabulary;
 using SpeedReading.Domain.Sessions;
 using SpeedReading.Infrastructure.Persistence;
+using SpeedReading.Infrastructure;
+using SpeedReading.Infrastructure.Legacy;
 
 namespace SpeedReading.Application.UnitTests;
 
 public sealed class SpeedReadingOwnedDomainTests
 {
+    [Fact]
+    public void Owned_runtime_does_not_require_legacy_connection()
+    {
+        var configuration = new ConfigurationManager
+        {
+            ["SpeedReading:OwnedDataEnabled"] = "true",
+            ["ConnectionStrings:SpeedReadingOwned"] = "Host=localhost;Database=unused;Username=unused;Password=unused"
+        };
+        var services = new ServiceCollection();
+
+        var action = () => services.AddSpeedReadingInfrastructure(configuration, includeLegacyData: false);
+
+        action.Should().NotThrow();
+        services.Should().Contain(item => item.ServiceType == typeof(OwnedSpeedReadingDbContext));
+        services.Should().NotContain(item => item.ServiceType == typeof(SpeedReadingDbContext));
+    }
+
     [Fact]
     public void Owned_model_uses_a_dedicated_schema_and_normalized_tables()
     {

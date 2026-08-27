@@ -353,6 +353,7 @@ var runtimeOptions = builder.Configuration
     .Get<SpeedReadingServiceOptions>()
     ?? new SpeedReadingServiceOptions();
 runtimeOptions.Validate();
+var ownedDataEnabled = builder.Configuration.GetValue<bool>("SpeedReading:OwnedDataEnabled");
 
 // Teacher analytics resolve student scope through Identity on every request,
 // so the shared service key is required even when optional integrations are off.
@@ -369,7 +370,7 @@ builder.Services.AddEduPlatformOpenTelemetry(
     builder.Environment,
     "EduPlatform.SpeedReading");
 builder.Services.AddGlobalExceptionHandler();
-builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
+builder.Services.AddSpeedReadingInfrastructure(builder.Configuration, includeLegacyData: !ownedDataEnabled);
 builder.Services.AddHostedService<SpeedReadingIdempotencyCleanupWorker>();
 builder.Services.AddCustomAuthentication(builder.Configuration);
 builder.Services.AddCustomAuthorization();
@@ -397,15 +398,14 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddHealthChecks()
-    .AddDbContextCheck<SpeedReadingDbContext>("database", tags: ["ready"]);
-if (!string.IsNullOrWhiteSpace(
-        builder.Configuration.GetConnectionString("SpeedReadingOwned")
-        ?? builder.Configuration["SPEED_READING_OWNED_CONNECTION_STRING"]
-        ?? Environment.GetEnvironmentVariable("SPEED_READING_OWNED_CONNECTION_STRING")))
+var healthChecks = builder.Services.AddHealthChecks();
+if (ownedDataEnabled)
 {
-    builder.Services.AddHealthChecks()
-        .AddDbContextCheck<OwnedSpeedReadingDbContext>("owned-database", tags: ["ready"]);
+    healthChecks.AddDbContextCheck<OwnedSpeedReadingDbContext>("owned-database", tags: ["ready"]);
+}
+else
+{
+    healthChecks.AddDbContextCheck<SpeedReadingDbContext>("database", tags: ["ready"]);
 }
 
 var app = builder.Build();
