@@ -199,16 +199,23 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<ExamQuestion>(entity =>
         {
             entity.ToTable("exam_questions");
-            entity.Property(item => item.Content).IsRequired();
-            entity.Property(item => item.Question).IsRequired();
-            entity.Property(item => item.OptionA).HasMaxLength(500).IsRequired();
-            entity.Property(item => item.OptionB).HasMaxLength(500).IsRequired();
-            entity.Property(item => item.OptionC).HasMaxLength(500).IsRequired();
-            entity.Property(item => item.OptionD).HasMaxLength(500).IsRequired();
-            entity.Property(item => item.OptionE).HasMaxLength(500);
-            entity.Property(item => item.CorrectOption).HasMaxLength(1).IsRequired();
-            entity.Property(item => item.Topic).HasMaxLength(300);
-            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.Property(item => item.Content).HasColumnName("content").IsRequired();
+            entity.Property(item => item.Question).HasColumnName("question").IsRequired();
+            entity.Property(item => item.OptionA).HasColumnName("option_a").HasMaxLength(500).IsRequired();
+            entity.Property(item => item.OptionB).HasColumnName("option_b").HasMaxLength(500).IsRequired();
+            entity.Property(item => item.OptionC).HasColumnName("option_c").HasMaxLength(500).IsRequired();
+            entity.Property(item => item.OptionD).HasColumnName("option_d").HasMaxLength(500).IsRequired();
+            entity.Property(item => item.OptionE).HasColumnName("option_e").HasMaxLength(500);
+            entity.Property(item => item.CorrectOption).HasColumnName("correct_option").HasMaxLength(1).IsRequired();
+            entity.Property(item => item.ExamType).HasColumnName("exam_type");
+            entity.Property(item => item.Difficulty).HasColumnName("difficulty");
+            entity.Property(item => item.WordCount).HasColumnName("word_count");
+            entity.Property(item => item.Topic).HasColumnName("topic").HasMaxLength(300);
+            entity.Property(item => item.Category).HasColumnName("category");
+            entity.Property(item => item.TargetAgeGroupId).HasColumnName("target_age_group_id");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by").HasMaxLength(100);
             entity.HasIndex(item => new { item.ExamType, item.Difficulty, item.Category });
             entity.HasIndex(item => item.TargetAgeGroupId);
             entity.HasIndex(item => item.CreatedAt);

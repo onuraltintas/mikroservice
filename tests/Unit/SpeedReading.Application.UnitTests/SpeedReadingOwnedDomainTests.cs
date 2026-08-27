@@ -246,6 +246,40 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Fact]
+    public void Owned_exam_question_model_matches_the_snake_case_exam_schema()
+    {
+        using var context = new OwnedSpeedReadingDbContext(
+            new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+                .UseNpgsql("Host=localhost;Database=unused;Username=unused;Password=unused")
+                .Options);
+
+        var table = StoreObjectIdentifier.Table("exam_questions", "speed_reading");
+        var entity = context.Model.FindEntityType(typeof(ExamQuestion))!;
+
+        new[]
+        {
+            (nameof(ExamQuestion.Content), "content"),
+            (nameof(ExamQuestion.Question), "question"),
+            (nameof(ExamQuestion.OptionA), "option_a"),
+            (nameof(ExamQuestion.OptionB), "option_b"),
+            (nameof(ExamQuestion.OptionC), "option_c"),
+            (nameof(ExamQuestion.OptionD), "option_d"),
+            (nameof(ExamQuestion.OptionE), "option_e"),
+            (nameof(ExamQuestion.CorrectOption), "correct_option"),
+            (nameof(ExamQuestion.ExamType), "exam_type"),
+            (nameof(ExamQuestion.Difficulty), "difficulty"),
+            (nameof(ExamQuestion.WordCount), "word_count"),
+            (nameof(ExamQuestion.Topic), "topic"),
+            (nameof(ExamQuestion.Category), "category"),
+            (nameof(ExamQuestion.TargetAgeGroupId), "target_age_group_id"),
+            (nameof(ExamQuestion.IsDeleted), "is_deleted"),
+            (nameof(ExamQuestion.DeletedAt), "deleted_at"),
+            (nameof(ExamQuestion.DeletedBy), "deleted_by")
+        }.Should().AllSatisfy(mapping =>
+            entity.FindProperty(mapping.Item1)!.GetColumnName(table).Should().Be(mapping.Item2));
+    }
+
+    [Fact]
     public void Owned_model_allows_reassignment_after_a_soft_removed_membership()
     {
         using var context = new OwnedSpeedReadingDbContext(
