@@ -8,6 +8,7 @@ using SpeedReading.Domain.Gamification;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Profiles;
 using SpeedReading.Domain.QuestionBank;
+using SpeedReading.Domain.Review;
 using SpeedReading.Domain.Visualization;
 using SpeedReading.Domain.Vocabulary;
 using SpeedReading.Domain.Sessions;
@@ -76,7 +77,7 @@ public sealed class SpeedReadingOwnedDomainTests
         context.Model.FindEntityType(typeof(UserVocabularyProgress))!.GetTableName()
             .Should().Be("user_vocabulary_progress");
         context.Model.GetEntityTypes().Select(entity => entity.GetTableName())
-            .Should().Contain(["subscription_products", "subscription_plans", "user_subscriptions", "payments", "cms_content_blocks", "cms_pages", "cms_blog_posts", "cms_contact_messages", "cms_newsletter_subscribers", "notifications", "notification_preferences", "notification_type_preferences", "push_subscriptions", "announcements", "announcement_user_interactions", "email_templates", "email_campaigns", "email_campaign_logs", "rsvp_sessions"]);
+            .Should().Contain(["subscription_products", "subscription_plans", "user_subscriptions", "payments", "cms_content_blocks", "cms_pages", "cms_blog_posts", "cms_contact_messages", "cms_newsletter_subscribers", "notifications", "notification_preferences", "notification_type_preferences", "push_subscriptions", "announcements", "announcement_user_interactions", "email_templates", "email_campaigns", "email_campaign_logs", "rsvp_sessions", "review_items"]);
         context.Model.GetEntityTypes()
             .Should()
             .Contain(entity => entity.GetTableName() == "idempotency_records");
@@ -164,7 +165,8 @@ public sealed class SpeedReadingOwnedDomainTests
             .And.Contain("20260827150000_AddOwnedSubscriptionsAndPayments")
             .And.Contain("20260827151000_AddOwnedCms")
             .And.Contain("20260827152000_AddOwnedNotifications")
-            .And.Contain("20260827153000_AddOwnedRsvp");
+            .And.Contain("20260827153000_AddOwnedRsvp")
+            .And.Contain("20260827154000_AddOwnedReview");
     }
 
     [Fact]
@@ -332,6 +334,26 @@ public sealed class SpeedReadingOwnedDomainTests
 
         progress.Review(false, userId, DateTime.UtcNow);
         progress.Box.Should().Be(1);
+    }
+
+    [Fact]
+    public void Review_item_applies_sm2_schedule_in_the_owned_domain()
+    {
+        var userId = Guid.NewGuid();
+        var item = ReviewItem.Start(
+            Guid.NewGuid(),
+            userId,
+            Guid.NewGuid(),
+            null,
+            DateTime.UtcNow,
+            userId);
+
+        item.ApplyReview(100, DateTime.UtcNow, userId);
+
+        item.ReviewCount.Should().Be(1);
+        item.IntervalDays.Should().Be(1);
+        item.LastScore.Should().Be(100);
+        item.IsMastered.Should().BeFalse();
     }
 
     [Fact]

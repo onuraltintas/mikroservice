@@ -12,6 +12,7 @@ using SpeedReading.Domain.Vocabulary;
 using SpeedReading.Infrastructure.Legacy;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Profiles;
+using SpeedReading.Domain.Review;
 using SpeedReading.Domain.Sessions;
 
 namespace SpeedReading.Infrastructure.Persistence;
@@ -55,6 +56,7 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<VisualizationQuestion> VisualizationQuestions => Set<VisualizationQuestion>();
     public DbSet<VocabularyItem> VocabularyItems => Set<VocabularyItem>();
     public DbSet<UserVocabularyProgress> UserVocabularyProgresses => Set<UserVocabularyProgress>();
+    public DbSet<ReviewItem> ReviewItems => Set<ReviewItem>();
     DbSet<LegacyProduct> ISpeedReadingDataContext.Products => Set<LegacyProduct>();
     DbSet<LegacyContentBlock> ISpeedReadingDataContext.ContentBlocks => Set<LegacyContentBlock>();
     DbSet<LegacyPage> ISpeedReadingDataContext.Pages => Set<LegacyPage>();
@@ -112,6 +114,7 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<VisualizationQuestion>());
         ConfigureEntity(modelBuilder.Entity<VocabularyItem>());
         ConfigureEntity(modelBuilder.Entity<UserVocabularyProgress>());
+        ConfigureEntity(modelBuilder.Entity<ReviewItem>());
         modelBuilder.Entity<AdminAuditRecord>(entity =>
         {
             entity.ToTable("admin_audit_records");
@@ -244,6 +247,28 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.HasIndex(item => new { item.UserId, item.NextReviewDate, item.IsDeleted });
             entity.HasOne<VocabularyItem>().WithMany().HasForeignKey(item => item.VocabularyItemId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<ReviewItem>(entity =>
+        {
+            entity.ToTable("review_items");
+            entity.Property(item => item.NextReviewDate).HasColumnName("next_review_date");
+            entity.Property(item => item.EasinessFactor).HasColumnName("easiness_factor").HasColumnType("double precision");
+            entity.Property(item => item.LastScore).HasColumnName("last_score").HasColumnType("double precision");
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.Property(item => item.UserId).HasColumnName("user_id");
+            entity.Property(item => item.ExerciseId).HasColumnName("exercise_id");
+            entity.Property(item => item.ProgramTemplateId).HasColumnName("program_template_id");
+            entity.Property(item => item.ReviewCount).HasColumnName("review_count");
+            entity.Property(item => item.IntervalDays).HasColumnName("interval_days");
+            entity.Property(item => item.IsMastered).HasColumnName("is_mastered");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.HasIndex(item => new { item.UserId, item.ExerciseId, item.IsDeleted }).IsUnique();
+            entity.HasIndex(item => new { item.UserId, item.NextReviewDate, item.IsDeleted });
+            entity.HasOne<Exercise>().WithMany().HasForeignKey(item => item.ExerciseId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<ProgramTemplate>().WithMany().HasForeignKey(item => item.ProgramTemplateId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<LegacyProduct>(entity =>
         {
