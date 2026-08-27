@@ -43,10 +43,11 @@ public sealed class ExamQuestion : AggregateRoot
         int category,
         Guid? targetAgeGroupId,
         DateTime createdAt,
-        Guid createdBy)
+        Guid createdBy,
+        bool allowMissingCreatedBy = false)
     {
         Validate(content, question, optionA, optionB, optionC, optionD, optionE, correctOption, examType, difficulty, category);
-        if (id == Guid.Empty || createdBy == Guid.Empty)
+        if (id == Guid.Empty || (createdBy == Guid.Empty && !allowMissingCreatedBy))
             throw new ArgumentException("Question identifiers are required.");
 
         return new ExamQuestion
@@ -96,7 +97,10 @@ public sealed class ExamQuestion : AggregateRoot
         Guid? deletedBy)
     {
         var item = Create(id, content, question, optionA, optionB, optionC, optionD, optionE,
-            correctOption, examType, difficulty, wordCount, topic, category, targetAgeGroupId, createdAt, createdBy);
+            correctOption, examType, difficulty, wordCount, topic, category, targetAgeGroupId, createdAt, createdBy,
+            allowMissingCreatedBy: true);
+        if (createdBy == Guid.Empty)
+            item.CreatedBy = null;
         item.UpdatedAt = updatedAt.HasValue ? EnsureUtc(updatedAt.Value) : null;
         item.UpdatedBy = updatedBy?.ToString();
         item.IsDeleted = isDeleted;

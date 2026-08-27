@@ -471,6 +471,36 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Fact]
+    public void Imported_exam_question_can_preserve_missing_legacy_creator()
+    {
+        var question = ExamQuestion.Import(
+            Guid.NewGuid(),
+            "Bir iki üç",
+            "Hangisi doğrudur?",
+            "Bir",
+            "İki",
+            "Üç",
+            "Dört",
+            null,
+            "C",
+            1,
+            2,
+            3,
+            null,
+            0,
+            null,
+            DateTime.UtcNow,
+            Guid.Empty,
+            null,
+            null,
+            false,
+            null,
+            null);
+
+        question.CreatedBy.Should().BeNull();
+    }
+
+    [Fact]
     public void Imported_question_can_preserve_a_missing_legacy_answer()
     {
         var question = ReadingQuestion.Import(
