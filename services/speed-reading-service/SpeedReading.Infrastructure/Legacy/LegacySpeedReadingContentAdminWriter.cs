@@ -10,7 +10,7 @@ using SpeedReading.Application.Progress;
 namespace SpeedReading.Infrastructure.Legacy;
 
 internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext db)
-    : ISpeedReadingContentAdminWriter
+    : ISpeedReadingContentAdminWriter, ISpeedReadingProgramAdminWriter
 {
     private const string CreateScope = "speed-reading.exercise-types.create";
     private const string UpdateScope = "speed-reading.exercise-types.update";

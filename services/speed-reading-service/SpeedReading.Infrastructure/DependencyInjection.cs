@@ -121,12 +121,14 @@ public static class DependencyInjection
             services.AddScoped<ISpeedReadingExerciseSessions, OwnedSpeedReadingExerciseSessions>();
             services.AddScoped<ISpeedReadingAssignments, OwnedSpeedReadingAssignments>();
             services.AddScoped<ILegacySpeedReadingPrograms, OwnedSpeedReadingPrograms>();
+            services.AddScoped<ISpeedReadingProgramAdminWriter, OwnedSpeedReadingProgramAdminWriter>();
         }
         else
         {
             services.AddScoped<ISpeedReadingExerciseSessions, LegacySpeedReadingExerciseSessions>();
             services.AddScoped<ISpeedReadingAssignments, LegacySpeedReadingAssignments>();
             services.AddScoped<ILegacySpeedReadingPrograms, LegacySpeedReadingPrograms>();
+            services.AddScoped<ISpeedReadingProgramAdminWriter, LegacySpeedReadingContentAdminWriter>();
         }
         services.AddScoped<ILegacySpeedReadingGamification, LegacySpeedReadingGamification>();
         services.AddScoped<ISpeedReadingGamificationAdminWriter, LegacySpeedReadingGamificationAdminWriter>();

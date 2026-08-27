@@ -18,7 +18,7 @@ internal sealed class OwnedSpeedReadingPrograms(
         CancellationToken cancellationToken = default) =>
         await db.ProgramTemplates
             .AsNoTracking()
-            .Where(item => item.IsActive)
+            .Where(item => !item.IsDeleted && item.IsActive)
             .OrderBy(item => item.DisplayOrder)
             .ThenBy(item => item.Name)
             .Select(ToTemplateSummary())
@@ -30,7 +30,7 @@ internal sealed class OwnedSpeedReadingPrograms(
     {
         var item = await db.ProgramTemplates
             .AsNoTracking()
-            .SingleOrDefaultAsync(template => template.Id == templateId, cancellationToken);
+            .SingleOrDefaultAsync(template => template.Id == templateId && !template.IsDeleted, cancellationToken);
         return item is null ? null : ToAdminSummary(item);
     }
 
@@ -38,6 +38,7 @@ internal sealed class OwnedSpeedReadingPrograms(
         CancellationToken cancellationToken = default) =>
         await db.ProgramTemplates
             .AsNoTracking()
+            .Where(item => !item.IsDeleted)
             .OrderBy(item => item.DisplayOrder)
             .ThenBy(item => item.Name)
             .Select(ToAdminSummary())
@@ -66,6 +67,7 @@ internal sealed class OwnedSpeedReadingPrograms(
             join template in db.ProgramTemplates.AsNoTracking()
                 on progress.ProgramTemplateId equals template.Id into templateRows
             from template in templateRows.DefaultIfEmpty()
+            where template == null || !template.IsDeleted
             select new
             {
                 Progress = progress,

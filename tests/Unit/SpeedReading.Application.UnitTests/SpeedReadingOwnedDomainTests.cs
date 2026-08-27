@@ -31,6 +31,9 @@ public sealed class SpeedReadingOwnedDomainTests
         context.Model.FindEntityType(typeof(ProgramTemplate))!.GetTableName().Should().Be("program_templates");
         context.Model.FindEntityType(typeof(StudentProgramProgress))!.GetTableName().Should().Be("student_program_progress");
         context.Model.FindEntityType(typeof(DailyExerciseLog))!.GetTableName().Should().Be("daily_exercise_logs");
+        context.Model.GetEntityTypes()
+            .Should()
+            .Contain(entity => entity.GetTableName() == "idempotency_records");
     }
 
     [Fact]
@@ -102,7 +105,8 @@ public sealed class SpeedReadingOwnedDomainTests
             .Contain("20260827110000_CreateOwnedSpeedReadingCore")
             .And.Contain("20260827120000_AddOwnedReadingSessionHistory")
             .And.Contain("20260827130000_AddOwnedAssignments")
-            .And.Contain("20260827140000_AddOwnedProgramsAndDailyProgress");
+            .And.Contain("20260827140000_AddOwnedProgramsAndDailyProgress")
+            .And.Contain("20260827141000_AddOwnedWriteSupport");
     }
 
     [Fact]
@@ -316,6 +320,59 @@ public sealed class SpeedReadingOwnedDomainTests
         progress.LongestStreak.Should().Be(0);
         progress.IsActive.Should().BeTrue();
         progress.CompletedDate.Should().BeNull();
+    }
+
+    [Fact]
+    public void Program_template_update_and_clone_preserve_owned_domain_rules()
+    {
+        var template = ProgramTemplate.Create(
+            name: "Başlangıç",
+            description: "İlk program",
+            targetAgeGroupConfigurationId: Guid.NewGuid(),
+            minAssessmentScore: 0,
+            maxAssessmentScore: 100,
+            weeklyPatternJson: "{}",
+            initialDifficultyLevel: 1,
+            weeksPerDifficultyIncrease: 2,
+            maxDifficultyLevel: 5,
+            totalWeeks: 4,
+            totalDays: 28,
+            isActive: true,
+            displayOrder: 1,
+            programType: 1,
+            examType: null,
+            isAssessment: false,
+            actorId: Guid.NewGuid(),
+            createdAt: DateTime.UtcNow);
+
+        var actorId = Guid.NewGuid();
+        template.Update(
+            "Güncel program",
+            "Güncel açıklama",
+            template.TargetAgeGroupConfigurationId,
+            10,
+            90,
+            "{\"days\":28}",
+            2,
+            3,
+            6,
+            5,
+            35,
+            false,
+            2,
+            2,
+            "TYT",
+            true,
+            actorId,
+            DateTime.UtcNow);
+
+        var clone = template.Clone(Guid.NewGuid(), actorId, DateTime.UtcNow);
+
+        template.Name.Should().Be("Güncel program");
+        template.IsActive.Should().BeFalse();
+        clone.Id.Should().NotBe(template.Id);
+        clone.Name.Should().Be("Güncel program - Kopya");
+        clone.IsActive.Should().BeFalse();
     }
 
     [Fact]

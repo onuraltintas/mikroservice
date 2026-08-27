@@ -28,6 +28,7 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<ProgramTemplate> ProgramTemplates => Set<ProgramTemplate>();
     public DbSet<StudentProgramProgress> StudentProgramProgresses => Set<StudentProgramProgress>();
     public DbSet<DailyExerciseLog> DailyExerciseLogs => Set<DailyExerciseLog>();
+    internal DbSet<OwnedIdempotencyRecord> IdempotencyRecords => Set<OwnedIdempotencyRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -48,6 +49,18 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<ProgramTemplate>());
         ConfigureEntity(modelBuilder.Entity<StudentProgramProgress>());
         ConfigureEntity(modelBuilder.Entity<DailyExerciseLog>());
+        modelBuilder.Entity<OwnedIdempotencyRecord>(entity =>
+        {
+            entity.ToTable("idempotency_records");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Id).HasColumnName("id");
+            entity.Property(item => item.Scope).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Key).HasMaxLength(128).IsRequired();
+            entity.Property(item => item.RequestHash).HasMaxLength(128).IsRequired();
+            entity.Property(item => item.CreatedAt).HasColumnName("created_at").IsRequired();
+            entity.HasIndex(item => new { item.Scope, item.Key }).IsUnique();
+            entity.HasIndex(item => item.CreatedAt);
+        });
 
         modelBuilder.Entity<Exercise>(entity =>
         {
@@ -229,9 +242,10 @@ public sealed class OwnedSpeedReadingDbContext(
         {
             entity.ToTable("program_templates");
             entity.Property(item => item.Name).HasMaxLength(200).IsRequired();
-            entity.Property(item => item.Description).HasMaxLength(4_000).IsRequired();
+            entity.Property(item => item.Description).HasMaxLength(5_000).IsRequired();
             entity.Property(item => item.WeeklyPatternJson).HasColumnType("jsonb").IsRequired();
             entity.Property(item => item.ExamType).HasMaxLength(100);
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
             entity.HasIndex(item => new { item.IsActive, item.DisplayOrder });
         });
 

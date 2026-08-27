@@ -13,7 +13,7 @@ namespace SpeedReading.API.Controllers;
 [Authorize]
 public sealed class ProgramTemplatesController(
     ILegacySpeedReadingPrograms programs,
-    ISpeedReadingContentAdminWriter adminWriter) : ControllerBase
+    ISpeedReadingProgramAdminWriter adminWriter) : ControllerBase
 {
     [HttpGet]
     public Task<IReadOnlyList<ExerciseProgramTemplateSummary>> GetProgramTemplates(

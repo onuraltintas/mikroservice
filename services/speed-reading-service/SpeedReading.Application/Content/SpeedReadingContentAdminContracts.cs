@@ -148,6 +148,34 @@ public sealed record UpdateExerciseProgramTemplateRequest(
     string? ExamType,
     bool IsAssessment);
 
+public interface ISpeedReadingProgramAdminWriter
+{
+    Task<ExerciseProgramTemplateAdminSummary> CreateExerciseProgramTemplateAsync(
+        Guid actorId,
+        CreateExerciseProgramTemplateRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<ExerciseProgramTemplateAdminSummary> UpdateExerciseProgramTemplateAsync(
+        Guid actorId,
+        Guid programTemplateId,
+        UpdateExerciseProgramTemplateRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteExerciseProgramTemplateAsync(
+        Guid actorId,
+        Guid programTemplateId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<ExerciseProgramTemplateAdminSummary> CloneExerciseProgramTemplateAsync(
+        Guid actorId,
+        Guid programTemplateId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+}
+
 public sealed record LearningPathTemplateAdminSummary(
     Guid Id,
     string Name,

@@ -143,6 +143,29 @@ public sealed class SpeedReadingServiceOptionsTests
     }
 
     [Fact]
+    public void Owned_data_mode_resolves_program_admin_writes_from_the_owned_store()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:SpeedReading"] = "Host=legacy;Database=legacy",
+                ["ConnectionStrings:SpeedReadingOwned"] = "Host=owned;Database=owned",
+                ["SpeedReading:OwnedDataEnabled"] = "true"
+            })
+            .Build();
+        var services = new ServiceCollection();
+
+        services.AddSpeedReadingInfrastructure(configuration);
+
+        services
+            .Last(item => item.ServiceType == typeof(ISpeedReadingProgramAdminWriter))
+            .ImplementationType!
+            .Name
+            .Should()
+            .Be("OwnedSpeedReadingProgramAdminWriter");
+    }
+
+    [Fact]
     public void Legacy_content_model_preserves_existing_tables_and_adds_only_the_write_ledger()
     {
         var options = new DbContextOptionsBuilder<SpeedReadingDbContext>()
