@@ -1,4 +1,4 @@
-import { ApplicationConfig, ErrorHandler, provideBrowserGlobalErrorListeners, provideZoneChangeDetection, isDevMode, LOCALE_ID } from '@angular/core';
+import { ApplicationConfig, ErrorHandler, inject, provideAppInitializer, provideBrowserGlobalErrorListeners, provideZoneChangeDetection, isDevMode, LOCALE_ID } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
@@ -16,6 +16,7 @@ import { apiResponseInterceptor } from './core/interceptors/api-response.interce
 import { GlobalErrorHandler } from './core/handlers/global-error.handler';
 import { TurkishPaginatorIntl } from './core/services/turkish-paginator-intl.service';
 import { provideServiceWorker } from '@angular/service-worker';
+import { AuthService } from './core/services/auth.service';
 
 // Register Turkish locale globally
 registerLocaleData(localeTr);
@@ -25,6 +26,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
+    provideAppInitializer(() => inject(AuthService).initializeSession()),
     provideHttpClient(
       withInterceptors([apiResponseInterceptor, authInterceptor, errorInterceptor]),
       withFetch()

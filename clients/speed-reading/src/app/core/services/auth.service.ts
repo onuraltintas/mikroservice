@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, map, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, map, of, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthResponse, LoginRequest, RegisterRequest } from '../models/user.model';
 import { environment } from '../../../environments/environment';
@@ -13,7 +13,7 @@ import { SettingsService } from './settings.service';
  * - All HTTP calls work with backend's ApiResponse<T> format
  * - ApiResponseInterceptor automatically unwraps responses
  * - Service receives clean typed data (AuthResponse, etc.)
- * - Token and user management remain unchanged
+ * - Access tokens stay in memory; the refresh token is an HttpOnly cookie
  */
 @Injectable({
   providedIn: 'root'
@@ -24,62 +24,36 @@ export class AuthService {
   private readonly settingsService = inject(SettingsService);
   private readonly API_URL = environment.apiUrl;
   private readonly AUTH_URL = `${this.API_URL}/auth`;
+  private accessToken: string | null = null;
+  private sessionInitialized = false;
 
-  private currentUserSubject = new BehaviorSubject<AuthResponse | null>(
-    this.getUserFromStorage()
-  );
+  private currentUserSubject = new BehaviorSubject<AuthResponse | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
-
-  private getUserFromStorage(): AuthResponse | null {
-    const userJson = localStorage.getItem('currentUser');
-    if (!userJson) return null;
-
-    const user = JSON.parse(userJson);
-
-    // Hydrate missing fields from token if available
-    if (user.token && (!user.institutionId || !user.institutionName)) {
-      try {
-        const decoded = this.decodeToken(user.token);
-        let changed = false;
-
-        if (!user.institutionId && decoded['InstitutionId']) {
-          user.institutionId = decoded['InstitutionId'];
-          changed = true;
-        }
-        if (!user.institutionName && decoded['InstitutionName']) {
-          user.institutionName = decoded['InstitutionName'];
-          changed = true;
-        }
-        // Ensure roles are synced
-        if (decoded['role']) {
-          const roles = Array.isArray(decoded['role']) ? decoded['role'] : [decoded['role']];
-          if (!user.roles || user.roles.length === 0) {
-            user.roles = roles;
-            changed = true;
-          }
-        }
-
-        if (changed) {
-          localStorage.setItem('currentUser', JSON.stringify(user));
-        }
-      } catch (e) {
-        console.error('Error hydrating user from storage token', e);
-      }
-    }
-
-    return user;
-  }
 
   get currentUserValue(): AuthResponse | null {
     return this.currentUserSubject.value;
   }
 
   get isAuthenticated(): boolean {
-    return !!this.currentUserValue;
+    return !!this.currentUserValue && !!this.accessToken && !this.isAccessTokenExpired(this.accessToken);
   }
 
   get token(): string | null {
-    return this.currentUserValue?.token || null;
+    return this.accessToken;
+  }
+
+  initializeSession(): Observable<AuthResponse | null> {
+    if (this.sessionInitialized) {
+      return of(this.currentUserValue);
+    }
+
+    this.sessionInitialized = true;
+    return this.refreshToken().pipe(
+      catchError(() => {
+        this.clearLocalSession();
+        return of(null);
+      })
+    );
   }
 
   hasRole(role: string): boolean {
@@ -183,7 +157,10 @@ export class AuthService {
    * Service receives: AuthResponse (auto-unwrapped)
    */
   refreshToken(): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.AUTH_URL}/refresh-token`, {}, { withCredentials: true }).pipe(
+    return this.http.post<AuthResponse>(`${this.AUTH_URL}/refresh-token`, {}, {
+      withCredentials: true,
+      headers: { 'X-Skip-Error-Toast': 'true' }
+    }).pipe(
       map(response => this.normalizeAuthResponse(response)),
       tap(response => {
         this.setUser(response);
@@ -252,6 +229,7 @@ export class AuthService {
 
   private setUser(response: AuthResponse): void {
     response = this.normalizeAuthResponse(response);
+    this.accessToken = response.token || null;
 
     // Decode token to ensure all claims are present in the user object
     if (response.token) {
@@ -278,8 +256,12 @@ export class AuthService {
       }
     }
 
-    localStorage.setItem('currentUser', JSON.stringify(response));
-    localStorage.setItem('token', response.token);
+    localStorage.setItem('currentUser', JSON.stringify({
+      ...response,
+      token: undefined,
+      refreshToken: undefined
+    }));
+    localStorage.removeItem('token');
     this.currentUserSubject.next(response);
     // Load user settings after successful authentication
     this.settingsService.loadSettings().subscribe();
@@ -337,6 +319,11 @@ export class AuthService {
     }
   }
 
+  private isAccessTokenExpired(token: string): boolean {
+    const claims = this.decodeToken(token);
+    return typeof claims['exp'] !== 'number' || claims['exp'] * 1000 <= Date.now();
+  }
+
   /**
    * Update current user information
    * Useful for updating user data after profile changes
@@ -345,9 +332,20 @@ export class AuthService {
     const currentUser = this.currentUserValue;
     if (currentUser) {
       const updatedUser = { ...currentUser, ...userData };
-      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      localStorage.setItem('currentUser', JSON.stringify({
+        ...updatedUser,
+        token: undefined,
+        refreshToken: undefined
+      }));
       this.currentUserSubject.next(updatedUser);
     }
+  }
+
+  private clearLocalSession(): void {
+    this.accessToken = null;
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('token');
+    this.currentUserSubject.next(null);
   }
   /**
    * Change password for current user
