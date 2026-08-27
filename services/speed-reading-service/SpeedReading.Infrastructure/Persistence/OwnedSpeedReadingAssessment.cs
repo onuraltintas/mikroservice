@@ -1,19 +1,23 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.Assessment;
+using SpeedReading.Domain.Programs;
+using SpeedReading.Domain.Profiles;
 
-namespace SpeedReading.Infrastructure.Legacy;
+namespace SpeedReading.Infrastructure.Persistence;
 
-internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : ISpeedReadingAssessment
+internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db) : ISpeedReadingAssessment
 {
-    public async Task<AssessmentExercisesSummary> GetExercisesAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<AssessmentExercisesSummary> GetExercisesAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
     {
         var exercises = await (
             from exercise in db.Exercises.AsNoTracking()
             join exerciseType in db.ExerciseTypes.AsNoTracking()
                 on exercise.ExerciseTypeId equals exerciseType.Id into exerciseTypes
             from exerciseType in exerciseTypes.DefaultIfEmpty()
-            where !exercise.IsDeleted
+            where exercise.IsActive
             orderby exercise.DifficultyLevel, exercise.Title
             select new
             {
@@ -27,9 +31,9 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
             .Take(3)
             .ToListAsync(cancellationToken);
 
-        var completedIds = await db.StudentExerciseResults
+        var completedIds = await db.ExerciseSessionResults
             .AsNoTracking()
-            .Where(item => item.StudentId == userId && !item.IsDeleted)
+            .Where(item => item.StudentId == userId)
             .Select(item => item.ExerciseId)
             .Distinct()
             .ToListAsync(cancellationToken);
@@ -58,11 +62,13 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
             items);
     }
 
-    public async Task<AssessmentStatusSummary> GetStatusAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<AssessmentStatusSummary> GetStatusAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
     {
-        var hasCompleted = await db.StudentExerciseResults
+        var hasCompleted = await db.ExerciseSessionResults
             .AsNoTracking()
-            .AnyAsync(item => item.StudentId == userId && !item.IsDeleted, cancellationToken);
+            .AnyAsync(item => item.StudentId == userId, cancellationToken);
         return new AssessmentStatusSummary(hasCompleted, null);
     }
 
@@ -71,15 +77,16 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
         AssessmentCalculationRequest? request,
         CancellationToken cancellationToken)
     {
-        var results = await db.StudentExerciseResults
+        var results = await db.ExerciseSessionResults
             .AsNoTracking()
-            .Where(item => item.StudentId == userId && !item.IsDeleted)
+            .Where(item => item.StudentId == userId)
             .OrderByDescending(item => item.CreatedAt)
             .Take(3)
             .ToListAsync(cancellationToken);
-        if (results.Count == 0) return null;
+        if (results.Count == 0)
+            return null;
 
-        var averageWpm = results.Average(item => item.RawWPM);
+        var averageWpm = results.Average(item => item.RawWpm);
         var averageComprehension = results.Average(item => item.ComprehensionScore);
         var level = averageWpm switch
         {
@@ -92,7 +99,6 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
             < 500 => 7,
             _ => 8
         };
-        var recommendedLevel = LevelName(level);
         var comprehensionScore = averageComprehension;
         var tachistoscopeScore = averageComprehension;
         var visualExpansionScore = averageComprehension;
@@ -101,7 +107,7 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
 
         if (request?.ExerciseResults is { Count: > 0 })
         {
-            var exerciseIds = request.ExerciseResults.Select(item => item.ExerciseId).Distinct().ToList();
+            var exerciseIds = request.ExerciseResults.Select(item => item.ExerciseId).Distinct().ToArray();
             var typeNames = await (
                 from exercise in db.Exercises.AsNoTracking()
                 join exerciseType in db.ExerciseTypes.AsNoTracking()
@@ -113,7 +119,8 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
 
             foreach (var item in request.ExerciseResults)
             {
-                if (!typeNames.TryGetValue(item.ExerciseId, out var typeName)) continue;
+                if (!typeNames.TryGetValue(item.ExerciseId, out var typeName))
+                    continue;
                 var score = Math.Clamp(item.Score, 0, 100);
                 if (IsType(typeName, "comprehension", "reading")) comprehensionScore = score;
                 else if (IsType(typeName, "visual", "expansion")) visualExpansionScore = score;
@@ -122,33 +129,29 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
             }
         }
 
-        var user = await db.Users
-            .SingleOrDefaultAsync(item => item.Id == userId && !item.IsDeleted, cancellationToken);
-        if (user is not null)
-        {
-            user.CurrentLevel = level;
-            user.TargetWPM = (int)(averageWpm * 1.2m);
-            user.TargetComprehension = Math.Max(70m, averageComprehension);
-        }
+        var profile = await GetOrCreateProfileAsync(userId, cancellationToken);
+        var targetWpm = (int)(averageWpm * 1.2m);
+        var targetComprehension = Math.Max(70m, averageComprehension);
+        profile.ApplyAssessment(level, targetWpm, targetComprehension, userId, DateTime.UtcNow);
 
-        var template = await db.ExerciseProgramTemplates
+        var template = await db.ProgramTemplates
             .AsNoTracking()
             .Where(item => item.IsActive && !item.IsDeleted
                 && item.MinAssessmentScore <= (int)averageComprehension
                 && item.MaxAssessmentScore >= (int)averageComprehension)
             .OrderBy(item => item.MinAssessmentScore)
             .FirstOrDefaultAsync(cancellationToken)
-            ?? await db.ExerciseProgramTemplates
+            ?? await db.ProgramTemplates
                 .AsNoTracking()
                 .Where(item => item.IsActive && !item.IsDeleted)
                 .OrderBy(item => item.MinAssessmentScore)
                 .FirstOrDefaultAsync(cancellationToken);
 
-        if (user is not null) await db.SaveChangesAsync(cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
 
         return new AssessmentResultSummary(
             level,
-            recommendedLevel,
+            LevelName(level),
             Math.Round(averageWpm, 1),
             (int)averageComprehension,
             Math.Round(averageComprehension, 1),
@@ -157,35 +160,48 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
             (int)visualExpansionScore,
             (int)fixationScore,
             (int)focusScore,
-            user?.TargetWPM,
-            user?.TargetComprehension,
+            profile.TargetWPM,
+            profile.TargetComprehension,
             template?.Id,
             null,
             template?.Name ?? "Başlangıç Programı",
-            $"{recommendedLevel} okuyucu olarak tespit edildiniz. Ortalama {(int)averageWpm} kelime/dk hızınız ve %{(int)averageComprehension} kavrama oranınız var.");
+            $"{LevelName(level)} okuyucu olarak tespit edildiniz. Ortalama {(int)averageWpm} kelime/dk hızınız ve %{(int)averageComprehension} kavrama oranınız var.");
     }
 
-    public async Task<AssessmentSkipResult?> SkipAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<AssessmentSkipResult?> SkipAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
     {
-        var user = await db.Users
-            .SingleOrDefaultAsync(item => item.Id == userId && !item.IsDeleted, cancellationToken);
-        if (user is null) return null;
+        var profile = await GetOrCreateProfileAsync(userId, cancellationToken);
+        var targetWpm = 150;
+        var targetComprehension = 70m;
+        if (profile.AgeGroupConfigurationId.HasValue)
+        {
+            var ageGroup = await db.AgeGroupConfigurations
+                .AsNoTracking()
+                .SingleOrDefaultAsync(item => item.Id == profile.AgeGroupConfigurationId.Value
+                    && item.IsActive
+                    && !item.IsDeleted, cancellationToken);
+            if (ageGroup is not null)
+            {
+                targetWpm = ageGroup.RecommendedWPM;
+                targetComprehension = ageGroup.RecommendedComprehension;
+            }
+        }
 
-        var ageGroup = user.AgeGroupConfigurationId.HasValue
-            ? await db.AgeGroupConfigurations.AsNoTracking()
-                .SingleOrDefaultAsync(item => item.Id == user.AgeGroupConfigurationId.Value && !item.IsDeleted, cancellationToken)
-            : null;
-        user.CurrentLevel = 1;
-        user.TargetWPM = ageGroup?.RecommendedWPM ?? 150;
-        user.TargetComprehension = ageGroup?.RecommendedComprehension ?? 70;
+        profile.SkipAssessment(targetWpm, targetComprehension, userId, DateTime.UtcNow);
         await db.SaveChangesAsync(cancellationToken);
-
-        return new AssessmentSkipResult(1, user.TargetWPM, user.TargetComprehension, "Değerlendirme atlandı. Başlangıç seviyesi atandı.");
+        return new AssessmentSkipResult(
+            1,
+            profile.TargetWPM,
+            profile.TargetComprehension,
+            "Değerlendirme atlandı. Başlangıç seviyesi atandı.");
     }
 
-    public async Task<IReadOnlyList<AssessmentTemplateSummary>> GetTemplatesAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<AssessmentTemplateSummary>> GetTemplatesAsync(
+        CancellationToken cancellationToken)
     {
-        var templates = await db.ExerciseProgramTemplates
+        var templates = await db.ProgramTemplates
             .AsNoTracking()
             .Where(item => item.IsAssessment && !item.IsDeleted)
             .OrderBy(item => item.DisplayOrder)
@@ -194,15 +210,20 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
         return await MapTemplatesAsync(templates, cancellationToken);
     }
 
-    public async Task<AssessmentTemplateSummary?> GetTemplateByAgeGroupAsync(Guid ageGroupId, CancellationToken cancellationToken)
+    public async Task<AssessmentTemplateSummary?> GetTemplateByAgeGroupAsync(
+        Guid ageGroupId,
+        CancellationToken cancellationToken)
     {
-        var template = await db.ExerciseProgramTemplates
+        var template = await db.ProgramTemplates
             .AsNoTracking()
             .Where(item => item.TargetAgeGroupConfigurationId == ageGroupId
-                && item.IsAssessment && item.IsActive && !item.IsDeleted)
+                && item.IsAssessment
+                && item.IsActive
+                && !item.IsDeleted)
             .OrderBy(item => item.DisplayOrder)
             .FirstOrDefaultAsync(cancellationToken);
-        if (template is null) return null;
+        if (template is null)
+            return null;
 
         var mapped = await MapTemplatesAsync([template], cancellationToken);
         return mapped.Single();
@@ -214,31 +235,34 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
         CancellationToken cancellationToken)
     {
         ValidateTemplate(request.Name, request.TargetAgeGroupId, request.Exercises);
-        var ageGroupExists = await db.AgeGroupConfigurations
-            .AnyAsync(item => item.Id == request.TargetAgeGroupId && !item.IsDeleted, cancellationToken);
-        if (!ageGroupExists) throw new ArgumentException("Age group not found.");
+        await EnsureTemplateReferencesAsync(request.TargetAgeGroupId, request.Exercises, cancellationToken);
 
-        var row = new LegacyExerciseProgramTemplate
-        {
-            Id = Guid.NewGuid(),
-            Name = request.Name.Trim(),
-            Description = "Yaş grubu seviye tespit şablonu",
-            TargetAgeGroupConfigurationId = request.TargetAgeGroupId,
-            MinAssessmentScore = 0,
-            MaxAssessmentScore = 100,
-            WeeklyPatternJson = BuildWeeklyPattern(request.Exercises),
-            InitialDifficultyLevel = 2,
-            TotalWeeks = 1,
-            TotalDays = 1,
-            IsActive = true,
-            DisplayOrder = 0,
-            IsAssessment = true,
-            CreatedAt = DateTime.UtcNow,
-            CreatedBy = userId
-        };
-        db.ExerciseProgramTemplates.Add(row);
+        var now = DateTime.UtcNow;
+        var template = ProgramTemplate.Import(
+            Guid.NewGuid(),
+            request.Name.Trim(),
+            "Yaş grubu seviye tespit şablonu",
+            request.TargetAgeGroupId,
+            0,
+            100,
+            BuildWeeklyPattern(request.Exercises),
+            2,
+            0,
+            2,
+            1,
+            1,
+            true,
+            0,
+            0,
+            null,
+            true,
+            now,
+            userId.ToString(),
+            null,
+            null);
+        db.ProgramTemplates.Add(template);
         await db.SaveChangesAsync(cancellationToken);
-        return row.Id;
+        return template.Id;
     }
 
     public async Task<bool> UpdateTemplateAsync(
@@ -248,57 +272,113 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
         CancellationToken cancellationToken)
     {
         ValidateTemplate(request.Name, Guid.Empty, request.Exercises);
-        var row = await db.ExerciseProgramTemplates
-            .SingleOrDefaultAsync(item => item.Id == id && item.IsAssessment && !item.IsDeleted, cancellationToken);
-        if (row is null) return false;
+        await EnsureExercisesExistAsync(request.Exercises, cancellationToken);
 
-        row.Name = request.Name.Trim();
-        row.WeeklyPatternJson = BuildWeeklyPattern(request.Exercises);
-        row.UpdatedAt = DateTime.UtcNow;
-        row.UpdatedBy = userId;
+        var template = await db.ProgramTemplates
+            .SingleOrDefaultAsync(item => item.Id == id && item.IsAssessment && !item.IsDeleted, cancellationToken);
+        if (template is null)
+            return false;
+
+        template.UpdateAssessment(
+            request.Name,
+            BuildWeeklyPattern(request.Exercises),
+            userId,
+            DateTime.UtcNow);
         await db.SaveChangesAsync(cancellationToken);
         return true;
     }
 
-    public async Task<bool> DeleteTemplateAsync(Guid userId, Guid id, CancellationToken cancellationToken)
+    public async Task<bool> DeleteTemplateAsync(
+        Guid userId,
+        Guid id,
+        CancellationToken cancellationToken)
     {
-        var row = await db.ExerciseProgramTemplates
+        var template = await db.ProgramTemplates
             .SingleOrDefaultAsync(item => item.Id == id && item.IsAssessment && !item.IsDeleted, cancellationToken);
-        if (row is null) return false;
-        row.IsDeleted = true;
-        row.DeletedAt = DateTime.UtcNow;
-        row.DeletedBy = userId;
-        row.UpdatedAt = DateTime.UtcNow;
-        row.UpdatedBy = userId;
+        if (template is null)
+            return false;
+
+        template.Delete(userId, DateTime.UtcNow);
         await db.SaveChangesAsync(cancellationToken);
         return true;
+    }
+
+    private async Task<SpeedReadingUserProfile> GetOrCreateProfileAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty)
+            throw new ArgumentException("A valid user is required.", nameof(userId));
+
+        var profile = await db.UserProfiles
+            .SingleOrDefaultAsync(item => item.UserId == userId, cancellationToken);
+        if (profile is not null)
+            return profile;
+
+        profile = SpeedReadingUserProfile.CreateDefault(
+            Guid.NewGuid(),
+            userId,
+            DateTime.UtcNow,
+            userId.ToString());
+        db.UserProfiles.Add(profile);
+        return profile;
+    }
+
+    private async Task EnsureTemplateReferencesAsync(
+        Guid ageGroupId,
+        IReadOnlyList<AssessmentTemplateExerciseInput> exercises,
+        CancellationToken cancellationToken)
+    {
+        if (!await db.AgeGroupConfigurations.AsNoTracking().AnyAsync(
+                item => item.Id == ageGroupId && !item.IsDeleted,
+                cancellationToken))
+        {
+            throw new ArgumentException("Age group not found.", nameof(ageGroupId));
+        }
+        await EnsureExercisesExistAsync(exercises, cancellationToken);
+    }
+
+    private async Task EnsureExercisesExistAsync(
+        IReadOnlyList<AssessmentTemplateExerciseInput> exercises,
+        CancellationToken cancellationToken)
+    {
+        var ids = exercises.Select(item => item.ExerciseId).Distinct().ToArray();
+        var count = await db.Exercises.AsNoTracking()
+            .CountAsync(item => ids.Contains(item.Id) && item.IsActive, cancellationToken);
+        if (count != ids.Length)
+            throw new ArgumentException("Every assessment exercise must exist and be active.", nameof(exercises));
     }
 
     private async Task<IReadOnlyList<AssessmentTemplateSummary>> MapTemplatesAsync(
-        IReadOnlyList<LegacyExerciseProgramTemplate> templates,
+        IReadOnlyList<ProgramTemplate> templates,
         CancellationToken cancellationToken)
     {
-        var ageGroupIds = templates.Select(item => item.TargetAgeGroupConfigurationId).Distinct().ToList();
+        var ageGroupIds = templates.Select(item => item.TargetAgeGroupConfigurationId).Distinct().ToArray();
         var ageGroups = await db.AgeGroupConfigurations
             .AsNoTracking()
             .Where(item => ageGroupIds.Contains(item.Id))
             .ToDictionaryAsync(item => item.Id, cancellationToken);
 
         var parsed = templates.SelectMany(item => ParseExerciseEntries(item.WeeklyPatternJson)).ToList();
-        var exerciseIds = parsed.Select(item => item.ExerciseId).Distinct().ToList();
+        var exerciseIds = parsed.Select(item => item.ExerciseId).Distinct().ToArray();
         var exercises = await (
             from exercise in db.Exercises.AsNoTracking()
             join exerciseType in db.ExerciseTypes.AsNoTracking()
                 on exercise.ExerciseTypeId equals exerciseType.Id into exerciseTypes
             from exerciseType in exerciseTypes.DefaultIfEmpty()
-            where exerciseIds.Contains(exercise.Id) && !exercise.IsDeleted
-            select new { exercise.Id, exercise.Title, exercise.DifficultyLevel, TypeName = exerciseType == null ? string.Empty : exerciseType.DisplayName })
-            .ToDictionaryAsync(item => item.Id, cancellationToken);
+            where exerciseIds.Contains(exercise.Id) && exercise.IsActive
+            select new
+            {
+                exercise.Id,
+                exercise.Title,
+                exercise.DifficultyLevel,
+                TypeName = exerciseType == null ? string.Empty : exerciseType.DisplayName
+            }).ToDictionaryAsync(item => item.Id, cancellationToken);
 
         return templates.Select(template =>
         {
             ageGroups.TryGetValue(template.TargetAgeGroupConfigurationId, out var ageGroup);
-            var exercisesForTemplate = ParseExerciseEntries(template.WeeklyPatternJson)
+            var templateExercises = ParseExerciseEntries(template.WeeklyPatternJson)
                 .Select((entry, index) =>
                 {
                     exercises.TryGetValue(entry.ExerciseId, out var exercise);
@@ -318,7 +398,7 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
                 template.TargetAgeGroupConfigurationId,
                 ageGroup?.Name ?? string.Empty,
                 ageGroup?.DisplayName ?? string.Empty,
-                exercisesForTemplate,
+                templateExercises,
                 template.IsActive,
                 template.CreatedAt);
         }).ToList();
@@ -326,18 +406,21 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
 
     private static IReadOnlyList<TemplateExerciseEntry> ParseExerciseEntries(string? json)
     {
-        if (string.IsNullOrWhiteSpace(json)) return [];
+        if (string.IsNullOrWhiteSpace(json))
+            return [];
         try
         {
             using var document = JsonDocument.Parse(json);
-            if (!TryGetProperty(document.RootElement, "week1", out var week) || week.ValueKind != JsonValueKind.Array)
+            if (!TryGetProperty(document.RootElement, "week1", out var week)
+                || week.ValueKind != JsonValueKind.Array)
                 return [];
 
             var result = new List<TemplateExerciseEntry>();
             foreach (var item in week.EnumerateArray())
             {
                 if (!TryGetProperty(item, "exerciseId", out var idProperty)
-                    || !Guid.TryParse(idProperty.GetString(), out var exerciseId)) continue;
+                    || !Guid.TryParse(idProperty.GetString(), out var exerciseId))
+                    continue;
                 result.Add(new TemplateExerciseEntry(
                     exerciseId,
                     GetString(item, "title"),
@@ -367,13 +450,17 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
             })
         });
 
-    private static void ValidateTemplate(string name, Guid ageGroupId, IReadOnlyList<AssessmentTemplateExerciseInput> exercises)
+    private static void ValidateTemplate(
+        string name,
+        Guid ageGroupId,
+        IReadOnlyList<AssessmentTemplateExerciseInput> exercises)
     {
         if (string.IsNullOrWhiteSpace(name) || name.Trim().Length > 200)
             throw new ArgumentException("Name is required and must not exceed 200 characters.");
         if (ageGroupId == Guid.Empty && exercises.Count == 0)
             throw new ArgumentException("At least one assessment exercise is required.");
-        if (exercises.Count == 0) throw new ArgumentException("At least one assessment exercise is required.");
+        if (exercises.Count == 0)
+            throw new ArgumentException("At least one assessment exercise is required.");
         if (exercises.Any(item => item.ExerciseId == Guid.Empty))
             throw new ArgumentException("Every assessment exercise must have an ID.");
     }
@@ -396,7 +483,8 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
 
     private static bool TryGetProperty(JsonElement element, string name, out JsonElement value)
     {
-        if (element.TryGetProperty(name, out value)) return true;
+        if (element.TryGetProperty(name, out value))
+            return true;
         foreach (var property in element.EnumerateObject())
         {
             if (string.Equals(property.Name, name, StringComparison.OrdinalIgnoreCase))
@@ -410,12 +498,16 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
     }
 
     private static string? GetString(JsonElement element, string name) =>
-        TryGetProperty(element, name, out var property) && property.ValueKind == JsonValueKind.String
+        TryGetProperty(element, name, out var property)
+        && property.ValueKind == JsonValueKind.String
             ? property.GetString()
             : null;
 
     private static int? GetInt(JsonElement element, string name) =>
-        TryGetProperty(element, name, out var property) && property.TryGetInt32(out var value) ? value : null;
+        TryGetProperty(element, name, out var property)
+        && property.TryGetInt32(out var value)
+            ? value
+            : null;
 
     private sealed record TemplateExerciseEntry(
         Guid ExerciseId,

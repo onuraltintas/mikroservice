@@ -1,8 +1,10 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using SpeedReading.Domain.AgeGroups;
 using SpeedReading.Domain.Assignments;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.Programs;
+using SpeedReading.Domain.Profiles;
 using SpeedReading.Domain.Sessions;
 using SpeedReading.Infrastructure.Persistence;
 
@@ -31,6 +33,10 @@ public sealed class SpeedReadingOwnedDomainTests
         context.Model.FindEntityType(typeof(ProgramTemplate))!.GetTableName().Should().Be("program_templates");
         context.Model.FindEntityType(typeof(StudentProgramProgress))!.GetTableName().Should().Be("student_program_progress");
         context.Model.FindEntityType(typeof(DailyExerciseLog))!.GetTableName().Should().Be("daily_exercise_logs");
+        context.Model.FindEntityType(typeof(AgeGroupConfiguration))!.GetTableName()
+            .Should().Be("age_group_configurations");
+        context.Model.FindEntityType(typeof(SpeedReadingUserProfile))!.GetTableName()
+            .Should().Be("user_profiles");
         context.Model.GetEntityTypes()
             .Should()
             .Contain(entity => entity.GetTableName() == "idempotency_records");
@@ -106,7 +112,50 @@ public sealed class SpeedReadingOwnedDomainTests
             .And.Contain("20260827120000_AddOwnedReadingSessionHistory")
             .And.Contain("20260827130000_AddOwnedAssignments")
             .And.Contain("20260827140000_AddOwnedProgramsAndDailyProgress")
-            .And.Contain("20260827141000_AddOwnedWriteSupport");
+            .And.Contain("20260827141000_AddOwnedWriteSupport")
+            .And.Contain("20260827142000_AddOwnedAgeGroups")
+            .And.Contain("20260827143000_AddOwnedUserProfiles");
+    }
+
+    [Fact]
+    public void Age_group_rejects_inconsistent_wpm_bounds()
+    {
+        var action = () => AgeGroupConfiguration.Create(
+            Guid.NewGuid(),
+            "Çocuk",
+            "Çocuklar",
+            6,
+            10,
+            200,
+            150,
+            300,
+            70,
+            20,
+            2,
+            1,
+            true,
+            null,
+            Guid.NewGuid(),
+            DateTime.UtcNow);
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void User_profile_updates_assessment_targets_without_identity_fields()
+    {
+        var userId = Guid.NewGuid();
+        var profile = SpeedReadingUserProfile.CreateDefault(
+            Guid.NewGuid(),
+            userId,
+            DateTime.UtcNow,
+            userId.ToString());
+
+        profile.ApplyAssessment(4, 275, 82.5m, userId, DateTime.UtcNow);
+
+        profile.CurrentLevel.Should().Be(4);
+        profile.TargetWPM.Should().Be(275);
+        profile.TargetComprehension.Should().Be(82.5m);
     }
 
     [Fact]

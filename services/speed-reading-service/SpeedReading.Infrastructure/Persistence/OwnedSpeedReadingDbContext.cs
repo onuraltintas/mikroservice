@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using EduPlatform.Shared.Kernel.Primitives;
 using SpeedReading.Domain.Assignments;
+using SpeedReading.Domain.AgeGroups;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.Programs;
+using SpeedReading.Domain.Profiles;
 using SpeedReading.Domain.Sessions;
 
 namespace SpeedReading.Infrastructure.Persistence;
@@ -25,9 +27,11 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<ReadingSession> ReadingSessions => Set<ReadingSession>();
     public DbSet<Assignment> Assignments => Set<Assignment>();
     public DbSet<StudentAssignment> StudentAssignments => Set<StudentAssignment>();
+    public DbSet<AgeGroupConfiguration> AgeGroupConfigurations => Set<AgeGroupConfiguration>();
     public DbSet<ProgramTemplate> ProgramTemplates => Set<ProgramTemplate>();
     public DbSet<StudentProgramProgress> StudentProgramProgresses => Set<StudentProgramProgress>();
     public DbSet<DailyExerciseLog> DailyExerciseLogs => Set<DailyExerciseLog>();
+    public DbSet<SpeedReadingUserProfile> UserProfiles => Set<SpeedReadingUserProfile>();
     internal DbSet<OwnedIdempotencyRecord> IdempotencyRecords => Set<OwnedIdempotencyRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -46,9 +50,11 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<ReadingSession>());
         ConfigureEntity(modelBuilder.Entity<Assignment>());
         ConfigureEntity(modelBuilder.Entity<StudentAssignment>());
+        ConfigureEntity(modelBuilder.Entity<AgeGroupConfiguration>());
         ConfigureEntity(modelBuilder.Entity<ProgramTemplate>());
         ConfigureEntity(modelBuilder.Entity<StudentProgramProgress>());
         ConfigureEntity(modelBuilder.Entity<DailyExerciseLog>());
+        ConfigureEntity(modelBuilder.Entity<SpeedReadingUserProfile>());
         modelBuilder.Entity<OwnedIdempotencyRecord>(entity =>
         {
             entity.ToTable("idempotency_records");
@@ -238,6 +244,17 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<ExerciseSession>()
             .HasIndex(item => item.StudentAssignmentId);
 
+        modelBuilder.Entity<AgeGroupConfiguration>(entity =>
+        {
+            entity.ToTable("age_group_configurations");
+            entity.Property(item => item.Name).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.DisplayName).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Description).HasMaxLength(2_000);
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.HasIndex(item => item.Name).IsUnique();
+            entity.HasIndex(item => new { item.IsActive, item.MinAge, item.MaxAge });
+        });
+
         modelBuilder.Entity<ProgramTemplate>(entity =>
         {
             entity.ToTable("program_templates");
@@ -292,6 +309,18 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.HasOne<ExerciseType>()
                 .WithMany()
                 .HasForeignKey(item => item.ExerciseTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<SpeedReadingUserProfile>(entity =>
+        {
+            entity.ToTable("user_profiles");
+            entity.Property(item => item.TargetComprehension).HasPrecision(5, 2);
+            entity.HasIndex(item => item.UserId).IsUnique();
+            entity.HasIndex(item => item.AgeGroupConfigurationId);
+            entity.HasOne<AgeGroupConfiguration>()
+                .WithMany()
+                .HasForeignKey(item => item.AgeGroupConfigurationId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

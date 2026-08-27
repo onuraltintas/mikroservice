@@ -58,8 +58,13 @@ public sealed class AssessmentAdminController(ISpeedReadingAssessment assessment
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default) =>
-        await assessment.DeleteTemplateAsync(id, cancellationToken) ? NoContent() : NotFound();
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        return await assessment.DeleteTemplateAsync(userId, id, cancellationToken)
+            ? NoContent()
+            : NotFound();
+    }
 
     private bool TryGetUserId(out Guid userId)
     {

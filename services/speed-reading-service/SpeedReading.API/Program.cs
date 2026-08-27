@@ -29,6 +29,10 @@ var backfillOwnedAssignments = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-assignments", StringComparison.OrdinalIgnoreCase));
 var backfillOwnedPrograms = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-programs", StringComparison.OrdinalIgnoreCase));
+var backfillOwnedAgeGroups = args.Any(argument =>
+    string.Equals(argument, "--backfill-owned-age-groups", StringComparison.OrdinalIgnoreCase));
+var backfillOwnedUserProfiles = args.Any(argument =>
+    string.Equals(argument, "--backfill-owned-user-profiles", StringComparison.OrdinalIgnoreCase));
 
 // The legacy speed-reading schema is not managed by EF migrations. This
 // one-shot mode applies only idempotent additive compatibility objects before
@@ -117,6 +121,34 @@ if (backfillOwnedPrograms)
     var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingProgramBackfill>()
         ?? throw new InvalidOperationException(
             "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-programs.");
+    var backfillResult = await backfill.RunAsync();
+    Console.WriteLine(JsonSerializer.Serialize(backfillResult));
+    return;
+}
+
+if (backfillOwnedAgeGroups)
+{
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
+
+    await using var backfillApp = builder.Build();
+    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
+    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingAgeGroupBackfill>()
+        ?? throw new InvalidOperationException(
+            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-age-groups.");
+    var backfillResult = await backfill.RunAsync();
+    Console.WriteLine(JsonSerializer.Serialize(backfillResult));
+    return;
+}
+
+if (backfillOwnedUserProfiles)
+{
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
+
+    await using var backfillApp = builder.Build();
+    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
+    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingUserProfileBackfill>()
+        ?? throw new InvalidOperationException(
+            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-user-profiles.");
     var backfillResult = await backfill.RunAsync();
     Console.WriteLine(JsonSerializer.Serialize(backfillResult));
     return;

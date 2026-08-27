@@ -95,5 +95,5 @@ public interface ISpeedReadingAssessment
     Task<AssessmentTemplateSummary?> GetTemplateByAgeGroupAsync(Guid ageGroupId, CancellationToken cancellationToken);
     Task<Guid> CreateTemplateAsync(Guid userId, CreateAssessmentTemplateRequest request, CancellationToken cancellationToken);
     Task<bool> UpdateTemplateAsync(Guid userId, Guid id, UpdateAssessmentTemplateRequest request, CancellationToken cancellationToken);
-    Task<bool> DeleteTemplateAsync(Guid id, CancellationToken cancellationToken);
+    Task<bool> DeleteTemplateAsync(Guid userId, Guid id, CancellationToken cancellationToken);
 }

@@ -32,6 +32,42 @@ public sealed class StudentProgramProgress : AggregateRoot
     public int CurrentStreak { get; private set; }
     public int LongestStreak { get; private set; }
 
+    public static StudentProgramProgress Start(
+        Guid id,
+        Guid userId,
+        ProgramTemplate template,
+        int previousCurrentStreak,
+        int previousLongestStreak,
+        Guid actorId,
+        DateTime assignedAt)
+    {
+        if (id == Guid.Empty || userId == Guid.Empty)
+            throw new ArgumentException("Student program identifiers are required.");
+        if (template is null)
+            throw new ArgumentNullException(nameof(template));
+        if (actorId == Guid.Empty)
+            throw new ArgumentException("Student program actor is required.", nameof(actorId));
+
+        return new StudentProgramProgress
+        {
+            Id = id,
+            UserId = userId,
+            ProgramTemplateId = template.Id,
+            AssignedDate = EnsureUtc(assignedAt),
+            CurrentDay = 1,
+            CurrentWeek = 1,
+            CurrentDifficultyLevel = template.InitialDifficultyLevel,
+            DaysCompleted = 0,
+            ExercisesCompleted = 0,
+            AverageSuccessRate = 0,
+            CurrentStreak = Math.Max(previousCurrentStreak, 0),
+            LongestStreak = Math.Max(previousLongestStreak, 0),
+            IsActive = true,
+            CreatedAt = EnsureUtc(assignedAt),
+            CreatedBy = actorId.ToString()
+        };
+    }
+
     public static StudentProgramProgress Import(
         Guid id,
         Guid userId,
@@ -100,6 +136,16 @@ public sealed class StudentProgramProgress : AggregateRoot
         LastCompletionDate = null;
         CompletedDate = null;
         IsActive = true;
+        UpdatedAt = EnsureUtc(at);
+        UpdatedBy = actorId.ToString();
+    }
+
+    public void Deactivate(Guid actorId, DateTime at)
+    {
+        if (actorId == Guid.Empty)
+            throw new ArgumentException("Student program actor is required.", nameof(actorId));
+
+        IsActive = false;
         UpdatedAt = EnsureUtc(at);
         UpdatedBy = actorId.ToString();
     }

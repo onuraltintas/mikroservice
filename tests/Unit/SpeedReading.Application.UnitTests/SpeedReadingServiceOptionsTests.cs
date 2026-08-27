@@ -3,11 +3,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SpeedReading.Application.Assignments;
+using SpeedReading.Application.AgeGroups;
+using SpeedReading.Application.Assessment;
 using SpeedReading.Application.Content;
 using SpeedReading.Application.DailyProgress;
 using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Application.Progress;
 using SpeedReading.Application.Configuration;
+using SpeedReading.Application.StudentProgram;
 using SpeedReading.Infrastructure;
 
 namespace SpeedReading.Application.UnitTests;
@@ -142,6 +145,75 @@ public sealed class SpeedReadingServiceOptionsTests
             .Name
             .Should()
             .Be("OwnedSpeedReadingPrograms");
+    }
+
+    [Fact]
+    public void Owned_data_mode_resolves_student_program_from_the_owned_store()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:SpeedReading"] = "Host=legacy;Database=legacy",
+                ["ConnectionStrings:SpeedReadingOwned"] = "Host=owned;Database=owned",
+                ["SpeedReading:OwnedDataEnabled"] = "true"
+            })
+            .Build();
+        var services = new ServiceCollection();
+
+        services.AddSpeedReadingInfrastructure(configuration);
+
+        services
+            .Last(item => item.ServiceType == typeof(ISpeedReadingStudentProgram))
+            .ImplementationType!
+            .Name
+            .Should()
+            .Be("OwnedSpeedReadingStudentProgram");
+    }
+
+    [Fact]
+    public void Owned_data_mode_resolves_assessment_from_the_owned_store()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:SpeedReading"] = "Host=legacy;Database=legacy",
+                ["ConnectionStrings:SpeedReadingOwned"] = "Host=owned;Database=owned",
+                ["SpeedReading:OwnedDataEnabled"] = "true"
+            })
+            .Build();
+        var services = new ServiceCollection();
+
+        services.AddSpeedReadingInfrastructure(configuration);
+
+        services
+            .Last(item => item.ServiceType == typeof(ISpeedReadingAssessment))
+            .ImplementationType!
+            .Name
+            .Should()
+            .Be("OwnedSpeedReadingAssessment");
+    }
+
+    [Fact]
+    public void Owned_data_mode_resolves_age_groups_from_the_owned_store()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:SpeedReading"] = "Host=legacy;Database=legacy",
+                ["ConnectionStrings:SpeedReadingOwned"] = "Host=owned;Database=owned",
+                ["SpeedReading:OwnedDataEnabled"] = "true"
+            })
+            .Build();
+        var services = new ServiceCollection();
+
+        services.AddSpeedReadingInfrastructure(configuration);
+
+        services
+            .Last(item => item.ServiceType == typeof(ISpeedReadingAgeGroups))
+            .ImplementationType!
+            .Name
+            .Should()
+            .Be("OwnedSpeedReadingAgeGroups");
     }
 
     [Fact]

@@ -195,6 +195,21 @@ public sealed class ProgramTemplate : AggregateRoot
         UpdatedBy = DeletedBy;
     }
 
+    public void UpdateAssessment(string name, string weeklyPatternJson, Guid actorId, DateTime updatedAt)
+    {
+        if (actorId == Guid.Empty)
+            throw new ArgumentException("Assessment template actor is required.", nameof(actorId));
+        if (string.IsNullOrWhiteSpace(name) || name.Trim().Length > 200)
+            throw new ArgumentException("Assessment template name is invalid.", nameof(name));
+        if (string.IsNullOrWhiteSpace(weeklyPatternJson))
+            throw new ArgumentException("Assessment template pattern is required.", nameof(weeklyPatternJson));
+
+        Name = name.Trim();
+        WeeklyPatternJson = weeklyPatternJson;
+        UpdatedAt = EnsureUtc(updatedAt);
+        UpdatedBy = actorId.ToString();
+    }
+
     public static ProgramTemplate Import(
         Guid id,
         string name,
