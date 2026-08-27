@@ -280,6 +280,79 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Fact]
+    public void Owned_visualization_and_vocabulary_models_match_the_snake_case_schema()
+    {
+        using var context = new OwnedSpeedReadingDbContext(
+            new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+                .UseNpgsql("Host=localhost;Database=unused;Username=unused;Password=unused")
+                .Options);
+
+        var mappings = new[]
+        {
+            (typeof(VisualizationScene), "visualization_scenes", new[]
+            {
+                (nameof(VisualizationScene.ExerciseId), "exercise_id"),
+                (nameof(VisualizationScene.Description), "description"),
+                (nameof(VisualizationScene.ImageUrl), "image_url"),
+                (nameof(VisualizationScene.Duration), "duration"),
+                (nameof(VisualizationScene.DisplayOrder), "display_order"),
+                (nameof(VisualizationScene.DifficultyLevel), "difficulty_level"),
+                (nameof(VisualizationScene.TargetAgeGroupId), "target_age_group_id"),
+                (nameof(VisualizationScene.IsDeleted), "is_deleted"),
+                (nameof(VisualizationScene.DeletedAt), "deleted_at"),
+                (nameof(VisualizationScene.DeletedBy), "deleted_by")
+            }),
+            (typeof(VisualizationQuestion), "visualization_questions", new[]
+            {
+                (nameof(VisualizationQuestion.SceneId), "scene_id"),
+                (nameof(VisualizationQuestion.QuestionText), "question_text"),
+                (nameof(VisualizationQuestion.OptionsJson), "options_json"),
+                (nameof(VisualizationQuestion.CorrectAnswer), "correct_answer"),
+                (nameof(VisualizationQuestion.QuestionType), "question_type"),
+                (nameof(VisualizationQuestion.DisplayOrder), "display_order"),
+                (nameof(VisualizationQuestion.HintText), "hint_text"),
+                (nameof(VisualizationQuestion.IsDeleted), "is_deleted"),
+                (nameof(VisualizationQuestion.DeletedAt), "deleted_at"),
+                (nameof(VisualizationQuestion.DeletedBy), "deleted_by")
+            }),
+            (typeof(VocabularyItem), "vocabulary_items", new[]
+            {
+                (nameof(VocabularyItem.Word), "word"),
+                (nameof(VocabularyItem.Definition), "definition"),
+                (nameof(VocabularyItem.ExampleSentence), "example_sentence"),
+                (nameof(VocabularyItem.Synonyms), "synonyms"),
+                (nameof(VocabularyItem.Antonyms), "antonyms"),
+                (nameof(VocabularyItem.TargetAgeGroupId), "target_age_group_id"),
+                (nameof(VocabularyItem.DifficultyLevel), "difficulty_level"),
+                (nameof(VocabularyItem.Category), "category"),
+                (nameof(VocabularyItem.IsDeleted), "is_deleted"),
+                (nameof(VocabularyItem.DeletedAt), "deleted_at"),
+                (nameof(VocabularyItem.DeletedBy), "deleted_by")
+            }),
+            (typeof(UserVocabularyProgress), "user_vocabulary_progress", new[]
+            {
+                (nameof(UserVocabularyProgress.UserId), "user_id"),
+                (nameof(UserVocabularyProgress.VocabularyItemId), "vocabulary_item_id"),
+                (nameof(UserVocabularyProgress.Box), "box"),
+                (nameof(UserVocabularyProgress.ConsecutiveCorrectCount), "consecutive_correct_count"),
+                (nameof(UserVocabularyProgress.NextReviewDate), "next_review_date"),
+                (nameof(UserVocabularyProgress.LastReviewedAt), "last_reviewed_at"),
+                (nameof(UserVocabularyProgress.IsDeleted), "is_deleted"),
+                (nameof(UserVocabularyProgress.DeletedAt), "deleted_at"),
+                (nameof(UserVocabularyProgress.DeletedBy), "deleted_by")
+            })
+        };
+
+        foreach (var (type, tableName, properties) in mappings)
+        {
+            var entity = context.Model.FindEntityType(type)!;
+            var table = StoreObjectIdentifier.Table(tableName, "speed_reading");
+            properties.Should().AllSatisfy(mapping =>
+                entity.FindProperty(mapping.Item1)!.GetColumnName(table).Should().Be(mapping.Item2));
+        }
+    }
+
+    [Fact]
     public void Owned_model_allows_reassignment_after_a_soft_removed_membership()
     {
         using var context = new OwnedSpeedReadingDbContext(

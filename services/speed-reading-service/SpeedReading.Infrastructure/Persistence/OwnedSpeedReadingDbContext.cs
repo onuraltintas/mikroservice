@@ -223,21 +223,32 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<VisualizationScene>(entity =>
         {
             entity.ToTable("visualization_scenes");
-            entity.Property(item => item.Description).HasMaxLength(4_000).IsRequired();
-            entity.Property(item => item.ImageUrl).HasMaxLength(1_000);
-            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.Property(item => item.ExerciseId).HasColumnName("exercise_id");
+            entity.Property(item => item.Description).HasColumnName("description").HasMaxLength(4_000).IsRequired();
+            entity.Property(item => item.ImageUrl).HasColumnName("image_url").HasMaxLength(1_000);
+            entity.Property(item => item.Duration).HasColumnName("duration");
+            entity.Property(item => item.DisplayOrder).HasColumnName("display_order");
+            entity.Property(item => item.DifficultyLevel).HasColumnName("difficulty_level");
+            entity.Property(item => item.TargetAgeGroupId).HasColumnName("target_age_group_id");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by").HasMaxLength(100);
             entity.HasIndex(item => new { item.ExerciseId, item.IsDeleted, item.DisplayOrder });
             entity.HasIndex(item => item.TargetAgeGroupId);
         });
         modelBuilder.Entity<VisualizationQuestion>(entity =>
         {
             entity.ToTable("visualization_questions");
-            entity.Property(item => item.QuestionText).IsRequired();
-            entity.Property(item => item.OptionsJson).HasColumnType("jsonb").IsRequired();
-            entity.Property(item => item.CorrectAnswer).HasMaxLength(500).IsRequired();
-            entity.Property(item => item.QuestionType).HasMaxLength(50).IsRequired();
-            entity.Property(item => item.HintText).HasMaxLength(2_000);
-            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.Property(item => item.SceneId).HasColumnName("scene_id");
+            entity.Property(item => item.QuestionText).HasColumnName("question_text").IsRequired();
+            entity.Property(item => item.OptionsJson).HasColumnName("options_json").HasColumnType("jsonb").IsRequired();
+            entity.Property(item => item.CorrectAnswer).HasColumnName("correct_answer").HasMaxLength(500).IsRequired();
+            entity.Property(item => item.QuestionType).HasColumnName("question_type").HasMaxLength(50).IsRequired();
+            entity.Property(item => item.DisplayOrder).HasColumnName("display_order");
+            entity.Property(item => item.HintText).HasColumnName("hint_text").HasMaxLength(2_000);
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by").HasMaxLength(100);
             entity.HasIndex(item => new { item.SceneId, item.IsDeleted, item.DisplayOrder });
             entity.HasOne<VisualizationScene>().WithMany().HasForeignKey(item => item.SceneId)
                 .OnDelete(DeleteBehavior.Cascade);
@@ -245,20 +256,32 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<VocabularyItem>(entity =>
         {
             entity.ToTable("vocabulary_items");
-            entity.Property(item => item.Word).HasMaxLength(200).IsRequired();
-            entity.Property(item => item.Definition).HasMaxLength(2_000).IsRequired();
-            entity.Property(item => item.ExampleSentence).HasMaxLength(2_000);
-            entity.Property(item => item.Synonyms).HasMaxLength(2_000);
-            entity.Property(item => item.Antonyms).HasMaxLength(2_000);
-            entity.Property(item => item.Category).HasMaxLength(200).IsRequired();
-            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.Property(item => item.Word).HasColumnName("word").HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Definition).HasColumnName("definition").HasMaxLength(2_000).IsRequired();
+            entity.Property(item => item.ExampleSentence).HasColumnName("example_sentence").HasMaxLength(2_000);
+            entity.Property(item => item.Synonyms).HasColumnName("synonyms").HasMaxLength(2_000);
+            entity.Property(item => item.Antonyms).HasColumnName("antonyms").HasMaxLength(2_000);
+            entity.Property(item => item.TargetAgeGroupId).HasColumnName("target_age_group_id");
+            entity.Property(item => item.DifficultyLevel).HasColumnName("difficulty_level");
+            entity.Property(item => item.Category).HasColumnName("category").HasMaxLength(200).IsRequired();
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by").HasMaxLength(100);
             entity.HasIndex(item => new { item.Category, item.DifficultyLevel, item.IsDeleted });
             entity.HasIndex(item => item.TargetAgeGroupId);
         });
         modelBuilder.Entity<UserVocabularyProgress>(entity =>
         {
             entity.ToTable("user_vocabulary_progress");
-            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.Property(item => item.UserId).HasColumnName("user_id");
+            entity.Property(item => item.VocabularyItemId).HasColumnName("vocabulary_item_id");
+            entity.Property(item => item.Box).HasColumnName("box");
+            entity.Property(item => item.ConsecutiveCorrectCount).HasColumnName("consecutive_correct_count");
+            entity.Property(item => item.NextReviewDate).HasColumnName("next_review_date");
+            entity.Property(item => item.LastReviewedAt).HasColumnName("last_reviewed_at");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by").HasMaxLength(100);
             entity.HasIndex(item => new { item.UserId, item.VocabularyItemId, item.IsDeleted });
             entity.HasIndex(item => new { item.UserId, item.NextReviewDate, item.IsDeleted });
             entity.HasOne<VocabularyItem>().WithMany().HasForeignKey(item => item.VocabularyItemId)
