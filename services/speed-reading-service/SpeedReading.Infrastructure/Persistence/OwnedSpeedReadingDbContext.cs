@@ -641,6 +641,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.Type).HasColumnName("type");
             entity.Property(item => item.Channel).HasColumnName("channel");
             entity.Property(item => item.Status).HasColumnName("status");
+            entity.Ignore(item => item.IsRead);
             entity.Property(item => item.Title).HasColumnName("title").HasMaxLength(200).IsRequired();
             entity.Property(item => item.Message).HasColumnName("message").HasMaxLength(1_000).IsRequired();
             entity.Property(item => item.Data).HasColumnName("data");
@@ -653,6 +654,13 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.UserEmail).HasColumnName("user_email").HasMaxLength(256);
             entity.Property(item => item.UserRole).HasColumnName("user_role").HasMaxLength(100);
             entity.Property(item => item.ErrorMessage).HasColumnName("error_message").HasMaxLength(2_000);
+            entity.Ignore(item => item.EmailSent);
+            entity.Ignore(item => item.EmailSentAt);
+            entity.Ignore(item => item.PushSent);
+            entity.Ignore(item => item.PushSentAt);
+            entity.Ignore(item => item.ExpiresAt);
+            entity.Ignore(item => item.RelatedEntityId);
+            entity.Ignore(item => item.RelatedEntityType);
             entity.HasIndex(item => item.UserId);
             entity.HasIndex(item => new { item.UserId, item.Status });
         });

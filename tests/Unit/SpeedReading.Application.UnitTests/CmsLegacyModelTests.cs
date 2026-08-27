@@ -270,6 +270,10 @@ public sealed class CmsLegacyModelTests
             .Single(entity => entity.GetTableName() == "Notifications");
         notification.FindProperty("ReadAt")!.GetColumnName().Should().Be("ReadAt");
         notification.FindProperty("Priority")!.GetColumnName().Should().Be("Priority");
+        notification.FindProperty("Channel").Should().BeNull();
+        notification.FindProperty("Status").Should().BeNull();
+        notification.FindProperty("Data")!.GetColumnName().Should().Be("MetadataJson");
+        notification.FindProperty("EmailSentAt")!.GetColumnName().Should().Be("EmailSentAt");
 
         var announcement = context.Model.GetEntityTypes()
             .Single(entity => entity.GetTableName() == "Announcements");

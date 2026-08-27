@@ -14,6 +14,7 @@ internal sealed class LegacyUserNotification : LegacyNotificationBase
     public int Type { get; set; }
     public int Channel { get; set; }
     public int Status { get; set; }
+    public bool IsRead { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
     public string? Data { get; set; }
@@ -26,6 +27,13 @@ internal sealed class LegacyUserNotification : LegacyNotificationBase
     public string? UserEmail { get; set; }
     public string? UserRole { get; set; }
     public string? ErrorMessage { get; set; }
+    public bool EmailSent { get; set; }
+    public DateTime? EmailSentAt { get; set; }
+    public bool PushSent { get; set; }
+    public DateTime? PushSentAt { get; set; }
+    public DateTime? ExpiresAt { get; set; }
+    public Guid? RelatedEntityId { get; set; }
+    public string? RelatedEntityType { get; set; }
 }
 
 internal sealed class LegacyNotificationPreference : LegacyNotificationBase

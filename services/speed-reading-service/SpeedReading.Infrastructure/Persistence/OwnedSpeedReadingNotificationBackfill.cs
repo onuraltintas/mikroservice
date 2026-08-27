@@ -11,6 +11,12 @@ public sealed class OwnedSpeedReadingNotificationBackfill(
         CancellationToken cancellationToken = default)
     {
         var sourceNotifications = await legacy.Notifications.AsNoTracking().ToListAsync(cancellationToken);
+        foreach (var notification in sourceNotifications)
+        {
+            notification.Channel = 0;
+            notification.Status = notification.IsRead ? 4 : 0;
+            notification.SentAt = notification.EmailSentAt ?? notification.PushSentAt;
+        }
         var sourcePreferences = await legacy.NotificationPreferences.AsNoTracking().ToListAsync(cancellationToken);
         var sourceTypePreferences = await legacy.NotificationTypePreferences.AsNoTracking().ToListAsync(cancellationToken);
         var sourcePushSubscriptions = await legacy.PushSubscriptions.AsNoTracking().ToListAsync(cancellationToken);

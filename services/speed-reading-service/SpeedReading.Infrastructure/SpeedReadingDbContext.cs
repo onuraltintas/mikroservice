@@ -321,13 +321,26 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
         {
             entity.ToTable("Notifications");
             entity.HasKey(item => item.Id);
+            entity.Ignore(item => item.Channel);
+            entity.Ignore(item => item.Status);
+            entity.Property(item => item.IsRead).HasColumnName("IsRead");
             entity.Property(item => item.Title).HasMaxLength(200).IsRequired();
             entity.Property(item => item.Message).HasMaxLength(1000).IsRequired();
-            entity.Property(item => item.UserName).HasMaxLength(200);
-            entity.Property(item => item.UserEmail).HasMaxLength(256);
-            entity.Property(item => item.UserRole).HasMaxLength(50);
+            entity.Property(item => item.Data).HasColumnName("MetadataJson");
+            entity.Ignore(item => item.IconUrl);
+            entity.Ignore(item => item.SentAt);
+            entity.Ignore(item => item.UserName);
+            entity.Ignore(item => item.UserEmail);
+            entity.Ignore(item => item.UserRole);
+            entity.Ignore(item => item.ErrorMessage);
+            entity.Property(item => item.EmailSent).HasColumnName("EmailSent");
+            entity.Property(item => item.EmailSentAt).HasColumnName("EmailSentAt");
+            entity.Property(item => item.PushSent).HasColumnName("PushSent");
+            entity.Property(item => item.PushSentAt).HasColumnName("PushSentAt");
+            entity.Property(item => item.ExpiresAt).HasColumnName("ExpiresAt");
+            entity.Property(item => item.RelatedEntityId).HasColumnName("RelatedEntityId");
+            entity.Property(item => item.RelatedEntityType).HasColumnName("RelatedEntityType");
             entity.HasIndex(item => item.UserId);
-            entity.HasIndex(item => new { item.UserId, item.Status });
         });
 
         modelBuilder.Entity<LegacyNotificationPreference>(entity =>
