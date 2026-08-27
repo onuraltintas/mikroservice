@@ -260,7 +260,8 @@ public partial class CreateOwnedSpeedReadingCore : Migration
             columns: table => new
             {
                 id = table.Column<Guid>(type: "uuid", nullable: false),
-                session_id = table.Column<Guid>(type: "uuid", nullable: false),
+                session_id = table.Column<Guid>(type: "uuid", nullable: true),
+                legacy_session_id = table.Column<Guid>(type: "uuid", nullable: true),
                 student_id = table.Column<Guid>(type: "uuid", nullable: false),
                 exercise_id = table.Column<Guid>(type: "uuid", nullable: false),
                 reading_text_id = table.Column<Guid>(type: "uuid", nullable: true),

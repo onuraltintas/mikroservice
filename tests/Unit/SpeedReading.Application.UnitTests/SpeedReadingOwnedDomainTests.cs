@@ -619,6 +619,7 @@ public sealed class SpeedReadingOwnedDomainTests
             updatedBy: null);
 
         result.SessionId.Should().BeNull();
+        result.LegacySessionId.Should().NotBeNull();
     }
 
     [Fact]
