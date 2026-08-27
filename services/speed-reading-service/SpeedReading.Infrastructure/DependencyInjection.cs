@@ -166,6 +166,7 @@ public static class DependencyInjection
             services.AddScoped<ISpeedReadingSeriesAccess, OwnedSpeedReadingSeriesAccess>();
             services.AddScoped<ISpeedReadingReview, OwnedSpeedReadingReview>();
             services.AddScoped<ISpeedReadingContentFeedback, OwnedSpeedReadingContentFeedback>();
+            services.AddScoped<ISpeedReadingStudentReading, OwnedSpeedReadingStudentReading>();
         }
         else
         {
