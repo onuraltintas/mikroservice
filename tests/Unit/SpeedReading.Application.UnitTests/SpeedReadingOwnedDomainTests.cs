@@ -76,7 +76,7 @@ public sealed class SpeedReadingOwnedDomainTests
         context.Model.FindEntityType(typeof(UserVocabularyProgress))!.GetTableName()
             .Should().Be("user_vocabulary_progress");
         context.Model.GetEntityTypes().Select(entity => entity.GetTableName())
-            .Should().Contain(["subscription_products", "subscription_plans", "user_subscriptions", "payments"]);
+            .Should().Contain(["subscription_products", "subscription_plans", "user_subscriptions", "payments", "cms_content_blocks", "cms_pages", "cms_blog_posts", "cms_contact_messages", "cms_newsletter_subscribers"]);
         context.Model.GetEntityTypes()
             .Should()
             .Contain(entity => entity.GetTableName() == "idempotency_records");
@@ -161,7 +161,8 @@ public sealed class SpeedReadingOwnedDomainTests
             .And.Contain("20260827147000_AddOwnedGamification")
             .And.Contain("20260827148000_AddOwnedQuestionBank")
             .And.Contain("20260827149000_AddOwnedVisualizationAndVocabulary")
-            .And.Contain("20260827150000_AddOwnedSubscriptionsAndPayments");
+            .And.Contain("20260827150000_AddOwnedSubscriptionsAndPayments")
+            .And.Contain("20260827151000_AddOwnedCms");
     }
 
     [Fact]

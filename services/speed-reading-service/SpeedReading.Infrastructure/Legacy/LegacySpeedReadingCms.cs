@@ -1,13 +1,25 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using SpeedReading.Application.Content;
+using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Infrastructure.Legacy;
 
-public sealed class LegacySpeedReadingCms(
-    SpeedReadingDbContext db,
-    IMemoryCache cache) : ISpeedReadingCms
+public sealed class LegacySpeedReadingCms : ISpeedReadingCms
 {
+    private readonly ISpeedReadingDataContext db;
+    private readonly IMemoryCache cache;
+
+    internal LegacySpeedReadingCms(ISpeedReadingDataContext db, IMemoryCache cache)
+    {
+        this.db = db;
+        this.cache = cache;
+    }
+
+    public LegacySpeedReadingCms(SpeedReadingDbContext db, IMemoryCache cache)
+        : this((ISpeedReadingDataContext)db, cache)
+    {
+    }
     private static readonly TimeSpan LandingCacheDuration = TimeSpan.FromMinutes(10);
 
     public async Task<IReadOnlyList<CmsContentBlockSummary>> GetLandingContentAsync(

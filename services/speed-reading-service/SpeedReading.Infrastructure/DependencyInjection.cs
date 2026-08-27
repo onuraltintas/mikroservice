@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using EduPlatform.Shared.Infrastructure.Middleware;
@@ -83,6 +84,7 @@ public static class DependencyInjection
             services.AddScoped<OwnedSpeedReadingVisualizationBackfill>();
             services.AddScoped<OwnedSpeedReadingVocabularyBackfill>();
             services.AddScoped<OwnedSpeedReadingSubscriptionBackfill>();
+            services.AddScoped<OwnedSpeedReadingCmsBackfill>();
         }
 
         services.AddMemoryCache(options => options.SizeLimit = 4_096);
@@ -100,7 +102,10 @@ public static class DependencyInjection
         });
 
         services.AddSingleton<ISpeedReadingReadingTextExporter, ReadingTextExportService>();
-        services.AddScoped<ISpeedReadingCms, LegacySpeedReadingCms>();
+        services.AddScoped<ISpeedReadingCms>(serviceProvider =>
+            new LegacySpeedReadingCms(
+                serviceProvider.GetRequiredService<ISpeedReadingDataContext>(),
+                serviceProvider.GetRequiredService<IMemoryCache>()));
         services.AddScoped<ISpeedReadingDataContext>(serviceProvider =>
             ownedDataEnabled
                 ? serviceProvider.GetRequiredService<OwnedSpeedReadingDbContext>()

@@ -56,6 +56,11 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<VocabularyItem> VocabularyItems => Set<VocabularyItem>();
     public DbSet<UserVocabularyProgress> UserVocabularyProgresses => Set<UserVocabularyProgress>();
     DbSet<LegacyProduct> ISpeedReadingDataContext.Products => Set<LegacyProduct>();
+    DbSet<LegacyContentBlock> ISpeedReadingDataContext.ContentBlocks => Set<LegacyContentBlock>();
+    DbSet<LegacyPage> ISpeedReadingDataContext.Pages => Set<LegacyPage>();
+    DbSet<LegacyBlogPost> ISpeedReadingDataContext.BlogPosts => Set<LegacyBlogPost>();
+    DbSet<LegacyContactMessage> ISpeedReadingDataContext.ContactMessages => Set<LegacyContactMessage>();
+    DbSet<LegacyNewsletterSubscriber> ISpeedReadingDataContext.NewsletterSubscribers => Set<LegacyNewsletterSubscriber>();
     DbSet<LegacySubscriptionPlan> ISpeedReadingDataContext.SubscriptionPlans => Set<LegacySubscriptionPlan>();
     DbSet<LegacyUserSubscription> ISpeedReadingDataContext.UserSubscriptions => Set<LegacyUserSubscription>();
     DbSet<LegacyPayment> ISpeedReadingDataContext.Payments => Set<LegacyPayment>();
@@ -286,6 +291,70 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.HasIndex(item => item.PlanId);
             entity.HasIndex(item => item.ProviderToken).IsUnique().HasFilter("\"ProviderToken\" IS NOT NULL");
             entity.HasOne<LegacySubscriptionPlan>().WithMany().HasForeignKey(item => item.PlanId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<LegacyContentBlock>(entity =>
+        {
+            ConfigureLegacyEntity(entity, "cms_content_blocks");
+            entity.Property(item => item.Key).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Group).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Label).HasMaxLength(200);
+            entity.Property(item => item.Value).IsRequired();
+            entity.HasIndex(item => item.Group);
+            entity.HasIndex(item => item.Key);
+        });
+        modelBuilder.Entity<LegacyPage>(entity =>
+        {
+            ConfigureLegacyEntity(entity, "cms_pages");
+            entity.Property(item => item.Title).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Slug).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Content).IsRequired();
+            entity.Property(item => item.MetaTitle).HasMaxLength(200);
+            entity.Property(item => item.MetaDescription).HasMaxLength(500);
+            entity.Property(item => item.MetaKeywords).HasMaxLength(500);
+            entity.Property(item => item.CanonicalUrl).HasMaxLength(500);
+            entity.Property(item => item.OgTitle).HasMaxLength(200);
+            entity.Property(item => item.OgDescription).HasMaxLength(500);
+            entity.Property(item => item.OgImage).HasMaxLength(500);
+            entity.Property(item => item.SeoSettingsNoIndex).HasColumnName("SeoSettings_NoIndex");
+            entity.HasIndex(item => item.Slug);
+        });
+        modelBuilder.Entity<LegacyBlogPost>(entity =>
+        {
+            ConfigureLegacyEntity(entity, "cms_blog_posts");
+            entity.Property(item => item.Title).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Slug).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Summary).HasMaxLength(500);
+            entity.Property(item => item.CoverImageUrl).HasMaxLength(500);
+            entity.Property(item => item.Tags).HasMaxLength(500);
+            entity.Property(item => item.Author).HasMaxLength(100);
+            entity.Property(item => item.MetaTitle).HasMaxLength(200);
+            entity.Property(item => item.MetaDescription).HasMaxLength(500);
+            entity.Property(item => item.MetaKeywords).HasMaxLength(500);
+            entity.Property(item => item.CanonicalUrl).HasMaxLength(500);
+            entity.Property(item => item.OgTitle).HasMaxLength(200);
+            entity.Property(item => item.OgDescription).HasMaxLength(500);
+            entity.Property(item => item.OgImage).HasMaxLength(500);
+            entity.Property(item => item.SeoSettingsNoIndex).HasColumnName("SeoSettings_NoIndex");
+            entity.HasIndex(item => item.PublishedAt);
+            entity.HasIndex(item => item.Slug);
+        });
+        modelBuilder.Entity<LegacyContactMessage>(entity =>
+        {
+            ConfigureLegacyEntity(entity, "cms_contact_messages");
+            entity.Property(item => item.Name).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Email).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Subject).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Message).IsRequired();
+            entity.Property(item => item.ReplyContent);
+            entity.HasIndex(item => item.CreatedAt);
+            entity.HasIndex(item => item.IsRead);
+        });
+        modelBuilder.Entity<LegacyNewsletterSubscriber>(entity =>
+        {
+            ConfigureLegacyEntity(entity, "cms_newsletter_subscribers");
+            entity.Property(item => item.Email).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Source).HasMaxLength(50);
+            entity.HasIndex(item => item.Email).IsUnique();
         });
         modelBuilder.Entity<OwnedIdempotencyRecord>(entity =>
         {
@@ -686,5 +755,19 @@ public sealed class OwnedSpeedReadingDbContext(
         {
             entity.Property("Version").HasColumnName("version").IsRequired();
         }
+    }
+
+    private static void ConfigureLegacyEntity<TEntity>(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<TEntity> entity, string tableName)
+        where TEntity : LegacyBaseEntity
+    {
+        entity.ToTable(tableName);
+        entity.HasKey(item => item.Id);
+        entity.Property(item => item.CreatedAt).IsRequired();
+        entity.Property(item => item.CreatedBy).IsRequired();
+        entity.Property(item => item.UpdatedAt);
+        entity.Property(item => item.UpdatedBy);
+        entity.Property(item => item.IsDeleted).IsRequired();
+        entity.Property(item => item.DeletedAt);
+        entity.Property(item => item.DeletedBy);
     }
 }

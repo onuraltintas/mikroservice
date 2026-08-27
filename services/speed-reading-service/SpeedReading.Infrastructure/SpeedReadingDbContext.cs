@@ -76,6 +76,11 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     internal DbSet<LegacyUserRoleLink> UserRoleLinks => Set<LegacyUserRoleLink>();
     internal DbSet<LegacyRoleLookup> Roles => Set<LegacyRoleLookup>();
     DbSet<LegacyProduct> ISpeedReadingDataContext.Products => Products;
+    DbSet<LegacyContentBlock> ISpeedReadingDataContext.ContentBlocks => ContentBlocks;
+    DbSet<LegacyPage> ISpeedReadingDataContext.Pages => Pages;
+    DbSet<LegacyBlogPost> ISpeedReadingDataContext.BlogPosts => BlogPosts;
+    DbSet<LegacyContactMessage> ISpeedReadingDataContext.ContactMessages => ContactMessages;
+    DbSet<LegacyNewsletterSubscriber> ISpeedReadingDataContext.NewsletterSubscribers => NewsletterSubscribers;
     DbSet<LegacySubscriptionPlan> ISpeedReadingDataContext.SubscriptionPlans => SubscriptionPlans;
     DbSet<LegacyUserSubscription> ISpeedReadingDataContext.UserSubscriptions => UserSubscriptions;
     DbSet<LegacyPayment> ISpeedReadingDataContext.Payments => Payments;
