@@ -62,6 +62,40 @@ public sealed class Exercise : AggregateRoot
         return exercise;
     }
 
+    public static Exercise Import(
+        Guid id,
+        string title,
+        string typeCode,
+        string configurationJson,
+        int difficultyLevel,
+        Guid creatorId,
+        Guid exerciseTypeId,
+        DateTime createdAt,
+        Guid? targetAgeGroupId,
+        string? description,
+        bool isActive,
+        string? createdBy,
+        DateTime? updatedAt,
+        string? updatedBy)
+    {
+        var exercise = Create(
+            title,
+            typeCode,
+            configurationJson,
+            difficultyLevel,
+            creatorId,
+            exerciseTypeId,
+            id,
+            description,
+            targetAgeGroupId);
+        exercise.IsActive = isActive;
+        exercise.CreatedAt = createdAt;
+        exercise.CreatedBy = createdBy;
+        exercise.UpdatedAt = updatedAt;
+        exercise.UpdatedBy = updatedBy;
+        return exercise;
+    }
+
     public void Deactivate()
     {
         IsActive = false;

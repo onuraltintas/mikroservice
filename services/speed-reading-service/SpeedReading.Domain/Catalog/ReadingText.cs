@@ -61,6 +61,53 @@ public sealed class ReadingText : AggregateRoot
         };
     }
 
+    public static ReadingText Import(
+        Guid id,
+        string title,
+        string content,
+        string language,
+        Guid? exerciseId,
+        int wordCount,
+        string? category,
+        int difficultyLevel,
+        Guid? targetAgeGroupId,
+        bool isActive,
+        string? tags,
+        int recommendedMinLevel,
+        int recommendedMaxLevel,
+        decimal averageComprehensionScore,
+        int timesRead,
+        int averageReadingTimeSeconds,
+        DateTime createdAt,
+        string? createdBy,
+        DateTime? updatedAt,
+        string? updatedBy)
+    {
+        var readingText = Create(
+            id,
+            title,
+            content,
+            language,
+            exerciseId,
+            wordCount,
+            difficultyLevel,
+            category,
+            targetAgeGroupId);
+        readingText.WordCount = wordCount > 0 ? wordCount : readingText.WordCount;
+        readingText.IsActive = isActive;
+        readingText.Tags = tags?.Trim() ?? string.Empty;
+        readingText.RecommendedMinLevel = recommendedMinLevel;
+        readingText.RecommendedMaxLevel = recommendedMaxLevel;
+        readingText.AverageComprehensionScore = averageComprehensionScore;
+        readingText.TimesRead = timesRead;
+        readingText.AverageReadingTimeSeconds = averageReadingTimeSeconds;
+        readingText.CreatedAt = createdAt;
+        readingText.CreatedBy = createdBy;
+        readingText.UpdatedAt = updatedAt;
+        readingText.UpdatedBy = updatedBy;
+        return readingText;
+    }
+
     private static int CountWords(string content) =>
         content.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
 }

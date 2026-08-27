@@ -35,4 +35,25 @@ public sealed class ExerciseTypeCategory : AggregateRoot
             SortOrder = sortOrder
         };
     }
+
+    public static ExerciseTypeCategory Import(
+        Guid id,
+        string name,
+        string displayName,
+        string? description,
+        int sortOrder,
+        bool isActive,
+        DateTime createdAt,
+        string? createdBy,
+        DateTime? updatedAt,
+        string? updatedBy)
+    {
+        var category = Create(id, name, displayName, description, sortOrder);
+        category.IsActive = isActive;
+        category.CreatedAt = createdAt;
+        category.CreatedBy = createdBy;
+        category.UpdatedAt = updatedAt;
+        category.UpdatedBy = updatedBy;
+        return category;
+    }
 }

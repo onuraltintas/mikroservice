@@ -52,6 +52,13 @@ yapılmadı:
   `SPEED_READING_OWNED_CONNECTION_STRING` ile verilir. Bağlantı boşsa servis
   eski çalışma düzenini korur; bağlantı verilirse migration-only container
   owned migration'ı da uygular ve readiness health check'i ekler.
+- İlk katalog backfill'i servis image'ı ile açıkça
+  `--backfill-owned-catalog` argümanıyla çalışır. Komut legacy'den kategori,
+  tür, egzersiz, metin ve soruları aynı UUID'lerle tek transaction içinde
+  kopyalar; duplicate/orphan kayıt varsa durur, ikinci çalışmada mevcut ID'leri
+  yeniden eklemez. Bu komut cutover yapmaz ve runtime endpoint'lerini owned
+  store'a çevirmediği için production'da ancak backup/parity onayından sonra
+  çalıştırılmalıdır.
 - `SPEED_READING_CONNECTION_STRING` geçiş tamamlanana kadar legacy kaynak
   bağlantısıdır. Bu nedenle bu adım tek başına “tamamen taşındı” anlamına
   gelmez; backfill, parity ve runtime write cutover sonraki kapılardır.

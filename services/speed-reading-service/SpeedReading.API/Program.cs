@@ -1,4 +1,5 @@
 using DotNetEnv;
+using System.Text.Json;
 using EduPlatform.Shared.Infrastructure.Extensions;
 using EduPlatform.Shared.Infrastructure.Logging;
 using EduPlatform.Shared.Infrastructure.Middleware;
@@ -20,6 +21,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 var migrationOnly = args.Any(argument =>
     string.Equals(argument, "--migrate-only", StringComparison.OrdinalIgnoreCase));
+var backfillOwnedCatalog = args.Any(argument =>
+    string.Equals(argument, "--backfill-owned-catalog", StringComparison.OrdinalIgnoreCase));
 
 // The legacy speed-reading schema is not managed by EF migrations. This
 // one-shot mode applies only idempotent additive compatibility objects before
@@ -54,6 +57,20 @@ if (migrationOnly)
         await ownedMigrationDb.Database.MigrateAsync();
     }
 
+    return;
+}
+
+if (backfillOwnedCatalog)
+{
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
+
+    await using var backfillApp = builder.Build();
+    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
+    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingCatalogBackfill>()
+        ?? throw new InvalidOperationException(
+            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-catalog.");
+    var backfillResult = await backfill.RunAsync();
+    Console.WriteLine(JsonSerializer.Serialize(backfillResult));
     return;
 }
 

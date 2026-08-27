@@ -62,4 +62,44 @@ public sealed class ReadingQuestion : Entity
             OptionD = optionD?.Trim() ?? string.Empty
         };
     }
+
+    public static ReadingQuestion Import(
+        Guid id,
+        Guid readingTextId,
+        string questionText,
+        string correctAnswer,
+        int orderIndex,
+        int type,
+        int bloomLevel,
+        int difficultyLevel,
+        string? explanation,
+        string? optionA,
+        string? optionB,
+        string? optionC,
+        string? optionD,
+        DateTime createdAt,
+        string? createdBy,
+        DateTime? updatedAt,
+        string? updatedBy)
+    {
+        var question = Create(
+            id,
+            readingTextId,
+            questionText,
+            correctAnswer,
+            orderIndex,
+            type,
+            bloomLevel,
+            difficultyLevel,
+            explanation,
+            optionA,
+            optionB,
+            optionC,
+            optionD);
+        question.CreatedAt = createdAt;
+        question.CreatedBy = createdBy;
+        question.UpdatedAt = updatedAt;
+        question.UpdatedBy = updatedBy;
+        return question;
+    }
 }

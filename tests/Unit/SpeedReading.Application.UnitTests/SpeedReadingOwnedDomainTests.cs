@@ -104,6 +104,34 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Fact]
+    public void Imported_catalog_entities_keep_source_identity_and_audit_metadata()
+    {
+        var id = Guid.NewGuid();
+        var createdAt = DateTime.UtcNow.AddDays(-1);
+        var creatorId = Guid.NewGuid();
+
+        var exercise = Exercise.Import(
+            id,
+            title: "Hızlı okuma",
+            typeCode: "SpeedReading",
+            configurationJson: "{}",
+            difficultyLevel: 1,
+            creatorId,
+            exerciseTypeId: Guid.NewGuid(),
+            createdAt: createdAt,
+            targetAgeGroupId: null,
+            description: null,
+            isActive: true,
+            createdBy: creatorId.ToString(),
+            updatedAt: null,
+            updatedBy: null);
+
+        exercise.Id.Should().Be(id);
+        exercise.CreatedAt.Should().Be(createdAt);
+        exercise.CreatedBy.Should().Be(creatorId.ToString());
+    }
+
+    [Fact]
     public void Session_starts_active_with_zero_progress()
     {
         var session = ExerciseSession.Start(

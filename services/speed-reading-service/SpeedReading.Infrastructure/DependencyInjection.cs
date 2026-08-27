@@ -64,6 +64,7 @@ public static class DependencyInjection
                     npgsql.MigrationsHistoryTable("__ef_migrations_history", "speed_reading");
                     npgsql.EnableRetryOnFailure();
                 }));
+            services.AddScoped<OwnedSpeedReadingCatalogBackfill>();
         }
 
         services.AddMemoryCache(options => options.SizeLimit = 4_096);

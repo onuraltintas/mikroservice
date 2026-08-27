@@ -49,4 +49,38 @@ public sealed class ExerciseType : AggregateRoot
             SortOrder = sortOrder
         };
     }
+
+    public static ExerciseType Import(
+        Guid id,
+        string name,
+        string displayName,
+        string engineType,
+        Guid? categoryId,
+        string? description,
+        string? iconName,
+        string? colorCode,
+        int sortOrder,
+        bool isActive,
+        DateTime createdAt,
+        string? createdBy,
+        DateTime? updatedAt,
+        string? updatedBy)
+    {
+        var exerciseType = Create(
+            id,
+            name,
+            displayName,
+            engineType,
+            categoryId,
+            description,
+            iconName,
+            colorCode,
+            sortOrder);
+        exerciseType.IsActive = isActive;
+        exerciseType.CreatedAt = createdAt;
+        exerciseType.CreatedBy = createdBy;
+        exerciseType.UpdatedAt = updatedAt;
+        exerciseType.UpdatedBy = updatedBy;
+        return exerciseType;
+    }
 }
