@@ -100,8 +100,7 @@ public sealed class OwnedSpeedReadingNotificationBackfill(
 
         var imported = notifications + preferences + typePreferences + pushSubscriptions
             + announcements + interactions + templates + campaigns + campaignLogs;
-        if (imported > 0)
-            await owned.SaveChangesAsync(cancellationToken);
+        await owned.SaveChangesAsync(cancellationToken);
 
         return new OwnedNotificationBackfillResult(
             sourceNotifications.Count,
