@@ -507,6 +507,8 @@ public sealed class SpeedReadingServiceOptionsTests
         var dailyExerciseLog = context.Model.GetEntityTypes()
             .Single(entity => entity.GetTableName() == "DailyExerciseLogs");
         dailyExerciseLog.FindProperty("ResultDataJson")!.IsNullable.Should().BeFalse();
+        dailyExerciseLog.FindProperty("AverageWPM").Should().BeNull();
+        dailyExerciseLog.FindProperty("AverageComprehension").Should().BeNull();
         dailyExerciseLog.FindProperty("AverageResponseTimeMs")!.GetColumnType()
             .Should().Be("numeric(18,2)");
         dailyExerciseLog.FindProperty("TimeOfDay")!.GetColumnType()
