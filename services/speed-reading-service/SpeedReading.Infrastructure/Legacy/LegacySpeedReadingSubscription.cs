@@ -1,18 +1,35 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using EduPlatform.Shared.Contracts.Reporting;
+using SpeedReading.Application.Assignments;
 using SpeedReading.Application.Content;
 using SpeedReading.Application.Subscription;
 using SpeedReading.Infrastructure.Payments;
+using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Infrastructure.Legacy;
 
-public sealed class LegacySpeedReadingSubscription(
-    SpeedReadingDbContext db,
-    ISpeedReadingPaymentProvider paymentProvider,
-    IyzicoOptions iyzicoOptions) : ISpeedReadingSubscription
+public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
 {
+    private readonly ISpeedReadingDataContext db;
+    private readonly ISpeedReadingPaymentProvider paymentProvider;
+    private readonly IyzicoOptions iyzicoOptions;
+    private readonly ISpeedReadingUserDirectory userDirectory;
+
+    internal LegacySpeedReadingSubscription(
+        ISpeedReadingDataContext db,
+        ISpeedReadingPaymentProvider paymentProvider,
+        IyzicoOptions iyzicoOptions,
+        ISpeedReadingUserDirectory userDirectory)
+    {
+        this.db = db;
+        this.paymentProvider = paymentProvider;
+        this.iyzicoOptions = iyzicoOptions;
+        this.userDirectory = userDirectory;
+    }
+
     public LegacySpeedReadingSubscription(SpeedReadingDbContext db)
-        : this(db, new UnconfiguredPaymentProvider(), new IyzicoOptions())
+        : this(db, new UnconfiguredPaymentProvider(), new IyzicoOptions(), new UnconfiguredUserDirectory())
     {
     }
     public async Task<IReadOnlyList<ProductSummary>> GetProductsAsync(bool includeInactive, CancellationToken cancellationToken = default)
@@ -331,7 +348,7 @@ public sealed class LegacySpeedReadingSubscription(
             return new(true, false, null, null, null, "A paid plan must be selected for checkout.");
         }
 
-        var user = await db.Users.AsNoTracking().SingleOrDefaultAsync(item => item.Id == userId, cancellationToken);
+        var user = (await userDirectory.GetUsersAsync([userId], cancellationToken)).Users.SingleOrDefault(item => item.UserId == userId);
         if (user is null || string.IsNullOrWhiteSpace(user.Email))
         {
             return new(true, false, null, null, null, "A complete user profile is required before checkout.");
@@ -340,7 +357,7 @@ public sealed class LegacySpeedReadingSubscription(
         var userName = $"{user.FirstName} {user.LastName}".Trim();
         if (string.IsNullOrWhiteSpace(userName))
         {
-            userName = user.UserName?.Trim() ?? string.Empty;
+            userName = user.Email.Trim();
         }
 
         if (string.IsNullOrWhiteSpace(userName))
@@ -575,8 +592,7 @@ public sealed class LegacySpeedReadingSubscription(
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         db.Entry(payment).State = EntityState.Detached;
         var persistedPayment = await db.Payments
-            .FromSqlInterpolated($"SELECT * FROM \"Payments\" WHERE \"Id\" = {payment.Id} FOR UPDATE")
-            .SingleOrDefaultAsync(cancellationToken);
+            .SingleOrDefaultAsync(item => item.Id == payment.Id, cancellationToken);
         if (persistedPayment is null)
         {
             await transaction.RollbackAsync(cancellationToken);
@@ -789,5 +805,13 @@ public sealed class LegacySpeedReadingSubscription(
                 null,
                 "Payment provider is not configured for this deployment.",
                 string.Empty));
+    }
+
+    private sealed class UnconfiguredUserDirectory : ISpeedReadingUserDirectory
+    {
+        public Task<SpeedReadingUserDirectoryResponse> GetUsersAsync(
+            IReadOnlyCollection<Guid> userIds,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new SpeedReadingUserDirectoryResponse([]));
     }
 }

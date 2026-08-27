@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using SpeedReading.Infrastructure.Legacy;
+using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Infrastructure;
 
@@ -9,7 +10,7 @@ namespace SpeedReading.Infrastructure;
 /// The existing schema remains the source of truth. The service only applies
 /// idempotent additive compatibility scripts before replicas start.
 /// </summary>
-public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext> options) : DbContext(options)
+public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext> options) : DbContext(options), ISpeedReadingDataContext
 {
     internal DbSet<LegacyExerciseTypeCategory> ExerciseTypeCategories => Set<LegacyExerciseTypeCategory>();
     internal DbSet<LegacyContentBlock> ContentBlocks => Set<LegacyContentBlock>();
@@ -74,6 +75,10 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     internal DbSet<LegacyEmailCampaignLog> EmailCampaignLogs => Set<LegacyEmailCampaignLog>();
     internal DbSet<LegacyUserRoleLink> UserRoleLinks => Set<LegacyUserRoleLink>();
     internal DbSet<LegacyRoleLookup> Roles => Set<LegacyRoleLookup>();
+    DbSet<LegacyProduct> ISpeedReadingDataContext.Products => Products;
+    DbSet<LegacySubscriptionPlan> ISpeedReadingDataContext.SubscriptionPlans => SubscriptionPlans;
+    DbSet<LegacyUserSubscription> ISpeedReadingDataContext.UserSubscriptions => UserSubscriptions;
+    DbSet<LegacyPayment> ISpeedReadingDataContext.Payments => Payments;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

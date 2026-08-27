@@ -9,6 +9,7 @@ using SpeedReading.Domain.Gamification;
 using SpeedReading.Domain.QuestionBank;
 using SpeedReading.Domain.Visualization;
 using SpeedReading.Domain.Vocabulary;
+using SpeedReading.Infrastructure.Legacy;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Profiles;
 using SpeedReading.Domain.Sessions;
@@ -20,7 +21,7 @@ namespace SpeedReading.Infrastructure.Persistence;
 /// It intentionally has no legacy entity sets.
 /// </summary>
 public sealed class OwnedSpeedReadingDbContext(
-    DbContextOptions<OwnedSpeedReadingDbContext> options) : DbContext(options)
+    DbContextOptions<OwnedSpeedReadingDbContext> options) : DbContext(options), ISpeedReadingDataContext
 {
     public DbSet<Exercise> Exercises => Set<Exercise>();
     public DbSet<ExerciseTypeCategory> ExerciseTypeCategories => Set<ExerciseTypeCategory>();
@@ -54,6 +55,10 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<VisualizationQuestion> VisualizationQuestions => Set<VisualizationQuestion>();
     public DbSet<VocabularyItem> VocabularyItems => Set<VocabularyItem>();
     public DbSet<UserVocabularyProgress> UserVocabularyProgresses => Set<UserVocabularyProgress>();
+    DbSet<LegacyProduct> ISpeedReadingDataContext.Products => Set<LegacyProduct>();
+    DbSet<LegacySubscriptionPlan> ISpeedReadingDataContext.SubscriptionPlans => Set<LegacySubscriptionPlan>();
+    DbSet<LegacyUserSubscription> ISpeedReadingDataContext.UserSubscriptions => Set<LegacyUserSubscription>();
+    DbSet<LegacyPayment> ISpeedReadingDataContext.Payments => Set<LegacyPayment>();
     internal DbSet<OwnedIdempotencyRecord> IdempotencyRecords => Set<OwnedIdempotencyRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -224,6 +229,63 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.HasIndex(item => new { item.UserId, item.NextReviewDate, item.IsDeleted });
             entity.HasOne<VocabularyItem>().WithMany().HasForeignKey(item => item.VocabularyItemId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<LegacyProduct>(entity =>
+        {
+            entity.ToTable("subscription_products");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Slug).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Name).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Description).HasMaxLength(1_000).IsRequired();
+            entity.Property(item => item.IncludedProductSlugsJson).HasColumnName("included_product_slugs").HasColumnType("jsonb").IsRequired();
+            entity.HasIndex(item => item.Slug).IsUnique();
+        });
+        modelBuilder.Entity<LegacySubscriptionPlan>(entity =>
+        {
+            entity.ToTable("subscription_plans");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Name).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Description).HasMaxLength(1_000).IsRequired();
+            entity.Property(item => item.Slug).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Price).HasPrecision(10, 2);
+            entity.Property(item => item.Features).HasColumnType("jsonb");
+            entity.HasIndex(item => item.ProductId);
+            entity.HasIndex(item => item.Slug).IsUnique();
+            entity.HasOne<LegacyProduct>().WithMany().HasForeignKey(item => item.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<LegacyUserSubscription>(entity =>
+        {
+            entity.ToTable("user_subscriptions");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.UserName).HasMaxLength(200);
+            entity.Property(item => item.UserEmail).HasMaxLength(256);
+            entity.Property(item => item.Status).HasMaxLength(50).IsRequired();
+            entity.Property(item => item.Notes).HasMaxLength(2_000);
+            entity.HasIndex(item => new { item.UserId, item.Status });
+            entity.HasIndex(item => new { item.UserId, item.PlanId });
+            entity.HasIndex(item => new { item.UserId, item.ProductId });
+            entity.HasOne<LegacySubscriptionPlan>().WithMany().HasForeignKey(item => item.PlanId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<LegacyProduct>().WithMany().HasForeignKey(item => item.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<LegacyPayment>(entity =>
+        {
+            entity.ToTable("payments");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.UserEmail).HasMaxLength(255).IsRequired();
+            entity.Property(item => item.UserName).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Amount).HasPrecision(10, 2);
+            entity.Property(item => item.Currency).HasMaxLength(10).IsRequired();
+            entity.Property(item => item.Status).HasMaxLength(50).IsRequired();
+            entity.Property(item => item.Provider).HasMaxLength(50).IsRequired();
+            entity.Property(item => item.ProviderToken).HasMaxLength(500);
+            entity.Property(item => item.ProviderPaymentId).HasMaxLength(500);
+            entity.Property(item => item.ProviderResponse).HasColumnType("jsonb");
+            entity.Property(item => item.ErrorMessage).HasMaxLength(2_000);
+            entity.HasIndex(item => item.UserId);
+            entity.HasIndex(item => item.Status);
+            entity.HasIndex(item => item.PlanId);
+            entity.HasIndex(item => item.ProviderToken).IsUnique().HasFilter("\"ProviderToken\" IS NOT NULL");
+            entity.HasOne<LegacySubscriptionPlan>().WithMany().HasForeignKey(item => item.PlanId).OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<OwnedIdempotencyRecord>(entity =>
         {

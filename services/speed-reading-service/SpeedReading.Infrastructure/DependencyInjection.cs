@@ -82,6 +82,7 @@ public static class DependencyInjection
             services.AddScoped<OwnedSpeedReadingQuestionBackfill>();
             services.AddScoped<OwnedSpeedReadingVisualizationBackfill>();
             services.AddScoped<OwnedSpeedReadingVocabularyBackfill>();
+            services.AddScoped<OwnedSpeedReadingSubscriptionBackfill>();
         }
 
         services.AddMemoryCache(options => options.SizeLimit = 4_096);
@@ -100,7 +101,16 @@ public static class DependencyInjection
 
         services.AddSingleton<ISpeedReadingReadingTextExporter, ReadingTextExportService>();
         services.AddScoped<ISpeedReadingCms, LegacySpeedReadingCms>();
-        services.AddScoped<ISpeedReadingSubscription, LegacySpeedReadingSubscription>();
+        services.AddScoped<ISpeedReadingDataContext>(serviceProvider =>
+            ownedDataEnabled
+                ? serviceProvider.GetRequiredService<OwnedSpeedReadingDbContext>()
+                : serviceProvider.GetRequiredService<SpeedReadingDbContext>());
+        services.AddScoped<ISpeedReadingSubscription>(serviceProvider =>
+            new LegacySpeedReadingSubscription(
+                serviceProvider.GetRequiredService<ISpeedReadingDataContext>(),
+                serviceProvider.GetRequiredService<ISpeedReadingPaymentProvider>(),
+                serviceProvider.GetRequiredService<IyzicoOptions>(),
+                serviceProvider.GetRequiredService<ISpeedReadingUserDirectory>()));
         services.AddScoped<ISpeedReadingAdaptiveLearning, LegacySpeedReadingAdaptiveLearning>();
         services.AddScoped<ISpeedReadingAdaptiveText, LegacySpeedReadingAdaptiveText>();
         services.AddScoped<ISpeedReadingContentFeedback, LegacySpeedReadingContentFeedback>();
