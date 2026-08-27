@@ -373,6 +373,18 @@ public sealed class SpeedReadingOwnedDomainTests
             ("EnableWeekly", "enable_weekly")
         }.Should().AllSatisfy(mapping =>
             entity.FindProperty(mapping.Item1)!.GetColumnName(table).Should().Be(mapping.Item2));
+
+        var notification = context.Model.GetEntityTypes()
+            .Single(item => item.ClrType.Name == "LegacyUserNotification");
+        new[]
+        {
+            ("CreatedBy", "created_by"),
+            ("UpdatedBy", "updated_by"),
+            ("DeletedAt", "deleted_at"),
+            ("DeletedBy", "deleted_by")
+        }.Should().AllSatisfy(mapping =>
+            notification.FindProperty(mapping.Item1)!.GetColumnName(StoreObjectIdentifier.Table("notifications", "speed_reading"))
+                .Should().Be(mapping.Item2));
     }
 
     [Fact]
@@ -444,7 +456,8 @@ public sealed class SpeedReadingOwnedDomainTests
             .And.Contain("20260827155000_AddOwnedContentFeedback")
             .And.Contain("20260827156000_AddOwnedAdaptiveLearning")
             .And.Contain("20260827157000_AddOwnedAdaptiveText")
-            .And.Contain("20260827158000_AddOwnedReports");
+            .And.Contain("20260827158000_AddOwnedReports")
+            .And.Contain("20260827162000_AddOwnedNotificationAuditFields");
     }
 
     [Fact]

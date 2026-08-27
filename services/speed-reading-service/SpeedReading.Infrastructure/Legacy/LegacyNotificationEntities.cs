@@ -4,8 +4,12 @@ internal abstract class LegacyNotificationBase
 {
     public Guid Id { get; set; }
     public DateTime CreatedAt { get; set; }
+    public Guid CreatedBy { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public Guid? UpdatedBy { get; set; }
     public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
+    public Guid? DeletedBy { get; set; }
 }
 
 internal sealed class LegacyUserNotification : LegacyNotificationBase
@@ -91,7 +95,6 @@ internal sealed class LegacyAnnouncement : LegacyNotificationBase
     public bool IsActive { get; set; }
     public string? ActionUrl { get; set; }
     public string? ImageUrl { get; set; }
-    public Guid CreatedBy { get; set; }
     public Guid CreatedByUserId { get; set; }
 
     // Additive fields used by the current client. EndDate/ImageUrl/Type stay
@@ -143,7 +146,6 @@ internal sealed class LegacyEmailCampaign : LegacyNotificationBase
     public int TotalRecipients { get; set; }
     public int SentCount { get; set; }
     public int FailedCount { get; set; }
-    public Guid CreatedBy { get; set; }
     public Guid CreatedByUserId { get; set; }
     public string? PlainTextBody { get; set; }
     public bool IncludeAllUsers { get; set; }

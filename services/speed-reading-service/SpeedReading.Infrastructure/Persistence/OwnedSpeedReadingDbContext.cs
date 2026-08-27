@@ -726,7 +726,6 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.IsActive).HasColumnName("is_active");
             entity.Property(item => item.ActionUrl).HasColumnName("action_url").HasMaxLength(500);
             entity.Property(item => item.ImageUrl).HasColumnName("image_url").HasMaxLength(1_000);
-            entity.Ignore(item => item.CreatedBy);
             entity.Property(item => item.CreatedByUserId).HasColumnName("created_by_user_id");
             entity.Property(item => item.PlainTextContent).HasColumnName("plain_text_content");
             entity.Property(item => item.ExpiresAt).HasColumnName("expires_at");
@@ -779,7 +778,6 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.TotalRecipients).HasColumnName("total_recipients");
             entity.Property(item => item.SentCount).HasColumnName("sent_count");
             entity.Property(item => item.FailedCount).HasColumnName("failed_count");
-            entity.Ignore(item => item.CreatedBy);
             entity.Property(item => item.CreatedByUserId).HasColumnName("created_by_user_id");
             entity.Property(item => item.PlainTextBody).HasColumnName("plain_text_body");
             entity.Property(item => item.IncludeAllUsers).HasColumnName("include_all_users");
@@ -1345,7 +1343,11 @@ public sealed class OwnedSpeedReadingDbContext(
         entity.HasKey(item => item.Id);
         entity.Property(item => item.Id).HasColumnName("id");
         entity.Property(item => item.CreatedAt).HasColumnName("created_at").IsRequired();
+        entity.Property(item => item.CreatedBy).HasColumnName("created_by").IsRequired();
         entity.Property(item => item.UpdatedAt).HasColumnName("updated_at");
+        entity.Property(item => item.UpdatedBy).HasColumnName("updated_by");
         entity.Property(item => item.IsDeleted).HasColumnName("is_deleted").IsRequired();
+        entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+        entity.Property(item => item.DeletedBy).HasColumnName("deleted_by");
     }
 }

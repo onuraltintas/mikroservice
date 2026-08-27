@@ -33,8 +33,12 @@ public sealed class OwnedSpeedReadingNotificationBackfill(
                 EnablePush = preference.PushEnabled,
                 PreferredTime = preference.PreferredTime,
                 CreatedAt = preference.CreatedAt,
+                CreatedBy = preference.CreatedBy,
                 UpdatedAt = preference.UpdatedAt,
-                IsDeleted = preference.IsDeleted
+                UpdatedBy = preference.UpdatedBy,
+                IsDeleted = preference.IsDeleted,
+                DeletedAt = preference.DeletedAt,
+                DeletedBy = preference.DeletedBy
             })
             .ToList();
         var sourcePushSubscriptions = await legacy.PushSubscriptions.AsNoTracking().ToListAsync(cancellationToken);
@@ -64,25 +68,35 @@ public sealed class OwnedSpeedReadingNotificationBackfill(
             throw new InvalidOperationException("Email campaign log references a missing campaign.");
 
         var target = (ISpeedReadingDataContext)owned;
-        var targetNotificationIds = await target.Notifications.Select(item => item.Id).ToHashSetAsync(cancellationToken);
-        var targetPreferenceIds = await target.NotificationPreferences.Select(item => item.Id).ToHashSetAsync(cancellationToken);
-        var targetTypePreferenceIds = await target.NotificationTypePreferences.Select(item => item.Id).ToHashSetAsync(cancellationToken);
-        var targetPushSubscriptionIds = await target.PushSubscriptions.Select(item => item.Id).ToHashSetAsync(cancellationToken);
-        var targetAnnouncementIds = await target.Announcements.Select(item => item.Id).ToHashSetAsync(cancellationToken);
-        var targetInteractionIds = await target.AnnouncementUserInteractions.Select(item => item.Id).ToHashSetAsync(cancellationToken);
-        var targetTemplateIds = await target.EmailTemplates.Select(item => item.Id).ToHashSetAsync(cancellationToken);
-        var targetCampaignIds = await target.EmailCampaigns.Select(item => item.Id).ToHashSetAsync(cancellationToken);
-        var targetCampaignLogIds = await target.EmailCampaignLogs.Select(item => item.Id).ToHashSetAsync(cancellationToken);
+        var targetNotifications = await target.Notifications.ToDictionaryAsync(item => item.Id, cancellationToken);
+        var targetPreferences = await target.NotificationPreferences.ToDictionaryAsync(item => item.Id, cancellationToken);
+        var targetTypePreferences = await target.NotificationTypePreferences.ToDictionaryAsync(item => item.Id, cancellationToken);
+        var targetPushSubscriptions = await target.PushSubscriptions.ToDictionaryAsync(item => item.Id, cancellationToken);
+        var targetAnnouncements = await target.Announcements.ToDictionaryAsync(item => item.Id, cancellationToken);
+        var targetInteractions = await target.AnnouncementUserInteractions.ToDictionaryAsync(item => item.Id, cancellationToken);
+        var targetTemplates = await target.EmailTemplates.ToDictionaryAsync(item => item.Id, cancellationToken);
+        var targetCampaigns = await target.EmailCampaigns.ToDictionaryAsync(item => item.Id, cancellationToken);
+        var targetCampaignLogs = await target.EmailCampaignLogs.ToDictionaryAsync(item => item.Id, cancellationToken);
 
-        var notifications = ImportMissing(sourceNotifications, target.Notifications, targetNotificationIds);
-        var preferences = ImportMissing(sourcePreferences, target.NotificationPreferences, targetPreferenceIds);
-        var typePreferences = ImportMissing(sourceTypePreferences, target.NotificationTypePreferences, targetTypePreferenceIds);
-        var pushSubscriptions = ImportMissing(sourcePushSubscriptions, target.PushSubscriptions, targetPushSubscriptionIds);
-        var announcements = ImportMissing(sourceAnnouncements, target.Announcements, targetAnnouncementIds);
-        var interactions = ImportMissing(sourceInteractions, target.AnnouncementUserInteractions, targetInteractionIds);
-        var templates = ImportMissing(sourceTemplates, target.EmailTemplates, targetTemplateIds);
-        var campaigns = ImportMissing(sourceCampaigns, target.EmailCampaigns, targetCampaignIds);
-        var campaignLogs = ImportMissing(sourceCampaignLogs, target.EmailCampaignLogs, targetCampaignLogIds);
+        SyncAudit(sourceNotifications, targetNotifications);
+        SyncAudit(sourcePreferences, targetPreferences);
+        SyncAudit(sourceTypePreferences, targetTypePreferences);
+        SyncAudit(sourcePushSubscriptions, targetPushSubscriptions);
+        SyncAudit(sourceAnnouncements, targetAnnouncements);
+        SyncAudit(sourceInteractions, targetInteractions);
+        SyncAudit(sourceTemplates, targetTemplates);
+        SyncAudit(sourceCampaigns, targetCampaigns);
+        SyncAudit(sourceCampaignLogs, targetCampaignLogs);
+
+        var notifications = ImportMissing(sourceNotifications, target.Notifications, targetNotifications.Keys.ToHashSet());
+        var preferences = ImportMissing(sourcePreferences, target.NotificationPreferences, targetPreferences.Keys.ToHashSet());
+        var typePreferences = ImportMissing(sourceTypePreferences, target.NotificationTypePreferences, targetTypePreferences.Keys.ToHashSet());
+        var pushSubscriptions = ImportMissing(sourcePushSubscriptions, target.PushSubscriptions, targetPushSubscriptions.Keys.ToHashSet());
+        var announcements = ImportMissing(sourceAnnouncements, target.Announcements, targetAnnouncements.Keys.ToHashSet());
+        var interactions = ImportMissing(sourceInteractions, target.AnnouncementUserInteractions, targetInteractions.Keys.ToHashSet());
+        var templates = ImportMissing(sourceTemplates, target.EmailTemplates, targetTemplates.Keys.ToHashSet());
+        var campaigns = ImportMissing(sourceCampaigns, target.EmailCampaigns, targetCampaigns.Keys.ToHashSet());
+        var campaignLogs = ImportMissing(sourceCampaignLogs, target.EmailCampaignLogs, targetCampaignLogs.Keys.ToHashSet());
 
         var imported = notifications + preferences + typePreferences + pushSubscriptions
             + announcements + interactions + templates + campaigns + campaignLogs;
@@ -100,6 +114,23 @@ public sealed class OwnedSpeedReadingNotificationBackfill(
             sourceCampaigns.Count,
             sourceCampaignLogs.Count,
             imported);
+    }
+
+    private static void SyncAudit<TEntity>(
+        IEnumerable<TEntity> source,
+        IReadOnlyDictionary<Guid, TEntity> target)
+        where TEntity : LegacyNotificationBase
+    {
+        foreach (var sourceItem in source)
+        {
+            if (!target.TryGetValue(sourceItem.Id, out var targetItem))
+                continue;
+
+            targetItem.CreatedBy = sourceItem.CreatedBy;
+            targetItem.UpdatedBy = sourceItem.UpdatedBy;
+            targetItem.DeletedAt = sourceItem.DeletedAt;
+            targetItem.DeletedBy = sourceItem.DeletedBy;
+        }
     }
 
     private static int ImportMissing<TEntity>(
