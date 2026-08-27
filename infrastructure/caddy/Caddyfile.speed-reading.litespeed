@@ -358,6 +358,16 @@
         }
     }
 
+    # Identity login, registration and token endpoints are exposed directly
+    # under the gateway's /api/auth contract. Keep this allowlist narrow so
+    # unrelated /api paths remain blocked on the speed-reading domain.
+    @identityAuth path /api/auth /api/auth/*
+    handle @identityAuth {
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
     # The existing frontend still emits /api/v1 for a small, explicit set of
     # SpeedReading and identity routes while the Gateway contract is /api.
     # Strip only this allowlisted compatibility surface before proxying.
