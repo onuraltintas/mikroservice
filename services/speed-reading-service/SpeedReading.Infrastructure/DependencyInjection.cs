@@ -86,6 +86,7 @@ public static class DependencyInjection
             services.AddScoped<OwnedSpeedReadingSubscriptionBackfill>();
             services.AddScoped<OwnedSpeedReadingCmsBackfill>();
             services.AddScoped<OwnedSpeedReadingNotificationBackfill>();
+            services.AddScoped<OwnedSpeedReadingRsvpBackfill>();
         }
 
         services.AddMemoryCache(options => options.SizeLimit = 4_096);

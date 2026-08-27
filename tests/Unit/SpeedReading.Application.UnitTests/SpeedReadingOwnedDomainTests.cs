@@ -76,7 +76,7 @@ public sealed class SpeedReadingOwnedDomainTests
         context.Model.FindEntityType(typeof(UserVocabularyProgress))!.GetTableName()
             .Should().Be("user_vocabulary_progress");
         context.Model.GetEntityTypes().Select(entity => entity.GetTableName())
-            .Should().Contain(["subscription_products", "subscription_plans", "user_subscriptions", "payments", "cms_content_blocks", "cms_pages", "cms_blog_posts", "cms_contact_messages", "cms_newsletter_subscribers", "notifications", "notification_preferences", "notification_type_preferences", "push_subscriptions", "announcements", "announcement_user_interactions", "email_templates", "email_campaigns", "email_campaign_logs"]);
+            .Should().Contain(["subscription_products", "subscription_plans", "user_subscriptions", "payments", "cms_content_blocks", "cms_pages", "cms_blog_posts", "cms_contact_messages", "cms_newsletter_subscribers", "notifications", "notification_preferences", "notification_type_preferences", "push_subscriptions", "announcements", "announcement_user_interactions", "email_templates", "email_campaigns", "email_campaign_logs", "rsvp_sessions"]);
         context.Model.GetEntityTypes()
             .Should()
             .Contain(entity => entity.GetTableName() == "idempotency_records");
@@ -163,7 +163,8 @@ public sealed class SpeedReadingOwnedDomainTests
             .And.Contain("20260827149000_AddOwnedVisualizationAndVocabulary")
             .And.Contain("20260827150000_AddOwnedSubscriptionsAndPayments")
             .And.Contain("20260827151000_AddOwnedCms")
-            .And.Contain("20260827152000_AddOwnedNotifications");
+            .And.Contain("20260827152000_AddOwnedNotifications")
+            .And.Contain("20260827153000_AddOwnedRsvp");
     }
 
     [Fact]

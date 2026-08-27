@@ -93,6 +93,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     DbSet<LegacyEmailTemplate> ISpeedReadingDataContext.EmailTemplates => EmailTemplates;
     DbSet<LegacyEmailCampaign> ISpeedReadingDataContext.EmailCampaigns => EmailCampaigns;
     DbSet<LegacyEmailCampaignLog> ISpeedReadingDataContext.EmailCampaignLogs => EmailCampaignLogs;
+    DbSet<LegacyRsvpSession> ISpeedReadingDataContext.RsvpSessions => RsvpSessions;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

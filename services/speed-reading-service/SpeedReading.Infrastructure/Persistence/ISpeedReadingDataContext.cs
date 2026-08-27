@@ -26,6 +26,7 @@ internal interface ISpeedReadingDataContext
     DbSet<LegacyEmailTemplate> EmailTemplates { get; }
     DbSet<LegacyEmailCampaign> EmailCampaigns { get; }
     DbSet<LegacyEmailCampaignLog> EmailCampaignLogs { get; }
+    DbSet<LegacyRsvpSession> RsvpSessions { get; }
     EntityEntry Entry(object entity);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

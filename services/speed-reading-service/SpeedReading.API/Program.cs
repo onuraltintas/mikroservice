@@ -51,6 +51,8 @@ var backfillOwnedCms = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-cms", StringComparison.OrdinalIgnoreCase));
 var backfillOwnedNotifications = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-notifications", StringComparison.OrdinalIgnoreCase));
+var backfillOwnedRsvp = args.Any(argument =>
+    string.Equals(argument, "--backfill-owned-rsvp", StringComparison.OrdinalIgnoreCase));
 
 // The legacy speed-reading schema is not managed by EF migrations. This
 // one-shot mode applies only idempotent additive compatibility objects before
@@ -279,6 +281,17 @@ if (backfillOwnedNotifications)
     await using var backfillScope = backfillApp.Services.CreateAsyncScope();
     var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingNotificationBackfill>()
         ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-notifications.");
+    Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
+    return;
+}
+
+if (backfillOwnedRsvp)
+{
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
+    await using var backfillApp = builder.Build();
+    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
+    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingRsvpBackfill>()
+        ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-rsvp.");
     Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
     return;
 }

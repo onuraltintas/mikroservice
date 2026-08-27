@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.Rsvp;
+using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Infrastructure.Legacy;
 
-internal sealed class LegacySpeedReadingRsvp(SpeedReadingDbContext db) : ISpeedReadingRsvp
+internal sealed class LegacySpeedReadingRsvp(ISpeedReadingDataContext db) : ISpeedReadingRsvp
 {
     public async Task<IReadOnlyList<RsvpSessionSummary>> GetSessionsAsync(
         Guid userId,

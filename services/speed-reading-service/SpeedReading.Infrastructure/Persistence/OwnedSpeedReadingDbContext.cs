@@ -73,6 +73,7 @@ public sealed class OwnedSpeedReadingDbContext(
     DbSet<LegacyEmailTemplate> ISpeedReadingDataContext.EmailTemplates => Set<LegacyEmailTemplate>();
     DbSet<LegacyEmailCampaign> ISpeedReadingDataContext.EmailCampaigns => Set<LegacyEmailCampaign>();
     DbSet<LegacyEmailCampaignLog> ISpeedReadingDataContext.EmailCampaignLogs => Set<LegacyEmailCampaignLog>();
+    DbSet<LegacyRsvpSession> ISpeedReadingDataContext.RsvpSessions => Set<LegacyRsvpSession>();
     internal DbSet<OwnedIdempotencyRecord> IdempotencyRecords => Set<OwnedIdempotencyRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -512,6 +513,25 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.SentAt).HasColumnName("sent_at");
             entity.Property(item => item.ErrorMessage).HasColumnName("error_message").HasMaxLength(2_000);
             entity.HasIndex(item => item.CampaignId);
+        });
+        modelBuilder.Entity<LegacyRsvpSession>(entity =>
+        {
+            ConfigureLegacyEntity(entity, "rsvp_sessions");
+            entity.Property(item => item.UserId).HasColumnName("user_id");
+            entity.Property(item => item.TextId).HasColumnName("text_id");
+            entity.Property(item => item.TextContent).HasColumnName("text_content");
+            entity.Property(item => item.WordsPerMinute).HasColumnName("words_per_minute");
+            entity.Property(item => item.FontFamily).HasColumnName("font_family").HasMaxLength(100).IsRequired();
+            entity.Property(item => item.FontSize).HasColumnName("font_size");
+            entity.Property(item => item.BackgroundColor).HasColumnName("background_color").HasMaxLength(20).IsRequired();
+            entity.Property(item => item.TextColor).HasColumnName("text_color").HasMaxLength(20).IsRequired();
+            entity.Property(item => item.TotalWords).HasColumnName("total_words");
+            entity.Property(item => item.CompletedWords).HasColumnName("completed_words");
+            entity.Property(item => item.SessionDuration).HasColumnName("session_duration");
+            entity.Property(item => item.Completed).HasColumnName("completed");
+            entity.Property(item => item.CompletedAt).HasColumnName("completed_at");
+            entity.HasIndex(item => item.UserId);
+            entity.HasIndex(item => new { item.UserId, item.CreatedAt });
         });
         modelBuilder.Entity<OwnedIdempotencyRecord>(entity =>
         {
