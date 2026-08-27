@@ -54,6 +54,7 @@ public sealed class OwnedSpeedReadingCatalogBackfill(
             .ToListAsync(cancellationToken);
 
         ValidateSource(categories, types, exercises, readingTexts, questions);
+        var normalizedQuestionOrders = NormalizeQuestionOrders(questions);
 
         await using var transaction = await owned.Database.BeginTransactionAsync(cancellationToken);
         var existingRows = 0;
@@ -206,7 +207,7 @@ public sealed class OwnedSpeedReadingCatalogBackfill(
                 source.ReadingTextId,
                 source.QuestionText,
                 source.CorrectAnswer,
-                source.OrderIndex,
+                normalizedQuestionOrders[source.Id],
                 source.Type,
                 source.BloomLevel,
                 source.DifficultyLevel,
@@ -243,10 +244,6 @@ public sealed class OwnedSpeedReadingCatalogBackfill(
     {
         EnsureUnique(categories, item => item.Name, "exercise type category name");
         EnsureUnique(types, item => item.Name, "exercise type name");
-        EnsureUnique(
-            questions,
-            item => $"{item.ReadingTextId}:{item.OrderIndex}",
-            "reading question order within text");
 
         var categoryIds = categories.Select(item => item.Id).ToHashSet();
         foreach (var type in types.Where(item => item.CategoryId.HasValue))
@@ -267,6 +264,31 @@ public sealed class OwnedSpeedReadingCatalogBackfill(
                     $"Exercise {exercise.Id} references a missing or deleted exercise type {exercise.ExerciseTypeId}.");
             }
         }
+    }
+
+    private static IReadOnlyDictionary<Guid, int> NormalizeQuestionOrders(
+        IReadOnlyList<LegacyReadingQuestion> questions)
+    {
+        // The legacy source contains duplicate order values for some texts,
+        // while the owned schema enforces one order per text. Preserve the
+        // source order and resolve collisions deterministically by source id.
+        return questions
+            .GroupBy(item => item.ReadingTextId)
+            .SelectMany(group =>
+            {
+                var used = new HashSet<int>();
+                return group
+                    .OrderBy(item => item.OrderIndex)
+                    .ThenBy(item => item.Id)
+                    .Select(item =>
+                    {
+                        var order = Math.Max(0, item.OrderIndex);
+                        while (!used.Add(order))
+                            order++;
+                        return new { item.Id, Order = order };
+                    });
+            })
+            .ToDictionary(item => item.Id, item => item.Order);
     }
 
     private static void EnsureUnique<T>(
