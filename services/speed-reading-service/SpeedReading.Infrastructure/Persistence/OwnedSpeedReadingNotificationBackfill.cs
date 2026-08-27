@@ -18,7 +18,25 @@ public sealed class OwnedSpeedReadingNotificationBackfill(
             notification.SentAt = notification.EmailSentAt ?? notification.PushSentAt;
         }
         var sourcePreferences = await legacy.NotificationPreferences.AsNoTracking().ToListAsync(cancellationToken);
-        var sourceTypePreferences = await legacy.NotificationTypePreferences.AsNoTracking().ToListAsync(cancellationToken);
+        // The legacy database stores type preferences in NotificationPreferences.
+        // The separate NotificationTypePreferences table exists only in the
+        // compatibility model, so materialize the owned type rows from the same
+        // source records instead of querying a table that is not present.
+        var sourceTypePreferences = sourcePreferences
+            .Select(preference => new LegacyNotificationTypePreference
+            {
+                Id = preference.Id,
+                UserId = preference.UserId,
+                NotificationType = preference.NotificationType,
+                EnableInApp = preference.InAppEnabled,
+                EnableEmail = preference.EmailEnabled,
+                EnablePush = preference.PushEnabled,
+                PreferredTime = preference.PreferredTime,
+                CreatedAt = preference.CreatedAt,
+                UpdatedAt = preference.UpdatedAt,
+                IsDeleted = preference.IsDeleted
+            })
+            .ToList();
         var sourcePushSubscriptions = await legacy.PushSubscriptions.AsNoTracking().ToListAsync(cancellationToken);
         var sourceAnnouncements = await legacy.Announcements.AsNoTracking().ToListAsync(cancellationToken);
         var sourceInteractions = await legacy.AnnouncementUserInteractions.AsNoTracking().ToListAsync(cancellationToken);

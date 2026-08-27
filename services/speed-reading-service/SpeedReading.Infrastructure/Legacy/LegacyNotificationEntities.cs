@@ -39,9 +39,14 @@ internal sealed class LegacyUserNotification : LegacyNotificationBase
 internal sealed class LegacyNotificationPreference : LegacyNotificationBase
 {
     public Guid UserId { get; set; }
+    public int NotificationType { get; set; }
     public bool EmailEnabled { get; set; }
     public bool PushEnabled { get; set; }
     public bool InAppEnabled { get; set; }
+    public bool EnableInstant { get; set; }
+    public bool EnableDaily { get; set; }
+    public bool EnableWeekly { get; set; }
+    public string? PreferredTime { get; set; }
     public bool SmsEnabled { get; set; }
     public bool AchievementsEnabled { get; set; }
     public bool LevelUpEnabled { get; set; }

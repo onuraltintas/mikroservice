@@ -353,6 +353,29 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Fact]
+    public void Owned_notification_preferences_preserve_legacy_type_flags()
+    {
+        using var context = new OwnedSpeedReadingDbContext(
+            new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+                .UseNpgsql("Host=localhost;Database=unused;Username=unused;Password=unused")
+                .Options);
+
+        var entity = context.Model.GetEntityTypes()
+            .Single(item => item.ClrType.Name == "LegacyNotificationPreference");
+        var table = StoreObjectIdentifier.Table("notification_preferences", "speed_reading");
+
+        new[]
+        {
+            ("NotificationType", "notification_type"),
+            ("EmailEnabled", "email_enabled"),
+            ("EnableInstant", "enable_instant"),
+            ("EnableDaily", "enable_daily"),
+            ("EnableWeekly", "enable_weekly")
+        }.Should().AllSatisfy(mapping =>
+            entity.FindProperty(mapping.Item1)!.GetColumnName(table).Should().Be(mapping.Item2));
+    }
+
+    [Fact]
     public void Owned_model_allows_reassignment_after_a_soft_removed_membership()
     {
         using var context = new OwnedSpeedReadingDbContext(

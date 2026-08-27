@@ -275,6 +275,21 @@ public sealed class CmsLegacyModelTests
         notification.FindProperty("Data")!.GetColumnName().Should().Be("MetadataJson");
         notification.FindProperty("EmailSentAt")!.GetColumnName().Should().Be("EmailSentAt");
 
+        var preference = context.Model.GetEntityTypes()
+            .Single(entity => entity.ClrType.Name == "LegacyNotificationPreference");
+        preference.FindProperty("NotificationType")!.GetColumnName().Should().Be("NotificationType");
+        preference.FindProperty("EmailEnabled")!.GetColumnName().Should().Be("EnableEmail");
+        preference.FindProperty("EnableInstant")!.GetColumnName().Should().Be("EnableInstant");
+        preference.FindProperty("EnableDaily")!.GetColumnName().Should().Be("EnableDaily");
+        preference.FindProperty("EnableWeekly")!.GetColumnName().Should().Be("EnableWeekly");
+        preference.FindProperty("PreferredTime")!.GetColumnName().Should().Be("PreferredTime");
+        preference.FindProperty("SmsEnabled").Should().BeNull();
+        preference.FindProperty("Email").Should().BeNull();
+
+        var typePreference = context.Model.GetEntityTypes()
+            .Single(entity => entity.ClrType.Name == "LegacyNotificationTypePreference");
+        typePreference.GetTableName().Should().Be("NotificationTypePreferences");
+
         var announcement = context.Model.GetEntityTypes()
             .Single(entity => entity.GetTableName() == "Announcements");
         announcement.FindProperty("EndDate")!.GetColumnName().Should().Be("EndDate");

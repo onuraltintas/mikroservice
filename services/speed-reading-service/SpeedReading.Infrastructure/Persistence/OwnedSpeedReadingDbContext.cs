@@ -668,9 +668,14 @@ public sealed class OwnedSpeedReadingDbContext(
         {
             ConfigureNotificationEntity(entity, "notification_preferences");
             entity.Property(item => item.UserId).HasColumnName("user_id");
+            entity.Property(item => item.NotificationType).HasColumnName("notification_type");
             entity.Property(item => item.EmailEnabled).HasColumnName("email_enabled");
             entity.Property(item => item.PushEnabled).HasColumnName("push_enabled");
             entity.Property(item => item.InAppEnabled).HasColumnName("in_app_enabled");
+            entity.Property(item => item.EnableInstant).HasColumnName("enable_instant");
+            entity.Property(item => item.EnableDaily).HasColumnName("enable_daily");
+            entity.Property(item => item.EnableWeekly).HasColumnName("enable_weekly");
+            entity.Ignore(item => item.PreferredTime);
             entity.Property(item => item.SmsEnabled).HasColumnName("sms_enabled");
             entity.Property(item => item.AchievementsEnabled).HasColumnName("achievements_enabled");
             entity.Property(item => item.LevelUpEnabled).HasColumnName("level_up_enabled");

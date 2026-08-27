@@ -102,7 +102,7 @@ public sealed class OwnedSpeedReadingParityChecker(
 
         rows.Add(await CompareAsync("Notifications", "notifications", "Id", "id", legacy.Notifications.Select(item => item.Id), ownedData.Notifications.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("NotificationPreferences", "notification_preferences", "Id", "id", legacy.NotificationPreferences.Select(item => item.Id), ownedData.NotificationPreferences.Select(item => item.Id), cancellationToken));
-        rows.Add(await CompareAsync("NotificationTypePreferences", "notification_type_preferences", "Id", "id", legacy.NotificationTypePreferences.Select(item => item.Id), ownedData.NotificationTypePreferences.Select(item => item.Id), cancellationToken));
+        rows.Add(await CompareAsync("NotificationTypePreferences", "notification_type_preferences", "Id", "id", legacy.NotificationPreferences.Select(item => item.Id), ownedData.NotificationTypePreferences.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("PushSubscriptions", "push_subscriptions", "Id", "id", legacy.PushSubscriptions.Select(item => item.Id), ownedData.PushSubscriptions.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("Announcements", "announcements", "Id", "id", legacy.Announcements.Select(item => item.Id), ownedData.Announcements.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("AnnouncementUserInteractions", "announcement_user_interactions", "Id", "id", legacy.AnnouncementUserInteractions.Select(item => item.Id), ownedData.AnnouncementUserInteractions.Select(item => item.Id), cancellationToken));

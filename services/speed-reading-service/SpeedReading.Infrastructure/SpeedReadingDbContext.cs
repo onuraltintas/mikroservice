@@ -347,17 +347,22 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
         {
             entity.ToTable("NotificationPreferences");
             entity.HasKey(item => item.Id);
-            entity.Property(item => item.EmailEnabled).HasColumnName("EmailEnabled");
-            entity.Property(item => item.PushEnabled).HasColumnName("PushEnabled");
-            entity.Property(item => item.InAppEnabled).HasColumnName("InAppEnabled");
-            entity.Property(item => item.SmsEnabled).HasColumnName("SmsEnabled");
-            entity.Property(item => item.AchievementsEnabled).HasColumnName("AchievementsEnabled");
-            entity.Property(item => item.LevelUpEnabled).HasColumnName("LevelUpEnabled");
-            entity.Property(item => item.DailyReminderEnabled).HasColumnName("DailyReminderEnabled");
-            entity.Property(item => item.StreakMilestoneEnabled).HasColumnName("StreakMilestoneEnabled");
-            entity.Property(item => item.Email).HasMaxLength(256);
-            entity.Property(item => item.PhoneNumber).HasMaxLength(20);
-            entity.HasIndex(item => item.UserId).IsUnique();
+            entity.Property(item => item.NotificationType).HasColumnName("NotificationType");
+            entity.Property(item => item.EmailEnabled).HasColumnName("EnableEmail");
+            entity.Property(item => item.PushEnabled).HasColumnName("EnablePush");
+            entity.Property(item => item.InAppEnabled).HasColumnName("EnableInApp");
+            entity.Property(item => item.EnableInstant).HasColumnName("EnableInstant");
+            entity.Property(item => item.EnableDaily).HasColumnName("EnableDaily");
+            entity.Property(item => item.EnableWeekly).HasColumnName("EnableWeekly");
+            entity.Property(item => item.PreferredTime).HasColumnName("PreferredTime").HasMaxLength(10);
+            entity.Ignore(item => item.SmsEnabled);
+            entity.Ignore(item => item.AchievementsEnabled);
+            entity.Ignore(item => item.LevelUpEnabled);
+            entity.Ignore(item => item.DailyReminderEnabled);
+            entity.Ignore(item => item.StreakMilestoneEnabled);
+            entity.Ignore(item => item.Email);
+            entity.Ignore(item => item.PhoneNumber);
+            entity.HasIndex(item => new { item.UserId, item.NotificationType });
         });
 
         modelBuilder.Entity<LegacyNotificationTypePreference>(entity =>
