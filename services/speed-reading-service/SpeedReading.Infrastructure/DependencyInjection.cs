@@ -29,6 +29,7 @@ using SpeedReading.Infrastructure.ExternalServices;
 using SpeedReading.Infrastructure.Exports;
 using SpeedReading.Infrastructure.Legacy;
 using SpeedReading.Infrastructure.Payments;
+using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Infrastructure;
 
@@ -51,6 +52,20 @@ public static class DependencyInjection
         services.AddDbContext<SpeedReadingDbContext>(options =>
             options.UseNpgsql(connectionString, npgsql =>
                 npgsql.EnableRetryOnFailure()));
+
+        var ownedConnectionString = configuration.GetConnectionString("SpeedReadingOwned")
+            ?? configuration["SPEED_READING_OWNED_CONNECTION_STRING"]
+            ?? Environment.GetEnvironmentVariable("SPEED_READING_OWNED_CONNECTION_STRING");
+        if (!string.IsNullOrWhiteSpace(ownedConnectionString))
+        {
+            services.AddDbContext<OwnedSpeedReadingDbContext>(options =>
+                options.UseNpgsql(ownedConnectionString, npgsql =>
+                {
+                    npgsql.MigrationsHistoryTable("__ef_migrations_history", "speed_reading");
+                    npgsql.EnableRetryOnFailure();
+                }));
+        }
+
         services.AddMemoryCache(options => options.SizeLimit = 4_096);
 
         var iyzicoOptions = configuration

@@ -33,6 +33,35 @@ verilecektir:
 | Shadow read ve write cutover | Bekliyor | Eski DB yazma yetkisi kaldırılmış, rollback kanıtlı |
 | Eski runtime/DB erişiminin kaldırılması | Bekliyor | Bağımsızlık testi ve production smoke tamamlanmış |
 
+## Uygulanan ilk owned slice
+
+İlk bağımsız veri sınırı kod tabanına eklendi; henüz canlı trafik cutover'ı
+yapılmadı:
+
+- `SpeedReading.Domain` altında egzersiz, okuma metni/sorusu ve egzersiz
+  oturumu/sonucu aggregate'leri bulunur. Oturum yaşam döngüsü, pause süresi,
+  timeout, cevap tekilleştirme ve sonuç tekilliği kuralları burada korunur.
+- `OwnedSpeedReadingDbContext`, legacy `SpeedReadingDbContext`'ten tamamen
+  ayrıdır ve yalnızca `speed_reading` şemasındaki yeni tabloları modeller:
+  `exercises`, `reading_texts`, `reading_questions`, `exercise_sessions`,
+  `exercise_session_answers`, `exercise_session_results`.
+- `CreateOwnedSpeedReadingCore` migration'ı ayrı migration history tablosu
+  (`speed_reading.__ef_migrations_history`) kullanır. Legacy tabloya
+  `ALTER`, `DROP` veya business migration uygulanmaz.
+- Yeni bağlantı `ConnectionStrings:SpeedReadingOwned` veya
+  `SPEED_READING_OWNED_CONNECTION_STRING` ile verilir. Bağlantı boşsa servis
+  eski çalışma düzenini korur; bağlantı verilirse migration-only container
+  owned migration'ı da uygular ve readiness health check'i ekler.
+- `SPEED_READING_CONNECTION_STRING` geçiş tamamlanana kadar legacy kaynak
+  bağlantısıdır. Bu nedenle bu adım tek başına “tamamen taşındı” anlamına
+  gelmez; backfill, parity ve runtime write cutover sonraki kapılardır.
+
+Yeni DB'yi mevcut PostgreSQL volume'ünde kullanmadan önce production backup
+alınmalı ve `speedreading_owned_db` veritabanı operasyonel olarak oluşturulup
+erişim doğrulanmalıdır. Compose ilk kez oluşturulan PostgreSQL volume'lerinde
+bu veritabanını `POSTGRES_DB_SPEED_READING_OWNED` ile otomatik oluşturacak
+şekilde hazırlanmıştır; mevcut volume'lerde init script geriye dönük çalışmaz.
+
 ## Kaynak uygulama kararı
 
 Taşınacak kaynak `onuraltintas/HizliOkuma` reposudur. `HizliOkuma_DDD`

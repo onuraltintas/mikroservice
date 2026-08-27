@@ -8,6 +8,7 @@ using EduPlatform.Shared.Security.Services;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.Configuration;
 using SpeedReading.Infrastructure;
+using SpeedReading.Infrastructure.Persistence;
 
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", ".env");
 if (File.Exists(envPath))
@@ -46,6 +47,13 @@ if (migrationOnly)
         await migrationDb.Database.ExecuteSqlRawAsync(
             script.Replace("{", "{{").Replace("}", "}}"));
     }
+
+    var ownedMigrationDb = migrationScope.ServiceProvider.GetService<OwnedSpeedReadingDbContext>();
+    if (ownedMigrationDb is not null)
+    {
+        await ownedMigrationDb.Database.MigrateAsync();
+    }
+
     return;
 }
 
@@ -100,6 +108,14 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<SpeedReadingDbContext>("database", tags: ["ready"]);
+if (!string.IsNullOrWhiteSpace(
+        builder.Configuration.GetConnectionString("SpeedReadingOwned")
+        ?? builder.Configuration["SPEED_READING_OWNED_CONNECTION_STRING"]
+        ?? Environment.GetEnvironmentVariable("SPEED_READING_OWNED_CONNECTION_STRING")))
+{
+    builder.Services.AddHealthChecks()
+        .AddDbContextCheck<OwnedSpeedReadingDbContext>("owned-database", tags: ["ready"]);
+}
 
 var app = builder.Build();
 app.UseRequestLogging();

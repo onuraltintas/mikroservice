@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB_IDENTITY} # Default DB, others created by script
-      POSTGRES_MULTIPLE_DATABASES: ${POSTGRES_DB_COACHING},${POSTGRES_DB_NOTIFICATION}
+      POSTGRES_MULTIPLE_DATABASES: ${POSTGRES_DB_COACHING},${POSTGRES_DB_NOTIFICATION},${POSTGRES_DB_SPEED_READING_OWNED:-speedreading_owned_db}
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
@@ -229,6 +229,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT:?ENVIRONMENT must be set to Development, Staging or Production}
       - ConnectionStrings__SpeedReading=${SPEED_READING_CONNECTION_STRING:-}
+      - ConnectionStrings__SpeedReadingOwned=${SPEED_READING_OWNED_CONNECTION_STRING:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -244,6 +245,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT:?ENVIRONMENT must be set to Development, Staging or Production}
       - ConnectionStrings__SpeedReading=${SPEED_READING_CONNECTION_STRING:-}
+      - ConnectionStrings__SpeedReadingOwned=${SPEED_READING_OWNED_CONNECTION_STRING:-}
       - SpeedReading__Mode=${SPEED_READING_MODE:-Standalone}
       - SpeedReading__CoachingIntegrationEnabled=${SPEED_READING_COACHING_INTEGRATION_ENABLED:-false}
       - SpeedReading__NotificationIntegrationEnabled=${SPEED_READING_NOTIFICATION_INTEGRATION_ENABLED:-false}
