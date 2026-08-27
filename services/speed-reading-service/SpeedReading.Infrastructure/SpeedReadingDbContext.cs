@@ -380,6 +380,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.Property(item => item.Endpoint).HasMaxLength(500).IsRequired();
             entity.Property(item => item.P256DH).HasMaxLength(200).IsRequired();
             entity.Property(item => item.Auth).HasMaxLength(200).IsRequired();
+            entity.Ignore(item => item.IsActive);
             entity.HasIndex(item => item.Endpoint);
             entity.HasIndex(item => item.UserId);
         });

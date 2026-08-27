@@ -290,6 +290,10 @@ public sealed class CmsLegacyModelTests
             .Single(entity => entity.ClrType.Name == "LegacyNotificationTypePreference");
         typePreference.GetTableName().Should().Be("NotificationTypePreferences");
 
+        var pushSubscription = context.Model.GetEntityTypes()
+            .Single(entity => entity.ClrType.Name == "LegacyPushSubscription");
+        pushSubscription.FindProperty("IsActive").Should().BeNull();
+
         var announcement = context.Model.GetEntityTypes()
             .Single(entity => entity.GetTableName() == "Announcements");
         announcement.FindProperty("EndDate")!.GetColumnName().Should().Be("EndDate");

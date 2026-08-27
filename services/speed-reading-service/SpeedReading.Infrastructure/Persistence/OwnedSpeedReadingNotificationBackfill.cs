@@ -38,6 +38,8 @@ public sealed class OwnedSpeedReadingNotificationBackfill(
             })
             .ToList();
         var sourcePushSubscriptions = await legacy.PushSubscriptions.AsNoTracking().ToListAsync(cancellationToken);
+        foreach (var subscription in sourcePushSubscriptions)
+            subscription.IsActive = !subscription.IsDeleted;
         var sourceAnnouncements = await legacy.Announcements.AsNoTracking().ToListAsync(cancellationToken);
         var sourceInteractions = await legacy.AnnouncementUserInteractions.AsNoTracking().ToListAsync(cancellationToken);
         var sourceTemplates = await legacy.EmailTemplates.AsNoTracking().ToListAsync(cancellationToken);
