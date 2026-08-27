@@ -2,6 +2,9 @@ using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using SpeedReading.Application.Analytics;
+using SpeedReading.Application.Content;
+using SpeedReading.Application.Reports;
 using SpeedReading.Domain.AgeGroups;
 using SpeedReading.Domain.Assignments;
 using SpeedReading.Domain.Catalog;
@@ -37,6 +40,30 @@ public sealed class SpeedReadingOwnedDomainTests
         action.Should().NotThrow();
         services.Should().Contain(item => item.ServiceType == typeof(OwnedSpeedReadingDbContext));
         services.Should().NotContain(item => item.ServiceType == typeof(SpeedReadingDbContext));
+    }
+
+    [Fact]
+    public void Owned_runtime_selects_owned_reporting_and_content_writers()
+    {
+        var configuration = new ConfigurationManager
+        {
+            ["SpeedReading:OwnedDataEnabled"] = "true",
+            ["ConnectionStrings:SpeedReadingOwned"] = "Host=localhost;Database=unused;Username=unused;Password=unused"
+        };
+        var services = new ServiceCollection();
+
+        services.AddSpeedReadingInfrastructure(configuration, includeLegacyData: false);
+
+        services.Last(item => item.ServiceType == typeof(ILegacySpeedReadingAnalytics))
+            .ImplementationType!.Name.Should().Be("OwnedSpeedReadingAnalytics");
+        services.Last(item => item.ServiceType == typeof(ILegacySpeedReadingAdminAnalytics))
+            .ImplementationType!.Name.Should().Be("OwnedSpeedReadingAdminAnalytics");
+        services.Last(item => item.ServiceType == typeof(ILegacySpeedReadingTeacherReports))
+            .ImplementationType!.Name.Should().Be("OwnedSpeedReadingTeacherReports");
+        services.Last(item => item.ServiceType == typeof(ILegacySpeedReadingReports))
+            .ImplementationType!.Name.Should().Be("OwnedSpeedReadingReports");
+        services.Last(item => item.ServiceType == typeof(ISpeedReadingContentAdminWriter))
+            .ImplementationType!.Name.Should().Be("OwnedSpeedReadingContentAdminWriter");
     }
 
     [Fact]

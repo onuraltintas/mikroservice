@@ -165,6 +165,7 @@ public static class DependencyInjection
             services.AddScoped<ISpeedReadingStudentProgram, OwnedSpeedReadingStudentProgram>();
             services.AddScoped<ISpeedReadingAssessment, OwnedSpeedReadingAssessment>();
             services.AddScoped<ISpeedReadingCatalogAdminWriter, OwnedSpeedReadingCatalogAdminWriter>();
+            services.AddScoped<ISpeedReadingContentAdminWriter, OwnedSpeedReadingContentAdminWriter>();
             services.AddScoped<ILegacySpeedReadingLearningPaths, OwnedSpeedReadingLearningPaths>();
             services.AddScoped<ISpeedReadingLearningPathAdminWriter, OwnedSpeedReadingLearningPathAdminWriter>();
             services.AddScoped<ISpeedReadingQuestionBank, OwnedSpeedReadingQuestionBank>();
@@ -177,10 +178,6 @@ public static class DependencyInjection
             services.AddScoped<ISpeedReadingStudentReading, OwnedSpeedReadingStudentReading>();
             services.AddScoped<ISpeedReadingAdaptiveLearning, OwnedSpeedReadingAdaptiveLearning>();
             services.AddScoped<ISpeedReadingAdaptiveText, OwnedSpeedReadingAdaptiveText>();
-            services.AddScoped<ILegacySpeedReadingReports, OwnedSpeedReadingReports>();
-            services.AddScoped<ISpeedReadingReportsAdminWriter, OwnedSpeedReadingReports>();
-            services.AddScoped<ISpeedReadingReportsScheduleWriter, OwnedSpeedReadingReports>();
-            services.AddScoped<ISpeedReadingReportsSnapshotWriter, OwnedSpeedReadingReports>();
         }
         else
         {
@@ -221,6 +218,13 @@ public static class DependencyInjection
             services.AddScoped<ILegacySpeedReadingGamification, OwnedSpeedReadingGamification>();
             services.AddScoped<ISpeedReadingGamificationAdminWriter, OwnedSpeedReadingGamificationAdminWriter>();
             services.AddScoped<IAdminAuditWriter, OwnedSpeedReadingAdminAuditWriter>();
+            services.AddScoped<ILegacySpeedReadingAnalytics, OwnedSpeedReadingAnalytics>();
+            services.AddScoped<ILegacySpeedReadingAdminAnalytics, OwnedSpeedReadingAdminAnalytics>();
+            services.AddScoped<ILegacySpeedReadingTeacherReports, OwnedSpeedReadingTeacherReports>();
+            services.AddScoped<ILegacySpeedReadingReports, OwnedSpeedReadingReports>();
+            services.AddScoped<ISpeedReadingReportsAdminWriter, OwnedSpeedReadingReports>();
+            services.AddScoped<ISpeedReadingReportsScheduleWriter, OwnedSpeedReadingReports>();
+            services.AddScoped<ISpeedReadingReportsSnapshotWriter, OwnedSpeedReadingReports>();
         }
 
         return services;
