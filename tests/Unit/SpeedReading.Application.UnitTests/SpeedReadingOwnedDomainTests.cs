@@ -114,7 +114,8 @@ public sealed class SpeedReadingOwnedDomainTests
             .And.Contain("20260827140000_AddOwnedProgramsAndDailyProgress")
             .And.Contain("20260827141000_AddOwnedWriteSupport")
             .And.Contain("20260827142000_AddOwnedAgeGroups")
-            .And.Contain("20260827143000_AddOwnedUserProfiles");
+            .And.Contain("20260827143000_AddOwnedUserProfiles")
+            .And.Contain("20260827144000_AddOwnedCatalogWriteSupport");
     }
 
     [Fact]
@@ -156,6 +157,24 @@ public sealed class SpeedReadingOwnedDomainTests
         profile.CurrentLevel.Should().Be(4);
         profile.TargetWPM.Should().Be(275);
         profile.TargetComprehension.Should().Be(82.5m);
+    }
+
+    [Fact]
+    public void Deleted_catalog_entities_are_inactive_and_audited()
+    {
+        var actorId = Guid.NewGuid();
+        var type = ExerciseType.Create(
+            Guid.NewGuid(),
+            "speed",
+            "Speed",
+            "speed",
+            null);
+
+        type.Delete(actorId, DateTime.UtcNow);
+
+        type.IsDeleted.Should().BeTrue();
+        type.IsActive.Should().BeFalse();
+        type.DeletedBy.Should().Be(actorId.ToString());
     }
 
     [Fact]

@@ -13,7 +13,7 @@ namespace SpeedReading.API.Controllers;
 [Authorize]
 public sealed class ExercisesController(
     ILegacySpeedReadingCatalog catalog,
-    ISpeedReadingContentAdminWriter adminWriter) : ControllerBase
+    ISpeedReadingCatalogAdminWriter adminWriter) : ControllerBase
 {
     [HttpGet]
     public Task<SpeedReadingPage<ExerciseSummary>> GetExercises(

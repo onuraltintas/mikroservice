@@ -13,7 +13,7 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
         CancellationToken cancellationToken = default) =>
         await db.ExerciseTypeCategories
             .AsNoTracking()
-            .Where(item => item.IsActive)
+            .Where(item => !item.IsDeleted)
             .OrderBy(item => item.SortOrder)
             .ThenBy(item => item.DisplayName)
             .Select(item => new ExerciseTypeCategorySummary(
@@ -33,7 +33,7 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
         CancellationToken cancellationToken = default)
     {
         var (page, size) = NormalizePage(pageNumber, pageSize);
-        var query = db.ExerciseTypes.AsNoTracking();
+        var query = db.ExerciseTypes.AsNoTracking().Where(item => !item.IsDeleted);
         if (categoryId.HasValue)
             query = query.Where(item => item.CategoryId == categoryId.Value);
         if (isActive.HasValue)
@@ -74,7 +74,7 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
             from exercise in db.Exercises.AsNoTracking()
             join type in db.ExerciseTypes.AsNoTracking()
                 on exercise.ExerciseTypeId equals type.Id
-            where exercise.IsActive && type.IsActive
+            where !exercise.IsDeleted && !type.IsDeleted
             select new { exercise, type };
 
         if (exerciseTypeId.HasValue)
@@ -116,7 +116,7 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
         bool? isActive,
         CancellationToken cancellationToken = default)
     {
-        var query = db.ReadingTexts.AsNoTracking();
+        var query = db.ReadingTexts.AsNoTracking().Where(item => !item.IsDeleted);
         if (isActive.HasValue)
             query = query.Where(item => item.IsActive == isActive.Value);
         if (exerciseId.HasValue)
@@ -137,7 +137,7 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
         if (onlyWithQuestions)
         {
             query = query.Where(item => db.ReadingQuestions.Any(question =>
-                question.ReadingTextId == item.Id));
+                question.ReadingTextId == item.Id && !question.IsDeleted));
         }
 
         return await query
@@ -164,7 +164,7 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
         CancellationToken cancellationToken = default) =>
         await db.ReadingTexts
             .AsNoTracking()
-            .Where(item => item.IsActive && item.Category != string.Empty)
+            .Where(item => item.IsActive && !item.IsDeleted && item.Category != string.Empty)
             .Select(item => item.Category)
             .Distinct()
             .OrderBy(item => item)
@@ -174,7 +174,7 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
         CancellationToken cancellationToken = default) =>
         await db.ReadingTexts
             .AsNoTracking()
-            .Where(item => item.IsActive)
+            .Where(item => item.IsActive && !item.IsDeleted)
             .Select(item => item.DifficultyLevel)
             .Distinct()
             .OrderBy(item => item)
@@ -187,7 +187,7 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
         var boundedLimit = Math.Clamp(limit, 1, 50);
         return await db.ReadingTexts
             .AsNoTracking()
-            .Where(item => item.IsActive && item.WordCount > 0 && item.WordCount <= 200)
+            .Where(item => item.IsActive && !item.IsDeleted && item.WordCount > 0 && item.WordCount <= 200)
             .OrderByDescending(item => item.CreatedAt)
             .Take(boundedLimit)
             .Select(item => new ShortReadingTextSummary(
@@ -208,7 +208,7 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
     {
         var text = await db.ReadingTexts
             .AsNoTracking()
-            .Where(item => item.Id == id && (includeInactive || item.IsActive))
+            .Where(item => item.Id == id && !item.IsDeleted && (includeInactive || item.IsActive))
             .Select(item => new
             {
                 item.Id,
@@ -234,7 +234,7 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
         var questions = includeQuestions
             ? await db.ReadingQuestions
                 .AsNoTracking()
-                .Where(item => item.ReadingTextId == id)
+                .Where(item => item.ReadingTextId == id && !item.IsDeleted)
                 .OrderBy(item => item.OrderIndex)
                 .Select(item => new ReadingQuestionSummary(
                     item.Id,

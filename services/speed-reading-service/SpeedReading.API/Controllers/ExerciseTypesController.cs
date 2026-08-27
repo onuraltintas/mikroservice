@@ -12,7 +12,7 @@ namespace SpeedReading.API.Controllers;
 [Route("api/speed-reading/exercise-types")]
 public sealed class ExerciseTypesController(
     ILegacySpeedReadingCatalog catalog,
-    ISpeedReadingContentAdminWriter adminWriter) : ControllerBase
+    ISpeedReadingCatalogAdminWriter adminWriter) : ControllerBase
 {
     [HttpGet("categories")]
     [AllowAnonymous]

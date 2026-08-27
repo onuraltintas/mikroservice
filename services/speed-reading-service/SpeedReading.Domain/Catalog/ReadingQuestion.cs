@@ -20,6 +20,9 @@ public sealed class ReadingQuestion : Entity
     public string OptionD { get; private set; } = string.Empty;
     public string CorrectAnswer { get; private set; } = string.Empty;
     public int OrderIndex { get; private set; }
+    public bool IsDeleted { get; private set; }
+    public DateTime? DeletedAt { get; private set; }
+    public string? DeletedBy { get; private set; }
 
     public static ReadingQuestion Create(
         Guid id,
@@ -101,5 +104,52 @@ public sealed class ReadingQuestion : Entity
         question.UpdatedAt = updatedAt;
         question.UpdatedBy = updatedBy;
         return question;
+    }
+
+    public void Update(
+        string questionText,
+        int type,
+        int bloomLevel,
+        int difficultyLevel,
+        string? explanation,
+        string optionA,
+        string optionB,
+        string optionC,
+        string optionD,
+        string correctAnswer,
+        int orderIndex,
+        Guid actorId,
+        DateTime updatedAt)
+    {
+        if (actorId == Guid.Empty)
+            throw new ArgumentException("Reading question actor is required.", nameof(actorId));
+        if (string.IsNullOrWhiteSpace(questionText) || string.IsNullOrWhiteSpace(correctAnswer)
+            || orderIndex < 0 || bloomLevel < 0 || difficultyLevel < 0)
+            throw new ArgumentException("Reading question fields are invalid.");
+
+        QuestionText = questionText.Trim();
+        Type = type;
+        BloomLevel = bloomLevel;
+        DifficultyLevel = difficultyLevel;
+        Explanation = explanation?.Trim();
+        OptionA = optionA?.Trim() ?? string.Empty;
+        OptionB = optionB?.Trim() ?? string.Empty;
+        OptionC = optionC?.Trim() ?? string.Empty;
+        OptionD = optionD?.Trim() ?? string.Empty;
+        CorrectAnswer = correctAnswer.Trim();
+        OrderIndex = orderIndex;
+        UpdatedAt = updatedAt.Kind == DateTimeKind.Utc ? updatedAt : updatedAt.ToUniversalTime();
+        UpdatedBy = actorId.ToString();
+    }
+
+    public void Delete(Guid actorId, DateTime deletedAt)
+    {
+        if (actorId == Guid.Empty)
+            throw new ArgumentException("Reading question actor is required.", nameof(actorId));
+        IsDeleted = true;
+        DeletedAt = deletedAt.Kind == DateTimeKind.Utc ? deletedAt : deletedAt.ToUniversalTime();
+        DeletedBy = actorId.ToString();
+        UpdatedAt = DeletedAt;
+        UpdatedBy = actorId.ToString();
     }
 }

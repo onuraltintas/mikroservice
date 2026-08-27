@@ -18,7 +18,7 @@ namespace SpeedReading.API.Controllers;
 [Authorize]
 public sealed class ReadingTextsController(
     ILegacySpeedReadingCatalog catalog,
-    ISpeedReadingContentAdminWriter adminWriter,
+    ISpeedReadingCatalogAdminWriter adminWriter,
     ISpeedReadingReadingTextExporter exporter) : ControllerBase
 {
     [HttpGet]

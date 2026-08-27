@@ -113,6 +113,7 @@ public static class DependencyInjection
         services.AddScoped<ISpeedReadingSeriesAccess, LegacySpeedReadingSeriesAccess>();
         services.AddScoped<ISpeedReadingStudentReading, LegacySpeedReadingStudentReading>();
         services.AddScoped<ISpeedReadingContentAdminWriter, LegacySpeedReadingContentAdminWriter>();
+        services.AddScoped<ISpeedReadingCatalogAdminWriter, LegacySpeedReadingContentAdminWriter>();
         services.AddScoped<ILegacySpeedReadingLearningPaths, LegacySpeedReadingLearningPaths>();
         if (ownedDataEnabled)
         {
@@ -127,6 +128,7 @@ public static class DependencyInjection
             services.AddScoped<ISpeedReadingAgeGroups, OwnedSpeedReadingAgeGroups>();
             services.AddScoped<ISpeedReadingStudentProgram, OwnedSpeedReadingStudentProgram>();
             services.AddScoped<ISpeedReadingAssessment, OwnedSpeedReadingAssessment>();
+            services.AddScoped<ISpeedReadingCatalogAdminWriter, OwnedSpeedReadingCatalogAdminWriter>();
         }
         else
         {

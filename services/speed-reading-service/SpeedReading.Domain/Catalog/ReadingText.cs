@@ -23,6 +23,9 @@ public sealed class ReadingText : AggregateRoot
     public int TimesRead { get; private set; }
     public int AverageReadingTimeSeconds { get; private set; }
     public Guid? ExerciseId { get; private set; }
+    public bool IsDeleted { get; private set; }
+    public DateTime? DeletedAt { get; private set; }
+    public string? DeletedBy { get; private set; }
 
     public static ReadingText Create(
         Guid id,
@@ -106,6 +109,56 @@ public sealed class ReadingText : AggregateRoot
         readingText.UpdatedAt = updatedAt;
         readingText.UpdatedBy = updatedBy;
         return readingText;
+    }
+
+    public void Update(
+        string title,
+        string content,
+        string language,
+        Guid? exerciseId,
+        int wordCount,
+        string? category,
+        int difficultyLevel,
+        Guid? targetAgeGroupId,
+        bool isActive,
+        string? tags,
+        int recommendedMinLevel,
+        int recommendedMaxLevel,
+        Guid actorId,
+        DateTime updatedAt)
+    {
+        if (actorId == Guid.Empty)
+            throw new ArgumentException("Reading text actor is required.", nameof(actorId));
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(content)
+            || string.IsNullOrWhiteSpace(language) || difficultyLevel < 0)
+            throw new ArgumentException("Reading text fields are invalid.");
+
+        Title = title.Trim();
+        Content = content;
+        Language = language.Trim();
+        ExerciseId = exerciseId;
+        WordCount = wordCount > 0 ? wordCount : CountWords(content);
+        Category = category?.Trim() ?? string.Empty;
+        DifficultyLevel = difficultyLevel;
+        TargetAgeGroupId = targetAgeGroupId;
+        IsActive = isActive;
+        Tags = tags?.Trim() ?? string.Empty;
+        RecommendedMinLevel = recommendedMinLevel;
+        RecommendedMaxLevel = recommendedMaxLevel;
+        UpdatedAt = updatedAt.Kind == DateTimeKind.Utc ? updatedAt : updatedAt.ToUniversalTime();
+        UpdatedBy = actorId.ToString();
+    }
+
+    public void Delete(Guid actorId, DateTime deletedAt)
+    {
+        if (actorId == Guid.Empty)
+            throw new ArgumentException("Reading text actor is required.", nameof(actorId));
+        IsDeleted = true;
+        IsActive = false;
+        DeletedAt = deletedAt.Kind == DateTimeKind.Utc ? deletedAt : deletedAt.ToUniversalTime();
+        DeletedBy = actorId.ToString();
+        UpdatedAt = DeletedAt;
+        UpdatedBy = actorId.ToString();
     }
 
     private static int CountWords(string content) =>

@@ -75,6 +75,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.Description).HasMaxLength(2_000).IsRequired();
             entity.Property(item => item.TypeCode).HasMaxLength(100).IsRequired();
             entity.Property(item => item.ConfigurationJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
             entity.HasIndex(item => new { item.TypeCode, item.IsActive });
             entity.HasIndex(item => item.CreatorId);
             entity.HasOne<ExerciseType>()
@@ -89,6 +90,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.Name).HasMaxLength(100).IsRequired();
             entity.Property(item => item.DisplayName).HasMaxLength(200).IsRequired();
             entity.Property(item => item.Description).HasMaxLength(2_000).IsRequired();
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
             entity.HasIndex(item => item.Name).IsUnique();
         });
 
@@ -101,6 +103,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.IconName).HasMaxLength(100).IsRequired();
             entity.Property(item => item.ColorCode).HasMaxLength(30).IsRequired();
             entity.Property(item => item.EngineType).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
             entity.HasIndex(item => item.Name).IsUnique();
             entity.HasIndex(item => new { item.CategoryId, item.IsActive });
             entity.HasOne<ExerciseTypeCategory>()
@@ -117,6 +120,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.Category).HasMaxLength(100).IsRequired();
             entity.Property(item => item.Language).HasMaxLength(20).IsRequired();
             entity.Property(item => item.Tags).HasMaxLength(1_000).IsRequired();
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
             entity.Property(item => item.AverageComprehensionScore).HasPrecision(5, 2);
             entity.HasIndex(item => new { item.ExerciseId, item.IsActive });
             entity.HasIndex(item => new { item.Language, item.IsActive });
@@ -136,6 +140,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.OptionC).HasMaxLength(500).IsRequired();
             entity.Property(item => item.OptionD).HasMaxLength(500).IsRequired();
             entity.Property(item => item.CorrectAnswer).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
             entity.HasIndex(item => new { item.ReadingTextId, item.OrderIndex }).IsUnique();
             entity.HasOne<ReadingText>()
                 .WithMany()

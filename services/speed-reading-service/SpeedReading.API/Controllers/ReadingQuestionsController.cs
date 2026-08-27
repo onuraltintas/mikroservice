@@ -12,7 +12,7 @@ namespace SpeedReading.API.Controllers;
 [Route("api/speed-reading/reading-questions")]
 [Authorize]
 public sealed class ReadingQuestionsController(
-    ISpeedReadingContentAdminWriter adminWriter) : ControllerBase
+    ISpeedReadingCatalogAdminWriter adminWriter) : ControllerBase
 {
     [HttpPost]
     [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]

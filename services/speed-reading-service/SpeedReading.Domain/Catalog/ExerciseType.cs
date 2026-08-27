@@ -17,6 +17,9 @@ public sealed class ExerciseType : AggregateRoot
     public bool IsActive { get; private set; } = true;
     public string EngineType { get; private set; } = string.Empty;
     public Guid? CategoryId { get; private set; }
+    public bool IsDeleted { get; private set; }
+    public DateTime? DeletedAt { get; private set; }
+    public string? DeletedBy { get; private set; }
 
     public static ExerciseType Create(
         Guid id,
@@ -82,5 +85,49 @@ public sealed class ExerciseType : AggregateRoot
         exerciseType.UpdatedAt = updatedAt;
         exerciseType.UpdatedBy = updatedBy;
         return exerciseType;
+    }
+
+    public void Update(
+        string name,
+        string displayName,
+        string engineType,
+        Guid? categoryId,
+        string? description,
+        string? iconName,
+        string? colorCode,
+        int sortOrder,
+        bool isActive,
+        Guid actorId,
+        DateTime updatedAt)
+    {
+        if (actorId == Guid.Empty)
+            throw new ArgumentException("Exercise type actor is required.", nameof(actorId));
+        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(displayName)
+            || string.IsNullOrWhiteSpace(engineType))
+            throw new ArgumentException("Exercise type fields are required.");
+
+        Name = name.Trim();
+        DisplayName = displayName.Trim();
+        EngineType = engineType.Trim();
+        CategoryId = categoryId;
+        Description = description?.Trim() ?? string.Empty;
+        IconName = iconName?.Trim() ?? string.Empty;
+        ColorCode = colorCode?.Trim() ?? string.Empty;
+        SortOrder = sortOrder;
+        IsActive = isActive;
+        UpdatedAt = updatedAt.Kind == DateTimeKind.Utc ? updatedAt : updatedAt.ToUniversalTime();
+        UpdatedBy = actorId.ToString();
+    }
+
+    public void Delete(Guid actorId, DateTime deletedAt)
+    {
+        if (actorId == Guid.Empty)
+            throw new ArgumentException("Exercise type actor is required.", nameof(actorId));
+        IsDeleted = true;
+        IsActive = false;
+        DeletedAt = deletedAt.Kind == DateTimeKind.Utc ? deletedAt : deletedAt.ToUniversalTime();
+        DeletedBy = actorId.ToString();
+        UpdatedAt = DeletedAt;
+        UpdatedBy = DeletedBy;
     }
 }

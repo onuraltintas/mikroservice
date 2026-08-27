@@ -247,7 +247,7 @@ public sealed record CreateLearningPathPrerequisiteRequest(
     Guid NodeId,
     Guid PrerequisiteNodeId);
 
-public interface ISpeedReadingContentAdminWriter
+public interface ISpeedReadingCatalogAdminWriter
 {
     Task<ExerciseTypeSummary> CreateExerciseTypeAsync(
         Guid actorId,
@@ -324,7 +324,10 @@ public interface ISpeedReadingContentAdminWriter
         Guid questionId,
         string idempotencyKey,
         CancellationToken cancellationToken = default);
+}
 
+public interface ISpeedReadingContentAdminWriter : ISpeedReadingCatalogAdminWriter
+{
     Task<ExerciseProgramTemplateAdminSummary> CreateExerciseProgramTemplateAsync(
         Guid actorId,
         CreateExerciseProgramTemplateRequest request,
