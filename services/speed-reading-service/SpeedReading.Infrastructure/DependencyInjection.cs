@@ -77,6 +77,7 @@ public static class DependencyInjection
             services.AddScoped<OwnedSpeedReadingAgeGroupBackfill>();
             services.AddScoped<OwnedSpeedReadingUserProfileBackfill>();
             services.AddScoped<OwnedSpeedReadingLearningPathBackfill>();
+            services.AddScoped<OwnedSpeedReadingAdminAuditBackfill>();
         }
 
         services.AddMemoryCache(options => options.SizeLimit = 4_096);
@@ -117,6 +118,7 @@ public static class DependencyInjection
         services.AddScoped<ISpeedReadingCatalogAdminWriter, LegacySpeedReadingContentAdminWriter>();
         services.AddScoped<ISpeedReadingLearningPathAdminWriter, LegacySpeedReadingContentAdminWriter>();
         services.AddScoped<ILegacySpeedReadingLearningPaths, LegacySpeedReadingLearningPaths>();
+        services.AddScoped<ISpeedReadingIdempotencyCleaner, LegacySpeedReadingIdempotencyCleaner>();
         if (ownedDataEnabled)
         {
             services.AddScoped<ILegacySpeedReadingCatalog, OwnedSpeedReadingCatalog>();
@@ -133,6 +135,8 @@ public static class DependencyInjection
             services.AddScoped<ISpeedReadingCatalogAdminWriter, OwnedSpeedReadingCatalogAdminWriter>();
             services.AddScoped<ILegacySpeedReadingLearningPaths, OwnedSpeedReadingLearningPaths>();
             services.AddScoped<ISpeedReadingLearningPathAdminWriter, OwnedSpeedReadingLearningPathAdminWriter>();
+            services.AddScoped<IAdminAuditWriter, OwnedSpeedReadingAdminAuditWriter>();
+            services.AddScoped<ISpeedReadingIdempotencyCleaner, OwnedSpeedReadingIdempotencyCleaner>();
         }
         else
         {

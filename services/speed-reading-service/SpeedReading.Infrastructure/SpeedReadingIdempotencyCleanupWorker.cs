@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -40,11 +39,10 @@ public sealed class SpeedReadingIdempotencyCleanupWorker(
         try
         {
             await using var scope = scopeFactory.CreateAsyncScope();
-            var db = scope.ServiceProvider.GetRequiredService<SpeedReadingDbContext>();
-            var cutoff = DateTime.UtcNow.Subtract(Retention);
-            var deleted = await db.IdempotencyRecords
-                .Where(item => item.CreatedAt < cutoff)
-                .ExecuteDeleteAsync(cancellationToken);
+            var cleaner = scope.ServiceProvider.GetRequiredService<ISpeedReadingIdempotencyCleaner>();
+            var deleted = await cleaner.DeleteExpiredAsync(
+                DateTime.UtcNow.Subtract(Retention),
+                cancellationToken);
 
             if (deleted > 0)
             {

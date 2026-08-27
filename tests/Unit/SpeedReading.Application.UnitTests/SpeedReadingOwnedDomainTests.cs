@@ -52,6 +52,9 @@ public sealed class SpeedReadingOwnedDomainTests
             .Should().Be("student_learning_node_progress");
         context.Model.FindEntityType(typeof(PersonalizedLearningPathItem))!.GetTableName()
             .Should().Be("personalized_learning_path_items");
+        context.Model.FindEntityType(typeof(EduPlatform.Shared.Infrastructure.Middleware.AdminAuditRecord))!
+            .GetTableName()
+            .Should().Be("admin_audit_records");
         context.Model.GetEntityTypes()
             .Should()
             .Contain(entity => entity.GetTableName() == "idempotency_records");
@@ -131,7 +134,8 @@ public sealed class SpeedReadingOwnedDomainTests
             .And.Contain("20260827142000_AddOwnedAgeGroups")
             .And.Contain("20260827143000_AddOwnedUserProfiles")
             .And.Contain("20260827144000_AddOwnedCatalogWriteSupport")
-            .And.Contain("20260827145000_AddOwnedLearningPaths");
+            .And.Contain("20260827145000_AddOwnedLearningPaths")
+            .And.Contain("20260827146000_AddOwnedAdminAudit");
     }
 
     [Fact]

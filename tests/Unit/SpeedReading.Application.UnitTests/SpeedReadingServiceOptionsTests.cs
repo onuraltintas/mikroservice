@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using EduPlatform.Shared.Infrastructure.Middleware;
 using SpeedReading.Application.Assignments;
 using SpeedReading.Application.AgeGroups;
 using SpeedReading.Application.Assessment;
@@ -352,6 +353,33 @@ public sealed class SpeedReadingServiceOptionsTests
             .Name
             .Should()
             .Be("OwnedSpeedReadingLearningPathAdminWriter");
+    }
+
+    [Fact]
+    public void Owned_data_mode_resolves_cross_cutting_writes_from_the_owned_store()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:SpeedReading"] = "Host=legacy;Database=legacy",
+                ["ConnectionStrings:SpeedReadingOwned"] = "Host=owned;Database=owned",
+                ["SpeedReading:OwnedDataEnabled"] = "true"
+            })
+            .Build();
+        var services = new ServiceCollection();
+
+        services.AddSpeedReadingInfrastructure(configuration);
+
+        services.Last(item => item.ServiceType == typeof(IAdminAuditWriter))
+            .ImplementationType!
+            .Name
+            .Should()
+            .Be("OwnedSpeedReadingAdminAuditWriter");
+        services.Last(item => item.ServiceType == typeof(ISpeedReadingIdempotencyCleaner))
+            .ImplementationType!
+            .Name
+            .Should()
+            .Be("OwnedSpeedReadingIdempotencyCleaner");
     }
 
     [Fact]

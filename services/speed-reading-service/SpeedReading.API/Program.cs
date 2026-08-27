@@ -35,6 +35,8 @@ var backfillOwnedUserProfiles = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-user-profiles", StringComparison.OrdinalIgnoreCase));
 var backfillOwnedLearningPaths = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-learning-paths", StringComparison.OrdinalIgnoreCase));
+var backfillOwnedAdminAudit = args.Any(argument =>
+    string.Equals(argument, "--backfill-owned-admin-audit", StringComparison.OrdinalIgnoreCase));
 
 // The legacy speed-reading schema is not managed by EF migrations. This
 // one-shot mode applies only idempotent additive compatibility objects before
@@ -165,6 +167,20 @@ if (backfillOwnedLearningPaths)
     var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingLearningPathBackfill>()
         ?? throw new InvalidOperationException(
             "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-learning-paths.");
+    var backfillResult = await backfill.RunAsync();
+    Console.WriteLine(JsonSerializer.Serialize(backfillResult));
+    return;
+}
+
+if (backfillOwnedAdminAudit)
+{
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
+
+    await using var backfillApp = builder.Build();
+    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
+    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingAdminAuditBackfill>()
+        ?? throw new InvalidOperationException(
+            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-admin-audit.");
     var backfillResult = await backfill.RunAsync();
     Console.WriteLine(JsonSerializer.Serialize(backfillResult));
     return;
