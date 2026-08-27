@@ -114,4 +114,34 @@ describe('AuthService', () => {
     expect(request.request.withCredentials).toBeTrue();
     request.flush({});
   });
+
+  it('does not persist the access token in browser storage after login', () => {
+    const accessToken = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyIiwicm9sZSI6IlN5c3RlbUFkbWluIiwiZXhwIjo0MTAyNDQ0ODAwfQ.';
+    service.login({ email: 'admin@example.com', password: 'Password1!' }).subscribe();
+
+    const request = http.expectOne('/api/auth/login');
+    request.flush({
+      accessToken,
+      roles: ['SystemAdmin']
+    });
+
+    expect(localStorage.getItem('token')).toBeNull();
+    expect(JSON.parse(localStorage.getItem('currentUser') || '{}').token).toBeUndefined();
+  });
+
+  it('restores the session from the HttpOnly cookie during application initialization', () => {
+    const accessToken = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyIiwicm9sZSI6IlN5c3RlbUFkbWluIiwiZXhwIjo0MTAyNDQ0ODAwfQ.';
+    service.initializeSession().subscribe(user => expect(user?.roles).toEqual(['SystemAdmin']));
+
+    const request = http.expectOne('/api/auth/refresh-token');
+    expect(request.request.withCredentials).toBeTrue();
+    request.flush({
+      accessToken,
+      roles: ['SystemAdmin']
+    });
+
+    expect(service.isAuthenticated).toBeTrue();
+    expect(localStorage.getItem('token')).toBeNull();
+    expect(JSON.parse(localStorage.getItem('currentUser') || '{}').token).toBeUndefined();
+  });
 });
