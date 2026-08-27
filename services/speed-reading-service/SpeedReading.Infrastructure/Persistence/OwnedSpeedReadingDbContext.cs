@@ -3,6 +3,7 @@ using EduPlatform.Shared.Kernel.Primitives;
 using SpeedReading.Domain.Assignments;
 using SpeedReading.Domain.AgeGroups;
 using SpeedReading.Domain.Catalog;
+using SpeedReading.Domain.LearningPaths;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Profiles;
 using SpeedReading.Domain.Sessions;
@@ -32,6 +33,13 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<StudentProgramProgress> StudentProgramProgresses => Set<StudentProgramProgress>();
     public DbSet<DailyExerciseLog> DailyExerciseLogs => Set<DailyExerciseLog>();
     public DbSet<SpeedReadingUserProfile> UserProfiles => Set<SpeedReadingUserProfile>();
+    public DbSet<LearningPathTemplate> LearningPathTemplates => Set<LearningPathTemplate>();
+    public DbSet<LearningPathNode> LearningPathNodes => Set<LearningPathNode>();
+    public DbSet<LearningPathNodeContent> LearningPathNodeContents => Set<LearningPathNodeContent>();
+    public DbSet<LearningPathPrerequisite> LearningPathPrerequisites => Set<LearningPathPrerequisite>();
+    public DbSet<StudentLearningPathProgress> StudentLearningPathProgresses => Set<StudentLearningPathProgress>();
+    public DbSet<StudentLearningNodeProgress> StudentLearningNodeProgresses => Set<StudentLearningNodeProgress>();
+    public DbSet<PersonalizedLearningPathItem> PersonalizedLearningPathItems => Set<PersonalizedLearningPathItem>();
     internal DbSet<OwnedIdempotencyRecord> IdempotencyRecords => Set<OwnedIdempotencyRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -55,6 +63,13 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<StudentProgramProgress>());
         ConfigureEntity(modelBuilder.Entity<DailyExerciseLog>());
         ConfigureEntity(modelBuilder.Entity<SpeedReadingUserProfile>());
+        ConfigureEntity(modelBuilder.Entity<LearningPathTemplate>());
+        ConfigureEntity(modelBuilder.Entity<LearningPathNode>());
+        ConfigureEntity(modelBuilder.Entity<LearningPathNodeContent>());
+        ConfigureEntity(modelBuilder.Entity<LearningPathPrerequisite>());
+        ConfigureEntity(modelBuilder.Entity<StudentLearningPathProgress>());
+        ConfigureEntity(modelBuilder.Entity<StudentLearningNodeProgress>());
+        ConfigureEntity(modelBuilder.Entity<PersonalizedLearningPathItem>());
         modelBuilder.Entity<OwnedIdempotencyRecord>(entity =>
         {
             entity.ToTable("idempotency_records");
@@ -326,6 +341,117 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.HasOne<AgeGroupConfiguration>()
                 .WithMany()
                 .HasForeignKey(item => item.AgeGroupConfigurationId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<LearningPathTemplate>(entity =>
+        {
+            entity.ToTable("learning_path_templates");
+            entity.Property(item => item.Name).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Description).HasMaxLength(5_000);
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.HasIndex(item => item.Name);
+            entity.HasIndex(item => new { item.IsActive, item.IsDeleted });
+            entity.HasOne<AgeGroupConfiguration>()
+                .WithMany()
+                .HasForeignKey(item => item.TargetAgeGroupConfigurationId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<LearningPathNode>(entity =>
+        {
+            entity.ToTable("learning_path_nodes");
+            entity.Property(item => item.NodeType).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Title).HasMaxLength(300).IsRequired();
+            entity.Property(item => item.ContentType).HasMaxLength(100);
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.HasIndex(item => new { item.TemplateId, item.IsDeleted, item.Order });
+            entity.HasIndex(item => item.ParentNodeId);
+            entity.HasOne<LearningPathTemplate>()
+                .WithMany()
+                .HasForeignKey(item => item.TemplateId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<LearningPathNode>()
+                .WithMany()
+                .HasForeignKey(item => item.ParentNodeId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<LearningPathNodeContent>(entity =>
+        {
+            entity.ToTable("learning_path_node_contents");
+            entity.Property(item => item.Description).HasMaxLength(2_000);
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.HasIndex(item => new { item.NodeId, item.IsDeleted });
+            entity.HasOne<LearningPathNode>()
+                .WithMany()
+                .HasForeignKey(item => item.NodeId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<Exercise>()
+                .WithMany()
+                .HasForeignKey(item => item.ExerciseId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<ReadingText>()
+                .WithMany()
+                .HasForeignKey(item => item.ReadingTextId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<LearningPathPrerequisite>(entity =>
+        {
+            entity.ToTable("learning_path_prerequisites");
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.HasIndex(item => new { item.NodeId, item.PrerequisiteNodeId, item.IsDeleted }).IsUnique();
+            entity.HasOne<LearningPathNode>()
+                .WithMany()
+                .HasForeignKey(item => item.NodeId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<LearningPathNode>()
+                .WithMany()
+                .HasForeignKey(item => item.PrerequisiteNodeId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<StudentLearningPathProgress>(entity =>
+        {
+            entity.ToTable("student_learning_path_progress");
+            entity.Property(item => item.Progress).HasPrecision(5, 1);
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.HasIndex(item => new { item.StudentId, item.TemplateId, item.IsDeleted });
+            entity.HasIndex(item => new { item.StudentId, item.CreatedAt });
+            entity.HasOne<LearningPathTemplate>()
+                .WithMany()
+                .HasForeignKey(item => item.TemplateId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<StudentLearningNodeProgress>(entity =>
+        {
+            entity.ToTable("student_learning_node_progress");
+            entity.Property(item => item.Status).HasMaxLength(50).IsRequired();
+            entity.Property(item => item.Score).HasPrecision(5, 2);
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.HasIndex(item => new { item.StudentId, item.NodeId, item.IsDeleted }).IsUnique();
+            entity.HasIndex(item => new { item.StudentId, item.Status });
+            entity.HasOne<LearningPathNode>()
+                .WithMany()
+                .HasForeignKey(item => item.NodeId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PersonalizedLearningPathItem>(entity =>
+        {
+            entity.ToTable("personalized_learning_path_items");
+            entity.Property(item => item.ContentType).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.ContentTitle).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.AchievedScore).HasPrecision(5, 2);
+            entity.Property(item => item.RecommendationReason).HasMaxLength(2_000);
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.HasIndex(item => new { item.StudentId, item.PathIndex, item.IsDeleted }).IsUnique();
+            entity.HasIndex(item => new { item.StudentId, item.IsCompleted, item.IsUnlocked });
+            entity.HasOne<LearningPathTemplate>()
+                .WithMany()
+                .HasForeignKey(item => item.TemplateId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

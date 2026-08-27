@@ -326,33 +326,8 @@ public interface ISpeedReadingCatalogAdminWriter
         CancellationToken cancellationToken = default);
 }
 
-public interface ISpeedReadingContentAdminWriter : ISpeedReadingCatalogAdminWriter
+public interface ISpeedReadingLearningPathAdminWriter
 {
-    Task<ExerciseProgramTemplateAdminSummary> CreateExerciseProgramTemplateAsync(
-        Guid actorId,
-        CreateExerciseProgramTemplateRequest request,
-        string idempotencyKey,
-        CancellationToken cancellationToken = default);
-
-    Task<ExerciseProgramTemplateAdminSummary> UpdateExerciseProgramTemplateAsync(
-        Guid actorId,
-        Guid programTemplateId,
-        UpdateExerciseProgramTemplateRequest request,
-        string idempotencyKey,
-        CancellationToken cancellationToken = default);
-
-    Task DeleteExerciseProgramTemplateAsync(
-        Guid actorId,
-        Guid programTemplateId,
-        string idempotencyKey,
-        CancellationToken cancellationToken = default);
-
-    Task<ExerciseProgramTemplateAdminSummary> CloneExerciseProgramTemplateAsync(
-        Guid actorId,
-        Guid programTemplateId,
-        string idempotencyKey,
-        CancellationToken cancellationToken = default);
-
     Task<LearningPathTemplateAdminSummary> CreateLearningPathTemplateAsync(
         Guid actorId,
         CreateLearningPathTemplateRequest request,
@@ -422,4 +397,33 @@ public interface ISpeedReadingContentAdminWriter : ISpeedReadingCatalogAdminWrit
         Guid prerequisiteNodeId,
         string idempotencyKey,
         CancellationToken cancellationToken = default);
+}
+
+public interface ISpeedReadingContentAdminWriter : ISpeedReadingCatalogAdminWriter, ISpeedReadingLearningPathAdminWriter
+{
+    Task<ExerciseProgramTemplateAdminSummary> CreateExerciseProgramTemplateAsync(
+        Guid actorId,
+        CreateExerciseProgramTemplateRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<ExerciseProgramTemplateAdminSummary> UpdateExerciseProgramTemplateAsync(
+        Guid actorId,
+        Guid programTemplateId,
+        UpdateExerciseProgramTemplateRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteExerciseProgramTemplateAsync(
+        Guid actorId,
+        Guid programTemplateId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<ExerciseProgramTemplateAdminSummary> CloneExerciseProgramTemplateAsync(
+        Guid actorId,
+        Guid programTemplateId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
 }

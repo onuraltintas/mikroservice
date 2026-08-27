@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SpeedReading.Domain.AgeGroups;
 using SpeedReading.Domain.Assignments;
 using SpeedReading.Domain.Catalog;
+using SpeedReading.Domain.LearningPaths;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Profiles;
 using SpeedReading.Domain.Sessions;
@@ -37,6 +38,20 @@ public sealed class SpeedReadingOwnedDomainTests
             .Should().Be("age_group_configurations");
         context.Model.FindEntityType(typeof(SpeedReadingUserProfile))!.GetTableName()
             .Should().Be("user_profiles");
+        context.Model.FindEntityType(typeof(LearningPathTemplate))!.GetTableName()
+            .Should().Be("learning_path_templates");
+        context.Model.FindEntityType(typeof(LearningPathNode))!.GetTableName()
+            .Should().Be("learning_path_nodes");
+        context.Model.FindEntityType(typeof(LearningPathNodeContent))!.GetTableName()
+            .Should().Be("learning_path_node_contents");
+        context.Model.FindEntityType(typeof(LearningPathPrerequisite))!.GetTableName()
+            .Should().Be("learning_path_prerequisites");
+        context.Model.FindEntityType(typeof(StudentLearningPathProgress))!.GetTableName()
+            .Should().Be("student_learning_path_progress");
+        context.Model.FindEntityType(typeof(StudentLearningNodeProgress))!.GetTableName()
+            .Should().Be("student_learning_node_progress");
+        context.Model.FindEntityType(typeof(PersonalizedLearningPathItem))!.GetTableName()
+            .Should().Be("personalized_learning_path_items");
         context.Model.GetEntityTypes()
             .Should()
             .Contain(entity => entity.GetTableName() == "idempotency_records");
@@ -115,7 +130,8 @@ public sealed class SpeedReadingOwnedDomainTests
             .And.Contain("20260827141000_AddOwnedWriteSupport")
             .And.Contain("20260827142000_AddOwnedAgeGroups")
             .And.Contain("20260827143000_AddOwnedUserProfiles")
-            .And.Contain("20260827144000_AddOwnedCatalogWriteSupport");
+            .And.Contain("20260827144000_AddOwnedCatalogWriteSupport")
+            .And.Contain("20260827145000_AddOwnedLearningPaths");
     }
 
     [Fact]
@@ -175,6 +191,56 @@ public sealed class SpeedReadingOwnedDomainTests
         type.IsDeleted.Should().BeTrue();
         type.IsActive.Should().BeFalse();
         type.DeletedBy.Should().Be(actorId.ToString());
+    }
+
+    [Fact]
+    public void Learning_path_template_tracks_nodes_and_soft_deletion()
+    {
+        var actorId = Guid.NewGuid();
+        var template = LearningPathTemplate.Create(
+            Guid.NewGuid(),
+            "Odaklanma yolu",
+            null,
+            "Başlangıç yolu",
+            14,
+            true,
+            actorId,
+            DateTime.UtcNow);
+
+        template.SetTotalNodes(3, actorId, DateTime.UtcNow);
+        template.Delete(actorId, DateTime.UtcNow);
+
+        template.TotalNodes.Should().Be(3);
+        template.IsDeleted.Should().BeTrue();
+        template.IsActive.Should().BeFalse();
+        template.DeletedBy.Should().Be(actorId.ToString());
+    }
+
+    [Fact]
+    public void Learning_path_progress_updates_completion_state()
+    {
+        var studentId = Guid.NewGuid();
+        var progress = StudentLearningPathProgress.Import(
+            Guid.NewGuid(),
+            studentId,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            0,
+            false,
+            false,
+            null,
+            null,
+            DateTime.UtcNow,
+            studentId.ToString(),
+            null,
+            null);
+
+        progress.UpdateState(100, true, null, studentId, DateTime.UtcNow);
+
+        progress.Progress.Should().Be(100);
+        progress.IsCompleted.Should().BeTrue();
+        progress.CurrentNodeId.Should().BeNull();
+        progress.UpdatedBy.Should().Be(studentId.ToString());
     }
 
     [Fact]

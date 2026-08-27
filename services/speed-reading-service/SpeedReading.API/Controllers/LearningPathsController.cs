@@ -14,7 +14,7 @@ namespace SpeedReading.API.Controllers;
 [Authorize]
 public sealed class LearningPathsController(
     ILegacySpeedReadingLearningPaths paths,
-    ISpeedReadingContentAdminWriter adminWriter) : ControllerBase
+    ISpeedReadingLearningPathAdminWriter adminWriter) : ControllerBase
 {
     [HttpGet("templates")]
     public Task<IReadOnlyList<LearningPathTemplateSummary>> GetTemplates(

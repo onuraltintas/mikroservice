@@ -309,6 +309,52 @@ public sealed class SpeedReadingServiceOptionsTests
     }
 
     [Fact]
+    public void Owned_data_mode_resolves_learning_paths_from_the_owned_store()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:SpeedReading"] = "Host=legacy;Database=legacy",
+                ["ConnectionStrings:SpeedReadingOwned"] = "Host=owned;Database=owned",
+                ["SpeedReading:OwnedDataEnabled"] = "true"
+            })
+            .Build();
+        var services = new ServiceCollection();
+
+        services.AddSpeedReadingInfrastructure(configuration);
+
+        services
+            .Last(item => item.ServiceType == typeof(ILegacySpeedReadingLearningPaths))
+            .ImplementationType!
+            .Name
+            .Should()
+            .Be("OwnedSpeedReadingLearningPaths");
+    }
+
+    [Fact]
+    public void Owned_data_mode_resolves_learning_path_writes_from_the_owned_store()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:SpeedReading"] = "Host=legacy;Database=legacy",
+                ["ConnectionStrings:SpeedReadingOwned"] = "Host=owned;Database=owned",
+                ["SpeedReading:OwnedDataEnabled"] = "true"
+            })
+            .Build();
+        var services = new ServiceCollection();
+
+        services.AddSpeedReadingInfrastructure(configuration);
+
+        services
+            .Last(item => item.ServiceType == typeof(ISpeedReadingLearningPathAdminWriter))
+            .ImplementationType!
+            .Name
+            .Should()
+            .Be("OwnedSpeedReadingLearningPathAdminWriter");
+    }
+
+    [Fact]
     public void Owned_data_mode_resolves_progress_reads_and_writes_from_the_owned_store()
     {
         var configuration = new ConfigurationBuilder()
