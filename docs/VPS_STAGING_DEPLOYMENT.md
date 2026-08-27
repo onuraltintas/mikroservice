@@ -25,9 +25,10 @@ PostgreSQL, Redis, RabbitMQ, MailCatcher ve Gateway host portlarına bağlanmaz;
 servisler Docker ağı içinde kalır. Prometheus, Grafana ve Alertmanager da
 observability overlay'i ile loopback'e bağlanır ve VPS dışından erişilemez.
 
-Speed Reading mevcut uygulama veritabanını korur; staging secret'larında
-`SPEED_READING_CONNECTION_STRING` tanımlanır ve servis ilk fazda migration
-çalıştırmaz.
+Speed Reading staging'de owned veritabanını kullanır. Staging secret'larında
+`SPEED_READING_OWNED_CONNECTION_STRING` tanımlanır; servis owned EF
+migration'larını uygular. `SPEED_READING_CONNECTION_STRING` yalnızca geçiş,
+backfill veya legacy fallback çalıştırılacaksa ayrıca tanımlanır.
 
 Mevcut VPS üzerinde LiteSpeed zaten 80/443 kullanıyorsa Caddy'yi public porta
 almayın. `docker-compose.staging.litespeed.yml` override'ı Caddy'yi yalnızca

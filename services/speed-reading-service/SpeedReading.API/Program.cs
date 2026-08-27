@@ -19,6 +19,7 @@ if (File.Exists(envPath))
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
+var ownedDataEnabled = builder.Configuration.GetValue<bool>("SpeedReading:OwnedDataEnabled");
 var migrationOnly = args.Any(argument =>
     string.Equals(argument, "--migrate-only", StringComparison.OrdinalIgnoreCase));
 var backfillOwnedCatalog = args.Any(argument =>
@@ -63,32 +64,39 @@ var backfillOwnedAdaptiveText = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-adaptive-text", StringComparison.OrdinalIgnoreCase));
 var backfillOwnedReports = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-reports", StringComparison.OrdinalIgnoreCase));
+var verifyOwnedParity = args.Any(argument =>
+    string.Equals(argument, "--verify-owned-parity", StringComparison.OrdinalIgnoreCase));
 
 // The legacy speed-reading schema is not managed by EF migrations. This
 // one-shot mode applies only idempotent additive compatibility objects before
 // web replicas start, leaving existing business rows untouched.
 if (migrationOnly)
 {
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
+    builder.Services.AddSpeedReadingInfrastructure(
+        builder.Configuration,
+        includeLegacyData: !ownedDataEnabled);
 
     await using var migrationApp = builder.Build();
     await using var migrationScope = migrationApp.Services.CreateAsyncScope();
-    var migrationDb = migrationScope.ServiceProvider.GetRequiredService<SpeedReadingDbContext>();
-    var scriptDirectory = Path.Combine(AppContext.BaseDirectory, "Database");
-    var scriptPaths = Directory.Exists(scriptDirectory)
-        ? Directory.GetFiles(scriptDirectory, "*.sql").Order(StringComparer.OrdinalIgnoreCase).ToArray()
-        : [];
-    if (scriptPaths.Length == 0)
+    if (!ownedDataEnabled)
     {
-        throw new DirectoryNotFoundException(
-            $"Speed Reading migration scripts are missing: {scriptDirectory}");
-    }
+        var migrationDb = migrationScope.ServiceProvider.GetRequiredService<SpeedReadingDbContext>();
+        var scriptDirectory = Path.Combine(AppContext.BaseDirectory, "Database");
+        var scriptPaths = Directory.Exists(scriptDirectory)
+            ? Directory.GetFiles(scriptDirectory, "*.sql").Order(StringComparer.OrdinalIgnoreCase).ToArray()
+            : [];
+        if (scriptPaths.Length == 0)
+        {
+            throw new DirectoryNotFoundException(
+                $"Speed Reading migration scripts are missing: {scriptDirectory}");
+        }
 
-    foreach (var scriptPath in scriptPaths)
-    {
-        var script = await File.ReadAllTextAsync(scriptPath);
-        await migrationDb.Database.ExecuteSqlRawAsync(
-            script.Replace("{", "{{").Replace("}", "}}"));
+        foreach (var scriptPath in scriptPaths)
+        {
+            var script = await File.ReadAllTextAsync(scriptPath);
+            await migrationDb.Database.ExecuteSqlRawAsync(
+                script.Replace("{", "{{").Replace("}", "}}"));
+        }
     }
 
     var ownedMigrationDb = migrationScope.ServiceProvider.GetService<OwnedSpeedReadingDbContext>();
@@ -361,12 +369,26 @@ if (backfillOwnedReports)
     return;
 }
 
+if (verifyOwnedParity)
+{
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
+    await using var parityApp = builder.Build();
+    await using var parityScope = parityApp.Services.CreateAsyncScope();
+    var parityChecker = parityScope.ServiceProvider.GetService<OwnedSpeedReadingParityChecker>()
+        ?? throw new InvalidOperationException(
+            "Both SPEED_READING_CONNECTION_STRING and SPEED_READING_OWNED_CONNECTION_STRING must be configured for --verify-owned-parity.");
+    var parityReport = await parityChecker.RunAsync();
+    Console.WriteLine(JsonSerializer.Serialize(parityReport));
+    if (!parityReport.IsMatch)
+        Environment.ExitCode = 2;
+    return;
+}
+
 var runtimeOptions = builder.Configuration
     .GetSection(SpeedReadingServiceOptions.SectionName)
     .Get<SpeedReadingServiceOptions>()
     ?? new SpeedReadingServiceOptions();
 runtimeOptions.Validate();
-var ownedDataEnabled = builder.Configuration.GetValue<bool>("SpeedReading:OwnedDataEnabled");
 
 // Teacher analytics resolve student scope through Identity on every request,
 // so the shared service key is required even when optional integrations are off.

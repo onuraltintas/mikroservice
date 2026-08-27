@@ -24,21 +24,23 @@ okuma/ilerleme sözleşmeleri için `/api/speed-reading` kullanır. Eski yazma
 kontratlarının okuma metni/egzersiz yolları da merkezi uçlara taşınmıştır;
 idempotency ve audit sözleşmeleri tüm içerik komutlarında korunur.
 
-- Mevcut hızlı okuma veritabanı korunur; servis mevcut business tabloları için
-  migration çalıştırmaz ve şemayı değiştirmez. Yazma dilimi için ayrı
-  `speed-reading-migrations` one-shot container'ı yalnızca
-  `SpeedReadingIdempotencyRecords` ve `SpeedReadingAdminAuditRecords`
-  tablolarını oluşturur.
-- `ConnectionStrings:SpeedReading` veya `SPEED_READING_CONNECTION_STRING`
-  zorunludur. Bağlantı bilgisi yoksa servis güvenli şekilde başlamaz.
-- Yeni servis veri sahibi olarak devreye alındığında eski uygulamanın yazma
-  yolları kapatılmalı, önce salt-okunur doğrulama ve geri dönüş planı
-  tamamlanmalıdır.
+- Owned modda servis `ConnectionStrings:SpeedReadingOwned` veya
+  `SPEED_READING_OWNED_CONNECTION_STRING` ile kendi `speed_reading` şemasına
+  bağlanır; legacy `SpeedReadingDbContext` ve legacy bağlantı runtime'a hiç
+  kaydedilmez. `speed-reading-migrations` owned modda yalnızca owned EF
+  migration geçmişini uygular.
+- `ConnectionStrings:SpeedReading` / `SPEED_READING_CONNECTION_STRING` yalnızca
+  legacy fallback veya açıkça çalıştırılan backfill/migration komutları için
+  gereklidir. Owned modda boş bırakılabilir.
+- Yeni servis veri sahibi olarak devreye alınmadan önce tüm backfill/parity,
+  eski yazma yollarının kapatılması, bağımsız backup/restore ve production E2E
+  doğrulaması tamamlanmalıdır.
 
 Kaynak repo ve tablo eşleştirmesi için [Hızlı Okuma Veri Taşıma ve Uyumluluk
-Planı](./SPEED_READING_DATA_MIGRATION.md) takip edilir. İlk sürüm mevcut
-`ExerciseTypes`, `Exercises`, `ReadingTexts` ve `ReadingQuestions` tablolarını
-değiştirmeden okur; yeni migration üretmez.
+Planı](./SPEED_READING_DATA_MIGRATION.md) takip edilir. İlk compatibility
+sürümü mevcut `ExerciseTypes`, `Exercises`, `ReadingTexts` ve
+`ReadingQuestions` tablolarını değiştirmeden okuyan geçiş aşamasıydı; güncel
+owned runtime kendi migration geçmişi ve tabloları üzerinden çalışır.
 
 ## Çalışma modları
 
@@ -66,16 +68,18 @@ Base Compose'da servis `speed-reading` profiliyle isteğe bağlıdır:
 docker compose --profile speed-reading up -d speed-reading-service
 ```
 
-Staging ve production overlay'leri profili kaldırır; bu ortamlar için
-`SPEED_READING_CONNECTION_STRING` deployment secret olarak verilmelidir.
+Staging ve production overlay'leri profili kaldırır. Owned modda
+`SPEED_READING_OWNED_CONNECTION_STRING` gerekir; legacy/backfill aşamasında
+`SPEED_READING_CONNECTION_STRING` da ayrıca verilir.
 Öğretmen/veli kurum kapsamı Identity üzerinden doğrulandığı için aynı
 ortamlarda `INTERNAL_SERVICE_API_KEY` zorunludur; Compose bu anahtarı
 `http://identity-service:8080` adresine giden çağrılar için sağlar. Servis
 container'ında `localhost` Identity adresi olarak kullanılmaz.
 Hızlı okuma veritabanı platform PostgreSQL container'ına taşınmadığı sürece
 business tabloları platform migration zincirine dahil edilmez; one-shot
-container yalnızca platform PostgreSQL'in hazır olmasını bekleyip ek ledger
-tablosunu uygular.
+container owned Speed Reading veritabanı hazır olduktan sonra kendi EF migration
+geçmişini uygular. Backfill ve parity komutları iki bağlantıyı açıkça kullanır;
+normal owned runtime legacy veritabanına bağlanmaz.
 
 İlk içerik API'leri:
 

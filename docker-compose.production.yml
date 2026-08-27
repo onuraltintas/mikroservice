@@ -126,7 +126,7 @@ services:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/speed-reading-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__SpeedReading: ${SPEED_READING_CONNECTION_STRING:?SPEED_READING_CONNECTION_STRING must be set for production}
+      ConnectionStrings__SpeedReading: ${SPEED_READING_CONNECTION_STRING:-}
       ConnectionStrings__SpeedReadingOwned: ${SPEED_READING_OWNED_CONNECTION_STRING:-}
       SpeedReading__OwnedDataEnabled: ${SPEED_READING_OWNED_DATA_ENABLED:-false}
       SpeedReading__Mode: ${SPEED_READING_MODE:-Standalone}
@@ -160,7 +160,7 @@ services:
     restart: "no"
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__SpeedReading: ${SPEED_READING_CONNECTION_STRING:?SPEED_READING_CONNECTION_STRING must be set for production}
+      ConnectionStrings__SpeedReading: ${SPEED_READING_CONNECTION_STRING:-}
       ConnectionStrings__SpeedReadingOwned: ${SPEED_READING_OWNED_CONNECTION_STRING:-}
       SpeedReading__OwnedDataEnabled: ${SPEED_READING_OWNED_DATA_ENABLED:-false}
     depends_on:

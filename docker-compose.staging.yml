@@ -1,7 +1,6 @@
 # Disposable/staging overlay for a single VPS.
 # It keeps infrastructure private, runs migrations before web services and
-# exposes only Caddy on ports 80/443. Use a separate .env.staging file and
-# start with --profile security-scan --profile object-storage.
+# exposes only Caddy on ports 80/443. Use a separate .env.staging file.
 services:
   postgres:
     ports: !reset []
@@ -19,7 +18,22 @@ services:
     ports: !reset []
     restart: unless-stopped
 
+  clamav:
+    # Attachment malware scanning is required by the staging coaching
+    # service; remove the development-only profile in this overlay.
+    profiles: !reset []
+    ports: !reset []
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --ping 3 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
   minio:
+    # Coaching attachments are required in staging; remove the optional
+    # development profile from the base compose file.
+    profiles: !reset []
     ports: !reset []
     restart: unless-stopped
     healthcheck:
@@ -92,7 +106,7 @@ services:
     profiles: !reset []
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
-      ConnectionStrings__SpeedReading: ${SPEED_READING_CONNECTION_STRING:?SPEED_READING_CONNECTION_STRING must be set for speed-reading}
+      ConnectionStrings__SpeedReading: ${SPEED_READING_CONNECTION_STRING:-}
       ConnectionStrings__SpeedReadingOwned: ${SPEED_READING_OWNED_CONNECTION_STRING:-}
       SpeedReading__OwnedDataEnabled: ${SPEED_READING_OWNED_DATA_ENABLED:-false}
       SpeedReading__Mode: ${SPEED_READING_MODE:-Standalone}
@@ -117,7 +131,7 @@ services:
     restart: "no"
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
-      ConnectionStrings__SpeedReading: ${SPEED_READING_CONNECTION_STRING:?SPEED_READING_CONNECTION_STRING must be set for speed-reading}
+      ConnectionStrings__SpeedReading: ${SPEED_READING_CONNECTION_STRING:-}
       ConnectionStrings__SpeedReadingOwned: ${SPEED_READING_OWNED_CONNECTION_STRING:-}
       SpeedReading__OwnedDataEnabled: ${SPEED_READING_OWNED_DATA_ENABLED:-false}
     depends_on:

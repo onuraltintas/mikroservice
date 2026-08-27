@@ -1,11 +1,11 @@
 # Hızlı Okuma Veri Taşıma ve Uyumluluk Planı
 
-## Final bağımsız ownership hedefi
+## Mevcut durum ve final bağımsız ownership hedefi
 
-Bu dokümandaki mevcut uyumluluk katmanı, final veri sahipliği olarak
-değerlendirilmez. “Veri ve iş mantığı tamamen bağımsız Speed Reading
-mikroservisine taşındı” kararı ancak aşağıdaki kapanış kapıları tamamlandığında
-verilecektir:
+Owned veri modeli ve runtime cutover kodu tamamlandı; ancak canlı verinin
+backfill/parity kanıtı ve production smoke tamamlanmadan “Veri ve iş mantığı
+tamamen bağımsız Speed Reading mikroservisine taşındı” kararı verilmeyecektir.
+Kapanış kapıları:
 
 1. Speed Reading kendi PostgreSQL veritabanını ve kendi migration geçmişini
    kullanır; eski Hızlı Okuma veritabanına production runtime erişimi yoktur.
@@ -27,16 +27,17 @@ verilecektir:
 | --- | --- | --- |
 | Baseline ve auth/session hizalama | Tamamlandı | 48 frontend test GREEN; canonical auth ve HttpOnly session akışı |
 | Yeni owned şema ve migration altyapısı | Kod tamamlandı | Yeni DB, EF migration geçmişi, katalog modeli ve backfill runner |
-| Core exercise/session/progress iş mantığı | Kısmi / flag arkasında | Owned session/assignment/program/daily-progress implementation ve backfill runner hazır; parity ve E2E hâlâ gerekli |
-| Content/program/report/gamification slice’ları | Bekliyor | Her slice için backfill ve parity raporu |
+| Core exercise/session/progress iş mantığı | Kod tamamlandı / flag arkasında | Owned session/assignment/program/daily-progress implementation ve backfill runner hazır; parity ve E2E hâlâ gerekli |
+| Content/program/report/gamification slice’ları | Kod tamamlandı / flag arkasında | Katalog, CMS, abonelik/ödeme, bildirim, RSVP, review, feedback, adaptive, rapor ve analitik implementation/backfill runner hazır; parity ve E2E hâlâ gerekli |
 | Frontend/gateway legacy endpoint temizliği | Bekliyor | Standalone domain’de 404 üreten çağrı kalmaması |
 | Shadow read ve write cutover | Bekliyor | Eski DB yazma yetkisi kaldırılmış, rollback kanıtlı |
 | Eski runtime/DB erişiminin kaldırılması | Bekliyor | Bağımsızlık testi ve production smoke tamamlanmış |
 
-## Uygulanan ilk owned slice
+## Uygulanan owned runtime slice’ları
 
-İlk bağımsız veri sınırı kod tabanına eklendi; henüz canlı trafik cutover'ı
-yapılmadı:
+Bağımsız veri sınırı kod tabanına eklendi. `SpeedReading__OwnedDataEnabled=true`
+ile normal web runtime yalnızca owned bağlantıyı kullanır; canlı trafik cutover'ı
+ve backfill operasyonu ayrıca tamamlanmalıdır:
 
 - `SpeedReading.Domain` altında egzersiz, okuma metni/sorusu ve egzersiz
   oturumu/sonucu aggregate'leri bulunur. Oturum yaşam döngüsü, pause süresi,
@@ -81,13 +82,12 @@ yapılmadı:
   okumaz; Identity'nin internal `POST /api/internal/reporting/speed-reading/users`
   sözleşmesini servis anahtarıyla çağırır. Identity erişilemezse assignment
   yazma/ayrıntı işlemi fail-closed davranır.
-- `SpeedReading__OwnedDataEnabled=true` olduğunda egzersiz oturumu uçları
-  `OwnedSpeedReadingExerciseSessions` üzerinden yeni DB'ye yazar/okur. Bu
-  flag'in açılması için ayrıca owned connection gerekir; bağlantı yoksa servis
-  başlatılmaz. Assignment doğrulaması ve assignment tamamlanma güncellemesi
-  artık owned store'dadır; gamification yan etkileri ve program bağlantısı
-  henüz taşınmadığı için production flag'i yine parity/E2E onayı olmadan
-  açılmamalıdır.
+- `SpeedReading__OwnedDataEnabled=true` olduğunda egzersiz oturumu, assignment,
+  program, günlük ilerleme, gamification, katalog, CMS, abonelik/ödeme,
+  bildirim, RSVP, review, feedback, adaptive learning/text, rapor, öğrenci
+  analitikleri, öğretmen raporları ve admin analitikleri owned store üzerinden
+  çalışır. Identity kullanıcı/rol/kurum bilgisi için yalnızca internal,
+  versioned HTTP sözleşmeleri kullanılır.
 - Katalog sorguları `OwnedSpeedReadingCatalog`, okuma/egzersiz geçmişi ve
   sonuç yazma akışları `OwnedSpeedReadingProgress`/
   `OwnedSpeedReadingProgressWriter` üzerinden owned DB'yi kullanır. Sonuç
@@ -106,9 +106,14 @@ yapılmadı:
   streak, gün/hafta ilerlemesi ve program tamamlanması owned domain kurallarıyla
   yürür; hız/anlama özeti owned session-result geçmişinden hesaplanır. Böylece
   günlük tamamlama sırasında legacy program/log tablolarına SQL yazılmaz.
-- `SPEED_READING_CONNECTION_STRING` geçiş tamamlanana kadar legacy kaynak
-  bağlantısıdır. Bu nedenle bu adım tek başına “tamamen taşındı” anlamına
-  gelmez; backfill, parity ve runtime write cutover sonraki kapılardır.
+- Web runtime owned modda `SpeedReadingDbContext` kaydetmez ve eski bağlantıyı
+  istemez. `--migrate-only` de owned modda yalnızca owned EF migration geçmişini
+  uygular; legacy migration/backfill komutları ise geçiş süresince iki bağlantıyı
+  açıkça kullanır.
+- `SPEED_READING_CONNECTION_STRING` yalnızca migration/backfill ve legacy
+  fallback modu için gereklidir. Bu nedenle kod cutover'ı tamamlanmış olsa da
+  backfill, checksum/row-count parity, eski yazma yollarının kapatılması,
+  backup/restore ve production E2E sonraki kapanış kapılarıdır.
 
 Yeni DB'yi mevcut PostgreSQL volume'ünde kullanmadan önce production backup
 alınmalı ve `speedreading_owned_db` veritabanı operasyonel olarak oluşturulup
@@ -125,11 +130,11 @@ repo'su 23 Kasım 2024 tarihli tek uygulamalı Clean Architecture sürümüdür;
 eski DDD reposundan yeniden üretilmeyecek; güncel Content veritabanı sözleşmesi
 esas alınacaktır.
 
-## Veri kaybını önleyen ilk aşama
+## Veri kaybını önleyen ilk aşama (geçiş tarihçesi)
 
 İlk aşamada hızlı okuma servisi mevcut PostgreSQL veritabanına bağlanan salt-
-okunur bir uyumluluk katmanıdır. Yazma geçişi yalnızca öğrenci egzersiz sonucu
-uç noktası için additive bir ledger ile başlatılmıştır:
+okunur bir uyumluluk katmanıydı. Bu bölüm, mevcut owned runtime'ın neden
+insert-only backfill ve ayrı migration geçmişi kullandığını açıklar:
 
 - Mevcut business tabloları için EF Core migration dosyası eklenmez ve
   `EnsureCreated` çağrılmaz.
@@ -336,10 +341,10 @@ Gateway üzerinden aşağıdaki sözleşmeler sunulur:
   cevapta açıkça kırpılmış olarak işaretlenir. İstemcinin snapshot okuma
   çağrıları bu merkezi uçları kullanır. `POST|DELETE
   /api/speed-reading/reports/snapshots` kullanıcının kendi snapshot kaydını
-  idempotency ve sahiplik kontrolüyle yönetir; okuma metni PDF/DOCX üretimi de
-  merkezi içerik export servisine alınmıştır. Rapor snapshot PDF/DOCX üretimi
-  legacy rapor pipeline'ına bağlı olduğu için bu ayrı dosya export uçları
-  henüz taşınmamıştır.
+  idempotency ve sahiplik kontrolüyle yönetir. Rapor PDF/Excel dışa aktarımı
+  owned rapor verisini kullanan merkezi export servisi üzerinden çalışır; okuma
+  metni PDF/DOCX dışa aktarımı da owned içerik sorgularını kullanan merkezi
+  içerik export servisi üzerinden çalışır.
 - `GET /api/speed-reading/reports/scheduled` — `ReportView` yetkisi ile
   token sahibinin `ScheduledReports` kayıtları
 - `GET /api/speed-reading/reports/scheduled/{id}` — yalnızca token sahibinin
@@ -380,22 +385,31 @@ bağlanmaz.
 4. En az bir gözlem periyodu boyunca hata, gecikme ve satır sayısı metriklerini
    izle.
 5. Yeni servisi platform ve bağımsız frontend'lerde kademeli olarak aç.
-6. `speed-reading-migrations` one-shot container'ı ile sıralı
-   `Database/*.sql` scriptlerini çalıştır; ledger, audit tablosu ve unique
-   index'leri doğrula.
-7. Yazma yetkisini yalnızca yeni servisin veritabanı kullanıcısına ver; eski
-   uygulamanın aynı sonuç write endpoint'ini kapat.
-8. Sorun halinde Gateway rotasını eski uygulamaya geri al; veritabanına geri
-   alma/migration çalıştırma.
+6. Owned migration'ı çalıştır; ardından image'ın backfill komutlarını şu sırayla
+   yürüt: `catalog`, `sessions`, `assignments`, `programs`, `age-groups`,
+   `user-profiles`, `learning-paths`, `admin-audit`, `gamification`, `questions`,
+   `visualization`, `vocabulary`, `subscriptions`, `cms`, `notifications`,
+   `rsvp`, `review`, `content-feedback`, `adaptive-learning`, `adaptive-text`,
+   `reports`. Her komut insert-only, referans kontrollü ve tekrar çalıştırılabilir.
+7. Her backfill sonrası source/owned row-count ve checksum parity raporunu
+   `--verify-owned-parity` ile üretip sakla; komut fark bulursa exit code 2
+   döndürür ve eksik/bozuk referans varsa cutover yapılmaz.
+8. Owned modda shadow read ve gerçek kullanıcı smoke testlerini tamamla;
+   login, katalog, egzersiz, sonuç, ilerleme, rapor, öğretmen/admin analitikleri,
+   CMS ve abonelik akışlarını kontrol et.
+9. Yazma yetkisini yalnızca yeni servisin owned veritabanı kullanıcısına ver;
+   eski uygulamanın aynı business write yollarını kapat.
+10. Bağımsız backup/restore provası ve rollback rotasını doğrula; sorun halinde
+    Gateway rotasını eski uygulamaya geri al.
 
-## Kalan taşıma dilimleri
+## Kalan final operasyonel kapılar
 
-Tamamen kapatılmamış uyumluluk işleri şunlardır:
+Kod taşınması tamamlandı; tamamen kapanmamış işler yalnızca operasyonel ve
+yayın doğrulama kapılarıdır:
 
-1. Görselleştirme ekranındaki PDF/DOCX yardımcılarının kaynak backend'de de
-   karşılığı olmadığı doğrulandı; 404 üreten butonlar frontend'den kaldırıldı.
-2. Gerçek veritabanı, Gateway ve bağımsız frontend ile uçtan uca smoke test;
-   geçiş öncesi satır sayısı ve geri dönüş kontrolü.
+1. Gerçek veritabanında migration/backfill ve source/owned parity sonuçları.
+2. Gateway ve bağımsız frontend ile uçtan uca smoke test.
+3. Eski uygulamanın write erişiminin kaldırılması ve bağımsız backup/restore.
 
 Rapor `export/pdf` ve `export/excel` artık merkezi serviste gerçek PDF/XLSX
 üretir. Newsletter abonelikten çıkış da merkezi CMS altında
