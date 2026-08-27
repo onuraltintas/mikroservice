@@ -63,6 +63,9 @@ public sealed class OwnedSpeedReadingDbContext(
     internal DbSet<LegacyDailyGoal> AdaptiveDailyGoals => Set<LegacyDailyGoal>();
     internal DbSet<LegacyStudentReadingProfile> AdaptiveReadingProfiles => Set<LegacyStudentReadingProfile>();
     internal DbSet<LegacyTextRecommendationHistory> AdaptiveTextRecommendationHistories => Set<LegacyTextRecommendationHistory>();
+    internal DbSet<LegacyReportTemplate> ReportTemplates => Set<LegacyReportTemplate>();
+    internal DbSet<LegacyReportSnapshot> ReportSnapshots => Set<LegacyReportSnapshot>();
+    internal DbSet<LegacyScheduledReport> ScheduledReports => Set<LegacyScheduledReport>();
     DbSet<LegacyProduct> ISpeedReadingDataContext.Products => Set<LegacyProduct>();
     DbSet<LegacyContentBlock> ISpeedReadingDataContext.ContentBlocks => Set<LegacyContentBlock>();
     DbSet<LegacyPage> ISpeedReadingDataContext.Pages => Set<LegacyPage>();
@@ -402,6 +405,83 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.CompletedAt).HasColumnName("completed_at");
             entity.HasIndex(item => item.ReadingTextId);
             entity.HasIndex(item => new { item.StudentId, item.RecommendedAt });
+        });
+        modelBuilder.Entity<LegacyReportTemplate>(entity =>
+        {
+            ConfigureLegacyEntity(entity, "report_templates");
+            entity.Property(item => item.Id).HasColumnName("id");
+            entity.Property(item => item.CreatedAt).HasColumnName("created_at");
+            entity.Property(item => item.CreatedBy).HasColumnName("created_by");
+            entity.Property(item => item.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(item => item.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(item => item.Name).HasColumnName("name").HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Description).HasColumnName("description").HasMaxLength(1_000).IsRequired();
+            entity.Property(item => item.Type).HasColumnName("type");
+            entity.Property(item => item.Category).HasColumnName("category");
+            entity.Property(item => item.ConfigurationJson).HasColumnName("configuration_json").IsRequired();
+            entity.Property(item => item.IsSystemTemplate).HasColumnName("is_system_template");
+            entity.Property(item => item.CreatedByUserId).HasColumnName("created_by_user_id");
+            entity.Property(item => item.CreatedById).HasColumnName("created_by_id");
+            entity.Property(item => item.IsActive).HasColumnName("is_active");
+            entity.HasIndex(item => new { item.Type, item.IsActive, item.IsDeleted });
+        });
+        modelBuilder.Entity<LegacyReportSnapshot>(entity =>
+        {
+            ConfigureLegacyEntity(entity, "report_snapshots");
+            entity.Property(item => item.Id).HasColumnName("id");
+            entity.Property(item => item.CreatedAt).HasColumnName("created_at");
+            entity.Property(item => item.CreatedBy).HasColumnName("created_by");
+            entity.Property(item => item.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(item => item.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(item => item.ReportTemplateId).HasColumnName("report_template_id");
+            entity.Property(item => item.GeneratedForUserId).HasColumnName("generated_for_user_id");
+            entity.Property(item => item.GeneratedByUserId).HasColumnName("generated_by_user_id");
+            entity.Property(item => item.GeneratedAt).HasColumnName("generated_at");
+            entity.Property(item => item.ReportStartDate).HasColumnName("report_start_date");
+            entity.Property(item => item.ReportEndDate).HasColumnName("report_end_date");
+            entity.Property(item => item.DataJson).HasColumnName("data_json").IsRequired();
+            entity.Property(item => item.PdfFileUrl).HasColumnName("pdf_file_url");
+            entity.Property(item => item.ExcelFileUrl).HasColumnName("excel_file_url");
+            entity.Property(item => item.IsViewed).HasColumnName("is_viewed");
+            entity.Property(item => item.ViewedAt).HasColumnName("viewed_at");
+            entity.HasIndex(item => new { item.GeneratedForUserId, item.GeneratedAt });
+            entity.HasOne<LegacyReportTemplate>().WithMany().HasForeignKey(item => item.ReportTemplateId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<LegacyScheduledReport>(entity =>
+        {
+            ConfigureLegacyEntity(entity, "scheduled_reports");
+            entity.Property(item => item.Id).HasColumnName("id");
+            entity.Property(item => item.CreatedAt).HasColumnName("created_at");
+            entity.Property(item => item.CreatedBy).HasColumnName("created_by");
+            entity.Property(item => item.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(item => item.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(item => item.ReportTemplateId).HasColumnName("report_template_id");
+            entity.Property(item => item.UserId).HasColumnName("user_id");
+            entity.Property(item => item.Frequency).HasColumnName("frequency");
+            entity.Property(item => item.DayOfWeek).HasColumnName("day_of_week");
+            entity.Property(item => item.DayOfMonth).HasColumnName("day_of_month");
+            entity.Property(item => item.DeliveryTime).HasColumnName("delivery_time").HasColumnType("time without time zone");
+            entity.Property(item => item.IsActive).HasColumnName("is_active");
+            entity.Property(item => item.LastRunAt).HasColumnName("last_run_at");
+            entity.Property(item => item.NextRunAt).HasColumnName("next_run_at");
+            entity.Property(item => item.SuccessCount).HasColumnName("success_count");
+            entity.Property(item => item.FailureCount).HasColumnName("failure_count");
+            entity.Property(item => item.SendEmail).HasColumnName("send_email");
+            entity.Property(item => item.SaveToDashboard).HasColumnName("save_to_dashboard");
+            entity.Property(item => item.EmailRecipients).HasColumnName("email_recipients");
+            entity.HasIndex(item => new { item.UserId, item.IsActive, item.NextRunAt });
+            entity.HasOne<LegacyReportTemplate>().WithMany().HasForeignKey(item => item.ReportTemplateId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<LegacyProduct>(entity =>
         {

@@ -96,6 +96,7 @@ public static class DependencyInjection
             services.AddScoped<OwnedSpeedReadingContentFeedbackBackfill>();
             services.AddScoped<OwnedSpeedReadingAdaptiveLearningBackfill>();
             services.AddScoped<OwnedSpeedReadingAdaptiveTextBackfill>();
+            services.AddScoped<OwnedSpeedReadingReportsBackfill>();
         }
 
         services.AddMemoryCache(options => options.SizeLimit = 4_096);
@@ -176,6 +177,10 @@ public static class DependencyInjection
             services.AddScoped<ISpeedReadingStudentReading, OwnedSpeedReadingStudentReading>();
             services.AddScoped<ISpeedReadingAdaptiveLearning, OwnedSpeedReadingAdaptiveLearning>();
             services.AddScoped<ISpeedReadingAdaptiveText, OwnedSpeedReadingAdaptiveText>();
+            services.AddScoped<ILegacySpeedReadingReports, OwnedSpeedReadingReports>();
+            services.AddScoped<ISpeedReadingReportsAdminWriter, OwnedSpeedReadingReports>();
+            services.AddScoped<ISpeedReadingReportsScheduleWriter, OwnedSpeedReadingReports>();
+            services.AddScoped<ISpeedReadingReportsSnapshotWriter, OwnedSpeedReadingReports>();
         }
         else
         {

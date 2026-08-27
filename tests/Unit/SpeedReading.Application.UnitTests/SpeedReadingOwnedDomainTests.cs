@@ -98,7 +98,7 @@ public sealed class SpeedReadingOwnedDomainTests
         context.Model.FindEntityType(typeof(UserVocabularyProgress))!.GetTableName()
             .Should().Be("user_vocabulary_progress");
         context.Model.GetEntityTypes().Select(entity => entity.GetTableName())
-            .Should().Contain(["subscription_products", "subscription_plans", "user_subscriptions", "payments", "cms_content_blocks", "cms_pages", "cms_blog_posts", "cms_contact_messages", "cms_newsletter_subscribers", "notifications", "notification_preferences", "notification_type_preferences", "push_subscriptions", "announcements", "announcement_user_interactions", "email_templates", "email_campaigns", "email_campaign_logs", "rsvp_sessions", "review_items", "content_feedback", "adaptive_learning_profiles", "adaptive_content_recommendations", "adaptive_daily_goals", "adaptive_reading_profiles", "adaptive_text_recommendation_history"]);
+            .Should().Contain(["subscription_products", "subscription_plans", "user_subscriptions", "payments", "cms_content_blocks", "cms_pages", "cms_blog_posts", "cms_contact_messages", "cms_newsletter_subscribers", "notifications", "notification_preferences", "notification_type_preferences", "push_subscriptions", "announcements", "announcement_user_interactions", "email_templates", "email_campaigns", "email_campaign_logs", "rsvp_sessions", "review_items", "content_feedback", "adaptive_learning_profiles", "adaptive_content_recommendations", "adaptive_daily_goals", "adaptive_reading_profiles", "adaptive_text_recommendation_history", "report_templates", "report_snapshots", "scheduled_reports"]);
         context.Model.GetEntityTypes()
             .Should()
             .Contain(entity => entity.GetTableName() == "idempotency_records");
@@ -190,7 +190,8 @@ public sealed class SpeedReadingOwnedDomainTests
             .And.Contain("20260827154000_AddOwnedReview")
             .And.Contain("20260827155000_AddOwnedContentFeedback")
             .And.Contain("20260827156000_AddOwnedAdaptiveLearning")
-            .And.Contain("20260827157000_AddOwnedAdaptiveText");
+            .And.Contain("20260827157000_AddOwnedAdaptiveText")
+            .And.Contain("20260827158000_AddOwnedReports");
     }
 
     [Fact]

@@ -61,6 +61,8 @@ var backfillOwnedAdaptiveLearning = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-adaptive-learning", StringComparison.OrdinalIgnoreCase));
 var backfillOwnedAdaptiveText = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-adaptive-text", StringComparison.OrdinalIgnoreCase));
+var backfillOwnedReports = args.Any(argument =>
+    string.Equals(argument, "--backfill-owned-reports", StringComparison.OrdinalIgnoreCase));
 
 // The legacy speed-reading schema is not managed by EF migrations. This
 // one-shot mode applies only idempotent additive compatibility objects before
@@ -344,6 +346,17 @@ if (backfillOwnedAdaptiveText)
     await using var backfillScope = backfillApp.Services.CreateAsyncScope();
     var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingAdaptiveTextBackfill>()
         ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-adaptive-text.");
+    Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
+    return;
+}
+
+if (backfillOwnedReports)
+{
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
+    await using var backfillApp = builder.Build();
+    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
+    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingReportsBackfill>()
+        ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-reports.");
     Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
     return;
 }
