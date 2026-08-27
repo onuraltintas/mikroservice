@@ -4,6 +4,7 @@ using SpeedReading.Domain.AgeGroups;
 using SpeedReading.Domain.Assignments;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.LearningPaths;
+using SpeedReading.Domain.Gamification;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Profiles;
 using SpeedReading.Domain.Sessions;
@@ -55,6 +56,12 @@ public sealed class SpeedReadingOwnedDomainTests
         context.Model.FindEntityType(typeof(EduPlatform.Shared.Infrastructure.Middleware.AdminAuditRecord))!
             .GetTableName()
             .Should().Be("admin_audit_records");
+        context.Model.FindEntityType(typeof(Achievement))!.GetTableName()
+            .Should().Be("achievements");
+        context.Model.FindEntityType(typeof(UserAchievement))!.GetTableName()
+            .Should().Be("user_achievements");
+        context.Model.FindEntityType(typeof(UserGamification))!.GetTableName()
+            .Should().Be("user_gamification");
         context.Model.GetEntityTypes()
             .Should()
             .Contain(entity => entity.GetTableName() == "idempotency_records");
@@ -135,7 +142,8 @@ public sealed class SpeedReadingOwnedDomainTests
             .And.Contain("20260827143000_AddOwnedUserProfiles")
             .And.Contain("20260827144000_AddOwnedCatalogWriteSupport")
             .And.Contain("20260827145000_AddOwnedLearningPaths")
-            .And.Contain("20260827146000_AddOwnedAdminAudit");
+            .And.Contain("20260827146000_AddOwnedAdminAudit")
+            .And.Contain("20260827147000_AddOwnedGamification");
     }
 
     [Fact]
@@ -245,6 +253,24 @@ public sealed class SpeedReadingOwnedDomainTests
         progress.IsCompleted.Should().BeTrue();
         progress.CurrentNodeId.Should().BeNull();
         progress.UpdatedBy.Should().Be(studentId.ToString());
+    }
+
+    [Fact]
+    public void Gamification_recalculates_level_after_xp_award()
+    {
+        var userId = Guid.NewGuid();
+        var stats = UserGamification.CreateDefault(
+            Guid.NewGuid(),
+            userId,
+            DateTime.UtcNow,
+            userId.ToString());
+
+        stats.AwardXp(250, userId, DateTime.UtcNow);
+
+        stats.TotalXP.Should().Be(250);
+        stats.CurrentLevel.Should().Be(2);
+        stats.CurrentLevelXP.Should().Be(100);
+        stats.LevelTitle.Should().Be("Başlangıç Okuyucu");
     }
 
     [Fact]

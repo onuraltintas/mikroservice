@@ -9,6 +9,7 @@ using SpeedReading.Application.Assessment;
 using SpeedReading.Application.Content;
 using SpeedReading.Application.DailyProgress;
 using SpeedReading.Application.ExerciseSessions;
+using SpeedReading.Application.Gamification;
 using SpeedReading.Application.Progress;
 using SpeedReading.Application.Configuration;
 using SpeedReading.Application.StudentProgram;
@@ -380,6 +381,33 @@ public sealed class SpeedReadingServiceOptionsTests
             .Name
             .Should()
             .Be("OwnedSpeedReadingIdempotencyCleaner");
+    }
+
+    [Fact]
+    public void Owned_data_mode_resolves_gamification_from_the_owned_store()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:SpeedReading"] = "Host=legacy;Database=legacy",
+                ["ConnectionStrings:SpeedReadingOwned"] = "Host=owned;Database=owned",
+                ["SpeedReading:OwnedDataEnabled"] = "true"
+            })
+            .Build();
+        var services = new ServiceCollection();
+
+        services.AddSpeedReadingInfrastructure(configuration);
+
+        services.Last(item => item.ServiceType == typeof(ILegacySpeedReadingGamification))
+            .ImplementationType!
+            .Name
+            .Should()
+            .Be("OwnedSpeedReadingGamification");
+        services.Last(item => item.ServiceType == typeof(ISpeedReadingGamificationAdminWriter))
+            .ImplementationType!
+            .Name
+            .Should()
+            .Be("OwnedSpeedReadingGamificationAdminWriter");
     }
 
     [Fact]

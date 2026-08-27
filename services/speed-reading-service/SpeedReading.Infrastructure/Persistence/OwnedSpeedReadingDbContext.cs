@@ -5,6 +5,7 @@ using SpeedReading.Domain.Assignments;
 using SpeedReading.Domain.AgeGroups;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.LearningPaths;
+using SpeedReading.Domain.Gamification;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Profiles;
 using SpeedReading.Domain.Sessions;
@@ -42,6 +43,9 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<StudentLearningNodeProgress> StudentLearningNodeProgresses => Set<StudentLearningNodeProgress>();
     public DbSet<PersonalizedLearningPathItem> PersonalizedLearningPathItems => Set<PersonalizedLearningPathItem>();
     public DbSet<AdminAuditRecord> AdminAuditRecords => Set<AdminAuditRecord>();
+    public DbSet<Achievement> Achievements => Set<Achievement>();
+    public DbSet<UserAchievement> UserAchievements => Set<UserAchievement>();
+    public DbSet<UserGamification> UserGamifications => Set<UserGamification>();
     internal DbSet<OwnedIdempotencyRecord> IdempotencyRecords => Set<OwnedIdempotencyRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -72,6 +76,9 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<StudentLearningPathProgress>());
         ConfigureEntity(modelBuilder.Entity<StudentLearningNodeProgress>());
         ConfigureEntity(modelBuilder.Entity<PersonalizedLearningPathItem>());
+        ConfigureEntity(modelBuilder.Entity<Achievement>());
+        ConfigureEntity(modelBuilder.Entity<UserAchievement>());
+        ConfigureEntity(modelBuilder.Entity<UserGamification>());
         modelBuilder.Entity<AdminAuditRecord>(entity =>
         {
             entity.ToTable("admin_audit_records");
@@ -92,6 +99,57 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.HasIndex(item => new { item.OccurredAt, item.Id });
             entity.HasIndex(item => new { item.ActorUserId, item.OccurredAt });
             entity.HasIndex(item => new { item.ResourceType, item.ResourceId, item.OccurredAt });
+        });
+
+        modelBuilder.Entity<Achievement>(entity =>
+        {
+            entity.ToTable("achievements");
+            entity.Property(item => item.Name).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Description).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.Category).HasMaxLength(50).IsRequired();
+            entity.Property(item => item.Tier).HasMaxLength(50).IsRequired();
+            entity.Property(item => item.IconUrl).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.IconEmoji).HasMaxLength(10).IsRequired();
+            entity.Property(item => item.CriteriaType).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.CriteriaValue).HasMaxLength(4_000).IsRequired();
+            entity.Property(item => item.TriggerType).HasMaxLength(100);
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.HasIndex(item => item.Category);
+            entity.HasIndex(item => item.Tier);
+            entity.HasIndex(item => item.IsActive);
+            entity.HasIndex(item => item.SortOrder);
+        });
+
+        modelBuilder.Entity<UserAchievement>(entity =>
+        {
+            entity.ToTable("user_achievements");
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.HasIndex(item => new { item.UserId, item.AchievementId, item.IsDeleted }).IsUnique();
+            entity.HasIndex(item => item.UserId);
+            entity.HasIndex(item => item.UnlockedAt);
+            entity.HasIndex(item => new { item.UserId, item.IsShowcased });
+            entity.HasOne<Achievement>()
+                .WithMany()
+                .HasForeignKey(item => item.AchievementId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<UserGamification>(entity =>
+        {
+            entity.ToTable("user_gamification");
+            entity.Property(item => item.LevelTitle).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.LevelIcon).HasMaxLength(50).IsRequired();
+            entity.Property(item => item.MaxComprehensionScore).HasPrecision(18, 2);
+            entity.Property(item => item.MaxRSVPComprehension).HasPrecision(18, 2);
+            entity.Property(item => item.CompletedExerciseTypesJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(item => item.LearnedVocabularyCategoriesJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(item => item.LearnedVocabularyCategoriesMapJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(item => item.LearnedVocabularyDifficultiesJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.HasIndex(item => item.UserId).IsUnique();
+            entity.HasIndex(item => item.TotalXP);
+            entity.HasIndex(item => item.CurrentLevel);
+            entity.HasIndex(item => item.CurrentStreak);
         });
         modelBuilder.Entity<OwnedIdempotencyRecord>(entity =>
         {

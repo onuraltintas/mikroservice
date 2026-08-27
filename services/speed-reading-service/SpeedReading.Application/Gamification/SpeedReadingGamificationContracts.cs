@@ -224,54 +224,21 @@ public interface ISpeedReadingGamificationAdminWriter
 public static class SpeedReadingGamificationRules
 {
     public static int CalculateLevel(long totalXp) =>
-        Math.Max(1, checked((int)(totalXp / 100)));
+        SpeedReading.Domain.Gamification.GamificationRules.CalculateLevel(totalXp);
 
     public static int GetCurrentLevelXp(long totalXp, int level) =>
-        Math.Clamp(checked((int)(totalXp - ((long)Math.Max(level, 1) - 1) * 100)), 0, 100);
+        SpeedReading.Domain.Gamification.GamificationRules.GetCurrentLevelXp(totalXp, level);
 
-    public static int GetTier(int level) => level switch
-    {
-        <= 5 => 1,
-        <= 10 => 2,
-        <= 15 => 3,
-        _ => 4
-    };
+    public static int GetTier(int level) =>
+        SpeedReading.Domain.Gamification.GamificationRules.GetTier(level);
 
-    public static string GetLevelTitle(int level) => GetTier(level) switch
-    {
-        1 => "Başlangıç Okuyucu",
-        2 => "Gelişen Okuyucu",
-        3 => "İleri Okuyucu",
-        _ => "Master Okuyucu"
-    };
+    public static string GetLevelTitle(int level) =>
+        SpeedReading.Domain.Gamification.GamificationRules.GetLevelTitle(level);
 
-    public static string GetLevelIcon(int level) => GetTier(level) switch
-    {
-        1 => "📖",
-        2 => "📗",
-        3 => "📘",
-        _ => "📕"
-    };
+    public static string GetLevelIcon(int level) =>
+        SpeedReading.Domain.Gamification.GamificationRules.GetLevelIcon(level);
 
-    public static int CalculateNextStreak(
-        DateTime? lastActivityDate,
-        DateTime activityDate,
-        int currentStreak)
-    {
-        if (!lastActivityDate.HasValue)
-        {
-            return 1;
-        }
-
-        var lastDate = lastActivityDate.Value.ToUniversalTime().Date;
-        var currentDate = activityDate.ToUniversalTime().Date;
-        if (lastDate == currentDate)
-        {
-            return Math.Max(currentStreak, 1);
-        }
-
-        return lastDate == currentDate.AddDays(-1)
-            ? Math.Max(currentStreak, 1) + 1
-            : 1;
-    }
+    public static int CalculateNextStreak(DateTime? lastActivityDate, DateTime activityDate, int currentStreak) =>
+        SpeedReading.Domain.Gamification.GamificationRules.CalculateNextStreak(
+            lastActivityDate, activityDate, currentStreak);
 }

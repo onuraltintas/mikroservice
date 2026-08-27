@@ -78,6 +78,7 @@ public static class DependencyInjection
             services.AddScoped<OwnedSpeedReadingUserProfileBackfill>();
             services.AddScoped<OwnedSpeedReadingLearningPathBackfill>();
             services.AddScoped<OwnedSpeedReadingAdminAuditBackfill>();
+            services.AddScoped<OwnedSpeedReadingGamificationBackfill>();
         }
 
         services.AddMemoryCache(options => options.SizeLimit = 4_096);
@@ -118,6 +119,7 @@ public static class DependencyInjection
         services.AddScoped<ISpeedReadingCatalogAdminWriter, LegacySpeedReadingContentAdminWriter>();
         services.AddScoped<ISpeedReadingLearningPathAdminWriter, LegacySpeedReadingContentAdminWriter>();
         services.AddScoped<ILegacySpeedReadingLearningPaths, LegacySpeedReadingLearningPaths>();
+        services.AddScoped<ISpeedReadingGamificationAdminWriter, LegacySpeedReadingGamificationAdminWriter>();
         services.AddScoped<ISpeedReadingIdempotencyCleaner, LegacySpeedReadingIdempotencyCleaner>();
         if (ownedDataEnabled)
         {
@@ -135,7 +137,6 @@ public static class DependencyInjection
             services.AddScoped<ISpeedReadingCatalogAdminWriter, OwnedSpeedReadingCatalogAdminWriter>();
             services.AddScoped<ILegacySpeedReadingLearningPaths, OwnedSpeedReadingLearningPaths>();
             services.AddScoped<ISpeedReadingLearningPathAdminWriter, OwnedSpeedReadingLearningPathAdminWriter>();
-            services.AddScoped<IAdminAuditWriter, OwnedSpeedReadingAdminAuditWriter>();
             services.AddScoped<ISpeedReadingIdempotencyCleaner, OwnedSpeedReadingIdempotencyCleaner>();
         }
         else
@@ -172,6 +173,12 @@ public static class DependencyInjection
         services.AddScoped<ISpeedReadingReportsSnapshotWriter, LegacySpeedReadingReportsSnapshotWriter>();
         services.AddSingleton<ISpeedReadingReportExporter, ReportExportService>();
         services.AddSingleton<IAdminAuditWriter, SpeedReadingAdminAuditWriter>();
+        if (ownedDataEnabled)
+        {
+            services.AddScoped<ILegacySpeedReadingGamification, OwnedSpeedReadingGamification>();
+            services.AddScoped<ISpeedReadingGamificationAdminWriter, OwnedSpeedReadingGamificationAdminWriter>();
+            services.AddScoped<IAdminAuditWriter, OwnedSpeedReadingAdminAuditWriter>();
+        }
 
         return services;
     }
