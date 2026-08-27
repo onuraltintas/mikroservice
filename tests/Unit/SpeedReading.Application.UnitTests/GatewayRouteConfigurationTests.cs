@@ -22,7 +22,38 @@ public sealed class GatewayRouteConfigurationTests
         route.GetProperty("Match").GetProperty("Path").GetString().Should().Be(pathPattern);
     }
 
+    [Fact]
+    public void Speed_reading_caddy_forwards_identity_auth_paths_before_api_fallback()
+    {
+        var caddy = File.ReadAllText(GetSpeedReadingCaddyPath());
+        var identityRouteIndex = caddy.IndexOf("@identityAuth path /api/auth /api/auth/*", StringComparison.Ordinal);
+        identityRouteIndex.Should().BeGreaterOrEqualTo(0);
+
+        if (identityRouteIndex < 0)
+        {
+            return;
+        }
+
+        var identityHandlerIndex = caddy.IndexOf("handle @identityAuth", identityRouteIndex, StringComparison.Ordinal);
+        var gatewayProxyIndex = caddy.IndexOf("reverse_proxy api-gateway:8080", identityHandlerIndex, StringComparison.Ordinal);
+        var blockedApiIndex = caddy.IndexOf("@blockedApi path /api/*", StringComparison.Ordinal);
+
+        identityHandlerIndex.Should().BeGreaterThan(identityRouteIndex);
+        gatewayProxyIndex.Should().BeGreaterThan(identityHandlerIndex);
+        gatewayProxyIndex.Should().BeLessThan(blockedApiIndex);
+    }
+
     private static string GetGatewaySettingsPath()
+    {
+        return Path.Combine(GetRepositoryRoot(), "services", "api-gateway", "appsettings.json");
+    }
+
+    private static string GetSpeedReadingCaddyPath()
+    {
+        return Path.Combine(GetRepositoryRoot(), "infrastructure", "caddy", "Caddyfile.speed-reading.litespeed");
+    }
+
+    private static string GetRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, ".git")))
@@ -30,6 +61,6 @@ public sealed class GatewayRouteConfigurationTests
             directory = directory.Parent;
         }
 
-        return Path.Combine(directory!.FullName, "services", "api-gateway", "appsettings.json");
+        return directory!.FullName;
     }
 }
