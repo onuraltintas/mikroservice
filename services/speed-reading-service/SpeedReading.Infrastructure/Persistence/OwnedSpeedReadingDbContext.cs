@@ -57,6 +57,7 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<VocabularyItem> VocabularyItems => Set<VocabularyItem>();
     public DbSet<UserVocabularyProgress> UserVocabularyProgresses => Set<UserVocabularyProgress>();
     public DbSet<ReviewItem> ReviewItems => Set<ReviewItem>();
+    internal DbSet<LegacyUserContentFeedback> ContentFeedbacks => Set<LegacyUserContentFeedback>();
     DbSet<LegacyProduct> ISpeedReadingDataContext.Products => Set<LegacyProduct>();
     DbSet<LegacyContentBlock> ISpeedReadingDataContext.ContentBlocks => Set<LegacyContentBlock>();
     DbSet<LegacyPage> ISpeedReadingDataContext.Pages => Set<LegacyPage>();
@@ -269,6 +270,33 @@ public sealed class OwnedSpeedReadingDbContext(
                 .OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<ProgramTemplate>().WithMany().HasForeignKey(item => item.ProgramTemplateId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<LegacyUserContentFeedback>(entity =>
+        {
+            ConfigureLegacyEntity(entity, "content_feedback");
+            entity.Property(item => item.UserId).HasColumnName("user_id");
+            entity.Property(item => item.ContentId).HasColumnName("content_id");
+            entity.Property(item => item.ContentType).HasColumnName("content_type").HasMaxLength(50).IsRequired();
+            entity.Property(item => item.Rating).HasColumnName("rating");
+            entity.Property(item => item.IsLiked).HasColumnName("is_liked");
+            entity.Property(item => item.IsBookmarked).HasColumnName("is_bookmarked");
+            entity.Property(item => item.SkipReason).HasColumnName("skip_reason").HasMaxLength(500);
+            entity.Property(item => item.CompletionRate).HasColumnName("completion_rate").HasPrecision(5, 2);
+            entity.Property(item => item.TimeSpentSeconds).HasColumnName("time_spent_seconds");
+            entity.Property(item => item.ExpectedTimeSeconds).HasColumnName("expected_time_seconds");
+            entity.Property(item => item.ComprehensionScore).HasColumnName("comprehension_score").HasPrecision(5, 2);
+            entity.Property(item => item.ExerciseScore).HasColumnName("exercise_score").HasPrecision(5, 2);
+            entity.Property(item => item.RetryCount).HasColumnName("retry_count");
+            entity.Property(item => item.InteractionCount).HasColumnName("interaction_count");
+            entity.Property(item => item.PauseCount).HasColumnName("pause_count");
+            entity.Property(item => item.AbandonedAtPercentage).HasColumnName("abandoned_at_percentage").HasPrecision(5, 2);
+            entity.Property(item => item.SessionDate).HasColumnName("session_date");
+            entity.Property(item => item.TimeOfDay).HasColumnName("time_of_day");
+            entity.Property(item => item.DeviceType).HasColumnName("device_type").HasMaxLength(50).IsRequired();
+            entity.Property(item => item.ContentCategory).HasColumnName("content_category").HasMaxLength(200);
+            entity.Property(item => item.ContentDifficultyLevel).HasColumnName("content_difficulty_level");
+            entity.HasIndex(item => new { item.UserId, item.SessionDate });
+            entity.HasIndex(item => new { item.UserId, item.ContentType, item.ContentId });
         });
         modelBuilder.Entity<LegacyProduct>(entity =>
         {
