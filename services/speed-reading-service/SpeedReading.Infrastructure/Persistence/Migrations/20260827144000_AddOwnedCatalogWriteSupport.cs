@@ -30,20 +30,20 @@ public partial class AddOwnedCatalogWriteSupport : Migration
     private static void AddSoftDeleteColumns(MigrationBuilder migrationBuilder, string table)
     {
         migrationBuilder.AddColumn<bool>(
-            name: "IsDeleted",
+            name: "is_deleted",
             schema: "speed_reading",
             table: table,
             type: "boolean",
             nullable: false,
             defaultValue: false);
         migrationBuilder.AddColumn<DateTime>(
-            name: "DeletedAt",
+            name: "deleted_at",
             schema: "speed_reading",
             table: table,
             type: "timestamp with time zone",
             nullable: true);
         migrationBuilder.AddColumn<string>(
-            name: "DeletedBy",
+            name: "deleted_by",
             schema: "speed_reading",
             table: table,
             type: "character varying(100)",
@@ -53,8 +53,8 @@ public partial class AddOwnedCatalogWriteSupport : Migration
 
     private static void DropSoftDeleteColumns(MigrationBuilder migrationBuilder, string table)
     {
-        migrationBuilder.DropColumn(name: "IsDeleted", schema: "speed_reading", table: table);
-        migrationBuilder.DropColumn(name: "DeletedAt", schema: "speed_reading", table: table);
-        migrationBuilder.DropColumn(name: "DeletedBy", schema: "speed_reading", table: table);
+        migrationBuilder.DropColumn(name: "is_deleted", schema: "speed_reading", table: table);
+        migrationBuilder.DropColumn(name: "deleted_at", schema: "speed_reading", table: table);
+        migrationBuilder.DropColumn(name: "deleted_by", schema: "speed_reading", table: table);
     }
 }

@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using SpeedReading.Application.Assessment;
 using SpeedReading.Application.Analytics;
@@ -220,6 +221,28 @@ public sealed class SpeedReadingOwnedDomainTests
                 && item.Properties.Single().Name == nameof(ExerciseSessionResult.SessionId));
 
         hasUniqueSessionIndex.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Owned_core_model_matches_the_snake_case_core_schema()
+    {
+        using var context = new OwnedSpeedReadingDbContext(
+            new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+                .UseNpgsql("Host=localhost;Database=unused;Username=unused;Password=unused")
+                .Options);
+
+        var exerciseTable = StoreObjectIdentifier.Table("exercises", "speed_reading");
+        var sessionTable = StoreObjectIdentifier.Table("exercise_sessions", "speed_reading");
+        var resultTable = StoreObjectIdentifier.Table("exercise_session_results", "speed_reading");
+
+        context.Model.FindEntityType(typeof(Exercise))!.FindProperty(nameof(Exercise.ExerciseTypeId))!
+            .GetColumnName(exerciseTable).Should().Be("exercise_type_id");
+        context.Model.FindEntityType(typeof(ExerciseSession))!.FindProperty(nameof(ExerciseSession.StudentAssignmentId))!
+            .GetColumnName(sessionTable).Should().Be("student_assignment_id");
+        context.Model.FindEntityType(typeof(ExerciseSessionResult))!.FindProperty(nameof(ExerciseSessionResult.LegacySessionId))!
+            .GetColumnName(resultTable).Should().Be("legacy_session_id");
+        context.Model.FindEntityType(typeof(ExerciseSessionResult))!.FindProperty(nameof(ExerciseSessionResult.SessionId))!
+            .IsNullable.Should().BeTrue();
     }
 
     [Fact]

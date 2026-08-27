@@ -787,10 +787,22 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<Exercise>(entity =>
         {
             entity.ToTable("exercises");
+            entity.Property(item => item.ExerciseTypeId).HasColumnName("exercise_type_id");
+            entity.Property(item => item.Title).HasColumnName("title");
             entity.Property(item => item.Title).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Description).HasColumnName("description");
             entity.Property(item => item.Description).HasMaxLength(2_000).IsRequired();
+            entity.Property(item => item.TypeCode).HasColumnName("type_code");
             entity.Property(item => item.TypeCode).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.DifficultyLevel).HasColumnName("difficulty_level");
+            entity.Property(item => item.ConfigurationJson).HasColumnName("configuration_json");
             entity.Property(item => item.ConfigurationJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(item => item.TargetAgeGroupId).HasColumnName("target_age_group_id");
+            entity.Property(item => item.CreatorId).HasColumnName("creator_id");
+            entity.Property(item => item.IsActive).HasColumnName("is_active");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by");
             entity.Property(item => item.DeletedBy).HasMaxLength(100);
             entity.HasIndex(item => new { item.TypeCode, item.IsActive });
             entity.HasIndex(item => item.CreatorId);
@@ -803,9 +815,17 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<ExerciseTypeCategory>(entity =>
         {
             entity.ToTable("exercise_type_categories");
+            entity.Property(item => item.Name).HasColumnName("name");
             entity.Property(item => item.Name).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.DisplayName).HasColumnName("display_name");
             entity.Property(item => item.DisplayName).HasMaxLength(200).IsRequired();
             entity.Property(item => item.Description).HasMaxLength(2_000).IsRequired();
+            entity.Property(item => item.Description).HasColumnName("description");
+            entity.Property(item => item.SortOrder).HasColumnName("sort_order");
+            entity.Property(item => item.IsActive).HasColumnName("is_active");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by");
             entity.Property(item => item.DeletedBy).HasMaxLength(100);
             entity.HasIndex(item => item.Name).IsUnique();
         });
@@ -813,12 +833,24 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<ExerciseType>(entity =>
         {
             entity.ToTable("exercise_types");
+            entity.Property(item => item.Name).HasColumnName("name");
             entity.Property(item => item.Name).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.DisplayName).HasColumnName("display_name");
             entity.Property(item => item.DisplayName).HasMaxLength(200).IsRequired();
             entity.Property(item => item.Description).HasMaxLength(2_000).IsRequired();
+            entity.Property(item => item.Description).HasColumnName("description");
+            entity.Property(item => item.IconName).HasColumnName("icon_name");
             entity.Property(item => item.IconName).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.ColorCode).HasColumnName("color_code");
             entity.Property(item => item.ColorCode).HasMaxLength(30).IsRequired();
+            entity.Property(item => item.SortOrder).HasColumnName("sort_order");
+            entity.Property(item => item.IsActive).HasColumnName("is_active");
             entity.Property(item => item.EngineType).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.EngineType).HasColumnName("engine_type");
+            entity.Property(item => item.CategoryId).HasColumnName("category_id");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by");
             entity.Property(item => item.DeletedBy).HasMaxLength(100);
             entity.HasIndex(item => item.Name).IsUnique();
             entity.HasIndex(item => new { item.CategoryId, item.IsActive });
@@ -831,13 +863,31 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<ReadingText>(entity =>
         {
             entity.ToTable("reading_texts");
+            entity.Property(item => item.Title).HasColumnName("title");
             entity.Property(item => item.Title).HasMaxLength(300).IsRequired();
+            entity.Property(item => item.Content).HasColumnName("content");
             entity.Property(item => item.Content).IsRequired();
+            entity.Property(item => item.WordCount).HasColumnName("word_count");
             entity.Property(item => item.Category).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Category).HasColumnName("category");
+            entity.Property(item => item.DifficultyLevel).HasColumnName("difficulty_level");
+            entity.Property(item => item.TargetAgeGroupId).HasColumnName("target_age_group_id");
             entity.Property(item => item.Language).HasMaxLength(20).IsRequired();
+            entity.Property(item => item.Language).HasColumnName("language");
+            entity.Property(item => item.IsActive).HasColumnName("is_active");
             entity.Property(item => item.Tags).HasMaxLength(1_000).IsRequired();
+            entity.Property(item => item.Tags).HasColumnName("tags");
+            entity.Property(item => item.RecommendedMinLevel).HasColumnName("recommended_min_level");
+            entity.Property(item => item.RecommendedMaxLevel).HasColumnName("recommended_max_level");
             entity.Property(item => item.DeletedBy).HasMaxLength(100);
             entity.Property(item => item.AverageComprehensionScore).HasPrecision(5, 2);
+            entity.Property(item => item.AverageComprehensionScore).HasColumnName("average_comprehension_score");
+            entity.Property(item => item.TimesRead).HasColumnName("times_read");
+            entity.Property(item => item.AverageReadingTimeSeconds).HasColumnName("average_reading_time_seconds");
+            entity.Property(item => item.ExerciseId).HasColumnName("exercise_id");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by");
             entity.HasIndex(item => new { item.ExerciseId, item.IsActive });
             entity.HasIndex(item => new { item.Language, item.IsActive });
             entity.HasOne<Exercise>()
@@ -849,13 +899,28 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<ReadingQuestion>(entity =>
         {
             entity.ToTable("reading_questions");
+            entity.Property(item => item.ReadingTextId).HasColumnName("reading_text_id");
             entity.Property(item => item.QuestionText).IsRequired();
+            entity.Property(item => item.QuestionText).HasColumnName("question_text");
+            entity.Property(item => item.Type).HasColumnName("type");
+            entity.Property(item => item.BloomLevel).HasColumnName("bloom_level");
+            entity.Property(item => item.DifficultyLevel).HasColumnName("difficulty_level");
             entity.Property(item => item.Explanation).HasMaxLength(2_000);
+            entity.Property(item => item.Explanation).HasColumnName("explanation");
+            entity.Property(item => item.OptionA).HasColumnName("option_a");
             entity.Property(item => item.OptionA).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.OptionB).HasColumnName("option_b");
             entity.Property(item => item.OptionB).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.OptionC).HasColumnName("option_c");
             entity.Property(item => item.OptionC).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.OptionD).HasColumnName("option_d");
             entity.Property(item => item.OptionD).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.CorrectAnswer).HasColumnName("correct_answer");
             entity.Property(item => item.CorrectAnswer).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.OrderIndex).HasColumnName("order_index");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by");
             entity.Property(item => item.DeletedBy).HasMaxLength(100);
             entity.HasIndex(item => new { item.ReadingTextId, item.OrderIndex }).IsUnique();
             entity.HasOne<ReadingText>()
@@ -867,9 +932,26 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<ExerciseSession>(entity =>
         {
             entity.ToTable("exercise_sessions");
+            entity.Property(item => item.StudentId).HasColumnName("student_id");
+            entity.Property(item => item.ExerciseId).HasColumnName("exercise_id");
+            entity.Property(item => item.ReadingTextId).HasColumnName("reading_text_id");
+            entity.Property(item => item.StudentAssignmentId).HasColumnName("student_assignment_id");
             entity.Property(item => item.Status).HasConversion<int>().IsRequired();
+            entity.Property(item => item.Status).HasColumnName("status");
+            entity.Property(item => item.StartTime).HasColumnName("start_time");
+            entity.Property(item => item.EndTime).HasColumnName("end_time");
+            entity.Property(item => item.TotalPausedSeconds).HasColumnName("total_paused_seconds");
+            entity.Property(item => item.PausedAt).HasColumnName("paused_at");
+            entity.Property(item => item.TimeLimitSeconds).HasColumnName("time_limit_seconds");
+            entity.Property(item => item.CurrentStep).HasColumnName("current_step");
+            entity.Property(item => item.TotalSteps).HasColumnName("total_steps");
+            entity.Property(item => item.CorrectCount).HasColumnName("correct_count");
+            entity.Property(item => item.IncorrectCount).HasColumnName("incorrect_count");
+            entity.Property(item => item.SessionDataJson).HasColumnName("session_data_json");
             entity.Property(item => item.SessionDataJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(item => item.CustomDataJson).HasColumnName("custom_data_json");
             entity.Property(item => item.CustomDataJson).HasColumnType("jsonb");
+            entity.Property(item => item.ProcessedActionsJson).HasColumnName("processed_actions_json");
             entity.Property(item => item.ProcessedActionsJson).HasColumnType("jsonb").IsRequired();
             entity.HasIndex(item => new { item.StudentId, item.Status });
             entity.HasIndex(item => new { item.StudentId, item.ExerciseId, item.Status });
@@ -890,19 +972,39 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<ExerciseSessionAnswer>(entity =>
         {
             entity.ToTable("exercise_session_answers");
+            entity.Property(item => item.SessionId).HasColumnName("session_id");
+            entity.Property(item => item.QuestionId).HasColumnName("question_id");
             entity.Property(item => item.Answer).HasMaxLength(2_000).IsRequired();
+            entity.Property(item => item.Answer).HasColumnName("answer");
+            entity.Property(item => item.IsCorrect).HasColumnName("is_correct");
+            entity.Property(item => item.TimeSpentSeconds).HasColumnName("time_spent_seconds");
+            entity.Property(item => item.BloomLevel).HasColumnName("bloom_level");
             entity.HasIndex(item => new { item.SessionId, item.QuestionId }).IsUnique();
         });
 
         modelBuilder.Entity<ExerciseSessionResult>(entity =>
         {
             entity.ToTable("exercise_session_results");
+            entity.Property(item => item.SessionId).HasColumnName("session_id");
+            entity.Property(item => item.LegacySessionId).HasColumnName("legacy_session_id");
+            entity.Property(item => item.StudentId).HasColumnName("student_id");
+            entity.Property(item => item.ExerciseId).HasColumnName("exercise_id");
+            entity.Property(item => item.ReadingTextId).HasColumnName("reading_text_id");
+            entity.Property(item => item.WordsRead).HasColumnName("words_read");
+            entity.Property(item => item.TimeSpentSeconds).HasColumnName("time_spent_seconds");
             entity.Property(item => item.RawWpm).HasPrecision(10, 2);
+            entity.Property(item => item.RawWpm).HasColumnName("raw_wpm");
             entity.Property(item => item.ComprehensionScore).HasPrecision(5, 2);
+            entity.Property(item => item.ComprehensionScore).HasColumnName("comprehension_score");
             entity.Property(item => item.WeightedKdp).HasPrecision(10, 2);
+            entity.Property(item => item.WeightedKdp).HasColumnName("weighted_kdp");
             entity.Property(item => item.Score).HasPrecision(5, 2);
+            entity.Property(item => item.Score).HasColumnName("score");
+            entity.Property(item => item.QuestionAnswersJson).HasColumnName("question_answers_json");
             entity.Property(item => item.QuestionAnswersJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(item => item.ReadingMovementsJson).HasColumnName("reading_movements_json");
             entity.Property(item => item.ReadingMovementsJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(item => item.CompletedAt).HasColumnName("completed_at");
             entity.HasIndex(item => item.SessionId).IsUnique();
             entity.HasIndex(item => item.LegacySessionId);
             entity.HasIndex(item => new { item.StudentId, item.CompletedAt });

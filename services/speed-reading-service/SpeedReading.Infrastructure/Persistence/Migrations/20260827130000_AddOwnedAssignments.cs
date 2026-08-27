@@ -116,7 +116,7 @@ public partial class AddOwnedAssignments : Migration
             name: "ix_exercise_sessions_StudentAssignmentId",
             schema: "speed_reading",
             table: "exercise_sessions",
-            column: "StudentAssignmentId");
+            column: "student_assignment_id");
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)
