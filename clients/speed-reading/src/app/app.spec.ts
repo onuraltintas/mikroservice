@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { App } from './app';
+import { routes } from './app.routes';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -21,5 +22,11 @@ describe('App', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('router-outlet')).toBeTruthy();
+  });
+
+  it('allows SystemAdmin to enter the admin area', () => {
+    const adminRoute = routes.find(route => route.path === 'admin');
+
+    expect(adminRoute?.data?.['role']).toContain('SystemAdmin');
   });
 });
