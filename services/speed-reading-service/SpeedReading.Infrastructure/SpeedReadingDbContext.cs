@@ -539,6 +539,10 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasIndex(item => new { item.IsDeleted, item.UserId, item.CompletedDate });
             entity.Property(item => item.ResultDataJson).IsRequired();
             entity.Property(item => item.DevicePlatform).HasMaxLength(50).IsRequired();
+            // These derived fields exist in the newer model but not in the
+            // live legacy table; the owned log schema stores them separately.
+            entity.Ignore(item => item.AverageWPM);
+            entity.Ignore(item => item.AverageComprehension);
             entity.Property(item => item.AverageResponseTimeMs).HasPrecision(18, 2);
             entity.Property(item => item.MedianResponseTimeMs).HasPrecision(18, 2);
             entity.Property(item => item.StdDevResponseTimeMs).HasPrecision(18, 2);
