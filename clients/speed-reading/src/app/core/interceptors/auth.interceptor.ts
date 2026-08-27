@@ -11,16 +11,16 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router); // Inject Router at top level
   const token = authService.token;
+  const isAuthRequest = req.url.includes('/auth/');
 
-  // Skip adding token for auth endpoints (login, register, etc.) to prevent 401 Unauthorized 
-  // if the token in local storage is invalid/expired during login attempt.
-  if (token && !req.url.includes('/auth/login') && !req.url.includes('/auth/register')) {
+  // Auth endpoints use the HttpOnly refresh cookie and must not receive a stale access token.
+  if (token && !isAuthRequest) {
     req = addToken(req, token);
   }
 
   return next(req).pipe(
     catchError(error => {
-      if (error.status === 401 && authService.currentUserValue?.refreshToken && !req.url.includes('/auth/login')) {
+      if (error.status === 401 && authService.currentUserValue && !isAuthRequest) {
         return handle401Error(req, next, authService, router);
       }
       return throwError(() => error);

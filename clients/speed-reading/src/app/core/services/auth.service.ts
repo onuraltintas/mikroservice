@@ -23,6 +23,7 @@ export class AuthService {
   private readonly router = inject(Router);
   private readonly settingsService = inject(SettingsService);
   private readonly API_URL = environment.apiUrl;
+  private readonly AUTH_URL = `${this.API_URL}/auth`;
 
   private currentUserSubject = new BehaviorSubject<AuthResponse | null>(
     this.getUserFromStorage()
@@ -109,7 +110,7 @@ export class AuthService {
    * Service receives: AuthResponse (auto-unwrapped)
    */
   login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/v1/auth/login`, credentials).pipe(
+    return this.http.post<AuthResponse>(`${this.AUTH_URL}/login`, credentials, { withCredentials: true }).pipe(
       map(response => this.normalizeAuthResponse(response)),
       tap(response => {
         this.setUser(response);
@@ -123,7 +124,7 @@ export class AuthService {
    * Service receives: AuthResponse (auto-unwrapped)
    */
   register(data: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/v1/auth/register`, data).pipe(
+    return this.http.post<AuthResponse>(`${this.AUTH_URL}/register`, data, { withCredentials: true }).pipe(
       tap(response => {
         this.setUser(response);
       })
@@ -134,7 +135,7 @@ export class AuthService {
    * Register new institution
    */
   registerInstitution(data: any): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/v1/auth/register-institution`, data).pipe(
+    return this.http.post<AuthResponse>(`${this.AUTH_URL}/register-institution`, data, { withCredentials: true }).pipe(
       tap(response => {
         this.setUser(response);
       })
@@ -145,7 +146,7 @@ export class AuthService {
    * Register new teacher
    */
   registerTeacher(data: any): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/v1/auth/register-teacher`, data).pipe(
+    return this.http.post<AuthResponse>(`${this.AUTH_URL}/register-teacher`, data, { withCredentials: true }).pipe(
       tap(response => {
         this.setUser(response);
       })
@@ -153,7 +154,7 @@ export class AuthService {
   }
 
   registerCoach(data: any): Observable<void> {
-    return this.http.post<void>(`${this.API_URL}/v1/auth/register-coach`, data);
+    return this.http.post<void>(`${this.AUTH_URL}/register-coach`, data, { withCredentials: true });
   }
 
   /**
@@ -161,16 +162,13 @@ export class AuthService {
    * Calls backend to log the event, then clears local storage and redirects to login
    */
   logout(): void {
-    // Read refreshToken BEFORE clearing state
-    const refreshToken = this.currentUserValue?.refreshToken;
-
     // IMPORTANT: Clear local storage FIRST to prevent error interceptor from calling logout again
     localStorage.removeItem('currentUser');
     localStorage.removeItem('token');
     this.currentUserSubject.next(null);
 
     // Optional: Notify backend (fire-and-forget, ignore errors)
-    this.http.post(`${this.API_URL}/v1/auth/logout`, { refreshToken }).subscribe({
+    this.http.post(`${this.AUTH_URL}/revoke-token`, {}, { withCredentials: true }).subscribe({
       next: () => console.log('Logout event logged on backend'),
       error: () => { } // Ignore errors (token might be expired)
     });
@@ -185,8 +183,7 @@ export class AuthService {
    * Service receives: AuthResponse (auto-unwrapped)
    */
   refreshToken(): Observable<AuthResponse> {
-    const refreshToken = this.currentUserValue?.refreshToken;
-    return this.http.post<AuthResponse>(`${this.API_URL}/v1/auth/refresh-token`, { refreshToken }).pipe(
+    return this.http.post<AuthResponse>(`${this.AUTH_URL}/refresh-token`, {}, { withCredentials: true }).pipe(
       map(response => this.normalizeAuthResponse(response)),
       tap(response => {
         this.setUser(response);
@@ -204,7 +201,7 @@ export class AuthService {
     if (role) {
       payload.role = role;
     }
-    return this.http.post<AuthResponse>(`${this.API_URL}/v1/auth/google-login`, payload).pipe(
+    return this.http.post<AuthResponse>(`${this.AUTH_URL}/google-login`, payload, { withCredentials: true }).pipe(
       map(response => this.normalizeAuthResponse(response)),
       tap(response => {
         this.setUser(response);
@@ -218,7 +215,7 @@ export class AuthService {
    * Service receives: void (auto-unwrapped)
    */
   forgotPassword(email: string): Observable<any> {
-    return this.http.post(`${this.API_URL}/v1/auth/forgot-password`, { email });
+    return this.http.post(`${this.AUTH_URL}/forgot-password`, { email }, { withCredentials: true });
   }
 
   /**
@@ -227,7 +224,7 @@ export class AuthService {
    * Service receives: void (auto-unwrapped)
    */
   resetPassword(data: { email: string; token: string; newPassword: string }): Observable<any> {
-    return this.http.post(`${this.API_URL}/v1/auth/reset-password`, data);
+    return this.http.post(`${this.AUTH_URL}/reset-password`, data, { withCredentials: true });
   }
 
   /**
@@ -236,7 +233,7 @@ export class AuthService {
    * Service receives: void (auto-unwrapped)
    */
   verifyEmail(data: { email: string; token: string }): Observable<any> {
-    return this.http.post(`${this.API_URL}/v1/auth/verify-email`, data);
+    return this.http.post(`${this.AUTH_URL}/confirm-email`, data, { withCredentials: true });
   }
 
   /**
@@ -245,7 +242,7 @@ export class AuthService {
    * Service receives: void (auto-unwrapped)
    */
   resendVerification(email: string): Observable<any> {
-    return this.http.post(`${this.API_URL}/v1/auth/resend-verification`, { email });
+    return this.http.post(`${this.AUTH_URL}/resend-verification-email`, { email }, { withCredentials: true });
   }
 
   /** Called by GoogleCallbackComponent after server-side OAuth redirect */
@@ -356,6 +353,6 @@ export class AuthService {
    * Change password for current user
    */
   changePassword(data: any): Observable<any> {
-    return this.http.post(`${this.API_URL}/v1/auth/change-password`, data);
+    return this.http.post(`${this.AUTH_URL}/change-password`, data, { withCredentials: true });
   }
 }
