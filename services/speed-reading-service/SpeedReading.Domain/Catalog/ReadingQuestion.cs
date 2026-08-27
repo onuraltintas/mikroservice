@@ -37,13 +37,14 @@ public sealed class ReadingQuestion : Entity
         string? optionA = null,
         string? optionB = null,
         string? optionC = null,
-        string? optionD = null)
+        string? optionD = null,
+        bool allowMissingCorrectAnswer = false)
     {
         if (id == Guid.Empty || readingTextId == Guid.Empty)
             throw new ArgumentException("Question and reading text ids are required.");
         if (string.IsNullOrWhiteSpace(questionText))
             throw new ArgumentException("Question text is required.", nameof(questionText));
-        if (string.IsNullOrWhiteSpace(correctAnswer))
+        if (string.IsNullOrWhiteSpace(correctAnswer) && !allowMissingCorrectAnswer)
             throw new ArgumentException("Correct answer is required.", nameof(correctAnswer));
         if (orderIndex < 0 || bloomLevel < 0 || difficultyLevel < 0)
             throw new ArgumentOutOfRangeException(nameof(orderIndex));
@@ -98,7 +99,8 @@ public sealed class ReadingQuestion : Entity
             optionA,
             optionB,
             optionC,
-            optionD);
+            optionD,
+            allowMissingCorrectAnswer: true);
         question.CreatedAt = createdAt;
         question.CreatedBy = createdBy;
         question.UpdatedAt = updatedAt;

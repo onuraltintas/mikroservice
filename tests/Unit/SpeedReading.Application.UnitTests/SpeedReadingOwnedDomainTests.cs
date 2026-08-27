@@ -471,6 +471,31 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Fact]
+    public void Imported_question_can_preserve_a_missing_legacy_answer()
+    {
+        var question = ReadingQuestion.Import(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Cevap anahtarı olmayan eski soru",
+            string.Empty,
+            0,
+            0,
+            0,
+            0,
+            null,
+            "A",
+            "B",
+            "C",
+            "D",
+            DateTime.UtcNow,
+            null,
+            null,
+            null);
+
+        question.CorrectAnswer.Should().BeEmpty();
+    }
+
+    [Fact]
     public void Vocabulary_progress_advances_boxes_and_is_reactivatable()
     {
         var userId = Guid.NewGuid();
