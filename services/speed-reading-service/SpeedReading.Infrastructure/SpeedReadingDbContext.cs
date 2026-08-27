@@ -565,7 +565,10 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.ToTable("LearningPathNodes");
             entity.HasKey(item => item.Id);
             entity.HasIndex(item => item.TemplateId);
-            entity.HasIndex(item => item.ParentNodeId);
+            entity.Property(item => item.Order).HasColumnName("OrderIndex");
+            entity.Ignore(item => item.ParentNodeId);
+            entity.Ignore(item => item.ContentType);
+            entity.Ignore(item => item.ContentId);
         });
 
         modelBuilder.Entity<LegacyNodeContent>(entity =>
@@ -573,6 +576,11 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.ToTable("NodeContents");
             entity.HasKey(item => item.Id);
             entity.HasIndex(item => item.NodeId);
+            entity.Ignore(item => item.ExerciseId);
+            entity.Ignore(item => item.ReadingTextId);
+            entity.Property(item => item.SourceContentId).HasColumnName("ContentId");
+            entity.Property(item => item.SourceContentType).HasColumnName("ContentType");
+            entity.Property(item => item.Description).HasColumnName("ContentDescription");
         });
 
         modelBuilder.Entity<LegacyNodePrerequisite>(entity =>
@@ -581,6 +589,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasKey(item => item.Id);
             entity.HasIndex(item => item.NodeId);
             entity.HasIndex(item => item.PrerequisiteNodeId);
+            entity.Property(item => item.NodeId).HasColumnName("DependentNodeId");
         });
 
         modelBuilder.Entity<LegacyStudentPathProgress>(entity =>
@@ -589,6 +598,8 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasKey(item => item.Id);
             entity.HasIndex(item => item.StudentId);
             entity.HasIndex(item => item.TemplateId);
+            entity.Ignore(item => item.IsCompleted);
+            entity.Property(item => item.Progress).HasColumnName("CompletionPercentage");
         });
 
         modelBuilder.Entity<LegacyStudentNodeProgress>(entity =>
@@ -604,7 +615,8 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.ToTable("PersonalizedLearningPaths");
             entity.HasKey(item => item.Id);
             entity.HasIndex(item => item.StudentId);
-            entity.HasIndex(item => item.TemplateId);
+            entity.Ignore(item => item.TemplateId);
+            entity.Ignore(item => item.IsUnlocked);
         });
 
         modelBuilder.Entity<LegacyIdempotencyRecord>(entity =>

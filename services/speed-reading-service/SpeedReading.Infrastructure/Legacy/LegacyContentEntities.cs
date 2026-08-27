@@ -298,6 +298,8 @@ internal sealed class LegacyLearningPathNode : LegacyBaseEntity
 internal sealed class LegacyNodeContent : LegacyBaseEntity
 {
     public Guid NodeId { get; set; }
+    public Guid SourceContentId { get; set; }
+    public string SourceContentType { get; set; } = string.Empty;
     public Guid? ExerciseId { get; set; }
     public Guid? ReadingTextId { get; set; }
     public string? Description { get; set; }
@@ -315,6 +317,8 @@ internal sealed class LegacyStudentPathProgress : LegacyBaseEntity
     public Guid TemplateId { get; set; }
     public Guid? CurrentNodeId { get; set; }
     public decimal Progress { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public DateTime? CompletedAt { get; set; }
     public bool IsCompleted { get; set; }
 }
 
@@ -339,6 +343,7 @@ internal sealed class LegacyPersonalizedLearningPath : LegacyBaseEntity
     public int EstimatedDurationMinutes { get; set; }
     public bool IsCompleted { get; set; }
     public DateTime? CompletedAt { get; set; }
+    public DateTime? UnlockedAt { get; set; }
     public decimal? AchievedScore { get; set; }
     public string? RecommendationReason { get; set; }
     public bool IsUnlocked { get; set; }

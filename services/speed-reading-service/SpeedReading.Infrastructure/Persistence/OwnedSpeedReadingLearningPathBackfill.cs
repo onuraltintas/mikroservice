@@ -80,6 +80,7 @@ public sealed class OwnedSpeedReadingLearningPathBackfill(
             .Select(item => item.Id)
             .ToHashSetAsync(cancellationToken);
 
+        ResolveNodeContentReferences(contents, exerciseIds, readingTextIds);
         ValidateReferences(
             templates,
             nodes,
@@ -237,7 +238,7 @@ public sealed class OwnedSpeedReadingLearningPathBackfill(
                 source.TemplateId,
                 source.CurrentNodeId,
                 source.Progress,
-                source.IsCompleted,
+                IsPathCompleted(source),
                 source.IsDeleted,
                 NormalizeUtc(source.DeletedAt),
                 ToAuditValue(source.DeletedBy),
@@ -303,7 +304,7 @@ public sealed class OwnedSpeedReadingLearningPathBackfill(
                 NormalizeUtc(source.CompletedAt),
                 source.AchievedScore,
                 source.RecommendationReason,
-                source.IsUnlocked,
+                source.UnlockedAt.HasValue,
                 source.IsDeleted,
                 NormalizeUtc(source.DeletedAt),
                 ToAuditValue(source.DeletedBy),
@@ -327,6 +328,49 @@ public sealed class OwnedSpeedReadingLearningPathBackfill(
             existingRows,
             DateTime.UtcNow);
     }
+
+    private static void ResolveNodeContentReferences(
+        IReadOnlyList<LegacyNodeContent> contents,
+        IReadOnlySet<Guid> exerciseIds,
+        IReadOnlySet<Guid> readingTextIds)
+    {
+        foreach (var content in contents)
+        {
+            if (content.SourceContentId == Guid.Empty)
+                throw new InvalidOperationException(
+                    $"Learning path content {content.Id} has no source content id.");
+
+            var sourceType = content.SourceContentType.Trim();
+            var isExercise = sourceType.Contains("exercise", StringComparison.OrdinalIgnoreCase);
+            var isReadingText = sourceType.Contains("reading", StringComparison.OrdinalIgnoreCase)
+                || sourceType.Contains("text", StringComparison.OrdinalIgnoreCase);
+
+            if (isExercise && isReadingText)
+                throw new InvalidOperationException(
+                    $"Learning path content {content.Id} has an ambiguous content type.");
+
+            if (!isExercise && !isReadingText)
+            {
+                isExercise = exerciseIds.Contains(content.SourceContentId)
+                    && !readingTextIds.Contains(content.SourceContentId);
+                isReadingText = readingTextIds.Contains(content.SourceContentId)
+                    && !exerciseIds.Contains(content.SourceContentId);
+            }
+
+            if (isExercise)
+                content.ExerciseId = content.SourceContentId;
+            else if (isReadingText)
+                content.ReadingTextId = content.SourceContentId;
+            else
+                throw new InvalidOperationException(
+                    $"Learning path content {content.Id} references an unknown source content "
+                    + $"{content.SourceContentId} ({content.SourceContentType}).");
+        }
+    }
+
+    private static bool IsPathCompleted(LegacyStudentPathProgress progress) =>
+        progress.CompletedAt.HasValue
+        || string.Equals(progress.Status, "Completed", StringComparison.OrdinalIgnoreCase);
 
     private static void ValidateReferences(
         IReadOnlyList<LegacyLearningPathTemplate> templates,
