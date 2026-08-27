@@ -25,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../../services/speed-reading-service/SpeedReading.Domain/SpeedReading.Domain.csproj" />
     <ProjectReference Include="../../../services/speed-reading-service/SpeedReading.Application/SpeedReading.Application.csproj" />
     <ProjectReference Include="../../../services/speed-reading-service/SpeedReading.Infrastructure/SpeedReading.Infrastructure.csproj" />
   </ItemGroup>
