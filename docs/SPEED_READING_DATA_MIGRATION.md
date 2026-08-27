@@ -1,5 +1,38 @@
 # Hızlı Okuma Veri Taşıma ve Uyumluluk Planı
 
+## Final bağımsız ownership hedefi
+
+Bu dokümandaki mevcut uyumluluk katmanı, final veri sahipliği olarak
+değerlendirilmez. “Veri ve iş mantığı tamamen bağımsız Speed Reading
+mikroservisine taşındı” kararı ancak aşağıdaki kapanış kapıları tamamlandığında
+verilecektir:
+
+1. Speed Reading kendi PostgreSQL veritabanını ve kendi migration geçmişini
+   kullanır; eski Hızlı Okuma veritabanına production runtime erişimi yoktur.
+2. Tüm Speed Reading yazma kuralları yeni domain/use-case/repository
+   katmanında çalışır; `LegacySpeedReading*` sınıfları runtime dependency
+   olmaktan çıkar.
+3. Identity, Coaching ve Notification verileri doğrudan SQL ile okunmaz;
+   servisler arası versioned contract/event kullanılır.
+4. Eski veriden yeni şemaya backfill, checksum/row-count karşılaştırması,
+   shadow read ve write cutover kanıtları saklanır.
+5. Eski uygulama ve eski veritabanı kapalıyken login, katalog, egzersiz,
+   sonuç, ilerleme, rapor ve yönetim akışları çalışır.
+6. Bağımsız backup/restore, health/metrics/logging, rollback ve production
+   E2E sonuçları geçerlidir.
+
+### Geçiş fazları
+
+| Faz | Durum | Kapanış ölçütü |
+| --- | --- | --- |
+| Baseline ve auth/session hizalama | Tamamlandı | 48 frontend test GREEN; canonical auth ve HttpOnly session akışı |
+| Yeni owned şema ve migration altyapısı | Devam ediyor | Yeni DB, EF migration geçmişi ve ilk dikey slice modeli |
+| Core exercise/session/progress iş mantığı | Bekliyor | Legacy olmadan unit + integration + E2E |
+| Content/program/report/gamification slice’ları | Bekliyor | Her slice için backfill ve parity raporu |
+| Frontend/gateway legacy endpoint temizliği | Bekliyor | Standalone domain’de 404 üreten çağrı kalmaması |
+| Shadow read ve write cutover | Bekliyor | Eski DB yazma yetkisi kaldırılmış, rollback kanıtlı |
+| Eski runtime/DB erişiminin kaldırılması | Bekliyor | Bağımsızlık testi ve production smoke tamamlanmış |
+
 ## Kaynak uygulama kararı
 
 Taşınacak kaynak `onuraltintas/HizliOkuma` reposudur. `HizliOkuma_DDD`
