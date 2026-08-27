@@ -17,6 +17,8 @@ public sealed class SpeedReadingOwnedDomainTests
                 .Options);
 
         context.Model.FindEntityType(typeof(Exercise))!.GetSchema().Should().Be("speed_reading");
+        context.Model.FindEntityType(typeof(ExerciseTypeCategory))!.GetTableName().Should().Be("exercise_type_categories");
+        context.Model.FindEntityType(typeof(ExerciseType))!.GetTableName().Should().Be("exercise_types");
         context.Model.FindEntityType(typeof(Exercise))!.GetTableName().Should().Be("exercises");
         context.Model.FindEntityType(typeof(ReadingText))!.GetTableName().Should().Be("reading_texts");
         context.Model.FindEntityType(typeof(ExerciseSession))!.GetTableName().Should().Be("exercise_sessions");
@@ -74,14 +76,31 @@ public sealed class SpeedReadingOwnedDomainTests
     [Fact]
     public void Exercise_requires_a_title_and_type_code()
     {
+        var exerciseTypeId = Guid.NewGuid();
         var act = () => Exercise.Create(
             title: " ",
             typeCode: "SpeedReading",
             configurationJson: "{}",
             difficultyLevel: 1,
-            creatorId: Guid.NewGuid());
+            creatorId: Guid.NewGuid(),
+            exerciseTypeId: exerciseTypeId);
 
         act.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Exercise_keeps_the_owned_exercise_type_reference()
+    {
+        var exerciseTypeId = Guid.NewGuid();
+        var exercise = Exercise.Create(
+            title: "Hızlı okuma",
+            typeCode: "SpeedReading",
+            configurationJson: "{}",
+            difficultyLevel: 1,
+            creatorId: Guid.NewGuid(),
+            exerciseTypeId: exerciseTypeId);
+
+        exercise.ExerciseTypeId.Should().Be(exerciseTypeId);
     }
 
     [Fact]

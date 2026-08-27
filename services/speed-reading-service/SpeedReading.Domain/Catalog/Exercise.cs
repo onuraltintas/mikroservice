@@ -16,6 +16,7 @@ public sealed class Exercise : AggregateRoot
     public string Title { get; private set; } = string.Empty;
     public string Description { get; private set; } = string.Empty;
     public string TypeCode { get; private set; } = string.Empty;
+    public Guid ExerciseTypeId { get; private set; }
     public int DifficultyLevel { get; private set; }
     public string ConfigurationJson { get; private set; } = "{}";
     public Guid? TargetAgeGroupId { get; private set; }
@@ -28,6 +29,7 @@ public sealed class Exercise : AggregateRoot
         string configurationJson,
         int difficultyLevel,
         Guid creatorId,
+        Guid exerciseTypeId,
         Guid? id = null,
         string? description = null,
         Guid? targetAgeGroupId = null)
@@ -38,6 +40,8 @@ public sealed class Exercise : AggregateRoot
             throw new ArgumentException("Exercise type code is required.", nameof(typeCode));
         if (creatorId == Guid.Empty)
             throw new ArgumentException("Exercise creator is required.", nameof(creatorId));
+        if (exerciseTypeId == Guid.Empty)
+            throw new ArgumentException("Exercise type is required.", nameof(exerciseTypeId));
         if (difficultyLevel < 0)
             throw new ArgumentOutOfRangeException(nameof(difficultyLevel));
 
@@ -47,6 +51,7 @@ public sealed class Exercise : AggregateRoot
             Title = title.Trim(),
             Description = description?.Trim() ?? string.Empty,
             TypeCode = typeCode.Trim(),
+            ExerciseTypeId = exerciseTypeId,
             DifficultyLevel = difficultyLevel,
             ConfigurationJson = string.IsNullOrWhiteSpace(configurationJson) ? "{}" : configurationJson,
             TargetAgeGroupId = targetAgeGroupId,

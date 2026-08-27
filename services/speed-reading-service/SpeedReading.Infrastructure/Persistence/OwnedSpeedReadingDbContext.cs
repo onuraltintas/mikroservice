@@ -13,6 +13,8 @@ public sealed class OwnedSpeedReadingDbContext(
     DbContextOptions<OwnedSpeedReadingDbContext> options) : DbContext(options)
 {
     public DbSet<Exercise> Exercises => Set<Exercise>();
+    public DbSet<ExerciseTypeCategory> ExerciseTypeCategories => Set<ExerciseTypeCategory>();
+    public DbSet<ExerciseType> ExerciseTypes => Set<ExerciseType>();
     public DbSet<ReadingText> ReadingTexts => Set<ReadingText>();
     public DbSet<ReadingQuestion> ReadingQuestions => Set<ReadingQuestion>();
     public DbSet<ExerciseSession> ExerciseSessions => Set<ExerciseSession>();
@@ -25,6 +27,8 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.HasDefaultSchema("speed_reading");
 
         ConfigureEntity(modelBuilder.Entity<Exercise>());
+        ConfigureEntity(modelBuilder.Entity<ExerciseTypeCategory>());
+        ConfigureEntity(modelBuilder.Entity<ExerciseType>());
         ConfigureEntity(modelBuilder.Entity<ReadingText>());
         ConfigureEntity(modelBuilder.Entity<ReadingQuestion>());
         ConfigureEntity(modelBuilder.Entity<ExerciseSession>());
@@ -40,6 +44,36 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.ConfigurationJson).HasColumnType("jsonb").IsRequired();
             entity.HasIndex(item => new { item.TypeCode, item.IsActive });
             entity.HasIndex(item => item.CreatorId);
+            entity.HasOne<ExerciseType>()
+                .WithMany()
+                .HasForeignKey(item => item.ExerciseTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ExerciseTypeCategory>(entity =>
+        {
+            entity.ToTable("exercise_type_categories");
+            entity.Property(item => item.Name).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.DisplayName).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Description).HasMaxLength(2_000).IsRequired();
+            entity.HasIndex(item => item.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<ExerciseType>(entity =>
+        {
+            entity.ToTable("exercise_types");
+            entity.Property(item => item.Name).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.DisplayName).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Description).HasMaxLength(2_000).IsRequired();
+            entity.Property(item => item.IconName).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.ColorCode).HasMaxLength(30).IsRequired();
+            entity.Property(item => item.EngineType).HasMaxLength(100).IsRequired();
+            entity.HasIndex(item => item.Name).IsUnique();
+            entity.HasIndex(item => new { item.CategoryId, item.IsActive });
+            entity.HasOne<ExerciseTypeCategory>()
+                .WithMany()
+                .HasForeignKey(item => item.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<ReadingText>(entity =>

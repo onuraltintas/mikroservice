@@ -15,11 +15,67 @@ public partial class CreateOwnedSpeedReadingCore : Migration
         migrationBuilder.EnsureSchema(name: "speed_reading");
 
         migrationBuilder.CreateTable(
+            name: "exercise_type_categories",
+            schema: "speed_reading",
+            columns: table => new
+            {
+                id = table.Column<Guid>(type: "uuid", nullable: false),
+                name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                display_name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
+                sort_order = table.Column<int>(type: "integer", nullable: false),
+                is_active = table.Column<bool>(type: "boolean", nullable: false),
+                created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                created_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                updated_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                version = table.Column<int>(type: "integer", nullable: false)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("pk_exercise_type_categories", x => x.id);
+            });
+
+        migrationBuilder.CreateTable(
+            name: "exercise_types",
+            schema: "speed_reading",
+            columns: table => new
+            {
+                id = table.Column<Guid>(type: "uuid", nullable: false),
+                name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                display_name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
+                icon_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                color_code = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                sort_order = table.Column<int>(type: "integer", nullable: false),
+                is_active = table.Column<bool>(type: "boolean", nullable: false),
+                engine_type = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                category_id = table.Column<Guid>(type: "uuid", nullable: true),
+                created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                created_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                updated_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                version = table.Column<int>(type: "integer", nullable: false)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("pk_exercise_types", x => x.id);
+                table.ForeignKey(
+                    name: "fk_exercise_types_exercise_type_categories_category_id",
+                    column: x => x.category_id,
+                    principalSchema: "speed_reading",
+                    principalTable: "exercise_type_categories",
+                    principalColumn: "id",
+                    onDelete: ReferentialAction.Restrict);
+            });
+
+        migrationBuilder.CreateTable(
             name: "exercises",
             schema: "speed_reading",
             columns: table => new
             {
                 id = table.Column<Guid>(type: "uuid", nullable: false),
+                exercise_type_id = table.Column<Guid>(type: "uuid", nullable: false),
                 title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                 description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
                 type_code = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
@@ -37,6 +93,13 @@ public partial class CreateOwnedSpeedReadingCore : Migration
             constraints: table =>
             {
                 table.PrimaryKey("pk_exercises", x => x.id);
+                table.ForeignKey(
+                    name: "fk_exercises_exercise_types_exercise_type_id",
+                    column: x => x.exercise_type_id,
+                    principalSchema: "speed_reading",
+                    principalTable: "exercise_types",
+                    principalColumn: "id",
+                    onDelete: ReferentialAction.Restrict);
             });
 
         migrationBuilder.CreateTable(
@@ -239,6 +302,28 @@ public partial class CreateOwnedSpeedReadingCore : Migration
             table: "exercises",
             column: "creator_id");
         migrationBuilder.CreateIndex(
+            name: "ix_exercises_exercise_type_id",
+            schema: "speed_reading",
+            table: "exercises",
+            column: "exercise_type_id");
+        migrationBuilder.CreateIndex(
+            name: "ix_exercise_type_categories_name",
+            schema: "speed_reading",
+            table: "exercise_type_categories",
+            column: "name",
+            unique: true);
+        migrationBuilder.CreateIndex(
+            name: "ix_exercise_types_name",
+            schema: "speed_reading",
+            table: "exercise_types",
+            column: "name",
+            unique: true);
+        migrationBuilder.CreateIndex(
+            name: "ix_exercise_types_category_id_is_active",
+            schema: "speed_reading",
+            table: "exercise_types",
+            columns: new[] { "category_id", "is_active" });
+        migrationBuilder.CreateIndex(
             name: "ix_exercises_type_code_is_active",
             schema: "speed_reading",
             table: "exercises",
@@ -296,5 +381,7 @@ public partial class CreateOwnedSpeedReadingCore : Migration
         migrationBuilder.DropTable(name: "exercise_sessions", schema: "speed_reading");
         migrationBuilder.DropTable(name: "reading_texts", schema: "speed_reading");
         migrationBuilder.DropTable(name: "exercises", schema: "speed_reading");
+        migrationBuilder.DropTable(name: "exercise_types", schema: "speed_reading");
+        migrationBuilder.DropTable(name: "exercise_type_categories", schema: "speed_reading");
     }
 }
