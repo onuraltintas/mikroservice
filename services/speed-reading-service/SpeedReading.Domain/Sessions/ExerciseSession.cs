@@ -67,6 +67,78 @@ public sealed class ExerciseSession : AggregateRoot
         };
     }
 
+    public static ExerciseSession Import(
+        Guid id,
+        Guid studentId,
+        Guid exerciseId,
+        Guid? readingTextId,
+        Guid? studentAssignmentId,
+        ExerciseSessionStatus status,
+        DateTime startTime,
+        DateTime? endTime,
+        int totalPausedSeconds,
+        DateTime? pausedAt,
+        int? timeLimitSeconds,
+        int currentStep,
+        int totalSteps,
+        int correctCount,
+        int incorrectCount,
+        string sessionDataJson,
+        string? customDataJson,
+        string processedActionsJson,
+        DateTime createdAt,
+        string? createdBy,
+        DateTime? updatedAt,
+        string? updatedBy)
+    {
+        if (id == Guid.Empty || studentId == Guid.Empty || exerciseId == Guid.Empty)
+            throw new ArgumentException("Session identifiers are required.");
+        if (!Enum.IsDefined(status))
+            throw new ArgumentOutOfRangeException(nameof(status));
+        if (totalSteps <= 0)
+            throw new ArgumentOutOfRangeException(nameof(totalSteps));
+        if (totalPausedSeconds < 0 || currentStep < 0 || correctCount < 0 || incorrectCount < 0)
+            throw new ArgumentOutOfRangeException(nameof(totalPausedSeconds));
+        if (timeLimitSeconds is <= 0)
+            throw new ArgumentOutOfRangeException(nameof(timeLimitSeconds));
+
+        return new ExerciseSession
+        {
+            Id = id,
+            StudentId = studentId,
+            ExerciseId = exerciseId,
+            ReadingTextId = readingTextId,
+            StudentAssignmentId = studentAssignmentId,
+            Status = status,
+            StartTime = EnsureUtc(startTime),
+            EndTime = endTime.HasValue ? EnsureUtc(endTime.Value) : null,
+            TotalPausedSeconds = totalPausedSeconds,
+            PausedAt = pausedAt.HasValue ? EnsureUtc(pausedAt.Value) : null,
+            TimeLimitSeconds = timeLimitSeconds,
+            CurrentStep = Math.Min(Math.Max(currentStep, 0), totalSteps),
+            TotalSteps = totalSteps,
+            CorrectCount = correctCount,
+            IncorrectCount = incorrectCount,
+            SessionDataJson = string.IsNullOrWhiteSpace(sessionDataJson) ? "{}" : sessionDataJson,
+            CustomDataJson = customDataJson,
+            ProcessedActionsJson = string.IsNullOrWhiteSpace(processedActionsJson) ? "{}" : processedActionsJson,
+            CreatedAt = EnsureUtc(createdAt),
+            CreatedBy = createdBy,
+            UpdatedAt = updatedAt.HasValue ? EnsureUtc(updatedAt.Value) : null,
+            UpdatedBy = updatedBy
+        };
+    }
+
+    public void ImportAnswer(ExerciseSessionAnswer answer)
+    {
+        ArgumentNullException.ThrowIfNull(answer);
+        if (answer.SessionId != Id)
+            throw new InvalidOperationException("Answer belongs to another session.");
+        if (_answers.Any(item => item.QuestionId == answer.QuestionId))
+            return;
+        _answers.Add(answer);
+    }
+
     public void Pause(DateTime at)
     {
         EnsureStatus(ExerciseSessionStatus.Active, "Only an active session can be paused.");

@@ -27,7 +27,7 @@ verilecektir:
 | --- | --- | --- |
 | Baseline ve auth/session hizalama | Tamamlandı | 48 frontend test GREEN; canonical auth ve HttpOnly session akışı |
 | Yeni owned şema ve migration altyapısı | Kod tamamlandı | Yeni DB, EF migration geçmişi, katalog modeli ve backfill runner |
-| Core exercise/session/progress iş mantığı | Kısmi / flag arkasında | Owned session implementation; session/result backfill, parity ve E2E hâlâ gerekli |
+| Core exercise/session/progress iş mantığı | Kısmi / flag arkasında | Owned session implementation ve session/result/history backfill runner hazır; parity ve E2E hâlâ gerekli |
 | Content/program/report/gamification slice’ları | Bekliyor | Her slice için backfill ve parity raporu |
 | Frontend/gateway legacy endpoint temizliği | Bekliyor | Standalone domain’de 404 üreten çağrı kalmaması |
 | Shadow read ve write cutover | Bekliyor | Eski DB yazma yetkisi kaldırılmış, rollback kanıtlı |
@@ -44,7 +44,7 @@ yapılmadı:
 - `OwnedSpeedReadingDbContext`, legacy `SpeedReadingDbContext`'ten tamamen
   ayrıdır ve yalnızca `speed_reading` şemasındaki yeni tabloları modeller:
   `exercises`, `reading_texts`, `reading_questions`, `exercise_sessions`,
-  `exercise_session_answers`, `exercise_session_results`.
+  `exercise_session_answers`, `exercise_session_results`, `reading_sessions`.
 - `CreateOwnedSpeedReadingCore` migration'ı ayrı migration history tablosu
   (`speed_reading.__ef_migrations_history`) kullanır. Legacy tabloya
   `ALTER`, `DROP` veya business migration uygulanmaz.
@@ -59,6 +59,13 @@ yapılmadı:
   yeniden eklemez. Bu komut cutover yapmaz ve runtime endpoint'lerini owned
   store'a çevirmediği için production'da ancak backup/parity onayından sonra
   çalıştırılmalıdır.
+- Katalogdan sonra session/progress geçmişi servis image'ı ile açıkça
+  `--backfill-owned-sessions` argümanıyla çalıştırılır. Komut egzersiz
+  oturumlarını, JSON içindeki cevapları, egzersiz sonuçlarını ve okuma
+  geçmişini aynı UUID'lerle taşır; artık kaynağı bulunmayan sonuçlarda
+  `legacy_session_id` korunur. İşlem tek transaction ve insert-only'dir;
+  hatalı referans, bilinmeyen durum veya bozuk/çakışan cevap verisi varsa
+  sessizce atlamak yerine durur. Önce katalog backfill'i yapılmalıdır.
 - `SpeedReading__OwnedDataEnabled=true` olduğunda egzersiz oturumu uçları
   `OwnedSpeedReadingExerciseSessions` üzerinden yeni DB'ye yazar/okur. Bu
   flag'in açılması için ayrıca owned connection gerekir; bağlantı yoksa servis

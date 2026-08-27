@@ -230,7 +230,8 @@ public partial class CreateOwnedSpeedReadingCore : Migration
             columns: table => new
             {
                 id = table.Column<Guid>(type: "uuid", nullable: false),
-                session_id = table.Column<Guid>(type: "uuid", nullable: false),
+                session_id = table.Column<Guid>(type: "uuid", nullable: true),
+                legacy_session_id = table.Column<Guid>(type: "uuid", nullable: true),
                 question_id = table.Column<Guid>(type: "uuid", nullable: false),
                 answer = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
                 is_correct = table.Column<bool>(type: "boolean", nullable: false),
@@ -366,6 +367,11 @@ public partial class CreateOwnedSpeedReadingCore : Migration
             table: "exercise_session_results",
             column: "session_id",
             unique: true);
+        migrationBuilder.CreateIndex(
+            name: "ix_exercise_session_results_legacy_session_id",
+            schema: "speed_reading",
+            table: "exercise_session_results",
+            column: "legacy_session_id");
         migrationBuilder.CreateIndex(
             name: "ix_exercise_session_results_student_id_completed_at",
             schema: "speed_reading",

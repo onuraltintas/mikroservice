@@ -23,6 +23,7 @@ public sealed class SpeedReadingOwnedDomainTests
         context.Model.FindEntityType(typeof(ReadingText))!.GetTableName().Should().Be("reading_texts");
         context.Model.FindEntityType(typeof(ExerciseSession))!.GetTableName().Should().Be("exercise_sessions");
         context.Model.FindEntityType(typeof(ExerciseSessionResult))!.GetTableName().Should().Be("exercise_session_results");
+        context.Model.FindEntityType(typeof(ReadingSession))!.GetTableName().Should().Be("reading_sessions");
     }
 
     [Fact]
@@ -57,7 +58,7 @@ public sealed class SpeedReadingOwnedDomainTests
         script.Should().Contain("reading_questions");
         script.Should().Contain("exercise_session_results");
         script.Should().NotContain("ContentBlocks");
-        script.Should().NotContain("Legacy");
+        script.Should().NotContain("speed_reading.legacy_");
     }
 
     [Fact]
@@ -70,7 +71,8 @@ public sealed class SpeedReadingOwnedDomainTests
 
         context.Database.GetMigrations()
             .Should()
-            .ContainSingle("20260827110000_CreateOwnedSpeedReadingCore");
+            .Contain("20260827110000_CreateOwnedSpeedReadingCore")
+            .And.Contain("20260827120000_AddOwnedReadingSessionHistory");
     }
 
     [Fact]
@@ -147,6 +149,70 @@ public sealed class SpeedReadingOwnedDomainTests
         session.TotalSteps.Should().Be(10);
         session.CorrectCount.Should().Be(0);
         session.IncorrectCount.Should().Be(0);
+    }
+
+    [Fact]
+    public void Imported_session_preserves_completed_state_and_answers()
+    {
+        var sessionId = Guid.NewGuid();
+        var questionId = Guid.NewGuid();
+        var session = ExerciseSession.Import(
+            id: sessionId,
+            studentId: Guid.NewGuid(),
+            exerciseId: Guid.NewGuid(),
+            readingTextId: Guid.NewGuid(),
+            studentAssignmentId: null,
+            status: ExerciseSessionStatus.Completed,
+            startTime: DateTime.UtcNow.AddMinutes(-3),
+            endTime: DateTime.UtcNow,
+            totalPausedSeconds: 5,
+            pausedAt: null,
+            timeLimitSeconds: 120,
+            currentStep: 2,
+            totalSteps: 2,
+            correctCount: 1,
+            incorrectCount: 1,
+            sessionDataJson: "{}",
+            customDataJson: null,
+            processedActionsJson: "{}",
+            createdAt: DateTime.UtcNow.AddDays(-1),
+            createdBy: null,
+            updatedAt: null,
+            updatedBy: null);
+
+        session.ImportAnswer(ExerciseSessionAnswer.Import(
+            Guid.NewGuid(), sessionId, questionId, "A", true, 2, 1));
+
+        session.Status.Should().Be(ExerciseSessionStatus.Completed);
+        session.CurrentStep.Should().Be(2);
+        session.Answers.Should().ContainSingle(item => item.QuestionId == questionId);
+    }
+
+    [Fact]
+    public void Imported_result_can_keep_a_missing_legacy_session_reference()
+    {
+        var result = ExerciseSessionResult.Import(
+            id: Guid.NewGuid(),
+            sessionId: null,
+            studentId: Guid.NewGuid(),
+            exerciseId: Guid.NewGuid(),
+            readingTextId: null,
+            wordsRead: 100,
+            timeSpentSeconds: 60,
+            rawWpm: 100,
+            comprehensionScore: 80,
+            weightedKdp: 80,
+            score: 80,
+            completedAt: DateTime.UtcNow,
+            questionAnswersJson: "[]",
+            readingMovementsJson: "[]",
+            legacySessionId: Guid.NewGuid(),
+            createdAt: DateTime.UtcNow,
+            createdBy: null,
+            updatedAt: null,
+            updatedBy: null);
+
+        result.SessionId.Should().BeNull();
     }
 
     [Fact]

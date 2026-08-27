@@ -71,6 +71,7 @@ public static class DependencyInjection
                     npgsql.EnableRetryOnFailure();
                 }));
             services.AddScoped<OwnedSpeedReadingCatalogBackfill>();
+            services.AddScoped<OwnedSpeedReadingSessionBackfill>();
         }
 
         services.AddMemoryCache(options => options.SizeLimit = 4_096);

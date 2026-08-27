@@ -20,6 +20,7 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<ExerciseSession> ExerciseSessions => Set<ExerciseSession>();
     public DbSet<ExerciseSessionAnswer> ExerciseSessionAnswers => Set<ExerciseSessionAnswer>();
     public DbSet<ExerciseSessionResult> ExerciseSessionResults => Set<ExerciseSessionResult>();
+    public DbSet<ReadingSession> ReadingSessions => Set<ReadingSession>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,6 +35,7 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<ExerciseSession>());
         ConfigureEntity(modelBuilder.Entity<ExerciseSessionAnswer>());
         ConfigureEntity(modelBuilder.Entity<ExerciseSessionResult>());
+        ConfigureEntity(modelBuilder.Entity<ReadingSession>());
 
         modelBuilder.Entity<Exercise>(entity =>
         {
@@ -150,11 +152,25 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.QuestionAnswersJson).HasColumnType("jsonb").IsRequired();
             entity.Property(item => item.ReadingMovementsJson).HasColumnType("jsonb").IsRequired();
             entity.HasIndex(item => item.SessionId).IsUnique();
+            entity.HasIndex(item => item.LegacySessionId);
             entity.HasIndex(item => new { item.StudentId, item.CompletedAt });
             entity.HasOne<ExerciseSession>()
                 .WithOne()
                 .HasForeignKey<ExerciseSessionResult>(item => item.SessionId)
                 .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<ReadingText>()
+                .WithMany()
+                .HasForeignKey(item => item.ReadingTextId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ReadingSession>(entity =>
+        {
+            entity.ToTable("reading_sessions");
+            entity.Property(item => item.ComprehensionRate).HasPrecision(5, 2);
+            entity.Property(item => item.EfficiencyScore).HasPrecision(5, 2);
+            entity.HasIndex(item => new { item.UserId, item.CompletedAt });
+            entity.HasIndex(item => item.ReadingTextId);
             entity.HasOne<ReadingText>()
                 .WithMany()
                 .HasForeignKey(item => item.ReadingTextId)
