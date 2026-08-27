@@ -515,6 +515,8 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.ToTable("ExerciseProgramTemplates");
             entity.HasKey(item => item.Id);
             entity.HasIndex(item => item.TargetAgeGroupConfigurationId);
+            entity.Property(item => item.TargetAgeGroupConfigurationId)
+                .HasColumnName("TargetAgeGroupId");
         });
 
         modelBuilder.Entity<LegacyStudentProgramProgress>(entity =>
