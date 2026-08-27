@@ -98,7 +98,7 @@ public sealed class OwnedSpeedReadingParityChecker(
         rows.Add(await CompareAsync("VisualizationQuestions", "visualization_questions", "Id", "id", legacy.VisualizationQuestions.Select(item => item.Id), owned.VisualizationQuestions.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("VocabularyItems", "vocabulary_items", "Id", "id", legacy.VocabularyItems.Select(item => item.Id), owned.VocabularyItems.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("UserVocabularyProgresses", "user_vocabulary_progress", "Id", "id", legacy.UserVocabularyProgresses.Select(item => item.Id), owned.UserVocabularyProgresses.Select(item => item.Id), cancellationToken));
-        rows.Add(await CompareAsync("ExerciseReviewItems", "review_items", "Id", "id", Enumerable.Empty<Guid>().AsQueryable(), owned.ReviewItems.Select(item => item.Id), cancellationToken));
+        rows.Add(await CompareAsync("ExerciseReviewItems", "review_items", "Id", "id", legacy.Database.SqlQueryRaw<Guid>("SELECT CAST(NULL AS uuid) AS \"Value\" WHERE FALSE"), owned.ReviewItems.Select(item => item.Id), cancellationToken));
 
         rows.Add(await CompareAsync("Notifications", "notifications", "Id", "id", legacy.Notifications.Select(item => item.Id), ownedData.Notifications.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("NotificationPreferences", "notification_preferences", "Id", "id", legacy.NotificationPreferences.Select(item => item.Id), ownedData.NotificationPreferences.Select(item => item.Id), cancellationToken));
