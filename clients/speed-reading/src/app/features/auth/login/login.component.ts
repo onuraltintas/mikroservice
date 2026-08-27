@@ -170,7 +170,7 @@ export class LoginComponent implements OnInit {
           this.router.navigate(['/teacher/dashboard']);
         } else if (normalizedRole === 'institutionadmin') {
           this.router.navigate(['/teacher/dashboard']);
-        } else if (normalizedRole === 'admin') {
+        } else if (normalizedRole === 'admin' || normalizedRole === 'systemadmin') {
           this.router.navigate(['/admin/dashboard']);
         } else if (normalizedRole === 'editor') {
           this.router.navigate(['/admin/dashboard']);
@@ -236,7 +236,7 @@ export class LoginComponent implements OnInit {
             this.router.navigate(['/teacher/dashboard']);
           } else if (normalizedRole === 'institutionadmin') {
             this.router.navigate(['/teacher/dashboard']);
-          } else if (normalizedRole === 'admin') {
+          } else if (normalizedRole === 'admin' || normalizedRole === 'systemadmin') {
             this.router.navigate(['/admin/dashboard']);
           } else if (normalizedRole === 'editor') {
             this.router.navigate(['/admin/dashboard']);
