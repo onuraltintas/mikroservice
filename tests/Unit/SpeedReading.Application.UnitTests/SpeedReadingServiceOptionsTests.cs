@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SpeedReading.Application.Assignments;
 using SpeedReading.Application.Content;
+using SpeedReading.Application.DailyProgress;
 using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Application.Configuration;
 using SpeedReading.Infrastructure;
@@ -163,6 +164,29 @@ public sealed class SpeedReadingServiceOptionsTests
             .Name
             .Should()
             .Be("OwnedSpeedReadingProgramAdminWriter");
+    }
+
+    [Fact]
+    public void Owned_data_mode_resolves_daily_progress_from_the_owned_store()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:SpeedReading"] = "Host=legacy;Database=legacy",
+                ["ConnectionStrings:SpeedReadingOwned"] = "Host=owned;Database=owned",
+                ["SpeedReading:OwnedDataEnabled"] = "true"
+            })
+            .Build();
+        var services = new ServiceCollection();
+
+        services.AddSpeedReadingInfrastructure(configuration);
+
+        services
+            .Last(item => item.ServiceType == typeof(ISpeedReadingDailyProgress))
+            .ImplementationType!
+            .Name
+            .Should()
+            .Be("OwnedSpeedReadingDailyProgress");
     }
 
     [Fact]

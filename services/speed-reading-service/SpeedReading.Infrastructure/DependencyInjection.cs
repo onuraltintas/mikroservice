@@ -115,13 +115,13 @@ public static class DependencyInjection
         services.AddScoped<ILegacySpeedReadingProgress, LegacySpeedReadingProgress>();
         services.AddScoped<ISpeedReadingProgressWriter, LegacySpeedReadingProgressWriter>();
         services.AddScoped<ILegacySpeedReadingLearningPaths, LegacySpeedReadingLearningPaths>();
-        services.AddScoped<ISpeedReadingDailyProgress, LegacySpeedReadingDailyProgress>();
         if (ownedDataEnabled)
         {
             services.AddScoped<ISpeedReadingExerciseSessions, OwnedSpeedReadingExerciseSessions>();
             services.AddScoped<ISpeedReadingAssignments, OwnedSpeedReadingAssignments>();
             services.AddScoped<ILegacySpeedReadingPrograms, OwnedSpeedReadingPrograms>();
             services.AddScoped<ISpeedReadingProgramAdminWriter, OwnedSpeedReadingProgramAdminWriter>();
+            services.AddScoped<ISpeedReadingDailyProgress, OwnedSpeedReadingDailyProgress>();
         }
         else
         {
@@ -129,6 +129,7 @@ public static class DependencyInjection
             services.AddScoped<ISpeedReadingAssignments, LegacySpeedReadingAssignments>();
             services.AddScoped<ILegacySpeedReadingPrograms, LegacySpeedReadingPrograms>();
             services.AddScoped<ISpeedReadingProgramAdminWriter, LegacySpeedReadingContentAdminWriter>();
+            services.AddScoped<ISpeedReadingDailyProgress, LegacySpeedReadingDailyProgress>();
         }
         services.AddScoped<ILegacySpeedReadingGamification, LegacySpeedReadingGamification>();
         services.AddScoped<ISpeedReadingGamificationAdminWriter, LegacySpeedReadingGamificationAdminWriter>();

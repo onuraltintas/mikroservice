@@ -27,7 +27,7 @@ verilecektir:
 | --- | --- | --- |
 | Baseline ve auth/session hizalama | Tamamlandı | 48 frontend test GREEN; canonical auth ve HttpOnly session akışı |
 | Yeni owned şema ve migration altyapısı | Kod tamamlandı | Yeni DB, EF migration geçmişi, katalog modeli ve backfill runner |
-| Core exercise/session/progress iş mantığı | Kısmi / flag arkasında | Owned session/assignment/program read-reset implementation ve backfill runner hazır; daily progress write, parity ve E2E hâlâ gerekli |
+| Core exercise/session/progress iş mantığı | Kısmi / flag arkasında | Owned session/assignment/program/daily-progress implementation ve backfill runner hazır; parity ve E2E hâlâ gerekli |
 | Content/program/report/gamification slice’ları | Bekliyor | Her slice için backfill ve parity raporu |
 | Frontend/gateway legacy endpoint temizliği | Bekliyor | Standalone domain’de 404 üreten çağrı kalmaması |
 | Shadow read ve write cutover | Bekliyor | Eski DB yazma yetkisi kaldırılmış, rollback kanıtlı |
@@ -75,8 +75,8 @@ yapılmadı:
   backfill'lerinden sonra çalıştırılır. Program şablonları, öğrenci ilerlemeleri
   ve günlük egzersiz logları aynı UUID'lerle owned store'a insert-only olarak
   taşınır; her foreign-key referansı önceden doğrulanır ve eksik referans varsa
-  işlem durur. Bu adım mevcut veriyi taşır; günlük ilerleme tamamlama yazarı ve
-  program şablonu admin CRUD'ı sonraki cutover diliminde owned store'a alınacaktır.
+  işlem durur. Bu adım mevcut veriyi taşır; program okuma/reset, admin CRUD ve
+  günlük ilerleme tamamlama runtime'ı da owned store'a bağlanmıştır.
 - Owned assignment runtime'ı öğrenci varlığı ve adını eski `Users` tablosundan
   okumaz; Identity'nin internal `POST /api/internal/reporting/speed-reading/users`
   sözleşmesini servis anahtarıyla çağırır. Identity erişilemezse assignment
@@ -92,9 +92,14 @@ yapılmadı:
   öğrenci ilerleme/reset uçları `OwnedSpeedReadingPrograms` üzerinden owned
   store'u kullanır. Admin araması kullanıcı adı/e-postası için Identity'nin
   internal user-directory sözleşmesini çağırır; legacy `Users` tablosuna SQL
-  erişimi yapılmaz. Program şablonu admin yazma ve günlük egzersiz tamamlama
-  akışları henüz legacy writer'a bağlı olduğundan nihai bağımsızlık kapısı
-  henüz kapanmış sayılmaz.
+  erişimi yapılmaz. Program şablonu admin yazma owned idempotency ledger'ı ile,
+  günlük egzersiz tamamlama ise owned progress/log tabloları ve domain kuralları
+  ile yürür; bu akışlarda legacy program/log writer'ı kullanılmaz.
+- Günlük egzersiz akışı da aynı flag ile `OwnedSpeedReadingDailyProgress`
+  kullanır. Egzersiz seçimi, fallback zorluk seviyesi, tekrar numarası, puan,
+  streak, gün/hafta ilerlemesi ve program tamamlanması owned domain kurallarıyla
+  yürür; hız/anlama özeti owned session-result geçmişinden hesaplanır. Böylece
+  günlük tamamlama sırasında legacy program/log tablolarına SQL yazılmaz.
 - `SPEED_READING_CONNECTION_STRING` geçiş tamamlanana kadar legacy kaynak
   bağlantısıdır. Bu nedenle bu adım tek başına “tamamen taşındı” anlamına
   gelmez; backfill, parity ve runtime write cutover sonraki kapılardır.

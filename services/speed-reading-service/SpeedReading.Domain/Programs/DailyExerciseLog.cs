@@ -137,6 +137,51 @@ public sealed class DailyExerciseLog : Entity
         };
     }
 
+    public void Complete(
+        DateTime completedDate,
+        int timeSpentSeconds,
+        decimal successRate,
+        bool isPassed,
+        string? resultDataJson,
+        string? devicePlatform,
+        int correctCount,
+        int incorrectCount,
+        int totalAttempts,
+        decimal averageResponseTimeMs,
+        decimal medianResponseTimeMs,
+        decimal stdDevResponseTimeMs,
+        int pauseCount,
+        int totalPausedSeconds,
+        Guid actorId)
+    {
+        if (actorId == Guid.Empty)
+            throw new ArgumentException("Completion actor is required.", nameof(actorId));
+        if (timeSpentSeconds <= 0)
+            throw new ArgumentOutOfRangeException(nameof(timeSpentSeconds));
+        if (successRate is < 0 or > 100)
+            throw new ArgumentOutOfRangeException(nameof(successRate));
+
+        var now = EnsureUtc(completedDate);
+        CompletedDate = now;
+        TimeSpentSeconds = timeSpentSeconds;
+        SuccessRate = successRate;
+        IsPassed = isPassed;
+        ResultDataJson = string.IsNullOrWhiteSpace(resultDataJson) ? "{}" : resultDataJson;
+        DevicePlatform = string.IsNullOrWhiteSpace(devicePlatform) ? "web-desktop" : devicePlatform.Trim();
+        CorrectCount = Math.Max(correctCount, 0);
+        IncorrectCount = Math.Max(incorrectCount, 0);
+        TotalAttempts = totalAttempts > 0 ? totalAttempts : CorrectCount + IncorrectCount;
+        AverageResponseTimeMs = Math.Max(averageResponseTimeMs, 0);
+        MedianResponseTimeMs = Math.Max(medianResponseTimeMs, 0);
+        StdDevResponseTimeMs = Math.Max(stdDevResponseTimeMs, 0);
+        PauseCount = Math.Max(pauseCount, 0);
+        TotalPausedSeconds = Math.Max(totalPausedSeconds, 0);
+        DayOfWeek = (int)now.DayOfWeek;
+        TimeOfDay = now.TimeOfDay;
+        UpdatedAt = now;
+        UpdatedBy = actorId.ToString();
+    }
+
     private static DateTime EnsureUtc(DateTime value) =>
         value.Kind == DateTimeKind.Utc
             ? value

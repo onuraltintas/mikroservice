@@ -376,6 +376,70 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Fact]
+    public void Student_progress_applies_the_last_daily_completion_and_closes_program()
+    {
+        var at = DateTime.UtcNow;
+        var progress = StudentProgramProgress.Import(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            at.AddDays(-1),
+            currentDay: 1,
+            currentWeek: 1,
+            currentDifficultyLevel: 1,
+            daysCompleted: 0,
+            exercisesCompleted: 0,
+            lastCompletionDate: null,
+            isActive: true,
+            completedDate: null,
+            averageSuccessRate: 0,
+            currentStreak: 0,
+            longestStreak: 0,
+            createdAt: at.AddDays(-1),
+            createdBy: null,
+            updatedAt: null,
+            updatedBy: null);
+        var template = ProgramTemplate.Import(
+            Guid.NewGuid(),
+            "Tek gün",
+            "",
+            Guid.NewGuid(),
+            0,
+            100,
+            "{}",
+            1,
+            1,
+            1,
+            1,
+            1,
+            true,
+            1,
+            1,
+            null,
+            false,
+            at.AddDays(-1),
+            null,
+            null,
+            null);
+
+        var result = progress.ApplyExerciseCompletion(
+            averageSuccessRate: 85,
+            wasPreviouslyPassed: false,
+            completedCount: 1,
+            expectedCount: 1,
+            template,
+            Guid.NewGuid(),
+            at);
+
+        result.DayCompleted.Should().BeTrue();
+        result.ProgramCompleted.Should().BeTrue();
+        progress.IsActive.Should().BeFalse();
+        progress.CompletedDate.Should().Be(at);
+        progress.ExercisesCompleted.Should().Be(1);
+        progress.CurrentStreak.Should().Be(1);
+    }
+
+    [Fact]
     public void Session_rejects_the_same_question_twice()
     {
         var session = ExerciseSession.Start(
