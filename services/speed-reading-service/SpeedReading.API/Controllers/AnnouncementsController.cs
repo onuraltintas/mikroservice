@@ -31,7 +31,7 @@ public sealed class AnnouncementsController(ISpeedReadingAnnouncements announcem
     }
 
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SystemAdmin")]
     public async Task<IActionResult> GetAll(
         [FromQuery] bool? isActive,
         [FromQuery] bool? isPinned,
@@ -54,7 +54,7 @@ public sealed class AnnouncementsController(ISpeedReadingAnnouncements announcem
     }
 
     [HttpGet("{id:guid}/stats")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SystemAdmin")]
     public async Task<IActionResult> GetStats(Guid id, CancellationToken cancellationToken = default)
     {
         var result = await announcements.GetStatsAsync(id, cancellationToken);
@@ -62,7 +62,7 @@ public sealed class AnnouncementsController(ISpeedReadingAnnouncements announcem
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SystemAdmin")]
     public async Task<IActionResult> Create(
         [FromBody] CreateAnnouncementRequest request,
         CancellationToken cancellationToken = default)
@@ -79,7 +79,7 @@ public sealed class AnnouncementsController(ISpeedReadingAnnouncements announcem
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SystemAdmin")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateAnnouncementRequest request, CancellationToken cancellationToken = default)
     {
         try
@@ -93,7 +93,7 @@ public sealed class AnnouncementsController(ISpeedReadingAnnouncements announcem
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SystemAdmin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default) =>
         await announcements.DeleteAsync(id, cancellationToken) ? NoContent() : NotFound();
 

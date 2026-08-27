@@ -6,7 +6,7 @@ namespace SpeedReading.API.Controllers;
 
 [ApiController]
 [Route("api/speed-reading/email-templates")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,SystemAdmin")]
 public sealed class EmailTemplatesController(ISpeedReadingEmailTemplates templates) : ControllerBase
 {
     [HttpGet]

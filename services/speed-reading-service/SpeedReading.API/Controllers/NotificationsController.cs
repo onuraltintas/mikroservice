@@ -107,7 +107,7 @@ public sealed class NotificationsController(ISpeedReadingNotifications notificat
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SystemAdmin")]
     public async Task<IActionResult> Create(
         [FromBody] CreateNotificationRequest request,
         CancellationToken cancellationToken = default)
@@ -124,7 +124,7 @@ public sealed class NotificationsController(ISpeedReadingNotifications notificat
     }
 
     [HttpGet("all")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SystemAdmin")]
     public async Task<IActionResult> GetAll(
         [FromQuery] Guid? userId,
         [FromQuery] int? type,
@@ -143,7 +143,7 @@ public sealed class NotificationsController(ISpeedReadingNotifications notificat
     }
 
     [HttpPost("bulk")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SystemAdmin")]
     public async Task<IActionResult> Bulk(
         [FromBody] BulkNotificationRequest request,
         CancellationToken cancellationToken = default)

@@ -7,7 +7,7 @@ namespace SpeedReading.API.Controllers;
 
 [ApiController]
 [Route("api/speed-reading/email-campaigns")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,SystemAdmin")]
 public sealed class EmailCampaignsController(ISpeedReadingEmailCampaigns campaigns) : ControllerBase
 {
     [HttpGet]

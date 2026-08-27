@@ -7,7 +7,7 @@ namespace SpeedReading.API.Controllers;
 
 [ApiController]
 [Route("api/speed-reading/admin/assessment-templates")]
-[Authorize(Roles = "Admin,Editor")]
+[Authorize(Roles = "Admin,Editor,SystemAdmin")]
 public sealed class AssessmentAdminController(ISpeedReadingAssessment assessment) : ControllerBase
 {
     [HttpGet]
