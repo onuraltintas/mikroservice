@@ -1,5 +1,8 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Application.Configuration;
 using SpeedReading.Infrastructure;
 
@@ -16,6 +19,7 @@ public sealed class SpeedReadingServiceOptionsTests
         options.CoachingIntegrationEnabled.Should().BeFalse();
         options.NotificationIntegrationEnabled.Should().BeFalse();
         options.SubscriptionIntegrationEnabled.Should().BeFalse();
+        options.OwnedDataEnabled.Should().BeFalse();
     }
 
     [Fact]
@@ -47,6 +51,47 @@ public sealed class SpeedReadingServiceOptionsTests
         var action = () => options.Validate();
 
         action.Should().NotThrow();
+    }
+
+    [Fact]
+    public void Owned_data_mode_requires_a_separate_connection()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:SpeedReading"] = "Host=legacy;Database=legacy",
+                ["SpeedReading:OwnedDataEnabled"] = "true"
+            })
+            .Build();
+        var services = new ServiceCollection();
+
+        var action = () => services.AddSpeedReadingInfrastructure(configuration);
+
+        action.Should().Throw<InvalidOperationException>()
+            .WithMessage("*OwnedDataEnabled*");
+    }
+
+    [Fact]
+    public void Owned_data_mode_resolves_sessions_from_the_owned_store()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:SpeedReading"] = "Host=legacy;Database=legacy",
+                ["ConnectionStrings:SpeedReadingOwned"] = "Host=owned;Database=owned",
+                ["SpeedReading:OwnedDataEnabled"] = "true"
+            })
+            .Build();
+        var services = new ServiceCollection();
+
+        services.AddSpeedReadingInfrastructure(configuration);
+
+        services
+            .Last(item => item.ServiceType == typeof(ISpeedReadingExerciseSessions))
+            .ImplementationType!
+            .Name
+            .Should()
+            .Be("OwnedSpeedReadingExerciseSessions");
     }
 
     [Fact]

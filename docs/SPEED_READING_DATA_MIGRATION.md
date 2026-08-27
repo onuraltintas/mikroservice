@@ -26,8 +26,8 @@ verilecektir:
 | Faz | Durum | Kapanış ölçütü |
 | --- | --- | --- |
 | Baseline ve auth/session hizalama | Tamamlandı | 48 frontend test GREEN; canonical auth ve HttpOnly session akışı |
-| Yeni owned şema ve migration altyapısı | Devam ediyor | Yeni DB, EF migration geçmişi ve ilk dikey slice modeli |
-| Core exercise/session/progress iş mantığı | Bekliyor | Legacy olmadan unit + integration + E2E |
+| Yeni owned şema ve migration altyapısı | Kod tamamlandı | Yeni DB, EF migration geçmişi, katalog modeli ve backfill runner |
+| Core exercise/session/progress iş mantığı | Kısmi / flag arkasında | Owned session implementation; session/result backfill, parity ve E2E hâlâ gerekli |
 | Content/program/report/gamification slice’ları | Bekliyor | Her slice için backfill ve parity raporu |
 | Frontend/gateway legacy endpoint temizliği | Bekliyor | Standalone domain’de 404 üreten çağrı kalmaması |
 | Shadow read ve write cutover | Bekliyor | Eski DB yazma yetkisi kaldırılmış, rollback kanıtlı |
@@ -59,6 +59,13 @@ yapılmadı:
   yeniden eklemez. Bu komut cutover yapmaz ve runtime endpoint'lerini owned
   store'a çevirmediği için production'da ancak backup/parity onayından sonra
   çalıştırılmalıdır.
+- `SpeedReading__OwnedDataEnabled=true` olduğunda egzersiz oturumu uçları
+  `OwnedSpeedReadingExerciseSessions` üzerinden yeni DB'ye yazar/okur. Bu
+  flag'in açılması için ayrıca owned connection gerekir; bağlantı yoksa servis
+  başlatılmaz. Core implementation henüz assignment doğrulamasını ve
+  gamification yan etkilerini taşımadığı için assignment ID'li akışları
+  kontrollü olarak reddeder; bu alanlar taşınmadan production flag'i
+  açılmamalıdır.
 - `SPEED_READING_CONNECTION_STRING` geçiş tamamlanana kadar legacy kaynak
   bağlantısıdır. Bu nedenle bu adım tek başına “tamamen taşındı” anlamına
   gelmez; backfill, parity ve runtime write cutover sonraki kapılardır.

@@ -56,6 +56,12 @@ public static class DependencyInjection
         var ownedConnectionString = configuration.GetConnectionString("SpeedReadingOwned")
             ?? configuration["SPEED_READING_OWNED_CONNECTION_STRING"]
             ?? Environment.GetEnvironmentVariable("SPEED_READING_OWNED_CONNECTION_STRING");
+        var ownedDataEnabled = configuration.GetValue<bool>("SpeedReading:OwnedDataEnabled");
+        if (ownedDataEnabled && string.IsNullOrWhiteSpace(ownedConnectionString))
+        {
+            throw new InvalidOperationException(
+                "SpeedReading:OwnedDataEnabled requires ConnectionStrings:SpeedReadingOwned or SPEED_READING_OWNED_CONNECTION_STRING.");
+        }
         if (!string.IsNullOrWhiteSpace(ownedConnectionString))
         {
             services.AddDbContext<OwnedSpeedReadingDbContext>(options =>
@@ -108,7 +114,10 @@ public static class DependencyInjection
         services.AddScoped<ILegacySpeedReadingPrograms, LegacySpeedReadingPrograms>();
         services.AddScoped<ILegacySpeedReadingLearningPaths, LegacySpeedReadingLearningPaths>();
         services.AddScoped<ISpeedReadingDailyProgress, LegacySpeedReadingDailyProgress>();
-        services.AddScoped<ISpeedReadingExerciseSessions, LegacySpeedReadingExerciseSessions>();
+        if (ownedDataEnabled)
+            services.AddScoped<ISpeedReadingExerciseSessions, OwnedSpeedReadingExerciseSessions>();
+        else
+            services.AddScoped<ISpeedReadingExerciseSessions, LegacySpeedReadingExerciseSessions>();
         services.AddScoped<ISpeedReadingAssignments, LegacySpeedReadingAssignments>();
         services.AddScoped<ILegacySpeedReadingGamification, LegacySpeedReadingGamification>();
         services.AddScoped<ISpeedReadingGamificationAdminWriter, LegacySpeedReadingGamificationAdminWriter>();

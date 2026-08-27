@@ -126,6 +126,13 @@ public sealed class ExerciseSession : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void SetCurrentStep(int step)
+    {
+        EnsureStatus(ExerciseSessionStatus.Active, "Only an active session can change progress.");
+        CurrentStep = Math.Clamp(step, 0, TotalSteps);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void SetState(string sessionDataJson, string? customDataJson = null)
     {
         SessionDataJson = string.IsNullOrWhiteSpace(sessionDataJson) ? "{}" : sessionDataJson;

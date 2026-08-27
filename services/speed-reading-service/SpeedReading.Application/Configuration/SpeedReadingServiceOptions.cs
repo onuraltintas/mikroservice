@@ -18,6 +18,13 @@ public sealed class SpeedReadingServiceOptions
 
     public bool SubscriptionIntegrationEnabled { get; set; }
 
+    /// <summary>
+    /// Switches the core exercise/session slice from the legacy compatibility
+    /// store to the owned Speed Reading database. It remains off until
+    /// backfill and parity evidence are approved.
+    /// </summary>
+    public bool OwnedDataEnabled { get; set; }
+
     public void Validate()
     {
         if (Mode == SpeedReadingDeploymentMode.Standalone && CoachingIntegrationEnabled)

@@ -17,11 +17,13 @@ public sealed class CapabilitiesController(SpeedReadingServiceOptions options) :
             options.Mode.ToString(),
             options.CoachingIntegrationEnabled,
             options.NotificationIntegrationEnabled,
-            options.SubscriptionIntegrationEnabled));
+            options.SubscriptionIntegrationEnabled,
+            options.OwnedDataEnabled));
 }
 
 public sealed record SpeedReadingCapabilitiesResponse(
     string Mode,
     bool CoachingIntegrationEnabled,
     bool NotificationIntegrationEnabled,
-    bool SubscriptionIntegrationEnabled);
+    bool SubscriptionIntegrationEnabled,
+    bool OwnedDataEnabled);

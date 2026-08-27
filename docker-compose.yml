@@ -230,6 +230,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT:?ENVIRONMENT must be set to Development, Staging or Production}
       - ConnectionStrings__SpeedReading=${SPEED_READING_CONNECTION_STRING:-}
       - ConnectionStrings__SpeedReadingOwned=${SPEED_READING_OWNED_CONNECTION_STRING:-}
+      - SpeedReading__OwnedDataEnabled=${SPEED_READING_OWNED_DATA_ENABLED:-false}
     depends_on:
       postgres:
         condition: service_healthy
@@ -246,6 +247,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT:?ENVIRONMENT must be set to Development, Staging or Production}
       - ConnectionStrings__SpeedReading=${SPEED_READING_CONNECTION_STRING:-}
       - ConnectionStrings__SpeedReadingOwned=${SPEED_READING_OWNED_CONNECTION_STRING:-}
+      - SpeedReading__OwnedDataEnabled=${SPEED_READING_OWNED_DATA_ENABLED:-false}
       - SpeedReading__Mode=${SPEED_READING_MODE:-Standalone}
       - SpeedReading__CoachingIntegrationEnabled=${SPEED_READING_COACHING_INTEGRATION_ENABLED:-false}
       - SpeedReading__NotificationIntegrationEnabled=${SPEED_READING_NOTIFICATION_INTEGRATION_ENABLED:-false}
