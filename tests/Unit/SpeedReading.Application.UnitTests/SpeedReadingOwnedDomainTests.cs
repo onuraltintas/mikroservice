@@ -24,6 +24,8 @@ public sealed class SpeedReadingOwnedDomainTests
         context.Model.FindEntityType(typeof(ExerciseSession))!.GetTableName().Should().Be("exercise_sessions");
         context.Model.FindEntityType(typeof(ExerciseSessionResult))!.GetTableName().Should().Be("exercise_session_results");
         context.Model.FindEntityType(typeof(ReadingSession))!.GetTableName().Should().Be("reading_sessions");
+        context.Model.FindEntityType(typeof(Assignment))!.GetTableName().Should().Be("assignments");
+        context.Model.FindEntityType(typeof(StudentAssignment))!.GetTableName().Should().Be("student_assignments");
     }
 
     [Fact]
@@ -213,6 +215,42 @@ public sealed class SpeedReadingOwnedDomainTests
             updatedBy: null);
 
         result.SessionId.Should().BeNull();
+    }
+
+    [Fact]
+    public void Assignment_requires_a_teacher_exercise_and_title()
+    {
+        var act = () => Assignment.Create(
+            teacherId: Guid.Empty,
+            exerciseId: Guid.NewGuid(),
+            readingTextId: null,
+            title: "Ödev",
+            description: null,
+            dueDate: DateTime.UtcNow.AddDays(1));
+
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Student_assignment_completion_is_idempotent_and_preserves_first_result()
+    {
+        var studentAssignment = StudentAssignment.Assign(
+            assignmentId: Guid.NewGuid(),
+            studentId: Guid.NewGuid(),
+            id: Guid.NewGuid(),
+            assignedAt: DateTime.UtcNow);
+        var firstResultId = Guid.NewGuid();
+        var secondResultId = Guid.NewGuid();
+        var completedAt = DateTime.UtcNow;
+
+        studentAssignment.Complete(firstResultId, 85, 80, completedAt);
+        studentAssignment.Complete(secondResultId, 20, 10, completedAt.AddMinutes(1));
+
+        studentAssignment.IsCompleted.Should().BeTrue();
+        studentAssignment.ResultId.Should().Be(firstResultId);
+        studentAssignment.Score.Should().Be(85);
+        studentAssignment.KeyPerformanceMetric.Should().Be(80);
+        studentAssignment.CompletionDate.Should().Be(completedAt);
     }
 
     [Fact]
