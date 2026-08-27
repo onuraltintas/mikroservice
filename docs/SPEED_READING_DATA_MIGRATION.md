@@ -88,6 +88,12 @@ yapılmadı:
   artık owned store'dadır; gamification yan etkileri ve program bağlantısı
   henüz taşınmadığı için production flag'i yine parity/E2E onayı olmadan
   açılmamalıdır.
+- Katalog sorguları `OwnedSpeedReadingCatalog`, okuma/egzersiz geçmişi ve
+  sonuç yazma akışları `OwnedSpeedReadingProgress`/
+  `OwnedSpeedReadingProgressWriter` üzerinden owned DB'yi kullanır. Sonuç
+  idempotency kayıtları da aynı owned ledger'a yazılır; bu çekirdek öğrenci
+  akışlarında eski `StudentExerciseResults`, `ReadingSessions` veya katalog
+  tablolarına SQL erişimi kalmaz.
 - Aynı flag açıkken program listesi, öğrenci programları, günlük loglar ve admin
   öğrenci ilerleme/reset uçları `OwnedSpeedReadingPrograms` üzerinden owned
   store'u kullanır. Admin araması kullanıcı adı/e-postası için Identity'nin

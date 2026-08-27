@@ -6,6 +6,7 @@ using SpeedReading.Application.Assignments;
 using SpeedReading.Application.Content;
 using SpeedReading.Application.DailyProgress;
 using SpeedReading.Application.ExerciseSessions;
+using SpeedReading.Application.Progress;
 using SpeedReading.Application.Configuration;
 using SpeedReading.Infrastructure;
 
@@ -187,6 +188,56 @@ public sealed class SpeedReadingServiceOptionsTests
             .Name
             .Should()
             .Be("OwnedSpeedReadingDailyProgress");
+    }
+
+    [Fact]
+    public void Owned_data_mode_resolves_catalog_reads_from_the_owned_store()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:SpeedReading"] = "Host=legacy;Database=legacy",
+                ["ConnectionStrings:SpeedReadingOwned"] = "Host=owned;Database=owned",
+                ["SpeedReading:OwnedDataEnabled"] = "true"
+            })
+            .Build();
+        var services = new ServiceCollection();
+
+        services.AddSpeedReadingInfrastructure(configuration);
+
+        services
+            .Last(item => item.ServiceType == typeof(ILegacySpeedReadingCatalog))
+            .ImplementationType!
+            .Name
+            .Should()
+            .Be("OwnedSpeedReadingCatalog");
+    }
+
+    [Fact]
+    public void Owned_data_mode_resolves_progress_reads_and_writes_from_the_owned_store()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:SpeedReading"] = "Host=legacy;Database=legacy",
+                ["ConnectionStrings:SpeedReadingOwned"] = "Host=owned;Database=owned",
+                ["SpeedReading:OwnedDataEnabled"] = "true"
+            })
+            .Build();
+        var services = new ServiceCollection();
+
+        services.AddSpeedReadingInfrastructure(configuration);
+
+        services.Last(item => item.ServiceType == typeof(ILegacySpeedReadingProgress))
+            .ImplementationType!
+            .Name
+            .Should()
+            .Be("OwnedSpeedReadingProgress");
+        services.Last(item => item.ServiceType == typeof(ISpeedReadingProgressWriter))
+            .ImplementationType!
+            .Name
+            .Should()
+            .Be("OwnedSpeedReadingProgressWriter");
     }
 
     [Fact]

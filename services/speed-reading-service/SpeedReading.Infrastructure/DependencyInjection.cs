@@ -90,7 +90,6 @@ public static class DependencyInjection
             client.Timeout = TimeSpan.FromSeconds(20);
         });
 
-        services.AddScoped<ILegacySpeedReadingCatalog, LegacySpeedReadingCatalog>();
         services.AddSingleton<ISpeedReadingReadingTextExporter, ReadingTextExportService>();
         services.AddScoped<ISpeedReadingCms, LegacySpeedReadingCms>();
         services.AddScoped<ISpeedReadingSubscription, LegacySpeedReadingSubscription>();
@@ -112,11 +111,12 @@ public static class DependencyInjection
         services.AddScoped<ISpeedReadingSeriesAccess, LegacySpeedReadingSeriesAccess>();
         services.AddScoped<ISpeedReadingStudentReading, LegacySpeedReadingStudentReading>();
         services.AddScoped<ISpeedReadingContentAdminWriter, LegacySpeedReadingContentAdminWriter>();
-        services.AddScoped<ILegacySpeedReadingProgress, LegacySpeedReadingProgress>();
-        services.AddScoped<ISpeedReadingProgressWriter, LegacySpeedReadingProgressWriter>();
         services.AddScoped<ILegacySpeedReadingLearningPaths, LegacySpeedReadingLearningPaths>();
         if (ownedDataEnabled)
         {
+            services.AddScoped<ILegacySpeedReadingCatalog, OwnedSpeedReadingCatalog>();
+            services.AddScoped<ILegacySpeedReadingProgress, OwnedSpeedReadingProgress>();
+            services.AddScoped<ISpeedReadingProgressWriter, OwnedSpeedReadingProgressWriter>();
             services.AddScoped<ISpeedReadingExerciseSessions, OwnedSpeedReadingExerciseSessions>();
             services.AddScoped<ISpeedReadingAssignments, OwnedSpeedReadingAssignments>();
             services.AddScoped<ILegacySpeedReadingPrograms, OwnedSpeedReadingPrograms>();
@@ -125,6 +125,9 @@ public static class DependencyInjection
         }
         else
         {
+            services.AddScoped<ILegacySpeedReadingCatalog, LegacySpeedReadingCatalog>();
+            services.AddScoped<ILegacySpeedReadingProgress, LegacySpeedReadingProgress>();
+            services.AddScoped<ISpeedReadingProgressWriter, LegacySpeedReadingProgressWriter>();
             services.AddScoped<ISpeedReadingExerciseSessions, LegacySpeedReadingExerciseSessions>();
             services.AddScoped<ISpeedReadingAssignments, LegacySpeedReadingAssignments>();
             services.AddScoped<ILegacySpeedReadingPrograms, LegacySpeedReadingPrograms>();
