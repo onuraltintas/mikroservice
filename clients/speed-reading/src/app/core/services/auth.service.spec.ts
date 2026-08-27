@@ -1,4 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { of } from 'rxjs';
@@ -8,6 +9,7 @@ import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
   let service: AuthService;
+  let http: HttpTestingController;
 
   beforeEach(() => {
     localStorage.removeItem('currentUser');
@@ -17,6 +19,7 @@ describe('AuthService', () => {
       providers: [
         AuthService,
         provideHttpClient(),
+        provideHttpClientTesting(),
         {
           provide: Router,
           useValue: { navigate: jasmine.createSpy('navigate') }
@@ -29,11 +32,13 @@ describe('AuthService', () => {
     });
 
     service = TestBed.inject(AuthService);
+    http = TestBed.inject(HttpTestingController);
   });
 
   afterEach(() => {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('token');
+    http.verify();
   });
 
   it('recognizes SystemAdmin as administrative access', () => {
@@ -66,5 +71,47 @@ describe('AuthService', () => {
     (service as any).currentUserSubject.next(editor);
 
     expect(service.hasAdminAccess()).toBeFalse();
+  });
+
+  it('uses the canonical auth endpoint for login and sends the session cookie', () => {
+    service.login({ email: 'admin@example.com', password: 'Password1!' }).subscribe();
+
+    const request = http.expectOne('/api/auth/login');
+    expect(request.request.withCredentials).toBeTrue();
+    request.flush({
+      accessToken: '',
+      roles: []
+    });
+  });
+
+  it('refreshes through the HttpOnly cookie without a client-side refresh token', () => {
+    service.refreshToken().subscribe();
+
+    const request = http.expectOne('/api/auth/refresh-token');
+    expect(request.request.withCredentials).toBeTrue();
+    expect(request.request.body).toEqual({});
+    request.flush({
+      accessToken: '',
+      roles: []
+    });
+  });
+
+  it('revokes the session through the backend revoke endpoint on logout', () => {
+    const user = {
+      id: 'user',
+      token: '',
+      refreshToken: '',
+      email: 'user@example.com',
+      firstName: 'Test',
+      lastName: 'User',
+      roles: ['Student']
+    } as AuthResponse;
+    (service as any).currentUserSubject.next(user);
+
+    service.logout();
+
+    const request = http.expectOne('/api/auth/revoke-token');
+    expect(request.request.withCredentials).toBeTrue();
+    request.flush({});
   });
 });
