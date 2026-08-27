@@ -58,6 +58,11 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<UserVocabularyProgress> UserVocabularyProgresses => Set<UserVocabularyProgress>();
     public DbSet<ReviewItem> ReviewItems => Set<ReviewItem>();
     internal DbSet<LegacyUserContentFeedback> ContentFeedbacks => Set<LegacyUserContentFeedback>();
+    internal DbSet<LegacyStudentLearningProfile> AdaptiveLearningProfiles => Set<LegacyStudentLearningProfile>();
+    internal DbSet<LegacyContentRecommendation> AdaptiveContentRecommendations => Set<LegacyContentRecommendation>();
+    internal DbSet<LegacyDailyGoal> AdaptiveDailyGoals => Set<LegacyDailyGoal>();
+    internal DbSet<LegacyStudentReadingProfile> AdaptiveReadingProfiles => Set<LegacyStudentReadingProfile>();
+    internal DbSet<LegacyTextRecommendationHistory> AdaptiveTextRecommendationHistories => Set<LegacyTextRecommendationHistory>();
     DbSet<LegacyProduct> ISpeedReadingDataContext.Products => Set<LegacyProduct>();
     DbSet<LegacyContentBlock> ISpeedReadingDataContext.ContentBlocks => Set<LegacyContentBlock>();
     DbSet<LegacyPage> ISpeedReadingDataContext.Pages => Set<LegacyPage>();
@@ -297,6 +302,106 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.ContentDifficultyLevel).HasColumnName("content_difficulty_level");
             entity.HasIndex(item => new { item.UserId, item.SessionDate });
             entity.HasIndex(item => new { item.UserId, item.ContentType, item.ContentId });
+        });
+        modelBuilder.Entity<LegacyStudentLearningProfile>(entity =>
+        {
+            ConfigureLegacyEntity(entity, "adaptive_learning_profiles");
+            entity.Property(item => item.Id).HasColumnName("id");
+            entity.Property(item => item.CreatedAt).HasColumnName("created_at");
+            entity.Property(item => item.CreatedBy).HasColumnName("created_by");
+            entity.Property(item => item.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(item => item.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(item => item.StudentId).HasColumnName("student_id");
+            entity.Property(item => item.ProficiencyLevel).HasColumnName("proficiency_level").HasMaxLength(50).IsRequired();
+            entity.Property(item => item.PreferredContentTypes).HasColumnName("preferred_content_types");
+            entity.Property(item => item.LearningPace).HasColumnName("learning_pace").HasMaxLength(50).IsRequired();
+            entity.Property(item => item.WeakAreas).HasColumnName("weak_areas");
+            entity.Property(item => item.StrongAreas).HasColumnName("strong_areas");
+            entity.HasIndex(item => new { item.StudentId, item.IsDeleted });
+        });
+        modelBuilder.Entity<LegacyContentRecommendation>(entity =>
+        {
+            ConfigureLegacyEntity(entity, "adaptive_content_recommendations");
+            entity.Property(item => item.Id).HasColumnName("id");
+            entity.Property(item => item.CreatedAt).HasColumnName("created_at");
+            entity.Property(item => item.CreatedBy).HasColumnName("created_by");
+            entity.Property(item => item.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(item => item.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(item => item.StudentId).HasColumnName("student_id");
+            entity.Property(item => item.ReadingTextId).HasColumnName("reading_text_id");
+            entity.Property(item => item.ConfidenceScore).HasColumnName("confidence_score").HasPrecision(18, 2);
+            entity.Property(item => item.RecommendationReason).HasColumnName("recommendation_reason");
+            entity.HasIndex(item => new { item.StudentId, item.IsDeleted, item.ConfidenceScore });
+            entity.HasIndex(item => item.ReadingTextId);
+        });
+        modelBuilder.Entity<LegacyDailyGoal>(entity =>
+        {
+            ConfigureLegacyEntity(entity, "adaptive_daily_goals");
+            entity.Property(item => item.Id).HasColumnName("id");
+            entity.Property(item => item.CreatedAt).HasColumnName("created_at");
+            entity.Property(item => item.CreatedBy).HasColumnName("created_by");
+            entity.Property(item => item.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(item => item.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(item => item.StudentId).HasColumnName("student_id");
+            entity.Property(item => item.Date).HasColumnName("date");
+            entity.Property(item => item.TargetMinutes).HasColumnName("target_minutes");
+            entity.Property(item => item.ActualMinutes).HasColumnName("actual_minutes");
+            entity.Property(item => item.IsCompleted).HasColumnName("is_completed");
+            entity.HasIndex(item => new { item.StudentId, item.Date, item.IsDeleted });
+        });
+        modelBuilder.Entity<LegacyStudentReadingProfile>(entity =>
+        {
+            ConfigureLegacyEntity(entity, "adaptive_reading_profiles");
+            entity.Property(item => item.Id).HasColumnName("id");
+            entity.Property(item => item.CreatedAt).HasColumnName("created_at");
+            entity.Property(item => item.CreatedBy).HasColumnName("created_by");
+            entity.Property(item => item.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(item => item.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(item => item.StudentId).HasColumnName("student_id");
+            entity.Property(item => item.CurrentReadingLevel).HasColumnName("current_reading_level");
+            entity.Property(item => item.AverageComprehensionScore).HasColumnName("average_comprehension_score").HasPrecision(5, 2);
+            entity.Property(item => item.AverageReadingSpeed).HasColumnName("average_reading_speed").HasPrecision(10, 2);
+            entity.Property(item => item.TotalTextsRead).HasColumnName("total_texts_read");
+            entity.Property(item => item.TotalReadingTimeSeconds).HasColumnName("total_reading_time_seconds");
+            entity.Property(item => item.PreferredCategories).HasColumnName("preferred_categories").HasColumnType("text[]");
+            entity.Property(item => item.DifficultCategories).HasColumnName("difficult_categories").HasColumnType("text[]");
+            entity.Property(item => item.LastCalculatedAt).HasColumnName("last_calculated_at");
+            entity.HasIndex(item => new { item.StudentId, item.IsDeleted });
+        });
+        modelBuilder.Entity<LegacyTextRecommendationHistory>(entity =>
+        {
+            ConfigureLegacyEntity(entity, "adaptive_text_recommendation_history");
+            entity.Property(item => item.Id).HasColumnName("id");
+            entity.Property(item => item.CreatedAt).HasColumnName("created_at");
+            entity.Property(item => item.CreatedBy).HasColumnName("created_by");
+            entity.Property(item => item.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(item => item.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(item => item.StudentId).HasColumnName("student_id");
+            entity.Property(item => item.ReadingTextId).HasColumnName("reading_text_id");
+            entity.Property(item => item.RecommendedAt).HasColumnName("recommended_at");
+            entity.Property(item => item.WasAccepted).HasColumnName("was_accepted");
+            entity.Property(item => item.ConfidenceScore).HasColumnName("confidence_score").HasPrecision(5, 2);
+            entity.Property(item => item.ReasoningJson).HasColumnName("reasoning_json");
+            entity.Property(item => item.StudentLevelAtTime).HasColumnName("student_level_at_time");
+            entity.Property(item => item.ResultScore).HasColumnName("result_score").HasPrecision(5, 2);
+            entity.Property(item => item.CompletedAt).HasColumnName("completed_at");
+            entity.HasIndex(item => item.ReadingTextId);
+            entity.HasIndex(item => new { item.StudentId, item.RecommendedAt });
         });
         modelBuilder.Entity<LegacyProduct>(entity =>
         {

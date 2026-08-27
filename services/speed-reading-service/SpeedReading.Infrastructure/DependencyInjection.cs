@@ -89,6 +89,8 @@ public static class DependencyInjection
             services.AddScoped<OwnedSpeedReadingRsvpBackfill>();
             services.AddScoped<OwnedSpeedReadingReviewBackfill>();
             services.AddScoped<OwnedSpeedReadingContentFeedbackBackfill>();
+            services.AddScoped<OwnedSpeedReadingAdaptiveLearningBackfill>();
+            services.AddScoped<OwnedSpeedReadingAdaptiveTextBackfill>();
         }
 
         services.AddMemoryCache(options => options.SizeLimit = 4_096);
@@ -167,6 +169,8 @@ public static class DependencyInjection
             services.AddScoped<ISpeedReadingReview, OwnedSpeedReadingReview>();
             services.AddScoped<ISpeedReadingContentFeedback, OwnedSpeedReadingContentFeedback>();
             services.AddScoped<ISpeedReadingStudentReading, OwnedSpeedReadingStudentReading>();
+            services.AddScoped<ISpeedReadingAdaptiveLearning, OwnedSpeedReadingAdaptiveLearning>();
+            services.AddScoped<ISpeedReadingAdaptiveText, OwnedSpeedReadingAdaptiveText>();
         }
         else
         {
