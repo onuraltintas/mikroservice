@@ -104,7 +104,7 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
     const teacherId = currentUser.id;
 
     // Check if user is Admin, they might not have a Teacher profile
-    if (this.authService.hasRole('Admin')) {
+    if (this.authService.hasAdminAccess()) {
       console.warn('Admin user accessing teacher view. Some data may be unavailable.');
     }
 

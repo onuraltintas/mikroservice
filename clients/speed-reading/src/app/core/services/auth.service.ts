@@ -90,6 +90,10 @@ export class AuthService {
     return userRoles.includes(role);
   }
 
+  hasAdminAccess(): boolean {
+    return this.hasRole('Admin') || this.hasRole('SystemAdmin');
+  }
+
   /**
    * Check if user has completed their profile setup
    * Profile is complete if dateOfBirth is set

@@ -39,7 +39,7 @@ export class TeacherReportsComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       const mode = params['mode'];
       const isInstAdmin = this.authService.hasRole('InstitutionAdmin');
-      const isAdmin = this.authService.hasRole('Admin');
+      const isAdmin = this.authService.hasAdminAccess();
 
       // Show dropdown only if user is Admin AND mode is 'teacher'
       if ((isInstAdmin || isAdmin) && mode === 'teacher') {

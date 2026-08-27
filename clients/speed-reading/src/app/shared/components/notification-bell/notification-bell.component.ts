@@ -131,7 +131,7 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
   }
 
   viewAllNotifications(): void {
-    if (this.authService.hasRole('Admin')) {
+    if (this.authService.hasAdminAccess()) {
       this.router.navigate(['/admin/notifications/all']);
     } else {
       let basePath = '/student';

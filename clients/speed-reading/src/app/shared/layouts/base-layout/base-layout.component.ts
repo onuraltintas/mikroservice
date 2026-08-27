@@ -152,7 +152,7 @@ export class BaseLayoutComponent implements OnInit {
   }
 
   isAdmin(): boolean {
-    return this.authService.hasRole('Admin');
+    return this.authService.hasAdminAccess();
   }
 
   isInstitutionAdmin(): boolean {
@@ -160,7 +160,7 @@ export class BaseLayoutComponent implements OnInit {
   }
 
   isOnlyEditor(): boolean {
-    return this.authService.hasRole('Editor') && !this.authService.hasRole('Admin');
+    return this.authService.hasRole('Editor') && !this.authService.hasAdminAccess();
   }
 
   isCoach(): boolean {

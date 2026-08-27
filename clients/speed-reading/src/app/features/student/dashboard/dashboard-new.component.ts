@@ -247,7 +247,7 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
   // ===== ADMIN TEST METHODS =====
 
   get isAdmin(): boolean {
-    return this.currentUser?.roles?.includes('Admin') || false;
+    return this.authService.hasAdminAccess();
   }
 
   async completeDayForTest() {

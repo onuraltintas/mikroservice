@@ -87,7 +87,7 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
     this.setupFilters();
 
     // Check role and update columns
-    const isInstitutionAdmin = this.authService.hasRole('Admin') || this.authService.hasRole('InstitutionAdmin');
+    const isInstitutionAdmin = this.authService.hasAdminAccess() || this.authService.hasRole('InstitutionAdmin');
     if (isInstitutionAdmin) {
       // Insert 'teacher' column after 'name'
       this.displayedColumns = ['avatar', 'name', 'teacher', 'level', 'target', 'dailyGoal', 'lastLogin', 'status', 'actions'];
@@ -135,7 +135,7 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
    */
   refreshData() {
     const user = this.authService.currentUserValue;
-    if (user && (this.authService.hasRole('Admin') || this.authService.hasRole('InstitutionAdmin'))) {
+    if (user && (this.authService.hasAdminAccess() || this.authService.hasRole('InstitutionAdmin'))) {
       // Admin/InstitutionAdmin: Use admin endpoint with query params
       const searchTerm = this.searchControl.value || '';
       const level = this.levelControl.value;
@@ -229,7 +229,7 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
   }
 
   deleteStudent(student: Student): void {
-    const isInstitutionAdmin = this.authService.hasRole('Admin') || this.authService.hasRole('InstitutionAdmin');
+    const isInstitutionAdmin = this.authService.hasAdminAccess() || this.authService.hasRole('InstitutionAdmin');
 
     const dialogData: ConfirmationDialogData = {
       title: isInstitutionAdmin ? 'Öğrenciyi Kurumdan Çıkar' : 'Öğrenciyi Sınıftan Çıkar',
@@ -281,7 +281,7 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
     const file: File = event.target.files[0];
     if (file) {
       this.loading.set(true);
-      const isInstitutionAdmin = this.authService.hasRole('Admin') || this.authService.hasRole('InstitutionAdmin');
+      const isInstitutionAdmin = this.authService.hasAdminAccess() || this.authService.hasRole('InstitutionAdmin');
 
       const request$ = isInstitutionAdmin
         ? this.studentsService.importStudents(file)
@@ -306,7 +306,7 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
   }
 
   downloadTemplate(): void {
-    const isInstitutionAdmin = this.authService.hasRole('Admin') || this.authService.hasRole('InstitutionAdmin');
+    const isInstitutionAdmin = this.authService.hasAdminAccess() || this.authService.hasRole('InstitutionAdmin');
     const request$ = isInstitutionAdmin
       ? this.studentsService.getImportTemplate()
       : this.teachersService.getImportTemplate();

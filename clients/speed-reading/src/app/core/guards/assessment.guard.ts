@@ -15,7 +15,7 @@ export const assessmentGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
 
   // Allow Admins and Teachers to bypass assessment check
-  if (authService.hasRole('Admin') || authService.hasRole('Teacher')) {
+  if (authService.hasAdminAccess() || authService.hasRole('Teacher')) {
     return true;
   }
 

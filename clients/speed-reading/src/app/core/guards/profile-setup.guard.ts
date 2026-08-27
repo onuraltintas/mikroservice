@@ -12,7 +12,7 @@ export const profileSetupGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
 
   // Allow Admins and Teachers to bypass profile setup check
-  if (authService.hasRole('Admin') || authService.hasRole('Teacher')) {
+  if (authService.hasAdminAccess() || authService.hasRole('Teacher')) {
     return true;
   }
 

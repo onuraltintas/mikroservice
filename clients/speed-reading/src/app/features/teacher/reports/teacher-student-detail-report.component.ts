@@ -134,7 +134,7 @@ export class TeacherStudentDetailReportComponent implements OnInit {
     this.loadingStudents.set(true);
 
     // Admin sees all students; teacher sees only their own students
-    const isAdmin = this.authService.hasRole('Admin');
+    const isAdmin = this.authService.hasAdminAccess();
     const queryTeacherId = this.route.snapshot.queryParamMap.get('teacherId');
     const teacherId = queryTeacherId || (isAdmin ? undefined : this.authService.currentUserValue?.id);
 
@@ -231,7 +231,7 @@ export class TeacherStudentDetailReportComponent implements OnInit {
     if (!studentId) return;
 
     // Admin uses own ID; teacher uses own ID or override from query param
-    const isAdmin = this.authService.hasRole('Admin');
+    const isAdmin = this.authService.hasAdminAccess();
     const effectiveId = this.route.snapshot.queryParamMap.get('teacherId') || this.authService.currentUserValue?.id;
 
     if (!effectiveId) {

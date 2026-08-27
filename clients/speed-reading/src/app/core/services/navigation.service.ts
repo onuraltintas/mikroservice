@@ -23,7 +23,7 @@ export class NavigationService {
 
   getStudentMenuItems(): MenuItem[] {
     const user = this.authService.currentUserValue;
-    const isAdmin = user?.roles?.includes('Admin');
+    const isAdmin = this.authService.hasAdminAccess();
     const isEditor = user?.roles?.includes('Editor');
     const canViewExercises = isAdmin || isEditor;
 
@@ -174,7 +174,7 @@ export class NavigationService {
 
   getAdminMenuItems(): MenuItem[] {
     const user = this.authService.currentUserValue;
-    const isAdmin = user?.roles?.includes('Admin');
+    const isAdmin = this.authService.hasAdminAccess();
     const isEditor = user?.roles?.includes('Editor');
     const isOnlyEditor = isEditor && !isAdmin;
 
