@@ -61,6 +61,27 @@ public class UserRepository : IUserRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Guid>> GetSpeedReadingAudienceUserIdsAsync(
+        string? role,
+        CancellationToken cancellationToken)
+    {
+        var query = _context.Users
+            .AsNoTracking()
+            .Where(user => user.IsActive);
+
+        if (!string.IsNullOrWhiteSpace(role))
+        {
+            var normalizedRole = role.Trim();
+            query = query.Where(user => user.Roles.Any(userRole =>
+                !userRole.Role.IsDeleted
+                && userRole.Role.Name == normalizedRole));
+        }
+
+        return await query
+            .Select(user => user.Id)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
     {
         var normalizedEmail = email.ToLowerInvariant();

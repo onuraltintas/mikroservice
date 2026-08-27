@@ -1,10 +1,11 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.Notifications;
+using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Infrastructure.Legacy;
 
-internal sealed class LegacySpeedReadingAnnouncements(SpeedReadingDbContext db) : ISpeedReadingAnnouncements
+internal sealed class LegacySpeedReadingAnnouncements(ISpeedReadingDataContext db) : ISpeedReadingAnnouncements
 {
     public async Task<IReadOnlyList<AnnouncementSummary>> GetMyAsync(
         Guid userId,

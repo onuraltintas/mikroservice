@@ -1,9 +1,13 @@
 using Microsoft.EntityFrameworkCore;
+using SpeedReading.Application.Assignments;
 using SpeedReading.Application.Notifications;
+using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Infrastructure.Legacy;
 
-internal sealed class LegacySpeedReadingNotifications(SpeedReadingDbContext db) : ISpeedReadingNotifications
+internal sealed class LegacySpeedReadingNotifications(
+    ISpeedReadingDataContext db,
+    ISpeedReadingUserDirectory userDirectory) : ISpeedReadingNotifications
 {
     public async Task<NotificationPage> GetNotificationsAsync(
         Guid userId,
@@ -345,12 +349,7 @@ internal sealed class LegacySpeedReadingNotifications(SpeedReadingDbContext db) 
                 throw new ArgumentException("TargetRole is required when TargetType is Role.");
             }
 
-            return await (
-                from link in db.UserRoleLinks.AsNoTracking()
-                join role in db.Roles.AsNoTracking() on link.RoleId equals role.Id
-                join user in db.Users.AsNoTracking() on link.UserId equals user.Id
-                where !user.IsDeleted && role.Name == targetRole
-                select user.Id).Distinct().ToListAsync(cancellationToken);
+            return (await userDirectory.GetAudienceUserIdsAsync(targetRole, cancellationToken)).ToList();
         }
 
         if (!string.IsNullOrWhiteSpace(targetType)
@@ -359,11 +358,7 @@ internal sealed class LegacySpeedReadingNotifications(SpeedReadingDbContext db) 
             throw new ArgumentException("TargetType must be All or Role.");
         }
 
-        return await db.Users
-            .AsNoTracking()
-            .Where(item => !item.IsDeleted)
-            .Select(item => item.Id)
-            .ToListAsync(cancellationToken);
+        return (await userDirectory.GetAudienceUserIdsAsync(null, cancellationToken)).ToList();
     }
 
     private static NotificationSummary ToSummary(LegacyUserNotification row) =>

@@ -14,3 +14,9 @@ public sealed record SpeedReadingUserDirectoryItem(
 
 public sealed record SpeedReadingUserDirectoryResponse(
     IReadOnlyList<SpeedReadingUserDirectoryItem> Users);
+
+public sealed record SpeedReadingUserAudienceRequest(
+    string? Role);
+
+public sealed record SpeedReadingUserAudienceResponse(
+    IReadOnlyList<Guid> UserIds);

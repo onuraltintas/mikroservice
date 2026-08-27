@@ -73,4 +73,43 @@ public sealed class IdentityUserDirectoryClient : ISpeedReadingUserDirectory
             throw new InvalidOperationException("Identity user directory timed out.", ex);
         }
     }
+
+    public async Task<IReadOnlyList<Guid>> GetAudienceUserIdsAsync(
+        string? role,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(serviceApiKey))
+            throw new InvalidOperationException("Internal service API key is not configured.");
+
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Post,
+                $"{baseUrl.TrimEnd('/')}/api/internal/reporting/speed-reading/user-audience")
+            {
+                Content = JsonContent.Create(new SpeedReadingUserAudienceRequest(
+                    string.IsNullOrWhiteSpace(role) ? null : role.Trim()))
+            };
+            request.Headers.Add(InternalServiceAuthentication.HeaderName, serviceApiKey);
+
+            using var response = await httpClient.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken);
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<SpeedReadingUserAudienceResponse>(
+                cancellationToken: cancellationToken);
+            return result?.UserIds ?? [];
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogError(ex, "Identity user audience request failed");
+            throw new InvalidOperationException("Identity user directory is unavailable.", ex);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogError(ex, "Identity user audience request timed out");
+            throw new InvalidOperationException("Identity user directory timed out.", ex);
+        }
+    }
 }

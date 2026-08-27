@@ -16,6 +16,9 @@ public interface IUserRepository
     Task<IReadOnlyList<SpeedReadingUserDirectoryItem>> GetSpeedReadingDirectoryAsync(
         IReadOnlyCollection<Guid> userIds,
         CancellationToken cancellationToken);
+    Task<IReadOnlyList<Guid>> GetSpeedReadingAudienceUserIdsAsync(
+        string? role,
+        CancellationToken cancellationToken);
     Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken);
     Task<User?> GetByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken);
     Task<bool> TryAddLoginAsync(User user, UserLogin login, CancellationToken cancellationToken);

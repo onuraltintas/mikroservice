@@ -813,5 +813,10 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             IReadOnlyCollection<Guid> userIds,
             CancellationToken cancellationToken = default) =>
             Task.FromResult(new SpeedReadingUserDirectoryResponse([]));
+
+        public Task<IReadOnlyList<Guid>> GetAudienceUserIdsAsync(
+            string? role,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<Guid>>([]);
     }
 }

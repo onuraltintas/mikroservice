@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.Notifications;
+using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Infrastructure.Legacy;
 
-internal sealed class LegacySpeedReadingEmailTemplates(SpeedReadingDbContext db) : ISpeedReadingEmailTemplates
+internal sealed class LegacySpeedReadingEmailTemplates(ISpeedReadingDataContext db) : ISpeedReadingEmailTemplates
 {
     public async Task<IReadOnlyList<EmailTemplateSummary>> GetAllAsync(CancellationToken cancellationToken)
     {
@@ -125,7 +126,7 @@ internal sealed class LegacySpeedReadingEmailTemplates(SpeedReadingDbContext db)
     private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
 
-internal sealed class LegacySpeedReadingEmailCampaigns(SpeedReadingDbContext db) : ISpeedReadingEmailCampaigns
+internal sealed class LegacySpeedReadingEmailCampaigns(ISpeedReadingDataContext db) : ISpeedReadingEmailCampaigns
 {
     public async Task<IReadOnlyList<EmailCampaignSummary>> GetAllAsync(int? status, CancellationToken cancellationToken)
     {

@@ -17,6 +17,15 @@ internal interface ISpeedReadingDataContext
     DbSet<LegacySubscriptionPlan> SubscriptionPlans { get; }
     DbSet<LegacyUserSubscription> UserSubscriptions { get; }
     DbSet<LegacyPayment> Payments { get; }
+    DbSet<LegacyUserNotification> Notifications { get; }
+    DbSet<LegacyNotificationPreference> NotificationPreferences { get; }
+    DbSet<LegacyNotificationTypePreference> NotificationTypePreferences { get; }
+    DbSet<LegacyPushSubscription> PushSubscriptions { get; }
+    DbSet<LegacyAnnouncement> Announcements { get; }
+    DbSet<LegacyAnnouncementUserInteraction> AnnouncementUserInteractions { get; }
+    DbSet<LegacyEmailTemplate> EmailTemplates { get; }
+    DbSet<LegacyEmailCampaign> EmailCampaigns { get; }
+    DbSet<LegacyEmailCampaignLog> EmailCampaignLogs { get; }
     EntityEntry Entry(object entity);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

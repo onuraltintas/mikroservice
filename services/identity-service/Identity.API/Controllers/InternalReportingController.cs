@@ -78,4 +78,21 @@ public sealed class InternalReportingController : ControllerBase
         var users = await userRepository.GetSpeedReadingDirectoryAsync(userIds, cancellationToken);
         return Ok(new SpeedReadingUserDirectoryResponse(users));
     }
+
+    [HttpPost("speed-reading/user-audience")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    [RequestSizeLimit(4_096)]
+    public async Task<ActionResult<SpeedReadingUserAudienceResponse>> GetSpeedReadingUserAudience(
+        [FromBody] SpeedReadingUserAudienceRequest? request,
+        CancellationToken cancellationToken)
+    {
+        if (request?.Role is { Length: > 100 })
+            return BadRequest("Role is too long.");
+
+        var userIds = await userRepository.GetSpeedReadingAudienceUserIdsAsync(
+            request?.Role,
+            cancellationToken);
+        return Ok(new SpeedReadingUserAudienceResponse(userIds));
+    }
 }

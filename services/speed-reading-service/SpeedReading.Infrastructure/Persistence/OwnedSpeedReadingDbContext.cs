@@ -64,6 +64,15 @@ public sealed class OwnedSpeedReadingDbContext(
     DbSet<LegacySubscriptionPlan> ISpeedReadingDataContext.SubscriptionPlans => Set<LegacySubscriptionPlan>();
     DbSet<LegacyUserSubscription> ISpeedReadingDataContext.UserSubscriptions => Set<LegacyUserSubscription>();
     DbSet<LegacyPayment> ISpeedReadingDataContext.Payments => Set<LegacyPayment>();
+    DbSet<LegacyUserNotification> ISpeedReadingDataContext.Notifications => Set<LegacyUserNotification>();
+    DbSet<LegacyNotificationPreference> ISpeedReadingDataContext.NotificationPreferences => Set<LegacyNotificationPreference>();
+    DbSet<LegacyNotificationTypePreference> ISpeedReadingDataContext.NotificationTypePreferences => Set<LegacyNotificationTypePreference>();
+    DbSet<LegacyPushSubscription> ISpeedReadingDataContext.PushSubscriptions => Set<LegacyPushSubscription>();
+    DbSet<LegacyAnnouncement> ISpeedReadingDataContext.Announcements => Set<LegacyAnnouncement>();
+    DbSet<LegacyAnnouncementUserInteraction> ISpeedReadingDataContext.AnnouncementUserInteractions => Set<LegacyAnnouncementUserInteraction>();
+    DbSet<LegacyEmailTemplate> ISpeedReadingDataContext.EmailTemplates => Set<LegacyEmailTemplate>();
+    DbSet<LegacyEmailCampaign> ISpeedReadingDataContext.EmailCampaigns => Set<LegacyEmailCampaign>();
+    DbSet<LegacyEmailCampaignLog> ISpeedReadingDataContext.EmailCampaignLogs => Set<LegacyEmailCampaignLog>();
     internal DbSet<OwnedIdempotencyRecord> IdempotencyRecords => Set<OwnedIdempotencyRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -355,6 +364,154 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.Email).HasMaxLength(100).IsRequired();
             entity.Property(item => item.Source).HasMaxLength(50);
             entity.HasIndex(item => item.Email).IsUnique();
+        });
+        modelBuilder.Entity<LegacyUserNotification>(entity =>
+        {
+            ConfigureNotificationEntity(entity, "notifications");
+            entity.Property(item => item.UserId).HasColumnName("user_id");
+            entity.Property(item => item.Type).HasColumnName("type");
+            entity.Property(item => item.Channel).HasColumnName("channel");
+            entity.Property(item => item.Status).HasColumnName("status");
+            entity.Property(item => item.Title).HasColumnName("title").HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Message).HasColumnName("message").HasMaxLength(1_000).IsRequired();
+            entity.Property(item => item.Data).HasColumnName("data");
+            entity.Property(item => item.ActionUrl).HasColumnName("action_url").HasMaxLength(500);
+            entity.Property(item => item.IconUrl).HasColumnName("icon_url").HasMaxLength(500);
+            entity.Property(item => item.SentAt).HasColumnName("sent_at");
+            entity.Property(item => item.ReadAt).HasColumnName("read_at");
+            entity.Property(item => item.Priority).HasColumnName("priority");
+            entity.Property(item => item.UserName).HasColumnName("user_name").HasMaxLength(200);
+            entity.Property(item => item.UserEmail).HasColumnName("user_email").HasMaxLength(256);
+            entity.Property(item => item.UserRole).HasColumnName("user_role").HasMaxLength(100);
+            entity.Property(item => item.ErrorMessage).HasColumnName("error_message").HasMaxLength(2_000);
+            entity.HasIndex(item => item.UserId);
+            entity.HasIndex(item => new { item.UserId, item.Status });
+        });
+        modelBuilder.Entity<LegacyNotificationPreference>(entity =>
+        {
+            ConfigureNotificationEntity(entity, "notification_preferences");
+            entity.Property(item => item.UserId).HasColumnName("user_id");
+            entity.Property(item => item.EmailEnabled).HasColumnName("email_enabled");
+            entity.Property(item => item.PushEnabled).HasColumnName("push_enabled");
+            entity.Property(item => item.InAppEnabled).HasColumnName("in_app_enabled");
+            entity.Property(item => item.SmsEnabled).HasColumnName("sms_enabled");
+            entity.Property(item => item.AchievementsEnabled).HasColumnName("achievements_enabled");
+            entity.Property(item => item.LevelUpEnabled).HasColumnName("level_up_enabled");
+            entity.Property(item => item.DailyReminderEnabled).HasColumnName("daily_reminder_enabled");
+            entity.Property(item => item.StreakMilestoneEnabled).HasColumnName("streak_milestone_enabled");
+            entity.Property(item => item.Email).HasColumnName("email").HasMaxLength(256);
+            entity.Property(item => item.PhoneNumber).HasColumnName("phone_number").HasMaxLength(20);
+            entity.HasIndex(item => item.UserId).IsUnique();
+        });
+        modelBuilder.Entity<LegacyNotificationTypePreference>(entity =>
+        {
+            ConfigureNotificationEntity(entity, "notification_type_preferences");
+            entity.Property(item => item.UserId).HasColumnName("user_id");
+            entity.Property(item => item.NotificationType).HasColumnName("notification_type");
+            entity.Property(item => item.EnableInApp).HasColumnName("enable_in_app");
+            entity.Property(item => item.EnableEmail).HasColumnName("enable_email");
+            entity.Property(item => item.EnablePush).HasColumnName("enable_push");
+            entity.Property(item => item.PreferredTime).HasColumnName("preferred_time").HasMaxLength(10);
+            entity.HasIndex(item => new { item.UserId, item.NotificationType }).IsUnique();
+        });
+        modelBuilder.Entity<LegacyPushSubscription>(entity =>
+        {
+            ConfigureNotificationEntity(entity, "push_subscriptions");
+            entity.Property(item => item.UserId).HasColumnName("user_id");
+            entity.Property(item => item.Endpoint).HasColumnName("endpoint").HasMaxLength(500).IsRequired();
+            entity.Property(item => item.P256DH).HasColumnName("p256dh").HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Auth).HasColumnName("auth").HasMaxLength(200).IsRequired();
+            entity.Property(item => item.UserAgent).HasColumnName("user_agent").HasMaxLength(1_000);
+            entity.Property(item => item.IsActive).HasColumnName("is_active");
+            entity.HasIndex(item => item.Endpoint).IsUnique();
+            entity.HasIndex(item => item.UserId);
+        });
+        modelBuilder.Entity<LegacyAnnouncement>(entity =>
+        {
+            ConfigureNotificationEntity(entity, "announcements");
+            entity.Property(item => item.Title).HasColumnName("title").HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Content).HasColumnName("content").IsRequired();
+            entity.Property(item => item.Type).HasColumnName("type").HasMaxLength(20).IsRequired();
+            entity.Property(item => item.Priority).HasColumnName("priority");
+            entity.Property(item => item.TargetAudience).HasColumnName("target_audience").HasMaxLength(50).IsRequired();
+            entity.Property(item => item.TargetInstitutionId).HasColumnName("target_institution_id");
+            entity.Property(item => item.TargetRoles).HasColumnName("target_roles").HasMaxLength(2_000);
+            entity.Property(item => item.StartDate).HasColumnName("start_date");
+            entity.Property(item => item.EndDate).HasColumnName("end_date");
+            entity.Property(item => item.IsPinned).HasColumnName("is_pinned");
+            entity.Property(item => item.IsActive).HasColumnName("is_active");
+            entity.Property(item => item.ActionUrl).HasColumnName("action_url").HasMaxLength(500);
+            entity.Property(item => item.ImageUrl).HasColumnName("image_url").HasMaxLength(1_000);
+            entity.Property(item => item.CreatedByUserId).HasColumnName("created_by_user_id");
+            entity.Property(item => item.PlainTextContent).HasColumnName("plain_text_content");
+            entity.Property(item => item.ExpiresAt).HasColumnName("expires_at");
+            entity.Property(item => item.DisplayType).HasColumnName("display_type");
+            entity.Property(item => item.Icon).HasColumnName("icon").HasMaxLength(200);
+            entity.Property(item => item.ColorTheme).HasColumnName("color_theme").HasMaxLength(50);
+            entity.Property(item => item.ActionText).HasColumnName("action_text").HasMaxLength(100);
+            entity.Property(item => item.SendEmailNotification).HasColumnName("send_email_notification");
+            entity.Property(item => item.CreateInAppNotification).HasColumnName("create_in_app_notification");
+            entity.Property(item => item.EmailCampaignId).HasColumnName("email_campaign_id");
+            entity.HasIndex(item => item.IsActive);
+            entity.HasIndex(item => item.CreatedAt);
+        });
+        modelBuilder.Entity<LegacyAnnouncementUserInteraction>(entity =>
+        {
+            ConfigureNotificationEntity(entity, "announcement_user_interactions");
+            entity.Property(item => item.AnnouncementId).HasColumnName("announcement_id");
+            entity.Property(item => item.UserId).HasColumnName("user_id");
+            entity.Property(item => item.ViewedAt).HasColumnName("viewed_at");
+            entity.Property(item => item.ClickedAt).HasColumnName("clicked_at");
+            entity.Property(item => item.DismissedAt).HasColumnName("dismissed_at");
+            entity.HasIndex(item => new { item.AnnouncementId, item.UserId }).IsUnique();
+        });
+        modelBuilder.Entity<LegacyEmailTemplate>(entity =>
+        {
+            ConfigureNotificationEntity(entity, "email_templates");
+            entity.Property(item => item.Name).HasColumnName("name").HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Subject).HasColumnName("subject").HasMaxLength(500).IsRequired();
+            entity.Property(item => item.Body).HasColumnName("body").IsRequired();
+            entity.Property(item => item.Variables).HasColumnName("variables");
+            entity.Property(item => item.IsSystem).HasColumnName("is_system");
+            entity.Property(item => item.IsActive).HasColumnName("is_active");
+            entity.Property(item => item.Description).HasColumnName("description").HasMaxLength(500);
+            entity.Property(item => item.Code).HasColumnName("code").HasMaxLength(100);
+            entity.Property(item => item.AvailableVariables).HasColumnName("available_variables");
+            entity.HasIndex(item => item.Code).IsUnique().HasFilter("code IS NOT NULL");
+        });
+        modelBuilder.Entity<LegacyEmailCampaign>(entity =>
+        {
+            ConfigureNotificationEntity(entity, "email_campaigns");
+            entity.Property(item => item.Name).HasColumnName("name").HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Subject).HasColumnName("subject").HasMaxLength(500).IsRequired();
+            entity.Property(item => item.Body).HasColumnName("body").IsRequired();
+            entity.Property(item => item.TargetRoles).HasColumnName("target_roles").HasMaxLength(2_000);
+            entity.Property(item => item.TargetInstitutionId).HasColumnName("target_institution_id");
+            entity.Property(item => item.TemplateId).HasColumnName("template_id");
+            entity.Property(item => item.ScheduledFor).HasColumnName("scheduled_for");
+            entity.Property(item => item.SentAt).HasColumnName("sent_at");
+            entity.Property(item => item.Status).HasColumnName("status").HasMaxLength(20).IsRequired();
+            entity.Property(item => item.TotalRecipients).HasColumnName("total_recipients");
+            entity.Property(item => item.SentCount).HasColumnName("sent_count");
+            entity.Property(item => item.FailedCount).HasColumnName("failed_count");
+            entity.Property(item => item.CreatedByUserId).HasColumnName("created_by_user_id");
+            entity.Property(item => item.PlainTextBody).HasColumnName("plain_text_body");
+            entity.Property(item => item.IncludeAllUsers).HasColumnName("include_all_users");
+            entity.Property(item => item.IncludeSubscribers).HasColumnName("include_subscribers");
+            entity.Property(item => item.OpenedCount).HasColumnName("opened_count");
+            entity.Property(item => item.ClickedCount).HasColumnName("clicked_count");
+            entity.HasIndex(item => item.TemplateId);
+            entity.HasIndex(item => item.Status);
+        });
+        modelBuilder.Entity<LegacyEmailCampaignLog>(entity =>
+        {
+            ConfigureNotificationEntity(entity, "email_campaign_logs");
+            entity.Property(item => item.CampaignId).HasColumnName("campaign_id");
+            entity.Property(item => item.RecipientEmail).HasColumnName("recipient_email").HasMaxLength(256).IsRequired();
+            entity.Property(item => item.Status).HasColumnName("status").HasMaxLength(20).IsRequired();
+            entity.Property(item => item.SentAt).HasColumnName("sent_at");
+            entity.Property(item => item.ErrorMessage).HasColumnName("error_message").HasMaxLength(2_000);
+            entity.HasIndex(item => item.CampaignId);
         });
         modelBuilder.Entity<OwnedIdempotencyRecord>(entity =>
         {
@@ -769,5 +926,16 @@ public sealed class OwnedSpeedReadingDbContext(
         entity.Property(item => item.IsDeleted).IsRequired();
         entity.Property(item => item.DeletedAt);
         entity.Property(item => item.DeletedBy);
+    }
+
+    private static void ConfigureNotificationEntity<TEntity>(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<TEntity> entity, string tableName)
+        where TEntity : LegacyNotificationBase
+    {
+        entity.ToTable(tableName);
+        entity.HasKey(item => item.Id);
+        entity.Property(item => item.Id).HasColumnName("id");
+        entity.Property(item => item.CreatedAt).HasColumnName("created_at").IsRequired();
+        entity.Property(item => item.UpdatedAt).HasColumnName("updated_at");
+        entity.Property(item => item.IsDeleted).HasColumnName("is_deleted").IsRequired();
     }
 }

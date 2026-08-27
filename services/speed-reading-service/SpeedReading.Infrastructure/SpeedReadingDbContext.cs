@@ -84,6 +84,15 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     DbSet<LegacySubscriptionPlan> ISpeedReadingDataContext.SubscriptionPlans => SubscriptionPlans;
     DbSet<LegacyUserSubscription> ISpeedReadingDataContext.UserSubscriptions => UserSubscriptions;
     DbSet<LegacyPayment> ISpeedReadingDataContext.Payments => Payments;
+    DbSet<LegacyUserNotification> ISpeedReadingDataContext.Notifications => Notifications;
+    DbSet<LegacyNotificationPreference> ISpeedReadingDataContext.NotificationPreferences => NotificationPreferences;
+    DbSet<LegacyNotificationTypePreference> ISpeedReadingDataContext.NotificationTypePreferences => NotificationTypePreferences;
+    DbSet<LegacyPushSubscription> ISpeedReadingDataContext.PushSubscriptions => PushSubscriptions;
+    DbSet<LegacyAnnouncement> ISpeedReadingDataContext.Announcements => Announcements;
+    DbSet<LegacyAnnouncementUserInteraction> ISpeedReadingDataContext.AnnouncementUserInteractions => AnnouncementUserInteractions;
+    DbSet<LegacyEmailTemplate> ISpeedReadingDataContext.EmailTemplates => EmailTemplates;
+    DbSet<LegacyEmailCampaign> ISpeedReadingDataContext.EmailCampaigns => EmailCampaigns;
+    DbSet<LegacyEmailCampaignLog> ISpeedReadingDataContext.EmailCampaignLogs => EmailCampaignLogs;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
