@@ -6,6 +6,7 @@ using SpeedReading.Domain.AgeGroups;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.LearningPaths;
 using SpeedReading.Domain.Gamification;
+using SpeedReading.Domain.QuestionBank;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Profiles;
 using SpeedReading.Domain.Sessions;
@@ -46,6 +47,7 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<Achievement> Achievements => Set<Achievement>();
     public DbSet<UserAchievement> UserAchievements => Set<UserAchievement>();
     public DbSet<UserGamification> UserGamifications => Set<UserGamification>();
+    public DbSet<ExamQuestion> ExamQuestions => Set<ExamQuestion>();
     internal DbSet<OwnedIdempotencyRecord> IdempotencyRecords => Set<OwnedIdempotencyRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -79,6 +81,7 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<Achievement>());
         ConfigureEntity(modelBuilder.Entity<UserAchievement>());
         ConfigureEntity(modelBuilder.Entity<UserGamification>());
+        ConfigureEntity(modelBuilder.Entity<ExamQuestion>());
         modelBuilder.Entity<AdminAuditRecord>(entity =>
         {
             entity.ToTable("admin_audit_records");
@@ -150,6 +153,23 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.HasIndex(item => item.TotalXP);
             entity.HasIndex(item => item.CurrentLevel);
             entity.HasIndex(item => item.CurrentStreak);
+        });
+        modelBuilder.Entity<ExamQuestion>(entity =>
+        {
+            entity.ToTable("exam_questions");
+            entity.Property(item => item.Content).IsRequired();
+            entity.Property(item => item.Question).IsRequired();
+            entity.Property(item => item.OptionA).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.OptionB).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.OptionC).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.OptionD).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.OptionE).HasMaxLength(500);
+            entity.Property(item => item.CorrectOption).HasMaxLength(1).IsRequired();
+            entity.Property(item => item.Topic).HasMaxLength(300);
+            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.HasIndex(item => new { item.ExamType, item.Difficulty, item.Category });
+            entity.HasIndex(item => item.TargetAgeGroupId);
+            entity.HasIndex(item => item.CreatedAt);
         });
         modelBuilder.Entity<OwnedIdempotencyRecord>(entity =>
         {

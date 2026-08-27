@@ -7,6 +7,7 @@ using SpeedReading.Domain.LearningPaths;
 using SpeedReading.Domain.Gamification;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Profiles;
+using SpeedReading.Domain.QuestionBank;
 using SpeedReading.Domain.Sessions;
 using SpeedReading.Infrastructure.Persistence;
 
@@ -62,6 +63,8 @@ public sealed class SpeedReadingOwnedDomainTests
             .Should().Be("user_achievements");
         context.Model.FindEntityType(typeof(UserGamification))!.GetTableName()
             .Should().Be("user_gamification");
+        context.Model.FindEntityType(typeof(ExamQuestion))!.GetTableName()
+            .Should().Be("exam_questions");
         context.Model.GetEntityTypes()
             .Should()
             .Contain(entity => entity.GetTableName() == "idempotency_records");
@@ -143,7 +146,8 @@ public sealed class SpeedReadingOwnedDomainTests
             .And.Contain("20260827144000_AddOwnedCatalogWriteSupport")
             .And.Contain("20260827145000_AddOwnedLearningPaths")
             .And.Contain("20260827146000_AddOwnedAdminAudit")
-            .And.Contain("20260827147000_AddOwnedGamification");
+            .And.Contain("20260827147000_AddOwnedGamification")
+            .And.Contain("20260827148000_AddOwnedQuestionBank");
     }
 
     [Fact]
@@ -271,6 +275,32 @@ public sealed class SpeedReadingOwnedDomainTests
         stats.CurrentLevel.Should().Be(2);
         stats.CurrentLevelXP.Should().Be(100);
         stats.LevelTitle.Should().Be("Başlangıç Okuyucu");
+    }
+
+    [Fact]
+    public void Exam_question_normalizes_answers_and_calculates_word_count()
+    {
+        var question = ExamQuestion.Create(
+            Guid.NewGuid(),
+            "Bir iki üç",
+            "Hangisi doğrudur?",
+            "Bir",
+            "İki",
+            "Üç",
+            "Dört",
+            null,
+            " c ",
+            1,
+            2,
+            0,
+            null,
+            3,
+            null,
+            DateTime.UtcNow,
+            Guid.NewGuid());
+
+        question.CorrectOption.Should().Be("C");
+        question.WordCount.Should().Be(3);
     }
 
     [Fact]

@@ -39,6 +39,8 @@ var backfillOwnedAdminAudit = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-admin-audit", StringComparison.OrdinalIgnoreCase));
 var backfillOwnedGamification = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-gamification", StringComparison.OrdinalIgnoreCase));
+var backfillOwnedQuestions = args.Any(argument =>
+    string.Equals(argument, "--backfill-owned-questions", StringComparison.OrdinalIgnoreCase));
 
 // The legacy speed-reading schema is not managed by EF migrations. This
 // one-shot mode applies only idempotent additive compatibility objects before
@@ -197,6 +199,20 @@ if (backfillOwnedGamification)
     var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingGamificationBackfill>()
         ?? throw new InvalidOperationException(
             "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-gamification.");
+    var backfillResult = await backfill.RunAsync();
+    Console.WriteLine(JsonSerializer.Serialize(backfillResult));
+    return;
+}
+
+if (backfillOwnedQuestions)
+{
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
+
+    await using var backfillApp = builder.Build();
+    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
+    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingQuestionBackfill>()
+        ?? throw new InvalidOperationException(
+            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-questions.");
     var backfillResult = await backfill.RunAsync();
     Console.WriteLine(JsonSerializer.Serialize(backfillResult));
     return;
