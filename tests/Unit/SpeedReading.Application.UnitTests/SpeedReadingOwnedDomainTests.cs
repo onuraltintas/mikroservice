@@ -2,9 +2,28 @@ using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using EduPlatform.Shared.Infrastructure.Middleware;
+using SpeedReading.Application.Assessment;
 using SpeedReading.Application.Analytics;
+using SpeedReading.Application.AdaptiveLearning;
+using SpeedReading.Application.AdaptiveText;
+using SpeedReading.Application.AgeGroups;
+using SpeedReading.Application.Assignments;
 using SpeedReading.Application.Content;
+using SpeedReading.Application.ContentFeedback;
+using SpeedReading.Application.DailyProgress;
+using SpeedReading.Application.Gamification;
+using SpeedReading.Application.Notifications;
+using SpeedReading.Application.QuestionBank;
 using SpeedReading.Application.Reports;
+using SpeedReading.Application.Review;
+using SpeedReading.Application.Rsvp;
+using SpeedReading.Application.SeriesAccess;
+using SpeedReading.Application.StudentProgram;
+using SpeedReading.Application.StudentReading;
+using SpeedReading.Application.Subscription;
+using SpeedReading.Application.Visualization;
+using SpeedReading.Application.Vocabulary;
 using SpeedReading.Domain.AgeGroups;
 using SpeedReading.Domain.Assignments;
 using SpeedReading.Domain.Catalog;
@@ -64,6 +83,60 @@ public sealed class SpeedReadingOwnedDomainTests
             .ImplementationType!.Name.Should().Be("OwnedSpeedReadingReports");
         services.Last(item => item.ServiceType == typeof(ISpeedReadingContentAdminWriter))
             .ImplementationType!.Name.Should().Be("OwnedSpeedReadingContentAdminWriter");
+    }
+
+    [Fact]
+    public void Owned_runtime_resolves_all_speed_reading_endpoint_services_without_legacy_context()
+    {
+        var configuration = new ConfigurationManager
+        {
+            ["SpeedReading:OwnedDataEnabled"] = "true",
+            ["ConnectionStrings:SpeedReadingOwned"] = "Host=localhost;Database=unused;Username=unused;Password=unused"
+        };
+        var services = new ServiceCollection();
+        services.AddHttpContextAccessor();
+        services.AddLogging();
+        services.AddSingleton<IConfiguration>(configuration);
+        services.AddSpeedReadingInfrastructure(configuration, includeLegacyData: false);
+        using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+        using var scope = provider.CreateScope();
+
+        var endpointServices = new[]
+        {
+            typeof(ISpeedReadingAssessment),
+            typeof(ISpeedReadingAdaptiveLearning),
+            typeof(ISpeedReadingAdaptiveText),
+            typeof(ISpeedReadingAgeGroups),
+            typeof(ISpeedReadingAssignments),
+            typeof(ILegacySpeedReadingCatalog),
+            typeof(ISpeedReadingContentAdminWriter),
+            typeof(ISpeedReadingContentFeedback),
+            typeof(ISpeedReadingDailyProgress),
+            typeof(SpeedReading.Application.ExerciseSessions.ISpeedReadingExerciseSessions),
+            typeof(ILegacySpeedReadingGamification),
+            typeof(ISpeedReadingNotifications),
+            typeof(ISpeedReadingAnnouncements),
+            typeof(ISpeedReadingEmailTemplates),
+            typeof(ISpeedReadingEmailCampaigns),
+            typeof(ISpeedReadingQuestionBank),
+            typeof(ILegacySpeedReadingReports),
+            typeof(ILegacySpeedReadingAnalytics),
+            typeof(ILegacySpeedReadingTeacherReports),
+            typeof(ILegacySpeedReadingAdminAnalytics),
+            typeof(ISpeedReadingReview),
+            typeof(ISpeedReadingRsvp),
+            typeof(ISpeedReadingSeriesAccess),
+            typeof(ISpeedReadingStudentProgram),
+            typeof(ISpeedReadingStudentReading),
+            typeof(ISpeedReadingSubscription),
+            typeof(ISpeedReadingCms),
+            typeof(ISpeedReadingVisualization),
+            typeof(ISpeedReadingVocabulary),
+            typeof(IAdminAuditWriter)
+        };
+
+        foreach (var serviceType in endpointServices)
+            scope.ServiceProvider.GetRequiredService(serviceType).Should().NotBeNull();
     }
 
     [Fact]

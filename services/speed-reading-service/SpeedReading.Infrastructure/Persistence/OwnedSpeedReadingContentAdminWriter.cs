@@ -3,9 +3,9 @@ using SpeedReading.Application.Content;
 namespace SpeedReading.Infrastructure.Persistence;
 
 internal sealed class OwnedSpeedReadingContentAdminWriter(
-    OwnedSpeedReadingCatalogAdminWriter catalog,
-    OwnedSpeedReadingLearningPathAdminWriter learningPaths,
-    OwnedSpeedReadingProgramAdminWriter programs) : ISpeedReadingContentAdminWriter
+    ISpeedReadingCatalogAdminWriter catalog,
+    ISpeedReadingLearningPathAdminWriter learningPaths,
+    ISpeedReadingProgramAdminWriter programs) : ISpeedReadingContentAdminWriter
 {
     public Task<ExerciseTypeSummary> CreateExerciseTypeAsync(Guid actorId, CreateExerciseTypeRequest request, string idempotencyKey, CancellationToken cancellationToken = default) =>
         catalog.CreateExerciseTypeAsync(actorId, request, idempotencyKey, cancellationToken);

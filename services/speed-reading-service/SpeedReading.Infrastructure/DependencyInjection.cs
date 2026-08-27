@@ -128,29 +128,32 @@ public static class DependencyInjection
                 serviceProvider.GetRequiredService<ISpeedReadingPaymentProvider>(),
                 serviceProvider.GetRequiredService<IyzicoOptions>(),
                 serviceProvider.GetRequiredService<ISpeedReadingUserDirectory>()));
-        services.AddScoped<ISpeedReadingAdaptiveLearning, LegacySpeedReadingAdaptiveLearning>();
-        services.AddScoped<ISpeedReadingAdaptiveText, LegacySpeedReadingAdaptiveText>();
-        services.AddScoped<ISpeedReadingContentFeedback, LegacySpeedReadingContentFeedback>();
-        services.AddScoped<ISpeedReadingVisualization, LegacySpeedReadingVisualization>();
-        services.AddScoped<ISpeedReadingVocabulary, LegacySpeedReadingVocabulary>();
-        services.AddScoped<ISpeedReadingQuestionBank, LegacySpeedReadingQuestionBank>();
-        services.AddScoped<ISpeedReadingStudentProgram, LegacySpeedReadingStudentProgram>();
-        services.AddScoped<ISpeedReadingRsvp, LegacySpeedReadingRsvp>();
         services.AddScoped<ISpeedReadingNotifications, LegacySpeedReadingNotifications>();
         services.AddScoped<ISpeedReadingAnnouncements, LegacySpeedReadingAnnouncements>();
         services.AddScoped<ISpeedReadingEmailTemplates, LegacySpeedReadingEmailTemplates>();
         services.AddScoped<ISpeedReadingEmailCampaigns, LegacySpeedReadingEmailCampaigns>();
-        services.AddScoped<ISpeedReadingAgeGroups, LegacySpeedReadingAgeGroups>();
-        services.AddScoped<ISpeedReadingAssessment, LegacySpeedReadingAssessment>();
-        services.AddScoped<ISpeedReadingReview, LegacySpeedReadingReview>();
-        services.AddScoped<ISpeedReadingSeriesAccess, LegacySpeedReadingSeriesAccess>();
-        services.AddScoped<ISpeedReadingStudentReading, LegacySpeedReadingStudentReading>();
-        services.AddScoped<ISpeedReadingContentAdminWriter, LegacySpeedReadingContentAdminWriter>();
-        services.AddScoped<ISpeedReadingCatalogAdminWriter, LegacySpeedReadingContentAdminWriter>();
-        services.AddScoped<ISpeedReadingLearningPathAdminWriter, LegacySpeedReadingContentAdminWriter>();
-        services.AddScoped<ILegacySpeedReadingLearningPaths, LegacySpeedReadingLearningPaths>();
-        services.AddScoped<ISpeedReadingGamificationAdminWriter, LegacySpeedReadingGamificationAdminWriter>();
-        services.AddScoped<ISpeedReadingIdempotencyCleaner, LegacySpeedReadingIdempotencyCleaner>();
+        services.AddScoped<ISpeedReadingRsvp, LegacySpeedReadingRsvp>();
+        if (!ownedDataEnabled)
+        {
+            services.AddScoped<ISpeedReadingAdaptiveLearning, LegacySpeedReadingAdaptiveLearning>();
+            services.AddScoped<ISpeedReadingAdaptiveText, LegacySpeedReadingAdaptiveText>();
+            services.AddScoped<ISpeedReadingContentFeedback, LegacySpeedReadingContentFeedback>();
+            services.AddScoped<ISpeedReadingVisualization, LegacySpeedReadingVisualization>();
+            services.AddScoped<ISpeedReadingVocabulary, LegacySpeedReadingVocabulary>();
+            services.AddScoped<ISpeedReadingQuestionBank, LegacySpeedReadingQuestionBank>();
+            services.AddScoped<ISpeedReadingStudentProgram, LegacySpeedReadingStudentProgram>();
+            services.AddScoped<ISpeedReadingAgeGroups, LegacySpeedReadingAgeGroups>();
+            services.AddScoped<ISpeedReadingAssessment, LegacySpeedReadingAssessment>();
+            services.AddScoped<ISpeedReadingReview, LegacySpeedReadingReview>();
+            services.AddScoped<ISpeedReadingSeriesAccess, LegacySpeedReadingSeriesAccess>();
+            services.AddScoped<ISpeedReadingStudentReading, LegacySpeedReadingStudentReading>();
+            services.AddScoped<ISpeedReadingContentAdminWriter, LegacySpeedReadingContentAdminWriter>();
+            services.AddScoped<ISpeedReadingCatalogAdminWriter, LegacySpeedReadingContentAdminWriter>();
+            services.AddScoped<ISpeedReadingLearningPathAdminWriter, LegacySpeedReadingContentAdminWriter>();
+            services.AddScoped<ILegacySpeedReadingLearningPaths, LegacySpeedReadingLearningPaths>();
+            services.AddScoped<ISpeedReadingGamificationAdminWriter, LegacySpeedReadingGamificationAdminWriter>();
+            services.AddScoped<ISpeedReadingIdempotencyCleaner, LegacySpeedReadingIdempotencyCleaner>();
+        }
         if (ownedDataEnabled)
         {
             services.AddScoped<ILegacySpeedReadingCatalog, OwnedSpeedReadingCatalog>();
@@ -190,10 +193,13 @@ public static class DependencyInjection
             services.AddScoped<ISpeedReadingProgramAdminWriter, LegacySpeedReadingContentAdminWriter>();
             services.AddScoped<ISpeedReadingDailyProgress, LegacySpeedReadingDailyProgress>();
         }
-        services.AddScoped<ILegacySpeedReadingGamification, LegacySpeedReadingGamification>();
-        services.AddScoped<ISpeedReadingGamificationAdminWriter, LegacySpeedReadingGamificationAdminWriter>();
-        services.AddScoped<ILegacySpeedReadingAnalytics, LegacySpeedReadingAnalytics>();
-        services.AddScoped<ILegacySpeedReadingAdminAnalytics, LegacySpeedReadingAdminAnalytics>();
+        if (!ownedDataEnabled)
+        {
+            services.AddScoped<ILegacySpeedReadingGamification, LegacySpeedReadingGamification>();
+            services.AddScoped<ISpeedReadingGamificationAdminWriter, LegacySpeedReadingGamificationAdminWriter>();
+            services.AddScoped<ILegacySpeedReadingAnalytics, LegacySpeedReadingAnalytics>();
+            services.AddScoped<ILegacySpeedReadingAdminAnalytics, LegacySpeedReadingAdminAnalytics>();
+        }
         services.AddHttpClient<ISpeedReadingTeacherAccess, IdentityTeacherAccessClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);
@@ -206,11 +212,14 @@ public static class DependencyInjection
         {
             client.Timeout = TimeSpan.FromSeconds(5);
         }).AddCorrelationIdPropagation();
-        services.AddScoped<ILegacySpeedReadingReports, LegacySpeedReadingReports>();
-        services.AddScoped<ILegacySpeedReadingTeacherReports, LegacySpeedReadingTeacherReports>();
-        services.AddScoped<ISpeedReadingReportsAdminWriter, LegacySpeedReadingReportsAdminWriter>();
-        services.AddScoped<ISpeedReadingReportsScheduleWriter, LegacySpeedReadingReportsScheduleWriter>();
-        services.AddScoped<ISpeedReadingReportsSnapshotWriter, LegacySpeedReadingReportsSnapshotWriter>();
+        if (!ownedDataEnabled)
+        {
+            services.AddScoped<ILegacySpeedReadingReports, LegacySpeedReadingReports>();
+            services.AddScoped<ILegacySpeedReadingTeacherReports, LegacySpeedReadingTeacherReports>();
+            services.AddScoped<ISpeedReadingReportsAdminWriter, LegacySpeedReadingReportsAdminWriter>();
+            services.AddScoped<ISpeedReadingReportsScheduleWriter, LegacySpeedReadingReportsScheduleWriter>();
+            services.AddScoped<ISpeedReadingReportsSnapshotWriter, LegacySpeedReadingReportsSnapshotWriter>();
+        }
         services.AddSingleton<ISpeedReadingReportExporter, ReportExportService>();
         services.AddSingleton<IAdminAuditWriter, SpeedReadingAdminAuditWriter>();
         if (ownedDataEnabled)
