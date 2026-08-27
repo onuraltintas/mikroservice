@@ -56,8 +56,11 @@ public sealed class OwnedSpeedReadingCatalogBackfill(
         ValidateSource(categories, types, exercises, readingTexts, questions);
         var normalizedQuestionOrders = NormalizeQuestionOrders(questions);
 
-        await using var transaction = await owned.Database.BeginTransactionAsync(cancellationToken);
-        var existingRows = 0;
+        var executionStrategy = owned.Database.CreateExecutionStrategy();
+        return await executionStrategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await owned.Database.BeginTransactionAsync(cancellationToken);
+            var existingRows = 0;
 
         var existingCategoryIds = await owned.ExerciseTypeCategories
             .AsNoTracking()
@@ -225,14 +228,15 @@ public sealed class OwnedSpeedReadingCatalogBackfill(
         await owned.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
-        return new OwnedSpeedReadingCatalogBackfillResult(
-            categories.Count - categories.Count(item => existingCategoryIds.Contains(item.Id)),
-            types.Count - types.Count(item => existingTypeIds.Contains(item.Id)),
-            exercises.Count - exercises.Count(item => existingExerciseIds.Contains(item.Id)),
-            readingTexts.Count - readingTexts.Count(item => existingReadingTextIds.Contains(item.Id)),
-            questions.Count - questions.Count(item => existingQuestionIds.Contains(item.Id)),
-            existingRows,
-            DateTime.UtcNow);
+            return new OwnedSpeedReadingCatalogBackfillResult(
+                categories.Count - categories.Count(item => existingCategoryIds.Contains(item.Id)),
+                types.Count - types.Count(item => existingTypeIds.Contains(item.Id)),
+                exercises.Count - exercises.Count(item => existingExerciseIds.Contains(item.Id)),
+                readingTexts.Count - readingTexts.Count(item => existingReadingTextIds.Contains(item.Id)),
+                questions.Count - questions.Count(item => existingQuestionIds.Contains(item.Id)),
+                existingRows,
+                DateTime.UtcNow);
+        });
     }
 
     private static void ValidateSource(
