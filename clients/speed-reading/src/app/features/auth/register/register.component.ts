@@ -148,7 +148,7 @@ export class RegisterComponent implements OnInit {
 
     this.authService.googleAuth(response.credential).subscribe({
       next: (authResponse) => {
-        const role = authResponse.roles[0];
+        const role = authResponse.roles?.[0];
         if (role === 'Student') {
           this.router.navigate(['/student/dashboard']);
         } else if (role === 'Teacher') {

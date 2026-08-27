@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, map, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthResponse, LoginRequest, RegisterRequest } from '../models/user.model';
 import { environment } from '../../../environments/environment';
@@ -106,6 +106,7 @@ export class AuthService {
    */
   login(credentials: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.API_URL}/v1/auth/login`, credentials).pipe(
+      map(response => this.normalizeAuthResponse(response)),
       tap(response => {
         this.setUser(response);
       })
@@ -182,6 +183,7 @@ export class AuthService {
   refreshToken(): Observable<AuthResponse> {
     const refreshToken = this.currentUserValue?.refreshToken;
     return this.http.post<AuthResponse>(`${this.API_URL}/v1/auth/refresh-token`, { refreshToken }).pipe(
+      map(response => this.normalizeAuthResponse(response)),
       tap(response => {
         this.setUser(response);
       })
@@ -199,6 +201,7 @@ export class AuthService {
       payload.role = role;
     }
     return this.http.post<AuthResponse>(`${this.API_URL}/v1/auth/google-login`, payload).pipe(
+      map(response => this.normalizeAuthResponse(response)),
       tap(response => {
         this.setUser(response);
       })
@@ -243,10 +246,12 @@ export class AuthService {
 
   /** Called by GoogleCallbackComponent after server-side OAuth redirect */
   loginFromCallback(response: AuthResponse): void {
-    this.setUser(response);
+    this.setUser(this.normalizeAuthResponse(response));
   }
 
   private setUser(response: AuthResponse): void {
+    response = this.normalizeAuthResponse(response);
+
     // Decode token to ensure all claims are present in the user object
     if (response.token) {
       try {
@@ -277,6 +282,40 @@ export class AuthService {
     this.currentUserSubject.next(response);
     // Load user settings after successful authentication
     this.settingsService.loadSettings().subscribe();
+  }
+
+  private normalizeAuthResponse(response: AuthResponse): AuthResponse {
+    const rawResponse = response as AuthResponse & { accessToken?: string };
+    const token = rawResponse.token || rawResponse.accessToken || '';
+    const decoded = token ? this.decodeToken(token) : {};
+    const roles = this.readClaimValues(decoded, [
+      'role',
+      'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
+    ]);
+
+    return {
+      ...rawResponse,
+      id: rawResponse.id || decoded['sub'] || '',
+      token,
+      refreshToken: rawResponse.refreshToken || '',
+      email: rawResponse.email || decoded['email'] || '',
+      firstName: rawResponse.firstName || decoded['given_name'] || decoded['firstName'] || '',
+      lastName: rawResponse.lastName || decoded['family_name'] || decoded['lastName'] || '',
+      roles: rawResponse.roles?.length ? rawResponse.roles : roles
+    };
+  }
+
+  private readClaimValues(claims: any, names: string[]): string[] {
+    for (const name of names) {
+      const value = claims?.[name];
+      if (Array.isArray(value)) {
+        return value.filter((item): item is string => typeof item === 'string');
+      }
+      if (typeof value === 'string' && value.length > 0) {
+        return [value];
+      }
+    }
+    return [];
   }
 
   /**

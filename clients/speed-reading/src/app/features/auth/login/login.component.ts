@@ -154,7 +154,7 @@ export class LoginComponent implements OnInit {
 
     this.authService.googleAuth(response.credential).subscribe({
       next: (authResponse) => {
-        const role = authResponse.roles[0];
+        const role = authResponse.roles?.[0];
         console.log('Google Auth Role:', role); // Debug log
 
         if (!role) {
@@ -220,7 +220,7 @@ export class LoginComponent implements OnInit {
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (response: any) => {
-          const role = response.roles[0];
+          const role = response.roles?.[0];
           console.log('Login Role:', role); // Debug log
 
           if (!role) {

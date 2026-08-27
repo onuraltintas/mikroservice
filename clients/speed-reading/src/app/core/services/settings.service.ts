@@ -24,7 +24,7 @@ export class SettingsService {
     }
 
     /**
-     * Load settings from backend
+     * Load settings from local storage
      */
     loadSettings(): Observable<UserSettings> {
         const settings = this.loadFromCache();
