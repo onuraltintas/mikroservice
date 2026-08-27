@@ -245,7 +245,9 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasKey(item => item.Id);
             entity.HasIndex(item => item.ExerciseTypeId);
             entity.HasIndex(item => item.TargetAgeGroupConfigurationId);
-            entity.HasIndex(item => item.CreatorId);
+            // The legacy table has no CreatorId column; CreatedBy is the
+            // available author identifier and is used during owned backfill.
+            entity.Ignore(item => item.CreatorId);
         });
 
         modelBuilder.Entity<LegacyVisualizationScene>(entity =>
@@ -450,7 +452,12 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasIndex(item => item.ExerciseId);
             entity.HasIndex(item => item.ReadingTextId);
             entity.HasIndex(item => item.StudentAssignmentId);
-            entity.Property(item => item.ProcessedActionsJson).IsRequired();
+            // These fields were introduced after the legacy database schema;
+            // owned sessions persist them in the new schema.
+            entity.Ignore(item => item.PausedAt);
+            entity.Ignore(item => item.TimeLimitSeconds);
+            // Added only in the owned schema; legacy rows predate this field.
+            entity.Ignore(item => item.ProcessedActionsJson);
         });
 
         modelBuilder.Entity<LegacyStudentExerciseResult>(entity =>
@@ -460,9 +467,9 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasIndex(item => item.StudentId);
             entity.HasIndex(item => item.ExerciseId);
             entity.HasIndex(item => item.ReadingTextId);
-            entity.HasIndex(item => item.SessionId)
-                .IsUnique()
-                .HasFilter("\"SessionId\" IS NOT NULL");
+            // StudentExerciseResults in the legacy database does not retain
+            // a session link; owned backfill keeps those results unlinked.
+            entity.Ignore(item => item.SessionId);
             entity.Property(item => item.RawWPM).HasPrecision(18, 2);
             entity.Property(item => item.ComprehensionScore).HasPrecision(18, 2);
         });

@@ -131,7 +131,7 @@ public sealed class OwnedSpeedReadingCatalogBackfill(
                 exerciseType.Name,
                 source.ConfigurationJson,
                 source.DifficultyLevel,
-                source.CreatorId,
+                source.CreatedBy,
                 source.ExerciseTypeId,
                 NormalizeUtc(source.CreatedAt),
                 source.TargetAgeGroupConfigurationId,
