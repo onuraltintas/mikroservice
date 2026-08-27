@@ -72,6 +72,7 @@ public static class DependencyInjection
                 }));
             services.AddScoped<OwnedSpeedReadingCatalogBackfill>();
             services.AddScoped<OwnedSpeedReadingSessionBackfill>();
+            services.AddScoped<OwnedSpeedReadingAssignmentBackfill>();
         }
 
         services.AddMemoryCache(options => options.SizeLimit = 4_096);
@@ -116,15 +117,24 @@ public static class DependencyInjection
         services.AddScoped<ILegacySpeedReadingLearningPaths, LegacySpeedReadingLearningPaths>();
         services.AddScoped<ISpeedReadingDailyProgress, LegacySpeedReadingDailyProgress>();
         if (ownedDataEnabled)
+        {
             services.AddScoped<ISpeedReadingExerciseSessions, OwnedSpeedReadingExerciseSessions>();
+            services.AddScoped<ISpeedReadingAssignments, OwnedSpeedReadingAssignments>();
+        }
         else
+        {
             services.AddScoped<ISpeedReadingExerciseSessions, LegacySpeedReadingExerciseSessions>();
-        services.AddScoped<ISpeedReadingAssignments, LegacySpeedReadingAssignments>();
+            services.AddScoped<ISpeedReadingAssignments, LegacySpeedReadingAssignments>();
+        }
         services.AddScoped<ILegacySpeedReadingGamification, LegacySpeedReadingGamification>();
         services.AddScoped<ISpeedReadingGamificationAdminWriter, LegacySpeedReadingGamificationAdminWriter>();
         services.AddScoped<ILegacySpeedReadingAnalytics, LegacySpeedReadingAnalytics>();
         services.AddScoped<ILegacySpeedReadingAdminAnalytics, LegacySpeedReadingAdminAnalytics>();
         services.AddHttpClient<ISpeedReadingTeacherAccess, IdentityTeacherAccessClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
+        }).AddCorrelationIdPropagation();
+        services.AddHttpClient<ISpeedReadingUserDirectory, IdentityUserDirectoryClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);
         }).AddCorrelationIdPropagation();

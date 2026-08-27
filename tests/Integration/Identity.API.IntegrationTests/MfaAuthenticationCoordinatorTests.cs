@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Kernel.Results;
+using EduPlatform.Shared.Contracts.Reporting;
 using FluentAssertions;
 using Identity.Application.Commands.Login;
 using Identity.Application.Interfaces;
@@ -106,6 +107,9 @@ public sealed class MfaAuthenticationCoordinatorTests
     private sealed class StubUserRepository(User user) : IUserRepository
     {
         public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult<User?>(user);
+        public Task<IReadOnlyList<SpeedReadingUserDirectoryItem>> GetSpeedReadingDirectoryAsync(
+            IReadOnlyCollection<Guid> userIds,
+            CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<SpeedReadingUserDirectoryItem>>([]);
         public Task AddAsync(User value, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<User?> GetByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken) => throw new NotSupportedException();

@@ -36,6 +36,28 @@ public class UserRepository : IUserRepository
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<SpeedReadingUserDirectoryItem>> GetSpeedReadingDirectoryAsync(
+        IReadOnlyCollection<Guid> userIds,
+        CancellationToken cancellationToken)
+    {
+        var ids = userIds
+            .Where(id => id != Guid.Empty)
+            .Distinct()
+            .ToArray();
+        if (ids.Length == 0)
+            return [];
+
+        return await _context.Users
+            .AsNoTracking()
+            .Where(user => ids.Contains(user.Id))
+            .Select(user => new SpeedReadingUserDirectoryItem(
+                user.Id,
+                user.FirstName,
+                user.LastName,
+                user.IsActive))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
     {
         var normalizedEmail = email.ToLowerInvariant();

@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using SpeedReading.Domain.Assignments;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.Sessions;
 using SpeedReading.Infrastructure.Persistence;
@@ -47,6 +48,27 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Fact]
+    public void Owned_model_allows_reassignment_after_a_soft_removed_membership()
+    {
+        using var context = new OwnedSpeedReadingDbContext(
+            new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+                .UseNpgsql("Host=localhost;Database=unused;Username=unused;Password=unused")
+                .Options);
+
+        var index = context.Model.FindEntityType(typeof(StudentAssignment))!
+            .GetIndexes()
+            .Single(item => item.IsUnique
+                && item.Properties.Select(property => property.Name)
+                    .SequenceEqual(new[]
+                    {
+                        nameof(StudentAssignment.AssignmentId),
+                        nameof(StudentAssignment.StudentId)
+                    }));
+
+        index.GetFilter().Should().Be("\"IsActive\" = TRUE");
+    }
+
+    [Fact]
     public void Owned_create_script_does_not_reference_legacy_tables()
     {
         using var context = new OwnedSpeedReadingDbContext(
@@ -74,7 +96,8 @@ public sealed class SpeedReadingOwnedDomainTests
         context.Database.GetMigrations()
             .Should()
             .Contain("20260827110000_CreateOwnedSpeedReadingCore")
-            .And.Contain("20260827120000_AddOwnedReadingSessionHistory");
+            .And.Contain("20260827120000_AddOwnedReadingSessionHistory")
+            .And.Contain("20260827130000_AddOwnedAssignments");
     }
 
     [Fact]

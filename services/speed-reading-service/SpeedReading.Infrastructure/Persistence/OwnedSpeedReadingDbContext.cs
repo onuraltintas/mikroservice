@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using EduPlatform.Shared.Kernel.Primitives;
+using SpeedReading.Domain.Assignments;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.Sessions;
 
@@ -21,6 +22,8 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<ExerciseSessionAnswer> ExerciseSessionAnswers => Set<ExerciseSessionAnswer>();
     public DbSet<ExerciseSessionResult> ExerciseSessionResults => Set<ExerciseSessionResult>();
     public DbSet<ReadingSession> ReadingSessions => Set<ReadingSession>();
+    public DbSet<Assignment> Assignments => Set<Assignment>();
+    public DbSet<StudentAssignment> StudentAssignments => Set<StudentAssignment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -36,6 +39,8 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<ExerciseSessionAnswer>());
         ConfigureEntity(modelBuilder.Entity<ExerciseSessionResult>());
         ConfigureEntity(modelBuilder.Entity<ReadingSession>());
+        ConfigureEntity(modelBuilder.Entity<Assignment>());
+        ConfigureEntity(modelBuilder.Entity<StudentAssignment>());
 
         modelBuilder.Entity<Exercise>(entity =>
         {
@@ -176,6 +181,42 @@ public sealed class OwnedSpeedReadingDbContext(
                 .HasForeignKey(item => item.ReadingTextId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+
+        modelBuilder.Entity<Assignment>(entity =>
+        {
+            entity.ToTable("assignments");
+            entity.Property(item => item.Title).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Description).HasMaxLength(2_000).IsRequired();
+            entity.HasIndex(item => new { item.TeacherId, item.CreatedAt });
+            entity.HasIndex(item => new { item.ExerciseId, item.IsActive });
+            entity.HasOne<Exercise>()
+                .WithMany()
+                .HasForeignKey(item => item.ExerciseId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<ReadingText>()
+                .WithMany()
+                .HasForeignKey(item => item.ReadingTextId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<StudentAssignment>(entity =>
+        {
+            entity.ToTable("student_assignments");
+            entity.Property(item => item.Score).HasPrecision(5, 2);
+            entity.Property(item => item.KeyPerformanceMetric).HasPrecision(10, 2);
+            entity.HasIndex(item => new { item.AssignmentId, item.StudentId })
+                .IsUnique()
+                .HasFilter("\"IsActive\" = TRUE");
+            entity.HasIndex(item => new { item.StudentId, item.IsActive, item.CreatedAt });
+            entity.HasIndex(item => item.ResultId);
+            entity.HasOne<Assignment>()
+                .WithMany()
+                .HasForeignKey(item => item.AssignmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ExerciseSession>()
+            .HasIndex(item => item.StudentAssignmentId);
     }
 
     private static void ConfigureEntity<TEntity>(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<TEntity> entity)

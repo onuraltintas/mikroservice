@@ -10,9 +10,7 @@ namespace SpeedReading.Infrastructure.Persistence;
 
 /// <summary>
 /// Core exercise/session use case backed only by the owned Speed Reading
-/// database. Assignment validation and gamification remain separate slices;
-/// this implementation deliberately rejects those references until their
-/// data is owned by this context as well.
+/// database. Gamification side effects remain a separate slice.
 /// </summary>
 internal sealed class OwnedSpeedReadingExerciseSessions(
     OwnedSpeedReadingDbContext db) : ISpeedReadingExerciseSessions
@@ -39,8 +37,21 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             throw new ArgumentException("A valid student and exercise are required.");
         if (request.StudentAssignmentId.HasValue)
         {
-            throw new InvalidOperationException(
-                "Student assignments are not available in the owned core slice yet.");
+            var assignmentMatches = await (
+                from studentAssignment in db.StudentAssignments.AsNoTracking()
+                join assignment in db.Assignments.AsNoTracking()
+                    on studentAssignment.AssignmentId equals assignment.Id
+                where studentAssignment.Id == request.StudentAssignmentId.Value
+                    && studentAssignment.StudentId == studentId
+                    && studentAssignment.IsActive
+                    && assignment.IsActive
+                    && assignment.ExerciseId == request.ExerciseId
+                select studentAssignment.Id)
+                .AnyAsync(cancellationToken);
+            if (!assignmentMatches)
+            {
+                throw new KeyNotFoundException("Assignment not found or does not belong to the student.");
+            }
         }
 
         var exercise = await db.Exercises
@@ -233,6 +244,15 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             now,
             JsonSerializer.Serialize(answers, JsonOptions));
         db.ExerciseSessionResults.Add(result);
+        if (session.StudentAssignmentId.HasValue)
+        {
+            var studentAssignment = await db.StudentAssignments.SingleOrDefaultAsync(
+                item => item.Id == session.StudentAssignmentId.Value
+                    && item.StudentId == studentId
+                    && item.IsActive,
+                cancellationToken);
+            studentAssignment?.Complete(result.Id, score, weightedKdp ?? 0, now);
+        }
         await db.SaveChangesAsync(cancellationToken);
 
         return ToResult(result, session, state, score, SpeedReadingExerciseSessionRules.CalculateXp(score, accuracy, timeSpent));

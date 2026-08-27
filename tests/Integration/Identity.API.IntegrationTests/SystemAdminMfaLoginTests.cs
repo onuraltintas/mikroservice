@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Kernel.Results;
+using EduPlatform.Shared.Contracts.Reporting;
 using EduPlatform.Shared.Security.Interfaces;
 using FluentAssertions;
 using Identity.Application.Commands.Login;
@@ -370,6 +371,9 @@ public sealed class SystemAdminMfaLoginTests
 
         public Task AddAsync(User value, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult<User?>(user);
+        public Task<IReadOnlyList<SpeedReadingUserDirectoryItem>> GetSpeedReadingDirectoryAsync(
+            IReadOnlyCollection<Guid> userIds,
+            CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<SpeedReadingUserDirectoryItem>>([]);
         public void Delete(User value) => throw new NotSupportedException();
         public Task<Identity.Application.Queries.GetAllUsers.PagedList<Identity.Application.Queries.GetUserProfile.UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Identity.Application.Queries.GetAllUsers.UserSummaryDto> GetSummaryAsync(Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();

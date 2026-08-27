@@ -27,7 +27,7 @@ verilecektir:
 | --- | --- | --- |
 | Baseline ve auth/session hizalama | Tamamlandı | 48 frontend test GREEN; canonical auth ve HttpOnly session akışı |
 | Yeni owned şema ve migration altyapısı | Kod tamamlandı | Yeni DB, EF migration geçmişi, katalog modeli ve backfill runner |
-| Core exercise/session/progress iş mantığı | Kısmi / flag arkasında | Owned session implementation ve session/result/history backfill runner hazır; parity ve E2E hâlâ gerekli |
+| Core exercise/session/progress iş mantığı | Kısmi / flag arkasında | Owned session/assignment implementation ve backfill runner hazır; program bağlantısı, parity ve E2E hâlâ gerekli |
 | Content/program/report/gamification slice’ları | Bekliyor | Her slice için backfill ve parity raporu |
 | Frontend/gateway legacy endpoint temizliği | Bekliyor | Standalone domain’de 404 üreten çağrı kalmaması |
 | Shadow read ve write cutover | Bekliyor | Eski DB yazma yetkisi kaldırılmış, rollback kanıtlı |
@@ -66,12 +66,21 @@ yapılmadı:
   `legacy_session_id` korunur. İşlem tek transaction ve insert-only'dir;
   hatalı referans, bilinmeyen durum veya bozuk/çakışan cevap verisi varsa
   sessizce atlamak yerine durur. Önce katalog backfill'i yapılmalıdır.
+- Assignment geçişi `--backfill-owned-assignments` komutuyla katalogdan sonra
+  çalıştırılır. Assignment ve öğrenci-atama kayıtları aynı UUID'lerle taşınır;
+  aktif öğrenci üyeliği için `(assignment_id, student_id)` filtresiyle unique
+  indeks kullanılır. Identity kullanıcı profilleri bu servise kopyalanmaz;
+  yalnızca stable user ID tutulur.
+- Owned assignment runtime'ı öğrenci varlığı ve adını eski `Users` tablosundan
+  okumaz; Identity'nin internal `POST /api/internal/reporting/speed-reading/users`
+  sözleşmesini servis anahtarıyla çağırır. Identity erişilemezse assignment
+  yazma/ayrıntı işlemi fail-closed davranır.
 - `SpeedReading__OwnedDataEnabled=true` olduğunda egzersiz oturumu uçları
   `OwnedSpeedReadingExerciseSessions` üzerinden yeni DB'ye yazar/okur. Bu
   flag'in açılması için ayrıca owned connection gerekir; bağlantı yoksa servis
-  başlatılmaz. Core implementation henüz assignment doğrulamasını ve
-  gamification yan etkilerini taşımadığı için assignment ID'li akışları
-  kontrollü olarak reddeder; bu alanlar taşınmadan production flag'i
+  başlatılmaz. Assignment doğrulaması ve assignment tamamlanma güncellemesi
+  artık owned store'dadır; gamification yan etkileri ve program bağlantısı
+  henüz taşınmadığı için production flag'i yine parity/E2E onayı olmadan
   açılmamalıdır.
 - `SPEED_READING_CONNECTION_STRING` geçiş tamamlanana kadar legacy kaynak
   bağlantısıdır. Bu nedenle bu adım tek başına “tamamen taşındı” anlamına
