@@ -245,6 +245,8 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasKey(item => item.Id);
             entity.HasIndex(item => item.ExerciseTypeId);
             entity.HasIndex(item => item.TargetAgeGroupConfigurationId);
+            entity.Property(item => item.TargetAgeGroupConfigurationId)
+                .HasColumnName("TargetAgeGroupId");
             // The legacy table has no CreatorId column; CreatedBy is the
             // available author identifier and is used during owned backfill.
             entity.Ignore(item => item.CreatorId);
@@ -435,6 +437,8 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasKey(item => item.Id);
             entity.HasIndex(item => item.ExerciseId);
             entity.HasIndex(item => item.TargetAgeGroupConfigurationId);
+            entity.Property(item => item.TargetAgeGroupConfigurationId)
+                .HasColumnName("TargetAgeGroupId");
         });
 
         modelBuilder.Entity<LegacyReadingQuestion>(entity =>

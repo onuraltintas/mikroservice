@@ -477,6 +477,15 @@ public sealed class SpeedReadingServiceOptionsTests
         var readingText = context.Model.GetEntityTypes()
             .Single(entity => entity.GetTableName() == "ReadingTexts");
         readingText.FindProperty("Tags")!.GetColumnType().Should().Be("text");
+        readingText.FindProperty("TargetAgeGroupConfigurationId")!
+            .GetColumnName()
+            .Should().Be("TargetAgeGroupId");
+
+        var exercise = context.Model.GetEntityTypes()
+            .Single(entity => entity.GetTableName() == "Exercises");
+        exercise.FindProperty("TargetAgeGroupConfigurationId")!
+            .GetColumnName()
+            .Should().Be("TargetAgeGroupId");
 
         var exerciseResult = context.Model.GetEntityTypes()
             .Single(entity => entity.GetTableName() == "StudentExerciseResults");
