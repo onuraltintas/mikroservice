@@ -62,6 +62,21 @@ export interface AssessmentComparisonDto {
   baseline?: AssessmentComparisonPointDto | null;
 }
 
+export interface AssessmentPhasePlanItemDto {
+  phase: number;
+  status: number;
+  prerequisitePhase?: number | null;
+  attemptId?: string | null;
+  formVersion: string;
+  availableAt?: string | null;
+  completedAt?: string | null;
+}
+
+export interface AssessmentPhasePlanDto {
+  phases: AssessmentPhasePlanItemDto[];
+  nextPhase?: number | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -125,6 +140,15 @@ export class AssessmentService {
       `${this.apiUrl}/comparison`
     ).pipe(
       map((response: ApiResponse<AssessmentComparisonDto> | AssessmentComparisonDto) =>
+        'data' in response ? response.data : response)
+    );
+  }
+
+  getPhasePlan(): Observable<AssessmentPhasePlanDto> {
+    return this.http.get<ApiResponse<AssessmentPhasePlanDto> | AssessmentPhasePlanDto>(
+      `${this.apiUrl}/phase-plan`
+    ).pipe(
+      map((response: ApiResponse<AssessmentPhasePlanDto> | AssessmentPhasePlanDto) =>
         'data' in response ? response.data : response)
     );
   }
