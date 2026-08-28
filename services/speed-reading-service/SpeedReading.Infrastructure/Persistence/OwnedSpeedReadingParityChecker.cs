@@ -572,11 +572,11 @@ public sealed class OwnedSpeedReadingParityChecker(
         }
 
         if (fieldName == "Version"
-            || fieldName == "IsDeleted"
+            || ((fieldName is "IsDeleted" or "DeletedAt" or "DeletedBy")
                 && (sourceTable is "ExerciseSessions"
                     or "StudentExerciseResults"
                     or "StudentProgramProgresses"
-                    or "DailyExerciseLogs"))
+                    or "DailyExerciseLogs")))
         {
             return true;
         }
@@ -636,6 +636,9 @@ public sealed class OwnedSpeedReadingParityChecker(
 
         if (value is DateTimeOffset dateTimeOffset)
             return dateTimeOffset.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
+
+        if (value is decimal decimalValue)
+            return decimalValue.ToString("G29", CultureInfo.InvariantCulture);
 
         if (value is TimeSpan timeSpan)
             return timeSpan.Ticks.ToString(CultureInfo.InvariantCulture);
