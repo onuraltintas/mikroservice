@@ -124,6 +124,10 @@ public interface ISpeedReadingAssessment
         Guid userId,
         CancellationToken cancellationToken) =>
         throw new NotSupportedException("Versioned assessment attempts require owned Speed Reading data.");
+    Task<AssessmentPhasePlanSummary> GetPhasePlanAsync(
+        Guid userId,
+        CancellationToken cancellationToken) =>
+        throw new NotSupportedException("Versioned assessment phase plans require owned Speed Reading data.");
     Task<AssessmentExercisesSummary> GetExercisesAsync(Guid userId, CancellationToken cancellationToken);
     Task<AssessmentStatusSummary> GetStatusAsync(Guid userId, CancellationToken cancellationToken);
     Task<AssessmentResultSummary?> CalculateAsync(Guid userId, AssessmentCalculationRequest? request, CancellationToken cancellationToken);

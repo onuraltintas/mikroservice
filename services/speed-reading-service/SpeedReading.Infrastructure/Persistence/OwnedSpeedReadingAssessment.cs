@@ -183,6 +183,29 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             points.FirstOrDefault(item => item.Phase == AssessmentAttemptPhase.Baseline));
     }
 
+    public async Task<AssessmentPhasePlanSummary> GetPhasePlanAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty)
+            throw new ArgumentException("A valid user is required.", nameof(userId));
+
+        var attempts = await db.AssessmentAttempts
+            .AsNoTracking()
+            .Where(item => item.StudentId == userId)
+            .Select(item => new AssessmentPhasePlanAttemptInput(
+                item.Id,
+                item.Phase,
+                item.Status,
+                item.FormVersion,
+                item.StartedAt,
+                item.CompletedAt,
+                item.Language))
+            .ToListAsync(cancellationToken);
+
+        return AssessmentPhasePlanCalculator.Calculate(attempts);
+    }
+
     public async Task<AssessmentExercisesSummary> GetExercisesAsync(
         Guid userId,
         CancellationToken cancellationToken)

@@ -6,6 +6,7 @@
   "scripts": {
     "test": "playwright test",
     "test:critical": "playwright test specs/gateway-critical.spec.mjs",
+    "test:speed-reading": "playwright test --project=speed-reading-assessment-api",
     "test:ui": "playwright test specs/admin-panel.spec.mjs",
     "test:coaching": "playwright test --project=coaching-disposable",
     "install:browsers": "playwright install chromium"

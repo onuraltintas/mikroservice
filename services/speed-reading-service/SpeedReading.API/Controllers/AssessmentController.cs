@@ -36,6 +36,13 @@ public sealed class AssessmentController(ISpeedReadingAssessment assessment) : C
         return Ok(await assessment.GetComparisonAsync(userId, cancellationToken));
     }
 
+    [HttpGet("phase-plan")]
+    public async Task<IActionResult> GetPhasePlan(CancellationToken cancellationToken = default)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        return Ok(await assessment.GetPhasePlanAsync(userId, cancellationToken));
+    }
+
     [HttpGet("exercises")]
     public async Task<IActionResult> GetExercises(CancellationToken cancellationToken = default)
     {

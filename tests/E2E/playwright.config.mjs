@@ -102,6 +102,16 @@ export default defineConfig({
         screenshot: 'off',
         video: 'off'
       }
+    },
+    {
+      name: 'speed-reading-assessment-api',
+      testMatch: /speed-reading-assessment\.spec\.mjs/,
+      use: {
+        baseURL: apiBaseUrl,
+        trace: 'off',
+        screenshot: 'off',
+        video: 'off'
+      }
     }
   ],
   webServer: process.env.E2E_START_UI === 'true'

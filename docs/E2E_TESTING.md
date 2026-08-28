@@ -19,6 +19,8 @@ Apache-2.0 lisanslı bir geliştirme bağımlılığıdır.
   oluşturma/okuma ve aynı idempotency anahtarıyla replay
 - Disposable coaching fixture'da teacher login → assignment oluşturma/replay → student
   tenant-scope okuma ve gerçek SignalR `ReceiveNotification` teslimi
+- Hızlı Okuma assessment faz planının anonim erişime kapalı olması ve yetkili kullanıcıda
+  dört fazı (`Baseline` → `PostTraining` → `Retention` → `Transfer`) döndürmesi
 
 Testler varsayılan olarak yalnızca Docker'da çalışan Gateway'e bağlanır ve
 `http://127.0.0.1:5000` kullanır. Anonim smoke testleri business verisi yazmaz;
@@ -59,6 +61,15 @@ CI'de çalıştırılmalı; ortak production verisine bağlanılmamalıdır.
 npm ci --prefix tests/E2E
 npm run install:browsers --prefix tests/E2E
 npm run test:critical --prefix tests/E2E
+```
+
+Hızlı Okuma faz planı sözleşmesini çalıştırmak için Gateway'e erişen bir kullanıcı verin.
+Test veri değiştirmez; kimlik bilgisi yoksa yalnız anonim 401 kontrolü çalışır:
+
+```powershell
+$env:E2E_SPEED_READING_EMAIL = 'student@example.test'
+$env:E2E_SPEED_READING_PASSWORD = '<secret-from-secret-store>'
+npm run test:speed-reading --prefix tests/E2E
 ```
 
 Admin panel login ekranını da çalıştırmak için Angular dev server'ını Playwright

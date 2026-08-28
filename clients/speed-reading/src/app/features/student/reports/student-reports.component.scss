@@ -18,6 +18,127 @@
   margin: 0;
 }
 
+.rp-phase-card {
+  margin-bottom: 24px;
+  padding: 20px 24px 24px;
+  background: var(--sp-surface, #fff);
+  border: 1px solid var(--sp-border, #e5e7eb);
+  border-radius: var(--sp-radius-card, 16px);
+  box-shadow: var(--sp-shadow-card, 0 2px 8px rgba(0, 0, 0, .06));
+}
+
+.rp-phase-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.rp-phase-card__header h2 {
+  margin: 0 0 4px;
+  color: var(--sp-text-1, #1a1a1a);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.rp-phase-card__header p {
+  margin: 0;
+  color: var(--sp-text-2, #666);
+  font-size: .875rem;
+}
+
+.rp-phase-card__next {
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: var(--sp-primary-ghost, rgba(99, 102, 241, .1));
+  color: var(--sp-primary, #6366f1);
+  font-size: .75rem;
+  font-weight: 700;
+}
+
+.rp-phase-card__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rp-phase-item {
+  min-height: 132px;
+  padding: 14px;
+  border: 1px solid var(--sp-border, #e5e7eb);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.rp-phase-item.available,
+.rp-phase-item.in-progress {
+  border-color: #c7d2fe;
+  background: #eef2ff;
+}
+
+.rp-phase-item.completed {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.rp-phase-item__topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rp-phase-item h3 {
+  margin: 0;
+  color: var(--sp-text-1, #1a1a1a);
+  font-size: .9rem;
+  font-weight: 700;
+}
+
+.rp-phase-item p {
+  min-height: 38px;
+  margin: 10px 0;
+  color: var(--sp-text-2, #666);
+  font-size: .78rem;
+  line-height: 1.4;
+}
+
+.rp-phase-item__status {
+  color: var(--sp-text-2, #666);
+  font-size: .68rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.rp-phase-item.available .rp-phase-item__status,
+.rp-phase-item.in-progress .rp-phase-item__status { color: #4f46e5; }
+.rp-phase-item.completed .rp-phase-item__status { color: #15803d; }
+
+.rp-phase-item__action {
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--sp-primary, #6366f1);
+  color: #fff;
+  cursor: pointer;
+  font-size: .75rem;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .rp-phase-card__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 540px) {
+  .rp-phase-card { padding: 16px; }
+  .rp-phase-card__header { flex-direction: column; }
+  .rp-phase-card__grid { grid-template-columns: 1fr; }
+}
+
 .rp-assessment-card {
   margin-bottom: 24px;
   overflow: hidden;

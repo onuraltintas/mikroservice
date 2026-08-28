@@ -12,7 +12,7 @@
         <span class="material-icons">emoji_events</span>
       </div>
       <h1>Tebrikler!</h1>
-      <p class="subtitle">Seviye belirleme testini başarıyla tamamladınız.</p>
+      <p class="subtitle">{{ getPhaseLabel() }} ölçümünü başarıyla tamamladınız.</p>
     </div>
 
     <div class="result-grid">
@@ -91,7 +91,7 @@
           <div class="title-icon-wrapper">
             <span class="material-icons">analytics</span>
           </div>
-          <h1>Seviye Tespit</h1>
+          <h1>{{ getPhaseLabel() }}</h1>
         </div>
 
         <div class="progress-container">

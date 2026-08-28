@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AssessmentService } from '../../../services/assessment.service';
 import { ToasterService } from '../../../core/services/toaster.service';
@@ -30,6 +30,7 @@ interface AssessmentExercise {
 export class AssessmentComponent implements OnInit, OnDestroy {
   private assessmentService = inject(AssessmentService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private toaster = inject(ToasterService);
 
   // State
@@ -41,6 +42,7 @@ export class AssessmentComponent implements OnInit, OnDestroy {
   showResult = signal(false);
   result = signal<any>(null);
   assessmentAttemptId = signal<string | null>(null);
+  assessmentPhase = signal(1);
 
   // Comprehension Exercise State
 
@@ -64,6 +66,7 @@ export class AssessmentComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.assessmentPhase.set(this.getRequestedPhase());
     this.loadAssessmentExercises();
   }
 
@@ -75,8 +78,8 @@ export class AssessmentComponent implements OnInit, OnDestroy {
     this.loading.set(true);
 
     this.assessmentService.startAttempt({
-      phase: 1,
-      formVersion: 'tr-baseline-v1',
+      phase: this.assessmentPhase(),
+      formVersion: this.formVersionForPhase(),
       language: 'tr-TR',
       expectedExerciseCount: 3
     }).pipe(
@@ -132,13 +135,15 @@ export class AssessmentComponent implements OnInit, OnDestroy {
         assessmentMode: 'true',
         assessmentStep: index + 1,
         assessmentAttemptId: this.assessmentAttemptId(),
-        returnUrl: '/student/assessment'
+        assessmentPhase: this.assessmentPhase(),
+        returnUrl: `/student/assessment?phase=${this.assessmentPhase()}`
       },
       state: {
         assessmentMode: true,
         assessmentStep: index + 1,
         assessmentAttemptId: this.assessmentAttemptId(),
-        returnUrl: '/student/assessment'
+        assessmentPhase: this.assessmentPhase(),
+        returnUrl: `/student/assessment?phase=${this.assessmentPhase()}`
       }
     });
   }
@@ -207,5 +212,30 @@ export class AssessmentComponent implements OnInit, OnDestroy {
       case 'Focus': return 'Odaklanma';
       default: return typeName;
     }
+  }
+
+  getPhaseLabel(): string {
+    switch (this.assessmentPhase()) {
+      case 1: return 'Seviye Tespit';
+      case 2: return 'Eğitim Sonrası Değerlendirme';
+      case 3: return 'Kalıcılık Değerlendirmesi';
+      case 4: return 'Transfer Değerlendirmesi';
+      default: return 'Değerlendirme';
+    }
+  }
+
+  private getRequestedPhase(): number {
+    const phase = Number(this.route.snapshot.queryParamMap.get('phase'));
+    return Number.isInteger(phase) && phase >= 1 && phase <= 4 ? phase : 1;
+  }
+
+  private formVersionForPhase(): string {
+    const phaseNames: Record<number, string> = {
+      1: 'baseline',
+      2: 'posttraining',
+      3: 'retention',
+      4: 'transfer'
+    };
+    return `tr-${phaseNames[this.assessmentPhase()] ?? 'baseline'}-v1`;
   }
 }

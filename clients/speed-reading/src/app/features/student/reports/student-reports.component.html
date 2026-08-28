@@ -5,6 +5,45 @@
     <p class="rp-header__sub">Performansını ve ilerlemenizi analiz et</p>
   </div>
 
+  @if (phasePlan(); as plan) {
+  <section class="rp-phase-card" aria-labelledby="assessment-phase-plan-title">
+    <div class="rp-phase-card__header">
+      <div>
+        <h2 id="assessment-phase-plan-title">Değerlendirme planı</h2>
+        <p>Her faz, bir önceki ölçüm tamamlandığında açılır.</p>
+      </div>
+      @if (plan.nextPhase) {
+      <span class="rp-phase-card__next">Sıradaki: {{ phaseLabel(plan.nextPhase) }}</span>
+      }
+    </div>
+
+    <div class="rp-phase-card__grid">
+      @for (phase of plan.phases; track phase.phase) {
+      <article [class]="'rp-phase-item ' + phaseStatusClass(phase.status)">
+        <div class="rp-phase-item__topline">
+          <h3>{{ phaseLabel(phase.phase) }}</h3>
+          <span class="rp-phase-item__status">{{ phaseStatusLabel(phase.status) }}</span>
+        </div>
+        @if (phase.status === 1 && phase.prerequisitePhase) {
+        <p>{{ phaseLabel(phase.prerequisitePhase) }} tamamlanınca açılır.</p>
+        } @else if (phase.status === 2) {
+        <p>Bu ölçüm için hazırsınız.</p>
+        } @else if (phase.status === 3) {
+        <p>Yarım kalan ölçümünüz devam ediyor.</p>
+        } @else if (phase.completedAt) {
+        <p>{{ phase.completedAt | date:'dd.MM.yyyy' }} tarihinde tamamlandı.</p>
+        }
+        @if (phase.phase === plan.nextPhase && (phase.status === 2 || phase.status === 3)) {
+        <button type="button" class="rp-phase-item__action" (click)="startAssessment(phase)">
+          {{ phase.status === 3 ? 'Devam et' : 'Değerlendirmeye başla' }}
+        </button>
+        }
+      </article>
+      }
+    </div>
+  </section>
+  }
+
   @if (assessmentComparison(); as comparison) {
   <section class="rp-assessment-card" aria-labelledby="assessment-comparison-title">
     <div class="rp-assessment-card__header">

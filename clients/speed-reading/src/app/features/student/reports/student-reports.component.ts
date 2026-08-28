@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ReportsService } from '../../../core/services/reports.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -11,6 +11,8 @@ import { StudentDashboardReportComponent } from './student-dashboard-report.comp
 import {
   AssessmentComparisonDto,
   AssessmentComparisonPointDto,
+  AssessmentPhasePlanDto,
+  AssessmentPhasePlanItemDto,
   AssessmentService
 } from '../../../services/assessment.service';
 
@@ -25,6 +27,7 @@ export class StudentReportsComponent extends BaseComponent implements OnInit {
   private reportsService = inject(ReportsService);
   private authService = inject(AuthService);
   private assessmentService = inject(AssessmentService);
+  private router = inject(Router);
 
   dateRangeControl = new FormControl('last7days');
   startDateControl = new FormControl(subDays(new Date(), 7));
@@ -32,11 +35,13 @@ export class StudentReportsComponent extends BaseComponent implements OnInit {
 
   isExporting = signal(false);
   assessmentComparison = signal<AssessmentComparisonDto | null>(null);
+  phasePlan = signal<AssessmentPhasePlanDto | null>(null);
   currentStudentId = this.authService.currentUserValue?.id || '';
 
   ngOnInit(): void {
     this.onDateRangeChange();
     this.loadAssessmentComparison();
+    this.loadPhasePlan();
   }
 
   private loadAssessmentComparison(): void {
@@ -45,6 +50,15 @@ export class StudentReportsComponent extends BaseComponent implements OnInit {
       .subscribe({
         next: comparison => this.assessmentComparison.set(comparison),
         error: () => this.assessmentComparison.set(null)
+      });
+  }
+
+  private loadPhasePlan(): void {
+    this.assessmentService.getPhasePlan()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: plan => this.phasePlan.set(plan),
+        error: () => this.phasePlan.set(null)
       });
   }
 
@@ -71,6 +85,36 @@ export class StudentReportsComponent extends BaseComponent implements OnInit {
   deltaClass(value: number | null | undefined): string {
     if (value === null || value === undefined || value === 0) return 'neutral';
     return value > 0 ? 'positive' : 'negative';
+  }
+
+  phaseStatusLabel(status: number): string {
+    switch (status) {
+      case 1: return 'Kilitli';
+      case 2: return 'Hazır';
+      case 3: return 'Devam ediyor';
+      case 4: return 'Tamamlandı';
+      default: return 'Beklemede';
+    }
+  }
+
+  phaseStatusClass(status: number): string {
+    switch (status) {
+      case 2: return 'available';
+      case 3: return 'in-progress';
+      case 4: return 'completed';
+      default: return 'locked';
+    }
+  }
+
+  startAssessment(phase: AssessmentPhasePlanItemDto): void {
+    if (phase.phase !== this.phasePlan()?.nextPhase
+      || (phase.status !== 2 && phase.status !== 3)) {
+      return;
+    }
+
+    this.router.navigate(['/student/assessment'], {
+      queryParams: { phase: phase.phase }
+    });
   }
 
   trackAttempt(_: number, attempt: AssessmentComparisonPointDto): string {
