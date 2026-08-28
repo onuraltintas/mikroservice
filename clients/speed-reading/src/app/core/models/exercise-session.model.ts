@@ -13,6 +13,7 @@ export interface StartSessionRequest {
   exerciseId: string;
   readingTextId?: string;
   studentAssignmentId?: string;
+  assessmentAttemptId?: string;
   customData?: any;  // Allow exercises to pass custom configuration
 }
 

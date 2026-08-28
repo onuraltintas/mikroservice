@@ -246,6 +246,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   sessionResult: SessionResult | null = null;
   showExitConfirm = false;
   isAssessmentMode = false;
+  assessmentAttemptId: string | null = null;
 
   // Tachistoscope specific
   tachistoscopeAnswer = '';
@@ -338,14 +339,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }, 100);
 
-    // Check assignment ID from query params
+    const state = history.state;
+
+    // Check assignment and assessment context from query params so the flow survives refreshes.
     this.route.queryParams.subscribe(params => {
       this.assignmentId = params['assignmentId'];
+      this.isAssessmentMode = state?.assessmentMode === true || params['assessmentMode'] === 'true';
+      this.assessmentAttemptId = state?.assessmentAttemptId || params['assessmentAttemptId'] || null;
     });
-
-    // Check assessment mode from state
-    const state = history.state;
-    this.isAssessmentMode = state?.assessmentMode === true;
 
     const exerciseId = this.route.snapshot.paramMap.get('exerciseId');
     if (exerciseId) {
@@ -534,7 +535,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const request: StartSessionRequest = {
       exerciseId: this.exercise.id,
       readingTextId: this.parsedConfig?.['metadata']?.targetReadingTextId || this.parsedConfig?.['readingTextId'],
-      studentAssignmentId: this.assignmentId || undefined
+      studentAssignmentId: this.assignmentId || undefined,
+      assessmentAttemptId: this.isAssessmentMode ? this.assessmentAttemptId || undefined : undefined
     };
 
     this.sessionService.startSession(request)
@@ -2432,7 +2434,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     // 2. Günlük egzersiz ilerlemesini kaydet (pratik modu değilse)
     const state = history.state;
     const isPracticeMode = state?.practiceMode === true;
-    const isAssessmentMode = state?.assessmentMode === true;
+    const isAssessmentMode = this.isAssessmentMode;
 
     // 1. Session kaydet (gamification için) - Assessment modunda XP kazanımı backend tarafında engellenir
     this.sessionService.completeSession(this.sessionId, toCompleteSessionRequest(

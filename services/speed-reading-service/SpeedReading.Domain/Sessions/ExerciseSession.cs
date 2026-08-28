@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Kernel.Exceptions;
 using EduPlatform.Shared.Kernel.Primitives;
+using SpeedReading.Domain.Assessment;
 
 namespace SpeedReading.Domain.Sessions;
 
@@ -19,6 +20,7 @@ public sealed class ExerciseSession : AggregateRoot
     public Guid ExerciseId { get; private set; }
     public Guid? ReadingTextId { get; private set; }
     public Guid? StudentAssignmentId { get; private set; }
+    public Guid? AssessmentAttemptId { get; private set; }
     public ExerciseSessionStatus Status { get; private set; }
     public DateTime StartTime { get; private set; }
     public DateTime? EndTime { get; private set; }
@@ -41,7 +43,8 @@ public sealed class ExerciseSession : AggregateRoot
         int totalSteps,
         DateTime startedAt,
         int? timeLimitSeconds,
-        Guid? studentAssignmentId = null)
+        Guid? studentAssignmentId = null,
+        Guid? assessmentAttemptId = null)
     {
         if (studentId == Guid.Empty)
             throw new ArgumentException("Student is required.", nameof(studentId));
@@ -58,6 +61,7 @@ public sealed class ExerciseSession : AggregateRoot
             ExerciseId = exerciseId,
             ReadingTextId = readingTextId,
             StudentAssignmentId = studentAssignmentId,
+            AssessmentAttemptId = assessmentAttemptId,
             Status = ExerciseSessionStatus.Active,
             StartTime = EnsureUtc(startedAt),
             TotalSteps = totalSteps,
@@ -89,7 +93,8 @@ public sealed class ExerciseSession : AggregateRoot
         DateTime createdAt,
         string? createdBy,
         DateTime? updatedAt,
-        string? updatedBy)
+        string? updatedBy,
+        Guid? assessmentAttemptId = null)
     {
         if (id == Guid.Empty || studentId == Guid.Empty || exerciseId == Guid.Empty)
             throw new ArgumentException("Session identifiers are required.");
@@ -109,6 +114,7 @@ public sealed class ExerciseSession : AggregateRoot
             ExerciseId = exerciseId,
             ReadingTextId = readingTextId,
             StudentAssignmentId = studentAssignmentId,
+            AssessmentAttemptId = assessmentAttemptId,
             Status = status,
             StartTime = EnsureUtc(startTime),
             EndTime = endTime.HasValue ? EnsureUtc(endTime.Value) : null,

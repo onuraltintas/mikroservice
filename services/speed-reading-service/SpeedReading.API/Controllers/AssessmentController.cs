@@ -10,6 +10,18 @@ namespace SpeedReading.API.Controllers;
 [Authorize(Roles = "Student,Admin,SystemAdmin")]
 public sealed class AssessmentController(ISpeedReadingAssessment assessment) : ControllerBase
 {
+    [HttpPost("attempts")]
+    public async Task<IActionResult> StartAttempt(
+        [FromBody] StartAssessmentAttemptRequest? request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        return Ok(await assessment.StartAttemptAsync(
+            userId,
+            request ?? new StartAssessmentAttemptRequest(),
+            cancellationToken));
+    }
+
     [HttpGet("exercises")]
     public async Task<IActionResult> GetExercises(CancellationToken cancellationToken = default)
     {

@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.ExerciseSessions;
+using SpeedReading.Domain.Assessment;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.Sessions;
 using OwnedExerciseSessionStatus = SpeedReading.Domain.Sessions.ExerciseSessionStatus;
@@ -35,6 +36,19 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
     {
         if (studentId == Guid.Empty || request.ExerciseId == Guid.Empty)
             throw new ArgumentException("A valid student and exercise are required.");
+        if (request.AssessmentAttemptId.HasValue)
+        {
+            var attemptIsActive = await db.AssessmentAttempts
+                .AsNoTracking()
+                .AnyAsync(item => item.Id == request.AssessmentAttemptId.Value
+                    && item.StudentId == studentId
+                    && item.Status == AssessmentAttemptStatus.InProgress,
+                    cancellationToken);
+            if (!attemptIsActive)
+            {
+                throw new KeyNotFoundException("Assessment attempt not found or is not active.");
+            }
+        }
         if (request.StudentAssignmentId.HasValue)
         {
             var assignmentMatches = await (
@@ -112,7 +126,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             readingTextId,
             state.TotalSteps,
             now,
-            state.TimeLimitSeconds);
+            state.TimeLimitSeconds,
+            assessmentAttemptId: request.AssessmentAttemptId);
         session.SetState(
             JsonSerializer.Serialize(state, JsonOptions),
             SerializeOptional(request.CustomData));
@@ -178,6 +193,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         CancellationToken cancellationToken = default)
     {
         var session = await GetOwnedSessionAsync(studentId, sessionId, cancellationToken);
+        if (session.AssessmentAttemptId.HasValue && !request.IsAssessmentMode)
+            throw new InvalidOperationException("An assessment attempt session must be completed in assessment mode.");
         var now = DateTime.UtcNow;
         if (session.IsTimedOut(now))
         {
@@ -260,7 +277,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             JsonSerializer.Serialize(answers, JsonOptions),
             "[]",
             request.IsAssessmentMode,
-            measurementStatus == SpeedReadingMeasurementStatus.Measured);
+            measurementStatus == SpeedReadingMeasurementStatus.Measured,
+            assessmentAttemptId: session.AssessmentAttemptId);
         db.ExerciseSessionResults.Add(result);
         if (session.StudentAssignmentId.HasValue)
         {

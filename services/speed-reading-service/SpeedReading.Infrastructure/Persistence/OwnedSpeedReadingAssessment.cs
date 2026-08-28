@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.Assessment;
+using SpeedReading.Domain.Assessment;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Profiles;
 
@@ -8,6 +9,49 @@ namespace SpeedReading.Infrastructure.Persistence;
 
 internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db) : ISpeedReadingAssessment
 {
+    public async Task<AssessmentAttemptSummary> StartAttemptAsync(
+        Guid userId,
+        StartAssessmentAttemptRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty)
+            throw new ArgumentException("A valid user is required.", nameof(userId));
+        ArgumentNullException.ThrowIfNull(request);
+
+        var formVersion = request.FormVersion?.Trim() ?? string.Empty;
+        var existing = await db.AssessmentAttempts
+            .SingleOrDefaultAsync(item => item.StudentId == userId
+                && item.Phase == request.Phase
+                && item.Status == AssessmentAttemptStatus.InProgress
+                && item.FormVersion == formVersion,
+                cancellationToken);
+        if (existing is not null)
+            return await MapAttemptSummaryAsync(existing, cancellationToken);
+
+        var attempt = AssessmentAttempt.Start(
+            Guid.NewGuid(),
+            userId,
+            request.Phase,
+            formVersion,
+            request.Language,
+            request.AgeGroupConfigurationId,
+            request.ExpectedExerciseCount,
+            DateTime.UtcNow,
+            userId.ToString());
+        db.AssessmentAttempts.Add(attempt);
+        await db.SaveChangesAsync(cancellationToken);
+        return new AssessmentAttemptSummary(
+            attempt.Id,
+            attempt.Phase,
+            attempt.Status,
+            attempt.FormVersion,
+            attempt.Language,
+            attempt.ExpectedExerciseCount,
+            0,
+            attempt.StartedAt,
+            attempt.CompletedAt);
+    }
+
     public async Task<AssessmentExercisesSummary> GetExercisesAsync(
         Guid userId,
         CancellationToken cancellationToken)
@@ -31,12 +75,26 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             .Take(3)
             .ToListAsync(cancellationToken);
 
-        var completedIds = await db.ExerciseSessionResults
+        var activeAttemptId = await db.AssessmentAttempts
             .AsNoTracking()
-            .Where(item => item.StudentId == userId && item.IsAssessmentMode && item.IsMeasured)
-            .Select(item => item.ExerciseId)
-            .Distinct()
-            .ToListAsync(cancellationToken);
+            .Where(item => item.StudentId == userId && item.Status == AssessmentAttemptStatus.InProgress)
+            .OrderByDescending(item => item.StartedAt)
+            .Select(item => (Guid?)item.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+        var completedResults = db.ExerciseSessionResults
+            .AsNoTracking()
+            .Where(item => item.StudentId == userId && item.IsAssessmentMode && item.IsMeasured);
+        var completedIds = activeAttemptId.HasValue
+            ? await completedResults
+                .Where(item => item.AssessmentAttemptId == activeAttemptId.Value)
+                .Select(item => item.ExerciseId)
+                .Distinct()
+                .ToListAsync(cancellationToken)
+            : await completedResults
+                .Where(item => item.AssessmentAttemptId == null)
+                .Select(item => item.ExerciseId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
 
         var items = exercises.Select(item => new AssessmentExerciseItem(
             item.Id,
@@ -77,13 +135,32 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
         AssessmentCalculationRequest? request,
         CancellationToken cancellationToken)
     {
-        var results = await db.ExerciseSessionResults
+        AssessmentAttempt? attempt = null;
+        if (request?.AttemptId is { } requestedAttemptId)
+        {
+            attempt = await db.AssessmentAttempts
+                .SingleOrDefaultAsync(item => item.Id == requestedAttemptId && item.StudentId == userId, cancellationToken)
+                ?? throw new KeyNotFoundException("Assessment attempt not found.");
+            if (attempt.Status == AssessmentAttemptStatus.Abandoned)
+                throw new InvalidOperationException("An abandoned assessment attempt cannot be calculated.");
+        }
+
+        var attemptId = attempt?.Id;
+        var resultsQuery = db.ExerciseSessionResults
             .AsNoTracking()
-            .Where(item => item.StudentId == userId && item.IsAssessmentMode && item.IsMeasured)
+            .Where(item => item.StudentId == userId
+                && item.IsAssessmentMode
+                && item.IsMeasured
+                && (attemptId.HasValue
+                    ? item.AssessmentAttemptId == attemptId.Value
+                    : item.AssessmentAttemptId == null))
             .OrderByDescending(item => item.CreatedAt)
-            .Take(3)
-            .ToListAsync(cancellationToken);
+            .Take(attempt?.ExpectedExerciseCount ?? 3);
+        var results = await resultsQuery.ToListAsync(cancellationToken);
         if (results.Count == 0)
+            return null;
+        if (attempt is not null
+            && results.Select(item => item.ExerciseId).Distinct().Count() < attempt.ExpectedExerciseCount)
             return null;
 
         var averageWpm = results
@@ -152,6 +229,10 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
                 .FirstOrDefaultAsync(cancellationToken);
 
         await db.SaveChangesAsync(cancellationToken);
+
+        attempt?.Complete(DateTime.UtcNow);
+        if (attempt is not null)
+            await db.SaveChangesAsync(cancellationToken);
 
         return new AssessmentResultSummary(
             level,
@@ -326,6 +407,28 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             userId.ToString());
         db.UserProfiles.Add(profile);
         return profile;
+    }
+
+    private async Task<AssessmentAttemptSummary> MapAttemptSummaryAsync(
+        AssessmentAttempt attempt,
+        CancellationToken cancellationToken)
+    {
+        var completedExerciseCount = await db.ExerciseSessionResults
+            .AsNoTracking()
+            .Where(item => item.AssessmentAttemptId == attempt.Id && item.IsMeasured)
+            .Select(item => item.ExerciseId)
+            .Distinct()
+            .CountAsync(cancellationToken);
+        return new AssessmentAttemptSummary(
+            attempt.Id,
+            attempt.Phase,
+            attempt.Status,
+            attempt.FormVersion,
+            attempt.Language,
+            attempt.ExpectedExerciseCount,
+            completedExerciseCount,
+            attempt.StartedAt,
+            attempt.CompletedAt);
     }
 
     private async Task EnsureTemplateReferencesAsync(

@@ -10,6 +10,7 @@ public sealed class ExerciseSessionResult : Entity
 
     public Guid? SessionId { get; private set; }
     public Guid? LegacySessionId { get; private set; }
+    public Guid? AssessmentAttemptId { get; private set; }
     public Guid StudentId { get; private set; }
     public Guid ExerciseId { get; private set; }
     public Guid? ReadingTextId { get; private set; }
@@ -41,7 +42,8 @@ public sealed class ExerciseSessionResult : Entity
         string questionAnswersJson = "[]",
         string readingMovementsJson = "[]",
         bool isAssessmentMode = false,
-        bool isMeasured = true)
+        bool isMeasured = true,
+        Guid? assessmentAttemptId = null)
     {
         if (id == Guid.Empty || sessionId == Guid.Empty || studentId == Guid.Empty || exerciseId == Guid.Empty)
             throw new ArgumentException("Result identifiers are required.");
@@ -53,6 +55,7 @@ public sealed class ExerciseSessionResult : Entity
             Id = id,
             SessionId = sessionId,
             LegacySessionId = null,
+            AssessmentAttemptId = assessmentAttemptId,
             StudentId = studentId,
             ExerciseId = exerciseId,
             ReadingTextId = readingTextId,
@@ -91,13 +94,15 @@ public sealed class ExerciseSessionResult : Entity
         DateTime? updatedAt,
         string? updatedBy,
         bool isAssessmentMode = false,
-        bool isMeasured = true)
+        bool isMeasured = true,
+        Guid? assessmentAttemptId = null)
     {
         var result = new ExerciseSessionResult
         {
             Id = id,
             SessionId = sessionId,
             LegacySessionId = legacySessionId,
+            AssessmentAttemptId = assessmentAttemptId,
             StudentId = studentId,
             ExerciseId = exerciseId,
             ReadingTextId = readingTextId,

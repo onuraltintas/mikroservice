@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   AssessmentExercisesDto,
@@ -18,6 +18,27 @@ interface CalculateLevelRequest {
     exerciseId: string;
     score: number;
   }[];
+  attemptId?: string;
+}
+
+export interface StartAssessmentAttemptRequest {
+  phase?: number;
+  formVersion?: string;
+  language?: string;
+  ageGroupConfigurationId?: string;
+  expectedExerciseCount?: number;
+}
+
+export interface AssessmentAttemptSummaryDto {
+  id: string;
+  phase: number;
+  status: number;
+  formVersion: string;
+  language: string;
+  expectedExerciseCount: number;
+  completedExerciseCount: number;
+  startedAt: string;
+  completedAt?: string | null;
 }
 
 @Injectable({
@@ -57,6 +78,18 @@ export class AssessmentService {
     return this.refreshTrigger.asReadonly();
   }
 
+  startAttempt(
+    request: StartAssessmentAttemptRequest = {}
+  ): Observable<AssessmentAttemptSummaryDto> {
+    return this.http.post<ApiResponse<AssessmentAttemptSummaryDto> | AssessmentAttemptSummaryDto>(
+      `${this.apiUrl}/attempts`,
+      request
+    ).pipe(
+      map((response: ApiResponse<AssessmentAttemptSummaryDto> | AssessmentAttemptSummaryDto) =>
+        'data' in response ? response.data : response)
+    );
+  }
+
   /**
    * Gets the 3 exercises for initial assessment
    */
@@ -87,11 +120,17 @@ export class AssessmentService {
   /**
    * Calculates the student's level based on exercise results
    */
-  calculateLevel(exerciseResults: { exerciseId: string; score: number }[]): Observable<ApiResponse<AssessmentResultDto>> {
+  calculateLevel(
+    exerciseResults: { exerciseId: string; score: number }[],
+    attemptId?: string
+  ): Observable<ApiResponse<AssessmentResultDto>> {
     this.loading.set(true);
     this.error.set(null);
 
-    const request: CalculateLevelRequest = { exerciseResults };
+    const request: CalculateLevelRequest = {
+      exerciseResults,
+      ...(attemptId ? { attemptId } : {})
+    };
 
     return this.http.post<ApiResponse<AssessmentResultDto>>(`${this.apiUrl}/calculate`, request).pipe(
       tap({

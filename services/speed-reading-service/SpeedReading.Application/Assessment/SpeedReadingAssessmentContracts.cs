@@ -1,4 +1,26 @@
+using SpeedReading.Domain.Assessment;
+
 namespace SpeedReading.Application.Assessment;
+
+public sealed class StartAssessmentAttemptRequest
+{
+    public AssessmentAttemptPhase Phase { get; init; } = AssessmentAttemptPhase.Baseline;
+    public string FormVersion { get; init; } = "tr-baseline-v1";
+    public string Language { get; init; } = "tr-TR";
+    public Guid? AgeGroupConfigurationId { get; init; }
+    public int ExpectedExerciseCount { get; init; } = 3;
+}
+
+public sealed record AssessmentAttemptSummary(
+    Guid Id,
+    AssessmentAttemptPhase Phase,
+    AssessmentAttemptStatus Status,
+    string FormVersion,
+    string Language,
+    int ExpectedExerciseCount,
+    int CompletedExerciseCount,
+    DateTime StartedAt,
+    DateTime? CompletedAt);
 
 public sealed record AssessmentExerciseItem(
     Guid Id,
@@ -43,7 +65,9 @@ public sealed record AssessmentResultSummary(
 
 public sealed record AssessmentExerciseScore(Guid ExerciseId, decimal Score);
 
-public sealed record AssessmentCalculationRequest(IReadOnlyList<AssessmentExerciseScore>? ExerciseResults);
+public sealed record AssessmentCalculationRequest(
+    IReadOnlyList<AssessmentExerciseScore>? ExerciseResults,
+    Guid? AttemptId = null);
 
 public sealed record AssessmentSkipResult(
     int Level,
@@ -87,6 +111,11 @@ public sealed record AssessmentTemplateExerciseInput(
 
 public interface ISpeedReadingAssessment
 {
+    Task<AssessmentAttemptSummary> StartAttemptAsync(
+        Guid userId,
+        StartAssessmentAttemptRequest request,
+        CancellationToken cancellationToken) =>
+        throw new NotSupportedException("Versioned assessment attempts require owned Speed Reading data.");
     Task<AssessmentExercisesSummary> GetExercisesAsync(Guid userId, CancellationToken cancellationToken);
     Task<AssessmentStatusSummary> GetStatusAsync(Guid userId, CancellationToken cancellationToken);
     Task<AssessmentResultSummary?> CalculateAsync(Guid userId, AssessmentCalculationRequest? request, CancellationToken cancellationToken);

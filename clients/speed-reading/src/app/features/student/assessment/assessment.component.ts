@@ -4,6 +4,7 @@ import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AssessmentService } from '../../../services/assessment.service';
 import { ToasterService } from '../../../core/services/toaster.service';
+import { switchMap } from 'rxjs';
 
 interface AssessmentExercise {
   id: string;
@@ -39,6 +40,7 @@ export class AssessmentComponent implements OnInit, OnDestroy {
   currentStep = signal(0);
   showResult = signal(false);
   result = signal<any>(null);
+  assessmentAttemptId = signal<string | null>(null);
 
   // Comprehension Exercise State
 
@@ -72,7 +74,17 @@ export class AssessmentComponent implements OnInit, OnDestroy {
   loadAssessmentExercises(): void {
     this.loading.set(true);
 
-    this.assessmentService.getAssessmentExercises().subscribe({
+    this.assessmentService.startAttempt({
+      phase: 1,
+      formVersion: 'tr-baseline-v1',
+      language: 'tr-TR',
+      expectedExerciseCount: 3
+    }).pipe(
+      switchMap(attempt => {
+        this.assessmentAttemptId.set(attempt.id);
+        return this.assessmentService.getAssessmentExercises();
+      })
+    ).subscribe({
       next: (data: any) => {
         if (data) {
           // Store exercise IDs
@@ -119,11 +131,13 @@ export class AssessmentComponent implements OnInit, OnDestroy {
       queryParams: {
         assessmentMode: 'true',
         assessmentStep: index + 1,
+        assessmentAttemptId: this.assessmentAttemptId(),
         returnUrl: '/student/assessment'
       },
       state: {
         assessmentMode: true,
         assessmentStep: index + 1,
+        assessmentAttemptId: this.assessmentAttemptId(),
         returnUrl: '/student/assessment'
       }
     });
@@ -145,7 +159,7 @@ export class AssessmentComponent implements OnInit, OnDestroy {
   calculateLevel(): void {
     this.calculating.set(true);
 
-    this.assessmentService.calculateLevel([]).subscribe({
+    this.assessmentService.calculateLevel([], this.assessmentAttemptId() ?? undefined).subscribe({
       next: (data: any) => {
         if (data) {
           this.result.set(data);

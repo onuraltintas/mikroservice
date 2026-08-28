@@ -1019,6 +1019,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.ExerciseId).HasColumnName("exercise_id");
             entity.Property(item => item.ReadingTextId).HasColumnName("reading_text_id");
             entity.Property(item => item.StudentAssignmentId).HasColumnName("student_assignment_id");
+            entity.Property(item => item.AssessmentAttemptId).HasColumnName("assessment_attempt_id");
             entity.Property(item => item.Status).HasConversion<int>().IsRequired();
             entity.Property(item => item.Status).HasColumnName("status");
             entity.Property(item => item.StartTime).HasColumnName("start_time");
@@ -1046,6 +1047,10 @@ public sealed class OwnedSpeedReadingDbContext(
                 .WithMany()
                 .HasForeignKey(item => item.ReadingTextId)
                 .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<AssessmentAttempt>()
+                .WithMany()
+                .HasForeignKey(item => item.AssessmentAttemptId)
+                .OnDelete(DeleteBehavior.Restrict);
             entity.HasMany(item => item.Answers)
                 .WithOne()
                 .HasForeignKey(item => item.SessionId)
@@ -1070,6 +1075,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.ToTable("exercise_session_results");
             entity.Property(item => item.SessionId).HasColumnName("session_id");
             entity.Property(item => item.LegacySessionId).HasColumnName("legacy_session_id");
+            entity.Property(item => item.AssessmentAttemptId).HasColumnName("assessment_attempt_id");
             entity.Property(item => item.StudentId).HasColumnName("student_id");
             entity.Property(item => item.ExerciseId).HasColumnName("exercise_id");
             entity.Property(item => item.ReadingTextId).HasColumnName("reading_text_id");
@@ -1100,6 +1106,10 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.HasOne<ReadingText>()
                 .WithMany()
                 .HasForeignKey(item => item.ReadingTextId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<AssessmentAttempt>()
+                .WithMany()
+                .HasForeignKey(item => item.AssessmentAttemptId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 

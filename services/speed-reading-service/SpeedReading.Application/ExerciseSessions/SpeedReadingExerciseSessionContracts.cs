@@ -23,6 +23,7 @@ public sealed class StartExerciseSessionRequest
     public Guid ExerciseId { get; init; }
     public Guid? ReadingTextId { get; init; }
     public Guid? StudentAssignmentId { get; init; }
+    public Guid? AssessmentAttemptId { get; init; }
     public Dictionary<string, JsonElement>? CustomData { get; init; }
 }
 

@@ -113,8 +113,14 @@ public sealed class SpeedReadingAssessmentAttemptTests
         using var context = new OwnedSpeedReadingDbContext(options);
 
         context.Model.FindEntityType(typeof(AssessmentAttempt)).Should().NotBeNull();
+        context.Model.FindEntityType(typeof(ExerciseSession))!
+            .FindProperty(nameof(ExerciseSession.AssessmentAttemptId)).Should().NotBeNull();
+        context.Model.FindEntityType(typeof(ExerciseSessionResult))!
+            .FindProperty(nameof(ExerciseSessionResult.AssessmentAttemptId)).Should().NotBeNull();
         context.Database.GetMigrations()
-            .Should().Contain("20260828130000_AddAssessmentMeasurementFoundation");
+            .Should()
+            .Contain("20260828130000_AddAssessmentMeasurementFoundation")
+            .And.Contain("20260828140000_LinkAssessmentAttemptsToSessions");
     }
 
     [Fact]
@@ -129,7 +135,7 @@ public sealed class SpeedReadingAssessmentAttemptTests
             totalSteps: 3,
             DateTime.UtcNow,
             timeLimitSeconds: null,
-            assessmentAttemptId);
+            assessmentAttemptId: assessmentAttemptId);
 
         session.AssessmentAttemptId.Should().Be(assessmentAttemptId);
     }
