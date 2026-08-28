@@ -138,4 +138,38 @@ describe('AssessmentService', () => {
       ]
     });
   });
+
+  it('loads the phase plan for the next available assessment', () => {
+    service.getPhasePlan().subscribe(plan => {
+      expect(plan.nextPhase).toBe(2);
+      expect(plan.phases[0].status).toBe(4);
+      expect(plan.phases[1].status).toBe(2);
+    });
+
+    const request = http.expectOne('/api/speed-reading/assessment/phase-plan');
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      phases: [
+        {
+          phase: 1,
+          status: 4,
+          prerequisitePhase: null,
+          attemptId: 'baseline-1',
+          formVersion: 'tr-baseline-v1',
+          availableAt: null,
+          completedAt: '2026-08-20T19:05:00Z'
+        },
+        {
+          phase: 2,
+          status: 2,
+          prerequisitePhase: 1,
+          attemptId: null,
+          formVersion: 'tr-posttraining-v1',
+          availableAt: '2026-08-20T19:05:00Z',
+          completedAt: null
+        }
+      ],
+      nextPhase: 2
+    });
+  });
 });
