@@ -4,8 +4,8 @@ namespace SpeedReading.Domain.Assessment;
 
 /// <summary>
 /// Immutable form item selected for an assessment attempt. Pinning the item
-/// and its reading text prevents content edits or catalog reordering from
-/// changing an assessment after it has started.
+/// and its reading text prevents catalog reordering or a different text from
+/// changing the assessment selection after it has started.
 /// </summary>
 public sealed class AssessmentAttemptExercise : Entity
 {
