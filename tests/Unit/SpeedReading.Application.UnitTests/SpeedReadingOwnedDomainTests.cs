@@ -155,7 +155,13 @@ public sealed class SpeedReadingOwnedDomainTests
         context.Model.FindEntityType(typeof(ReadingText))!.GetTableName().Should().Be("reading_texts");
         context.Model.FindEntityType(typeof(ExerciseSession))!.GetTableName().Should().Be("exercise_sessions");
         context.Model.FindEntityType(typeof(ExerciseSessionResult))!.GetTableName().Should().Be("exercise_session_results");
-        context.Model.FindEntityType(typeof(ReadingSession))!.GetTableName().Should().Be("reading_sessions");
+        var readingSession = context.Model.FindEntityType(typeof(ReadingSession))!;
+        readingSession.GetTableName().Should().Be("reading_sessions");
+        var readingSessionTable = StoreObjectIdentifier.Table("reading_sessions", "speed_reading");
+        readingSession.FindProperty(nameof(ReadingSession.CalculatedWpm))!
+            .GetColumnName(readingSessionTable).Should().Be("calculated_wpm");
+        readingSession.FindProperty(nameof(ReadingSession.ReadingTextId))!
+            .GetColumnName(readingSessionTable).Should().Be("reading_text_id");
         context.Model.FindEntityType(typeof(Assignment))!.GetTableName().Should().Be("assignments");
         context.Model.FindEntityType(typeof(StudentAssignment))!.GetTableName().Should().Be("student_assignments");
         context.Model.FindEntityType(typeof(ProgramTemplate))!.GetTableName().Should().Be("program_templates");

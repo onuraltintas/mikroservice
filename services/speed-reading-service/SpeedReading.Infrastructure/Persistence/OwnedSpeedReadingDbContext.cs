@@ -101,6 +101,25 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<ExerciseSessionAnswer>());
         ConfigureEntity(modelBuilder.Entity<ExerciseSessionResult>());
         ConfigureEntity(modelBuilder.Entity<ReadingSession>());
+        modelBuilder.Entity<ReadingSession>(entity =>
+        {
+            entity.ToTable("reading_sessions");
+            entity.Property(item => item.UserId).HasColumnName("user_id");
+            entity.Property(item => item.ReadingTextId).HasColumnName("reading_text_id");
+            entity.Property(item => item.ReadingTimeSeconds).HasColumnName("reading_time_seconds");
+            entity.Property(item => item.CalculatedWpm).HasColumnName("calculated_wpm");
+            entity.Property(item => item.CorrectAnswers).HasColumnName("correct_answers");
+            entity.Property(item => item.TotalQuestions).HasColumnName("total_questions");
+            entity.Property(item => item.ComprehensionRate).HasColumnName("comprehension_rate");
+            entity.Property(item => item.EfficiencyScore).HasColumnName("efficiency_score");
+            entity.Property(item => item.CompletedAt).HasColumnName("completed_at");
+            entity.HasIndex(item => item.ReadingTextId);
+            entity.HasIndex(item => new { item.UserId, item.CompletedAt });
+            entity.HasOne<ReadingText>()
+                .WithMany()
+                .HasForeignKey(item => item.ReadingTextId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
         ConfigureEntity(modelBuilder.Entity<Assignment>());
         ConfigureEntity(modelBuilder.Entity<StudentAssignment>());
         ConfigureEntity(modelBuilder.Entity<AgeGroupConfiguration>());
