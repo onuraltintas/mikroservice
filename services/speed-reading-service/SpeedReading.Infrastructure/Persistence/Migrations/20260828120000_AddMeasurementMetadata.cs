@@ -34,9 +34,9 @@ public partial class AddMeasurementMetadata : Migration
                 AND jsonb_array_length(question_answers_json) > 0;
 
             UPDATE speed_reading.daily_exercise_logs
-            SET is_measured = total_attempts > 0
-                OR correct_count > 0
-                OR incorrect_count > 0;
+            SET is_measured = "TotalAttempts" > 0
+                OR "CorrectCount" > 0
+                OR "IncorrectCount" > 0;
             """);
     }
 
