@@ -36,18 +36,25 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
     {
         if (studentId == Guid.Empty || request.ExerciseId == Guid.Empty)
             throw new ArgumentException("A valid student and exercise are required.");
+        Guid? pinnedReadingTextId = null;
         if (request.AssessmentAttemptId.HasValue)
         {
-            var attemptIsActive = await db.AssessmentAttempts
-                .AsNoTracking()
-                .AnyAsync(item => item.Id == request.AssessmentAttemptId.Value
-                    && item.StudentId == studentId
-                    && item.Status == AssessmentAttemptStatus.InProgress,
-                    cancellationToken);
-            if (!attemptIsActive)
+            var pinnedItem = await (
+                from attempt in db.AssessmentAttempts.AsNoTracking()
+                join formItem in db.AssessmentAttemptExercises.AsNoTracking()
+                    on attempt.Id equals formItem.AssessmentAttemptId
+                where attempt.Id == request.AssessmentAttemptId.Value
+                    && attempt.StudentId == studentId
+                    && attempt.Status == AssessmentAttemptStatus.InProgress
+                    && formItem.ExerciseId == request.ExerciseId
+                select new { formItem.ReadingTextId })
+                .SingleOrDefaultAsync(cancellationToken);
+            if (pinnedItem is null)
             {
-                throw new KeyNotFoundException("Assessment attempt not found or is not active.");
+                throw new KeyNotFoundException("Assessment exercise is not part of the active form.");
             }
+
+            pinnedReadingTextId = pinnedItem.ReadingTextId;
         }
         if (request.StudentAssignmentId.HasValue)
         {
@@ -99,7 +106,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         if (hasActiveSession)
             throw new InvalidOperationException("An active session already exists for this exercise.");
 
-        var readingTextId = request.ReadingTextId;
+        var readingTextId = pinnedReadingTextId ?? request.ReadingTextId;
         if (!readingTextId.HasValue && ReadingExerciseTypes.Contains(exerciseType.Name))
         {
             readingTextId = await db.ReadingTexts

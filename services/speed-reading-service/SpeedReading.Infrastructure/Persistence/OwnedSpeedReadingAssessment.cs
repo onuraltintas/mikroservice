@@ -26,8 +26,12 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
                 && item.FormVersion == formVersion,
                 cancellationToken);
         if (existing is not null)
+        {
+            await EnsurePinnedFormItemsAsync(existing, cancellationToken);
             return await MapAttemptSummaryAsync(existing, cancellationToken);
+        }
 
+        var now = DateTime.UtcNow;
         var attempt = AssessmentAttempt.Start(
             Guid.NewGuid(),
             userId,
@@ -36,51 +40,71 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             request.Language,
             request.AgeGroupConfigurationId,
             request.ExpectedExerciseCount,
-            DateTime.UtcNow,
+            now,
             userId.ToString());
-        db.AssessmentAttempts.Add(attempt);
-        await db.SaveChangesAsync(cancellationToken);
-        return new AssessmentAttemptSummary(
+        var formItems = await BuildPinnedFormItemsAsync(
             attempt.Id,
-            attempt.Phase,
-            attempt.Status,
-            attempt.FormVersion,
-            attempt.Language,
             attempt.ExpectedExerciseCount,
-            0,
-            attempt.StartedAt,
-            attempt.CompletedAt);
+            now,
+            userId.ToString(),
+            cancellationToken);
+        db.AssessmentAttempts.Add(attempt);
+        db.AssessmentAttemptExercises.AddRange(formItems);
+        await db.SaveChangesAsync(cancellationToken);
+        return await MapAttemptSummaryAsync(attempt, cancellationToken);
     }
 
     public async Task<AssessmentExercisesSummary> GetExercisesAsync(
         Guid userId,
         CancellationToken cancellationToken)
     {
-        var exercises = await (
-            from exercise in db.Exercises.AsNoTracking()
-            join exerciseType in db.ExerciseTypes.AsNoTracking()
-                on exercise.ExerciseTypeId equals exerciseType.Id into exerciseTypes
-            from exerciseType in exerciseTypes.DefaultIfEmpty()
-            where exercise.IsActive
-            orderby exercise.DifficultyLevel, exercise.Title
-            select new
-            {
-                exercise.Id,
-                exercise.Title,
-                exercise.Description,
-                exercise.DifficultyLevel,
-                exercise.ConfigurationJson,
-                TypeName = exerciseType == null ? string.Empty : exerciseType.Name
-            })
-            .Take(3)
-            .ToListAsync(cancellationToken);
-
         var activeAttemptId = await db.AssessmentAttempts
             .AsNoTracking()
             .Where(item => item.StudentId == userId && item.Status == AssessmentAttemptStatus.InProgress)
             .OrderByDescending(item => item.StartedAt)
             .Select(item => (Guid?)item.Id)
             .FirstOrDefaultAsync(cancellationToken);
+        List<AssessmentExerciseRow> exercises;
+        if (activeAttemptId.HasValue)
+        {
+            exercises = await (
+                from formItem in db.AssessmentAttemptExercises.AsNoTracking()
+                join exercise in db.Exercises.AsNoTracking()
+                    on formItem.ExerciseId equals exercise.Id
+                join exerciseType in db.ExerciseTypes.AsNoTracking()
+                    on exercise.ExerciseTypeId equals exerciseType.Id into exerciseTypes
+                from exerciseType in exerciseTypes.DefaultIfEmpty()
+                where formItem.AssessmentAttemptId == activeAttemptId.Value
+                    && exercise.IsActive
+                orderby formItem.OrderIndex
+                select new AssessmentExerciseRow(
+                    exercise.Id,
+                    exercise.Title,
+                    exercise.Description,
+                    exercise.DifficultyLevel,
+                    exercise.ConfigurationJson,
+                    exerciseType == null ? string.Empty : exerciseType.Name))
+                .ToListAsync(cancellationToken);
+        }
+        else
+        {
+            exercises = await (
+                from exercise in db.Exercises.AsNoTracking()
+                join exerciseType in db.ExerciseTypes.AsNoTracking()
+                    on exercise.ExerciseTypeId equals exerciseType.Id into exerciseTypes
+                from exerciseType in exerciseTypes.DefaultIfEmpty()
+                where exercise.IsActive
+                orderby exercise.DifficultyLevel, exercise.Title
+                select new AssessmentExerciseRow(
+                    exercise.Id,
+                    exercise.Title,
+                    exercise.Description,
+                    exercise.DifficultyLevel,
+                    exercise.ConfigurationJson,
+                    exerciseType == null ? string.Empty : exerciseType.Name))
+                .Take(3)
+                .ToListAsync(cancellationToken);
+        }
         var completedResults = db.ExerciseSessionResults
             .AsNoTracking()
             .Where(item => item.StudentId == userId && item.IsAssessmentMode && item.IsMeasured);
@@ -163,12 +187,53 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             && results.Select(item => item.ExerciseId).Distinct().Count() < attempt.ExpectedExerciseCount)
             return null;
 
+        var requestedExerciseIds = request?.ExerciseResults?.Select(item => item.ExerciseId) ?? [];
+        var exerciseIds = results
+            .Select(item => item.ExerciseId)
+            .Concat(requestedExerciseIds)
+            .Distinct()
+            .ToArray();
+        var typeNames = await (
+            from exercise in db.Exercises.AsNoTracking()
+            join exerciseType in db.ExerciseTypes.AsNoTracking()
+                on exercise.ExerciseTypeId equals exerciseType.Id into exerciseTypes
+            from exerciseType in exerciseTypes.DefaultIfEmpty()
+            where exerciseIds.Contains(exercise.Id)
+            select new { exercise.Id, TypeName = exerciseType == null ? string.Empty : exerciseType.Name })
+            .ToDictionaryAsync(item => item.Id, item => item.TypeName, cancellationToken);
+        var attemptRoles = attempt is null
+            ? new Dictionary<Guid, string>()
+            : await db.AssessmentAttemptExercises
+                .AsNoTracking()
+                .Where(item => item.AssessmentAttemptId == attempt.Id)
+                .ToDictionaryAsync(item => item.ExerciseId, item => item.Role, cancellationToken);
+        var resultRoles = results.Select(item =>
+        {
+            var typeName = typeNames.TryGetValue(item.ExerciseId, out var value) ? value : string.Empty;
+            var role = attemptRoles.TryGetValue(item.ExerciseId, out var pinnedRole)
+                ? pinnedRole
+                : ResolveAssessmentRole(typeName);
+            return (Item: item, Role: role);
+        }).ToList();
+        var comprehensionValues = resultRoles
+            .Where(item => item.Role == "comprehension")
+            .Select(item => Math.Clamp(item.Item.ComprehensionScore, 0, 100))
+            .ToArray();
         var averageWpm = results
             .Where(item => item.RawWpm > 0)
             .Select(item => item.RawWpm)
             .DefaultIfEmpty()
             .Average();
-        var averageComprehension = results.Average(item => item.ComprehensionScore);
+        var averageComprehension = comprehensionValues.Length > 0
+            ? comprehensionValues.Average()
+            : results
+                .Select(item => Math.Clamp(item.ComprehensionScore, 0, 100))
+                .DefaultIfEmpty()
+                .Average();
+        var averageScore = resultRoles
+            .Select(item => Math.Clamp(item.Item.Score, 0, 100))
+            .DefaultIfEmpty()
+            .Average();
         var level = averageWpm switch
         {
             < 100 => 1,
@@ -180,24 +245,26 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             < 500 => 7,
             _ => 8
         };
-        var comprehensionScore = averageComprehension;
-        var tachistoscopeScore = averageComprehension;
-        var visualExpansionScore = averageComprehension;
-        var fixationScore = averageComprehension;
-        var focusScore = averageComprehension;
+        var comprehensionScore = comprehensionValues.DefaultIfEmpty().Average();
+        var tachistoscopeScore = resultRoles
+            .Where(item => item.Role == "tachistoscope")
+            .Select(item => Math.Clamp(item.Item.Score, 0, 100))
+            .DefaultIfEmpty()
+            .Average();
+        var visualExpansionScore = resultRoles
+            .Where(item => item.Role == "visual")
+            .Select(item => Math.Clamp(item.Item.Score, 0, 100))
+            .DefaultIfEmpty()
+            .Average();
+        var fixationScore = resultRoles
+            .Where(item => item.Role == "focus")
+            .Select(item => Math.Clamp(item.Item.Score, 0, 100))
+            .DefaultIfEmpty()
+            .Average();
+        var focusScore = fixationScore;
 
         if (request?.ExerciseResults is { Count: > 0 })
         {
-            var exerciseIds = request.ExerciseResults.Select(item => item.ExerciseId).Distinct().ToArray();
-            var typeNames = await (
-                from exercise in db.Exercises.AsNoTracking()
-                join exerciseType in db.ExerciseTypes.AsNoTracking()
-                    on exercise.ExerciseTypeId equals exerciseType.Id into exerciseTypes
-                from exerciseType in exerciseTypes.DefaultIfEmpty()
-                where exerciseIds.Contains(exercise.Id)
-                select new { exercise.Id, TypeName = exerciseType == null ? string.Empty : exerciseType.Name })
-                .ToDictionaryAsync(item => item.Id, item => item.TypeName, cancellationToken);
-
             foreach (var item in request.ExerciseResults)
             {
                 if (!typeNames.TryGetValue(item.ExerciseId, out var typeName))
@@ -238,13 +305,13 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             level,
             LevelName(level),
             Math.Round(averageWpm, 1),
-            (int)averageComprehension,
+            (int)Math.Round(averageScore),
             Math.Round(averageComprehension, 1),
-            (int)comprehensionScore,
-            (int)tachistoscopeScore,
-            (int)visualExpansionScore,
-            (int)fixationScore,
-            (int)focusScore,
+            (int)Math.Round(comprehensionScore),
+            (int)Math.Round(tachistoscopeScore),
+            (int)Math.Round(visualExpansionScore),
+            (int)Math.Round(fixationScore),
+            (int)Math.Round(focusScore),
             profile.TargetWPM,
             profile.TargetComprehension,
             template?.Id,
@@ -258,6 +325,13 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
         CancellationToken cancellationToken)
     {
         var profile = await GetOrCreateProfileAsync(userId, cancellationToken);
+        var now = DateTime.UtcNow;
+        var activeBaselineAttempt = await db.AssessmentAttempts
+            .SingleOrDefaultAsync(item => item.StudentId == userId
+                && item.Phase == AssessmentAttemptPhase.Baseline
+                && item.Status == AssessmentAttemptStatus.InProgress,
+                cancellationToken);
+        activeBaselineAttempt?.Abandon(now);
         var targetWpm = 150;
         var targetComprehension = 70m;
         if (profile.AgeGroupConfigurationId.HasValue)
@@ -274,7 +348,7 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             }
         }
 
-        profile.SkipAssessment(targetWpm, targetComprehension, userId, DateTime.UtcNow);
+        profile.SkipAssessment(targetWpm, targetComprehension, userId, now);
         await db.SaveChangesAsync(cancellationToken);
         return new AssessmentSkipResult(
             1,
@@ -431,6 +505,137 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             attempt.CompletedAt);
     }
 
+    private async Task EnsurePinnedFormItemsAsync(
+        AssessmentAttempt attempt,
+        CancellationToken cancellationToken)
+    {
+        var existingCount = await db.AssessmentAttemptExercises
+            .AsNoTracking()
+            .CountAsync(item => item.AssessmentAttemptId == attempt.Id, cancellationToken);
+        if (existingCount == attempt.ExpectedExerciseCount)
+            return;
+        if (existingCount != 0)
+            throw new InvalidOperationException("Assessment form contains an incomplete pinned item set.");
+
+        var items = await BuildPinnedFormItemsAsync(
+            attempt.Id,
+            attempt.ExpectedExerciseCount,
+            attempt.StartedAt,
+            attempt.CreatedBy,
+            cancellationToken);
+        db.AssessmentAttemptExercises.AddRange(items);
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<AssessmentAttemptExercise>> BuildPinnedFormItemsAsync(
+        Guid attemptId,
+        int expectedExerciseCount,
+        DateTime createdAt,
+        string? createdBy,
+        CancellationToken cancellationToken)
+    {
+        var candidates = await (
+            from exercise in db.Exercises.AsNoTracking()
+            join exerciseType in db.ExerciseTypes.AsNoTracking()
+                on exercise.ExerciseTypeId equals exerciseType.Id
+            where exercise.IsActive
+                && !exercise.IsDeleted
+                && exerciseType.IsActive
+                && !exerciseType.IsDeleted
+            orderby exercise.DifficultyLevel, exercise.Title
+            select new AssessmentFormCandidate(
+                exercise.Id,
+                exerciseType.Name,
+                exerciseType.EngineType))
+            .ToListAsync(cancellationToken);
+
+        var selected = SelectFormCandidates(candidates, expectedExerciseCount);
+        var readingTexts = await (
+            from readingText in db.ReadingTexts.AsNoTracking()
+            where readingText.IsActive && !readingText.IsDeleted
+            select new AssessmentReadingTextCandidate(
+                readingText.Id,
+                readingText.ExerciseId,
+                db.ReadingQuestions.Any(question =>
+                    question.ReadingTextId == readingText.Id && !question.IsDeleted)))
+            .ToListAsync(cancellationToken);
+
+        var usedReadingTextIds = new HashSet<Guid>();
+        var result = new List<AssessmentAttemptExercise>(selected.Count);
+        foreach (var (candidate, role) in selected)
+        {
+            Guid? readingTextId = null;
+            if (role == "comprehension")
+            {
+                var text = readingTexts
+                    .Where(item => item.HasQuestions
+                        && !usedReadingTextIds.Contains(item.Id)
+                        && (item.ExerciseId == candidate.ExerciseId || item.ExerciseId is null))
+                    .OrderBy(item => item.ExerciseId == candidate.ExerciseId ? 0 : 1)
+                    .ThenBy(item => item.Id)
+                    .FirstOrDefault();
+                if (text is null)
+                    throw new InvalidOperationException(
+                        "Assessment form requires an active reading text with valid comprehension questions.");
+
+                readingTextId = text.Id;
+                usedReadingTextIds.Add(text.Id);
+            }
+
+            result.Add(AssessmentAttemptExercise.Pin(
+                Guid.NewGuid(),
+                attemptId,
+                candidate.ExerciseId,
+                readingTextId,
+                role,
+                result.Count + 1,
+                createdAt,
+                createdBy));
+        }
+
+        return result;
+    }
+
+    private static IReadOnlyList<(AssessmentFormCandidate Candidate, string Role)> SelectFormCandidates(
+        IReadOnlyList<AssessmentFormCandidate> candidates,
+        int expectedExerciseCount)
+    {
+        var requiredRoles = new (string Role, string[] Aliases)[]
+        {
+            ("comprehension", ["comprehension", "reading", "free"]),
+            ("visual", ["visual", "expansion", "vision"]),
+            ("focus", ["focus", "fixation", "attention", "schulte"])
+        };
+        var selected = new List<(AssessmentFormCandidate Candidate, string Role)>();
+        var selectedIds = new HashSet<Guid>();
+
+        foreach (var required in requiredRoles.Take(Math.Min(requiredRoles.Length, expectedExerciseCount)))
+        {
+            var candidate = candidates.FirstOrDefault(item =>
+                !selectedIds.Contains(item.ExerciseId)
+                && (IsType(item.TypeName, required.Aliases)
+                    || IsType(item.EngineType, required.Aliases)));
+            if (candidate is null)
+                throw new InvalidOperationException(
+                    $"Assessment form requires an active {required.Role} exercise.");
+
+            selected.Add((candidate, required.Role));
+            selectedIds.Add(candidate.ExerciseId);
+        }
+
+        foreach (var candidate in candidates.Where(item => !selectedIds.Contains(item.ExerciseId)))
+        {
+            if (selected.Count == expectedExerciseCount)
+                break;
+            selected.Add((candidate, "supplementary"));
+            selectedIds.Add(candidate.ExerciseId);
+        }
+
+        if (selected.Count != expectedExerciseCount)
+            throw new InvalidOperationException("Assessment form does not contain enough active exercises.");
+        return selected;
+    }
+
     private async Task EnsureTemplateReferencesAsync(
         Guid ageGroupId,
         IReadOnlyList<AssessmentTemplateExerciseInput> exercises,
@@ -575,6 +780,15 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
     private static bool IsType(string value, params string[] parts) =>
         parts.Any(part => value.Contains(part, StringComparison.OrdinalIgnoreCase));
 
+    private static string ResolveAssessmentRole(string typeName)
+    {
+        if (IsType(typeName, "comprehension", "reading", "free")) return "comprehension";
+        if (IsType(typeName, "visual", "expansion", "vision")) return "visual";
+        if (IsType(typeName, "focus", "fixation", "attention", "schulte")) return "focus";
+        if (IsType(typeName, "rsvp", "tachistoscope")) return "tachistoscope";
+        return "supplementary";
+    }
+
     private static string LevelName(int level) => level switch
     {
         1 => "Başlangıç",
@@ -624,4 +838,22 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
         string? CustomDescription,
         int? Difficulty,
         int? DisplayOrder);
+
+    private sealed record AssessmentFormCandidate(
+        Guid ExerciseId,
+        string TypeName,
+        string EngineType);
+
+    private sealed record AssessmentReadingTextCandidate(
+        Guid Id,
+        Guid? ExerciseId,
+        bool HasQuestions);
+
+    private sealed record AssessmentExerciseRow(
+        Guid Id,
+        string Title,
+        string Description,
+        int DifficultyLevel,
+        string ConfigurationJson,
+        string TypeName);
 }

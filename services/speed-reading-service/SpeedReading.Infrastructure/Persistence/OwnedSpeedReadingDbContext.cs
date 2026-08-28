@@ -59,6 +59,7 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<UserVocabularyProgress> UserVocabularyProgresses => Set<UserVocabularyProgress>();
     public DbSet<ReviewItem> ReviewItems => Set<ReviewItem>();
     public DbSet<AssessmentAttempt> AssessmentAttempts => Set<AssessmentAttempt>();
+    public DbSet<AssessmentAttemptExercise> AssessmentAttemptExercises => Set<AssessmentAttemptExercise>();
     internal DbSet<LegacyUserContentFeedback> ContentFeedbacks => Set<LegacyUserContentFeedback>();
     internal DbSet<LegacyStudentLearningProfile> AdaptiveLearningProfiles => Set<LegacyStudentLearningProfile>();
     internal DbSet<LegacyContentRecommendation> AdaptiveContentRecommendations => Set<LegacyContentRecommendation>();
@@ -146,6 +147,7 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<UserVocabularyProgress>());
         ConfigureEntity(modelBuilder.Entity<ReviewItem>());
         ConfigureEntity(modelBuilder.Entity<AssessmentAttempt>());
+        ConfigureEntity(modelBuilder.Entity<AssessmentAttemptExercise>());
         modelBuilder.Entity<AdminAuditRecord>(entity =>
         {
             entity.ToTable("admin_audit_records");
@@ -1248,6 +1250,31 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.HasIndex(item => new { item.StudentId, item.Phase, item.Status, item.StartedAt });
             entity.HasIndex(item => new { item.StudentId, item.Phase, item.FormVersion })
                 .HasFilter("status = 1");
+        });
+
+        modelBuilder.Entity<AssessmentAttemptExercise>(entity =>
+        {
+            entity.ToTable("assessment_attempt_exercises");
+            entity.Property(item => item.AssessmentAttemptId).HasColumnName("assessment_attempt_id");
+            entity.Property(item => item.ExerciseId).HasColumnName("exercise_id");
+            entity.Property(item => item.ReadingTextId).HasColumnName("reading_text_id");
+            entity.Property(item => item.Role).HasMaxLength(50).IsRequired();
+            entity.Property(item => item.Role).HasColumnName("role");
+            entity.Property(item => item.OrderIndex).HasColumnName("order_index");
+            entity.HasIndex(item => new { item.AssessmentAttemptId, item.OrderIndex }).IsUnique();
+            entity.HasIndex(item => new { item.AssessmentAttemptId, item.ExerciseId }).IsUnique();
+            entity.HasOne<AssessmentAttempt>()
+                .WithMany()
+                .HasForeignKey(item => item.AssessmentAttemptId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<Exercise>()
+                .WithMany()
+                .HasForeignKey(item => item.ExerciseId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<ReadingText>()
+                .WithMany()
+                .HasForeignKey(item => item.ReadingTextId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<SpeedReadingUserProfile>(entity =>

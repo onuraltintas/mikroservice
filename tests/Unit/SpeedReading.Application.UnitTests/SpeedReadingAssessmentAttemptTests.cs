@@ -113,6 +113,7 @@ public sealed class SpeedReadingAssessmentAttemptTests
         using var context = new OwnedSpeedReadingDbContext(options);
 
         context.Model.FindEntityType(typeof(AssessmentAttempt)).Should().NotBeNull();
+        context.Model.FindEntityType(typeof(AssessmentAttemptExercise)).Should().NotBeNull();
         context.Model.FindEntityType(typeof(ExerciseSession))!
             .FindProperty(nameof(ExerciseSession.AssessmentAttemptId)).Should().NotBeNull();
         context.Model.FindEntityType(typeof(ExerciseSessionResult))!
@@ -120,7 +121,8 @@ public sealed class SpeedReadingAssessmentAttemptTests
         context.Database.GetMigrations()
             .Should()
             .Contain("20260828130000_AddAssessmentMeasurementFoundation")
-            .And.Contain("20260828140000_LinkAssessmentAttemptsToSessions");
+            .And.Contain("20260828140000_LinkAssessmentAttemptsToSessions")
+            .And.Contain("20260828150000_PinAssessmentFormItems");
     }
 
     [Fact]
@@ -161,5 +163,30 @@ public sealed class SpeedReadingAssessmentAttemptTests
             assessmentAttemptId: assessmentAttemptId);
 
         result.AssessmentAttemptId.Should().Be(assessmentAttemptId);
+    }
+
+    [Fact]
+    public void Assessment_attempt_exercise_pins_the_form_item_and_reading_text()
+    {
+        var attemptId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        var readingTextId = Guid.NewGuid();
+        var pinnedAt = DateTime.UtcNow;
+
+        var item = AssessmentAttemptExercise.Pin(
+            Guid.NewGuid(),
+            attemptId,
+            exerciseId,
+            readingTextId,
+            "comprehension",
+            1,
+            pinnedAt,
+            "system");
+
+        item.AssessmentAttemptId.Should().Be(attemptId);
+        item.ExerciseId.Should().Be(exerciseId);
+        item.ReadingTextId.Should().Be(readingTextId);
+        item.Role.Should().Be("comprehension");
+        item.OrderIndex.Should().Be(1);
     }
 }
