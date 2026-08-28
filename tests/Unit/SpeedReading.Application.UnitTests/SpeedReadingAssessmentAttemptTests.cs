@@ -172,6 +172,7 @@ public sealed class SpeedReadingAssessmentAttemptTests
         var exerciseId = Guid.NewGuid();
         var readingTextId = Guid.NewGuid();
         var pinnedAt = DateTime.UtcNow;
+        const string snapshot = "{\"version\":1,\"exercise\":{\"title\":\"Hızlı Okuma\"}}";
 
         var item = AssessmentAttemptExercise.Pin(
             Guid.NewGuid(),
@@ -180,6 +181,7 @@ public sealed class SpeedReadingAssessmentAttemptTests
             readingTextId,
             "comprehension",
             1,
+            snapshot,
             pinnedAt,
             "system");
 
@@ -188,5 +190,23 @@ public sealed class SpeedReadingAssessmentAttemptTests
         item.ReadingTextId.Should().Be(readingTextId);
         item.Role.Should().Be("comprehension");
         item.OrderIndex.Should().Be(1);
+        item.ContentSnapshotJson.Should().Be(snapshot);
+    }
+
+    [Fact]
+    public void Assessment_attempt_exercise_rejects_an_empty_content_snapshot()
+    {
+        var act = () => AssessmentAttemptExercise.Pin(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            readingTextId: null,
+            "visual",
+            1,
+            "",
+            DateTime.UtcNow,
+            "system");
+
+        act.Should().Throw<ArgumentException>();
     }
 }
