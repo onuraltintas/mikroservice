@@ -1261,6 +1261,10 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.Role).HasMaxLength(50).IsRequired();
             entity.Property(item => item.Role).HasColumnName("role");
             entity.Property(item => item.OrderIndex).HasColumnName("order_index");
+            entity.Property(item => item.ContentSnapshotJson)
+                .HasColumnName("content_snapshot_json")
+                .HasColumnType("text")
+                .IsRequired();
             entity.HasIndex(item => new { item.AssessmentAttemptId, item.OrderIndex }).IsUnique();
             entity.HasIndex(item => new { item.AssessmentAttemptId, item.ExerciseId }).IsUnique();
             entity.HasOne<AssessmentAttempt>()

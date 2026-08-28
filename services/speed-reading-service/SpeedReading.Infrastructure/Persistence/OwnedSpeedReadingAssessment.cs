@@ -9,6 +9,8 @@ namespace SpeedReading.Infrastructure.Persistence;
 
 internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db) : ISpeedReadingAssessment
 {
+    private static readonly JsonSerializerOptions SnapshotJsonOptions = new(JsonSerializerDefaults.Web);
+
     public async Task<AssessmentAttemptSummary> StartAttemptAsync(
         Guid userId,
         StartAssessmentAttemptRequest request,
@@ -45,6 +47,8 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
         var formItems = await BuildPinnedFormItemsAsync(
             attempt.Id,
             attempt.ExpectedExerciseCount,
+            attempt.Phase,
+            attempt.FormVersion,
             now,
             userId.ToString(),
             cancellationToken);
@@ -83,7 +87,8 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
                     exercise.Description,
                     exercise.DifficultyLevel,
                     exercise.ConfigurationJson,
-                    exerciseType == null ? string.Empty : exerciseType.Name))
+                    exerciseType == null ? string.Empty : exerciseType.Name,
+                    formItem.ContentSnapshotJson))
                 .ToListAsync(cancellationToken);
         }
         else
@@ -101,7 +106,8 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
                     exercise.Description,
                     exercise.DifficultyLevel,
                     exercise.ConfigurationJson,
-                    exerciseType == null ? string.Empty : exerciseType.Name))
+                    exerciseType == null ? string.Empty : exerciseType.Name,
+                    "{}"))
                 .Take(3)
                 .ToListAsync(cancellationToken);
         }
@@ -122,12 +128,12 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
 
         var items = exercises.Select(item => new AssessmentExerciseItem(
             item.Id,
-            item.TypeName,
-            item.Title,
-            item.Description,
-            item.DifficultyLevel,
+            GetSnapshot(item)?.Exercise.TypeName ?? item.TypeName,
+            GetSnapshot(item)?.Exercise.Title ?? item.Title,
+            GetSnapshot(item)?.Exercise.Description ?? item.Description,
+            GetSnapshot(item)?.Exercise.DifficultyLevel ?? item.DifficultyLevel,
             completedIds.Contains(item.Id),
-            item.ConfigurationJson)).ToList();
+            GetSnapshot(item)?.Exercise.ConfigurationJson ?? item.ConfigurationJson)).ToList();
 
         var comprehension = items.FirstOrDefault(item => IsType(item.TypeName, "comprehension", "reading"));
         var visual = items.FirstOrDefault(item => IsType(item.TypeName, "visual", "expansion"));
@@ -520,6 +526,8 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
         var items = await BuildPinnedFormItemsAsync(
             attempt.Id,
             attempt.ExpectedExerciseCount,
+            attempt.Phase,
+            attempt.FormVersion,
             attempt.StartedAt,
             attempt.CreatedBy,
             cancellationToken);
@@ -530,6 +538,8 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
     private async Task<IReadOnlyList<AssessmentAttemptExercise>> BuildPinnedFormItemsAsync(
         Guid attemptId,
         int expectedExerciseCount,
+        AssessmentAttemptPhase phase,
+        string formVersion,
         DateTime createdAt,
         string? createdBy,
         CancellationToken cancellationToken)
@@ -545,19 +555,46 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             orderby exercise.DifficultyLevel, exercise.Title
             select new AssessmentFormCandidate(
                 exercise.Id,
+                exercise.Title,
+                exercise.Description,
+                exercise.DifficultyLevel,
+                exercise.ConfigurationJson,
                 exerciseType.Name,
                 exerciseType.EngineType))
             .ToListAsync(cancellationToken);
 
-        var selected = SelectFormCandidates(candidates, expectedExerciseCount);
+        var selected = SelectFormCandidates(candidates, expectedExerciseCount, phase, formVersion);
         var readingTexts = await (
             from readingText in db.ReadingTexts.AsNoTracking()
             where readingText.IsActive && !readingText.IsDeleted
             select new AssessmentReadingTextCandidate(
                 readingText.Id,
                 readingText.ExerciseId,
+                readingText.Title,
+                readingText.Content,
+                readingText.WordCount,
                 db.ReadingQuestions.Any(question =>
                     question.ReadingTextId == readingText.Id && !question.IsDeleted)))
+            .ToListAsync(cancellationToken);
+
+        var readingTextIds = readingTexts.Select(item => item.Id).ToArray();
+        var questions = await db.ReadingQuestions
+            .AsNoTracking()
+            .Where(item => readingTextIds.Contains(item.ReadingTextId) && !item.IsDeleted)
+            .OrderBy(item => item.OrderIndex)
+            .Select(item => new AssessmentQuestionSnapshot(
+                item.ReadingTextId,
+                item.Id,
+                item.QuestionText,
+                item.OptionA,
+                item.OptionB,
+                item.OptionC,
+                item.OptionD,
+                item.CorrectAnswer,
+                item.Explanation,
+                item.BloomLevel,
+                item.DifficultyLevel,
+                item.OrderIndex))
             .ToListAsync(cancellationToken);
 
         var usedReadingTextIds = new HashSet<Guid>();
@@ -565,6 +602,8 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
         foreach (var (candidate, role) in selected)
         {
             Guid? readingTextId = null;
+            AssessmentReadingTextSnapshot? readingTextSnapshot = null;
+            IReadOnlyList<AssessmentQuestionSnapshot> questionSnapshots = [];
             if (role == "comprehension")
             {
                 var text = readingTexts
@@ -580,8 +619,27 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
 
                 readingTextId = text.Id;
                 usedReadingTextIds.Add(text.Id);
+                readingTextSnapshot = new AssessmentReadingTextSnapshot(
+                    text.Id,
+                    text.Title,
+                    text.Content,
+                    text.WordCount > 0 ? text.WordCount : CountWords(text.Content));
+                questionSnapshots = questions
+                    .Where(item => item.ReadingTextId == text.Id)
+                    .ToList();
             }
 
+            var snapshot = new AssessmentContentSnapshot(
+                1,
+                new AssessmentExerciseSnapshot(
+                    candidate.ExerciseId,
+                    candidate.Title,
+                    candidate.Description,
+                    candidate.TypeName,
+                    candidate.DifficultyLevel,
+                    candidate.ConfigurationJson),
+                readingTextSnapshot,
+                questionSnapshots);
             result.Add(AssessmentAttemptExercise.Pin(
                 Guid.NewGuid(),
                 attemptId,
@@ -589,6 +647,7 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
                 readingTextId,
                 role,
                 result.Count + 1,
+                JsonSerializer.Serialize(snapshot, SnapshotJsonOptions),
                 createdAt,
                 createdBy));
         }
@@ -598,7 +657,9 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
 
     private static IReadOnlyList<(AssessmentFormCandidate Candidate, string Role)> SelectFormCandidates(
         IReadOnlyList<AssessmentFormCandidate> candidates,
-        int expectedExerciseCount)
+        int expectedExerciseCount,
+        AssessmentAttemptPhase phase,
+        string formVersion)
     {
         var requiredRoles = new (string Role, string[] Aliases)[]
         {
@@ -611,10 +672,12 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
 
         foreach (var required in requiredRoles.Take(Math.Min(requiredRoles.Length, expectedExerciseCount)))
         {
-            var candidate = candidates.FirstOrDefault(item =>
-                !selectedIds.Contains(item.ExerciseId)
-                && (IsType(item.TypeName, required.Aliases)
-                    || IsType(item.EngineType, required.Aliases)));
+            var roleCandidates = candidates
+                .Where(item => !selectedIds.Contains(item.ExerciseId)
+                    && (IsType(item.TypeName, required.Aliases)
+                        || IsType(item.EngineType, required.Aliases)))
+                .ToList();
+            var candidate = PickFormCandidate(roleCandidates, phase, formVersion, required.Role);
             if (candidate is null)
                 throw new InvalidOperationException(
                     $"Assessment form requires an active {required.Role} exercise.");
@@ -634,6 +697,32 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
         if (selected.Count != expectedExerciseCount)
             throw new InvalidOperationException("Assessment form does not contain enough active exercises.");
         return selected;
+    }
+
+    private static AssessmentFormCandidate? PickFormCandidate(
+        IReadOnlyList<AssessmentFormCandidate> candidates,
+        AssessmentAttemptPhase phase,
+        string formVersion,
+        string role)
+    {
+        if (candidates.Count == 0)
+            return null;
+        if (phase == AssessmentAttemptPhase.Baseline)
+            return candidates[0];
+
+        var seed = StableHash($"{phase}:{formVersion}:{role}");
+        return candidates[seed % candidates.Count];
+    }
+
+    private static int StableHash(string value)
+    {
+        unchecked
+        {
+            var hash = 17;
+            foreach (var character in value)
+                hash = hash * 31 + character;
+            return (hash & int.MaxValue);
+        }
     }
 
     private async Task EnsureTemplateReferencesAsync(
@@ -780,6 +869,26 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
     private static bool IsType(string value, params string[] parts) =>
         parts.Any(part => value.Contains(part, StringComparison.OrdinalIgnoreCase));
 
+    private static AssessmentContentSnapshot? GetSnapshot(AssessmentExerciseRow item)
+    {
+        if (string.IsNullOrWhiteSpace(item.ContentSnapshotJson)
+            || item.ContentSnapshotJson == "{}")
+            return null;
+        try
+        {
+            return JsonSerializer.Deserialize<AssessmentContentSnapshot>(
+                item.ContentSnapshotJson,
+                SnapshotJsonOptions);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static int CountWords(string content) =>
+        content.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
+
     private static string ResolveAssessmentRole(string typeName)
     {
         if (IsType(typeName, "comprehension", "reading", "free")) return "comprehension";
@@ -841,12 +950,19 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
 
     private sealed record AssessmentFormCandidate(
         Guid ExerciseId,
+        string Title,
+        string Description,
+        int DifficultyLevel,
+        string ConfigurationJson,
         string TypeName,
         string EngineType);
 
     private sealed record AssessmentReadingTextCandidate(
         Guid Id,
         Guid? ExerciseId,
+        string Title,
+        string Content,
+        int WordCount,
         bool HasQuestions);
 
     private sealed record AssessmentExerciseRow(
@@ -855,5 +971,6 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
         string Description,
         int DifficultyLevel,
         string ConfigurationJson,
-        string TypeName);
+        string TypeName,
+        string ContentSnapshotJson);
 }

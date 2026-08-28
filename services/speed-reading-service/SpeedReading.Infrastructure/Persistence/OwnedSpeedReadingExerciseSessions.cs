@@ -37,6 +37,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         if (studentId == Guid.Empty || request.ExerciseId == Guid.Empty)
             throw new ArgumentException("A valid student and exercise are required.");
         Guid? pinnedReadingTextId = null;
+        AssessmentContentSnapshot? assessmentSnapshot = null;
         if (request.AssessmentAttemptId.HasValue)
         {
             var pinnedItem = await (
@@ -47,7 +48,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                     && attempt.StudentId == studentId
                     && attempt.Status == AssessmentAttemptStatus.InProgress
                     && formItem.ExerciseId == request.ExerciseId
-                select new { formItem.ReadingTextId })
+                select new { formItem.ReadingTextId, formItem.ContentSnapshotJson })
                 .SingleOrDefaultAsync(cancellationToken);
             if (pinnedItem is null)
             {
@@ -55,6 +56,12 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             }
 
             pinnedReadingTextId = pinnedItem.ReadingTextId;
+            assessmentSnapshot = DeserializeAssessmentSnapshot(pinnedItem.ContentSnapshotJson);
+            if (assessmentSnapshot is not null
+                && assessmentSnapshot.Exercise.Id != request.ExerciseId)
+            {
+                throw new InvalidOperationException("Assessment content snapshot does not match the requested exercise.");
+            }
         }
         if (request.StudentAssignmentId.HasValue)
         {
@@ -75,16 +82,31 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             }
         }
 
-        var exercise = await db.Exercises
-            .AsNoTracking()
-            .SingleOrDefaultAsync(item => item.Id == request.ExerciseId && item.IsActive, cancellationToken)
-            ?? throw new KeyNotFoundException("Exercise not found.");
-        var exerciseType = await db.ExerciseTypes
-            .AsNoTracking()
-            .SingleOrDefaultAsync(item => item.Id == exercise.ExerciseTypeId && item.IsActive, cancellationToken)
-            ?? throw new KeyNotFoundException("Exercise type not found.");
+        string exerciseTypeName;
+        string configurationJson;
+        int difficultyLevel;
+        if (assessmentSnapshot is not null)
+        {
+            exerciseTypeName = assessmentSnapshot.Exercise.TypeName;
+            configurationJson = assessmentSnapshot.Exercise.ConfigurationJson;
+            difficultyLevel = assessmentSnapshot.Exercise.DifficultyLevel;
+        }
+        else
+        {
+            var exercise = await db.Exercises
+                .AsNoTracking()
+                .SingleOrDefaultAsync(item => item.Id == request.ExerciseId && item.IsActive, cancellationToken)
+                ?? throw new KeyNotFoundException("Exercise not found.");
+            var exerciseType = await db.ExerciseTypes
+                .AsNoTracking()
+                .SingleOrDefaultAsync(item => item.Id == exercise.ExerciseTypeId && item.IsActive, cancellationToken)
+                ?? throw new KeyNotFoundException("Exercise type not found.");
+            exerciseTypeName = exerciseType.Name;
+            configurationJson = exercise.ConfigurationJson;
+            difficultyLevel = exercise.DifficultyLevel;
+        }
 
-        if (request.ReadingTextId.HasValue)
+        if (request.ReadingTextId.HasValue && assessmentSnapshot is null)
         {
             var readingTextMatches = await db.ReadingTexts
                 .AsNoTracking()
@@ -106,8 +128,10 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         if (hasActiveSession)
             throw new InvalidOperationException("An active session already exists for this exercise.");
 
-        var readingTextId = pinnedReadingTextId ?? request.ReadingTextId;
-        if (!readingTextId.HasValue && ReadingExerciseTypes.Contains(exerciseType.Name))
+        var readingTextId = assessmentSnapshot is not null
+            ? assessmentSnapshot.ReadingText?.Id
+            : pinnedReadingTextId ?? request.ReadingTextId;
+        if (!readingTextId.HasValue && ReadingExerciseTypes.Contains(exerciseTypeName))
         {
             readingTextId = await db.ReadingTexts
                 .AsNoTracking()
@@ -121,15 +145,17 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
 
         var state = await CreateSessionStateAsync(
             request.ExerciseId,
-            exercise,
-            exerciseType.Name,
+            exerciseTypeName,
+            difficultyLevel,
+            configurationJson,
             readingTextId,
+            assessmentSnapshot,
             request.CustomData,
             cancellationToken);
         var now = DateTime.UtcNow;
         var session = ExerciseSession.Start(
             studentId,
-            exercise.Id,
+            request.ExerciseId,
             readingTextId,
             state.TotalSteps,
             now,
@@ -145,12 +171,12 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         return new StartExerciseSessionResponse(
             session.Id,
             session.ExerciseId,
-            exerciseType.Name,
+            exerciseTypeName,
             Application.ExerciseSessions.ExerciseSessionStatus.Active,
             session.StartTime,
             session.TotalSteps,
             ToPublicJson(state),
-            RemoveAnswerKeys(ParseJsonOrEmpty(exercise.ConfigurationJson)));
+            RemoveAnswerKeys(ParseJsonOrEmpty(configurationJson)));
     }
 
     public async Task<ExerciseActionValidationResponse> ValidateActionAsync(
@@ -454,23 +480,49 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
 
     private async Task<SessionState> CreateSessionStateAsync(
         Guid exerciseId,
-        Exercise exercise,
         string exerciseTypeName,
+        int difficultyLevel,
+        string configurationJson,
         Guid? readingTextId,
+        AssessmentContentSnapshot? assessmentSnapshot,
         Dictionary<string, JsonElement>? customData,
         CancellationToken cancellationToken)
     {
-        var config = ParseJsonOrEmpty(exercise.ConfigurationJson);
+        var config = ParseJsonOrEmpty(configurationJson);
         var state = new SessionState
         {
             ExerciseId = exerciseId,
             ExerciseTypeName = exerciseTypeName,
-            DifficultyLevel = exercise.DifficultyLevel,
+            DifficultyLevel = difficultyLevel,
             CurrentNumber = exerciseTypeName.Equals("SchulteTable", StringComparison.OrdinalIgnoreCase) ? 1 : null,
             TimeLimitSeconds = ReadPositiveInt(config, "timeLimitSeconds")
         };
 
-        if (readingTextId.HasValue)
+        if (assessmentSnapshot?.ReadingText is { } snapshotText)
+        {
+            state.ReadingTextId = snapshotText.Id;
+            state.ReadingTextTitle = snapshotText.Title;
+            state.Content = snapshotText.Content;
+            state.WordCount = snapshotText.WordCount > 0 ? snapshotText.WordCount : CountWords(snapshotText.Content);
+            state.Words = SplitWords(snapshotText.Content);
+            state.Questions = assessmentSnapshot.Questions
+                .OrderBy(item => item.OrderIndex)
+                .Select(item => new SessionQuestion
+                {
+                    QuestionId = item.Id,
+                    QuestionText = item.QuestionText,
+                    OptionA = item.OptionA,
+                    OptionB = item.OptionB,
+                    OptionC = item.OptionC,
+                    OptionD = item.OptionD,
+                    CorrectAnswer = item.CorrectAnswer,
+                    Explanation = item.Explanation,
+                    BloomLevel = item.BloomLevel,
+                    DifficultyLevel = item.DifficultyLevel
+                })
+                .ToList();
+        }
+        else if (readingTextId.HasValue)
         {
             var readingText = await db.ReadingTexts.AsNoTracking()
                 .SingleOrDefaultAsync(item => item.Id == readingTextId.Value && item.IsActive, cancellationToken)
@@ -500,7 +552,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         }
 
         var gridSize = exerciseTypeName.Equals("SchulteTable", StringComparison.OrdinalIgnoreCase)
-            ? ReadPositiveInt(config, "gridSize") ?? Math.Clamp(exercise.DifficultyLevel + 2, 3, 7)
+            ? ReadPositiveInt(config, "gridSize") ?? Math.Clamp(difficultyLevel + 2, 3, 7)
             : (int?)null;
         if (gridSize.HasValue)
         {
@@ -778,6 +830,20 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         string.IsNullOrWhiteSpace(json)
             ? new SessionState()
             : JsonSerializer.Deserialize<SessionState>(json, JsonOptions) ?? new SessionState();
+
+    private static AssessmentContentSnapshot? DeserializeAssessmentSnapshot(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json) || json == "{}")
+            return null;
+        try
+        {
+            return JsonSerializer.Deserialize<AssessmentContentSnapshot>(json, JsonOptions);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
 
     private static JsonElement ParseJsonOrEmpty(string? json)
     {

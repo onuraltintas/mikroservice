@@ -3,9 +3,8 @@ using EduPlatform.Shared.Kernel.Primitives;
 namespace SpeedReading.Domain.Assessment;
 
 /// <summary>
-/// Immutable form item selected for an assessment attempt. Pinning the item
-/// and its reading text prevents catalog reordering or a different text from
-/// changing the assessment selection after it has started.
+/// Immutable form item selected for an assessment attempt. The snapshot keeps
+/// the exact content used by the measurement stable after it has started.
 /// </summary>
 public sealed class AssessmentAttemptExercise : Entity
 {
@@ -18,6 +17,7 @@ public sealed class AssessmentAttemptExercise : Entity
     public Guid? ReadingTextId { get; private set; }
     public string Role { get; private set; } = string.Empty;
     public int OrderIndex { get; private set; }
+    public string ContentSnapshotJson { get; private set; } = string.Empty;
 
     public static AssessmentAttemptExercise Pin(
         Guid id,
@@ -26,6 +26,7 @@ public sealed class AssessmentAttemptExercise : Entity
         Guid? readingTextId,
         string role,
         int orderIndex,
+        string contentSnapshotJson,
         DateTime createdAt,
         string? createdBy)
     {
@@ -35,6 +36,8 @@ public sealed class AssessmentAttemptExercise : Entity
             throw new ArgumentException("Assessment form item role is required and must not exceed 50 characters.", nameof(role));
         if (orderIndex is < 1 or > 50)
             throw new ArgumentOutOfRangeException(nameof(orderIndex));
+        if (string.IsNullOrWhiteSpace(contentSnapshotJson))
+            throw new ArgumentException("Assessment form item content snapshot is required.", nameof(contentSnapshotJson));
 
         return new AssessmentAttemptExercise
         {
@@ -44,6 +47,7 @@ public sealed class AssessmentAttemptExercise : Entity
             ReadingTextId = readingTextId,
             Role = role.Trim().ToLowerInvariant(),
             OrderIndex = orderIndex,
+            ContentSnapshotJson = contentSnapshotJson.Trim(),
             CreatedAt = EnsureUtc(createdAt),
             CreatedBy = createdBy
         };
