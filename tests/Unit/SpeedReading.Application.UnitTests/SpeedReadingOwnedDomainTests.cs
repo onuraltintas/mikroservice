@@ -182,6 +182,13 @@ public sealed class SpeedReadingOwnedDomainTests
             .GetColumnName(rsvpSessionTable).Should().Be("created_at");
         rsvpSession.FindProperty("WordsPerMinute")!
             .GetColumnName(rsvpSessionTable).Should().Be("words_per_minute");
+        var contentFeedback = context.Model.GetEntityTypes()
+            .Single(item => item.ClrType.Name == "LegacyUserContentFeedback");
+        var contentFeedbackTable = StoreObjectIdentifier.Table("content_feedback", "speed_reading");
+        contentFeedback.FindProperty("CreatedAt")!
+            .GetColumnName(contentFeedbackTable).Should().Be("created_at");
+        contentFeedback.FindProperty("SessionDate")!
+            .GetColumnName(contentFeedbackTable).Should().Be("session_date");
         context.Model.FindEntityType(typeof(LearningPathNodeContent))!.GetTableName()
             .Should().Be("learning_path_node_contents");
         context.Model.FindEntityType(typeof(LearningPathPrerequisite))!.GetTableName()

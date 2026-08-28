@@ -331,6 +331,13 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<LegacyUserContentFeedback>(entity =>
         {
             ConfigureLegacyEntity(entity, "content_feedback");
+            entity.Property(item => item.CreatedAt).HasColumnName("created_at");
+            entity.Property(item => item.CreatedBy).HasColumnName("created_by");
+            entity.Property(item => item.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(item => item.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by");
             entity.Property(item => item.UserId).HasColumnName("user_id");
             entity.Property(item => item.ContentId).HasColumnName("content_id");
             entity.Property(item => item.ContentType).HasColumnName("content_type").HasMaxLength(50).IsRequired();
