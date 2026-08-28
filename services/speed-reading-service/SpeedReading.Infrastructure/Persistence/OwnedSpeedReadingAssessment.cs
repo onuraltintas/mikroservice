@@ -110,6 +110,79 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             attempt.CompletedAt)).ToList();
     }
 
+    public async Task<AssessmentComparisonSummary> GetComparisonAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty)
+            throw new ArgumentException("A valid user is required.", nameof(userId));
+
+        var attempts = await db.AssessmentAttempts
+            .AsNoTracking()
+            .Where(item => item.StudentId == userId
+                && item.Status == AssessmentAttemptStatus.Completed)
+            .OrderBy(item => item.StartedAt)
+            .ToListAsync(cancellationToken);
+        if (attempts.Count == 0)
+            return new AssessmentComparisonSummary([], null);
+
+        var attemptIds = attempts.Select(item => item.Id).ToArray();
+        var resultRows = await db.ExerciseSessionResults
+            .AsNoTracking()
+            .Where(item => item.AssessmentAttemptId.HasValue
+                && attemptIds.Contains(item.AssessmentAttemptId.Value)
+                && item.IsAssessmentMode
+                && item.IsMeasured)
+            .Select(item => new AssessmentComparisonResultRow(
+                item.AssessmentAttemptId!.Value,
+                item.ExerciseId,
+                item.RawWpm,
+                item.ComprehensionScore,
+                item.Score,
+                item.CompletedAt))
+            .ToListAsync(cancellationToken);
+        var roleMap = await db.AssessmentAttemptExercises
+            .AsNoTracking()
+            .Where(item => attemptIds.Contains(item.AssessmentAttemptId))
+            .ToDictionaryAsync(
+                item => (item.AssessmentAttemptId, item.ExerciseId),
+                item => item.Role,
+                cancellationToken);
+        var latestResultsByAttempt = resultRows
+            .GroupBy(item => item.AttemptId)
+            .ToDictionary(
+                group => group.Key,
+                group => group
+                    .GroupBy(item => item.ExerciseId)
+                    .Select(exerciseResults => exerciseResults
+                        .OrderByDescending(item => item.CompletedAt)
+                        .First())
+                    .ToList());
+
+        var inputs = attempts.Select(attempt => new AssessmentComparisonAttemptInput(
+            attempt.Id,
+            attempt.Phase,
+            attempt.Status,
+            attempt.FormVersion,
+            attempt.StartedAt,
+            attempt.CompletedAt,
+            attempt.ExpectedExerciseCount,
+            latestResultsByAttempt.TryGetValue(attempt.Id, out var results)
+                ? results.Select(item => new AssessmentComparisonResultInput(
+                    true,
+                    item.RawWpm,
+                    item.ComprehensionScore,
+                    item.Score,
+                    roleMap.GetValueOrDefault((attempt.Id, item.ExerciseId))
+                        ?? "supplementary"))
+                    .ToList()
+                : [])).ToList();
+        var points = AssessmentComparisonCalculator.Calculate(inputs);
+        return new AssessmentComparisonSummary(
+            points,
+            points.FirstOrDefault(item => item.Phase == AssessmentAttemptPhase.Baseline));
+    }
+
     public async Task<AssessmentExercisesSummary> GetExercisesAsync(
         Guid userId,
         CancellationToken cancellationToken)
@@ -1039,4 +1112,12 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
         string ConfigurationJson,
         string TypeName,
         string ContentSnapshotJson);
+
+    private sealed record AssessmentComparisonResultRow(
+        Guid AttemptId,
+        Guid ExerciseId,
+        decimal RawWpm,
+        decimal ComprehensionScore,
+        decimal Score,
+        DateTime CompletedAt);
 }

@@ -41,6 +41,27 @@ export interface AssessmentAttemptSummaryDto {
   completedAt?: string | null;
 }
 
+export interface AssessmentComparisonPointDto {
+  attemptId: string;
+  phase: number;
+  status: number;
+  formVersion: string;
+  startedAt: string;
+  completedAt?: string | null;
+  expectedExerciseCount: number;
+  completedExerciseCount: number;
+  averageWpm?: number | null;
+  averageComprehension?: number | null;
+  averageScore?: number | null;
+  wpmDeltaFromBaseline?: number | null;
+  comprehensionDeltaFromBaseline?: number | null;
+}
+
+export interface AssessmentComparisonDto {
+  attempts: AssessmentComparisonPointDto[];
+  baseline?: AssessmentComparisonPointDto | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -95,6 +116,15 @@ export class AssessmentService {
       ApiResponse<AssessmentAttemptSummaryDto[]> | AssessmentAttemptSummaryDto[]
     >(`${this.apiUrl}/attempts`).pipe(
       map((response: ApiResponse<AssessmentAttemptSummaryDto[]> | AssessmentAttemptSummaryDto[]) =>
+        'data' in response ? response.data : response)
+    );
+  }
+
+  getAttemptComparison(): Observable<AssessmentComparisonDto> {
+    return this.http.get<ApiResponse<AssessmentComparisonDto> | AssessmentComparisonDto>(
+      `${this.apiUrl}/comparison`
+    ).pipe(
+      map((response: ApiResponse<AssessmentComparisonDto> | AssessmentComparisonDto) =>
         'data' in response ? response.data : response)
     );
   }

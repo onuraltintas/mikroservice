@@ -5,5 +5,53 @@
     <p class="rp-header__sub">Performansını ve ilerlemenizi analiz et</p>
   </div>
 
+  @if (assessmentComparison(); as comparison) {
+  <section class="rp-assessment-card" aria-labelledby="assessment-comparison-title">
+    <div class="rp-assessment-card__header">
+      <div>
+        <h2 id="assessment-comparison-title">Değerlendirme gelişimi</h2>
+        <p>Faz sonuçlarını başlangıç ölçümünüzle karşılaştırın.</p>
+      </div>
+      <span class="rp-assessment-card__badge">{{ comparison.attempts.length }} ölçüm</span>
+    </div>
+
+    @if (comparison.attempts.length > 0) {
+    <div class="rp-assessment-card__table-wrap">
+      <table class="rp-assessment-table">
+        <thead>
+          <tr>
+            <th>Faz</th>
+            <th>Hız</th>
+            <th>Anlama</th>
+            <th>Başlangıca fark</th>
+            <th>Tarih</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (attempt of comparison.attempts; track trackAttempt($index, attempt)) {
+          <tr>
+            <th scope="row">{{ phaseLabel(attempt.phase) }}</th>
+            <td>{{ metric(attempt.averageWpm, ' WPM') }}</td>
+            <td>{{ metric(attempt.averageComprehension, '%') }}</td>
+            <td>
+              <span [class]="'rp-delta ' + deltaClass(attempt.wpmDeltaFromBaseline)">
+                {{ delta(attempt.wpmDeltaFromBaseline, ' WPM') }}
+              </span>
+              <span [class]="'rp-delta ' + deltaClass(attempt.comprehensionDeltaFromBaseline)">
+                {{ delta(attempt.comprehensionDeltaFromBaseline, ' puan') }}
+              </span>
+            </td>
+            <td>{{ attempt.startedAt | date:'dd.MM.yyyy' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    } @else {
+    <p class="rp-assessment-card__empty">Henüz tamamlanmış bir değerlendirme ölçümü bulunmuyor.</p>
+    }
+  </section>
+  }
+
   <app-student-dashboard-report />
 </div>

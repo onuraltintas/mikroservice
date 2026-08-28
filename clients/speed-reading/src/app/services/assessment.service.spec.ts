@@ -79,4 +79,63 @@ describe('AssessmentService', () => {
       }]
     });
   });
+
+  it('loads the baseline comparison for assessment phases', () => {
+    service.getAttemptComparison().subscribe(comparison => {
+      expect(comparison.baseline?.averageWpm).toBe(200);
+      expect(comparison.attempts[1].wpmDeltaFromBaseline).toBe(50);
+    });
+
+    const request = http.expectOne('/api/speed-reading/assessment/comparison');
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      baseline: {
+        attemptId: 'baseline-1',
+        phase: 1,
+        status: 2,
+        formVersion: 'tr-baseline-v1',
+        startedAt: '2026-08-20T19:00:00Z',
+        completedAt: '2026-08-20T19:05:00Z',
+        expectedExerciseCount: 3,
+        completedExerciseCount: 3,
+        averageWpm: 200,
+        averageComprehension: 80,
+        averageScore: 75,
+        wpmDeltaFromBaseline: null,
+        comprehensionDeltaFromBaseline: null
+      },
+      attempts: [
+        {
+          attemptId: 'baseline-1',
+          phase: 1,
+          status: 2,
+          formVersion: 'tr-baseline-v1',
+          startedAt: '2026-08-20T19:00:00Z',
+          completedAt: '2026-08-20T19:05:00Z',
+          expectedExerciseCount: 3,
+          completedExerciseCount: 3,
+          averageWpm: 200,
+          averageComprehension: 80,
+          averageScore: 75,
+          wpmDeltaFromBaseline: null,
+          comprehensionDeltaFromBaseline: null
+        },
+        {
+          attemptId: 'post-1',
+          phase: 2,
+          status: 2,
+          formVersion: 'tr-posttraining-v1',
+          startedAt: '2026-08-28T19:00:00Z',
+          completedAt: '2026-08-28T19:05:00Z',
+          expectedExerciseCount: 3,
+          completedExerciseCount: 3,
+          averageWpm: 250,
+          averageComprehension: 90,
+          averageScore: 85,
+          wpmDeltaFromBaseline: 50,
+          comprehensionDeltaFromBaseline: 10
+        }
+      ]
+    });
+  });
 });
