@@ -19,7 +19,8 @@ public sealed record OwnedSpeedReadingParityRow(
     string OwnedChecksum,
     string SourcePayloadChecksum,
     string OwnedPayloadChecksum,
-    bool FieldParityAvailable)
+    bool FieldParityAvailable,
+    IReadOnlyList<string> MismatchedFields)
 {
     public bool IsMatch => SourceCount == OwnedCount
         && SourceChecksum == OwnedChecksum
@@ -195,6 +196,7 @@ public sealed class OwnedSpeedReadingParityChecker(
         var ownedEntityType = FindEntityClrType(ownedIds.Expression);
         var sourcePayloadChecksum = OwnedSpeedReadingParityHash.ComputePayload([]);
         var ownedPayloadChecksum = OwnedSpeedReadingParityHash.ComputePayload([]);
+        IReadOnlyList<string> mismatchedFields = [];
         var bothStoresAreEmpty = source.Count == 0 && target.Count == 0;
         var fieldParityAvailable = bothStoresAreEmpty
             || sourceEntityType is not null && ownedEntityType is not null;
@@ -214,10 +216,33 @@ public sealed class OwnedSpeedReadingParityChecker(
                 FindProjectedPropertyName(ownedIds.Expression) ?? "Id",
                 cancellationToken);
 
+            var sourceCanonicalRows = sourceRows
+                .Select(row => CreateCanonicalRow(
+                    sourceEntityType,
+                    FindProjectedPropertyName(sourceIds.Expression) ?? "Id",
+                    sourceTable,
+                    row,
+                    isSource: true))
+                .ToArray();
+            var ownedCanonicalRows = ownedRows
+                .Select(row => CreateCanonicalRow(
+                    ownedEntityType,
+                    FindProjectedPropertyName(ownedIds.Expression) ?? "Id",
+                    sourceTable,
+                    row,
+                    isSource: false))
+                .ToArray();
+
             sourcePayloadChecksum = OwnedSpeedReadingParityHash.ComputePayload(
-                sourceRows.Select(row => Canonicalize(sourceTable, row, isSource: true)));
+                sourceCanonicalRows.Select(row => row.Fields));
             ownedPayloadChecksum = OwnedSpeedReadingParityHash.ComputePayload(
-                ownedRows.Select(row => Canonicalize(sourceTable, row, isSource: false)));
+                ownedCanonicalRows.Select(row => row.Fields));
+            if (sourcePayloadChecksum != ownedPayloadChecksum)
+            {
+                mismatchedFields = FindMismatchedFields(
+                    sourceCanonicalRows,
+                    ownedCanonicalRows);
+            }
         }
 
         return new OwnedSpeedReadingParityRow(
@@ -231,7 +256,8 @@ public sealed class OwnedSpeedReadingParityChecker(
             OwnedSpeedReadingParityHash.Compute(target),
             sourcePayloadChecksum,
             ownedPayloadChecksum,
-            fieldParityAvailable);
+            fieldParityAvailable,
+            mismatchedFields);
     }
 
     private async Task<IReadOnlyList<object>> LoadEntityRowsAsync(
@@ -242,16 +268,65 @@ public sealed class OwnedSpeedReadingParityChecker(
         CancellationToken cancellationToken)
     {
         var rows = await LoadEntityRowsByTypeAsync(context, entityType, cancellationToken);
-        var keyProperty = entityType.GetProperty(
-            keyPropertyName,
-            BindingFlags.Instance | BindingFlags.Public)
-            ?? throw new InvalidOperationException(
-                $"Parity key property '{keyPropertyName}' was not found on {entityType.Name}.");
+        var keyProperty = GetKeyProperty(entityType, keyPropertyName);
 
         return rows
             .Where(row => TryGetGuid(keyProperty.GetValue(row)) is { } id && ids.Contains(id))
             .ToArray();
     }
+
+    private CanonicalParityRow CreateCanonicalRow(
+        Type entityType,
+        string keyPropertyName,
+        string sourceTable,
+        object row,
+        bool isSource)
+    {
+        var key = TryGetGuid(GetKeyProperty(entityType, keyPropertyName).GetValue(row))
+            ?? throw new InvalidOperationException(
+                $"Parity key property '{keyPropertyName}' on {entityType.Name} was empty.");
+        return new CanonicalParityRow(key, Canonicalize(sourceTable, row, isSource));
+    }
+
+    private static IReadOnlyList<string> FindMismatchedFields(
+        IReadOnlyCollection<CanonicalParityRow> sourceRows,
+        IReadOnlyCollection<CanonicalParityRow> ownedRows)
+    {
+        var sourceById = sourceRows.ToDictionary(row => row.Id);
+        var ownedById = ownedRows.ToDictionary(row => row.Id);
+        var fieldNames = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var id in sourceById.Keys.Union(ownedById.Keys))
+        {
+            if (!sourceById.TryGetValue(id, out var sourceRow)
+                || !ownedById.TryGetValue(id, out var ownedRow))
+            {
+                fieldNames.Add("<missing-row>");
+                continue;
+            }
+
+            foreach (var field in sourceRow.Fields.Keys.Union(ownedRow.Fields.Keys))
+            {
+                sourceRow.Fields.TryGetValue(field, out var sourceValue);
+                ownedRow.Fields.TryGetValue(field, out var ownedValue);
+                if (!string.Equals(sourceValue, ownedValue, StringComparison.Ordinal))
+                    fieldNames.Add(field);
+            }
+        }
+
+        return fieldNames.OrderBy(field => field, StringComparer.Ordinal).ToArray();
+    }
+
+    private static PropertyInfo GetKeyProperty(Type entityType, string keyPropertyName) =>
+        entityType.GetProperty(
+            keyPropertyName,
+            BindingFlags.Instance | BindingFlags.Public)
+        ?? throw new InvalidOperationException(
+            $"Parity key property '{keyPropertyName}' was not found on {entityType.Name}.");
+
+    private sealed record CanonicalParityRow(
+        Guid Id,
+        IReadOnlyDictionary<string, string?> Fields);
 
     private static async Task<IReadOnlyList<object>> LoadEntityRowsByTypeAsync(
         DbContext context,
