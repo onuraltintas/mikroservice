@@ -175,6 +175,13 @@ public sealed class SpeedReadingOwnedDomainTests
             .Should().Be("learning_path_templates");
         context.Model.FindEntityType(typeof(LearningPathNode))!.GetTableName()
             .Should().Be("learning_path_nodes");
+        var rsvpSession = context.Model.GetEntityTypes()
+            .Single(item => item.ClrType.Name == "LegacyRsvpSession");
+        var rsvpSessionTable = StoreObjectIdentifier.Table("rsvp_sessions", "speed_reading");
+        rsvpSession.FindProperty("CreatedAt")!
+            .GetColumnName(rsvpSessionTable).Should().Be("created_at");
+        rsvpSession.FindProperty("WordsPerMinute")!
+            .GetColumnName(rsvpSessionTable).Should().Be("words_per_minute");
         context.Model.FindEntityType(typeof(LearningPathNodeContent))!.GetTableName()
             .Should().Be("learning_path_node_contents");
         context.Model.FindEntityType(typeof(LearningPathPrerequisite))!.GetTableName()

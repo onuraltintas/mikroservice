@@ -819,6 +819,13 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<LegacyRsvpSession>(entity =>
         {
             ConfigureLegacyEntity(entity, "rsvp_sessions");
+            entity.Property(item => item.CreatedAt).HasColumnName("created_at");
+            entity.Property(item => item.CreatedBy).HasColumnName("created_by");
+            entity.Property(item => item.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(item => item.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
+            entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by");
             entity.Property(item => item.UserId).HasColumnName("user_id");
             entity.Property(item => item.TextId).HasColumnName("text_id");
             entity.Property(item => item.TextContent).HasColumnName("text_content");
