@@ -1,5 +1,7 @@
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using SpeedReading.Domain.Assessment;
+using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Application.UnitTests;
 
@@ -98,5 +100,19 @@ public sealed class SpeedReadingAssessmentAttemptTests
 
         attempt.Status.Should().Be(AssessmentAttemptStatus.Abandoned);
         act.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void Owned_context_maps_assessment_attempts_and_their_migration()
+    {
+        var options = new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+            .UseNpgsql("Host=localhost;Database=unused;Username=unused;Password=unused")
+            .Options;
+
+        using var context = new OwnedSpeedReadingDbContext(options);
+
+        context.Model.FindEntityType(typeof(AssessmentAttempt)).Should().NotBeNull();
+        context.Database.GetMigrations()
+            .Should().Contain("20260828130000_AddAssessmentMeasurementFoundation");
     }
 }
