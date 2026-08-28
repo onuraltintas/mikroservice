@@ -42,11 +42,16 @@ public static class DependencyInjection
         bool includeLegacyData = true)
     {
         var ownedDataEnabled = configuration.GetValue<bool>("SpeedReading:OwnedDataEnabled");
+        var legacyDataEnabled = includeLegacyData || !ownedDataEnabled;
         var connectionString = configuration.GetConnectionString("SpeedReading")
             ?? configuration["SPEED_READING_CONNECTION_STRING"]
             ?? Environment.GetEnvironmentVariable("SPEED_READING_CONNECTION_STRING");
+        if (ownedDataEnabled && !includeLegacyData && !string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException(
+                "A legacy Speed Reading connection must not be configured for an owned runtime.");
+        }
 
-        var legacyDataEnabled = includeLegacyData || !ownedDataEnabled;
         if (legacyDataEnabled && string.IsNullOrWhiteSpace(connectionString))
         {
             throw new InvalidOperationException(

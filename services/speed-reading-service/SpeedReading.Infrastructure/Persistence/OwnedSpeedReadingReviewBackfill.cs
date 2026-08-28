@@ -4,14 +4,26 @@ using SpeedReading.Domain.Review;
 
 namespace SpeedReading.Infrastructure.Persistence;
 
-public sealed class OwnedSpeedReadingReviewBackfill(OwnedSpeedReadingDbContext owned)
+public sealed class OwnedSpeedReadingReviewBackfill(
+    SpeedReadingDbContext legacy,
+    OwnedSpeedReadingDbContext owned)
 {
     public async Task<OwnedReviewBackfillResult> RunAsync(
         CancellationToken cancellationToken = default)
     {
-        // ExerciseReviewItems does not exist in the legacy database; review
-        // data is already represented by the owned review schema when present.
-        var source = Array.Empty<LegacyExerciseReviewItem>();
+        // Some legacy installations predate ExerciseReviewItems. Detect the
+        // physical table before querying it so a missing optional table is
+        // reported as an empty source, while existing rows are migrated.
+        var sourceTableExists = await legacy.Database
+            .SqlQueryRaw<bool>(
+                @"SELECT to_regclass('""ExerciseReviewItems""') IS NOT NULL AS ""Value""")
+            .SingleAsync(cancellationToken);
+        IReadOnlyList<LegacyExerciseReviewItem> source = sourceTableExists
+            ? await legacy.ExerciseReviewItems
+                .AsNoTracking()
+                .OrderBy(item => item.Id)
+                .ToListAsync(cancellationToken)
+            : [];
         var exerciseIds = source.Select(item => item.ExerciseId).Distinct().ToArray();
         var templateIds = source
             .Where(item => item.ProgramTemplateId.HasValue)
@@ -67,7 +79,7 @@ public sealed class OwnedSpeedReadingReviewBackfill(OwnedSpeedReadingDbContext o
         if (imported > 0)
             await owned.SaveChangesAsync(cancellationToken);
 
-        return new OwnedReviewBackfillResult(source.Length, imported);
+        return new OwnedReviewBackfillResult(source.Count, imported);
     }
 }
 

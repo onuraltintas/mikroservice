@@ -21,4 +21,33 @@ public sealed class OwnedSpeedReadingParityTests
             .Should()
             .NotBe(checksum);
     }
+
+    [Fact]
+    public void Payload_checksum_is_order_independent_but_changes_when_a_field_changes()
+    {
+        var firstRow = new Dictionary<string, string?>
+        {
+            ["Title"] = "Hızlı okuma",
+            ["Score"] = "72.50"
+        };
+        var secondRow = new Dictionary<string, string?>
+        {
+            ["Title"] = "İleri seviye",
+            ["Score"] = "91.00"
+        };
+        var changedRow = new Dictionary<string, string?>
+        {
+            ["Title"] = "Hızlı okuma",
+            ["Score"] = "72.51"
+        };
+
+        var checksum = OwnedSpeedReadingParityHash.ComputePayload([secondRow, firstRow]);
+
+        OwnedSpeedReadingParityHash.ComputePayload([firstRow, secondRow])
+            .Should()
+            .Be(checksum);
+        OwnedSpeedReadingParityHash.ComputePayload([changedRow, secondRow])
+            .Should()
+            .NotBe(checksum);
+    }
 }

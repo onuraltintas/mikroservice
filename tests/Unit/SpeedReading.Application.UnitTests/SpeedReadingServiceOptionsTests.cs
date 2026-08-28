@@ -104,6 +104,27 @@ public sealed class SpeedReadingServiceOptionsTests
     }
 
     [Fact]
+    public void Owned_runtime_rejects_a_legacy_connection_when_legacy_data_is_disabled()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:SpeedReading"] = "Host=legacy;Database=legacy",
+                ["ConnectionStrings:SpeedReadingOwned"] = "Host=owned;Database=owned",
+                ["SpeedReading:OwnedDataEnabled"] = "true"
+            })
+            .Build();
+        var services = new ServiceCollection();
+
+        var action = () => services.AddSpeedReadingInfrastructure(
+            configuration,
+            includeLegacyData: false);
+
+        action.Should().Throw<InvalidOperationException>()
+            .WithMessage("*legacy*owned runtime*");
+    }
+
+    [Fact]
     public void Owned_data_mode_resolves_assignments_from_the_owned_store()
     {
         var configuration = new ConfigurationBuilder()

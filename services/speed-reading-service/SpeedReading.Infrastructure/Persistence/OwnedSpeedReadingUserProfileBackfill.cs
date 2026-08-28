@@ -25,7 +25,6 @@ public sealed class OwnedSpeedReadingUserProfileBackfill(
 
         var sourceRows = await legacy.Users
             .AsNoTracking()
-            .Where(item => !item.IsDeleted)
             .OrderBy(item => item.Id)
             .ToListAsync(cancellationToken);
         var ageGroupIds = await owned.AgeGroupConfigurations
@@ -69,7 +68,7 @@ public sealed class OwnedSpeedReadingUserProfileBackfill(
                 source.DailyGoalMinutes,
                 source.AgeGroupConfigurationId,
                 source.InstitutionId,
-                isActive: true,
+                isActive: !source.IsDeleted,
                 NormalizeUtc(DateTime.UtcNow),
                 source.Id.ToString(),
                 null,

@@ -1,5 +1,10 @@
+using System.Globalization;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Text;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
+using SpeedReading.Infrastructure.Legacy;
 
 namespace SpeedReading.Infrastructure.Persistence;
 
@@ -11,9 +16,15 @@ public sealed record OwnedSpeedReadingParityRow(
     int SourceCount,
     int OwnedCount,
     string SourceChecksum,
-    string OwnedChecksum)
+    string OwnedChecksum,
+    string SourcePayloadChecksum,
+    string OwnedPayloadChecksum,
+    bool FieldParityAvailable)
 {
-    public bool IsMatch => SourceCount == OwnedCount && SourceChecksum == OwnedChecksum;
+    public bool IsMatch => SourceCount == OwnedCount
+        && SourceChecksum == OwnedChecksum
+        && FieldParityAvailable
+        && SourcePayloadChecksum == OwnedPayloadChecksum;
 }
 
 public sealed record OwnedSpeedReadingParityReport(
@@ -34,6 +45,19 @@ public static class OwnedSpeedReadingParityHash
 
         return Convert.ToHexString(SHA256.HashData(bytes));
     }
+
+    public static string ComputePayload(
+        IEnumerable<IReadOnlyDictionary<string, string?>> rows)
+    {
+        var serializedRows = rows
+            .Select(row => string.Join("|", row
+                .OrderBy(field => field.Key, StringComparer.Ordinal)
+                .Select(field => $"{field.Key}={field.Value ?? "<null>"}")))
+            .OrderBy(row => row, StringComparer.Ordinal)
+            .ToArray();
+        var payload = string.Join("\n", serializedRows);
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload)));
+    }
 }
 
 /// <summary>
@@ -45,9 +69,26 @@ public sealed class OwnedSpeedReadingParityChecker(
     SpeedReadingDbContext legacy,
     OwnedSpeedReadingDbContext owned)
 {
+    private IReadOnlyDictionary<Guid, string> _exerciseTypeNames =
+        new Dictionary<Guid, string>();
+    private IReadOnlySet<Guid> _legacyExerciseIds = new HashSet<Guid>();
+    private IReadOnlySet<Guid> _legacyReadingTextIds = new HashSet<Guid>();
+
     public async Task<OwnedSpeedReadingParityReport> RunAsync(
         CancellationToken cancellationToken = default)
     {
+        _exerciseTypeNames = await legacy.ExerciseTypes
+            .AsNoTracking()
+            .ToDictionaryAsync(item => item.Id, item => item.Name, cancellationToken);
+        _legacyExerciseIds = await legacy.Exercises
+            .AsNoTracking()
+            .Select(item => item.Id)
+            .ToHashSetAsync(cancellationToken);
+        _legacyReadingTextIds = await legacy.ReadingTexts
+            .AsNoTracking()
+            .Select(item => item.Id)
+            .ToHashSetAsync(cancellationToken);
+
         var rows = new List<OwnedSpeedReadingParityRow>();
         ISpeedReadingDataContext ownedData = owned;
 
@@ -79,7 +120,7 @@ public sealed class OwnedSpeedReadingParityChecker(
         rows.Add(await CompareAsync("DailyExerciseLogs", "daily_exercise_logs", "Id", "id", legacy.DailyExerciseLogs.Select(item => item.Id), owned.DailyExerciseLogs.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("AgeGroupConfigurations", "age_group_configurations", "Id", "id", legacy.AgeGroupConfigurations.Select(item => item.Id), owned.AgeGroupConfigurations.Select(item => item.Id), cancellationToken));
 
-        rows.Add(await CompareAsync("Users(active)", "user_profiles", "Id", "user_id", legacy.Users.Where(item => !item.IsDeleted).Select(item => item.Id), owned.UserProfiles.Select(item => item.UserId), cancellationToken));
+        rows.Add(await CompareAsync("Users", "user_profiles", "Id", "user_id", legacy.Users.Select(item => item.Id), owned.UserProfiles.Select(item => item.UserId), cancellationToken));
         rows.Add(await CompareAsync("LearningPathTemplates", "learning_path_templates", "Id", "id", legacy.LearningPathTemplates.Select(item => item.Id), owned.LearningPathTemplates.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("LearningPathNodes", "learning_path_nodes", "Id", "id", legacy.LearningPathNodes.Select(item => item.Id), owned.LearningPathNodes.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("NodeContents", "learning_path_node_contents", "Id", "id", legacy.NodeContents.Select(item => item.Id), owned.LearningPathNodeContents.Select(item => item.Id), cancellationToken));
@@ -98,11 +139,18 @@ public sealed class OwnedSpeedReadingParityChecker(
         rows.Add(await CompareAsync("VisualizationQuestions", "visualization_questions", "Id", "id", legacy.VisualizationQuestions.Select(item => item.Id), owned.VisualizationQuestions.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("VocabularyItems", "vocabulary_items", "Id", "id", legacy.VocabularyItems.Select(item => item.Id), owned.VocabularyItems.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("UserVocabularyProgresses", "user_vocabulary_progress", "Id", "id", legacy.UserVocabularyProgresses.Select(item => item.Id), owned.UserVocabularyProgresses.Select(item => item.Id), cancellationToken));
-        rows.Add(await CompareAsync("ExerciseReviewItems", "review_items", "Id", "id", legacy.Database.SqlQueryRaw<Guid>("SELECT CAST(NULL AS uuid) AS \"Value\" WHERE FALSE"), owned.ReviewItems.Select(item => item.Id), cancellationToken));
+        var reviewTableExists = await legacy.Database
+            .SqlQueryRaw<bool>(
+                @"SELECT to_regclass('""ExerciseReviewItems""') IS NOT NULL AS ""Value""")
+            .SingleAsync(cancellationToken);
+        var reviewIds = reviewTableExists
+            ? legacy.ExerciseReviewItems.Select(item => item.Id)
+            : legacy.Database.SqlQueryRaw<Guid>("SELECT CAST(NULL AS uuid) AS \"Value\" WHERE FALSE");
+        rows.Add(await CompareAsync("ExerciseReviewItems", "review_items", "Id", "id", reviewIds, owned.ReviewItems.Select(item => item.Id), cancellationToken));
 
         rows.Add(await CompareAsync("Notifications", "notifications", "Id", "id", legacy.Notifications.Select(item => item.Id), ownedData.Notifications.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("NotificationPreferences", "notification_preferences", "Id", "id", legacy.NotificationPreferences.Select(item => item.Id), ownedData.NotificationPreferences.Select(item => item.Id), cancellationToken));
-        rows.Add(await CompareAsync("NotificationTypePreferences", "notification_type_preferences", "Id", "id", legacy.NotificationPreferences.Select(item => item.Id), ownedData.NotificationTypePreferences.Select(item => item.Id), cancellationToken));
+        rows.Add(await CompareAsync("NotificationTypePreferences", "notification_type_preferences", "Id", "id", legacy.NotificationTypePreferences.Select(item => item.Id), ownedData.NotificationTypePreferences.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("PushSubscriptions", "push_subscriptions", "Id", "id", legacy.PushSubscriptions.Select(item => item.Id), ownedData.PushSubscriptions.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("Announcements", "announcements", "Id", "id", legacy.Announcements.Select(item => item.Id), ownedData.Announcements.Select(item => item.Id), cancellationToken));
         rows.Add(await CompareAsync("AnnouncementUserInteractions", "announcement_user_interactions", "Id", "id", legacy.AnnouncementUserInteractions.Select(item => item.Id), ownedData.AnnouncementUserInteractions.Select(item => item.Id), cancellationToken));
@@ -125,7 +173,7 @@ public sealed class OwnedSpeedReadingParityChecker(
         return new OwnedSpeedReadingParityReport(DateTime.UtcNow, rows);
     }
 
-    private static async Task<OwnedSpeedReadingParityRow> CompareAsync(
+    private async Task<OwnedSpeedReadingParityRow> CompareAsync(
         string sourceTable,
         string ownedTable,
         string sourceKey,
@@ -136,6 +184,35 @@ public sealed class OwnedSpeedReadingParityChecker(
     {
         var source = await sourceIds.ToListAsync(cancellationToken);
         var target = await ownedIds.ToListAsync(cancellationToken);
+        var sourceEntityType = FindEntityClrType(sourceIds.Expression);
+        var ownedEntityType = FindEntityClrType(ownedIds.Expression);
+        var sourcePayloadChecksum = OwnedSpeedReadingParityHash.ComputePayload([]);
+        var ownedPayloadChecksum = OwnedSpeedReadingParityHash.ComputePayload([]);
+        var bothStoresAreEmpty = source.Count == 0 && target.Count == 0;
+        var fieldParityAvailable = bothStoresAreEmpty
+            || sourceEntityType is not null && ownedEntityType is not null;
+
+        if (fieldParityAvailable && sourceEntityType is not null && ownedEntityType is not null)
+        {
+            var sourceRows = await LoadEntityRowsAsync(
+                legacy,
+                sourceEntityType,
+                source.ToHashSet(),
+                FindProjectedPropertyName(sourceIds.Expression) ?? "Id",
+                cancellationToken);
+            var ownedRows = await LoadEntityRowsAsync(
+                owned,
+                ownedEntityType,
+                target.ToHashSet(),
+                FindProjectedPropertyName(ownedIds.Expression) ?? "Id",
+                cancellationToken);
+
+            sourcePayloadChecksum = OwnedSpeedReadingParityHash.ComputePayload(
+                sourceRows.Select(row => Canonicalize(sourceTable, row, isSource: true)));
+            ownedPayloadChecksum = OwnedSpeedReadingParityHash.ComputePayload(
+                ownedRows.Select(row => Canonicalize(sourceTable, row, isSource: false)));
+        }
+
         return new OwnedSpeedReadingParityRow(
             sourceTable,
             ownedTable,
@@ -144,6 +221,343 @@ public sealed class OwnedSpeedReadingParityChecker(
             source.Count,
             target.Count,
             OwnedSpeedReadingParityHash.Compute(source),
-            OwnedSpeedReadingParityHash.Compute(target));
+            OwnedSpeedReadingParityHash.Compute(target),
+            sourcePayloadChecksum,
+            ownedPayloadChecksum,
+            fieldParityAvailable);
+    }
+
+    private async Task<IReadOnlyList<object>> LoadEntityRowsAsync(
+        DbContext context,
+        Type entityType,
+        IReadOnlySet<Guid> ids,
+        string keyPropertyName,
+        CancellationToken cancellationToken)
+    {
+        var rows = await LoadEntityRowsByTypeAsync(context, entityType, cancellationToken);
+        var keyProperty = entityType.GetProperty(
+            keyPropertyName,
+            BindingFlags.Instance | BindingFlags.Public)
+            ?? throw new InvalidOperationException(
+                $"Parity key property '{keyPropertyName}' was not found on {entityType.Name}.");
+
+        return rows
+            .Where(row => TryGetGuid(keyProperty.GetValue(row)) is { } id && ids.Contains(id))
+            .ToArray();
+    }
+
+    private static async Task<IReadOnlyList<object>> LoadEntityRowsByTypeAsync(
+        DbContext context,
+        Type entityType,
+        CancellationToken cancellationToken)
+    {
+        var loader = typeof(OwnedSpeedReadingParityChecker)
+            .GetMethod(nameof(LoadEntityRowsGenericAsync), BindingFlags.Static | BindingFlags.NonPublic)!
+            .MakeGenericMethod(entityType);
+        var task = (Task<IReadOnlyList<object>>)loader.Invoke(
+            null,
+            [context, cancellationToken])!;
+        return await task;
+    }
+
+    private static async Task<IReadOnlyList<object>> LoadEntityRowsGenericAsync<TEntity>(
+        DbContext context,
+        CancellationToken cancellationToken)
+        where TEntity : class
+    {
+        return (await context.Set<TEntity>()
+                .AsNoTracking()
+                .ToListAsync(cancellationToken))
+            .Cast<object>()
+            .ToArray();
+    }
+
+    private IReadOnlyDictionary<string, string?> Canonicalize(
+        string sourceTable,
+        object row,
+        bool isSource)
+    {
+        var fields = new Dictionary<string, string?>(StringComparer.Ordinal);
+        foreach (var property in row.GetType().GetProperties(
+                     BindingFlags.Instance | BindingFlags.Public))
+        {
+            if (!IsScalar(property.PropertyType)
+                || string.Equals(property.Name, "Id", StringComparison.Ordinal)
+                || ShouldSkipField(sourceTable, property.Name, isSource))
+            {
+                continue;
+            }
+
+            var name = NormalizeFieldName(property.Name);
+            fields[name] = FormatValue(property.GetValue(row), name);
+        }
+
+        foreach (var field in GetSyntheticFields(sourceTable, row, isSource))
+        {
+            fields[NormalizeFieldName(field.Key)] = FormatValue(
+                field.Value,
+                NormalizeFieldName(field.Key));
+        }
+
+        return fields;
+    }
+
+    private IReadOnlyDictionary<string, object?> GetSyntheticFields(
+        string sourceTable,
+        object row,
+        bool isSource)
+    {
+        if (!isSource)
+            return new Dictionary<string, object?>();
+
+        if (sourceTable == "Exercises" && row is LegacyExercise exercise)
+        {
+            return new Dictionary<string, object?>
+            {
+                ["TypeCode"] = _exerciseTypeNames.GetValueOrDefault(exercise.ExerciseTypeId, string.Empty),
+                ["IsActive"] = true
+            };
+        }
+
+        if (sourceTable == "StudentAssignments" && row is LegacyStudentAssignment)
+            return new Dictionary<string, object?> { ["IsActive"] = true };
+
+        if (sourceTable == "Users" && row is LegacyUser user)
+        {
+            return new Dictionary<string, object?>
+            {
+                ["UserId"] = user.Id,
+                ["IsActive"] = !user.IsDeleted
+            };
+        }
+
+        if (sourceTable == "StudentPathProgresses"
+            && row is LegacyStudentPathProgress progress)
+        {
+            return new Dictionary<string, object?>
+            {
+                ["IsCompleted"] = progress.IsCompleted
+                    || progress.CompletedAt.HasValue
+                    || string.Equals(progress.Status, "Completed", StringComparison.OrdinalIgnoreCase)
+            };
+        }
+
+        if (sourceTable == "PersonalizedLearningPaths"
+            && row is LegacyPersonalizedLearningPath personalized)
+        {
+            return new Dictionary<string, object?>
+            {
+                ["IsUnlocked"] = personalized.UnlockedAt.HasValue
+            };
+        }
+
+        if (sourceTable == "StudentExerciseResults"
+            && row is LegacyStudentExerciseResult result)
+        {
+            return new Dictionary<string, object?>
+            {
+                ["Score"] = result.WeightedKDP,
+                ["LegacySessionId"] = result.SessionId
+            };
+        }
+
+        if (sourceTable == "NodeContents" && row is LegacyNodeContent content)
+        {
+            var sourceType = content.SourceContentType.Trim();
+            var isExercise = sourceType.Contains("exercise", StringComparison.OrdinalIgnoreCase);
+            var isReadingText = sourceType.Contains("reading", StringComparison.OrdinalIgnoreCase)
+                || sourceType.Contains("text", StringComparison.OrdinalIgnoreCase);
+            if (!isExercise && !isReadingText)
+            {
+                isExercise = _legacyExerciseIds.Contains(content.SourceContentId)
+                    && !_legacyReadingTextIds.Contains(content.SourceContentId);
+                isReadingText = _legacyReadingTextIds.Contains(content.SourceContentId)
+                    && !_legacyExerciseIds.Contains(content.SourceContentId);
+            }
+
+            return new Dictionary<string, object?>
+            {
+                ["ExerciseId"] = isExercise ? content.SourceContentId : null,
+                ["ReadingTextId"] = isReadingText ? content.SourceContentId : null
+            };
+        }
+
+        return new Dictionary<string, object?>();
+    }
+
+    private static bool ShouldSkipField(
+        string sourceTable,
+        string fieldName,
+        bool isSource)
+    {
+        if (sourceTable == "Users")
+        {
+            return fieldName is "UserName"
+                or "Email"
+                or "IsDeleted"
+                or "CreatedAt"
+                or "CreatedBy"
+                or "UpdatedAt"
+                or "UpdatedBy";
+        }
+
+        if (sourceTable == "StudentPathProgresses"
+            && isSource
+            && fieldName is "Status" or "CompletedAt")
+        {
+            return true;
+        }
+
+        if (sourceTable == "PersonalizedLearningPaths"
+            && isSource
+            && fieldName == "UnlockedAt")
+        {
+            return true;
+        }
+
+        if (sourceTable == "NodeContents"
+            && isSource
+            && fieldName is "SourceContentId" or "SourceContentType"
+                or "ExerciseId" or "ReadingTextId")
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsScalar(Type type)
+    {
+        var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+        return underlyingType.IsEnum
+            || underlyingType.IsPrimitive
+            || underlyingType == typeof(string)
+            || underlyingType == typeof(Guid)
+            || underlyingType == typeof(DateTime)
+            || underlyingType == typeof(DateTimeOffset)
+            || underlyingType == typeof(TimeSpan)
+            || underlyingType == typeof(decimal);
+    }
+
+    private static string? FormatValue(object? value, string fieldName)
+    {
+        if (value is null)
+            return null;
+
+        if (value is Guid guid)
+        {
+            return IsAuditField(fieldName) && guid == Guid.Empty
+                ? null
+                : guid.ToString("D");
+        }
+
+        if (value is string text)
+        {
+            if (IsAuditField(fieldName) && Guid.TryParse(text, out var auditId))
+                return auditId == Guid.Empty ? null : auditId.ToString("D");
+            return text;
+        }
+
+        if (value is DateTime dateTime)
+        {
+            var utc = dateTime.Kind == DateTimeKind.Utc
+                ? dateTime
+                : dateTime.Kind == DateTimeKind.Local
+                    ? dateTime.ToUniversalTime()
+                    : DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+            return utc.ToString("O", CultureInfo.InvariantCulture);
+        }
+
+        if (value is DateTimeOffset dateTimeOffset)
+            return dateTimeOffset.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
+
+        if (value is TimeSpan timeSpan)
+            return timeSpan.Ticks.ToString(CultureInfo.InvariantCulture);
+
+        if (value.GetType().IsEnum)
+            return Convert.ToInt64(value, CultureInfo.InvariantCulture)
+                .ToString(CultureInfo.InvariantCulture);
+
+        return value is IFormattable formattable
+            ? formattable.ToString(null, CultureInfo.InvariantCulture)
+            : value.ToString();
+    }
+
+    private static bool IsAuditField(string fieldName) =>
+        fieldName is "createdby" or "updatedby" or "deletedby";
+
+    private static string NormalizeFieldName(string name)
+    {
+        var normalized = new string(name
+            .Where(char.IsLetterOrDigit)
+            .Select(char.ToLowerInvariant)
+            .ToArray());
+        return normalized switch
+        {
+            "targetagegroupconfigurationid" => "targetagegroupid",
+            _ => normalized
+        };
+    }
+
+    private static Guid? TryGetGuid(object? value) =>
+        value switch
+        {
+            Guid guid => guid,
+            string text when Guid.TryParse(text, out var guid) => guid,
+            _ => null
+        };
+
+    private static Type? FindEntityClrType(Expression expression)
+    {
+        var visitor = new EntityQueryRootVisitor();
+        visitor.Visit(expression);
+        return visitor.ClrType;
+    }
+
+    private static string? FindProjectedPropertyName(Expression expression)
+    {
+        if (expression is MethodCallExpression methodCall)
+        {
+            if (string.Equals(methodCall.Method.Name, "Select", StringComparison.Ordinal)
+                && methodCall.Arguments.Count > 1
+                && StripQuote(methodCall.Arguments[1]) is LambdaExpression lambda)
+            {
+                return GetMemberName(lambda.Body);
+            }
+
+            return FindProjectedPropertyName(methodCall.Arguments[0]);
+        }
+
+        return null;
+    }
+
+    private static string? GetMemberName(Expression expression) =>
+        expression switch
+        {
+            MemberExpression member => member.Member.Name,
+            UnaryExpression unary => GetMemberName(unary.Operand),
+            _ => null
+        };
+
+    private static Expression StripQuote(Expression expression) =>
+        expression is UnaryExpression { NodeType: ExpressionType.Quote } unary
+            ? unary.Operand
+            : expression;
+
+    private sealed class EntityQueryRootVisitor : ExpressionVisitor
+    {
+        public Type? ClrType { get; private set; }
+
+        protected override Expression VisitExtension(Expression node)
+        {
+            var entityType = node.GetType()
+                .GetProperty("EntityType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                ?.GetValue(node);
+            ClrType = entityType?.GetType()
+                .GetProperty("ClrType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                ?.GetValue(entityType) as Type
+                ?? ClrType;
+            return base.VisitExtension(node);
+        }
     }
 }
