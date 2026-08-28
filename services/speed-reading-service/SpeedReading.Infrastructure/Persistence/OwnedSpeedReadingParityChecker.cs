@@ -317,7 +317,9 @@ public sealed class OwnedSpeedReadingParityChecker(
             {
                 sourceRow.Fields.TryGetValue(field, out var sourceValue);
                 ownedRow.Fields.TryGetValue(field, out var ownedValue);
-                if (!string.Equals(sourceValue, ownedValue, StringComparison.Ordinal))
+                if (!sourceRow.Fields.ContainsKey(field)
+                    || !ownedRow.Fields.ContainsKey(field)
+                    || !string.Equals(sourceValue, ownedValue, StringComparison.Ordinal))
                     fieldNames.Add(field);
             }
         }
@@ -398,6 +400,10 @@ public sealed class OwnedSpeedReadingParityChecker(
                 {
                     fields[fieldName] = null;
                 }
+                else if (value is not null)
+                {
+                    fields[fieldName] = value.Trim();
+                }
             }
         }
 
@@ -429,6 +435,16 @@ public sealed class OwnedSpeedReadingParityChecker(
                 ["OrderIndex"] = _legacyQuestionOrders.GetValueOrDefault(
                     question.Id,
                     Math.Max(0, question.OrderIndex))
+            };
+        }
+
+        if (sourceTable == "ExamQuestions" && row is LegacyExamQuestion examQuestion)
+        {
+            return new Dictionary<string, object?>
+            {
+                ["WordCount"] = examQuestion.WordCount > 0
+                    ? examQuestion.WordCount
+                    : CountWords(examQuestion.Content)
             };
         }
 
@@ -529,7 +545,8 @@ public sealed class OwnedSpeedReadingParityChecker(
                 or "CreatedAt"
                 or "CreatedBy"
                 or "UpdatedAt"
-                or "UpdatedBy";
+                or "UpdatedBy"
+                or "Version";
         }
 
         if (sourceTable == "StudentPathProgresses"
@@ -634,6 +651,9 @@ public sealed class OwnedSpeedReadingParityChecker(
 
     private static bool IsAuditField(string fieldName) =>
         fieldName is "createdby" or "updatedby" or "deletedby";
+
+    private static int CountWords(string value) =>
+        value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
 
     private static string NormalizeFieldName(string name)
     {
