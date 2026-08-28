@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Domain.Assessment;
+using SpeedReading.Domain.Sessions;
 using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Application.UnitTests;
@@ -114,5 +115,45 @@ public sealed class SpeedReadingAssessmentAttemptTests
         context.Model.FindEntityType(typeof(AssessmentAttempt)).Should().NotBeNull();
         context.Database.GetMigrations()
             .Should().Contain("20260828130000_AddAssessmentMeasurementFoundation");
+    }
+
+    [Fact]
+    public void Exercise_session_keeps_the_assessment_attempt_reference()
+    {
+        var assessmentAttemptId = Guid.NewGuid();
+
+        var session = ExerciseSession.Start(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            readingTextId: null,
+            totalSteps: 3,
+            DateTime.UtcNow,
+            timeLimitSeconds: null,
+            assessmentAttemptId);
+
+        session.AssessmentAttemptId.Should().Be(assessmentAttemptId);
+    }
+
+    [Fact]
+    public void Exercise_session_result_keeps_the_assessment_attempt_reference()
+    {
+        var assessmentAttemptId = Guid.NewGuid();
+
+        var result = ExerciseSessionResult.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            readingTextId: null,
+            wordsRead: 100,
+            timeSpentSeconds: 60,
+            rawWpm: 100,
+            comprehensionScore: 80,
+            weightedKdp: 80,
+            score: 80,
+            DateTime.UtcNow,
+            assessmentAttemptId: assessmentAttemptId);
+
+        result.AssessmentAttemptId.Should().Be(assessmentAttemptId);
     }
 }
