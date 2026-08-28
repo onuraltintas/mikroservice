@@ -3,6 +3,7 @@ using EduPlatform.Shared.Kernel.Primitives;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using SpeedReading.Domain.Assignments;
 using SpeedReading.Domain.AgeGroups;
+using SpeedReading.Domain.Assessment;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.LearningPaths;
 using SpeedReading.Domain.Gamification;
@@ -57,6 +58,7 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<VocabularyItem> VocabularyItems => Set<VocabularyItem>();
     public DbSet<UserVocabularyProgress> UserVocabularyProgresses => Set<UserVocabularyProgress>();
     public DbSet<ReviewItem> ReviewItems => Set<ReviewItem>();
+    public DbSet<AssessmentAttempt> AssessmentAttempts => Set<AssessmentAttempt>();
     internal DbSet<LegacyUserContentFeedback> ContentFeedbacks => Set<LegacyUserContentFeedback>();
     internal DbSet<LegacyStudentLearningProfile> AdaptiveLearningProfiles => Set<LegacyStudentLearningProfile>();
     internal DbSet<LegacyContentRecommendation> AdaptiveContentRecommendations => Set<LegacyContentRecommendation>();
@@ -143,6 +145,7 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<VocabularyItem>());
         ConfigureEntity(modelBuilder.Entity<UserVocabularyProgress>());
         ConfigureEntity(modelBuilder.Entity<ReviewItem>());
+        ConfigureEntity(modelBuilder.Entity<AssessmentAttempt>());
         modelBuilder.Entity<AdminAuditRecord>(entity =>
         {
             entity.ToTable("admin_audit_records");
@@ -1216,6 +1219,25 @@ public sealed class OwnedSpeedReadingDbContext(
                 .WithMany()
                 .HasForeignKey(item => item.ExerciseTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<AssessmentAttempt>(entity =>
+        {
+            entity.ToTable("assessment_attempts");
+            entity.Property(item => item.StudentId).HasColumnName("student_id");
+            entity.Property(item => item.Phase).HasColumnName("phase");
+            entity.Property(item => item.Status).HasColumnName("status");
+            entity.Property(item => item.FormVersion).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.FormVersion).HasColumnName("form_version");
+            entity.Property(item => item.Language).HasMaxLength(20).IsRequired();
+            entity.Property(item => item.Language).HasColumnName("language");
+            entity.Property(item => item.AgeGroupConfigurationId).HasColumnName("age_group_configuration_id");
+            entity.Property(item => item.ExpectedExerciseCount).HasColumnName("expected_exercise_count");
+            entity.Property(item => item.StartedAt).HasColumnName("started_at");
+            entity.Property(item => item.CompletedAt).HasColumnName("completed_at");
+            entity.HasIndex(item => new { item.StudentId, item.Phase, item.Status, item.StartedAt });
+            entity.HasIndex(item => new { item.StudentId, item.Phase, item.FormVersion })
+                .HasFilter("status = 1");
         });
 
         modelBuilder.Entity<SpeedReadingUserProfile>(entity =>
