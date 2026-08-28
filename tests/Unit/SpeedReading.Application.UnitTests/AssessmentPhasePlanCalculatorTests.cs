@@ -15,7 +15,7 @@ public sealed class AssessmentPhasePlanCalculatorTests
         result.Phases.Should().ContainSingle(item =>
             item.Phase == AssessmentAttemptPhase.Baseline
             && item.Status == AssessmentPhasePlanStatus.Available
-            && item.PrerequisitePhase is null);
+            && item.PrerequisitePhase == null);
         result.Phases.Single(item => item.Phase == AssessmentAttemptPhase.PostTraining)
             .Status.Should().Be(AssessmentPhasePlanStatus.Locked);
     }
@@ -23,11 +23,11 @@ public sealed class AssessmentPhasePlanCalculatorTests
     [Fact]
     public void Unlocks_the_next_phase_after_a_completed_prerequisite()
     {
-        var completedAt = DateTime.UtcNow.AddDays(-1);
+        var startedAt = DateTime.UtcNow.AddDays(-1);
         var baseline = CreateAttempt(
             AssessmentAttemptPhase.Baseline,
             AssessmentAttemptStatus.Completed,
-            completedAt,
+            startedAt,
             "tr-baseline-v1");
 
         var result = AssessmentPhasePlanCalculator.Calculate([baseline]);
@@ -35,7 +35,7 @@ public sealed class AssessmentPhasePlanCalculatorTests
         var postTraining = result.Phases.Single(item => item.Phase == AssessmentAttemptPhase.PostTraining);
         postTraining.Status.Should().Be(AssessmentPhasePlanStatus.Available);
         postTraining.PrerequisitePhase.Should().Be(AssessmentAttemptPhase.Baseline);
-        postTraining.AvailableAt.Should().Be(completedAt);
+        postTraining.AvailableAt.Should().Be(startedAt.AddMinutes(5));
         postTraining.FormVersion.Should().Be("tr-posttraining-v1");
         result.NextPhase.Should().Be(AssessmentAttemptPhase.PostTraining);
     }
@@ -101,7 +101,7 @@ public sealed class AssessmentPhasePlanCalculatorTests
         string formVersion)
     {
         var completedAt = status == AssessmentAttemptStatus.Completed
-            ? timestamp.AddMinutes(5)
+            ? (DateTime?)timestamp.AddMinutes(5)
             : null;
         return new(
             Guid.NewGuid(),
