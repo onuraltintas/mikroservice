@@ -8,6 +8,20 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class SpeedReadingAssessmentAttemptTests
 {
+    [Theory]
+    [InlineData(AssessmentAttemptPhase.Baseline, null)]
+    [InlineData(AssessmentAttemptPhase.PostTraining, AssessmentAttemptPhase.Baseline)]
+    [InlineData(AssessmentAttemptPhase.Retention, AssessmentAttemptPhase.PostTraining)]
+    [InlineData(AssessmentAttemptPhase.Transfer, AssessmentAttemptPhase.Retention)]
+    public void Phase_rules_define_the_required_measurement_sequence(
+        AssessmentAttemptPhase phase,
+        AssessmentAttemptPhase? prerequisite)
+    {
+        AssessmentAttemptPhaseRules.TryGetPrerequisite(phase, out var actualPrerequisite)
+            .Should().Be(prerequisite.HasValue);
+        actualPrerequisite.Should().Be(prerequisite.GetValueOrDefault());
+    }
+
     [Fact]
     public void Start_creates_an_in_progress_attempt_with_explicit_phase_and_form()
     {
