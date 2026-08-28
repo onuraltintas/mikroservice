@@ -57,4 +57,26 @@ describe('AssessmentService', () => {
     });
     request.flush({});
   });
+
+  it('loads the student assessment attempt history', () => {
+    service.getAttemptHistory().subscribe(attempts => expect(attempts).toEqual([
+      jasmine.objectContaining({ id: 'attempt-1', phase: 1 })
+    ]));
+
+    const request = http.expectOne('/api/speed-reading/assessment/attempts');
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      data: [{
+        id: 'attempt-1',
+        phase: 1,
+        status: 2,
+        formVersion: 'tr-baseline-v1',
+        language: 'tr-TR',
+        expectedExerciseCount: 3,
+        completedExerciseCount: 3,
+        startedAt: '2026-08-28T19:00:00Z',
+        completedAt: '2026-08-28T19:05:00Z'
+      }]
+    });
+  });
 });

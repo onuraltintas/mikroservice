@@ -90,6 +90,15 @@ export class AssessmentService {
     );
   }
 
+  getAttemptHistory(): Observable<AssessmentAttemptSummaryDto[]> {
+    return this.http.get<
+      ApiResponse<AssessmentAttemptSummaryDto[]> | AssessmentAttemptSummaryDto[]
+    >(`${this.apiUrl}/attempts`).pipe(
+      map((response: ApiResponse<AssessmentAttemptSummaryDto[]> | AssessmentAttemptSummaryDto[]) =>
+        'data' in response ? response.data : response)
+    );
+  }
+
   /**
    * Gets the 3 exercises for initial assessment
    */

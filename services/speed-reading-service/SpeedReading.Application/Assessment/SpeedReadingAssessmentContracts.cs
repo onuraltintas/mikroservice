@@ -5,7 +5,7 @@ namespace SpeedReading.Application.Assessment;
 public sealed class StartAssessmentAttemptRequest
 {
     public AssessmentAttemptPhase Phase { get; init; } = AssessmentAttemptPhase.Baseline;
-    public string FormVersion { get; init; } = "tr-baseline-v1";
+    public string FormVersion { get; init; } = string.Empty;
     public string Language { get; init; } = "tr-TR";
     public Guid? AgeGroupConfigurationId { get; init; }
     public int ExpectedExerciseCount { get; init; } = 3;
@@ -114,6 +114,10 @@ public interface ISpeedReadingAssessment
     Task<AssessmentAttemptSummary> StartAttemptAsync(
         Guid userId,
         StartAssessmentAttemptRequest request,
+        CancellationToken cancellationToken) =>
+        throw new NotSupportedException("Versioned assessment attempts require owned Speed Reading data.");
+    Task<IReadOnlyList<AssessmentAttemptSummary>> GetAttemptHistoryAsync(
+        Guid userId,
         CancellationToken cancellationToken) =>
         throw new NotSupportedException("Versioned assessment attempts require owned Speed Reading data.");
     Task<AssessmentExercisesSummary> GetExercisesAsync(Guid userId, CancellationToken cancellationToken);

@@ -20,7 +20,19 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             throw new ArgumentException("A valid user is required.", nameof(userId));
         ArgumentNullException.ThrowIfNull(request);
 
-        var formVersion = request.FormVersion?.Trim() ?? string.Empty;
+        var formVersion = string.IsNullOrWhiteSpace(request.FormVersion)
+            ? GetDefaultFormVersion(request.Phase, request.Language)
+            : request.FormVersion.Trim();
+        if (AssessmentAttemptPhaseRules.TryGetPrerequisite(request.Phase, out var prerequisitePhase)
+            && !await db.AssessmentAttempts.AsNoTracking().AnyAsync(item =>
+                item.StudentId == userId
+                && item.Phase == prerequisitePhase
+                && item.Status == AssessmentAttemptStatus.Completed,
+                cancellationToken))
+        {
+            throw new InvalidOperationException(
+                $"A completed {prerequisitePhase} assessment is required before starting {request.Phase}.");
+        }
         var existing = await db.AssessmentAttempts
             .SingleOrDefaultAsync(item => item.StudentId == userId
                 && item.Phase == request.Phase
@@ -58,6 +70,46 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
         return await MapAttemptSummaryAsync(attempt, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<AssessmentAttemptSummary>> GetAttemptHistoryAsync(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty)
+            throw new ArgumentException("A valid user is required.", nameof(userId));
+
+        var attempts = await db.AssessmentAttempts
+            .AsNoTracking()
+            .Where(item => item.StudentId == userId)
+            .OrderByDescending(item => item.StartedAt)
+            .ToListAsync(cancellationToken);
+        if (attempts.Count == 0)
+            return [];
+
+        var attemptIds = attempts.Select(item => item.Id).ToArray();
+        var completedItems = await db.ExerciseSessionResults
+            .AsNoTracking()
+            .Where(item => item.AssessmentAttemptId.HasValue
+                && attemptIds.Contains(item.AssessmentAttemptId.Value)
+                && item.IsMeasured)
+            .Select(item => new { item.AssessmentAttemptId, item.ExerciseId })
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        var completedCounts = completedItems
+            .GroupBy(item => item.AssessmentAttemptId!.Value)
+            .ToDictionary(group => group.Key, group => group.Count());
+
+        return attempts.Select(attempt => new AssessmentAttemptSummary(
+            attempt.Id,
+            attempt.Phase,
+            attempt.Status,
+            attempt.FormVersion,
+            attempt.Language,
+            attempt.ExpectedExerciseCount,
+            completedCounts.GetValueOrDefault(attempt.Id),
+            attempt.StartedAt,
+            attempt.CompletedAt)).ToList();
+    }
+
     public async Task<AssessmentExercisesSummary> GetExercisesAsync(
         Guid userId,
         CancellationToken cancellationToken)
@@ -79,7 +131,7 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
                     on exercise.ExerciseTypeId equals exerciseType.Id into exerciseTypes
                 from exerciseType in exerciseTypes.DefaultIfEmpty()
                 where formItem.AssessmentAttemptId == activeAttemptId.Value
-                    && exercise.IsActive
+                    && (exercise.IsActive || formItem.ContentSnapshotJson != "{}")
                 orderby formItem.OrderIndex
                 select new AssessmentExerciseRow(
                     exercise.Id,
@@ -910,6 +962,20 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
         8 => "Elit",
         _ => $"Seviye {level}"
     };
+
+    private static string GetDefaultFormVersion(
+        AssessmentAttemptPhase phase,
+        string language)
+    {
+        var languageCode = language
+            .Split('-', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?.ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(languageCode))
+            languageCode = "tr";
+
+        return $"{languageCode}-{phase.ToString().ToLowerInvariant()}-v1";
+    }
 
     private static bool TryGetProperty(JsonElement element, string name, out JsonElement value)
     {

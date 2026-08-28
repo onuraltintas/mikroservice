@@ -22,6 +22,13 @@ public sealed class AssessmentController(ISpeedReadingAssessment assessment) : C
             cancellationToken));
     }
 
+    [HttpGet("attempts")]
+    public async Task<IActionResult> GetAttemptHistory(CancellationToken cancellationToken = default)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        return Ok(await assessment.GetAttemptHistoryAsync(userId, cancellationToken));
+    }
+
     [HttpGet("exercises")]
     public async Task<IActionResult> GetExercises(CancellationToken cancellationToken = default)
     {

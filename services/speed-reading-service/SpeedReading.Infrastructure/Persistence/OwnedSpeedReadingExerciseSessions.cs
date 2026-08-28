@@ -131,7 +131,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         var readingTextId = assessmentSnapshot is not null
             ? assessmentSnapshot.ReadingText?.Id
             : pinnedReadingTextId ?? request.ReadingTextId;
-        if (!readingTextId.HasValue && ReadingExerciseTypes.Contains(exerciseTypeName))
+        if (assessmentSnapshot is null
+            && !readingTextId.HasValue
+            && ReadingExerciseTypes.Contains(exerciseTypeName))
         {
             readingTextId = await db.ReadingTexts
                 .AsNoTracking()
