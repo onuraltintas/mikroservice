@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Infrastructure.Legacy;
@@ -72,6 +73,8 @@ public sealed class OwnedSpeedReadingParityChecker(
 {
     private IReadOnlyDictionary<Guid, string> _exerciseTypeNames =
         new Dictionary<Guid, string>();
+    private IReadOnlyDictionary<Guid, int> _legacyQuestionOrders =
+        new Dictionary<Guid, int>();
     private IReadOnlySet<Guid> _legacyExerciseIds = new HashSet<Guid>();
     private IReadOnlySet<Guid> _legacyReadingTextIds = new HashSet<Guid>();
 
@@ -89,6 +92,11 @@ public sealed class OwnedSpeedReadingParityChecker(
             .AsNoTracking()
             .Select(item => item.Id)
             .ToHashSetAsync(cancellationToken);
+        var legacyQuestionOrderRows = await legacy.ReadingQuestions
+            .AsNoTracking()
+            .Select(item => new { item.Id, item.ReadingTextId, item.OrderIndex })
+            .ToListAsync(cancellationToken);
+        _legacyQuestionOrders = NormalizeQuestionOrders(legacyQuestionOrderRows);
 
         var rows = new List<OwnedSpeedReadingParityRow>();
         ISpeedReadingDataContext ownedData = owned;
@@ -381,6 +389,18 @@ public sealed class OwnedSpeedReadingParityChecker(
                 NormalizeFieldName(field.Key));
         }
 
+        if (sourceTable == "VocabularyItems")
+        {
+            foreach (var fieldName in new[] { "synonyms", "antonyms" })
+            {
+                if (fields.TryGetValue(fieldName, out var value)
+                    && string.IsNullOrWhiteSpace(value))
+                {
+                    fields[fieldName] = null;
+                }
+            }
+        }
+
         return fields;
     }
 
@@ -397,7 +417,18 @@ public sealed class OwnedSpeedReadingParityChecker(
             return new Dictionary<string, object?>
             {
                 ["TypeCode"] = _exerciseTypeNames.GetValueOrDefault(exercise.ExerciseTypeId, string.Empty),
+                ["CreatorId"] = exercise.CreatedBy,
                 ["IsActive"] = true
+            };
+        }
+
+        if (sourceTable == "ReadingQuestions" && row is LegacyReadingQuestion question)
+        {
+            return new Dictionary<string, object?>
+            {
+                ["OrderIndex"] = _legacyQuestionOrders.GetValueOrDefault(
+                    question.Id,
+                    Math.Max(0, question.OrderIndex))
             };
         }
 
@@ -443,6 +474,22 @@ public sealed class OwnedSpeedReadingParityChecker(
             };
         }
 
+        if (sourceTable == "Notifications" && row is LegacyUserNotification notification)
+        {
+            return new Dictionary<string, object?>
+            {
+                ["Status"] = notification.IsRead ? 4 : 0
+            };
+        }
+
+        if (sourceTable == "EmailTemplates" && row is LegacyEmailTemplate template)
+        {
+            return new Dictionary<string, object?>
+            {
+                ["Variables"] = template.AvailableVariables
+            };
+        }
+
         if (sourceTable == "NodeContents" && row is LegacyNodeContent content)
         {
             var sourceType = content.SourceContentType.Trim();
@@ -476,6 +523,8 @@ public sealed class OwnedSpeedReadingParityChecker(
         {
             return fieldName is "UserName"
                 or "Email"
+                or "FirstName"
+                or "LastName"
                 or "IsDeleted"
                 or "CreatedAt"
                 or "CreatedBy"
@@ -504,6 +553,19 @@ public sealed class OwnedSpeedReadingParityChecker(
         {
             return true;
         }
+
+        if (fieldName == "Version"
+            || fieldName == "IsDeleted"
+                && (sourceTable is "ExerciseSessions"
+                    or "StudentExerciseResults"
+                    or "StudentProgramProgresses"
+                    or "DailyExerciseLogs"))
+        {
+            return true;
+        }
+
+        if (sourceTable == "Notifications" && fieldName == "IsRead")
+            return true;
 
         return false;
     }
@@ -537,6 +599,11 @@ public sealed class OwnedSpeedReadingParityChecker(
         {
             if (IsAuditField(fieldName) && Guid.TryParse(text, out var auditId))
                 return auditId == Guid.Empty ? null : auditId.ToString("D");
+            if (fieldName.EndsWith("json", StringComparison.OrdinalIgnoreCase)
+                && TryNormalizeJson(text, out var normalizedJson))
+            {
+                return normalizedJson;
+            }
             return text;
         }
 
@@ -579,6 +646,62 @@ public sealed class OwnedSpeedReadingParityChecker(
             "targetagegroupconfigurationid" => "targetagegroupid",
             _ => normalized
         };
+    }
+
+    private static bool TryNormalizeJson(string text, out string normalized)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(text);
+            normalized = NormalizeJsonElement(document.RootElement);
+            return true;
+        }
+        catch (JsonException)
+        {
+            normalized = string.Empty;
+            return false;
+        }
+    }
+
+    private static string NormalizeJsonElement(JsonElement element) =>
+        element.ValueKind switch
+        {
+            JsonValueKind.Object => "{" + string.Join(",", element.EnumerateObject()
+                .OrderBy(property => property.Name, StringComparer.Ordinal)
+                .Select(property => JsonSerializer.Serialize(property.Name) + ":" + NormalizeJsonElement(property.Value))) + "}",
+            JsonValueKind.Array => "[" + string.Join(",", element.EnumerateArray().Select(NormalizeJsonElement)) + "]",
+            JsonValueKind.String => JsonSerializer.Serialize(element.GetString()),
+            JsonValueKind.Number => element.GetRawText(),
+            JsonValueKind.True => "true",
+            JsonValueKind.False => "false",
+            JsonValueKind.Null => "null",
+            _ => element.GetRawText()
+        };
+
+    private static IReadOnlyDictionary<Guid, int> NormalizeQuestionOrders<T>(
+        IReadOnlyCollection<T> rows)
+        where T : class
+    {
+        var idProperty = typeof(T).GetProperty("Id")!;
+        var readingTextIdProperty = typeof(T).GetProperty("ReadingTextId")!;
+        var orderProperty = typeof(T).GetProperty("OrderIndex")!;
+        return rows
+            .GroupBy(row => (Guid)readingTextIdProperty.GetValue(row)!)
+            .SelectMany(group =>
+            {
+                var used = new HashSet<int>();
+                return group
+                    .OrderBy(row => (int)orderProperty.GetValue(row)!)
+                    .ThenBy(row => (Guid)idProperty.GetValue(row)!)
+                    .Select(row =>
+                    {
+                        var order = Math.Max(0, (int)orderProperty.GetValue(row)!);
+                        while (!used.Add(order))
+                            order++;
+                        return new { Id = (Guid)idProperty.GetValue(row)!, Order = order };
+                    });
+            })
+            .ToDictionary(item => item.Id, item => item.Order);
     }
 
     private static Guid? TryGetGuid(object? value) =>
