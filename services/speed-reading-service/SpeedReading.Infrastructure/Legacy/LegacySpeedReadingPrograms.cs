@@ -192,7 +192,8 @@ internal sealed class LegacySpeedReadingPrograms(SpeedReadingDbContext db) : ILe
                 item.IncorrectCount,
                 item.TotalAttempts,
                 item.AverageWPM,
-                item.AverageComprehension))
+                item.AverageComprehension,
+                "Measured"))
             .ToListAsync(cancellationToken);
 
         return new AdminStudentProgressDetails(
@@ -278,7 +279,8 @@ internal sealed class LegacySpeedReadingPrograms(SpeedReadingDbContext db) : ILe
                 item.IncorrectCount,
                 item.TotalAttempts,
                 item.AverageWPM,
-                item.AverageComprehension))
+                item.AverageComprehension,
+                "Measured"))
             .ToListAsync(cancellationToken);
     }
 

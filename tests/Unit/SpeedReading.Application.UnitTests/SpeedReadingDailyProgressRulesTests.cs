@@ -13,6 +13,24 @@ public sealed class SpeedReadingDailyProgressRulesTests
     }
 
     [Fact]
+    public void Accepts_a_valid_completion_idempotency_key()
+    {
+        SpeedReadingDailyProgressRules.ValidateIdempotencyKey("daily-completion-1234")
+            .Should().Be("daily-completion-1234");
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("too short")]
+    public void Rejects_missing_or_invalid_completion_idempotency_keys(string? key)
+    {
+        var action = () => SpeedReadingDailyProgressRules.ValidateIdempotencyKey(key);
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
     public void Rejects_invalid_scores_and_missing_duration()
     {
         FluentActions.Invoking(() => SpeedReadingDailyProgressRules.ResolveScore(null, 101m))

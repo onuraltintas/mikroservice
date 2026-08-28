@@ -1530,7 +1530,7 @@
 
 
             <!-- Main Stats Row - Hide for exam_simulation and reading exercises -->
-            <div class="stats-row" *ngIf="!result?.details?.wpm && engine?.engineType !== 'exam_simulation'">
+            <div class="stats-row" *ngIf="!result?.details?.wpm && result?.details?.measurementStatus !== 'NotMeasured' && engine?.engineType !== 'exam_simulation'">
                 <div class="stat-card primary">
                     <div class="stat-value">{{ result?.score }}</div>
                     <div class="stat-label">Skor</div>
@@ -1547,6 +1547,11 @@
                     <div class="stat-value">{{ result?.errors }}</div>
                     <div class="stat-label">Hata</div>
                 </div>
+            </div>
+
+            <div class="measurement-not-available" *ngIf="result?.details?.measurementStatus === 'NotMeasured'">
+                Bu egzersizde doğrulanabilir performans ölçümü alınmadı. Tamamlama kaydedildi; skor ve WPM
+                istatistiklerine dahil edilmedi.
             </div>
 
             <!-- XP and Level Row -->
@@ -1596,7 +1601,7 @@
             </div>
 
             <!-- Speed Reading / RSVP Results (WPM) -->
-            <div class="speed-reading-results" *ngIf="result?.details?.wpm && engine?.engineType !== 'exam_simulation'">
+            <div class="speed-reading-results" *ngIf="result?.details?.wpm && result?.details?.measurementStatus !== 'NotMeasured' && engine?.engineType !== 'exam_simulation'">
                 <!-- WPM Box -->
                 <div class="result-box wpm-box">
                     <span class="material-icons">speed</span>

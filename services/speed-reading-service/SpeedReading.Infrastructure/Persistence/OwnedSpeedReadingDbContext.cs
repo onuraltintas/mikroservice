@@ -1080,6 +1080,8 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.WeightedKdp).HasColumnName("weighted_kdp");
             entity.Property(item => item.Score).HasPrecision(5, 2);
             entity.Property(item => item.Score).HasColumnName("score");
+            entity.Property(item => item.IsMeasured).HasColumnName("is_measured");
+            entity.Property(item => item.IsAssessmentMode).HasColumnName("is_assessment_mode");
             entity.Property(item => item.QuestionAnswersJson).HasColumnName("question_answers_json");
             entity.Property(item => item.QuestionAnswersJson).HasColumnType("jsonb").IsRequired();
             entity.Property(item => item.ReadingMovementsJson).HasColumnName("reading_movements_json");
@@ -1186,6 +1188,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.ToTable("daily_exercise_logs");
             entity.Property(item => item.ResultDataJson).HasColumnType("jsonb").IsRequired();
             entity.Property(item => item.SuccessRate).HasPrecision(5, 2);
+            entity.Property(item => item.IsMeasured).HasColumnName("is_measured");
             entity.Property(item => item.AverageWPM).HasPrecision(10, 2);
             entity.Property(item => item.AverageComprehension).HasPrecision(5, 2);
             entity.Property(item => item.AverageResponseTimeMs).HasPrecision(10, 2);

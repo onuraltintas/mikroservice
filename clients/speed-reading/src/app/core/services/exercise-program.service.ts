@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -26,8 +26,10 @@ export interface DailyExercise {
  */
 export interface CompleteExerciseRequest {
   exerciseId: string;
-  successRate: number;
+  sessionId?: string;
+  successRate?: number;
   timeSpentSeconds: number;
+  measurementStatus?: 'Measured' | 'NotMeasured';
 
   // ML-ready enhanced metrics
   correctCount: number;
@@ -139,10 +141,11 @@ export class ExerciseProgramService {
   /**
    * Egzersiz tamamlandı olarak işaretle
    */
-  completeExercise(request: CompleteExerciseRequest): Observable<CompleteExerciseResponse> {
+  completeExercise(request: CompleteExerciseRequest, idempotencyKey?: string): Observable<CompleteExerciseResponse> {
     return this.http.post<CompleteExerciseResponse>(
       `${this.baseUrl}/complete-exercise`,
-      request
+      request,
+      { headers: new HttpHeaders({ 'Idempotency-Key': idempotencyKey ?? this.newIdempotencyKey() }) }
     );
   }
 
@@ -185,6 +188,11 @@ export class ExerciseProgramService {
     return this.http.get(`${this.baseUrl}/calendar`, {
       params: { year: year.toString(), month: month.toString() }
     });
+  }
+
+  private newIdempotencyKey(): string {
+    return `speed-reading-daily-${globalThis.crypto?.randomUUID?.()
+      ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`}`;
   }
 }
 

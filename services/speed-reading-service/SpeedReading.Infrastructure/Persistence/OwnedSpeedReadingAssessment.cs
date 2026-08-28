@@ -33,7 +33,7 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
 
         var completedIds = await db.ExerciseSessionResults
             .AsNoTracking()
-            .Where(item => item.StudentId == userId)
+            .Where(item => item.StudentId == userId && item.IsAssessmentMode && item.IsMeasured)
             .Select(item => item.ExerciseId)
             .Distinct()
             .ToListAsync(cancellationToken);
@@ -68,7 +68,7 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
     {
         var hasCompleted = await db.ExerciseSessionResults
             .AsNoTracking()
-            .AnyAsync(item => item.StudentId == userId, cancellationToken);
+            .AnyAsync(item => item.StudentId == userId && item.IsAssessmentMode && item.IsMeasured, cancellationToken);
         return new AssessmentStatusSummary(hasCompleted, null);
     }
 
@@ -79,14 +79,18 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
     {
         var results = await db.ExerciseSessionResults
             .AsNoTracking()
-            .Where(item => item.StudentId == userId)
+            .Where(item => item.StudentId == userId && item.IsAssessmentMode && item.IsMeasured)
             .OrderByDescending(item => item.CreatedAt)
             .Take(3)
             .ToListAsync(cancellationToken);
         if (results.Count == 0)
             return null;
 
-        var averageWpm = results.Average(item => item.RawWpm);
+        var averageWpm = results
+            .Where(item => item.RawWpm > 0)
+            .Select(item => item.RawWpm)
+            .DefaultIfEmpty()
+            .Average();
         var averageComprehension = results.Average(item => item.ComprehensionScore);
         var level = averageWpm switch
         {

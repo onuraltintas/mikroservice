@@ -176,10 +176,11 @@ public sealed record ExerciseResultSummary(
     Guid? ReadingTextId,
     int WordsRead,
     int TimeSpentSeconds,
-    decimal RawWpm,
-    decimal ComprehensionScore,
-    decimal WeightedKdp,
-    DateTime CompletedAt);
+    decimal? RawWpm,
+    decimal? ComprehensionScore,
+    decimal? WeightedKdp,
+    DateTime CompletedAt,
+    string MeasurementStatus = "Measured");
 
 public sealed record ExerciseSessionSummary(
     Guid Id,
@@ -311,7 +312,7 @@ public sealed record DailyExerciseLogSummary(
     int DifficultyLevel,
     DateTime CompletedDate,
     int TimeSpentSeconds,
-    decimal SuccessRate,
+    decimal? SuccessRate,
     bool IsPassed,
     int AttemptNumber,
     bool IsRetry,
@@ -320,7 +321,8 @@ public sealed record DailyExerciseLogSummary(
     int IncorrectCount,
     int TotalAttempts,
     decimal? AverageWpm,
-    decimal? AverageComprehension);
+    decimal? AverageComprehension,
+    string MeasurementStatus = "Measured");
 
 public sealed record LearningPathTemplateSummary(
     Guid Id,

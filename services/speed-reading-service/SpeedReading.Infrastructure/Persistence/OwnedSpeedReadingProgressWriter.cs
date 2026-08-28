@@ -6,6 +6,7 @@ using Npgsql;
 using SpeedReading.Application.Content;
 using SpeedReading.Application.Progress;
 using SpeedReading.Domain.Sessions;
+using SessionRules = SpeedReading.Application.ExerciseSessions.SpeedReadingExerciseSessionRules;
 
 namespace SpeedReading.Infrastructure.Persistence;
 
@@ -37,6 +38,10 @@ internal sealed class OwnedSpeedReadingProgressWriter(OwnedSpeedReadingDbContext
 
         await EnsureReferencesExistAsync(request, cancellationToken);
         var now = DateTime.UtcNow;
+        var isMeasured = request.IsMeasured ?? (
+            request.RawWpm > 0
+            || request.ComprehensionScore > 0
+            || !string.Equals(request.QuestionAnswersJson, "[]", StringComparison.Ordinal));
         var result = ExerciseSessionResult.Import(
             Guid.NewGuid(),
             null,
@@ -48,7 +53,9 @@ internal sealed class OwnedSpeedReadingProgressWriter(OwnedSpeedReadingDbContext
             request.RawWpm,
             request.ComprehensionScore,
             request.WeightedKdp,
-            request.WeightedKdp,
+            SessionRules.CalculateCompositeScore(
+                request.ComprehensionScore,
+                request.RawWpm),
             request.CompletedAt?.ToUniversalTime() ?? now,
             request.QuestionAnswersJson,
             request.ReadingMovementsJson,
@@ -56,7 +63,8 @@ internal sealed class OwnedSpeedReadingProgressWriter(OwnedSpeedReadingDbContext
             now,
             studentId.ToString(),
             null,
-            null);
+            null,
+            isMeasured: isMeasured);
         db.ExerciseSessionResults.Add(result);
         db.IdempotencyRecords.Add(new OwnedIdempotencyRecord
         {
@@ -158,6 +166,15 @@ internal sealed class OwnedSpeedReadingProgressWriter(OwnedSpeedReadingDbContext
         {
             throw new ArgumentException("Exercise metrics contain an invalid value.", nameof(request));
         }
+        if (request.RawWpm > 0 && (request.RawWpm < 20 || request.RawWpm > 1_500))
+        {
+            throw new ArgumentOutOfRangeException(nameof(request.RawWpm), "Raw WPM must be between 20 and 1500 when measured.");
+        }
+        if (request.IsMeasured == false
+            && (request.RawWpm > 0 || request.ComprehensionScore > 0 || request.WeightedKdp > 0))
+        {
+            throw new ArgumentException("An unmeasured result cannot contain measured metrics.", nameof(request));
+        }
 
         ValidateJson(request.QuestionAnswersJson, nameof(request.QuestionAnswersJson));
         ValidateJson(request.ReadingMovementsJson, nameof(request.ReadingMovementsJson));
@@ -199,8 +216,9 @@ internal sealed class OwnedSpeedReadingProgressWriter(OwnedSpeedReadingDbContext
         result.ReadingTextId,
         result.WordsRead,
         result.TimeSpentSeconds,
-        result.RawWpm,
-        result.ComprehensionScore,
-        result.WeightedKdp,
-        result.CompletedAt);
+        result.IsMeasured && result.RawWpm > 0 ? result.RawWpm : null,
+        result.IsMeasured && result.ReadingTextId.HasValue ? result.ComprehensionScore : null,
+        result.IsMeasured && result.RawWpm > 0 ? result.WeightedKdp : null,
+        result.CompletedAt,
+        result.IsMeasured ? "Measured" : "NotMeasured");
 }

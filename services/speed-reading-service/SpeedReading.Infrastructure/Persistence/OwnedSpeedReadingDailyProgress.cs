@@ -1,6 +1,9 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using EduPlatform.Shared.Kernel.Exceptions;
 using SpeedReading.Application.DailyProgress;
+using SpeedReading.Application.Progress;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.Programs;
 
@@ -14,6 +17,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(OwnedSpeedReadingDbContext 
     : ISpeedReadingDailyProgress
 {
     private const decimal PassingScore = 70m;
+    private const string IdempotencyScope = "speed-reading.daily-progress.complete-exercise";
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
@@ -60,12 +64,21 @@ internal sealed class OwnedSpeedReadingDailyProgress(OwnedSpeedReadingDbContext 
     public async Task<CompleteDailyExerciseResponse> CompleteExerciseAsync(
         Guid userId,
         CompleteDailyExerciseRequest request,
+        string idempotencyKey,
         CancellationToken cancellationToken = default)
     {
         if (userId == Guid.Empty)
             throw new ArgumentException("A valid authenticated user is required.", nameof(userId));
 
-        var score = SpeedReadingDailyProgressRules.ResolveScore(request.Score, request.SuccessRate);
+        idempotencyKey = SpeedReadingDailyProgressRules.ValidateIdempotencyKey(idempotencyKey);
+        var requestHash = CreateCompletionHash(userId, request);
+        var existing = await db.IdempotencyRecords
+            .SingleOrDefaultAsync(
+                item => item.Scope == IdempotencyScope && item.Key == idempotencyKey,
+                cancellationToken);
+        if (existing is not null)
+            return await ReplayAsync(existing, userId, requestHash, cancellationToken);
+
         var duration = SpeedReadingDailyProgressRules.ResolveDuration(
             request.DurationSeconds,
             request.TimeSpentSeconds);
@@ -96,6 +109,24 @@ internal sealed class OwnedSpeedReadingDailyProgress(OwnedSpeedReadingDbContext 
             .SingleOrDefaultAsync(item => item.Id == exerciseId && item.IsActive, cancellationToken)
             ?? throw new KeyNotFoundException("Exercise not found.");
 
+        var sessionResult = request.SessionId.HasValue
+            ? await db.ExerciseSessionResults
+                .AsNoTracking()
+                .SingleOrDefaultAsync(item => item.SessionId == request.SessionId.Value
+                    && item.StudentId == userId
+                    && item.ExerciseId == exerciseId, cancellationToken)
+            : null;
+        if (request.SessionId.HasValue && sessionResult is null)
+        {
+            throw new KeyNotFoundException("Completed exercise session result not found.");
+        }
+
+        var isMeasured = sessionResult?.IsMeasured
+            ?? !string.Equals(request.MeasurementStatus, "NotMeasured", StringComparison.OrdinalIgnoreCase);
+        var score = isMeasured
+            ? sessionResult?.Score ?? SpeedReadingDailyProgressRules.ResolveScore(request.Score, request.SuccessRate)
+            : 0;
+
         var wasPreviouslyPassed = log?.IsPassed == true;
         if (log is null)
         {
@@ -118,7 +149,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(OwnedSpeedReadingDbContext 
                 now,
                 duration,
                 score,
-                score >= PassingScore,
+                !isMeasured || score >= PassingScore,
                 "{}",
                 attemptNumber,
                 attemptNumber > 1,
@@ -146,7 +177,8 @@ internal sealed class OwnedSpeedReadingDailyProgress(OwnedSpeedReadingDbContext 
                 now,
                 userId.ToString(),
                 now,
-                userId.ToString());
+                userId.ToString(),
+                isMeasured);
             db.DailyExerciseLogs.Add(log);
         }
 
@@ -165,7 +197,8 @@ internal sealed class OwnedSpeedReadingDailyProgress(OwnedSpeedReadingDbContext 
             request.StdDevResponseTimeMs,
             request.PauseCount,
             request.TotalPausedSeconds,
-            userId);
+            userId,
+            isMeasured);
 
         var allLogs = await db.DailyExerciseLogs
             .Where(item => item.StudentProgramProgressId == progress.Id)
@@ -173,9 +206,13 @@ internal sealed class OwnedSpeedReadingDailyProgress(OwnedSpeedReadingDbContext 
         if (!allLogs.Contains(log))
             allLogs.Add(log);
 
-        var averageSuccessRate = allLogs.Count == 0
-            ? score
-            : allLogs.Average(item => item.SuccessRate);
+        var measuredScores = allLogs
+            .Where(item => item.IsMeasured)
+            .Select(item => item.SuccessRate)
+            .ToList();
+        var averageSuccessRate = measuredScores.Count > 0
+            ? measuredScores.Average()
+            : progress.AverageSuccessRate;
         var expectedCount = await CountExpectedExercisesAsync(
             progress,
             template,
@@ -192,7 +229,29 @@ internal sealed class OwnedSpeedReadingDailyProgress(OwnedSpeedReadingDbContext 
             userId,
             now);
 
-        await db.SaveChangesAsync(cancellationToken);
+        db.IdempotencyRecords.Add(new OwnedIdempotencyRecord
+        {
+            Id = Guid.NewGuid(),
+            Scope = IdempotencyScope,
+            Key = idempotencyKey,
+            RequestHash = requestHash,
+            ResourceId = log.Id,
+            CreatedAt = now
+        });
+
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (IsIdempotencyConflict(exception))
+        {
+            db.ChangeTracker.Clear();
+            var concurrent = await db.IdempotencyRecords
+                .SingleAsync(
+                    item => item.Scope == IdempotencyScope && item.Key == idempotencyKey,
+                    cancellationToken);
+            return await ReplayAsync(concurrent, userId, requestHash, cancellationToken);
+        }
 
         return new CompleteDailyExerciseResponse(
             true,
@@ -216,8 +275,75 @@ internal sealed class OwnedSpeedReadingDailyProgress(OwnedSpeedReadingDbContext 
                     progress.AverageSuccessRate,
                     progress.LongestStreak,
                     progress.ExercisesCompleted)
-                : null);
+            : null);
     }
+
+    private async Task<CompleteDailyExerciseResponse> ReplayAsync(
+        OwnedIdempotencyRecord record,
+        Guid userId,
+        string requestHash,
+        CancellationToken cancellationToken)
+    {
+        if (!record.Matches(requestHash))
+        {
+            throw new BusinessRuleException(
+                "Idempotency.Conflict",
+                "The idempotency key was already used with a different request payload.");
+        }
+
+        var progressId = await db.DailyExerciseLogs
+            .AsNoTracking()
+            .Where(item => item.Id == record.ResourceId && item.UserId == userId)
+            .Select(item => (Guid?)item.StudentProgramProgressId)
+            .SingleOrDefaultAsync(cancellationToken);
+        if (!progressId.HasValue)
+        {
+            throw new BusinessRuleException(
+                "Idempotency.ResourceMissing",
+                "The idempotency record points to a missing daily exercise log.");
+        }
+
+        var progress = await db.StudentProgramProgresses
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                item => item.UserId == userId && item.Id == progressId.Value,
+                cancellationToken)
+            ?? throw new BusinessRuleException(
+                "Idempotency.ProgressMissing",
+                "The idempotent daily completion progress record is missing.");
+
+        return new CompleteDailyExerciseResponse(
+            true,
+            "Egzersiz daha önce tamamlandı.",
+            false,
+            progress.CurrentDay,
+            progress.CurrentWeek,
+            progress.CurrentDifficultyLevel,
+            false,
+            progress.CurrentDifficultyLevel,
+            false,
+            progress.CurrentWeek,
+            progress.CurrentDifficultyLevel,
+            progress.CurrentStreak,
+            progress.LongestStreak,
+            progress.CompletedDate.HasValue,
+            null,
+            null);
+    }
+
+    private static string CreateCompletionHash(Guid userId, CompleteDailyExerciseRequest request) =>
+        SpeedReadingRequestHasher.Create(
+            userId.ToString("D"),
+            IdempotencyScope,
+            JsonSerializer.Serialize(request, JsonOptions));
+
+    private static bool IsIdempotencyConflict(DbUpdateException exception) =>
+        exception.InnerException is PostgresException postgres
+        && postgres.SqlState == PostgresErrorCodes.UniqueViolation
+        && string.Equals(
+            postgres.ConstraintName,
+            "ix_idempotency_records_scope_key",
+            StringComparison.Ordinal);
 
     public async Task<DailyProgressSummary?> GetProgressSummaryAsync(
         Guid userId,
@@ -234,10 +360,11 @@ internal sealed class OwnedSpeedReadingDailyProgress(OwnedSpeedReadingDbContext 
         var completed = logs.Where(item => item.IsPassed).ToList();
         var results = await db.ExerciseSessionResults
             .AsNoTracking()
-            .Where(item => item.StudentId == userId && item.RawWpm > 0)
+            .Where(item => item.StudentId == userId && item.IsMeasured)
             .OrderBy(item => item.CreatedAt)
             .Select(item => new { item.RawWpm, item.ComprehensionScore })
             .ToListAsync(cancellationToken);
+        var wpmResults = results.Where(item => item.RawWpm > 0).ToList();
 
         return new DailyProgressSummary(
             program.Value.Progress.Id,
@@ -247,8 +374,8 @@ internal sealed class OwnedSpeedReadingDailyProgress(OwnedSpeedReadingDbContext 
             logs.Count,
             completed.Count,
             program.Value.Progress.AssignedDate,
-            results.Count == 0 ? 0 : results.TakeLast(5).Average(item => item.RawWpm),
-            results.Count == 0 ? 0 : results.Take(5).Average(item => item.RawWpm),
+            wpmResults.Count == 0 ? 0 : wpmResults.TakeLast(5).Average(item => item.RawWpm),
+            wpmResults.Count == 0 ? 0 : wpmResults.Take(5).Average(item => item.RawWpm),
             results.Count == 0 ? 0 : results.Average(item => item.ComprehensionScore));
     }
 
@@ -268,7 +395,10 @@ internal sealed class OwnedSpeedReadingDailyProgress(OwnedSpeedReadingDbContext 
         return new WeeklyProgressSummary(
             logs.Count,
             logs.Count(item => item.IsPassed),
-            logs.Where(item => item.IsPassed).Select(item => item.SuccessRate).DefaultIfEmpty().Average(),
+            logs.Where(item => item.IsPassed && item.IsMeasured)
+                .Select(item => item.SuccessRate)
+                .DefaultIfEmpty()
+                .Average(),
             logs.Sum(item => item.TimeSpentSeconds) / 60,
             logs.Select(item => item.CompletedDate.Date).Distinct().Count());
     }
@@ -302,7 +432,10 @@ internal sealed class OwnedSpeedReadingDailyProgress(OwnedSpeedReadingDbContext 
                 group.Key,
                 group.Count(),
                 group.Count(item => item.IsPassed),
-                group.Where(item => item.IsPassed).Select(item => item.SuccessRate).DefaultIfEmpty().Average()))
+                group.Where(item => item.IsPassed && item.IsMeasured)
+                    .Select(item => item.SuccessRate)
+                    .DefaultIfEmpty()
+                    .Average()))
             .ToList();
 
         return new DailyProgressCalendar(targetMonth, targetYear, days);

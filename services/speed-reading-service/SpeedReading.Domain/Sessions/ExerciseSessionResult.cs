@@ -19,6 +19,8 @@ public sealed class ExerciseSessionResult : Entity
     public decimal ComprehensionScore { get; private set; }
     public decimal WeightedKdp { get; private set; }
     public decimal Score { get; private set; }
+    public bool IsAssessmentMode { get; private set; }
+    public bool IsMeasured { get; private set; }
     public string QuestionAnswersJson { get; private set; } = "[]";
     public string ReadingMovementsJson { get; private set; } = "[]";
     public DateTime CompletedAt { get; private set; }
@@ -37,7 +39,9 @@ public sealed class ExerciseSessionResult : Entity
         decimal score,
         DateTime completedAt,
         string questionAnswersJson = "[]",
-        string readingMovementsJson = "[]")
+        string readingMovementsJson = "[]",
+        bool isAssessmentMode = false,
+        bool isMeasured = true)
     {
         if (id == Guid.Empty || sessionId == Guid.Empty || studentId == Guid.Empty || exerciseId == Guid.Empty)
             throw new ArgumentException("Result identifiers are required.");
@@ -58,6 +62,8 @@ public sealed class ExerciseSessionResult : Entity
             ComprehensionScore = comprehensionScore,
             WeightedKdp = weightedKdp,
             Score = score,
+            IsAssessmentMode = isAssessmentMode,
+            IsMeasured = isMeasured,
             CompletedAt = completedAt.Kind == DateTimeKind.Utc ? completedAt : completedAt.ToUniversalTime(),
             QuestionAnswersJson = string.IsNullOrWhiteSpace(questionAnswersJson) ? "[]" : questionAnswersJson,
             ReadingMovementsJson = string.IsNullOrWhiteSpace(readingMovementsJson) ? "[]" : readingMovementsJson
@@ -83,7 +89,9 @@ public sealed class ExerciseSessionResult : Entity
         DateTime createdAt,
         string? createdBy,
         DateTime? updatedAt,
-        string? updatedBy)
+        string? updatedBy,
+        bool isAssessmentMode = false,
+        bool isMeasured = true)
     {
         var result = new ExerciseSessionResult
         {
@@ -99,6 +107,8 @@ public sealed class ExerciseSessionResult : Entity
             ComprehensionScore = comprehensionScore,
             WeightedKdp = weightedKdp,
             Score = score,
+            IsAssessmentMode = isAssessmentMode,
+            IsMeasured = isMeasured,
             CompletedAt = completedAt.Kind == DateTimeKind.Utc ? completedAt : completedAt.ToUniversalTime(),
             QuestionAnswersJson = string.IsNullOrWhiteSpace(questionAnswersJson) ? "[]" : questionAnswersJson,
             ReadingMovementsJson = string.IsNullOrWhiteSpace(readingMovementsJson) ? "[]" : readingMovementsJson,

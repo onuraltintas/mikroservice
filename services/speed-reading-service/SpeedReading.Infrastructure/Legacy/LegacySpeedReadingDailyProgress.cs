@@ -45,8 +45,10 @@ internal sealed class LegacySpeedReadingDailyProgress(SpeedReadingDbContext db) 
     public async Task<CompleteDailyExerciseResponse> CompleteExerciseAsync(
         Guid userId,
         CompleteDailyExerciseRequest request,
+        string idempotencyKey,
         CancellationToken cancellationToken = default)
     {
+        _ = idempotencyKey;
         if (userId == Guid.Empty)
         {
             throw new ArgumentException("A valid authenticated user is required.", nameof(userId));

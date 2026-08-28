@@ -36,10 +36,11 @@ export interface SpeedReadingExerciseResult {
   readingTextId?: string;
   wordsRead: number;
   timeSpentSeconds: number;
-  rawWpm: number;
-  comprehensionScore: number;
-  weightedKdp: number;
+  rawWpm: number | null;
+  comprehensionScore: number | null;
+  weightedKdp: number | null;
   completedAt: string;
+  measurementStatus: 'Measured' | 'NotMeasured';
 }
 
 export interface SpeedReadingExerciseSession {

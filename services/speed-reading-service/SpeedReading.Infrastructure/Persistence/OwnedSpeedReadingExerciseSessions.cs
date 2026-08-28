@@ -201,26 +201,41 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             session.SetState(session.SessionDataJson, SerializeOptional(request.CustomData));
         session.Complete(now);
 
-        var timeSpent = SpeedReadingExerciseSessionRules.CalculateActiveSeconds(
+        if (state.ReadingPausedAt.HasValue)
+        {
+            state.ReadingPausedSeconds += Math.Max(
+                0,
+                (int)Math.Round((now - state.ReadingPausedAt.Value).TotalSeconds));
+            state.ReadingPausedAt = null;
+        }
+
+        var pausedReadingSeconds = state.ReadingStartTime.HasValue
+            ? state.ReadingPausedSeconds
+            : session.TotalPausedSeconds;
+        var timeSpent = SpeedReadingExerciseSessionRules.CalculateReadingSeconds(
             session.StartTime,
             now,
-            session.TotalPausedSeconds,
-            null,
-            isPaused: false);
+            state.ReadingStartTime,
+            state.ReadingEndTime,
+            pausedReadingSeconds);
         var accuracy = SpeedReadingExerciseSessionRules.CalculateAccuracy(
             session.CorrectCount,
             session.IncorrectCount);
         var wordsRead = state.WordCount > 0 ? (int?)state.WordCount : null;
-        var rawWpm = wordsRead.HasValue && timeSpent > 0
-            ? Math.Round((decimal)wordsRead.Value / timeSpent * 60, 2)
-            : (decimal?)null;
+        var measurementStatus = SpeedReadingExerciseSessionRules.ResolveMeasurementStatus(
+            state.Questions.Count,
+            session.CorrectCount,
+            session.IncorrectCount);
+        var rawWpm = measurementStatus == SpeedReadingMeasurementStatus.Measured
+            ? SpeedReadingExerciseSessionRules.CalculateValidatedRawWpm(wordsRead ?? 0, timeSpent)
+            : null;
         var comprehension = state.Questions.Count > 0
             ? Math.Round((decimal)answers.Count(item => item.IsCorrect) / state.Questions.Count * 100, 2)
-            : accuracy;
-        var score = state.Questions.Count > 0
-            ? Math.Round(Math.Clamp((comprehension * 0.6m) + ((rawWpm ?? 0) > 0
-                ? Math.Min(rawWpm!.Value / 5, 100) * 0.4m
-                : 0), 0, 100), 2)
+            : 0;
+        var score = measurementStatus == SpeedReadingMeasurementStatus.NotMeasured
+            ? (decimal?)null
+            : state.Questions.Count > 0
+            ? SpeedReadingExerciseSessionRules.CalculateCompositeScore(comprehension, rawWpm)
             : accuracy;
         var weightedKdp = rawWpm.HasValue ? Math.Round(rawWpm.Value * comprehension / 100, 2) : (decimal?)null;
         state.FinalWpm = rawWpm;
@@ -240,9 +255,12 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             rawWpm ?? 0,
             comprehension,
             weightedKdp ?? 0,
-            score,
+            score ?? 0,
             now,
-            JsonSerializer.Serialize(answers, JsonOptions));
+            JsonSerializer.Serialize(answers, JsonOptions),
+            "[]",
+            request.IsAssessmentMode,
+            measurementStatus == SpeedReadingMeasurementStatus.Measured);
         db.ExerciseSessionResults.Add(result);
         if (session.StudentAssignmentId.HasValue)
         {
@@ -251,24 +269,47 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                     && item.StudentId == studentId
                     && item.IsActive,
                 cancellationToken);
-            studentAssignment?.Complete(result.Id, score, weightedKdp ?? 0, now);
+            studentAssignment?.Complete(result.Id, score ?? 0, weightedKdp ?? 0, now);
         }
         await db.SaveChangesAsync(cancellationToken);
 
-        return ToResult(result, session, state, score, SpeedReadingExerciseSessionRules.CalculateXp(score, accuracy, timeSpent));
+        return ToResult(
+            result,
+            session,
+            state,
+            score,
+            measurementStatus == SpeedReadingMeasurementStatus.Measured
+                ? SpeedReadingExerciseSessionRules.CalculateXp(score ?? 0, accuracy, timeSpent)
+                : 0,
+            feedback: "Egzersiz tamamlandı.");
     }
 
     public async Task PauseAsync(Guid studentId, Guid sessionId, CancellationToken cancellationToken = default)
     {
         var session = await GetOwnedSessionAsync(studentId, sessionId, cancellationToken);
-        session.Pause(DateTime.UtcNow);
+        var now = DateTime.UtcNow;
+        var state = DeserializeState(session.SessionDataJson);
+        session.Pause(now);
+        if (state.ReadingStartTime.HasValue && !state.ReadingEndTime.HasValue)
+            state.ReadingPausedAt = now;
+        session.SetState(JsonSerializer.Serialize(state, JsonOptions), session.CustomDataJson);
         await db.SaveChangesAsync(cancellationToken);
     }
 
     public async Task ResumeAsync(Guid studentId, Guid sessionId, CancellationToken cancellationToken = default)
     {
         var session = await GetOwnedSessionAsync(studentId, sessionId, cancellationToken);
-        session.Resume(DateTime.UtcNow);
+        var now = DateTime.UtcNow;
+        var state = DeserializeState(session.SessionDataJson);
+        session.Resume(now);
+        if (state.ReadingPausedAt.HasValue)
+        {
+            state.ReadingPausedSeconds += Math.Max(
+                0,
+                (int)Math.Round((now - state.ReadingPausedAt.Value).TotalSeconds));
+            state.ReadingPausedAt = null;
+        }
+        session.SetState(JsonSerializer.Serialize(state, JsonOptions), session.CustomDataJson);
         await db.SaveChangesAsync(cancellationToken);
     }
 
@@ -478,9 +519,17 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         state.ReadingStartTime ??= session.StartTime;
         state.ReadingEndTime = now;
         session.SetCurrentStep(Math.Max(session.CurrentStep, 1));
-        var seconds = Math.Max(1, (int)(now - state.ReadingStartTime.Value).TotalSeconds);
-        var wpm = state.WordCount == 0 ? 0 : Math.Round((decimal)state.WordCount / seconds * 60, 2);
-        return Valid("Okuma tamamlandı! Hızınız: " + wpm + " WPM.", session.CurrentStep, currentWpm: wpm);
+        var seconds = SpeedReadingExerciseSessionRules.CalculateReadingSeconds(
+            session.StartTime,
+            now,
+            state.ReadingStartTime,
+            state.ReadingEndTime,
+            state.ReadingPausedSeconds);
+        var wpm = SpeedReadingExerciseSessionRules.CalculateValidatedRawWpm(state.WordCount, seconds);
+        var message = wpm.HasValue
+            ? "Okuma tamamlandı! Hızınız: " + wpm.Value + " WPM."
+            : "Okuma tamamlandı; güvenilir WPM için yeterli ölçüm alınamadı.";
+        return Valid(message, session.CurrentStep, currentWpm: wpm);
     }
 
     private static ExerciseActionValidationResponse AnswerQuestion(
@@ -627,30 +676,36 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         ExerciseSession session,
         SessionState state,
         decimal? score = null,
-        int? xp = null) =>
+        int? xp = null,
+        string? feedback = null) =>
         new(
             session.Id,
             result.StudentId,
             result.ExerciseId,
             session.CorrectCount,
             session.IncorrectCount,
-            SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount),
+            result.IsMeasured
+                ? SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount)
+                : null,
             result.TimeSpentSeconds,
-            score ?? result.Score,
+            result.IsMeasured ? score ?? result.Score : null,
             result.WordsRead == 0 ? null : result.WordsRead,
-            result.RawWpm == 0 ? null : result.RawWpm,
-            result.ComprehensionScore,
-            result.WeightedKdp,
-            xp ?? SpeedReadingExerciseSessionRules.CalculateXp(
-                score ?? result.Score,
-                result.ComprehensionScore,
-                result.TimeSpentSeconds),
+            result.IsMeasured && result.RawWpm > 0 ? result.RawWpm : null,
+            result.IsMeasured && state.Questions.Count > 0 ? result.ComprehensionScore : null,
+            result.IsMeasured && result.RawWpm > 0 ? result.WeightedKdp : null,
+            xp ?? (result.IsMeasured
+                ? SpeedReadingExerciseSessionRules.CalculateXp(
+                    score ?? result.Score,
+                    result.ComprehensionScore,
+                    result.TimeSpentSeconds)
+                : 0),
             [],
             false,
             null,
             RemoveAnswerKeys(JsonSerializer.SerializeToElement(state, JsonOptions)),
-            score.HasValue ? "Egzersiz tamamlandı." : "Bu oturum daha önce tamamlandı.",
-            null);
+            feedback ?? (score.HasValue ? "Egzersiz tamamlandı." : "Bu oturum daha önce tamamlandı."),
+            null,
+            result.IsMeasured ? nameof(SpeedReadingMeasurementStatus.Measured) : nameof(SpeedReadingMeasurementStatus.NotMeasured));
 
     private static bool TryGetCachedAction(
         string processedActionsJson,
@@ -796,6 +851,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public int? TimeLimitSeconds { get; set; }
         public DateTime? ReadingStartTime { get; set; }
         public DateTime? ReadingEndTime { get; set; }
+        public DateTime? ReadingPausedAt { get; set; }
+        public int ReadingPausedSeconds { get; set; }
         public decimal? FinalWpm { get; set; }
         public decimal? ComprehensionScore { get; set; }
         public decimal? WeightedKdp { get; set; }

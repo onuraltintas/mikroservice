@@ -19,6 +19,7 @@ public sealed class DailyExerciseLog : Entity
     public int TimeSpentSeconds { get; private set; }
     public decimal SuccessRate { get; private set; }
     public bool IsPassed { get; private set; }
+    public bool IsMeasured { get; private set; }
     public string ResultDataJson { get; private set; } = "{}";
     public int AttemptNumber { get; private set; }
     public bool IsRetry { get; private set; }
@@ -84,7 +85,8 @@ public sealed class DailyExerciseLog : Entity
         DateTime createdAt,
         string? createdBy,
         DateTime? updatedAt,
-        string? updatedBy)
+        string? updatedBy,
+        bool isMeasured = true)
     {
         if (id == Guid.Empty || userId == Guid.Empty || studentProgramProgressId == Guid.Empty
             || exerciseId == Guid.Empty || exerciseTypeId == Guid.Empty)
@@ -106,6 +108,7 @@ public sealed class DailyExerciseLog : Entity
             TimeSpentSeconds = timeSpentSeconds,
             SuccessRate = successRate,
             IsPassed = isPassed,
+            IsMeasured = isMeasured,
             ResultDataJson = string.IsNullOrWhiteSpace(resultDataJson) ? "{}" : resultDataJson,
             AttemptNumber = attemptNumber,
             IsRetry = isRetry,
@@ -152,7 +155,8 @@ public sealed class DailyExerciseLog : Entity
         decimal stdDevResponseTimeMs,
         int pauseCount,
         int totalPausedSeconds,
-        Guid actorId)
+        Guid actorId,
+        bool isMeasured = true)
     {
         if (actorId == Guid.Empty)
             throw new ArgumentException("Completion actor is required.", nameof(actorId));
@@ -166,6 +170,7 @@ public sealed class DailyExerciseLog : Entity
         TimeSpentSeconds = timeSpentSeconds;
         SuccessRate = successRate;
         IsPassed = isPassed;
+        IsMeasured = isMeasured;
         ResultDataJson = string.IsNullOrWhiteSpace(resultDataJson) ? "{}" : resultDataJson;
         DevicePlatform = string.IsNullOrWhiteSpace(devicePlatform) ? "web-desktop" : devicePlatform.Trim();
         CorrectCount = Math.Max(correctCount, 0);

@@ -33,6 +33,7 @@ TestResults/
 node_modules/
 dist/
 tmp/
+clients/speed-reading/.tmp-*/
 
 clients/admin-panel/.tmp-ng/
 out-tsc/

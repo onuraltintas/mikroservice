@@ -85,6 +85,7 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
         var completedTextIds = await db.ExerciseSessionResults
             .AsNoTracking()
             .Where(item => item.StudentId == userId
+                && item.IsMeasured
                 && item.ReadingTextId.HasValue
                 && readingTextIds.Contains(item.ReadingTextId.Value))
             .Select(item => item.ReadingTextId!.Value)
@@ -192,7 +193,7 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
             .FirstOrDefaultAsync(item => item.UserId == userId && item.IsActive, cancellationToken);
         var exerciseResults = await db.ExerciseSessionResults
             .AsNoTracking()
-            .Where(item => item.StudentId == userId)
+            .Where(item => item.StudentId == userId && item.IsMeasured)
             .OrderByDescending(item => item.CompletedAt)
             .ToListAsync(cancellationToken);
         var readingSessions = await db.ReadingSessions

@@ -15,7 +15,8 @@ public sealed record CreateExerciseResultRequest(
     decimal WeightedKdp,
     string QuestionAnswersJson,
     string ReadingMovementsJson,
-    DateTime? CompletedAt = null);
+    DateTime? CompletedAt = null,
+    bool? IsMeasured = null);
 
 public interface ISpeedReadingProgressWriter
 {
@@ -46,7 +47,8 @@ public static class SpeedReadingRequestHasher
             request.WeightedKdp.ToString(CultureInfo.InvariantCulture),
             request.QuestionAnswersJson,
             request.ReadingMovementsJson,
-            Format(request.CompletedAt));
+            Format(request.CompletedAt),
+            request.IsMeasured?.ToString() ?? string.Empty);
 
     public static string Create(params string?[] values)
     {

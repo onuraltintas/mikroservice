@@ -83,9 +83,10 @@ export interface ExerciseResult {
   // Performance metrics
   correctCount: number;
   incorrectCount: number;
-  accuracy: number;
+  accuracy: number | null;
   timeSpentSeconds: number;
-  score: number;
+  score: number | null;
+  measurementStatus: 'Measured' | 'NotMeasured';
 
   // Reading specific metrics
   wordsRead?: number;

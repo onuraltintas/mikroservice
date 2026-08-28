@@ -273,7 +273,7 @@ internal sealed class OwnedSpeedReadingPrograms(
             item.DifficultyLevel,
             item.CompletedDate,
             item.TimeSpentSeconds,
-            item.SuccessRate,
+            item.IsMeasured ? item.SuccessRate : null,
             item.IsPassed,
             item.AttemptNumber,
             item.IsRetry,
@@ -282,7 +282,8 @@ internal sealed class OwnedSpeedReadingPrograms(
             item.IncorrectCount,
             item.TotalAttempts,
             item.AverageWPM,
-            item.AverageComprehension);
+            item.AverageComprehension,
+            item.IsMeasured ? "Measured" : "NotMeasured");
 
     private static DailyExerciseLogSummary ToDailyLogSummary(DailyExerciseLog item) =>
         new(
@@ -294,7 +295,7 @@ internal sealed class OwnedSpeedReadingPrograms(
             item.DifficultyLevel,
             item.CompletedDate,
             item.TimeSpentSeconds,
-            item.SuccessRate,
+            item.IsMeasured ? item.SuccessRate : null,
             item.IsPassed,
             item.AttemptNumber,
             item.IsRetry,
@@ -303,7 +304,8 @@ internal sealed class OwnedSpeedReadingPrograms(
             item.IncorrectCount,
             item.TotalAttempts,
             item.AverageWPM,
-            item.AverageComprehension);
+            item.AverageComprehension,
+            item.IsMeasured ? "Measured" : "NotMeasured");
 
     private static ExerciseProgramTemplateAdminSummary ToAdminSummary(ProgramTemplate item) =>
         new(

@@ -94,10 +94,11 @@ internal sealed class OwnedSpeedReadingProgress(OwnedSpeedReadingDbContext db)
                 item.ReadingTextId,
                 item.WordsRead,
                 item.TimeSpentSeconds,
-                item.RawWpm,
-                item.ComprehensionScore,
-                item.WeightedKdp,
-                item.CompletedAt))
+                item.IsMeasured && item.RawWpm > 0 ? item.RawWpm : null,
+                item.IsMeasured && item.ReadingTextId.HasValue ? item.ComprehensionScore : null,
+                item.IsMeasured && item.RawWpm > 0 ? item.WeightedKdp : null,
+                item.CompletedAt,
+                item.IsMeasured ? "Measured" : "NotMeasured"))
             .ToListAsync(cancellationToken);
 
         return new SpeedReadingPage<ExerciseResultSummary>(items, page, size, totalCount);

@@ -55,8 +55,12 @@ internal sealed class OwnedSpeedReadingAnalytics(
             .Select(group => new
             {
                 Count = group.Count(),
-                Passed = group.Count(item => item.IsPassed),
-                AverageSuccessRate = group.Average(item => item.SuccessRate)
+                Passed = group.Count(item => item.IsPassed && item.IsMeasured),
+                AverageSuccessRate = group
+                    .Where(item => item.IsMeasured)
+                    .Select(item => item.SuccessRate)
+                    .DefaultIfEmpty()
+                    .Average()
             })
             .SingleOrDefaultAsync(cancellationToken);
         var exerciseDaily = await exerciseQuery
@@ -65,7 +69,11 @@ internal sealed class OwnedSpeedReadingAnalytics(
             {
                 Date = group.Key,
                 ExerciseCount = group.Count(),
-                AverageSuccessRate = group.Average(item => item.SuccessRate)
+                AverageSuccessRate = group
+                    .Where(item => item.IsMeasured)
+                    .Select(item => item.SuccessRate)
+                    .DefaultIfEmpty()
+                    .Average()
             })
             .ToListAsync(cancellationToken);
 

@@ -191,7 +191,10 @@ public sealed class OwnedSpeedReadingProgramBackfill(
                 NormalizeUtc(source.CreatedAt),
                 ToAuditValue(source.CreatedBy),
                 NormalizeUtc(source.UpdatedAt),
-                ToAuditValue(source.UpdatedBy)));
+                ToAuditValue(source.UpdatedBy),
+                source.TotalAttempts > 0
+                    || source.CorrectCount > 0
+                    || source.IncorrectCount > 0));
             logsInserted++;
         }
 

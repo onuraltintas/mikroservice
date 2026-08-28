@@ -5,8 +5,6 @@
  * Kullanım: /student/exercises/universal-player/:exerciseId
  */
 
-import { ExerciseResult as CoreExerciseResult } from '../../../../core/models/exercise.model';
-
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef, AfterViewChecked, HostListener, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -33,6 +31,7 @@ import { ExerciseSessionService } from '../../../../core/services/exercise-sessi
 import { ExerciseProgramService, CompleteExerciseRequest } from '../../../../core/services/exercise-program.service';
 import { StudentProgramService } from '../../../../core/services/student-program.service'; // INJECTED
 import { StartSessionRequest, ExerciseResult as SessionResult } from '../../../../core/models/exercise-session.model';
+import { toCompleteSessionRequest } from '../../../../core/services/exercise-session-completion';
 
 interface ExerciseData {
   id: string;
@@ -288,6 +287,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   // Peripheral Vision Input
   @ViewChild('peripheralInput') peripheralInput?: ElementRef<HTMLInputElement>;
   private lastAwaitingState = false;
+  private readingTrackingStarted = false;
+  private readingTrackingFinished = false;
+  private readingTrackingStartCompleted = false;
+  private pendingReadingCompletion?: () => void;
 
   // Timer for Duration-based exercises
   private activeTimer: any = null;
@@ -623,6 +626,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         onComplete: (result) => {
           this.stopTimer();
 
+          const finalizeCompletion = () => {
+
           // For word_highlight or reading_comprehension with questions, go to question phase
           const hasQuestions = this.comprehensionQuestions.length > 0;
           const isReadingEngine =
@@ -630,14 +635,16 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             this.engine?.engineType === 'reading_comprehension' ||
             this.engine?.engineType === 'exam_simulation' ||
             this.engine?.engineType === 'text_fade' ||
-            this.engine?.engineType === 'text_stream'; // text_stream (RSVP) added
+            this.engine?.engineType === 'text_stream' ||
+            this.engine?.engineType === 'free_reading'; // text_stream (RSVP) added
 
           // Regression Reduction engine handles its own question flow internally
           // When it calls onComplete, it means everything (reading + questions) is done
           if (this.engine?.engineType === 'regression_reduction') {
-            this.result = result;
+            const normalizedResult = this.normalizeEngineResultForDisplay(result);
+            this.result = normalizedResult;
             this.exercisePhase = 'completed';
-            this.saveResult(result);
+            this.saveResult(normalizedResult);
             this.cdr.detectChanges();
             return;
           }
@@ -671,10 +678,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             return;
           }
 
-          this.result = result;
+          const normalizedResult = this.normalizeEngineResultForDisplay(result);
+          this.result = normalizedResult;
           this.exercisePhase = 'completed';
-          this.saveResult(result);
+          this.saveResult(normalizedResult);
           this.cdr.detectChanges();
+          };
+
+          this.finishReadingTracking(finalizeCompletion);
         },
         onError: (error) => {
           this.error = error;
@@ -810,6 +821,73 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   }
 
+  private shouldTrackReading(): boolean {
+    return !!this.sessionId
+      && this.sessionId !== 'preview-mode'
+      && !this.authService.hasRole('Teacher')
+      && [
+        'word_highlight',
+        'reading_comprehension',
+        'text_fade',
+        'text_stream',
+        'free_reading'
+      ].includes(this.engine?.engineType || '');
+  }
+
+  private startReadingTracking(): void {
+    if (!this.shouldTrackReading() || this.readingTrackingStarted)
+      return;
+
+    this.readingTrackingStarted = true;
+    this.sessionService.validateAction(this.sessionId!, {
+      action: 'start_reading',
+      timestamp: new Date()
+    }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.readingTrackingStartCompleted = true;
+        if (this.pendingReadingCompletion) {
+          const onFinished = this.pendingReadingCompletion;
+          this.pendingReadingCompletion = undefined;
+          this.finishReadingTracking(onFinished);
+        }
+      },
+      error: (error) => {
+        this.readingTrackingStarted = false;
+        this.readingTrackingStartCompleted = false;
+        console.error('[ExercisePlayer] Reading start tracking failed:', error);
+        if (this.pendingReadingCompletion) {
+          const onFinished = this.pendingReadingCompletion;
+          this.pendingReadingCompletion = undefined;
+          onFinished();
+        }
+      }
+    });
+  }
+
+  private finishReadingTracking(onFinished: () => void): void {
+    if (!this.shouldTrackReading() || !this.readingTrackingStarted || this.readingTrackingFinished) {
+      onFinished();
+      return;
+    }
+
+    if (!this.readingTrackingStartCompleted) {
+      this.pendingReadingCompletion = onFinished;
+      return;
+    }
+
+    this.readingTrackingFinished = true;
+    this.sessionService.validateAction(this.sessionId!, {
+      action: 'finish_reading',
+      timestamp: new Date()
+    }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => onFinished(),
+      error: (error) => {
+        console.error('[ExercisePlayer] Reading finish tracking failed:', error);
+        onFinished();
+      }
+    });
+  }
+
   startExercise(): void {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     this.clickedCells.clear();
@@ -830,6 +908,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       return;
     }
 
+    this.startReadingTracking();
     this.engine?.start();
 
     // Calculate line breaks for Subvocalization Reduction to prevent cross-line chunks
@@ -939,6 +1018,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.exercisePhase = 'reading';
     this.currentQuestionIndex = 0;
     this.readingWpm = 0;
+    this.readingTrackingStarted = false;
+    this.readingTrackingFinished = false;
+    this.readingTrackingStartCompleted = false;
+    this.pendingReadingCompletion = undefined;
     this.questionAnswers = [];
     this.selectedAnswer = null;
     this.questionFeedback = null;
@@ -2246,6 +2329,50 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return 0;
   }
 
+  private isMeasuredClientResult(result: EngineResult): boolean {
+    if (this.questionAnswers.length > 0
+      || result.details?.totalQuestions > 0
+      || result.details?.totalAnswers > 0
+      || result.details?.correctAnswers > 0
+      || result.details?.trials?.length > 0) {
+      return true;
+    }
+
+    const observationOnlyEngines = [
+      'motion_path',
+      'text_fade',
+      'regression_reduction',
+      'subvocalization_reduction',
+      'chunking',
+      'rsvp',
+      'speed_reading',
+      'free_reading'
+    ];
+    return !observationOnlyEngines.includes(this.engine?.engineType || '');
+  }
+
+  private normalizeEngineResultForDisplay(result: EngineResult): EngineResult {
+    if (this.isMeasuredClientResult(result)) {
+      return {
+        ...result,
+        details: { ...(result.details || {}), measurementStatus: 'Measured' }
+      };
+    }
+
+    return {
+      ...result,
+      score: 0,
+      accuracy: 0,
+      details: {
+        ...(result.details || {}),
+        wpm: null,
+        speedScore: null,
+        comprehensionScore: null,
+        measurementStatus: 'NotMeasured'
+      }
+    };
+  }
+
   /**
    * Heatmap rengi hesapla (0-1 arası normalize değer)
    * Yeşil (hızlı) -> Sarı -> Turuncu -> Kırmızı (yavaş)
@@ -2288,15 +2415,17 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       return;
     }
 
+    const isMeasured = this.isMeasuredClientResult(result);
     const customData = {
       wordsRead: this.engineState.totalSteps,
-      wpm: this.getWpm(),
-      accuracy: result.accuracy,
-      score: result.score,
       errors: result.errors,
       engineType: this.engine?.engineType,
       ...this.parsedConfig,
-      details: result.details
+      details: result.details,
+      wpm: isMeasured ? this.getWpm() : null,
+      accuracy: isMeasured ? result.accuracy : null,
+      score: isMeasured ? result.score : null,
+      measurementStatus: isMeasured ? 'Measured' : 'NotMeasured'
     };
 
 
@@ -2306,10 +2435,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const isAssessmentMode = state?.assessmentMode === true;
 
     // 1. Session kaydet (gamification için) - Assessment modunda XP kazanımı backend tarafında engellenir
-    this.sessionService.completeSession(this.sessionId, {
-      customData: customData,
-      isAssessmentMode: isAssessmentMode
-    }).subscribe({
+    this.sessionService.completeSession(this.sessionId, toCompleteSessionRequest(
+      this.questionAnswers,
+      customData,
+      isAssessmentMode
+    )).subscribe({
       next: (sessionResult: SessionResult) => {
         this.sessionResult = sessionResult;
 
@@ -2326,6 +2456,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         }
 
         this.showToast(msg, 'info', 5000);
+
+        if (!isAssessmentMode && !isPracticeMode && this.exercise?.id) {
+          this.completeDailyProgress(result, customData, isMeasured);
+        }
       },
       error: (err) => {
         console.error('Session completion failed:', err);
@@ -2335,114 +2469,51 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
 
 
-    if (isAssessmentMode && this.exercise?.id) {
-      // ASSESSMENT MODE: Create result for StudentExerciseResults table (Backend: submitExerciseResult)
-      // This is required because DailyProgress service requires an active Program, which doesn't exist yet for Assessment.
-      const resultData: CoreExerciseResult = {
-        exerciseId: this.exercise.id,
-        timeSpentSeconds: Math.round(result.totalTime / 1000),
-        wordsRead: this.engineState.totalSteps || 0,
-        rawWPM: this.getWpm(),
-        comprehensionScore: (() => {
-          // Robust score calculation for Assessment
-          let score = result.accuracy;
+  }
 
-          // 1. Visual Expansion Fallback
-          if ((!score || score === 0) && this.engine?.engineType === 'visual_expansion') {
-            const correct = this.getExpansionCorrectCount();
-            const wrong = this.getExpansionWrongCount();
-            const total = correct + wrong;
-            if (total > 0) score = (correct / total) * 100;
-          }
+  private completeDailyProgress(
+    result: EngineResult,
+    customData: { [key: string]: any },
+    isMeasured: boolean): void {
+    if (!this.exercise?.id || !this.sessionId) return;
 
-          // 2. Fixation / Motion Path Fallback
-          else if (this.engine?.engineType === 'motion_path') {
-            // For passive fixation exercises, completion = 100%
-            // If active (has interactions), calculate based on hits
-            const correct = (this.engine as any)?.correctAnswers || 0;
-            const wrong = (this.engine as any)?.incorrectAnswers || 0;
-            const total = correct + wrong;
+    const completeRequest: CompleteExerciseRequest = {
+      exerciseId: this.exercise.id,
+      sessionId: this.sessionId,
+      successRate: isMeasured ? result.accuracy ?? undefined : undefined,
+      timeSpentSeconds: Math.max(1, Math.round(result.totalTime / 1000)),
+      measurementStatus: isMeasured ? 'Measured' : 'NotMeasured',
+      correctCount: isMeasured ? result.completedSteps || 0 : 0,
+      incorrectCount: isMeasured ? result.errors || 0 : 0,
+      totalAttempts: isMeasured ? result.totalSteps || 0 : 0,
+      averageResponseTimeMs: result.details?.averageResponseTimeMs || 0,
+      medianResponseTimeMs: result.details?.medianResponseTimeMs || 0,
+      stdDevResponseTimeMs: result.details?.stdDevResponseTimeMs || 0,
+      pauseCount: result.details?.pauseCount || 0,
+      totalPausedSeconds: result.details?.totalPausedSeconds || 0,
+      resultDataJson: JSON.stringify(customData)
+    };
 
-            if (total > 0) {
-              score = (correct / total) * 100;
-            } else {
-              // Passive mode: If completed, give full score
-              score = 100;
-            }
-          }
-
-          // 3. General Fallback to Engine Score if Accuracy is missing
-          else if ((!score || score === 0) && result.score > 0) {
-            score = result.score;
-          }
-
-          return Math.round(score || 0);
-        })(), // Execute robust score calculation
-        questionAnswersJson: JSON.stringify(this.questionAnswers.map(q => ({
-          questionId: q.questionId,
-          selectedAnswer: q.selectedAnswer,
-          isCorrect: q.isCorrect
-        }))),
-        readingMovementsJson: JSON.stringify(customData), // Save full details here as metadata
-        readingTextId: this.parsedConfig?.['metadata']?.['readingTextId']
-      };
-
-      this.exerciseService.submitExerciseResult(resultData).subscribe({
-        next: () => {
-          this.showToast('Seviye tespit sonucu kaydedildi.', 'info', 3000);
-        },
-        error: (err) => {
-          console.error('[ExercisePlayer] Assessment submit failed:', err);
-          this.showToast('Sonuç kaydedilirken hata oluştu', 'error', 3000);
+    this.exerciseProgramService.completeExercise(completeRequest, this.sessionId).subscribe({
+      next: (response: any) => {
+        if (response.programCompleted) {
+          console.log('🎉 Program Completed!', response);
+          this.programCompletionData = response;
+          this.showProgramCompletionModal = true;
+          this.cdr.detectChanges();
+          return;
         }
-      });
-    } else if (!isPracticeMode && this.exercise?.id) {
-      const completeRequest: CompleteExerciseRequest = {
-        exerciseId: this.exercise.id,
-        successRate: result.accuracy,
-        timeSpentSeconds: Math.max(1, Math.round(result.totalTime / 1000)),
-        correctCount: result.completedSteps || 0,
-        incorrectCount: result.errors || 0,
-        totalAttempts: result.totalSteps || 0,
-        averageResponseTimeMs: result.details?.averageResponseTimeMs || 0,
-        medianResponseTimeMs: result.details?.medianResponseTimeMs || 0,
-        stdDevResponseTimeMs: result.details?.stdDevResponseTimeMs || 0,
-        pauseCount: result.details?.pauseCount || 0,
-        totalPausedSeconds: result.details?.totalPausedSeconds || 0,
-        resultDataJson: JSON.stringify(customData)
-      };
 
-
-      this.exerciseProgramService.completeExercise(completeRequest).subscribe({
-        next: (response: any) => {
-
-          // Check for PROGRAM COMPLETION (Priority 1)
-          if (response.programCompleted) {
-            console.log('🎉 Program Completed!', response);
-            this.programCompletionData = response;
-            this.showProgramCompletionModal = true;
-            this.cdr.detectChanges();
-            return; // Stop here, modal will take over
-          }
-
-          // Gün tamamlandıysa ekstra bildirim
-          if (response.dayCompleted) {
-            setTimeout(() => {
-              this.showToast('🎉 Bugünün tüm egzersizlerini tamamladınız!', 'info', 5000);
-            }, 2000);
-          }
-
-          // Streak bilgisini güncelle
-          if (response.currentStreak > 1) {
-          }
-        },
-        error: (err) => {
-          console.error('[ExercisePlayer] Daily progress update failed:', err);
-          // Session zaten kaydedildi, bu hata kritik değil
+        if (response.dayCompleted) {
+          setTimeout(() => {
+            this.showToast('🎉 Bugünün tüm egzersizlerini tamamladınız!', 'info', 5000);
+          }, 2000);
         }
-      });
-    } else if (isPracticeMode) {
-    }
+      },
+      error: (err) => {
+        console.error('[ExercisePlayer] Daily progress update failed:', err);
+      }
+    });
   }
 
   // Reading Comprehension helpers
@@ -2783,4 +2854,3 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return this.currentHintIndex === index;
   }
 }
-

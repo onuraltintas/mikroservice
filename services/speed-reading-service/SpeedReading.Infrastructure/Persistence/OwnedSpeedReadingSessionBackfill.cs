@@ -170,7 +170,8 @@ public sealed class OwnedSpeedReadingSessionBackfill(
                 NormalizeUtc(source.CreatedAt),
                 ToAuditValue(source.CreatedBy),
                 NormalizeUtc(source.UpdatedAt),
-                ToAuditValue(source.UpdatedBy)));
+                ToAuditValue(source.UpdatedBy),
+                !string.Equals(source.QuestionAnswersJson, "[]", StringComparison.Ordinal)));
             resultsInserted++;
         }
 

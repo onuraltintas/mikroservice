@@ -12,6 +12,12 @@ public enum ExerciseSessionStatus
     Abandoned = 5
 }
 
+public enum SpeedReadingMeasurementStatus
+{
+    NotMeasured = 0,
+    Measured = 1
+}
+
 public sealed class StartExerciseSessionRequest
 {
     public Guid ExerciseId { get; init; }
@@ -120,9 +126,9 @@ public sealed record ExerciseSessionResult(
     Guid ExerciseId,
     int CorrectCount,
     int IncorrectCount,
-    decimal Accuracy,
+    decimal? Accuracy,
     int TimeSpentSeconds,
-    decimal Score,
+    decimal? Score,
     int? WordsRead,
     [property: JsonPropertyName("rawWPM")] decimal? RawWPM,
     decimal? ComprehensionScore,
@@ -133,7 +139,8 @@ public sealed record ExerciseSessionResult(
     int? NewLevel,
     JsonElement DetailedResults,
     string Feedback,
-    string? NextRecommendation);
+    string? NextRecommendation,
+    string MeasurementStatus = "Measured");
 
 public interface ISpeedReadingExerciseSessions
 {
@@ -196,6 +203,55 @@ public static class SpeedReadingExerciseSessionRules
         }
 
         return Math.Max(0, (int)Math.Round(elapsed));
+    }
+
+    public static int CalculateReadingSeconds(
+        DateTime sessionStartTime,
+        DateTime sessionEndTime,
+        DateTime? readingStartTime,
+        DateTime? readingEndTime,
+        int pausedReadingSeconds)
+    {
+        var start = readingStartTime ?? sessionStartTime;
+        var end = readingEndTime ?? sessionEndTime;
+        var elapsed = Math.Max(0, (end.ToUniversalTime() - start.ToUniversalTime()).TotalSeconds);
+        elapsed -= Math.Max(0, pausedReadingSeconds);
+        return Math.Max(0, (int)Math.Round(elapsed));
+    }
+
+    public static decimal CalculateCompositeScore(decimal comprehensionScore, decimal? rawWpm)
+    {
+        var comprehension = Math.Clamp(comprehensionScore, 0, 100);
+        if (rawWpm is not > 0)
+        {
+            return comprehension;
+        }
+
+        var speedComponent = Math.Min(rawWpm.Value / 5, 100) * 0.4m;
+        return Math.Round(Math.Clamp((comprehension * 0.6m) + speedComponent, 0, 100), 2);
+    }
+
+    public static decimal? CalculateValidatedRawWpm(int wordsRead, int readingSeconds)
+    {
+        if (wordsRead <= 0 || readingSeconds < 3)
+        {
+            return null;
+        }
+
+        var rawWpm = (decimal)wordsRead / readingSeconds * 60;
+        return rawWpm is < 20 or > 1_500
+            ? null
+            : Math.Round(rawWpm, 2);
+    }
+
+    public static SpeedReadingMeasurementStatus ResolveMeasurementStatus(
+        int questionCount,
+        int correctCount,
+        int incorrectCount)
+    {
+        return questionCount > 0 || Math.Max(correctCount, 0) + Math.Max(incorrectCount, 0) > 0
+            ? SpeedReadingMeasurementStatus.Measured
+            : SpeedReadingMeasurementStatus.NotMeasured;
     }
 
     public static int CalculateXp(decimal score, decimal accuracy, int timeSpentSeconds)

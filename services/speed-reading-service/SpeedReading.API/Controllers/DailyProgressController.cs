@@ -30,6 +30,7 @@ public sealed class DailyProgressController(ISpeedReadingDailyProgress dailyProg
     [HttpPost("complete-exercise")]
     public async Task<ActionResult<CompleteDailyExerciseResponse>> CompleteExercise(
         [FromBody] CompleteDailyExerciseRequest? request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
         CancellationToken cancellationToken = default)
     {
         if (request is null)
@@ -40,6 +41,7 @@ public sealed class DailyProgressController(ISpeedReadingDailyProgress dailyProg
         return Ok(await dailyProgress.CompleteExerciseAsync(
             GetCurrentUserId(),
             request,
+            SpeedReadingDailyProgressRules.ValidateIdempotencyKey(idempotencyKey),
             cancellationToken));
     }
 

@@ -24,8 +24,10 @@ public sealed class CompleteDailyExerciseRequest
     // The current frontend sends these names. Both contracts are supported
     // during the migration so old clients do not silently lose completions.
     public Guid? ExerciseId { get; init; }
+    public Guid? SessionId { get; init; }
     public decimal? SuccessRate { get; init; }
     public int? TimeSpentSeconds { get; init; }
+    public string? MeasurementStatus { get; init; }
 
     public int CorrectCount { get; init; }
     public int IncorrectCount { get; init; }
@@ -131,6 +133,7 @@ public interface ISpeedReadingDailyProgress
     Task<CompleteDailyExerciseResponse> CompleteExerciseAsync(
         Guid userId,
         CompleteDailyExerciseRequest request,
+        string idempotencyKey,
         CancellationToken cancellationToken = default);
 
     Task<DailyProgressSummary?> GetProgressSummaryAsync(
@@ -150,6 +153,21 @@ public interface ISpeedReadingDailyProgress
 
 public static class SpeedReadingDailyProgressRules
 {
+    public static string ValidateIdempotencyKey(string? key)
+    {
+        var normalized = key?.Trim() ?? string.Empty;
+        if (!System.Text.RegularExpressions.Regex.IsMatch(
+                normalized,
+                "^[A-Za-z0-9._~-]{16,128}$"))
+        {
+            throw new ArgumentException(
+                "Idempotency-Key must contain 16-128 letters, numbers, dots, underscores, hyphens or tildes.",
+                nameof(key));
+        }
+
+        return normalized;
+    }
+
     public static decimal ResolveScore(decimal? legacyScore, decimal? frontendSuccessRate)
     {
         var score = legacyScore ?? frontendSuccessRate
