@@ -2,9 +2,11 @@
 
 ## Mevcut durum ve final bağımsız ownership hedefi
 
-Owned veri modeli ve runtime cutover kodu tamamlandı; ancak canlı verinin
-backfill/parity kanıtı ve production smoke tamamlanmadan “Veri ve iş mantığı
-tamamen bağımsız Speed Reading mikroservisine taşındı” kararı verilmeyecektir.
+Owned veri modeli, runtime cutover, gerçek production backfill/parity ve aktif
+servis izolasyonu tamamlandı. 2026-08-29 operasyon kanıtları aşağıda kayıtlıdır.
+Authenticated E2E için gerçek bir test hesabı ile login ve kullanıcı akışlarının
+ayrıca doğrulanması gerekir; legacy veritabanı ve önceki image'lar rollback için
+bilinçli olarak korunmaktadır.
 Kapanış kapıları:
 
 1. Speed Reading kendi PostgreSQL veritabanını ve kendi migration geçmişini
@@ -26,18 +28,35 @@ Kapanış kapıları:
 | Faz | Durum | Kapanış ölçütü |
 | --- | --- | --- |
 | Baseline ve auth/session hizalama | Tamamlandı | 48 frontend test GREEN; canonical auth ve HttpOnly session akışı |
-| Yeni owned şema ve migration altyapısı | Kod tamamlandı | Yeni DB, EF migration geçmişi, katalog modeli ve backfill runner |
-| Core exercise/session/progress iş mantığı | Kod tamamlandı / flag arkasında | Owned session/assignment/program/daily-progress implementation ve backfill runner hazır; parity ve E2E hâlâ gerekli |
-| Content/program/report/gamification slice’ları | Kod tamamlandı / flag arkasında | Katalog, CMS, abonelik/ödeme, bildirim, RSVP, review, feedback, adaptive, rapor ve analitik implementation/backfill runner hazır; parity ve E2E hâlâ gerekli |
-| Frontend/gateway legacy endpoint temizliği | Bekliyor | Standalone domain’de 404 üreten çağrı kalmaması |
-| Shadow read ve write cutover | Bekliyor | Eski DB yazma yetkisi kaldırılmış, rollback kanıtlı |
-| Eski runtime/DB erişiminin kaldırılması | Bekliyor | Bağımsızlık testi ve production smoke tamamlanmış |
+| Yeni owned şema ve migration altyapısı | Tamamlandı | `speedreading_owned_db` ve bağımsız EF migration geçmişi production'da doğrulandı |
+| Core exercise/session/progress iş mantığı | Tamamlandı / aktif | Owned runtime, backfill ve 60 tablo parity kontrolü GREEN |
+| Content/program/report/gamification slice’ları | Tamamlandı / aktif | Owned store ve canlı endpoint smoke doğrulandı; Iyzico bilinçli olarak ertelendi |
+| Frontend/gateway legacy endpoint temizliği | Tamamlandı / uyumluluk alias'ları korunuyor | Aktif standalone endpoint'ler 404 üretmiyor; geriye dönük `/api/v1` alias'ları kontrollü biçimde duruyor |
+| Shadow read ve write cutover | Tamamlandı / aktif servis | Servis dedicated owned role kullanıyor; legacy egzersiz tablolarında bu role `INSERT=false` |
+| Eski runtime/DB erişiminin kaldırılması | Kontrollü tamamlandı; cleanup bekliyor | Aktif servis legacy DB'ye erişmiyor; eski DB/image'lar rollback için tutuluyor |
+
+### Production operasyon kanıtı (2026-08-29)
+
+- Backup: `/opt/eduivme/backups/speed-reading/20260829T043855Z`; legacy ve
+  owned dump'ları alındı, SHA-256 değerleri backup dizininde doğrulandı.
+- Restore drill: geçici PostgreSQL veritabanlarına iki dump geri yüklendi,
+  tablo/katalog sayımları doğrulandı ve yalnızca drill veritabanları silindi.
+- Migration: `b0d3810` image'ı ile owned migration çalıştı; `No migrations
+  were applied. The database is already up to date.` sonucu alındı.
+- Parity: `--verify-owned-parity` 60 tabloyu karşılaştırdı; `IsMatch=true`,
+  mismatch sayısı `0`.
+- Runtime isolation: canlı servis `speedreading_owned_runtime` kullanıyor;
+  `speedreading_owned_db` ve `speed_reading` sahipliği bu role ait, legacy
+  egzersiz tablolarında yazma yetkisi yok.
+- Live smoke: health/live, health/ready, capabilities, CMS ve subscription
+  endpoint'leri 200; oturum gerektiren phase-plan ve reading-texts endpoint'leri
+  oturumsuz istekte beklenen 401 döndürüyor.
 
 ## Uygulanan owned runtime slice’ları
 
 Bağımsız veri sınırı kod tabanına eklendi. `SpeedReading__OwnedDataEnabled=true`
 ile normal web runtime yalnızca owned bağlantıyı kullanır; canlı trafik cutover'ı
-ve backfill operasyonu ayrıca tamamlanmalıdır:
+ve production backfill operasyonu tamamlanmış, kanıtları üstte kaydedilmiştir:
 
 - `SpeedReading.Domain` altında egzersiz, okuma metni/sorusu ve egzersiz
   oturumu/sonucu aggregate'leri bulunur. Oturum yaşam döngüsü, pause süresi,
@@ -111,9 +130,10 @@ ve backfill operasyonu ayrıca tamamlanmalıdır:
   uygular; legacy migration/backfill komutları ise geçiş süresince iki bağlantıyı
   açıkça kullanır.
 - `SPEED_READING_CONNECTION_STRING` yalnızca migration/backfill ve legacy
-  fallback modu için gereklidir. Bu nedenle kod cutover'ı tamamlanmış olsa da
-  backfill, checksum/row-count parity, eski yazma yollarının kapatılması,
-  backup/restore ve production E2E sonraki kapanış kapılarıdır.
+  fallback modu için gereklidir. Kod cutover'ı, backfill, checksum/row-count
+  parity, aktif runtime'ın legacy yazma yollarından ayrılması ve backup/restore
+  kanıtları tamamlanmıştır; authenticated production E2E son kullanıcı kapanış
+  kanıtı olarak ayrıca tutulur.
 
 Yeni DB'yi mevcut PostgreSQL volume'ünde kullanmadan önce production backup
 alınmalı ve `speedreading_owned_db` veritabanı operasyonel olarak oluşturulup
@@ -404,12 +424,17 @@ bağlanmaz.
 
 ## Kalan final operasyonel kapılar
 
-Kod taşınması tamamlandı; tamamen kapanmamış işler yalnızca operasyonel ve
-yayın doğrulama kapılarıdır:
+Kod ve aktif runtime taşınması tamamlandı. Kalan doğrulama yalnızca gerçek bir
+test hesabıyla authenticated E2E akışlarının kanıtlanmasıdır:
 
-1. Gerçek veritabanında migration/backfill ve source/owned parity sonuçları.
-2. Gateway ve bağımsız frontend ile uçtan uca smoke test.
-3. Eski uygulamanın write erişiminin kaldırılması ve bağımsız backup/restore.
+1. Login ve session yenileme.
+2. Katalog/egzersiz başlatma, cevap kaydı, sonuç ve ilerleme kaydı.
+3. Rapor/analytics ve yetkili admin akışları.
+
+Aktif servis için legacy DB yazma yetkisi dedicated role ile kaldırılmıştır.
+Eski release/image ve legacy DB, rollback süresi ve veri saklama politikası
+belirlenene kadar silinmemelidir; bu varlıkların tutulması aktif servis
+bağımsızlığını bozmaz.
 
 Rapor `export/pdf` ve `export/excel` artık merkezi serviste gerçek PDF/XLSX
 üretir. Newsletter abonelikten çıkış da merkezi CMS altında
