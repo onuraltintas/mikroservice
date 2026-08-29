@@ -62,6 +62,44 @@ public static class OwnedSpeedReadingParityHash
     }
 }
 
+public static class OwnedSpeedReadingParityDerivedFields
+{
+    public static decimal CalculateSessionScore(
+        decimal comprehensionScore,
+        decimal rawWpm)
+    {
+        var boundedComprehension = Math.Clamp(comprehensionScore, 0m, 100m);
+        var normalizedWpm = Math.Clamp(rawWpm / 5m, 0m, 100m);
+        return Math.Clamp(
+            (boundedComprehension * 0.6m) + (normalizedWpm * 0.4m),
+            0m,
+            100m);
+    }
+
+    public static bool IsMeasuredFromQuestionAnswers(string? questionAnswersJson)
+    {
+        if (string.IsNullOrWhiteSpace(questionAnswersJson))
+            return false;
+
+        try
+        {
+            using var document = JsonDocument.Parse(questionAnswersJson);
+            return document.RootElement.ValueKind == JsonValueKind.Array
+                && document.RootElement.GetArrayLength() > 0;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    public static bool IsMeasuredFromDailyLog(
+        int totalAttempts,
+        int correctCount,
+        int incorrectCount) =>
+        totalAttempts > 0 || correctCount > 0 || incorrectCount > 0;
+}
+
 /// <summary>
 /// Compares the source and owned stores by the stable business identifier of
 /// every migrated Speed Reading table. It is read-only and deliberately does
@@ -485,8 +523,25 @@ public sealed class OwnedSpeedReadingParityChecker(
         {
             return new Dictionary<string, object?>
             {
-                ["Score"] = result.WeightedKDP,
+                ["Score"] = OwnedSpeedReadingParityDerivedFields.CalculateSessionScore(
+                    result.ComprehensionScore,
+                    result.RawWPM),
+                ["IsAssessmentMode"] = false,
+                ["IsMeasured"] = OwnedSpeedReadingParityDerivedFields.IsMeasuredFromQuestionAnswers(
+                    result.QuestionAnswersJson),
                 ["LegacySessionId"] = result.SessionId
+            };
+        }
+
+        if (sourceTable == "DailyExerciseLogs"
+            && row is LegacyDailyExerciseLog dailyLog)
+        {
+            return new Dictionary<string, object?>
+            {
+                ["IsMeasured"] = OwnedSpeedReadingParityDerivedFields.IsMeasuredFromDailyLog(
+                    dailyLog.TotalAttempts,
+                    dailyLog.CorrectCount,
+                    dailyLog.IncorrectCount)
             };
         }
 

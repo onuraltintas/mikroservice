@@ -50,4 +50,41 @@ public sealed class OwnedSpeedReadingParityTests
             .Should()
             .NotBe(checksum);
     }
+
+    [Fact]
+    public void Session_score_matches_the_owned_measurement_migration_formula()
+    {
+        OwnedSpeedReadingParityDerivedFields.CalculateSessionScore(80m, 500m)
+            .Should()
+            .Be(88m);
+
+        OwnedSpeedReadingParityDerivedFields.CalculateSessionScore(-10m, 1000m)
+            .Should()
+            .Be(40m);
+    }
+
+    [Theory]
+    [InlineData("[]", false)]
+    [InlineData("[\"answer\"]", true)]
+    [InlineData("{}", false)]
+    [InlineData("not-json", false)]
+    public void Measurement_flag_from_question_answers_matches_the_owned_migration(
+        string questionAnswersJson,
+        bool expected)
+    {
+        OwnedSpeedReadingParityDerivedFields.IsMeasuredFromQuestionAnswers(questionAnswersJson)
+            .Should()
+            .Be(expected);
+    }
+
+    [Fact]
+    public void Daily_log_measurement_flag_requires_at_least_one_attempt_signal()
+    {
+        OwnedSpeedReadingParityDerivedFields.IsMeasuredFromDailyLog(0, 0, 0)
+            .Should()
+            .BeFalse();
+        OwnedSpeedReadingParityDerivedFields.IsMeasuredFromDailyLog(0, 1, 0)
+            .Should()
+            .BeTrue();
+    }
 }
