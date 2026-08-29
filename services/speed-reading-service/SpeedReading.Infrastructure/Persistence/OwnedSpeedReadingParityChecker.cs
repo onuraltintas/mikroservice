@@ -71,7 +71,10 @@ public static class OwnedSpeedReadingParityDerivedFields
         var boundedComprehension = Math.Clamp(comprehensionScore, 0m, 100m);
         var normalizedWpm = Math.Clamp(rawWpm / 5m, 0m, 100m);
         return Math.Clamp(
-            (boundedComprehension * 0.6m) + (normalizedWpm * 0.4m),
+            Math.Round(
+                (boundedComprehension * 0.6m) + (normalizedWpm * 0.4m),
+                2,
+                MidpointRounding.AwayFromZero),
             0m,
             100m);
     }
@@ -529,7 +532,17 @@ public sealed class OwnedSpeedReadingParityChecker(
                 ["IsAssessmentMode"] = false,
                 ["IsMeasured"] = OwnedSpeedReadingParityDerivedFields.IsMeasuredFromQuestionAnswers(
                     result.QuestionAnswersJson),
+                ["AssessmentAttemptId"] = null,
                 ["LegacySessionId"] = result.SessionId
+            };
+        }
+
+        if (sourceTable == "ExerciseSessions"
+            && row is LegacyExerciseSession)
+        {
+            return new Dictionary<string, object?>
+            {
+                ["AssessmentAttemptId"] = null
             };
         }
 

@@ -57,6 +57,9 @@ public sealed class OwnedSpeedReadingParityTests
         OwnedSpeedReadingParityDerivedFields.CalculateSessionScore(80m, 500m)
             .Should()
             .Be(88m);
+        OwnedSpeedReadingParityDerivedFields.CalculateSessionScore(80.01m, 333.33m)
+            .Should()
+            .Be(74.67m);
 
         OwnedSpeedReadingParityDerivedFields.CalculateSessionScore(-10m, 1000m)
             .Should()
