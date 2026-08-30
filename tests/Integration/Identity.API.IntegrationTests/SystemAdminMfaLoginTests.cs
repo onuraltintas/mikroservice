@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Kernel.Results;
+using EduPlatform.Shared.Kernel.Exceptions;
 using EduPlatform.Shared.Contracts.Reporting;
 using EduPlatform.Shared.Security.Interfaces;
 using FluentAssertions;
@@ -323,6 +324,27 @@ public sealed class SystemAdminMfaLoginTests
         refreshToken.IsActive.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task RefreshToken_WhenConcurrentRotationOccurs_ShouldReturnInvalidTokenFailure()
+    {
+        var user = CreateSystemAdministrator();
+        var refreshToken = RefreshToken.Create(
+            user.Id, "concurrent-refresh-token", DateTime.UtcNow.AddDays(1), "127.0.0.1",
+            isPersistent: true, mfaVerifiedAt: null);
+        user.AddRefreshToken(refreshToken);
+
+        var handler = new RefreshTokenCommandHandler(
+            new StubUserRepository(user),
+            new IssuingTokenService(),
+            new ConcurrencyUnitOfWork());
+
+        var result = await handler.Handle(
+            new RefreshTokenCommand(refreshToken.Token), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.InvalidToken");
+    }
+
     private static User CreateSystemAdministrator(bool mfaEnabled = false)
     {
         var user = User.Create(Guid.NewGuid(), "admin@example.com");
@@ -447,6 +469,14 @@ public sealed class SystemAdminMfaLoginTests
     private sealed class StubUnitOfWork : IUnitOfWork
     {
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken) => Task.FromResult(0);
+        public void ClearTracking() { }
+    }
+
+    private sealed class ConcurrencyUnitOfWork : IUnitOfWork
+    {
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken) =>
+            Task.FromException<int>(new ConcurrencyException("RefreshToken", Guid.NewGuid()));
+
         public void ClearTracking() { }
     }
 

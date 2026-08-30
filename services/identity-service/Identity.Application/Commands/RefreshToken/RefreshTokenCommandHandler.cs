@@ -1,6 +1,7 @@
 using EduPlatform.Shared.Kernel.Results;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
+using EduPlatform.Shared.Kernel.Exceptions;
 using MediatR;
 using System.Security.Claims;
 
@@ -49,7 +50,15 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         if (isSystemAdministrator && user.MfaEnabled && existingRefreshToken.MfaVerifiedAt is null)
         {
             existingRefreshToken.Revoke("system", "MFA reauthentication required");
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+            catch (ConcurrencyException)
+            {
+                return InvalidatedRefreshToken();
+            }
+
             return Result.Failure<RefreshTokenResponse>(new Error(
                 "Auth.MfaRequired",
                 "Yönetici oturumunun iki adımlı doğrulamayla yeniden açılması gerekiyor."));
@@ -68,7 +77,14 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         
         user.AddRefreshToken(newRefreshToken);
 
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (ConcurrencyException)
+        {
+            return InvalidatedRefreshToken();
+        }
 
         return Result.Success(new RefreshTokenResponse(
             newAccessToken,
@@ -77,4 +93,9 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
             newRefreshToken.IsPersistent,
             ExpiresInMinutes: _tokenService.GetAccessTokenLifetimeMinutes()));
     }
+
+    private static Result<RefreshTokenResponse> InvalidatedRefreshToken() =>
+        Result.Failure<RefreshTokenResponse>(new Error(
+            "Auth.InvalidToken",
+            "Oturum anahtarı artık geçerli değil; lütfen tekrar giriş yapın."));
 }

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using Serilog;
 using EduPlatform.Shared.Kernel.Primitives;
+using EduPlatform.Shared.Kernel.Exceptions;
 using MassTransit;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using Identity.Application.Exceptions;
@@ -122,6 +123,16 @@ public class IdentityDbContext : DbContext
         catch (DbUpdateException exception) when (IsIdempotencyConstraintViolation(exception))
         {
             throw new IdempotencyConflictException(exception);
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            var entry = exception.Entries.FirstOrDefault();
+            var entityName = entry?.Metadata.ClrType.Name ?? "Entity";
+            var keyProperty = entry?.Metadata.FindPrimaryKey()?.Properties.FirstOrDefault();
+            var entityId = keyProperty is null
+                ? "unknown"
+                : entry!.Property(keyProperty.Name).CurrentValue ?? "unknown";
+            throw new EduPlatform.Shared.Kernel.Exceptions.ConcurrencyException(entityName, entityId);
         }
     }
 
