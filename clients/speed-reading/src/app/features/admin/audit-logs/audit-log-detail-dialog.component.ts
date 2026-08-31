@@ -1,14 +1,12 @@
-import { Component, OnInit, inject, Inject } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { AuditLogsService } from '../../../core/services/audit-logs.service';
-import { AuditLogDetail } from '../../../core/models/audit-log.model';
+import { AuditLog, AuditLogDetail } from '../../../core/models/audit-log.model';
 import { BaseComponent } from '../../../core/components/base.component';
-import { takeUntil, finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-audit-log-detail-dialog',
@@ -25,38 +23,32 @@ import { takeUntil, finalize } from 'rxjs/operators';
   styleUrls: ['./audit-log-detail-dialog.component.scss']
 })
 export class AuditLogDetailDialogComponent extends BaseComponent implements OnInit {
-  private auditLogsService = inject(AuditLogsService);
-  private dialogRef = inject(MatDialogRef<AuditLogDetailDialogComponent>);
-
   log: AuditLogDetail | null = null;
   // loading inherited from BaseComponent
   error: string | null = null;
 
-  constructor(@Inject(MAT_DIALOG_DATA) public data: { logId: string }) {
+  constructor(@Inject(MAT_DIALOG_DATA) public data: { log: AuditLog }) {
     super();
   }
 
   ngOnInit(): void {
-    this.loadLogDetail();
+    const source = this.data.log;
+    this.log = {
+      ...source,
+      oldValues: null,
+      newValues: source.changedFieldsJson ?? null,
+      userAgent: source.userAgent ?? '',
+      additionalInfo: [
+        source.serviceName ? `Servis: ${source.serviceName}` : '',
+        source.requestPath && source.httpMethod ? `İstek: ${source.httpMethod} ${source.requestPath}` : '',
+        source.statusCode ? `HTTP durumu: ${source.statusCode}` : '',
+        source.correlationId ? `Korelasyon: ${source.correlationId}` : ''
+      ].filter(Boolean).join('\n') || null
+    };
   }
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-  }
-
-  loadLogDetail(): void {
-    this.loading.set(true);
-    this.auditLogsService.getAuditLogDetail(this.data.logId)
-      .pipe(takeUntil(this.destroy$), finalize(() => this.loading.set(false)))
-      .subscribe({
-        next: (log) => {
-          this.log = log;
-        },
-        error: (err) => {
-          console.error('Error loading log detail:', err);
-          this.error = 'Log detayı yüklenirken hata oluştu';
-        }
-      });
   }
 
   formatJson(jsonString: string): string {

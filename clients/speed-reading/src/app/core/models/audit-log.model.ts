@@ -9,6 +9,13 @@ export interface AuditLog {
   entityName: string | null;
   ipAddress: string;
   timestamp: Date;
+  serviceName?: string;
+  httpMethod?: string;
+  statusCode?: number;
+  requestPath?: string;
+  correlationId?: string;
+  userAgent?: string;
+  changedFieldsJson?: string | null;
 }
 
 export interface AuditLogDetail extends AuditLog {

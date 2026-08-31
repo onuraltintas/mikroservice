@@ -1,6 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -98,7 +97,7 @@ export class CoachDialogComponent extends BaseComponent {
   selector: 'app-coaches-list',
   standalone: true,
   imports: [
-    CommonModule, RouterLink, MatTableModule, MatButtonModule, MatIconModule, MatCardModule,
+    CommonModule, MatTableModule, MatButtonModule, MatIconModule, MatCardModule,
     MatDialogModule, MatTooltipModule, MatProgressSpinnerModule, MatChipsModule
   ],
   template: `
@@ -147,15 +146,6 @@ export class CoachDialogComponent extends BaseComponent {
               <th mat-header-cell *matHeaderCellDef>Son Giriş</th>
               <td mat-cell *matCellDef="let c">{{ c.lastLoginAt ? (c.lastLoginAt | date:'dd.MM.yyyy') : '—' }}</td>
             </ng-container>
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let c">
-                <button mat-icon-button matTooltip="Koçluk İlişkileri" color="primary"
-                  [routerLink]="['/admin/coaching/relationships']">
-                  <mat-icon>people</mat-icon>
-                </button>
-              </td>
-            </ng-container>
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
           </table>
@@ -169,7 +159,7 @@ export class CoachesListComponent extends BaseComponent implements OnInit {
   private dialog = inject(MatDialog);
 
   coaches: UserDto[] = [];
-  displayedColumns = ['name', 'email', 'status', 'lastLogin', 'actions'];
+  displayedColumns = ['name', 'email', 'status', 'lastLogin'];
 
   ngOnInit(): void { this.loadCoaches(); }
 

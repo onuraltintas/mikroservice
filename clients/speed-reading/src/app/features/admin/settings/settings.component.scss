@@ -16,10 +16,15 @@
         font-weight: 600;
     }
 
-    button {
+    .header-actions {
         display: flex;
         align-items: center;
         gap: 0.5rem;
+    }
+
+    p {
+        margin: 0.4rem 0 0;
+        color: #666;
     }
 }
 
@@ -28,6 +33,70 @@
     justify-content: center;
     align-items: center;
     padding: 3.75rem;
+}
+
+.empty-card {
+    padding: 3rem;
+    text-align: center;
+
+    mat-icon {
+        color: #777;
+        font-size: 3rem;
+        height: 3rem;
+        width: 3rem;
+    }
+}
+
+.settings-card {
+    margin-bottom: 1rem;
+
+    h2 {
+        margin: 0 0 1rem;
+        font-size: 1.25rem;
+    }
+}
+
+.setting-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 28rem);
+    gap: 1.5rem;
+    align-items: center;
+    padding: 1rem 0;
+    border-top: 1px solid #eee;
+}
+
+.setting-description {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    span {
+        color: #666;
+        font-size: 0.875rem;
+    }
+}
+
+.boolean-setting {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.setting-row mat-form-field {
+    width: 100%;
+}
+
+@media (max-width: 700px) {
+    .page-header,
+    .setting-row {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .header-actions {
+        flex-wrap: wrap;
+    }
 }
 
 .tab-content {

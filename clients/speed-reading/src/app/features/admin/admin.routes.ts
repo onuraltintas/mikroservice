@@ -51,18 +51,6 @@ export const adminRoutes: Routes = [
         loadComponent: () => import('./settings/settings.component').then(m => m.SettingsComponent)
       },
       {
-        path: 'system/backups',
-        loadComponent: () => import('./system/backups/backup-list.component').then(m => m.BackupListComponent)
-      },
-      {
-        path: 'deleted-records',
-        loadComponent: () => import('./deleted-records/deleted-records.component').then(m => m.DeletedRecordsComponent)
-      },
-      {
-        path: 'legal-documents',
-        loadComponent: () => import('./legal-documents/legal-documents.component').then(m => m.LegalDocumentsComponent)
-      },
-      {
         path: 'bulk-operations',
         loadComponent: () => import('./bulk-operations/bulk-operations.component').then(m => m.BulkOperationsComponent)
       },
@@ -245,7 +233,8 @@ export const adminRoutes: Routes = [
       },
       {
         path: 'coaching/relationships',
-        loadComponent: () => import('./coaching/coaching-relationships.component').then(m => m.CoachingRelationshipsComponent)
+        redirectTo: 'coaches',
+        pathMatch: 'full'
       },
       {
         path: 'coaching/sessions',
@@ -256,10 +245,6 @@ export const adminRoutes: Routes = [
         loadComponent: () => import('./coaching/coaching-goals.component').then(m => m.CoachingGoalsComponent)
       },
       {
-        path: 'coaching/study-sessions',
-        loadComponent: () => import('./coaching/coaching-study-sessions.component').then(m => m.CoachingStudySessionsComponent)
-      },
-      {
         path: 'coaching/exam-results',
         loadComponent: () => import('./coaching/coaching-exam-results.component').then(m => m.CoachingExamResultsComponent)
       },
@@ -268,16 +253,39 @@ export const adminRoutes: Routes = [
         loadComponent: () => import('./coaching/coaching-assignments.component').then(m => m.CoachingAssignmentsComponent)
       },
       {
+        path: 'coaching/study-sessions',
+        redirectTo: 'coaching/sessions',
+        pathMatch: 'full'
+      },
+      {
         path: 'coaching/subjects',
-        loadComponent: () => import('./coaching/coaching-subjects.component').then(m => m.CoachingSubjectsComponent)
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
       },
       {
         path: 'coaching/snapshots',
-        loadComponent: () => import('./coaching/coaching-snapshots.component').then(m => m.CoachingSnapshotsComponent)
+        redirectTo: 'reports/platform-usage',
+        pathMatch: 'full'
       },
       {
         path: 'coaching/weak-subjects',
-        loadComponent: () => import('./coaching/coaching-weak-subjects.component').then(m => m.CoachingWeakSubjectsComponent)
+        redirectTo: 'reports/students',
+        pathMatch: 'full'
+      },
+      {
+        path: 'system/backups',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      },
+      {
+        path: 'deleted-records',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      },
+      {
+        path: 'legal-documents',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
       },
       {
         path: 'subscriptions',

@@ -232,15 +232,10 @@ export class NavigationService {
         icon: 'school',
         children: [
           { label: 'Koçlar', icon: 'sports', route: '/admin/coaches' },
-          { label: 'Koçluk İlişkileri', icon: 'people', route: '/admin/coaching/relationships' },
           { label: 'Koçluk Seansları', icon: 'event', route: '/admin/coaching/sessions' },
           { label: 'Hedefler', icon: 'flag', route: '/admin/coaching/goals' },
-          { label: 'Çalışma Oturumları', icon: 'timer', route: '/admin/coaching/study-sessions' },
           { label: 'Sınav Sonuçları', icon: 'analytics', route: '/admin/coaching/exam-results' },
-          { label: 'Ödevler', icon: 'assignment', route: '/admin/coaching/assignments' },
-          { label: 'Dersler & Konular', icon: 'menu_book', route: '/admin/coaching/subjects' },
-          { label: 'Haftalık Özetler', icon: 'summarize', route: '/admin/coaching/snapshots' },
-          { label: 'Zayıf Konu Analizi', icon: 'query_stats', route: '/admin/coaching/weak-subjects' }
+          { label: 'Ödevler', icon: 'assignment', route: '/admin/coaching/assignments' }
         ]
       },
       {
@@ -270,15 +265,10 @@ export class NavigationService {
         label: 'Sistem',
         icon: 'settings',
         children: [
-          { label: 'Kurum Olarak Görün', icon: 'business', route: '/admin/impersonate/institution', badge: 'SEÇ', badgeColor: 'accent' },
-          { label: 'Öğretmen Olarak Görün', icon: 'person', route: '/admin/impersonate/teacher', badge: 'SEÇ', badgeColor: 'accent' },
           { label: 'Öğrenci Modu', icon: 'science', route: '/admin/test-mode', badge: 'BETA', badgeColor: 'warn' },
           { label: 'Sistem Sağlığı', icon: 'health_and_safety', route: '/admin/reports/health' },
           { label: 'Aktivite Logları', icon: 'history', route: '/admin/audit-logs' },
-          { label: 'Ayarlar', icon: 'tune', route: '/admin/settings' },
-          { label: 'Yasal Dokümanlar', icon: 'gavel', route: '/admin/legal-documents' },
-          { label: 'Veritabanı Yedekleri', icon: 'backup', route: '/admin/system/backups' },
-          { label: 'Silinen Kayıtlar', icon: 'delete_sweep', route: '/admin/deleted-records' }
+          { label: 'Ayarlar', icon: 'tune', route: '/admin/settings' }
         ]
       }
     ];

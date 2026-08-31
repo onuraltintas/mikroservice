@@ -73,8 +73,6 @@ export class AuditLogsListComponent extends BaseComponent implements OnInit {
   };
 
   ngOnInit(): void {
-    this.loadActions();
-    this.loadEntityTypes();
     this.loadLogs();
   }
 
@@ -118,35 +116,11 @@ export class AuditLogsListComponent extends BaseComponent implements OnInit {
           this.totalCount = response.totalCount;
           this.pageNumber = response.pageNumber;
           this.pageSize = response.pageSize;
+          this.actions = [...new Set(this.logs.map(log => log.action))].sort();
+          this.entityTypes = [...new Set(this.logs.map(log => log.entityType).filter((type): type is string => !!type))].sort();
         },
         error: (err) => {
           console.error('Error loading audit logs:', err);
-        }
-      });
-  }
-
-  loadActions(): void {
-    this.auditLogsService.getActions()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (actions) => {
-          this.actions = actions;
-        },
-        error: (err) => {
-          console.error('Error loading actions:', err);
-        }
-      });
-  }
-
-  loadEntityTypes(): void {
-    this.auditLogsService.getEntityTypes()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (types) => {
-          this.entityTypes = types;
-        },
-        error: (err) => {
-          console.error('Error loading entity types:', err);
         }
       });
   }
@@ -173,7 +147,7 @@ export class AuditLogsListComponent extends BaseComponent implements OnInit {
   viewDetail(log: AuditLog): void {
     this.dialog.open(AuditLogDetailDialogComponent, {
       width: '900px',
-      data: { logId: log.id }
+      data: { log }
     });
   }
 

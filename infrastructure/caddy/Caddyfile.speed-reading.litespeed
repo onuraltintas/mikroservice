@@ -388,6 +388,24 @@
         }
     }
 
+    # Administrative audit records are owned by each service. Expose the
+    # gateway's read-only aggregation sources on the admin client domain.
+    @adminAudit path /api/admin-audit/identity /api/admin-audit/identity/* /api/admin-audit/coaching /api/admin-audit/coaching/* /api/admin-audit/notification /api/admin-audit/notification/*
+    handle @adminAudit {
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    # Identity-owned configuration and operational log contracts used by the
+    # admin settings screen.
+    @adminOperations path /api/configurations /api/configurations/* /api/system-logs /api/system-logs/*
+    handle @adminOperations {
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
     # The existing frontend still emits /api/v1 for a small, explicit set of
     # SpeedReading and identity routes while the Gateway contract is /api.
     # Strip only this allowlisted compatibility surface before proxying.
