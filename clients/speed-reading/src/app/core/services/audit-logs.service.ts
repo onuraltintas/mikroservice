@@ -42,7 +42,7 @@ interface AdminAuditFacets {
 
 interface AuditLogLoadResult {
   logs: AuditLog[];
-  totalCount: number;
+  sourceTotalCount: number;
   failedServices: string[];
   limitedBySafetyCap: boolean;
 }
@@ -65,10 +65,12 @@ export class AuditLogsService {
   getAuditLogs(filters?: AuditLogFilters): Observable<AuditLogListResponse> {
     const pageSize = Math.min(Math.max(filters?.pageSize ?? 50, 1), AuditLogsService.backendPageSize);
     const maxPageNumber = Math.ceil(AuditLogsService.maxRecords / pageSize);
-    const pageNumber = Math.min(Math.max(filters?.pageNumber ?? 1, 1), maxPageNumber);
+    const requestedPageNumber = Math.max(filters?.pageNumber ?? 1, 1);
     let params = new HttpParams().set('page', '1').set('pageSize', '100');
 
     if (filters?.userId) params = params.set('search', filters.userId);
+    if (filters?.action) params = params.set('action', filters.action);
+    if (filters?.entityType) params = params.set('resourceType', filters.entityType);
     if (filters?.startDate) params = params.set('from', filters.startDate.toISOString());
     if (filters?.endDate) {
       const endOfDay = new Date(filters.endDate);
@@ -76,22 +78,29 @@ export class AuditLogsService {
       params = params.set('to', endOfDay.toISOString());
     }
 
-    const fetchAll = !!filters?.action || !!filters?.entityType;
-    return this.loadAuditLogs(
-      filters,
-      params,
-      fetchAll ? AuditLogsService.maxRecords : pageNumber * pageSize,
-      false
-    ).pipe(
-      map(result => ({
-        logs: result.logs.slice((pageNumber - 1) * pageSize, pageNumber * pageSize),
-        totalCount: Math.min(result.totalCount, AuditLogsService.maxRecords),
-        pageNumber,
-        pageSize,
-        totalPages: Math.min(Math.ceil(result.totalCount / pageSize), maxPageNumber),
-        failedServices: result.failedServices,
-        warning: this.getListWarning(result)
-      }))
+    return this.loadAuditLogs(params, requestedPageNumber * pageSize, false).pipe(
+      map(result => {
+        const totalPages = Math.min(
+          Math.ceil(result.sourceTotalCount / pageSize),
+          maxPageNumber
+        );
+        const effectivePageNumber = totalPages === 0
+          ? 1
+          : Math.min(requestedPageNumber, totalPages);
+
+        return {
+          logs: result.logs.slice(
+            (effectivePageNumber - 1) * pageSize,
+            effectivePageNumber * pageSize
+          ),
+          totalCount: Math.min(result.sourceTotalCount, AuditLogsService.maxRecords),
+          pageNumber: effectivePageNumber,
+          pageSize,
+          totalPages,
+          failedServices: result.failedServices,
+          warning: this.getListWarning(result)
+        };
+      })
     );
   }
 
@@ -108,6 +117,8 @@ export class AuditLogsService {
   exportAuditLogs(filters?: AuditLogFilters): Observable<Blob> {
     let params = new HttpParams().set('page', '1').set('pageSize', '100');
     if (filters?.userId) params = params.set('search', filters.userId);
+    if (filters?.action) params = params.set('action', filters.action);
+    if (filters?.entityType) params = params.set('resourceType', filters.entityType);
     if (filters?.startDate) params = params.set('from', filters.startDate.toISOString());
     if (filters?.endDate) {
       const endOfDay = new Date(filters.endDate);
@@ -115,7 +126,7 @@ export class AuditLogsService {
       params = params.set('to', endOfDay.toISOString());
     }
 
-    return this.loadAuditLogs(filters, params, undefined, true).pipe(
+    return this.loadAuditLogs(params, undefined, true).pipe(
       map(result => {
         const header = ['Tarih', 'Servis', 'Kullanıcı', 'Aksiyon', 'Varlık', 'Varlık ID', 'HTTP', 'Durum', 'IP', 'İstek'];
         const rows = result.logs.map(log => [
@@ -164,7 +175,6 @@ export class AuditLogsService {
   }
 
   private loadAuditLogs(
-    filters: AuditLogFilters | undefined,
     params: HttpParams,
     recordLimit: number | undefined,
     enforceExportLimit: boolean
@@ -194,16 +204,11 @@ export class AuditLogsService {
         const allLogs = pageGroups.flat()
           .flatMap(page => page.items ?? [])
           .map(record => this.toAuditLog(record))
-          .filter(log => !filters?.action || log.action.toLowerCase() === filters.action.toLowerCase())
-          .filter(log => !filters?.entityType || log.entityType === filters.entityType)
           .sort((left, right) => right.timestamp.getTime() - left.timestamp.getTime());
         const limitedBySafetyCap = sourceTotalCount > AuditLogsService.maxRecords;
-        const totalCount = filters?.action || filters?.entityType
-          ? Math.min(allLogs.length, AuditLogsService.maxRecords)
-          : Math.min(sourceTotalCount, AuditLogsService.maxRecords);
         return {
           logs: allLogs.slice(0, AuditLogsService.maxRecords),
-          totalCount,
+          sourceTotalCount,
           failedServices,
           limitedBySafetyCap
         };

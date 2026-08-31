@@ -207,8 +207,36 @@ export class AuditLogsListComponent extends BaseComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error exporting logs:', err);
-          this.handleError(err, 'Dışa aktarma işlemi sırasında hata oluştu');
+          this.handleError(err, this.getExportErrorMessage(err));
         }
       });
+  }
+
+  private getExportErrorMessage(error: any): string {
+    const message = [
+      typeof error === 'string' ? error : '',
+      typeof error?.message === 'string' ? error.message : '',
+      typeof error?.error === 'string' ? error.error : '',
+      typeof error?.error?.message === 'string' ? error.error.message : ''
+    ].join(' ').toLowerCase();
+
+    if (
+      message.includes('100.000')
+      || message.includes('100,000')
+      || message.includes('100000')
+      || message.includes('güvenli dışa aktarma sınırını aşıyor')
+    ) {
+      return 'Dışa aktarma 100.000 kayıtla sınırlıdır. Lütfen filtreleri daraltıp tekrar deneyin.';
+    }
+
+    if (
+      message.includes('audit servislerinden veri alınamadı')
+      || message.includes('audit services unavailable')
+      || (message.includes('audit') && message.includes('service unavailable'))
+    ) {
+      return 'Audit servisleri şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.';
+    }
+
+    return 'Dışa aktarma işlemi sırasında hata oluştu';
   }
 }

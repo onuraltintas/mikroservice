@@ -94,6 +94,39 @@ describe('AuditLogsService', () => {
     }
   });
 
+  it('sends action and resource filters to every backend and uses their filtered totals', () => {
+    let response: any;
+    service.getAuditLogs({
+      pageNumber: 1,
+      pageSize: 2,
+      action: 'Update',
+      entityType: 'Configuration'
+    }).subscribe(result => response = result);
+
+    const requests = http.match(req => req.method === 'GET' && req.url.includes('/api/admin-audit/'));
+    expect(requests.length).toBe(3);
+    for (const request of requests) {
+      expect(request.request.params.get('action')).toBe('Update');
+      expect(request.request.params.get('resourceType')).toBe('Configuration');
+      request.flush({
+        items: [{
+          id: `${request.request.url}-1`, occurredAt: '2026-08-31T10:00:00Z', serviceName: 'Audit.API',
+          actorUserId: 'user-1', actorRoles: 'SystemAdmin', tenantId: null,
+          httpMethod: 'PATCH', path: '/api/configurations/Site.Name', statusCode: 200,
+          correlationId: 'corr-1', clientIp: '127.0.0.1', userAgent: 'Chrome',
+          action: 'BackendValue', resourceType: 'BackendResource', resourceId: 'resource-1', changedFieldsJson: null
+        }],
+        totalCount: 4,
+        page: 1,
+        pageSize: 100
+      });
+    }
+
+    expect(response.totalCount).toBe(12);
+    expect(response.totalPages).toBe(6);
+    expect(response.logs).toHaveSize(2);
+  });
+
   it('returns healthy service logs with a warning when one service fails', () => {
     let response: any;
     service.getAuditLogs({ pageNumber: 1, pageSize: 50 }).subscribe(result => response = result);
@@ -141,7 +174,7 @@ describe('AuditLogsService', () => {
     expect(response.warning).toContain('100.000');
   });
 
-  it('caps a requested list page to the supported page range', () => {
+  it('clamps a requested list page to the actual result page range', () => {
     let response: any;
     service.getAuditLogs({ pageNumber: 1_001, pageSize: 100 }).subscribe(result => response = result);
 
@@ -150,7 +183,8 @@ describe('AuditLogsService', () => {
       request.flush({ items: [], totalCount: 1, page: 1, pageSize: 100 });
     }
 
-    expect(response.pageNumber).toBe(1_000);
+    expect(response.pageNumber).toBe(1);
+    expect(response.totalPages).toBe(1);
   });
 
   it('fails closed when export exceeds 100,000 records', () => {

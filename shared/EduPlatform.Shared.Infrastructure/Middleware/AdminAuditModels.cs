@@ -5,6 +5,8 @@ public sealed class AdminAuditQueryParameters
     public int Page { get; init; } = 1;
     public int PageSize { get; init; } = 25;
     public string? Search { get; init; }
+    public string? Action { get; init; }
+    public string? ResourceType { get; init; }
     public int? StatusCode { get; init; }
     public DateTimeOffset? From { get; init; }
     public DateTimeOffset? To { get; init; }

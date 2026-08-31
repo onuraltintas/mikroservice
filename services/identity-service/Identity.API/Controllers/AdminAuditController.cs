@@ -22,7 +22,7 @@ public sealed class AdminAuditController(IdentityDbContext dbContext) : Controll
     {
         if (!IsValid(request))
         {
-            return ValidationProblem("Page must be 1-1000, pageSize 1-100, search at most 100 characters, and from must not exceed to.");
+            return ValidationProblem("Page must be 1-1000, pageSize 1-100, search, action, and resourceType at most 100 characters, and from must not exceed to.");
         }
 
         var query = ApplyFilters(dbContext.AdminAuditRecords.AsNoTracking(), request);
@@ -79,6 +79,18 @@ public sealed class AdminAuditController(IdentityDbContext dbContext) : Controll
             query = query.Where(record => record.StatusCode == request.StatusCode.Value);
         }
 
+        if (!string.IsNullOrWhiteSpace(request.Action))
+        {
+            var action = request.Action.Trim().ToLowerInvariant();
+            query = query.Where(record => (record.Action ?? record.HttpMethod).ToLower() == action);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.ResourceType))
+        {
+            var resourceType = request.ResourceType.Trim().ToLowerInvariant();
+            query = query.Where(record => record.ResourceType != null && record.ResourceType.ToLower() == resourceType);
+        }
+
         if (request.From.HasValue)
         {
             query = query.Where(record => record.OccurredAt >= request.From.Value);
@@ -96,6 +108,8 @@ public sealed class AdminAuditController(IdentityDbContext dbContext) : Controll
         request.Page is >= 1 and <= 1000
         && request.PageSize is >= 1 and <= 100
         && (request.Search?.Length ?? 0) <= 100
+        && (request.Action?.Length ?? 0) <= 100
+        && (request.ResourceType?.Length ?? 0) <= 100
         && (!request.StatusCode.HasValue || request.StatusCode is >= 100 and <= 599)
         && (!request.From.HasValue || !request.To.HasValue || request.From <= request.To);
 }
