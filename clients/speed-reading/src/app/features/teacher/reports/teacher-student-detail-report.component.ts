@@ -19,7 +19,8 @@ import { ReportsService } from '../../../core/services/reports.service';
 import { TeacherStudentDetailReport } from '../../../core/models/report.model';
 import { RadarChartComponent } from '../../../shared/components/charts/radar-chart.component';
 import { AuthService } from '../../../core/services/auth.service';
-import { StudentsService } from '../../../core/services/students.service';
+import { UsersService } from '../../../core/services/users.service';
+import { TeachersService } from '../../../core/services/teachers.service';
 import { map, startWith } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 
@@ -57,7 +58,8 @@ interface StudentOption {
 export class TeacherStudentDetailReportComponent implements OnInit {
   private reportsService = inject(ReportsService);
   private authService = inject(AuthService);
-  private studentsService = inject(StudentsService);
+  private usersService = inject(UsersService);
+  private teachersService = inject(TeachersService);
   private route = inject(ActivatedRoute);
 
   report = signal<TeacherStudentDetailReport | null>(null);
@@ -135,14 +137,16 @@ export class TeacherStudentDetailReportComponent implements OnInit {
 
     // Admin sees all students; teacher sees only their own students
     const isAdmin = this.authService.hasAdminAccess();
-    const queryTeacherId = this.route.snapshot.queryParamMap.get('teacherId');
-    const teacherId = queryTeacherId || (isAdmin ? undefined : this.authService.currentUserValue?.id);
 
-    this.studentsService.getStudents(undefined, undefined, undefined, undefined, teacherId).subscribe({
+    const students$ = isAdmin
+      ? this.usersService.getUsers(undefined, 'Student')
+      : this.teachersService.getMyStudents();
+
+    students$.subscribe({
       next: (data) => {
         this.students = data.map(s => ({
-          id: s.id,
-          name: `${s.firstName} ${s.lastName}`
+          id: s.id ?? s.userId,
+          name: `${s.firstName ?? ''} ${s.lastName ?? ''}`.trim()
         }));
         this.loadingStudents.set(false);
 
