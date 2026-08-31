@@ -68,4 +68,116 @@ describe('AuditLogsService', () => {
       request.flush({ items: [], totalCount: 0, page: 1, pageSize: 100 });
     }
   });
+
+  it('loads filter facets from the three service-owned audit stores', () => {
+    service.getAuditFilterOptions().subscribe(options => {
+      expect(options.actions).toEqual(['create', 'update']);
+      expect(options.entityTypes).toEqual(['Assignment', 'Configuration']);
+    });
+
+    const requests = http.match(req => req.method === 'GET' && req.url.endsWith('/facets'));
+    expect(requests.length).toBe(3);
+    requests.find(req => req.request.url.includes('/identity/'))?.flush({ actions: ['update'], resourceTypes: ['Configuration'] });
+    requests.find(req => req.request.url.includes('/coaching/'))?.flush({ actions: ['create'], resourceTypes: ['Assignment'] });
+    requests.find(req => req.request.url.includes('/notification/'))?.flush({ actions: [], resourceTypes: [] });
+  });
+
+  it('normalizes the date-picker end date to the end of the selected day', () => {
+    service.getAuditLogs({ endDate: new Date(2026, 7, 31), pageNumber: 1, pageSize: 50 }).subscribe();
+
+    const requests = http.match(req => req.method === 'GET' && req.url.includes('/api/admin-audit/'));
+    expect(requests.length).toBe(3);
+    const expectedEnd = new Date(2026, 7, 31, 23, 59, 59, 999).toISOString();
+    for (const request of requests) {
+      expect(request.request.params.get('to')).toBe(expectedEnd);
+      request.flush({ items: [], totalCount: 0, page: 1, pageSize: 100 });
+    }
+  });
+
+  it('returns healthy service logs with a warning when one service fails', () => {
+    let response: any;
+    service.getAuditLogs({ pageNumber: 1, pageSize: 50 }).subscribe(result => response = result);
+
+    const requests = http.match(req => req.method === 'GET' && req.url.includes('/api/admin-audit/'));
+    requests.find(req => req.request.url.endsWith('/identity'))?.flush('identity unavailable', {
+      status: 503,
+      statusText: 'Service Unavailable'
+    });
+    requests.find(req => req.request.url.endsWith('/coaching'))?.flush({
+      items: [], totalCount: 1, page: 1, pageSize: 100
+    });
+    requests.find(req => req.request.url.endsWith('/notification'))?.flush({
+      items: [], totalCount: 2, page: 1, pageSize: 100
+    });
+
+    expect(response.failedServices).toEqual(['identity']);
+    expect(response.warning).toContain('identity');
+    expect(response.totalCount).toBe(3);
+  });
+
+  it('fails the list when every audit service fails', () => {
+    let receivedError: Error | undefined;
+    service.getAuditLogs().subscribe({ error: error => receivedError = error });
+
+    const requests = http.match(req => req.method === 'GET' && req.url.includes('/api/admin-audit/'));
+    for (const request of requests) {
+      request.flush('service unavailable', { status: 503, statusText: 'Service Unavailable' });
+    }
+
+    expect(receivedError?.message).toContain('Audit servislerinden veri alınamadı');
+  });
+
+  it('caps normal list metadata at the first 100,000 records', () => {
+    let response: any;
+    service.getAuditLogs({ pageNumber: 1, pageSize: 100 }).subscribe(result => response = result);
+
+    const requests = http.match(req => req.method === 'GET' && req.url.includes('/api/admin-audit/'));
+    for (const request of requests) {
+      request.flush({ items: [], totalCount: 100_001, page: 1, pageSize: 100 });
+    }
+
+    expect(response.totalCount).toBe(100_000);
+    expect(response.totalPages).toBe(1_000);
+    expect(response.warning).toContain('100.000');
+  });
+
+  it('caps a requested list page to the supported page range', () => {
+    let response: any;
+    service.getAuditLogs({ pageNumber: 1_001, pageSize: 100 }).subscribe(result => response = result);
+
+    const requests = http.match(req => req.method === 'GET' && req.url.includes('/api/admin-audit/'));
+    for (const request of requests) {
+      request.flush({ items: [], totalCount: 1, page: 1, pageSize: 100 });
+    }
+
+    expect(response.pageNumber).toBe(1_000);
+  });
+
+  it('fails closed when export exceeds 100,000 records', () => {
+    let receivedError: Error | undefined;
+    service.exportAuditLogs().subscribe({ error: error => receivedError = error });
+
+    const requests = http.match(req => req.method === 'GET' && req.url.includes('/api/admin-audit/'));
+    requests.filter(req => !req.request.url.endsWith('/identity')).forEach(request => {
+      request.flush({ items: [], totalCount: 0, page: 1, pageSize: 100 });
+    });
+    requests.find(req => req.request.url.endsWith('/identity'))?.flush({
+      items: [], totalCount: 100_001, page: 1, pageSize: 100
+    });
+
+    expect(receivedError?.message).toContain('güvenli dışa aktarma sınırını aşıyor');
+  });
+
+  it('propagates facet failures for the component to show a retry state', () => {
+    let receivedError: unknown;
+    service.getAuditFilterOptions().subscribe({ error: error => receivedError = error });
+
+    const requests = http.match(req => req.method === 'GET' && req.url.endsWith('/facets'));
+    requests.slice(0, 2).forEach(request => {
+      request.flush({ actions: [], resourceTypes: [] });
+    });
+    requests[2].flush('facets unavailable', { status: 503, statusText: 'Service Unavailable' });
+
+    expect(receivedError).toBeTruthy();
+  });
 });

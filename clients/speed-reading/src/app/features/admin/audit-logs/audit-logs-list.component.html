@@ -60,6 +60,11 @@
                 <mat-datepicker #endPicker></mat-datepicker>
             </mat-form-field>
         </div>
+        <div *ngIf="filterOptionsError" class="filter-options-error" role="alert">
+            <mat-icon color="warn">error</mat-icon>
+            <span>{{ filterOptionsError }}</span>
+            <button mat-button color="primary" (click)="loadFilterOptions()">Tekrar Dene</button>
+        </div>
     </mat-card>
 
     <!-- Table Card -->
@@ -76,8 +81,24 @@
                 </div>
             </div>
 
+            <div *ngIf="!loading() && loadWarning" class="load-warning" role="status">
+                <mat-icon color="warn">warning</mat-icon>
+                <span>{{ loadWarning }}</span>
+            </div>
+
+            <!-- Error State -->
+            <div *ngIf="!loading() && loadError" class="empty-state">
+                <mat-icon color="warn">error</mat-icon>
+                <h3>{{ loadError }}</h3>
+                <p>Audit servislerinden veri alınamadı. Bağlantıyı kontrol edip tekrar deneyin.</p>
+                <button mat-raised-button color="primary" (click)="loadLogs()">
+                    <mat-icon>refresh</mat-icon>
+                    Tekrar Dene
+                </button>
+            </div>
+
             <!-- Empty State -->
-            <div *ngIf="!loading() && logs.length === 0" class="empty-state">
+            <div *ngIf="!loading() && !loadError && logs.length === 0" class="empty-state">
                 <mat-icon>history</mat-icon>
                 <h3>Aktivite Kaydı Bulunamadı</h3>
                 <p>Seçili filtrelere uygun aktivite kaydı bulunmamaktadır.</p>

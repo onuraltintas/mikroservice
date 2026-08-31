@@ -37,6 +37,26 @@ public sealed class AdminAuditController(NotificationDbContext dbContext) : Cont
         return Ok(new AdminAuditPage(items, totalCount, request.Page, request.PageSize));
     }
 
+    [HttpGet("facets")]
+    public async Task<ActionResult<AdminAuditFacets>> GetFacetsAsync(CancellationToken cancellationToken)
+    {
+        var actions = await dbContext.AdminAuditRecords
+            .AsNoTracking()
+            .Select(record => record.Action ?? record.HttpMethod)
+            .Distinct()
+            .OrderBy(action => action)
+            .ToListAsync(cancellationToken);
+        var resourceTypes = await dbContext.AdminAuditRecords
+            .AsNoTracking()
+            .Where(record => record.ResourceType != null)
+            .Select(record => record.ResourceType!)
+            .Distinct()
+            .OrderBy(resourceType => resourceType)
+            .ToListAsync(cancellationToken);
+
+        return Ok(new AdminAuditFacets(actions, resourceTypes));
+    }
+
     private static IQueryable<AdminAuditRecord> ApplyFilters(
         IQueryable<AdminAuditRecord> query,
         AdminAuditQueryParameters request)

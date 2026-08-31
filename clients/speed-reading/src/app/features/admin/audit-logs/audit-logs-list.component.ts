@@ -17,7 +17,9 @@ import { AuditLogsService } from '../../../core/services/audit-logs.service';
 import { AuditLog, AuditLogFilters } from '../../../core/models/audit-log.model';
 import { AuditLogDetailDialogComponent } from './audit-log-detail-dialog.component';
 import { BaseComponent } from '../../../core/components/base.component';
-import { takeUntil, finalize } from 'rxjs/operators';
+import { catchError, takeUntil, finalize } from 'rxjs/operators';
+import { switchMap } from 'rxjs/operators';
+import { EMPTY, Subject } from 'rxjs';
 
 @Component({
   selector: 'app-audit-logs-list',
@@ -54,6 +56,11 @@ export class AuditLogsListComponent extends BaseComponent implements OnInit {
   totalCount = 0;
   pageSize = 50;
   pageNumber = 1;
+  loadError: string | null = null;
+  loadWarning: string | null = null;
+  failedServices: string[] = [];
+  filterOptionsError: string | null = null;
+  private readonly reloadLogs$ = new Subject<void>();
 
   filters: AuditLogFilters = {
     pageNumber: 1,
@@ -74,6 +81,39 @@ export class AuditLogsListComponent extends BaseComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadFilterOptions();
+    this.reloadLogs$
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap(() => {
+          this.loading.set(true);
+          this.loadError = null;
+          this.loadWarning = null;
+          this.failedServices = [];
+          return this.auditLogsService.getAuditLogs({ ...this.filters }).pipe(
+            takeUntil(this.destroy$),
+            finalize(() => this.loading.set(false)),
+            catchError(error => {
+              this.logs = [];
+              this.totalCount = 0;
+              this.loadError = 'Aktivite logları yüklenemedi';
+              this.loadWarning = null;
+              this.failedServices = [];
+              this.handleError(error, this.loadError);
+              return EMPTY;
+            })
+          );
+        })
+      )
+      .subscribe({
+        next: response => {
+          this.logs = response.logs;
+          this.totalCount = response.totalCount;
+          this.pageNumber = response.pageNumber;
+          this.pageSize = response.pageSize;
+          this.loadWarning = response.warning;
+          this.failedServices = response.failedServices;
+        }
+      });
     this.loadLogs();
   }
 
@@ -105,26 +145,11 @@ export class AuditLogsListComponent extends BaseComponent implements OnInit {
   }
 
   loadLogs(): void {
-    this.loading.set(true);
-    this.auditLogsService.getAuditLogs(this.filters)
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => this.loading.set(false))
-      )
-      .subscribe({
-        next: (response) => {
-          this.logs = response.logs;
-          this.totalCount = response.totalCount;
-          this.pageNumber = response.pageNumber;
-          this.pageSize = response.pageSize;
-        },
-        error: (err) => {
-          console.error('Error loading audit logs:', err);
-        }
-      });
+    this.reloadLogs$.next();
   }
 
   loadFilterOptions(): void {
+    this.filterOptionsError = null;
     this.auditLogsService.getAuditFilterOptions()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -132,7 +157,10 @@ export class AuditLogsListComponent extends BaseComponent implements OnInit {
           this.actions = options.actions;
           this.entityTypes = options.entityTypes;
         },
-        error: err => console.error('Error loading audit filter options:', err)
+        error: err => {
+          this.filterOptionsError = 'Audit filtre seçenekleri yüklenemedi';
+          this.handleError(err, this.filterOptionsError);
+        }
       });
   }
 

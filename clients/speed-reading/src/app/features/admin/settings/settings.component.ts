@@ -1,8 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
-import { finalize, takeUntil } from 'rxjs/operators';
+import { from } from 'rxjs';
+import { concatMap, finalize, takeUntil, toArray } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
@@ -98,10 +98,14 @@ export class SettingsComponent extends BaseComponent implements OnInit {
     }
 
     this.saving = true;
-    const updates = changed.map(configuration =>
-      this.configurationService.update(configuration.key, this.toStringValue(this.values[configuration.key])));
-    forkJoin(updates)
-      .pipe(takeUntil(this.destroy$), finalize(() => this.saving = false))
+    from(changed)
+      .pipe(
+        concatMap(configuration =>
+          this.configurationService.update(configuration.key, this.toStringValue(this.values[configuration.key]))),
+        toArray(),
+        takeUntil(this.destroy$),
+        finalize(() => this.saving = false)
+      )
       .subscribe({
         next: () => {
           for (const configuration of changed) {
@@ -109,7 +113,10 @@ export class SettingsComponent extends BaseComponent implements OnInit {
           }
           this.handleSuccess('Ayarlar başarıyla kaydedildi');
         },
-        error: error => this.handleError(error, 'Ayarlar kaydedilirken hata oluştu')
+        error: error => {
+          this.loadSettings();
+          this.handleError(error, 'Bazı ayarlar kaydedilemedi; güncel değerler yeniden yüklendi');
+        }
       });
   }
 

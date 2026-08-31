@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, forkJoin, from, of } from 'rxjs';
-import { concatMap, map, switchMap, toArray } from 'rxjs/operators';
+import { Observable, forkJoin, from, of, throwError } from 'rxjs';
+import { catchError, concatMap, map, switchMap, toArray } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   AuditLog,
@@ -35,20 +35,37 @@ interface AdminAuditPage {
   pageSize: number;
 }
 
+interface AdminAuditFacets {
+  actions: string[];
+  resourceTypes: string[];
+}
+
+interface AuditLogLoadResult {
+  logs: AuditLog[];
+  totalCount: number;
+  failedServices: string[];
+  limitedBySafetyCap: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuditLogsService {
+  private static readonly maxRecords = 100_000;
+  private static readonly backendPageSize = 100;
+  private static readonly maxBackendPage = 1_000;
   private readonly http = inject(HttpClient);
   private readonly auditUrls = [
     `${environment.apiUrl}/admin-audit/identity`,
     `${environment.apiUrl}/admin-audit/coaching`,
     `${environment.apiUrl}/admin-audit/notification`
   ];
+  private readonly facetUrls = this.auditUrls.map(url => `${url}/facets`);
 
   getAuditLogs(filters?: AuditLogFilters): Observable<AuditLogListResponse> {
-    const pageNumber = filters?.pageNumber ?? 1;
-    const pageSize = Math.min(filters?.pageSize ?? 50, 100);
+    const pageSize = Math.min(Math.max(filters?.pageSize ?? 50, 1), AuditLogsService.backendPageSize);
+    const maxPageNumber = Math.ceil(AuditLogsService.maxRecords / pageSize);
+    const pageNumber = Math.min(Math.max(filters?.pageNumber ?? 1, 1), maxPageNumber);
     let params = new HttpParams().set('page', '1').set('pageSize', '100');
 
     if (filters?.userId) params = params.set('search', filters.userId);
@@ -60,23 +77,30 @@ export class AuditLogsService {
     }
 
     const fetchAll = !!filters?.action || !!filters?.entityType;
-    return this.loadAuditLogs(filters, params, fetchAll ? undefined : pageNumber * pageSize).pipe(
+    return this.loadAuditLogs(
+      filters,
+      params,
+      fetchAll ? AuditLogsService.maxRecords : pageNumber * pageSize,
+      false
+    ).pipe(
       map(result => ({
         logs: result.logs.slice((pageNumber - 1) * pageSize, pageNumber * pageSize),
-        totalCount: result.totalCount,
+        totalCount: Math.min(result.totalCount, AuditLogsService.maxRecords),
         pageNumber,
         pageSize,
-        totalPages: Math.ceil(result.totalCount / pageSize)
+        totalPages: Math.min(Math.ceil(result.totalCount / pageSize), maxPageNumber),
+        failedServices: result.failedServices,
+        warning: this.getListWarning(result)
       }))
     );
   }
 
   getAuditFilterOptions(): Observable<{ actions: string[]; entityTypes: string[] }> {
     const params = new HttpParams().set('page', '1').set('pageSize', '100');
-    return this.loadAuditLogs(undefined, params, undefined).pipe(
-      map(result => ({
-        actions: [...new Set(result.logs.map(log => log.action))].sort(),
-        entityTypes: [...new Set(result.logs.map(log => log.entityType).filter((type): type is string => !!type))].sort()
+    return forkJoin(this.facetUrls.map(url => this.http.get<AdminAuditFacets>(url, { params }))).pipe(
+      map(facets => ({
+        actions: [...new Set(facets.flatMap(facet => facet.actions ?? []))].sort(),
+        entityTypes: [...new Set(facets.flatMap(facet => facet.resourceTypes ?? []))].sort()
       }))
     );
   }
@@ -91,7 +115,7 @@ export class AuditLogsService {
       params = params.set('to', endOfDay.toISOString());
     }
 
-    return this.loadAuditLogs(filters, params, undefined).pipe(
+    return this.loadAuditLogs(filters, params, undefined, true).pipe(
       map(result => {
         const header = ['Tarih', 'Servis', 'Kullanıcı', 'Aksiyon', 'Varlık', 'Varlık ID', 'HTTP', 'Durum', 'IP', 'İstek'];
         const rows = result.logs.map(log => [
@@ -142,31 +166,69 @@ export class AuditLogsService {
   private loadAuditLogs(
     filters: AuditLogFilters | undefined,
     params: HttpParams,
-    recordLimit: number | undefined
-  ): Observable<{ logs: AuditLog[]; totalCount: number }> {
-    return forkJoin(this.auditUrls.map(url => this.getPages(url, params, recordLimit))).pipe(
-      map(pageGroups => {
+    recordLimit: number | undefined,
+    enforceExportLimit: boolean
+  ): Observable<AuditLogLoadResult> {
+    return forkJoin(this.auditUrls.map(url => this.getPages(url, params, recordLimit, enforceExportLimit).pipe(
+      map(pages => ({ serviceName: this.getServiceName(url), pages, failed: false })),
+      catchError(error => {
+        if (enforceExportLimit) return throwError(() => error);
+        return of({ serviceName: this.getServiceName(url), pages: [], failed: true });
+      })
+    ))).pipe(
+      map(serviceResults => {
+        const failedServices = serviceResults.filter(result => result.failed).map(result => result.serviceName);
+        if (failedServices.length === this.auditUrls.length) {
+          throw new Error('Audit servislerinden veri alınamadı.');
+        }
+
+        const pageGroups = serviceResults.filter(result => !result.failed).map(result => result.pages);
+        const sourceTotalCount = pageGroups.reduce(
+          (total, pages) => total + (pages[0]?.totalCount ?? 0),
+          0
+        );
+        if (enforceExportLimit && sourceTotalCount > AuditLogsService.maxRecords) {
+          throw new Error('Audit kaydı sayısı güvenli dışa aktarma sınırını aşıyor.');
+        }
+
         const allLogs = pageGroups.flat()
           .flatMap(page => page.items ?? [])
           .map(record => this.toAuditLog(record))
           .filter(log => !filters?.action || log.action.toLowerCase() === filters.action.toLowerCase())
           .filter(log => !filters?.entityType || log.entityType === filters.entityType)
           .sort((left, right) => right.timestamp.getTime() - left.timestamp.getTime());
+        const limitedBySafetyCap = sourceTotalCount > AuditLogsService.maxRecords;
         const totalCount = filters?.action || filters?.entityType
-          ? allLogs.length
-          : pageGroups.reduce((total, pages) => total + (pages[0]?.totalCount ?? 0), 0);
-        return { logs: allLogs, totalCount };
+          ? Math.min(allLogs.length, AuditLogsService.maxRecords)
+          : Math.min(sourceTotalCount, AuditLogsService.maxRecords);
+        return {
+          logs: allLogs.slice(0, AuditLogsService.maxRecords),
+          totalCount,
+          failedServices,
+          limitedBySafetyCap
+        };
       })
     );
   }
 
-  private getPages(url: string, params: HttpParams, recordLimit: number | undefined): Observable<AdminAuditPage[]> {
+  private getPages(
+    url: string,
+    params: HttpParams,
+    recordLimit: number | undefined,
+    enforceExportLimit: boolean
+  ): Observable<AdminAuditPage[]> {
     return this.http.get<AdminAuditPage>(url, { params }).pipe(
       switchMap(firstPage => {
         const recordsToLoad = recordLimit === undefined
           ? firstPage.totalCount
           : Math.min(firstPage.totalCount, recordLimit);
-        const pageCount = Math.min(Math.ceil(recordsToLoad / 100), 1000);
+        if (enforceExportLimit && recordsToLoad > AuditLogsService.maxRecords) {
+          return throwError(() => new Error('Audit kaydı sayısı güvenli dışa aktarma sınırını aşıyor.'));
+        }
+        const pageCount = Math.min(
+          Math.ceil(recordsToLoad / AuditLogsService.backendPageSize),
+          AuditLogsService.maxBackendPage
+        );
         if (pageCount <= 1) return of([firstPage]);
 
         return from(Array.from({ length: pageCount - 1 }, (_, index) => index + 2)).pipe(
@@ -180,7 +242,23 @@ export class AuditLogsService {
     );
   }
 
+  private getServiceName(url: string): string {
+    return url.substring(url.lastIndexOf('/') + 1);
+  }
+
+  private getListWarning(result: AuditLogLoadResult): string | null {
+    const warnings: string[] = [];
+    if (result.failedServices.length > 0) {
+      warnings.push(`Eksik veri: ${result.failedServices.join(', ')} servisi yanıt vermedi.`);
+    }
+    if (result.limitedBySafetyCap) {
+      warnings.push('İlk 100.000 kayıt gösteriliyor; daha eski kayıtlar listelenmiyor.');
+    }
+    return warnings.length > 0 ? warnings.join(' ') : null;
+  }
+
   private csvValue(value: string): string {
-    return `"${value.replace(/"/g, '""')}"`;
+    const safeValue = /^[=+\-@]/.test(value) ? `'${value}` : value;
+    return `"${safeValue.replace(/"/g, '""')}"`;
   }
 }

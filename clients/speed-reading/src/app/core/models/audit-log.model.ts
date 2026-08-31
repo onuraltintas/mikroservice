@@ -31,6 +31,8 @@ export interface AuditLogListResponse {
   pageNumber: number;
   pageSize: number;
   totalPages: number;
+  failedServices: string[];
+  warning: string | null;
 }
 
 export interface AuditLogFilters {
