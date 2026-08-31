@@ -13,6 +13,36 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
     public async Task<AdaptiveProfileSummary> GetProfileAsync(Guid userId, CancellationToken cancellationToken = default) =>
         BuildProfile(await LoadSnapshotAsync(userId, cancellationToken));
 
+    public async Task UpdateProfileSettingsAsync(
+        Guid userId,
+        UpdateAdaptiveProfileSettingsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var profile = await db.UserProfiles
+            .SingleOrDefaultAsync(item => item.UserId == userId, cancellationToken);
+        if (profile is null)
+        {
+            profile = SpeedReadingUserProfile.CreateDefault(
+                Guid.NewGuid(),
+                userId,
+                DateTime.UtcNow,
+                userId.ToString(),
+                request.TargetWPM,
+                request.TargetComprehension);
+            db.UserProfiles.Add(profile);
+        }
+
+        profile.UpdateSettings(
+            request.CurrentLevel,
+            request.TargetWPM,
+            request.TargetComprehension,
+            request.DailyGoalMinutes,
+            request.AgeGroupConfigurationId,
+            userId,
+            DateTime.UtcNow);
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<AdaptiveDashboardSummary> GetDashboardAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var snapshot = await LoadSnapshotAsync(userId, cancellationToken);

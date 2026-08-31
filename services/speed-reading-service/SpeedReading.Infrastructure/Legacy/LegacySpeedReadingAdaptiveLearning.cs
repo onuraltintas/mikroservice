@@ -15,6 +15,31 @@ internal sealed class LegacySpeedReadingAdaptiveLearning(SpeedReadingDbContext d
         return BuildProfile(snapshot);
     }
 
+    public async Task UpdateProfileSettingsAsync(
+        Guid userId,
+        UpdateAdaptiveProfileSettingsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await db.Users
+            .SingleOrDefaultAsync(item => item.Id == userId && !item.IsDeleted, cancellationToken);
+        if (user is null)
+        {
+            user = new LegacyUser
+            {
+                Id = userId,
+                IsDeleted = false
+            };
+            db.Users.Add(user);
+        }
+
+        user.CurrentLevel = request.CurrentLevel;
+        user.TargetWPM = request.TargetWPM;
+        user.TargetComprehension = request.TargetComprehension;
+        user.DailyGoalMinutes = request.DailyGoalMinutes;
+        user.AgeGroupConfigurationId = request.AgeGroupConfigurationId ?? user.AgeGroupConfigurationId;
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<AdaptiveDashboardSummary> GetDashboardAsync(
         Guid userId,
         CancellationToken cancellationToken = default)

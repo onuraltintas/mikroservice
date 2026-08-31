@@ -22,6 +22,28 @@ public sealed class AdaptiveLearningController(ISpeedReadingAdaptiveLearning ada
         return Ok(await adaptiveLearning.GetProfileAsync(userId, cancellationToken));
     }
 
+    [HttpPut("profile")]
+    public async Task<IActionResult> UpdateProfile(
+        [FromBody] UpdateAdaptiveProfileSettingsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        if (request.CurrentLevel < 1
+            || request.TargetWPM < 0
+            || request.TargetComprehension is < 0 or > 100
+            || request.DailyGoalMinutes is < 5 or > 480)
+        {
+            return BadRequest("Profile settings are outside the allowed range.");
+        }
+
+        await adaptiveLearning.UpdateProfileSettingsAsync(userId, request, cancellationToken);
+        return NoContent();
+    }
+
     [HttpGet("dashboard")]
     public async Task<ActionResult<AdaptiveDashboardSummary>> GetDashboard(
         CancellationToken cancellationToken = default)

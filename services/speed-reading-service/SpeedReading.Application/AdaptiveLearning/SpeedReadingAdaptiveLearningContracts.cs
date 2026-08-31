@@ -84,9 +84,20 @@ public sealed record UpdateAdaptiveDailyProgressRequest(
     bool SessionCompleted,
     bool ExerciseCompleted);
 
+public sealed record UpdateAdaptiveProfileSettingsRequest(
+    int CurrentLevel,
+    int TargetWPM,
+    decimal TargetComprehension,
+    int DailyGoalMinutes,
+    Guid? AgeGroupConfigurationId);
+
 public interface ISpeedReadingAdaptiveLearning
 {
     Task<AdaptiveProfileSummary> GetProfileAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task UpdateProfileSettingsAsync(
+        Guid userId,
+        UpdateAdaptiveProfileSettingsRequest request,
+        CancellationToken cancellationToken = default);
     Task<AdaptiveDashboardSummary> GetDashboardAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<AdaptiveWeakAreaSummary>> GetWeakAreasAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<AdaptiveContentRecommendationSummary>> GetRecommendationsAsync(Guid userId, int count, CancellationToken cancellationToken = default);

@@ -93,6 +93,30 @@ public sealed class SpeedReadingUserProfile : AggregateRoot
         ApplyAssessment(1, targetWpm, targetComprehension, actorId, at);
     }
 
+    public void UpdateSettings(
+        int currentLevel,
+        int targetWpm,
+        decimal targetComprehension,
+        int dailyGoalMinutes,
+        Guid? ageGroupConfigurationId,
+        Guid actorId,
+        DateTime at)
+    {
+        if (actorId == Guid.Empty)
+            throw new ArgumentException("Profile actor is required.", nameof(actorId));
+        if (dailyGoalMinutes is < 5 or > 480)
+            throw new ArgumentOutOfRangeException(nameof(dailyGoalMinutes), "Daily goal must be between 5 and 480 minutes");
+
+        CurrentLevel = Math.Max(currentLevel, 1);
+        TargetWPM = Math.Max(targetWpm, 0);
+        TargetComprehension = Math.Clamp(targetComprehension, 0, 100);
+        DailyGoalMinutes = dailyGoalMinutes;
+        if (ageGroupConfigurationId.HasValue)
+            AgeGroupConfigurationId = ageGroupConfigurationId;
+        UpdatedAt = EnsureUtc(at);
+        UpdatedBy = actorId.ToString();
+    }
+
     private static DateTime EnsureUtc(DateTime value) =>
         value.Kind == DateTimeKind.Utc
             ? value
