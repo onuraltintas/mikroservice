@@ -270,7 +270,7 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
         CancellationToken cancellationToken = default)
     {
         ValidateIdempotency(actorId, idempotencyKey);
-        ValidateReadingText(request.Title, request.Content, request.WordCount, request.Category,
+        ValidateReadingText(request.Title, request.Content, request.Category,
             request.DifficultyLevel, request.Language, request.RecommendedMinLevel, request.RecommendedMaxLevel);
         var key = idempotencyKey.Trim();
         const string scope = "speed-reading.reading-texts.create";
@@ -327,7 +327,7 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
         CancellationToken cancellationToken = default)
     {
         ValidateIdempotency(actorId, idempotencyKey);
-        ValidateReadingText(request.Title, request.Content, request.WordCount, request.Category,
+        ValidateReadingText(request.Title, request.Content, request.Category,
             request.DifficultyLevel, request.Language, request.RecommendedMinLevel, request.RecommendedMaxLevel);
         var key = idempotencyKey.Trim();
         const string scope = "speed-reading.reading-texts.update";
@@ -713,7 +713,6 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
     private static void ValidateReadingText(
         string title,
         string content,
-        int wordCount,
         string category,
         int difficultyLevel,
         string language,
@@ -722,7 +721,7 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
     {
         if (string.IsNullOrWhiteSpace(title) || title.Trim().Length > 250
             || string.IsNullOrWhiteSpace(content) || content.Length > 2_097_152
-            || wordCount < 0 || string.IsNullOrWhiteSpace(category) || category.Trim().Length > 100
+            || string.IsNullOrWhiteSpace(category) || category.Trim().Length > 100
             || difficultyLevel is < 0 or > 10 || string.IsNullOrWhiteSpace(language)
             || language.Trim().Length > 10 || recommendedMinLevel < 0
             || recommendedMaxLevel < recommendedMinLevel)

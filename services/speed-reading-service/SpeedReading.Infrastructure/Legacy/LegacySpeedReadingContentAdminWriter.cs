@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using SpeedReading.Application.Content;
 using SpeedReading.Application.Progress;
+using SpeedReading.Domain.Catalog;
 
 namespace SpeedReading.Infrastructure.Legacy;
 
@@ -297,7 +298,7 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
             Id = Guid.NewGuid(),
             Title = request.Title.Trim(),
             Content = request.Content,
-            WordCount = request.WordCount,
+            WordCount = ReadingText.CalculateWordCount(request.Content),
             Category = request.Category.Trim(),
             DifficultyLevel = request.DifficultyLevel,
             TargetAgeGroupConfigurationId = request.TargetAgeGroupConfigurationId,
@@ -340,7 +341,7 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         await EnsureExerciseExistsAsync(request.ExerciseId, cancellationToken);
         readingText.Title = request.Title.Trim();
         readingText.Content = request.Content;
-        readingText.WordCount = request.WordCount;
+        readingText.WordCount = ReadingText.CalculateWordCount(request.Content);
         readingText.Category = request.Category.Trim();
         readingText.DifficultyLevel = request.DifficultyLevel;
         readingText.TargetAgeGroupConfigurationId = request.TargetAgeGroupConfigurationId;
@@ -1519,7 +1520,7 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         CreateReadingTextRequest request,
         string idempotencyKey) =>
         ValidateReadingTextRequest(actorId, idempotencyKey, request.Title, request.Content,
-            request.WordCount, request.Category, request.DifficultyLevel, request.Language,
+            request.Category, request.DifficultyLevel, request.Language,
             request.RecommendedMinLevel, request.RecommendedMaxLevel, request.ExerciseId);
 
     private static void ValidateRequest(
@@ -1527,7 +1528,7 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         UpdateReadingTextRequest request,
         string idempotencyKey) =>
         ValidateReadingTextRequest(actorId, idempotencyKey, request.Title, request.Content,
-            request.WordCount, request.Category, request.DifficultyLevel, request.Language,
+            request.Category, request.DifficultyLevel, request.Language,
             request.RecommendedMinLevel, request.RecommendedMaxLevel, request.ExerciseId);
 
     private static void ValidateReadingTextRequest(
@@ -1535,7 +1536,6 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         string idempotencyKey,
         string title,
         string content,
-        int wordCount,
         string category,
         int difficultyLevel,
         string language,
@@ -1546,7 +1546,6 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         ValidateIdempotency(actorId, idempotencyKey);
         if (string.IsNullOrWhiteSpace(title) || title.Trim().Length > 250
             || string.IsNullOrWhiteSpace(content) || content.Length > 2_097_152
-            || wordCount < 0
             || string.IsNullOrWhiteSpace(category) || category.Trim().Length > 100
             || difficultyLevel is < 0 or > 10
             || string.IsNullOrWhiteSpace(language) || language.Trim().Length > 10

@@ -54,7 +54,7 @@ public sealed class ReadingText : AggregateRoot
             Id = id,
             Title = title.Trim(),
             Content = content,
-            WordCount = wordCount.GetValueOrDefault() > 0 ? wordCount!.Value : CountWords(content),
+            WordCount = CalculateWordCount(content),
             Language = language.Trim(),
             ExerciseId = exerciseId,
             DifficultyLevel = difficultyLevel,
@@ -96,7 +96,6 @@ public sealed class ReadingText : AggregateRoot
             difficultyLevel,
             category,
             targetAgeGroupId);
-        readingText.WordCount = wordCount > 0 ? wordCount : readingText.WordCount;
         readingText.IsActive = isActive;
         readingText.Tags = tags?.Trim() ?? string.Empty;
         readingText.RecommendedMinLevel = recommendedMinLevel;
@@ -137,7 +136,7 @@ public sealed class ReadingText : AggregateRoot
         Content = content;
         Language = language.Trim();
         ExerciseId = exerciseId;
-        WordCount = wordCount > 0 ? wordCount : CountWords(content);
+        WordCount = CalculateWordCount(content);
         Category = category?.Trim() ?? string.Empty;
         DifficultyLevel = difficultyLevel;
         TargetAgeGroupId = targetAgeGroupId;
@@ -161,6 +160,6 @@ public sealed class ReadingText : AggregateRoot
         UpdatedBy = actorId.ToString();
     }
 
-    private static int CountWords(string content) =>
+    public static int CalculateWordCount(string content) =>
         content.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
 }
