@@ -634,6 +634,71 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Fact]
+    public void Reading_text_create_calculates_word_count_from_content()
+    {
+        var text = ReadingText.Create(
+            Guid.NewGuid(),
+            "Bir metin",
+            "Bir  iki\nüç",
+            wordCount: 99);
+
+        text.WordCount.Should().Be(3);
+    }
+
+    [Fact]
+    public void Reading_text_update_calculates_word_count_from_content()
+    {
+        var text = ReadingText.Create(Guid.NewGuid(), "Bir metin", "İlk içerik");
+        var actorId = Guid.NewGuid();
+
+        text.Update(
+            "Güncel metin",
+            "Dört\tbeş altı",
+            "tr",
+            exerciseId: null,
+            wordCount: 99,
+            category: "Genel",
+            difficultyLevel: 1,
+            targetAgeGroupId: null,
+            isActive: true,
+            tags: null,
+            recommendedMinLevel: 0,
+            recommendedMaxLevel: 10,
+            actorId,
+            DateTime.UtcNow);
+
+        text.WordCount.Should().Be(3);
+    }
+
+    [Fact]
+    public void Imported_reading_text_recalculates_word_count_from_content()
+    {
+        var text = ReadingText.Import(
+            Guid.NewGuid(),
+            "İçe aktarılan metin",
+            "Yedi sekiz",
+            "tr",
+            exerciseId: null,
+            wordCount: 99,
+            category: "Genel",
+            difficultyLevel: 0,
+            targetAgeGroupId: null,
+            isActive: true,
+            tags: null,
+            recommendedMinLevel: 0,
+            recommendedMaxLevel: 10,
+            averageComprehensionScore: 0,
+            timesRead: 0,
+            averageReadingTimeSeconds: 0,
+            createdAt: DateTime.UtcNow,
+            createdBy: null,
+            updatedAt: null,
+            updatedBy: null);
+
+        text.WordCount.Should().Be(2);
+    }
+
+    [Fact]
     public void Imported_exam_question_can_preserve_missing_legacy_creator()
     {
         var question = ExamQuestion.Import(
