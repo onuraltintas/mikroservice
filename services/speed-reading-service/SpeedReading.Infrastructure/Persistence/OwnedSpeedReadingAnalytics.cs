@@ -256,20 +256,28 @@ internal sealed class OwnedSpeedReadingAnalytics(
             .Select(group => new { Date = group.Key, Value = group.Average(item => item.ComprehensionRate) })
             .ToListAsync(cancellationToken))
             .Select(item => new StudentAnalyticsTrendPoint(DateOnly.FromDateTime(item.Date), item.Value)).ToList();
-        var categories = await (
+        var categoryRows = await (
             from session in query
             join text in db.ReadingTexts.AsNoTracking() on session.ReadingTextId equals text.Id
             where !text.IsDeleted && text.IsActive
             group session by text.Category into grouped
-            let averageCategory = grouped.Average(item => item.ComprehensionRate)
             orderby grouped.Key
-            select new StudentAnalyticsCategoryPoint(
-                grouped.Key,
-                averageCategory,
-                grouped.Sum(item => item.TotalQuestions),
-                grouped.Sum(item => item.CorrectAnswers),
-                averageCategory >= 80 ? "Strong" : averageCategory >= 60 ? "Average" : "Needs Improvement"))
+            select new
+            {
+                CategoryName = grouped.Key,
+                Average = grouped.Average(item => item.ComprehensionRate),
+                TotalQuestions = grouped.Sum(item => item.TotalQuestions),
+                CorrectAnswers = grouped.Sum(item => item.CorrectAnswers)
+            })
             .ToListAsync(cancellationToken);
+        var categories = categoryRows
+            .Select(item => new StudentAnalyticsCategoryPoint(
+                item.CategoryName,
+                item.Average,
+                item.TotalQuestions,
+                item.CorrectAnswers,
+                item.Average >= 80 ? "Strong" : item.Average >= 60 ? "Average" : "Needs Improvement"))
+            .ToList();
         var latest = await query.OrderByDescending(item => item.CompletedAt)
             .Select(item => (decimal?)item.ComprehensionRate).FirstOrDefaultAsync(cancellationToken);
         var successRate = aggregate?.TotalQuestions > 0

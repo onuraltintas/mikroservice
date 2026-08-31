@@ -1191,4 +1191,34 @@ public sealed class SpeedReadingOwnedDomainTests
         session.TotalPausedSeconds.Should().Be(20);
         session.PausedAt.Should().BeNull();
     }
+
+    [Fact]
+    public void Owned_comprehension_category_projection_is_translatable_by_postgres()
+    {
+        using var context = new OwnedSpeedReadingDbContext(
+            new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+                .UseNpgsql("Host=localhost;Database=unused;Username=unused;Password=unused")
+                .Options);
+
+        var query =
+            from session in context.ReadingSessions.AsNoTracking()
+            join text in context.ReadingTexts.AsNoTracking()
+                on session.ReadingTextId equals text.Id
+            where !text.IsDeleted && text.IsActive
+            group session by text.Category
+            into grouped
+            orderby grouped.Key
+            select new
+            {
+                CategoryName = grouped.Key,
+                Average = grouped.Average(item => item.ComprehensionRate),
+                TotalQuestions = grouped.Sum(item => item.TotalQuestions),
+                CorrectAnswers = grouped.Sum(item => item.CorrectAnswers)
+            };
+
+        var sql = query.ToQueryString();
+
+        sql.Should().Contain("GROUP BY");
+        sql.Should().Contain("avg(");
+    }
 }
