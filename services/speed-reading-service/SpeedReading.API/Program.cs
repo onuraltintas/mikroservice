@@ -373,7 +373,7 @@ if (backfillOwnedReports)
 
 if (backfillOwnedReadingTextWordCounts)
 {
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration, includeLegacyData: false);
     await using var backfillApp = builder.Build();
     await using var backfillScope = backfillApp.Services.CreateAsyncScope();
     var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingReadingTextWordCountBackfill>()
