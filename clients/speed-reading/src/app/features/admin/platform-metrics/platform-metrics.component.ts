@@ -36,7 +36,6 @@ import { takeUntil, finalize } from 'rxjs/operators';
 export class PlatformMetricsComponent extends BaseComponent implements OnInit {
   metrics: PlatformMetricsSummary | null = null;
   reversedDailyMetrics: PlatformMetrics[] = [];
-  isCollecting = false;
   error: string | null = null;
   selectedPeriod: string = '30';
 
@@ -81,27 +80,6 @@ export class PlatformMetricsComponent extends BaseComponent implements OnInit {
     if (this.selectedPeriod !== 'custom') {
       this.loadMetrics();
     }
-  }
-
-  collectMetrics(): void {
-    this.isCollecting = true;
-
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    this.metricsService.collectMetrics(yesterday).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: () => {
-        this.isCollecting = false;
-        this.loadMetrics();
-      },
-      error: (err) => {
-        this.isCollecting = false;
-        this.error = 'Metrikler toplanırken hata oluştu';
-        console.error('Error collecting metrics:', err);
-      }
-    });
   }
 
   getDayCount(): number {

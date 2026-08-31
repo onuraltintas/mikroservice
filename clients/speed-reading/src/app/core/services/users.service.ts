@@ -49,8 +49,9 @@ export class UsersService {
     if (isActive !== undefined) {
       params = params.set('isActive', isActive.toString());
     }
-    return this.http.get<PagedResult<UserDto>>(this.API_URL, { params }).pipe(
-      map(response => response.items)
+    return this.http.get<PagedResult<UserDto> | any>(this.API_URL, { params }).pipe(
+      map(response => (Array.isArray(response) ? response : (response?.items ?? []))
+        .map((user: any) => this.normalizeUser(user)))
     );
   }
 
@@ -60,7 +61,9 @@ export class UsersService {
    * Service receives: UserDetailDto (auto-unwrapped)
    */
   getUserById(id: string): Observable<UserDetailDto> {
-    return this.http.get<UserDetailDto>(`${this.API_URL}/${id}`);
+    return this.http.get<UserDetailDto>(`${this.API_URL}/${id}`).pipe(
+      map(user => this.normalizeUser(user) as UserDetailDto)
+    );
   }
 
   /**
@@ -159,7 +162,27 @@ export class UsersService {
    * Service receives: Institution[] (auto-unwrapped)
    */
   getInstitutions(): Observable<Institution[]> {
-    return this.http.get<Institution[]>(`${environment.apiUrl}/v1/institutions`);
+    return this.http.get<any>(`${environment.apiUrl}/v1/institutions`, {
+      params: new HttpParams().set('pageNumber', '1').set('pageSize', '100')
+    }).pipe(
+      map(response => (Array.isArray(response) ? response : (response?.items ?? []))
+        .map((institution: any) => ({
+          id: institution.id,
+          name: institution.name,
+          code: institution.code,
+          contactEmail: institution.email ?? institution.contactEmail ?? '',
+          phoneNumber: institution.phone ?? institution.phoneNumber,
+          address: institution.address,
+          city: institution.city,
+          district: institution.district,
+          createdAt: institution.createdAt
+            ? new Date(institution.createdAt)
+            : new Date(institution.subscriptionStartDate ?? 0),
+          isActive: institution.isActive,
+          teacherCount: institution.teacherCount ?? 0,
+          studentCount: institution.studentCount ?? 0
+        })))
+    );
   }
 
   /**
@@ -177,5 +200,21 @@ export class UsersService {
    */
   adminResetPassword(userId: string, newPassword: string): Observable<void> {
     return this.http.post<void>(`${this.API_URL}/${userId}/reset-password-admin`, { userId, newPassword });
+  }
+
+  private normalizeUser(user: any): UserDto {
+    return {
+      ...user,
+      id: user.id ?? user.userId,
+      roles: user.roles ?? (user.role ? [user.role] : []),
+      createdAt: user.createdAt ? new Date(user.createdAt) : undefined,
+      updatedAt: user.updatedAt ? new Date(user.updatedAt) : undefined,
+      lastLoginAt: user.lastLoginAt ? new Date(user.lastLoginAt) : undefined,
+      institutionId: user.institutionId ?? user.studentDetails?.institutionId ?? user.teacherDetails?.institutionId,
+      institutionName: user.institutionName ?? user.studentDetails?.institutionName ?? user.teacherDetails?.institutionName,
+      learningStyle: user.learningStyle ?? user.studentDetails?.learningStyle,
+      ageGroupId: user.ageGroupId,
+      dateOfBirth: user.dateOfBirth ?? user.studentDetails?.birthDate
+    };
   }
 }

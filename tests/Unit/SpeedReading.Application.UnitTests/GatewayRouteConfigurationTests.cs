@@ -58,6 +58,21 @@ public sealed class GatewayRouteConfigurationTests
         versionedHandlerIndex.Should().BeLessThan(blockedApiIndex);
     }
 
+    [Fact]
+    public void Speed_reading_caddy_forwards_versioned_coaching_admin_paths_before_api_fallback()
+    {
+        var caddy = File.ReadAllText(GetSpeedReadingCaddyPath());
+        var coachingPathIndex = caddy.IndexOf(
+            "@versionedCoachingAdmin path /api/v1/coaching-admin /api/v1/coaching-admin/*",
+            StringComparison.Ordinal);
+        var coachingHandlerIndex = caddy.IndexOf("handle @versionedCoachingAdmin", StringComparison.Ordinal);
+        var blockedApiIndex = caddy.IndexOf("@blockedApi path /api/*", StringComparison.Ordinal);
+
+        coachingPathIndex.Should().BeGreaterOrEqualTo(0);
+        coachingHandlerIndex.Should().BeGreaterThan(coachingPathIndex);
+        coachingHandlerIndex.Should().BeLessThan(blockedApiIndex);
+    }
+
     private static string GetGatewaySettingsPath()
     {
         return Path.Combine(GetRepositoryRoot(), "services", "api-gateway", "appsettings.json");

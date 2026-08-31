@@ -12,7 +12,8 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BaseComponent } from '../../../core/components/base.component';
-import { CoachingService, ExamResult } from '../../../core/services/coaching.service';
+import { ExamResult } from '../../../core/services/coaching.service';
+import { AdminCoachingService } from '../../../core/services/admin-coaching.service';
 
 @Component({
   selector: 'app-coaching-exam-results',
@@ -26,7 +27,7 @@ import { CoachingService, ExamResult } from '../../../core/services/coaching.ser
   templateUrl: './coaching-exam-results.component.html'
 })
 export class CoachingExamResultsComponent extends BaseComponent implements OnInit {
-  private service = inject(CoachingService);
+  private service = inject(AdminCoachingService);
 
   records: ExamResult[] = [];
   total = 0;
@@ -55,7 +56,7 @@ export class CoachingExamResultsComponent extends BaseComponent implements OnIni
 
   load(): void {
     this.loading.set(true);
-    this.service.getExamResults({
+    this.service.getExams({
       examType: this.filterExamType || undefined,
       page: this.page,
       pageSize: this.pageSize
@@ -70,7 +71,7 @@ export class CoachingExamResultsComponent extends BaseComponent implements OnIni
   async deleteResult(r: ExamResult): Promise<void> {
     const ok = await this.confirm(`"${r.examName}" sonucunu silmek istiyor musunuz?`);
     if (!ok) return;
-    this.service.deleteExamResult(r.id)
+    this.service.deleteExam(r.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => { this.handleSuccess('Sonuç silindi'); this.load(); },

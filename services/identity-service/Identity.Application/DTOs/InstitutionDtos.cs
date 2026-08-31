@@ -21,7 +21,8 @@ public sealed record InstitutionDto(
     bool IsActive,
     int StudentCount,
     int TeacherCount,
-    int AdminCount);
+    int AdminCount,
+    DateTime CreatedAt);
 
 public sealed record AssignInstitutionAdminRequest(Guid UserId, InstitutionAdminRole Role);
 

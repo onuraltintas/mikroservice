@@ -378,6 +378,16 @@
         }
     }
 
+    # The admin client uses the coaching service's dedicated administrative
+    # contract. Keep it explicit so generic /api paths remain closed.
+    @versionedCoachingAdmin path /api/v1/coaching-admin /api/v1/coaching-admin/*
+    handle @versionedCoachingAdmin {
+        uri replace /api/v1 /api
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
     # The existing frontend still emits /api/v1 for a small, explicit set of
     # SpeedReading and identity routes while the Gateway contract is /api.
     # Strip only this allowlisted compatibility surface before proxying.

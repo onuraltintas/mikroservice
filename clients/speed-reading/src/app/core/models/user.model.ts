@@ -76,11 +76,14 @@ export interface UserDto {
   phoneNumber?: string;
   institutionId?: string;
   institutionName?: string;
+  dateOfBirth?: Date;
+  ageGroupId?: string;
+  learningStyle?: 'visual' | 'auditory' | 'kinesthetic' | string;
   roles: string[];
   isActive: boolean;
   emailConfirmed: boolean;
   lastLoginAt?: Date;
-  createdAt: Date;
+  createdAt?: Date;
   updatedAt?: Date;
 }
 

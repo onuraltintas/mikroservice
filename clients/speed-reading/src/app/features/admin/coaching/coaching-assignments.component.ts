@@ -11,9 +11,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatBadgeModule } from '@angular/material/badge';
 import { BaseComponent } from '../../../core/components/base.component';
-import { CoachingService, Assignment } from '../../../core/services/coaching.service';
+import { Assignment } from '../../../core/services/coaching.service';
+import { AdminCoachingService } from '../../../core/services/admin-coaching.service';
 
 @Component({
   selector: 'app-coaching-assignments',
@@ -22,20 +22,18 @@ import { CoachingService, Assignment } from '../../../core/services/coaching.ser
     CommonModule, FormsModule,
     MatCardModule, MatTableModule, MatButtonModule, MatIconModule,
     MatSelectModule, MatFormFieldModule, MatPaginatorModule,
-    MatProgressSpinnerModule, MatTooltipModule, MatBadgeModule
+    MatProgressSpinnerModule, MatTooltipModule
   ],
   templateUrl: './coaching-assignments.component.html'
 })
 export class CoachingAssignmentsComponent extends BaseComponent implements OnInit {
-  private service = inject(CoachingService);
+  private service = inject(AdminCoachingService);
 
   records: Assignment[] = [];
   total = 0;
   page = 1;
   pageSize = 20;
   filterStatus = '';
-  pendingReviewMode = false;
-  pendingReviewCount = 0;
 
   displayedColumns = ['studentName', 'title', 'dueDate', 'status', 'approval', 'target', 'completedAt', 'actions'];
 
@@ -60,23 +58,12 @@ export class CoachingAssignmentsComponent extends BaseComponent implements OnIni
 
   ngOnInit(): void {
     this.load();
-    this.service.getAssignments({ pendingReview: true, pageSize: 1 })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({ next: r => this.pendingReviewCount = r.total });
-  }
-
-  togglePendingReview(): void {
-    this.pendingReviewMode = !this.pendingReviewMode;
-    this.filterStatus = '';
-    this.page = 1;
-    this.load();
   }
 
   load(): void {
     this.loading.set(true);
     this.service.getAssignments({
-      status: this.pendingReviewMode ? undefined : (this.filterStatus || undefined),
-      pendingReview: this.pendingReviewMode || undefined,
+      status: this.filterStatus || undefined,
       page: this.page,
       pageSize: this.pageSize
     })
@@ -94,7 +81,7 @@ export class CoachingAssignmentsComponent extends BaseComponent implements OnIni
   async cancelAssignment(r: Assignment): Promise<void> {
     const ok = await this.confirm(`"${r.title}" ödevini iptal etmek istiyor musunuz?`);
     if (!ok) return;
-    this.service.updateAssignment(r.id, { status: 'Cancelled' })
+    this.service.cancelAssignment(r.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => { this.handleSuccess('Ödev iptal edildi'); this.load(); },
@@ -102,6 +89,6 @@ export class CoachingAssignmentsComponent extends BaseComponent implements OnIni
       });
   }
 
-  onFilter(): void { this.pendingReviewMode = false; this.page = 1; this.load(); }
+  onFilter(): void { this.page = 1; this.load(); }
   onPage(e: PageEvent): void { this.page = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); }
 }

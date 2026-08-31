@@ -13,7 +13,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BaseComponent } from '../../../core/components/base.component';
-import { CoachingService, Goal } from '../../../core/services/coaching.service';
+import { Goal } from '../../../core/services/coaching.service';
+import { AdminCoachingService } from '../../../core/services/admin-coaching.service';
 
 @Component({
   selector: 'app-coaching-goals',
@@ -27,7 +28,7 @@ import { CoachingService, Goal } from '../../../core/services/coaching.service';
   templateUrl: './coaching-goals.component.html'
 })
 export class CoachingGoalsComponent extends BaseComponent implements OnInit {
-  private service = inject(CoachingService);
+  private service = inject(AdminCoachingService);
 
   records: Goal[] = [];
   total = 0;

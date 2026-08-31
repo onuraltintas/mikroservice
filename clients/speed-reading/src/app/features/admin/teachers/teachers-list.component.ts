@@ -17,6 +17,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { debounceTime, distinctUntilChanged, takeUntil, finalize } from 'rxjs/operators';
 import { TeachersService } from '../../../core/services/teachers.service';
+import { UsersService } from '../../../core/services/users.service';
 import { InstitutionsService } from '../../../core/services/institutions.service';
 import { Teacher } from '../../../core/models/teacher.model';
 import { Institution } from '../../../core/models/institution.model';
@@ -49,6 +50,7 @@ import { BaseComponent } from '../../../core/components/base.component';
 })
 export class TeachersListComponent extends BaseComponent implements OnInit, AfterViewInit {
   private teachersService = inject(TeachersService);
+  private usersService = inject(UsersService);
   private institutionsService = inject(InstitutionsService);
   private dialog = inject(MatDialog);
   // toaster inherited from BaseComponent
@@ -130,13 +132,27 @@ export class TeachersListComponent extends BaseComponent implements OnInit, Afte
 
   loadTeachers(searchTerm?: string, institutionId?: string, isActive?: boolean) {
     this.loading.set(true);
-    this.teachersService.getTeachers(searchTerm, institutionId, isActive)
+    this.usersService.getUsers(searchTerm, 'Teacher', isActive)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => this.loading.set(false))
       )
       .subscribe({
-        next: (teachers) => {
+        next: (users) => {
+          const teachers = users
+            .filter(teacher => !institutionId || teacher.institutionId === institutionId)
+            .map(teacher => ({
+              id: teacher.id,
+              firstName: teacher.firstName,
+              lastName: teacher.lastName,
+              email: teacher.email,
+              institutionId: teacher.institutionId,
+              institutionName: teacher.institutionName,
+              studentCount: 0,
+              lastLoginAt: teacher.lastLoginAt,
+              isActive: teacher.isActive,
+              createdAt: teacher.createdAt ?? new Date(0)
+            }));
           this.dataSource.data = teachers;
         },
         error: (error) => {

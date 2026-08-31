@@ -288,6 +288,7 @@ public class UserRepository : IUserRepository
             MfaEnabled = u.MfaEnabled,
             PhoneNumber = u.PhoneNumber,
             LastLoginAt = u.LastLoginAt,
+            CreatedAt = u.CreatedAt,
             Roles = u.Roles.Select(ur => ur.Role.Name).ToList()
         }).ToList();
 
@@ -420,7 +421,8 @@ public class InstitutionRepository : IInstitutionRepository
                 institution.IsActive,
                 institution.Students.Count(student => student.IsActive),
                 institution.Teachers.Count(teacher => teacher.IsActive),
-                institution.Admins.Count(admin => admin.IsActive)))
+                institution.Admins.Count(admin => admin.IsActive),
+                institution.CreatedAt))
             .ToListAsync(cancellationToken);
 
         return new PagedList<InstitutionDto>(institutions, totalCount, page, pageSize);
@@ -455,7 +457,8 @@ public class InstitutionRepository : IInstitutionRepository
                 institution.IsActive,
                 institution.Students.Count(student => student.IsActive),
                 institution.Teachers.Count(teacher => teacher.IsActive),
-                institution.Admins.Count(admin => admin.IsActive)))
+                institution.Admins.Count(admin => admin.IsActive),
+                institution.CreatedAt))
             .FirstOrDefaultAsync(cancellationToken);
     }
 

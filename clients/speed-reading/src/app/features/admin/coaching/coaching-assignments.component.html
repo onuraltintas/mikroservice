@@ -2,12 +2,6 @@
   <div class="page-header">
     <h2><mat-icon>assignment</mat-icon> Ödevler</h2>
     <div style="display:flex;gap:8px">
-      <button mat-stroked-button [color]="pendingReviewMode ? 'accent' : ''"
-        (click)="togglePendingReview()"
-        [matBadge]="pendingReviewCount > 0 ? pendingReviewCount : null"
-        matBadgeColor="warn" matBadgeSize="small">
-        <mat-icon>rate_review</mat-icon> İnceleme Bekleyenler
-      </button>
       <button mat-raised-button color="primary" (click)="load()">
         <mat-icon>refresh</mat-icon> Yenile
       </button>

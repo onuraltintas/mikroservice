@@ -12,7 +12,8 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BaseComponent } from '../../../core/components/base.component';
-import { CoachingService, CoachingSession } from '../../../core/services/coaching.service';
+import { CoachingSession } from '../../../core/services/coaching.service';
+import { AdminCoachingService } from '../../../core/services/admin-coaching.service';
 
 @Component({
   selector: 'app-coaching-sessions',
@@ -26,7 +27,7 @@ import { CoachingService, CoachingSession } from '../../../core/services/coachin
   templateUrl: './coaching-sessions.component.html'
 })
 export class CoachingSessionsComponent extends BaseComponent implements OnInit {
-  private service = inject(CoachingService);
+  private service = inject(AdminCoachingService);
 
   records: CoachingSession[] = [];
   total = 0;
@@ -58,7 +59,7 @@ export class CoachingSessionsComponent extends BaseComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.service.getCoachingSessions({ status: this.filterStatus || undefined, page: this.page, pageSize: this.pageSize })
+    this.service.getSessions({ status: this.filterStatus || undefined, page: this.page, pageSize: this.pageSize })
       .pipe(takeUntil(this.destroy$), finalize(() => this.loading.set(false)))
       .subscribe({
         next: r => { this.records = r.items; this.total = r.total; },
@@ -72,7 +73,7 @@ export class CoachingSessionsComponent extends BaseComponent implements OnInit {
   async cancelSession(s: CoachingSession): Promise<void> {
     const ok = await this.confirm('Bu seansı iptal etmek istiyor musunuz?');
     if (!ok) return;
-    this.service.updateCoachingSession(s.id, { status: 'Cancelled' })
+    this.service.cancelSession(s.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({ next: () => { this.handleSuccess('Seans iptal edildi'); this.load(); }, error: e => this.handleError(e) });
   }

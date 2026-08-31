@@ -20,7 +20,7 @@ import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { debounceTime, distinctUntilChanged, takeUntil, finalize } from 'rxjs/operators';
 import { StudentsService } from '../../../core/services/students.service';
 import { InstitutionsService } from '../../../core/services/institutions.service';
-import { TeachersService } from '../../../core/services/teachers.service';
+import { UsersService } from '../../../core/services/users.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { Student } from '../../../core/models/student.model';
 import { Institution } from '../../../core/models/institution.model';
@@ -56,7 +56,7 @@ import { BaseComponent } from '../../../core/components/base.component';
 export class StudentsListComponent extends BaseComponent implements OnInit, AfterViewInit {
   private studentsService = inject(StudentsService);
   private institutionsService = inject(InstitutionsService);
-  private teachersService = inject(TeachersService);
+  private usersService = inject(UsersService);
   private dialog = inject(MatDialog);
   private router = inject(Router); // Injected Router
   // toaster is inherited from BaseComponent
@@ -121,13 +121,26 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
   }
 
   loadTeachers(institutionId?: string) {
-    this.teachersService.getTeachers(undefined, institutionId)
+    this.usersService.getUsers(undefined, 'Teacher', true)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (teachers) => {
-          console.log('Teachers loaded:', teachers.length, 'InstitutionId:', institutionId);
-          this.teachers = teachers;
-          this.filteredTeachers = teachers; // Initialize filtered list
+          const filteredTeachers = (institutionId
+            ? teachers.filter(teacher => teacher.institutionId === institutionId)
+            : teachers).map(teacher => ({
+              id: teacher.id,
+              firstName: teacher.firstName,
+              lastName: teacher.lastName,
+              email: teacher.email,
+              institutionId: teacher.institutionId,
+              institutionName: teacher.institutionName,
+              studentCount: 0,
+              lastLoginAt: teacher.lastLoginAt,
+              isActive: teacher.isActive,
+              createdAt: teacher.createdAt ?? new Date(0)
+            }));
+          this.teachers = filteredTeachers;
+          this.filteredTeachers = this.teachers; // Initialize filtered list
         },
         error: (error) => {
           console.error('Error loading teachers:', error);
@@ -206,19 +219,41 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
 
   loadStudents(searchTerm?: string, institutionId?: string, currentLevel?: number, isActive?: boolean, teacherId?: string) {
     this.loading.set(true);
-    this.studentsService.getStudents(searchTerm, institutionId, currentLevel, isActive, teacherId)
+    this.usersService.getUsers(searchTerm, 'Student', isActive)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => this.loading.set(false))
       )
       .subscribe({
-        next: (students) => {
+        next: (users) => {
+          const students = users
+            .filter(student => !institutionId || student.institutionId === institutionId)
+            .map(student => this.toStudent(student));
           this.dataSource.data = students;
         },
         error: (error) => {
           this.toaster.error('Öğrenciler yüklenirken bir hata oluştu');
         }
       });
+  }
+
+  private toStudent(user: import('../../../core/models/user.model').UserDto): Student {
+    return {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      institutionId: user.institutionId,
+      institutionName: user.institutionName,
+      currentLevel: (user as any).currentLevel ?? 0,
+      targetWPM: (user as any).targetWPM ?? 0,
+      targetComprehension: (user as any).targetComprehension ?? 0,
+      dailyGoalMinutes: (user as any).dailyGoalMinutes ?? 0,
+      learningStyle: user.learningStyle ?? 'visual',
+      lastLoginAt: user.lastLoginAt,
+      isActive: user.isActive,
+      createdAt: user.createdAt ?? new Date(0)
+    };
   }
 
   openDialog(student?: Student) {

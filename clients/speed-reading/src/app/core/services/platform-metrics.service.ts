@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface PlatformMetrics {
-  date: string;
+  date: string | Date;
   totalUsers: number;
   activeUsers: number;
   newUsers: number;
@@ -45,7 +46,7 @@ export interface PlatformMetricsSummary {
   providedIn: 'root'
 })
 export class PlatformMetricsService {
-  private readonly apiUrl = `${environment.apiUrl}/v1/admin/metrics`;
+  private readonly apiUrl = `${environment.speedReadingApiUrl}/analytics/admin/platform-usage`;
 
   constructor(private http: HttpClient) { }
 
@@ -62,20 +63,9 @@ export class PlatformMetricsService {
       params = params.set('endDate', endDate.toISOString());
     }
 
-    return this.http.get<PlatformMetricsSummary>(this.apiUrl, { params });
-  }
-
-  /**
-   * Manually trigger metrics collection for a specific date
-   */
-  collectMetrics(date?: Date): Observable<{ message: string }> {
-    let params = new HttpParams();
-
-    if (date) {
-      params = params.set('date', date.toISOString());
-    }
-
-    return this.http.post<{ message: string }>(`${this.apiUrl}/collect`, null, { params });
+    return this.http.get<any>(this.apiUrl, { params }).pipe(
+      map(response => this.toPlatformMetricsSummary(response))
+    );
   }
 
   /**
@@ -98,5 +88,55 @@ export class PlatformMetricsService {
     startDate.setDate(startDate.getDate() - 7);
 
     return this.getMetrics(startDate, endDate);
+  }
+
+  private toPlatformMetricsSummary(value: any): PlatformMetricsSummary {
+    const activeByDate = this.chartValues(value.dailyActiveUsers);
+    const activityByDate = this.chartValues(value.activityVolume);
+    const dates = [...new Set([...activeByDate.keys(), ...activityByDate.keys()])].sort();
+    const dailyMetrics = dates.map(date => ({
+      date: new Date(date),
+      totalUsers: value.totalUsers ?? 0,
+      activeUsers: activeByDate.get(date) ?? 0,
+      newUsers: 0,
+      totalActivities: activityByDate.get(date) ?? 0,
+      totalExercises: 0,
+      totalReadingSessions: 0,
+      averageDurationMinutes: value.averageSessionDuration ?? 0,
+      averagePerformance: 0
+    }));
+    const averageDailyActiveUsers = dailyMetrics.length === 0
+      ? 0
+      : dailyMetrics.reduce((total, day) => total + day.activeUsers, 0) / dailyMetrics.length;
+    const totalExercises = value.featureUsageStats?.exercise ?? 0;
+
+    return {
+      startDate: value.dateFrom,
+      endDate: value.dateTo,
+      dailyMetrics,
+      totals: {
+        totalUsers: value.totalUsers ?? 0,
+        totalNewUsers: value.newUsers ?? 0,
+        totalActivities: value.totalActivities ?? 0,
+        totalExercises,
+        totalReadingSessions: value.totalReadingSessions ?? 0,
+        averageDailyActiveUsers,
+        averageSessionDuration: value.averageSessionDuration ?? 0,
+        averagePerformance: 0
+      },
+      trends: {
+        userGrowthRate: value.userGrowthRate ?? 0,
+        activeUserRate: value.engagementRate ?? 0,
+        activityGrowthRate: 0,
+        performanceImprovement: 0
+      }
+    };
+  }
+
+  private chartValues(charts: any[] | undefined): Map<string, number> {
+    return new Map((charts ?? []).map(chart => [
+      chart.name,
+      Number(chart.series?.[0]?.value ?? 0)
+    ]));
   }
 }

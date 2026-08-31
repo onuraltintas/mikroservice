@@ -138,14 +138,7 @@ export class InstitutionsListComponent extends BaseComponent implements OnInit, 
     const action = institution.isActive ? 'devre dışı bırakılsın' : 'aktif edilsin';
     const confirmed = await this.confirm(`${institution.name} kurumu ${action} mı?`);
     if (confirmed) {
-      const updateRequest = {
-        id: institution.id,
-        name: institution.name,
-        contactEmail: institution.contactEmail,
-        isActive: !institution.isActive
-      };
-
-      this.institutionsService.updateInstitution(institution.id, updateRequest)
+      this.institutionsService.setActive(institution.id, !institution.isActive)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {

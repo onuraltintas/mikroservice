@@ -15,6 +15,7 @@ public class UserProfileDto
     public bool EmailConfirmed { get; set; }
     public bool MfaEnabled { get; set; }
     public DateTime? LastLoginAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
     
     // Common fields
     public string? AvatarUrl { get; set; }
