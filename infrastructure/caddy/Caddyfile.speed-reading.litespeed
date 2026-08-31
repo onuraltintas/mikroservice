@@ -368,6 +368,16 @@
         }
     }
 
+    # The current standalone client updates the identity-owned profile through
+    # the Gateway's unversioned users contract. Keep this single profile route
+    # explicitly exposed while leaving unrelated identity routes closed.
+    @identityProfile path /api/users/me /api/users/me/*
+    handle @identityProfile {
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
     # The existing frontend still emits /api/v1 for a small, explicit set of
     # SpeedReading and identity routes while the Gateway contract is /api.
     # Strip only this allowlisted compatibility surface before proxying.
