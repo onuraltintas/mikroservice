@@ -59,6 +59,7 @@ public sealed class SpeedReadingOwnedDomainTests
 
         action.Should().NotThrow();
         services.Should().Contain(item => item.ServiceType == typeof(OwnedSpeedReadingDbContext));
+        services.Should().Contain(item => item.ServiceType == typeof(OwnedSpeedReadingReadingTextWordCountBackfill));
         services.Should().NotContain(item => item.ServiceType == typeof(SpeedReadingDbContext));
     }
 
@@ -696,6 +697,38 @@ public sealed class SpeedReadingOwnedDomainTests
             updatedBy: null);
 
         text.WordCount.Should().Be(2);
+    }
+
+    [Fact]
+    public void Reading_text_word_count_repair_updates_only_when_content_changed()
+    {
+        var text = ReadingText.Import(
+            Guid.NewGuid(),
+            "Eski metin",
+            "Bir  iki\nüç",
+            "tr",
+            exerciseId: null,
+            wordCount: 99,
+            category: "Genel",
+            difficultyLevel: 0,
+            targetAgeGroupId: null,
+            isActive: true,
+            tags: null,
+            recommendedMinLevel: 0,
+            recommendedMaxLevel: 10,
+            averageComprehensionScore: 0,
+            timesRead: 0,
+            averageReadingTimeSeconds: 0,
+            createdAt: DateTime.UtcNow,
+            createdBy: null,
+            updatedAt: null,
+            updatedBy: null);
+
+        text.WordCount.Should().Be(3);
+        typeof(ReadingText).GetProperty(nameof(ReadingText.WordCount))!.SetValue(text, 99);
+        text.RecalculateWordCount().Should().BeTrue();
+        text.WordCount.Should().Be(3);
+        text.RecalculateWordCount().Should().BeFalse();
     }
 
     [Fact]

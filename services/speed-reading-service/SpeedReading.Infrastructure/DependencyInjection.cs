@@ -102,6 +102,7 @@ public static class DependencyInjection
             services.AddScoped<OwnedSpeedReadingAdaptiveLearningBackfill>();
             services.AddScoped<OwnedSpeedReadingAdaptiveTextBackfill>();
             services.AddScoped<OwnedSpeedReadingReportsBackfill>();
+            services.AddScoped<OwnedSpeedReadingReadingTextWordCountBackfill>();
             services.AddScoped<OwnedSpeedReadingParityChecker>();
         }
 

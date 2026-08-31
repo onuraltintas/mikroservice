@@ -162,4 +162,14 @@ public sealed class ReadingText : AggregateRoot
 
     public static int CalculateWordCount(string content) =>
         content.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
+
+    public bool RecalculateWordCount()
+    {
+        var calculatedWordCount = CalculateWordCount(Content);
+        if (WordCount == calculatedWordCount)
+            return false;
+
+        WordCount = calculatedWordCount;
+        return true;
+    }
 }

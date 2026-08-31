@@ -64,6 +64,8 @@ var backfillOwnedAdaptiveText = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-adaptive-text", StringComparison.OrdinalIgnoreCase));
 var backfillOwnedReports = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-reports", StringComparison.OrdinalIgnoreCase));
+var backfillOwnedReadingTextWordCounts = args.Any(argument =>
+    string.Equals(argument, "--backfill-owned-reading-text-word-counts", StringComparison.OrdinalIgnoreCase));
 var verifyOwnedParity = args.Any(argument =>
     string.Equals(argument, "--verify-owned-parity", StringComparison.OrdinalIgnoreCase));
 
@@ -365,6 +367,17 @@ if (backfillOwnedReports)
     await using var backfillScope = backfillApp.Services.CreateAsyncScope();
     var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingReportsBackfill>()
         ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-reports.");
+    Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
+    return;
+}
+
+if (backfillOwnedReadingTextWordCounts)
+{
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
+    await using var backfillApp = builder.Build();
+    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
+    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingReadingTextWordCountBackfill>()
+        ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-reading-text-word-counts.");
     Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
     return;
 }

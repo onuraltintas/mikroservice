@@ -38,16 +38,16 @@ export class UsersService {
    */
   getUsers(searchTerm?: string, role?: string, isActive?: boolean): Observable<UserDto[]> {
     let params = new HttpParams();
-    params = params.set('PageNumber', '1');
-    params = params.set('PageSize', '1000');
+    params = params.set('page', '1');
+    params = params.set('pageSize', '100');
     if (searchTerm) {
-      params = params.set('SearchTerm', searchTerm);
+      params = params.set('search', searchTerm);
     }
     if (role) {
-      params = params.set('Role', role);
+      params = params.set('role', role);
     }
     if (isActive !== undefined) {
-      params = params.set('IsActive', isActive.toString());
+      params = params.set('isActive', isActive.toString());
     }
     return this.http.get<PagedResult<UserDto>>(this.API_URL, { params }).pipe(
       map(response => response.items)
@@ -96,7 +96,7 @@ export class UsersService {
    * Service receives: void (auto-unwrapped)
    */
   assignRole(userId: string, request: AssignRoleRequest): Observable<void> {
-    return this.http.post<void>(`${this.API_URL}/${userId}/roles/${request.roleName}`, {});
+    return this.http.post<void>(`${this.API_URL}/${userId}/roles`, request);
   }
 
   /**
