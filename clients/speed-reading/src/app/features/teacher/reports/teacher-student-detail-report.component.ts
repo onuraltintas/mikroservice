@@ -15,6 +15,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import { ReportsService } from '../../../core/services/reports.service';
 import { TeacherStudentDetailReport } from '../../../core/models/report.model';
 import { RadarChartComponent } from '../../../shared/components/charts/radar-chart.component';
@@ -61,6 +62,7 @@ export class TeacherStudentDetailReportComponent implements OnInit {
   private usersService = inject(UsersService);
   private teachersService = inject(TeachersService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   report = signal<TeacherStudentDetailReport | null>(null);
   loading = signal(false);
@@ -136,7 +138,7 @@ export class TeacherStudentDetailReportComponent implements OnInit {
     this.loadingStudents.set(true);
 
     // Admin sees all students; teacher sees only their own students
-    const isAdmin = this.authService.hasAdminAccess();
+    const isAdmin = this.router.url.includes('/admin/reports') || this.authService.hasAdminAccess();
 
     const students$ = isAdmin
       ? this.usersService.getUsers(undefined, 'Student')
