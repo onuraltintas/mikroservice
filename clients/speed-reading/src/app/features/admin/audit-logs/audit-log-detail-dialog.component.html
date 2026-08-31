@@ -60,23 +60,12 @@
             </div>
         </mat-card>
 
-        <!-- Old vs New Values Comparison -->
-        <div class="values-comparison" *ngIf="log.oldValues || log.newValues">
-            <h3><mat-icon>compare_arrows</mat-icon> Değişiklikler</h3>
-            <div class="comparison-grid">
-                <!-- Old Values -->
-                <mat-card class="values-section old-values" *ngIf="log.oldValues">
-                    <h4><mat-icon>history</mat-icon> Eski Değerler</h4>
-                    <pre class="json-display">{{ formatJson(log.oldValues) }}</pre>
-                </mat-card>
-
-                <!-- New Values -->
-                <mat-card class="values-section new-values" *ngIf="log.newValues">
-                    <h4><mat-icon>new_releases</mat-icon> Yeni Değerler</h4>
-                    <pre class="json-display">{{ formatJson(log.newValues) }}</pre>
-                </mat-card>
-            </div>
-        </div>
+        <!-- The audit contract intentionally stores field names only, never
+             request payload values. -->
+        <mat-card class="info-section" *ngIf="log.changedFieldsJson">
+            <h3><mat-icon>compare_arrows</mat-icon> Değişen Alanlar</h3>
+            <pre class="json-display">{{ formatJson(log.changedFieldsJson) }}</pre>
+        </mat-card>
 
         <!-- Additional Info -->
         <mat-card class="info-section" *ngIf="log.additionalInfo">

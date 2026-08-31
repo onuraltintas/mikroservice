@@ -8,7 +8,7 @@ export interface AdminConfiguration {
   key: string;
   value: string;
   description: string;
-  dataType: number;
+  dataType: number | string;
   isPublic: boolean;
   group: string;
 }

@@ -36,7 +36,7 @@ export class AuditLogDetailDialogComponent extends BaseComponent implements OnIn
     this.log = {
       ...source,
       oldValues: null,
-      newValues: source.changedFieldsJson ?? null,
+      newValues: null,
       userAgent: source.userAgent ?? '',
       additionalInfo: [
         source.serviceName ? `Servis: ${source.serviceName}` : '',

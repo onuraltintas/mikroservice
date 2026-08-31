@@ -62,17 +62,18 @@ export class AuditLogsListComponent extends BaseComponent implements OnInit {
 
   // Action translations
   private actionLabels: { [key: string]: string } = {
-    'Create': 'Oluştur',
-    'Update': 'Güncelle',
-    'Delete': 'Sil',
-    'Login': 'Giriş',
-    'Logout': 'Çıkış',
-    'View': 'Görüntüle',
-    'Export': 'Dışa Aktar',
-    'Import': 'İçe Aktar'
+    'create': 'Oluştur',
+    'update': 'Güncelle',
+    'delete': 'Sil',
+    'login': 'Giriş',
+    'logout': 'Çıkış',
+    'view': 'Görüntüle',
+    'export': 'Dışa Aktar',
+    'import': 'İçe Aktar'
   };
 
   ngOnInit(): void {
+    this.loadFilterOptions();
     this.loadLogs();
   }
 
@@ -81,7 +82,7 @@ export class AuditLogsListComponent extends BaseComponent implements OnInit {
   }
 
   getActionLabel(action: string): string {
-    return this.actionLabels[action] || action;
+    return this.actionLabels[action] || this.actionLabels[action.toLowerCase()] || action;
   }
 
   getActionClass(action: string): string {
@@ -91,16 +92,16 @@ export class AuditLogsListComponent extends BaseComponent implements OnInit {
 
   getActionIcon(action: string): string {
     const icons: { [key: string]: string } = {
-      'Create': 'add_circle',
-      'Update': 'edit',
-      'Delete': 'delete',
-      'Login': 'login',
-      'Logout': 'logout',
-      'View': 'visibility',
-      'Export': 'file_download',
-      'Import': 'file_upload'
+      'create': 'add_circle',
+      'update': 'edit',
+      'delete': 'delete',
+      'login': 'login',
+      'logout': 'logout',
+      'view': 'visibility',
+      'export': 'file_download',
+      'import': 'file_upload'
     };
-    return icons[action] || 'info';
+    return icons[action.toLowerCase()] || 'info';
   }
 
   loadLogs(): void {
@@ -116,12 +117,22 @@ export class AuditLogsListComponent extends BaseComponent implements OnInit {
           this.totalCount = response.totalCount;
           this.pageNumber = response.pageNumber;
           this.pageSize = response.pageSize;
-          this.actions = [...new Set(this.logs.map(log => log.action))].sort();
-          this.entityTypes = [...new Set(this.logs.map(log => log.entityType).filter((type): type is string => !!type))].sort();
         },
         error: (err) => {
           console.error('Error loading audit logs:', err);
         }
+      });
+  }
+
+  loadFilterOptions(): void {
+    this.auditLogsService.getAuditFilterOptions()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: options => {
+          this.actions = options.actions;
+          this.entityTypes = options.entityTypes;
+        },
+        error: err => console.error('Error loading audit filter options:', err)
       });
   }
 

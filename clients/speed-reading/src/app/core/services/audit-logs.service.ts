@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, forkJoin, of } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { Observable, forkJoin, from, of } from 'rxjs';
+import { concatMap, map, switchMap, toArray } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   AuditLog,
@@ -53,35 +53,45 @@ export class AuditLogsService {
 
     if (filters?.userId) params = params.set('search', filters.userId);
     if (filters?.startDate) params = params.set('from', filters.startDate.toISOString());
-    if (filters?.endDate) params = params.set('to', filters.endDate.toISOString());
+    if (filters?.endDate) {
+      const endOfDay = new Date(filters.endDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      params = params.set('to', endOfDay.toISOString());
+    }
 
-    return forkJoin(this.auditUrls.map(url => this.getAllPages(url, params))).pipe(
-      map(pageGroups => {
-        const pages = pageGroups.flat();
-        const allLogs = pages
-          .flatMap(page => page.items ?? [])
-          .map(record => this.toAuditLog(record))
-          .filter(log => !filters?.action || log.action === filters.action)
-          .filter(log => !filters?.entityType || log.entityType === filters.entityType)
-          .sort((left, right) => right.timestamp.getTime() - left.timestamp.getTime());
-        const totalCount = filters?.action || filters?.entityType
-          ? allLogs.length
-          : pages.reduce((total, page) => total + (page.totalCount ?? 0), 0);
-        const start = (pageNumber - 1) * pageSize;
+    const fetchAll = !!filters?.action || !!filters?.entityType;
+    return this.loadAuditLogs(filters, params, fetchAll ? undefined : pageNumber * pageSize).pipe(
+      map(result => ({
+        logs: result.logs.slice((pageNumber - 1) * pageSize, pageNumber * pageSize),
+        totalCount: result.totalCount,
+        pageNumber,
+        pageSize,
+        totalPages: Math.ceil(result.totalCount / pageSize)
+      }))
+    );
+  }
 
-        return {
-          logs: allLogs.slice(start, start + pageSize),
-          totalCount,
-          pageNumber,
-          pageSize,
-          totalPages: Math.ceil(totalCount / pageSize)
-        };
-      })
+  getAuditFilterOptions(): Observable<{ actions: string[]; entityTypes: string[] }> {
+    const params = new HttpParams().set('page', '1').set('pageSize', '100');
+    return this.loadAuditLogs(undefined, params, undefined).pipe(
+      map(result => ({
+        actions: [...new Set(result.logs.map(log => log.action))].sort(),
+        entityTypes: [...new Set(result.logs.map(log => log.entityType).filter((type): type is string => !!type))].sort()
+      }))
     );
   }
 
   exportAuditLogs(filters?: AuditLogFilters): Observable<Blob> {
-    return this.getAuditLogs({ ...filters, pageNumber: 1, pageSize: 100 }).pipe(
+    let params = new HttpParams().set('page', '1').set('pageSize', '100');
+    if (filters?.userId) params = params.set('search', filters.userId);
+    if (filters?.startDate) params = params.set('from', filters.startDate.toISOString());
+    if (filters?.endDate) {
+      const endOfDay = new Date(filters.endDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      params = params.set('to', endOfDay.toISOString());
+    }
+
+    return this.loadAuditLogs(filters, params, undefined).pipe(
       map(result => {
         const header = ['Tarih', 'Servis', 'Kullanıcı', 'Aksiyon', 'Varlık', 'Varlık ID', 'HTTP', 'Durum', 'IP', 'İstek'];
         const rows = result.logs.map(log => [
@@ -129,22 +139,44 @@ export class AuditLogsService {
     };
   }
 
-  private getAllPages(url: string, params: HttpParams): Observable<AdminAuditPage[]> {
+  private loadAuditLogs(
+    filters: AuditLogFilters | undefined,
+    params: HttpParams,
+    recordLimit: number | undefined
+  ): Observable<{ logs: AuditLog[]; totalCount: number }> {
+    return forkJoin(this.auditUrls.map(url => this.getPages(url, params, recordLimit))).pipe(
+      map(pageGroups => {
+        const allLogs = pageGroups.flat()
+          .flatMap(page => page.items ?? [])
+          .map(record => this.toAuditLog(record))
+          .filter(log => !filters?.action || log.action.toLowerCase() === filters.action.toLowerCase())
+          .filter(log => !filters?.entityType || log.entityType === filters.entityType)
+          .sort((left, right) => right.timestamp.getTime() - left.timestamp.getTime());
+        const totalCount = filters?.action || filters?.entityType
+          ? allLogs.length
+          : pageGroups.reduce((total, pages) => total + (pages[0]?.totalCount ?? 0), 0);
+        return { logs: allLogs, totalCount };
+      })
+    );
+  }
+
+  private getPages(url: string, params: HttpParams, recordLimit: number | undefined): Observable<AdminAuditPage[]> {
     return this.http.get<AdminAuditPage>(url, { params }).pipe(
       switchMap(firstPage => {
-        const pageCount = Math.min(Math.ceil((firstPage.totalCount ?? 0) / 100), 1000);
-        const remainingPages = Array.from({ length: Math.max(0, pageCount - 1) }, (_, index) =>
-          this.http.get<AdminAuditPage>(url, {
-            params: params.set('page', String(index + 2))
-          }).pipe(
-            // A service can legitimately have no audit store in a local/staged
-            // deployment. Keep the combined admin screen usable with the other
-            // service streams in that case.
-            catchError(() => of({ items: [], totalCount: 0, page: index + 2, pageSize: 100 }))
-          ));
-        return forkJoin([of(firstPage), ...remainingPages]);
-      }),
-      catchError(() => of([{ items: [], totalCount: 0, page: 1, pageSize: 100 }]))
+        const recordsToLoad = recordLimit === undefined
+          ? firstPage.totalCount
+          : Math.min(firstPage.totalCount, recordLimit);
+        const pageCount = Math.min(Math.ceil(recordsToLoad / 100), 1000);
+        if (pageCount <= 1) return of([firstPage]);
+
+        return from(Array.from({ length: pageCount - 1 }, (_, index) => index + 2)).pipe(
+          concatMap(page => this.http.get<AdminAuditPage>(url, {
+            params: params.set('page', String(page))
+          })),
+          toArray(),
+          map(remainingPages => [firstPage, ...remainingPages])
+        );
+      })
     );
   }
 

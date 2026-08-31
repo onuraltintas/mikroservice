@@ -32,7 +32,7 @@ export class SettingsComponent extends BaseComponent implements OnInit {
   private readonly configurationService = inject(AdminConfigurationService);
 
   configurations: AdminConfiguration[] = [];
-  values: Record<string, string | number | boolean> = {};
+  values: Record<string, string | number | boolean | null> = {};
   private originalValues: Record<string, string> = {};
   saving = false;
 
@@ -73,14 +73,14 @@ export class SettingsComponent extends BaseComponent implements OnInit {
   }
 
   isBoolean(configuration: AdminConfiguration): boolean {
-    return configuration.dataType === 2;
+    return configuration.dataType === 2 || String(configuration.dataType).toLowerCase() === 'boolean';
   }
 
   isNumber(configuration: AdminConfiguration): boolean {
-    return configuration.dataType === 1;
+    return configuration.dataType === 1 || String(configuration.dataType).toLowerCase() === 'number';
   }
 
-  updateValue(configuration: AdminConfiguration, value: string | number | boolean): void {
+  updateValue(configuration: AdminConfiguration, value: string | number | boolean | null): void {
     this.values[configuration.key] = value;
   }
 
@@ -89,6 +89,11 @@ export class SettingsComponent extends BaseComponent implements OnInit {
       this.toStringValue(this.values[configuration.key]) !== this.originalValues[configuration.key]);
     if (changed.length === 0) {
       this.handleInfo('Kaydedilecek değişiklik bulunmuyor');
+      return;
+    }
+    if (changed.some(configuration =>
+      this.isNumber(configuration) && (this.values[configuration.key] === null || this.values[configuration.key] === ''))) {
+      this.handleError(new Error('Sayısal ayarlar boş bırakılamaz'));
       return;
     }
 
@@ -117,16 +122,17 @@ export class SettingsComponent extends BaseComponent implements OnInit {
       });
   }
 
-  private parseValue(value: string, dataType: number): string | number | boolean {
-    if (dataType === 2) return value.toLowerCase() === 'true';
-    if (dataType === 1) {
+  private parseValue(value: string, dataType: number | string): string | number | boolean {
+    const normalizedType = String(dataType).toLowerCase();
+    if (dataType === 2 || normalizedType === 'boolean') return value.toLowerCase() === 'true';
+    if (dataType === 1 || normalizedType === 'number') {
       const numberValue = Number(value);
       return Number.isNaN(numberValue) ? 0 : numberValue;
     }
     return value;
   }
 
-  private toStringValue(value: string | number | boolean | undefined): string {
-    return value === undefined ? '' : String(value);
+  private toStringValue(value: string | number | boolean | null | undefined): string {
+    return value === undefined || value === null ? '' : String(value);
   }
 }
