@@ -325,6 +325,31 @@ public sealed class SystemAdminMfaLoginTests
     }
 
     [Fact]
+    public async Task RefreshToken_WhenFirstRotationSaveHasTransientConcurrency_ShouldRetryWithFreshTracking()
+    {
+        var userId = Guid.NewGuid();
+        var firstUser = CreateSystemAdministrator(id: userId);
+        firstUser.AddRefreshToken(RefreshToken.Create(
+            userId, "retry-refresh-token", DateTime.UtcNow.AddDays(1), "127.0.0.1"));
+        var reloadedUser = CreateSystemAdministrator(id: userId);
+        reloadedUser.AddRefreshToken(RefreshToken.Create(
+            userId, "retry-refresh-token", DateTime.UtcNow.AddDays(1), "127.0.0.1"));
+
+        var repository = new StubUserRepository(firstUser);
+        repository.SetRefreshUsers(firstUser, reloadedUser);
+        var unitOfWork = new RetryOnceConcurrencyUnitOfWork();
+        var handler = new RefreshTokenCommandHandler(
+            repository, new IssuingTokenService(), unitOfWork);
+
+        var result = await handler.Handle(
+            new RefreshTokenCommand("retry-refresh-token"), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        unitOfWork.SaveCalls.Should().Be(2);
+        unitOfWork.ClearTrackingCalls.Should().Be(1);
+    }
+
+    [Fact]
     public async Task RefreshToken_WhenConcurrentRotationOccurs_ShouldReturnInvalidTokenFailure()
     {
         var user = CreateSystemAdministrator();
@@ -345,9 +370,9 @@ public sealed class SystemAdminMfaLoginTests
         result.Error.Code.Should().Be("Auth.InvalidToken");
     }
 
-    private static User CreateSystemAdministrator(bool mfaEnabled = false)
+    private static User CreateSystemAdministrator(bool mfaEnabled = false, Guid? id = null)
     {
-        var user = User.Create(Guid.NewGuid(), "admin@example.com");
+        var user = User.Create(id ?? Guid.NewGuid(), "admin@example.com");
         var role = Role.Create("SystemAdmin", "System administrator", isSystemRole: true);
         var userRole = new UserRole(user.Id, role.Id);
         typeof(UserRole).GetProperty(nameof(UserRole.Role))!.SetValue(userRole, role);
@@ -365,6 +390,15 @@ public sealed class SystemAdminMfaLoginTests
         private readonly Queue<User?> _emailResults = new(emailResults);
         public bool ExternalLoginLookupCalled { get; private set; }
         public bool EmailLookupCalled { get; private set; }
+        private readonly Queue<User?> _refreshResults = new();
+
+        public void SetRefreshUsers(params User?[] users)
+        {
+            foreach (var refreshUser in users)
+            {
+                _refreshResults.Enqueue(refreshUser);
+            }
+        }
 
         public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
         {
@@ -402,7 +436,8 @@ public sealed class SystemAdminMfaLoginTests
         public void Delete(User value) => throw new NotSupportedException();
         public Task<Identity.Application.Queries.GetAllUsers.PagedList<Identity.Application.Queries.GetUserProfile.UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Identity.Application.Queries.GetAllUsers.UserSummaryDto> GetSummaryAsync(Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken) => Task.FromResult<User?>(user);
+        public Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken) =>
+            Task.FromResult(_refreshResults.Count > 0 ? _refreshResults.Dequeue() : user);
         public Task RevokeActiveRefreshTokensAsync(Guid userId, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task RevokeActiveRefreshTokensForInstitutionAsync(Guid institutionId, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<List<User>> GetUsersByRolesAsync(List<string> roleNames, CancellationToken cancellationToken) => throw new NotSupportedException();
@@ -481,6 +516,22 @@ public sealed class SystemAdminMfaLoginTests
             Task.FromException<int>(new ConcurrencyException("RefreshToken", Guid.NewGuid()));
 
         public void ClearTracking() { }
+    }
+
+    private sealed class RetryOnceConcurrencyUnitOfWork : IUnitOfWork
+    {
+        public int SaveCalls { get; private set; }
+        public int ClearTrackingCalls { get; private set; }
+
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+        {
+            SaveCalls++;
+            return SaveCalls == 1
+                ? Task.FromException<int>(new ConcurrencyException("RefreshToken", Guid.NewGuid()))
+                : Task.FromResult(1);
+        }
+
+        public void ClearTracking() => ClearTrackingCalls++;
     }
 
     private sealed class StubGoogleAuthService(
