@@ -90,4 +90,26 @@ public sealed class OwnedSpeedReadingParityTests
             .Should()
             .BeTrue();
     }
+
+    [Fact]
+    public void Parity_allows_owned_only_rows_created_after_cutover()
+    {
+        var row = new OwnedSpeedReadingParityRow(
+            "Users",
+            "user_profiles",
+            "Id",
+            "user_id",
+            SourceCount: 10,
+            OwnedCount: 10,
+            OwnedOnlyCount: 1,
+            SourceChecksum: "same",
+            OwnedChecksum: "same",
+            SourcePayloadChecksum: "same-payload",
+            OwnedPayloadChecksum: "same-payload",
+            FieldParityAvailable: true,
+            MismatchedFields: []);
+
+        row.IsMatch.Should().BeTrue();
+        row.OwnedOnlyCount.Should().Be(1);
+    }
 }

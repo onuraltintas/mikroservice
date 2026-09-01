@@ -16,6 +16,7 @@ public sealed record OwnedSpeedReadingParityRow(
     string OwnedKey,
     int SourceCount,
     int OwnedCount,
+    int OwnedOnlyCount,
     string SourceChecksum,
     string OwnedChecksum,
     string SourcePayloadChecksum,
@@ -241,6 +242,10 @@ public sealed class OwnedSpeedReadingParityChecker(
     {
         var source = await sourceIds.ToListAsync(cancellationToken);
         var target = await ownedIds.ToListAsync(cancellationToken);
+        var sourceIdSet = source.ToHashSet();
+        var comparableTarget = target
+            .Where(sourceIdSet.Contains)
+            .ToArray();
         var sourceEntityType = FindEntityClrType(sourceIds.Expression);
         var ownedEntityType = FindEntityClrType(ownedIds.Expression);
         var sourcePayloadChecksum = OwnedSpeedReadingParityHash.ComputePayload([]);
@@ -261,7 +266,7 @@ public sealed class OwnedSpeedReadingParityChecker(
             var ownedRows = await LoadEntityRowsAsync(
                 owned,
                 ownedEntityType,
-                target.ToHashSet(),
+                comparableTarget.ToHashSet(),
                 FindProjectedPropertyName(ownedIds.Expression) ?? "Id",
                 cancellationToken);
 
@@ -300,9 +305,10 @@ public sealed class OwnedSpeedReadingParityChecker(
             sourceKey,
             ownedKey,
             source.Count,
-            target.Count,
+            comparableTarget.Length,
+            target.Count - comparableTarget.Length,
             OwnedSpeedReadingParityHash.Compute(source),
-            OwnedSpeedReadingParityHash.Compute(target),
+            OwnedSpeedReadingParityHash.Compute(comparableTarget),
             sourcePayloadChecksum,
             ownedPayloadChecksum,
             fieldParityAvailable,
@@ -466,6 +472,14 @@ public sealed class OwnedSpeedReadingParityChecker(
                 ["TypeCode"] = _exerciseTypeNames.GetValueOrDefault(exercise.ExerciseTypeId, string.Empty),
                 ["CreatorId"] = exercise.CreatedBy,
                 ["IsActive"] = true
+            };
+        }
+
+        if (sourceTable == "ReadingTexts" && row is LegacyReadingText readingText)
+        {
+            return new Dictionary<string, object?>
+            {
+                ["WordCount"] = CountWords(readingText.Content)
             };
         }
 
