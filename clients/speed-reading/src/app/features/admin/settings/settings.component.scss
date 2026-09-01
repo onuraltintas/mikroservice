@@ -47,6 +47,116 @@
     }
 }
 
+.mfa-card {
+    margin-bottom: 1rem;
+}
+
+.mfa-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+
+    h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 500;
+        color: #333;
+    }
+
+    p {
+        margin: 0.4rem 0 0;
+        color: #666;
+    }
+
+    mat-icon {
+        flex: 0 0 auto;
+    }
+}
+
+.mfa-setup-block {
+    margin-top: 1rem;
+
+    p {
+        margin: 0 0 1rem;
+        color: #555;
+    }
+}
+
+.mfa-inline-form {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    mat-form-field {
+        flex: 1;
+    }
+
+    button {
+        min-height: 3.5rem;
+        white-space: nowrap;
+    }
+}
+
+.mfa-secret {
+    code {
+        display: block;
+        padding: 0.75rem;
+        overflow-wrap: anywhere;
+        border-radius: 0.35rem;
+        background: #eef2ff;
+        color: #312e81;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+    }
+
+    small {
+        display: block;
+        margin-top: 0.65rem;
+        color: #666;
+    }
+}
+
+.mfa-message {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 0.4rem;
+}
+
+.mfa-success {
+    color: #166534;
+    background: #f0fdf4;
+}
+
+.mfa-error {
+    color: #991b1b;
+    background: #fef2f2;
+}
+
+.mfa-recovery {
+    color: #92400e;
+    background: #fffbeb;
+}
+
+.recovery-code-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+
+    code {
+        padding: 0.45rem 0.6rem;
+        border-radius: 0.25rem;
+        background: white;
+        color: #292524;
+        text-align: center;
+        font-weight: 600;
+    }
+}
+
 .settings-card {
     margin-bottom: 1rem;
 
@@ -96,6 +206,19 @@
 
     .header-actions {
         flex-wrap: wrap;
+    }
+
+    .mfa-inline-form {
+        flex-direction: column;
+        align-items: stretch;
+
+        button {
+            min-height: 2.75rem;
+        }
+    }
+
+    .mfa-card-header {
+        flex-direction: column;
     }
 }
 

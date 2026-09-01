@@ -17,6 +17,68 @@
         </div>
     </div>
 
+    <mat-card *ngIf="!mfaStatusLoading" class="mfa-card">
+        <div class="mfa-card-header">
+            <div>
+                <h2>İki Adımlı Doğrulama (MFA)</h2>
+                <p>SystemAdmin işlemlerini güvenli hale getirmek için authenticator uygulaması kullanın.</p>
+            </div>
+            <mat-icon [color]="mfaEnabled ? 'primary' : 'warn'">security</mat-icon>
+        </div>
+
+        <div *ngIf="mfaStatusError" class="mfa-message mfa-error">
+            MFA durumu yüklenemedi. Sayfayı yenileyip tekrar deneyin.
+        </div>
+
+        <ng-container *ngIf="!mfaStatusError">
+            <div *ngIf="mfaRecoveryCodes.length > 0" class="mfa-message mfa-recovery">
+                <strong>Kurtarma kodları</strong>
+                <span>Bu kodlar yalnızca bir kez gösterilir. Güvenli bir yerde saklayın.</span>
+                <div class="recovery-code-grid">
+                    <code *ngFor="let code of mfaRecoveryCodes">{{ code }}</code>
+                </div>
+            </div>
+
+            <div *ngIf="mfaEnabled && mfaRecoveryCodes.length === 0" class="mfa-message mfa-success">
+                MFA hesabınızda etkin.
+            </div>
+
+            <div *ngIf="!mfaEnabled && !mfaSetup" class="mfa-setup-block">
+                <p>MFA kapalı. Kurulumu başlatmak için mevcut şifrenizi doğrulayın.</p>
+                <div class="mfa-inline-form">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Mevcut şifre</mat-label>
+                        <input matInput type="password" autocomplete="current-password"
+                            [(ngModel)]="mfaCurrentPassword" placeholder="Mevcut şifreniz">
+                    </mat-form-field>
+                    <button mat-raised-button color="primary" type="button" (click)="startMfaSetup()"
+                        [disabled]="mfaLoading || !mfaCurrentPassword.trim()">
+                        <mat-icon>lock</mat-icon>
+                        {{ mfaLoading ? 'Kurulum başlatılıyor...' : 'MFA’yı etkinleştir' }}
+                    </button>
+                </div>
+            </div>
+
+            <div *ngIf="mfaSetup && !mfaEnabled" class="mfa-setup-block mfa-secret">
+                <p>Authenticator uygulamanıza aşağıdaki anahtarı ekleyin:</p>
+                <code>{{ mfaSetup.secret }}</code>
+                <small>Ardından uygulamanın ürettiği 6 haneli kodu girin. Kurulum anahtarını paylaşmayın.</small>
+                <div class="mfa-inline-form">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Doğrulama kodu</mat-label>
+                        <input matInput type="text" inputmode="numeric" autocomplete="one-time-code"
+                            maxlength="6" [(ngModel)]="mfaCode" placeholder="123456">
+                    </mat-form-field>
+                    <button mat-raised-button color="primary" type="button" (click)="enableMfa()"
+                        [disabled]="mfaEnabling || !isMfaCodeValid()">
+                        <mat-icon>verified_user</mat-icon>
+                        {{ mfaEnabling ? 'Etkinleştiriliyor...' : 'Kodu doğrula ve etkinleştir' }}
+                    </button>
+                </div>
+            </div>
+        </ng-container>
+    </mat-card>
+
     <mat-card *ngIf="loading()" class="loading-card">
         <mat-spinner></mat-spinner>
     </mat-card>

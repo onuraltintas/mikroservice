@@ -30,6 +30,23 @@ describe('UsersService', () => {
     request.flush({ items: [], totalCount: 0, pageNumber: 1, pageSize: 100 });
   });
 
+  it('loads the authenticated user profile including MFA status', () => {
+    service.getMyProfile().subscribe(profile => expect(profile.mfaEnabled).toBeFalse());
+
+    const request = http.expectOne('/api/v1/users/me');
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      userId: 'user-1',
+      email: 'admin@example.com',
+      firstName: 'System',
+      lastName: 'Admin',
+      roles: ['SystemAdmin'],
+      isActive: true,
+      emailConfirmed: true,
+      mfaEnabled: false
+    });
+  });
+
   it('sends admin user creation using the identity provisioning contract', () => {
     service.createUser({
       email: 'new-student@example.com',

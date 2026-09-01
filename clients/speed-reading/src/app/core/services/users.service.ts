@@ -105,6 +105,12 @@ export class UsersService {
     );
   }
 
+  getMyProfile(): Observable<UserDto> {
+    return this.http.get<UserDto>(`${this.API_URL}/me`).pipe(
+      map(user => this.normalizeUser(user))
+    );
+  }
+
   /**
    * Create new user
    * Backend returns: ApiResponse<CreateUserResponse>

@@ -145,11 +145,8 @@ describe('AuthService', () => {
     expect(JSON.parse(localStorage.getItem('currentUser') || '{}').token).toBeUndefined();
   });
 
-  it('starts authenticated MFA setup with the current password', () => {
-    service.startAuthenticatedMfaSetup('CurrentPassword1!').subscribe(response => {
-      expect(response.setupToken).toBe('setup-token');
-      expect(response.challengeToken).toBe('challenge-token');
-    });
+  it('starts authenticated MFA setup with the current password', async () => {
+    const responsePromise = service.startAuthenticatedMfaSetup('CurrentPassword1!');
 
     const request = http.expectOne('/api/auth/mfa/setup-authenticated');
     expect(request.request.method).toBe('POST');
@@ -161,9 +158,13 @@ describe('AuthService', () => {
       setupToken: 'setup-token',
       challengeToken: 'challenge-token'
     });
+
+    const response = await responsePromise;
+    expect(response.setupToken).toBe('setup-token');
+    expect(response.challengeToken).toBe('challenge-token');
   });
 
-  it('enables MFA and promotes the returned access token to the active session', () => {
+  it('enables MFA and promotes the returned access token to the active session', async () => {
     const currentUser = {
       id: 'system-admin',
       token: 'old-token',
@@ -176,10 +177,7 @@ describe('AuthService', () => {
     (service as any).currentUserSubject.next(currentUser);
     (service as any).accessToken = 'old-token';
 
-    service.enableMfa('challenge-token', 'setup-token', '123456').subscribe(recoveryCodes => {
-      expect(recoveryCodes).toEqual(['RECOVERY-ONE']);
-      expect(service.token).toBeTruthy();
-    });
+    const recoveryCodesPromise = service.enableMfa('challenge-token', 'setup-token', '123456');
 
     const request = http.expectOne('/api/auth/mfa/enable');
     expect(request.request.method).toBe('POST');
@@ -195,5 +193,18 @@ describe('AuthService', () => {
       expiresInMinutes: 15,
       recoveryCodes: ['RECOVERY-ONE']
     });
+
+    const recoveryCodes = await recoveryCodesPromise;
+    expect(recoveryCodes).toEqual(['RECOVERY-ONE']);
+    expect(service.token).toBeTruthy();
+  });
+
+  it('rejects MFA setup codes unless they contain exactly six digits', async () => {
+    await expectAsync(service.enableMfa('challenge-token', 'setup-token', '12345'))
+      .toBeRejectedWithError('MFA code must contain exactly six digits.');
+    await expectAsync(service.enableMfa('challenge-token', 'setup-token', '1234567'))
+      .toBeRejectedWithError('MFA code must contain exactly six digits.');
+    await expectAsync(service.enableMfa('challenge-token', 'setup-token', '12a456'))
+      .toBeRejectedWithError('MFA code must contain exactly six digits.');
   });
 });

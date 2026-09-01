@@ -1,10 +1,24 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, map, of, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, firstValueFrom, map, of, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthResponse, LoginRequest, RegisterRequest } from '../models/user.model';
 import { environment } from '../../../environments/environment';
 import { SettingsService } from './settings.service';
+
+export interface MfaSetupResponse {
+  secret: string;
+  otpAuthUri: string;
+  setupToken: string;
+  challengeToken?: string | null;
+}
+
+interface MfaSessionResponse {
+  accessToken: string;
+  tokenType: string;
+  expiresInMinutes: number;
+  recoveryCodes?: string[] | null;
+}
 
 /**
  * Authentication Service - Refactored for ApiResponse<T> compatibility
@@ -352,5 +366,38 @@ export class AuthService {
    */
   changePassword(data: any): Observable<any> {
     return this.http.post(`${this.AUTH_URL}/change-password`, data, { withCredentials: true });
+  }
+
+  async startAuthenticatedMfaSetup(currentPassword: string): Promise<MfaSetupResponse> {
+    return firstValueFrom(this.http.post<MfaSetupResponse>(
+      `${this.AUTH_URL}/mfa/setup-authenticated`,
+      { currentPassword },
+      { withCredentials: true }
+    ));
+  }
+
+  async enableMfa(challengeToken: string, setupToken: string, code: string): Promise<string[]> {
+    if (!/^\d{6}$/.test(code)) {
+      throw new Error('MFA code must contain exactly six digits.');
+    }
+
+    const response = await firstValueFrom(this.http.post<MfaSessionResponse>(
+      `${this.AUTH_URL}/mfa/enable`,
+      { challengeToken, setupToken, code },
+      { withCredentials: true }
+    ));
+
+    const currentUser = this.currentUserValue;
+    if (currentUser) {
+      this.setUser(this.normalizeAuthResponse({
+        ...currentUser,
+        token: response.accessToken,
+        refreshToken: ''
+      }));
+    } else {
+      this.accessToken = response.accessToken;
+    }
+
+    return response.recoveryCodes ?? [];
   }
 }
