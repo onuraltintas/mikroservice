@@ -16,6 +16,9 @@ export interface AuthResponse {
   learningStyle?: string;
   institutionId?: string;
   institutionName?: string;
+  requiresMfa?: boolean;
+  mfaEnrollmentRequired?: boolean;
+  mfaChallengeToken?: string | null;
 }
 
 export interface RegisterInstitutionRequest {

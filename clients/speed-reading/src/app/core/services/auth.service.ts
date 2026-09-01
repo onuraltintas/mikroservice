@@ -101,7 +101,9 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.AUTH_URL}/login`, credentials, { withCredentials: true }).pipe(
       map(response => this.normalizeAuthResponse(response)),
       tap(response => {
-        this.setUser(response);
+        if (!response.requiresMfa) {
+          this.setUser(response);
+        }
       })
     );
   }
@@ -195,7 +197,9 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.AUTH_URL}/google-login`, payload, { withCredentials: true }).pipe(
       map(response => this.normalizeAuthResponse(response)),
       tap(response => {
-        this.setUser(response);
+        if (!response.requiresMfa) {
+          this.setUser(response);
+        }
       })
     );
   }
@@ -376,6 +380,13 @@ export class AuthService {
     ));
   }
 
+  async startMfaSetup(challengeToken: string): Promise<MfaSetupResponse> {
+    return firstValueFrom(this.http.post<MfaSetupResponse>(
+      `${this.AUTH_URL}/mfa/setup`,
+      { challengeToken }
+    ));
+  }
+
   async enableMfa(challengeToken: string, setupToken: string, code: string): Promise<string[]> {
     if (!/^\d{6}$/.test(code)) {
       throw new Error('MFA code must contain exactly six digits.');
@@ -387,17 +398,30 @@ export class AuthService {
       { withCredentials: true }
     ));
 
-    const currentUser = this.currentUserValue;
-    if (currentUser) {
-      this.setUser(this.normalizeAuthResponse({
-        ...currentUser,
-        token: response.accessToken,
-        refreshToken: ''
-      }));
-    } else {
-      this.accessToken = response.accessToken;
-    }
+    this.promoteMfaSession(response);
 
     return response.recoveryCodes ?? [];
+  }
+
+  async verifyMfa(
+    challengeToken: string,
+    code: string | null,
+    recoveryCode: string | null = null): Promise<void> {
+    const response = await firstValueFrom(this.http.post<MfaSessionResponse>(
+      `${this.AUTH_URL}/mfa/verify`,
+      { challengeToken, code, recoveryCode },
+      { withCredentials: true }
+    ));
+
+    this.promoteMfaSession(response);
+  }
+
+  private promoteMfaSession(response: MfaSessionResponse): void {
+    const currentUser = this.currentUserValue;
+    this.setUser(this.normalizeAuthResponse({
+      ...(currentUser ?? {}),
+      token: response.accessToken,
+      refreshToken: ''
+    } as AuthResponse));
   }
 }

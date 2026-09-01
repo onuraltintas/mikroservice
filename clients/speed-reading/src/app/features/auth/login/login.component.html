@@ -14,6 +14,7 @@
         <mat-card-title>Giriş Yap</mat-card-title>
       </mat-card-header>
       <mat-card-content>
+        @if (mfaStage === 'none') {
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>E-posta</mat-label>
@@ -84,6 +85,55 @@
             <a routerLink="/auth/register-school">Okulunuzu Kaydedin</a>
           </div>
         </form>
+        } @else if (mfaStage === 'recovery') {
+        <section class="mfa-login-panel">
+          <h3>İki adımlı doğrulama etkinleştirildi</h3>
+          <p>Bu kurtarma kodlarını güvenli bir yerde saklayın. Her biri yalnızca bir kez kullanılabilir.</p>
+          <div class="mfa-recovery-codes">
+            @for (code of mfaRecoveryCodes; track code) {
+            <code>{{ code }}</code>
+            }
+          </div>
+          <button mat-raised-button color="primary" type="button" class="full-width"
+            (click)="finishMfaEnrollment()">Devam et</button>
+        </section>
+        } @else {
+        <form (ngSubmit)="submitMfa()" class="mfa-login-panel">
+          <h3>{{ mfaStage === 'setup' ? 'İki adımlı doğrulamayı etkinleştir' : 'İki adımlı doğrulama' }}</h3>
+          @if (mfaStage === 'setup') {
+          <p>Authenticator uygulamanıza aşağıdaki anahtarı ekleyin ve üretilen 6 haneli kodu girin.</p>
+          <code class="mfa-secret">{{ mfaSecret }}</code>
+          }
+          @if (mfaUsingRecoveryCode) {
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Kurtarma kodu</mat-label>
+            <input matInput [(ngModel)]="mfaRecoveryCode" name="mfaRecoveryCode" autocomplete="one-time-code">
+          </mat-form-field>
+          } @else {
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Doğrulama kodu</mat-label>
+            <input matInput type="text" inputmode="numeric" maxlength="6" [(ngModel)]="mfaCode" name="mfaCode"
+              autocomplete="one-time-code">
+          </mat-form-field>
+          }
+          @if (error) {
+          <div class="error-message">{{ error }}</div>
+          }
+          <button mat-raised-button color="primary" type="submit" class="full-width"
+            [disabled]="loading || (mfaUsingRecoveryCode ? !mfaRecoveryCode.trim() : !isMfaCodeValid())">
+            @if (loading) {
+            <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+            {{ mfaStage === 'setup' ? 'Kodu doğrula ve etkinleştir' : 'Giriş yap' }}
+            }
+          </button>
+          @if (mfaStage === 'verify') {
+          <button mat-button type="button" class="full-width" (click)="toggleRecoveryCode()">
+            {{ mfaUsingRecoveryCode ? 'Authenticator kodu kullan' : 'Kurtarma kodu kullan' }}
+          </button>
+          }
+        </form>
+        }
       </mat-card-content>
     </mat-card>
   </div>

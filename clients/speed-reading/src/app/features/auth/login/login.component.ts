@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, PLATFORM_ID, Inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
@@ -14,6 +14,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { SubscriptionService } from '../../../core/services/subscription.service';
+import { AuthResponse } from '../../../core/models/user.model';
 import { environment } from '../../../../environments/environment';
 
 declare const google: any;
@@ -23,6 +24,7 @@ declare const google: any;
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     RouterLink,
     MatCardModule,
@@ -53,6 +55,15 @@ export class LoginComponent implements OnInit {
   unverifiedEmail = '';
   resendingEmail = false;
   hidePassword = true;
+  mfaStage: 'none' | 'setup' | 'verify' | 'recovery' = 'none';
+  mfaSecret = '';
+  mfaOtpAuthUri = '';
+  mfaRecoveryCodes: string[] = [];
+  mfaChallengeToken = '';
+  mfaSetupToken = '';
+  mfaCode = '';
+  mfaRecoveryCode = '';
+  mfaUsingRecoveryCode = false;
 
   constructor() {
     this.loginForm = this.fb.group({
@@ -154,33 +165,13 @@ export class LoginComponent implements OnInit {
 
     this.authService.googleAuth(response.credential).subscribe({
       next: (authResponse) => {
-        const role = authResponse.roles?.[0];
-        console.log('Google Auth Role:', role); // Debug log
-
-        if (!role) {
-          this.toaster.error('Kullanıcı rolü bulunamadı.', 5000);
+        if (authResponse.requiresMfa) {
+          void this.beginMfa(
+            authResponse.mfaChallengeToken ?? null,
+            authResponse.mfaEnrollmentRequired === true);
           return;
         }
-
-        const normalizedRole = role.toLowerCase();
-
-        if (normalizedRole === 'student') {
-          this.navigateStudent();
-        } else if (normalizedRole === 'teacher') {
-          this.router.navigate(['/teacher/dashboard']);
-        } else if (normalizedRole === 'institutionadmin') {
-          this.router.navigate(['/teacher/dashboard']);
-        } else if (normalizedRole === 'admin' || normalizedRole === 'systemadmin') {
-          this.router.navigate(['/admin/dashboard']);
-        } else if (normalizedRole === 'editor') {
-          this.router.navigate(['/admin/dashboard']);
-        } else if (normalizedRole === 'coach') {
-          this.router.navigate(['/coaching/dashboard']);
-        } else {
-          console.warn('Unknown role:', role);
-          this.toaster.error(`Tanımlanamayan kullanıcı rolü: ${role}`, 5000);
-          this.router.navigate(['/']);
-        }
+        this.handleAuthenticatedResponse(authResponse);
       },
       error: (err) => {
         if (err.error?.Message) {
@@ -220,33 +211,13 @@ export class LoginComponent implements OnInit {
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (response: any) => {
-          const role = response.roles?.[0];
-          console.log('Login Role:', role); // Debug log
-
-          if (!role) {
-            this.toaster.error('Kullanıcı rolü bulunamadı.', 5000);
+          if (response.requiresMfa) {
+            void this.beginMfa(
+              response.mfaChallengeToken ?? null,
+              response.mfaEnrollmentRequired === true);
             return;
           }
-
-          const normalizedRole = role.toLowerCase();
-
-          if (normalizedRole === 'student') {
-            this.navigateStudent();
-          } else if (normalizedRole === 'teacher') {
-            this.router.navigate(['/teacher/dashboard']);
-          } else if (normalizedRole === 'institutionadmin') {
-            this.router.navigate(['/teacher/dashboard']);
-          } else if (normalizedRole === 'admin' || normalizedRole === 'systemadmin') {
-            this.router.navigate(['/admin/dashboard']);
-          } else if (normalizedRole === 'editor') {
-            this.router.navigate(['/admin/dashboard']);
-          } else if (normalizedRole === 'coach') {
-            this.router.navigate(['/coaching/dashboard']);
-          } else {
-            console.warn('Unknown role:', role);
-            this.toaster.error(`Tanımlanamayan kullanıcı rolü: ${role}`, 5000);
-            this.router.navigate(['/']);
-          }
+          this.handleAuthenticatedResponse(response);
         },
         error: (err) => {
           // Check if error is about email verification
@@ -273,6 +244,140 @@ export class LoginComponent implements OnInit {
           }
         }
       });
+  }
+
+  async submitMfa(): Promise<void> {
+    const code = this.mfaCode.trim();
+    const recoveryCode = this.mfaRecoveryCode.trim();
+    if (!this.mfaChallengeToken || this.loading) return;
+    if (this.mfaStage === 'setup' && !/^\d{6}$/.test(code)) return;
+    if (this.mfaStage === 'verify' && !this.mfaUsingRecoveryCode && !/^\d{6}$/.test(code)) return;
+    if (this.mfaStage === 'verify' && this.mfaUsingRecoveryCode && !recoveryCode) return;
+
+    this.loading = true;
+    this.error = '';
+
+    try {
+      if (this.mfaStage === 'setup') {
+        this.mfaRecoveryCodes = await this.authService.enableMfa(
+          this.mfaChallengeToken,
+          this.mfaSetupToken,
+          code);
+        this.mfaCode = '';
+        this.mfaStage = 'recovery';
+        this.toaster.success('İki adımlı doğrulama etkinleştirildi.', 5000);
+        return;
+      }
+
+      await this.authService.verifyMfa(
+        this.mfaChallengeToken,
+        this.mfaUsingRecoveryCode ? null : code,
+        this.mfaUsingRecoveryCode ? recoveryCode : null);
+      this.resetMfaState();
+      this.handleAuthenticatedResponse(this.authService.currentUserValue);
+    } catch (error) {
+      this.error = this.readErrorMessage(error, 'MFA doğrulama kodu geçersiz.');
+      this.toaster.error(this.error, 5000);
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  finishMfaEnrollment(): void {
+    this.resetMfaState();
+    this.handleAuthenticatedResponse(this.authService.currentUserValue);
+  }
+
+  toggleRecoveryCode(): void {
+    this.mfaUsingRecoveryCode = !this.mfaUsingRecoveryCode;
+    this.mfaCode = '';
+    this.mfaRecoveryCode = '';
+    this.error = '';
+  }
+
+  isMfaCodeValid(): boolean {
+    return /^\d{6}$/.test(this.mfaCode.trim());
+  }
+
+  private async beginMfa(challengeToken: string | null, enrollmentRequired: boolean): Promise<void> {
+    this.loading = true;
+    this.error = '';
+    try {
+      if (!challengeToken) {
+        throw new Error('MFA doğrulama oturumu başlatılamadı.');
+      }
+
+      this.mfaChallengeToken = challengeToken;
+      this.mfaCode = '';
+      this.mfaRecoveryCode = '';
+      this.mfaUsingRecoveryCode = false;
+
+      if (enrollmentRequired) {
+        const setup = await this.authService.startMfaSetup(challengeToken);
+        this.mfaSecret = setup.secret;
+        this.mfaOtpAuthUri = setup.otpAuthUri;
+        this.mfaSetupToken = setup.setupToken;
+        this.mfaChallengeToken = setup.challengeToken ?? challengeToken;
+        this.mfaStage = 'setup';
+      } else {
+        this.mfaStage = 'verify';
+      }
+    } catch (error) {
+      this.error = this.readErrorMessage(error, 'MFA doğrulaması başlatılamadı.');
+      this.toaster.error(this.error, 5000);
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  private handleAuthenticatedResponse(response: AuthResponse | null): void {
+    this.loading = false;
+    const role = response?.roles?.[0];
+    console.log('Login Role:', role);
+
+    if (!role) {
+      this.toaster.error('Kullanıcı rolü bulunamadı.', 5000);
+      return;
+    }
+
+    const normalizedRole = role.toLowerCase();
+    if (normalizedRole === 'student') {
+      this.navigateStudent();
+    } else if (normalizedRole === 'teacher') {
+      this.router.navigate(['/teacher/dashboard']);
+    } else if (normalizedRole === 'institutionadmin') {
+      this.router.navigate(['/teacher/dashboard']);
+    } else if (normalizedRole === 'admin' || normalizedRole === 'systemadmin') {
+      this.router.navigate(['/admin/dashboard']);
+    } else if (normalizedRole === 'editor') {
+      this.router.navigate(['/admin/dashboard']);
+    } else if (normalizedRole === 'coach') {
+      this.router.navigate(['/coaching/dashboard']);
+    } else {
+      console.warn('Unknown role:', role);
+      this.toaster.error(`Tanımlanamayan kullanıcı rolü: ${role}`, 5000);
+      this.router.navigate(['/']);
+    }
+  }
+
+  private resetMfaState(): void {
+    this.mfaStage = 'none';
+    this.mfaSecret = '';
+    this.mfaOtpAuthUri = '';
+    this.mfaRecoveryCodes = [];
+    this.mfaChallengeToken = '';
+    this.mfaSetupToken = '';
+    this.mfaCode = '';
+    this.mfaRecoveryCode = '';
+    this.mfaUsingRecoveryCode = false;
+  }
+
+  private readErrorMessage(error: any, fallback: string): string {
+    return error?.error?.Message
+      || error?.error?.message
+      || error?.error?.description
+      || error?.message
+      || fallback;
   }
 
   private navigateStudent(): void {

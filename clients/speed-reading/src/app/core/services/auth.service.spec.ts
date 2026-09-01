@@ -84,6 +84,23 @@ describe('AuthService', () => {
     });
   });
 
+  it('keeps an MFA login challenge outside the authenticated session state', () => {
+    let response: AuthResponse | undefined;
+    service.login({ email: 'admin@example.com', password: 'Password1!' }).subscribe(value => response = value);
+
+    const request = http.expectOne('/api/auth/login');
+    request.flush({
+      requiresMfa: true,
+      mfaEnrollmentRequired: false,
+      mfaChallengeToken: 'challenge-token'
+    });
+
+    expect(response?.requiresMfa).toBeTrue();
+    expect(response?.mfaChallengeToken).toBe('challenge-token');
+    expect(service.currentUserValue).toBeNull();
+    expect(service.token).toBeNull();
+  });
+
   it('refreshes through the HttpOnly cookie without a client-side refresh token', () => {
     service.refreshToken().subscribe();
 
@@ -197,6 +214,29 @@ describe('AuthService', () => {
     const recoveryCodes = await recoveryCodesPromise;
     expect(recoveryCodes).toEqual(['RECOVERY-ONE']);
     expect(service.token).toBeTruthy();
+  });
+
+  it('verifies MFA and promotes the returned access token to the active session', async () => {
+    const verifyPromise = service.verifyMfa('challenge-token', '123456');
+
+    const request = http.expectOne('/api/auth/mfa/verify');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.withCredentials).toBeTrue();
+    expect(request.request.body).toEqual({
+      challengeToken: 'challenge-token',
+      code: '123456',
+      recoveryCode: null
+    });
+    request.flush({
+      accessToken: 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJzeXN0ZW0tYWRtaW4iLCJyb2xlIjoiU3lzdGVtQWRtaW4iLCJleHAiOjQxMDI0NDQ4MDB9.',
+      tokenType: 'Bearer',
+      expiresInMinutes: 15
+    });
+
+    await verifyPromise;
+
+    expect(service.token).toBeTruthy();
+    expect(service.currentUserValue?.roles).toEqual(['SystemAdmin']);
   });
 
   it('rejects MFA setup codes unless they contain exactly six digits', async () => {
