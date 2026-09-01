@@ -132,6 +132,12 @@ public class IdentityDbContext : DbContext
             var entityId = keyProperty is null
                 ? "unknown"
                 : entry!.Property(keyProperty.Name).CurrentValue ?? "unknown";
+            Log.Error(
+                exception,
+                "Database concurrency conflict for {EntityName} {EntityId}. Tracked state: {EntityState}.",
+                entityName,
+                entityId,
+                entry?.State.ToString() ?? "unknown");
             throw new EduPlatform.Shared.Kernel.Exceptions.ConcurrencyException(entityName, entityId);
         }
     }
