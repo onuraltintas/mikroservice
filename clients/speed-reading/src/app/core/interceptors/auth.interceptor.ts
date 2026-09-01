@@ -6,15 +6,40 @@ import { catchError, switchMap, throwError, Observable, BehaviorSubject, filter,
 
 let isRefreshing = false;
 const refreshTokenSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
+const anonymousAuthEndpoints = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/register/student',
+  '/auth/register/teacher',
+  '/auth/register/institution',
+  '/auth/register/parent',
+  '/auth/register-student',
+  '/auth/register-teacher',
+  '/auth/register-institution',
+  '/auth/register-parent',
+  '/auth/refresh-token',
+  '/auth/confirm-email',
+  '/auth/resend-verification-email',
+  '/auth/google-login',
+  '/auth/google',
+  '/auth/mfa/setup',
+  '/auth/mfa/enable',
+  '/auth/mfa/verify',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/revoke-token'
+];
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router); // Inject Router at top level
   const token = authService.token;
   const isAuthRequest = req.url.includes('/auth/');
+  const isAnonymousAuthRequest = anonymousAuthEndpoints.some(endpoint => req.url.endsWith(endpoint));
 
-  // Auth endpoints use the HttpOnly refresh cookie and must not receive a stale access token.
-  if (token && !isAuthRequest) {
+  // Anonymous auth endpoints use only the HttpOnly refresh cookie. Protected auth endpoints
+  // (for example MFA setup and Google account linking) still require the access token.
+  if (token && (!isAuthRequest || !isAnonymousAuthRequest)) {
     req = addToken(req, token);
   }
 
