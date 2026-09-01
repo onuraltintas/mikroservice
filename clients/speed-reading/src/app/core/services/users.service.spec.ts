@@ -83,10 +83,11 @@ describe('UsersService', () => {
   });
 
   it('uses the Identity admin change-password contract', () => {
-    service.adminResetPassword('user-1', 'NewPassword!123').subscribe();
+    service.adminResetPassword('user-1', 'NewPassword!123', true).subscribe();
 
     const request = http.expectOne('/api/v1/users/user-1/change-password');
     expect(request.request.method).toBe('POST');
+    expect(request.request.headers.get('X-Skip-Forbidden-Redirect')).toBe('true');
     expect(request.request.body).toEqual({ password: 'NewPassword!123' });
     request.flush(null);
   });
@@ -108,6 +109,7 @@ describe('UsersService', () => {
     expect(http.expectOne('/api/v1/users/user-1/revoke-email-confirmation').request.method).toBe('POST');
     const getSessionsRequest = http.expectOne(request =>
       request.url === '/api/v1/users/user-1/sessions' && request.method === 'GET');
+    expect(getSessionsRequest.request.headers.get('X-Skip-Forbidden-Redirect')).toBe('true');
     const revokeAllSessionsRequest = http.expectOne(request =>
       request.url === '/api/v1/users/user-1/sessions' && request.method === 'DELETE');
     const resetMfaRequest = http.expectOne('/api/v1/users/user-1/mfa/reset');

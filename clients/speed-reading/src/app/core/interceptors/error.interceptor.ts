@@ -33,9 +33,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             return throwError(() => error);
 
           case 403:
-            // Forbidden - redirect to 403 page
+            // Modal-level access management can handle this response locally.
             errorMessage = 'Bu işlem için yetkiniz yok';
-            router.navigate(['/error/403']);
+            if (!req.headers.has('X-Skip-Forbidden-Redirect')) {
+              router.navigate(['/error/403']);
+            }
             break;
 
           case 404:

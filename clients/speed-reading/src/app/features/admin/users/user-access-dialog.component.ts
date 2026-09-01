@@ -48,7 +48,7 @@ import { PASSWORD_ERROR_MESSAGES, strongPasswordValidator } from '../../../share
         <div class="password-row">
           <mat-form-field appearance="outline">
             <mat-label>Yeni parola</mat-label>
-            <input matInput [type]="hidePassword ? 'password' : 'text'" [formControl]="newPassword" autocomplete="new-password">
+            <input matInput [type]="hidePassword ? 'password' : 'text'" [formControl]="newPassword" [disabled]="processing || accessUnavailable" autocomplete="new-password">
             <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword" [attr.aria-label]="hidePassword ? 'Parolayı göster' : 'Parolayı gizle'">
               <mat-icon>{{ hidePassword ? 'visibility' : 'visibility_off' }}</mat-icon>
             </button>
@@ -56,15 +56,16 @@ import { PASSWORD_ERROR_MESSAGES, strongPasswordValidator } from '../../../share
             <mat-error *ngIf="newPassword.hasError('required')">Parola zorunludur.</mat-error>
             <mat-error *ngIf="newPassword.hasError('passwordStrength')">{{ passwordStrengthMessage }}</mat-error>
           </mat-form-field>
-          <button mat-flat-button color="primary" (click)="resetPassword()" [disabled]="processing || newPassword.invalid">
+          <button mat-flat-button color="primary" (click)="resetPassword()" [disabled]="processing || accessUnavailable || newPassword.invalid">
             <mat-icon>vpn_key</mat-icon> Parolayı sıfırla
           </button>
         </div>
       </section>
 
       <div *ngIf="loading()" class="loading"><mat-spinner diameter="32"></mat-spinner></div>
-      <p *ngIf="!loading() && sessions.length === 0" class="empty">Aktif oturum bulunmuyor.</p>
-      <mat-list *ngIf="!loading() && sessions.length > 0">
+      <p *ngIf="!loading() && accessUnavailable" class="error-message">{{ accessErrorMessage }}</p>
+      <p *ngIf="!loading() && !accessUnavailable && sessions.length === 0" class="empty">Aktif oturum bulunmuyor.</p>
+      <mat-list *ngIf="!loading() && !accessUnavailable && sessions.length > 0">
         <mat-list-item *ngFor="let session of sessions">
           <mat-icon matListItemIcon>devices</mat-icon>
           <div matListItemTitle>{{ session.createdByIp || 'IP bilgisi yok' }}</div>
@@ -95,6 +96,7 @@ import { PASSWORD_ERROR_MESSAGES, strongPasswordValidator } from '../../../share
     .password-row mat-form-field { flex: 1 1 320px; }
     .loading { display: grid; place-items: center; min-height: 100px; }
     .empty { color: #6b7280; padding: 24px 0; }
+    .error-message { color: #b91c1c; padding: 24px 0; }
     @media (max-width: 600px) { mat-dialog-content { min-width: 0; } }
   `]
 })
@@ -103,6 +105,8 @@ export class UserAccessDialogComponent extends BaseComponent implements OnInit {
 
   sessions: UserSessionDto[] = [];
   processing = false;
+  accessUnavailable = false;
+  accessErrorMessage = '';
   hidePassword = true;
   newPassword = new FormControl('', {
     nonNullable: true,
@@ -125,12 +129,20 @@ export class UserAccessDialogComponent extends BaseComponent implements OnInit {
   }
 
   loadSessions(): void {
+    this.accessUnavailable = false;
+    this.accessErrorMessage = '';
     this.loading.set(true);
     this.usersService.getSessions(this.data.id)
       .pipe(takeUntil(this.destroy$), finalize(() => this.loading.set(false)))
       .subscribe({
         next: sessions => this.sessions = sessions,
-        error: () => this.toaster.error('Oturumlar yüklenirken hata oluştu', 3000)
+        error: (error: any) => {
+          this.accessUnavailable = true;
+          this.accessErrorMessage = error?.status === 403
+            ? 'Bu yönetim işlemi için SystemAdmin hesabında MFA doğrulaması gerekir.'
+            : 'Erişim bilgileri yüklenemedi. Lütfen daha sonra tekrar deneyin.';
+          this.toaster.error(this.accessErrorMessage, 4000);
+        }
       });
   }
 
@@ -200,7 +212,7 @@ export class UserAccessDialogComponent extends BaseComponent implements OnInit {
     if (!confirmed) return;
 
     this.processing = true;
-    this.usersService.adminResetPassword(this.data.id, this.newPassword.value)
+    this.usersService.adminResetPassword(this.data.id, this.newPassword.value, true)
       .pipe(takeUntil(this.destroy$), finalize(() => this.processing = false))
       .subscribe({
         next: () => {

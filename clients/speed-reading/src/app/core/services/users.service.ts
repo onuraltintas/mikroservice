@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -31,6 +31,9 @@ import {
 export class UsersService {
   private readonly http = inject(HttpClient);
   private readonly API_URL = `${environment.apiUrl}/v1/users`;
+  private readonly accessManagementOptions = {
+    headers: new HttpHeaders({ 'X-Skip-Forbidden-Redirect': 'true' })
+  };
 
   /**
    * Get all users with optional filtering
@@ -239,26 +242,34 @@ export class UsersService {
    * Admin Reset Password Override
    * Backend returns: ApiResponse<void>
    */
-  adminResetPassword(userId: string, newPassword: string): Observable<void> {
-    return this.http.post<void>(`${this.API_URL}/${userId}/change-password`, { password: newPassword });
+  adminResetPassword(
+    userId: string,
+    newPassword: string,
+    suppressForbiddenRedirect = false
+  ): Observable<void> {
+    const options = suppressForbiddenRedirect ? this.accessManagementOptions : {};
+    return this.http.post<void>(`${this.API_URL}/${userId}/change-password`, { password: newPassword }, options);
   }
 
   getSessions(userId: string): Observable<UserSessionDto[]> {
-    return this.http.get<UserSessionDto[] | { items?: UserSessionDto[] }>(`${this.API_URL}/${userId}/sessions`).pipe(
+    return this.http.get<UserSessionDto[] | { items?: UserSessionDto[] }>(
+      `${this.API_URL}/${userId}/sessions`,
+      this.accessManagementOptions
+    ).pipe(
       map(response => Array.isArray(response) ? response : (response?.items ?? []))
     );
   }
 
   revokeSession(userId: string, sessionId: string): Observable<void> {
-    return this.http.delete<void>(`${this.API_URL}/${userId}/sessions/${sessionId}`);
+    return this.http.delete<void>(`${this.API_URL}/${userId}/sessions/${sessionId}`, this.accessManagementOptions);
   }
 
   revokeAllSessions(userId: string): Observable<void> {
-    return this.http.delete<void>(`${this.API_URL}/${userId}/sessions`);
+    return this.http.delete<void>(`${this.API_URL}/${userId}/sessions`, this.accessManagementOptions);
   }
 
   resetMfa(userId: string): Observable<void> {
-    return this.http.post<void>(`${this.API_URL}/${userId}/mfa/reset`, {});
+    return this.http.post<void>(`${this.API_URL}/${userId}/mfa/reset`, {}, this.accessManagementOptions);
   }
 
   private normalizeUser(user: any): UserDto {
