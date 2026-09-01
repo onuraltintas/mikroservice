@@ -30,6 +30,32 @@ describe('UsersService', () => {
     request.flush({ items: [], totalCount: 0, pageNumber: 1, pageSize: 100 });
   });
 
+  it('loads a server-paged user list with the requested filters', () => {
+    let result: any;
+
+    service.getUsersPage(2, 25, 'student', 'Student', true).subscribe(value => result = value);
+
+    const request = http.expectOne(candidate => candidate.url === '/api/v1/users');
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('page')).toBe('2');
+    expect(request.request.params.get('pageSize')).toBe('25');
+    expect(request.request.params.get('search')).toBe('student');
+    expect(request.request.params.get('role')).toBe('Student');
+    expect(request.request.params.get('isActive')).toBe('true');
+    request.flush({
+      items: [{ id: 'user-1', firstName: 'Test', lastName: 'Student', email: 'student@example.com', roles: ['Student'], isActive: true, emailConfirmed: true }],
+      totalCount: 26,
+      pageNumber: 2,
+      pageSize: 25,
+      totalPages: 2,
+      hasPreviousPage: true,
+      hasNextPage: false
+    });
+
+    expect(result.totalCount).toBe(26);
+    expect(result.items[0].id).toBe('user-1');
+  });
+
   it('sends role assignments using the identity command shape', () => {
     service.assignRole('user-1', { roleName: 'Teacher' }).subscribe();
 
@@ -37,5 +63,44 @@ describe('UsersService', () => {
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({ roleName: 'Teacher' });
     request.flush(null);
+  });
+
+  it('updates role-specific profile data through the identity profile endpoint', () => {
+    service.updateUserProfile('user-1', {
+      firstName: 'Updated',
+      lastName: 'Student',
+      phoneNumber: '+905551112233',
+      institutionId: 'institution-1',
+      studentBirthDate: '2010-01-02T00:00:00.000Z',
+      studentLearningStyle: 'visual'
+    }).subscribe();
+
+    const request = http.expectOne('/api/v1/users/user-1/profile');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body.studentBirthDate).toBe('2010-01-02T00:00:00.000Z');
+    expect(request.request.body.institutionId).toBe('institution-1');
+    request.flush(null);
+  });
+
+  it('uses the Identity admin change-password contract', () => {
+    service.adminResetPassword('user-1', 'NewPassword!123').subscribe();
+
+    const request = http.expectOne('/api/v1/users/user-1/change-password');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ password: 'NewPassword!123' });
+    request.flush(null);
+  });
+
+  it('exposes email confirmation, session and MFA management operations', () => {
+    service.revokeEmailConfirmation('user-1').subscribe();
+    service.getSessions('user-1').subscribe();
+    service.revokeAllSessions('user-1').subscribe();
+    service.resetMfa('user-1').subscribe();
+
+    expect(http.expectOne('/api/v1/users/user-1/revoke-email-confirmation').request.method).toBe('POST');
+    expect(http.expectOne('/api/v1/users/user-1/sessions').request.method).toBe('GET');
+    expect(http.expectOne('/api/v1/users/user-1/sessions').request.method).toBe('DELETE');
+    expect(http.expectOne('/api/v1/users/user-1/mfa/reset').request.method).toBe('POST');
+    http.match(() => true).forEach(request => request.flush(null));
   });
 });
