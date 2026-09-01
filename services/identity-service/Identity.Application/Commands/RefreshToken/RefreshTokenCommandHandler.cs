@@ -23,7 +23,15 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Result<RefreshTokenResponse>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
+    public Task<Result<RefreshTokenResponse>> Handle(
+        RefreshTokenCommand request,
+        CancellationToken cancellationToken) =>
+        HandleInternal(request, cancellationToken, retryOnConcurrency: true);
+
+    private async Task<Result<RefreshTokenResponse>> HandleInternal(
+        RefreshTokenCommand request,
+        CancellationToken cancellationToken,
+        bool retryOnConcurrency)
     {
         // 1. Validate Refresh Token Logic (Needs DB access)
         // Since we don't have a direct method to get token, we find user by token OR need a method in repo.
@@ -80,6 +88,14 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         try
         {
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (ConcurrencyException) when (retryOnConcurrency)
+        {
+            // A concurrent login/statistics write can leave this scoped graph
+            // stale. Reload the aggregate once before treating the session as
+            // invalid; a second conflict still follows the normal safe failure.
+            _unitOfWork.ClearTracking();
+            return await HandleInternal(request, cancellationToken, retryOnConcurrency: false);
         }
         catch (ConcurrencyException)
         {
