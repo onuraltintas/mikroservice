@@ -122,6 +122,35 @@ public class DatabaseCrudTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetByRefreshToken_ShouldLoadActiveSessionData()
+    {
+        var userId = Guid.NewGuid();
+        var user = User.Create(userId, "refresh-session@query.edu", "Refresh", "Session");
+        var refreshToken = RefreshToken.Create(
+            userId,
+            "refresh-token-query-value",
+            DateTime.UtcNow.AddDays(7),
+            "127.0.0.1");
+
+        _dbContext!.Users.Add(user);
+        _dbContext.RefreshTokens.Add(refreshToken);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var repository = new Identity.Infrastructure.Repositories.UserRepository(_dbContext);
+
+        var loadedUser = await repository.GetByRefreshTokenAsync(
+            refreshToken.Token,
+            CancellationToken.None);
+
+        loadedUser.Should().NotBeNull();
+        loadedUser!.Id.Should().Be(userId);
+        loadedUser.RefreshTokens.Should().ContainSingle();
+        loadedUser.RefreshTokens.Single().Token.Should().Be(refreshToken.Token);
+        loadedUser.RefreshTokens.Single().IsPersistent.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task UpdateUser_ShouldPersistChanges()
     {
         // Arrange

@@ -1,9 +1,7 @@
 using EduPlatform.Shared.Kernel.Results;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
-using EduPlatform.Shared.Kernel.Exceptions;
 using MediatR;
-using System.Security.Claims;
 
 namespace Identity.Application.Commands.RefreshToken;
 
@@ -11,43 +9,29 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
 {
     private readonly IUserRepository _userRepository;
     private readonly ITokenService _tokenService;
-    private readonly IUnitOfWork _unitOfWork;
 
     public RefreshTokenCommandHandler(
         IUserRepository userRepository,
-        ITokenService tokenService,
-        IUnitOfWork unitOfWork)
+        ITokenService tokenService)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
-        _unitOfWork = unitOfWork;
     }
 
     public Task<Result<RefreshTokenResponse>> Handle(
         RefreshTokenCommand request,
-        CancellationToken cancellationToken) =>
-        HandleInternal(request, cancellationToken, retryOnConcurrency: true);
+        CancellationToken cancellationToken) => HandleInternal(request, cancellationToken);
 
     private async Task<Result<RefreshTokenResponse>> HandleInternal(
         RefreshTokenCommand request,
-        CancellationToken cancellationToken,
-        bool retryOnConcurrency)
+        CancellationToken cancellationToken)
     {
-        // 1. Validate Refresh Token Logic (Needs DB access)
-        // Since we don't have a direct method to get token, we find user by token OR need a method in repo.
-        // Let's assume we fetch the user who HAS this token.
-        // For efficiency, we should have GetByRefreshToken in Repository, but for now we might iterate or query.
-        // EF Core can query: _context.Users.Include(u => u.RefreshTokens).SingleOrDefault(u => u.RefreshTokens.Any(t => t.Token == request.RefreshToken));
-        
-        // Let's add GetByRefreshTokenAsync to IUserRepository to be clean.
-        // For now, I'll simulate it or access via repo if I update the interface.
-
         var user = await _userRepository.GetByRefreshTokenAsync(request.RefreshToken, cancellationToken);
         
         if (user == null)
             return Result.Failure<RefreshTokenResponse>(new Error("Auth.InvalidToken", "Geçersiz oturum anahtarı."));
 
-        var existingRefreshToken = user.RefreshTokens.SingleOrDefault(r => r.Token == request.RefreshToken);
+        var existingRefreshToken = user.RefreshTokens.FirstOrDefault(r => r.Token == request.RefreshToken);
 
         if (existingRefreshToken == null || !existingRefreshToken.IsActive)
              return Result.Failure<RefreshTokenResponse>(new Error("Auth.InvalidToken", "Oturum süresi dolmuş veya geçersiz."));
@@ -57,25 +41,20 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
             && string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
         if (isSystemAdministrator && user.MfaEnabled && existingRefreshToken.MfaVerifiedAt is null)
         {
-            existingRefreshToken.Revoke("system", "MFA reauthentication required");
-            try
-            {
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
-            }
-            catch (ConcurrencyException)
-            {
+            var revoked = await _userRepository.RevokeRefreshTokenAsync(
+                request.RefreshToken,
+                "system",
+                "MFA reauthentication required",
+                cancellationToken);
+            if (!revoked)
                 return InvalidatedRefreshToken();
-            }
 
             return Result.Failure<RefreshTokenResponse>(new Error(
                 "Auth.MfaRequired",
                 "Yönetici oturumunun iki adımlı doğrulamayla yeniden açılması gerekiyor."));
         }
 
-        // 2. Revoke Old
-        existingRefreshToken.Revoke("0.0.0.0", "Refreshed");
-
-        // 3. Generate New
+        // Generate the replacement before atomically revoking the old token.
         var newAccessToken = _tokenService.GenerateAccessToken(user, existingRefreshToken.MfaVerifiedAt);
         var newRefreshToken = _tokenService.GenerateRefreshToken(
             user.Id,
@@ -83,21 +62,13 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
             existingRefreshToken.IsPersistent,
             existingRefreshToken.MfaVerifiedAt);
         
-        user.AddRefreshToken(newRefreshToken);
-
-        try
-        {
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-        }
-        catch (ConcurrencyException) when (retryOnConcurrency)
-        {
-            // A concurrent login/statistics write can leave this scoped graph
-            // stale. Reload the aggregate once before treating the session as
-            // invalid; a second conflict still follows the normal safe failure.
-            _unitOfWork.ClearTracking();
-            return await HandleInternal(request, cancellationToken, retryOnConcurrency: false);
-        }
-        catch (ConcurrencyException)
+        var rotated = await _userRepository.RotateRefreshTokenAsync(
+            request.RefreshToken,
+            newRefreshToken,
+            "0.0.0.0",
+            "Refreshed",
+            cancellationToken);
+        if (!rotated)
         {
             return InvalidatedRefreshToken();
         }

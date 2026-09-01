@@ -1,5 +1,4 @@
 using EduPlatform.Shared.Kernel.Results;
-using EduPlatform.Shared.Kernel.Exceptions;
 using EduPlatform.Shared.Contracts.Reporting;
 using EduPlatform.Shared.Security.Interfaces;
 using FluentAssertions;
@@ -293,7 +292,7 @@ public sealed class SystemAdminMfaLoginTests
         user.AddRefreshToken(refreshToken);
         var tokenService = new RejectingTokenService();
         var handler = new RefreshTokenCommandHandler(
-            new StubUserRepository(user), tokenService, new StubUnitOfWork());
+            new StubUserRepository(user), tokenService);
 
         var result = await handler.Handle(
             new RefreshTokenCommand(refreshToken.Token), CancellationToken.None);
@@ -314,7 +313,7 @@ public sealed class SystemAdminMfaLoginTests
         user.AddRefreshToken(refreshToken);
 
         var handler = new RefreshTokenCommandHandler(
-            new StubUserRepository(user), new IssuingTokenService(), new StubUnitOfWork());
+            new StubUserRepository(user), new IssuingTokenService());
 
         var result = await handler.Handle(
             new RefreshTokenCommand(refreshToken.Token), CancellationToken.None);
@@ -325,7 +324,7 @@ public sealed class SystemAdminMfaLoginTests
     }
 
     [Fact]
-    public async Task RefreshToken_WhenFirstRotationSaveHasTransientConcurrency_ShouldRetryWithFreshTracking()
+    public async Task RefreshToken_WhenRepositoryRotationSucceeds_ShouldIssueReplacementSession()
     {
         var userId = Guid.NewGuid();
         var firstUser = CreateSystemAdministrator(id: userId);
@@ -337,16 +336,14 @@ public sealed class SystemAdminMfaLoginTests
 
         var repository = new StubUserRepository(firstUser);
         repository.SetRefreshUsers(firstUser, reloadedUser);
-        var unitOfWork = new RetryOnceConcurrencyUnitOfWork();
         var handler = new RefreshTokenCommandHandler(
-            repository, new IssuingTokenService(), unitOfWork);
+            repository, new IssuingTokenService());
 
         var result = await handler.Handle(
             new RefreshTokenCommand("retry-refresh-token"), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        unitOfWork.SaveCalls.Should().Be(2);
-        unitOfWork.ClearTrackingCalls.Should().Be(1);
+        repository.RotationCalls.Should().Be(1);
     }
 
     [Fact]
@@ -358,10 +355,8 @@ public sealed class SystemAdminMfaLoginTests
             isPersistent: true, mfaVerifiedAt: null);
         user.AddRefreshToken(refreshToken);
 
-        var handler = new RefreshTokenCommandHandler(
-            new StubUserRepository(user),
-            new IssuingTokenService(),
-            new ConcurrencyUnitOfWork());
+        var repository = new StubUserRepository(user) { RotationSucceeds = false };
+        var handler = new RefreshTokenCommandHandler(repository, new IssuingTokenService());
 
         var result = await handler.Handle(
             new RefreshTokenCommand(refreshToken.Token), CancellationToken.None);
@@ -390,6 +385,8 @@ public sealed class SystemAdminMfaLoginTests
         private readonly Queue<User?> _emailResults = new(emailResults);
         public bool ExternalLoginLookupCalled { get; private set; }
         public bool EmailLookupCalled { get; private set; }
+        public bool RotationSucceeds { get; set; } = true;
+        public int RotationCalls { get; private set; }
         private readonly Queue<User?> _refreshResults = new();
 
         public void SetRefreshUsers(params User?[] users)
@@ -438,6 +435,35 @@ public sealed class SystemAdminMfaLoginTests
         public Task<Identity.Application.Queries.GetAllUsers.UserSummaryDto> GetSummaryAsync(Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken) =>
             Task.FromResult(_refreshResults.Count > 0 ? _refreshResults.Dequeue() : user);
+        public Task<bool> RevokeRefreshTokenAsync(
+            string refreshToken,
+            string revokedByIp,
+            string reason,
+            CancellationToken cancellationToken)
+        {
+            var token = user.RefreshTokens.FirstOrDefault(candidate => candidate.Token == refreshToken);
+            token?.Revoke(revokedByIp, reason);
+            return Task.FromResult(token is not null);
+        }
+        public Task<bool> RotateRefreshTokenAsync(
+            string refreshToken,
+            RefreshToken replacementToken,
+            string revokedByIp,
+            string reason,
+            CancellationToken cancellationToken)
+        {
+            RotationCalls++;
+            if (!RotationSucceeds)
+                return Task.FromResult(false);
+
+            var token = user.RefreshTokens.FirstOrDefault(candidate => candidate.Token == refreshToken);
+            if (token is null)
+                return Task.FromResult(false);
+
+            token.Revoke(revokedByIp, reason);
+            user.AddRefreshToken(replacementToken);
+            return Task.FromResult(true);
+        }
         public Task RevokeActiveRefreshTokensAsync(Guid userId, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task RevokeActiveRefreshTokensForInstitutionAsync(Guid institutionId, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<List<User>> GetUsersByRolesAsync(List<string> roleNames, CancellationToken cancellationToken) => throw new NotSupportedException();
@@ -508,30 +534,6 @@ public sealed class SystemAdminMfaLoginTests
     {
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken) => Task.FromResult(0);
         public void ClearTracking() { }
-    }
-
-    private sealed class ConcurrencyUnitOfWork : IUnitOfWork
-    {
-        public Task<int> SaveChangesAsync(CancellationToken cancellationToken) =>
-            Task.FromException<int>(new ConcurrencyException("RefreshToken", Guid.NewGuid()));
-
-        public void ClearTracking() { }
-    }
-
-    private sealed class RetryOnceConcurrencyUnitOfWork : IUnitOfWork
-    {
-        public int SaveCalls { get; private set; }
-        public int ClearTrackingCalls { get; private set; }
-
-        public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
-        {
-            SaveCalls++;
-            return SaveCalls == 1
-                ? Task.FromException<int>(new ConcurrencyException("RefreshToken", Guid.NewGuid()))
-                : Task.FromResult(1);
-        }
-
-        public void ClearTracking() => ClearTrackingCalls++;
     }
 
     private sealed class StubGoogleAuthService(

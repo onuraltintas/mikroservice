@@ -152,12 +152,100 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
     {
-        return await _context.Users
-            .Include(u => u.RefreshTokens)
+        // Read only the session data needed by the handler. RefreshToken.Id is
+        // not used here because refresh rotation is performed atomically by
+        // token value below; this keeps the flow independent from EF's entity
+        // materialization of inherited keys.
+        var now = DateTime.UtcNow;
+        var matchedToken = await _context.RefreshTokens
+            .AsNoTracking()
+            .Where(token => token.Token == refreshToken
+                && token.RevokedAt == null
+                && token.ExpiresAt > now)
+            .Select(token => new
+            {
+                token.UserId,
+                token.ExpiresAt,
+                token.IsPersistent,
+                token.MfaVerifiedAt
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (matchedToken is null)
+            return null;
+
+        var user = await _context.Users
+            .AsNoTracking()
             .Include(u => u.Roles)
                 .ThenInclude(userRole => userRole.Role)
                     .ThenInclude(role => role.Permissions)
-            .FirstOrDefaultAsync(u => u.RefreshTokens.Any(rt => rt.Token == refreshToken), cancellationToken);
+            .FirstOrDefaultAsync(u => u.Id == matchedToken.UserId, cancellationToken);
+
+        if (user is null)
+            return null;
+
+        user.AddRefreshToken(RefreshToken.Create(
+            matchedToken.UserId,
+            refreshToken,
+            matchedToken.ExpiresAt,
+            createdByIp: null,
+            matchedToken.IsPersistent,
+            matchedToken.MfaVerifiedAt));
+        return user;
+    }
+
+    public async Task<bool> RevokeRefreshTokenAsync(
+        string refreshToken,
+        string revokedByIp,
+        string reason,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+        var affectedRows = await _context.RefreshTokens
+            .Where(token => token.Token == refreshToken && token.RevokedAt == null)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(token => token.RevokedAt, now)
+                .SetProperty(token => token.RevokedByIp, revokedByIp)
+                .SetProperty(token => token.ReasonRevoked, reason)
+                .SetProperty(token => token.UpdatedAt, now), cancellationToken);
+
+        return affectedRows == 1;
+    }
+
+    public async Task<bool> RotateRefreshTokenAsync(
+        string refreshToken,
+        RefreshToken replacementToken,
+        string revokedByIp,
+        string reason,
+        CancellationToken cancellationToken)
+    {
+        var executionStrategy = _context.Database.CreateExecutionStrategy();
+        return await executionStrategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+            var now = DateTime.UtcNow;
+            var affectedRows = await _context.RefreshTokens
+                .Where(token => token.Token == refreshToken
+                    && token.RevokedAt == null
+                    && token.ExpiresAt > now)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(token => token.RevokedAt, now)
+                    .SetProperty(token => token.RevokedByIp, revokedByIp)
+                    .SetProperty(token => token.ReasonRevoked, reason)
+                    .SetProperty(token => token.UpdatedAt, now), cancellationToken);
+
+            if (affectedRows != 1)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return false;
+            }
+
+            await _context.RefreshTokens.AddAsync(replacementToken, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return true;
+        });
     }
 
     public async Task RevokeActiveRefreshTokensAsync(
