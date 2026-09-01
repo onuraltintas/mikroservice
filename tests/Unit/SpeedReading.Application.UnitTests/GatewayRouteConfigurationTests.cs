@@ -73,6 +73,23 @@ public sealed class GatewayRouteConfigurationTests
         coachingHandlerIndex.Should().BeLessThan(blockedApiIndex);
     }
 
+    [Theory]
+    [InlineData("speed-reading-admin-audit-route", "/api/admin-audit/speed-reading")]
+    [InlineData("speed-reading-admin-audit-facets-route", "/api/admin-audit/speed-reading/facets")]
+    public void Speed_reading_admin_audit_routes_forward_to_the_speed_reading_cluster(
+        string routeName,
+        string path)
+    {
+        using var document = JsonDocument.Parse(File.ReadAllText(GetGatewaySettingsPath()));
+        var route = document.RootElement
+            .GetProperty("ReverseProxy")
+            .GetProperty("Routes")
+            .GetProperty(routeName);
+
+        route.GetProperty("ClusterId").GetString().Should().Be("speed-reading-cluster");
+        route.GetProperty("Match").GetProperty("Path").GetString().Should().Be(path);
+    }
+
     private static string GetGatewaySettingsPath()
     {
         return Path.Combine(GetRepositoryRoot(), "services", "api-gateway", "appsettings.json");

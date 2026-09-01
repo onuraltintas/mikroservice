@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
-export type AdminAuditServiceName = 'identity' | 'coaching' | 'notification';
+export type AdminAuditServiceName = 'identity' | 'coaching' | 'notification' | 'speed-reading';
 
 export interface AdminAuditRecord {
   id: string;

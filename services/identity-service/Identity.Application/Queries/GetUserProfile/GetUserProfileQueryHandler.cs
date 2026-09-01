@@ -110,6 +110,8 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
                 {
                     Title = teacher.Title,
                     Subjects = teacher.Subjects.ToArray(),
+                    ExperienceYears = teacher.ExperienceYears,
+                    Bio = teacher.Bio,
                     InstitutionId = teacher.InstitutionId,
                     InstitutionName = teacher.Institution?.Name
                 };
@@ -129,6 +131,7 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
                 {
                     GradeLevel = student.GradeLevel,
                     StudentNumber = null, // Not persisted yet
+                    Bio = student.Bio,
                     InstitutionId = student.InstitutionId,
                     InstitutionName = student.Institution?.Name,
                     BirthDate = student.BirthDate,

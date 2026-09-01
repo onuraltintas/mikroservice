@@ -110,6 +110,9 @@ public sealed class MfaAuthenticationCoordinatorTests
         public Task<IReadOnlyList<SpeedReadingUserDirectoryItem>> GetSpeedReadingDirectoryAsync(
             IReadOnlyCollection<Guid> userIds,
             CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<SpeedReadingUserDirectoryItem>>([]);
+        public Task<IReadOnlyList<Guid>> GetSpeedReadingAudienceUserIdsAsync(
+            string? role,
+            CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<Guid>>([]);
         public Task AddAsync(User value, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<User?> GetByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken) => throw new NotSupportedException();

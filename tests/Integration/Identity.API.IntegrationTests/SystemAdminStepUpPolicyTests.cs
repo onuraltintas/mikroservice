@@ -18,6 +18,7 @@ public sealed class SystemAdminStepUpPolicyTests
         { typeof(UserController), nameof(UserController.ConfirmEmail) },
         { typeof(UserController), nameof(UserController.ChangePassword) },
         { typeof(UserController), nameof(UserController.UpdateUser) },
+        { typeof(UserController), nameof(UserController.UpdateUserProfile) },
         { typeof(UserController), nameof(UserController.AssignRole) },
         { typeof(UserController), nameof(UserController.RemoveRole) },
         { typeof(RolesController), nameof(RolesController.CreateRole) },

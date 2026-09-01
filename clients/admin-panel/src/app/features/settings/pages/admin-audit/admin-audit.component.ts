@@ -92,7 +92,8 @@ export class AdminAuditComponent implements OnInit, OnDestroy {
   readonly services: ReadonlyArray<{ value: AdminAuditServiceName; label: string }> = [
     { value: 'identity', label: 'Kimlik' },
     { value: 'coaching', label: 'Koçluk' },
-    { value: 'notification', label: 'Bildirim' }
+    { value: 'notification', label: 'Bildirim' },
+    { value: 'speed-reading', label: 'Hızlı Okuma' }
   ];
   readonly selectedService = signal<AdminAuditServiceName>('identity');
   readonly records = signal<AdminAuditRecord[]>([]);

@@ -20,6 +20,8 @@ export interface UserDto {
 export interface TeacherDetailsDto {
     title?: string;
     subjects: string[];
+    experienceYears?: number;
+    bio?: string;
     institutionId?: string;
     institutionName?: string;
 }
@@ -27,6 +29,7 @@ export interface TeacherDetailsDto {
 export interface StudentDetailsDto {
     gradeLevel?: number;
     studentNumber?: string;
+    bio?: string;
     institutionId?: string;
     institutionName?: string;
     birthDate?: string;
@@ -57,10 +60,26 @@ export interface CreateUserRequest {
     phoneNumber?: string;
 }
 
+export interface CreateUserResponse {
+    userId: string;
+}
+
 export interface UpdateUserRequest {
     firstName: string;
     lastName: string;
     phoneNumber?: string;
+}
+
+export interface UpdateUserProfileRequest extends UpdateUserRequest {
+    bio?: string;
+    avatarUrl?: string;
+    teacherTitle?: string;
+    teacherExperienceYears?: number;
+    teacherSubjects?: string[];
+    studentGradeLevel?: number;
+    studentBirthDate?: string;
+    studentLearningStyle?: 'Visual' | 'Auditory' | 'Kinesthetic' | 'ReadingWriting';
+    institutionId?: string | null;
 }
 
 export interface PagedResult<T> {
@@ -141,7 +160,7 @@ export class IdentityService {
     }
 
     createUser(user: CreateUserRequest) {
-        return this.http.post<{ userId: string, temporaryPassword: string }>(this.baseUrl, user);
+        return this.http.post<CreateUserResponse>(this.baseUrl, user);
     }
 
     deleteUser(userId: string, permanent: boolean = false) {
@@ -158,6 +177,10 @@ export class IdentityService {
 
     updateUser(userId: string, user: UpdateUserRequest) {
         return this.http.put(`${this.baseUrl}/${userId}`, user);
+    }
+
+    updateUserProfile(userId: string, user: UpdateUserProfileRequest) {
+        return this.http.put(`${this.baseUrl}/${userId}/profile`, user);
     }
 
     changePassword(userId: string, password: string) {

@@ -32,6 +32,8 @@ public class TeacherDetailsDto
 {
     public string? Title { get; set; }
     public string[] Subjects { get; set; } = Array.Empty<string>();
+    public int? ExperienceYears { get; set; }
+    public string? Bio { get; set; }
     public Guid? InstitutionId { get; set; }
     public string? InstitutionName { get; set; }
 }
@@ -40,6 +42,7 @@ public class StudentDetailsDto
 {
     public int? GradeLevel { get; set; }
     public string? StudentNumber { get; set; }
+    public string? Bio { get; set; }
     public Guid? InstitutionId { get; set; }
     public string? InstitutionName { get; set; }
     public DateTime? BirthDate { get; set; }

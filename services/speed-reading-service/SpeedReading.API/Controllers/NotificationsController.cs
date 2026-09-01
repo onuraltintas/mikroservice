@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using EduPlatform.Shared.Contracts.Authorization;
+using EduPlatform.Shared.Security.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SpeedReading.Application.Notifications;
@@ -108,6 +110,7 @@ public sealed class NotificationsController(ISpeedReadingNotifications notificat
 
     [HttpPost]
     [Authorize(Roles = "Admin,SystemAdmin")]
+    [HasPermission(PlatformPermissions.SpeedReading.CommunicationsManage)]
     public async Task<IActionResult> Create(
         [FromBody] CreateNotificationRequest request,
         CancellationToken cancellationToken = default)
@@ -125,6 +128,7 @@ public sealed class NotificationsController(ISpeedReadingNotifications notificat
 
     [HttpGet("all")]
     [Authorize(Roles = "Admin,SystemAdmin")]
+    [HasPermission(PlatformPermissions.SpeedReading.CommunicationsManage)]
     public async Task<IActionResult> GetAll(
         [FromQuery] Guid? userId,
         [FromQuery] int? type,
@@ -144,6 +148,7 @@ public sealed class NotificationsController(ISpeedReadingNotifications notificat
 
     [HttpPost("bulk")]
     [Authorize(Roles = "Admin,SystemAdmin")]
+    [HasPermission(PlatformPermissions.SpeedReading.CommunicationsManage)]
     public async Task<IActionResult> Bulk(
         [FromBody] BulkNotificationRequest request,
         CancellationToken cancellationToken = default)

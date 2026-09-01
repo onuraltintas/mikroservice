@@ -42,7 +42,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     internal DbSet<LegacyStudentNodeProgress> StudentNodeProgresses => Set<LegacyStudentNodeProgress>();
     internal DbSet<LegacyPersonalizedLearningPath> PersonalizedLearningPaths => Set<LegacyPersonalizedLearningPath>();
     internal DbSet<LegacyIdempotencyRecord> IdempotencyRecords => Set<LegacyIdempotencyRecord>();
-    internal DbSet<AdminAuditRecord> AdminAuditRecords => Set<AdminAuditRecord>();
+    public DbSet<AdminAuditRecord> AdminAuditRecords => Set<AdminAuditRecord>();
     internal DbSet<LegacyAchievement> Achievements => Set<LegacyAchievement>();
     internal DbSet<LegacyUserAchievement> UserAchievements => Set<LegacyUserAchievement>();
     internal DbSet<LegacyUserGamification> UserGamifications => Set<LegacyUserGamification>();

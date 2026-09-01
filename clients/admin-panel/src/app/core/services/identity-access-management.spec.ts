@@ -40,4 +40,24 @@ describe('IdentityService user access management', () => {
     service.resetUserMfa('user-1').subscribe();
     expect(http.expectOne('/api/users/user-1/mfa/reset').request.method).toBe('POST');
   });
+
+  it('updates the role-specific profile through the admin endpoint', () => {
+    const service = TestBed.inject(IdentityService);
+    const profile = {
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      phoneNumber: '+905551112233',
+      teacherTitle: 'Matematik Öğretmeni',
+      teacherExperienceYears: 8,
+      teacherSubjects: ['Matematik'],
+      institutionId: 'institution-1'
+    };
+
+    service.updateUserProfile('user-1', profile).subscribe();
+
+    const request = http.expectOne('/api/users/user-1/profile');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual(profile);
+    request.flush(null);
+  });
 });

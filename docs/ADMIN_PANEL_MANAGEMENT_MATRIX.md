@@ -11,6 +11,7 @@ route guard'ları yalnızca kullanıcı deneyimi ve erken yönlendirme sağlar.
 | --- | --- | --- | --- |
 | Identity | Kullanıcı listeleme ve ayrıntı (aktif tenant scope'u) | `/api/users` | `Permissions.Users.View` |
 | Identity | Kullanıcı oluşturma, düzenleme, pasifleştirme/aktifleştirme, rol, e-posta ve parola yönetimi | `/api/users` | `SystemAdmin` + ilgili `Permissions.Users.*` |
+| Identity | Öğrenci/öğretmen profil alanları ve kurum üyeliği yönetimi; eksik profil kaydını güvenli biçimde oluşturma | `/api/users/{id}/profile` | `SystemAdmin` + `Permissions.Users.Edit` + `MfaRequired` |
 | Identity | Kullanıcının aktif refresh oturumlarını metadata olarak listeleme, tek/toplu oturum sonlandırma ve MFA sıfırlama | `/api/users/{id}/sessions`, `/api/users/{id}/mfa/reset` | `SystemAdmin` + `MfaRequired` + `Permissions.Users.Edit` |
 | Identity | Rol ve permission CRUD'u, role-permission eşlemesi | `/api/roles`, `/api/permissions` | `Permissions.Roles.*`, `Permissions.Permissions.*` |
 | Identity | Kurum listeleme/detay ve yönetici listesi (SystemAdmin global, diğer yöneticiler yalnız aktif kendi tenant'ı) | `/api/institutions` | `Permissions.Institutions.View` |
@@ -18,6 +19,22 @@ route guard'ları yalnızca kullanıcı deneyimi ve erken yönlendirme sağlar.
 | Identity | Kendi tenant'ının iletişim bilgileri ve kurum yöneticileri | `/api/institutions` | Aktif tenant yöneticisi + `Permissions.Institutions.Manage` |
 | Identity | Secret içermeyen feature flag ve sistem ayarları, log ve retention yönetimi | `/api/configurations`, `/api/system-logs` | `Permissions.Operations.View` ve mevcut SystemAdmin mutasyon politikaları |
 | Identity / Notification / Coaching | Servis-lokal, append-only yönetici denetim kayıtlarını işlem, kaynak ve değişen alan adlarıyla filtreleme/sayfalama | `/api/admin-audit/{service}` | Yalnız `SystemAdmin` + `Permissions.Operations.View` |
+| Speed Reading | Servis-lokal, append-only yönetici denetim kayıtlarını işlem, kaynak ve değişen alan adlarıyla filtreleme/sayfalama | `/api/admin-audit/speed-reading` | Yalnız `SystemAdmin` + `Permissions.Operations.View` |
+| Speed Reading | Platform kullanım, içerik, öğrenme sağlığı, kurum ve program analitikleri | `/api/speed-reading/analytics/admin/*` | `Permissions.SpeedReading.PlatformAnalyticsView` |
+| Speed Reading | Öğretmen sınıf özeti, atama, içerik ve zaman/ilerleme analitikleri | `/api/speed-reading/analytics/admin/teachers/{teacherId}/*` | `Permissions.SpeedReading.ReportView` + öğretmen kapsam politikası |
+| Speed Reading | Sayfalı öğrenci program ilerlemesi ve son egzersiz kayıtlarının incelenmesi | `/api/speed-reading/student-progress` | `Permissions.SpeedReading.ProgressView` |
+| Speed Reading | Egzersiz türleri, egzersizler ve okuma metinleri; okuma metni kelime sayısı metinden hesaplanarak saklanır | `/api/speed-reading/exercise-types`, `/api/speed-reading/exercises`, `/api/speed-reading/reading-texts` | `Permissions.SpeedReading.ContentManage` |
+| Speed Reading | Program şablonları, öğrenme yolu şablonları, düğüm ve düğüm içeriği yönetimi | `/api/speed-reading/program-templates`, `/api/speed-reading/learning-path-templates*` | `Permissions.SpeedReading.ProgramManage` |
+| Speed Reading | Başarı/rozet tanımları, kriterleri, tekrar davranışı ve XP ödülleri | `/api/speed-reading/achievements` | `Permissions.SpeedReading.GamificationManage` |
+| Speed Reading | Ürün/plan kataloğu, manuel abonelik erişimi ve ödeme geçmişi; ödeme sağlayıcısı başlatma/doğrulama panel dışında | `/api/speed-reading/products`, `/api/speed-reading/subscription-plans`, `/api/speed-reading/subscriptions`, `/api/speed-reading/payment` | `Permissions.SpeedReading.ContentManage` |
+| Speed Reading | Yaş grupları ve yaş grubuna bağlı seviye tespit şablonlarının yönetimi | `/api/speed-reading/age-group-configurations`, `/api/speed-reading/admin/assessment-templates` | `Permissions.SpeedReading.SettingsManage` |
+| Speed Reading | Görselleştirme sahneleri, soruları ve CSV içe aktarma | `/api/speed-reading/admin/visualization-scenes*` | `Permissions.SpeedReading.ContentManage` |
+| Speed Reading | Sınav soru bankası CRUD'u ve kelime havuzu CRUD/import/export | `/api/speed-reading/exam-questions`, `/api/speed-reading/vocabulary*` | `Permissions.SpeedReading.ContentManage` |
+| Speed Reading | Rapor şablonları, snapshot ve zamanlanmış rapor yönetimi | `/api/speed-reading/reports/*` | `Permissions.SpeedReading.ReportView/ReportManage` |
+| Speed Reading | CMS landing blokları, sayfalar, blog, iletişim mesajları ve bülten aboneleri | `/api/speed-reading/admin/cms/*` | `Permissions.SpeedReading.ContentManage` |
+| Speed Reading | Duyuru CRUD'u ve duyuru istatistikleri | `/api/speed-reading/announcements` | `Permissions.SpeedReading.CommunicationsManage` |
+| Speed Reading | Servis e-posta şablonları, kampanyaları ve gönderim istatistikleri | `/api/speed-reading/email-templates`, `/api/speed-reading/email-campaigns` | `Permissions.SpeedReading.CommunicationsManage` |
+| Speed Reading | Toplu bildirim gönderimi ve sayfalı bildirim geçmişi | `/api/speed-reading/notifications/all`, `/api/speed-reading/notifications/bulk` | `Permissions.SpeedReading.CommunicationsManage` |
 | Identity | Kullanıcının MFA kurulumu, doğrulaması ve tek kullanımlık kurtarma kodları | `/api/auth/mfa/*` | Profil ayarlarında mevcut parola ile yeniden doğrulama; girişte yalnız MFA etkinse 5 dakikalık challenge |
 | Notification | Destek talebi listeleme, filtreleme, notlandırma, işlenmiş işareti ve yanıt | `/api/support/requests`, `/api/support/reply` | `Permissions.Support.View/Reply` |
 | Notification | E-posta şablonu listeleme, oluşturma, konu/gövde/aktiflik güncelleme | `/api/email-templates` | `Permissions.Notifications.Templates` |
@@ -62,8 +79,8 @@ Bunlar eksik CRUD olarak değerlendirilmez; farklı bir güvenlik ve işletim s�
 - JWT, SMTP, database, Redis ve service API key secret'ları.
 - Docker/Kubernetes replica, network, ingress/TLS ve deploy/rollback işlemleri.
 - Prometheus/Grafana/Tempo/Alertmanager kural ve credential'ları.
-- Henüz repository'de bounded context'i bulunmayan Blog, Content, Analytics,
-  Billing veya Search modülleri.
+- Speed Reading CMS'sinden ayrı bir bounded context olarak repository'de bulunmayan
+  bağımsız Billing veya Search modülleri.
 
 Bu alanlar CI/CD, secret manager, migration job ve observability runbook'larıyla
 yönetilir. Admin paneline secret veya altyapı yazma yetkisi vermek, platform

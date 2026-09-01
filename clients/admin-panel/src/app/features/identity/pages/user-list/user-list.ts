@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal, effect, PLATFORM_ID, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IdentityService, UserDto } from '../../../../core/services/identity.service';
+import { IdentityService, UserDto, UserProfileDto } from '../../../../core/services/identity.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { CreateUserModalComponent } from '../../components/create-user-modal/create-user-modal';
 import { EditUserModalComponent } from '../../components/edit-user-modal/edit-user-modal';
@@ -49,7 +49,7 @@ export class UserListComponent {
   showPasswordModal = signal(false);
   showDetailsModal = signal(false);
   showRoleModal = signal(false);
-  userToEdit = signal<UserDto | null>(null);
+  userToEdit = signal<UserProfileDto | null>(null);
   userForPasswordChange = signal<UserDto | null>(null);
   userForRoleManagement = signal<UserDto | null>(null);
   selectedUserId = signal<string | null>(null);
@@ -320,9 +320,14 @@ export class UserListComponent {
   }
 
   editUser(user: UserDto) {
-    this.userToEdit.set(user);
-    this.showEditModal.set(true);
     this.openMenuId.set(null);
+    this.identityService.getUserById(user.userId).subscribe({
+      next: profile => {
+        this.userToEdit.set(profile);
+        this.showEditModal.set(true);
+      },
+      error: () => this.toaster.error('Kullanıcı profili yüklenemedi.')
+    });
   }
 
   changePage(page: number) {

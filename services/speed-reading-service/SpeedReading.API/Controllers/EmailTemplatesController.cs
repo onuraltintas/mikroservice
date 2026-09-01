@@ -1,3 +1,5 @@
+using EduPlatform.Shared.Contracts.Authorization;
+using EduPlatform.Shared.Security.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SpeedReading.Application.Notifications;
@@ -7,6 +9,7 @@ namespace SpeedReading.API.Controllers;
 [ApiController]
 [Route("api/speed-reading/email-templates")]
 [Authorize(Roles = "Admin,SystemAdmin")]
+[HasPermission(PlatformPermissions.SpeedReading.CommunicationsManage)]
 public sealed class EmailTemplatesController(ISpeedReadingEmailTemplates templates) : ControllerBase
 {
     [HttpGet]

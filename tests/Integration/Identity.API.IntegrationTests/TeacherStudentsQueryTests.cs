@@ -5,6 +5,7 @@ using Identity.Application.Interfaces;
 using Identity.Application.Queries.GetAllUsers;
 using Identity.Application.Queries.GetTeacherStudents;
 using Identity.Domain.Entities;
+using EduPlatform.Shared.Contracts.Reporting;
 using System.Security.Claims;
 
 namespace Identity.API.IntegrationTests;
@@ -77,6 +78,10 @@ public sealed class TeacherStudentsQueryTests
         public Task<TeacherProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<TeacherProfile?> GetByUserIdAsync(Guid userId, Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<TeacherProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<SpeedReadingTeacherStudentScopeResponse?> GetSpeedReadingTeacherStudentScopeAsync(
+            Guid viewerUserId,
+            Guid? targetTeacherUserId,
+            CancellationToken cancellationToken) => Task.FromResult<SpeedReadingTeacherStudentScopeResponse?>(null);
         public Task AddStudentAssignmentAsync(TeacherStudentAssignment assignment, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<TeacherStudentAssignment?> GetAssignmentAsync(Guid teacherId, Guid studentId, CancellationToken cancellationToken) => throw new NotSupportedException();
     }

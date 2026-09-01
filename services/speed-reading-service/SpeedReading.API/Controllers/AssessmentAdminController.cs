@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using EduPlatform.Shared.Contracts.Authorization;
+using EduPlatform.Shared.Security.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SpeedReading.Application.Assessment;
@@ -7,7 +9,8 @@ namespace SpeedReading.API.Controllers;
 
 [ApiController]
 [Route("api/speed-reading/admin/assessment-templates")]
-[Authorize(Roles = "Admin,Editor,SystemAdmin")]
+[Authorize]
+[HasPermission(PlatformPermissions.SpeedReading.SettingsManage)]
 public sealed class AssessmentAdminController(ISpeedReadingAssessment assessment) : ControllerBase
 {
     [HttpGet]

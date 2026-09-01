@@ -50,6 +50,7 @@ export const permissionGuard: CanActivateFn = async (route, state) => {
     const router = inject(Router);
     const platformId = inject(PLATFORM_ID);
     const requiredPermission = route.data?.['permission'] as string | undefined;
+    const requiredPermissions = route.data?.['permissions'] as readonly string[] | undefined;
     const requiredRole = route.data?.['role'] as string | undefined;
 
     if ((!requiredPermission && !requiredRole) || isPlatformServer(platformId)) {
@@ -62,7 +63,9 @@ export const permissionGuard: CanActivateFn = async (route, state) => {
     }
 
     const profile = authService.userProfile();
-    const hasPermission = !requiredPermission || authService.hasPermission(requiredPermission);
+    const hasPermission = requiredPermissions?.length
+        ? requiredPermissions.some(permission => authService.hasPermission(permission))
+        : !requiredPermission || authService.hasPermission(requiredPermission);
     const hasRole = !requiredRole || hasRequiredRole(profile, requiredRole);
     if (hasPermission && hasRole) {
         return true;

@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using EduPlatform.Shared.Contracts.Authorization;
+using EduPlatform.Shared.Security.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SpeedReading.Application.AgeGroups;
@@ -10,7 +12,8 @@ namespace SpeedReading.API.Controllers;
 public sealed class AgeGroupConfigurationsController(ISpeedReadingAgeGroups ageGroups) : ControllerBase
 {
     [HttpGet]
-    [Authorize(Roles = "Admin,SystemAdmin")]
+    [Authorize]
+    [HasPermission(PlatformPermissions.SpeedReading.SettingsManage)]
     public async Task<IActionResult> GetAll(
         [FromQuery] bool activeOnly = false,
         CancellationToken cancellationToken = default) =>
@@ -60,7 +63,8 @@ public sealed class AgeGroupConfigurationsController(ISpeedReadingAgeGroups ageG
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin,SystemAdmin")]
+    [Authorize]
+    [HasPermission(PlatformPermissions.SpeedReading.SettingsManage)]
     public async Task<IActionResult> Create(
         [FromBody] CreateAgeGroupRequest request,
         CancellationToken cancellationToken = default)
@@ -78,7 +82,8 @@ public sealed class AgeGroupConfigurationsController(ISpeedReadingAgeGroups ageG
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin,SystemAdmin")]
+    [Authorize]
+    [HasPermission(PlatformPermissions.SpeedReading.SettingsManage)]
     public async Task<IActionResult> Update(
         Guid id,
         [FromBody] UpdateAgeGroupRequest request,
@@ -98,7 +103,8 @@ public sealed class AgeGroupConfigurationsController(ISpeedReadingAgeGroups ageG
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin,SystemAdmin")]
+    [Authorize]
+    [HasPermission(PlatformPermissions.SpeedReading.SettingsManage)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default)
     {
         if (!TryGetUserId(out var userId)) return Unauthorized();

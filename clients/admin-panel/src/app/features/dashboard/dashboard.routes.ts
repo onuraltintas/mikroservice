@@ -30,6 +30,78 @@ export const DASHBOARD_ROUTES: Routes = [
         loadComponent: () => import('./pages/coaching-assignments').then(m => m.CoachingAssignmentsComponent)
     },
     {
+        path: 'speed-reading/analytics',
+        canActivate: [permissionGuard],
+        data: { permission: ADMIN_PERMISSIONS.speedReadingPlatformAnalytics, defaultTab: 'platform' },
+        loadComponent: () => import('./pages/speed-reading-analytics').then(m => m.SpeedReadingAnalyticsComponent)
+    },
+    {
+        path: 'speed-reading/progress',
+        canActivate: [permissionGuard],
+        data: { permission: ADMIN_PERMISSIONS.speedReadingProgressView, defaultTab: 'progress' },
+        loadComponent: () => import('./pages/speed-reading-analytics').then(m => m.SpeedReadingAnalyticsComponent)
+    },
+    {
+      path: 'speed-reading/subscriptions',
+      canActivate: [permissionGuard],
+      data: { permission: ADMIN_PERMISSIONS.speedReadingContentManage },
+      loadComponent: () => import('./pages/speed-reading-subscriptions').then(m => m.SpeedReadingSubscriptionsComponent)
+    },
+    {
+      path: 'speed-reading/content-configuration',
+      canActivate: [permissionGuard],
+      data: { permission: ADMIN_PERMISSIONS.speedReadingSettingsManage },
+      loadComponent: () => import('./pages/speed-reading-content-configuration').then(m => m.SpeedReadingContentConfigurationComponent)
+    },
+    {
+      path: 'speed-reading/visualization-scenes',
+      canActivate: [permissionGuard],
+      data: { permission: ADMIN_PERMISSIONS.speedReadingContentManage },
+      loadComponent: () => import('./pages/speed-reading-visualization-scenes').then(m => m.SpeedReadingVisualizationScenesComponent)
+    },
+    {
+      path: 'speed-reading/language-content',
+      canActivate: [permissionGuard],
+      data: { permission: ADMIN_PERMISSIONS.speedReadingContentManage },
+      loadComponent: () => import('./pages/speed-reading-language-content').then(m => m.SpeedReadingLanguageContentComponent)
+    },
+    {
+      path: 'speed-reading/reports',
+      canActivate: [permissionGuard],
+      data: { permission: ADMIN_PERMISSIONS.speedReadingReportView },
+      loadComponent: () => import('./pages/speed-reading-reports').then(m => m.SpeedReadingReportsComponent)
+    },
+    {
+      path: 'speed-reading/communications',
+      canActivate: [permissionGuard],
+      data: { permissions: [ADMIN_PERMISSIONS.speedReadingContentManage, ADMIN_PERMISSIONS.speedReadingCommunicationsManage] },
+      loadComponent: () => import('./pages/speed-reading-communications').then(m => m.SpeedReadingCommunicationsComponent)
+    },
+    {
+      path: 'speed-reading/teacher-analytics',
+      canActivate: [permissionGuard],
+      data: { permission: ADMIN_PERMISSIONS.speedReadingReportView, defaultTab: 'teacher' },
+      loadComponent: () => import('./pages/speed-reading-analytics').then(m => m.SpeedReadingAnalyticsComponent)
+    },
+    {
+      path: 'speed-reading/catalog',
+      canActivate: [permissionGuard],
+      data: { permission: ADMIN_PERMISSIONS.speedReadingContentManage, defaultTab: 'content' },
+      loadComponent: () => import('./pages/speed-reading-catalog').then(m => m.SpeedReadingCatalogComponent)
+    },
+    {
+      path: 'speed-reading/programs',
+      canActivate: [permissionGuard],
+      data: { permission: ADMIN_PERMISSIONS.speedReadingProgramManage, defaultTab: 'programs' },
+      loadComponent: () => import('./pages/speed-reading-catalog').then(m => m.SpeedReadingCatalogComponent)
+    },
+    {
+      path: 'speed-reading/achievements',
+      canActivate: [permissionGuard],
+      data: { permission: ADMIN_PERMISSIONS.speedReadingGamificationManage, defaultTab: 'achievements' },
+      loadComponent: () => import('./pages/speed-reading-catalog').then(m => m.SpeedReadingCatalogComponent)
+    },
+    {
         path: 'speed-reading',
         canActivate: [permissionGuard],
         data: { permission: ADMIN_PERMISSIONS.speedReadingView },

@@ -32,6 +32,318 @@ describe('SpeedReadingAdminService', () => {
     request.flush(response);
   });
 
+  it('loads platform analytics with an explicit date range', () => {
+    service.getPlatformUsage('2026-08-01', '2026-08-31').subscribe();
+
+    const request = http.expectOne('/api/speed-reading/analytics/admin/platform-usage?dateFrom=2026-08-01&dateTo=2026-08-31');
+    expect(request.request.method).toBe('GET');
+    request.flush({});
+  });
+
+  it('loads content, health, institution and program analytics from admin contracts', () => {
+    service.getContentAnalysis('2026-08-01', '2026-08-31').subscribe();
+    expect(http.expectOne('/api/speed-reading/analytics/admin/content-analysis?dateFrom=2026-08-01&dateTo=2026-08-31').request.method).toBe('GET');
+
+    service.getSystemHealth('2026-08-01', '2026-08-31').subscribe();
+    expect(http.expectOne('/api/speed-reading/analytics/admin/system-health?dateFrom=2026-08-01&dateTo=2026-08-31').request.method).toBe('GET');
+
+    service.getInstitutionAnalytics('2026-08-01', '2026-08-31').subscribe();
+    expect(http.expectOne('/api/speed-reading/analytics/admin/institutions?dateFrom=2026-08-01&dateTo=2026-08-31').request.method).toBe('GET');
+
+    service.getProgramAnalytics().subscribe();
+    expect(http.expectOne('/api/speed-reading/analytics/admin/programs').request.method).toBe('GET');
+  });
+
+  it('loads teacher analytics through the scoped admin contracts', () => {
+    service.getTeacherClassOverview('teacher-1', '2026-08-01', '2026-08-31').subscribe();
+    expect(http.expectOne('/api/speed-reading/analytics/admin/teachers/teacher-1/class-overview?dateFrom=2026-08-01&dateTo=2026-08-31').request.method).toBe('GET');
+
+    service.getTeacherAssignmentAnalytics('teacher-1', '2026-08-01', '2026-08-31').subscribe();
+    expect(http.expectOne('/api/speed-reading/analytics/admin/teachers/teacher-1/assignments?dateFrom=2026-08-01&dateTo=2026-08-31').request.method).toBe('GET');
+
+    service.getTeacherContentAnalysis('teacher-1', '2026-08-01', '2026-08-31').subscribe();
+    expect(http.expectOne('/api/speed-reading/analytics/admin/teachers/teacher-1/content-analysis?dateFrom=2026-08-01&dateTo=2026-08-31').request.method).toBe('GET');
+
+    service.getTeacherTimeProgress('teacher-1', '2026-08-01', '2026-08-31').subscribe();
+    expect(http.expectOne('/api/speed-reading/analytics/admin/teachers/teacher-1/time-progress?dateFrom=2026-08-01&dateTo=2026-08-31').request.method).toBe('GET');
+  });
+
+  it('lists and opens student program progress through the report contract', () => {
+    service.getStudentProgress(2, 25, 'Ada').subscribe();
+    const listRequest = http.expectOne('/api/speed-reading/student-progress?pageNumber=2&pageSize=25&searchTerm=Ada');
+    expect(listRequest.request.method).toBe('GET');
+    listRequest.flush({ items: [], pageNumber: 2, pageSize: 25, totalCount: 0 });
+
+    service.getStudentProgressDetails('progress-1').subscribe();
+    const detailsRequest = http.expectOne('/api/speed-reading/student-progress/progress-1');
+    expect(detailsRequest.request.method).toBe('GET');
+    detailsRequest.flush({});
+  });
+
+  it('loads subscription products, plans, subscriptions and payment history', () => {
+    service.getSubscriptionProducts().subscribe(value => expect(value).toEqual([]));
+    const productsRequest = http.expectOne('/api/speed-reading/products/all');
+    expect(productsRequest.request.method).toBe('GET');
+    productsRequest.flush({ success: true, data: [] });
+
+    service.getSubscriptionPlans().subscribe(value => expect(value).toEqual([]));
+    const plansRequest = http.expectOne('/api/speed-reading/subscription-plans/all');
+    expect(plansRequest.request.method).toBe('GET');
+    plansRequest.flush({ success: true, data: [] });
+
+    service.getUserSubscriptions(2, 25, 'active', 'Ada').subscribe(value => expect(value.totalCount).toBe(0));
+    const subscriptionsRequest = http.expectOne('/api/speed-reading/subscriptions?page=2&pageSize=25&status=active&search=Ada');
+    expect(subscriptionsRequest.request.method).toBe('GET');
+    subscriptionsRequest.flush({ success: true, data: { items: [], totalCount: 0, page: 2, pageSize: 25 } });
+
+    service.getPaymentHistory(2, 25, 'success', 'Ada').subscribe(value => expect(value.totalCount).toBe(0));
+    const paymentsRequest = http.expectOne('/api/speed-reading/payment?page=2&pageSize=25&status=success&search=Ada');
+    expect(paymentsRequest.request.method).toBe('GET');
+    paymentsRequest.flush({ items: [], total: 0, pageNumber: 2, pageSize: 25 });
+  });
+
+  it('writes product and subscription plan changes through ContentManage routes', () => {
+    service.createSubscriptionProduct({
+      slug: 'hizliokuma', name: 'Hızlı Okuma', description: 'Ürün',
+      includedProductSlugs: [], isActive: true, isPublic: true, sortOrder: 1
+    }).subscribe();
+    const productCreate = http.expectOne('/api/speed-reading/products');
+    expect(productCreate.request.method).toBe('POST');
+    productCreate.flush({ success: true, data: {} });
+
+    service.updateSubscriptionPlan('plan-1', { isActive: false }).subscribe();
+    const planUpdate = http.expectOne('/api/speed-reading/subscription-plans/plan-1');
+    expect(planUpdate.request.method).toBe('PUT');
+    planUpdate.flush({ success: true, data: {} });
+  });
+
+  it('loads and manages age-group configurations through SettingsManage routes', () => {
+    service.getAgeGroups().subscribe(value => expect(value).toEqual([]));
+    const listRequest = http.expectOne('/api/speed-reading/age-group-configurations?activeOnly=false');
+    expect(listRequest.request.method).toBe('GET');
+    listRequest.flush([]);
+
+    const request = {
+      name: 'child',
+      displayName: 'Çocuk',
+      minAge: 7,
+      maxAge: 12,
+      minWpm: 80,
+      recommendedWpm: 120,
+      maxWpm: 180,
+      recommendedComprehension: 70,
+      recommendedDailyMinutes: 15,
+      defaultDifficultyLevel: 1,
+      orderIndex: 1,
+      isActive: true,
+      description: 'Çocuk grubu'
+    };
+
+    service.createAgeGroup(request).subscribe();
+    const createRequest = http.expectOne('/api/speed-reading/age-group-configurations');
+    expect(createRequest.request.method).toBe('POST');
+    createRequest.flush({ id: 'age-1' });
+
+    service.updateAgeGroup('age-1', request).subscribe();
+    const updateRequest = http.expectOne('/api/speed-reading/age-group-configurations/age-1');
+    expect(updateRequest.request.method).toBe('PUT');
+    updateRequest.flush(null);
+
+    service.deleteAgeGroup('age-1').subscribe();
+    const deleteRequest = http.expectOne('/api/speed-reading/age-group-configurations/age-1');
+    expect(deleteRequest.request.method).toBe('DELETE');
+    deleteRequest.flush(null);
+  });
+
+  it('loads and manages assessment templates by age group', () => {
+    service.getAssessmentTemplates().subscribe(value => expect(value).toEqual([]));
+    const listRequest = http.expectOne('/api/speed-reading/admin/assessment-templates');
+    expect(listRequest.request.method).toBe('GET');
+    listRequest.flush([]);
+
+    service.getAssessmentTemplateByAgeGroup('age-1').subscribe();
+    const detailRequest = http.expectOne('/api/speed-reading/admin/assessment-templates/age-group/age-1');
+    expect(detailRequest.request.method).toBe('GET');
+    detailRequest.flush({ id: 'template-1' });
+
+    const request = {
+      name: 'Çocuk seviye tespit',
+      targetAgeGroupId: 'age-1',
+      exercises: [{ exerciseId: 'exercise-1', customTitle: 'Odak', customDescription: null, displayOrder: 1 }]
+    };
+    service.createAssessmentTemplate(request).subscribe();
+    const createRequest = http.expectOne('/api/speed-reading/admin/assessment-templates');
+    expect(createRequest.request.method).toBe('POST');
+    createRequest.flush('template-1');
+
+    service.updateAssessmentTemplate('template-1', { name: request.name, exercises: request.exercises }).subscribe();
+    const updateRequest = http.expectOne('/api/speed-reading/admin/assessment-templates/template-1');
+    expect(updateRequest.request.method).toBe('PUT');
+    updateRequest.flush(null);
+
+    service.deleteAssessmentTemplate('template-1').subscribe();
+    const deleteRequest = http.expectOne('/api/speed-reading/admin/assessment-templates/template-1');
+    expect(deleteRequest.request.method).toBe('DELETE');
+    deleteRequest.flush(null);
+  });
+
+  it('lists and manages visualization scenes, questions and CSV imports', () => {
+    service.getVisualizationScenes(2, 25, 3, 'orman').subscribe(value => expect(value.totalCount).toBe(0));
+    const listRequest = http.expectOne('/api/speed-reading/admin/visualization-scenes?pageNumber=2&pageSize=25&difficultyLevel=3&searchTerm=orman');
+    expect(listRequest.request.method).toBe('GET');
+    listRequest.flush({ items: [], totalCount: 0, pageNumber: 2, pageSize: 25 });
+
+    service.getVisualizationExercises().subscribe(value => expect(value).toEqual([]));
+    const exercisesRequest = http.expectOne('/api/speed-reading/admin/visualization-scenes/exercises');
+    expect(exercisesRequest.request.method).toBe('GET');
+    exercisesRequest.flush([]);
+
+    service.getVisualizationScene('scene-1').subscribe();
+    const detailRequest = http.expectOne('/api/speed-reading/admin/visualization-scenes/scene-1');
+    expect(detailRequest.request.method).toBe('GET');
+    detailRequest.flush({ id: 'scene-1', questions: [] });
+
+    const request = {
+      exerciseId: 'exercise-1', description: 'Bir orman sahnesi', imageUrl: null,
+      duration: 30, displayOrder: 1, difficultyLevel: 2, questions: [],
+      targetAgeGroupConfigurationId: null
+    };
+    service.createVisualizationScene(request).subscribe();
+    const createRequest = http.expectOne('/api/speed-reading/admin/visualization-scenes');
+    expect(createRequest.request.method).toBe('POST');
+    createRequest.flush('scene-1');
+
+    service.updateVisualizationScene('scene-1', request).subscribe();
+    const updateRequest = http.expectOne('/api/speed-reading/admin/visualization-scenes/scene-1');
+    expect(updateRequest.request.method).toBe('PUT');
+    updateRequest.flush(null);
+
+    service.deleteVisualizationScene('scene-1').subscribe();
+    const deleteRequest = http.expectOne('/api/speed-reading/admin/visualization-scenes/scene-1');
+    expect(deleteRequest.request.method).toBe('DELETE');
+    deleteRequest.flush(null);
+
+    service.importVisualizationCsv(new File(['ExerciseId,Description'], 'scenes.csv', { type: 'text/csv' })).subscribe();
+    const importRequest = http.expectOne('/api/speed-reading/admin/visualization-scenes/import/csv');
+    expect(importRequest.request.method).toBe('POST');
+    expect(importRequest.request.body instanceof FormData).toBe(true);
+    importRequest.flush({ successCount: 1, failedCount: 0, message: 'Imported', errors: [] });
+  });
+
+  it('lists and manages the exam question bank with filters', () => {
+    service.getExamQuestions(2, 25, 1, 3, 4, 'ana fikir', 'age-1').subscribe(value => expect(value.totalCount).toBe(0));
+    const listRequest = http.expectOne('/api/speed-reading/exam-questions?pageNumber=2&pageSize=25&examType=1&difficulty=3&category=4&searchTerm=ana%20fikir&ageGroupId=age-1');
+    expect(listRequest.request.method).toBe('GET');
+    listRequest.flush({ items: [], totalCount: 0, pageNumber: 2, pageSize: 25, totalPages: 0 });
+
+    const request = {
+      content: 'Kısa bir metin', question: 'Ana fikir nedir?', optionA: 'A', optionB: 'B',
+      optionC: 'C', optionD: 'D', optionE: null, correctOption: 'A', examType: 1,
+      difficulty: 2, wordCount: 3, topic: 'Okuma', category: 1, targetAgeGroupId: 'age-1'
+    };
+    service.createExamQuestion(request).subscribe();
+    const createRequest = http.expectOne('/api/speed-reading/exam-questions');
+    expect(createRequest.request.method).toBe('POST');
+    createRequest.flush('question-1');
+
+    service.updateExamQuestion('question-1', request).subscribe();
+    const updateRequest = http.expectOne('/api/speed-reading/exam-questions/question-1');
+    expect(updateRequest.request.method).toBe('PUT');
+    updateRequest.flush(null);
+
+    service.deleteExamQuestion('question-1').subscribe();
+    const deleteRequest = http.expectOne('/api/speed-reading/exam-questions/question-1');
+    expect(deleteRequest.request.method).toBe('DELETE');
+    deleteRequest.flush(null);
+  });
+
+  it('lists and manages vocabulary with CSV import/export', () => {
+    service.getVocabulary('kitap', 'Genel', 2, 'age-1', 2, 25).subscribe(value => expect(value.totalCount).toBe(0));
+    const listRequest = http.expectOne('/api/speed-reading/vocabulary?pageNumber=2&pageSize=25&search=kitap&category=Genel&difficultyLevel=2&ageGroupId=age-1');
+    expect(listRequest.request.method).toBe('GET');
+    listRequest.flush({ items: [], totalCount: 0, pageNumber: 2, pageSize: 25, totalPages: 0 });
+
+    service.getVocabularyCategories().subscribe(value => expect(value).toEqual([]));
+    const categoriesRequest = http.expectOne('/api/speed-reading/vocabulary/categories');
+    expect(categoriesRequest.request.method).toBe('GET');
+    categoriesRequest.flush([]);
+
+    const request = {
+      word: 'kitap', definition: 'Okuma nesnesi', exampleSentence: 'Kitap okudum.',
+      synonyms: 'eser', antonyms: null, category: 'Genel', difficultyLevel: 1, targetAgeGroupId: null
+    };
+    service.createVocabularyItem(request).subscribe();
+    const createRequest = http.expectOne('/api/speed-reading/vocabulary');
+    expect(createRequest.request.method).toBe('POST');
+    createRequest.flush({ id: 'word-1' });
+
+    service.updateVocabularyItem('word-1', request).subscribe();
+    const updateRequest = http.expectOne('/api/speed-reading/vocabulary/word-1');
+    expect(updateRequest.request.method).toBe('PUT');
+    updateRequest.flush({ id: 'word-1' });
+
+    service.deleteVocabularyItem('word-1').subscribe();
+    const deleteRequest = http.expectOne('/api/speed-reading/vocabulary/word-1');
+    expect(deleteRequest.request.method).toBe('DELETE');
+    deleteRequest.flush(null);
+
+    service.importVocabulary(new File(['Word,Definition'], 'vocabulary.csv', { type: 'text/csv' })).subscribe();
+    const importRequest = http.expectOne('/api/speed-reading/vocabulary/import');
+    expect(importRequest.request.method).toBe('POST');
+    expect(importRequest.request.body instanceof FormData).toBe(true);
+    importRequest.flush({ successCount: 1, failureCount: 0, errors: [] });
+
+    service.exportVocabulary('Genel', 1, 'age-1').subscribe();
+    const exportRequest = http.expectOne('/api/speed-reading/vocabulary/export?category=Genel&difficultyLevel=1&ageGroupId=age-1');
+    expect(exportRequest.request.method).toBe('GET');
+    exportRequest.flush(new Blob(['csv'], { type: 'text/csv' }));
+  });
+
+  it('lists and manages report templates, snapshots and schedules', () => {
+    service.getReportTemplates('Progress', true, 50).subscribe(value => expect(value).toEqual([]));
+    const templatesRequest = http.expectOne(request =>
+      request.url === '/api/speed-reading/reports/templates'
+      && request.params.get('type') === 'Progress'
+      && request.params.get('isActive') === 'true'
+      && request.params.get('limit') === '50');
+    expect(templatesRequest.request.method).toBe('GET');
+    templatesRequest.flush([]);
+
+    const template = { name: 'İlerleme', description: 'Haftalık', type: 1, category: 1, configurationJson: '{}' };
+    service.createReportTemplate(template, 'report-template-key-123456').subscribe();
+    const createTemplateRequest = http.expectOne('/api/speed-reading/reports/templates');
+    expect(createTemplateRequest.request.method).toBe('POST');
+    expect(createTemplateRequest.request.headers.get('Idempotency-Key')).toBe('report-template-key-123456');
+    createTemplateRequest.flush({ id: 'template-1' });
+
+    service.updateReportTemplate('template-1', { ...template, isActive: true }).subscribe();
+    const updateTemplateRequest = http.expectOne('/api/speed-reading/reports/templates/template-1');
+    expect(updateTemplateRequest.request.method).toBe('PUT');
+    updateTemplateRequest.flush({ id: 'template-1' });
+
+    service.getReportSnapshots(20).subscribe(value => expect(value).toEqual([]));
+    const snapshotsRequest = http.expectOne('/api/speed-reading/reports/snapshots?limit=20');
+    expect(snapshotsRequest.request.method).toBe('GET');
+    snapshotsRequest.flush([]);
+
+    service.getScheduledReports(20).subscribe(value => expect(value).toEqual([]));
+    const schedulesRequest = http.expectOne('/api/speed-reading/reports/scheduled?limit=20');
+    expect(schedulesRequest.request.method).toBe('GET');
+    schedulesRequest.flush([]);
+
+    const schedule = { reportTemplateId: 'template-1', frequency: 1, dayOfWeek: 1, dayOfMonth: null, deliveryTime: '09:00:00', sendEmail: false, saveToDashboard: true, emailRecipients: null };
+    service.createScheduledReport(schedule, 'report-schedule-key-123456').subscribe();
+    const createScheduleRequest = http.expectOne('/api/speed-reading/reports/scheduled');
+    expect(createScheduleRequest.request.method).toBe('POST');
+    expect(createScheduleRequest.request.headers.get('Idempotency-Key')).toBe('report-schedule-key-123456');
+    createScheduleRequest.flush({ id: 'schedule-1' });
+
+    service.updateScheduledReportStatus('schedule-1', false).subscribe();
+    const statusRequest = http.expectOne('/api/speed-reading/reports/scheduled/schedule-1/status');
+    expect(statusRequest.request.method).toBe('PATCH');
+    statusRequest.flush({ id: 'schedule-1' });
+  });
+
   it('loads exercise types from the legacy content catalog', () => {
     const response = {
       items: [{
@@ -145,6 +457,27 @@ describe('SpeedReadingAdminService', () => {
     expect(deleteRequest.request.method).toBe('DELETE');
     expect(deleteRequest.request.headers.get('Idempotency-Key')).toBe('reading-text-delete-123456');
     deleteRequest.flush(null);
+  });
+
+  it('supports reading-text import/export and program cloning contracts', () => {
+    service.exportReadingText('text-1', 'pdf').subscribe();
+    const exportRequest = http.expectOne('/api/speed-reading/reading-texts/text-1/export/pdf');
+    expect(exportRequest.request.method).toBe('GET');
+    expect(exportRequest.request.responseType).toBe('blob');
+    exportRequest.flush(new Blob(['pdf']));
+
+    service.importReadingTexts(new File(['title,content'], 'texts.csv', { type: 'text/csv' }), 'csv', 'import-key-123456').subscribe();
+    const importRequest = http.expectOne('/api/speed-reading/reading-texts/import/csv');
+    expect(importRequest.request.method).toBe('POST');
+    expect(importRequest.request.headers.get('Idempotency-Key')).toBe('import-key-123456');
+    expect(importRequest.request.body instanceof FormData).toBe(true);
+    importRequest.flush({ importedCount: 1 });
+
+    service.cloneProgramTemplate('program-1', 'clone-key-123456').subscribe();
+    const cloneRequest = http.expectOne('/api/speed-reading/program-templates/program-1/clone');
+    expect(cloneRequest.request.method).toBe('POST');
+    expect(cloneRequest.request.headers.get('Idempotency-Key')).toBe('clone-key-123456');
+    cloneRequest.flush({ id: 'program-2' });
   });
 
   it('writes reading questions through the dedicated route with idempotency', () => {
@@ -384,5 +717,71 @@ describe('SpeedReadingAdminService', () => {
     expect(deleteRequest.request.method).toBe('DELETE');
     expect(deleteRequest.request.headers.get('Idempotency-Key')).toBe('achievement-delete-key-123456');
     deleteRequest.flush(null);
+  });
+
+  it('loads achievement detail, statistics, categories and tiers', () => {
+    service.getAchievementForAdmin('achievement-1').subscribe();
+    expect(http.expectOne('/api/speed-reading/achievements/admin/achievement-1').request.method).toBe('GET');
+
+    service.getAchievementStats().subscribe();
+    expect(http.expectOne('/api/speed-reading/achievements/admin/stats').request.method).toBe('GET');
+
+    service.getAchievementCategories().subscribe();
+    expect(http.expectOne('/api/speed-reading/achievements/categories').request.method).toBe('GET');
+
+    service.getAchievementTiers().subscribe();
+    expect(http.expectOne('/api/speed-reading/achievements/tiers').request.method).toBe('GET');
+  });
+
+  it('loads and manages CMS, announcements, email and broadcast notification contracts', () => {
+    service.getCmsBlocks('HomePage').subscribe(value => expect(value).toEqual([]));
+    const blocksRequest = http.expectOne('/api/speed-reading/admin/cms/blocks?group=HomePage');
+    expect(blocksRequest.request.method).toBe('GET');
+    blocksRequest.flush({ data: [] });
+
+    service.getCmsPages(2, 25).subscribe(value => expect(value.totalCount).toBe(0));
+    const pagesRequest = http.expectOne('/api/speed-reading/admin/cms/pages?pageNumber=2&pageSize=25');
+    expect(pagesRequest.request.method).toBe('GET');
+    pagesRequest.flush({ data: { items: [], totalCount: 0, pageNumber: 2, pageSize: 25 } });
+
+    service.createCmsBlock({ key: 'hero.title', group: 'HomePage', label: 'Başlık', type: 1, value: 'Merhaba' }).subscribe();
+    const createBlockRequest = http.expectOne('/api/speed-reading/admin/cms/blocks');
+    expect(createBlockRequest.request.method).toBe('POST');
+    createBlockRequest.flush({ data: { id: 'block-1' } });
+
+    service.getAnnouncements({ isActive: true, includeExpired: false, take: 25 }).subscribe(value => expect(value).toEqual([]));
+    const announcementsRequest = http.expectOne('/api/speed-reading/announcements?isActive=true&includeExpired=false&take=25');
+    expect(announcementsRequest.request.method).toBe('GET');
+    announcementsRequest.flush([]);
+
+    service.createAnnouncement({
+      title: 'Bakım', content: 'Planlı bakım', plainTextContent: 'Planlı bakım', priority: 2,
+      targetAudience: 0, targetInstitutionId: null, targetRoles: [], isPinned: false,
+      startDate: null, expiresAt: null, displayType: 0, icon: null, colorTheme: null,
+      actionUrl: null, actionText: null, sendEmailNotification: false, createInAppNotification: true
+    }).subscribe();
+    const announcementCreateRequest = http.expectOne('/api/speed-reading/announcements');
+    expect(announcementCreateRequest.request.method).toBe('POST');
+    announcementCreateRequest.flush({ id: 'announcement-1' });
+
+    service.getSpeedReadingEmailTemplates().subscribe(value => expect(value).toEqual([]));
+    const templatesRequest = http.expectOne('/api/speed-reading/email-templates');
+    expect(templatesRequest.request.method).toBe('GET');
+    templatesRequest.flush([]);
+
+    service.getSpeedReadingEmailCampaigns(1).subscribe(value => expect(value).toEqual([]));
+    const campaignsRequest = http.expectOne('/api/speed-reading/email-campaigns?status=1');
+    expect(campaignsRequest.request.method).toBe('GET');
+    campaignsRequest.flush([]);
+
+    service.getSpeedReadingNotifications(2, 25, { isRead: false, searchTerm: 'Ada' }).subscribe(value => expect(value.totalCount).toBe(0));
+    const notificationsRequest = http.expectOne('/api/speed-reading/notifications/all?pageNumber=2&pageSize=25&isRead=false&searchTerm=Ada');
+    expect(notificationsRequest.request.method).toBe('GET');
+    notificationsRequest.flush({ items: [], totalCount: 0, pageNumber: 2, pageSize: 25 });
+
+    service.sendSpeedReadingBulkNotification({ targetType: 'All', targetRole: null, title: 'Duyuru', message: 'Mesaj', sendEmail: false }).subscribe();
+    const bulkRequest = http.expectOne('/api/speed-reading/notifications/bulk');
+    expect(bulkRequest.request.method).toBe('POST');
+    bulkRequest.flush({ success: true, totalSent: 0, totalFailed: 0, emailsSent: 0, errors: [] });
   });
 });

@@ -47,6 +47,17 @@ export class SidebarComponent {
     const permissions = this.user()?.permissions ?? [];
     const isSystemAdmin = this.user()?.roles?.includes('SystemAdmin') ?? false;
     const isManager = permissions.some(permission => permission.startsWith('Permissions.'));
+    const hasSpeedReadingAccess = [
+      ADMIN_PERMISSIONS.speedReadingView,
+      ADMIN_PERMISSIONS.speedReadingContentManage,
+      ADMIN_PERMISSIONS.speedReadingProgramManage,
+      ADMIN_PERMISSIONS.speedReadingProgressView,
+      ADMIN_PERMISSIONS.speedReadingReportView,
+      ADMIN_PERMISSIONS.speedReadingPlatformAnalytics,
+      ADMIN_PERMISSIONS.speedReadingGamificationManage,
+      ADMIN_PERMISSIONS.speedReadingSettingsManage,
+      ADMIN_PERMISSIONS.speedReadingCommunicationsManage
+    ].some(permission => permissions.includes(permission));
     const items: any[] = [
       {
         label: 'Ana Sayfa',
@@ -161,7 +172,7 @@ export class SidebarComponent {
         ]
       });
 
-      if (this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingView)) {
+      if (hasSpeedReadingAccess) {
         items.push({
           label: 'Hızlı Okuma',
           icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>',
@@ -171,6 +182,78 @@ export class SidebarComponent {
               route: '/dashboard/speed-reading',
               permission: ADMIN_PERMISSIONS.speedReadingView,
               icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v18h18M7.5 15l3-3 2.25 2.25 4.5-6" /></svg>'
+            },
+            {
+              label: 'Analitik ve raporlar',
+              route: '/dashboard/speed-reading/analytics',
+              permission: ADMIN_PERMISSIONS.speedReadingPlatformAnalytics,
+              icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.5 8.25 8.25l3.75 3.75L21 3m0 0v6m0-6h-6" /></svg>'
+            },
+            {
+              label: 'Öğretmen analitiği',
+              route: '/dashboard/speed-reading/teacher-analytics',
+              permission: ADMIN_PERMISSIONS.speedReadingReportView,
+              icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.37 9.37 0 0 0 2.625-.372M15 19.128v-.004a6.75 6.75 0 0 0-6-6.704 6.75 6.75 0 0 0-6 6.704v.004M15 19.128a9.37 9.37 0 0 1-6 0M12 11.25a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" /></svg>'
+            },
+            {
+              label: 'Öğrenci ilerlemeleri',
+              route: '/dashboard/speed-reading/progress',
+              permission: ADMIN_PERMISSIONS.speedReadingProgressView,
+              icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5h15m-12-3v-6m4.5 6V6m4.5 10.5V3" /></svg>'
+            },
+            {
+              label: 'Ürün ve abonelikler',
+              route: '/dashboard/speed-reading/subscriptions',
+              permission: ADMIN_PERMISSIONS.speedReadingContentManage,
+              icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M3 6h18a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 21 18H3a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 3 6Z" /></svg>'
+            },
+            {
+              label: 'İçerik yapılandırması',
+              route: '/dashboard/speed-reading/content-configuration',
+              permission: ADMIN_PERMISSIONS.speedReadingSettingsManage,
+              icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M3.75 6h.008v.008H3.75V6Zm0 6h.008v.008H3.75V12Zm0 6h.008v.008H3.75V18ZM6 6h.75M6 12h.75M6 18h.75m4.5-6h9.75m-9.75 6h9.75" /></svg>'
+            },
+            {
+              label: 'Egzersiz ve okuma içeriği',
+              route: '/dashboard/speed-reading/catalog',
+              permission: ADMIN_PERMISSIONS.speedReadingContentManage,
+              icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 5.25A2.25 2.25 0 0 1 6.75 3h10.5A2.25 2.25 0 0 1 19.5 5.25v13.5A2.25 2.25 0 0 1 17.25 21H6.75A2.25 2.25 0 0 1 4.5 18.75V5.25Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5h7.5m-7.5 3h7.5m-7.5 3h4.5" /></svg>'
+            },
+            {
+              label: 'Programlar ve öğrenme yolları',
+              route: '/dashboard/speed-reading/programs',
+              permission: ADMIN_PERMISSIONS.speedReadingProgramManage,
+              icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" /></svg>'
+            },
+            {
+              label: 'Görselleştirme sahneleri',
+              route: '/dashboard/speed-reading/visualization-scenes',
+              permission: ADMIN_PERMISSIONS.speedReadingContentManage,
+              icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 3.75-3.75 3 3 4.5-6 5.25 6.75M3.75 19.5h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Z" /></svg>'
+            },
+            {
+              label: 'Soru ve kelime havuzu',
+              route: '/dashboard/speed-reading/language-content',
+              permission: ADMIN_PERMISSIONS.speedReadingContentManage,
+              icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.5h4.242M9.879 12h4.242m-4.242 4.5h4.242M6.75 3.75h10.5A2.25 2.25 0 0 1 19.5 6v12a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 18V6a2.25 2.25 0 0 1 2.25-2.25Z" /></svg>'
+            },
+            {
+              label: 'Başarılar ve rozetler',
+              route: '/dashboard/speed-reading/achievements',
+              permission: ADMIN_PERMISSIONS.speedReadingGamificationManage,
+              icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.75h-9A2.25 2.25 0 0 0 5.25 6v3.75A6.75 6.75 0 0 0 12 16.5a6.75 6.75 0 0 0 6.75-6.75V6a2.25 2.25 0 0 0-2.25-2.25Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M9 20.25h6M12 16.5v3.75" /></svg>'
+            },
+            {
+              label: 'Rapor yönetimi',
+              route: '/dashboard/speed-reading/reports',
+              permission: ADMIN_PERMISSIONS.speedReadingReportView,
+              icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3.75-12H18m-2.25 3H18m-2.25 3H18M6.75 3.75h10.5A2.25 2.25 0 0 1 19.5 6v12a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 18V6a2.25 2.25 0 0 1 2.25-2.25Z" /></svg>'
+            },
+            {
+              label: 'İletişim ve CMS',
+              route: '/dashboard/speed-reading/communications',
+              permissions: [ADMIN_PERMISSIONS.speedReadingContentManage, ADMIN_PERMISSIONS.speedReadingCommunicationsManage],
+              icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9.75h7.5m-7.5 3h4.5m-9 5.25 1.75-1.75A2.25 2.25 0 0 1 7.09 15.6h9.82a2.25 2.25 0 0 1 2.25 2.25v.4a2.25 2.25 0 0 1-2.25 2.25H7.09a2.25 2.25 0 0 1-1.59-.66L3.75 18Z" /></svg>'
             }
           ]
         });
@@ -217,6 +300,18 @@ export class SidebarComponent {
       '/dashboard/coaching/operations/new/exam': ADMIN_PERMISSIONS.coachingManage,
       '/dashboard/coaching/operations/new/goal': ADMIN_PERMISSIONS.coachingManage,
       '/dashboard/speed-reading': ADMIN_PERMISSIONS.speedReadingView,
+      '/dashboard/speed-reading/analytics': ADMIN_PERMISSIONS.speedReadingPlatformAnalytics,
+      '/dashboard/speed-reading/progress': ADMIN_PERMISSIONS.speedReadingProgressView,
+      '/dashboard/speed-reading/subscriptions': ADMIN_PERMISSIONS.speedReadingContentManage,
+      '/dashboard/speed-reading/content-configuration': ADMIN_PERMISSIONS.speedReadingSettingsManage,
+      '/dashboard/speed-reading/visualization-scenes': ADMIN_PERMISSIONS.speedReadingContentManage,
+      '/dashboard/speed-reading/language-content': ADMIN_PERMISSIONS.speedReadingContentManage,
+      '/dashboard/speed-reading/reports': ADMIN_PERMISSIONS.speedReadingReportView,
+      '/dashboard/speed-reading/communications': ADMIN_PERMISSIONS.speedReadingCommunicationsManage,
+      '/dashboard/speed-reading/teacher-analytics': ADMIN_PERMISSIONS.speedReadingReportView,
+      '/dashboard/speed-reading/catalog': ADMIN_PERMISSIONS.speedReadingContentManage,
+      '/dashboard/speed-reading/programs': ADMIN_PERMISSIONS.speedReadingProgramManage,
+      '/dashboard/speed-reading/achievements': ADMIN_PERMISSIONS.speedReadingGamificationManage,
       '/dashboard/settings/admin-audit': ADMIN_PERMISSIONS.operationsView,
       '/dashboard/settings/logs': ADMIN_PERMISSIONS.operationsView,
       '/dashboard/settings/log-retention': ADMIN_PERMISSIONS.operationsView,
@@ -227,8 +322,8 @@ export class SidebarComponent {
     return items
       .map(i => ({
         ...i,
-        children: i.children?.filter((child: any) =>
-          !child.route || this.authService.hasPermission(permissionByRoute[child.route]))
+         children: i.children?.filter((child: any) =>
+           !child.route || child.permissions?.some((permission: string) => this.authService.hasPermission(permission)) || this.authService.hasPermission(permissionByRoute[child.route]))
       }))
       .filter(i => !i.children || i.children.length > 0)
       .map(i => ({

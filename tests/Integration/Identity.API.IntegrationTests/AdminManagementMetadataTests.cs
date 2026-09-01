@@ -48,7 +48,7 @@ public class AdminManagementMetadataTests
         foreach (var methodName in new[]
                  {
                      "CreateUser", "DeleteUser", "ActivateUser", "ConfirmEmail",
-                     "ChangePassword", "UpdateUser", "AssignRole", "RemoveRole"
+                     "ChangePassword", "UpdateUser", "UpdateUserProfile", "AssignRole", "RemoveRole"
                  })
         {
             typeof(UserController)
@@ -58,6 +58,18 @@ public class AdminManagementMetadataTests
                 .Should()
                 .Contain(attribute => attribute.Roles == "SystemAdmin");
         }
+    }
+
+    [Fact]
+    public void UserProfileMutation_MustRequireEditPermission()
+    {
+        var method = typeof(UserController).GetMethod(nameof(UserController.UpdateUserProfile));
+
+        method.Should().NotBeNull();
+        method!.GetCustomAttributes(typeof(HasPermissionAttribute), inherit: true)
+            .Cast<HasPermissionAttribute>()
+            .Should()
+            .Contain(attribute => attribute.Policy == "Permissions.Users.Edit");
     }
 
     [Fact]

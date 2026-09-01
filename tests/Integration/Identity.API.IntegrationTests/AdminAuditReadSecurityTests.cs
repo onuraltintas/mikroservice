@@ -24,6 +24,11 @@ public sealed class AdminAuditReadSecurityTests
             typeof(Coaching.API.Controllers.AssignmentsController).Assembly,
             "Coaching.API.Controllers.AdminAuditController",
             "api/admin-audit/coaching"
+        },
+        {
+            typeof(SpeedReading.API.Controllers.AdminAnalyticsController).Assembly,
+            "SpeedReading.API.Controllers.AdminAuditController",
+            "api/admin-audit/speed-reading"
         }
     };
 

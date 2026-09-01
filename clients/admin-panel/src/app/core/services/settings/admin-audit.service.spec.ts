@@ -25,6 +25,11 @@ describe('AdminAuditService', () => {
     expect(request.request.params.get('search')).toBe('/api/assignments');
     expect(request.request.params.get('statusCode')).toBe('403');
     request.flush({ items: [], totalCount: 0, page: 2, pageSize: 25 });
+
+    service.getPage('speed-reading', { page: 1, pageSize: 25 }).subscribe();
+    const speedReadingRequest = http.expectOne(candidate => candidate.url.endsWith('/admin-audit/speed-reading'));
+    expect(speedReadingRequest.request.method).toBe('GET');
+    speedReadingRequest.flush({ items: [], totalCount: 0, page: 1, pageSize: 25 });
     http.verify();
   });
 });

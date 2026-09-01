@@ -56,6 +56,7 @@ public static class Permissions
         public const string LeaderboardView = PlatformPermissions.SpeedReading.LeaderboardView;
         public const string GamificationManage = PlatformPermissions.SpeedReading.GamificationManage;
         public const string SettingsManage = PlatformPermissions.SpeedReading.SettingsManage;
+        public const string CommunicationsManage = PlatformPermissions.SpeedReading.CommunicationsManage;
     }
 
     public static class Support

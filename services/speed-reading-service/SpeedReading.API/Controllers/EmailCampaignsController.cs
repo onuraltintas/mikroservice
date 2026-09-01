@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using EduPlatform.Shared.Contracts.Authorization;
+using EduPlatform.Shared.Security.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SpeedReading.Application.Notifications;
@@ -8,6 +10,7 @@ namespace SpeedReading.API.Controllers;
 [ApiController]
 [Route("api/speed-reading/email-campaigns")]
 [Authorize(Roles = "Admin,SystemAdmin")]
+[HasPermission(PlatformPermissions.SpeedReading.CommunicationsManage)]
 public sealed class EmailCampaignsController(ISpeedReadingEmailCampaigns campaigns) : ControllerBase
 {
     [HttpGet]

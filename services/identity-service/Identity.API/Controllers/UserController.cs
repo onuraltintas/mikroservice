@@ -341,6 +341,39 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
+    /// Updates the role-specific profile fields of a student or teacher.
+    /// </summary>
+    [HttpPut("{id:guid}/profile")]
+    [HasPermission(Permissions.Users.Edit)]
+    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
+    public async Task<IActionResult> UpdateUserProfile(Guid id, [FromBody] UpdateUserRequest request)
+    {
+        var command = new Identity.Application.Commands.UpdateUser.UpdateUserCommand(
+            id,
+            request.FirstName,
+            request.LastName,
+            request.PhoneNumber,
+            request.Bio,
+            request.AvatarUrl,
+            request.TeacherTitle,
+            request.TeacherExperienceYears,
+            request.TeacherSubjects,
+            request.StudentGradeLevel,
+            request.StudentBirthDate,
+            request.StudentLearningStyle,
+            request.InstitutionId,
+            UpdateRoleProfile: true);
+
+        var result = await _mediator.Send(command);
+
+        if (result.IsSuccess)
+            return NoContent();
+
+        return BadRequest(result.Error);
+    }
+
+    /// <summary>
     /// Kullanıcıdan rol çıkarır.
     /// </summary>
     [HttpDelete("{id:guid}/roles/{roleName}")]
@@ -355,7 +388,19 @@ public class UserController : ControllerBase
         return BadRequest(result.Error);
     }
 
-    public record UpdateUserRequest(string FirstName, string LastName, string? PhoneNumber);
+    public record UpdateUserRequest(
+        string FirstName,
+        string LastName,
+        string? PhoneNumber,
+        string? Bio = null,
+        string? AvatarUrl = null,
+        string? TeacherTitle = null,
+        int? TeacherExperienceYears = null,
+        string[]? TeacherSubjects = null,
+        int? StudentGradeLevel = null,
+        DateTime? StudentBirthDate = null,
+        Identity.Domain.Enums.LearningStyle? StudentLearningStyle = null,
+        Guid? InstitutionId = null);
     
     public record RoleRequest(string RoleName);
 
