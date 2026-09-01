@@ -38,8 +38,8 @@
                 <mat-icon matSuffix>phone</mat-icon>
             </mat-form-field>
 
-            <!-- Password (required for new, optional for edit) -->
-            <div class="password-group full-width">
+            <!-- Password (optional for edit; new users receive a setup link) -->
+            <div class="password-group full-width" *ngIf="isEditMode">
                 <mat-form-field appearance="outline">
                     <mat-label>{{ isEditMode ? 'Yeni Şifre (İsteğe Bağlı)' : 'Şifre' }}</mat-label>
                     <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password"
@@ -57,7 +57,12 @@
                         <span *ngIf="userForm.get('password')?.hasError(error.type)">• {{error.message}}</span>
                     </small>
                 </div>
-                <mat-hint *ngIf="isEditMode">Şifreyi değiştirmek istemiyorsanız boş bırakın</mat-hint>
+                <mat-hint>Şifreyi değiştirmek istemiyorsanız boş bırakın</mat-hint>
+            </div>
+
+            <div class="profile-info-header full-width" *ngIf="!isEditMode">
+                <mat-icon>info</mat-icon>
+                <p>Editör oluşturulduğunda parola belirleme bağlantısı e-posta adresine gönderilir.</p>
             </div>
         </div>
     </form>

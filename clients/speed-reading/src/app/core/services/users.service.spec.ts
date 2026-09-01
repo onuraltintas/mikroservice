@@ -30,6 +30,28 @@ describe('UsersService', () => {
     request.flush({ items: [], totalCount: 0, pageNumber: 1, pageSize: 100 });
   });
 
+  it('sends admin user creation using the identity provisioning contract', () => {
+    service.createUser({
+      email: 'new-student@example.com',
+      firstName: 'New',
+      lastName: 'Student',
+      role: 'Student',
+      phoneNumber: '+905551112233'
+    }, true).subscribe();
+
+    const request = http.expectOne('/api/v1/users');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.headers.get('X-Skip-Forbidden-Redirect')).toBe('true');
+    expect(request.request.body).toEqual({
+      email: 'new-student@example.com',
+      firstName: 'New',
+      lastName: 'Student',
+      phoneNumber: '+905551112233',
+      role: 'Student'
+    });
+    request.flush({ userId: 'user-1' });
+  });
+
   it('loads a server-paged user list with the requested filters', () => {
     let result: any;
 

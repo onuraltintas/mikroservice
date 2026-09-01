@@ -196,22 +196,6 @@
             </mat-error>
         </mat-form-field>
 
-        <!-- Password -->
-        <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Şifre</mat-label>
-            <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" placeholder="Şifre">
-            <mat-icon matPrefix>lock</mat-icon>
-            <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
-                <mat-icon>{{ hidePassword ? 'visibility' : 'visibility_off' }}</mat-icon>
-            </button>
-            <mat-error *ngIf="userForm.get('password')?.hasError('required')">
-                Şifre zorunludur
-            </mat-error>
-            <mat-error *ngIf="userForm.get('password')?.hasError('minlength')">
-                Şifre en az 6 karakter olmalıdır
-            </mat-error>
-        </mat-form-field>
-
         <!-- Phone Number -->
         <mat-form-field appearance="outline" class="full-width">
             <mat-label>Telefon</mat-label>
@@ -219,22 +203,10 @@
             <mat-icon matPrefix>phone</mat-icon>
         </mat-form-field>
 
-        <!-- Institution -->
-        <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Kurum</mat-label>
-            <mat-select formControlName="institutionId">
-                <mat-option [value]="null">Kurum seçilmedi</mat-option>
-                <mat-option *ngFor="let institution of institutions" [value]="institution.id">
-                    {{ institution.name }}
-                </mat-option>
-            </mat-select>
-            <mat-icon matPrefix>business</mat-icon>
-        </mat-form-field>
-
         <!-- Roles -->
         <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Roller</mat-label>
-            <mat-select formControlName="roles" multiple>
+            <mat-label>Rol</mat-label>
+            <mat-select formControlName="role">
                 <mat-option *ngFor="let role of roles" [value]="role.name">
                     {{ getRoleDisplayName(role.name) }}
                 </mat-option>
@@ -242,6 +214,11 @@
             <mat-icon matPrefix>admin_panel_settings</mat-icon>
             <mat-hint>Varsayılan olarak Student rolü atanır</mat-hint>
         </mat-form-field>
+
+        <div class="profile-info-header">
+            <mat-icon>info</mat-icon>
+            <p>Kullanıcı oluşturulduğunda parola belirleme bağlantısı e-posta adresine gönderilir. Kurum ve profil bilgileri oluşturma sonrasında düzenlenir.</p>
+        </div>
     </form>
 
     <!-- Loading -->

@@ -58,10 +58,7 @@ export class EditorDialogComponent extends BaseComponent implements OnInit {
             phoneNumber: [this.data?.phoneNumber || '', [Validators.pattern(/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/)]]
         };
 
-        if (!this.isEditMode) {
-            // Create: Password Required
-            formConfig.password = ['', [Validators.required, strongPasswordValidator()]];
-        } else {
+        if (this.isEditMode) {
             // Edit: Password Optional
             formConfig.password = ['', [strongPasswordValidator()]];
         }
@@ -78,14 +75,13 @@ export class EditorDialogComponent extends BaseComponent implements OnInit {
         const formValue = this.userForm.value;
 
         // Prepare DTO
-        let userData: any = {
-            ...formValue,
-            roles: ['Editor']
-        };
-
         if (this.isEditMode) {
             // Update User
-            const updateOp = this.usersService.updateUser(this.data!.id, userData);
+            const updateOp = this.usersService.updateUser(this.data!.id, {
+                firstName: formValue.firstName,
+                lastName: formValue.lastName,
+                phoneNumber: formValue.phoneNumber || undefined
+            });
 
             let finalOp = updateOp;
             if (formValue.password) {
@@ -112,7 +108,13 @@ export class EditorDialogComponent extends BaseComponent implements OnInit {
 
         } else {
             // Create User
-            this.usersService.createUser(userData)
+            this.usersService.createUser({
+                email: formValue.email,
+                firstName: formValue.firstName,
+                lastName: formValue.lastName,
+                phoneNumber: formValue.phoneNumber || undefined,
+                role: 'Editor'
+            }, true)
                 .pipe(
                     takeUntil(this.destroy$),
                     finalize(() => this.saving = false)
@@ -122,8 +124,11 @@ export class EditorDialogComponent extends BaseComponent implements OnInit {
                         this.handleSuccess('Editör oluşturuldu');
                         this.dialogRef.close(true);
                     },
-                    error: (error) => {
-                        this.toaster.error('İşlem başarısız oldu. Lütfen e-posta adresinin benzersiz olduğundan emin olun.');
+                    error: (error: unknown) => {
+                        const status = (error as { status?: number })?.status;
+                        this.toaster.error(status === 403
+                            ? 'Bu işlem için SystemAdmin hesabında MFA doğrulaması gerekir.'
+                            : 'İşlem başarısız oldu. Lütfen e-posta adresinin benzersiz olduğundan emin olun.');
                     }
                 });
         }

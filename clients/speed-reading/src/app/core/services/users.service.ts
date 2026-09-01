@@ -7,6 +7,7 @@ import {
   UserDto,
   UserDetailDto,
   CreateUserRequest,
+  CreateUserResponse,
   UpdateUserRequest,
   AssignRoleRequest,
   Institution,
@@ -106,11 +107,18 @@ export class UsersService {
 
   /**
    * Create new user
-   * Backend returns: ApiResponse<UserDto>
-   * Service receives: UserDto (auto-unwrapped)
+   * Backend returns: ApiResponse<CreateUserResponse>
+   * Service receives: CreateUserResponse (auto-unwrapped)
    */
-  createUser(request: CreateUserRequest): Observable<UserDto> {
-    return this.http.post<UserDto>(this.API_URL, request);
+  createUser(request: CreateUserRequest, suppressForbiddenRedirect = false): Observable<CreateUserResponse> {
+    const options = suppressForbiddenRedirect ? this.accessManagementOptions : {};
+    return this.http.post<CreateUserResponse>(this.API_URL, {
+      email: request.email,
+      firstName: request.firstName,
+      lastName: request.lastName,
+      phoneNumber: request.phoneNumber,
+      role: request.role
+    }, options);
   }
 
   /**

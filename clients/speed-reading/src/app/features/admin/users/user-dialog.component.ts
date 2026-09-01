@@ -15,10 +15,9 @@ import { takeUntil, finalize, switchMap } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 import { UsersService } from '../../../core/services/users.service';
 import { AgeGroupConfigurationService } from '../../../core/services/age-group-configuration.service';
-import { UserDetailDto, Institution, RoleDto, UpdateUserProfileRequest } from '../../../core/models/user.model';
+import { UserDetailDto, Institution, RoleDto, CreateUserRequest, UpdateUserProfileRequest } from '../../../core/models/user.model';
 import { AgeGroupConfiguration } from '../../../core/models/age-group-configuration.model';
 import { BaseComponent } from '../../../core/components/base.component';
-import { strongPasswordValidator, PASSWORD_ERROR_MESSAGES } from '../../../shared/validators/password.validator';
 
 @Component({
   selector: 'app-user-dialog',
@@ -49,10 +48,8 @@ export class UserDialogComponent extends BaseComponent implements OnInit {
   userForm: FormGroup;
   isEditMode = false;
   saving = false;
-  hidePassword = true;
   institutions: Institution[] = [];
   ageGroups: AgeGroupConfiguration[] = [];
-  passwordErrorMessages = PASSWORD_ERROR_MESSAGES;
 
   constructor(
     public dialogRef: MatDialogRef<UserDialogComponent>,
@@ -83,10 +80,9 @@ export class UserDialogComponent extends BaseComponent implements OnInit {
       institutionId: [this.data?.institutionId || null]
     };
 
-    // Add password field only for create mode
+    // The identity service provisions a one-time password setup link for new users.
     if (!this.isEditMode) {
-      formConfig.password = ['', [Validators.required, strongPasswordValidator()]];
-      formConfig.roles = [[]];
+      formConfig.role = ['Student', Validators.required];
     } else {
       // Profile fields
       formConfig.dateOfBirth = [this.data?.dateOfBirth ? new Date(this.data.dateOfBirth) : null];
@@ -197,19 +193,6 @@ export class UserDialogComponent extends BaseComponent implements OnInit {
     this.saving = true;
     const formValue = this.userForm.getRawValue();
 
-    // Clean up null/empty values and format data
-    const userData: any = {};
-    Object.keys(formValue).forEach(key => {
-      if (formValue[key] !== null && formValue[key] !== '') {
-        // Convert Date object to ISO string for dateOfBirth
-        if (key === 'dateOfBirth' && formValue[key] instanceof Date) {
-          userData[key] = formValue[key].toISOString();
-        } else {
-          userData[key] = formValue[key];
-        }
-      }
-    });
-
     let operation: Observable<unknown>;
     if (this.isEditMode) {
       const basicUpdate = this.usersService.updateUser(this.data!.id, {
@@ -236,7 +219,14 @@ export class UserDialogComponent extends BaseComponent implements OnInit {
           : of(null))
       );
     } else {
-      operation = this.usersService.createUser(userData);
+      const createRequest: CreateUserRequest = {
+        email: formValue.email,
+        firstName: formValue.firstName,
+        lastName: formValue.lastName,
+        phoneNumber: formValue.phoneNumber || undefined,
+        role: formValue.role || 'Student'
+      };
+      operation = this.usersService.createUser(createRequest, true);
     }
 
     operation
@@ -251,8 +241,11 @@ export class UserDialogComponent extends BaseComponent implements OnInit {
           );
           this.dialogRef.close(true);
         },
-        error: (_error: unknown) => {
-          this.toaster.error('Kullanıcı kaydedilirken bir hata oluştu. Lütfen bilgileri kontrol edin (E-posta adresi kullanımda olabilir).');
+        error: (error: unknown) => {
+          const status = (error as { status?: number })?.status;
+          this.toaster.error(status === 403
+            ? 'Bu işlem için SystemAdmin hesabında MFA doğrulaması gerekir.'
+            : 'Kullanıcı kaydedilirken bir hata oluştu. Lütfen bilgileri kontrol edin (E-posta adresi kullanımda olabilir).');
         }
       });
   }

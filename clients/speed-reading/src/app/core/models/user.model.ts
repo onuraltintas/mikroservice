@@ -101,12 +101,14 @@ export interface UserDetailDto extends UserDto {
 
 export interface CreateUserRequest {
   email: string;
-  password: string;
   firstName: string;
   lastName: string;
+  role: string;
   phoneNumber?: string;
-  institutionId?: string;
-  roles?: string[];
+}
+
+export interface CreateUserResponse {
+  userId: string;
 }
 
 export interface UpdateUserRequest {
