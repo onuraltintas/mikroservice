@@ -82,6 +82,7 @@ export interface UserDto {
   roles: string[];
   isActive: boolean;
   emailConfirmed: boolean;
+  mfaEnabled?: boolean;
   lastLoginAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
@@ -117,6 +118,30 @@ export interface UpdateUserRequest {
   dateOfBirth?: string;
   isActive?: boolean;
   roles?: string[];
+}
+
+export interface UpdateUserProfileRequest {
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+  institutionId?: string | null;
+  bio?: string | null;
+  avatarUrl?: string | null;
+  teacherTitle?: string | null;
+  teacherExperienceYears?: number | null;
+  teacherSubjects?: string[] | null;
+  studentGradeLevel?: number | null;
+  studentBirthDate?: string | null;
+  studentLearningStyle?: string | null;
+}
+
+export interface UserSessionDto {
+  id: string;
+  createdAt: string;
+  expiresAt: string;
+  createdByIp?: string | null;
+  isPersistent: boolean;
+  mfaVerifiedAt?: string | null;
 }
 
 export interface AssignRoleRequest {

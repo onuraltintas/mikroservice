@@ -91,6 +91,14 @@ describe('UsersService', () => {
     request.flush(null);
   });
 
+  it('deactivates a user through the Identity soft-delete contract', () => {
+    service.deactivateUser('user-1').subscribe();
+
+    const request = http.expectOne('/api/v1/users/user-1?permanent=false');
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null);
+  });
+
   it('exposes email confirmation, session and MFA management operations', () => {
     service.revokeEmailConfirmation('user-1').subscribe();
     service.getSessions('user-1').subscribe();
@@ -98,9 +106,14 @@ describe('UsersService', () => {
     service.resetMfa('user-1').subscribe();
 
     expect(http.expectOne('/api/v1/users/user-1/revoke-email-confirmation').request.method).toBe('POST');
-    expect(http.expectOne('/api/v1/users/user-1/sessions').request.method).toBe('GET');
-    expect(http.expectOne('/api/v1/users/user-1/sessions').request.method).toBe('DELETE');
-    expect(http.expectOne('/api/v1/users/user-1/mfa/reset').request.method).toBe('POST');
-    http.match(() => true).forEach(request => request.flush(null));
+    const getSessionsRequest = http.expectOne(request =>
+      request.url === '/api/v1/users/user-1/sessions' && request.method === 'GET');
+    const revokeAllSessionsRequest = http.expectOne(request =>
+      request.url === '/api/v1/users/user-1/sessions' && request.method === 'DELETE');
+    const resetMfaRequest = http.expectOne('/api/v1/users/user-1/mfa/reset');
+    expect(resetMfaRequest.request.method).toBe('POST');
+    getSessionsRequest.flush([]);
+    revokeAllSessionsRequest.flush(null);
+    resetMfaRequest.flush(null);
   });
 });

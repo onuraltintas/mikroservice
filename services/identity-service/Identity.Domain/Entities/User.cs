@@ -117,6 +117,14 @@ public class User : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void RevokeEmailConfirmation()
+    {
+        EmailConfirmed = false;
+        EmailVerificationToken = null;
+        EmailVerificationTokenExpiresAt = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void GenerateEmailVerificationToken()
     {
         EmailVerificationToken = Guid.NewGuid().ToString("N");

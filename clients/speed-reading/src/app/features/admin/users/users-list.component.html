@@ -158,6 +158,10 @@
                                     <mat-icon>admin_panel_settings</mat-icon>
                                     <span>Rol Yönetimi</span>
                                 </button>
+                                <button mat-menu-item (click)="openAccessDialog(user)">
+                                    <mat-icon>security</mat-icon>
+                                    <span>Erişim ve MFA</span>
+                                </button>
                                 <mat-divider></mat-divider>
                                 <button mat-menu-item (click)="toggleEmailConfirmation(user)">
                                     <mat-icon>{{ user.emailConfirmed ? 'mark_email_unread' : 'mark_email_read'
@@ -197,7 +201,13 @@
                 </div>
             </div>
 
-            <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]" [pageSize]="25" showFirstLastButtons></mat-paginator>
+            <mat-paginator
+                [length]="totalUsers"
+                [pageIndex]="pageIndex"
+                [pageSizeOptions]="[10, 25, 50, 100]"
+                [pageSize]="pageSize"
+                (page)="onPageChange($event)"
+                showFirstLastButtons></mat-paginator>
         </div>
     </mat-card>
 </div>

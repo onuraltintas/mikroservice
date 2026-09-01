@@ -66,18 +66,9 @@
                         <mat-icon matPrefix>business</mat-icon>
                     </mat-form-field>
 
-                    <!-- Email Confirmed -->
-                    <div class="email-confirmed-section">
-                        <mat-slide-toggle formControlName="emailConfirmed" color="primary">
-                            <div class="toggle-content">
-                                <mat-icon>{{ userForm.get('emailConfirmed')?.value ? 'verified' : 'mail_outline'
-                                    }}</mat-icon>
-                                <span>E-posta Onaylı</span>
-                            </div>
-                        </mat-slide-toggle>
-                        <mat-hint class="toggle-hint">
-                            Kullanıcının e-posta adresini manuel olarak onaylayabilir/onayını kaldırabilirsiniz
-                        </mat-hint>
+                    <div class="profile-info-header">
+                        <mat-icon>info</mat-icon>
+                        <p>E-posta adresi ve onay durumu kullanıcı listesindeki işlemlerden yönetilir.</p>
                     </div>
                 </form>
             </div>
@@ -116,6 +107,7 @@
                             </mat-option>
                         </mat-select>
                         <mat-icon matPrefix>group</mat-icon>
+                        <mat-hint>Hızlı okuma ayarları Öğrenciler bölümünden yönetilir.</mat-hint>
                     </mat-form-field>
 
                     <!-- Learning Style -->
@@ -135,7 +127,7 @@
                         <mat-label>Mevcut Seviye</mat-label>
                         <input matInput type="number" formControlName="currentLevel" min="1" max="5" placeholder="1-5">
                         <mat-icon matPrefix>trending_up</mat-icon>
-                        <mat-hint>Seviye 1 (Başlangıç) - 5 (İleri)</mat-hint>
+                        <mat-hint>Hızlı okuma ayarları Öğrenciler bölümünden yönetilir.</mat-hint>
                     </mat-form-field>
 
                     <!-- Target WPM -->
@@ -144,7 +136,7 @@
                         <input matInput type="number" formControlName="targetWPM" min="100" max="1000"
                             placeholder="ör: 300">
                         <mat-icon matPrefix>speed</mat-icon>
-                        <mat-hint>100 - 1000 arasında</mat-hint>
+                        <mat-hint>Hızlı okuma ayarları Öğrenciler bölümünden yönetilir.</mat-hint>
                     </mat-form-field>
 
                     <!-- Target Comprehension -->
@@ -153,7 +145,7 @@
                         <input matInput type="number" formControlName="targetComprehension" min="60" max="100"
                             placeholder="ör: 80">
                         <mat-icon matPrefix>check_circle</mat-icon>
-                        <mat-hint>60 - 100 arasında</mat-hint>
+                        <mat-hint>Hızlı okuma ayarları Öğrenciler bölümünden yönetilir.</mat-hint>
                     </mat-form-field>
 
                     <!-- Daily Goal Minutes -->
@@ -162,7 +154,7 @@
                         <input matInput type="number" formControlName="dailyGoalMinutes" min="10" max="120"
                             placeholder="ör: 30">
                         <mat-icon matPrefix>timer</mat-icon>
-                        <mat-hint>10 - 120 dakika</mat-hint>
+                        <mat-hint>Hızlı okuma ayarları Öğrenciler bölümünden yönetilir.</mat-hint>
                     </mat-form-field>
                 </form>
             </div>

@@ -2,7 +2,7 @@ import { Component, OnInit, inject, ViewChild, AfterViewInit } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatPaginatorModule, MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSortModule, MatSort } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -24,6 +24,8 @@ import { AssignRoleDialogComponent } from './assign-role-dialog.component';
 import { BaseComponent } from '../../../core/components/base.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { UserDetailsDialogComponent } from './user-details-dialog.component';
+import { UserAccessDialogComponent } from './user-access-dialog.component';
 
 @Component({
   selector: 'app-users-list',
@@ -62,6 +64,9 @@ export class UsersListComponent extends BaseComponent implements OnInit, AfterVi
 
   dataSource = new MatTableDataSource<UserDto>([]);
   displayedColumns = ['index', 'avatar', 'fullName', 'email', 'roles', 'institution', 'status', 'lastLogin', 'actions'];
+  totalUsers = 0;
+  pageIndex = 0;
+  pageSize = 25;
   // loading inherited from BaseComponent
 
   searchControl = new FormControl('');
@@ -73,7 +78,7 @@ export class UsersListComponent extends BaseComponent implements OnInit, AfterVi
   ngOnInit() {
     this.loadRoles();
     this.setupFilters();
-    this.loadUsers();
+    this.loadUsers(1, this.pageSize);
   }
 
   loadRoles() {
@@ -90,7 +95,6 @@ export class UsersListComponent extends BaseComponent implements OnInit, AfterVi
   }
 
   ngAfterViewInit() {
-    this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
 
     // Custom filter predicate
@@ -124,24 +128,40 @@ export class UsersListComponent extends BaseComponent implements OnInit, AfterVi
     const role = this.roleControl.value || '';
     const status = this.statusControl.value;
 
-    this.loadUsers(searchTerm, role, status ?? undefined);
+    this.pageIndex = 0;
+    this.loadUsers(1, this.pageSize, searchTerm, role, status ?? undefined);
   }
 
-  loadUsers(searchTerm?: string, role?: string, isActive?: boolean) {
+  loadUsers(page = this.pageIndex + 1, pageSize = this.pageSize, searchTerm?: string, role?: string, isActive?: boolean) {
     this.loading.set(true);
-    this.usersService.getUsers(searchTerm, role, isActive)
+    this.usersService.getUsersPage(page, pageSize, searchTerm, role, isActive)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => this.loading.set(false))
       )
       .subscribe({
-        next: (users) => {
-          this.dataSource.data = users;
+        next: (result) => {
+          this.dataSource.data = result.items;
+          this.totalUsers = result.totalCount;
+          this.pageIndex = Math.max((result.pageNumber || page) - 1, 0);
+          this.pageSize = result.pageSize || pageSize;
         },
         error: (error) => {
           this.toaster.error('Kullanıcılar yüklenirken bir hata oluştu');
         }
       });
+  }
+
+  onPageChange(event: PageEvent): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.loadUsers(
+      event.pageIndex + 1,
+      event.pageSize,
+      this.searchControl.value || '',
+      this.roleControl.value || '',
+      this.statusControl.value ?? undefined
+    );
   }
 
   openDialog(user?: UserDto) {
@@ -195,12 +215,31 @@ export class UsersListComponent extends BaseComponent implements OnInit, AfterVi
   viewUser(user: UserDto) {
     this.usersService.getUserById(user.id).subscribe({
       next: (userDetail) => {
-        this.toaster.info(`Kullanıcı detayları: ${userDetail.firstName} ${userDetail.lastName}`, 3500);
-        // TODO: Implement user detail view
+        this.dialog.open(UserDetailsDialogComponent, {
+          width: '720px',
+          maxWidth: '95vw',
+          data: userDetail
+        });
       },
       error: (error) => {
         console.error('Error loading user details:', error);
         this.toaster.error('Kullanıcı detayları yüklenirken hata oluştu', 3000);
+      }
+    });
+  }
+
+  openAccessDialog(user: UserDto): void {
+    this.usersService.getUserById(user.id).subscribe({
+      next: (userDetail) => {
+        this.dialog.open(UserAccessDialogComponent, {
+          width: '760px',
+          maxWidth: '95vw',
+          data: userDetail
+        });
+      },
+      error: (error) => {
+        console.error('Error loading user access details:', error);
+        this.toaster.error('Erişim bilgileri yüklenirken hata oluştu', 3000);
       }
     });
   }

@@ -338,7 +338,11 @@ public class UserRepository : IUserRepository
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
-            query = query.Where(u => EF.Functions.ILike(u.Email, $"%{searchTerm}%"));
+            var searchPattern = $"%{searchTerm}%";
+            query = query.Where(u =>
+                EF.Functions.ILike(u.Email, searchPattern) ||
+                EF.Functions.ILike(u.FirstName, searchPattern) ||
+                EF.Functions.ILike(u.LastName, searchPattern));
         }
 
         if (isActive.HasValue)

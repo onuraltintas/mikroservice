@@ -11,7 +11,9 @@ import {
   AssignRoleRequest,
   Institution,
   PagedResult,
-  RoleDto
+  RoleDto,
+  UpdateUserProfileRequest,
+  UserSessionDto
 } from '../models/user.model';
 
 /**
@@ -37,9 +39,21 @@ export class UsersService {
    * Then extracts items array
    */
   getUsers(searchTerm?: string, role?: string, isActive?: boolean): Observable<UserDto[]> {
+    return this.getUsersPage(1, 100, searchTerm, role, isActive).pipe(
+      map(response => response.items)
+    );
+  }
+
+  getUsersPage(
+    page = 1,
+    pageSize = 25,
+    searchTerm?: string,
+    role?: string,
+    isActive?: boolean
+  ): Observable<PagedResult<UserDto>> {
     let params = new HttpParams();
-    params = params.set('page', '1');
-    params = params.set('pageSize', '100');
+    params = params.set('page', page.toString());
+    params = params.set('pageSize', pageSize.toString());
     if (searchTerm) {
       params = params.set('search', searchTerm);
     }
@@ -49,9 +63,30 @@ export class UsersService {
     if (isActive !== undefined) {
       params = params.set('isActive', isActive.toString());
     }
-    return this.http.get<PagedResult<UserDto> | any>(this.API_URL, { params }).pipe(
-      map(response => (Array.isArray(response) ? response : (response?.items ?? []))
-        .map((user: any) => this.normalizeUser(user)))
+    return this.http.get<PagedResult<UserDto> | UserDto[] | any>(this.API_URL, { params }).pipe(
+      map(response => {
+        if (Array.isArray(response)) {
+          return {
+            items: response.map(user => this.normalizeUser(user)),
+            totalCount: response.length,
+            pageNumber: page,
+            pageSize,
+            totalPages: Math.ceil(response.length / pageSize),
+            hasPreviousPage: page > 1,
+            hasNextPage: false
+          };
+        }
+
+        return {
+          items: (response?.items ?? []).map((user: any) => this.normalizeUser(user)),
+          totalCount: response?.totalCount ?? 0,
+          pageNumber: response?.pageNumber ?? page,
+          pageSize: response?.pageSize ?? pageSize,
+          totalPages: response?.totalPages ?? 0,
+          hasPreviousPage: response?.hasPreviousPage ?? page > 1,
+          hasNextPage: response?.hasNextPage ?? false
+        };
+      })
     );
   }
 
@@ -82,6 +117,10 @@ export class UsersService {
    */
   updateUser(id: string, request: UpdateUserRequest): Observable<UserDto> {
     return this.http.put<UserDto>(`${this.API_URL}/${id}`, request);
+  }
+
+  updateUserProfile(id: string, request: UpdateUserProfileRequest): Observable<void> {
+    return this.http.put<void>(`${this.API_URL}/${id}/profile`, request);
   }
 
   /**
@@ -126,7 +165,7 @@ export class UsersService {
    * Service receives: void (auto-unwrapped)
    */
   restoreUser(userId: string): Observable<void> {
-    return this.http.post<void>(`${this.API_URL}/${userId}/restore`, {});
+    return this.activateUser(userId);
   }
 
   /**
@@ -135,7 +174,9 @@ export class UsersService {
    * Service receives: void (auto-unwrapped)
    */
   deactivateUser(userId: string): Observable<void> {
-    return this.http.post<void>(`${this.API_URL}/${userId}/deactivate`, {});
+    return this.http.delete<void>(`${this.API_URL}/${userId}`, {
+      params: new HttpParams().set('permanent', 'false')
+    });
   }
 
   /**
@@ -199,7 +240,25 @@ export class UsersService {
    * Backend returns: ApiResponse<void>
    */
   adminResetPassword(userId: string, newPassword: string): Observable<void> {
-    return this.http.post<void>(`${this.API_URL}/${userId}/reset-password-admin`, { userId, newPassword });
+    return this.http.post<void>(`${this.API_URL}/${userId}/change-password`, { password: newPassword });
+  }
+
+  getSessions(userId: string): Observable<UserSessionDto[]> {
+    return this.http.get<UserSessionDto[] | { items?: UserSessionDto[] }>(`${this.API_URL}/${userId}/sessions`).pipe(
+      map(response => Array.isArray(response) ? response : (response?.items ?? []))
+    );
+  }
+
+  revokeSession(userId: string, sessionId: string): Observable<void> {
+    return this.http.delete<void>(`${this.API_URL}/${userId}/sessions/${sessionId}`);
+  }
+
+  revokeAllSessions(userId: string): Observable<void> {
+    return this.http.delete<void>(`${this.API_URL}/${userId}/sessions`);
+  }
+
+  resetMfa(userId: string): Observable<void> {
+    return this.http.post<void>(`${this.API_URL}/${userId}/mfa/reset`, {});
   }
 
   private normalizeUser(user: any): UserDto {

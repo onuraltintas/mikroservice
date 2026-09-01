@@ -6,6 +6,7 @@ using Identity.Application.Queries.GetAllUsers;
 using Identity.Application.Commands.ActivateUser;
 using Identity.Application.Commands.ConfirmEmail;
 using Identity.Application.Commands.DeleteUser;
+using Identity.Application.Commands.RevokeEmailConfirmation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -241,6 +242,20 @@ public class UserController : ControllerBase
     public async Task<IActionResult> ConfirmEmail(Guid id)
     {
         var result = await _mediator.Send(new ConfirmEmailCommand(id));
+        if (result.IsSuccess) return Ok();
+        return BadRequest(new { Error = result.Error });
+    }
+
+    /// <summary>
+    /// E-posta onayını geri alır ve yeni doğrulama yapılabilmesi için mevcut token bilgisini temizler.
+    /// </summary>
+    [HttpPost("{id:guid}/revoke-email-confirmation")]
+    [HasPermission(Permissions.Users.ConfirmEmail)]
+    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
+    public async Task<IActionResult> RevokeEmailConfirmation(Guid id)
+    {
+        var result = await _mediator.Send(new RevokeEmailConfirmationCommand(id));
         if (result.IsSuccess) return Ok();
         return BadRequest(new { Error = result.Error });
     }
