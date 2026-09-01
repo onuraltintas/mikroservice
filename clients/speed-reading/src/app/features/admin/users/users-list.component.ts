@@ -132,6 +132,13 @@ export class UsersListComponent extends BaseComponent implements OnInit, AfterVi
     this.loadUsers(1, this.pageSize, searchTerm, role, status ?? undefined);
   }
 
+  clearFilters(): void {
+    this.searchControl.setValue('', { emitEvent: false });
+    this.roleControl.setValue('', { emitEvent: false });
+    this.statusControl.setValue(null, { emitEvent: false });
+    this.applyFilters();
+  }
+
   loadUsers(page = this.pageIndex + 1, pageSize = this.pageSize, searchTerm?: string, role?: string, isActive?: boolean) {
     this.loading.set(true);
     this.usersService.getUsersPage(page, pageSize, searchTerm, role, isActive)
