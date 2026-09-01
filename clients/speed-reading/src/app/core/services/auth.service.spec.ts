@@ -144,4 +144,56 @@ describe('AuthService', () => {
     expect(localStorage.getItem('token')).toBeNull();
     expect(JSON.parse(localStorage.getItem('currentUser') || '{}').token).toBeUndefined();
   });
+
+  it('starts authenticated MFA setup with the current password', () => {
+    service.startAuthenticatedMfaSetup('CurrentPassword1!').subscribe(response => {
+      expect(response.setupToken).toBe('setup-token');
+      expect(response.challengeToken).toBe('challenge-token');
+    });
+
+    const request = http.expectOne('/api/auth/mfa/setup-authenticated');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.withCredentials).toBeTrue();
+    expect(request.request.body).toEqual({ currentPassword: 'CurrentPassword1!' });
+    request.flush({
+      secret: 'BASE32SECRET',
+      otpAuthUri: 'otpauth://totp/EduPlatform:admin@example.com',
+      setupToken: 'setup-token',
+      challengeToken: 'challenge-token'
+    });
+  });
+
+  it('enables MFA and promotes the returned access token to the active session', () => {
+    const currentUser = {
+      id: 'system-admin',
+      token: 'old-token',
+      refreshToken: '',
+      email: 'admin@example.com',
+      firstName: 'System',
+      lastName: 'Admin',
+      roles: ['SystemAdmin']
+    } as AuthResponse;
+    (service as any).currentUserSubject.next(currentUser);
+    (service as any).accessToken = 'old-token';
+
+    service.enableMfa('challenge-token', 'setup-token', '123456').subscribe(recoveryCodes => {
+      expect(recoveryCodes).toEqual(['RECOVERY-ONE']);
+      expect(service.token).toBeTruthy();
+    });
+
+    const request = http.expectOne('/api/auth/mfa/enable');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.withCredentials).toBeTrue();
+    expect(request.request.body).toEqual({
+      challengeToken: 'challenge-token',
+      setupToken: 'setup-token',
+      code: '123456'
+    });
+    request.flush({
+      accessToken: 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJzeXN0ZW0tYWRtaW4iLCJyb2xlIjoiU3lzdGVtQWRtaW4iLCJleHAiOjQxMDI0NDQ4MDB9.',
+      tokenType: 'Bearer',
+      expiresInMinutes: 15,
+      recoveryCodes: ['RECOVERY-ONE']
+    });
+  });
 });
