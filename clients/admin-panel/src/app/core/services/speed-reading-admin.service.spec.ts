@@ -831,4 +831,41 @@ describe('SpeedReadingAdminService', () => {
     expect(deleteRequest.request.method).toBe('DELETE');
     deleteRequest.flush(null);
   });
+
+  it('supports CMS preview, revisions and subscriber lifecycle operations', () => {
+    service.previewCmsPage('page-1').subscribe(value => expect(value.id).toBe('page-1'));
+    const pagePreview = http.expectOne('/api/speed-reading/admin/cms/pages/page-1/preview');
+    expect(pagePreview.request.method).toBe('GET');
+    pagePreview.flush({ data: { id: 'page-1' } });
+
+    service.previewCmsBlogPost('blog-1').subscribe(value => expect(value.id).toBe('blog-1'));
+    const blogPreview = http.expectOne('/api/speed-reading/admin/cms/blog/blog-1/preview');
+    expect(blogPreview.request.method).toBe('GET');
+    blogPreview.flush({ data: { id: 'blog-1' } });
+
+    service.getCmsRevisions('Page', 'page-1').subscribe(value => expect(value).toEqual([]));
+    const revisions = http.expectOne('/api/speed-reading/admin/cms/revisions/Page/page-1');
+    expect(revisions.request.method).toBe('GET');
+    revisions.flush({ data: [] });
+
+    service.restoreCmsRevision('Page', 'page-1', 'revision-1').subscribe();
+    const restore = http.expectOne('/api/speed-reading/admin/cms/revisions/Page/page-1/revision-1/restore');
+    expect(restore.request.method).toBe('POST');
+    restore.flush(null);
+
+    service.getCmsSubscribers(1, 25, true).subscribe(value => expect(value.totalCount).toBe(0));
+    const subscribers = http.expectOne('/api/speed-reading/admin/cms/newsletter/subscribers?pageNumber=1&pageSize=25&includeInactive=true');
+    expect(subscribers.request.method).toBe('GET');
+    subscribers.flush({ data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 25 } });
+
+    service.restoreCmsSubscriber('subscriber-1').subscribe();
+    const subscriberRestore = http.expectOne('/api/speed-reading/admin/cms/newsletter/subscribers/subscriber-1/restore');
+    expect(subscriberRestore.request.method).toBe('PUT');
+    subscriberRestore.flush(null);
+
+    service.exportCmsSubscribers(true).subscribe();
+    const exportRequest = http.expectOne('/api/speed-reading/admin/cms/newsletter/subscribers/export?includeInactive=true');
+    expect(exportRequest.request.method).toBe('GET');
+    exportRequest.flush(new Blob(['csv'], { type: 'text/csv' }));
+  });
 });

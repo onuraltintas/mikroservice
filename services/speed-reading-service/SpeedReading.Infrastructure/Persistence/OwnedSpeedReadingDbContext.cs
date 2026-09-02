@@ -77,6 +77,7 @@ public sealed class OwnedSpeedReadingDbContext(
     DbSet<LegacyNewsletterSubscriber> ISpeedReadingDataContext.NewsletterSubscribers => Set<LegacyNewsletterSubscriber>();
     DbSet<LegacyCmsMediaAsset> ISpeedReadingDataContext.CmsMediaAssets => Set<LegacyCmsMediaAsset>();
     DbSet<LegacyCmsNavigationItem> ISpeedReadingDataContext.CmsNavigationItems => Set<LegacyCmsNavigationItem>();
+    DbSet<LegacyCmsContentRevision> ISpeedReadingDataContext.CmsContentRevisions => Set<LegacyCmsContentRevision>();
     DbSet<LegacySubscriptionPlan> ISpeedReadingDataContext.SubscriptionPlans => Set<LegacySubscriptionPlan>();
     DbSet<LegacyUserSubscription> ISpeedReadingDataContext.UserSubscriptions => Set<LegacyUserSubscription>();
     DbSet<LegacyPayment> ISpeedReadingDataContext.Payments => Set<LegacyPayment>();
@@ -621,6 +622,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.Title).HasMaxLength(200).IsRequired();
             entity.Property(item => item.Slug).HasMaxLength(200).IsRequired();
             entity.Property(item => item.Content).IsRequired();
+            entity.Property(item => item.ScheduledPublishAt);
             entity.Property(item => item.MetaTitle).HasMaxLength(200);
             entity.Property(item => item.MetaDescription).HasMaxLength(500);
             entity.Property(item => item.MetaKeywords).HasMaxLength(500);
@@ -640,6 +642,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.CoverImageUrl).HasMaxLength(500);
             entity.Property(item => item.Tags).HasMaxLength(500);
             entity.Property(item => item.Author).HasMaxLength(100);
+            entity.Property(item => item.ScheduledPublishAt);
             entity.Property(item => item.MetaTitle).HasMaxLength(200);
             entity.Property(item => item.MetaDescription).HasMaxLength(500);
             entity.Property(item => item.MetaKeywords).HasMaxLength(500);
@@ -692,6 +695,15 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.IsVisible).HasColumnName("is_visible");
             entity.Property(item => item.OpenInNewTab).HasColumnName("open_in_new_tab");
             entity.HasIndex(item => new { item.Menu, item.SortOrder });
+        });
+        modelBuilder.Entity<LegacyCmsContentRevision>(entity =>
+        {
+            ConfigureLegacyEntity(entity, "cms_content_revisions");
+            entity.Property(item => item.EntityType).HasColumnName("entity_type").HasMaxLength(30).IsRequired();
+            entity.Property(item => item.EntityId).HasColumnName("entity_id");
+            entity.Property(item => item.Version).HasColumnName("version");
+            entity.Property(item => item.PayloadJson).HasColumnName("payload_json").IsRequired();
+            entity.HasIndex(item => new { item.EntityType, item.EntityId, item.Version }).IsUnique();
         });
         modelBuilder.Entity<LegacyUserNotification>(entity =>
         {

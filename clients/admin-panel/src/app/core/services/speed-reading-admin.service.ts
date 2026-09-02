@@ -1001,6 +1001,7 @@ export interface SpeedReadingCmsPage {
   seoSettings: SpeedReadingCmsSeoSettings;
   createdAt: string;
   updatedAt: string | null;
+  scheduledPublishAt: string | null;
 }
 
 export interface SpeedReadingCmsPageRequest {
@@ -1009,6 +1010,7 @@ export interface SpeedReadingCmsPageRequest {
   content: string;
   isPublished: boolean;
   seoSettings: SpeedReadingCmsSeoSettings;
+  scheduledPublishAt?: string | null;
 }
 
 export interface SpeedReadingCmsBlogPost {
@@ -1026,6 +1028,7 @@ export interface SpeedReadingCmsBlogPost {
   isPublished: boolean;
   createdAt: string;
   updatedAt: string | null;
+  scheduledPublishAt: string | null;
 }
 
 export interface SpeedReadingCmsBlogPostRequest {
@@ -1039,6 +1042,16 @@ export interface SpeedReadingCmsBlogPostRequest {
   coverImageUrl?: string | null;
   isPublished: boolean;
   seoSettings: SpeedReadingCmsSeoSettings;
+  scheduledPublishAt?: string | null;
+}
+
+export interface SpeedReadingCmsRevision {
+  id: string;
+  entityType: string;
+  entityId: string;
+  version: number;
+  createdAt: string;
+  createdBy: string;
 }
 
 export interface SpeedReadingCmsContactMessage {
@@ -2162,6 +2175,11 @@ export class SpeedReadingAdminService {
       .pipe(map(response => response.data));
   }
 
+  previewCmsPage(id: string) {
+    return this.http.get<{ data: SpeedReadingCmsPage }>(`${this.url}/admin/cms/pages/${id}/preview`)
+      .pipe(map(response => response.data));
+  }
+
   createCmsPage(request: SpeedReadingCmsPageRequest) {
     return this.http.post<{ data: { id: string } }>(`${this.url}/admin/cms/pages`, request)
       .pipe(map(response => response.data.id));
@@ -2186,6 +2204,11 @@ export class SpeedReadingAdminService {
       .pipe(map(response => response.data));
   }
 
+  previewCmsBlogPost(id: string) {
+    return this.http.get<{ data: SpeedReadingCmsBlogPost }>(`${this.url}/admin/cms/blog/${id}/preview`)
+      .pipe(map(response => response.data));
+  }
+
   createCmsBlogPost(request: SpeedReadingCmsBlogPostRequest) {
     return this.http.post<{ data: { id: string } }>(`${this.url}/admin/cms/blog`, request)
       .pipe(map(response => response.data.id));
@@ -2199,15 +2222,35 @@ export class SpeedReadingAdminService {
     return this.http.delete<void>(`${this.url}/admin/cms/blog/${id}`);
   }
 
-  getCmsSubscribers(pageNumber = 1, pageSize = 25) {
+  getCmsRevisions(entityType: 'Page' | 'Blog', entityId: string) {
+    return this.http.get<{ data: SpeedReadingCmsRevision[] }>(`${this.url}/admin/cms/revisions/${entityType}/${entityId}`)
+      .pipe(map(response => response.data ?? []));
+  }
+
+  restoreCmsRevision(entityType: 'Page' | 'Blog', entityId: string, revisionId: string) {
+    return this.http.post<void>(`${this.url}/admin/cms/revisions/${entityType}/${entityId}/${revisionId}/restore`, {});
+  }
+
+  getCmsSubscribers(pageNumber = 1, pageSize = 25, includeInactive = false) {
     return this.http.get<{ data: SpeedReadingPage<SpeedReadingCmsNewsletterSubscriber> }>(`${this.url}/admin/cms/newsletter/subscribers`, {
-      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize)
+      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize).set('includeInactive', includeInactive)
     }).pipe(map(response => response.data));
   }
 
   deleteCmsSubscriber(id: string, hardDelete = false) {
     return this.http.delete<void>(`${this.url}/admin/cms/newsletter/subscribers/${id}`, {
       params: new HttpParams().set('hardDelete', hardDelete)
+    });
+  }
+
+  restoreCmsSubscriber(id: string) {
+    return this.http.put<void>(`${this.url}/admin/cms/newsletter/subscribers/${id}/restore`, {});
+  }
+
+  exportCmsSubscribers(includeInactive = true) {
+    return this.http.get(`${this.url}/admin/cms/newsletter/subscribers/export`, {
+      params: new HttpParams().set('includeInactive', includeInactive),
+      responseType: 'blob'
     });
   }
 

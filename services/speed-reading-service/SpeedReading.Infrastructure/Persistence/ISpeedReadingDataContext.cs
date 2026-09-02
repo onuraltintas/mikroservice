@@ -15,6 +15,7 @@ internal interface ISpeedReadingDataContext
     DbSet<LegacyNewsletterSubscriber> NewsletterSubscribers { get; }
     DbSet<LegacyCmsMediaAsset> CmsMediaAssets { get; }
     DbSet<LegacyCmsNavigationItem> CmsNavigationItems { get; }
+    DbSet<LegacyCmsContentRevision> CmsContentRevisions { get; }
     DbSet<LegacyProduct> Products { get; }
     DbSet<LegacySubscriptionPlan> SubscriptionPlans { get; }
     DbSet<LegacyUserSubscription> UserSubscriptions { get; }

@@ -26,7 +26,8 @@ public sealed record CmsPageSummary(
     bool IsPublished,
     CmsSeoSettings SeoSettings,
     DateTime CreatedAt,
-    DateTime? UpdatedAt);
+    DateTime? UpdatedAt,
+    DateTime? ScheduledPublishAt = null);
 
 public sealed record CmsBlogPostSummary(
     Guid Id,
@@ -42,7 +43,8 @@ public sealed record CmsBlogPostSummary(
     int ViewCount,
     bool IsPublished,
     DateTime CreatedAt,
-    DateTime? UpdatedAt);
+    DateTime? UpdatedAt,
+    DateTime? ScheduledPublishAt = null);
 
 public sealed record CmsContactMessageSummary(
     Guid Id,
@@ -70,7 +72,8 @@ public sealed record CmsPageRequest(
     string Slug,
     string Content,
     bool IsPublished,
-    CmsSeoSettings SeoSettings);
+    CmsSeoSettings SeoSettings,
+    DateTime? ScheduledPublishAt = null);
 
 public sealed record CmsBlogPostRequest(
     string Title,
@@ -82,7 +85,14 @@ public sealed record CmsBlogPostRequest(
     IReadOnlyList<string>? Tags,
     string? CoverImageUrl,
     bool IsPublished,
-    CmsSeoSettings SeoSettings);
+    CmsSeoSettings SeoSettings,
+    DateTime? ScheduledPublishAt = null);
+
+public static class CmsPublicationRules
+{
+    public static bool IsPubliclyAvailable(bool isPublished, DateTime? scheduledPublishAt, DateTime nowUtc) =>
+        isPublished && (!scheduledPublishAt.HasValue || scheduledPublishAt.Value <= nowUtc);
+}
 
 public sealed record CmsContentBlockRequest(
     string Key,
@@ -160,10 +170,19 @@ public sealed record CmsNavigationItemRequest(
     bool IsVisible,
     bool OpenInNewTab);
 
+public sealed record CmsContentRevisionSummary(
+    Guid Id,
+    string EntityType,
+    Guid EntityId,
+    int Version,
+    DateTime CreatedAt,
+    Guid CreatedBy);
+
 public static class CmsNavigationRules
 {
     public static CmsNavigationItemRequest Normalize(CmsNavigationItemRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
         var menu = string.IsNullOrWhiteSpace(request.Menu) ? "Main" : request.Menu.Trim();
         var label = request.Label?.Trim() ?? string.Empty;
         var url = request.Url?.Trim() ?? string.Empty;
@@ -433,6 +452,18 @@ public interface ISpeedReadingCms
         Guid actorId,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<CmsContentRevisionSummary>> GetContentRevisionsAsync(
+        string entityType,
+        Guid entityId,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> RestoreContentRevisionAsync(
+        string entityType,
+        Guid entityId,
+        Guid revisionId,
+        Guid actorId,
+        CancellationToken cancellationToken = default);
+
     Task<SpeedReadingPage<CmsPageSummary>> GetPagesAsync(
         int pageNumber,
         int pageSize,
@@ -462,6 +493,16 @@ public interface ISpeedReadingCms
     Task<SpeedReadingPage<CmsNewsletterSubscriberSummary>> GetSubscribersAsync(
         int pageNumber,
         int pageSize,
+        bool includeInactive = false,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<CmsNewsletterSubscriberSummary>> ExportSubscribersAsync(
+        bool includeInactive,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> RestoreSubscriberAsync(
+        Guid id,
+        Guid actorId,
         CancellationToken cancellationToken = default);
 
     Task<bool> DeleteSubscriberAsync(Guid id, bool hardDelete, Guid actorId, CancellationToken cancellationToken = default);

@@ -20,6 +20,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     internal DbSet<LegacyNewsletterSubscriber> NewsletterSubscribers => Set<LegacyNewsletterSubscriber>();
     internal DbSet<LegacyCmsMediaAsset> CmsMediaAssets => Set<LegacyCmsMediaAsset>();
     internal DbSet<LegacyCmsNavigationItem> CmsNavigationItems => Set<LegacyCmsNavigationItem>();
+    internal DbSet<LegacyCmsContentRevision> CmsContentRevisions => Set<LegacyCmsContentRevision>();
     internal DbSet<LegacyProduct> Products => Set<LegacyProduct>();
     internal DbSet<LegacySubscriptionPlan> SubscriptionPlans => Set<LegacySubscriptionPlan>();
     internal DbSet<LegacyUserSubscription> UserSubscriptions => Set<LegacyUserSubscription>();
@@ -85,6 +86,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     DbSet<LegacyNewsletterSubscriber> ISpeedReadingDataContext.NewsletterSubscribers => NewsletterSubscribers;
     DbSet<LegacyCmsMediaAsset> ISpeedReadingDataContext.CmsMediaAssets => CmsMediaAssets;
     DbSet<LegacyCmsNavigationItem> ISpeedReadingDataContext.CmsNavigationItems => CmsNavigationItems;
+    DbSet<LegacyCmsContentRevision> ISpeedReadingDataContext.CmsContentRevisions => CmsContentRevisions;
     DbSet<LegacySubscriptionPlan> ISpeedReadingDataContext.SubscriptionPlans => SubscriptionPlans;
     DbSet<LegacyUserSubscription> ISpeedReadingDataContext.UserSubscriptions => UserSubscriptions;
     DbSet<LegacyPayment> ISpeedReadingDataContext.Payments => Payments;
@@ -122,6 +124,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.Property(item => item.Title).HasMaxLength(200).IsRequired();
             entity.Property(item => item.Slug).HasMaxLength(200).IsRequired();
             entity.Property(item => item.Content).IsRequired();
+            entity.Property(item => item.ScheduledPublishAt);
             entity.Property(item => item.MetaTitle).HasMaxLength(200);
             entity.Property(item => item.MetaDescription).HasMaxLength(500);
             entity.Property(item => item.MetaKeywords).HasMaxLength(500);
@@ -143,6 +146,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.Property(item => item.CoverImageUrl).HasMaxLength(500);
             entity.Property(item => item.Tags).HasMaxLength(500);
             entity.Property(item => item.Author).HasMaxLength(100);
+            entity.Property(item => item.ScheduledPublishAt);
             entity.Property(item => item.MetaTitle).HasMaxLength(200);
             entity.Property(item => item.MetaDescription).HasMaxLength(500);
             entity.Property(item => item.MetaKeywords).HasMaxLength(500);
@@ -199,6 +203,15 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.Property(item => item.Fragment).HasMaxLength(100);
             entity.Property(item => item.Icon).HasMaxLength(50);
             entity.HasIndex(item => new { item.Menu, item.SortOrder });
+        });
+
+        modelBuilder.Entity<LegacyCmsContentRevision>(entity =>
+        {
+            entity.ToTable("CmsContentRevisions");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.EntityType).HasMaxLength(30).IsRequired();
+            entity.Property(item => item.PayloadJson).IsRequired();
+            entity.HasIndex(item => new { item.EntityType, item.EntityId, item.Version }).IsUnique();
         });
 
         modelBuilder.Entity<LegacyProduct>(entity =>

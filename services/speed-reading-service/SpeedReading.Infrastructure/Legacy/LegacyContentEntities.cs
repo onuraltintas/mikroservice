@@ -27,6 +27,7 @@ internal sealed class LegacyPage : LegacyBaseEntity
     public string Slug { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
     public bool IsPublished { get; set; }
+    public DateTime? ScheduledPublishAt { get; set; }
     public string? MetaTitle { get; set; }
     public string? MetaDescription { get; set; }
     public string? MetaKeywords { get; set; }
@@ -49,6 +50,7 @@ internal sealed class LegacyBlogPost : LegacyBaseEntity
     public int ViewCount { get; set; }
     public bool IsPublished { get; set; }
     public DateTime? PublishedAt { get; set; }
+    public DateTime? ScheduledPublishAt { get; set; }
     public string? MetaTitle { get; set; }
     public string? MetaDescription { get; set; }
     public string? MetaKeywords { get; set; }
@@ -99,6 +101,14 @@ internal sealed class LegacyCmsNavigationItem : LegacyBaseEntity
     public int SortOrder { get; set; }
     public bool IsVisible { get; set; }
     public bool OpenInNewTab { get; set; }
+}
+
+internal sealed class LegacyCmsContentRevision : LegacyBaseEntity
+{
+    public string EntityType { get; set; } = string.Empty;
+    public Guid EntityId { get; set; }
+    public int Version { get; set; }
+    public string PayloadJson { get; set; } = string.Empty;
 }
 
 internal sealed class LegacyExerciseTypeCategory : LegacyBaseEntity

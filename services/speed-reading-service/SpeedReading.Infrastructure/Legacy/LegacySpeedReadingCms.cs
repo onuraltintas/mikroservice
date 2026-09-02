@@ -4,6 +4,7 @@ using SpeedReading.Application.Content;
 using SpeedReading.Infrastructure.Persistence;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 namespace SpeedReading.Infrastructure.Legacy;
 
@@ -13,6 +14,10 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
     private readonly IMemoryCache cache;
     private readonly ISpeedReadingEmailDelivery emailDelivery;
     private readonly ISpeedReadingCmsMediaStorage mediaStorage;
+    private static readonly JsonSerializerOptions RevisionJsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
 
     internal LegacySpeedReadingCms(
         ISpeedReadingDataContext db,
@@ -67,9 +72,13 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         string slug,
         CancellationToken cancellationToken = default)
     {
+        var nowUtc = DateTime.UtcNow;
         var page = await db.Pages
             .AsNoTracking()
-            .SingleOrDefaultAsync(item => !item.IsDeleted && item.IsPublished && item.Slug == slug, cancellationToken);
+            .SingleOrDefaultAsync(item => !item.IsDeleted
+                && item.IsPublished
+                && (!item.ScheduledPublishAt.HasValue || item.ScheduledPublishAt <= nowUtc)
+                && item.Slug == slug, cancellationToken);
         return page is null ? null : ToSummary(page);
     }
 
@@ -80,9 +89,12 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         CancellationToken cancellationToken = default)
     {
         var (page, size) = NormalizePage(pageNumber, pageSize);
+        var nowUtc = DateTime.UtcNow;
         var query = db.BlogPosts
             .AsNoTracking()
-            .Where(item => !item.IsDeleted && item.IsPublished);
+            .Where(item => !item.IsDeleted
+                && item.IsPublished
+                && (!item.ScheduledPublishAt.HasValue || item.ScheduledPublishAt <= nowUtc));
 
         if (!string.IsNullOrWhiteSpace(tag))
         {
@@ -106,8 +118,12 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         string slug,
         CancellationToken cancellationToken = default)
     {
+        var nowUtc = DateTime.UtcNow;
         var post = await db.BlogPosts
-            .SingleOrDefaultAsync(item => !item.IsDeleted && item.IsPublished && item.Slug == slug, cancellationToken);
+            .SingleOrDefaultAsync(item => !item.IsDeleted
+                && item.IsPublished
+                && (!item.ScheduledPublishAt.HasValue || item.ScheduledPublishAt <= nowUtc)
+                && item.Slug == slug, cancellationToken);
         if (post is null)
         {
             return null;
@@ -490,6 +506,79 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         return true;
     }
 
+    public async Task<IReadOnlyList<CmsContentRevisionSummary>> GetContentRevisionsAsync(
+        string entityType,
+        Guid entityId,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedType = NormalizeRevisionType(entityType);
+        var revisions = await db.CmsContentRevisions
+            .AsNoTracking()
+            .Where(item => !item.IsDeleted && item.EntityType == normalizedType && item.EntityId == entityId)
+            .OrderByDescending(item => item.Version)
+            .ThenByDescending(item => item.CreatedAt)
+            .ToListAsync(cancellationToken);
+        return revisions.Select(ToSummary).ToList();
+    }
+
+    public async Task<bool> RestoreContentRevisionAsync(
+        string entityType,
+        Guid entityId,
+        Guid revisionId,
+        Guid actorId,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedType = NormalizeRevisionType(entityType);
+        var revision = await db.CmsContentRevisions
+            .SingleOrDefaultAsync(item => item.Id == revisionId
+                && !item.IsDeleted
+                && item.EntityType == normalizedType
+                && item.EntityId == entityId, cancellationToken);
+        if (revision is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            if (normalizedType == "Page")
+            {
+                var page = await FindActiveAsync(db.Pages, entityId, cancellationToken);
+                var request = JsonSerializer.Deserialize<CmsPageRequest>(revision.PayloadJson, RevisionJsonOptions);
+                if (page is null || request is null)
+                {
+                    return false;
+                }
+
+                await CreatePageRevisionAsync(page, actorId, cancellationToken);
+                Apply(page, request);
+                page.UpdatedAt = DateTime.UtcNow;
+                page.UpdatedBy = actorId;
+            }
+            else
+            {
+                var post = await FindActiveAsync(db.BlogPosts, entityId, cancellationToken);
+                var request = JsonSerializer.Deserialize<CmsBlogPostRequest>(revision.PayloadJson, RevisionJsonOptions);
+                if (post is null || request is null)
+                {
+                    return false;
+                }
+
+                await CreateBlogRevisionAsync(post, actorId, cancellationToken);
+                Apply(post, request);
+                post.UpdatedAt = DateTime.UtcNow;
+                post.UpdatedBy = actorId;
+            }
+
+            await db.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
     public Task<SpeedReadingPage<CmsPageSummary>> GetPagesAsync(int pageNumber, int pageSize, CancellationToken cancellationToken = default) =>
         GetPagePageAsync(pageNumber, pageSize, cancellationToken);
 
@@ -521,6 +610,7 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
             return false;
         }
 
+        await CreatePageRevisionAsync(page, actorId, cancellationToken);
         Apply(page, request);
         page.UpdatedAt = DateTime.UtcNow;
         page.UpdatedBy = actorId;
@@ -574,11 +664,12 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
             return false;
         }
 
-        if (request.IsPublished && !post.IsPublished && request.PublishedAt is null)
+        if (request.IsPublished && !post.IsPublished && request.PublishedAt is null && request.ScheduledPublishAt is null)
         {
             request = request with { PublishedAt = DateTime.UtcNow };
         }
 
+        await CreateBlogRevisionAsync(post, actorId, cancellationToken);
         Apply(post, request);
         post.UpdatedAt = DateTime.UtcNow;
         post.UpdatedBy = actorId;
@@ -604,10 +695,12 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
     public async Task<SpeedReadingPage<CmsNewsletterSubscriberSummary>> GetSubscribersAsync(
         int pageNumber,
         int pageSize,
+        bool includeInactive = false,
         CancellationToken cancellationToken = default)
     {
         var (page, size) = NormalizePage(pageNumber, pageSize);
-        var query = db.NewsletterSubscribers.AsNoTracking().Where(item => !item.IsDeleted && item.IsActive);
+        var query = db.NewsletterSubscribers.AsNoTracking()
+            .Where(item => !item.IsDeleted && (includeInactive || item.IsActive));
         var total = await query.CountAsync(cancellationToken);
         var rows = await query
             .OrderByDescending(item => item.CreatedAt)
@@ -638,6 +731,37 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
             subscriber.UpdatedBy = actorId;
         }
 
+        await db.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<IReadOnlyList<CmsNewsletterSubscriberSummary>> ExportSubscribersAsync(
+        bool includeInactive,
+        CancellationToken cancellationToken = default)
+    {
+        var rows = await db.NewsletterSubscribers
+            .AsNoTracking()
+            .Where(item => !item.IsDeleted && (includeInactive || item.IsActive))
+            .OrderBy(item => item.Email)
+            .ToListAsync(cancellationToken);
+        return rows.Select(ToSummary).ToList();
+    }
+
+    public async Task<bool> RestoreSubscriberAsync(
+        Guid id,
+        Guid actorId,
+        CancellationToken cancellationToken = default)
+    {
+        var subscriber = await db.NewsletterSubscribers
+            .SingleOrDefaultAsync(item => item.Id == id && !item.IsDeleted, cancellationToken);
+        if (subscriber is null)
+        {
+            return false;
+        }
+
+        subscriber.IsActive = true;
+        subscriber.UpdatedAt = DateTime.UtcNow;
+        subscriber.UpdatedBy = actorId;
         await db.SaveChangesAsync(cancellationToken);
         return true;
     }
@@ -769,6 +893,7 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         page.Slug = request.Slug.Trim();
         page.Content = request.Content;
         page.IsPublished = request.IsPublished;
+        page.ScheduledPublishAt = request.ScheduledPublishAt;
         page.MetaTitle = request.SeoSettings.MetaTitle;
         page.MetaDescription = request.SeoSettings.MetaDescription;
         page.MetaKeywords = request.SeoSettings.MetaKeywords;
@@ -786,7 +911,10 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         post.Summary = request.Summary;
         post.Content = request.Content;
         post.Author = request.Author;
-        post.PublishedAt = request.IsPublished ? request.PublishedAt ?? DateTime.UtcNow : request.PublishedAt;
+        post.PublishedAt = request.IsPublished
+            ? request.PublishedAt ?? request.ScheduledPublishAt ?? DateTime.UtcNow
+            : request.PublishedAt;
+        post.ScheduledPublishAt = request.ScheduledPublishAt;
         post.Tags = request.Tags is null ? null : string.Join(',', request.Tags.Where(tag => !string.IsNullOrWhiteSpace(tag)).Select(tag => tag.Trim()));
         post.CoverImageUrl = request.CoverImageUrl;
         post.IsPublished = request.IsPublished;
@@ -799,6 +927,84 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         post.OgImage = request.SeoSettings.OgImage;
         post.SeoSettingsNoIndex = request.SeoSettings.NoIndex;
     }
+
+    private async Task CreatePageRevisionAsync(
+        LegacyPage page,
+        Guid actorId,
+        CancellationToken cancellationToken)
+    {
+        await AddRevisionAsync(
+            "Page",
+            page.Id,
+            new CmsPageRequest(
+                page.Title,
+                page.Slug,
+                page.Content,
+                page.IsPublished,
+                new CmsSeoSettings(page.MetaTitle, page.MetaDescription, page.MetaKeywords, page.CanonicalUrl, page.OgTitle, page.OgDescription, page.OgImage, page.SeoSettingsNoIndex),
+                page.ScheduledPublishAt),
+            actorId,
+            cancellationToken);
+    }
+
+    private async Task CreateBlogRevisionAsync(
+        LegacyBlogPost post,
+        Guid actorId,
+        CancellationToken cancellationToken)
+    {
+        await AddRevisionAsync(
+            "Blog",
+            post.Id,
+            new CmsBlogPostRequest(
+                post.Title,
+                post.Slug,
+                post.Summary,
+                post.Content,
+                post.Author,
+                post.PublishedAt,
+                SplitTags(post.Tags),
+                post.CoverImageUrl,
+                post.IsPublished,
+                new CmsSeoSettings(post.MetaTitle, post.MetaDescription, post.MetaKeywords, post.CanonicalUrl, post.OgTitle, post.OgDescription, post.OgImage, post.SeoSettingsNoIndex),
+                post.ScheduledPublishAt),
+            actorId,
+            cancellationToken);
+    }
+
+    private async Task AddRevisionAsync(
+        string entityType,
+        Guid entityId,
+        object payload,
+        Guid actorId,
+        CancellationToken cancellationToken)
+    {
+        var lastVersion = await db.CmsContentRevisions
+            .Where(item => !item.IsDeleted && item.EntityType == entityType && item.EntityId == entityId)
+            .Select(item => (int?)item.Version)
+            .MaxAsync(cancellationToken) ?? 0;
+
+        db.CmsContentRevisions.Add(new LegacyCmsContentRevision
+        {
+            Id = Guid.NewGuid(),
+            EntityType = entityType,
+            EntityId = entityId,
+            Version = lastVersion + 1,
+            PayloadJson = JsonSerializer.Serialize(payload, RevisionJsonOptions),
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = actorId
+        });
+    }
+
+    private static string NormalizeRevisionType(string entityType) =>
+        entityType.Trim().ToLowerInvariant() switch
+        {
+            "page" or "pages" => "Page",
+            "blog" or "blogpost" or "blogposts" => "Blog",
+            _ => throw new ArgumentException("Only Page and Blog revisions are supported.", nameof(entityType))
+        };
+
+    private static CmsContentRevisionSummary ToSummary(LegacyCmsContentRevision item) =>
+        new(item.Id, item.EntityType, item.EntityId, item.Version, item.CreatedAt, item.CreatedBy);
 
     private static CmsContentBlockSummary ToSummary(LegacyContentBlock item) =>
         new(item.Id, item.Key, item.Group, item.Label, item.Type, item.Value);
@@ -850,7 +1056,8 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
             item.IsPublished,
             new CmsSeoSettings(item.MetaTitle, item.MetaDescription, item.MetaKeywords, item.CanonicalUrl, item.OgTitle, item.OgDescription, item.OgImage, item.SeoSettingsNoIndex),
             item.CreatedAt,
-            item.UpdatedAt);
+            item.UpdatedAt,
+            item.ScheduledPublishAt);
 
     private static CmsBlogPostSummary ToSummary(LegacyBlogPost item) =>
         new(
@@ -867,7 +1074,8 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
             item.ViewCount,
             item.IsPublished,
             item.CreatedAt,
-            item.UpdatedAt);
+            item.UpdatedAt,
+            item.ScheduledPublishAt);
 
     private static CmsContactMessageSummary ToSummary(LegacyContactMessage item) =>
         new(item.Id, item.Name, item.Email, item.Subject, item.Message, item.IsRead, item.IsReplied, item.RepliedAt, item.ReplyContent, item.CreatedAt, item.UpdatedAt);
