@@ -135,6 +135,18 @@ services:
   clamav:
     image: clamav/clamav:1.4.3
     profiles: ["security-scan"]
+    environment:
+      # The application accepts only JPEG/PNG/WebP attachments up to 10 MiB.
+      CLAMD_CONF_MaxScanSize: 10M
+      CLAMD_CONF_StreamMaxLength: 10M
+      # Keep attachment scanning bounded on the small production VPS.
+      CLAMD_CONF_MaxThreads: "4"
+      CLAMD_CONF_MaxQueue: "16"
+      CLAMAV_NO_MILTERD: "true"
+      FRESHCLAM_CHECKS: "1"
+    mem_limit: 1g
+    cpus: "1.0"
+    pids_limit: 128
     expose:
       - "3310"
     volumes:
