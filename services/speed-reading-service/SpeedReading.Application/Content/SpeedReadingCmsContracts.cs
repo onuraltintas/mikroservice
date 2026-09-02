@@ -109,6 +109,59 @@ public static class SpeedReadingNewsletterRules
 
 public sealed record CmsContactReplyRequest(Guid MessageId, string ReplyContent);
 
+public sealed record CmsContactReplyEmail(string Subject, string Body);
+
+public static class CmsContactReplyEmailFormatter
+{
+    public static CmsContactReplyEmail Create(
+        string contactName,
+        string contactSubject,
+        string originalMessage,
+        string replyContent)
+    {
+        var safeName = System.Text.Encodings.Web.HtmlEncoder.Default.Encode(contactName);
+        var safeSubject = System.Text.Encodings.Web.HtmlEncoder.Default.Encode(contactSubject);
+        var safeOriginalMessage = System.Text.Encodings.Web.HtmlEncoder.Default.Encode(originalMessage);
+        var safeReplyContent = System.Text.Encodings.Web.HtmlEncoder.Default.Encode(replyContent);
+
+        var body = $"""
+            <html>
+              <body style="font-family: sans-serif; line-height: 1.6;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+                  <h2 style="color: #4f46e5;">Destek talebiniz yanıtlandı</h2>
+                  <p>Merhaba <strong>{safeName}</strong>,</p>
+                  <p><strong>{safeSubject}</strong> konusundaki destek talebiniz yanıtlandı.</p>
+                  <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 0; font-size: 0.9em; color: #6b7280;">Mesajınız:</p>
+                    <p style="margin: 5px 0 0 0; white-space: pre-wrap;">{safeOriginalMessage}</p>
+                  </div>
+                  <div style="background-color: #eef2ff; padding: 20px; border-radius: 8px; border-left: 4px solid #4f46e5;">
+                    <p style="margin: 0; font-size: 0.9em; color: #4f46e5; font-weight: bold;">Yanıt:</p>
+                    <p style="margin: 10px 0 0 0; white-space: pre-wrap;">{safeReplyContent}</p>
+                  </div>
+                  <p style="margin-top: 30px; font-size: 0.8em; color: #9ca3af;">Bu e-posta Hızlı Okuma otomatik sistemi tarafından gönderilmiştir.</p>
+                </div>
+              </body>
+            </html>
+            """;
+
+        return new CmsContactReplyEmail(
+            $"RE: {contactSubject} - Hızlı Okuma destek talebi yanıtı",
+            body);
+    }
+}
+
+public interface ISpeedReadingEmailDelivery
+{
+    Task QueueAsync(
+        Guid messageId,
+        string consumerType,
+        string recipient,
+        string subject,
+        string body,
+        CancellationToken cancellationToken = default);
+}
+
 public interface ISpeedReadingCms
 {
     Task<IReadOnlyList<CmsContentBlockSummary>> GetLandingContentAsync(

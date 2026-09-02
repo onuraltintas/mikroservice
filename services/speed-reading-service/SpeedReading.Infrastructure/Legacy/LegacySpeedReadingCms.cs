@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using SpeedReading.Application.Content;
 using SpeedReading.Infrastructure.Persistence;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace SpeedReading.Infrastructure.Legacy;
 
@@ -9,15 +11,20 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
 {
     private readonly ISpeedReadingDataContext db;
     private readonly IMemoryCache cache;
+    private readonly ISpeedReadingEmailDelivery emailDelivery;
 
-    internal LegacySpeedReadingCms(ISpeedReadingDataContext db, IMemoryCache cache)
+    internal LegacySpeedReadingCms(
+        ISpeedReadingDataContext db,
+        IMemoryCache cache,
+        ISpeedReadingEmailDelivery emailDelivery)
     {
         this.db = db;
         this.cache = cache;
+        this.emailDelivery = emailDelivery;
     }
 
     public LegacySpeedReadingCms(SpeedReadingDbContext db, IMemoryCache cache)
-        : this((ISpeedReadingDataContext)db, cache)
+        : this((ISpeedReadingDataContext)db, cache, NullSpeedReadingEmailDelivery.Instance)
     {
     }
     private static readonly TimeSpan LandingCacheDuration = TimeSpan.FromMinutes(10);
@@ -523,6 +530,19 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         message.UpdatedAt = DateTime.UtcNow;
         message.UpdatedBy = actorId;
         await db.SaveChangesAsync(cancellationToken);
+
+        var email = CmsContactReplyEmailFormatter.Create(
+            message.Name,
+            message.Subject,
+            message.Message,
+            message.ReplyContent);
+        await emailDelivery.QueueAsync(
+            CreateContactReplyMessageId(message.Id, message.ReplyContent),
+            "SpeedReadingContactReply",
+            message.Email,
+            email.Subject,
+            email.Body,
+            cancellationToken);
         return true;
     }
 
@@ -648,6 +668,13 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
             ? Array.Empty<string>()
             : tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
+    private static Guid CreateContactReplyMessageId(Guid contactMessageId, string replyContent)
+    {
+        var payload = Encoding.UTF8.GetBytes($"{contactMessageId:N}:{replyContent}");
+        var hash = SHA256.HashData(payload);
+        return new Guid(hash.AsSpan(0, 16));
+    }
+
     private void RemoveLandingCache(string group)
     {
         cache.Remove($"cms:landing:{group}:");
@@ -664,4 +691,17 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         CancellationToken cancellationToken)
         where TEntity : LegacyBaseEntity =>
         set.SingleOrDefaultAsync(item => item.Id == id && !item.IsDeleted, cancellationToken);
+
+    private sealed class NullSpeedReadingEmailDelivery : ISpeedReadingEmailDelivery
+    {
+        public static readonly NullSpeedReadingEmailDelivery Instance = new();
+
+        public Task QueueAsync(
+            Guid messageId,
+            string consumerType,
+            string recipient,
+            string subject,
+            string body,
+            CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
 }

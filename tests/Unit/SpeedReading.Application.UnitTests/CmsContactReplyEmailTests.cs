@@ -16,9 +16,9 @@ public sealed class CmsContactReplyEmailTests
 
         email.Subject.Should().Be("RE: Yardım & bilgi - Hızlı Okuma destek talebi yanıtı");
         email.Body.Should().Contain("Ada &lt;script&gt;");
-        email.Body.Should().Contain("Yardım &amp; bilgi");
+        email.Body.Should().Contain("Yard&#x131;m &amp; bilgi");
         email.Body.Should().Contain("Merhaba &lt;b&gt;ekip&lt;/b&gt;");
-        email.Body.Should().Contain("Yanıtım: 2 &gt; 1");
+        email.Body.Should().Contain("Yan&#x131;t&#x131;m: 2 &gt; 1");
         email.Body.Should().NotContain("<script>");
     }
 }

@@ -124,7 +124,8 @@ public static class DependencyInjection
         services.AddScoped<ISpeedReadingCms>(serviceProvider =>
             new LegacySpeedReadingCms(
                 serviceProvider.GetRequiredService<ISpeedReadingDataContext>(),
-                serviceProvider.GetRequiredService<IMemoryCache>()));
+                serviceProvider.GetRequiredService<IMemoryCache>(),
+                serviceProvider.GetRequiredService<ISpeedReadingEmailDelivery>()));
         services.AddScoped<ISpeedReadingDataContext>(serviceProvider =>
             ownedDataEnabled
                 ? serviceProvider.GetRequiredService<OwnedSpeedReadingDbContext>()
@@ -218,6 +219,10 @@ public static class DependencyInjection
         services.AddHttpClient<ISpeedReadingInstitutionDirectory, IdentityInstitutionDirectoryClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);
+        }).AddCorrelationIdPropagation();
+        services.AddHttpClient<ISpeedReadingEmailDelivery, NotificationEmailClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(10);
         }).AddCorrelationIdPropagation();
         if (!ownedDataEnabled)
         {
