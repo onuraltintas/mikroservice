@@ -190,6 +190,11 @@ describe('CoachingAdminService', () => {
     expect(result.request.method).toBe('PUT');
     result.flush({});
 
+    service.deleteExamResult('exam/1', 'result/1').subscribe();
+    const deletedResult = http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/exams/exam%2F1/results/result%2F1'));
+    expect(deletedResult.request.method).toBe('DELETE');
+    deletedResult.flush(null);
+
     service.getGoal('goal/1').subscribe();
     const goalDetail = http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/goals/goal%2F1'));
     expect(goalDetail.request.method).toBe('GET');

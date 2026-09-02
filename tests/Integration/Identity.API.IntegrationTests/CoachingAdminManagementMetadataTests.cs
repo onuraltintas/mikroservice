@@ -41,6 +41,7 @@ public sealed class CoachingAdminManagementMetadataTests
     [InlineData(nameof(CoachingAdminController.AddExamResult))]
     [InlineData(nameof(CoachingAdminController.UpdateExam))]
     [InlineData(nameof(CoachingAdminController.UpdateExamResult))]
+    [InlineData(nameof(CoachingAdminController.DeleteExamResult))]
     [InlineData(nameof(CoachingAdminController.DeleteExam))]
     [InlineData(nameof(CoachingAdminController.CreateGoal))]
     [InlineData(nameof(CoachingAdminController.UpdateGoalProgress))]
@@ -63,6 +64,16 @@ public sealed class CoachingAdminManagementMetadataTests
             .Should()
             .Contain(attribute => attribute.Policy == "MfaRequired")
             .And.Contain(attribute => attribute.Roles == "SystemAdmin");
+    }
+
+    [Fact]
+    public void DeleteExamResult_MustUseDelete()
+    {
+        typeof(CoachingAdminController)
+            .GetMethod(nameof(CoachingAdminController.DeleteExamResult))!
+            .GetCustomAttributes(typeof(HttpDeleteAttribute), inherit: true)
+            .Should()
+            .NotBeEmpty();
     }
 
     [Theory]

@@ -443,6 +443,22 @@ describe('SpeedReadingAdminService', () => {
     createRequest.flush({ id: 'exercise-1' });
   });
 
+  it('loads every exercise page for assessment template selection', () => {
+    service.getAllExercises().subscribe(value => {
+      expect(value.map(exercise => exercise.id)).toEqual(['exercise-1', 'exercise-2']);
+    });
+
+    const firstPage = http.expectOne('/api/speed-reading/exercises?pageNumber=1&pageSize=100');
+    firstPage.flush({
+      items: [{ id: 'exercise-1' }], pageNumber: 1, pageSize: 100, totalCount: 101
+    });
+
+    const secondPage = http.expectOne('/api/speed-reading/exercises?pageNumber=2&pageSize=100');
+    secondPage.flush({
+      items: [{ id: 'exercise-2' }], pageNumber: 2, pageSize: 100, totalCount: 101
+    });
+  });
+
   it('loads reading texts and details, then sends idempotent mutations', () => {
     service.getReadingTexts('exercise-1').subscribe(value => expect(value).toEqual([]));
     const listRequest = http.expectOne('/api/speed-reading/reading-texts?exerciseId=exercise-1');
