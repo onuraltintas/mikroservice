@@ -144,7 +144,7 @@ services:
       CLAMD_CONF_MaxQueue: "16"
       CLAMAV_NO_MILTERD: "true"
       FRESHCLAM_CHECKS: "1"
-    mem_limit: 1g
+    mem_limit: 1536m
     cpus: "1.0"
     pids_limit: 128
     expose:
