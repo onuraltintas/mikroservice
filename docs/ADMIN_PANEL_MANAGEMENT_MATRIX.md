@@ -106,8 +106,8 @@ secret kaydı oluşturma da fail-closed olarak reddedilir.
    kendisi hiçbir API yanıtında dönmez.
 4. Support submit anonim kalır; body limiti, validator, idempotency key ve gateway
    + service rate limit'i birlikte uygulanır.
-5. Coaching admin endpoint'i SystemAdmin rolüyle ek fail-closed kontrol taşır;
-   yalnız permission claim'ine güvenerek global öğrenci verisi açılmaz.
+5. Coaching admin yazma endpoint'leri SystemAdmin rolüyle ek fail-closed kontrol
+   taşır; yalnız permission claim'ine güvenerek global öğrenci verisi açılmaz.
 6. SystemAdmin rolü oluşturma/atama yalnızca mevcut SystemAdmin tarafından yapılır;
    kurum yöneticisi kullanıcı ekranında salt-okunur tenant görünümüne sahiptir.
 7. Son aktif SystemAdmin hesabı silinemez, pasifleştirilemez veya SystemAdmin rolü

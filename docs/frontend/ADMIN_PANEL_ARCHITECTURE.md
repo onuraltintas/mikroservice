@@ -148,7 +148,7 @@ export class SessionService {
 - [x] Server-issued permission claim'lerine bağlı functional route guard ve menü.
 - [x] Identity kurum yaşam döngüsü yönetimi.
 - [x] Notification destek inbox ve e-posta şablonu yönetimi.
-- [x] SystemAdmin için Coaching operasyon özeti ve sayfalı listeler.
+- [x] SystemAdmin ve kurum kapsamındaki yöneticiler için Coaching operasyon özeti ve sayfalı listeler.
 - [x] Coaching assignment oluşturma, teslim/not/attachment ayrıntısı ve yönetim aksiyonları.
 - [x] Coaching seans, sınav ve hedef oluşturma/iptal/silme/ilerleme ekranları.
 - [x] Seans katılımı ve sınav sonucu için MFA + Manage permission korumalı detay ekranları.

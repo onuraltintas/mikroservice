@@ -27,9 +27,9 @@ tanımlıdır. `CoachingContractTests` şu sınırları release sırasında sabi
 - Fotoğraf bytes'ları PostgreSQL'e yazılmaz. `Local` yalnız Development/test
   içindir; yatay ölçek için `Minio`/S3 uyumlu provider, tarama için `ClamAv`
   seçilir ve Production bu iki seçimi fail-closed zorunlu kılar.
-- SystemAdmin Coaching read model'i assignment, session, exam ve goal listelerini
-  bounded pagination/filter ile sunar; admin DTO'larında Identity profile PII'si
-  veya storage key bulunmaz.
+- SystemAdmin ve yetkili kurum yöneticileri Coaching read model'i assignment,
+  session, exam ve goal listelerini bounded pagination/filter ile sunar; admin
+  DTO'larında Identity profile PII'si veya storage key bulunmaz.
 - SystemAdmin yönetim yüzeyi genel tablo CRUD'u değildir: Coaching command'larını
   açık aksiyonlarla çağırır ve `Permissions.Coaching.Manage` + `MfaRequired`
   ister. Seans katılımı ve sınav sonuçları için admin detay query'leri yalnızca
