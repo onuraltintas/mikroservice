@@ -9,10 +9,17 @@
 
         <!-- Desktop Navigation -->
         <div class="nav-links desktop-only">
-            <a *ngFor="let link of navLinks" [routerLink]="link.fragment ? ['/'] : [link.href]"
-                [fragment]="link.fragment" (click)="onNavLinkClick($event, link)" [class.scrolled]="isScrolled">
-                {{ link.label }}
-            </a>
+            <ng-container *ngFor="let link of navLinks">
+                <a *ngIf="link.external" [href]="link.href" [target]="link.openInNewTab ? '_blank' : undefined"
+                    [attr.rel]="link.openInNewTab ? 'noopener' : null" [class.scrolled]="isScrolled">
+                    {{ link.label }}
+                </a>
+                <a *ngIf="!link.external" [routerLink]="link.fragment ? ['/'] : [link.href]"
+                    [fragment]="link.fragment" (click)="onNavLinkClick($event, link)" [target]="link.openInNewTab ? '_blank' : undefined"
+                    [class.scrolled]="isScrolled">
+                    {{ link.label }}
+                </a>
+            </ng-container>
             <div class="lang-switcher" [class.scrolled]="isScrolled">
                 <button (click)="switchLanguage('tr')" [class.active]="currentLanguage() === 'tr'">TR</button>
                 <span>|</span>
@@ -36,10 +43,16 @@
     <!-- Mobile Menu -->
     <div class="mobile-menu" [class.open]="mobileMenuOpen">
         <div class="mobile-menu-content">
-            <a *ngFor="let link of navLinks" [routerLink]="link.fragment ? ['/'] : [link.href]"
-                [fragment]="link.fragment" (click)="onNavLinkClick($event, link)">
-                {{ link.label }}
-            </a>
+            <ng-container *ngFor="let link of navLinks">
+                <a *ngIf="link.external" [href]="link.href" [target]="link.openInNewTab ? '_blank' : undefined"
+                    [attr.rel]="link.openInNewTab ? 'noopener' : null" (click)="closeMobileMenu()">
+                    {{ link.label }}
+                </a>
+                <a *ngIf="!link.external" [routerLink]="link.fragment ? ['/'] : [link.href]"
+                    [fragment]="link.fragment" (click)="onNavLinkClick($event, link)" [target]="link.openInNewTab ? '_blank' : undefined">
+                    {{ link.label }}
+                </a>
+            </ng-container>
             <a routerLink="/auth/login" (click)="closeMobileMenu()">Giriş Yap</a>
             <button mat-raised-button color="primary" routerLink="/auth/register" (click)="closeMobileMenu()">
                 Ücretsiz Dene

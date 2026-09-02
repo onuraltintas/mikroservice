@@ -76,6 +76,7 @@ public sealed class OwnedSpeedReadingDbContext(
     DbSet<LegacyContactMessage> ISpeedReadingDataContext.ContactMessages => Set<LegacyContactMessage>();
     DbSet<LegacyNewsletterSubscriber> ISpeedReadingDataContext.NewsletterSubscribers => Set<LegacyNewsletterSubscriber>();
     DbSet<LegacyCmsMediaAsset> ISpeedReadingDataContext.CmsMediaAssets => Set<LegacyCmsMediaAsset>();
+    DbSet<LegacyCmsNavigationItem> ISpeedReadingDataContext.CmsNavigationItems => Set<LegacyCmsNavigationItem>();
     DbSet<LegacySubscriptionPlan> ISpeedReadingDataContext.SubscriptionPlans => Set<LegacySubscriptionPlan>();
     DbSet<LegacyUserSubscription> ISpeedReadingDataContext.UserSubscriptions => Set<LegacyUserSubscription>();
     DbSet<LegacyPayment> ISpeedReadingDataContext.Payments => Set<LegacyPayment>();
@@ -678,6 +679,19 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.StorageKey).HasMaxLength(500).IsRequired();
             entity.Property(item => item.AltText).HasMaxLength(500);
             entity.HasIndex(item => item.CreatedAt);
+        });
+        modelBuilder.Entity<LegacyCmsNavigationItem>(entity =>
+        {
+            ConfigureLegacyEntity(entity, "cms_navigation_items");
+            entity.Property(item => item.Menu).HasColumnName("menu").HasMaxLength(50).IsRequired();
+            entity.Property(item => item.Label).HasColumnName("label").HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Url).HasColumnName("url").HasMaxLength(500).IsRequired();
+            entity.Property(item => item.Fragment).HasColumnName("fragment").HasMaxLength(100);
+            entity.Property(item => item.Icon).HasColumnName("icon").HasMaxLength(50);
+            entity.Property(item => item.SortOrder).HasColumnName("sort_order");
+            entity.Property(item => item.IsVisible).HasColumnName("is_visible");
+            entity.Property(item => item.OpenInNewTab).HasColumnName("open_in_new_tab");
+            entity.HasIndex(item => new { item.Menu, item.SortOrder });
         });
         modelBuilder.Entity<LegacyUserNotification>(entity =>
         {

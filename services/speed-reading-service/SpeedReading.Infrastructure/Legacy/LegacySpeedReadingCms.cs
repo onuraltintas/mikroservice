@@ -414,6 +414,82 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         return true;
     }
 
+    public async Task<IReadOnlyList<CmsNavigationItemSummary>> GetNavigationAsync(
+        string menu,
+        bool includeHidden,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedMenu = string.IsNullOrWhiteSpace(menu) ? "Main" : menu.Trim();
+        var query = db.CmsNavigationItems
+            .AsNoTracking()
+            .Where(item => !item.IsDeleted && item.Menu == normalizedMenu);
+        if (!includeHidden)
+        {
+            query = query.Where(item => item.IsVisible);
+        }
+
+        var rows = await query
+            .OrderBy(item => item.SortOrder)
+            .ThenBy(item => item.CreatedAt)
+            .ToListAsync(cancellationToken);
+        return rows.Select(ToSummary).ToList();
+    }
+
+    public async Task<Guid> CreateNavigationItemAsync(
+        CmsNavigationItemRequest request,
+        Guid actorId,
+        CancellationToken cancellationToken = default)
+    {
+        var normalized = CmsNavigationRules.Normalize(request);
+        var item = new LegacyCmsNavigationItem
+        {
+            Id = Guid.NewGuid(),
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = actorId
+        };
+        Apply(item, normalized);
+        db.CmsNavigationItems.Add(item);
+        await db.SaveChangesAsync(cancellationToken);
+        return item.Id;
+    }
+
+    public async Task<bool> UpdateNavigationItemAsync(
+        Guid id,
+        CmsNavigationItemRequest request,
+        Guid actorId,
+        CancellationToken cancellationToken = default)
+    {
+        var item = await FindActiveAsync(db.CmsNavigationItems, id, cancellationToken);
+        if (item is null)
+        {
+            return false;
+        }
+
+        Apply(item, CmsNavigationRules.Normalize(request));
+        item.UpdatedAt = DateTime.UtcNow;
+        item.UpdatedBy = actorId;
+        await db.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> DeleteNavigationItemAsync(
+        Guid id,
+        Guid actorId,
+        CancellationToken cancellationToken = default)
+    {
+        var item = await FindActiveAsync(db.CmsNavigationItems, id, cancellationToken);
+        if (item is null)
+        {
+            return false;
+        }
+
+        item.IsDeleted = true;
+        item.DeletedAt = DateTime.UtcNow;
+        item.DeletedBy = actorId;
+        await db.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
     public Task<SpeedReadingPage<CmsPageSummary>> GetPagesAsync(int pageNumber, int pageSize, CancellationToken cancellationToken = default) =>
         GetPagePageAsync(pageNumber, pageSize, cancellationToken);
 
@@ -738,6 +814,32 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
             item.AltText,
             item.CreatedAt,
             item.UpdatedAt);
+
+    private static CmsNavigationItemSummary ToSummary(LegacyCmsNavigationItem item) =>
+        new(
+            item.Id,
+            item.Menu,
+            item.Label,
+            item.Url,
+            item.Fragment,
+            item.Icon,
+            item.SortOrder,
+            item.IsVisible,
+            item.OpenInNewTab,
+            item.CreatedAt,
+            item.UpdatedAt);
+
+    private static void Apply(LegacyCmsNavigationItem item, CmsNavigationItemRequest request)
+    {
+        item.Menu = request.Menu;
+        item.Label = request.Label;
+        item.Url = request.Url;
+        item.Fragment = request.Fragment;
+        item.Icon = request.Icon;
+        item.SortOrder = request.SortOrder;
+        item.IsVisible = request.IsVisible;
+        item.OpenInNewTab = request.OpenInNewTab;
+    }
 
     private static CmsPageSummary ToSummary(LegacyPage item) =>
         new(

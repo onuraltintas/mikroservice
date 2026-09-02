@@ -19,6 +19,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     internal DbSet<LegacyContactMessage> ContactMessages => Set<LegacyContactMessage>();
     internal DbSet<LegacyNewsletterSubscriber> NewsletterSubscribers => Set<LegacyNewsletterSubscriber>();
     internal DbSet<LegacyCmsMediaAsset> CmsMediaAssets => Set<LegacyCmsMediaAsset>();
+    internal DbSet<LegacyCmsNavigationItem> CmsNavigationItems => Set<LegacyCmsNavigationItem>();
     internal DbSet<LegacyProduct> Products => Set<LegacyProduct>();
     internal DbSet<LegacySubscriptionPlan> SubscriptionPlans => Set<LegacySubscriptionPlan>();
     internal DbSet<LegacyUserSubscription> UserSubscriptions => Set<LegacyUserSubscription>();
@@ -83,6 +84,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     DbSet<LegacyContactMessage> ISpeedReadingDataContext.ContactMessages => ContactMessages;
     DbSet<LegacyNewsletterSubscriber> ISpeedReadingDataContext.NewsletterSubscribers => NewsletterSubscribers;
     DbSet<LegacyCmsMediaAsset> ISpeedReadingDataContext.CmsMediaAssets => CmsMediaAssets;
+    DbSet<LegacyCmsNavigationItem> ISpeedReadingDataContext.CmsNavigationItems => CmsNavigationItems;
     DbSet<LegacySubscriptionPlan> ISpeedReadingDataContext.SubscriptionPlans => SubscriptionPlans;
     DbSet<LegacyUserSubscription> ISpeedReadingDataContext.UserSubscriptions => UserSubscriptions;
     DbSet<LegacyPayment> ISpeedReadingDataContext.Payments => Payments;
@@ -185,6 +187,18 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.Property(item => item.StorageKey).HasMaxLength(500).IsRequired();
             entity.Property(item => item.AltText).HasMaxLength(500);
             entity.HasIndex(item => item.CreatedAt).HasDatabaseName("IX_CmsMediaAssets_CreatedAt");
+        });
+
+        modelBuilder.Entity<LegacyCmsNavigationItem>(entity =>
+        {
+            entity.ToTable("CmsNavigationItems");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Menu).HasMaxLength(50).IsRequired();
+            entity.Property(item => item.Label).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Url).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.Fragment).HasMaxLength(100);
+            entity.Property(item => item.Icon).HasMaxLength(50);
+            entity.HasIndex(item => new { item.Menu, item.SortOrder });
         });
 
         modelBuilder.Entity<LegacyProduct>(entity =>

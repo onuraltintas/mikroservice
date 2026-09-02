@@ -89,6 +89,18 @@ internal sealed class LegacyCmsMediaAsset : LegacyBaseEntity
     public string? AltText { get; set; }
 }
 
+internal sealed class LegacyCmsNavigationItem : LegacyBaseEntity
+{
+    public string Menu { get; set; } = "Main";
+    public string Label { get; set; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
+    public string? Fragment { get; set; }
+    public string? Icon { get; set; }
+    public int SortOrder { get; set; }
+    public bool IsVisible { get; set; }
+    public bool OpenInNewTab { get; set; }
+}
+
 internal sealed class LegacyExerciseTypeCategory : LegacyBaseEntity
 {
     public string Name { get; set; } = string.Empty;

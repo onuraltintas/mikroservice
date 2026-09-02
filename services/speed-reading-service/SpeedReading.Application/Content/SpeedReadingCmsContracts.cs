@@ -137,6 +137,87 @@ public sealed record CmsStoredMedia(
     long SizeBytes,
     string Sha256);
 
+public sealed record CmsNavigationItemSummary(
+    Guid Id,
+    string Menu,
+    string Label,
+    string Url,
+    string? Fragment,
+    string? Icon,
+    int SortOrder,
+    bool IsVisible,
+    bool OpenInNewTab,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt);
+
+public sealed record CmsNavigationItemRequest(
+    string Menu,
+    string Label,
+    string Url,
+    string? Fragment,
+    string? Icon,
+    int SortOrder,
+    bool IsVisible,
+    bool OpenInNewTab);
+
+public static class CmsNavigationRules
+{
+    public static CmsNavigationItemRequest Normalize(CmsNavigationItemRequest request)
+    {
+        var menu = string.IsNullOrWhiteSpace(request.Menu) ? "Main" : request.Menu.Trim();
+        var label = request.Label?.Trim() ?? string.Empty;
+        var url = request.Url?.Trim() ?? string.Empty;
+
+        if (menu.Length is < 1 or > 50)
+        {
+            throw new ArgumentException("The menu name must be between 1 and 50 characters.", nameof(request));
+        }
+
+        if (label.Length is < 1 or > 100)
+        {
+            throw new ArgumentException("The navigation label must be between 1 and 100 characters.", nameof(request));
+        }
+
+        if (url.Length is < 1 or > 500 || !IsSafeUrl(url))
+        {
+            throw new ArgumentException("The navigation URL must be an internal path or an HTTP(S) URL.", nameof(request));
+        }
+
+        var fragment = string.IsNullOrWhiteSpace(request.Fragment)
+            ? null
+            : request.Fragment.Trim().TrimStart('#');
+        if (fragment is not null && (fragment.Length > 100 || fragment.Any(character => !IsFragmentCharacter(character))))
+        {
+            throw new ArgumentException("The navigation fragment contains invalid characters.", nameof(request));
+        }
+
+        var icon = string.IsNullOrWhiteSpace(request.Icon) ? null : request.Icon.Trim();
+        if (icon is not null && icon.Length > 50)
+        {
+            throw new ArgumentException("The navigation icon is too long.", nameof(request));
+        }
+
+        return request with
+        {
+            Menu = menu,
+            Label = label,
+            Url = url,
+            Fragment = fragment,
+            Icon = icon,
+            SortOrder = Math.Max(0, request.SortOrder)
+        };
+    }
+
+    private static bool IsSafeUrl(string url) =>
+        (url.StartsWith('/') && !url.StartsWith("//", StringComparison.Ordinal))
+        || (Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            && (uri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+                || uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)));
+
+    private static bool IsFragmentCharacter(char character) =>
+        char.IsLetterOrDigit(character) || character is '-' or '_' or '.';
+}
+
 public interface ISpeedReadingCmsMediaStorage
 {
     Task<CmsStoredMedia> SaveAsync(
@@ -327,6 +408,27 @@ public interface ISpeedReadingCms
         CancellationToken cancellationToken = default);
 
     Task<bool> DeleteMediaAsync(
+        Guid id,
+        Guid actorId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<CmsNavigationItemSummary>> GetNavigationAsync(
+        string menu,
+        bool includeHidden,
+        CancellationToken cancellationToken = default);
+
+    Task<Guid> CreateNavigationItemAsync(
+        CmsNavigationItemRequest request,
+        Guid actorId,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> UpdateNavigationItemAsync(
+        Guid id,
+        CmsNavigationItemRequest request,
+        Guid actorId,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteNavigationItemAsync(
         Guid id,
         Guid actorId,
         CancellationToken cancellationToken = default);

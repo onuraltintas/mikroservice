@@ -41,6 +41,16 @@ public sealed class CmsController(ISpeedReadingCms cms) : ControllerBase
             : File(media.Content, media.ContentType, enableRangeProcessing: true);
     }
 
+    [HttpGet("navigation")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetNavigation(
+        [FromQuery] string menu = "Main",
+        CancellationToken cancellationToken = default)
+    {
+        var items = await cms.GetNavigationAsync(menu, includeHidden: false, cancellationToken);
+        return Ok(new { success = true, data = items, message = "Navigation retrieved" });
+    }
+
     [HttpGet("blog")]
     [AllowAnonymous]
     public async Task<IActionResult> GetBlogPosts(

@@ -55,6 +55,20 @@ export interface SeoSettings {
     noIndex: boolean;
 }
 
+export interface NavigationItemDto {
+    id: string;
+    menu: string;
+    label: string;
+    url: string;
+    fragment?: string | null;
+    icon?: string | null;
+    sortOrder: number;
+    isVisible: boolean;
+    openInNewTab: boolean;
+    createdAt?: string;
+    updatedAt?: string | null;
+}
+
 export interface ContactMessageRequest {
     name: string;
     email: string;
@@ -88,6 +102,12 @@ export class PublicCmsService {
                 ) as { [key: string]: string }
                 };
             })
+        );
+    }
+
+    getNavigation(menu: string = 'Main'): Observable<NavigationItemDto[]> {
+        return this.http.get<any>(`${this.apiUrl}/navigation`, { params: { menu } }).pipe(
+            map(response => Array.isArray(response) ? response : (response?.data ?? []))
         );
     }
 

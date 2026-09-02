@@ -804,4 +804,31 @@ describe('SpeedReadingAdminService', () => {
     expect(deleteRequest.request.method).toBe('DELETE');
     deleteRequest.flush(null);
   });
+
+  it('loads and manages CMS navigation items', () => {
+    service.getCmsNavigation().subscribe(value => expect(value).toEqual([]));
+    const listRequest = http.expectOne('/api/speed-reading/admin/cms/navigation?menu=Main&includeHidden=true');
+    expect(listRequest.request.method).toBe('GET');
+    listRequest.flush({ data: [] });
+
+    const request = {
+      menu: 'Main', label: 'Blog', url: '/blog', fragment: null, icon: null,
+      sortOrder: 10, isVisible: true, openInNewTab: false
+    };
+    service.createCmsNavigationItem(request).subscribe(value => expect(value).toBe('navigation-1'));
+    const createRequest = http.expectOne('/api/speed-reading/admin/cms/navigation');
+    expect(createRequest.request.method).toBe('POST');
+    expect(createRequest.request.body).toEqual(request);
+    createRequest.flush({ data: { id: 'navigation-1' } });
+
+    service.updateCmsNavigationItem('navigation-1', request).subscribe();
+    const updateRequest = http.expectOne('/api/speed-reading/admin/cms/navigation/navigation-1');
+    expect(updateRequest.request.method).toBe('PUT');
+    updateRequest.flush(null);
+
+    service.deleteCmsNavigationItem('navigation-1').subscribe();
+    const deleteRequest = http.expectOne('/api/speed-reading/admin/cms/navigation/navigation-1');
+    expect(deleteRequest.request.method).toBe('DELETE');
+    deleteRequest.flush(null);
+  });
 });

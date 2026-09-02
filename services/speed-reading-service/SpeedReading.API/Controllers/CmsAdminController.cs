@@ -109,6 +109,52 @@ public sealed class CmsAdminController(ISpeedReadingCms cms) : ControllerBase
     public Task<IActionResult> DeleteMedia(Guid id, CancellationToken cancellationToken = default) =>
         Delete(id, cms.DeleteMediaAsync, "Media not found", "Media deleted", cancellationToken);
 
+    [HttpGet("navigation")]
+    public async Task<IActionResult> GetNavigation(
+        [FromQuery] string menu = "Main",
+        [FromQuery] bool includeHidden = true,
+        CancellationToken cancellationToken = default) =>
+        Ok(new
+        {
+            success = true,
+            data = await cms.GetNavigationAsync(menu, includeHidden, cancellationToken),
+            message = "Navigation retrieved"
+        });
+
+    [HttpPost("navigation")]
+    public async Task<IActionResult> CreateNavigationItem(
+        [FromBody] CmsNavigationItemRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId))
+        {
+            return Unauthorized();
+        }
+
+        var id = await cms.CreateNavigationItemAsync(request, actorId, cancellationToken);
+        return Ok(new { success = true, data = new { id }, message = "Navigation item created" });
+    }
+
+    [HttpPut("navigation/{id:guid}")]
+    public async Task<IActionResult> UpdateNavigationItem(
+        Guid id,
+        [FromBody] CmsNavigationItemRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId))
+        {
+            return Unauthorized();
+        }
+
+        return await cms.UpdateNavigationItemAsync(id, request, actorId, cancellationToken)
+            ? Ok(new { success = true, message = "Navigation item updated" })
+            : NotFound(new { success = false, message = "Navigation item not found" });
+    }
+
+    [HttpDelete("navigation/{id:guid}")]
+    public Task<IActionResult> DeleteNavigationItem(Guid id, CancellationToken cancellationToken = default) =>
+        Delete(id, cms.DeleteNavigationItemAsync, "Navigation item not found", "Navigation item deleted", cancellationToken);
+
     [HttpGet("pages")]
     public async Task<IActionResult> GetPages([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
     {

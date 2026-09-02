@@ -1076,6 +1076,31 @@ export interface SpeedReadingCmsMediaAsset {
   updatedAt: string | null;
 }
 
+export interface SpeedReadingCmsNavigationItem {
+  id: string;
+  menu: string;
+  label: string;
+  url: string;
+  fragment: string | null;
+  icon: string | null;
+  sortOrder: number;
+  isVisible: boolean;
+  openInNewTab: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface SpeedReadingCmsNavigationItemRequest {
+  menu: string;
+  label: string;
+  url: string;
+  fragment?: string | null;
+  icon?: string | null;
+  sortOrder: number;
+  isVisible: boolean;
+  openInNewTab: boolean;
+}
+
 export interface SpeedReadingCmsContactReplyRequest {
   messageId: string;
   replyContent: string;
@@ -2105,6 +2130,25 @@ export class SpeedReadingAdminService {
 
   deleteCmsMedia(id: string) {
     return this.http.delete<void>(`${this.url}/admin/cms/media/${id}`);
+  }
+
+  getCmsNavigation(menu = 'Main', includeHidden = true) {
+    return this.http.get<{ data: SpeedReadingCmsNavigationItem[] }>(`${this.url}/admin/cms/navigation`, {
+      params: new HttpParams().set('menu', menu).set('includeHidden', includeHidden)
+    }).pipe(map(response => response.data ?? []));
+  }
+
+  createCmsNavigationItem(request: SpeedReadingCmsNavigationItemRequest) {
+    return this.http.post<{ data: { id: string } }>(`${this.url}/admin/cms/navigation`, request)
+      .pipe(map(response => response.data.id));
+  }
+
+  updateCmsNavigationItem(id: string, request: SpeedReadingCmsNavigationItemRequest) {
+    return this.http.put<void>(`${this.url}/admin/cms/navigation/${id}`, request);
+  }
+
+  deleteCmsNavigationItem(id: string) {
+    return this.http.delete<void>(`${this.url}/admin/cms/navigation/${id}`);
   }
 
   getCmsPages(pageNumber = 1, pageSize = 25) {
