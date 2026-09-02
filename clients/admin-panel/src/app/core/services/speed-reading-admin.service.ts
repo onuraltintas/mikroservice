@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { map } from 'rxjs';
+import { forkJoin, map, of, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface SpeedReadingCapabilities {
@@ -1780,6 +1780,23 @@ export class SpeedReadingAdminService {
     return this.http.get<SpeedReadingPage<SpeedReadingExercise>>(
       `${this.url}/exercises`,
       { params }
+    );
+  }
+
+  getAllExercises(pageSize = 100) {
+    const boundedPageSize = Math.min(Math.max(pageSize, 1), 100);
+    return this.getExercises(1, boundedPageSize).pipe(
+      switchMap(firstPage => {
+        const totalPages = Math.max(1, Math.ceil(firstPage.totalCount / firstPage.pageSize));
+        if (totalPages === 1) return of(firstPage.items);
+
+        const remainingPages = Array.from({ length: totalPages - 1 }, (_, index) =>
+          this.getExercises(index + 2, boundedPageSize)
+        );
+        return forkJoin(remainingPages).pipe(
+          map(pages => [firstPage, ...pages].flatMap(page => page.items))
+        );
+      })
     );
   }
 

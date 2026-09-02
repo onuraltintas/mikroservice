@@ -529,6 +529,12 @@ export class CoachingAdminService {
     );
   }
 
+  deleteExamResult(examId: string, resultId: string) {
+    return this.http.delete<void>(
+      `${this.url}/exams/${encodeURIComponent(examId)}/results/${encodeURIComponent(resultId)}`
+    );
+  }
+
   deleteExam(id: string) {
     return this.http.delete(`${this.url}/exams/${encodeURIComponent(id)}`);
   }

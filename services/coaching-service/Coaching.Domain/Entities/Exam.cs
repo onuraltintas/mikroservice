@@ -174,6 +174,17 @@ public class Exam : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public ExamResult RemoveResult(Guid resultId)
+    {
+        var result = _results.FirstOrDefault(existing => existing.Id == resultId);
+        if (result is null)
+            throw new InvalidOperationException($"Exam result {resultId} not found.");
+
+        _results.Remove(result);
+        UpdatedAt = DateTime.UtcNow;
+        return result;
+    }
+
     private static string? NormalizeOptional(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

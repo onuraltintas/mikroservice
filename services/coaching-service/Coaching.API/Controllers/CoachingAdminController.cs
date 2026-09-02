@@ -20,6 +20,7 @@ using Coaching.Application.Commands.DeleteSession;
 using Coaching.Application.Commands.CreateExam;
 using Coaching.Application.Commands.AddExamResult;
 using Coaching.Application.Commands.UpdateExam;
+using Coaching.Application.Commands.DeleteExamResult;
 using Coaching.Application.Commands.DeleteExam;
 using Coaching.Application.Commands.CreateGoal;
 using Coaching.Application.Commands.UpdateGoalProgress;
@@ -583,6 +584,30 @@ public sealed class CoachingAdminController : ControllerBase
         catch (ArgumentException ex)
         {
             return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpDelete("exams/{id:guid}/results/{resultId:guid}")]
+    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
+    [HasPermission(PlatformPermissions.Coaching.Manage)]
+    public async Task<IActionResult> DeleteExamResult(
+        Guid id,
+        Guid resultId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _mediator.Send(new DeleteExamResultCommand(id, resultId), cancellationToken);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
         }
     }
 

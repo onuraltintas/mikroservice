@@ -227,8 +227,8 @@ SystemAdmin coaching management is intentionally command-based rather than a
 generic table CRUD surface. With `Permissions.Coaching.Manage` and a recent
 `MfaRequired` authentication, the admin panel can create, cancel, grade and
 delete assignments; create, cancel, delete and record attendance for sessions;
-create and delete exams and add exam results; and create, update progress and
-delete goals. The details needed for attendance/results are available at
+create and delete exams, add/update/delete individual exam results; and create,
+update progress and delete goals. The details needed for attendance/results are available at
 `GET /api/coaching-admin/sessions/{id}` and
 `GET /api/coaching-admin/exams/{id}`. Create and result commands require a
 16–128 character `Idempotency-Key`; domain authorization and target validation

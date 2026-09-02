@@ -168,8 +168,8 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
   }
 
   loadExercises(): void {
-    this.service.getExercises(1, 500).subscribe({
-      next: value => this.exercises.set(value.items),
+    this.service.getAllExercises().subscribe({
+      next: value => this.exercises.set(value),
       error: () => this.error.set('Egzersiz listesi yüklenemedi.')
     });
   }

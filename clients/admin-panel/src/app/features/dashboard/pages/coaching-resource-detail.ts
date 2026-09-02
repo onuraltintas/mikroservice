@@ -52,7 +52,7 @@ type Resource = 'session' | 'exam';
       } @else if (exam(); as value) {
         <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <div class="mb-4 flex items-center justify-between gap-3"><h2 class="font-semibold text-gray-900 dark:text-white">Sınav sonuçları</h2><span class="text-sm text-gray-500">{{ value.results.length }} sonuç</span></div>
-          <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700"><thead class="text-left text-xs uppercase text-gray-500"><tr><th class="px-3 py-2">Öğrenci</th><th class="px-3 py-2">Puan</th><th class="px-3 py-2">Doğru / Yanlış / Boş</th><th class="px-3 py-2">Not</th>@if (canManage()) { <th class="px-3 py-2">İşlem</th> }</tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-700">@for (result of value.results; track result.id) {<tr><td class="px-3 py-3">{{ userName(result.studentId) }}</td><td class="px-3 py-3">{{ result.score }}</td><td class="px-3 py-3">{{ result.correctAnswers ?? '—' }} / {{ result.wrongAnswers ?? '—' }} / {{ result.emptyAnswers ?? '—' }}</td><td class="px-3 py-3">{{ result.teacherNotes || '—' }}</td>@if (canManage()) { <td class="px-3 py-3"><button type="button" (click)="editResult(result)" class="text-xs text-indigo-700 hover:underline">Düzenle</button></td> }</tr>} @empty {<tr><td [attr.colspan]="canManage() ? 5 : 4" class="px-3 py-8 text-center text-gray-500">Sonuç bulunamadı.</td></tr>}</tbody></table></div>
+          <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700"><thead class="text-left text-xs uppercase text-gray-500"><tr><th class="px-3 py-2">Öğrenci</th><th class="px-3 py-2">Puan</th><th class="px-3 py-2">Doğru / Yanlış / Boş</th><th class="px-3 py-2">Not</th>@if (canManage()) { <th class="px-3 py-2">İşlem</th> }</tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-700">@for (result of value.results; track result.id) {<tr><td class="px-3 py-3">{{ userName(result.studentId) }}</td><td class="px-3 py-3">{{ result.score }}</td><td class="px-3 py-3">{{ result.correctAnswers ?? '—' }} / {{ result.wrongAnswers ?? '—' }} / {{ result.emptyAnswers ?? '—' }}</td><td class="px-3 py-3">{{ result.teacherNotes || '—' }}</td>@if (canManage()) { <td class="px-3 py-3"><div class="flex gap-2"><button type="button" (click)="editResult(result)" class="text-xs text-indigo-700 hover:underline">Düzenle</button><button type="button" (click)="deleteResult(result)" [disabled]="actionLoading()" class="text-xs text-red-700 hover:underline">Sil</button></div></td> }</tr>} @empty {<tr><td [attr.colspan]="canManage() ? 5 : 4" class="px-3 py-8 text-center text-gray-500">Sonuç bulunamadı.</td></tr>}</tbody></table></div>
           @if (editingResult(); as result) { <form (ngSubmit)="saveResult()" class="mt-4 space-y-3 rounded-lg border border-indigo-100 bg-indigo-50 p-4 dark:border-indigo-900 dark:bg-indigo-950/30"><p class="text-sm font-medium">{{ userName(result.studentId) }} sonucunu düzelt</p><div class="grid gap-3 md:grid-cols-4"><label class="text-sm">Puan<input [(ngModel)]="resultEditForm.score" name="editScore" type="number" min="0" [max]="value.maxScore" step="0.01" class="mt-1 w-full rounded border px-2 py-1 dark:border-gray-600 dark:bg-gray-900" /></label><label class="text-sm">Doğru<input [(ngModel)]="resultEditForm.correctAnswers" name="editCorrect" type="number" min="0" class="mt-1 w-full rounded border px-2 py-1 dark:border-gray-600 dark:bg-gray-900" /></label><label class="text-sm">Yanlış<input [(ngModel)]="resultEditForm.wrongAnswers" name="editWrong" type="number" min="0" class="mt-1 w-full rounded border px-2 py-1 dark:border-gray-600 dark:bg-gray-900" /></label><label class="text-sm">Boş<input [(ngModel)]="resultEditForm.emptyAnswers" name="editEmpty" type="number" min="0" class="mt-1 w-full rounded border px-2 py-1 dark:border-gray-600 dark:bg-gray-900" /></label></div><label class="block text-sm">Öğretmen notu<textarea [(ngModel)]="resultEditForm.notes" name="editNotes" maxlength="2000" rows="2" class="mt-1 w-full rounded border px-2 py-1 dark:border-gray-600 dark:bg-gray-900"></textarea></label><div class="flex justify-end gap-2"><button type="button" (click)="editingResult.set(null)" class="rounded border px-3 py-1 text-sm">Vazgeç</button><button type="submit" [disabled]="actionLoading()" class="rounded bg-indigo-600 px-3 py-1 text-sm text-white">Kaydet</button></div></form> }
         </div>
         @if (canManage()) {
@@ -191,6 +191,20 @@ export class CoachingResourceDetailComponent implements OnInit {
       next: () => { this.editingResult.set(null); this.load(); },
       error: () => this.error.set('Sınav sonucu güncellenemedi.')
     });
+  }
+
+  deleteResult(result: CoachingAdminExamResult) {
+    const exam = this.exam();
+    if (!exam || !this.canManage()) return;
+    if (typeof window !== 'undefined' && !window.confirm('Bu sınav sonucu kalıcı olarak silinsin mi?')) return;
+
+    this.actionLoading.set(true); this.error.set(null);
+    this.coaching.deleteExamResult(exam.id, result.id)
+      .pipe(finalize(() => this.actionLoading.set(false)))
+      .subscribe({
+        next: () => this.load(),
+        error: () => this.error.set('Sınav sonucu silinemedi.')
+      });
   }
 
   private idempotencyKey() {

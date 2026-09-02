@@ -2,6 +2,8 @@ import { Component, EventEmitter, Input, Output, OnInit, inject, signal } from '
 import { CommonModule } from '@angular/common';
 import { IdentityService, UserProfileDto, UserSessionDto } from '../../../../core/services/identity.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
+import { AuthService, hasRequiredAccess } from '../../../../core/auth/auth.service';
+import { ADMIN_PERMISSIONS } from '../../../../core/auth/permissions';
 
 @Component({
   selector: 'app-user-details-modal',
@@ -80,6 +82,7 @@ import { ToasterService } from '../../../../core/services/toaster.service';
                   </div>
                 </div>
 
+                @if (canManageAccess()) {
                 <!-- Access Management -->
                 <div class="pt-6 border-t border-gray-100 dark:border-gray-700">
                   <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -126,6 +129,7 @@ import { ToasterService } from '../../../../core/services/toaster.service';
                     </div>
                   }
                 </div>
+                }
 
                 <!-- Roles & Permissions -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-gray-100 dark:border-gray-700">
@@ -237,6 +241,7 @@ export class UserDetailsModalComponent implements OnInit {
 
   private identityService = inject(IdentityService);
   private toaster = inject(ToasterService);
+  private auth = inject(AuthService);
 
   user = signal<UserProfileDto | null>(null);
   sessions = signal<UserSessionDto[]>([]);
@@ -256,7 +261,7 @@ export class UserDetailsModalComponent implements OnInit {
       next: (res) => {
         this.user.set(res);
         this.loading.set(false);
-        this.loadSessions();
+        if (this.canManageAccess()) this.loadSessions();
       },
       error: (err) => {
         console.error('User detail error:', err);
@@ -268,6 +273,7 @@ export class UserDetailsModalComponent implements OnInit {
   }
 
   loadSessions() {
+    if (!this.canManageAccess()) return;
     this.sessionsLoading.set(true);
     this.identityService.getUserSessions(this.userId).subscribe({
       next: (sessions) => {
@@ -283,6 +289,7 @@ export class UserDetailsModalComponent implements OnInit {
   }
 
   async revokeSession(session: UserSessionDto) {
+    if (!this.canManageAccess()) return;
     const confirmed = await this.toaster.confirm(
       'Oturumu Sonlandır',
       'Bu oturumu sonlandırmak istediğinize emin misiniz?',
@@ -299,6 +306,7 @@ export class UserDetailsModalComponent implements OnInit {
   }
 
   async revokeAllSessions() {
+    if (!this.canManageAccess()) return;
     const confirmed = await this.toaster.confirm(
       'Tüm Oturumları Sonlandır',
       'Kullanıcının tüm aktif oturumları kapatılacak. Devam etmek istiyor musunuz?',
@@ -315,6 +323,7 @@ export class UserDetailsModalComponent implements OnInit {
   }
 
   async resetMfa() {
+    if (!this.canManageAccess()) return;
     const confirmed = await this.toaster.confirm(
       'MFA Sıfırla',
       'MFA kurulumu ve kurtarma kodları silinecek, tüm oturumlar kapatılacak.',
@@ -328,6 +337,14 @@ export class UserDetailsModalComponent implements OnInit {
       },
       error: () => this.toaster.error('MFA sıfırlanamadı.')
     });
+  }
+
+  canManageAccess() {
+    return hasRequiredAccess(
+      this.auth.userProfile(),
+      ADMIN_PERMISSIONS.usersEdit,
+      'SystemAdmin'
+    );
   }
 
   closeModal() {
