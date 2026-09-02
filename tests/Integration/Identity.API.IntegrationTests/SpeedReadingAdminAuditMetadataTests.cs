@@ -29,4 +29,22 @@ public sealed class SpeedReadingAdminAuditMetadataTests
         typeof(AdminAuditController).GetMethod(nameof(AdminAuditController.GetAsync)).Should().NotBeNull();
         typeof(AdminAuditController).GetMethod(nameof(AdminAuditController.GetFacetsAsync)).Should().NotBeNull();
     }
+
+    [Fact]
+    public void StudentProgressController_MustAlignViewAndResetPermissions()
+    {
+        var controller = typeof(StudentProgressAdminController);
+
+        controller.GetCustomAttributes(typeof(HasPermissionAttribute), inherit: true)
+            .Cast<HasPermissionAttribute>()
+            .Should()
+            .Contain(attribute => attribute.Policy == PlatformPermissions.SpeedReading.ProgressView);
+
+        var reset = controller.GetMethod(nameof(StudentProgressAdminController.Reset));
+        reset.Should().NotBeNull();
+        reset!.GetCustomAttributes(typeof(HasPermissionAttribute), inherit: true)
+            .Cast<HasPermissionAttribute>()
+            .Should()
+            .Contain(attribute => attribute.Policy == PlatformPermissions.SpeedReading.ProgramManage);
+    }
 }

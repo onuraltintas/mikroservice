@@ -11,7 +11,7 @@ namespace SpeedReading.API.Controllers;
 [ApiVersion(1.0)]
 [Route("api/speed-reading/student-progress")]
 [Authorize]
-[HasPermission(PlatformPermissions.SpeedReading.ReportView)]
+[HasPermission(PlatformPermissions.SpeedReading.ProgressView)]
 public sealed class StudentProgressAdminController(ILegacySpeedReadingPrograms programs) : ControllerBase
 {
     [HttpGet]

@@ -10,7 +10,8 @@ import {
   SpeedReadingPlanRequest,
   SpeedReadingProduct,
   SpeedReadingProductRequest,
-  SpeedReadingSubscription
+  SpeedReadingSubscription,
+  SpeedReadingSubscriptionUpdateRequest
 } from '../../../core/services/speed-reading-admin.service';
 
 type SubscriptionTab = 'products' | 'plans' | 'subscriptions' | 'payments';
@@ -52,10 +53,10 @@ type SubscriptionTab = 'products' | 'plans' | 'subscriptions' | 'payments';
       }
 
       @if (selectedTab() === 'subscriptions') {
-        <section class="space-y-4" aria-labelledby="user-subscriptions-title"><div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><h2 id="user-subscriptions-title" class="text-lg font-semibold text-gray-900 dark:text-white">Kullanıcı abonelikleri</h2><p class="muted">Manuel tanımlama, ödeme sağlayıcısından bağımsız bir erişim operasyonudur.</p></div><button type="button" (click)="subscriptionEditing.set(true)" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white">Manuel abonelik</button></div>
-          @if (subscriptionEditing()) { <form (ngSubmit)="createSubscription()" class="form-card"><h3>Manuel abonelik tanımla</h3><div class="form-grid"><label>Kullanıcı ID<input [(ngModel)]="subscriptionDraft.userId" name="subscriptionUserId" required /></label><label>Plan<select [(ngModel)]="subscriptionDraft.planId" name="subscriptionPlanId" required><option value="">Seçin</option>@for (plan of plans(); track plan.id) {<option [value]="plan.id">{{ plan.name }}</option>}</select></label><label>Başlangıç<input type="date" [(ngModel)]="subscriptionDraft.startDate" name="subscriptionStartDate" required /></label><label>Bitiş<input type="date" [(ngModel)]="subscriptionDraft.endDate" name="subscriptionEndDate" /></label><label class="wide">Not<textarea [(ngModel)]="subscriptionDraft.notes" name="subscriptionNotes" maxlength="1000"></textarea></label></div><div class="form-actions"><button type="button" (click)="subscriptionEditing.set(false)" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form> }
+        <section class="space-y-4" aria-labelledby="user-subscriptions-title"><div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><h2 id="user-subscriptions-title" class="text-lg font-semibold text-gray-900 dark:text-white">Kullanıcı abonelikleri</h2><p class="muted">Manuel tanımlama, ödeme sağlayıcısından bağımsız bir erişim operasyonudur.</p></div><button type="button" (click)="startSubscriptionCreate()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white">Manuel abonelik</button></div>
+          @if (subscriptionEditing()) { <form (ngSubmit)="saveSubscription()" class="form-card"><h3>{{ subscriptionEditingId ? 'Aboneliği düzenle' : 'Manuel abonelik tanımla' }}</h3><div class="form-grid"><label>Kullanıcı ID<input [(ngModel)]="subscriptionDraft.userId" name="subscriptionUserId" required [disabled]="!!subscriptionEditingId" /></label><label>Plan<select [(ngModel)]="subscriptionDraft.planId" name="subscriptionPlanId" required [disabled]="!!subscriptionEditingId"><option value="">Seçin</option>@for (plan of plans(); track plan.id) {<option [value]="plan.id">{{ plan.name }}</option>}</select></label><label>Başlangıç<input type="date" [(ngModel)]="subscriptionDraft.startDate" name="subscriptionStartDate" required [disabled]="!!subscriptionEditingId" /></label><label>Bitiş<input type="date" [(ngModel)]="subscriptionDraft.endDate" name="subscriptionEndDate" /></label>@if (subscriptionEditingId) {<label>Durum<select [(ngModel)]="subscriptionUpdateStatus" name="subscriptionUpdateStatus"><option value="Active">Aktif</option><option value="Cancelled">İptal</option><option value="Expired">Süresi dolmuş</option></select></label>}<label class="wide">Not<textarea [(ngModel)]="subscriptionDraft.notes" name="subscriptionNotes" maxlength="1000"></textarea></label></div><div class="form-actions"><button type="button" (click)="cancelSubscriptionEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form> }
           <form (ngSubmit)="loadSubscriptions()" class="inline-filter"><input [(ngModel)]="subscriptionSearch" name="subscriptionSearch" placeholder="Kullanıcı ara" maxlength="100" /><select [(ngModel)]="subscriptionStatus" name="subscriptionStatus"><option value="">Tüm durumlar</option><option value="Active">Aktif</option><option value="Cancelled">İptal</option><option value="Expired">Süresi dolmuş</option></select><button type="submit" class="secondary">Filtrele</button></form>
-          <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Kullanıcı</th><th>Plan</th><th>Durum</th><th>Başlangıç</th><th>Bitiş</th><th></th></tr></thead><tbody>@for (subscription of subscriptions().items; track subscription.id) {<tr><td>{{ subscription.userName || subscription.userEmail || subscription.userId }}</td><td>{{ subscription.plan.name }}</td><td>{{ subscription.status }}</td><td>{{ subscription.startDate | date:'dd.MM.yyyy' }}</td><td>{{ subscription.endDate ? (subscription.endDate | date:'dd.MM.yyyy') : '—' }}</td><td class="actions"><button type="button" (click)="cancelSubscription(subscription)">Sil</button></td></tr>} @empty {<tr><td colspan="6" class="empty">Abonelik bulunamadı.</td></tr>}</tbody></table></div><div class="pager"><span>Toplam {{ subscriptions().totalCount }}</span><button type="button" (click)="changeSubscriptionPage(subscriptionPage - 1)" [disabled]="subscriptionPage <= 1 || loading()">Önceki</button><button type="button" (click)="changeSubscriptionPage(subscriptionPage + 1)" [disabled]="subscriptionPage >= subscriptionTotalPages() || loading()">Sonraki</button></div></div>
+          <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Kullanıcı</th><th>Plan</th><th>Durum</th><th>Başlangıç</th><th>Bitiş</th><th></th></tr></thead><tbody>@for (subscription of subscriptions().items; track subscription.id) {<tr><td>{{ subscription.userName || subscription.userEmail || subscription.userId }}</td><td>{{ subscription.plan.name }}</td><td>{{ subscription.status }}</td><td>{{ subscription.startDate | date:'dd.MM.yyyy' }}</td><td>{{ subscription.endDate ? (subscription.endDate | date:'dd.MM.yyyy') : '—' }}</td><td class="actions"><button type="button" (click)="editSubscription(subscription)">Düzenle</button><button type="button" (click)="cancelSubscription(subscription)">Sil</button></td></tr>} @empty {<tr><td colspan="6" class="empty">Abonelik bulunamadı.</td></tr>}</tbody></table></div><div class="pager"><span>Toplam {{ subscriptions().totalCount }}</span><button type="button" (click)="changeSubscriptionPage(subscriptionPage - 1)" [disabled]="subscriptionPage <= 1 || loading()">Önceki</button><button type="button" (click)="changeSubscriptionPage(subscriptionPage + 1)" [disabled]="subscriptionPage >= subscriptionTotalPages() || loading()">Sonraki</button></div></div>
         </section>
       }
 
@@ -116,10 +117,12 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
   readonly subscriptionEditing = signal(false);
   productEditingId: string | null = null;
   planEditingId: string | null = null;
+  subscriptionEditingId: string | null = null;
   productIncluded = '';
   planFeatures = '';
   subscriptionSearch = '';
   subscriptionStatus = '';
+  subscriptionUpdateStatus = 'Active';
   paymentSearch = '';
   paymentStatus = '';
   subscriptionPage = 1;
@@ -136,7 +139,7 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
     this.selectedTab.set(tab);
     if (tab === 'products') this.loadProducts();
     if (tab === 'plans') this.loadPlans();
-    if (tab === 'subscriptions') this.loadSubscriptions();
+    if (tab === 'subscriptions') { this.loadPlans(); this.loadSubscriptions(); }
     if (tab === 'payments') this.loadPayments();
   }
 
@@ -172,9 +175,52 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
     this.saveRequest(this.service.deactivateSubscriptionPlan(plan.id), () => this.loadPlans());
   }
 
-  createSubscription(): void {
+  startSubscriptionCreate(): void {
+    this.subscriptionEditingId = null;
+    this.subscriptionUpdateStatus = 'Active';
+    this.subscriptionDraft = this.emptySubscription();
+    this.subscriptionEditing.set(true);
+    if (!this.plans().length) this.loadPlans();
+  }
+
+  editSubscription(subscription: SpeedReadingSubscription): void {
+    this.subscriptionEditingId = subscription.id;
+    this.subscriptionUpdateStatus = subscription.status;
+    this.subscriptionDraft = {
+      userId: subscription.userId,
+      planId: subscription.plan.id,
+      startDate: subscription.startDate.slice(0, 10),
+      endDate: subscription.endDate?.slice(0, 10) ?? null,
+      notes: subscription.notes
+    };
+    this.subscriptionEditing.set(true);
+    if (!this.plans().length) this.loadPlans();
+  }
+
+  cancelSubscriptionEdit(): void {
+    this.subscriptionEditingId = null;
+    this.subscriptionEditing.set(false);
+  }
+
+  saveSubscription(): void {
+    if (this.subscriptionEditingId) {
+      const request: SpeedReadingSubscriptionUpdateRequest = {
+        status: this.subscriptionUpdateStatus,
+        endDate: this.subscriptionDraft.endDate || null,
+        notes: this.subscriptionDraft.notes || null
+      };
+      this.saveRequest(this.service.updateUserSubscription(this.subscriptionEditingId, request), () => {
+        this.cancelSubscriptionEdit();
+        this.loadSubscriptions();
+      });
+      return;
+    }
+
     const request = { ...this.subscriptionDraft, endDate: this.subscriptionDraft.endDate || null, notes: this.subscriptionDraft.notes || null };
-    this.saveRequest(this.service.createManualSubscription(request), () => { this.subscriptionEditing.set(false); this.loadSubscriptions(); });
+    this.saveRequest(this.service.createManualSubscription(request), () => {
+      this.cancelSubscriptionEdit();
+      this.loadSubscriptions();
+    });
   }
 
   cancelSubscription(subscription: SpeedReadingSubscription): void {

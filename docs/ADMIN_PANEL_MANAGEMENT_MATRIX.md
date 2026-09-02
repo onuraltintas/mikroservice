@@ -23,6 +23,7 @@ route guard'ları yalnızca kullanıcı deneyimi ve erken yönlendirme sağlar.
 | Speed Reading | Platform kullanım, içerik, öğrenme sağlığı, kurum ve program analitikleri | `/api/speed-reading/analytics/admin/*` | `Permissions.SpeedReading.PlatformAnalyticsView` |
 | Speed Reading | Öğretmen sınıf özeti, atama, içerik ve zaman/ilerleme analitikleri | `/api/speed-reading/analytics/admin/teachers/{teacherId}/*` | `Permissions.SpeedReading.ReportView` + öğretmen kapsam politikası |
 | Speed Reading | Sayfalı öğrenci program ilerlemesi ve son egzersiz kayıtlarının incelenmesi | `/api/speed-reading/student-progress` | `Permissions.SpeedReading.ProgressView` |
+| Speed Reading | Öğrenci program ilerlemesini kontrollü biçimde sıfırlama ve listeyi yenileme | `/api/speed-reading/student-progress/{id}/reset` | `Permissions.SpeedReading.ProgressView` + `Permissions.SpeedReading.ProgramManage` |
 | Speed Reading | Egzersiz türleri, egzersizler ve okuma metinleri; okuma metni kelime sayısı metinden hesaplanarak saklanır | `/api/speed-reading/exercise-types`, `/api/speed-reading/exercises`, `/api/speed-reading/reading-texts` | `Permissions.SpeedReading.ContentManage` |
 | Speed Reading | Program şablonları, öğrenme yolu şablonları, düğüm ve düğüm içeriği yönetimi | `/api/speed-reading/program-templates`, `/api/speed-reading/learning-path-templates*` | `Permissions.SpeedReading.ProgramManage` |
 | Speed Reading | Başarı/rozet tanımları, kriterleri, tekrar davranışı ve XP ödülleri | `/api/speed-reading/achievements` | `Permissions.SpeedReading.GamificationManage` |
@@ -30,7 +31,7 @@ route guard'ları yalnızca kullanıcı deneyimi ve erken yönlendirme sağlar.
 | Speed Reading | Yaş grupları ve yaş grubuna bağlı seviye tespit şablonlarının yönetimi | `/api/speed-reading/age-group-configurations`, `/api/speed-reading/admin/assessment-templates` | `Permissions.SpeedReading.SettingsManage` |
 | Speed Reading | Görselleştirme sahneleri, soruları ve CSV içe aktarma | `/api/speed-reading/admin/visualization-scenes*` | `Permissions.SpeedReading.ContentManage` |
 | Speed Reading | Sınav soru bankası CRUD'u ve kelime havuzu CRUD/import/export | `/api/speed-reading/exam-questions`, `/api/speed-reading/vocabulary*` | `Permissions.SpeedReading.ContentManage` |
-| Speed Reading | Rapor şablonları, snapshot ve zamanlanmış rapor yönetimi | `/api/speed-reading/reports/*` | `Permissions.SpeedReading.ReportView/ReportManage` |
+| Speed Reading | Rapor şablonları, snapshot, zamanlanmış rapor yönetimi ve PDF/Excel dışa aktarma | `/api/speed-reading/reports/*` | `Permissions.SpeedReading.ReportView/ReportManage` |
 | Speed Reading | CMS landing blokları, sayfalar, blog, iletişim mesajları ve bülten aboneleri | `/api/speed-reading/admin/cms/*` | `Permissions.SpeedReading.ContentManage` |
 | Speed Reading | Duyuru CRUD'u ve duyuru istatistikleri | `/api/speed-reading/announcements` | `Permissions.SpeedReading.CommunicationsManage` |
 | Speed Reading | Servis e-posta şablonları, kampanyaları ve gönderim istatistikleri | `/api/speed-reading/email-templates`, `/api/speed-reading/email-campaigns` | `Permissions.SpeedReading.CommunicationsManage` |

@@ -78,6 +78,11 @@ describe('SpeedReadingAdminService', () => {
     const detailsRequest = http.expectOne('/api/speed-reading/student-progress/progress-1');
     expect(detailsRequest.request.method).toBe('GET');
     detailsRequest.flush({});
+
+    service.resetStudentProgress('progress-1').subscribe();
+    const resetRequest = http.expectOne('/api/speed-reading/student-progress/progress-1/reset');
+    expect(resetRequest.request.method).toBe('POST');
+    resetRequest.flush(null);
   });
 
   it('loads subscription products, plans, subscriptions and payment history', () => {
@@ -115,6 +120,23 @@ describe('SpeedReadingAdminService', () => {
     const planUpdate = http.expectOne('/api/speed-reading/subscription-plans/plan-1');
     expect(planUpdate.request.method).toBe('PUT');
     planUpdate.flush({ success: true, data: {} });
+  });
+
+  it('updates a manual subscription through the ContentManage route', () => {
+    service.updateUserSubscription('subscription-1', {
+      status: 'Cancelled',
+      endDate: '2026-09-30',
+      notes: 'Kullanıcı talebi'
+    }).subscribe();
+
+    const request = http.expectOne('/api/speed-reading/subscriptions/subscription-1');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({
+      status: 'Cancelled',
+      endDate: '2026-09-30',
+      notes: 'Kullanıcı talebi'
+    });
+    request.flush({ success: true, data: {} });
   });
 
   it('loads and manages age-group configurations through SettingsManage routes', () => {
@@ -342,6 +364,18 @@ describe('SpeedReadingAdminService', () => {
     const statusRequest = http.expectOne('/api/speed-reading/reports/scheduled/schedule-1/status');
     expect(statusRequest.request.method).toBe('PATCH');
     statusRequest.flush({ id: 'schedule-1' });
+
+    service.exportReport('pdf', { title: 'İlerleme', data: { completed: 3 } }).subscribe();
+    const pdfRequest = http.expectOne('/api/speed-reading/reports/export/pdf');
+    expect(pdfRequest.request.method).toBe('POST');
+    expect(pdfRequest.request.body).toEqual({ title: 'İlerleme', data: { completed: 3 } });
+    pdfRequest.flush(new Blob(['pdf'], { type: 'application/pdf' }));
+
+    service.exportReport('excel', { title: 'İlerleme', data: { completed: 3 } }).subscribe();
+    const excelRequest = http.expectOne('/api/speed-reading/reports/export/excel');
+    expect(excelRequest.request.method).toBe('POST');
+    expect(excelRequest.request.body).toEqual({ title: 'İlerleme', data: { completed: 3 } });
+    excelRequest.flush(new Blob(['xlsx'], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
   });
 
   it('loads exercise types from the legacy content catalog', () => {

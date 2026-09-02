@@ -112,8 +112,8 @@ type SpeedReadingAnalyticsTab = 'platform' | 'content' | 'health' | 'institution
         }
       }
 
-      @if (selectedTab() === 'progress') {
-        <section class="space-y-4" aria-labelledby="progress-title"><div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><h2 id="progress-title" class="text-lg font-semibold text-gray-900 dark:text-white">Öğrenci program ilerlemeleri</h2><p class="muted">İlerleme sıfırlama ayrı ve yazma yetkisi gerektiren bir adımdır; bu görünüm yalnızca inceleme içindir.</p></div><label class="text-sm font-medium text-gray-700 dark:text-gray-200">Öğrenci ara<input [(ngModel)]="progressSearch" (ngModelChange)="searchProgress()" name="progressSearch" maxlength="100" class="mt-1 block rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-600" /></label></div><div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>İlerleme ID</th><th>Kullanıcı ID</th><th>Program ID</th><th>Gün</th><th>Tamamlanan gün</th><th>Egzersiz</th><th>Atanma</th><th></th></tr></thead><tbody>@for (item of progressPage()?.items; track item.id) {<tr><td class="font-mono text-xs">{{ item.id }}</td><td class="font-mono text-xs">{{ item.userId }}</td><td class="font-mono text-xs">{{ item.programTemplateId }}</td><td>{{ item.currentDay }}</td><td>{{ item.daysCompleted }}</td><td>{{ item.exercisesCompleted }}</td><td>{{ item.assignedDate | date:'dd.MM.yyyy' }}</td><td><button type="button" (click)="openProgress(item)" class="rounded-md border px-2 py-1 text-xs">Detay</button></td></tr>} @empty {<tr><td colspan="8" class="empty">{{ loading() ? 'Yükleniyor…' : 'İlerleme kaydı bulunamadı.' }}</td></tr>}</tbody></table></div><div class="mt-3 flex items-center justify-between text-xs text-gray-500"><span>Toplam {{ progressPage()?.totalCount ?? 0 }} kayıt</span><div class="flex gap-2"><button type="button" (click)="changeProgressPage(progressPageNumber - 1)" [disabled]="progressPageNumber <= 1 || loading()" class="rounded border px-2 py-1 disabled:opacity-40">Önceki</button><button type="button" (click)="changeProgressPage(progressPageNumber + 1)" [disabled]="!progressPage() || progressPageNumber >= progressTotalPages() || loading()" class="rounded border px-2 py-1 disabled:opacity-40">Sonraki</button></div></div></div>
+  @if (selectedTab() === 'progress') {
+        <section class="space-y-4" aria-labelledby="progress-title"><div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><h2 id="progress-title" class="text-lg font-semibold text-gray-900 dark:text-white">Öğrenci program ilerlemeleri</h2><p class="muted">İlerleme kayıtlarını inceleyin; sıfırlama işlemi yalnızca ProgramManage yetkisi olan yöneticilere açıktır.</p></div><label class="text-sm font-medium text-gray-700 dark:text-gray-200">Öğrenci ara<input [(ngModel)]="progressSearch" (ngModelChange)="searchProgress()" name="progressSearch" maxlength="100" class="mt-1 block rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-600" /></label></div><div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>İlerleme ID</th><th>Kullanıcı ID</th><th>Program ID</th><th>Gün</th><th>Tamamlanan gün</th><th>Egzersiz</th><th>Atanma</th><th></th></tr></thead><tbody>@for (item of progressPage()?.items; track item.id) {<tr><td class="font-mono text-xs">{{ item.id }}</td><td class="font-mono text-xs">{{ item.userId }}</td><td class="font-mono text-xs">{{ item.programTemplateId }}</td><td>{{ item.currentDay }}</td><td>{{ item.daysCompleted }}</td><td>{{ item.exercisesCompleted }}</td><td>{{ item.assignedDate | date:'dd.MM.yyyy' }}</td><td class="flex gap-2"><button type="button" (click)="openProgress(item)" class="rounded-md border px-2 py-1 text-xs">Detay</button>@if (canResetProgress()) {<button type="button" (click)="resetProgress(item)" [disabled]="loading()" class="rounded-md border border-amber-300 px-2 py-1 text-xs text-amber-700">Sıfırla</button>}</td></tr>} @empty {<tr><td colspan="8" class="empty">{{ loading() ? 'Yükleniyor…' : 'İlerleme kaydı bulunamadı.' }}</td></tr>}</tbody></table></div><div class="mt-3 flex items-center justify-between text-xs text-gray-500"><span>Toplam {{ progressPage()?.totalCount ?? 0 }} kayıt</span><div class="flex gap-2"><button type="button" (click)="changeProgressPage(progressPageNumber - 1)" [disabled]="progressPageNumber <= 1 || loading()" class="rounded border px-2 py-1 disabled:opacity-40">Önceki</button><button type="button" (click)="changeProgressPage(progressPageNumber + 1)" [disabled]="!progressPage() || progressPageNumber >= progressTotalPages() || loading()" class="rounded border px-2 py-1 disabled:opacity-40">Sonraki</button></div></div></div>
         @if (progressDetails(); as details) {<div class="data-card"><div class="flex items-center justify-between"><h3>İlerleme ayrıntısı</h3><button type="button" (click)="progressDetails.set(null)" class="text-sm text-gray-500">Kapat</button></div><p class="muted">Güncel hafta: {{ details.progress.currentWeek }} · Zorluk: {{ details.progress.currentDifficultyLevel }} · Başarı: {{ details.progress.averageSuccessRate }}%</p><div class="mt-3 overflow-x-auto"><table class="data-table"><thead><tr><th>Tarih</th><th>Gün/hafta</th><th>Sonuç</th><th>WPM</th><th>Anlama</th><th>Ölçüm</th></tr></thead><tbody>@for (log of details.recentLogs; track log.id) {<tr><td>{{ log.completedDate | date:'dd.MM.yyyy HH:mm' }}</td><td>{{ log.dayNumber }} / {{ log.weekNumber }}</td><td>{{ log.isPassed ? 'Geçti' : 'Başarısız' }}</td><td>{{ log.averageWpm ?? '—' }}</td><td>{{ log.averageComprehension ?? '—' }}</td><td>{{ log.measurementStatus }}</td></tr>} @empty {<tr><td colspan="6" class="empty">Son kayıt yok.</td></tr>}</tbody></table></div></div>}
         </section>
       }
@@ -166,6 +166,7 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
 
   readonly canPlatformAnalytics = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingPlatformAnalytics));
   readonly canProgress = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingProgressView));
+  readonly canResetProgress = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingProgramManage));
   readonly canTeacherAnalytics = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingReportView));
   readonly tabs: ReadonlyArray<{ value: SpeedReadingAnalyticsTab; label: string; visible: () => boolean }> = [
     { value: 'platform', label: 'Platform kullanımı', visible: () => this.canPlatformAnalytics() },
@@ -245,6 +246,23 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
     this.service.getStudentProgressDetails(item.id).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: details => this.progressDetails.set(details),
       error: () => this.error.set('Öğrenci ilerleme ayrıntısı yüklenemedi.')
+    });
+  }
+
+  resetProgress(item: AdminStudentProgressSummary): void {
+    if (!this.canResetProgress() || !globalThis.confirm('Bu öğrencinin program ilerlemesi sıfırlansın mı?')) return;
+
+    this.loading.set(true);
+    this.error.set('');
+    this.service.resetStudentProgress(item.id).subscribe({
+      next: () => {
+        this.progressDetails.set(null);
+        this.loadProgress();
+      },
+      error: () => {
+        this.loading.set(false);
+        this.error.set('Öğrenci ilerlemesi sıfırlanamadı.');
+      }
     });
   }
 

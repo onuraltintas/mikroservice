@@ -621,6 +621,12 @@ export interface SpeedReadingReportSnapshot {
   viewedAt: string | null;
 }
 
+export interface SpeedReadingReportSnapshotDetail extends SpeedReadingReportSnapshot {
+  generatedForUserId: string;
+  dataJson: string;
+  dataJsonTruncated: boolean;
+}
+
 export interface SpeedReadingScheduledReport {
   id: string;
   reportTemplateId: string;
@@ -1591,7 +1597,7 @@ export class SpeedReadingAdminService {
   }
 
   getReportSnapshot(id: string) {
-    return this.http.get<unknown>(`${this.url}/reports/snapshots/${id}`);
+    return this.http.get<SpeedReadingReportSnapshotDetail>(`${this.url}/reports/snapshots/${id}`);
   }
 
   createReportSnapshot(request: SpeedReadingReportSnapshotCreateRequest, idempotencyKey?: string) {
@@ -1723,6 +1729,10 @@ export class SpeedReadingAdminService {
 
   getStudentProgressDetails(progressId: string) {
     return this.http.get<AdminStudentProgressDetails>(`${this.url}/student-progress/${progressId}`);
+  }
+
+  resetStudentProgress(progressId: string) {
+    return this.http.post<void>(`${this.url}/student-progress/${progressId}/reset`, {});
   }
 
   getExerciseTypes(pageNumber = 1, pageSize = 20) {

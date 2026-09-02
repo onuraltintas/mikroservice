@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Observable, finalize } from 'rxjs';
+import { Observable, finalize, switchMap } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import {
   SpeedReadingAdminService,
   SpeedReadingReportSnapshot,
+  SpeedReadingReportSnapshotDetail,
   SpeedReadingReportTemplate,
   SpeedReadingReportTemplateCreateRequest,
   SpeedReadingReportTemplateUpdateRequest,
@@ -31,7 +32,7 @@ type ReportTab = 'templates' | 'schedules' | 'snapshots';
 
       @if (selectedTab() === 'schedules') {<section class="space-y-4"><div class="flex items-end justify-between gap-3"><div><h2 class="text-lg font-semibold text-gray-900 dark:text-white">Zamanlanmış raporlar</h2><p class="muted">Rapor üretimi ve e-posta teslimat tercihlerini yönetin.</p></div>@if (canManageReports()) {<button type="button" (click)="startScheduleCreate()" class="primary">Yeni zamanlama</button>}</div>@if (scheduleEditing()) {<form (ngSubmit)="saveSchedule()" class="form-card"><h3>{{ scheduleEditingId ? 'Zamanlamayı düzenle' : 'Yeni zamanlama' }}</h3><div class="form-grid"><label>Şablon<select [(ngModel)]="scheduleDraft.reportTemplateId" name="scheduleTemplate" required [disabled]="!!scheduleEditingId"><option value="">Seçin</option>@for (template of templates(); track template.id) {<option [value]="template.id">{{ template.name }}</option>}</select></label><label>Sıklık<select [(ngModel)]="scheduleDraft.frequency" name="scheduleFrequency"><option [ngValue]="1">Günlük</option><option [ngValue]="2">Haftalık</option><option [ngValue]="3">Aylık</option></select></label><label>Haftanın günü<input type="number" [(ngModel)]="scheduleDraft.dayOfWeek" name="scheduleDayOfWeek" min="0" max="6" /></label><label>Ayın günü<input type="number" [(ngModel)]="scheduleDraft.dayOfMonth" name="scheduleDayOfMonth" min="1" max="31" /></label><label>Çalışma saati<input type="time" [(ngModel)]="scheduleDraft.deliveryTime" name="scheduleDeliveryTime" required /></label><label class="wide">E-posta alıcıları<input [(ngModel)]="scheduleDraft.emailRecipients" name="scheduleRecipients" placeholder="ornek@site.com, ikinci@site.com" maxlength="2000" /></label><label class="check"><input type="checkbox" [(ngModel)]="scheduleDraft.sendEmail" name="scheduleSendEmail" /> E-posta gönder</label><label class="check"><input type="checkbox" [(ngModel)]="scheduleDraft.saveToDashboard" name="scheduleSaveDashboard" /> Dashboard'a kaydet</label>@if (scheduleEditingId) {<label class="check"><input type="checkbox" [(ngModel)]="scheduleUpdateDraft.isActive" name="scheduleActive" /> Aktif</label>}</div><div class="form-actions"><button type="button" (click)="cancelScheduleEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form>}<div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Şablon</th><th>Sıklık</th><th>Sonraki çalışma</th><th>Başarı/başarısız</th><th>Durum</th><th></th></tr></thead><tbody>@for (schedule of schedules(); track schedule.id) {<tr><td>{{ schedule.reportTemplateName }}</td><td>{{ schedule.frequency }}</td><td>{{ schedule.nextRunAt ? (schedule.nextRunAt | date:'dd.MM.yyyy HH:mm') : '—' }}</td><td>{{ schedule.successCount }}/{{ schedule.failureCount }}</td><td>{{ schedule.isActive ? 'Aktif' : 'Pasif' }}</td><td class="actions">@if (canManageReports()) {<button type="button" (click)="startScheduleEdit(schedule)">Düzenle</button><button type="button" (click)="toggleSchedule(schedule)">{{ schedule.isActive ? 'Durdur' : 'Aktifleştir' }}</button><button type="button" (click)="deleteSchedule(schedule)" class="danger">Sil</button>}</td></tr>} @empty {<tr><td colspan="6" class="empty">Zamanlanmış rapor bulunamadı.</td></tr>}</tbody></table></div></div></section>}
 
-      @if (selectedTab() === 'snapshots') {<section class="space-y-4"><div class="flex items-end justify-between gap-3"><div><h2 class="text-lg font-semibold text-gray-900 dark:text-white">Rapor snapshot'ları</h2><p class="muted">Şablondan manuel rapor görünümü üretin ve saklanan kayıtları yönetin.</p></div><div class="actions">@if (canManageReports()) {<select [(ngModel)]="snapshotTemplateId" name="snapshotTemplate"><option value="">Şablon seçin</option>@for (template of templates(); track template.id) {<option [value]="template.id">{{ template.name }}</option>}</select><button type="button" (click)="createSnapshot()" class="primary" [disabled]="!snapshotTemplateId || saving()">Snapshot üret</button>}</div></div><div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Şablon</th><th>Üretim</th><th>Aralık</th><th>Görüntüleme</th><th></th></tr></thead><tbody>@for (snapshot of snapshots(); track snapshot.id) {<tr><td>{{ snapshot.reportTemplateName }}</td><td>{{ snapshot.generatedAt | date:'dd.MM.yyyy HH:mm' }}</td><td>{{ snapshot.reportStartDate | date:'dd.MM.yyyy' }} – {{ snapshot.reportEndDate | date:'dd.MM.yyyy' }}</td><td>{{ snapshot.isViewed ? 'Görüldü' : 'Yeni' }}</td><td>@if (canManageReports()) {<button type="button" (click)="deleteSnapshot(snapshot)" class="danger">Sil</button>}</td></tr>} @empty {<tr><td colspan="5" class="empty">Snapshot bulunamadı.</td></tr>}</tbody></table></div></div></section>}
+      @if (selectedTab() === 'snapshots') {<section class="space-y-4"><div class="flex items-end justify-between gap-3"><div><h2 class="text-lg font-semibold text-gray-900 dark:text-white">Rapor snapshot'ları</h2><p class="muted">Şablondan manuel rapor görünümü üretin, dışa aktarın ve saklanan kayıtları yönetin.</p></div><div class="actions">@if (canManageReports()) {<select [(ngModel)]="snapshotTemplateId" name="snapshotTemplate"><option value="">Şablon seçin</option>@for (template of templates(); track template.id) {<option [value]="template.id">{{ template.name }}</option>} </select><button type="button" (click)="createSnapshot()" class="primary" [disabled]="!snapshotTemplateId || saving()">Snapshot üret</button>}</div></div><div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Şablon</th><th>Üretim</th><th>Aralık</th><th>Görüntüleme</th><th></th></tr></thead><tbody>@for (snapshot of snapshots(); track snapshot.id) {<tr><td>{{ snapshot.reportTemplateName }}</td><td>{{ snapshot.generatedAt | date:'dd.MM.yyyy HH:mm' }}</td><td>{{ snapshot.reportStartDate | date:'dd.MM.yyyy' }} – {{ snapshot.reportEndDate | date:'dd.MM.yyyy' }}</td><td>{{ snapshot.isViewed ? 'Görüldü' : 'Yeni' }}</td><td class="actions"><button type="button" (click)="exportSnapshot(snapshot, 'pdf')" [disabled]="saving()">PDF</button><button type="button" (click)="exportSnapshot(snapshot, 'excel')" [disabled]="saving()">Excel</button>@if (canManageReports()) {<button type="button" (click)="deleteSnapshot(snapshot)" class="danger">Sil</button>}</td></tr>} @empty {<tr><td colspan="5" class="empty">Snapshot bulunamadı.</td></tr>}</tbody></table></div></div></section>}
     </main>
   `,
   styles: [`
@@ -123,6 +124,43 @@ export class SpeedReadingReportsComponent implements OnInit {
 
   createSnapshot(): void { if (!this.snapshotTemplateId) return; this.saveRequest(this.service.createReportSnapshot({ reportTemplateId: this.snapshotTemplateId, data: {} }), () => this.loadSnapshots()); }
   deleteSnapshot(snapshot: SpeedReadingReportSnapshot): void { if (!globalThis.confirm('Bu rapor snapshot’ı silinsin mi?')) return; this.saveRequest(this.service.deleteReportSnapshot(snapshot.id), () => this.loadSnapshots()); }
+
+  exportSnapshot(snapshot: SpeedReadingReportSnapshot, format: 'pdf' | 'excel'): void {
+    this.saving.set(true);
+    this.error.set('');
+    this.service.getReportSnapshot(snapshot.id).pipe(
+      switchMap(detail => this.service.exportReport(format, {
+        reportType: snapshot.reportTemplateName,
+        title: snapshot.reportTemplateName,
+        startDate: snapshot.reportStartDate,
+        endDate: snapshot.reportEndDate,
+        data: this.parseSnapshotData(detail)
+      })),
+      finalize(() => this.saving.set(false))
+    ).subscribe({
+      next: blob => this.downloadBlob(blob, `hizli-okuma-${format}-${new Date().toISOString().slice(0, 10)}.${format === 'pdf' ? 'pdf' : 'xlsx'}`),
+      error: () => this.error.set('Rapor dışa aktarılamadı.')
+    });
+  }
+
+  downloadBlob(blob: Blob, fileName: string): void {
+    if (typeof document === 'undefined' || typeof URL.createObjectURL !== 'function') return;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  private parseSnapshotData(detail: SpeedReadingReportSnapshotDetail): unknown {
+    if (detail.dataJsonTruncated || !detail.dataJson.trim()) return {};
+    try {
+      return JSON.parse(detail.dataJson);
+    } catch {
+      return { rawData: detail.dataJson };
+    }
+  }
 
   private saveRequest(request: Observable<unknown>, onSuccess: () => void): void { this.saving.set(true); this.error.set(''); request.pipe(finalize(() => this.saving.set(false))).subscribe({ next: onSuccess, error: () => this.error.set('Rapor işlemi tamamlanamadı.') }); }
   private emptyTemplate(): SpeedReadingReportTemplateCreateRequest { return { name: '', description: '', type: 0, category: 0, configurationJson: '{}' }; }
