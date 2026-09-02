@@ -1,0 +1,23 @@
+[Unit]
+Description=Eduivme production Docker Compose stack
+Documentation=https://docs.docker.com/compose/
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+ConditionPathExists=/opt/eduivme/.env
+ConditionPathExists=/opt/eduivme/docker-compose.yml
+ConditionPathExists=/opt/eduivme/docker-compose.production.yml
+ConditionPathExists=/opt/eduivme/docker-compose.production.litespeed.yml
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/eduivme
+ExecStartPre=/usr/bin/docker compose --env-file /opt/eduivme/.env -p eduivme-production -f /opt/eduivme/docker-compose.yml -f /opt/eduivme/docker-compose.production.yml -f /opt/eduivme/docker-compose.production.litespeed.yml config --quiet
+ExecStart=/usr/bin/docker compose --env-file /opt/eduivme/.env -p eduivme-production -f /opt/eduivme/docker-compose.yml -f /opt/eduivme/docker-compose.production.yml -f /opt/eduivme/docker-compose.production.litespeed.yml up -d
+ExecStop=/usr/bin/docker compose --env-file /opt/eduivme/.env -p eduivme-production -f /opt/eduivme/docker-compose.yml -f /opt/eduivme/docker-compose.production.yml -f /opt/eduivme/docker-compose.production.litespeed.yml stop
+RemainAfterExit=yes
+TimeoutStartSec=0
+TimeoutStopSec=120
+
+[Install]
+WantedBy=multi-user.target

@@ -12,12 +12,15 @@ services:
   # production. The Gateway is the only public application entry point.
   postgres:
     ports: !reset []
+    restart: unless-stopped
 
   redis:
     ports: !reset []
+    restart: unless-stopped
 
   rabbitmq:
     ports: !reset []
+    restart: unless-stopped
 
   mailcatcher:
     profiles: ["development"]
@@ -63,6 +66,7 @@ services:
     secrets:
       - source: dataprotection_certificate
         target: eduplatform-dataprotection.pfx
+    restart: unless-stopped
 
   identity-migrations:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/identity-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
@@ -102,6 +106,7 @@ services:
     secrets:
       - source: dataprotection_certificate
         target: eduplatform-dataprotection.pfx
+    restart: unless-stopped
 
   # Apply the Coaching schema once before web replicas start. The command
   # exits after EF migrations and never starts RabbitMQ consumers or HTTP.
@@ -221,6 +226,7 @@ services:
     secrets:
       - source: dataprotection_certificate
         target: eduplatform-dataprotection.pfx
+    restart: unless-stopped
 
   notification-migrations:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/notification-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
@@ -250,6 +256,7 @@ services:
     depends_on:
       speed-reading-service:
         condition: service_started
+    restart: unless-stopped
 
   # The Angular SSR application remains private; the dedicated LiteSpeed
   # overlay publishes it through production-edge on loopback only.
