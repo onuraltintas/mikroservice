@@ -71,6 +71,44 @@ public sealed class CmsAdminController(ISpeedReadingCms cms) : ControllerBase
     public Task<IActionResult> DeleteBlock(Guid id, CancellationToken cancellationToken = default) =>
         Delete(id, cms.DeleteContentBlockAsync, "Block not found", "Block deleted", cancellationToken);
 
+    [HttpGet("media")]
+    public async Task<IActionResult> GetMedia(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 30,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await cms.GetMediaAssetsAsync(pageNumber, pageSize, cancellationToken);
+        return Ok(new { success = true, data = ToPageResult(result), message = "Media assets retrieved" });
+    }
+
+    [HttpPost("media")]
+    [RequestSizeLimit(CmsMediaPolicy.MaxFileSizeBytes + 1_024)]
+    public async Task<IActionResult> UploadMedia(
+        IFormFile? file,
+        [FromForm] string? altText = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var actorId))
+        {
+            return Unauthorized();
+        }
+
+        if (file is null)
+        {
+            return BadRequest(new { success = false, message = "An image file is required" });
+        }
+
+        var uploaded = await cms.UploadMediaAsync(
+            new CmsMediaUpload(file.FileName, file.ContentType, file.Length, file.OpenReadStream(), altText),
+            actorId,
+            cancellationToken);
+        return Ok(new { success = true, data = uploaded, message = "Media uploaded" });
+    }
+
+    [HttpDelete("media/{id:guid}")]
+    public Task<IActionResult> DeleteMedia(Guid id, CancellationToken cancellationToken = default) =>
+        Delete(id, cms.DeleteMediaAsync, "Media not found", "Media deleted", cancellationToken);
+
     [HttpGet("pages")]
     public async Task<IActionResult> GetPages([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
     {

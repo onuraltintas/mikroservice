@@ -75,6 +75,7 @@ public sealed class OwnedSpeedReadingDbContext(
     DbSet<LegacyBlogPost> ISpeedReadingDataContext.BlogPosts => Set<LegacyBlogPost>();
     DbSet<LegacyContactMessage> ISpeedReadingDataContext.ContactMessages => Set<LegacyContactMessage>();
     DbSet<LegacyNewsletterSubscriber> ISpeedReadingDataContext.NewsletterSubscribers => Set<LegacyNewsletterSubscriber>();
+    DbSet<LegacyCmsMediaAsset> ISpeedReadingDataContext.CmsMediaAssets => Set<LegacyCmsMediaAsset>();
     DbSet<LegacySubscriptionPlan> ISpeedReadingDataContext.SubscriptionPlans => Set<LegacySubscriptionPlan>();
     DbSet<LegacyUserSubscription> ISpeedReadingDataContext.UserSubscriptions => Set<LegacyUserSubscription>();
     DbSet<LegacyPayment> ISpeedReadingDataContext.Payments => Set<LegacyPayment>();
@@ -666,6 +667,17 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.Email).HasMaxLength(100).IsRequired();
             entity.Property(item => item.Source).HasMaxLength(50);
             entity.HasIndex(item => item.Email).IsUnique();
+        });
+        modelBuilder.Entity<LegacyCmsMediaAsset>(entity =>
+        {
+            ConfigureLegacyEntity(entity, "cms_media_assets");
+            entity.Property(item => item.FileName).HasMaxLength(255).IsRequired();
+            entity.Property(item => item.ContentType).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.SizeBytes).IsRequired();
+            entity.Property(item => item.Sha256).HasMaxLength(64).IsRequired();
+            entity.Property(item => item.StorageKey).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.AltText).HasMaxLength(500);
+            entity.HasIndex(item => item.CreatedAt);
         });
         modelBuilder.Entity<LegacyUserNotification>(entity =>
         {

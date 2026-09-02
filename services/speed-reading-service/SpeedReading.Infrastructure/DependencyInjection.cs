@@ -107,6 +107,7 @@ public static class DependencyInjection
         }
 
         services.AddMemoryCache(options => options.SizeLimit = 4_096);
+        services.AddSingleton<ISpeedReadingCmsMediaStorage, LocalCmsMediaStorage>();
 
         var iyzicoOptions = configuration
             .GetSection(IyzicoOptions.SectionName)
@@ -125,7 +126,8 @@ public static class DependencyInjection
             new LegacySpeedReadingCms(
                 serviceProvider.GetRequiredService<ISpeedReadingDataContext>(),
                 serviceProvider.GetRequiredService<IMemoryCache>(),
-                serviceProvider.GetRequiredService<ISpeedReadingEmailDelivery>()));
+                serviceProvider.GetRequiredService<ISpeedReadingEmailDelivery>(),
+                serviceProvider.GetRequiredService<ISpeedReadingCmsMediaStorage>()));
         services.AddScoped<ISpeedReadingDataContext>(serviceProvider =>
             ownedDataEnabled
                 ? serviceProvider.GetRequiredService<OwnedSpeedReadingDbContext>()

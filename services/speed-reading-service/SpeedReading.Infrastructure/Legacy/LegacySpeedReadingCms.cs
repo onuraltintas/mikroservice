@@ -12,19 +12,26 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
     private readonly ISpeedReadingDataContext db;
     private readonly IMemoryCache cache;
     private readonly ISpeedReadingEmailDelivery emailDelivery;
+    private readonly ISpeedReadingCmsMediaStorage mediaStorage;
 
     internal LegacySpeedReadingCms(
         ISpeedReadingDataContext db,
         IMemoryCache cache,
-        ISpeedReadingEmailDelivery emailDelivery)
+        ISpeedReadingEmailDelivery emailDelivery,
+        ISpeedReadingCmsMediaStorage mediaStorage)
     {
         this.db = db;
         this.cache = cache;
         this.emailDelivery = emailDelivery;
+        this.mediaStorage = mediaStorage;
     }
 
     public LegacySpeedReadingCms(SpeedReadingDbContext db, IMemoryCache cache)
-        : this((ISpeedReadingDataContext)db, cache, NullSpeedReadingEmailDelivery.Instance)
+        : this(
+            (ISpeedReadingDataContext)db,
+            cache,
+            NullSpeedReadingEmailDelivery.Instance,
+            NullSpeedReadingCmsMediaStorage.Instance)
     {
     }
     private static readonly TimeSpan LandingCacheDuration = TimeSpan.FromMinutes(10);
@@ -313,6 +320,97 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         block.DeletedBy = actorId;
         await db.SaveChangesAsync(cancellationToken);
         RemoveLandingCache(block.Group);
+        return true;
+    }
+
+    public async Task<SpeedReadingPage<CmsMediaAssetSummary>> GetMediaAssetsAsync(
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var (page, size) = NormalizePage(pageNumber, pageSize);
+        var query = db.CmsMediaAssets.AsNoTracking().Where(item => !item.IsDeleted);
+        var total = await query.CountAsync(cancellationToken);
+        var rows = await query
+            .OrderByDescending(item => item.CreatedAt)
+            .Skip((page - 1) * size)
+            .Take(size)
+            .ToListAsync(cancellationToken);
+        return new SpeedReadingPage<CmsMediaAssetSummary>(
+            rows.Select(ToSummary).ToList(),
+            page,
+            size,
+            total);
+    }
+
+    public async Task<CmsMediaAssetSummary> UploadMediaAsync(
+        CmsMediaUpload upload,
+        Guid actorId,
+        CancellationToken cancellationToken = default)
+    {
+        var extension = CmsMediaPolicy.GetValidatedExtension(
+            upload.ContentType,
+            upload.FileName,
+            upload.SizeBytes);
+        var id = Guid.NewGuid();
+        var stored = await mediaStorage.SaveAsync(id, upload, extension, cancellationToken);
+        try
+        {
+            var media = new LegacyCmsMediaAsset
+            {
+                Id = id,
+                FileName = Path.GetFileName(upload.FileName),
+                ContentType = upload.ContentType.Trim().ToLowerInvariant(),
+                SizeBytes = stored.SizeBytes,
+                Sha256 = stored.Sha256,
+                StorageKey = stored.StorageKey,
+                AltText = string.IsNullOrWhiteSpace(upload.AltText) ? null : upload.AltText.Trim(),
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = actorId
+            };
+            db.CmsMediaAssets.Add(media);
+            await db.SaveChangesAsync(cancellationToken);
+            return ToSummary(media);
+        }
+        catch
+        {
+            await mediaStorage.DeleteAsync(stored.StorageKey, CancellationToken.None);
+            throw;
+        }
+    }
+
+    public async Task<CmsMediaDownload?> GetMediaDownloadAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var media = await db.CmsMediaAssets
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == id && !item.IsDeleted, cancellationToken);
+        if (media is null)
+        {
+            return null;
+        }
+
+        var stream = await mediaStorage.OpenReadAsync(media.StorageKey, cancellationToken);
+        return stream is null ? null : new CmsMediaDownload(stream, media.ContentType, media.FileName);
+    }
+
+    public async Task<bool> DeleteMediaAsync(
+        Guid id,
+        Guid actorId,
+        CancellationToken cancellationToken = default)
+    {
+        var media = await FindActiveAsync(db.CmsMediaAssets, id, cancellationToken);
+        if (media is null)
+        {
+            return false;
+        }
+
+        media.IsDeleted = true;
+        media.DeletedAt = DateTime.UtcNow;
+        media.DeletedBy = actorId;
+        await db.SaveChangesAsync(cancellationToken);
+        await mediaStorage.DeleteAsync(media.StorageKey, cancellationToken);
         return true;
     }
 
@@ -629,6 +727,18 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
     private static CmsContentBlockSummary ToSummary(LegacyContentBlock item) =>
         new(item.Id, item.Key, item.Group, item.Label, item.Type, item.Value);
 
+    private static CmsMediaAssetSummary ToSummary(LegacyCmsMediaAsset item) =>
+        new(
+            item.Id,
+            item.FileName,
+            item.ContentType,
+            item.SizeBytes,
+            item.Sha256,
+            $"/api/speed-reading/cms/media/{item.Id:D}",
+            item.AltText,
+            item.CreatedAt,
+            item.UpdatedAt);
+
     private static CmsPageSummary ToSummary(LegacyPage item) =>
         new(
             item.Id,
@@ -703,5 +813,23 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
             string subject,
             string body,
             CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
+
+    private sealed class NullSpeedReadingCmsMediaStorage : ISpeedReadingCmsMediaStorage
+    {
+        public static readonly NullSpeedReadingCmsMediaStorage Instance = new();
+
+        public Task<CmsStoredMedia> SaveAsync(
+            Guid mediaId,
+            CmsMediaUpload upload,
+            string extension,
+            CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("CMS media storage is not configured.");
+
+        public Task<Stream?> OpenReadAsync(string storageKey, CancellationToken cancellationToken = default) =>
+            Task.FromResult<Stream?>(null);
+
+        public Task DeleteAsync(string storageKey, CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
     }
 }

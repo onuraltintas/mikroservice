@@ -31,6 +31,16 @@ public sealed class CmsController(ISpeedReadingCms cms) : ControllerBase
             : Ok(new { success = true, data = page, message = "Page retrieved" });
     }
 
+    [HttpGet("media/{id:guid}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetMedia(Guid id, CancellationToken cancellationToken = default)
+    {
+        var media = await cms.GetMediaDownloadAsync(id, cancellationToken);
+        return media is null
+            ? NotFound(new { success = false, message = "Media not found" })
+            : File(media.Content, media.ContentType, enableRangeProcessing: true);
+    }
+
     [HttpGet("blog")]
     [AllowAnonymous]
     public async Task<IActionResult> GetBlogPosts(

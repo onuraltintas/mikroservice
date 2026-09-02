@@ -116,6 +116,9 @@ services:
       INTERNAL_SERVICE_API_KEY: ${INTERNAL_SERVICE_API_KEY:?INTERNAL_SERVICE_API_KEY must be set for speed-reading}
       Services__IdentityService: http://identity-service:8080
       Services__NotificationService: http://notification-service:8080
+      SpeedReading__CmsMedia__RootPath: /var/lib/eduplatform/media
+    volumes:
+      - speed_reading_media:/var/lib/eduplatform/media
     restart: unless-stopped
     depends_on:
       speed-reading-migrations:

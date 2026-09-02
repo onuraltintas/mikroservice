@@ -1064,6 +1064,18 @@ export interface SpeedReadingCmsNewsletterSubscriber {
   updatedAt: string | null;
 }
 
+export interface SpeedReadingCmsMediaAsset {
+  id: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+  sha256: string;
+  url: string;
+  altText: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
 export interface SpeedReadingCmsContactReplyRequest {
   messageId: string;
   replyContent: string;
@@ -2075,6 +2087,24 @@ export class SpeedReadingAdminService {
 
   deleteCmsBlock(id: string) {
     return this.http.delete<void>(`${this.url}/admin/cms/blocks/${id}`);
+  }
+
+  getCmsMedia(pageNumber = 1, pageSize = 30) {
+    return this.http.get<{ data: SpeedReadingPage<SpeedReadingCmsMediaAsset> }>(`${this.url}/admin/cms/media`, {
+      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize)
+    }).pipe(map(response => response.data));
+  }
+
+  uploadCmsMedia(file: File, altText?: string | null) {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    if (altText?.trim()) formData.append('altText', altText.trim());
+    return this.http.post<{ data: SpeedReadingCmsMediaAsset }>(`${this.url}/admin/cms/media`, formData)
+      .pipe(map(response => response.data));
+  }
+
+  deleteCmsMedia(id: string) {
+    return this.http.delete<void>(`${this.url}/admin/cms/media/${id}`);
   }
 
   getCmsPages(pageNumber = 1, pageSize = 25) {

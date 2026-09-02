@@ -109,6 +109,104 @@ public static class SpeedReadingNewsletterRules
 
 public sealed record CmsContactReplyRequest(Guid MessageId, string ReplyContent);
 
+public sealed record CmsMediaAssetSummary(
+    Guid Id,
+    string FileName,
+    string ContentType,
+    long SizeBytes,
+    string Sha256,
+    string Url,
+    string? AltText,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt);
+
+public sealed record CmsMediaUpload(
+    string FileName,
+    string ContentType,
+    long SizeBytes,
+    Stream Content,
+    string? AltText);
+
+public sealed record CmsMediaDownload(
+    Stream Content,
+    string ContentType,
+    string FileName);
+
+public sealed record CmsStoredMedia(
+    string StorageKey,
+    long SizeBytes,
+    string Sha256);
+
+public interface ISpeedReadingCmsMediaStorage
+{
+    Task<CmsStoredMedia> SaveAsync(
+        Guid mediaId,
+        CmsMediaUpload upload,
+        string extension,
+        CancellationToken cancellationToken = default);
+
+    Task<Stream?> OpenReadAsync(string storageKey, CancellationToken cancellationToken = default);
+
+    Task DeleteAsync(string storageKey, CancellationToken cancellationToken = default);
+}
+
+public static class CmsMediaPolicy
+{
+    public const long MaxFileSizeBytes = 10 * 1024 * 1024;
+
+    public static string GetValidatedExtension(string contentType, string fileName, long sizeBytes)
+    {
+        if (sizeBytes <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(sizeBytes), "The image must not be empty.");
+        }
+
+        if (sizeBytes > MaxFileSizeBytes)
+        {
+            throw new ArgumentOutOfRangeException(nameof(sizeBytes), "The image exceeds the maximum size.");
+        }
+
+        if (string.IsNullOrWhiteSpace(fileName)
+            || !string.Equals(Path.GetFileName(fileName), fileName, StringComparison.Ordinal))
+        {
+            throw new ArgumentException("The image file name is invalid.", nameof(fileName));
+        }
+
+        var normalizedType = contentType.Trim().ToLowerInvariant();
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        var valid = normalizedType switch
+        {
+            "image/jpeg" when extension is ".jpg" or ".jpeg" => true,
+            "image/png" when extension == ".png" => true,
+            "image/webp" when extension == ".webp" => true,
+            "image/gif" when extension == ".gif" => true,
+            _ => false
+        };
+
+        if (!valid)
+        {
+            throw new ArgumentException("Only supported image types with matching extensions are allowed.", nameof(contentType));
+        }
+
+        return extension;
+    }
+
+    public static bool HasValidSignature(string contentType, ReadOnlySpan<byte> header)
+    {
+        var normalizedType = contentType.Trim().ToLowerInvariant();
+        return normalizedType switch
+        {
+            "image/png" => header.Length >= 8 && header[..8].SequenceEqual(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }),
+            "image/jpeg" => header.Length >= 3 && header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF,
+            "image/gif" => header.Length >= 4 && header[..4].SequenceEqual("GIF8"u8),
+            "image/webp" => header.Length >= 12
+                && header[..4].SequenceEqual("RIFF"u8)
+                && header[8..12].SequenceEqual("WEBP"u8),
+            _ => false
+        };
+    }
+}
+
 public sealed record CmsContactReplyEmail(string Subject, string Body);
 
 public static class CmsContactReplyEmailFormatter
@@ -213,6 +311,25 @@ public interface ISpeedReadingCms
         CancellationToken cancellationToken = default);
 
     Task<bool> DeleteContentBlockAsync(Guid id, Guid actorId, CancellationToken cancellationToken = default);
+
+    Task<SpeedReadingPage<CmsMediaAssetSummary>> GetMediaAssetsAsync(
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
+    Task<CmsMediaAssetSummary> UploadMediaAsync(
+        CmsMediaUpload upload,
+        Guid actorId,
+        CancellationToken cancellationToken = default);
+
+    Task<CmsMediaDownload?> GetMediaDownloadAsync(
+        Guid id,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteMediaAsync(
+        Guid id,
+        Guid actorId,
+        CancellationToken cancellationToken = default);
 
     Task<SpeedReadingPage<CmsPageSummary>> GetPagesAsync(
         int pageNumber,

@@ -143,11 +143,13 @@ services:
       INTERNAL_SERVICE_API_KEY: ${INTERNAL_SERVICE_API_KEY:?INTERNAL_SERVICE_API_KEY must be set for speed-reading}
       Services__IdentityService: http://identity-service:8080
       Services__NotificationService: http://notification-service:8080
+      SpeedReading__CmsMedia__RootPath: /var/lib/eduplatform/media
       DataProtection__KeysPath: /var/lib/eduplatform/data-protection-keys
       DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
       DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?DATAPROTECTION_CERTIFICATE_PASSWORD must be set}
     volumes:
       - speed_reading_data_protection:/var/lib/eduplatform/data-protection-keys
+      - speed_reading_media:/var/lib/eduplatform/media
     secrets:
       - source: dataprotection_certificate
         target: eduplatform-dataprotection.pfx

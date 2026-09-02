@@ -79,6 +79,16 @@ internal sealed class LegacyNewsletterSubscriber : LegacyBaseEntity
     public string? Source { get; set; }
 }
 
+internal sealed class LegacyCmsMediaAsset : LegacyBaseEntity
+{
+    public string FileName { get; set; } = string.Empty;
+    public string ContentType { get; set; } = string.Empty;
+    public long SizeBytes { get; set; }
+    public string Sha256 { get; set; } = string.Empty;
+    public string StorageKey { get; set; } = string.Empty;
+    public string? AltText { get; set; }
+}
+
 internal sealed class LegacyExerciseTypeCategory : LegacyBaseEntity
 {
     public string Name { get; set; } = string.Empty;

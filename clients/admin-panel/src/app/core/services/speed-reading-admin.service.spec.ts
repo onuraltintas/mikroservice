@@ -784,4 +784,24 @@ describe('SpeedReadingAdminService', () => {
     expect(bulkRequest.request.method).toBe('POST');
     bulkRequest.flush({ success: true, totalSent: 0, totalFailed: 0, emailsSent: 0, errors: [] });
   });
+
+  it('loads, uploads and deletes CMS media assets', () => {
+    service.getCmsMedia(2, 30).subscribe(value => expect(value.totalCount).toBe(0));
+    const listRequest = http.expectOne('/api/speed-reading/admin/cms/media?pageNumber=2&pageSize=30');
+    expect(listRequest.request.method).toBe('GET');
+    listRequest.flush({ data: { items: [], totalCount: 0, pageNumber: 2, pageSize: 30 } });
+
+    service.uploadCmsMedia(new File(['png'], 'hero.png', { type: 'image/png' }), 'Hero görseli').subscribe();
+    const uploadRequest = http.expectOne('/api/speed-reading/admin/cms/media');
+    expect(uploadRequest.request.method).toBe('POST');
+    expect(uploadRequest.request.body instanceof FormData).toBe(true);
+    expect(uploadRequest.request.body.get('file')).toBeTruthy();
+    expect(uploadRequest.request.body.get('altText')).toBe('Hero görseli');
+    uploadRequest.flush({ data: { id: 'media-1', url: '/api/speed-reading/cms/media/media-1' } });
+
+    service.deleteCmsMedia('media-1').subscribe();
+    const deleteRequest = http.expectOne('/api/speed-reading/admin/cms/media/media-1');
+    expect(deleteRequest.request.method).toBe('DELETE');
+    deleteRequest.flush(null);
+  });
 });
