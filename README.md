@@ -26,7 +26,8 @@ mikroservice/
 │   ├── notification-service/ # Bildirim servisi
 │   └── api-gateway/       # YARP API Gateway
 ├── clients/
-│   └── admin-panel/       # Angular Admin Panel
+│   ├── speed-reading/     # Bağımsız hızlı okuma web istemcisi
+│   └── admin-panel/       # Angular yönetim paneli
 ├── shared/                # Ortak kütüphaneler
 ├── infrastructure/        # Docker & K8s
 └── .env                   # Environment değişkenleri
@@ -308,12 +309,14 @@ cat .env | grep POSTGRES
 
 ## 📝 Notlar
 
-- Bu proje **Development** ortamı için yapılandırılmıştır
-- Production deployment için Kubernetes konfigürasyonları `infrastructure/kubernetes/` klasöründe
+- Repository development, staging ve production compose varyantlarını içerir; aktif production
+  dağıtımı için release/image ve ortam secret'ları kullanılmalıdır.
+- Deployment yardımcıları `infrastructure/caddy/`, `infrastructure/litespeed/`
+  ve compose override dosyalarında bulunur.
 - Tüm migration'lar uygulanmıştır
 - Swagger UI her servis için `/swagger` endpoint'inde mevcuttur
 
 ---
 
-**Son Güncelleme:** 2026-01-24
-**Versiyon:** 1.0.0
+**Son Güncelleme:** 2026-09-02
+**Sürüm:** CI/CD release tag'i ile belirlenir

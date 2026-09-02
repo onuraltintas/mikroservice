@@ -5,9 +5,12 @@ tek bir yerde tutar. Hedef, ilk aşamada yaklaşık 100.000 kayıtlı kullanıc�
 taşıyabilen; replica, cache, queue ve database katmanları yatay büyütüldüğünde
 daha yüksek kapasiteye geçebilen bir platformdur.
 
-> Production deploy henüz yapılmayacaktır. Önce development → staging kapıları,
-> veri/olay sözleşmeleri, yük testi, backup/restore ve operasyon runbook'ları
-> tamamlanacaktır.
+> Durum notu (2026-09-02): Bu belge 2026-08-22 tarihli production öncesi planın
+> güncel çalışma kaydıdır. Production deployment artık ayrı bir release süreciyle
+> yürütülmektedir; aşağıdaki staging, backup/restore, canary ve kapasite kapıları
+> sonraki release'ler için geçerlidir. Güncel migration/cutover kanıtı için
+> `docs/SPEED_READING_DATA_MIGRATION.md` ve operasyon adımları için
+> `docs/OPERATIONS_RUNBOOK.md` esas alınır.
 
 ## Mevcut durum
 
@@ -190,11 +193,11 @@ docker compose --env-file .env.example config --quiet
 docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.scale.yml config --quiet
 ```
 
-## Üretime geçiş koşulu
+## Sonraki production release koşulları
 
-CI'nin yeşil olması tek başına production onayı değildir. `docs/CI_CD_AND_PRODUCTION_MONITORING.md`,
-`docs/PHASE5_PRODUCTION_HARDENING.md` ve `docs/PHASE6_PERFORMANCE_OBSERVABILITY.md`
-runbook'ları staging üzerinde uygulanıp kanıtlanmadan gerçek kullanıcı trafiği
-verilmez.
+CI'nin yeşil olması tek başına production onayı değildir. Her yeni release için
+`docs/CI_CD_AND_PRODUCTION_MONITORING.md`, `docs/PHASE5_PRODUCTION_HARDENING.md`
+ve `docs/PHASE6_PERFORMANCE_OBSERVABILITY.md` runbook'ları staging üzerinde
+uygulanıp kanıtlanmalıdır.
 
-Son güncelleme: 2026-08-22
+Son güncelleme: 2026-09-02

@@ -1,5 +1,9 @@
 # 🌐 API Gateway Araştırma ve Best Practice Raporu
 
+> Araştırma notu: Bu dosya karar geçmişidir. Güncel gateway route ve deployment
+> sözleşmeleri için `docs/BOUNDED_CONTEXT_CONTRACTS.md`, compose dosyaları ve
+> `infrastructure/caddy/` altındaki aktif edge konfigürasyonları esas alınır.
+
 ## 1. Yönetici Özeti
 .NET tabanlı mikroservis mimarilerinde endüstri standardı ve "State of the Art" yaklaşım artık **Microsoft YARP (Yet Another Reverse Proxy)** kütüphanesidir. Eski popüler kütüphane olan *Ocelot* artık aktif geliştirilmemekte ve performans sorunları yaşatmaktadır. Nginx/HAProxy gibi çözümler ise "Ingress/Load Balancer" katmanında kalmalı, "Application Gateway" katmanında .NET entegrasyonu (Auth, Logging, Policy) güçlü olan YARP tercih edilmelidir.
 

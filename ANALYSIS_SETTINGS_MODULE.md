@@ -1,5 +1,10 @@
 # Mikroservis Projesi: Gelişmiş Ayarlar ve Yönetim Modülü Analizi
 
+> Tasarım/uygulama geçmişi: Bu belge önerilerin ilk analizidir. Tamamlanan ve
+> güncel yönetim kapsamı için `docs/ADMIN_PANEL_MANAGEMENT_MATRIX.md` ve
+> `docs/API_CONTRACTS.md` esas alınmalıdır; aşağıdaki öneriler mevcut özellik
+> sözleşmesi olarak değerlendirilmemelidir.
+
 ## 1. Genel Bakış
 Mevcut proje yapısı (.NET 9 Microservices, Angular, Docker) göz önüne alındığında, Admin Paneli'ne eklenecek "Ayarlar" modülü statik bir formdan ziyade, sistemin canlı durumunu izleyen ve yöneten bir kontrol merkezi olmalıdır.
 

@@ -1,6 +1,12 @@
 # 🎓 Eğitim Platformu Mimari Tasarım Raporu
 ## %100 Ücretsiz ve Açık Kaynak Teknolojilerle
 
+> Arşiv/tasarım referansı: Bu belge ilk hedef mimariyi ve alternatifleri anlatır;
+> güncel çalışan servis sınırları ve production sözleşmeleri için
+> `docs/BOUNDED_CONTEXT_CONTRACTS.md`, `docs/API_CONTRACTS.md` ve
+> `README.md` esas alınmalıdır. Bu belgede geçen Keycloak, mobil istemci ve
+> gelecek ML bileşenleri mevcut production kapsamı olarak yorumlanmamalıdır.
+
 ## 📋 Yönetici Özeti
 
 Bu rapor, **1 milyon aktif kullanıcı** için tasarlanmış, **tamamen ücretsiz ve açık kaynak** teknolojiler kullanan modüler bir eğitim platformunun mikroservis mimarisini içermektedir.
