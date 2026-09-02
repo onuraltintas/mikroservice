@@ -65,23 +65,30 @@ export class DynamicPageComponent implements OnInit {
     }
 
     updateMetaTags(page: PageDto): void {
-        const url = `${window.location.origin}/${page.slug}`;
+        const fallbackUrl = `${window.location.origin}/${page.slug}`;
+        const settings = page.seoSettings ?? { noIndex: false };
+        const canonicalUrl = settings.canonicalUrl?.trim() || fallbackUrl;
+        const image = settings.ogImage?.trim() || undefined;
 
         this.seo.updateTags({
-            title: page.seoSettings?.metaTitle || page.title,
-            description: page.seoSettings?.metaDescription || '',
-            keywords: page.seoSettings?.metaKeywords,
-            url: url,
+            title: settings.metaTitle || page.title,
+            description: settings.metaDescription || '',
+            keywords: settings.metaKeywords || undefined,
+            url: canonicalUrl,
+            canonicalUrl,
+            ogTitle: settings.ogTitle || undefined,
+            ogDescription: settings.ogDescription || undefined,
+            image,
             type: 'website'
         });
 
-        this.seo.setCanonicalUrl(url);
-        this.seo.setNoIndex(page.seoSettings?.noIndex || false);
+        this.seo.setCanonicalUrl(canonicalUrl);
+        this.seo.setNoIndex(settings.noIndex || false);
 
         this.seo.generateStructuredData('WebPage', {
             title: page.title,
-            description: page.seoSettings?.metaDescription || '',
-            url: url
+            description: settings.metaDescription || '',
+            url: canonicalUrl
         });
     }
 }

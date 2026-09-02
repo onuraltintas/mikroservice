@@ -18,7 +18,7 @@ export interface PageDto {
     isPublished: boolean;
     seoSettings: SeoSettings;
     createdAt: string;
-    updatedAt: string;
+    updatedAt: string | null;
 }
 
 export interface BlogPostDto {
@@ -45,9 +45,13 @@ export interface BlogListVm {
 }
 
 export interface SeoSettings {
-    metaTitle?: string;
-    metaDescription?: string;
-    metaKeywords?: string;
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+    metaKeywords?: string | null;
+    canonicalUrl?: string | null;
+    ogTitle?: string | null;
+    ogDescription?: string | null;
+    ogImage?: string | null;
     noIndex: boolean;
 }
 

@@ -88,25 +88,31 @@ export class BlogDetailComponent implements OnInit {
     }
 
     updateMetaTags(post: BlogPostDto) {
-        const url = `${window.location.origin}/blog/${post.slug}`;
+        const fallbackUrl = `${window.location.origin}/blog/${post.slug}`;
+        const settings = post.seoSettings ?? { noIndex: false };
+        const canonicalUrl = settings.canonicalUrl?.trim() || fallbackUrl;
+        const image = settings.ogImage?.trim() || post.coverImageUrl;
 
         this.seoService.updateTags({
-            title: post.seoSettings?.metaTitle || post.title,
-            description: post.seoSettings?.metaDescription || post.summary,
-            keywords: post.seoSettings?.metaKeywords,
-            url: url,
+            title: settings.metaTitle || post.title,
+            description: settings.metaDescription || post.summary,
+            keywords: settings.metaKeywords || undefined,
+            url: canonicalUrl,
+            canonicalUrl,
+            ogTitle: settings.ogTitle || undefined,
+            ogDescription: settings.ogDescription || undefined,
             type: 'article',
-            image: post.coverImageUrl
+            image
         });
 
-        this.seoService.setCanonicalUrl(url);
-        this.seoService.setNoIndex(post.seoSettings?.noIndex || false);
+        this.seoService.setCanonicalUrl(canonicalUrl);
+        this.seoService.setNoIndex(settings.noIndex || false);
 
         this.seoService.generateStructuredData('Article', {
             title: post.title,
-            description: post.summary,
-            url: url,
-            image: post.coverImageUrl,
+            description: settings.ogDescription || settings.metaDescription || post.summary,
+            url: canonicalUrl,
+            image,
             author: post.author || 'Anonim',
             publishedAt: post.publishedAt
         });

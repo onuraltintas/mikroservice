@@ -7,6 +7,9 @@ export interface SeoConfig {
     keywords?: string;
     image?: string;
     url?: string;
+    canonicalUrl?: string;
+    ogTitle?: string;
+    ogDescription?: string;
     type?: string;
     author?: string;
     publishedTime?: string;
@@ -31,17 +34,20 @@ export class SeoService {
     updateTags(config: SeoConfig): void {
         const seoConfig = { ...this.defaultConfig, ...config };
 
+        const openGraphTitle = seoConfig.ogTitle || seoConfig.title;
+        const openGraphDescription = seoConfig.ogDescription || seoConfig.description;
+
         // Title
         if (seoConfig.title) {
             this.title.setTitle(seoConfig.title);
-            this.meta.updateTag({ property: 'og:title', content: seoConfig.title });
+            this.meta.updateTag({ property: 'og:title', content: openGraphTitle || seoConfig.title });
             this.meta.updateTag({ name: 'twitter:title', content: seoConfig.title });
         }
 
         // Description
         if (seoConfig.description) {
             this.meta.updateTag({ name: 'description', content: seoConfig.description });
-            this.meta.updateTag({ property: 'og:description', content: seoConfig.description });
+            this.meta.updateTag({ property: 'og:description', content: openGraphDescription || seoConfig.description });
             this.meta.updateTag({ name: 'twitter:description', content: seoConfig.description });
         }
 
@@ -57,9 +63,11 @@ export class SeoService {
         }
 
         // URL
-        if (seoConfig.url) {
-            this.meta.updateTag({ property: 'og:url', content: seoConfig.url });
-            this.meta.updateTag({ name: 'twitter:url', content: seoConfig.url });
+        const canonicalUrl = seoConfig.canonicalUrl || seoConfig.url;
+        if (canonicalUrl) {
+            this.meta.updateTag({ property: 'og:url', content: canonicalUrl });
+            this.meta.updateTag({ name: 'twitter:url', content: canonicalUrl });
+            this.setCanonicalUrl(canonicalUrl);
         }
 
         // Type

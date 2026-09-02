@@ -79,7 +79,7 @@ export class PaymentComponent implements OnInit {
                     this.seoService.updateTags({
                         title:       page.seoSettings?.metaTitle || 'Abonelik Planları',
                         description: page.seoSettings?.metaDescription || 'Size uygun abonelik planını seçin',
-                        keywords:    page.seoSettings?.metaKeywords,
+                        keywords:    page.seoSettings?.metaKeywords || undefined,
                         url:         `${window.location.origin}/odeme`
                     });
                     this.seoService.setNoIndex(page.seoSettings?.noIndex || false);
