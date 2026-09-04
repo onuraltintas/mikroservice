@@ -10,7 +10,7 @@ namespace SpeedReading.API.Controllers;
 [ApiController]
 [ApiVersion(1.0)]
 [Route("api/speed-reading")]
-public sealed class SitemapController(ISpeedReadingCms cms) : ControllerBase
+public sealed class SitemapController(ISpeedReadingCms cms, IConfiguration configuration) : ControllerBase
 {
     [HttpGet("sitemap.xml")]
     [AllowAnonymous]
@@ -18,7 +18,7 @@ public sealed class SitemapController(ISpeedReadingCms cms) : ControllerBase
     {
         var pages = await cms.GetPagesAsync(1, 100, cancellationToken);
         var posts = await cms.GetBlogPostsAsync(1, 100, cancellationToken);
-        var baseUrl = $"{Request.Scheme}://{Request.Host}";
+        var baseUrl = ResolvePublicBaseUrl(configuration).TrimEnd('/');
         XNamespace sitemap = "http://www.sitemaps.org/schemas/sitemap/0.9";
 
         var locations = new List<string> { baseUrl + "/" };
@@ -35,5 +35,20 @@ public sealed class SitemapController(ISpeedReadingCms cms) : ControllerBase
                 new XElement(sitemap + "url", new XElement(sitemap + "loc", location)))));
 
         return Content(document.ToString(SaveOptions.DisableFormatting), "application/xml", Encoding.UTF8);
+    }
+
+    private string ResolvePublicBaseUrl(IConfiguration configuration)
+    {
+        var configuredBaseUrl = configuration["PublicApp:BaseUrl"];
+        if (Uri.TryCreate(configuredBaseUrl, UriKind.Absolute, out var publicUri)
+            && (publicUri.Scheme == Uri.UriSchemeHttp || publicUri.Scheme == Uri.UriSchemeHttps)
+            && string.IsNullOrWhiteSpace(publicUri.UserInfo)
+            && string.IsNullOrWhiteSpace(publicUri.Query)
+            && string.IsNullOrWhiteSpace(publicUri.Fragment))
+        {
+            return configuredBaseUrl!;
+        }
+
+        return $"{Request.Scheme}://{Request.Host}";
     }
 }
