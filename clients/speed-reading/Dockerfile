@@ -10,7 +10,7 @@ COPY shared/ /workspace/clients/shared/
 RUN npm run build -- --configuration production
 
 FROM nginx:1.27.5-alpine AS runtime
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY speed-reading/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /workspace/clients/speed-reading/dist/speed-reading-frontend/browser /usr/share/nginx/html
 
 EXPOSE 80
