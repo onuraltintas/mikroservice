@@ -14,6 +14,10 @@ export const publicRoutes: Routes = [
     loadComponent: () => import('./contact/contact.component').then(m => m.ContactComponent)
   },
   {
+    path: 'fiyatlandirma',
+    loadComponent: () => import('./pricing/pricing-page.component').then(m => m.PricingPageComponent)
+  },
+  {
     path: 'odeme',
     loadComponent: () => import('./payment/payment.component').then(m => m.PaymentComponent)
   },
