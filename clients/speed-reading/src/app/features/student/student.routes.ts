@@ -41,6 +41,16 @@ export const studentRoutes: Routes = [
         loadComponent: () => import('./exercises/exercises-list.component').then(m => m.ExercisesListComponent)
       },
       {
+        path: 'reading',
+        redirectTo: 'daily-exercises',
+        pathMatch: 'full'
+      },
+      {
+        path: 'reading-text',
+        redirectTo: 'daily-exercises',
+        pathMatch: 'full'
+      },
+      {
         path: 'assignments',
         canActivate: [authGuard, profileSetupGuard, subscriptionGuard],
         loadComponent: () => import('./assignments/student-assignments-page.component').then(m => m.StudentAssignmentsPageComponent)
@@ -90,6 +100,11 @@ export const studentRoutes: Routes = [
       },
       {
         path: 'reports',
+        canActivate: [authGuard, profileSetupGuard, subscriptionGuard],
+        loadComponent: () => import('./reports/student-reports.component').then(m => m.StudentReportsComponent)
+      },
+      {
+        path: 'progress',
         canActivate: [authGuard, profileSetupGuard, subscriptionGuard],
         loadComponent: () => import('./reports/student-reports.component').then(m => m.StudentReportsComponent)
       },

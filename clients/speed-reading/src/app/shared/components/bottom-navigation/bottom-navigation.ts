@@ -41,14 +41,14 @@ export class BottomNavigationComponent {
     {
       label: 'Okuma',
       icon: 'menu_book',
-      route: '/student/reading',
-      activeRoutes: ['/student/reading', '/student/reading-text']
+      route: '/student/daily-exercises',
+      activeRoutes: ['/student/daily-exercises', '/student/reading', '/student/reading-text']
     },
     {
       label: 'İlerleme',
       icon: 'trending_up',
       route: '/student/progress',
-      activeRoutes: ['/student/progress', '/student/analytics']
+      activeRoutes: ['/student/progress', '/student/analytics', '/student/reports']
     },
     {
       label: 'Profil',
