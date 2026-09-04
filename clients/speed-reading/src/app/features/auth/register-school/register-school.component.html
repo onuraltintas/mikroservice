@@ -60,26 +60,15 @@
 
                 <div class="row">
                     <mat-form-field appearance="outline">
-                        <mat-label>İl Seçiniz</mat-label>
-                        <mat-select formControlName="cityId">
-                            <mat-option *ngFor="let city of cities" [value]="city.id">
-                                {{ city.plateCode }} - {{ city.name }}
-                            </mat-option>
-                        </mat-select>
-                        <mat-error *ngIf="registerForm.get('cityId')?.hasError('required')">İl seçimi
-                            zorunludur</mat-error>
+                        <mat-label>İl</mat-label>
+                        <input matInput formControlName="city" placeholder="Örn: Ankara">
+                        <mat-error *ngIf="registerForm.get('city')?.hasError('required')">İl zorunludur</mat-error>
                     </mat-form-field>
 
                     <mat-form-field appearance="outline">
-                        <mat-label>İlçe Seçiniz</mat-label>
-                        <mat-select formControlName="districtId">
-                            <mat-option *ngIf="isLoadingDistricts" disabled>Yükleniyor...</mat-option>
-                            <mat-option *ngFor="let district of districts" [value]="district.id">
-                                {{ district.name }}
-                            </mat-option>
-                        </mat-select>
-                        <mat-error *ngIf="registerForm.get('districtId')?.hasError('required')">İlçe seçimi
-                            zorunludur</mat-error>
+                        <mat-label>İlçe</mat-label>
+                        <input matInput formControlName="district" placeholder="Örn: Çankaya">
+                        <mat-error *ngIf="registerForm.get('district')?.hasError('required')">İlçe zorunludur</mat-error>
                     </mat-form-field>
                 </div>
 

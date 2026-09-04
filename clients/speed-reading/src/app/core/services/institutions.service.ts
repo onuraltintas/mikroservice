@@ -25,25 +25,15 @@ export class InstitutionsService {
     }
     return this.http.get<any>(this.API_URL, { params }).pipe(
       map(response => (Array.isArray(response) ? response : (response?.items ?? []))
-        .map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          contactEmail: item.email ?? item.contactEmail ?? '',
-          phoneNumber: item.phone ?? item.phoneNumber,
-          address: item.address,
-          city: item.city,
-          district: item.district,
-          isActive: item.isActive,
-          studentCount: item.studentCount ?? 0,
-          teacherCount: item.teacherCount ?? 0,
-          createdAt: item.createdAt ? new Date(item.createdAt) : new Date(item.subscriptionStartDate ?? 0)
-        })))
+        .map((item: any) => this.mapInstitution(item)))
     );
   }
 
   // Get single institution by ID
   getInstitutionById(id: string): Observable<Institution> {
-    return this.http.get<Institution>(`${this.API_URL}/${id}`);
+    return this.http.get<any>(`${this.API_URL}/${id}`).pipe(
+      map(item => this.mapInstitution(item))
+    );
   }
 
   // Create new institution
@@ -73,5 +63,21 @@ export class InstitutionsService {
 
   setActive(id: string, isActive: boolean): Observable<void> {
     return this.http.post<void>(`${this.API_URL}/${id}/active`, { isActive });
+  }
+
+  private mapInstitution(item: any): Institution {
+    return {
+      id: item.id,
+      name: item.name,
+      contactEmail: item.email ?? item.contactEmail ?? '',
+      phoneNumber: item.phone ?? item.phoneNumber,
+      address: item.address,
+      city: item.city,
+      district: item.district,
+      isActive: item.isActive,
+      studentCount: item.studentCount ?? 0,
+      teacherCount: item.teacherCount ?? 0,
+      createdAt: item.createdAt ? new Date(item.createdAt) : new Date(item.subscriptionStartDate ?? 0)
+    };
   }
 }

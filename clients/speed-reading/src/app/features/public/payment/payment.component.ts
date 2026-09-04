@@ -2,13 +2,10 @@ import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild, inject, si
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { PublicCmsService, PageDto } from '../../../core/services/public-cms.service';
-import { SeoService } from '../../../core/services/seo.service';
 import { SubscriptionService, SubscriptionPlan } from '../../../core/services/subscription.service';
 import { PaymentService } from '../../../core/services/payment.service';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar';
@@ -32,17 +29,13 @@ import { FooterComponent } from '../../../shared/components/footer/footer';
     styleUrl: './payment.component.scss'
 })
 export class PaymentComponent implements OnInit {
-    private cmsService          = inject(PublicCmsService);
-    private seoService          = inject(SeoService);
     private subscriptionService = inject(SubscriptionService);
     private paymentService      = inject(PaymentService);
-    private sanitizer           = inject(DomSanitizer);
     private changeDetector      = inject(ChangeDetectorRef);
 
     @ViewChild('checkoutHost') private checkoutHost?: ElementRef<HTMLElement>;
 
     plans:        SubscriptionPlan[] = [];
-    pageContent:  PageDto | null     = null;
     selectedPlan: SubscriptionPlan | null = null;
 
     // Checkout form content — Iyzico'dan gelen HTML (iframe yaklaşımı)
@@ -71,27 +64,10 @@ export class PaymentComponent implements OnInit {
     };
 
     ngOnInit() {
-        this.loadPage();
+        // Ödeme sayfası CMS kaydı olmadan da çalışır; planlar kendi API'sinden gelir.
+        // Var olmayan /cms/pages/odeme endpoint'ine istek atmayarak gereksiz 404 üretmeyiz.
+        this.loading.set(false);
         this.loadPlans();
-    }
-
-    private loadPage() {
-        this.cmsService.getPage('odeme').subscribe({
-            next: (page) => {
-                if (page.isPublished) {
-                    this.pageContent = page;
-                    this.seoService.updateTags({
-                        title:       page.seoSettings?.metaTitle || 'Abonelik Planları',
-                        description: page.seoSettings?.metaDescription || 'Size uygun abonelik planını seçin',
-                        keywords:    page.seoSettings?.metaKeywords || undefined,
-                        url:         `${window.location.origin}/odeme`
-                    });
-                    this.seoService.setNoIndex(page.seoSettings?.noIndex || false);
-                }
-                this.loading.set(false);
-            },
-            error: () => this.loading.set(false)
-        });
     }
 
     private loadPlans() {
@@ -168,10 +144,6 @@ export class PaymentComponent implements OnInit {
 
     getPeriodLabel(plan: SubscriptionPlan): string {
         return this.billingPeriodLabel[plan.billingPeriod] ?? '';
-    }
-
-    get safeContent(): SafeHtml {
-        return this.sanitizer.bypassSecurityTrustHtml(this.pageContent?.content ?? '');
     }
 
     private mountCheckoutForm(content: string) {

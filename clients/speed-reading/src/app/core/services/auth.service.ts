@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, firstValueFrom, map, of, tap } from 'rxjs';
 import { Router } from '@angular/router';
-import { AuthResponse, LoginRequest, RegisterRequest } from '../models/user.model';
+import { AuthResponse, LoginRequest, RegisterInstitutionRequest, RegisterRequest } from '../models/user.model';
 import { environment } from '../../../environments/environment';
 import { SettingsService } from './settings.service';
 
@@ -62,6 +62,13 @@ export class AuthService {
     }
 
     this.sessionInitialized = true;
+    // The refresh token is HttpOnly, so the browser cannot inspect it directly.
+    // The locally stored user is the session marker written after a successful login.
+    // Avoid probing the refresh endpoint for a genuinely anonymous visitor.
+    if (typeof localStorage === 'undefined' || !localStorage.getItem('currentUser')) {
+      return of(null);
+    }
+
     return this.refreshToken().pipe(
       catchError(() => {
         this.clearLocalSession();
@@ -124,7 +131,7 @@ export class AuthService {
   /**
    * Register new institution
    */
-  registerInstitution(data: any): Observable<AuthResponse> {
+  registerInstitution(data: RegisterInstitutionRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.AUTH_URL}/register-institution`, data, { withCredentials: true }).pipe(
       tap(response => {
         this.setUser(response);

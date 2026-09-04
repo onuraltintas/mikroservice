@@ -8,15 +8,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatSelectModule } from '@angular/material/select';
 import { MatDividerModule } from '@angular/material/divider';
 import { takeUntil, finalize, switchMap } from 'rxjs/operators';
-import { of } from 'rxjs';
 import { InstitutionsService } from '../../../core/services/institutions.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { LocationService, City, District } from '../../../core/services/location.service';
 import { UsersService } from '../../../core/services/users.service';
 import { Institution } from '../../../core/models/institution.model';
+import { RegisterInstitutionRequest } from '../../../core/models/user.model';
 import { BaseComponent } from '../../../core/components/base.component';
 import { strongPasswordValidator, PASSWORD_ERROR_MESSAGES } from '../../../shared/validators/password.validator';
 
@@ -33,7 +31,6 @@ import { strongPasswordValidator, PASSWORD_ERROR_MESSAGES } from '../../../share
     MatIconModule,
     MatProgressSpinnerModule,
     MatSlideToggleModule,
-    MatSelectModule,
     MatDividerModule
   ],
   templateUrl: './institution-dialog.component.html',
@@ -43,7 +40,6 @@ export class InstitutionDialogComponent extends BaseComponent implements OnInit 
   private fb = inject(FormBuilder);
   private institutionsService = inject(InstitutionsService);
   private authService = inject(AuthService);
-  private locationService = inject(LocationService);
   private usersService = inject(UsersService);
   // toaster inherited from BaseComponent
 
@@ -52,8 +48,6 @@ export class InstitutionDialogComponent extends BaseComponent implements OnInit 
   saving = false;
   hidePassword = true;
 
-  cities: City[] = [];
-  districts: District[] = [];
   passwordErrorMessages = Object.entries(PASSWORD_ERROR_MESSAGES).map(([type, message]) => ({ type, message }));
 
   // For Edit Mode: To store the ID of the found admin user
@@ -70,13 +64,7 @@ export class InstitutionDialogComponent extends BaseComponent implements OnInit 
   }
 
   ngOnInit() {
-    this.loadCities();
-
     if (this.isEditMode && this.data) {
-      if (this.data.cityId) {
-        this.loadDistricts(this.data.cityId);
-      }
-
       // Try to find the admin user associated with this institution's contact email
       if (this.data.contactEmail) {
         this.checkingAdminUser = true;
@@ -103,38 +91,6 @@ export class InstitutionDialogComponent extends BaseComponent implements OnInit 
       }
     }
 
-    this.institutionForm.get('cityId')?.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(cityId => {
-        if (cityId) {
-          this.loadDistricts(cityId);
-        } else {
-          this.districts = [];
-          this.institutionForm.get('districtId')?.reset();
-        }
-      });
-  }
-
-  loadCities() {
-    this.locationService.getCities()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (cities) => this.cities = cities,
-        error: (err) => this.toaster.error('Şehirler yüklenirken bir hata oluştu.')
-      });
-  }
-
-  loadDistricts(cityId: string) {
-    this.institutionForm.get('districtId')?.disable();
-    this.locationService.getDistricts(cityId)
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => this.institutionForm.get('districtId')?.enable())
-      )
-      .subscribe({
-        next: (districts) => this.districts = districts,
-        error: (err) => this.toaster.error('İlçeler yüklenirken bir hata oluştu.')
-      });
   }
 
   createForm(): FormGroup {
@@ -145,8 +101,8 @@ export class InstitutionDialogComponent extends BaseComponent implements OnInit 
         contactEmail: [this.data?.contactEmail || '', [Validators.required, Validators.email]],
         phoneNumber: [this.data?.phoneNumber || '', [Validators.required, Validators.pattern('^[0-9\\+\\-\\(\\) \\s]{10,20}$')]],
         address: [this.data?.address || ''],
-        cityId: [this.data?.cityId || '', Validators.required],
-        districtId: [this.data?.districtId || '', Validators.required],
+        city: [this.data?.city || '', Validators.maxLength(100)],
+        district: [this.data?.district || '', Validators.maxLength(100)],
         isActive: [this.data?.isActive || false]
         // password control is added dynamically in ngOnInit if admin user is found
       });
@@ -155,11 +111,10 @@ export class InstitutionDialogComponent extends BaseComponent implements OnInit 
       return this.fb.group({
         // Institution Info
         schoolName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-        contactEmail: ['', [Validators.required, Validators.email]],
         phoneNumber: ['', [Validators.required, Validators.pattern('^[0-9\\+\\-\\(\\) \\s]{10,20}$')]],
         address: [''],
-        cityId: ['', Validators.required],
-        districtId: ['', Validators.required],
+        city: ['', [Validators.required, Validators.maxLength(100)]],
+        district: ['', [Validators.required, Validators.maxLength(100)]],
 
         // Admin Info
         firstName: ['', [Validators.required, Validators.minLength(2)]],
@@ -198,14 +153,12 @@ export class InstitutionDialogComponent extends BaseComponent implements OnInit 
     if (this.isEditMode) {
       // Base update operation
       const updateOp = this.institutionsService.updateInstitution(this.data!.id, {
-        id: this.data!.id,
         name: formValue.name,
-        contactEmail: formValue.contactEmail,
-        phoneNumber: formValue.phoneNumber,
+        email: formValue.contactEmail,
+        phone: formValue.phoneNumber,
         address: formValue.address,
-        cityId: formValue.cityId,
-        districtId: formValue.districtId,
-        isActive: formValue.isActive
+        city: formValue.city,
+        district: formValue.district
       });
 
       // Chain password reset if applicable
@@ -235,19 +188,15 @@ export class InstitutionDialogComponent extends BaseComponent implements OnInit 
 
     } else {
       // Use AuthService for full registration
-      const request: any = {
-        schoolName: formValue.schoolName,
-        contactEmail: formValue.contactEmail,
-        phoneNumber: formValue.phoneNumber,
-        address: formValue.address || null,
-        cityId: formValue.cityId,
-        districtId: formValue.districtId,
-        firstName: formValue.firstName,
-        lastName: formValue.lastName,
-        adminEmail: formValue.adminEmail,
-        password: formValue.password,
-        acceptTerms: true,
-        acceptKVKK: true
+      const request: RegisterInstitutionRequest = {
+        Email: formValue.adminEmail,
+        Password: formValue.password,
+        FirstName: formValue.firstName,
+        LastName: formValue.lastName,
+        InstitutionName: formValue.schoolName,
+        InstitutionType: 1,
+        Phone: formValue.phoneNumber,
+        City: `${formValue.city}, ${formValue.district}`
       };
 
       this.authService.registerInstitution(request)

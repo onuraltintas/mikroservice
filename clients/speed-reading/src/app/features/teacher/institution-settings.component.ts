@@ -5,8 +5,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatOptionModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -14,7 +12,6 @@ import { finalize } from 'rxjs/operators';
 import { InstitutionsService } from '../../core/services/institutions.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToasterService } from '../../core/services/toaster.service';
-import { LocationService, City, District } from '../../core/services/location.service';
 import { Institution } from '../../core/models/institution.model';
 
 @Component({
@@ -27,8 +24,6 @@ import { Institution } from '../../core/models/institution.model';
         MatInputModule,
         MatButtonModule,
         MatIconModule,
-        MatSelectModule,
-        MatOptionModule,
         MatProgressSpinnerModule,
         MatTabsModule,
         ReactiveFormsModule
@@ -142,7 +137,6 @@ import { Institution } from '../../core/models/institution.model';
 export class InstitutionSettingsComponent implements OnInit {
     private fb = inject(FormBuilder);
     private institutionsService = inject(InstitutionsService);
-    private locationService = inject(LocationService);
     private authService = inject(AuthService);
     private toaster = inject(ToasterService);
 
@@ -152,10 +146,6 @@ export class InstitutionSettingsComponent implements OnInit {
     loading = signal(false);
     passwordLoading = signal(false);
 
-    cities = signal<City[]>([]);
-    districts = signal<District[]>([]);
-    districtsLoading = signal(false);
-
     institutionId: string | null = null;
     institution = signal<Institution | null>(null);
 
@@ -164,8 +154,8 @@ export class InstitutionSettingsComponent implements OnInit {
             name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
             contactEmail: ['', [Validators.required, Validators.email]],
             phoneNumber: ['', [Validators.pattern('^[0-9\\+\\-\\(\\) \\s]{10,20}$')]],
-            cityId: [null],
-            districtId: [null],
+            city: ['', [Validators.maxLength(100)]],
+            district: ['', [Validators.maxLength(100)]],
             address: ['']
         });
 
@@ -187,7 +177,6 @@ export class InstitutionSettingsComponent implements OnInit {
 
     ngOnInit(): void {
         const user = this.authService.currentUserValue;
-        this.loadCities();
 
         // Check if user has institutionId claim/property
         if (user && (user as any).institutionId) {
@@ -199,13 +188,6 @@ export class InstitutionSettingsComponent implements OnInit {
         }
     }
 
-    loadCities() {
-        this.locationService.getCities().subscribe({
-            next: (data) => this.cities.set(data),
-            error: (err) => console.error('Error loading cities', err)
-        });
-    }
-
     loadInstitution() {
         if (!this.institutionId) return;
 
@@ -214,18 +196,13 @@ export class InstitutionSettingsComponent implements OnInit {
             next: (data: Institution) => {
                 this.institution.set(data);
 
-                // If there's a cityId, load districts before patching or after
-                if (data.cityId) {
-                    this.loadDistricts(data.cityId);
-                }
-
                 this.settingsForm.patchValue({
                     name: data.name,
                     contactEmail: data.contactEmail,
                     phoneNumber: data.phoneNumber,
                     address: data.address,
-                    cityId: data.cityId,
-                    districtId: data.districtId
+                    city: data.city,
+                    district: data.district
                 });
                 this.loading.set(false);
             },
@@ -237,45 +214,19 @@ export class InstitutionSettingsComponent implements OnInit {
         });
     }
 
-    onCityChange(cityId: string) {
-        this.settingsForm.patchValue({ districtId: null });
-        if (cityId) {
-            this.loadDistricts(cityId);
-        } else {
-            this.districts.set([]);
-        }
-    }
-
-    loadDistricts(cityId: string) {
-        this.districtsLoading.set(true);
-        this.locationService.getDistricts(cityId).subscribe({
-            next: (data) => {
-                this.districts.set(data);
-                this.districtsLoading.set(false);
-            },
-            error: (err) => {
-                console.error('Error loading districts', err);
-                this.districtsLoading.set(false);
-            }
-        });
-    }
-
     onSubmit() {
         if (this.settingsForm.invalid || !this.institutionId) return;
 
         this.loading.set(true);
         const formValue = this.settingsForm.value;
 
-        const currentInst = this.institution();
         this.institutionsService.updateInstitution(this.institutionId, {
-            id: this.institutionId,
             name: formValue.name,
-            contactEmail: formValue.contactEmail,
-            phoneNumber: formValue.phoneNumber,
+            email: formValue.contactEmail,
+            phone: formValue.phoneNumber,
             address: formValue.address,
-            cityId: formValue.cityId,
-            districtId: formValue.districtId,
-            isActive: currentInst ? currentInst.isActive : true
+            city: formValue.city,
+            district: formValue.district
         }).subscribe({
             next: (updated: any) => {
                 this.toaster.success('Kurum ayarları güncellendi');

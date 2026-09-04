@@ -148,6 +148,7 @@ describe('AuthService', () => {
 
   it('restores the session from the HttpOnly cookie during application initialization', () => {
     const accessToken = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyIiwicm9sZSI6IlN5c3RlbUFkbWluIiwiZXhwIjo0MTAyNDQ0ODAwfQ.';
+    localStorage.setItem('currentUser', JSON.stringify({ id: 'stored-user' }));
     service.initializeSession().subscribe(user => expect(user?.roles).toEqual(['SystemAdmin']));
 
     const request = http.expectOne('/api/auth/refresh-token');
@@ -160,6 +161,12 @@ describe('AuthService', () => {
     expect(service.isAuthenticated).toBeTrue();
     expect(localStorage.getItem('token')).toBeNull();
     expect(JSON.parse(localStorage.getItem('currentUser') || '{}').token).toBeUndefined();
+  });
+
+  it('does not probe the refresh endpoint for an anonymous browser session', () => {
+    service.initializeSession().subscribe(user => expect(user).toBeNull());
+
+    http.expectNone('/api/auth/refresh-token');
   });
 
   it('starts authenticated MFA setup with the current password', async () => {

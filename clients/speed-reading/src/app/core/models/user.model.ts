@@ -22,15 +22,14 @@ export interface AuthResponse {
 }
 
 export interface RegisterInstitutionRequest {
-  schoolName: string;
-  schoolCode?: string;
-  contactEmail: string;
-  adminEmail: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  acceptTerms: boolean;
-  acceptKVKK: boolean;
+  Email: string;
+  Password: string;
+  FirstName: string;
+  LastName: string;
+  InstitutionName: string;
+  InstitutionType: number;
+  Phone?: string;
+  City: string;
 }
 
 export interface RegisterTeacherRequest {
@@ -161,10 +160,8 @@ export interface Institution {
   contactEmail?: string;
   phoneNumber?: string;
   address?: string;
-  cityId?: string;
-  districtId?: string;
-  city?: any;
-  district?: any;
+  city?: string;
+  district?: string;
 }
 
 export interface RoleDto {

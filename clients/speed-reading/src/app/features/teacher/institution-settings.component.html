@@ -69,25 +69,12 @@
                             <div class="form-row">
                                 <mat-form-field appearance="outline" class="modern-input">
                                     <mat-label>İl</mat-label>
-                                    <mat-select formControlName="cityId" (selectionChange)="onCityChange($event.value)">
-                                        <mat-option>Seçiniz</mat-option>
-                                        <mat-option *ngFor="let city of cities()" [value]="city.id">
-                                            {{city.name}}
-                                        </mat-option>
-                                    </mat-select>
+                                    <input matInput formControlName="city" placeholder="Örn: Ankara">
                                 </mat-form-field>
 
                                 <mat-form-field appearance="outline" class="modern-input">
                                     <mat-label>İlçe</mat-label>
-                                    <mat-select formControlName="districtId"
-                                        [disabled]="!settingsForm.get('cityId')?.value || districtsLoading()">
-                                        <mat-option>Seçiniz</mat-option>
-                                        <mat-option *ngIf="districtsLoading()">Yükleniyor...</mat-option>
-                                        <mat-option *ngFor="let district of districts()" [value]="district.id">
-                                            {{district.name}}
-                                        </mat-option>
-                                    </mat-select>
-                                    <mat-spinner *ngIf="districtsLoading()" diameter="20" matSuffix></mat-spinner>
+                                    <input matInput formControlName="district" placeholder="Örn: Çankaya">
                                 </mat-form-field>
                             </div>
 

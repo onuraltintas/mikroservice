@@ -26,7 +26,7 @@
             </mat-form-field>
 
             <!-- Email -->
-            <mat-form-field appearance="outline">
+            <mat-form-field appearance="outline" *ngIf="isEditMode">
                 <mat-label>İletişim E-posta</mat-label>
                 <input matInput formControlName="contactEmail" placeholder="iletisim@okul.com" type="email">
                 <mat-icon matSuffix>email</mat-icon>
@@ -45,21 +45,15 @@
             <!-- City -->
             <mat-form-field appearance="outline">
                 <mat-label>İl</mat-label>
-                <mat-select formControlName="cityId">
-                    <mat-option *ngFor="let city of cities" [value]="city.id">{{city.name}}</mat-option>
-                </mat-select>
-                <mat-error *ngIf="institutionForm.get('cityId')?.hasError('required')">Seçiniz</mat-error>
+                <input matInput formControlName="city" placeholder="Örn: Ankara">
+                <mat-error *ngIf="institutionForm.get('city')?.hasError('required')">İl zorunludur</mat-error>
             </mat-form-field>
 
             <!-- District -->
             <mat-form-field appearance="outline">
                 <mat-label>İlçe</mat-label>
-                <mat-select formControlName="districtId">
-                    <mat-option *ngFor="let dist of districts" [value]="dist.id">{{dist.name}}</mat-option>
-                </mat-select>
-                <mat-spinner *ngIf="institutionForm.get('districtId')?.disabled && institutionForm.get('cityId')?.value"
-                    diameter="20" matSuffix></mat-spinner>
-                <mat-error *ngIf="institutionForm.get('districtId')?.hasError('required')">Seçiniz</mat-error>
+                <input matInput formControlName="district" placeholder="Örn: Çankaya">
+                <mat-error *ngIf="institutionForm.get('district')?.hasError('required')">İlçe zorunludur</mat-error>
             </mat-form-field>
 
             <!-- Address -->

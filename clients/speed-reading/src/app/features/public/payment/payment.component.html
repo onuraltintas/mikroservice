@@ -4,13 +4,8 @@
   <!-- Hero Section -->
   <section class="hero-section">
     <div class="container">
-      <ng-container *ngIf="pageContent; else defaultHero">
-        <h1>{{ pageContent.title }}</h1>
-      </ng-container>
-      <ng-template #defaultHero>
-        <h1>Abonelik Planları</h1>
-        <p>Size en uygun planı seçin ve hızlı okuma yolculuğunuza başlayın</p>
-      </ng-template>
+      <h1>Abonelik Planları</h1>
+      <p>Size en uygun planı seçin ve hızlı okuma yolculuğunuza başlayın</p>
     </div>
   </section>
 
@@ -146,11 +141,8 @@
 
     </ng-container>
 
-    <!-- CMS İçeriği -->
-    <div *ngIf="!loading() && pageContent" class="cms-content" [innerHTML]="safeContent"></div>
-
-    <!-- Fallback FAQ -->
-    <div *ngIf="!loading() && !pageContent" class="faq-section">
+    <!-- Ödeme bilgileri -->
+    <div *ngIf="!loading()" class="faq-section">
       <h2>Sıkça Sorulan Sorular</h2>
       <mat-card class="faq-card">
         <h3>İptal politikanız nedir?</h3>

@@ -5,10 +5,8 @@ export interface Institution {
   contactEmail: string;
   phoneNumber?: string;
   address?: string;
-  cityId?: string;
-  districtId?: string;
-  city?: any;
-  district?: any;
+  city?: string;
+  district?: string;
   createdAt: Date;
   isActive: boolean;
   teacherCount: number;
@@ -21,12 +19,11 @@ export interface CreateInstitutionRequest {
 }
 
 export interface UpdateInstitutionRequest {
-  id: string;
-  name: string;
-  contactEmail: string;
-  phoneNumber?: string;
+  name?: string;
   address?: string;
-  cityId?: string;
-  districtId?: string;
-  isActive: boolean;
+  city?: string;
+  district?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
 }

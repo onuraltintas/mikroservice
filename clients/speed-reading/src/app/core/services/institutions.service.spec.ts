@@ -49,4 +49,42 @@ describe('InstitutionsService', () => {
     expect(request.request.body).toEqual({ isActive: false });
     request.flush(null);
   });
+
+  it('maps the single institution response to the frontend model', () => {
+    service.getInstitutionById('institution-1').subscribe(institution => {
+      expect(institution.contactEmail).toBe('okul@example.com');
+      expect(institution.phoneNumber).toBe('555');
+      expect(institution.city).toBe('Ankara');
+      expect(institution.district).toBe('Çankaya');
+    });
+
+    const request = http.expectOne('/api/v1/institutions/institution-1');
+    request.flush({
+      id: 'institution-1', name: 'Örnek Kolej', email: 'okul@example.com', phone: '555',
+      address: 'Adres', city: 'Ankara', district: 'Çankaya', isActive: true
+    });
+  });
+
+  it('uses the identity field names when updating institution contact details', () => {
+    service.updateInstitution('institution-1', {
+      name: 'Güncel Kolej',
+      address: 'Yeni adres',
+      city: 'Ankara',
+      district: 'Çankaya',
+      phone: '555',
+      email: 'okul@example.com'
+    }).subscribe();
+
+    const request = http.expectOne('/api/v1/institutions/institution-1');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({
+      name: 'Güncel Kolej',
+      address: 'Yeni adres',
+      city: 'Ankara',
+      district: 'Çankaya',
+      phone: '555',
+      email: 'okul@example.com'
+    });
+    request.flush(null);
+  });
 });
