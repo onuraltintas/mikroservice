@@ -18,6 +18,8 @@ export interface GaugeChartData {
     <div class="chart-container">
       <canvas
         baseChart
+        role="img"
+        [attr.aria-label]="label + ': ' + currentValue"
         [data]="gaugeChartData"
         [options]="gaugeChartOptions"
         [type]="'doughnut'">

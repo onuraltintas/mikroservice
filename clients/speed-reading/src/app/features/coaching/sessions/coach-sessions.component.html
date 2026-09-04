@@ -55,11 +55,11 @@
                 {{ statusLabels[s.status] }}
               </span>
               <!-- Action items chip'leri -->
-              <div *ngIf="getActionItems(s).length > 0" style="margin-top:6px">
+              <div *ngIf="getActionItems(s).length > 0" class="action-items">
                 <mat-chip-set>
-                  <mat-chip *ngFor="let item of getActionItems(s)" style="font-size:0.75em"
+                  <mat-chip *ngFor="let item of getActionItems(s)" class="action-item"
                     [matTooltip]="item">
-                    <mat-icon matChipTrailingIcon style="font-size:14px;cursor:pointer"
+                    <mat-icon matChipTrailingIcon class="action-item-icon"
                       matTooltip="Ödev Oluştur"
                       (click)="openActionAsAssignment(s, item)">add_task</mat-icon>
                     {{ item.length > 30 ? (item | slice:0:30) + '…' : item }}
@@ -72,17 +72,17 @@
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef></th>
           <td mat-cell *matCellDef="let s">
-            <button mat-icon-button color="primary"
+            <button mat-icon-button type="button" color="primary" aria-label="Seans brifingini aç"
               *ngIf="s.status === 'Scheduled'"
               matTooltip="Seans Brifing" (click)="openBriefing(s)">
               <mat-icon>summarize</mat-icon>
             </button>
-            <button mat-icon-button color="accent"
+            <button mat-icon-button type="button" color="accent" aria-label="Seansı tamamlandı işaretle"
               *ngIf="s.status === 'Scheduled'"
               matTooltip="Seansı Tamamla" (click)="completeSession(s)">
               <mat-icon>check_circle</mat-icon>
             </button>
-            <button mat-icon-button color="warn" *ngIf="s.status === 'Scheduled'"
+            <button mat-icon-button type="button" color="warn" aria-label="Seansı iptal et" *ngIf="s.status === 'Scheduled'"
               matTooltip="İptal Et" (click)="cancelSession(s)">
               <mat-icon>cancel</mat-icon>
             </button>

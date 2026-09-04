@@ -46,7 +46,7 @@
                 </mat-icon>
                 <div matListItemTitle>{{ roleInfo.label }}</div>
                 <div matListItemLine class="role-description">{{ roleInfo.description }}</div>
-                <button mat-icon-button [color]="hasRole(roleInfo.name) ? 'warn' : 'primary'"
+                  <button mat-icon-button type="button" [attr.aria-label]="hasRole(roleInfo.name) ? roleInfo.name + ' rolünü kaldır' : roleInfo.name + ' rolünü ata'" [color]="hasRole(roleInfo.name) ? 'warn' : 'primary'"
                     (click)="toggleRole(roleInfo.name)" [disabled]="processing" matListItemMeta>
                     <mat-icon>{{ hasRole(roleInfo.name) ? 'remove_circle' : 'add_circle' }}</mat-icon>
                 </button>

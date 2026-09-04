@@ -74,7 +74,7 @@ import { PASSWORD_ERROR_MESSAGES, strongPasswordValidator } from '../../../share
             <span *ngIf="session.isPersistent"> · Kalıcı</span>
             <span *ngIf="session.mfaVerifiedAt"> · MFA doğrulandı</span>
           </div>
-          <button mat-icon-button color="warn" matListItemMeta (click)="revokeSession(session)" [disabled]="processing" aria-label="Oturumu sonlandır">
+                    <button mat-icon-button type="button" color="warn" matListItemMeta (click)="revokeSession(session)" [disabled]="processing" aria-label="Oturumu sonlandır">
             <mat-icon>logout</mat-icon>
           </button>
         </mat-list-item>

@@ -1,5 +1,5 @@
 <h2 mat-dialog-title>
-    <div style="display: flex; align-items: center; gap: 12px;">
+    <div class="ui-inline-actions">
         <mat-icon>{{ isEditMode ? 'edit' : 'person_add' }}</mat-icon>
         <span>{{ isEditMode ? 'Öğretmen Düzenle' : 'Yeni Öğretmen' }}</span>
     </div>
@@ -49,7 +49,7 @@
                     <mat-label>{{ isEditMode ? 'Yeni Şifre (İsteğe Bağlı)' : 'Şifre' }}</mat-label>
                     <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password"
                         [placeholder]="isEditMode ? 'Değiştirmek için yeni şifre girin' : 'Şifre'">
-                    <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button"
+                    <button mat-icon-button matSuffix aria-label="Parolayı göster veya gizle" (click)="hidePassword = !hidePassword" type="button"
                         tabindex="-1">
                         <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
                     </button>

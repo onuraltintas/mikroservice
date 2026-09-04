@@ -40,7 +40,7 @@ import { ADMIN_PERMISSIONS } from '../../../../core/auth/permissions';
                   <div class="relative">
                     <div class="h-24 w-24 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 text-3xl font-bold border-4 border-white dark:border-gray-800 shadow-md">
                       @if (user()?.avatarUrl) {
-                        <img [src]="user()?.avatarUrl" class="h-full w-full rounded-full object-cover">
+                        <img [src]="user()?.avatarUrl" [alt]="user()?.fullName || 'Kullanıcı avatarı'" class="h-full w-full rounded-full object-cover">
                       } @else {
                         {{ user()?.firstName?.charAt(0) }}{{ user()?.lastName?.charAt(0) }}
                       }
@@ -291,9 +291,8 @@ export class UserDetailsModalComponent implements OnInit {
   async revokeSession(session: UserSessionDto) {
     if (!this.canManageAccess()) return;
     const confirmed = await this.toaster.confirm(
-      'Oturumu Sonlandır',
       'Bu oturumu sonlandırmak istediğinize emin misiniz?',
-      'Evet, sonlandır');
+      { title: 'Oturumu sonlandır', confirmText: 'Evet, sonlandır' });
     if (!confirmed) return;
 
     this.identityService.revokeUserSession(this.userId, session.id).subscribe({
@@ -308,9 +307,8 @@ export class UserDetailsModalComponent implements OnInit {
   async revokeAllSessions() {
     if (!this.canManageAccess()) return;
     const confirmed = await this.toaster.confirm(
-      'Tüm Oturumları Sonlandır',
       'Kullanıcının tüm aktif oturumları kapatılacak. Devam etmek istiyor musunuz?',
-      'Evet, hepsini kapat');
+      { title: 'Tüm oturumları sonlandır', confirmText: 'Evet, hepsini kapat' });
     if (!confirmed) return;
 
     this.identityService.revokeAllUserSessions(this.userId).subscribe({
@@ -325,9 +323,8 @@ export class UserDetailsModalComponent implements OnInit {
   async resetMfa() {
     if (!this.canManageAccess()) return;
     const confirmed = await this.toaster.confirm(
-      'MFA Sıfırla',
       'MFA kurulumu ve kurtarma kodları silinecek, tüm oturumlar kapatılacak.',
-      'Evet, MFA sıfırla');
+      { title: 'MFA ayarını sıfırla', confirmText: 'Evet, MFA sıfırla' });
     if (!confirmed) return;
 
     this.identityService.resetUserMfa(this.userId).subscribe({

@@ -386,3 +386,43 @@
         }
     }
 }
+
+:host {
+    color: var(--ui-text);
+}
+
+.visually-hidden-file {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.actions-column { width: 60px; }
+.inline-school-icon { margin-right: 4px; vertical-align: text-bottom; }
+
+.students-container {
+    .header h1,
+    .student-name,
+    .student-email {
+        color: var(--ui-text);
+    }
+
+    .subtitle,
+    .student-meta,
+    .empty-state,
+    .last-activity {
+        color: var(--ui-text-muted);
+    }
+
+    .students-card,
+    .filters-bar {
+        border-color: var(--ui-border);
+        background: var(--ui-surface);
+    }
+}

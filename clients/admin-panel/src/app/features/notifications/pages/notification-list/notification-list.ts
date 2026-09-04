@@ -205,7 +205,7 @@ export class NotificationListComponent implements OnInit {
     }
 
     deleteNotification(id: string) {
-        this.toaster.confirm('Bildirimi Sil', 'Bu bildirimi silmek istediğinize emin misiniz?').then(confirm => {
+        this.toaster.confirm('Bu bildirimi silmek istediğinize emin misiniz?', { title: 'Bildirimi sil' }).then(confirm => {
             if (confirm) {
                 this.notificationService.deleteNotification(id).subscribe(() => {
                     this.notificationService.fetchNotifications();
@@ -218,7 +218,7 @@ export class NotificationListComponent implements OnInit {
     deleteSelected() {
         if (this.selection.selected.length === 0) return;
 
-        this.toaster.confirm('Seçilileri Sil', `${this.selection.selected.length} bildirimi silmek istediğinize emin misiniz?`).then(confirm => {
+        this.toaster.confirm(`${this.selection.selected.length} bildirimi silmek istediğinize emin misiniz?`, { title: 'Seçili bildirimleri sil' }).then(confirm => {
             if (confirm) {
                 const promises = this.selection.selected.map(n => this.notificationService.deleteNotification(n.id).toPromise());
                 Promise.all(promises).then(() => {
@@ -258,7 +258,7 @@ export class NotificationListComponent implements OnInit {
             <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-0">{{ getCategoryLabel(data.type) }}</p>
           </div>
         </div>
-        <button mat-icon-button mat-dialog-close>
+                <button mat-icon-button type="button" mat-dialog-close aria-label="Pencereyi kapat">
           <mat-icon>close</mat-icon>
         </button>
       </div>

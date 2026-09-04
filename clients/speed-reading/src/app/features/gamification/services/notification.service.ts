@@ -1,34 +1,21 @@
 import { Injectable, inject } from '@angular/core';
-import { MatSnackBar, MatSnackBarConfig } from '@angular/material/snack-bar';
 import { Achievement, LevelUpResult } from '../../../core/models/gamification.model';
-import { AchievementNotificationComponent } from '../components/achievement-notification/achievement-notification.component';
 import { MatDialog } from '@angular/material/dialog';
 import { LevelUpModalComponent } from '../components/level-up-modal/level-up-modal.component';
+import { ToasterService } from '../../../core/services/toaster.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GamificationNotificationService {
-  private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private toaster = inject(ToasterService);
 
   // Achievement unlocked notification
   showAchievementUnlocked(achievement: Achievement): void {
-    const config: MatSnackBarConfig = {
-      duration: 5000,
-      horizontalPosition: 'end',
-      verticalPosition: 'top',
-      panelClass: ['achievement-snackbar', 'success']
-    };
-
-    this.snackBar.openFromComponent(AchievementNotificationComponent, {
-      ...config,
-      data: {
-        type: 'achievement',
-        achievement,
-        title: 'Yeni Başarı Kazanıldı! 🎉',
-        message: achievement.name
-      }
+    this.toaster.success(achievement.name, {
+      title: 'Yeni başarı kazanıldı',
+      duration: 5000
     });
   }
 
@@ -43,14 +30,10 @@ export class GamificationNotificationService {
 
   // XP gained notification
   showXPGained(amount: number): void {
-    const config: MatSnackBarConfig = {
-      duration: 2000,
-      horizontalPosition: 'end',
-      verticalPosition: 'bottom',
-      panelClass: ['xp-snackbar']
-    };
-
-    this.snackBar.open(`+${amount} XP kazandınız! ⭐`, '', config);
+    this.toaster.info(`+${amount} XP kazandınız.`, {
+      title: 'Deneyim puanı',
+      duration: 3000
+    });
   }
 
   // Level up modal
@@ -66,59 +49,27 @@ export class GamificationNotificationService {
 
   // Streak milestone
   showStreakMilestone(days: number): void {
-    const config: MatSnackBarConfig = {
-      duration: 4000,
-      horizontalPosition: 'center',
-      verticalPosition: 'top',
-      panelClass: ['streak-snackbar', 'success']
-    };
-
-    const icon = this.getStreakIcon(days);
-    this.snackBar.open(
-      `${icon} ${days} günlük seri! Harikasınız!`,
-      'Kapat',
-      config
-    );
+    this.toaster.success(`${days} günlük seri! Harikasınız.`, {
+      title: 'Seri hedefi',
+      duration: 4000
+    });
   }
 
   // Streak broken warning
   showStreakBrokenWarning(): void {
-    const config: MatSnackBarConfig = {
+    this.toaster.warning('Seriniz kırılmak üzere. Bugün bir aktivite tamamlayın.', {
+      title: 'Serinizi koruyun',
       duration: 5000,
-      horizontalPosition: 'center',
-      verticalPosition: 'top',
-      panelClass: ['streak-snackbar', 'warning']
-    };
-
-    this.snackBar.open(
-      '⚠️ Seriniz kırılmak üzere! Bugün bir aktivite tamamlayın.',
-      'Tamam',
-      config
-    );
+      actionLabel: 'Tamam'
+    });
   }
 
   // Streak frozen
   showStreakFrozen(): void {
-    const config: MatSnackBarConfig = {
+    this.toaster.info('Seri donduruldu. Bir gün mola hakkınız var.', {
+      title: 'Seri koruması',
       duration: 3000,
-      horizontalPosition: 'center',
-      verticalPosition: 'top',
-      panelClass: ['streak-snackbar', 'info']
-    };
-
-    this.snackBar.open(
-      '❄️ Seri donduruldu! 1 gün molaya hakkınız var.',
-      'Tamam',
-      config
-    );
-  }
-
-  private getStreakIcon(streak: number): string {
-    if (streak >= 100) return '🔥🔥🔥🔥🔥';
-    if (streak >= 30) return '🔥🔥🔥🔥';
-    if (streak >= 14) return '🔥🔥🔥';
-    if (streak >= 7) return '🔥🔥';
-    if (streak >= 3) return '🔥';
-    return '⚪';
+      actionLabel: 'Tamam'
+    });
   }
 }

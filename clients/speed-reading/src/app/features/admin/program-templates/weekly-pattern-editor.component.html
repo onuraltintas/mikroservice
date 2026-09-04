@@ -4,7 +4,7 @@
             <mat-icon>calendar_month</mat-icon>
             Haftalık Egzersiz Pattern Editörü
         </mat-card-title>
-        <button mat-icon-button color="primary" type="button" (click)="addWeek()" matTooltip="Yeni hafta ekle">
+    <button mat-icon-button color="primary" type="button" aria-label="Yeni hafta ekle" (click)="addWeek()" matTooltip="Yeni hafta ekle">
             <mat-icon>add_circle</mat-icon>
         </button>
     </mat-card-header>
@@ -28,10 +28,9 @@
                     <mat-tab-group [(selectedIndex)]="selectedDayIndex" (selectedIndexChange)="onDayChange()"
                         class="day-tabs" mat-stretch-tabs="false" mat-align-tabs="start">
                         <mat-tab *ngFor="let dayKey of getDayKeys(weekKey)" [label]="'Gün ' + getDayNumber(dayKey)">
-                            <div class="day-content" style="padding: 16px 0;">
-                                <div class="day-header"
-                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                                    <h4 style="margin: 0;">{{ getDayNumber(dayKey) }}. Gün - {{ getDayExercises(weekKey,
+                            <div class="day-content ui-day-content">
+                                <div class="day-header ui-flex-between ui-day-header">
+                                    <h4 class="ui-heading-reset">{{ getDayNumber(dayKey) }}. Gün - {{ getDayExercises(weekKey,
                                         dayKey).length }} Egzersiz</h4>
                                     <button mat-raised-button color="primary" type="button"
                                         (click)="addExerciseToDay(weekKey, dayKey)">
@@ -60,8 +59,7 @@
                                             <!-- Description (if exists) -->
                                             <div class="description-card" *ngIf="exercise.description">
                                                 <div class="info-label">
-                                                    <mat-icon
-                                                        style="font-size: 14px; width: 14px; height: 14px;">description</mat-icon>
+                                                    <mat-icon class="ui-icon--xs">description</mat-icon>
                                                     Açıklama
                                                 </div>
                                                 <div class="description-text">{{ exercise.description }}</div>
@@ -186,7 +184,7 @@
                                                         <span class="info-label">Tekrar</span>
                                                     </div>
                                                     <div class="count-stepper-compact">
-                                                        <button mat-icon-button
+                                                          <button mat-icon-button type="button" aria-label="Egzersiz sayısını azalt"
                                                             (click)="decrementCount(weekKey, dayKey, i)"
                                                             [disabled]="exercise.count <= 1">
                                                             <mat-icon>remove</mat-icon>
@@ -194,7 +192,7 @@
                                                         <input type="number" [(ngModel)]="exercise.count"
                                                             (ngModelChange)="onPatternChange()" min="1" max="10"
                                                             class="count-input-compact">
-                                                        <button mat-icon-button
+                                                          <button mat-icon-button type="button" aria-label="Egzersiz sayısını artır"
                                                             (click)="incrementCount(weekKey, dayKey, i)"
                                                             [disabled]="exercise.count >= 10">
                                                             <mat-icon>add</mat-icon>

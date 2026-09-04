@@ -1,7 +1,7 @@
 <div class="page-container">
   <div class="page-header">
     <h2><mat-icon>assignment</mat-icon> Ödevler</h2>
-    <div style="display:flex;gap:8px">
+    <div class="ui-inline-actions">
       <button mat-raised-button color="primary" (click)="load()">
         <mat-icon>refresh</mat-icon> Yenile
       </button>
@@ -34,7 +34,7 @@
           <td mat-cell *matCellDef="let r">
             <div>
               <strong [matTooltip]="r.description">{{ r.title }}</strong>
-              <div *ngIf="r.completionNote" class="text-muted" style="font-size:0.8em">{{ r.completionNote }}</div>
+              <div *ngIf="r.completionNote" class="text-muted ui-meta">{{ r.completionNote }}</div>
             </div>
           </td>
         </ng-container>
@@ -43,7 +43,7 @@
           <td mat-cell *matCellDef="let r">
             <span [style.color]="isOverdue(r) ? '#f44336' : 'inherit'">
               {{ r.dueDate | date:'dd.MM.yyyy' }}
-              <mat-icon *ngIf="isOverdue(r)" class="icon-sm" style="color:#f44336" matTooltip="Gecikti">warning</mat-icon>
+              <mat-icon *ngIf="isOverdue(r)" class="icon-sm ui-icon--danger" matTooltip="Gecikti">warning</mat-icon>
             </span>
           </td>
         </ng-container>
@@ -58,11 +58,11 @@
         <ng-container matColumnDef="approval">
           <th mat-header-cell *matHeaderCellDef>Koç Onayı</th>
           <td mat-cell *matCellDef="let r">
-            <mat-icon *ngIf="r.isApprovedByCoach === true" style="color:#4CAF50" matTooltip="Onaylandı">verified</mat-icon>
-            <mat-icon *ngIf="r.isApprovedByCoach === false" style="color:#f44336"
+            <mat-icon *ngIf="r.isApprovedByCoach === true" class="ui-icon--success" matTooltip="Onaylandı">verified</mat-icon>
+            <mat-icon *ngIf="r.isApprovedByCoach === false" class="ui-icon--danger"
               [matTooltip]="'Reddedildi' + (r.coachFeedback ? ': ' + r.coachFeedback : '')">unpublished</mat-icon>
             <span *ngIf="(r.status === 'Completed' || r.status === 'PartiallyCompleted') && r.isApprovedByCoach == null"
-              style="color:#F57C00;font-size:12px">İnceleniyor</span>
+              class="ui-note--warning ui-meta">İnceleniyor</span>
           </td>
         </ng-container>
         <ng-container matColumnDef="target">
@@ -83,7 +83,7 @@
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef>İşlemler</th>
           <td mat-cell *matCellDef="let r">
-            <button mat-icon-button color="warn"
+            <button mat-icon-button type="button" color="warn" aria-label="Atamayı iptal et"
               *ngIf="r.status === 'Pending' || r.status === 'Overdue'"
               matTooltip="İptal Et" (click)="cancelAssignment(r)">
               <mat-icon>cancel</mat-icon>

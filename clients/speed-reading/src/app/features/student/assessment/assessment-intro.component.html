@@ -13,7 +13,7 @@
         <img src="assets/images/logo.png" alt="Hızlı Okuma" class="hero-logo">
       </div>
 
-      <h1 class="hero-title">Seviye Belirleme Testi <span class="title-emoji">🎯</span></h1>
+      <h1 class="hero-title">Seviye Belirleme Testi <span class="material-icons title-icon" aria-hidden="true">analytics</span></h1>
       <p class="hero-subtitle">Size en uygun öğrenme yolunu birlikte keşfedelim</p>
     </div>
 
@@ -112,12 +112,12 @@
 
     <!-- Action Buttons -->
     <div class="action-section">
-      <button class="sp-btn start-btn" (click)="startAssessment()" [disabled]="loading">
+      <button type="button" class="sp-btn start-btn" (click)="startAssessment()" [disabled]="loading">
         <span class="material-icons">play_circle_filled</span>
         Teste Başla
       </button>
 
-      <button class="sp-btn skip-btn" (click)="skipAssessment()" [disabled]="loading">
+      <button type="button" class="sp-btn skip-btn" (click)="skipAssessment()" [disabled]="loading">
         Şimdilik Atla
       </button>
     </div>

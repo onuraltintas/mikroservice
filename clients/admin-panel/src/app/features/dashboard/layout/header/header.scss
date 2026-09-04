@@ -1,0 +1,36 @@
+.header-user-name-row,
+.header-menu-name-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.header-user-name {
+  color: var(--ui-text);
+  font-size: 0.95rem;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.header-user-name + .header-user-name,
+.header-menu-name + .header-menu-name {
+  margin-inline-start: 0.35rem;
+}
+
+.header-user-role,
+.header-menu-email {
+  margin: 0.35rem 0 0;
+  overflow: hidden;
+  color: var(--ui-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-menu-name {
+  color: var(--ui-text);
+  font-size: 1rem;
+  font-weight: 750;
+}

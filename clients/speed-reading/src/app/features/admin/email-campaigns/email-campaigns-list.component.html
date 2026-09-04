@@ -98,19 +98,19 @@
                 <ng-container matColumnDef="actions">
                     <th mat-header-cell *matHeaderCellDef>İşlemler</th>
                     <td mat-cell *matCellDef="let campaign">
-                        <button mat-icon-button (click)="viewStats(campaign)" title="İstatistikler"
+                        <button mat-icon-button type="button" aria-label="Kampanya istatistiklerini görüntüle" (click)="viewStats(campaign)" title="İstatistikler"
                             *ngIf="campaign.status === CampaignStatus.Sent || campaign.status === CampaignStatus.Sending">
                             <mat-icon>analytics</mat-icon>
                         </button>
-                        <button mat-icon-button (click)="editCampaign(campaign)" title="Düzenle"
+                        <button mat-icon-button type="button" aria-label="Kampanyayı düzenle" (click)="editCampaign(campaign)" title="Düzenle"
                             [disabled]="campaign.status !== CampaignStatus.Draft">
                             <mat-icon>edit</mat-icon>
                         </button>
-                        <button mat-icon-button color="primary" (click)="sendCampaign(campaign)" title="Gönder"
+                        <button mat-icon-button type="button" aria-label="Kampanyayı gönder" color="primary" (click)="sendCampaign(campaign)" title="Gönder"
                             [disabled]="campaign.status !== CampaignStatus.Draft && campaign.status !== CampaignStatus.Scheduled">
                             <mat-icon>send</mat-icon>
                         </button>
-                        <button mat-icon-button color="warn" (click)="deleteCampaign(campaign)" title="Sil"
+                        <button mat-icon-button type="button" aria-label="Kampanyayı sil" color="warn" (click)="deleteCampaign(campaign)" title="Sil"
                             [disabled]="campaign.status === CampaignStatus.Sending">
                             <mat-icon>delete</mat-icon>
                         </button>

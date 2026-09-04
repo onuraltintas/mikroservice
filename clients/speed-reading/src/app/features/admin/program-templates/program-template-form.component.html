@@ -1,7 +1,7 @@
 <div class="form-container">
     <!-- Header -->
     <div class="header-section">
-        <button mat-icon-button (click)="goBack()">
+    <button mat-icon-button type="button" aria-label="Program şablonlarına dön" (click)="goBack()">
             <mat-icon>arrow_back</mat-icon>
         </button>
         <h1>{{ isEditMode ? 'Şablon Düzenle' : 'Yeni Şablon Oluştur' }}</h1>
@@ -129,7 +129,7 @@
                             Seviye Tespit Sınavı Modu
                         </mat-slide-toggle>
                         <mat-icon
-                            style="font-size: 18px; width: 18px; height: 18px; margin-left: 8px; vertical-align: middle; cursor: help; opacity: 0.7;"
+                            class="ui-icon--help"
                             matTooltip="Bu seçenek işaretlenirse, bu şablonun 1. Hafta/1. Gün egzersizleri seviye tespit sınavı olarak kullanılır.">
                             help_outline
                         </mat-icon>
@@ -181,7 +181,7 @@
                     </button>
 
                     <button mat-raised-button color="accent" type="button" (click)="validatePattern()"
-                        style="margin-left: 8px;">
+                        class="ui-button--offset">
                         <mat-icon>check_circle</mat-icon>
                         Pattern'i Doğrula
                     </button>

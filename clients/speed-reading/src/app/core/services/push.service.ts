@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import { SwPush } from '@angular/service-worker';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { catchError, map, of } from 'rxjs';
-import { ToastrService } from 'ngx-toastr';
+import { ToasterService } from './toaster.service';
 
 @Injectable({
     providedIn: 'root'
@@ -15,13 +14,13 @@ export class PushService {
     constructor(
         private swPush: SwPush,
         private http: HttpClient,
-        private toastr: ToastrService
+        private toaster: ToasterService
     ) { }
 
     requestSubscription() {
         if (!this.swPush.isEnabled) {
             console.warn('Service Worker is not enabled');
-            this.toastr.warning('Service Worker aktif değil. Tarayıcınız desteklemiyor veya dev modundasınız.');
+            this.toaster.warning('Service Worker aktif değil. Tarayıcınız desteklemiyor veya dev modundasınız.');
             return;
         }
 
@@ -33,7 +32,7 @@ export class PushService {
             })
             .catch(err => {
                 console.error('Could not subscribe to notifications', err);
-                this.toastr.error('Bildirim izni alınamadı: ' + err.message);
+                this.toaster.error('Bildirim izni alınamadı: ' + err.message);
             });
     }
 
@@ -46,10 +45,10 @@ export class PushService {
             p256dh: keys['p256dh'],
             auth: keys['auth']
         }).subscribe({
-            next: () => this.toastr.success('Bildirimler başarıyla açıldı!'),
+            next: () => this.toaster.success('Bildirimler başarıyla açıldı!'),
             error: err => {
                 console.error('Could not send subscription to backend', err);
-                this.toastr.error('Sunucu kaydı başarısız oldu.');
+                this.toaster.error('Sunucu kaydı başarısız oldu.');
             }
         });
     }

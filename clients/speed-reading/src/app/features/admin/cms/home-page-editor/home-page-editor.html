@@ -15,8 +15,7 @@
         </div>
     </div>
 
-    <div class="loading-overlay" *ngIf="loading()"
-        style="display: flex; justify-content: center; align-items: center; padding: 4rem;">
+    <div class="loading-overlay ui-loading-state" *ngIf="loading()">
         <mat-spinner diameter="48"></mat-spinner>
     </div>
 
@@ -63,7 +62,7 @@
                                 <mat-label>Açıklama</mat-label>
                                 <textarea matInput formControlName="description" rows="3"></textarea>
                             </mat-form-field>
-                            <button mat-icon-button color="warn" (click)="removeFeature(i)" class="delete-btn">
+        <button mat-icon-button type="button" color="warn" aria-label="Özelliği sil" (click)="removeFeature(i)" class="delete-btn">
                                 <mat-icon>delete</mat-icon>
                             </button>
                         </div>
@@ -112,10 +111,10 @@
                 <div formArrayName="stats">
                     <div *ngFor="let stat of statsList.controls; let i = index; trackBy: trackByFn"
                         class="form-array-item"
-                        style="margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 1rem;">
+                        class="form-array-item ui-array-item">
                         <div [formGroup]="$any(stat)">
-                            <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                                <mat-form-field appearance="outline" style="flex: 1">
+                            <div class="ui-form-row">
+                                <mat-form-field appearance="outline" class="ui-field--grow">
                                     <mat-label>Icon</mat-label>
                                     <mat-select formControlName="icon">
                                         <mat-option *ngFor="let icon of statIconOptions" [value]="icon.value">
@@ -123,15 +122,15 @@
                                         </mat-option>
                                     </mat-select>
                                 </mat-form-field>
-                                <mat-form-field appearance="outline" style="flex: 1">
+                                <mat-form-field appearance="outline" class="ui-field--grow">
                                     <mat-label>Etiket</mat-label>
                                     <input matInput formControlName="label" placeholder="Örn: Aktif Kullanıcı">
                                 </mat-form-field>
-                                <mat-form-field appearance="outline" style="flex: 1">
+                                <mat-form-field appearance="outline" class="ui-field--grow">
                                     <mat-label>Hedef Değer</mat-label>
                                     <input matInput type="number" formControlName="target">
                                 </mat-form-field>
-                                <mat-form-field appearance="outline" style="flex: 1">
+                                <mat-form-field appearance="outline" class="ui-field--grow">
                                     <mat-label>Format</mat-label>
                                     <mat-select formControlName="format">
                                         <mat-option *ngFor="let fmt of statFormatOptions" [value]="fmt.value">
@@ -140,7 +139,7 @@
                                     </mat-select>
                                 </mat-form-field>
                             </div>
-                            <button mat-icon-button color="warn" (click)="removeStat(i)">
+        <button mat-icon-button type="button" color="warn" aria-label="İstatistiği sil" (click)="removeStat(i)">
                                 <mat-icon>delete</mat-icon>
                             </button>
                         </div>
@@ -162,14 +161,14 @@
                 <div formArrayName="faqs">
                     <div *ngFor="let faq of faqList.controls; let i = index; trackBy: trackByFn"
                         class="form-array-item"
-                        style="margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 1rem;">
+                        class="form-array-item ui-array-item">
                         <div [formGroup]="$any(faq)">
-                            <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                                <mat-form-field appearance="outline" style="flex: 2">
+                            <div class="ui-form-row">
+                                <mat-form-field appearance="outline" class="ui-field--grow-2">
                                     <mat-label>Soru</mat-label>
                                     <input matInput formControlName="question">
                                 </mat-form-field>
-                                <mat-form-field appearance="outline" style="flex: 1">
+                                <mat-form-field appearance="outline" class="ui-field--grow">
                                     <mat-label>Kategori</mat-label>
                                     <mat-select formControlName="category">
                                         <mat-option *ngFor="let cat of faqCategoryOptions" [value]="cat">
@@ -182,7 +181,7 @@
                                 <mat-label>Cevap</mat-label>
                                 <textarea matInput formControlName="answer" rows="3"></textarea>
                             </mat-form-field>
-                            <button mat-icon-button color="warn" (click)="removeFaq(i)">
+        <button mat-icon-button type="button" color="warn" aria-label="SSS maddesini sil" (click)="removeFaq(i)">
                                 <mat-icon>delete</mat-icon>
                             </button>
                         </div>
@@ -236,7 +235,7 @@
                     </mat-form-field>
                 </div>
 
-                <h3 style="margin-top: 2rem;">Newsletter Bölümü</h3>
+                <h3 class="ui-heading--spaced">Newsletter Bölümü</h3>
                 <div formGroupName="newsletter">
                     <mat-form-field appearance="outline" class="full-width">
                         <mat-label>Başlık</mat-label>

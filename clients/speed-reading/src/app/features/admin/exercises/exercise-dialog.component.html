@@ -79,8 +79,8 @@
             </button>
         </div>
 
-        <div class="template-section" style="margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
-            <mat-form-field appearance="outline" style="flex: 1; margin-bottom: 0;">
+        <div class="template-section ui-inline-actions ui-section-block--bottom">
+            <mat-form-field appearance="outline" class="ui-field--flex">
                 <mat-label>Hızlı Şablon Yükle (Universal Engine)</mat-label>
                 <mat-select [(ngModel)]="selectedTemplateKey" [ngModelOptions]="{standalone: true}">
                     <mat-option *ngFor="let tmpl of engineTemplates" [value]="tmpl.key">
@@ -90,7 +90,7 @@
                 <mat-hint>Motor tipine göre örnek JSON yükler</mat-hint>
             </mat-form-field>
             <button mat-stroked-button type="button" (click)="applyTemplate()" [disabled]="!selectedTemplateKey"
-                style="height: 56px;">
+                class="ui-control--tall">
                 <mat-icon>content_paste</mat-icon>
                 Uygula
             </button>

@@ -2,7 +2,7 @@
   class="!bg-white dark:!bg-gray-900 !text-gray-800 dark:!text-white border-b border-gray-200 dark:border-gray-700 !px-6 shadow-sm z-10 relative">
 
   <!-- Mobile Menu Button -->
-  <button mat-icon-button (click)="menuToggle.emit()" class="mr-2 !text-gray-600 dark:!text-gray-300 md:hidden">
+  <button type="button" mat-icon-button (click)="menuToggle.emit()" aria-label="Menüyü aç veya kapat" class="mr-2 !text-gray-600 dark:!text-gray-300 md:hidden">
     <mat-icon>menu</mat-icon>
   </button>
 
@@ -17,7 +17,7 @@
   <!-- Right Actions -->
   <div class="flex items-center gap-2">
     <!-- Notifications -->
-    <button mat-icon-button [matMenuTriggerFor]="notificationMenu" class="!text-gray-500"
+    <button mat-icon-button type="button" [matMenuTriggerFor]="notificationMenu" class="!text-gray-500"
       [matBadge]="unreadCount" [matBadgeHidden]="unreadCount === 0" matBadgeColor="warn" matBadgeSize="small"
       aria-label="Bildirimler">
       <mat-icon>notifications_none</mat-icon>
@@ -38,8 +38,9 @@
           <p class="text-sm">Henüz bildiriminiz yok</p>
         </div>
 
-        <button mat-menu-item *ngFor="let n of notifications" [class.bg-blue-50]="!n.isRead"
+        <button type="button" mat-menu-item *ngFor="let n of notifications" [class.bg-blue-50]="!n.isRead"
           [class.dark:bg-blue-900]="!n.isRead"
+          (click)="!n.isRead && markAsRead(n.id)"
           class="!h-auto !py-3 !px-4 border-b border-gray-50 dark:border-gray-800 last:border-0 hover:!bg-gray-50 dark:hover:!bg-gray-800 transition-colors">
           <div class="flex gap-3 items-start">
             <div [ngClass]="{
@@ -59,10 +60,7 @@
                 {{ formatTime(n.createdAt) }}
               </span>
             </div>
-            <button *ngIf="!n.isRead" mat-icon-button (click)="markAsRead(n.id, $event)"
-              class="!w-6 !h-6 !text-blue-500 shrink-0">
-              <mat-icon class="!w-4 !h-4 !text-[16px]">done</mat-icon>
-            </button>
+            <mat-icon *ngIf="!n.isRead" class="!w-4 !h-4 !text-[16px] shrink-0" aria-hidden="true">done</mat-icon>
           </div>
         </button>
       </div>
@@ -76,7 +74,8 @@
     </mat-menu>
 
     <!-- User Profile Dropdown -->
-    <button mat-button [matMenuTriggerFor]="userMenu"
+    <button type="button" mat-button [matMenuTriggerFor]="userMenu"
+      aria-label="Kullanıcı menüsünü aç"
       class="!flex !items-center !px-2 !min-w-0 !rounded-full hover:!bg-gray-100 dark:hover:!bg-gray-800 transition-colors">
       <div class="flex items-center gap-2">
         <div

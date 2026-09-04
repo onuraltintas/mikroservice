@@ -189,10 +189,8 @@ export class LogRetentionComponent implements OnInit {
 
     async deletePolicy(id: string) {
         const confirmed = await this.toaster.confirm(
-            'Politikayı Sil',
             'Bu saklama politikasını silmek istediğinize emin misiniz?',
-            'Evet, Sil',
-            'Vazgeç'
+            { title: 'Politikayı Sil', confirmText: 'Evet, Sil', cancelText: 'Vazgeç' }
         );
 
         if (!confirmed) return;

@@ -1,0 +1,175 @@
+// Shared visual contract for every browser client.
+// Components may keep feature-specific tokens, but new UI should consume these
+// semantic values so student, coaching and admin surfaces feel like one product.
+
+:root {
+  --ui-brand: #4f46e5;
+  --ui-brand-strong: #4338ca;
+  --ui-brand-soft: #eef2ff;
+  --ui-accent: #7c3aed;
+
+  --ui-page: #f8fafc;
+  --ui-surface: #ffffff;
+  --ui-surface-muted: #f1f5f9;
+  --ui-border: #e2e8f0;
+  --ui-border-strong: #cbd5e1;
+  --ui-text: #0f172a;
+  --ui-text-muted: #475569;
+  --ui-text-subtle: #64748b;
+
+  --ui-success: #047857;
+  --ui-success-soft: #ecfdf5;
+  --ui-warning: #b45309;
+  --ui-warning-soft: #fffbeb;
+  --ui-danger: #be123c;
+  --ui-danger-soft: #fff1f2;
+  --ui-info: #0369a1;
+  --ui-info-soft: #f0f9ff;
+
+  --ui-font-body: 'Inter', 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --ui-font-display: 'Inter', 'Roboto', system-ui, sans-serif;
+  --ui-font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+
+  --ui-radius-sm: 8px;
+  --ui-radius-md: 12px;
+  --ui-radius-lg: 16px;
+  --ui-radius-xl: 20px;
+  --ui-radius-pill: 999px;
+
+  --ui-shadow-sm: 0 1px 2px rgb(15 23 42 / 0.05);
+  --ui-shadow-md: 0 8px 24px rgb(15 23 42 / 0.08);
+  --ui-shadow-lg: 0 18px 40px rgb(15 23 42 / 0.12);
+
+  --ui-space-1: 4px;
+  --ui-space-2: 8px;
+  --ui-space-3: 12px;
+  --ui-space-4: 16px;
+  --ui-space-5: 20px;
+  --ui-space-6: 24px;
+  --ui-space-8: 32px;
+  --ui-space-10: 40px;
+
+  --ui-control-height: 44px;
+  --ui-header-height: 68px;
+  --ui-content-max-width: 1280px;
+  --ui-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ui-transition-normal: 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ui-focus-ring: 0 0 0 3px rgb(79 70 229 / 0.24);
+  --ui-z-header: 100;
+  --ui-z-overlay: 400;
+  --ui-z-modal: 1000;
+  --ui-z-toast: 1100;
+}
+
+// Both Angular clients use one of these selectors for dark mode.
+html.dark,
+[data-sp-theme='dark'],
+[data-theme='dark'] {
+  --ui-brand: #818cf8;
+  --ui-brand-strong: #6366f1;
+  --ui-brand-soft: #1e1b4b;
+
+  --ui-page: #0f172a;
+  --ui-surface: #1e293b;
+  --ui-surface-muted: #334155;
+  --ui-border: #334155;
+  --ui-border-strong: #475569;
+  --ui-text: #f8fafc;
+  --ui-text-muted: #cbd5e1;
+  --ui-text-subtle: #94a3b8;
+
+  --ui-success: #6ee7b7;
+  --ui-success-soft: #064e3b;
+  --ui-warning: #fbbf24;
+  --ui-warning-soft: #78350f;
+  --ui-danger: #fda4af;
+  --ui-danger-soft: #881337;
+  --ui-info: #7dd3fc;
+  --ui-info-soft: #0c4a6e;
+
+  --ui-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.24);
+  --ui-shadow-md: 0 8px 24px rgb(0 0 0 / 0.25);
+  --ui-shadow-lg: 0 18px 40px rgb(0 0 0 / 0.32);
+  --ui-focus-ring: 0 0 0 3px rgb(129 140 248 / 0.32);
+}
+
+// Sepia is intentionally limited to the reading client. Keeping the semantic
+// names here lets shared controls remain legible when reading mode is active.
+[data-sp-theme='sepia'],
+[data-theme='sepia'] {
+  --ui-page: #f5edd0;
+  --ui-surface: #fdf6e3;
+  --ui-surface-muted: #ede0ba;
+  --ui-border: #d4c5a0;
+  --ui-border-strong: #b9a880;
+  --ui-text: #3d2b1f;
+  --ui-text-muted: #6b4c35;
+  --ui-text-subtle: #806448;
+}
+
+// One feedback surface for all generic success/error/warning/info messages.
+// The semantic border keeps the message understandable without relying only
+// on color, while Material's live region preserves screen-reader feedback.
+.mat-mdc-snack-bar-container.ui-toast {
+  --mdc-snackbar-container-color: var(--ui-surface);
+  --mdc-snackbar-supporting-text-color: var(--ui-text);
+  --mat-snack-bar-button-color: var(--ui-brand);
+  min-width: min(420px, calc(100vw - 32px));
+  max-width: min(560px, calc(100vw - 32px));
+  margin: 16px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  box-shadow: var(--ui-shadow-lg);
+  overflow: hidden;
+}
+
+.mat-mdc-snack-bar-container.ui-toast .mdc-snackbar__surface {
+  background: var(--ui-surface);
+  border-inline-start: 4px solid var(--ui-brand);
+}
+
+.mat-mdc-snack-bar-container.ui-toast .mdc-snackbar__label {
+  color: var(--ui-text);
+  font-family: var(--ui-font-body);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.mat-mdc-snack-bar-container.ui-toast .mat-mdc-button {
+  min-height: 36px;
+  color: var(--ui-brand);
+  font-weight: 700;
+}
+
+.mat-mdc-snack-bar-container.ui-toast--success .mdc-snackbar__surface {
+  border-inline-start-color: var(--ui-success);
+}
+
+.mat-mdc-snack-bar-container.ui-toast--error .mdc-snackbar__surface {
+  border-inline-start-color: var(--ui-danger);
+}
+
+.mat-mdc-snack-bar-container.ui-toast--warning .mdc-snackbar__surface {
+  border-inline-start-color: var(--ui-warning);
+}
+
+.mat-mdc-snack-bar-container.ui-toast--info .mdc-snackbar__surface {
+  border-inline-start-color: var(--ui-info);
+}
+
+@media (max-width: 640px) {
+  .mat-mdc-snack-bar-container.ui-toast {
+    min-width: 0;
+    width: calc(100vw - 24px);
+    max-width: none;
+    margin: 12px;
+  }
+}
+
+.ui-confirm-dialog .mat-mdc-dialog-surface {
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-xl);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-lg);
+}

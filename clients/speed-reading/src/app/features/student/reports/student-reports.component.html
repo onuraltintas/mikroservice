@@ -1,12 +1,12 @@
 <!-- Reports — Sprint 6 Redesign -->
-<div class="rp-page">
+<div class="rp-page sp-page-enter">
   <div class="rp-header">
     <h1 class="rp-header__title">Raporlarım</h1>
     <p class="rp-header__sub">Performansını ve ilerlemenizi analiz et</p>
   </div>
 
   @if (phasePlan(); as plan) {
-  <section class="rp-phase-card" aria-labelledby="assessment-phase-plan-title">
+  <section class="rp-phase-card sp-card" aria-labelledby="assessment-phase-plan-title">
     <div class="rp-phase-card__header">
       <div>
         <h2 id="assessment-phase-plan-title">Değerlendirme planı</h2>
@@ -34,7 +34,7 @@
         <p>{{ phase.completedAt | date:'dd.MM.yyyy' }} tarihinde tamamlandı.</p>
         }
         @if (phase.phase === plan.nextPhase && (phase.status === 2 || phase.status === 3)) {
-        <button type="button" class="rp-phase-item__action" (click)="startAssessment(phase)">
+        <button type="button" class="rp-phase-item__action sp-btn sp-btn--primary" (click)="startAssessment(phase)">
           {{ phase.status === 3 ? 'Devam et' : 'Değerlendirmeye başla' }}
         </button>
         }
@@ -45,7 +45,7 @@
   }
 
   @if (assessmentComparison(); as comparison) {
-  <section class="rp-assessment-card" aria-labelledby="assessment-comparison-title">
+  <section class="rp-assessment-card sp-card" aria-labelledby="assessment-comparison-title">
     <div class="rp-assessment-card__header">
       <div>
         <h2 id="assessment-comparison-title">Değerlendirme gelişimi</h2>

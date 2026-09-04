@@ -2,7 +2,7 @@
   <mat-card-header>
     <mat-card-title>
       <div class="streak-header">
-        <span class="streak-icon">{{ getStreakIcon(currentStreak) }}</span>
+        <mat-icon class="streak-icon" aria-hidden="true">{{ getStreakIcon(currentStreak) }}</mat-icon>
         <span>Aktivite Serisi</span>
       </div>
     </mat-card-title>
@@ -22,7 +22,7 @@
       </div>
 
       <div class="stat-item" *ngIf="streakFreezeCount > 0">
-        <span class="stat-value freeze">❄️ {{ streakFreezeCount }}</span>
+        <span class="stat-value freeze"><mat-icon aria-hidden="true">ac_unit</mat-icon> {{ streakFreezeCount }}</span>
         <span class="stat-label">Dondurma</span>
       </div>
     </div>

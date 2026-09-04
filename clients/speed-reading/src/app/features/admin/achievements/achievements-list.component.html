@@ -201,11 +201,11 @@
                     <th mat-header-cell *matHeaderCellDef>İşlemler</th>
                     <td mat-cell *matCellDef="let item">
                         <div class="action-buttons">
-                            <button mat-icon-button color="primary" (click)="openAchievementDialog(item)"
+                            <button mat-icon-button type="button" aria-label="Başarıyı düzenle" color="primary" (click)="openAchievementDialog(item)"
                                 matTooltip="Düzenle">
                                 <mat-icon>edit</mat-icon>
                             </button>
-                            <button mat-icon-button color="warn" (click)="deleteAchievement(item)"
+                            <button mat-icon-button type="button" aria-label="Başarıyı kalıcı olarak sil" color="warn" (click)="deleteAchievement(item)"
                                 matTooltip="Kalıcı Olarak Sil">
                                 <mat-icon>delete</mat-icon>
                             </button>

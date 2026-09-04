@@ -5,6 +5,7 @@
     <!-- Exit Button -->
     <button
       mat-icon-button
+      type="button"
       (click)="onExit()"
       [matTooltip]="'Çıkış (ESC)'"
       aria-label="Egzersizden çık"
@@ -35,6 +36,7 @@
     <!-- Fullscreen Toggle -->
     <button
       mat-icon-button
+      type="button"
       (click)="toggleFullscreen()"
       [matTooltip]="isFullscreen ? 'Tam Ekrandan Çık (F11)' : 'Tam Ekran (F11)'"
       aria-label="Tam ekran aç/kapat"
@@ -95,8 +97,8 @@
   <!-- KEYBOARD SHORTCUTS HINT (ilk kullanımda) -->
   <div class="shortcut-hint" *ngIf="showShortcutHint && !isMobile" @fadeOut>
     <mat-icon>keyboard</mat-icon>
-    <span>💡 İpucu: <kbd>ESC</kbd> ile çık, <kbd>SPACE</kbd> ile duraklat</span>
-    <button mat-icon-button (click)="hideShortcutHint()" aria-label="Kapat">
+    <span><mat-icon aria-hidden="true">lightbulb</mat-icon> İpucu: <kbd>ESC</kbd> ile çık, <kbd>SPACE</kbd> ile duraklat</span>
+      <button mat-icon-button type="button" (click)="hideShortcutHint()" aria-label="Kapat">
       <mat-icon>close</mat-icon>
     </button>
   </div>

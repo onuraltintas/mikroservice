@@ -1,11 +1,12 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-streak-counter',
   standalone: true,
-  imports: [CommonModule, MatTooltipModule],
+  imports: [CommonModule, MatTooltipModule, MatIconModule],
   templateUrl: './streak-counter.component.html',
   styleUrls: ['./streak-counter.component.scss']
 })
@@ -15,12 +16,7 @@ export class StreakCounterComponent {
   @Input() streakFreezeCount: number = 0;
 
   get streakIcon(): string {
-    if (this.currentStreak >= 100) return '🔥🔥🔥🔥🔥';
-    if (this.currentStreak >= 30) return '🔥🔥🔥🔥';
-    if (this.currentStreak >= 14) return '🔥🔥🔥';
-    if (this.currentStreak >= 7) return '🔥🔥';
-    if (this.currentStreak >= 3) return '🔥';
-    return '⚪';
+    return this.currentStreak > 0 ? 'local_fire_department' : 'radio_button_unchecked';
   }
 
   get tooltipText(): string {

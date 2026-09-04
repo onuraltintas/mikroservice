@@ -11,6 +11,7 @@ import {
   CoachingAdminSessionListItem,
   CoachingAdminService
 } from '../../../core/services/coaching-admin.service';
+import { ToasterService } from '../../../core/services/toaster.service';
 
 type Resource = 'sessions' | 'exams' | 'goals';
 type OperationalPage = { items: unknown[]; totalCount: number; totalPages: number };
@@ -75,6 +76,7 @@ type OperationalPage = { items: unknown[]; totalCount: number; totalPages: numbe
 })
 export class CoachingOperationalComponent implements OnInit {
   private readonly service = inject(CoachingAdminService);
+  private readonly toaster = inject(ToasterService);
   private readonly auth = inject(AuthService);
   private readonly platformId = inject(PLATFORM_ID);
   readonly resource = signal<Resource>('sessions');
@@ -124,8 +126,8 @@ export class CoachingOperationalComponent implements OnInit {
   progressFor(id: string, fallback: number) { return this.progressDraft[id] ?? fallback; }
   setProgress(id: string, value: number) { this.progressDraft[id] = Number(value); }
 
-  cancelSession(id: string) {
-    if (typeof window !== 'undefined' && !window.confirm('Bu seans iptal edilsin mi?')) return;
+  async cancelSession(id: string): Promise<void> {
+    if (!await this.toaster.confirm('Bu seans iptal edilsin mi?', { title: 'Seansı iptal et' })) return;
     this.actionLoading.set(true);
     this.service.cancelSession(id).pipe(finalize(() => this.actionLoading.set(false))).subscribe({
       next: () => this.load(),
@@ -133,8 +135,8 @@ export class CoachingOperationalComponent implements OnInit {
     });
   }
 
-  deleteSession(id: string) {
-    if (typeof window !== 'undefined' && !window.confirm('Bu seans kalıcı olarak silinsin mi?')) return;
+  async deleteSession(id: string): Promise<void> {
+    if (!await this.toaster.confirm('Bu seans kalıcı olarak silinsin mi?', { title: 'Seansı kalıcı olarak sil' })) return;
     this.actionLoading.set(true);
     this.service.deleteSession(id).pipe(finalize(() => this.actionLoading.set(false))).subscribe({
       next: () => this.load(),
@@ -142,8 +144,8 @@ export class CoachingOperationalComponent implements OnInit {
     });
   }
 
-  deleteExam(id: string) {
-    if (typeof window !== 'undefined' && !window.confirm('Bu sınav kalıcı olarak silinsin mi?')) return;
+  async deleteExam(id: string): Promise<void> {
+    if (!await this.toaster.confirm('Bu sınav kalıcı olarak silinsin mi?', { title: 'Sınavı kalıcı olarak sil' })) return;
     this.actionLoading.set(true);
     this.service.deleteExam(id).pipe(finalize(() => this.actionLoading.set(false))).subscribe({
       next: () => this.load(),
@@ -164,8 +166,8 @@ export class CoachingOperationalComponent implements OnInit {
     });
   }
 
-  deleteGoal(id: string) {
-    if (typeof window !== 'undefined' && !window.confirm('Bu hedef kalıcı olarak silinsin mi?')) return;
+  async deleteGoal(id: string): Promise<void> {
+    if (!await this.toaster.confirm('Bu hedef kalıcı olarak silinsin mi?', { title: 'Hedefi kalıcı olarak sil' })) return;
     this.actionLoading.set(true);
     this.service.deleteGoal(id).pipe(finalize(() => this.actionLoading.set(false))).subscribe({
       next: () => this.load(),

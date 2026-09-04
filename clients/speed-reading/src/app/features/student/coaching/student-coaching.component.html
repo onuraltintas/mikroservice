@@ -1,31 +1,31 @@
-<div class="page-container">
+<div class="page-container coaching-page">
   <div class="page-header">
     <h2><span class="material-icons">sports</span> Koçluk Panelim</h2>
   </div>
 
-  <div *ngIf="loading()" class="loading-container"><div class="sp-spinner"></div></div>
+  <div *ngIf="loading()" class="loading-container" role="status" aria-live="polite"><div class="sp-spinner"></div><span class="sr-only">Koçluk verileri yükleniyor</span></div>
 
   <ng-container *ngIf="!loading()">
 
     <!-- Koç Yok State -->
-    <div *ngIf="!relationship" class="sp-card" style="text-align:center;padding:48px 24px">
-      <span class="material-icons" style="font-size:64px;color:#ccc">sports</span>
-      <h3 style="color:#666;margin-top:16px">Henüz bir koçluk ilişkiniz bulunmuyor</h3>
-      <p style="color:#999">Bir koç ile eşleştirildiğinizde hedefleriniz, seanslarınız ve ödevleriniz burada görünecektir.</p>
+    <div *ngIf="!relationship" class="sp-card coaching-empty-state">
+      <span class="material-icons coaching-empty-icon" aria-hidden="true">sports</span>
+      <h3>Henüz bir koçluk ilişkiniz bulunmuyor</h3>
+      <p>Bir koç ile eşleştirildiğinizde hedefleriniz, seanslarınız ve ödevleriniz burada görünecektir.</p>
     </div>
 
     <!-- Koç Var -->
     <ng-container *ngIf="relationship">
 
       <!-- Koç Bilgi Kartı -->
-      <div class="sp-card" style="margin-bottom:20px">
-        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-          <div style="width:52px;height:52px;border-radius:50%;background:#1976D2;display:flex;align-items:center;justify-content:center">
-            <span class="material-icons" style="color:white;font-size:28px">person</span>
+      <div class="sp-card coaching-relationship-card">
+        <div class="coaching-relationship-row">
+          <div class="coaching-avatar">
+            <span class="material-icons" aria-hidden="true">person</span>
           </div>
-          <div style="flex:1">
-            <div style="font-weight:600;font-size:16px">Koçunuz Atandı</div>
-            <div style="color:#666;font-size:13px">
+          <div class="coaching-relationship-details">
+            <div class="coaching-relationship-title">Koçunuz Atandı</div>
+            <div class="coaching-relationship-date">
               Başlangıç: {{ relationship.startDate | date:'dd.MM.yyyy' }}
               <span *ngIf="relationship.endDate"> · Bitiş: {{ relationship.endDate | date:'dd.MM.yyyy' }}</span>
             </div>
@@ -37,87 +37,71 @@
       </div>
 
       <!-- Tekrar Hatırlatıcısı -->
-      <div *ngIf="reviewReminders.length > 0" style="margin-bottom:16px;padding:10px 16px;background:#E8F5E9;border-left:4px solid #388E3C;border-radius:4px">
-        <div style="font-weight:600;color:#1B5E20;margin-bottom:6px;font-size:13px">
-          <span class="material-icons" style="font-size:16px;vertical-align:middle">replay</span>
+      <div *ngIf="reviewReminders.length > 0" class="coaching-review-reminder">
+        <div class="coaching-review-reminder__title">
+          <span class="material-icons" aria-hidden="true">replay</span>
           Son 7 günde çalışılmayan dersler — tekrar vakti:
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px">
-          <span *ngFor="let r of reviewReminders"
-            style="background:#C8E6C9;color:#1B5E20;padding:2px 10px;border-radius:12px;font-size:12px">
+        <div class="coaching-review-reminder__list">
+          <span *ngFor="let r of reviewReminders" class="coaching-review-reminder__item">
             {{ r }}
           </span>
         </div>
       </div>
 
       <!-- Özet Kartlar -->
-      <div class="dashboard-stats" style="margin-bottom:20px">
+      <div class="dashboard-stats coaching-stats">
         <div class="sp-card stat-card">
-          <span class="material-icons stat-icon" style="color:#388E3C">flag</span>
+          <span class="material-icons stat-icon stat-icon--success" aria-hidden="true">flag</span>
           <div class="stat-value">{{ activeGoals }}</div>
           <div class="stat-label">Aktif Hedef</div>
         </div>
         <div class="sp-card stat-card">
-          <span class="material-icons stat-icon" style="color:#F57C00">assignment</span>
+          <span class="material-icons stat-icon stat-icon--warning" aria-hidden="true">assignment</span>
           <div class="stat-value">{{ pendingAssignments }}</div>
           <div class="stat-label">Bekleyen Ödev</div>
         </div>
         <div class="sp-card stat-card">
-          <span class="material-icons stat-icon" style="color:#1976D2">timer</span>
+          <span class="material-icons stat-icon stat-icon--primary" aria-hidden="true">timer</span>
           <div class="stat-value">{{ totalStudyMinutesThisWeek }}</div>
           <div class="stat-label">Bu Hafta (dk)</div>
         </div>
         <div class="sp-card stat-card" *ngIf="upcomingSession">
-          <span class="material-icons stat-icon" style="color:#7B1FA2">schedule</span>
-          <div class="stat-value" style="font-size:14px">{{ upcomingSession.scheduledAt | date:'dd MMM' }}</div>
+          <span class="material-icons stat-icon stat-icon--accent" aria-hidden="true">schedule</span>
+          <div class="stat-value stat-value--compact">{{ upcomingSession.scheduledAt | date:'dd MMM' }}</div>
           <div class="stat-label">Yaklaşan Seans</div>
         </div>
       </div>
 
       <!-- Sekmeler -->
       <div class="sp-card">
-        <div style="padding:0">
+        <div class="coaching-panel">
 
           <!-- Tab Buttons -->
-          <div class="sp-tabs" style="display:flex;border-bottom:1px solid #e0e0e0;padding:0 16px;flex-wrap:wrap">
-            <button class="sp-tab-btn" (click)="activeTab=0"
-              style="padding:12px 14px;border:none;background:none;cursor:pointer;font-size:13px;border-bottom:2px solid transparent;white-space:nowrap"
-              [style.border-bottom-color]="activeTab===0 ? '#1976D2' : 'transparent'"
-              [style.color]="activeTab===0 ? '#1976D2' : '#666'">
+          <div class="sp-tabs coaching-tabs" role="tablist" aria-label="Koçluk bölümleri">
+            <button type="button" class="sp-tab-btn" role="tab" [attr.aria-selected]="activeTab === 0" [class.active]="activeTab === 0" (click)="activeTab=0">
               Hedeflerim
             </button>
-            <button class="sp-tab-btn" (click)="activeTab=1"
-              style="padding:12px 14px;border:none;background:none;cursor:pointer;font-size:13px;border-bottom:2px solid transparent;white-space:nowrap"
-              [style.border-bottom-color]="activeTab===1 ? '#1976D2' : 'transparent'"
-              [style.color]="activeTab===1 ? '#1976D2' : '#666'">
+            <button type="button" class="sp-tab-btn" role="tab" [attr.aria-selected]="activeTab === 1" [class.active]="activeTab === 1" (click)="activeTab=1">
               Ödevlerim
             </button>
-            <button class="sp-tab-btn" (click)="activeTab=2"
-              style="padding:12px 14px;border:none;background:none;cursor:pointer;font-size:13px;border-bottom:2px solid transparent;white-space:nowrap"
-              [style.border-bottom-color]="activeTab===2 ? '#1976D2' : 'transparent'"
-              [style.color]="activeTab===2 ? '#1976D2' : '#666'">
+            <button type="button" class="sp-tab-btn" role="tab" [attr.aria-selected]="activeTab === 2" [class.active]="activeTab === 2" (click)="activeTab=2">
               Çalışmalarım
             </button>
-            <button class="sp-tab-btn" (click)="activeTab=3"
-              style="padding:12px 14px;border:none;background:none;cursor:pointer;font-size:13px;border-bottom:2px solid transparent;white-space:nowrap"
-              [style.border-bottom-color]="activeTab===3 ? '#1976D2' : 'transparent'"
-              [style.color]="activeTab===3 ? '#1976D2' : '#666'">
+            <button type="button" class="sp-tab-btn" role="tab" [attr.aria-selected]="activeTab === 3" [class.active]="activeTab === 3" (click)="activeTab=3">
               Koçluk Seansları
             </button>
-            <button class="sp-tab-btn" (click)="activeTab=4"
-              style="padding:12px 14px;border:none;background:none;cursor:pointer;font-size:13px;border-bottom:2px solid transparent;white-space:nowrap"
-              [style.border-bottom-color]="activeTab===4 ? '#1976D2' : 'transparent'"
-              [style.color]="activeTab===4 ? '#1976D2' : '#666'">
+            <button type="button" class="sp-tab-btn" role="tab" [attr.aria-selected]="activeTab === 4" [class.active]="activeTab === 4" (click)="activeTab=4">
               Sınav Sonuçları
             </button>
           </div>
 
           <!-- Hedeflerim -->
           @if (activeTab === 0) {
-            <div style="padding:16px">
-              <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
-                <button class="sp-btn sp-btn--primary" (click)="openNewGoal()">
-                  <span class="material-icons" style="font-size:16px;vertical-align:middle">add</span> Hedef Ekle
+            <div class="coaching-tab-panel">
+              <div class="coaching-panel-actions">
+                <button type="button" class="sp-btn sp-btn--primary" (click)="openNewGoal()">
+                  <span class="material-icons" aria-hidden="true">add</span> Hedef Ekle
                 </button>
               </div>
               <div *ngIf="goals.length === 0" class="empty-state">
@@ -142,14 +126,14 @@
                         <span class="level-badge level-{{ g.level.toLowerCase() }}">{{ levelLabels[g.level] }}</span>
                       </td>
                       <td>{{ g.targetDate | date:'dd.MM.yyyy' }}</td>
-                      <td style="min-width:160px">
+                      <td class="goal-progress-cell">
                         <div class="progress-cell">
                           <div class="sp-bar"><div class="sp-bar-fill" [style.width.%]="g.completionPercentage"></div></div>
                           <span class="progress-label">%{{ g.completionPercentage | number:'1.0-0' }}</span>
                         </div>
                       </td>
                       <td>
-                        <button class="sp-btn sp-btn--icon" title="İlerleme Güncelle"
+                        <button type="button" class="sp-btn sp-btn--icon" title="İlerleme Güncelle"
                           (click)="openCheckin(g)" *ngIf="g.status === 'Active'">
                           <span class="material-icons">update</span>
                         </button>
@@ -163,7 +147,7 @@
 
           <!-- Ödevlerim -->
           @if (activeTab === 1) {
-            <div style="padding:16px">
+            <div class="coaching-tab-panel">
               <div *ngIf="assignments.length === 0" class="empty-state">
                 <span class="material-icons">assignment_late</span>
                 <p>Henüz ödev verilmedi</p>
@@ -182,19 +166,19 @@
                   <tbody>
                     <tr *ngFor="let a of assignments">
                       <td>
-                        <div style="display:flex;flex-direction:column;gap:4px">
-                          <div style="display:flex;align-items:center;gap:6px">
-                            <span *ngIf="isOverdue(a)" class="material-icons"
-                              style="color:#F44336;font-size:16px" title="Süre geçti">warning</span>
+                        <div class="assignment-title-cell">
+                          <div class="assignment-title-row">
+                            <span *ngIf="isOverdue(a)" class="material-icons overdue-icon"
+                              title="Süre geçti" aria-label="Süresi geçti">warning</span>
                             <strong>{{ a.title }}</strong>
                           </div>
-                          <div *ngIf="a.coachFeedback" style="font-size:0.78em;color:#F57C00">
-                            <span class="material-icons" style="font-size:13px;vertical-align:middle">feedback</span>
+                          <div *ngIf="a.coachFeedback" class="coach-feedback">
+                            <span class="material-icons" aria-hidden="true">feedback</span>
                             {{ a.coachFeedback }}
                           </div>
                         </div>
                       </td>
-                      <td [style.color]="isOverdue(a) ? '#F44336' : 'inherit'">
+                      <td [class.overdue-date]="isOverdue(a)">
                         {{ a.dueDate | date:'dd.MM.yyyy' }}
                       </td>
                       <td>
@@ -203,19 +187,19 @@
                         </span>
                       </td>
                       <td>
-                        <span *ngIf="a.isApprovedByCoach === true" style="color:#4CAF50;font-size:13px;display:flex;align-items:center;gap:3px">
-                          <span class="material-icons" style="font-size:16px">verified</span> Onaylandı
+                        <span *ngIf="a.isApprovedByCoach === true" class="approval-status approval-status--approved">
+                          <span class="material-icons" aria-hidden="true">verified</span> Onaylandı
                         </span>
-                        <span *ngIf="a.isApprovedByCoach === false" style="color:#F44336;font-size:13px;display:flex;align-items:center;gap:3px">
-                          <span class="material-icons" style="font-size:16px">unpublished</span> Reddedildi
+                        <span *ngIf="a.isApprovedByCoach === false" class="approval-status approval-status--rejected">
+                          <span class="material-icons" aria-hidden="true">unpublished</span> Reddedildi
                         </span>
                         <span *ngIf="(a.status === 'Completed' || a.status === 'PartiallyCompleted') && a.isApprovedByCoach == null"
-                          style="color:#F57C00;font-size:13px;display:flex;align-items:center;gap:3px">
-                          <span class="material-icons" style="font-size:16px">hourglass_empty</span> İnceleniyor
+                          class="approval-status approval-status--review">
+                          <span class="material-icons" aria-hidden="true">hourglass_empty</span> İnceleniyor
                         </span>
                       </td>
                       <td>
-                        <button class="sp-btn sp-btn--icon" title="Tamamlandı olarak işaretle"
+                        <button type="button" class="sp-btn sp-btn--icon" title="Tamamlandı olarak işaretle"
                           (click)="openComplete(a)"
                           *ngIf="a.status === 'Pending' || a.status === 'PartiallyCompleted'">
                           <span class="material-icons">check_circle_outline</span>
@@ -230,10 +214,10 @@
 
           <!-- Çalışmalarım -->
           @if (activeTab === 2) {
-            <div style="padding:16px">
-              <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
-                <button class="sp-btn sp-btn--primary" (click)="openLogStudySession()">
-                  <span class="material-icons" style="font-size:16px;vertical-align:middle">add_task</span> Çalışma Kaydet
+            <div class="coaching-tab-panel">
+              <div class="coaching-panel-actions">
+                <button type="button" class="sp-btn sp-btn--primary" (click)="openLogStudySession()">
+                  <span class="material-icons" aria-hidden="true">add_task</span> Çalışma Kaydet
                 </button>
               </div>
               <div *ngIf="studySessions.length === 0" class="empty-state">
@@ -266,10 +250,10 @@
                         <span *ngIf="!s.questionsSolved" class="text-muted">—</span>
                       </td>
                       <td>
-                        <span *ngIf="s.isVerifiedByCoach" style="color:#4CAF50;font-size:12px">
-                          <span class="material-icons" style="font-size:14px;vertical-align:middle">verified</span> Onaylı
+                        <span *ngIf="s.isVerifiedByCoach" class="verified-status">
+                          <span class="material-icons" aria-hidden="true">verified</span> Onaylı
                         </span>
-                        <span *ngIf="!s.isVerifiedByCoach" style="color:#999;font-size:12px">Bekliyor</span>
+                        <span *ngIf="!s.isVerifiedByCoach" class="pending-status">Bekliyor</span>
                       </td>
                     </tr>
                   </tbody>
@@ -280,7 +264,7 @@
 
           <!-- Koçluk Seansları -->
           @if (activeTab === 3) {
-            <div style="padding:16px">
+            <div class="coaching-tab-panel">
               <div *ngIf="sessions.length === 0" class="empty-state">
                 <span class="material-icons">event_busy</span>
                 <p>Henüz seans planlanmadı</p>
@@ -307,10 +291,10 @@
                         </span>
                       </td>
                       <td>
-                        <span *ngIf="s.studentRating" style="color:#F57C00">
+                        <span *ngIf="s.studentRating" class="rating-text" [attr.aria-label]="s.studentRating + ' yıldız'">
                           {{ '★'.repeat(s.studentRating) }}{{ '☆'.repeat(5 - s.studentRating) }}
                         </span>
-                        <button class="sp-btn sp-btn--icon" title="Seansı değerlendir"
+                        <button type="button" class="sp-btn sp-btn--icon" title="Seansı değerlendir"
                           *ngIf="!s.studentRating && s.status === 'Completed'"
                           (click)="openRating(s)">
                           <span class="material-icons">star_outline</span>
@@ -325,10 +309,10 @@
 
           <!-- Sınav Sonuçları -->
           @if (activeTab === 4) {
-            <div style="padding:16px">
-              <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
-                <button class="sp-btn sp-btn--primary" (click)="openNewExam()">
-                  <span class="material-icons" style="font-size:16px;vertical-align:middle">add</span> Sınav Ekle
+            <div class="coaching-tab-panel">
+              <div class="coaching-panel-actions">
+                <button type="button" class="sp-btn sp-btn--primary" (click)="openNewExam()">
+                  <span class="material-icons" aria-hidden="true">add</span> Sınav Ekle
                 </button>
               </div>
               <div *ngIf="examResults.length === 0" class="empty-state">
@@ -358,7 +342,7 @@
                         <span *ngIf="e.totalNet == null" class="text-muted">—</span>
                       </td>
                       <td>
-                        <span *ngIf="e.estimatedScore != null" style="color:#1976D2;font-weight:600">
+                        <span *ngIf="e.estimatedScore != null" class="estimated-score">
                           {{ e.estimatedScore | number:'1.2-2' }}
                         </span>
                         <span *ngIf="e.estimatedScore == null" class="text-muted">—</span>

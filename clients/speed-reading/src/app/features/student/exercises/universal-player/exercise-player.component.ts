@@ -5,7 +5,7 @@
  * Kullanım: /student/exercises/universal-player/:exerciseId
  */
 
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef, AfterViewChecked, HostListener, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef, AfterViewChecked, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -30,6 +30,7 @@ import { ExerciseService } from '../../../../core/services/exercise.service';
 import { ExerciseSessionService } from '../../../../core/services/exercise-session.service';
 import { ExerciseProgramService, CompleteExerciseRequest } from '../../../../core/services/exercise-program.service';
 import { StudentProgramService } from '../../../../core/services/student-program.service'; // INJECTED
+import { ToasterService } from '../../../../core/services/toaster.service';
 import { StartSessionRequest, ExerciseResult as SessionResult } from '../../../../core/models/exercise-session.model';
 import { toCompleteSessionRequest } from '../../../../core/services/exercise-session-completion';
 
@@ -72,12 +73,16 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
 
-  // Toast notification state
-  toast = signal<{msg: string, type: 'info' | 'warn' | 'error'} | null>(null);
+  private readonly toaster = inject(ToasterService);
 
   showToast(msg: string, type: 'info' | 'warn' | 'error' = 'info', duration = 3000): void {
-    this.toast.set({msg, type});
-    setTimeout(() => this.toast.set(null), duration);
+    if (type === 'error') {
+      this.toaster.error(msg, duration);
+    } else if (type === 'warn') {
+      this.toaster.warning(msg, duration);
+    } else {
+      this.toaster.info(msg, duration);
+    }
   }
 
   // Program Completion State
@@ -310,7 +315,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
     this.studentProgramService.startProgram(templateId).subscribe({
       next: () => {
-        this.showToast('Yeni programınız başarıyla başlatıldı! 🚀', 'info', 3000);
+        this.showToast('Yeni programınız başarıyla başlatıldı!', 'info', 3000);
         this.router.navigate(['/student/dashboard']);
       },
       error: (err) => {
@@ -1374,11 +1379,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private getPerformanceLevel(wpm: number, comprehension: number): string {
-    if (comprehension >= 80 && wpm >= 300) return 'Mükemmel! 🏆';
-    if (comprehension >= 70 && wpm >= 250) return 'Çok İyi! ⭐';
-    if (comprehension >= 60 && wpm >= 200) return 'İyi! 👍';
-    if (comprehension >= 50) return 'Gelişiyor 📈';
-    return 'Pratik Gerekli 💪';
+    if (comprehension >= 80 && wpm >= 300) return 'Mükemmel!';
+    if (comprehension >= 70 && wpm >= 250) return 'Çok İyi!';
+    if (comprehension >= 60 && wpm >= 200) return 'İyi!';
+    if (comprehension >= 50) return 'Gelişiyor';
+    return 'Pratik Gerekli';
   }
 
   // Get correct answer for a specific question by index
@@ -2412,7 +2417,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private saveResult(result: EngineResult): void {
     // Skip saving for Teachers in preview mode
     if (this.authService.hasRole('Teacher')) {
-      this.showToast('📋 Önizleme modu - Sonuçlar kaydedilmedi.', 'info', 3000);
+      this.showToast('Önizleme modu - Sonuçlar kaydedilmedi.', 'info', 3000);
       return;
     }
 
@@ -2452,14 +2457,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
         let msg = 'Sonuç kaydedildi.';
         if (sessionResult.xpGained > 0) {
-          msg += ` 🎉 +${sessionResult.xpGained} XP kazandınız!`;
+          msg += ` +${sessionResult.xpGained} XP kazandınız!`;
         }
         if (sessionResult.leveledUp) {
           msg += ` 🆙 Seviye Atladınız!`;
         }
 
         if (sessionResult.unlockedBadges && sessionResult.unlockedBadges.length > 0) {
-          msg += ` 🏆 Yeni Rozet!`;
+          msg += ` Yeni rozet kazandınız!`;
         }
 
         this.showToast(msg, 'info', 5000);
@@ -2513,7 +2518,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
         if (response.dayCompleted) {
           setTimeout(() => {
-            this.showToast('🎉 Bugünün tüm egzersizlerini tamamladınız!', 'info', 5000);
+            this.showToast('Bugünün tüm egzersizlerini tamamladınız!', 'info', 5000);
           }, 2000);
         }
       },

@@ -9,7 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
 import { CmsService } from '../../../../core/services/cms.service';
 import { ContactMessage } from '../../../../core/models/cms.models';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ToasterService } from '../../../../core/services/toaster.service';
 
 @Component({
     selector: 'app-contact-message-detail',
@@ -23,7 +23,6 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
         MatInputModule,
         FormsModule,
         MatTabsModule,
-        MatSnackBarModule
     ],
     template: `
     <h2 mat-dialog-title>Mesaj Detayı</h2>
@@ -93,7 +92,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 })
 export class ContactMessageDetailComponent {
     private cmsService = inject(CmsService);
-    private snackBar = inject(MatSnackBar);
+    private toaster = inject(ToasterService);
 
     replyContent = '';
     loading = signal(false);
@@ -110,12 +109,12 @@ export class ContactMessageDetailComponent {
         this.cmsService.replyToContactMessage(this.data.id, this.replyContent)
             .subscribe({
                 next: () => {
-                    this.snackBar.open('Yanıt başarıyla gönderildi', 'Tamam', { duration: 3000 });
+                    this.toaster.success('Yanıt başarıyla gönderildi');
                     this.dialogRef.close(true);
                 },
                 error: (err) => {
                     console.error('Error sending reply', err);
-                    this.snackBar.open('Yanıt gönderilirken hata oluştu', 'Kapat', { duration: 5000 });
+                    this.toaster.error('Yanıt gönderilirken hata oluştu');
                     this.loading.set(false);
                 }
             });

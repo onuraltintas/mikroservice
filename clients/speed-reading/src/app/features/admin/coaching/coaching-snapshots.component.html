@@ -91,7 +91,7 @@
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef></th>
           <td mat-cell *matCellDef="let r">
-            <button mat-icon-button color="primary" matTooltip="Özeti Yeniden Oluştur"
+            <button mat-icon-button type="button" color="primary" aria-label="Özeti yeniden oluştur" matTooltip="Özeti Yeniden Oluştur"
               (click)="generateSnapshot(r)">
               <mat-icon>refresh</mat-icon>
             </button>

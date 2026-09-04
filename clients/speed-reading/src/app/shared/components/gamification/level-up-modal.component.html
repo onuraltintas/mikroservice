@@ -1,16 +1,16 @@
 <div class="level-up-modal" [@fadeIn]>
-    <div class="confetti">🎉</div>
+    <div class="confetti" aria-hidden="true"><mat-icon>celebration</mat-icon></div>
 
     <h1 class="title" [@slideDown]>Seviye Atladın!</h1>
 
     <div class="level-display" [@scaleIn]>
         <div class="old-level">
-            <span class="level-icon">{{ oldTierIcon }}</span>
+            <mat-icon class="level-icon" aria-hidden="true">{{ oldTierIcon }}</mat-icon>
             <span class="level-number">Lv {{ data.oldLevel }}</span>
         </div>
         <div class="arrow">→</div>
         <div class="new-level">
-            <span class="level-icon">{{ data.levelIcon }}</span>
+            <mat-icon class="level-icon" aria-hidden="true">{{ normalizeIcon(data.levelIcon) }}</mat-icon>
             <span class="level-number">Lv {{ data.newLevel }}</span>
         </div>
     </div>
@@ -21,7 +21,7 @@
             <span class="tier-icon">{{ data.levelIcon }}</span>
             <span class="tier-name">{{ data.levelTitle }}</span>
         </div>
-        <p class="tier-message">Yeni seviyeye ulaştın! 🎊</p>
+        <p class="tier-message">Yeni seviyeye ulaştın!</p>
     </div>
     }
 
@@ -38,11 +38,11 @@
 
     @if (data.achievementsUnlocked && data.achievementsUnlocked.length > 0) {
     <div class="achievements-unlocked" [@fadeIn]>
-        <h3>Yeni Rozetler! 🏆</h3>
+        <h3>Yeni Rozetler!</h3>
         <div class="achievements-list">
             @for (achievement of data.achievementsUnlocked; track achievement.id) {
             <div class="achievement-item">
-                <span class="achievement-icon">{{ achievement.iconEmoji }}</span>
+                <mat-icon class="achievement-icon" aria-hidden="true">emoji_events</mat-icon>
                 <span class="achievement-name">{{ achievement.name }}</span>
             </div>
             }

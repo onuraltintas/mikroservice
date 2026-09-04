@@ -5,7 +5,7 @@ import { RouterModule } from '@angular/router';
 interface Badge {
   id: string;
   name: string;
-  icon: string;
+  materialIcon: string;
   description: string;
   unlocked: boolean;
   progress?: number;
@@ -59,7 +59,7 @@ export class LevelBadgesWidgetComponent implements OnInit {
           return {
             id: ach.id,
             name: ach.name,
-            icon: ach.iconEmoji || 'emoji_events',
+            materialIcon: this.getBadgeMaterialIcon(ach.iconEmoji, ach.name),
             description: ach.description,
             unlocked: isUnlocked,
             progress: isUnlocked ? 100 : 0
@@ -83,6 +83,19 @@ export class LevelBadgesWidgetComponent implements OnInit {
   }
 
   getXPPercentage(): number {
-    return (this.currentXP() / this.maxXP()) * 100;
+    const maximum = this.maxXP();
+    if (maximum <= 0) return 0;
+    return Math.min(100, Math.max(0, (this.currentXP() / maximum) * 100));
+  }
+
+  private getBadgeMaterialIcon(icon: string | null | undefined, name: string | null | undefined): string {
+    const source = `${icon ?? ''} ${name ?? ''}`.toLowerCase();
+    if (source.includes('fire') || source.includes('seri')) return 'local_fire_department';
+    if (source.includes('speed') || source.includes('hız')) return 'speed';
+    if (source.includes('read') || source.includes('oku')) return 'menu_book';
+    if (source.includes('focus') || source.includes('odak')) return 'center_focus_strong';
+    if (source.includes('complete') || source.includes('tamam')) return 'check_circle';
+    if (source.includes('star') || source.includes('yıldız')) return 'star';
+    return 'workspace_premium';
   }
 }

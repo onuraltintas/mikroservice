@@ -1,7 +1,7 @@
 <div class="page-container">
   <div class="page-header">
     <h2><mat-icon>assignment</mat-icon> Ödevler</h2>
-    <div style="display:flex;gap:8px;align-items:center">
+    <div class="ui-inline-actions">
       <button mat-stroked-button [color]="pendingReviewMode ? 'accent' : ''"
         (click)="togglePendingReview()"
         [matBadge]="pendingReviewCount > 0 ? pendingReviewCount : null"
@@ -24,9 +24,9 @@
           </mat-select>
         </mat-form-field>
       </div>
-      <div *ngIf="pendingReviewMode" style="margin-bottom:12px">
-        <span style="color:#f57c00;font-weight:500">
-          <mat-icon style="vertical-align:middle;font-size:18px">info</mat-icon>
+      <div *ngIf="pendingReviewMode" class="ui-note--warning">
+        <span>
+          <mat-icon class="ui-icon--sm">info</mat-icon>
           Teslim edilmiş ancak henüz incelenmemiş ödevler gösteriliyor
         </span>
       </div>
@@ -52,10 +52,10 @@
           <td mat-cell *matCellDef="let a">
             <div>
               <strong>{{ a.title }}</strong>
-              <div *ngIf="a.completionNote" class="text-muted" style="font-size:0.8em">
+              <div *ngIf="a.completionNote" class="text-muted ui-meta">
                 <mat-icon class="icon-sm">comment</mat-icon> {{ a.completionNote }}
               </div>
-              <div *ngIf="a.coachFeedback" style="font-size:0.8em;color:#f57c00">
+              <div *ngIf="a.coachFeedback" class="ui-meta ui-note--warning">
                 <mat-icon class="icon-sm">feedback</mat-icon> {{ a.coachFeedback }}
               </div>
             </div>
@@ -64,8 +64,8 @@
         <ng-container matColumnDef="dueDate">
           <th mat-header-cell *matHeaderCellDef>Son Tarih</th>
           <td mat-cell *matCellDef="let a">
-            <span [style.color]="isOverdue(a.dueDate) && a.status === 'Pending' ? '#f44336' : 'inherit'">
-              <mat-icon *ngIf="isOverdue(a.dueDate) && a.status === 'Pending'" class="icon-sm" style="color:#f44336">warning</mat-icon>
+            <span [class.ui-note--danger]="isOverdue(a.dueDate) && a.status === 'Pending'">
+              <mat-icon *ngIf="isOverdue(a.dueDate) && a.status === 'Pending'" class="icon-sm ui-icon--danger">warning</mat-icon>
               {{ a.dueDate | date:'dd.MM.yyyy' }}
             </span>
           </td>
@@ -86,24 +86,24 @@
           <th mat-header-cell *matHeaderCellDef>Onay</th>
           <td mat-cell *matCellDef="let a">
             <!-- İncelenmemiş, onay bekliyor -->
-            <span *ngIf="needsReview(a)" style="display:flex;gap:4px;align-items:center">
-              <button mat-icon-button color="primary" matTooltip="Onayla" (click)="approveAssignment(a)">
+            <span *ngIf="needsReview(a)" class="ui-inline-actions">
+              <button mat-icon-button type="button" color="primary" aria-label="Ödevi onayla" matTooltip="Onayla" (click)="approveAssignment(a)">
                 <mat-icon>check_circle</mat-icon>
               </button>
-              <button mat-icon-button color="warn" matTooltip="Reddet" (click)="rejectAssignment(a)">
+              <button mat-icon-button type="button" color="warn" aria-label="Ödevi reddet" matTooltip="Reddet" (click)="rejectAssignment(a)">
                 <mat-icon>cancel</mat-icon>
               </button>
             </span>
             <!-- Onaylandı -->
-            <mat-icon *ngIf="a.isApprovedByCoach === true" style="color:#4CAF50" matTooltip="Onaylandı">verified</mat-icon>
+            <mat-icon *ngIf="a.isApprovedByCoach === true" class="ui-icon--success" matTooltip="Onaylandı">verified</mat-icon>
             <!-- Reddedildi -->
-            <mat-icon *ngIf="a.isApprovedByCoach === false" style="color:#f44336" [matTooltip]="'Reddedildi' + (a.coachFeedback ? ': ' + a.coachFeedback : '')">unpublished</mat-icon>
+            <mat-icon *ngIf="a.isApprovedByCoach === false" class="ui-icon--danger" [matTooltip]="'Reddedildi' + (a.coachFeedback ? ': ' + a.coachFeedback : '')">unpublished</mat-icon>
           </td>
         </ng-container>
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef></th>
           <td mat-cell *matCellDef="let a">
-            <button mat-icon-button color="warn"
+              <button mat-icon-button type="button" color="warn" aria-label="Ödevi iptal et"
               *ngIf="a.status === 'Pending' || a.status === 'Overdue'"
               matTooltip="İptal Et" (click)="cancelAssignment(a)">
               <mat-icon>block</mat-icon>

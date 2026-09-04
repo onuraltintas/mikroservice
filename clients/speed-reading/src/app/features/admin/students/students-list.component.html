@@ -67,7 +67,7 @@
                 <table mat-table [dataSource]="dataSource" matSort class="students-table">
                     <!-- Index Column -->
                     <ng-container matColumnDef="index">
-                        <th mat-header-cell *matHeaderCellDef style="width: 60px;">#</th>
+                        <th mat-header-cell *matHeaderCellDef class="ui-cell--w-60">#</th>
                         <td mat-cell *matCellDef="let item; let i = index">
                             {{ paginator ? (paginator.pageIndex * paginator.pageSize + i + 1) : (i + 1) }}
                         </td>
@@ -171,7 +171,7 @@
                         <th mat-header-cell *matHeaderCellDef></th>
                         <td mat-cell *matCellDef="let student">
                             <div class="actions-wrapper">
-                                <button mat-icon-button [matMenuTriggerFor]="menu" class="action-btn">
+                <button mat-icon-button type="button" [matMenuTriggerFor]="menu" class="action-btn" aria-label="Öğrenci işlemlerini aç">
                                     <mat-icon>more_vert</mat-icon>
                                 </button>
                                 <mat-menu #menu="matMenu">

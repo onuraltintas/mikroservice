@@ -8,9 +8,9 @@
     <span class="badge-card__name">{{ achievement.name }}</span>
     <span class="badge-card__tier" [style.color]="tierColor">{{ tierText }}</span>
     @if (!isUnlocked) {
-      <span class="badge-card__xp badge-card__xp--locked">🔒 {{ achievement.xpReward }} XP</span>
+      <span class="badge-card__xp badge-card__xp--locked"><mat-icon aria-hidden="true">lock</mat-icon> {{ achievement.xpReward }} XP</span>
     } @else {
-      <span class="badge-card__xp badge-card__xp--earned">⭐ {{ achievement.xpReward }} XP</span>
+      <span class="badge-card__xp badge-card__xp--earned"><mat-icon aria-hidden="true">stars</mat-icon> {{ achievement.xpReward }} XP</span>
       @if (userAchievement?.unlockedAt) {
         <time class="badge-card__date">{{ userAchievement!.unlockedAt | date:'dd.MM.yyyy' }}</time>
       }

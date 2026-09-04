@@ -43,7 +43,7 @@
                 </mat-form-field>
             </div>
 
-            <button mat-icon-button (click)="refreshReport()" matTooltip="Yenile" class="refresh-btn">
+            <button mat-icon-button type="button" aria-label="Sınıf raporunu yenile" (click)="refreshReport()" matTooltip="Yenile" class="refresh-btn">
                 <mat-icon>refresh</mat-icon>
             </button>
         </div>
@@ -69,7 +69,7 @@
         <div class="kpi-grid">
             <mat-card class="kpi-card students-card">
                 <mat-card-content>
-                    <div class="kpi-icon">👥</div>
+                    <div class="kpi-icon"><mat-icon aria-hidden="true">groups</mat-icon></div>
                     <div class="kpi-details">
                         <div class="kpi-value">{{ report()!.totalStudents }}</div>
                         <div class="kpi-label">Toplam Öğrenci</div>
@@ -82,7 +82,7 @@
 
             <mat-card class="kpi-card wpm-card">
                 <mat-card-content>
-                    <div class="kpi-icon">⚡</div>
+                    <div class="kpi-icon"><mat-icon aria-hidden="true">speed</mat-icon></div>
                     <div class="kpi-details">
                         <div class="kpi-value">
                             {{ report()!.classAverageWpmDataAvailable === false ? '—' : (report()!.classAverageWPM | number:'1.0-0') }}
@@ -95,7 +95,7 @@
 
             <mat-card class="kpi-card comprehension-card">
                 <mat-card-content>
-                    <div class="kpi-icon">🎯</div>
+                    <div class="kpi-icon"><mat-icon aria-hidden="true">track_changes</mat-icon></div>
                     <div class="kpi-details">
                         <div class="kpi-value">
                             {{ report()!.classAverageComprehensionDataAvailable === false ? '—' : (report()!.classAverageComprehension | number:'1.0-0') + '%' }}
@@ -108,7 +108,7 @@
 
             <mat-card class="kpi-card activities-card">
                 <mat-card-content>
-                    <div class="kpi-icon">📊</div>
+                    <div class="kpi-icon"><mat-icon aria-hidden="true">insights</mat-icon></div>
                     <div class="kpi-details">
                         <div class="kpi-value">{{ report()!.totalActivitiesCompleted }}</div>
                         <div class="kpi-label">Toplam Aktivite</div>
@@ -224,7 +224,7 @@
                     </table>
 
                     <div *ngIf="report()!.studentsNeedingSupport.length === 0" class="no-data-small">
-                        <p>Tüm öğrenciler iyi durumda! 🎉</p>
+                        <p>Tüm öğrenciler iyi durumda!</p>
                     </div>
                 </mat-card-content>
             </mat-card>

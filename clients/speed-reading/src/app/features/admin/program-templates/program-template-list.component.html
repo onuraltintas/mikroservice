@@ -89,19 +89,17 @@
             <ng-container matColumnDef="ageGroup">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header>Yaş Grubu</th>
                 <td mat-cell *matCellDef="let template">
-                    <div style="display: flex; gap: 8px; align-items: center;">
+                    <div class="ui-inline-actions">
                         <mat-chip [highlighted]="true">
                             {{ getAgeGroupName(template) }}
                         </mat-chip>
                         <mat-chip *ngIf="template.programType === 1" color="accent">
-                            <mat-icon
-                                style="font-size: 16px; width: 16px; height: 16px; margin-right: 4px;">school</mat-icon>
+                            <mat-icon class="ui-icon--compact">school</mat-icon>
                             {{ template.examType }}
                         </mat-chip>
                         <mat-chip *ngIf="template.isAssessment" color="warn"
                             matTooltip="Bu bir seviye tespit sınavı şablonudur">
-                            <mat-icon
-                                style="font-size: 16px; width: 16px; height: 16px; margin-right: 4px;">assignment_turned_in</mat-icon>
+                            <mat-icon class="ui-icon--compact">assignment_turned_in</mat-icon>
                             Seviye Tespit
                         </mat-chip>
                     </div>
@@ -113,8 +111,7 @@
                 <th mat-header-cell *matHeaderCellDef
                     matTooltip="Seviye tespit sınavında bu puan aralığında olan ve ilgili yaş grubundaki öğrenciler otomatik olarak bu programa atanır">
                     Puan Aralığı
-                    <mat-icon
-                        style="font-size: 16px; height: 16px; width: 16px; vertical-align: middle; opacity: 0.7;">help_outline</mat-icon>
+                    <mat-icon class="ui-icon--compact">help_outline</mat-icon>
                 </th>
                 <td mat-cell *matCellDef="let template">
                     <div class="score-range">
@@ -166,19 +163,19 @@
                 <th mat-header-cell *matHeaderCellDef>İşlemler</th>
                 <td mat-cell *matCellDef="let template">
                     <div class="action-buttons">
-                        <button mat-icon-button color="primary" (click)="viewTemplate(template)" matTooltip="Görüntüle">
+                  <button mat-icon-button type="button" color="primary" aria-label="Program şablonunu görüntüle" (click)="viewTemplate(template)" matTooltip="Görüntüle">
                             <mat-icon>visibility</mat-icon>
                         </button>
-                        <button mat-icon-button color="accent" (click)="editTemplate(template)" matTooltip="Düzenle">
+                  <button mat-icon-button type="button" color="accent" aria-label="Program şablonunu düzenle" (click)="editTemplate(template)" matTooltip="Düzenle">
                             <mat-icon>edit</mat-icon>
                         </button>
-                        <button mat-icon-button style="color: #607d8b;" (click)="cloneTemplate(template)"
+                  <button mat-icon-button type="button" class="ui-icon--info" aria-label="Program şablonunu kopyala" (click)="cloneTemplate(template)"
                             matTooltip="Kopyala">
                             <mat-icon>content_copy</mat-icon>
                         </button>
                         <span
                             [matTooltip]="template.isActive ? 'Aktif şablon silinemez. Önce pasif konuma getirin.' : 'Sil'">
-                            <button mat-icon-button color="warn" (click)="deleteTemplate(template)"
+                  <button mat-icon-button type="button" color="warn" aria-label="Program şablonunu sil" (click)="deleteTemplate(template)"
                                 [disabled]="template.isActive">
                                 <mat-icon>delete</mat-icon>
                             </button>

@@ -45,7 +45,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
                     <mat-icon>description</mat-icon>
                     <span>{{ selectedFile.name }}</span>
                     <span class="file-size">({{ (selectedFile.size / 1024).toFixed(1) }} KB)</span>
-                    <button mat-icon-button (click)="clearFile()">
+                    <button mat-icon-button type="button" aria-label="Seçili dosyayı kaldır" (click)="clearFile()">
                         <mat-icon>close</mat-icon>
                     </button>
                 </div>

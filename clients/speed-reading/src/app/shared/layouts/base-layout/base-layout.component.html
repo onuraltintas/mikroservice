@@ -4,7 +4,7 @@
     <mat-toolbar color="primary">
       <span class="logo-text">Hızlı Okuma</span>
     </mat-toolbar>
-    <mat-nav-list>
+    <mat-nav-list aria-label="Mobil navigasyon">
       <ng-container *ngFor="let item of menuItems">
         <!-- Menu Item without Children -->
         <a mat-list-item *ngIf="!item.children" [routerLink]="item.route" [queryParams]="item.queryParams"
@@ -35,13 +35,13 @@
 
         <!-- Mobile Toggle Button -->
         <button type="button" mat-icon-button (click)="drawer.toggle()" *ngIf="isHandset$ | async"
-          class="mobile-menu-btn">
+          class="mobile-menu-btn" aria-label="Menüyü aç veya kapat" title="Menüyü aç veya kapat">
           <mat-icon>menu</mat-icon>
         </button>
 
         <!-- Logo Area -->
         <div class="logo-container" [routerLink]="'/' + role + '/dashboard'">
-          <img src="assets/icons/apple-touch-icon.png" alt="OnAl Logo" class="logo-image">
+          <img src="assets/icons/apple-touch-icon.png" alt="Master Hızlı Okuma logosu" class="logo-image">
           <span class="logo-text">Hızlı Okuma</span>
         </div>
 
@@ -95,7 +95,7 @@
         </div>
 
         <!-- Admin Panel Return Button -->
-        <button mat-flat-button *ngIf="isAdmin() && role !== 'admin' && !(isHandset$ | async)"
+        <button type="button" mat-flat-button *ngIf="isAdmin() && role !== 'admin' && !(isHandset$ | async)"
           (click)="exitImpersonation()" color="warn" class="admin-switch-btn">
           <mat-icon>admin_panel_settings</mat-icon>
           <span>Admin Panele Dön</span>
@@ -109,7 +109,8 @@
 
 
         <!-- User Menu -->
-        <button mat-icon-button [matMenuTriggerFor]="userMenu" class="user-button">
+        <button type="button" mat-icon-button [matMenuTriggerFor]="userMenu" class="user-button"
+          [attr.aria-label]="getUserDisplayName() + ' kullanıcı menüsünü aç'">
           <div class="avatar">{{ getAvatarLetters() }}</div>
         </button>
 
@@ -130,7 +131,7 @@
           </button>
           <!-- Coach Panel Link -->
           <button mat-menu-item *ngIf="isCoach() && role !== 'teacher'" routerLink="/coaching/dashboard">
-            <mat-icon style="color:#388E3C">sports</mat-icon>
+            <mat-icon class="coach-icon">sports</mat-icon>
             <span>Koç Paneli</span>
           </button>
 
@@ -150,7 +151,7 @@
             <mat-icon>settings</mat-icon>
             <span>Ayarlar</span>
           </button>
-          <button mat-menu-item (click)="logout()">
+          <button type="button" mat-menu-item (click)="logout()">
             <mat-icon>logout</mat-icon>
             <span>Çıkış Yap</span>
           </button>

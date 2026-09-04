@@ -14,7 +14,7 @@
 }
 
 .completion-modal {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--sp-primary-dark), var(--sp-primary));
   border-radius: 24px;
   padding: 40px;
   max-width: 600px;
@@ -36,6 +36,11 @@
   font-weight: 700;
   margin: 0 0 12px 0;
   animation: bounce 0.6s ease-in-out;
+
+  .material-icons {
+    font-size: 1em;
+    vertical-align: middle;
+  }
 }
 
 .program-name {
@@ -57,6 +62,17 @@
   font-size: 20px;
   margin: 0 0 20px 0;
   font-weight: 600;
+}
+
+.stats-section h2,
+.recommendation-section h2,
+.max-level-section h2 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  .material-icons { font-size: 22px; }
 }
 
 .stats-grid {

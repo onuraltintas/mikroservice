@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { ToasterService } from '../../../core/services/toaster.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
@@ -37,7 +37,7 @@ export class TestModeComponent implements OnInit {
     private programTemplateService: ProgramTemplateService,
     private http: HttpClient,
     private router: Router,
-    private snackBar: MatSnackBar
+    private toaster: ToasterService
   ) { }
 
   ngOnInit() {
@@ -84,16 +84,10 @@ export class TestModeComponent implements OnInit {
   }
 
   private showSuccess(message: string) {
-    this.snackBar.open(message, 'Tamam', {
-      duration: 3000,
-      panelClass: ['success-snackbar']
-    });
+    this.toaster.success(message);
   }
 
   private showError(message: string) {
-    this.snackBar.open(message, 'Kapat', {
-      duration: 5000,
-      panelClass: ['error-snackbar']
-    });
+    this.toaster.error(message);
   }
 }

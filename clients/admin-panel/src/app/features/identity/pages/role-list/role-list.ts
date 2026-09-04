@@ -194,9 +194,8 @@ export class RoleListComponent {
         }
 
         const confirmed = await this.toaster.confirm(
-            'Rolü Pasife Al',
             'Bu rolü pasife almak istediğinize emin misiniz? (Daha sonra kalıcı olarak silebilirsiniz)',
-            'Evet, Pasife Al'
+            { title: 'Rolü Pasife Al', confirmText: 'Evet, Pasife Al' }
         );
 
         if (confirmed) {
@@ -216,9 +215,8 @@ export class RoleListComponent {
 
     async restoreRole(role: RoleDto) {
         const confirmed = await this.toaster.confirm(
-            'Rolü Aktif Yap',
             'Bu rolü tekrar aktif hale getirmek istediğinize emin misiniz?',
-            'Evet, Aktif Yap'
+            { title: 'Rolü Aktif Yap', confirmText: 'Evet, Aktif Yap' }
         );
 
         if (confirmed) {
@@ -238,9 +236,8 @@ export class RoleListComponent {
 
     async permanentDeleteRole(role: RoleDto) {
         const confirmed = await this.toaster.confirm(
-            'DİKKAT! Kalıcı Silme',
             'Bu rolü kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
-            'Evet, Kalıcı Sil'
+            { title: 'DİKKAT! Kalıcı Silme', confirmText: 'Evet, Kalıcı Sil' }
         );
 
         if (confirmed) {

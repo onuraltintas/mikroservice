@@ -1,11 +1,12 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
 import { Achievement, UserAchievement } from '../../../core/models/gamification.model';
 
 @Component({
   selector: 'app-badge-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './badge-card.component.html',
   styleUrls: ['./badge-card.component.scss']
 })

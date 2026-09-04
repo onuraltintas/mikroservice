@@ -1,26 +1,26 @@
-<div class="learning-path-container">
+<div class="learning-path-container sp-page-enter">
   <!-- Header -->
   <div class="path-header">
-    <button class="sp-btn" (click)="goToDashboard()" class="back-button">
-      <span class="material-icons">arrow_back</span>
+    <button type="button" class="sp-btn sp-btn--icon back-button" aria-label="Dashboard'a dön" (click)="goToDashboard()">
+      <span class="material-icons" aria-hidden="true">arrow_back</span>
     </button>
     <h1 class="path-title">{{ pathProgress?.templateName || 'Öğrenme Yolum' }}</h1>
-    <button class="sp-btn" (click)="refreshPath()" class="refresh-button">
-      <span class="material-icons">refresh</span>
+    <button type="button" class="sp-btn sp-btn--icon refresh-button" aria-label="Öğrenme yolunu yenile" (click)="refreshPath()">
+      <span class="material-icons" aria-hidden="true">refresh</span>
     </button>
   </div>
 
   <!-- Loading State -->
-  <div *ngIf="isLoading" class="loading-container">
-    <div class="sp-bar"><div class="sp-bar-fill" style="width:100%"></div></div>
+  <div *ngIf="isLoading" class="loading-container" role="status" aria-live="polite">
+    <div class="sp-bar"><div class="sp-bar-fill loading-progress-fill"></div></div>
     <p>Öğrenme yolu yükleniyor...</p>
   </div>
 
   <!-- Error State -->
-  <div *ngIf="error && !isLoading" class="error-container">
-    <span class="material-icons error-icon">error_outline</span>
+  <div *ngIf="error && !isLoading" class="sp-card error-container" role="alert">
+    <span class="material-icons error-icon" aria-hidden="true">error_outline</span>
     <p>{{ error }}</p>
-    <button class="sp-btn" (click)="goToDashboard()">
+    <button type="button" class="sp-btn" (click)="goToDashboard()">
       Dashboard'a Dön
     </button>
   </div>
@@ -32,25 +32,25 @@
     <div class="sp-card statistics-card">
       <div class="stats-grid">
         <div class="stat-item">
-          <span class="material-icons stat-icon">emoji_events</span>
+          <span class="material-icons stat-icon" aria-hidden="true">emoji_events</span>
           <div class="stat-value">{{ pathStatistics?.earnedPoints || 0 }}</div>
           <div class="stat-label">Toplam Puan</div>
         </div>
 
         <div class="stat-item">
-          <span class="material-icons stat-icon">stars</span>
+          <span class="material-icons stat-icon" aria-hidden="true">stars</span>
           <div class="stat-value">{{ pathStatistics?.totalStars || 0 }}</div>
           <div class="stat-label">Toplam Yıldız</div>
         </div>
 
         <div class="stat-item">
-          <span class="material-icons stat-icon">check_circle</span>
+          <span class="material-icons stat-icon" aria-hidden="true">check_circle</span>
           <div class="stat-value">{{ pathProgress.completedNodes }} / {{ pathProgress.totalNodes }}</div>
           <div class="stat-label">Tamamlanan Node</div>
         </div>
 
         <div class="stat-item">
-          <span class="material-icons stat-icon">schedule</span>
+          <span class="material-icons stat-icon" aria-hidden="true">schedule</span>
           <div class="stat-value">{{ pathStatistics?.timeSpentHours || 0 }}sa</div>
           <div class="stat-label">Harcanan Süre</div>
         </div>
@@ -148,7 +148,6 @@
                   [attr.fill]="getNodeFillColor(node)"
                   [attr.stroke]="getNodeStrokeColor(node)"
                   [attr.stroke-width]="getNodeStrokeWidth(node)"
-                  [style.cursor]="getNodeCursor(node)"
                   class="node-circle"
                 />
 
@@ -208,8 +207,8 @@
           <span class="material-icons">{{ NodeHelper.getStatusIcon(selectedNode.status) }}</span>
           {{ selectedNode.title }}
         </div>
-        <button class="sp-btn" (click)="selectedNode = null">
-          <span class="material-icons">close</span>
+        <button type="button" class="sp-btn sp-btn--icon" aria-label="Detayı kapat" (click)="selectedNode = null">
+          <span class="material-icons" aria-hidden="true">close</span>
         </button>
       </div>
 
@@ -246,8 +245,8 @@
         </div>
 
         <div class="node-actions" *ngIf="learningPathService.isNodeUnlocked(selectedNode)">
-          <button class="sp-btn" (click)="openNodeDetails(selectedNode)">
-            <span class="material-icons">play_arrow</span>
+          <button type="button" class="sp-btn sp-btn--primary" (click)="openNodeDetails(selectedNode)">
+            <span class="material-icons" aria-hidden="true">play_arrow</span>
             Başla
           </button>
         </div>

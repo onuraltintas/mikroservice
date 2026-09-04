@@ -10,6 +10,7 @@ import {
   CoachingAdminAssignmentDetail,
   CoachingAdminService
 } from '../../../core/services/coaching-admin.service';
+import { ToasterService } from '../../../core/services/toaster.service';
 
 @Component({
   selector: 'app-coaching-assignment-detail',
@@ -91,6 +92,7 @@ import {
 })
 export class CoachingAssignmentDetailComponent implements OnInit {
   private readonly service = inject(CoachingAdminService);
+  private readonly toaster = inject(ToasterService);
   private readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -137,8 +139,8 @@ export class CoachingAssignmentDetailComponent implements OnInit {
   setScore(studentId: string, value: string) { this.scoreDraft[studentId] = value; }
   setFeedback(studentId: string, value: string) { this.feedbackDraft[studentId] = value; }
 
-  cancelAssignment(id: string) {
-    if (typeof window !== 'undefined' && !window.confirm('Bu ödev iptal edilsin mi?')) return;
+  async cancelAssignment(id: string): Promise<void> {
+    if (!await this.toaster.confirm('Bu ödev iptal edilsin mi?', { title: 'Ödevi iptal et' })) return;
     this.actionLoading.set(true);
     this.service.cancelAssignment(id).pipe(finalize(() => this.actionLoading.set(false))).subscribe({
       next: () => this.load(),
@@ -146,8 +148,8 @@ export class CoachingAssignmentDetailComponent implements OnInit {
     });
   }
 
-  deleteAssignment(id: string) {
-    if (typeof window !== 'undefined' && !window.confirm('Bu ödev kalıcı olarak silinsin mi?')) return;
+  async deleteAssignment(id: string): Promise<void> {
+    if (!await this.toaster.confirm('Bu ödev kalıcı olarak silinsin mi?', { title: 'Ödevi kalıcı olarak sil' })) return;
     this.actionLoading.set(true);
     this.service.deleteAssignment(id).pipe(finalize(() => this.actionLoading.set(false))).subscribe({
       next: () => this.router.navigate(['/dashboard/coaching/assignments']),

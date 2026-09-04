@@ -12,6 +12,7 @@ import {
   CoachingAdminSessionDetail
 } from '../../../core/services/coaching-admin.service';
 import { IdentityService, UserDto } from '../../../core/services/identity.service';
+import { ToasterService } from '../../../core/services/toaster.service';
 
 type Resource = 'session' | 'exam';
 
@@ -68,6 +69,7 @@ export class CoachingResourceDetailComponent implements OnInit {
   private readonly identity = inject(IdentityService);
   private readonly auth = inject(AuthService);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly toaster = inject(ToasterService);
 
   readonly session = signal<CoachingAdminSessionDetail | null>(null);
   readonly exam = signal<CoachingAdminExamDetail | null>(null);
@@ -193,10 +195,10 @@ export class CoachingResourceDetailComponent implements OnInit {
     });
   }
 
-  deleteResult(result: CoachingAdminExamResult) {
+  async deleteResult(result: CoachingAdminExamResult): Promise<void> {
     const exam = this.exam();
     if (!exam || !this.canManage()) return;
-    if (typeof window !== 'undefined' && !window.confirm('Bu sınav sonucu kalıcı olarak silinsin mi?')) return;
+    if (!await this.toaster.confirm('Bu sınav sonucu kalıcı olarak silinsin mi?', { title: 'Sınav sonucunu kalıcı olarak sil' })) return;
 
     this.actionLoading.set(true); this.error.set(null);
     this.coaching.deleteExamResult(exam.id, result.id)

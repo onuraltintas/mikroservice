@@ -432,7 +432,7 @@ export class ConfigurationsComponent implements OnInit {
     }
 
     deleteConfig(config: Configuration) {
-        this.toaster.confirm('Ayarı Sil', `"${config.key}" ayarını silmek istediğinize emin misiniz?`).then(confirmed => {
+        this.toaster.confirm(`"${config.key}" ayarını silmek istediğinize emin misiniz?`, { title: 'Ayarı sil' }).then(confirmed => {
             if (confirmed) {
                 this.configService.deleteConfiguration(config.key).subscribe({
                     next: () => {

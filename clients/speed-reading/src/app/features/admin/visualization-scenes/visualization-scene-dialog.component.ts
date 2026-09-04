@@ -41,7 +41,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
         <div class="dialog-container">
             <div class="dialog-header">
                 <h2 mat-dialog-title>{{ isEdit ? 'Sahne Düzenle' : 'Yeni Sahne Oluştur' }}</h2>
-                <button mat-icon-button mat-dialog-close tabindex="-1">
+                <button mat-icon-button type="button" aria-label="Sahne penceresini kapat" mat-dialog-close tabindex="-1">
                     <mat-icon>close</mat-icon>
                 </button>
             </div>
@@ -176,7 +176,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
                                                             </mat-select>
                                                         </mat-form-field>
 
-                                                        <button mat-icon-button color="warn" type="button" (click)="removeQuestion(i)" matTooltip="Bu soruyu sil">
+                                                        <button mat-icon-button color="warn" type="button" aria-label="Sahne sorusunu sil" (click)="removeQuestion(i)" matTooltip="Bu soruyu sil">
                                                             <mat-icon>delete_outline</mat-icon>
                                                         </button>
                                                     </div>

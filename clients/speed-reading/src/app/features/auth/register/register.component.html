@@ -47,7 +47,7 @@
           <mat-form-field appearance="outline" class="half-width">
             <mat-label>Şifre</mat-label>
             <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" placeholder="******">
-            <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+            <button mat-icon-button matSuffix type="button" aria-label="Parolayı göster veya gizle" (click)="hidePassword = !hidePassword">
               <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
             @if (registerForm.get('password')?.hasError('required') && registerForm.get('password')?.touched) {
@@ -59,7 +59,7 @@
             <mat-label>Tekrar</mat-label>
             <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmPassword"
               placeholder="******">
-            <button mat-icon-button matSuffix type="button" (click)="hideConfirmPassword = !hideConfirmPassword">
+            <button mat-icon-button matSuffix type="button" aria-label="Parola tekrarını göster veya gizle" (click)="hideConfirmPassword = !hideConfirmPassword">
               <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
             @if (registerForm.get('confirmPassword')?.hasError('mismatch') &&

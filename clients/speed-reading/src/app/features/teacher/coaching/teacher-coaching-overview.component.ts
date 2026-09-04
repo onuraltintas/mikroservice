@@ -133,7 +133,7 @@ import { CoachingApiService, CoachingSession, CoachingAssignment, CoachingRelati
                 <span class="rel-name">{{ r.studentName }}</span>
                 <span class="rel-since">{{ formatDate(r.startDate) }} tarihinden beri</span>
               </div>
-              <a mat-icon-button [routerLink]="['/teacher/students', r.studentId]" matTooltip="Detay">
+              <a mat-icon-button [routerLink]="['/teacher/students', r.studentId]" matTooltip="Detay" aria-label="Öğrenci koçluk detayını görüntüle">
                 <mat-icon>arrow_forward</mat-icon>
               </a>
             </div>

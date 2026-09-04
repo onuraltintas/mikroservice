@@ -240,7 +240,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 34px;
+  min-height: 44px;
   padding: 0 16px;
   border-radius: var(--sp-radius-sm);
   font-family: var(--sp-font-sans);
@@ -332,4 +332,7 @@
   p { font-size: 0.875rem; font-weight: 600; color: var(--sp-success-dark); margin: 0; }
 }
 
-.dp-widget__complete-emoji { font-size: 32px; }
+.dp-widget__complete-icon {
+  font-size: 32px;
+  color: var(--sp-success);
+}

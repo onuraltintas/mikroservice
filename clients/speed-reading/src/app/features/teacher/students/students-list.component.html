@@ -6,10 +6,10 @@
         </div>
         <div class="header-actions">
             <input type="file" id="fileInput" (change)="onFileSelected($event)" accept=".xlsx, .xls"
-                style="display: none;">
+                class="visually-hidden-file">
             <button mat-icon-button color="primary"
                 matTooltip="Excel dosyanızda sırasıyla: Ad, Soyad, E-posta ve Şifre sütunları olmalıdır."
-                matTooltipPosition="below">
+                matTooltipPosition="below" aria-label="Excel yükleme biçimi yardımını göster" type="button">
                 <mat-icon>help_outline</mat-icon>
             </button>
             <button mat-stroked-button color="accent" (click)="downloadTemplate()" [disabled]="loading()" class="mr-2">
@@ -80,7 +80,7 @@
 
                 <!-- Avatar Column -->
                 <ng-container matColumnDef="avatar">
-                    <th mat-header-cell *matHeaderCellDef style="width: 60px;"></th>
+                    <th mat-header-cell *matHeaderCellDef class="actions-column"></th>
                     <td mat-cell *matCellDef="let student">
                         <div class="avatar" [style.background]="getAvatarBackground(student)">
                             {{ getInitials(student.firstName, student.lastName) }}
@@ -106,7 +106,7 @@
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>Sınıf Öğretmeni</th>
                     <td mat-cell *matCellDef="let student">
                         <span *ngIf="student.teacherName" class="teacher-badge">
-                            <mat-icon style="font-size: 16px; width: 16px; height: 16px; vertical-align: text-bottom; margin-right: 4px;">school</mat-icon>
+                            <mat-icon class="inline-school-icon">school</mat-icon>
                             {{ student.teacherName }}
                         </span>
                         <span *ngIf="!student.teacherName" class="no-teacher-badge">Atanmamış</span>
@@ -177,11 +177,11 @@
                     <th mat-header-cell *matHeaderCellDef></th>
                     <td mat-cell *matCellDef="let student">
                         <div class="actions-wrapper">
-                            <button mat-icon-button [routerLink]="['/teacher/students', student.id]"
-                                matTooltip="Detayları Görüntüle" class="action-btn">
+              <button mat-icon-button type="button" [routerLink]="['/teacher/students', student.id]"
+                                matTooltip="Detayları Görüntüle" aria-label="Öğrenci detaylarını görüntüle" class="action-btn">
                                 <mat-icon>visibility</mat-icon>
                             </button>
-                            <button mat-icon-button [matMenuTriggerFor]="menu" class="action-btn">
+              <button mat-icon-button type="button" [matMenuTriggerFor]="menu" aria-label="Öğrenci işlemleri menüsünü aç" class="action-btn">
                                 <mat-icon>more_vert</mat-icon>
                             </button>
                             <mat-menu #menu="matMenu">

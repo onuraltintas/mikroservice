@@ -3,7 +3,10 @@
 // =============================================================================
 
 // ── Page ─────────────────────────────────────────────────────────────────────
+:host { display: block; }
+
 .de-page {
+  width: 100%;
   max-width: var(--sp-content-max-width);
 }
 
@@ -38,7 +41,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 36px;
+  min-height: 44px;
   padding: 0 14px;
   border-radius: var(--sp-radius-sm);
   background: var(--sp-surface);
@@ -89,8 +92,8 @@
 }
 
 .de-stat--orange .de-stat__icon { color: var(--sp-streak); }
-.de-stat--purple .de-stat__icon { color: #8b5cf6; }
-.de-stat--blue   .de-stat__icon { color: #3b82f6; }
+.de-stat--purple .de-stat__icon { color: var(--sp-platinum); }
+.de-stat--blue   .de-stat__icon { color: var(--sp-diamond); }
 .de-stat--green  .de-stat__icon { color: var(--sp-success); }
 
 .de-stat__value {
@@ -126,7 +129,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 36px;
+  min-height: 44px;
   padding: 0 16px;
   border-radius: calc(var(--sp-radius-md) - 2px);
   border: none;
@@ -237,7 +240,10 @@
   margin-bottom: 20px;
 }
 
-.de-celebration__emoji { font-size: 40px; }
+.de-celebration__icon {
+  font-size: 40px;
+  color: var(--sp-success);
+}
 
 .de-celebration__title {
   font-family: var(--sp-font-sans);
@@ -255,12 +261,17 @@
 }
 
 .de-celebration__streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: rgba(16, 185, 129, 0.15);
   border-radius: var(--sp-radius-full);
   padding: 4px 16px;
   font-size: 0.875rem;
   font-weight: 700;
   color: var(--sp-success-dark);
+
+  .material-icons { font-size: 18px; }
 }
 
 // ── Exercise grid ─────────────────────────────────────────────────────────────
@@ -401,7 +412,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  height: 36px;
+  min-height: 44px;
   padding: 0 16px;
   border-radius: var(--sp-radius-sm);
   font-family: var(--sp-font-sans);
@@ -466,7 +477,7 @@
 }
 
 .de-day-chip {
-  height: 30px;
+  min-height: 44px;
   padding: 0 12px;
   border-radius: var(--sp-radius-full);
   border: 1px solid var(--sp-border);

@@ -34,7 +34,8 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "src/tailwind.css"
             ],
             "allowedCommonJsDependencies": [
               "rfdc",
@@ -114,7 +115,8 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "src/tailwind.css"
             ]
           }
         }

@@ -7,8 +7,7 @@
             <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
 
                 <!-- Google Sign In -->
-                <div id="google-register-teacher-button"
-                    style="display: flex; justify-content: center; margin-bottom: 20px;"></div>
+                <div id="google-register-teacher-button" class="ui-auth-google-button"></div>
 
                 <div class="divider-text">
                     <span>VEYA E-POSTA İLE</span>
@@ -54,7 +53,7 @@
                     <mat-form-field appearance="outline">
                         <mat-label>Şifre</mat-label>
                         <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'">
-                        <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+                        <button mat-icon-button matSuffix type="button" aria-label="Parolayı göster veya gizle" (click)="hidePassword = !hidePassword">
                             <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
                         </button>
                         <mat-error *ngIf="registerForm.get('password')?.hasError('passwordStrength')">
@@ -75,7 +74,7 @@
                         <mat-label>Şifre Tekrar</mat-label>
                         <input matInput formControlName="confirmPassword"
                             [type]="hideConfirmPassword ? 'password' : 'text'">
-                        <button mat-icon-button matSuffix type="button"
+                        <button mat-icon-button matSuffix type="button" aria-label="Parola tekrarını göster veya gizle"
                             (click)="hideConfirmPassword = !hideConfirmPassword">
                             <mat-icon>{{hideConfirmPassword ? 'visibility_off' : 'visibility'}}</mat-icon>
                         </button>
@@ -93,7 +92,7 @@
                         (İşaretlemezseniz kendi bağımsız sınıfınızı yönetirsiniz)
                     </p>
 
-                    <div *ngIf="showInstitutionCode" style="margin-top: 12px;">
+                    <div *ngIf="showInstitutionCode" class="ui-section-block">
                         <mat-form-field appearance="outline" class="full-width">
                             <mat-label>Kurum/Okul Kodu</mat-label>
                             <input matInput formControlName="institutionCode" placeholder="Örn: X9K2L1">

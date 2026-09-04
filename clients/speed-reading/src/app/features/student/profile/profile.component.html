@@ -14,23 +14,24 @@
 
         <div class="sp-card-content">
             @if (loading()) {
-            <div class="loading-state">
+            <div class="loading-state" role="status" aria-live="polite">
                 <div class="sp-spinner"></div>
+                <span class="sr-only">Profil yükleniyor</span>
             </div>
             } @else {
             <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
                 <div class="form-row">
                     <div class="sp-field">
-                        <label>Ad</label>
-                        <input type="text" formControlName="firstName" placeholder="Adınız">
+                        <label for="profile-first-name">Ad</label>
+                        <input id="profile-first-name" type="text" formControlName="firstName" placeholder="Adınız" autocomplete="given-name">
                         <div class="sp-error" *ngIf="profileForm.get('firstName')?.hasError('required')">
                             Ad zorunludur
                         </div>
                     </div>
 
                     <div class="sp-field">
-                        <label>Soyad</label>
-                        <input type="text" formControlName="lastName" placeholder="Soyadınız">
+                        <label for="profile-last-name">Soyad</label>
+                        <input id="profile-last-name" type="text" formControlName="lastName" placeholder="Soyadınız" autocomplete="family-name">
                         <div class="sp-error" *ngIf="profileForm.get('lastName')?.hasError('required')">
                             Soyad zorunludur
                         </div>
@@ -38,20 +39,20 @@
                 </div>
 
                 <div class="sp-field full-width">
-                    <label>E-posta</label>
-                    <input type="email" formControlName="email" placeholder="ornek@email.com">
+                    <label for="profile-email">E-posta</label>
+                    <input id="profile-email" type="email" formControlName="email" placeholder="ornek@email.com" autocomplete="email">
                     <div class="sp-hint">E-posta adresi değiştirilemez</div>
                 </div>
 
                 <div class="form-row">
                     <div class="sp-field">
-                        <label>Telefon</label>
-                        <input type="text" formControlName="phoneNumber" placeholder="5XX XXX XX XX">
+                        <label for="profile-phone">Telefon</label>
+                        <input id="profile-phone" type="tel" formControlName="phoneNumber" placeholder="5XX XXX XX XX" autocomplete="tel">
                     </div>
 
                     <div class="sp-field">
-                        <label>Doğum Tarihi</label>
-                        <input type="date" formControlName="dateOfBirth">
+                        <label for="profile-birth-date">Doğum Tarihi</label>
+                        <input id="profile-birth-date" type="date" formControlName="dateOfBirth" autocomplete="bday">
                     </div>
                 </div>
 

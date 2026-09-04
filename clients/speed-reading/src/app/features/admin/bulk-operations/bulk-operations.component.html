@@ -21,7 +21,7 @@
 
                         <div class="file-input-wrapper">
                             <input type="file" #fileInput accept=".csv" (change)="onFileSelected($event)"
-                                style="display: none">
+                                class="ui-hidden-input">
                             <button mat-raised-button (click)="fileInput.click()">
                                 <mat-icon>upload_file</mat-icon>
                                 CSV Dosyası Seç

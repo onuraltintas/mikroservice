@@ -716,3 +716,22 @@ h1 {
         border-radius: 0.25rem;
     }
 }
+
+:host {
+    color: var(--ui-text);
+}
+
+.student-detail-container {
+    color: var(--ui-text);
+
+    .last-activity,
+    .steps-text,
+    .student-subtitle {
+        color: var(--ui-text-muted);
+    }
+
+    .progress-text,
+    .section-title {
+        color: var(--ui-brand);
+    }
+}

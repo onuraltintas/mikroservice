@@ -23,7 +23,7 @@
 
         <div class="relative z-10 p-6 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
             <div class="flex items-center gap-4 mb-4">
-                <img src="https://i.pravatar.cc/150?u=teacher" class="w-12 h-12 rounded-full border-2 border-white">
+                <img src="https://i.pravatar.cc/150?u=teacher" alt="" class="w-12 h-12 rounded-full border-2 border-white">
                 <div>
                     <div class="font-bold">Mehmet Hoca</div>
                     <div class="text-xs text-purple-200">Matematik Öğretmeni</div>
@@ -124,7 +124,7 @@
                         <mat-label>Şifre</mat-label>
                         <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="password">
                         <mat-icon matPrefix class="text-gray-400 mr-2">lock</mat-icon>
-                        <button mat-icon-button matSuffix (click)="togglePassword($event)" type="button">
+                        <button mat-icon-button matSuffix (click)="togglePassword($event)" type="button" aria-label="Parolayı göster veya gizle">
                             <mat-icon>{{hidePassword() ? 'visibility_off' : 'visibility'}}</mat-icon>
                         </button>
                         <mat-error *ngIf="form.get('password')?.hasError('required')">Şifre zorunludur</mat-error>
@@ -138,7 +138,7 @@
                         <mat-label>Şifreyi Onayla</mat-label>
                         <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="confirmPassword">
                         <mat-icon matPrefix class="text-gray-400 mr-2">lock_outline</mat-icon>
-                        <button mat-icon-button matSuffix (click)="togglePassword($event)" type="button">
+                        <button mat-icon-button matSuffix (click)="togglePassword($event)" type="button" aria-label="Parolayı tekrar göster veya gizle">
                             <mat-icon>{{hidePassword() ? 'visibility_off' : 'visibility'}}</mat-icon>
                         </button>
 

@@ -1,6 +1,6 @@
-<div class="activity-report">
+<div class="activity-report sp-page-enter">
     @if (loading()) {
-    <div class="loading-container"><div class="rp-spinner"></div></div>
+    <div class="loading-container" role="status" aria-live="polite"><div class="rp-spinner"></div><span>Aktiviteler yükleniyor...</span></div>
     } @else if (report()?.dataAvailable === false) {
     <div class="empty-state">
         {{ report()?.unavailableReason || 'Bu tarih aralığında aktivite verisi bulunamadı.' }}
@@ -11,16 +11,16 @@
             <div class="streak-container">
                 <span class="material-icons streak-icon">local_fire_department</span>
                 <div class="streak-info">
-                    <div class="streak-value">{{ report()!.currentStreak.days }} Days</div>
-                    <div class="streak-label">Current Streak</div>
-                    <div class="streak-record">Longest: {{ report()!.currentStreak.longestStreak }} days</div>
+                    <div class="streak-value">{{ report()!.currentStreak.days }} gün</div>
+                    <div class="streak-label">Mevcut seri</div>
+                    <div class="streak-record">Rekor: {{ report()!.currentStreak.longestStreak }} gün</div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="rp-card">
-        <div class="rp-card__header"><h3 class="rp-card__title">Activity Heatmap</h3></div>
+        <div class="rp-card__header"><h3 class="rp-card__title">Aktivite yoğunluğu</h3><p class="rp-card__sub">Son 30 gündeki çalışma düzenin</p></div>
         <div class="rp-card__body">
             <div class="chart-container"><app-heatmap [data]="heatmapData()"></app-heatmap></div>
         </div>
@@ -28,18 +28,18 @@
 
     <div class="charts-row">
         <div class="rp-card">
-            <div class="rp-card__header"><h3 class="rp-card__title">Hourly Distribution</h3></div>
+            <div class="rp-card__header"><h3 class="rp-card__title">Saatlere göre dağılım</h3></div>
             <div class="rp-card__body">
                 <div class="chart-container"><app-bar-chart [data]="report()!.hourlyDistributionChart.data"
-                        xAxisLabel="Hour" yAxisLabel="Activities"></app-bar-chart></div>
+                        xAxisLabel="Saat" yAxisLabel="Aktivite"></app-bar-chart></div>
             </div>
         </div>
 
         <div class="rp-card">
-            <div class="rp-card__header"><h3 class="rp-card__title">Daily Distribution</h3></div>
+            <div class="rp-card__header"><h3 class="rp-card__title">Günlere göre dağılım</h3></div>
             <div class="rp-card__body">
                 <div class="chart-container"><app-bar-chart [data]="report()!.dailyDistributionChart.data"
-                        xAxisLabel="Day" yAxisLabel="Activities"></app-bar-chart></div>
+                        xAxisLabel="Gün" yAxisLabel="Aktivite"></app-bar-chart></div>
             </div>
         </div>
     </div>
@@ -47,19 +47,19 @@
     <div class="stats-grid">
         <div class="rp-card"><div class="rp-card__body">
                 <div class="stat-value">{{ formatMinutes(report()!.studyTime.totalMinutes) }}</div>
-                <div class="stat-label">Total Study Time</div>
+                <div class="stat-label">Toplam çalışma</div>
             </div></div>
         <div class="rp-card"><div class="rp-card__body">
                 <div class="stat-value">{{ report()!.studyTime.averageSessionLength }} min</div>
-                <div class="stat-label">Avg Session</div>
+                <div class="stat-label">Ortalama oturum</div>
             </div></div>
         <div class="rp-card"><div class="rp-card__body">
                 <div class="stat-value">{{ report()!.studyTime.totalSessions }}</div>
-                <div class="stat-label">Total Sessions</div>
+                <div class="stat-label">Toplam oturum</div>
             </div></div>
         <div class="rp-card"><div class="rp-card__body">
                 <div class="stat-value">{{ report()!.studyTime.mostActiveHour }}:00</div>
-                <div class="stat-label">Peak Hour</div>
+                <div class="stat-label">En aktif saat</div>
             </div></div>
     </div>
     } @else {

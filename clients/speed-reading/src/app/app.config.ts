@@ -3,7 +3,6 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
-import { provideToastr } from 'ngx-toastr';
 import { MatPaginatorIntl } from '@angular/material/paginator';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { registerLocaleData } from '@angular/common';
@@ -33,17 +32,6 @@ export const appConfig: ApplicationConfig = {
     ),
     provideAnimationsAsync(),
     provideCharts(withDefaultRegisterables()),
-    provideToastr({
-      timeOut: 4000,
-      positionClass: 'toast-top-right',
-      preventDuplicates: true,
-      progressBar: true,
-      closeButton: true,
-      enableHtml: false,
-      tapToDismiss: true,
-      maxOpened: 5,
-      autoDismiss: true
-    }),
     { provide: MatPaginatorIntl, useClass: TurkishPaginatorIntl },
     { provide: MAT_DATE_LOCALE, useValue: 'tr-TR' },
     { provide: LOCALE_ID, useValue: 'tr-TR' },

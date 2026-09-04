@@ -27,6 +27,7 @@ import {
   SpeedReadingAchievement,
   SpeedReadingAchievementRequest
 } from '../../../core/services/speed-reading-admin.service';
+import { ToasterService } from '../../../core/services/toaster.service';
 
 @Component({
   selector: 'app-speed-reading-overview',
@@ -817,6 +818,7 @@ export class SpeedReadingOverviewComponent implements OnInit {
   private readonly service = inject(SpeedReadingAdminService);
   private readonly authService = inject(AuthService);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly toaster = inject(ToasterService);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly capabilities = signal<SpeedReadingCapabilities | null>(null);
@@ -932,8 +934,8 @@ export class SpeedReadingOverviewComponent implements OnInit {
     });
   }
 
-  deleteExerciseType(type: SpeedReadingExerciseType) {
-    if (!globalThis.confirm(`“${type.displayName || type.name}” türü silinsin mi?`)) return;
+  async deleteExerciseType(type: SpeedReadingExerciseType): Promise<void> {
+    if (!await this.toaster.confirm(`“${type.displayName || type.name}” türü silinsin mi?`, { title: 'Egzersiz türünü sil' })) return;
     this.service.deleteExerciseType(type.id).subscribe({
       next: () => this.load(),
       error: () => this.error.set('Egzersiz türü silinemedi.')
@@ -977,8 +979,8 @@ export class SpeedReadingOverviewComponent implements OnInit {
     });
   }
 
-  deleteExercise(exercise: SpeedReadingExercise) {
-    if (!globalThis.confirm(`“${exercise.title}” egzersizi silinsin mi?`)) return;
+  async deleteExercise(exercise: SpeedReadingExercise): Promise<void> {
+    if (!await this.toaster.confirm(`“${exercise.title}” egzersizi silinsin mi?`, { title: 'Egzersizi sil' })) return;
     this.service.deleteExercise(exercise.id).subscribe({
       next: () => this.load(),
       error: () => this.error.set('Egzersiz silinemedi. Bağlı okuma metinlerini kontrol edin.')
@@ -1041,8 +1043,8 @@ export class SpeedReadingOverviewComponent implements OnInit {
     });
   }
 
-  deleteReadingText(text: SpeedReadingReadingText) {
-    if (!globalThis.confirm(`“${text.title}” okuma metni silinsin mi?`)) return;
+  async deleteReadingText(text: SpeedReadingReadingText): Promise<void> {
+    if (!await this.toaster.confirm(`“${text.title}” okuma metni silinsin mi?`, { title: 'Okuma metnini sil' })) return;
     this.service.deleteReadingText(text.id).subscribe({
       next: () => {
         if (this.selectedReadingTextId === text.id) {
@@ -1138,8 +1140,8 @@ export class SpeedReadingOverviewComponent implements OnInit {
     });
   }
 
-  deleteQuestion(question: SpeedReadingReadingQuestion) {
-    if (!globalThis.confirm(`“${question.questionText}” sorusu silinsin mi?`)) return;
+  async deleteQuestion(question: SpeedReadingReadingQuestion): Promise<void> {
+    if (!await this.toaster.confirm(`“${question.questionText}” sorusu silinsin mi?`, { title: 'Soruyu sil' })) return;
     this.service.deleteReadingQuestion(question.id).subscribe({
       next: () => {
         if (this.selectedReadingTextId !== null) {
@@ -1206,8 +1208,8 @@ export class SpeedReadingOverviewComponent implements OnInit {
     });
   }
 
-  deleteProgram(program: SpeedReadingProgramTemplate) {
-    if (!globalThis.confirm(`“${program.name}” program şablonu silinsin mi?`)) return;
+  async deleteProgram(program: SpeedReadingProgramTemplate): Promise<void> {
+    if (!await this.toaster.confirm(`“${program.name}” program şablonu silinsin mi?`, { title: 'Program şablonunu sil' })) return;
     this.service.deleteProgramTemplate(program.id).subscribe({
       next: () => this.load(),
       error: () => this.error.set('Program şablonu silinemedi. Bağlı öğrenci ilerlemesini kontrol edin.')
@@ -1250,8 +1252,8 @@ export class SpeedReadingOverviewComponent implements OnInit {
     });
   }
 
-  deleteLearningPathTemplate(template: SpeedReadingLearningPathTemplate) {
-    if (!globalThis.confirm(`“${template.name}” öğrenme yolu silinsin mi?`)) return;
+  async deleteLearningPathTemplate(template: SpeedReadingLearningPathTemplate): Promise<void> {
+    if (!await this.toaster.confirm(`“${template.name}” öğrenme yolu silinsin mi?`, { title: 'Öğrenme yolunu sil' })) return;
     this.service.deleteLearningPathTemplate(template.id).subscribe({
       next: () => this.load(),
       error: () => this.error.set('Öğrenme yolu silinemedi. Bağlı düğüm ve ilerlemeleri kontrol edin.')
@@ -1332,8 +1334,8 @@ export class SpeedReadingOverviewComponent implements OnInit {
     });
   }
 
-  deleteLearningPathNode(node: SpeedReadingLearningPathNode) {
-    if (!globalThis.confirm(`“${node.title}” düğümü silinsin mi?`)) return;
+  async deleteLearningPathNode(node: SpeedReadingLearningPathNode): Promise<void> {
+    if (!await this.toaster.confirm(`“${node.title}” düğümü silinsin mi?`, { title: 'Öğrenme yolu düğümünü sil' })) return;
     this.service.deleteLearningPathNode(node.id).subscribe({
       next: () => {
         if (this.selectedLearningPathId !== null) {
@@ -1392,8 +1394,8 @@ export class SpeedReadingOverviewComponent implements OnInit {
     });
   }
 
-  deleteLearningPathNodeContent(contentId: string) {
-    if (!globalThis.confirm('Bu düğüm içeriği silinsin mi?')) return;
+  async deleteLearningPathNodeContent(contentId: string): Promise<void> {
+    if (!await this.toaster.confirm('Bu düğüm içeriği silinsin mi?', { title: 'Düğüm içeriğini sil' })) return;
     this.service.deleteLearningPathNodeContent(contentId).subscribe({
       next: () => this.reloadLearningPathNodes(),
       error: () => this.error.set('Düğüm içeriği silinemedi.')
@@ -1415,8 +1417,8 @@ export class SpeedReadingOverviewComponent implements OnInit {
     });
   }
 
-  deleteLearningPathPrerequisite(prerequisiteNodeId: string) {
-    if (this.selectedLearningPathNodeId === null || !globalThis.confirm('Bu önkoşul silinsin mi?')) return;
+  async deleteLearningPathPrerequisite(prerequisiteNodeId: string): Promise<void> {
+    if (this.selectedLearningPathNodeId === null || !await this.toaster.confirm('Bu önkoşul silinsin mi?', { title: 'Önkoşulu sil' })) return;
     this.service.deleteLearningPathPrerequisite(
       this.selectedLearningPathNodeId,
       prerequisiteNodeId
@@ -1470,8 +1472,8 @@ export class SpeedReadingOverviewComponent implements OnInit {
     });
   }
 
-  deleteAchievement(achievement: SpeedReadingAchievement) {
-    if (!globalThis.confirm(`“${achievement.name}” kazanımı silinsin mi?`)) return;
+  async deleteAchievement(achievement: SpeedReadingAchievement): Promise<void> {
+    if (!await this.toaster.confirm(`“${achievement.name}” kazanımı silinsin mi?`, { title: 'Kazanımı sil' })) return;
     this.service.deleteAchievement(achievement.id).subscribe({
       next: () => this.load(),
       error: () => this.error.set('Kazanım silinemedi. Öğrenci kazanım kayıtları varsa pasif hale getirin.')

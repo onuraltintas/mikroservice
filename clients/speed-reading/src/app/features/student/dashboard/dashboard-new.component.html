@@ -25,7 +25,7 @@
     <div class="db-onboarding__card">
       <!-- Illustration -->
       <div class="db-onboarding__illus">
-        <span class="db-onboarding__illus-emoji">🚀</span>
+        <span class="db-onboarding__illus-emoji material-icons" aria-hidden="true">rocket_launch</span>
       </div>
 
       <h1 class="db-onboarding__title">Hızlı Okuma Yolculuğuna Başla!</h1>
@@ -78,7 +78,7 @@
         <div class="db-hero__left">
           <div class="db-hero__avatar">{{ getInitials(currentUser?.firstName, currentUser?.lastName) }}</div>
           <div>
-            <h1 class="db-hero__title">Merhaba, {{ currentUser?.firstName }}! 👋</h1>
+            <h1 class="db-hero__title">Merhaba, {{ currentUser?.firstName }}!</h1>
             <p class="db-hero__sub">Bugün harika bir gün olacak. Hazır mısın?</p>
             @if (hasProgram()) {
               <div class="db-hero__badge">
@@ -104,7 +104,7 @@
                     [attr.stroke-dasharray]="150.8"
                     [attr.stroke-dashoffset]="150.8 * (1 - todayProgress() / 100)"
                     transform="rotate(-90 30 30)"
-                    style="transition: stroke-dashoffset 0.6s ease"/>
+                    class="progress-ring__value"/>
                 </svg>
                 <span class="db-quick-stat__pct" [appCountUp]="todayProgress()" cuSuffix="%"></span>
               </div>
@@ -113,13 +113,13 @@
 
             <div class="db-quick-stat db-quick-stat--text">
               <span class="db-quick-stat__big" [appCountUp]="currentStreak()"></span>
-              <span class="db-quick-stat__unit">🔥</span>
+              <span class="db-quick-stat__unit material-icons" aria-hidden="true">local_fire_department</span>
               <span class="db-quick-stat__label">Gün Serisi</span>
             </div>
 
             <div class="db-quick-stat db-quick-stat--text">
               <span class="db-quick-stat__big" [appCountUp]="currentLevel()"></span>
-              <span class="db-quick-stat__unit">⭐</span>
+              <span class="db-quick-stat__unit material-icons" aria-hidden="true">star</span>
               <span class="db-quick-stat__label">Seviye</span>
             </div>
           </div>

@@ -95,10 +95,10 @@
                 <mat-card class="info-card" *ngIf="contactInfo.workingHours">
                     <mat-icon>schedule</mat-icon>
                     <h3>Çalışma Saatleri</h3>
-                    <p style="white-space: pre-line">{{ contactInfo.workingHours }}</p>
+                    <p class="ui-pre-line">{{ contactInfo.workingHours }}</p>
                 </mat-card>
 
-                <iframe *ngIf="mapUrl" [src]="mapUrl" width="100%" height="250" style="border:0; border-radius: 8px;"
+                <iframe *ngIf="mapUrl" [src]="mapUrl" width="100%" height="250" class="ui-map-frame"
                     allowfullscreen="" loading="lazy"></iframe>
             </div>
         </div>

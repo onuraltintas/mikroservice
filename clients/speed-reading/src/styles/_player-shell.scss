@@ -1,0 +1,98 @@
+// Universal exercise player shell. Exercise engines keep their own visual
+// language; the shared shell follows the student panel tokens.
+app-exercise-player {
+  color: var(--sp-text-1);
+
+  .player-container { padding: var(--sp-content-padding); }
+
+  .loading-state,
+  .error-state,
+  .unsupported-state { color: var(--sp-text-1); }
+
+  .game-container,
+  .info-card {
+    border: 1px solid var(--sp-border);
+    border-radius: var(--sp-radius-2xl);
+    background: var(--sp-surface);
+    color: var(--sp-text-1);
+  }
+
+  .game-container { box-shadow: var(--sp-shadow-xl); }
+  .info-card { box-shadow: var(--sp-shadow-card); }
+  .game-header { border-bottom-color: var(--sp-border); }
+
+  .game-header .timer {
+    color: var(--sp-primary-dark);
+    background: var(--sp-primary-ghost);
+    border-color: var(--sp-primary-light);
+  }
+
+  .game-header .timer.countdown {
+    color: var(--sp-warning-dark);
+    background: var(--sp-warning-light);
+    border-color: var(--sp-warning);
+  }
+
+  .game-header .timer.urgent,
+  .game-header .timer.last-ten-seconds {
+    color: var(--sp-danger);
+    background: var(--sp-danger-light);
+    border-color: var(--sp-danger);
+  }
+
+  .game-header .progress-info span { color: var(--sp-text-2); }
+
+  .game-header .progress-info .target-counter {
+    color: var(--sp-primary-dark);
+    background: var(--sp-primary-ghost);
+  }
+
+  .game-header .target-display {
+    background: var(--sp-surface-3);
+    color: var(--sp-text-2);
+  }
+
+  .game-header .target-display strong { color: var(--sp-primary-dark); }
+
+  .ep-btn {
+    min-height: var(--ui-control-height);
+    border: 1px solid var(--sp-border-strong);
+    border-radius: var(--sp-radius-sm);
+    font-family: var(--sp-font-sans);
+    transition: background-color var(--sp-transition-fast), border-color var(--sp-transition-fast), color var(--sp-transition-fast), transform var(--sp-transition-fast);
+
+    &:hover:not(:disabled) { transform: translateY(-1px); }
+
+    &:focus-visible,
+    &.ep-btn--icon:focus-visible { outline: 2px solid var(--sp-primary); outline-offset: 2px; }
+  }
+
+  .ep-btn--primary { border-color: var(--sp-primary); background: var(--sp-primary); color: var(--sp-text-inv); }
+  .ep-btn--danger { border-color: var(--sp-danger); background: var(--sp-danger); color: #fff; }
+  .ep-btn--ghost { background: var(--sp-surface); color: var(--sp-text-2); }
+
+  .ep-btn--icon {
+    width: var(--ui-control-height);
+    height: var(--ui-control-height);
+    min-height: var(--ui-control-height);
+    background: var(--sp-surface-2);
+    border-color: var(--sp-border-strong);
+    color: var(--sp-text-1);
+
+    &:hover:not(:disabled) { background: var(--sp-primary-ghost); color: var(--sp-primary); }
+  }
+}
+
+@media (max-width: 640px) {
+  app-exercise-player {
+    .player-container { padding: 16px; }
+    .game-container { border-radius: var(--sp-radius-xl); padding: 16px; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  app-exercise-player .game-container,
+  app-exercise-player .info-card,
+  app-exercise-player .ep-btn,
+  app-exercise-player .ep-spinner { animation: none; transition: none; }
+}

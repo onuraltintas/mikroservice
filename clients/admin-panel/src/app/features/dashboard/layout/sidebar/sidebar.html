@@ -1,5 +1,5 @@
 <div [class.w-72]="!layoutService.isSidebarCollapsed()" [class.w-20]="layoutService.isSidebarCollapsed()"
-    class="flex flex-col h-full bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 border-r border-gray-200 dark:border-slate-800 transition-all duration-300 ease-in-out relative group z-30">
+    class="flex flex-col h-full bg-[var(--ui-surface)] border-r border-[var(--ui-border)] transition-all duration-300 ease-in-out relative group z-30">
 
     <!-- Decorative Elements (Dark mode only) -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none hidden dark:block">
@@ -8,7 +8,8 @@
     </div>
 
     <!-- Collapse Toggle Button (Desktop) -->
-    <button (click)="layoutService.toggleSidebar()"
+    <button type="button" (click)="layoutService.toggleSidebar()"
+        aria-label="Kenar çubuğunu daralt veya genişlet"
         class="hidden md:flex absolute -right-3 top-20 bg-white dark:bg-gradient-to-r dark:from-indigo-500 dark:to-purple-500 border border-gray-200 dark:border-white/20 rounded-full p-1.5 text-gray-500 dark:text-white shadow-lg items-center justify-center w-7 h-7 z-50 transition-all duration-300 transform hover:scale-110 hover:shadow-xl focus:outline-none hover:bg-gray-50 dark:hover:bg-indigo-600"
         [class.rotate-180]="layoutService.isSidebarCollapsed()">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"
@@ -25,7 +26,7 @@
             <!-- Logo Icon -->
             <div class="relative">
                 <div
-                    class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                    class="w-10 h-10 rounded-xl bg-[var(--ui-brand)] flex items-center justify-center shadow-lg shadow-indigo-500/30">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -44,7 +45,7 @@
 
         <div *ngIf="layoutService.isSidebarCollapsed()" class="flex items-center justify-center">
             <div
-                class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                class="w-10 h-10 rounded-xl bg-[var(--ui-brand)] flex items-center justify-center shadow-lg shadow-indigo-500/30">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -91,7 +92,8 @@
         } @else {
         <!-- Parent Menu Item (Has Children) -->
         <div class="relative mb-1">
-            <button (click)="toggleSubmenu(item.label)"
+            <button type="button" (click)="toggleSubmenu(item.label)"
+                [attr.aria-expanded]="isExpanded(item.label)"
                 class="w-full group flex items-center px-3 py-2.5 text-sm font-medium text-gray-600 dark:text-slate-400 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 hover:text-indigo-600 dark:hover:text-white transition-all duration-200 relative focus:outline-none"
                 [class.bg-gray-100]="isExpanded(item.label) && !layoutService.isSidebarCollapsed()"
                 [class.dark:bg-white/5]="isExpanded(item.label) && !layoutService.isSidebarCollapsed()"
@@ -166,22 +168,19 @@
                 </div>
             </div>
 
-            <div *ngIf="!layoutService.isSidebarCollapsed()" class="ml-3 flex-1 min-w-0">
-                <div style="display: flex !important; align-items: center !important;" class="leading-none">
-                    <span
-                        style="font-size: 22px !important; font-weight: 900 !important; color: inherit; margin-right: 12px !important;">{{
-                        user()?.firstName }}</span>
-                    <span style="font-size: 22px !important; font-weight: 900 !important; color: inherit;">{{
-                        user()?.lastName }}</span>
+            <div *ngIf="!layoutService.isSidebarCollapsed()" class="sidebar-user-details">
+                <div class="sidebar-user-name-row">
+                    <span class="sidebar-user-name">{{ user()?.firstName }}</span>
+                    <span class="sidebar-user-name">{{ user()?.lastName }}</span>
                 </div>
-                <p style="font-size: 13px !important; font-weight: 600 !important;"
-                    class="text-gray-500 dark:text-slate-400 truncate mt-2 opacity-80">
+                <p class="sidebar-user-role">
                     {{ user()?.role || 'Rol' }}
                 </p>
             </div>
 
             <!-- Logout Button - Expanded -->
-            <button *ngIf="!layoutService.isSidebarCollapsed()" (click)="logout(); $event.stopPropagation()"
+            <button type="button" *ngIf="!layoutService.isSidebarCollapsed()" (click)="logout(); $event.stopPropagation()"
+                aria-label="Çıkış yap"
                 class="ml-2 p-2 rounded-lg text-gray-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 transition-colors cursor-pointer"
                 title="Çıkış Yap">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none"
@@ -192,7 +191,8 @@
             </button>
 
             <!-- Logout Button - Collapsed (show icon only) -->
-            <button *ngIf="layoutService.isSidebarCollapsed()" (click)="logout(); $event.stopPropagation()"
+            <button type="button" *ngIf="layoutService.isSidebarCollapsed()" (click)="logout(); $event.stopPropagation()"
+                aria-label="Çıkış yap"
                 class="ml-2 p-2 rounded-lg text-gray-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 transition-colors cursor-pointer"
                 title="Çıkış Yap">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none"
@@ -204,29 +204,3 @@
         </div>
     </div>
 </div>
-
-<style>
-    :host-context(.dark) .active-menu-item {
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
-        color: white;
-        border-left: 3px solid rgb(99, 102, 241);
-        margin-left: -3px;
-        padding-left: calc(0.75rem + 3px);
-    }
-
-    :host-context(.dark) .active-menu-item span:first-child {
-        color: rgb(129, 140, 248);
-    }
-
-    :host-context(:not(.dark)) .active-menu-item {
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
-        color: rgb(79, 70, 229);
-        border-left: 3px solid rgb(99, 102, 241);
-        margin-left: -3px;
-        padding-left: calc(0.75rem + 3px);
-    }
-
-    :host-context(:not(.dark)) .active-menu-item span:first-child {
-        color: rgb(99, 102, 241);
-    }
-</style>

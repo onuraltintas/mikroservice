@@ -227,9 +227,8 @@ export class UserListComponent {
 
   async deleteUser(userId: string) {
     const confirmed = await this.toaster.confirm(
-      'Kullanıcıyı Pasif Yap',
       'Kullanıcıyı pasif duruma getirmek istediğinize emin misiniz?',
-      'Evet, pasif yap'
+      { title: 'Kullanıcıyı Pasif Yap', confirmText: 'Evet, pasif yap' }
     );
 
     if (confirmed) {
@@ -251,9 +250,8 @@ export class UserListComponent {
 
   async activateUser(userId: string) {
     const confirmed = await this.toaster.confirm(
-      'Kullanıcıyı Aktif Yap',
       'Kullanıcıyı tekrar aktif hale getirmek istediğinize emin misiniz?',
-      'Evet, aktif yap'
+      { title: 'Kullanıcıyı Aktif Yap', confirmText: 'Evet, aktif yap' }
     );
 
     if (confirmed) {
@@ -275,9 +273,8 @@ export class UserListComponent {
 
   async confirmUserEmail(userId: string) {
     const confirmed = await this.toaster.confirm(
-      'E-Postayı Doğrula',
       'Kullanıcının e-postasını manuel olarak doğrulamak istediğinize emin misiniz?',
-      'Evet, doğrula'
+      { title: 'E-Postayı Doğrula', confirmText: 'Evet, doğrula' }
     );
 
     if (confirmed) {
@@ -299,9 +296,8 @@ export class UserListComponent {
 
   async permanentDeleteUser(userId: string) {
     const confirmed = await this.toaster.confirm(
-      'DİKKAT! Kalıcı Silme',
       'Kullanıcıyı kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
-      'Evet, kalıcı olarak sil'
+      { title: 'DİKKAT! Kalıcı Silme', confirmText: 'Evet, kalıcı olarak sil' }
     );
 
     if (confirmed) {

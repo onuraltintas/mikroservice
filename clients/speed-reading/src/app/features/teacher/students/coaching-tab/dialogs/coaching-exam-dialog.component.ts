@@ -21,7 +21,7 @@ import { CoachingApiService, CoachingSubject } from '../../../../../core/service
     <div class="cd-header">
       <mat-icon>quiz</mat-icon>
       <h2>Sınav Sonucu Ekle</h2>
-      <button mat-icon-button (click)="cancel()"><mat-icon>close</mat-icon></button>
+      <button mat-icon-button type="button" (click)="cancel()" aria-label="Sınav penceresini kapat"><mat-icon>close</mat-icon></button>
     </div>
     <mat-dialog-content>
       <form [formGroup]="form" class="cd-form">
@@ -84,7 +84,7 @@ import { CoachingApiService, CoachingSubject } from '../../../../../core/service
                 <mat-label>B</mat-label>
                 <input matInput type="number" formControlName="empty" min="0" placeholder="0">
               </mat-form-field>
-              <button mat-icon-button type="button" class="remove-btn" (click)="removeSubjectRow(i)">
+      <button mat-icon-button type="button" aria-label="Ders satırını kaldır" class="remove-btn" (click)="removeSubjectRow(i)">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
@@ -95,12 +95,13 @@ import { CoachingApiService, CoachingSubject } from '../../../../../core/service
     <mat-dialog-actions align="end">
       <button mat-stroked-button (click)="cancel()">İptal</button>
       <button mat-raised-button color="primary" (click)="save()" [disabled]="loading() || form.invalid">
-        <mat-spinner *ngIf="loading()" diameter="16" style="display:inline-flex;margin-right:6px"></mat-spinner>
+        <mat-spinner *ngIf="loading()" class="dialog-spinner" diameter="16"></mat-spinner>
         Kaydet
       </button>
     </mat-dialog-actions>
   `,
   styles: [`
+    .dialog-spinner { display:inline-flex; margin-right:6px; }
     .cd-header { display:flex; align-items:center; gap:10px; padding:16px 20px 0;
       mat-icon{color:#6366f1} h2{flex:1;margin:0;font-size:1.05rem;font-weight:700}
     }

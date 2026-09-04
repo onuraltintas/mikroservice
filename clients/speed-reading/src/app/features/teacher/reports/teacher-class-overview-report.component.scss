@@ -417,3 +417,46 @@
         }
     }
 }
+
+// Shared platform contract keeps dashboard/report cards consistent across
+// teacher, student and admin surfaces, including dark-mode token overrides.
+:host {
+    color: var(--ui-text);
+}
+
+.class-overview-container {
+    .header .title-section h1,
+    .kpi-grid .kpi-card .kpi-value {
+        color: var(--ui-text);
+    }
+
+    .header .title-section .subtitle,
+    .header .controls .date-range-selector .option-icon,
+    .header .controls .custom-date-range .date-separator,
+    .chart-card mat-card-subtitle,
+    .student-lists-grid .student-list-card mat-card-subtitle,
+    .student-lists-grid .student-table th {
+        color: var(--ui-text-muted);
+    }
+
+    .header .controls .refresh-btn,
+    .kpi-grid .kpi-card .kpi-badge {
+        background: var(--ui-surface-muted);
+    }
+
+    .kpi-grid .kpi-card {
+        background: var(--ui-surface);
+        border-color: var(--ui-border);
+        box-shadow: var(--ui-shadow-sm);
+    }
+
+    .student-lists-grid .student-list-card .comprehension-badge.high {
+        background: var(--ui-success-soft);
+        color: var(--ui-success);
+    }
+
+    .student-lists-grid .student-list-card .comprehension-badge.low {
+        background: var(--ui-danger-soft);
+        color: var(--ui-danger);
+    }
+}

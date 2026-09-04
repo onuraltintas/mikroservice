@@ -18,11 +18,7 @@
       @for (achievement of achievements(); track achievement.id) {
         <li class="ra-item">
           <div class="ra-item__icon">
-            @if (achievement.icon) {
-              <span class="ra-item__emoji">{{ achievement.icon }}</span>
-            } @else {
-              <span class="material-icons ra-item__mat-icon">emoji_events</span>
-            }
+            <span class="material-icons ra-item__mat-icon" aria-hidden="true">workspace_premium</span>
           </div>
           <div class="ra-item__content">
             <h4 class="ra-item__title">{{ achievement.title }}</h4>

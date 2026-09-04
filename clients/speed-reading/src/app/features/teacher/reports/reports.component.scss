@@ -96,3 +96,33 @@ h1 {
     justify-content: center;
     padding: 3rem;
 }
+
+// Shared platform contract keeps the teacher report surface in the same
+// palette as the student and standalone admin clients.
+:host {
+    color: var(--ui-text);
+}
+
+.reports-container h1,
+.stat .value,
+.summary-item .value {
+    color: var(--ui-brand);
+}
+
+.stats-summary,
+.summary-item {
+    background: var(--ui-surface-muted);
+}
+
+.stat .label,
+.summary-item .label {
+    color: var(--ui-text-muted);
+}
+
+.stat .value.improving {
+    color: var(--ui-success);
+}
+
+.stat .value.declining {
+    color: var(--ui-danger);
+}

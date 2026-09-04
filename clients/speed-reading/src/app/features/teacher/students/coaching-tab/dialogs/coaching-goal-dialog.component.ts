@@ -23,7 +23,7 @@ import { AuthService } from '../../../../../core/services/auth.service';
     <div class="cd-header">
       <mat-icon>flag</mat-icon>
       <h2>{{ data.goal ? 'Hedef Düzenle' : 'Yeni Hedef' }}</h2>
-      <button mat-icon-button (click)="cancel()"><mat-icon>close</mat-icon></button>
+      <button mat-icon-button type="button" (click)="cancel()" aria-label="Hedef penceresini kapat"><mat-icon>close</mat-icon></button>
     </div>
     <mat-dialog-content>
       <form [formGroup]="form" class="cd-form">
@@ -61,12 +61,13 @@ import { AuthService } from '../../../../../core/services/auth.service';
     <mat-dialog-actions align="end">
       <button mat-stroked-button (click)="cancel()">İptal</button>
       <button mat-raised-button color="primary" (click)="save()" [disabled]="loading() || form.invalid">
-        <mat-spinner *ngIf="loading()" diameter="16" style="display:inline-flex;margin-right:6px"></mat-spinner>
+        <mat-spinner *ngIf="loading()" class="dialog-spinner" diameter="16"></mat-spinner>
         {{ data.goal ? 'Güncelle' : 'Oluştur' }}
       </button>
     </mat-dialog-actions>
   `,
   styles: [`
+    .dialog-spinner { display:inline-flex; margin-right:6px; }
     .cd-header { display:flex; align-items:center; gap:10px; padding:16px 20px 0;
       mat-icon{color:#6366f1} h2{flex:1;margin:0;font-size:1.05rem;font-weight:700}
     }

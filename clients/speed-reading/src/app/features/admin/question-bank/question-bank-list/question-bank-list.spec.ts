@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideToastr } from 'ngx-toastr';
 
 import { QuestionBankListComponent } from './question-bank-list';
 
@@ -13,7 +12,7 @@ describe('QuestionBankListComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [QuestionBankListComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideToastr()]
+      providers: [provideHttpClient(), provideHttpClientTesting()]
     })
     .compileComponents();
 

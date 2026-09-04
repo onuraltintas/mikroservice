@@ -53,12 +53,12 @@
   }
 
   <!-- ── Tabs ───────────────────────────────────────────────────── -->
-  <div class="de-tabs">
-    <button class="de-tab" [class.de-tab--active]="selectedTabIndex === 0" (click)="switchTab(0)">
+  <div class="de-tabs" role="tablist" aria-label="Günlük egzersiz görünümleri">
+    <button type="button" class="de-tab" role="tab" [attr.aria-selected]="selectedTabIndex === 0" [class.de-tab--active]="selectedTabIndex === 0" (click)="switchTab(0)">
       <span class="material-icons">today</span>
       Bugünün Programı
     </button>
-    <button class="de-tab" [class.de-tab--active]="selectedTabIndex === 1" (click)="switchTab(1)">
+    <button type="button" class="de-tab" role="tab" [attr.aria-selected]="selectedTabIndex === 1" [class.de-tab--active]="selectedTabIndex === 1" (click)="switchTab(1)">
       <span class="material-icons">history</span>
       Geçmiş Günler
     </button>
@@ -94,12 +94,13 @@
         <!-- All completed celebration -->
         @if (completedCount() === exercises().length && exercises().length > 0) {
           <div class="de-celebration">
-            <span class="de-celebration__emoji">🎉</span>
+            <span class="material-icons de-celebration__icon" aria-hidden="true">celebration</span>
             <h2 class="de-celebration__title">Harika İş!</h2>
             <p class="de-celebration__desc">Bugünün tüm egzersizlerini başarıyla tamamladın.</p>
             @if (progress()?.currentStreak) {
               <div class="de-celebration__streak">
-                🔥 {{ progress()?.currentStreak }} günlük serin devam ediyor!
+                <span class="material-icons" aria-hidden="true">local_fire_department</span>
+                {{ progress()?.currentStreak }} günlük serin devam ediyor!
               </div>
             }
           </div>
@@ -148,7 +149,7 @@
                 <!-- Footer -->
                 <div class="de-card__footer">
                   @if (!exercise.isCompleted) {
-                    <button class="de-card__btn de-card__btn--primary"
+                    <button type="button" class="de-card__btn de-card__btn--primary"
                       [disabled]="isExerciseDisabled(i)"
                       (click)="startExercise(exercise)">
                       <span class="material-icons">play_circle</span>
@@ -165,7 +166,7 @@
                       <span class="material-icons">check_circle</span>
                       Tamamlandı
                     </div>
-                    <button class="de-card__btn de-card__btn--ghost"
+                    <button type="button" class="de-card__btn de-card__btn--ghost"
                       (click)="startExercise(exercise)">
                       <span class="material-icons">replay</span>
                       TEKRAR ET
@@ -203,7 +204,7 @@
         <div class="de-day-chips">
           <span class="de-day-chips__label">Gün Seç:</span>
           @for (day of availableHistoricalDays(); track day) {
-            <button class="de-day-chip"
+            <button type="button" class="de-day-chip"
               [class.de-day-chip--active]="selectedHistoricalDay() === day"
               (click)="loadHistoricalDay(day)">
               Gün {{ day }}
@@ -243,7 +244,7 @@
                 </div>
               </div>
               <div class="de-card__footer">
-                <button class="de-card__btn de-card__btn--ghost" (click)="startHistoricalExercise(exercise)">
+                <button type="button" class="de-card__btn de-card__btn--ghost" (click)="startHistoricalExercise(exercise)">
                   <span class="material-icons">replay</span>
                   PRATİK YAP
                 </button>

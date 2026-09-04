@@ -336,10 +336,8 @@ export class SidebarComponent {
 
   async logout() { // Make async
     const confirmed = await this.toaster.confirm(
-      'Çıkış Yap',
       'Oturumunuzu sonlandırmak istediğinize emin misiniz?',
-      'Evet, Çıkış Yap',
-      'İptal'
+      { title: 'Çıkış Yap', confirmText: 'Evet, Çıkış Yap', cancelText: 'İptal' }
     );
 
     if (confirmed) {

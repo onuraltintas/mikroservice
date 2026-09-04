@@ -1,12 +1,12 @@
 <div class="streak-container" [matTooltip]="tooltipText">
-    <div class="streak-icon">{{ streakIcon }}</div>
+    <div class="streak-icon"><mat-icon aria-hidden="true">{{ streakIcon }}</mat-icon></div>
     <div class="streak-info">
         <div class="streak-value">{{ currentStreak }} Gün</div>
         <div class="streak-label">Seri</div>
     </div>
     @if (streakFreezeCount > 0) {
     <div class="freeze-count" matTooltip="Mevcut dondurucu sayısı">
-        ❄️ × {{ streakFreezeCount }}
+        <mat-icon aria-hidden="true">ac_unit</mat-icon> × {{ streakFreezeCount }}
     </div>
     }
 </div>

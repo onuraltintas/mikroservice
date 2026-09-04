@@ -108,10 +108,8 @@ export class HeaderComponent implements OnInit {
   async logout() {
     this.showUserMenu.set(false);
     const confirmed = await this.toaster.confirm(
-      'Çıkış Yap',
       'Oturumunuzu sonlandırmak istediğinize emin misiniz?',
-      'Evet, Çıkış Yap',
-      'İptal'
+      { title: 'Çıkış Yap', confirmText: 'Evet, Çıkış Yap', cancelText: 'İptal' }
     );
 
     if (confirmed) {

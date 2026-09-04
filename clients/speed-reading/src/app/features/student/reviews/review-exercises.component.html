@@ -1,4 +1,4 @@
-<div class="review-container">
+<div class="review-container sp-page-enter">
     <!-- Hero Header -->
     <div class="hero-header">
         <div class="hero-content">
@@ -43,16 +43,16 @@
     </div>
 
     <!-- Tabs -->
-    <div class="content-section">
+    <div class="sp-card content-section">
         <!-- Tab Buttons -->
-        <div class="sp-tab-bar">
-            <button class="sp-tab-btn" [class.active]="activeTab === 0" (click)="activeTab = 0">
-                <span class="material-icons">event</span>
+            <div class="sp-tab-bar" role="tablist" aria-label="Tekrar egzersizi sekmeleri">
+            <button type="button" class="sp-tab-btn" role="tab" [attr.aria-selected]="activeTab === 0" [class.active]="activeTab === 0" (click)="activeTab = 0">
+                <span class="material-icons" aria-hidden="true">event</span>
                 Yapılacaklar
                 <span class="tab-badge" *ngIf="dueReviews().length > 0">{{ dueReviews().length }}</span>
             </button>
-            <button class="sp-tab-btn" [class.active]="activeTab === 1" (click)="activeTab = 1">
-                <span class="material-icons">analytics</span>
+            <button type="button" class="sp-tab-btn" role="tab" [attr.aria-selected]="activeTab === 1" [class.active]="activeTab === 1" (click)="activeTab = 1">
+                <span class="material-icons" aria-hidden="true">analytics</span>
                 İstatistikler
             </button>
         </div>
@@ -123,12 +123,12 @@
                     </div>
 
                     <div class="sp-card-actions">
-                        <button class="sp-btn sp-btn-primary" (click)="startReview(review)">
-                            <span class="material-icons">play_arrow</span>
+                        <button type="button" class="sp-btn sp-btn--primary" (click)="startReview(review)">
+                            <span class="material-icons" aria-hidden="true">play_arrow</span>
                             Tekrar Yap
                         </button>
-                        <button class="sp-btn" (click)="viewHistory(review)">
-                            <span class="material-icons">history</span>
+                        <button type="button" class="sp-btn" (click)="viewHistory(review)">
+                            <span class="material-icons" aria-hidden="true">history</span>
                             Geçmiş
                         </button>
                     </div>

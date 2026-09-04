@@ -1,21 +1,21 @@
 // Variables - Verified Color Palette
-$primary-light: #6366f1; // Indigo 500
-$primary-dark: #4f46e5; // Indigo 600
-$secondary-light: #a855f7; // Purple 500
-$secondary-dark: #9333ea; // Purple 600
-$accent-light: #10b981; // Emerald 500
-$text-main: #1f2937; // Gray 800
-$text-secondary: #6b7280; // Gray 500
-$bg-light: #f3f4f6; // Gray 100
-$surface-white: #ffffff;
-$glass-bg: rgba(255, 255, 255, 0.95);
-$glass-border: 1px solid rgba(255, 255, 255, 0.2);
-$transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$primary-light: var(--sp-primary);
+$primary-dark: var(--sp-primary-dark);
+$secondary-light: var(--sp-primary-light);
+$secondary-dark: var(--sp-primary-dark);
+$accent-light: var(--sp-success);
+$text-main: var(--sp-text-1);
+$text-secondary: var(--sp-text-2);
+$bg-light: var(--sp-surface-3);
+$surface-white: var(--sp-surface);
+$glass-bg: var(--sp-surface);
+$glass-border: 1px solid var(--sp-border);
+$transition: all var(--sp-transition-normal);
 
 :host {
     display: block;
     min-height: 100vh;
-    background-color: #f9fafb;
+    background-color: var(--sp-surface-2);
     padding-bottom: 2rem;
 }
 
@@ -461,4 +461,181 @@ $transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   .sp-tab-btn { color: var(--sp-text-2, #94a3b8); &.active { color: var(--sp-primary, #818cf8); border-bottom-color: var(--sp-primary, #818cf8); } }
   .toggle-card { background: var(--sp-surface-3, #1e293b); border-color: var(--sp-border, #334155); }
   .setting-group label { color: var(--sp-text-2, #94a3b8); }
+}
+
+// ── Shared token alignment ──────────────────────────────────────────────────
+// Eski ekran kuralları korunurken son katmanda ortak öğrenci token'ları
+// uygulanır; böylece tema değişiminde ayrı bir sayfa kuralı gerekmez.
+:host {
+  color: var(--sp-text-1);
+  background: var(--sp-surface-2);
+}
+
+.settings-container {
+  max-width: var(--sp-content-max-width);
+  padding: clamp(8px, 2vw, 24px) 0 24px;
+}
+
+.header-section {
+  margin-bottom: 24px;
+}
+
+.header-section .title-area h1,
+.section-title,
+.setting-group label,
+.toggle-card .text h4 {
+  color: var(--sp-text-1);
+}
+
+.header-section .title-area .subtitle,
+.toggle-card .text p,
+.setting-group label .material-icons {
+  color: var(--sp-text-2);
+}
+
+.header-section .title-area h1 .material-icons {
+  color: var(--sp-primary);
+}
+
+.settings-card,
+.toggle-card,
+.slider-container {
+  background: var(--sp-surface);
+  border-color: var(--sp-border);
+  box-shadow: var(--sp-shadow-card);
+}
+
+.settings-card {
+  border-radius: var(--sp-radius-card);
+}
+
+.settings-card .tab-content {
+  padding: clamp(20px, 4vw, 40px);
+}
+
+.settings-card .sp-tab-bar {
+  background: var(--sp-surface);
+  border-bottom-color: var(--sp-border);
+}
+
+.settings-card .sp-tab-btn {
+  color: var(--sp-text-2);
+
+  &:hover {
+    color: var(--sp-text-1);
+  }
+
+  &.active {
+    color: var(--sp-primary);
+    border-bottom-color: var(--sp-primary);
+  }
+}
+
+.slider-container {
+  padding: 8px 12px;
+  border-radius: var(--sp-radius-md);
+  gap: 12px;
+
+  input[type='range'] {
+    flex: 1;
+    min-width: 0;
+    height: 44px;
+    accent-color: var(--sp-primary);
+    cursor: pointer;
+  }
+
+  .value-badge {
+    background: var(--sp-surface-3);
+    border-color: var(--sp-border);
+    color: var(--sp-primary);
+  }
+}
+
+.sp-select {
+  color-scheme: inherit;
+}
+
+.toggle-card {
+  min-height: 76px;
+
+  .info {
+    min-width: 0;
+
+    .text {
+      min-width: 0;
+    }
+
+    .icon-box {
+      background: var(--sp-surface-3);
+      color: var(--sp-primary);
+    }
+  }
+
+  > input[type='checkbox'] {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    accent-color: var(--sp-primary);
+    cursor: pointer;
+  }
+}
+
+.reminder-time-card {
+  margin-left: clamp(8px, 4vw, 32px);
+  border-left: 4px solid var(--sp-primary);
+  background: var(--sp-surface-3);
+}
+
+.reminder-time-input {
+  width: auto;
+  min-height: var(--ui-control-height);
+  padding: 10px 12px;
+  border: 1px solid var(--sp-border-strong);
+  border-radius: var(--sp-radius-sm);
+  background: var(--sp-surface);
+  color: var(--sp-text-1);
+  font: inherit;
+}
+
+.action-buttons {
+  border-top-color: var(--sp-border);
+  padding: 24px clamp(20px, 4vw, 40px) 0;
+
+  button {
+    min-height: var(--ui-control-height);
+  }
+}
+
+@media (max-width: 640px) {
+  .settings-container {
+    padding-inline: 0;
+  }
+
+  .header-section .title-area h1 {
+    font-size: 1.75rem;
+  }
+
+  .settings-card .tab-content {
+    padding: 20px 16px;
+  }
+
+  .theme-picker {
+    grid-template-columns: 1fr;
+  }
+
+  .toggle-card {
+    align-items: flex-start;
+
+    > input[type='checkbox'] {
+      margin-top: 10px;
+    }
+  }
+
+  .reminder-time-card {
+    align-items: center;
+  }
+
+  .reminder-time-input {
+    max-width: 120px;
+  }
 }

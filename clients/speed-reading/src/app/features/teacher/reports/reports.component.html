@@ -18,7 +18,7 @@
   <div class="kpi-cards" *ngIf="selectedStudentControl.value && !loading && activityReport?.dataAvailable !== false">
     <mat-card class="kpi-card">
       <mat-card-content>
-        <div class="kpi-icon">📊</div>
+        <div class="kpi-icon"><mat-icon aria-hidden="true">insights</mat-icon></div>
         <span class="kpi-label">Toplam Aktivite</span>
         <span class="kpi-value">{{ activityReport?.totalActivities }}</span>
       </mat-card-content>
@@ -26,7 +26,7 @@
 
     <mat-card class="kpi-card">
       <mat-card-content>
-        <div class="kpi-icon">⚡</div>
+        <div class="kpi-icon"><mat-icon aria-hidden="true">speed</mat-icon></div>
         <span class="kpi-label">Ortalama Okuma Hızı</span>
         <span class="kpi-value">{{ kdpReport?.averageWPM | number:'1.0-0' }}</span>
       </mat-card-content>
@@ -34,7 +34,7 @@
 
     <mat-card class="kpi-card">
       <mat-card-content>
-        <div class="kpi-icon">🎯</div>
+        <div class="kpi-icon"><mat-icon aria-hidden="true">track_changes</mat-icon></div>
         <span class="kpi-label">Ortalama Anlama</span>
         <span class="kpi-value">{{ comprehensionReport?.averageComprehension | number:'1.0-0' }}%</span>
       </mat-card-content>
@@ -42,7 +42,7 @@
 
     <mat-card class="kpi-card">
       <mat-card-content>
-        <div class="kpi-icon">🔥</div>
+        <div class="kpi-icon"><mat-icon aria-hidden="true">local_fire_department</mat-icon></div>
         <span class="kpi-label">Günlük Seri</span>
         <span class="kpi-value">{{ activityReport?.currentStreak }}</span>
       </mat-card-content>

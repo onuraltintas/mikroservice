@@ -31,7 +31,7 @@ import {
     MatInputModule, MatSelectModule, MatButtonModule, MatDatepickerModule, MatNativeDateModule],
   template: `
     <h2 mat-dialog-title>Seans Planla</h2>
-    <mat-dialog-content [formGroup]="form" style="display:flex;flex-direction:column;gap:12px;min-width:380px;padding-top:8px">
+    <mat-dialog-content [formGroup]="form" class="ui-dialog-content ui-dialog-form ui-dialog-content--lg">
       <mat-form-field appearance="outline">
         <mat-label>Öğrenci</mat-label>
         <mat-select formControlName="studentId" (selectionChange)="onStudentChange($event.value)">
@@ -127,27 +127,27 @@ export class NewCoachingSessionDialogComponent {
       <mat-icon>summarize</mat-icon>
       Seans Brifing — {{ briefing?.studentName }}
     </h2>
-    <mat-dialog-content style="min-width:480px;max-width:600px">
+    <mat-dialog-content class="ui-dialog-content ui-dialog-content--briefing">
       <div *ngIf="loading" class="loading-container"><mat-spinner diameter="40"></mat-spinner></div>
       <div *ngIf="!loading && briefing">
         <!-- Uyarılar -->
-        <div *ngIf="briefing.alertFlags.length > 0" style="margin-bottom:16px">
+        <div *ngIf="briefing.alertFlags.length > 0" class="ui-section-block--bottom">
           <div *ngFor="let flag of briefing.alertFlags"
-            style="background:#fff3e0;border-left:4px solid #f57c00;padding:8px 12px;margin-bottom:6px;border-radius:4px;font-size:0.9em">
-            <mat-icon style="font-size:16px;vertical-align:middle;color:#f57c00">warning</mat-icon>
+            class="ui-alert--warning ui-list-item">
+            <mat-icon class="ui-icon--sm ui-icon--warning">warning</mat-icon>
             {{ flag }}
           </div>
         </div>
 
         <!-- Çalışma Özeti -->
-        <div style="margin-bottom:16px">
+        <div class="ui-section-block--bottom">
           <strong>Çalışma (son {{ briefing.daysSinceLastSession }} gün)</strong>
-          <div style="display:flex;gap:24px;margin-top:8px;flex-wrap:wrap">
-            <div><span style="font-size:1.4em;font-weight:700">{{ briefing.studySummary.totalMinutes }}</span><br><small>dakika</small></div>
-            <div><span style="font-size:1.4em;font-weight:700">{{ briefing.studySummary.totalQuestions }}</span><br><small>soru</small></div>
-            <div><span style="font-size:1.4em;font-weight:700">{{ briefing.studySummary.totalSessions }}</span><br><small>oturum</small></div>
+          <div class="ui-summary-metrics">
+            <div><span class="ui-metric-value">{{ briefing.studySummary.totalMinutes }}</span><br><small>dakika</small></div>
+            <div><span class="ui-metric-value">{{ briefing.studySummary.totalQuestions }}</span><br><small>soru</small></div>
+            <div><span class="ui-metric-value">{{ briefing.studySummary.totalSessions }}</span><br><small>oturum</small></div>
           </div>
-          <div *ngIf="briefing.studySummary.subjectsWorked.length > 0" style="margin-top:8px">
+          <div *ngIf="briefing.studySummary.subjectsWorked.length > 0" class="ui-section-block">
             <mat-chip-set>
               <mat-chip *ngFor="let s of briefing.studySummary.subjectsWorked">{{ s }}</mat-chip>
             </mat-chip-set>
@@ -156,37 +156,37 @@ export class NewCoachingSessionDialogComponent {
         <mat-divider></mat-divider>
 
         <!-- Tamamlanan Hedefler -->
-        <div *ngIf="briefing.goalsCompleted.length > 0" style="margin:12px 0">
-          <strong style="color:#4CAF50">✓ Tamamlanan Hedefler ({{ briefing.goalsCompleted.length }})</strong>
-          <div *ngFor="let g of briefing.goalsCompleted" style="font-size:0.9em;margin-top:4px">
+        <div *ngIf="briefing.goalsCompleted.length > 0" class="ui-section-block">
+          <strong class="ui-note--success"><mat-icon class="ui-icon--xs ui-icon--success">check_circle</mat-icon> Tamamlanan Hedefler ({{ briefing.goalsCompleted.length }})</strong>
+          <div *ngFor="let g of briefing.goalsCompleted" class="ui-list-item">
             {{ g.title }} <small class="text-muted">({{ g.level }})</small>
           </div>
         </div>
 
         <!-- Geri Kalan Hedefler -->
-        <div *ngIf="briefing.goalsStalled.length > 0" style="margin:12px 0">
-          <strong style="color:#f44336">⚠ Geri Kalan Hedefler ({{ briefing.goalsStalled.length }})</strong>
-          <div *ngFor="let g of briefing.goalsStalled" style="font-size:0.9em;margin-top:4px">
+        <div *ngIf="briefing.goalsStalled.length > 0" class="ui-section-block">
+          <strong class="ui-note--danger"><mat-icon class="ui-icon--xs ui-icon--danger">warning</mat-icon> Geri Kalan Hedefler ({{ briefing.goalsStalled.length }})</strong>
+          <div *ngFor="let g of briefing.goalsStalled" class="ui-list-item">
             {{ g.title }} — %{{ g.completionPercentage | number:'1.0-0' }}
             <small class="text-muted">(bitiş: {{ g.targetDate | date:'dd.MM' }})</small>
           </div>
         </div>
 
         <!-- Teslim Edilen Ödevler -->
-        <div *ngIf="briefing.assignmentsSubmitted.length > 0" style="margin:12px 0">
+        <div *ngIf="briefing.assignmentsSubmitted.length > 0" class="ui-section-block">
           <strong>Teslim Edilen Ödevler ({{ briefing.assignmentsSubmitted.length }})</strong>
-          <div *ngFor="let a of briefing.assignmentsSubmitted" style="font-size:0.9em;margin-top:4px">
+          <div *ngFor="let a of briefing.assignmentsSubmitted" class="ui-list-item">
             {{ a.title }}
-            <mat-icon *ngIf="a.isApprovedByCoach === true" style="font-size:14px;color:#4CAF50;vertical-align:middle">verified</mat-icon>
-            <mat-icon *ngIf="a.isApprovedByCoach === false" style="font-size:14px;color:#f44336;vertical-align:middle">unpublished</mat-icon>
-            <mat-icon *ngIf="a.isApprovedByCoach == null" style="font-size:14px;color:#FF9800;vertical-align:middle">pending</mat-icon>
+            <mat-icon *ngIf="a.isApprovedByCoach === true" class="ui-icon--xs ui-icon--success">verified</mat-icon>
+            <mat-icon *ngIf="a.isApprovedByCoach === false" class="ui-icon--xs ui-icon--danger">unpublished</mat-icon>
+            <mat-icon *ngIf="a.isApprovedByCoach == null" class="ui-icon--xs ui-icon--warning">pending</mat-icon>
           </div>
         </div>
 
         <!-- Sınavlar -->
-        <div *ngIf="briefing.examsEntered.length > 0" style="margin:12px 0">
+        <div *ngIf="briefing.examsEntered.length > 0" class="ui-section-block">
           <strong>Girilen Sınavlar</strong>
-          <div *ngFor="let e of briefing.examsEntered" style="font-size:0.9em;margin-top:4px">
+          <div *ngFor="let e of briefing.examsEntered" class="ui-list-item">
             {{ e.examName }} — {{ e.examDate | date:'dd.MM' }}
             <strong *ngIf="e.totalNet">{{ e.totalNet | number:'1.1-1' }} net</strong>
           </div>
@@ -221,7 +221,7 @@ export class SessionBriefingDialogComponent implements OnInit {
     MatInputModule, MatSelectModule, MatButtonModule],
   template: `
     <h2 mat-dialog-title>Seansı Tamamla</h2>
-    <mat-dialog-content [formGroup]="form" style="display:flex;flex-direction:column;gap:12px;min-width:420px;padding-top:8px">
+    <mat-dialog-content [formGroup]="form" class="ui-dialog-content ui-dialog-form ui-dialog-content--wide">
       <mat-form-field appearance="outline">
         <mat-label>Sonuç</mat-label>
         <mat-select formControlName="status">
@@ -289,7 +289,7 @@ export class CompleteSessionDialogComponent {
     MatInputModule, MatSelectModule, MatButtonModule, MatDatepickerModule, MatNativeDateModule],
   template: `
     <h2 mat-dialog-title>Action Item → Ödev</h2>
-    <mat-dialog-content [formGroup]="form" style="display:flex;flex-direction:column;gap:12px;min-width:360px;padding-top:8px">
+    <mat-dialog-content [formGroup]="form" class="ui-dialog-content ui-dialog-form ui-dialog-content--md">
       <mat-form-field appearance="outline">
         <mat-label>Ödev Başlığı</mat-label>
         <input matInput formControlName="title">

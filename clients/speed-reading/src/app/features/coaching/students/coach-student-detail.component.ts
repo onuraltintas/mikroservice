@@ -32,8 +32,8 @@ import {
     MatInputModule, MatButtonModule],
   template: `
     <h2 mat-dialog-title>İlerleme Güncelle</h2>
-    <mat-dialog-content [formGroup]="form" style="display:flex;flex-direction:column;gap:12px;min-width:320px;padding-top:8px">
-      <p style="margin:0;color:#666">Mevcut: %{{ data.current }}</p>
+    <mat-dialog-content [formGroup]="form" class="ui-dialog-content ui-dialog-form ui-dialog-content--sm">
+      <p class="ui-muted-note">Mevcut: %{{ data.current }}</p>
       <mat-form-field appearance="outline">
         <mat-label>Yeni Tamamlanma Yüzdesi (0-100)</mat-label>
         <input matInput type="number" formControlName="newPercentage" min="0" max="100">
@@ -77,7 +77,7 @@ export class CoachGoalCheckinDialogComponent {
     MatInputModule, MatSelectModule, MatButtonModule, MatDatepickerModule, MatNativeDateModule],
   template: `
     <h2 mat-dialog-title>Yeni Hedef</h2>
-    <mat-dialog-content [formGroup]="form" style="display:flex;flex-direction:column;gap:12px;min-width:360px;padding-top:8px">
+    <mat-dialog-content [formGroup]="form" class="ui-dialog-content ui-dialog-form ui-dialog-content--md">
       <mat-form-field appearance="outline">
         <mat-label>Başlık</mat-label>
         <input matInput formControlName="title">
@@ -150,7 +150,7 @@ export class NewGoalDialogComponent {
     MatInputModule, MatSelectModule, MatButtonModule, MatDatepickerModule, MatNativeDateModule],
   template: `
     <h2 mat-dialog-title>Seans Planla</h2>
-    <mat-dialog-content [formGroup]="form" style="display:flex;flex-direction:column;gap:12px;min-width:360px;padding-top:8px">
+    <mat-dialog-content [formGroup]="form" class="ui-dialog-content ui-dialog-form ui-dialog-content--md">
       <mat-form-field appearance="outline">
         <mat-label>Tarih</mat-label>
         <input matInput [matDatepicker]="dp" formControlName="scheduledDate">
@@ -233,7 +233,7 @@ export class NewSessionDialogComponent {
     MatInputModule, MatSelectModule, MatButtonModule, MatDatepickerModule, MatNativeDateModule],
   template: `
     <h2 mat-dialog-title>Ödev Ver</h2>
-    <mat-dialog-content [formGroup]="form" style="display:flex;flex-direction:column;gap:12px;min-width:360px;padding-top:8px">
+    <mat-dialog-content [formGroup]="form" class="ui-dialog-content ui-dialog-form ui-dialog-content--md">
       <mat-form-field appearance="outline">
         <mat-label>Ödev Başlığı</mat-label>
         <input matInput formControlName="title">
@@ -310,7 +310,7 @@ export class NewAssignmentDialogComponent {
     MatInputModule, MatSelectModule, MatButtonModule, MatDatepickerModule, MatNativeDateModule],
   template: `
     <h2 mat-dialog-title>Sınav Sonucu Gir</h2>
-    <mat-dialog-content [formGroup]="form" style="display:flex;flex-direction:column;gap:12px;min-width:360px;padding-top:8px">
+    <mat-dialog-content [formGroup]="form" class="ui-dialog-content ui-dialog-form ui-dialog-content--md">
       <mat-form-field appearance="outline">
         <mat-label>Sınav Adı</mat-label>
         <input matInput formControlName="examName" placeholder="Örn: 5. TYT Denemesi">
@@ -379,7 +379,7 @@ export class NewExamDialogComponent {
     MatInputModule, MatSelectModule, MatButtonModule],
   template: `
     <h2 mat-dialog-title>Seansı Tamamla</h2>
-    <mat-dialog-content [formGroup]="form" style="display:flex;flex-direction:column;gap:12px;min-width:420px;padding-top:8px">
+    <mat-dialog-content [formGroup]="form" class="ui-dialog-content ui-dialog-form ui-dialog-content--wide">
       <mat-form-field appearance="outline">
         <mat-label>Sonuç</mat-label>
         <mat-select formControlName="status">

@@ -1,14 +1,15 @@
-$primary-color: #2563eb;
-$success-color: #059669;
-$warning-color: #d97706;
-$error-color: #dc2626;
-$text-primary: #1e293b;
-$text-secondary: #64748b;
-$bg-color: #f8fafc;
+$primary-color: var(--sp-primary);
+$success-color: var(--sp-success);
+$warning-color: var(--sp-warning-text);
+$error-color: var(--sp-danger);
+$text-primary: var(--sp-text-1);
+$text-secondary: var(--sp-text-2);
+$bg-color: var(--sp-surface-2);
 
 .assignments-page-container {
-    padding: 24px;
-    max-width: 1200px;
+    width: 100%;
+    max-width: var(--sp-content-max-width);
+    padding: 8px 0 24px;
     margin: 0 auto;
 }
 
@@ -52,10 +53,10 @@ $bg-color: #f8fafc;
     }
 
     .stat-card {
-        background: white;
+        background: var(--sp-surface);
         padding: 16px 24px;
         border-radius: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        box-shadow: var(--sp-shadow-card);
         display: flex;
         align-items: center;
         gap: 16px;
@@ -69,7 +70,7 @@ $bg-color: #f8fafc;
             align-items: center;
             justify-content: center;
 
-            mat-icon {
+            .material-icons {
                 font-size: 24px;
             }
         }
@@ -94,21 +95,21 @@ $bg-color: #f8fafc;
 
         &.pending {
             .icon-circle {
-                background: #fff7ed;
+                background: var(--sp-warning-light);
                 color: $warning-color;
             }
         }
 
         &.completed {
             .icon-circle {
-                background: #ecfdf5;
+                background: var(--sp-success-light);
                 color: $success-color;
             }
         }
 
         &.score {
             .icon-circle {
-                background: #eff6ff;
+                background: var(--sp-primary-ghost);
                 color: $primary-color;
             }
         }
@@ -116,10 +117,10 @@ $bg-color: #f8fafc;
 }
 
 .content-section {
-    background: white;
+    background: var(--sp-surface);
     border-radius: 20px;
     padding: 24px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--sp-shadow-card);
     min-height: 400px;
     position: relative;
 }
@@ -129,15 +130,49 @@ $bg-color: #f8fafc;
     gap: 16px;
     margin-bottom: 24px;
 
-    mat-form-field {
-        font-size: 14px;
+    .search-field {
+        position: relative;
+        flex: 1;
+        max-width: 400px;
 
-        &.search-field {
-            flex: 1;
-            max-width: 400px;
+        .search-icon {
+            position: absolute;
+            top: 50%;
+            left: 12px;
+            z-index: 1;
+            color: var(--sp-text-3);
+            pointer-events: none;
+            transform: translateY(-50%);
         }
 
+        .assignment-search-input {
+            width: 100%;
+            min-height: var(--ui-control-height);
+            border: 1px solid var(--sp-border-strong);
+            border-radius: var(--sp-radius-sm);
+            background: var(--sp-surface);
+            color: var(--sp-text-1);
+            font: inherit;
+            padding: 10px 12px 10px 40px;
+        }
+    }
+}
 
+.assignment-tabs {
+    margin-bottom: 16px;
+
+    > button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding-inline: 16px;
+    }
+
+    .assignment-tab-icon { font-size: 18px; }
+
+    .active {
+        border-bottom-color: var(--sp-primary);
+        color: var(--sp-primary);
     }
 }
 
@@ -150,11 +185,10 @@ $bg-color: #f8fafc;
 }
 
 .assignment-card {
-    background: white;
-    border: 1px solid #e2e8f0;
+    background: var(--sp-surface);
+    border: 1px solid var(--sp-border);
     border-radius: 16px;
     overflow: hidden;
-    cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
     display: flex;
@@ -162,11 +196,11 @@ $bg-color: #f8fafc;
 
     &:hover {
         transform: translateY(-4px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        box-shadow: var(--sp-shadow-hover);
 
         .card-footer button {
             background: $primary-color;
-            color: white;
+            color: var(--sp-text-inv);
         }
     }
 
@@ -206,7 +240,7 @@ $bg-color: #f8fafc;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: $text-secondary;
-            background: #f1f5f9;
+            background: var(--sp-surface-3);
             padding: 4px 8px;
             border-radius: 6px;
         }
@@ -218,17 +252,17 @@ $bg-color: #f8fafc;
             border-radius: 20px;
 
             &.urgent {
-                background: #fef2f2;
+                background: var(--sp-danger-light);
                 color: $error-color;
             }
 
             &.soon {
-                background: #fffbeb;
+                background: var(--sp-warning-light);
                 color: $warning-color;
             }
 
             &.normal {
-                background: #eff6ff;
+                background: var(--sp-primary-ghost);
                 color: $primary-color;
             }
         }
@@ -259,7 +293,7 @@ $bg-color: #f8fafc;
 
         button {
             width: 100%;
-            background: #eff6ff;
+            background: var(--sp-primary-ghost);
             color: $primary-color;
             font-weight: 600;
             transition: all 0.2s;
@@ -279,14 +313,14 @@ $bg-color: #f8fafc;
     justify-content: space-between;
     align-items: center;
     padding: 16px 24px;
-    background: white;
-    border: 1px solid #f1f5f9;
+    background: var(--sp-surface);
+    border: 1px solid var(--sp-border);
     border-radius: 12px;
     transition: all 0.2s;
 
     &:hover {
-        background: #fafafa;
-        border-color: #e2e8f0;
+        background: var(--sp-surface-3);
+        border-color: var(--sp-border-strong);
     }
 
     .item-left {
@@ -298,7 +332,7 @@ $bg-color: #f8fafc;
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: #ecfdf5;
+            background: var(--sp-success-light);
             color: $success-color;
             display: flex;
             align-items: center;
@@ -321,7 +355,7 @@ $bg-color: #f8fafc;
                 gap: 8px;
 
                 .dot {
-                    color: #cbd5e1;
+                    color: var(--sp-border-strong);
                 }
             }
         }
@@ -337,12 +371,12 @@ $bg-color: #f8fafc;
     text-align: center;
     color: $text-secondary;
 
-    mat-icon {
+    .material-icons {
         font-size: 64px;
         width: 64px;
         height: 64px;
         margin-bottom: 16px;
-        color: #cbd5e1;
+        color: var(--sp-border-strong);
     }
 
     h3 {
@@ -363,10 +397,52 @@ $bg-color: #f8fafc;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(255, 255, 255, 0.8);
+    background: color-mix(in srgb, var(--sp-surface) 88%, transparent);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 10;
     border-radius: 20px;
+}
+
+@media (max-width: 640px) {
+    .assignments-page-container {
+        padding: 0 0 16px;
+    }
+
+    .page-header {
+        align-items: stretch;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .page-header .header-content h1 {
+        font-size: 24px;
+    }
+
+    .stats-row .stat-card {
+        min-width: 148px;
+        padding: 12px 16px;
+    }
+
+    .content-section {
+        padding: 16px;
+        border-radius: var(--sp-radius-md);
+    }
+
+    .filters-bar .search-field {
+        max-width: none;
+    }
+
+    .completed-item {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 14px;
+        padding: 16px;
+
+        .item-right,
+        .item-right .sp-btn {
+            width: 100%;
+        }
+    }
 }

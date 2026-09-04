@@ -13,6 +13,7 @@ import {
   SpeedReadingSubscription,
   SpeedReadingSubscriptionUpdateRequest
 } from '../../../core/services/speed-reading-admin.service';
+import { ToasterService } from '../../../core/services/toaster.service';
 
 type SubscriptionTab = 'products' | 'plans' | 'subscriptions' | 'payments';
 
@@ -98,6 +99,7 @@ type SubscriptionTab = 'products' | 'plans' | 'subscriptions' | 'payments';
 })
 export class SpeedReadingSubscriptionsComponent implements OnInit {
   private readonly service = inject(SpeedReadingAdminService);
+  private readonly toaster = inject(ToasterService);
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly tabs: ReadonlyArray<{ value: SubscriptionTab; label: string }> = [
@@ -153,8 +155,8 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
     this.saveRequest(operation, () => { this.productEditing.set(false); this.loadProducts(); });
   }
 
-  deactivateProduct(product: SpeedReadingProduct): void {
-    if (!product.isActive || !globalThis.confirm(`“${product.name}” pasifleştirilsin mi?`)) return;
+  async deactivateProduct(product: SpeedReadingProduct): Promise<void> {
+    if (!product.isActive || !await this.toaster.confirm(`“${product.name}” pasifleştirilsin mi?`, { title: 'Ürünü pasifleştir' })) return;
     this.saveRequest(this.service.deactivateSubscriptionProduct(product.id), () => this.loadProducts());
   }
 
@@ -170,8 +172,8 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
     this.saveRequest(operation, () => { this.planEditing.set(false); this.loadPlans(); });
   }
 
-  deactivatePlan(plan: SpeedReadingPlan): void {
-    if (!plan.isActive || !globalThis.confirm(`“${plan.name}” pasifleştirilsin mi?`)) return;
+  async deactivatePlan(plan: SpeedReadingPlan): Promise<void> {
+    if (!plan.isActive || !await this.toaster.confirm(`“${plan.name}” pasifleştirilsin mi?`, { title: 'Planı pasifleştir' })) return;
     this.saveRequest(this.service.deactivateSubscriptionPlan(plan.id), () => this.loadPlans());
   }
 
@@ -223,8 +225,8 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
     });
   }
 
-  cancelSubscription(subscription: SpeedReadingSubscription): void {
-    if (!globalThis.confirm('Bu abonelik kaydı silinsin mi?')) return;
+  async cancelSubscription(subscription: SpeedReadingSubscription): Promise<void> {
+    if (!await this.toaster.confirm('Bu abonelik kaydı silinsin mi?', { title: 'Abonelik kaydını sil' })) return;
     this.saveRequest(this.service.deleteUserSubscription(subscription.id), () => this.loadSubscriptions());
   }
 

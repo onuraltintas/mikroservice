@@ -6,7 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ToasterService } from '../../../core/services/toaster.service';
 
 @Component({
     selector: 'app-newsletter-widget',
@@ -18,7 +18,6 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
         MatInputModule,
         MatButtonModule,
         MatIconModule,
-        MatSnackBarModule
     ],
     templateUrl: './newsletter-widget.component.html',
     styleUrls: ['./newsletter-widget.component.scss']
@@ -26,7 +25,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 export class NewsletterWidgetComponent {
     private fb = inject(FormBuilder);
     private cmsService = inject(PublicCmsService);
-    private snackBar = inject(MatSnackBar);
+    private toaster = inject(ToasterService);
 
     newsletterForm: FormGroup;
     loading = false;
@@ -48,24 +47,14 @@ export class NewsletterWidgetComponent {
         this.loading = true;
         this.cmsService.subscribeNewsletter(this.newsletterForm.value).subscribe({
             next: () => {
-                this.snackBar.open('🎉 Başarıyla abone oldunuz! Hoş geldiniz.', 'Kapat', {
-                    duration: 5000,
-                    horizontalPosition: 'center',
-                    verticalPosition: 'top',
-                    panelClass: ['success-snackbar']
-                });
+                this.toaster.success('Başarıyla abone oldunuz! Hoş geldiniz.');
                 this.newsletterForm.reset();
                 this.loading = false;
                 this.isMinimized = true;
             },
             error: (error) => {
                 console.error('Error subscribing to newsletter:', error);
-                this.snackBar.open('Bir hata oluştu. Lütfen tekrar deneyin.', 'Kapat', {
-                    duration: 5000,
-                    horizontalPosition: 'center',
-                    verticalPosition: 'top',
-                    panelClass: ['error-snackbar']
-                });
+                this.toaster.error('Bir hata oluştu. Lütfen tekrar deneyin.');
                 this.loading = false;
             }
         });

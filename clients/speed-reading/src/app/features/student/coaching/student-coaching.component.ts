@@ -16,20 +16,20 @@ import {
   template: `
     <div class="sp-dialog">
       <h2 class="sp-dialog-title">İlerleme Güncelle</h2>
-      <div class="sp-dialog-content" [formGroup]="form" style="display:flex;flex-direction:column;gap:12px;min-width:340px;padding-top:8px">
-        <p style="margin:0;color:#666">Mevcut: %{{ data.current }}</p>
+      <div class="sp-dialog-content" [formGroup]="form">
+        <p>Mevcut: %{{ data.current }}</p>
         <div class="sp-field">
-          <label>Yeni Tamamlanma Yüzdesi (0-100)</label>
-          <input type="number" formControlName="newPercentage" min="0" max="100">
+          <label for="checkin-percentage">Yeni Tamamlanma Yüzdesi (0-100)</label>
+          <input id="checkin-percentage" type="number" formControlName="newPercentage" min="0" max="100">
         </div>
         <div class="sp-field">
-          <label>Not (opsiyonel)</label>
-          <textarea formControlName="note" rows="2" placeholder="Bu hafta ne yaptın?"></textarea>
+          <label for="checkin-note">Not (opsiyonel)</label>
+          <textarea id="checkin-note" formControlName="note" rows="2" placeholder="Bu hafta ne yaptın?"></textarea>
         </div>
       </div>
-      <div class="sp-dialog-actions" style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="sp-btn" (click)="ref.close()">İptal</button>
-        <button class="sp-btn sp-btn--primary" [disabled]="form.invalid" (click)="submit()">Güncelle</button>
+      <div class="sp-dialog-actions">
+        <button type="button" class="sp-btn" (click)="ref.close()">İptal</button>
+        <button type="button" class="sp-btn sp-btn--primary" [disabled]="form.invalid" (click)="submit()">Güncelle</button>
       </div>
     </div>
   `
@@ -62,17 +62,17 @@ export class GoalCheckinDialogComponent {
   template: `
     <div class="sp-dialog">
       <h2 class="sp-dialog-title">Ödevi Tamamla</h2>
-      <div class="sp-dialog-content" [formGroup]="form" style="display:flex;flex-direction:column;gap:12px;min-width:340px;padding-top:8px">
-        <p style="margin:0;color:#666"><strong>{{ data.title }}</strong></p>
+      <div class="sp-dialog-content" [formGroup]="form">
+        <p><strong>{{ data.title }}</strong></p>
         <div class="sp-field">
-          <label>Tamamlama Notu (opsiyonel)</label>
-          <textarea formControlName="completionNote" rows="3"
+          <label for="assignment-completion-note">Tamamlama Notu (opsiyonel)</label>
+          <textarea id="assignment-completion-note" formControlName="completionNote" rows="3"
             placeholder="Ödev hakkında bir not bırak..."></textarea>
         </div>
       </div>
-      <div class="sp-dialog-actions" style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="sp-btn" (click)="ref.close()">İptal</button>
-        <button class="sp-btn sp-btn--primary" (click)="submit()">Tamamlandı</button>
+      <div class="sp-dialog-actions">
+        <button type="button" class="sp-btn" (click)="ref.close()">İptal</button>
+        <button type="button" class="sp-btn sp-btn--primary" (click)="submit()">Tamamlandı</button>
       </div>
     </div>
   `
@@ -100,21 +100,23 @@ export class AssignmentCompleteDialogComponent {
   template: `
     <div class="sp-dialog">
       <h2 class="sp-dialog-title">Seanı Değerlendir</h2>
-      <div class="sp-dialog-content" style="min-width:320px;padding-top:8px">
-        <p style="margin:0 0 12px;color:#666">{{ data.scheduledAt | date:'dd.MM.yyyy HH:mm' }}</p>
-        <div style="display:flex;gap:8px;justify-content:center;margin-bottom:8px">
+      <div class="sp-dialog-content">
+        <p>{{ data.scheduledAt | date:'dd.MM.yyyy HH:mm' }}</p>
+        <div class="rating-picker">
           <button *ngFor="let star of [1,2,3,4,5]"
+            type="button"
             (click)="rating = star"
-            style="background:none;border:none;cursor:pointer;font-size:28px;padding:4px;"
-            [style.color]="star <= rating ? '#F57C00' : '#ccc'">
+            class="rating-star"
+            [class.rating-star--active]="star <= rating"
+            [attr.aria-label]="star + ' yıldız'">
             {{ star <= rating ? '★' : '☆' }}
           </button>
         </div>
-        <p style="text-align:center;color:#666;font-size:13px">{{ ratingLabel }}</p>
+        <p class="rating-label">{{ ratingLabel }}</p>
       </div>
-      <div class="sp-dialog-actions" style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="sp-btn" (click)="ref.close()">İptal</button>
-        <button class="sp-btn sp-btn--primary" [disabled]="!rating" (click)="submit()">Gönder</button>
+      <div class="sp-dialog-actions">
+        <button type="button" class="sp-btn" (click)="ref.close()">İptal</button>
+        <button type="button" class="sp-btn sp-btn--primary" [disabled]="!rating" (click)="submit()">Gönder</button>
       </div>
     </div>
   `
@@ -143,14 +145,14 @@ export class SessionRatingDialogComponent {
   template: `
     <div class="sp-dialog">
       <h2 class="sp-dialog-title">Yeni Hedef</h2>
-      <div class="sp-dialog-content" [formGroup]="form" style="display:flex;flex-direction:column;gap:12px;min-width:340px;padding-top:8px">
+      <div class="sp-dialog-content" [formGroup]="form">
         <div class="sp-field">
-          <label>Başlık *</label>
-          <input formControlName="title" placeholder="Hedefini yaz...">
+          <label for="goal-title">Başlık *</label>
+          <input id="goal-title" formControlName="title" placeholder="Hedefini yaz...">
         </div>
         <div class="sp-field">
-          <label>Seviye</label>
-          <select formControlName="level">
+          <label for="goal-level">Seviye</label>
+          <select id="goal-level" formControlName="level">
             <option value="Yearly">Yıllık</option>
             <option value="Monthly">Aylık</option>
             <option value="Weekly">Haftalık</option>
@@ -158,17 +160,17 @@ export class SessionRatingDialogComponent {
           </select>
         </div>
         <div class="sp-field">
-          <label>Hedef Tarih *</label>
-          <input type="date" formControlName="targetDate">
+          <label for="goal-target-date">Hedef Tarih *</label>
+          <input id="goal-target-date" type="date" formControlName="targetDate">
         </div>
         <div class="sp-field">
-          <label>Başarı Kriteri</label>
-          <textarea formControlName="successCriteria" rows="2" placeholder="Ne zaman başardın sayılırsın?"></textarea>
+          <label for="goal-success-criteria">Başarı Kriteri</label>
+          <textarea id="goal-success-criteria" formControlName="successCriteria" rows="2" placeholder="Ne zaman başardın sayılırsın?"></textarea>
         </div>
       </div>
-      <div class="sp-dialog-actions" style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="sp-btn" (click)="ref.close()">İptal</button>
-        <button class="sp-btn sp-btn--primary" [disabled]="form.invalid" (click)="submit()">Oluştur</button>
+      <div class="sp-dialog-actions">
+        <button type="button" class="sp-btn" (click)="ref.close()">İptal</button>
+        <button type="button" class="sp-btn sp-btn--primary" [disabled]="form.invalid" (click)="submit()">Oluştur</button>
       </div>
     </div>
   `
@@ -209,18 +211,18 @@ export class StudentNewGoalDialogComponent {
   template: `
     <div class="sp-dialog">
       <h2 class="sp-dialog-title">Sınav Sonucu Gir</h2>
-      <div class="sp-dialog-content" [formGroup]="form" style="display:flex;flex-direction:column;gap:12px;min-width:340px;padding-top:8px">
+      <div class="sp-dialog-content" [formGroup]="form">
         <div class="sp-field">
-          <label>Sınav Adı *</label>
-          <input formControlName="examName" placeholder="Örn: 5. TYT Denemesi">
+          <label for="exam-name">Sınav Adı *</label>
+          <input id="exam-name" formControlName="examName" placeholder="Örn: 5. TYT Denemesi">
         </div>
         <div class="sp-field">
-          <label>Sınav Tarihi *</label>
-          <input type="date" formControlName="examDate">
+          <label for="exam-date">Sınav Tarihi *</label>
+          <input id="exam-date" type="date" formControlName="examDate">
         </div>
         <div class="sp-field">
-          <label>Sınav Tipi</label>
-          <select formControlName="examType">
+          <label for="exam-type">Sınav Tipi</label>
+          <select id="exam-type" formControlName="examType">
             <option value="YKS_TYT">YKS TYT</option>
             <option value="YKS_AYT_Sayisal">AYT Sayısal</option>
             <option value="YKS_AYT_EsitAgirlik">AYT Eşit Ağırlık</option>
@@ -230,13 +232,13 @@ export class StudentNewGoalDialogComponent {
           </select>
         </div>
         <div class="sp-field">
-          <label>Not (opsiyonel)</label>
-          <textarea formControlName="notes" rows="2"></textarea>
+          <label for="exam-notes">Not (opsiyonel)</label>
+          <textarea id="exam-notes" formControlName="notes" rows="2"></textarea>
         </div>
       </div>
-      <div class="sp-dialog-actions" style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="sp-btn" (click)="ref.close()">İptal</button>
-        <button class="sp-btn sp-btn--primary" [disabled]="form.invalid" (click)="submit()">Kaydet</button>
+      <div class="sp-dialog-actions">
+        <button type="button" class="sp-btn" (click)="ref.close()">İptal</button>
+        <button type="button" class="sp-btn sp-btn--primary" [disabled]="form.invalid" (click)="submit()">Kaydet</button>
       </div>
     </div>
   `
@@ -275,21 +277,21 @@ export class StudentNewExamDialogComponent {
   template: `
     <div class="sp-dialog">
       <h2 class="sp-dialog-title">Çalışma Seansı Kaydet</h2>
-      <div class="sp-dialog-content" [formGroup]="form" style="display:flex;flex-direction:column;gap:12px;min-width:360px;padding-top:8px">
+      <div class="sp-dialog-content" [formGroup]="form">
         <div class="sp-field">
-          <label>Tarih</label>
-          <input type="date" formControlName="date">
+          <label for="session-date">Tarih</label>
+          <input id="session-date" type="date" formControlName="date">
         </div>
         <div class="sp-field">
-          <label>Ders</label>
-          <select formControlName="subjectId">
+          <label for="session-subject">Ders</label>
+          <select id="session-subject" formControlName="subjectId">
             <option value="">-- Seçiniz --</option>
             <option *ngFor="let s of data.subjects" [value]="s.id">{{ s.name }}</option>
           </select>
         </div>
         <div class="sp-field">
-          <label>Çalışma Türü</label>
-          <select formControlName="studyType">
+          <label for="session-study-type">Çalışma Türü</label>
+          <select id="session-study-type" formControlName="studyType">
             <option value="Reading">Okuma</option>
             <option value="Practice">Pratik</option>
             <option value="Review">Tekrar</option>
@@ -299,25 +301,25 @@ export class StudentNewExamDialogComponent {
           </select>
         </div>
         <div class="sp-field">
-          <label>Çalışma Süresi (dakika)</label>
-          <input type="number" formControlName="actualMinutes" min="1">
+          <label for="session-duration">Çalışma Süresi (dakika)</label>
+          <input id="session-duration" type="number" formControlName="actualMinutes" min="1">
         </div>
         <div class="sp-field">
-          <label>Çözülen Soru Sayısı</label>
-          <input type="number" formControlName="questionsSolved" min="0">
+          <label for="session-questions">Çözülen Soru Sayısı</label>
+          <input id="session-questions" type="number" formControlName="questionsSolved" min="0">
         </div>
         <div class="sp-field">
-          <label>Doğru Sayısı</label>
-          <input type="number" formControlName="correctAnswers" min="0">
+          <label for="session-correct">Doğru Sayısı</label>
+          <input id="session-correct" type="number" formControlName="correctAnswers" min="0">
         </div>
         <div class="sp-field">
-          <label>Not (opsiyonel)</label>
-          <textarea formControlName="notes" rows="2" placeholder="Bu çalışma hakkında bir not..."></textarea>
+          <label for="session-notes">Not (opsiyonel)</label>
+          <textarea id="session-notes" formControlName="notes" rows="2" placeholder="Bu çalışma hakkında bir not..."></textarea>
         </div>
       </div>
-      <div class="sp-dialog-actions" style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="sp-btn" (click)="ref.close()">İptal</button>
-        <button class="sp-btn sp-btn--primary" [disabled]="form.invalid" (click)="submit()">Kaydet</button>
+      <div class="sp-dialog-actions">
+        <button type="button" class="sp-btn" (click)="ref.close()">İptal</button>
+        <button type="button" class="sp-btn sp-btn--primary" [disabled]="form.invalid" (click)="submit()">Kaydet</button>
       </div>
     </div>
   `
@@ -364,7 +366,8 @@ export class LogStudySessionDialogComponent {
   imports: [
     CommonModule
   ],
-  templateUrl: './student-coaching.component.html'
+  templateUrl: './student-coaching.component.html',
+  styleUrls: ['./student-coaching.component.scss']
 })
 export class StudentCoachingComponent extends BaseComponent implements OnInit {
   private service = inject(CoachingService);

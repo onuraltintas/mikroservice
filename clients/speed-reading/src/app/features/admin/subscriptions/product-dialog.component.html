@@ -9,7 +9,7 @@
       <p>{{ isEditMode ? 'Platform bilgilerini güncelleyin' : 'Sisteme yeni bir platform ekleyin' }}</p>
     </div>
   </div>
-  <button mat-icon-button class="close-btn" (click)="cancel()">
+    <button mat-icon-button type="button" class="close-btn" aria-label="Pencereyi kapat" (click)="cancel()">
     <mat-icon>close</mat-icon>
   </button>
 </div>
@@ -82,7 +82,7 @@
     <!-- Sıra -->
     <div class="field-group">
       <label class="field-label">Sıra</label>
-      <mat-form-field appearance="outline" style="width: 120px">
+      <mat-form-field appearance="outline" class="ui-field--narrow">
         <input matInput type="number" formControlName="sortOrder" min="0" placeholder="0">
         <mat-icon matPrefix>sort</mat-icon>
       </mat-form-field>

@@ -45,27 +45,20 @@
         <!-- Filters -->
         <div class="filters-bar">
             <div class="search-field">
-                <span class="material-icons" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#999;pointer-events:none">search</span>
-                <input [formControl]="searchControl" placeholder="Ödev ara..."
-                    style="padding-left:36px;width:100%;box-sizing:border-box">
+                <span class="material-icons search-icon" aria-hidden="true">search</span>
+                <input id="assignment-search" class="assignment-search-input" [formControl]="searchControl" placeholder="Ödev ara..." aria-label="Ödevlerde ara">
             </div>
         </div>
 
         <!-- Tabs -->
-        <div class="sp-tabs" style="display:flex;border-bottom:1px solid #e0e0e0;margin-bottom:16px">
-            <button (click)="selectedTab=0"
-                style="padding:12px 16px;border:none;background:none;cursor:pointer;font-size:14px;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px"
-                [style.border-bottom-color]="selectedTab===0 ? '#1976D2' : 'transparent'"
-                [style.color]="selectedTab===0 ? '#1976D2' : '#666'">
-                <span class="material-icons" style="font-size:18px">schedule</span>
+        <div class="sp-tabs assignment-tabs" role="tablist" aria-label="Ödev görünümleri">
+            <button type="button" role="tab" [attr.aria-selected]="selectedTab === 0" [class.active]="selectedTab === 0" (click)="selectedTab=0">
+                <span class="material-icons assignment-tab-icon" aria-hidden="true">schedule</span>
                 Bekleyenler
                 <span class="badge" *ngIf="stats.pending > 0">{{ stats.pending }}</span>
             </button>
-            <button (click)="selectedTab=1"
-                style="padding:12px 16px;border:none;background:none;cursor:pointer;font-size:14px;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px"
-                [style.border-bottom-color]="selectedTab===1 ? '#1976D2' : 'transparent'"
-                [style.color]="selectedTab===1 ? '#1976D2' : '#666'">
-                <span class="material-icons" style="font-size:18px">check_circle</span>
+            <button type="button" role="tab" [attr.aria-selected]="selectedTab === 1" [class.active]="selectedTab === 1" (click)="selectedTab=1">
+                <span class="material-icons assignment-tab-icon" aria-hidden="true">check_circle</span>
                 Tamamlananlar
             </button>
         </div>
@@ -73,8 +66,7 @@
         <!-- Active Assignments Tab -->
         @if (selectedTab === 0) {
             <div class="assignments-grid" *ngIf="!loading && activeAssignments.length > 0">
-                <div class="assignment-card pending-card" *ngFor="let item of activeAssignments"
-                    (click)="startAssignment(item)">
+                <div class="assignment-card pending-card" *ngFor="let item of activeAssignments">
                     <div class="card-status-bar" [ngClass]="getDueDateClass(item)"></div>
                     <div class="card-content">
                         <div class="card-header">
@@ -88,7 +80,7 @@
                         <p class="description" *ngIf="item.description">{{ item.description }}</p>
 
                         <div class="card-footer">
-                            <button class="sp-btn sp-btn--primary">
+                            <button type="button" class="sp-btn sp-btn--primary" (click)="startAssignment(item)">
                                 <span class="material-icons">play_arrow</span>
                                 Başla
                             </button>
@@ -131,7 +123,7 @@
                 <span class="score-label">Puan</span>
             </div>
             -->
-                        <button class="sp-btn sp-btn--outline" (click)="startAssignment(item, true)">
+                        <button type="button" class="sp-btn sp-btn--outline" (click)="startAssignment(item, true)">
                             <span class="material-icons">replay</span>
                             Tekrar Et
                         </button>
@@ -146,8 +138,9 @@
             </div>
         }
 
-        <div class="loading-overlay" *ngIf="loading">
+        <div class="loading-overlay" *ngIf="loading" role="status" aria-live="polite">
             <div class="sp-spinner"></div>
+            <span class="sr-only">Ödevler yükleniyor</span>
         </div>
     </div>
 </div>

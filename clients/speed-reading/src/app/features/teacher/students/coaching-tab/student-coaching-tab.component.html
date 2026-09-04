@@ -84,13 +84,13 @@
               </div>
             </div>
             <div class="goal-actions">
-              <button mat-icon-button matTooltip="İlerleme Güncelle" (click)="checkInGoal(goal)">
+                    <button mat-icon-button type="button" aria-label="Hedef ilerlemesini güncelle" matTooltip="İlerleme Güncelle" (click)="checkInGoal(goal)">
                 <mat-icon>trending_up</mat-icon>
               </button>
-              <button mat-icon-button matTooltip="Düzenle" (click)="openGoalDialog(goal)">
+                    <button mat-icon-button type="button" aria-label="Hedefi düzenle" matTooltip="Düzenle" (click)="openGoalDialog(goal)">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-icon-button matTooltip="Sil" class="delete-btn" (click)="deleteGoal(goal)">
+                    <button mat-icon-button type="button" aria-label="Hedefi sil" matTooltip="Sil" class="delete-btn" (click)="deleteGoal(goal)">
                 <mat-icon>delete</mat-icon>
               </button>
             </div>
@@ -137,12 +137,12 @@
                 {{ sessionStatusLabel(s.status) }}
               </span>
               <div class="session-actions">
-                <button mat-icon-button matTooltip="Tamamlandı İşaretle"
+                    <button mat-icon-button type="button" aria-label="Seansı tamamlandı işaretle" matTooltip="Tamamlandı İşaretle"
                         *ngIf="s.status === 'Scheduled'"
                         (click)="completeSession(s)">
                   <mat-icon>check_circle</mat-icon>
                 </button>
-                <button mat-icon-button matTooltip="Düzenle" (click)="openSessionDialog(s)">
+                    <button mat-icon-button type="button" aria-label="Seansı düzenle" matTooltip="Düzenle" (click)="openSessionDialog(s)">
                   <mat-icon>edit</mat-icon>
                 </button>
               </div>

@@ -10,7 +10,7 @@
             </div>
             <p class="subtitle">{{assignment.exerciseTitle}}</p>
         </div>
-        <button mat-icon-button (click)="dialogRef.close()" class="close-btn">
+        <button mat-icon-button (click)="dialogRef.close()" class="close-btn" aria-label="Ödev detay penceresini kapat" type="button">
             <mat-icon>close</mat-icon>
         </button>
     </div>
@@ -86,7 +86,7 @@
                 <ng-container matColumnDef="actions">
                     <th mat-header-cell *matHeaderCellDef> </th>
                     <td mat-cell *matCellDef="let element">
-                        <button mat-icon-button color="warn" (click)="removeStudent(element.studentId)"
+                            <button mat-icon-button type="button" color="warn" aria-label="Öğrenciyi listeden çıkar" (click)="removeStudent(element.studentId)"
                             [disabled]="actionLoading" matTooltip="Listeden Çıkar" class="delete-btn">
                             <mat-icon>delete_outline</mat-icon>
                         </button>

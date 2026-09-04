@@ -40,7 +40,7 @@
                 <table mat-table [dataSource]="dataSource" matSort class="age-groups-table">
                     <!-- Index Column -->
                     <ng-container matColumnDef="index">
-                        <th mat-header-cell *matHeaderCellDef style="width: 60px;">#</th>
+                        <th mat-header-cell *matHeaderCellDef class="ui-cell--w-60">#</th>
                         <td mat-cell *matCellDef="let group; let i = index">
                             {{ paginator ? (paginator.pageIndex * paginator.pageSize + i + 1) : (i + 1) }}
                         </td>
@@ -105,7 +105,7 @@
 
                     <!-- Default Difficulty Level Column -->
                     <ng-container matColumnDef="defaultDifficultyLevel">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header style="width: 100px;">Zorluk</th>
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header class="ui-cell--w-100">Zorluk</th>
                         <td mat-cell *matCellDef="let group">
                             <mat-chip class="difficulty-chip">
                                 <mat-icon class="difficulty-icon">settings</mat-icon>
@@ -116,7 +116,7 @@
 
                     <!-- Order Column -->
                     <ng-container matColumnDef="orderIndex">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header style="width: 80px;">Sıra</th>
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header class="ui-cell--w-80">Sıra</th>
                         <td mat-cell *matCellDef="let group">
                             {{ group.orderIndex }}
                         </td>
@@ -137,10 +137,10 @@
                     <ng-container matColumnDef="actions">
                         <th mat-header-cell *matHeaderCellDef>İşlemler</th>
                         <td mat-cell *matCellDef="let group">
-                            <button mat-icon-button (click)="openDialog(group)" matTooltip="Düzenle">
+                    <button mat-icon-button type="button" aria-label="Yaş grubunu düzenle" (click)="openDialog(group)" matTooltip="Düzenle">
                                 <mat-icon>edit</mat-icon>
                             </button>
-                            <button mat-icon-button color="warn" (click)="deleteAgeGroup(group)" matTooltip="Sil">
+                    <button mat-icon-button type="button" color="warn" aria-label="Yaş grubunu sil" (click)="deleteAgeGroup(group)" matTooltip="Sil">
                                 <mat-icon>delete</mat-icon>
                             </button>
                         </td>

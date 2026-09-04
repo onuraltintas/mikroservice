@@ -1,0 +1,47 @@
+.active-menu-item {
+  background: var(--ui-brand-soft) !important;
+  border-inline-start: 3px solid var(--ui-brand);
+  color: var(--ui-brand) !important;
+  margin-inline-start: -3px;
+  padding-inline-start: calc(0.75rem + 3px) !important;
+}
+
+.active-menu-item span:first-child {
+  color: var(--ui-brand);
+}
+
+.sidebar-user-details {
+  min-width: 0;
+  margin-inline-start: 0.75rem;
+  flex: 1;
+}
+
+.sidebar-user-name-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.sidebar-user-name {
+  overflow: hidden;
+  color: var(--ui-text);
+  font-size: 0.875rem;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-user-name + .sidebar-user-name {
+  margin-inline-start: 0.35rem;
+}
+
+.sidebar-user-role {
+  margin: 0.4rem 0 0;
+  overflow: hidden;
+  color: var(--ui-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

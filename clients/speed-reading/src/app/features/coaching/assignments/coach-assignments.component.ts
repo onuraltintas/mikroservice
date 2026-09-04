@@ -31,7 +31,7 @@ import {
     MatInputModule, MatSelectModule, MatButtonModule, MatDatepickerModule, MatNativeDateModule],
   template: `
     <h2 mat-dialog-title>Ödev Ver</h2>
-    <mat-dialog-content [formGroup]="form" style="display:flex;flex-direction:column;gap:12px;min-width:380px;padding-top:8px">
+    <mat-dialog-content [formGroup]="form" class="ui-dialog-content ui-dialog-form ui-dialog-content--lg">
       <mat-form-field appearance="outline">
         <mat-label>Öğrenci</mat-label>
         <mat-select formControlName="studentId">
@@ -117,8 +117,8 @@ export class NewCoachAssignmentDialogComponent {
     MatInputModule, MatButtonModule],
   template: `
     <h2 mat-dialog-title>Ödevi Reddet</h2>
-    <mat-dialog-content style="min-width:320px;padding-top:8px">
-      <mat-form-field appearance="outline" style="width:100%">
+    <mat-dialog-content class="ui-dialog-content ui-dialog-content--sm">
+      <mat-form-field appearance="outline" class="ui-field--full">
         <mat-label>Geri Bildirim (isteğe bağlı)</mat-label>
         <textarea matInput [(ngModel)]="feedback" rows="3"
           placeholder="Öğrenciye ne yapması gerektiğini açıklayın..."></textarea>

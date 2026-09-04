@@ -2,13 +2,14 @@ import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { LevelUpResult } from '../../../core/models/gamification.model';
 
 @Component({
   selector: 'app-level-up-modal',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule],
+  imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule],
   templateUrl: './level-up-modal.component.html',
   styleUrls: ['./level-up-modal.component.scss'],
   animations: [
@@ -51,12 +52,16 @@ export class LevelUpModalComponent {
   get oldTierIcon(): string {
     const tier = Math.ceil(this.data.oldLevel / 5);
     switch (tier) {
-      case 1: return '📖';
-      case 2: return '📗';
-      case 3: return '📘';
-      case 4: return '📕';
-      default: return '📖';
+      case 1: return 'menu_book';
+      case 2: return 'auto_stories';
+      case 3: return 'library_books';
+      case 4: return 'workspace_premium';
+      default: return 'menu_book';
     }
+  }
+
+  normalizeIcon(icon: string | undefined): string {
+    return icon && /^[a-z0-9_]+$/i.test(icon) ? icon : 'auto_awesome';
   }
 
   get tierGradient(): string {

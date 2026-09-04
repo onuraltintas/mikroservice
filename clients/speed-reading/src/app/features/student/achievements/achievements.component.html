@@ -13,7 +13,7 @@
       <div>
         <p class="ach-header__sub">Oyunlaştırma</p>
         <h1 class="ach-header__title">
-          <span>🏆</span>
+          <span class="material-icons" aria-hidden="true">emoji_events</span>
           Başarımlar & Rozetler
         </h1>
       </div>
@@ -45,7 +45,7 @@
     <!-- Category filter -->
     <div class="ach-filters">
       @for (cat of categories; track cat.value) {
-        <button class="ach-filter-chip"
+        <button type="button" class="ach-filter-chip"
           [class.ach-filter-chip--active]="selectedCategory === cat.value"
           (click)="selectCategory(cat.value)">
           <span class="material-icons">{{ cat.icon }}</span>

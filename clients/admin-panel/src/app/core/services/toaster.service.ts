@@ -1,87 +1,125 @@
-import { Injectable } from '@angular/core';
-import Swal from 'sweetalert2';
+import { Injectable, inject } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarConfig } from '@angular/material/snack-bar';
+import { firstValueFrom } from 'rxjs';
+import { TextInputDialogComponent, TextInputDialogData } from '../../shared/components/text-input-dialog/text-input-dialog.component';
+import { ConfirmOptions, PromptOptions, ToastOptions } from '../../../../../shared/types/feedback.types';
+import {
+    ConfirmationDialogComponent,
+    ConfirmationDialogData
+} from '../../shared/components/confirmation-dialog/confirmation-dialog.component';
 
 @Injectable({
     providedIn: 'root'
 })
 export class ToasterService {
+    private readonly snackBar = inject(MatSnackBar);
+    private readonly dialog = inject(MatDialog);
 
-    // ToastMixin: SweetAlert2'nin "Toast" modu ayarları
-    private Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-            toast.onmouseenter = Swal.stopTimer;
-            toast.onmouseleave = Swal.resumeTimer;
-        },
-        customClass: {
-            popup: 'colored-toast' // İlerde CSS ile özelleştirmek istersek
+    private readonly defaultConfig: MatSnackBarConfig = {
+        horizontalPosition: 'end',
+        verticalPosition: 'top',
+        duration: 4000,
+        panelClass: ['ui-toast'],
+        politeness: 'polite'
+    };
+
+    success(message: string, options?: ToastOptions): void;
+    success(message: string, title?: string): void;
+    success(message: string, value: ToastOptions | string = {}): void {
+        this.open('success', message, this.normalizeToastOptions(value, 'Başarılı', 4000));
+    }
+
+    error(message: string, options?: ToastOptions): void;
+    error(message: string, title?: string): void;
+    error(message: string, value: ToastOptions | string = {}): void {
+        this.open('error', message, this.normalizeToastOptions(value, 'Hata', 5000));
+    }
+
+    warning(message: string, options?: ToastOptions): void;
+    warning(message: string, title?: string): void;
+    warning(message: string, value: ToastOptions | string = {}): void {
+        this.open('warning', message, this.normalizeToastOptions(value, 'Uyarı', 4500));
+    }
+
+    info(message: string, options?: ToastOptions): void;
+    info(message: string, title?: string): void;
+    info(message: string, value: ToastOptions | string = {}): void {
+        this.open('info', message, this.normalizeToastOptions(value, 'Bilgi', 3500));
+    }
+
+    async confirm(message: string, options: ConfirmOptions = {}): Promise<boolean> {
+        const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+            width: 'min(460px, calc(100vw - 32px))',
+            maxWidth: 'calc(100vw - 32px)',
+            panelClass: 'ui-confirm-dialog',
+            autoFocus: false,
+            data: {
+                title: options.title || 'Onay',
+                message,
+                confirmText: options.confirmText,
+                cancelText: options.cancelText
+            } as ConfirmationDialogData
+        });
+
+        const result = await firstValueFrom(dialogRef.afterClosed());
+        return result === true;
+    }
+
+    dismiss(): void {
+        this.snackBar.dismiss();
+    }
+
+    alert(message: string, options?: ToastOptions): void {
+        this.info(message, { title: options?.title || 'Bilgi', duration: options?.duration || 5000 });
+    }
+
+    async prompt(message: string, value = '', options: PromptOptions = {}): Promise<string | null> {
+        const dialogRef = this.dialog.open(TextInputDialogComponent, {
+            width: 'min(520px, calc(100vw - 32px))',
+            maxWidth: 'calc(100vw - 32px)',
+            panelClass: 'ui-confirm-dialog',
+            autoFocus: false,
+            data: {
+                ...options,
+                title: options.title || 'Bilgi',
+                message,
+                value
+            } as TextInputDialogData
+        });
+
+        const result = await firstValueFrom(dialogRef.afterClosed());
+        return result ?? null;
+    }
+
+    private normalizeToastOptions(
+        value: ToastOptions | string,
+        defaultTitle: string,
+        defaultDuration: number
+    ): Required<Pick<ToastOptions, 'title' | 'duration' | 'actionLabel'>> {
+        if (typeof value === 'string') {
+            return { title: value, duration: defaultDuration, actionLabel: 'Kapat' };
         }
-    });
 
-    /**
-     * Başarılı işlem bildirimi (Yeşil Tik Animasyonu)
-     */
-    success(message: string, title?: string) {
-        this.Toast.fire({
-            icon: 'success',
-            title: title || message,
-            text: title ? message : undefined
-        });
+        return {
+            title: value.title || defaultTitle,
+            duration: value.duration || defaultDuration,
+            actionLabel: value.actionLabel || 'Kapat'
+        };
     }
 
-    /**
-     * Hata bildirimi (Kırmızı Çarpı Animasyonu)
-     */
-    error(message: string, title?: string) {
-        this.Toast.fire({
-            icon: 'error',
-            title: title || message,
-            text: title ? message : undefined
-        });
-    }
+    private open(
+        type: 'success' | 'error' | 'warning' | 'info',
+        message: string,
+        options: Required<Pick<ToastOptions, 'title' | 'duration' | 'actionLabel'>>
+    ): void {
+        const text = options.title && options.title !== message ? `${options.title}: ${message}` : message;
 
-    /**
-     * Uyarı bildirimi (Turuncu Ünlem)
-     */
-    warning(message: string, title?: string) {
-        this.Toast.fire({
-            icon: 'warning',
-            title: title || message,
-            text: title ? message : undefined
-        });
-    }
-
-    /**
-     * Bilgi bildirimi (Mavi İkon)
-     */
-    info(message: string, title?: string) {
-        this.Toast.fire({
-            icon: 'info',
-            title: title || message,
-            text: title ? message : undefined
-        });
-    }
-
-    /**
-     * Özel Onay Penceresi (Örn: Silmek istediğinize emin misiniz?)
-     */
-    confirm(title: string, text: string, confirmButtonText: string = 'Evet', cancelButtonText: string = 'İptal'): Promise<boolean> {
-        return Swal.fire({
-            title: title,
-            text: text,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: confirmButtonText,
-            cancelButtonText: cancelButtonText,
-            heightAuto: false
-        }).then((result) => {
-            return result.isConfirmed;
+        this.snackBar.open(text, options.actionLabel, {
+            ...this.defaultConfig,
+            duration: options.duration,
+            panelClass: ['ui-toast', `ui-toast--${type}`],
+            politeness: type === 'error' ? 'assertive' : 'polite'
         });
     }
 }

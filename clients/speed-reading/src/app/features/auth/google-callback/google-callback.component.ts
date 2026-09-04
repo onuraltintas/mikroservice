@@ -16,9 +16,9 @@ import { AuthResponse } from '../../../core/models/user.model';
   standalone: true,
   imports: [CommonModule, MatProgressSpinnerModule],
   template: `
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:16px">
+    <div class="ui-page-center">
       @if (error) {
-        <p style="color:red">{{ error }}</p>
+        <p class="ui-error-text">{{ error }}</p>
         <a href="/auth/login">Giriş sayfasına dön</a>
       } @else {
         <mat-spinner diameter="48"></mat-spinner>

@@ -33,7 +33,9 @@
         </div>
 
         <!-- Mobile Toggle -->
-        <button mat-icon-button class="mobile-toggle" (click)="toggleMobileMenu()">
+        <button type="button" mat-icon-button class="mobile-toggle" (click)="toggleMobileMenu()"
+            [attr.aria-label]="mobileMenuOpen ? 'Menüyü kapat' : 'Menüyü aç'"
+            [attr.aria-expanded]="mobileMenuOpen">
             <mat-icon [class.scrolled]="isScrolled">
                 {{ mobileMenuOpen ? 'close' : 'menu' }}
             </mat-icon>

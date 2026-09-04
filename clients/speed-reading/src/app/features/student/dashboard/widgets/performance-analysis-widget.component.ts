@@ -132,21 +132,21 @@ export class PerformanceAnalysisWidgetComponent implements OnInit {
   readonly ringCircumference = 2 * Math.PI * 20; // 125.66
 
   getComprehensionMessage(percentage: number): string {
-    if (percentage >= 90) return 'Mükemmel! Harika gidiyorsun! 🎉';
-    if (percentage >= 80) return 'Çok iyi! Devam et! 👍';
-    if (percentage >= 70) return 'İyi! Biraz daha çalışmalısın 💪';
-    return 'Gelişme gösteriyor, devam et! 📚';
+    if (percentage >= 90) return 'Mükemmel! Harika gidiyorsun!';
+    if (percentage >= 80) return 'Çok iyi! Devam et!';
+    if (percentage >= 70) return 'İyi! Biraz daha çalışmalısın';
+    return 'Gelişme gösteriyor, devam et!';
   }
 
   getEyeMovementMessage(change: number): string {
-    if (change >= 10) return 'Çok iyi gelişme! 🎯';
-    if (change >= 5) return 'İyi gidiyorsun! 👀';
-    return 'Devam et! 💪';
+    if (change >= 10) return 'Çok iyi gelişme!';
+    if (change >= 5) return 'İyi gidiyorsun!';
+    return 'Devam et!';
   }
 
   getConcentrationMessage(percentage: number): string {
-    if (percentage >= 90) return 'Mükemmel konsantrasyon! ⭐';
-    if (percentage >= 80) return 'İyi seviyede! 🎯';
-    return 'Gelişmeye devam! 💪';
+    if (percentage >= 90) return 'Mükemmel konsantrasyon!';
+    if (percentage >= 80) return 'İyi seviyede!';
+    return 'Gelişmeye devam!';
   }
 }

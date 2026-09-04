@@ -58,7 +58,7 @@
         </div>
         }
 
-        <button mat-icon-button (click)="loadReport()" matTooltip="Yenile" class="refresh-btn"
+        <button mat-icon-button type="button" aria-label="Öğrenci raporunu yenile" (click)="loadReport()" matTooltip="Yenile" class="refresh-btn"
             [disabled]="!selectedStudentId()">
             <mat-icon>refresh</mat-icon>
         </button>

@@ -1,0 +1,293 @@
+:host {
+  display: block;
+}
+
+.coaching-page {
+  width: 100%;
+  max-width: var(--sp-content-max-width);
+  padding: 8px 0 24px;
+  color: var(--sp-text-1);
+}
+
+.coaching-page > .page-header {
+  margin-bottom: 24px;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    color: var(--sp-text-1);
+    font-size: 1.5rem;
+
+    .material-icons {
+      color: var(--sp-primary);
+    }
+  }
+}
+
+.coaching-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+  padding: 48px 24px;
+  text-align: center;
+
+  .coaching-empty-icon {
+    color: var(--sp-text-3);
+    font-size: 64px;
+  }
+
+  h3 {
+    margin: 16px 0 8px;
+    color: var(--sp-text-1);
+    font-size: 1.125rem;
+  }
+
+  p {
+    max-width: 560px;
+    margin: 0;
+    color: var(--sp-text-2);
+    line-height: 1.5;
+  }
+}
+
+.coaching-relationship-card {
+  margin-bottom: 20px;
+  padding: 20px;
+}
+
+.coaching-relationship-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.coaching-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  border-radius: var(--sp-radius-full);
+  background: var(--sp-primary);
+  color: var(--sp-text-inv);
+
+  .material-icons { font-size: 28px; }
+}
+
+.coaching-relationship-details {
+  flex: 1;
+  min-width: 220px;
+}
+
+.coaching-relationship-title {
+  color: var(--sp-text-1);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.coaching-relationship-date {
+  color: var(--sp-text-2);
+  font-size: 0.8125rem;
+}
+
+.coaching-review-reminder {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-left: 4px solid var(--sp-success);
+  border-radius: var(--sp-radius-sm);
+  background: var(--sp-success-light);
+}
+
+.coaching-review-reminder__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  color: var(--sp-success-dark);
+  font-size: 0.8125rem;
+  font-weight: 700;
+
+  .material-icons { font-size: 18px; }
+}
+
+.coaching-review-reminder__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.coaching-review-reminder__item {
+  border-radius: var(--sp-radius-full);
+  background: color-mix(in srgb, var(--sp-success) 22%, var(--sp-surface));
+  color: var(--sp-success-dark);
+  font-size: 0.75rem;
+  padding: 4px 10px;
+}
+
+.coaching-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.coaching-stats .stat-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+  padding: 16px;
+}
+
+.coaching-stats .stat-icon {
+  grid-row: span 2;
+  font-size: 26px;
+}
+
+.stat-icon--success { color: var(--sp-success); }
+.stat-icon--warning { color: var(--sp-warning); }
+.stat-icon--primary { color: var(--sp-primary); }
+.stat-icon--accent { color: var(--sp-platinum); }
+
+.coaching-stats .stat-value {
+  color: var(--sp-text-1);
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.coaching-stats .stat-value--compact {
+  font-size: 0.875rem;
+}
+
+.coaching-stats .stat-label {
+  color: var(--sp-text-2);
+  font-size: 0.75rem;
+}
+
+.coaching-panel {
+  overflow: hidden;
+}
+
+.coaching-tabs {
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  padding: 8px 16px 0;
+}
+
+.coaching-tabs .sp-tab-btn {
+  white-space: nowrap;
+}
+
+.coaching-tab-panel {
+  padding: 16px;
+}
+
+.coaching-panel-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.goal-progress-cell {
+  min-width: 160px;
+}
+
+.assignment-title-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.assignment-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.overdue-icon {
+  color: var(--sp-danger);
+  font-size: 18px;
+}
+
+.overdue-date {
+  color: var(--sp-danger);
+}
+
+.coach-feedback {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--sp-warning-text);
+  font-size: 0.78rem;
+
+  .material-icons { font-size: 16px; }
+}
+
+.approval-status,
+.verified-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8125rem;
+
+  .material-icons { font-size: 16px; }
+}
+
+.approval-status--approved,
+.verified-status { color: var(--sp-success-dark); }
+.approval-status--rejected { color: var(--sp-danger); }
+.approval-status--review,
+.pending-status { color: var(--sp-warning-text); }
+
+.rating-text {
+  color: var(--sp-warning);
+  letter-spacing: 2px;
+}
+
+.estimated-score {
+  color: var(--sp-primary);
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .coaching-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .coaching-page {
+    padding: 0 0 16px;
+  }
+
+  .coaching-relationship-card {
+    padding: 16px;
+  }
+
+  .coaching-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .coaching-stats .stat-card {
+    padding: 12px;
+  }
+
+  .coaching-tabs {
+    padding-inline: 8px;
+  }
+
+  .coaching-tab-panel {
+    padding: 8px;
+  }
+
+  .coaching-panel-actions .sp-btn {
+    width: 100%;
+  }
+}

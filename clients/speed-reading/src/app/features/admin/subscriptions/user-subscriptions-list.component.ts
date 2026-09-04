@@ -163,7 +163,7 @@ export class UserSubscriptionsListComponent extends BaseComponent implements OnI
   }
 
   async extendSubscription(sub: UserSubscription): Promise<void> {
-    const days = window.prompt(`"${sub.plan.name}" aboneliğini kaç gün uzatmak istiyorsunuz?`, '30');
+    const days = await this.toaster.prompt(`"${sub.plan.name}" aboneliğini kaç gün uzatmak istiyorsunuz?`, '30', { title: 'Aboneliği uzat', placeholder: 'Gün sayısı' });
     if (!days || isNaN(Number(days))) return;
 
     const currentEnd = sub.endDate ? new Date(sub.endDate) : new Date();

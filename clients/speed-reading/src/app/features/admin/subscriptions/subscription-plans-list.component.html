@@ -118,10 +118,10 @@
           <th mat-header-cell *matHeaderCellDef></th>
           <td mat-cell *matCellDef="let plan">
             <div class="actions-wrapper">
-              <button mat-icon-button color="primary" (click)="openDialog(plan)" matTooltip="Düzenle">
+                    <button mat-icon-button type="button" color="primary" aria-label="Abonelik planını düzenle" (click)="openDialog(plan)" matTooltip="Düzenle">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-icon-button color="warn" (click)="deactivatePlan(plan)" matTooltip="Devre Dışı Bırak">
+                    <button mat-icon-button type="button" color="warn" aria-label="Abonelik planını devre dışı bırak" (click)="deactivatePlan(plan)" matTooltip="Devre Dışı Bırak">
                 <mat-icon>block</mat-icon>
               </button>
             </div>

@@ -41,6 +41,11 @@ import { Institution } from '../../core/models/institution.model';
       padding: 32px 24px;
     }
 
+    .tab-content { padding-top: 24px; }
+    .contact-email-field { margin-top: 16px; }
+    .settings-submit { height: 48px; padding: 0 32px; }
+    .button-spinner { display: inline-block; margin-right: 8px; }
+
     .header-section {
       margin-bottom: 32px;
       

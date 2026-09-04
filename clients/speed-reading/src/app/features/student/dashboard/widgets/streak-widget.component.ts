@@ -61,11 +61,11 @@ export class StreakWidgetComponent implements OnInit {
 
   getMotivationMessage(): string {
     const s = this.currentStreak();
-    if (s === 0)  return 'Bugün başla, alışkanlık kazan! 💪';
-    if (s < 3)    return 'Harika başlangıç! Devam et! 🌱';
-    if (s < 7)    return `${s} günlük seri! Hız kazanıyorsun 🚀`;
-    if (s < 14)   return `Bir haftayı geçtin! Muhteşem ⚡`;
-    if (s < 30)   return `${s} gün! Alışkanlık oluştu 🔥`;
-    return `${s} gün! İnanılmaz kararlılık! 🏆`;
+    if (s === 0)  return 'Bugün başla, alışkanlık kazan!';
+    if (s < 3)    return 'Harika başlangıç! Devam et!';
+    if (s < 7)    return `${s} günlük seri! Hız kazanıyorsun`;
+    if (s < 14)   return 'Bir haftayı geçtin! Muhteşem';
+    if (s < 30)   return `${s} gün! Alışkanlık oluştu`;
+    return `${s} gün! İnanılmaz kararlılık!`;
   }
 }

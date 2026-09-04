@@ -56,7 +56,7 @@ interface Teacher {
           <p class="subtitle">Kurumunuzdaki öğretmenleri yönetin ve performanslarını takip edin.</p>
         </div>
         <div class="header-actions">
-           <input type="file" id="teacherFileInput" (change)="onFileSelected($event)" accept=".xlsx, .xls" style="display: none;">
+           <input type="file" id="teacherFileInput" (change)="onFileSelected($event)" accept=".xlsx, .xls" class="visually-hidden-file">
           <button mat-stroked-button color="accent" (click)="downloadTemplate()" [disabled]="loading" class="action-btn">
             <mat-icon>download</mat-icon>
             Şablon İndir
@@ -141,13 +141,13 @@ interface Teacher {
                 <th mat-header-cell *matHeaderCellDef></th>
                 <td mat-cell *matCellDef="let teacher">
                   <div class="action-buttons">
-                    <button mat-icon-button color="primary" (click)="viewStudents(teacher)" matTooltip="Öğrencileri Gör">
+          <button mat-icon-button type="button" color="primary" aria-label="Öğretmenin öğrencilerini gör" (click)="viewStudents(teacher)" matTooltip="Öğrencileri Gör">
                       <mat-icon>groups</mat-icon>
                     </button>
-                    <button mat-icon-button color="accent" (click)="viewReports(teacher)" matTooltip="Raporları Gör">
+          <button mat-icon-button type="button" color="accent" aria-label="Öğretmenin raporlarını gör" (click)="viewReports(teacher)" matTooltip="Raporları Gör">
                       <mat-icon>assessment</mat-icon>
                     </button>
-                    <button mat-icon-button [matMenuTriggerFor]="menu">
+          <button mat-icon-button type="button" [matMenuTriggerFor]="menu" aria-label="Öğretmen işlemleri menüsünü aç">
                       <mat-icon>more_vert</mat-icon>
                     </button>
                     <mat-menu #menu="matMenu">
@@ -194,6 +194,18 @@ interface Teacher {
     </div>
   `,
   styles: [`
+    .visually-hidden-file {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     :host {
       display: block;
       min-height: 100vh;
@@ -580,8 +592,9 @@ export class TeachersListComponent implements OnInit {
     });
   }
 
-  deleteTeacher(teacher: Teacher): void {
-    if (confirm(`${teacher.firstName} ${teacher.lastName} adlı öğretmeni silmek veya bağlantısını kesmek istediğinize emin misiniz?`)) {
+  async deleteTeacher(teacher: Teacher): Promise<void> {
+    const confirmed = await this.toaster.confirm(`${teacher.firstName} ${teacher.lastName} adlı öğretmeni silmek veya bağlantısını kesmek istediğinize emin misiniz?`, { title: 'Öğretmeni sil veya bağlantıyı kes' });
+    if (confirmed) {
       this.http.delete(`${environment.apiUrl}/v1/teachers/${teacher.id}`).subscribe({
         next: () => {
           this.toaster.success('Öğretmen başarıyla silindi/bağlantı kesildi');

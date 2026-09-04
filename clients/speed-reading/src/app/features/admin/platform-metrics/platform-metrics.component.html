@@ -184,7 +184,7 @@
         </mat-card>
     </div>
 
-    <div *ngIf="!loading() && !error && metrics && !metrics?.totals" class="empty-state">
+    <div *ngIf="!loading() && !error && metrics && !metrics.totals" class="empty-state">
         <mat-icon>bar_chart</mat-icon>
         <p>Seçilen dönem için metrik verisi bulunamadı.</p>
     </div>

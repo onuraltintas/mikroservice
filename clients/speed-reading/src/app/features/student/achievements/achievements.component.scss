@@ -52,6 +52,7 @@
   align-items: center;
   gap: 8px;
 }
+.ach-header__title .material-icons { color: var(--sp-xp); font-size: 24px; }
 .ach-header__stats {
   display: flex;
   align-items: center;
@@ -127,7 +128,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 34px;
+  min-height: 44px;
   padding: 0 12px;
   border-radius: var(--sp-radius-full);
   border: 1px solid var(--sp-border);

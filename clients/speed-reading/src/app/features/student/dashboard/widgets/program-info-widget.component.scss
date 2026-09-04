@@ -2,6 +2,8 @@
     height: 100%;
     display: flex;
     flex-direction: column;
+    padding: 24px;
+    color: var(--sp-text-1);
 }
 
 .header-content {
@@ -21,7 +23,12 @@
     font-size: 1.75rem;
     width: 1.75rem;
     height: 1.75rem;
-    color: #1976d2;
+    color: var(--sp-primary);
+}
+
+.program-title {
+    font-size: 1rem;
+    font-weight: 700;
 }
 
 mat-card-title {
@@ -48,6 +55,12 @@ mat-card-title {
     margin-bottom: 1rem;
 }
 
+.error-icon {
+    margin-bottom: 1rem;
+    color: var(--sp-danger);
+    font-size: 3rem;
+}
+
 .program-content {
     display: flex;
     flex-direction: column;
@@ -66,7 +79,7 @@ mat-card-title {
     margin: 0;
     font-size: 1.125rem;
     font-weight: 600;
-    color: #333;
+    color: var(--sp-text-1);
     min-width: 12.5rem;
 }
 
@@ -87,7 +100,7 @@ mat-card-title {
 
 .program-description {
     margin: 0;
-    color: #666;
+    color: var(--sp-text-2);
     font-size: 0.875rem;
     line-height: 1.5;
 }
@@ -103,32 +116,32 @@ mat-card-title {
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem;
-    background: #f5f5f5;
+    background: var(--sp-surface-3);
     border-radius: 0.5rem;
     transition: background 0.2s;
 }
 
 .stat-item:hover {
-    background: #eeeeee;
+    background: var(--sp-primary-ghost);
 }
 
 .stat-icon {
     font-size: 1.5rem;
     width: 1.5rem;
     height: 1.5rem;
-    color: #1976d2;
+    color: var(--sp-primary);
 }
 
 .stat-icon.max-difficulty {
-    color: #f44336;
+    color: var(--sp-danger);
 }
 
 .stat-icon.high-success {
-    color: #4caf50;
+    color: var(--sp-success);
 }
 
 .stat-icon.streak-icon {
-    color: #ff9800;
+    color: var(--sp-streak);
 }
 
 .stat-content {
@@ -139,20 +152,26 @@ mat-card-title {
 
 .stat-label {
     font-size: 0.75rem;
-    color: #666;
+    color: var(--sp-text-2);
     font-weight: 500;
 }
 
 .stat-value {
     font-size: 1rem;
     font-weight: 600;
-    color: #333;
+    color: var(--sp-text-1);
+}
+
+.streak-value-icon {
+    color: var(--sp-streak);
+    font-size: 1rem;
+    vertical-align: middle;
 }
 
 .difficulty-badge {
     font-size: 0.75rem;
     font-weight: 400;
-    color: #666;
+    color: var(--sp-text-2);
     margin-left: 0.25rem;
 }
 
@@ -171,13 +190,13 @@ mat-card-title {
 .progress-label {
     font-size: 0.875rem;
     font-weight: 500;
-    color: #666;
+    color: var(--sp-text-2);
 }
 
 .progress-percentage {
     font-size: 1rem;
     font-weight: 600;
-    color: #1976d2;
+    color: var(--sp-primary);
 }
 
 .meta-info {
@@ -185,7 +204,7 @@ mat-card-title {
     flex-wrap: wrap;
     gap: 1rem;
     padding-top: 0.75rem;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid var(--sp-border);
 }
 
 .meta-item {
@@ -193,17 +212,21 @@ mat-card-title {
     align-items: center;
     gap: 0.5rem;
     font-size: 0.8125rem;
-    color: #666;
+    color: var(--sp-text-2);
 }
 
 .meta-icon {
     font-size: 1.125rem;
     width: 1.125rem;
     height: 1.125rem;
-    color: #999;
+    color: var(--sp-text-3);
 }
 
 @media (max-width: 48rem) {
+    .program-info-card {
+        padding: 20px 16px;
+    }
+
     .stats-grid {
         grid-template-columns: 1fr;
     }

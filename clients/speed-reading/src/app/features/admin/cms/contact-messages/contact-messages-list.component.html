@@ -3,7 +3,7 @@
         <h1 class="page-title">İletişim Mesajları</h1>
         <div class="header-actions">
             <!-- Optional refresh button or export -->
-            <button mat-icon-button (click)="loadMessages()" matTooltip="Yenile">
+    <button mat-icon-button type="button" aria-label="Mesajları yenile" (click)="loadMessages()" matTooltip="Yenile">
                 <mat-icon>refresh</mat-icon>
             </button>
         </div>
@@ -19,7 +19,7 @@
                         (ngModelChange)="filters.search = $event; onFilterChange()"
                         placeholder="İsim, e-posta veya konu...">
                     <mat-icon matPrefix>search</mat-icon>
-                    <button *ngIf="filters.search" matSuffix mat-icon-button aria-label="Temizle"
+    <button *ngIf="filters.search" matSuffix mat-icon-button type="button" aria-label="Temizle"
                         (click)="filters.search = ''; onFilterChange()">
                         <mat-icon>close</mat-icon>
                     </button>
@@ -107,11 +107,11 @@
                 <ng-container matColumnDef="actions">
                     <th mat-header-cell *matHeaderCellDef> İşlemler </th>
                     <td mat-cell *matCellDef="let msg">
-                        <button mat-icon-button color="primary" (click)="openDetail(msg)"
+                        <button mat-icon-button type="button" color="primary" aria-label="Mesajı görüntüle ve yanıtla" (click)="openDetail(msg)"
                             matTooltip="Görüntüle & Yanıtla">
                             <mat-icon>visibility</mat-icon>
                         </button>
-                        <button mat-icon-button color="warn" (click)="deleteMessage(msg, $event)" matTooltip="Sil">
+                        <button mat-icon-button type="button" color="warn" aria-label="Mesajı sil" (click)="deleteMessage(msg, $event)" matTooltip="Sil">
                             <mat-icon>delete</mat-icon>
                         </button>
                     </td>

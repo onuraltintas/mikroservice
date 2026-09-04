@@ -143,7 +143,7 @@
             <button class="ep-btn ep-btn--icon" (click)="togglePause()">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -210,7 +210,7 @@
             <button class="ep-btn ep-btn--icon" (click)="togglePause()">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+                    <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -331,11 +331,9 @@
                 {{ hasTimeLimit() ? formatTime(getRemainingTimeMs()) : formatTime(engineState.timeElapsed) }}
             </div>
             <div class="progress-info">
-                <span class="word-count-display"
-                    style="font-size: 24px; font-weight: 800; color: #EF6C00; display: flex; align-items: baseline; line-height: 1; margin-bottom: 4px;">
+                <span class="word-count-display word-count-display--active">
                     {{ engineState.currentStep }}/{{ engineState.totalSteps }}
-                    <small
-                        style="font-size: 13px; font-weight: 600; color: #757575; margin-left: 6px; text-transform: uppercase;">Kelime</small>
+                    <small class="word-count-display__label">Kelime</small>
                 </span>
                 <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
             </div>
@@ -343,7 +341,7 @@
             <button class="ep-btn ep-btn--icon" (click)="togglePause()">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -411,7 +409,7 @@
             <button class="ep-btn ep-btn--icon" (click)="togglePause()">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -471,7 +469,7 @@
             <button class="ep-btn ep-btn--icon" (click)="togglePause()">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -517,7 +515,7 @@
             <button class="ep-btn ep-btn--icon" (click)="togglePause()">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -583,7 +581,7 @@
             <button class="ep-btn ep-btn--icon" (click)="togglePause()">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -643,7 +641,7 @@
                 <span class="label">Yanlış</span>
                 <span class="value bad">{{ getExpansionWrongCount() }}</span>
             </div>
-            <div class="stat" *ngIf="engine?.engineType !== 'visual_expansion'">
+            <div class="stat" *ngIf="engine.engineType !== 'visual_expansion'">
                 <span class="label">Süre</span>
                 <span class="value">{{ hasTimeLimit() ? formatTime(getRemainingTimeMs()) :
                     formatTime(engineState.timeElapsed) }}</span>
@@ -666,7 +664,7 @@
             <button class="ep-btn ep-btn--icon" (click)="togglePause()">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -711,7 +709,7 @@
             <button class="ep-btn ep-btn--icon" (click)="togglePause()">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -780,7 +778,7 @@
             <button class="ep-btn ep-btn--icon" (click)="togglePause()">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -973,7 +971,7 @@
             <button class="ep-btn ep-btn--icon" (click)="togglePause()">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
-            <button class="ep-btn ep-btn--icon ep-btn--warn" (click)="goBack()" style="margin-left: 8px;">
+            <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -1029,7 +1027,7 @@
             </div>
 
             <div class="header-right">
-                <div class="wpm-badge" style="background: rgba(255,255,255,0.2); box-shadow: none;">
+                <div class="wpm-badge wpm-badge--compact">
                     <span class="material-icons">speed</span>
                     <span>{{ getSubvocCurrentWpm() }} WPM</span>
                 </div>
@@ -1610,7 +1608,7 @@
                 </div>
 
                 <!-- Word Count Box (New for RSVP) -->
-                <div class="result-box" style="background: rgba(var(--text-color-rgb), 0.05);"
+                <div class="result-box word-count-box"
                     *ngIf="result?.details?.readWordCount !== undefined">
                     <span class="material-icons">text_snippet</span>
                     <div class="result-value">{{ result?.details?.readWordCount }}{{ result?.details?.totalWordCount ?
@@ -1656,7 +1654,7 @@
                 <div class="answers-header">
                     <span class="material-icons">list_alt</span>
                     <span>Cevap Detayları</span>
-                    <span class="header-summary" style="margin-left: auto; font-size: 12px; opacity: 0.8;">
+                    <span class="header-summary">
                         {{ result?.details?.correctAnswers }}/{{ result?.details?.totalQuestions }} Doğru
                     </span>
                 </div>
@@ -1687,17 +1685,17 @@
             <div class="speed-reading-results focus-results"
                 *ngIf="engine?.engineType === 'focus' || engine?.engineType === 'attention_training'">
                 <div class="result-box correct-box">
-                    <span class="material-icons" style="color: #4caf50">check_circle</span>
+                    <span class="material-icons status-icon--success">check_circle</span>
                     <div class="result-value">{{ result?.details?.hits || 0 }}</div>
                     <div class="result-label">Doğru</div>
                 </div>
                 <div class="result-box wrong-box">
-                    <span class="material-icons" style="color: #f44336">error</span>
+                    <span class="material-icons status-icon--error">error</span>
                     <div class="result-value">{{ result?.details?.falseAlarms || 0 }}</div>
                     <div class="result-label">Yanlış Alarm</div>
                 </div>
                 <div class="result-box miss-box">
-                    <span class="material-icons" style="color: #ff9800">rule</span>
+                    <span class="material-icons status-icon--warning">rule</span>
                     <div class="result-value">{{ result?.details?.misses || 0 }}</div>
                     <div class="result-label">Kaçırılan</div>
                 </div>
@@ -1846,7 +1844,7 @@
 
             <ng-template #completeAllTpl>
                 <div class="next-program-card ultimate-completion">
-                    <h3>Zirvedesiniz! 🏆</h3>
+                    <h3>Zirvedesiniz!</h3>
                     <div class="program-preview">
                         <div class="prog-icon gold">
                             <span class="material-icons">military_tech</span>
@@ -1889,9 +1887,3 @@
         </div>
     </div>
 </div>
-
-@if (toast()) {
-  <div class="ep-toast ep-toast--{{ toast()!.type }}">
-    <span>{{ toast()!.msg }}</span>
-  </div>
-}

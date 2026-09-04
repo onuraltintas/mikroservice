@@ -2,7 +2,7 @@
     <div class="header-content">
         <div class="title-section">
             <span class="material-icons header-icon">school</span>
-            <div style="font-size:16px;font-weight:600">Programınız</div>
+            <div class="program-title">Programınız</div>
         </div>
     </div>
 
@@ -14,7 +14,7 @@
 
     <!-- Error State -->
     <div *ngIf="error() && !loading()" class="error-state">
-        <span class="material-icons" style="color:#f44336">error_outline</span>
+        <span class="material-icons error-icon" aria-hidden="true">error_outline</span>
         <p>{{ error() }}</p>
     </div>
 
@@ -96,7 +96,10 @@
                 <span class="material-icons stat-icon streak-icon">local_fire_department</span>
                 <div class="stat-content">
                     <span class="stat-label">Mevcut Seri</span>
-                    <span class="stat-value">{{ programInfo()!.currentStreak }} gün 🔥</span>
+                    <span class="stat-value">
+                        <span class="material-icons streak-value-icon" aria-hidden="true">local_fire_department</span>
+                        {{ programInfo()!.currentStreak }} gün
+                    </span>
                 </div>
             </div>
         </div>

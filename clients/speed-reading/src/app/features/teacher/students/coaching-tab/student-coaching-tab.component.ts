@@ -140,8 +140,8 @@ export class StudentCoachingTabComponent extends BaseComponent implements OnInit
     ref.afterClosed().subscribe(saved => { if (saved) this.loadAll(); });
   }
 
-  checkInGoal(goal: CoachingGoal): void {
-    const pct = window.prompt(`"${goal.title}" için yeni ilerleme yüzdesi (şu an: %${goal.completionPercentage})?`, String(goal.completionPercentage));
+  async checkInGoal(goal: CoachingGoal): Promise<void> {
+    const pct = await this.toaster.prompt(`"${goal.title}" için yeni ilerleme yüzdesi (şu an: %${goal.completionPercentage})?`, String(goal.completionPercentage), { title: 'Hedef ilerlemesini güncelle', placeholder: '0-100 arası yüzde' });
     if (pct === null || isNaN(Number(pct))) return;
     this.coaching.goalCheckIn(goal.id, { newPercentage: Number(pct) })
       .pipe(takeUntil(this.destroy$))

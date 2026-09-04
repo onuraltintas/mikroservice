@@ -131,6 +131,7 @@
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
+  min-height: 44px;
   border-radius: var(--sp-radius-sm);
   color: var(--sp-sidebar-text-muted);
   text-decoration: none;
@@ -309,8 +310,8 @@
   display: none;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--sp-radius-sm);
   border: none;
   background: transparent;
@@ -342,8 +343,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--sp-radius-sm);
   color: var(--sp-text-2);
   text-decoration: none;
@@ -415,6 +416,7 @@
   gap: 10px;
   width: 100%;
   padding: 10px 16px;
+  min-height: 44px;
   font-family: var(--sp-font-sans);
   font-size: 0.875rem;
   font-weight: 500;
@@ -455,6 +457,10 @@
 
   // Fade in when navigating
   animation: sp-fade-in 0.2s cubic-bezier(0.4, 0, 0.2, 1) both;
+
+  @media (max-width: 640px) {
+    padding: 16px;
+  }
 }
 
 // ── Animations (local keyframes as fallback) ──────────────────────────────────

@@ -101,12 +101,7 @@ export class StreakDisplayComponent implements OnInit {
   }
 
   getStreakIcon(streak: number): string {
-    if (streak >= 100) return '🔥🔥🔥🔥🔥';
-    if (streak >= 30) return '🔥🔥🔥🔥';
-    if (streak >= 14) return '🔥🔥🔥';
-    if (streak >= 7) return '🔥🔥';
-    if (streak >= 3) return '🔥';
-    return '⚪';
+    return streak > 0 ? 'local_fire_department' : 'radio_button_unchecked';
   }
 
   getStreakMessage(): string {
@@ -117,17 +112,17 @@ export class StreakDisplayComponent implements OnInit {
       return `${7 - this.currentStreak} gün daha devam edin!`;
     }
     if (this.currentStreak < 30) {
-      return 'Harika gidiyorsunuz! Devam edin! 🔥';
+      return 'Harika gidiyorsunuz! Devam edin!';
     }
-    return 'Muhteşem bir seri! Efsanesiniz! 🔥🔥🔥';
+    return 'Muhteşem bir seri! Efsanesiniz!';
   }
 
   getMotivationMessage(): string {
     const messages = [
-      'Her gün biraz daha iyileşiyorsunuz! 💪',
-      'Düzenli çalışmanın gücünü görüyorsunuz! ⭐',
-      'Harika bir tempo! Devam edin! 🚀',
-      'Azminiz takdire şayan! 🏆'
+      'Her gün biraz daha iyileşiyorsunuz!',
+      'Düzenli çalışmanın gücünü görüyorsunuz!',
+      'Harika bir tempo! Devam edin!',
+      'Azminiz takdire şayan!'
     ];
     return messages[Math.floor(Math.random() * messages.length)];
   }

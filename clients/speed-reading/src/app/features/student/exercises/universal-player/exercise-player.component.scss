@@ -7801,7 +7801,7 @@ h1 {
     &:hover { background: var(--sp-surface-3, #f3f4f6); }
   }
   &--icon {
-    width: 40px; height: 40px;
+    width: 44px; height: 44px;
     padding: 0;
     border-radius: 8px;
     background: rgba(255,255,255,.15);
@@ -7813,25 +7813,42 @@ h1 {
   }
 }
 
-.ep-toast {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 9999;
-  padding: 12px 24px;
-  border-radius: 10px;
-  font-size: .9rem;
-  font-weight: 500;
-  color: #fff;
-  box-shadow: 0 4px 16px rgba(0,0,0,.2);
-  animation: ep-toast-in .25s ease;
+// ── Shared student UI alignment ─────────────────────────────────────────────
+.ep-back-button { margin-left: 8px; }
 
-  &--info    { background: var(--sp-primary, #6366f1); }
-  &--warn    { background: var(--sp-warning, #f59e0b); }
-  &--error   { background: var(--sp-danger, #ef4444); }
+.word-count-display--active {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 4px;
+  color: var(--sp-warning-dark, #d97706);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
 }
-@keyframes ep-toast-in {
-  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.word-count-display__label {
+  margin-left: 6px;
+  color: var(--sp-text-2, #64748b);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
 }
+
+.wpm-badge--compact {
+  background: color-mix(in srgb, var(--sp-surface, #ffffff) 20%, transparent);
+  box-shadow: none;
+}
+
+.word-count-box {
+  background: color-mix(in srgb, var(--sp-text-1, #1e293b) 5%, transparent);
+}
+
+.header-summary {
+  margin-left: auto;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.status-icon--success { color: var(--sp-success, #10b981); }
+.status-icon--error { color: var(--sp-danger, #f43f5e); }
+.status-icon--warning { color: var(--sp-warning, #f59e0b); }

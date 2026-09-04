@@ -15,8 +15,7 @@
     </div>
 
     <!-- Loading State -->
-    <div class="loading-overlay" *ngIf="loading()"
-        style="display: flex; justify-content: center; align-items: center; padding: 4rem;">
+    <div class="loading-overlay ui-loading-state" *ngIf="loading()">
         <mat-spinner diameter="48"></mat-spinner>
     </div>
 
@@ -102,7 +101,7 @@
                         [formGroupName]="i">
                         <div class="item-header">
                             <span class="index">#{{i + 1}}</span>
-                            <button mat-icon-button color="warn" (click)="removeTestimonial(i)" matTooltip="Sil">
+              <button mat-icon-button type="button" color="warn" aria-label="Referansı sil" (click)="removeTestimonial(i)" matTooltip="Sil">
                                 <mat-icon>delete</mat-icon>
                             </button>
                         </div>
@@ -120,7 +119,7 @@
                                 <mat-error>Rol gereklidir</mat-error>
                             </mat-form-field>
 
-                            <mat-form-field appearance="outline" style="width: 100px;">
+                            <mat-form-field appearance="outline" class="ui-field--narrow">
                                 <mat-label>Puan</mat-label>
                                 <input matInput type="number" formControlName="rating" min="1" max="5">
                                 <mat-error>1-5 arası</mat-error>

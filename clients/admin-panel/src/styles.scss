@@ -1,4 +1,12 @@
 @use '@angular/material' as mat;
+@use '../../shared/styles/platform-tokens';
+@use '../../shared/styles/platform-components';
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
 
 html {
     height: 100%;
@@ -17,9 +25,54 @@ body {
 
     // Default to Light Scheme
     color-scheme: light;
-    background-color: var(--mat-sys-surface);
-    color: var(--mat-sys-on-surface);
-    font: var(--mat-sys-body-medium);
+    background-color: var(--ui-page);
+    color: var(--ui-text);
+    font-family: var(--ui-font-body);
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+    font-family: var(--ui-font-body);
+}
+
+button,
+a,
+input,
+select,
+textarea,
+[role='button'] {
+    -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+[role='button'] {
+    &:focus-visible {
+        outline: 2px solid var(--ui-brand);
+        outline-offset: 3px;
+        box-shadow: var(--ui-focus-ring);
+    }
+}
+
+input,
+select,
+textarea {
+    &:focus-visible {
+        outline: 2px solid var(--ui-brand);
+        outline-offset: 1px;
+        border-color: var(--ui-brand);
+        box-shadow: var(--ui-focus-ring);
+    }
+}
+
+button,
+[role='button'] {
+    min-height: var(--ui-control-height);
 }
 
 // DARK MODE SUPPORT check (System Preference)
@@ -53,4 +106,15 @@ body {
 
 .animate-fade-in-up {
     animation: fadeInUp 0.4s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
 }

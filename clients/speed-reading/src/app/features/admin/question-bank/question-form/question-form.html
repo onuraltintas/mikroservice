@@ -17,7 +17,7 @@
                             <mat-label>Paragraf Metni</mat-label>
                             <textarea matInput formControlName="content" rows="12"
                                 placeholder="Paragraf metnini buraya yapıştırın..."
-                                style="resize: vertical; min-height: 300px;">
+                                class="ui-textarea-resizable">
               </textarea>
                             <mat-hint>Kelime sayısı: {{ form.get('wordCount')?.value }}</mat-hint>
                             <mat-error *ngIf="form.get('content')?.hasError('required')">

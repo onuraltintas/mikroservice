@@ -48,11 +48,11 @@
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef>İşlemler</th>
           <td mat-cell *matCellDef="let r">
-            <a mat-icon-button [routerLink]="['/coaching/students', r.studentId]"
+            <a mat-icon-button aria-label="Öğrenci detayını gör" [routerLink]="['/coaching/students', r.studentId]"
               matTooltip="Öğrenci Detayı">
               <mat-icon>open_in_new</mat-icon>
             </a>
-            <button mat-icon-button color="warn" *ngIf="r.status === 'Active'"
+              <button mat-icon-button type="button" color="warn" aria-label="Koçluk ilişkisini sonlandır" *ngIf="r.status === 'Active'"
               matTooltip="İlişkiyi Sonlandır" (click)="endRelationship(r)">
               <mat-icon>stop_circle</mat-icon>
             </button>

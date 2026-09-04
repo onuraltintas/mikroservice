@@ -477,3 +477,62 @@
     }
   }
 }
+
+// Keep the teacher home screen on the shared semantic token layer.
+:host {
+  color: var(--ui-text);
+}
+
+.teacher-dashboard {
+  h1 {
+    color: var(--ui-text);
+  }
+
+  .subtitle,
+  .stat-content .stat-label,
+  .stat-content .stat-description,
+  .stat-content .stat-change,
+  .distribution-info .distribution-label,
+  .distribution-info .distribution-percentage,
+  .students-table-card .last-activity,
+  .empty-state,
+  .loading-container p {
+    color: var(--ui-text-muted);
+  }
+
+  .stat-content .stat-value,
+  .distribution-info .distribution-count {
+    color: var(--ui-text);
+  }
+
+  .stat-content .stat-badge.active {
+    background: var(--ui-info-soft);
+    color: var(--ui-info);
+  }
+
+  .stat-content .stat-badge.pending {
+    background: var(--ui-warning-soft);
+    color: var(--ui-warning);
+  }
+
+  .stat-content .stat-change.positive,
+  .kdp-value.success {
+    color: var(--ui-success);
+  }
+
+  .kdp-value.primary {
+    color: var(--ui-info);
+  }
+
+  .kdp-value.warning {
+    color: var(--ui-warning);
+  }
+
+  .kdp-value.danger {
+    color: var(--ui-danger);
+  }
+
+  .empty-state mat-icon {
+    color: var(--ui-text-subtle);
+  }
+}

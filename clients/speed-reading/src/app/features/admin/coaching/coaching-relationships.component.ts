@@ -26,8 +26,8 @@ import { UserDto } from '../../../core/models/user.model';
     MatSelectModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
   template: `
     <h2 mat-dialog-title>Yeni Koçluk İlişkisi</h2>
-    <mat-dialog-content style="min-width:360px;padding-top:8px">
-      <div style="display:flex;flex-direction:column;gap:16px">
+    <mat-dialog-content class="ui-dialog-content ui-dialog-content--md">
+      <div class="ui-stack">
         <mat-form-field appearance="outline">
           <mat-label>Öğrenci</mat-label>
           <mat-select [(ngModel)]="studentId">

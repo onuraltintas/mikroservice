@@ -198,9 +198,8 @@ export class PermissionListComponent {
         }
 
         const confirmed = await this.toaster.confirm(
-            'İzni Pasife Al',
             'Bu izni pasife almak istediğinize emin misiniz? (Daha sonra kalıcı olarak silebilirsiniz)',
-            'Evet, Pasife Al'
+            { title: 'İzni Pasife Al', confirmText: 'Evet, Pasife Al' }
         );
 
         if (confirmed) {
@@ -220,9 +219,8 @@ export class PermissionListComponent {
 
     async restorePermission(permission: PermissionDto) {
         const confirmed = await this.toaster.confirm(
-            'İzni Aktif Yap',
             'Bu izni tekrar aktif hale getirmek istediğinize emin misiniz?',
-            'Evet, Aktif Yap'
+            { title: 'İzni Aktif Yap', confirmText: 'Evet, Aktif Yap' }
         );
 
         if (confirmed) {
@@ -242,9 +240,8 @@ export class PermissionListComponent {
 
     async permanentDeletePermission(permission: PermissionDto) {
         const confirmed = await this.toaster.confirm(
-            'DİKKAT! Kalıcı Silme',
             'Bu izni kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
-            'Evet, Kalıcı Sil'
+            { title: 'DİKKAT! Kalıcı Silme', confirmText: 'Evet, Kalıcı Sil' }
         );
 
         if (confirmed) {

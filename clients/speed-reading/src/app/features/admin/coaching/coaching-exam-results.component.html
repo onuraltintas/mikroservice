@@ -68,7 +68,7 @@
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef>İşlemler</th>
           <td mat-cell *matCellDef="let r">
-            <button mat-icon-button color="warn" matTooltip="Sil" (click)="deleteResult(r)">
+                  <button mat-icon-button type="button" color="warn" aria-label="Sınav sonucunu sil" matTooltip="Sil" (click)="deleteResult(r)">
               <mat-icon>delete</mat-icon>
             </button>
           </td>

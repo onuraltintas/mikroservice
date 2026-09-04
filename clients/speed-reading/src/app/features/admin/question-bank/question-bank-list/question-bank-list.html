@@ -85,7 +85,7 @@
                 <th mat-header-cell *matHeaderCellDef mat-sort-header> İçerik </th>
                 <td mat-cell *matCellDef="let row">
                     <div class="d-flex flex-column py-2">
-                        <span class="text-truncate fw-medium" style="max-width: 350px;">{{row.content}}</span>
+                        <span class="text-truncate fw-medium ui-text-truncate">{{row.content}}</span>
                         <small class="text-muted" *ngIf="row.topic">{{row.topic}}</small>
                     </div>
                 </td>
@@ -122,8 +122,7 @@
                 <th mat-header-cell *matHeaderCellDef mat-sort-header> Kelime </th>
                 <td mat-cell *matCellDef="let row">
                     <div class="d-flex align-items-center gap-2">
-                        <mat-icon class="text-muted icon-sm"
-                            style="font-size: 18px; width: 18px; height: 18px;">description</mat-icon>
+                        <mat-icon class="text-muted icon-sm ui-icon--sm">description</mat-icon>
                         {{row.wordCount}}
                     </div>
                 </td>
@@ -140,15 +139,15 @@
                 <th mat-header-cell *matHeaderCellDef> İşlemler </th>
                 <td mat-cell *matCellDef="let row">
                     <div class="d-flex gap-2">
-                        <button mat-icon-button color="primary" (click)="editQuestion(row.id)" matTooltip="Düzenle"
+                            <button mat-icon-button type="button" color="primary" aria-label="Soruyu düzenle" (click)="editQuestion(row.id)" matTooltip="Düzenle"
                             class="action-btn">
                             <mat-icon>edit</mat-icon>
                         </button>
-                        <button mat-icon-button color="warn" (click)="deleteQuestion(row)" matTooltip="Sil (Arşivle)"
+                            <button mat-icon-button type="button" color="warn" aria-label="Soruyu arşivle" (click)="deleteQuestion(row)" matTooltip="Sil (Arşivle)"
                             class="action-btn">
                             <mat-icon>delete</mat-icon>
                         </button>
-                        <button mat-icon-button (click)="hardDeleteQuestion(row)" matTooltip="Kalıcı Olarak Sil"
+                            <button mat-icon-button type="button" aria-label="Soruyu kalıcı olarak sil" (click)="hardDeleteQuestion(row)" matTooltip="Kalıcı Olarak Sil"
                             class="action-btn text-danger">
                             <mat-icon>delete_forever</mat-icon>
                         </button>
@@ -163,8 +162,7 @@
             <tr class="mat-row" *matNoDataRow>
                 <td class="mat-cell" colspan="6">
                     <div class="text-center p-5">
-                        <mat-icon class="text-muted mb-3"
-                            style="font-size: 48px; width: 48px; height: 48px;">search_off</mat-icon>
+                        <mat-icon class="text-muted mb-3 ui-icon--lg">search_off</mat-icon>
                         <p class="text-muted mb-0">Aradığınız kriterlere uygun soru bulunamadı.</p>
                     </div>
                 </td>

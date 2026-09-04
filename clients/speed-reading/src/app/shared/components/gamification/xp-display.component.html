@@ -1,5 +1,5 @@
 <div class="xp-container">
-    <span class="xp-icon">⭐</span>
+    <mat-icon class="xp-icon" aria-hidden="true">stars</mat-icon>
     <span class="xp-value">{{ currentXP | number }}</span>
     @if (showGainAnimation && gainedXP > 0) {
     <span class="xp-gain" [@floatUp]>+{{ gainedXP }}</span>

@@ -12,6 +12,7 @@ import {
   SpeedReadingVocabularyItemRequest,
   SpeedReadingVocabularyPage
 } from '../../../core/services/speed-reading-admin.service';
+import { ToasterService } from '../../../core/services/toaster.service';
 
 type LanguageContentTab = 'questions' | 'vocabulary';
 
@@ -68,6 +69,7 @@ type LanguageContentTab = 'questions' | 'vocabulary';
 })
 export class SpeedReadingLanguageContentComponent implements OnInit {
   private readonly service = inject(SpeedReadingAdminService);
+  private readonly toaster = inject(ToasterService);
 
   readonly tabs: { value: LanguageContentTab; label: string }[] = [
     { value: 'questions', label: 'Soru bankası' },
@@ -145,8 +147,8 @@ export class SpeedReadingLanguageContentComponent implements OnInit {
     });
   }
 
-  deleteQuestion(question: SpeedReadingExamQuestion): void {
-    if (!globalThis.confirm(`“${question.question}” sorusu silinsin mi?`)) return;
+  async deleteQuestion(question: SpeedReadingExamQuestion): Promise<void> {
+    if (!await this.toaster.confirm(`“${question.question}” sorusu silinsin mi?`, { title: 'Sınav sorusunu sil' })) return;
     this.service.deleteExamQuestion(question.id).subscribe({ next: () => this.loadQuestions(), error: () => this.error.set('Soru silinemedi.') });
   }
 
@@ -183,8 +185,8 @@ export class SpeedReadingLanguageContentComponent implements OnInit {
     });
   }
 
-  deleteVocabulary(item: SpeedReadingVocabularyItem): void {
-    if (!globalThis.confirm(`“${item.word}” kelimesi silinsin mi?`)) return;
+  async deleteVocabulary(item: SpeedReadingVocabularyItem): Promise<void> {
+    if (!await this.toaster.confirm(`“${item.word}” kelimesi silinsin mi?`, { title: 'Kelimeyi sil' })) return;
     this.service.deleteVocabularyItem(item.id).subscribe({ next: () => this.loadVocabulary(), error: () => this.error.set('Kelime silinemedi.') });
   }
 

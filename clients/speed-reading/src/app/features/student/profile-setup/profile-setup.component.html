@@ -11,7 +11,7 @@
     <div class="ps-step" [class.ps-step--active]="currentStep() >= 1" [class.ps-step--done]="currentStep() > 1">
       <div class="ps-step__circle">
         @if (currentStep() > 1) {
-          <span class="material-icons" style="font-size:16px">check</span>
+          <span class="material-icons ps-inline-icon" aria-hidden="true">check</span>
         } @else {
           1
         }
@@ -24,7 +24,7 @@
     <div class="ps-step" [class.ps-step--active]="currentStep() >= 2" [class.ps-step--done]="currentStep() > 2">
       <div class="ps-step__circle">
         @if (currentStep() > 2) {
-          <span class="material-icons" style="font-size:16px">check</span>
+          <span class="material-icons ps-inline-icon" aria-hidden="true">check</span>
         } @else {
           2
         }

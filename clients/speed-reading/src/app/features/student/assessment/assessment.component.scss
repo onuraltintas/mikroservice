@@ -1,11 +1,9 @@
-@use 'sass:color';
-
 // Variables
-$primary: #667eea;
-$success: #10b981;
-$dark-text: #1f2937;
-$light-text: #6b7280;
-$bg-color: #f3f4f6;
+$primary: var(--sp-primary);
+$success: var(--sp-success);
+$dark-text: var(--sp-text-1);
+$light-text: var(--sp-text-2);
+$bg-color: var(--sp-surface-2);
 
 .assessment-container {
   min-height: calc(100vh - 64px);
@@ -59,12 +57,12 @@ $bg-color: #f3f4f6;
     .title-icon-wrapper {
       width: 48px;
       height: 48px;
-      background: linear-gradient(135deg, $primary 0%, color.scale($primary, $lightness: -15%) 100%);
+      background: linear-gradient(135deg, var(--sp-primary), var(--sp-primary-dark));
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 12px rgba($primary, 0.3);
+      box-shadow: var(--sp-shadow-glow);
 
       mat-icon {
         color: white;
@@ -594,5 +592,189 @@ $bg-color: #f3f4f6;
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+// ── Shared token alignment ──────────────────────────────────────────────────
+.assessment-container {
+  color: var(--sp-text-1);
+  background: var(--sp-surface-2);
+}
+
+.top-bar .title-row h1,
+.exercise-item .content h3,
+.result-header h1,
+.score-card .value,
+.detail-scores .mini-score .value {
+  color: var(--sp-text-1);
+}
+
+.top-bar .progress-container,
+.exercise-item,
+.calc-box,
+.level-card,
+.score-card,
+.detail-scores,
+.auto-assign-box {
+  background: var(--sp-surface);
+  border-color: var(--sp-border);
+  box-shadow: var(--sp-shadow-card);
+}
+
+.top-bar .progress-container .sub-text,
+.top-bar .progress-container .progress-labels .label,
+.exercise-item .content p.description,
+.result-header p,
+.level-card .label,
+.score-card .label,
+.detail-scores .mini-score .label {
+  color: var(--sp-text-2);
+}
+
+.exercise-item {
+  &:hover {
+    box-shadow: var(--sp-shadow-hover);
+  }
+
+  &.completed {
+    background: var(--sp-success-light);
+    border-color: var(--sp-success);
+
+    .icon-box {
+      background: var(--sp-success-light);
+    }
+  }
+
+  &.locked {
+    background: var(--sp-surface-3);
+    border-color: var(--sp-border);
+  }
+
+  .icon-box {
+    background: var(--sp-primary-ghost);
+
+    .status-badge {
+      border-color: var(--sp-surface);
+    }
+  }
+
+  .exercise-metadata .meta-badge {
+    &.type {
+      background: var(--sp-primary-ghost);
+      color: var(--sp-primary-dark);
+      border-color: var(--sp-primary-light);
+    }
+
+    &.level {
+      background: var(--sp-warning-light);
+      color: var(--sp-warning-text);
+      border-color: var(--sp-warning);
+    }
+  }
+}
+
+.detail-scores .mini-score:not(:last-child)::after {
+  background: var(--sp-border);
+}
+
+.message-box {
+  background: var(--sp-warning-light);
+  border-color: var(--sp-warning);
+
+  .material-icons,
+  p {
+    color: var(--sp-warning-text);
+  }
+}
+
+.auto-assign-box {
+  border-color: var(--sp-primary-light);
+
+  .icon-side {
+    background: var(--sp-primary-ghost);
+
+    .material-icons {
+      color: var(--sp-primary);
+    }
+  }
+
+  .text-side {
+    strong { color: var(--sp-primary-dark); }
+    span { color: var(--sp-text-2); }
+  }
+}
+
+.assessment-container .material-icons {
+  line-height: 1;
+}
+
+.assessment-container .sp-spinner-sm {
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-width: 640px) {
+  .assessment-container {
+    padding: 16px;
+    padding-top: 16px;
+  }
+
+  .top-bar .title-group {
+    gap: 16px;
+  }
+
+  .top-bar .title-row {
+    gap: 12px;
+
+    h1 {
+      font-size: 1.5rem;
+    }
+  }
+
+  .exercise-item {
+    align-items: stretch;
+    flex-wrap: wrap;
+    padding: 16px;
+    gap: 14px;
+
+    .icon-box {
+      width: 52px;
+      height: 52px;
+
+      > .material-icons {
+        font-size: 26px;
+      }
+    }
+
+    .content {
+      flex-basis: calc(100% - 66px);
+
+      h3 { font-size: 1rem; }
+    }
+
+    .action-btn {
+      width: 100%;
+      flex-basis: 100%;
+    }
+  }
+
+  .detail-scores {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+
+    .mini-score {
+      &:not(:last-child)::after { display: none; }
+    }
+  }
+
+  .auto-assign-box {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .actions button {
+    width: 100%;
+    padding-inline: 24px;
   }
 }

@@ -1,7 +1,7 @@
-<div class="learning-path-page">
+<div class="learning-path-page sp-page-enter">
     <div class="page-header">
-        <button class="sp-btn sp-btn-icon" (click)="goBack()">
-            <span class="material-icons">arrow_back</span>
+        <button type="button" class="sp-btn sp-btn--icon" aria-label="Dashboard'a dön" (click)="goBack()">
+            <span class="material-icons" aria-hidden="true">arrow_back</span>
         </button>
         <div class="header-content">
             <h1>
@@ -69,16 +69,16 @@
     <div class="sp-card filters-card">
         <div class="sp-card-content">
             <div class="sp-tab-bar">
-                <button class="sp-tab-btn" [class.active]="selectedTabIndex === 0" (click)="onTabChange(0)">
-                    <span class="material-icons">pending</span>
+                <button type="button" class="sp-tab-btn" role="tab" [attr.aria-selected]="selectedTabIndex === 0" [class.active]="selectedTabIndex === 0" (click)="onTabChange(0)">
+                    <span class="material-icons" aria-hidden="true">pending</span>
                     Tamamlanacaklar ({{ progressSummary?.remainingItems || 0 }})
                 </button>
-                <button class="sp-tab-btn" [class.active]="selectedTabIndex === 1" (click)="onTabChange(1)">
-                    <span class="material-icons">check_circle</span>
+                <button type="button" class="sp-tab-btn" role="tab" [attr.aria-selected]="selectedTabIndex === 1" [class.active]="selectedTabIndex === 1" (click)="onTabChange(1)">
+                    <span class="material-icons" aria-hidden="true">check_circle</span>
                     Tamamlananlar ({{ progressSummary?.completedItems || 0 }})
                 </button>
-                <button class="sp-tab-btn" [class.active]="selectedTabIndex === 2" (click)="onTabChange(2)">
-                    <span class="material-icons">list</span>
+                <button type="button" class="sp-tab-btn" role="tab" [attr.aria-selected]="selectedTabIndex === 2" [class.active]="selectedTabIndex === 2" (click)="onTabChange(2)">
+                    <span class="material-icons" aria-hidden="true">list</span>
                     Tümü ({{ progressSummary?.totalItems || 0 }})
                 </button>
             </div>
@@ -87,7 +87,7 @@
 
     <!-- Loading State -->
     @if (loading) {
-    <div class="loading-container">
+    <div class="loading-container" role="status" aria-live="polite">
         <div class="sp-card">
             <div class="sp-card-content">
                 <div class="loading-spinner">
@@ -105,16 +105,16 @@
         @if (learningPath.items && learningPath.items.length > 0) {
         <div class="items-grid">
             @for (item of learningPath.items; track item.id) {
-            <div class="sp-card path-item-card" [class.completed]="item.isCompleted" [class.current]="isCurrentItem(item)"
-                (click)="navigateToItem(item)">
+            <div class="sp-card path-item-card" role="button" tabindex="0" [attr.aria-label]="item.contentTitle" [class.completed]="item.isCompleted" [class.current]="isCurrentItem(item)"
+                (click)="navigateToItem(item)" (keydown.enter)="navigateToItem(item)" (keydown.space)="$event.preventDefault(); navigateToItem(item)">
 
                 <div class="item-header">
                     <div class="item-index">
                         <span class="index-number">#{{ item.pathIndex + 1 }}</span>
                         @if (item.isCompleted) {
-                        <span class="material-icons completed-badge">check_circle</span>
+                        <span class="material-icons completed-badge" aria-hidden="true">check_circle</span>
                         } @else if (isCurrentItem(item)) {
-                        <span class="material-icons current-badge">play_circle</span>
+                        <span class="material-icons current-badge" aria-hidden="true">play_circle</span>
                         }
                     </div>
 
@@ -163,11 +163,10 @@
                 </div>
 
                 <div class="sp-card-actions">
-                    <button class="sp-btn sp-btn-primary"
-                        (click)="navigateToItem(item); $event.stopPropagation()">
+                    <span class="sp-btn sp-btn--primary" aria-hidden="true">
                         <span class="material-icons">{{ item.isCompleted ? 'replay' : 'play_arrow' }}</span>
                         {{ item.isCompleted ? 'Tekrar Yap' : 'Başla' }}
-                    </button>
+                    </span>
                 </div>
             </div>
             }
@@ -176,12 +175,12 @@
         <!-- Pagination -->
         @if (totalItems > pageSize) {
         <div class="path-paginator">
-            <button class="sp-btn" [disabled]="currentPage === 0" (click)="onPageChange(currentPage - 1, pageSize)">
-                <span class="material-icons">chevron_left</span>
+            <button type="button" class="sp-btn" aria-label="Önceki sayfa" [disabled]="currentPage === 0" (click)="onPageChange(currentPage - 1, pageSize)">
+                <span class="material-icons" aria-hidden="true">chevron_left</span>
             </button>
             <span>{{ currentPage + 1 }} / {{ Math.ceil(totalItems / pageSize) }}</span>
-            <button class="sp-btn" [disabled]="(currentPage + 1) * pageSize >= totalItems" (click)="onPageChange(currentPage + 1, pageSize)">
-                <span class="material-icons">chevron_right</span>
+            <button type="button" class="sp-btn" aria-label="Sonraki sayfa" [disabled]="(currentPage + 1) * pageSize >= totalItems" (click)="onPageChange(currentPage + 1, pageSize)">
+                <span class="material-icons" aria-hidden="true">chevron_right</span>
             </button>
         </div>
         }
@@ -193,15 +192,15 @@
                 <h2>{{ getEmptyStateTitle() }}</h2>
                 <p>{{ getEmptyStateMessage() }}</p>
                 @if (progressSummary?.totalItems === 0 && !generating) {
-                <button class="sp-btn sp-btn-primary" (click)="generatePath()" style="margin-top:16px">
+                <button type="button" class="sp-btn sp-btn--primary generate-path-button" (click)="generatePath()">
                     <span class="material-icons">auto_awesome</span>
                     Öğrenme Yolumu Oluştur
                 </button>
                 }
                 @if (generating) {
-                <div style="margin-top:16px">
-                    <div class="sp-spinner" style="margin:0 auto"></div>
-                    <p style="color:#666;margin-top:8px">Kişisel yolun oluşturuluyor...</p>
+                <div class="generating-state" role="status" aria-live="polite">
+                    <div class="sp-spinner"></div>
+                    <p>Kişisel yolun oluşturuluyor...</p>
                 </div>
                 }
             </div>

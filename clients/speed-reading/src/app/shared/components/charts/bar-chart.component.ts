@@ -18,6 +18,8 @@ export interface BarChartDataPoint {
     <div class="chart-container" [style.height.px]="height">
       <canvas
         baseChart
+        role="img"
+        [attr.aria-label]="chartLabel"
         [data]="barChartData"
         [options]="barChartOptions"
         [type]="barChartType">
@@ -41,6 +43,7 @@ export class BarChartComponent implements AfterViewInit, OnChanges {
   @Input() showLegend = false;
   @Input() horizontal = false;
   @Input() height = 300;
+  @Input() chartLabel = 'Çubuk grafiği';
 
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 

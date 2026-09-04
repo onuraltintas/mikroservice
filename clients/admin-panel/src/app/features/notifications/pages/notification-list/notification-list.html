@@ -28,8 +28,8 @@
                     <mat-icon matPrefix class="text-gray-400 mr-2">search</mat-icon>
                     <input matInput placeholder="Bildirimlerde ara (başlık, mesaj...)" [value]="searchQuery()"
                         (input)="onSearchChange($event)">
-                    <button *ngIf="searchQuery()" matSuffix mat-icon-button
-                        (click)="searchQuery.set(''); selection.clear()">
+                    <button type="button" *ngIf="searchQuery()" matSuffix mat-icon-button
+                        aria-label="Bildirim aramasını temizle" (click)="searchQuery.set(''); selection.clear()">
                         <mat-icon>close</mat-icon>
                     </button>
                 </mat-form-field>
@@ -153,15 +153,15 @@
                 <th mat-header-cell *matHeaderCellDef class="!pr-6 !text-right">İşlemler</th>
                 <td mat-cell *matCellDef="let element" class="!pr-6 !text-right">
                     <div class="flex justify-end gap-1">
-                        <button mat-icon-button color="primary" (click)="viewDetail(element); $event.stopPropagation()"
+                        <button type="button" mat-icon-button color="primary" aria-label="Bildirim detaylarını gör" (click)="viewDetail(element); $event.stopPropagation()"
                             matTooltip="Detayları Gör">
                             <mat-icon>visibility</mat-icon>
                         </button>
-                        <button *ngIf="!element.isRead" mat-icon-button color="primary"
+                        <button type="button" *ngIf="!element.isRead" mat-icon-button color="primary" aria-label="Bildirimi okundu işaretle"
                             (click)="markAsRead(element.id); $event.stopPropagation()" matTooltip="Okundu İşaretle">
                             <mat-icon>done</mat-icon>
                         </button>
-                        <button mat-icon-button color="warn"
+                        <button type="button" mat-icon-button color="warn" aria-label="Bildirimi sil"
                             (click)="deleteNotification(element.id); $event.stopPropagation()" matTooltip="Sil">
                             <mat-icon>delete_outline</mat-icon>
                         </button>

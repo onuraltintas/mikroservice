@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule } from '@angular/material/table';
+import { MatIconModule } from '@angular/material/icon';
 import {
   TeacherReportService,
   TeacherStudentReadingSpeedReport,
@@ -30,6 +31,7 @@ import { LineChartComponent } from '../../../shared/components/charts/line-chart
     MatProgressSpinnerModule,
     MatTabsModule,
     MatTableModule,
+    MatIconModule,
     LineChartComponent
   ],
   templateUrl: './reports.component.html',

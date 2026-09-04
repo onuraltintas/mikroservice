@@ -3,7 +3,7 @@
     <div class="sticky-header">
         <div class="header-content">
             <div class="header-left">
-                <button mat-icon-button routerLink="/admin/cms/blog" class="back-btn">
+    <button mat-icon-button type="button" aria-label="Blog listesine dön" routerLink="/admin/cms/blog" class="back-btn">
                     <mat-icon>arrow_back</mat-icon>
                 </button>
                 <div class="title-section">
@@ -224,7 +224,7 @@
                     </div>
                 </div>
                 <div class="preview-box mt-3" *ngIf="form.get('coverImageUrl')?.value">
-                    <img [src]="form.get('coverImageUrl')?.value" class="w-full h-40 object-cover rounded-lg">
+                    <img [src]="form.get('coverImageUrl')?.value" alt="Blog kapak önizlemesi" class="w-full h-40 object-cover rounded-lg">
                 </div>
             </div>
         </div>

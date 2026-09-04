@@ -66,8 +66,8 @@ export class RolesListComponent implements OnInit {
     return ['Admin', 'Teacher', 'Student', 'Editor'].includes(roleName);
   }
 
-  openCreateDialog(): void {
-    const roleName = prompt('Yeni rol adını girin:');
+  async openCreateDialog(): Promise<void> {
+    const roleName = await this.toaster.prompt('Yeni rol adını girin:', '', { title: 'Yeni rol oluştur', placeholder: 'Rol adı' });
     if (roleName && roleName.trim()) {
       this.createRole(roleName.trim());
     }
@@ -86,8 +86,8 @@ export class RolesListComponent implements OnInit {
     });
   }
 
-  openEditDialog(role: Role): void {
-    const newName = prompt('Yeni rol adını girin:', role.name);
+  async openEditDialog(role: Role): Promise<void> {
+    const newName = await this.toaster.prompt('Yeni rol adını girin:', role.name, { title: 'Rolü düzenle', placeholder: 'Rol adı' });
     if (newName && newName.trim() && newName !== role.name) {
       this.updateRole(role.id, newName.trim());
     }

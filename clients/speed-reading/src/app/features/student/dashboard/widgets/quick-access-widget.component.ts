@@ -6,7 +6,7 @@ interface QuickLink {
   icon: string;
   label: string;
   route: string;
-  color: string;
+  tone: 'primary' | 'danger' | 'success' | 'warning';
   queryParams?: any;
 }
 
@@ -28,16 +28,16 @@ export class QuickAccessWidgetComponent implements OnInit {
   private router = inject(Router);
 
   quickLinks: QuickLink[] = [
-    { label: 'Günlük Egzersizler', icon: 'today', route: '/student/daily-exercises', color: '#3f51b5' },
+    { label: 'Günlük Egzersizler', icon: 'today', route: '/student/daily-exercises', tone: 'primary' },
     {
       label: 'Geçmiş Egzersizler',
       icon: 'history',
       route: '/student/daily-exercises',
-      color: '#e91e63',
+      tone: 'danger',
       queryParams: { tab: 'history' }
     },
-    { label: 'Raporlar', icon: 'assessment', route: '/student/reports', color: '#009688' },
-    { label: 'Profilim', icon: 'person', route: '/student/profile', color: '#ff9800' }
+    { label: 'Raporlar', icon: 'assessment', route: '/student/reports', tone: 'success' },
+    { label: 'Profilim', icon: 'person', route: '/student/profile', tone: 'warning' }
   ];
 
   quotes: Quote[] = [

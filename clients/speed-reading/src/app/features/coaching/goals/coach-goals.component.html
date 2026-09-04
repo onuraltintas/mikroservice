@@ -57,7 +57,7 @@
         </ng-container>
         <ng-container matColumnDef="progress">
           <th mat-header-cell *matHeaderCellDef>İlerleme</th>
-          <td mat-cell *matCellDef="let g" style="min-width:140px">
+          <td mat-cell *matCellDef="let g" class="ui-cell--min-140">
             <div class="progress-cell">
               <mat-progress-bar mode="determinate" [value]="g.completionPercentage"></mat-progress-bar>
               <span class="progress-label">%{{ g.completionPercentage | number:'1.0-0' }}</span>
@@ -75,7 +75,7 @@
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef></th>
           <td mat-cell *matCellDef="let g">
-            <button mat-icon-button matTooltip="İlerleme Güncelle" (click)="checkIn(g)" *ngIf="g.status === 'Active'">
+            <button mat-icon-button type="button" aria-label="Hedef ilerlemesini güncelle" matTooltip="İlerleme Güncelle" (click)="checkIn(g)" *ngIf="g.status === 'Active'">
               <mat-icon>update</mat-icon>
             </button>
           </td>
@@ -83,7 +83,7 @@
         <ng-container matColumnDef="delete">
           <th mat-header-cell *matHeaderCellDef></th>
           <td mat-cell *matCellDef="let g">
-            <button mat-icon-button color="warn" matTooltip="Sil" (click)="deleteGoal(g)">
+            <button mat-icon-button type="button" color="warn" aria-label="Hedefi sil" matTooltip="Sil" (click)="deleteGoal(g)">
               <mat-icon>delete</mat-icon>
             </button>
           </td>

@@ -1,6 +1,6 @@
-<div class="series-report">
+<div class="series-report sp-page-enter">
   @if (loading()) {
-    <div class="loading-container"><div class="rp-spinner"></div></div>
+    <div class="loading-container" role="status" aria-live="polite"><div class="rp-spinner"></div><span>Seri raporu yükleniyor...</span></div>
   } @else if (report()?.dataAvailable === false) {
     <div class="empty-state">
       {{ report()?.unavailableReason || 'Bu tarih aralığında seri verisi bulunamadı.' }}
@@ -10,32 +10,32 @@
       <div class="rp-card">
         <div class="rp-card__body">
           <div class="stat-value">{{ report()!.summary.totalSeriesStarted }}</div>
-          <div class="stat-label">Series Started</div>
+          <div class="stat-label">Başlayan seri</div>
         </div>
       </div>
       <div class="rp-card">
         <div class="rp-card__body">
           <div class="stat-value">{{ report()!.summary.seriesCompleted }}</div>
-          <div class="stat-label">Completed</div>
+          <div class="stat-label">Tamamlanan</div>
         </div>
       </div>
       <div class="rp-card">
         <div class="rp-card__body">
           <div class="stat-value">{{ report()!.summary.seriesInProgress }}</div>
-          <div class="stat-label">In Progress</div>
+          <div class="stat-label">Devam eden</div>
         </div>
       </div>
       <div class="rp-card">
         <div class="rp-card__body">
           <div class="stat-value">{{ report()!.summary.totalMilestones }}</div>
-          <div class="stat-label">Milestones</div>
+          <div class="stat-label">Kilometre taşı</div>
         </div>
       </div>
     </div>
 
     <div class="rp-card active-series-card">
       <div class="rp-card__header">
-        <h3 class="rp-card__title">Active Series</h3>
+        <h3 class="rp-card__title">Aktif seriler</h3>
       </div>
       <div class="rp-card__body">
         <ul class="rp-list">
@@ -56,7 +56,7 @@
 
     <div class="rp-card">
       <div class="rp-card__header">
-        <h3 class="rp-card__title">Completion Timeline</h3>
+        <h3 class="rp-card__title">Tamamlanma zaman çizelgesi</h3>
       </div>
       <div class="rp-card__body">
         <div class="chart-container">
@@ -67,7 +67,7 @@
 
     <div class="rp-card">
       <div class="rp-card__header">
-        <h3 class="rp-card__title">Milestones</h3>
+        <h3 class="rp-card__title">Kilometre taşları</h3>
       </div>
       <div class="rp-card__body">
         <div class="milestones-grid">
@@ -83,6 +83,6 @@
       </div>
     </div>
   } @else {
-    <div class="empty-state">No series data available</div>
+    <div class="empty-state">Henüz seri verisi bulunmuyor.</div>
   }
 </div>

@@ -29,7 +29,7 @@
               <span class="group-badge" [style.background-color]="examTypeColors[group.examType]">
                 {{ examTypeLabels[group.examType] }}
               </span>
-              <span style="margin-left:8px">{{ group.subjects.length }} ders</span>
+              <span class="ui-subject-count">{{ group.subjects.length }} ders</span>
             </mat-panel-title>
           </mat-expansion-panel-header>
 
@@ -38,12 +38,12 @@
               <mat-card-header>
                 <div mat-card-avatar class="subject-avatar"
                   [style.background-color]="s.color ?? examTypeColors[s.examType]">
-                  <mat-icon style="color:white">book</mat-icon>
+                  <mat-icon class="ui-icon--white">book</mat-icon>
                 </div>
                 <mat-card-title>{{ s.name }}</mat-card-title>
                 <mat-card-subtitle>
                   <span *ngIf="s.totalQuestionsInExam">{{ s.totalQuestionsInExam }} soru</span>
-                  <mat-chip *ngIf="s.isSystem" style="margin-left:4px;font-size:0.7em">Sistem</mat-chip>
+                  <mat-chip *ngIf="s.isSystem" class="ui-chip--system">Sistem</mat-chip>
                 </mat-card-subtitle>
               </mat-card-header>
               <mat-card-content *ngIf="s.topics && s.topics.length > 0">

@@ -23,6 +23,8 @@ export interface LineChartSeries {
     <div class="chart-container" [style.height.px]="height">
       <canvas
         baseChart
+        role="img"
+        [attr.aria-label]="chartLabel"
         [data]="lineChartData"
         [options]="lineChartOptions"
         [type]="lineChartType">
@@ -45,6 +47,7 @@ export class LineChartComponent implements AfterViewInit, OnChanges {
   @Input() yAxisLabel = '';
   @Input() showLegend = true;
   @Input() height = 300;
+  @Input() chartLabel = 'Çizgi grafiği';
 
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 

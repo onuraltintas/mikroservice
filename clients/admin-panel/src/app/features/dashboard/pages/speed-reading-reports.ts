@@ -15,6 +15,7 @@ import {
   SpeedReadingScheduledReportCreateRequest,
   SpeedReadingScheduledReportUpdateRequest
 } from '../../../core/services/speed-reading-admin.service';
+import { ToasterService } from '../../../core/services/toaster.service';
 
 type ReportTab = 'templates' | 'schedules' | 'snapshots';
 
@@ -56,6 +57,7 @@ type ReportTab = 'templates' | 'schedules' | 'snapshots';
 export class SpeedReadingReportsComponent implements OnInit {
   private readonly service = inject(SpeedReadingAdminService);
   private readonly authService = inject(AuthService);
+  private readonly toaster = inject(ToasterService);
 
   readonly canManageReports = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingReportManage));
 
@@ -103,7 +105,7 @@ export class SpeedReadingReportsComponent implements OnInit {
       : this.service.createReportTemplate(this.templateDraft);
     this.saveRequest(request, () => { this.cancelTemplateEdit(); this.loadTemplates(); });
   }
-  deleteTemplate(template: SpeedReadingReportTemplate): void { if (template.isSystemTemplate || !globalThis.confirm('Bu rapor şablonu silinsin mi?')) return; this.saveRequest(this.service.deleteReportTemplate(template.id), () => this.loadTemplates()); }
+  async deleteTemplate(template: SpeedReadingReportTemplate): Promise<void> { if (template.isSystemTemplate || !await this.toaster.confirm('Bu rapor şablonu silinsin mi?', { title: 'Rapor şablonunu sil' })) return; this.saveRequest(this.service.deleteReportTemplate(template.id), () => this.loadTemplates()); }
 
   startScheduleCreate(): void { this.scheduleEditingId = null; this.scheduleDraft = this.emptySchedule(); this.scheduleEditing.set(true); }
   startScheduleEdit(schedule: SpeedReadingScheduledReport): void {
@@ -120,10 +122,10 @@ export class SpeedReadingReportsComponent implements OnInit {
     this.saveRequest(request, () => { this.cancelScheduleEdit(); this.loadSchedules(); });
   }
   toggleSchedule(schedule: SpeedReadingScheduledReport): void { this.saveRequest(this.service.updateScheduledReportStatus(schedule.id, !schedule.isActive), () => this.loadSchedules()); }
-  deleteSchedule(schedule: SpeedReadingScheduledReport): void { if (!globalThis.confirm('Bu rapor zamanlaması silinsin mi?')) return; this.saveRequest(this.service.deleteScheduledReport(schedule.id), () => this.loadSchedules()); }
+  async deleteSchedule(schedule: SpeedReadingScheduledReport): Promise<void> { if (!await this.toaster.confirm('Bu rapor zamanlaması silinsin mi?', { title: 'Rapor zamanlamasını sil' })) return; this.saveRequest(this.service.deleteScheduledReport(schedule.id), () => this.loadSchedules()); }
 
   createSnapshot(): void { if (!this.snapshotTemplateId) return; this.saveRequest(this.service.createReportSnapshot({ reportTemplateId: this.snapshotTemplateId, data: {} }), () => this.loadSnapshots()); }
-  deleteSnapshot(snapshot: SpeedReadingReportSnapshot): void { if (!globalThis.confirm('Bu rapor snapshot’ı silinsin mi?')) return; this.saveRequest(this.service.deleteReportSnapshot(snapshot.id), () => this.loadSnapshots()); }
+  async deleteSnapshot(snapshot: SpeedReadingReportSnapshot): Promise<void> { if (!await this.toaster.confirm('Bu rapor snapshot’ı silinsin mi?', { title: 'Rapor snapshot’ını sil' })) return; this.saveRequest(this.service.deleteReportSnapshot(snapshot.id), () => this.loadSnapshots()); }
 
   exportSnapshot(snapshot: SpeedReadingReportSnapshot, format: 'pdf' | 'excel'): void {
     this.saving.set(true);

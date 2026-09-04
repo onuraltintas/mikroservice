@@ -11,6 +11,7 @@ import {
   SpeedReadingVisualizationScene,
   SpeedReadingVisualizationSceneRequest
 } from '../../../core/services/speed-reading-admin.service';
+import { ToasterService } from '../../../core/services/toaster.service';
 
 @Component({
   selector: 'app-speed-reading-visualization-scenes',
@@ -65,6 +66,7 @@ import {
 })
 export class SpeedReadingVisualizationScenesComponent implements OnInit {
   private readonly service = inject(SpeedReadingAdminService);
+  private readonly toaster = inject(ToasterService);
 
   readonly scenes = signal<SpeedReadingVisualizationPage>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
   readonly exercises = signal<SpeedReadingVisualizationExerciseOption[]>([]);
@@ -148,8 +150,8 @@ export class SpeedReadingVisualizationScenesComponent implements OnInit {
     });
   }
 
-  deleteScene(scene: SpeedReadingVisualizationScene): void {
-    if (!globalThis.confirm('Bu görselleştirme sahnesi silinsin mi?')) return;
+  async deleteScene(scene: SpeedReadingVisualizationScene): Promise<void> {
+    if (!await this.toaster.confirm('Bu görselleştirme sahnesi silinsin mi?', { title: 'Görselleştirme sahnesini sil' })) return;
     this.service.deleteVisualizationScene(scene.id).subscribe({
       next: () => this.loadScenes(),
       error: () => this.error.set('Görselleştirme sahnesi silinemedi.')

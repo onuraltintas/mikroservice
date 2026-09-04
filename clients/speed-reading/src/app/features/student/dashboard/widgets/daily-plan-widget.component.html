@@ -31,7 +31,7 @@
     <div class="dp-widget__empty">
       <span class="material-icons dp-widget__empty-icon dp-widget__empty-icon--err">error_outline</span>
       <p>{{ error() }}</p>
-      <button class="dp-widget__btn dp-widget__btn--ghost" (click)="refresh()">
+      <button type="button" class="dp-widget__btn dp-widget__btn--ghost" (click)="refresh()">
         <span class="material-icons">refresh</span>
         Tekrar Dene
       </button>
@@ -90,7 +90,7 @@
               }
             </div>
             @if (!exercise.completed && (i === 0 || todaysPlan()!.exercises![i-1]?.completed)) {
-              <button class="dp-widget__btn dp-widget__btn--primary" (click)="continuePlan()">
+              <button type="button" class="dp-widget__btn dp-widget__btn--primary" (click)="continuePlan()">
                 <span class="material-icons">play_arrow</span>
                 Başla
               </button>
@@ -103,9 +103,9 @@
     <!-- Completion message -->
     @if (todaysPlan()!.isCompleted) {
       <div class="dp-widget__complete">
-        <span class="dp-widget__complete-emoji">🎉</span>
+        <span class="material-icons dp-widget__complete-icon" aria-hidden="true">celebration</span>
         <p>Harika! Bugünün tüm görevlerini tamamladın.</p>
-        <button class="dp-widget__btn dp-widget__btn--ghost" (click)="repeatExercises()">
+        <button type="button" class="dp-widget__btn dp-widget__btn--ghost" (click)="repeatExercises()">
           <span class="material-icons">replay</span>
           Tekrar Yap
         </button>
@@ -118,7 +118,7 @@
       <span class="material-icons dp-widget__empty-icon">event_busy</span>
       <p class="dp-widget__empty-title">Bugün için aktif plan bulunamadı</p>
       <p class="dp-widget__empty-hint">Bir eğitim serisine kayıt olarak günlük planını oluşturabilirsin.</p>
-      <button class="dp-widget__btn dp-widget__btn--primary" (click)="goToSeries()">
+      <button type="button" class="dp-widget__btn dp-widget__btn--primary" (click)="goToSeries()">
         <span class="material-icons">school</span>
         Serilere Git
       </button>

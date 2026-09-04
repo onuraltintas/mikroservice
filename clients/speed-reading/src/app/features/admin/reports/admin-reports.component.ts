@@ -9,7 +9,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material/input';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ReportsService } from '../../../core/services/reports.service';
 import { BaseComponent } from '../../../core/components/base.component';
@@ -19,7 +18,7 @@ import { subDays, subMonths } from 'date-fns';
 @Component({
   selector: 'app-admin-reports',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatTabsModule, MatButtonModule, MatIconModule, MatSelectModule, MatFormFieldModule, MatDatepickerModule, MatNativeDateModule, MatInputModule, MatSnackBarModule, ReactiveFormsModule],
+  imports: [CommonModule, RouterModule, MatTabsModule, MatButtonModule, MatIconModule, MatSelectModule, MatFormFieldModule, MatDatepickerModule, MatNativeDateModule, MatInputModule, ReactiveFormsModule],
   templateUrl: './admin-reports.component.html',
   styleUrls: ['./admin-reports.component.scss']
 })
@@ -84,4 +83,3 @@ export class AdminReportsComponent extends BaseComponent {
       });
   }
 }
-

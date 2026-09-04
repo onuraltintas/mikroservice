@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Observable, Subscription, finalize, forkJoin } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
+import { ToasterService } from '../../../core/services/toaster.service';
 import {
   AdminContentAnalysisAnalytics,
   AdminInstitutionAnalytics,
@@ -160,6 +161,7 @@ type SpeedReadingAnalyticsTab = 'platform' | 'content' | 'health' | 'institution
 export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
   private readonly service = inject(SpeedReadingAdminService);
   private readonly authService = inject(AuthService);
+  private readonly toaster = inject(ToasterService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly route = inject(ActivatedRoute);
   private request?: Subscription;
@@ -249,8 +251,8 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
     });
   }
 
-  resetProgress(item: AdminStudentProgressSummary): void {
-    if (!this.canResetProgress() || !globalThis.confirm('Bu öğrencinin program ilerlemesi sıfırlansın mı?')) return;
+  async resetProgress(item: AdminStudentProgressSummary): Promise<void> {
+    if (!this.canResetProgress() || !await this.toaster.confirm('Bu öğrencinin program ilerlemesi sıfırlansın mı?', { title: 'İlerlemeyi sıfırla' })) return;
 
     this.loading.set(true);
     this.error.set('');

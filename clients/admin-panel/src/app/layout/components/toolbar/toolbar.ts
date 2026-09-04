@@ -52,8 +52,7 @@ export class ToolbarComponent {
     return formatDistanceToNow(new Date(date), { addSuffix: true, locale: tr });
   }
 
-  markAsRead(id: string, event: Event) {
-    event.stopPropagation();
+  markAsRead(id: string) {
     this.notificationService.markAsRead(id).subscribe(() => {
       this.notificationService.fetchNotifications();
     });

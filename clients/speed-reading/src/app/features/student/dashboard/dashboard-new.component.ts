@@ -272,7 +272,7 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
             // Test modunda bunları simüle edebiliriz veya backend'i güncelleyebiliriz
             // Şimdilik basit bir mesaj gösterelim, çünkü modal için detaylı veri lazım
             // alert('🎉 PROGRAM TAMAMLANDI! (Test Modu)');
-            this.toaster.success('🎉 PROGRAM TAMAMLANDI! (Test Modu)', 5000);
+            this.toaster.success('Program tamamlandı! (Test Modu)', 5000);
             // İsterseniz burada modal'ı dummy data ile açabiliriz
           }
 

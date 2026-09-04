@@ -47,6 +47,8 @@
           <div class="notification-actions">
             <button
               mat-icon-button
+              type="button"
+              aria-label="Bildirimi okundu işaretle"
               *ngIf="!notification.isRead"
               (click)="markAsRead(notification, $event)"
               title="Okundu olarak işaretle"
@@ -56,6 +58,8 @@
 
             <button
               mat-icon-button
+              type="button"
+              aria-label="Bildirimi sil"
               (click)="deleteNotification(notification, $event)"
               title="Sil"
               class="action-btn delete">
@@ -64,6 +68,8 @@
 
             <button
               mat-icon-button
+              type="button"
+              aria-label="Bildirimi görüntüle"
               *ngIf="notification.actionUrl"
               title="Görüntüle"
               class="action-btn">

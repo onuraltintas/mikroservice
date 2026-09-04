@@ -4,7 +4,7 @@
             <mat-icon>{{ isEditMode ? 'edit' : 'campaign' }}</mat-icon>
             <h1>{{ isEditMode ? 'Kampanya Düzenle' : 'Yeni E-posta Kampanyası' }}</h1>
         </div>
-        <button mat-icon-button mat-dialog-close class="close-btn">
+        <button mat-icon-button type="button" aria-label="Kampanya penceresini kapat" mat-dialog-close class="close-btn">
             <mat-icon>close</mat-icon>
         </button>
     </div>
@@ -34,8 +34,7 @@
                     <strong>Tüm Kullanıcılara Gönder</strong>
                 </mat-checkbox>
 
-                <mat-checkbox formControlName="includeSubscribers" class="all-users-checkbox"
-                    style="margin-left: 0; display: block; margin-bottom: 15px;">
+                <mat-checkbox formControlName="includeSubscribers" class="all-users-checkbox ui-checkbox--block">
                     <strong>Bülten Abonelerini Dahil Et</strong>
                 </mat-checkbox>
 

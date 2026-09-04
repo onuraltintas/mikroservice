@@ -18,6 +18,8 @@ export interface PieChartDataPoint {
     <div class="chart-container" [style.height.px]="height">
       <canvas
         baseChart
+        role="img"
+        [attr.aria-label]="chartLabel"
         [data]="pieChartData"
         [options]="pieChartOptions"
         [type]="pieChartType">
@@ -41,6 +43,7 @@ export class PieChartComponent implements AfterViewInit, OnChanges {
   @Input() height = 300;
   @Input() legendFontSize = 12;
   @Input() padding: any = 0;
+  @Input() chartLabel = 'Pasta grafiği';
 
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 

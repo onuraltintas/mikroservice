@@ -1,4 +1,4 @@
-<div class="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden font-sans flex-col">
+<div class="flex h-screen overflow-hidden font-sans flex-col bg-[var(--ui-page)] text-[var(--ui-text)]">
 
     <!-- Maintenance Mode Banner -->
     <div *ngIf="inMaintenanceMode" class="bg-gradient-to-r from-red-600 to-rose-600 px-4 py-3 shadow-md relative z-50">
@@ -29,7 +29,7 @@
 
         <!-- Sidebar (Desktop & Mobile) -->
         <aside
-            class="fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-lg md:shadow-none"
+            class="fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 bg-[var(--ui-surface)] border-r border-[var(--ui-border)] shadow-lg md:shadow-none"
             [class.translate-x-0]="layoutService.isMobileSidebarOpen()"
             [class.-translate-x-full]="!layoutService.isMobileSidebarOpen()"
             [class.w-72]="!layoutService.isSidebarCollapsed()" [class.w-20]="layoutService.isSidebarCollapsed()">
@@ -42,7 +42,7 @@
 
             <!-- Header -->
             <header
-                class="relative z-10 flex-shrink-0 flex h-20 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+                class="relative z-10 flex-shrink-0 flex h-[var(--ui-header-height)] bg-[var(--ui-surface)] shadow-sm border-b border-[var(--ui-border)]">
                 <app-header class="w-full"></app-header>
             </header>
 

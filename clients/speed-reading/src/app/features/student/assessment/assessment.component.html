@@ -75,7 +75,7 @@
     }
 
     <div class="actions">
-      <button class="sp-btn" (click)="goToDashboard()">
+      <button type="button" class="sp-btn" (click)="goToDashboard()">
         <span class="material-icons">dashboard</span>
         Panele Git
       </button>
@@ -138,7 +138,7 @@
           </div>
         </div>
 
-        <button class="sp-btn action-btn"
+        <button type="button" class="sp-btn action-btn"
           (click)="startExercise(i)" [disabled]="i > 0 && !exercises()[i-1].completed">
           {{ exercise.completed ? 'Tekrar' : 'Başla' }}
         </button>
@@ -153,9 +153,9 @@
         <span class="material-icons">check_circle</span>
         <span>Tüm egzersizler tamamlandı!</span>
       </div>
-      <button class="sp-btn" (click)="calculateLevel()" [disabled]="calculating()">
+      <button type="button" class="sp-btn" (click)="calculateLevel()" [disabled]="calculating()">
         @if (calculating()) {
-        <div class="sp-spinner" style="width:20px;height:20px"></div>
+        <div class="sp-spinner sp-spinner-sm" aria-label="Seviye hesaplanıyor"></div>
         } @else {
         Seviyemi Hesapla
         }

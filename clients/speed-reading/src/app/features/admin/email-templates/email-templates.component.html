@@ -48,16 +48,16 @@
                 <ng-container matColumnDef="actions">
                     <th mat-header-cell *matHeaderCellDef>İşlemler</th>
                     <td mat-cell *matCellDef="let template">
-                        <button mat-icon-button (click)="viewTemplate(template)" matTooltip="Görüntüle">
+                        <button mat-icon-button type="button" aria-label="E-posta şablonunu görüntüle" (click)="viewTemplate(template)" matTooltip="Görüntüle">
                             <mat-icon>visibility</mat-icon>
                         </button>
-                        <button mat-icon-button (click)="openEditDialog(template)" matTooltip="Düzenle">
+                        <button mat-icon-button type="button" aria-label="E-posta şablonunu düzenle" (click)="openEditDialog(template)" matTooltip="Düzenle">
                             <mat-icon>edit</mat-icon>
                         </button>
-                        <button mat-icon-button (click)="previewTemplate(template)" matTooltip="Önizle">
+                        <button mat-icon-button type="button" aria-label="E-posta şablonunu önizle" (click)="previewTemplate(template)" matTooltip="Önizle">
                             <mat-icon>preview</mat-icon>
                         </button>
-                        <button mat-icon-button color="warn" (click)="deleteTemplate(template)" matTooltip="Sil">
+                        <button mat-icon-button type="button" aria-label="E-posta şablonunu sil" color="warn" (click)="deleteTemplate(template)" matTooltip="Sil">
                             <mat-icon>delete</mat-icon>
                         </button>
                     </td>
@@ -96,10 +96,9 @@
             </mat-form-field>
 
 
-            <div class="editor-wrapper" style="margin-bottom: 20px;">
-                <div class="editor-header"
-                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <mat-label style="font-weight: 500;">E-posta İçeriği</mat-label>
+            <div class="editor-wrapper ui-editor-wrapper">
+                <div class="editor-header ui-flex-between ui-editor-header">
+                    <mat-label class="ui-editor-label">E-posta İçeriği</mat-label>
                     <mat-button-toggle-group [(ngModel)]="editorMode" name="editorMode" aria-label="Editor Mode">
                         <mat-button-toggle value="editor">
                             <mat-icon>edit</mat-icon> Düzenle
@@ -116,8 +115,7 @@
                     </quill-editor>
                 </div>
 
-                <div class="preview-content" *ngIf="editorMode === 'preview'"
-                    style="height: 400px; overflow-y: auto; background: white; border: 1px solid #ccc; padding: 20px; border-radius: 4px;">
+                <div class="preview-content ui-editor-preview" *ngIf="editorMode === 'preview'">
                     <div [innerHTML]="getPreviewBody()"></div>
                 </div>
             </div>

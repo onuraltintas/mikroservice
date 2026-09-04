@@ -10,6 +10,7 @@ import {
   SpeedReadingAssessmentTemplate,
   SpeedReadingExercise
 } from '../../../core/services/speed-reading-admin.service';
+import { ToasterService } from '../../../core/services/toaster.service';
 
 type ConfigurationTab = 'age-groups' | 'assessments';
 
@@ -121,6 +122,7 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
 })
 export class SpeedReadingContentConfigurationComponent implements OnInit {
   private readonly service = inject(SpeedReadingAdminService);
+  private readonly toaster = inject(ToasterService);
 
   readonly tabs: { value: ConfigurationTab; label: string }[] = [
     { value: 'age-groups', label: 'Yaş grupları' },
@@ -220,8 +222,8 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
     });
   }
 
-  deleteAgeGroup(ageGroup: SpeedReadingAgeGroup): void {
-    if (!globalThis.confirm(`“${ageGroup.displayName}” yaş grubu silinsin mi?`)) return;
+  async deleteAgeGroup(ageGroup: SpeedReadingAgeGroup): Promise<void> {
+    if (!await this.toaster.confirm(`“${ageGroup.displayName}” yaş grubu silinsin mi?`, { title: 'Yaş grubunu sil' })) return;
     this.service.deleteAgeGroup(ageGroup.id).subscribe({
       next: () => this.loadAgeGroups(),
       error: () => this.error.set('Yaş grubu silinemedi; bağlı içerikleri kontrol edin.')
@@ -299,9 +301,9 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
     });
   }
 
-  deleteAssessment(): void {
+  async deleteAssessment(): Promise<void> {
     const template = this.currentTemplate();
-    if (!template || !globalThis.confirm(`“${template.name}” şablonu silinsin mi?`)) return;
+    if (!template || !await this.toaster.confirm(`“${template.name}” şablonu silinsin mi?`, { title: 'Seviye tespit şablonunu sil' })) return;
     this.service.deleteAssessmentTemplate(template.id).subscribe({
       next: () => {
         this.resetAssessmentForm();

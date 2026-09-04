@@ -53,7 +53,7 @@
             <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password"
                 [placeholder]="isEditMode ? 'Değiştirmek için yeni şifre girin' : 'Şifre'">
             <mat-icon matPrefix>lock</mat-icon>
-            <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button" tabindex="-1">
+            <button mat-icon-button matSuffix aria-label="Parolayı göster veya gizle" (click)="hidePassword = !hidePassword" type="button" tabindex="-1">
                 <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
             <mat-error *ngIf="studentForm.get('password')?.hasError('required')">

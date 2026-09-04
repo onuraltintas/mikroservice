@@ -14,13 +14,13 @@
 .lb-icon-wrap {
   width: 40px;
   height: 40px;
-  background: rgba(139, 92, 246, 0.12);
+  background: var(--sp-platinum-light, rgba(139, 92, 246, 0.12));
   border-radius: var(--sp-radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  .material-icons { font-size: 20px; color: #8b5cf6; }
+  .material-icons { font-size: 20px; color: var(--sp-platinum); }
 }
 .lb-level {
   font-family: var(--sp-font-sans);
@@ -44,7 +44,7 @@
 }
 .lb-xp-fill {
   height: 100%;
-  background: linear-gradient(90deg, #8b5cf6 0%, #a855f7 100%);
+  background: linear-gradient(90deg, var(--sp-platinum), var(--sp-primary-light));
   border-radius: var(--sp-radius-full);
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -85,14 +85,13 @@
 .lb-badge__icon {
   width: 36px;
   height: 36px;
-  background: rgba(139, 92, 246, 0.12);
+  background: var(--sp-platinum-light, rgba(139, 92, 246, 0.12));
   border-radius: var(--sp-radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.lb-badge__emoji { font-size: 18px; line-height: 1; }
-.lb-badge__mat-icon { font-size: 18px; color: #8b5cf6; }
+.lb-badge__mat-icon { font-size: 18px; color: var(--sp-platinum); }
 .lb-badge__name {
   font-size: 0.625rem;
   font-weight: 600;
@@ -119,4 +118,5 @@
   transition: background var(--sp-transition-fast), color var(--sp-transition-fast);
   .material-icons { font-size: 16px; }
   &:hover { background: var(--sp-surface-3); color: var(--sp-primary); }
+  &:focus-visible { outline: 2px solid var(--sp-primary); outline-offset: 2px; }
 }

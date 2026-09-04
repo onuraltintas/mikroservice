@@ -9,7 +9,7 @@
       <p>Kullanıcıya abonelik planı atayın</p>
     </div>
   </div>
-  <button mat-icon-button class="close-btn" (click)="cancel()">
+    <button mat-icon-button type="button" class="close-btn" aria-label="Pencereyi kapat" (click)="cancel()">
     <mat-icon>close</mat-icon>
   </button>
 </div>
@@ -54,7 +54,7 @@
           <span *ngFor="let role of selectedUser.roles" class="role-badge">{{ getRoleLabel(role) }}</span>
         </div>
       </div>
-      <button mat-icon-button (click)="clearUser()" matTooltip="Değiştir" class="change-btn">
+              <button mat-icon-button type="button" aria-label="Kullanıcıyı değiştir" (click)="clearUser()" matTooltip="Değiştir" class="change-btn">
         <mat-icon>edit</mat-icon>
       </button>
     </div>
@@ -186,7 +186,7 @@
     </div>
 
     <!-- Süre hızlı seçim -->
-    <div class="step-title" style="margin-top:1.25rem">Süreyi belirleyin</div>
+    <div class="step-title ui-margin-top-5">Süreyi belirleyin</div>
     <div class="preset-buttons">
       <button *ngFor="let p of durationPresets"
               class="preset-btn"
@@ -226,7 +226,7 @@
     </div>
 
     <!-- Notlar -->
-    <mat-form-field appearance="outline" class="full-width" style="margin-top:0.75rem">
+    <mat-form-field appearance="outline" class="full-width ui-margin-top-3">
       <mat-label>Not (İsteğe bağlı)</mat-label>
       <mat-icon matPrefix>notes</mat-icon>
       <textarea matInput formControlName="notes"

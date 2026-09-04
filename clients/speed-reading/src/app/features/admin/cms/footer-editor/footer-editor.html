@@ -15,8 +15,7 @@
     </div>
 
     <!-- Loading State -->
-    <div class="loading-overlay" *ngIf="loading()"
-        style="display: flex; justify-content: center; align-items: center; padding: 4rem;">
+    <div class="loading-overlay ui-loading-state" *ngIf="loading()">
         <mat-spinner diameter="48"></mat-spinner>
     </div>
 
@@ -50,7 +49,7 @@
                     <div *ngFor="let link of socialLinksList.controls; let i = index; trackBy: trackByFn"
                         class="form-array-item">
                         <div [formGroup]="$any(link)" class="link-row">
-                            <mat-form-field appearance="outline" style="flex: 1">
+                            <mat-form-field appearance="outline" class="ui-field--grow">
                                 <mat-label>Platform</mat-label>
                                 <mat-select formControlName="icon">
                                     <mat-option *ngFor="let opt of socialIconOptions" [value]="opt.value">
@@ -59,12 +58,12 @@
                                 </mat-select>
                             </mat-form-field>
 
-                            <mat-form-field appearance="outline" style="flex: 2">
+                            <mat-form-field appearance="outline" class="ui-field--grow-2">
                                 <mat-label>URL</mat-label>
                                 <input matInput formControlName="url" placeholder="https://facebook.com/...">
                             </mat-form-field>
 
-                            <button mat-icon-button color="warn" (click)="removeSocialLink(i)" title="Sil">
+          <button mat-icon-button type="button" color="warn" aria-label="Sosyal medya bağlantısını sil" (click)="removeSocialLink(i)" title="Sil">
                                 <mat-icon>delete</mat-icon>
                             </button>
                         </div>
@@ -92,22 +91,22 @@
                     <div *ngFor="let link of productLinksList.controls; let i = index; trackBy: trackByFn"
                         class="form-array-item">
                         <div [formGroup]="$any(link)" class="link-row">
-                            <mat-form-field appearance="outline" style="flex: 1">
+                            <mat-form-field appearance="outline" class="ui-field--grow">
                                 <mat-label>Etiket</mat-label>
                                 <input matInput formControlName="label" placeholder="Özellikler">
                             </mat-form-field>
 
-                            <mat-form-field appearance="outline" style="flex: 1">
+                            <mat-form-field appearance="outline" class="ui-field--grow">
                                 <mat-label>Route</mat-label>
                                 <input matInput formControlName="route" placeholder="/">
                             </mat-form-field>
 
-                            <mat-form-field appearance="outline" style="flex: 1">
+                            <mat-form-field appearance="outline" class="ui-field--grow">
                                 <mat-label>Fragment (opsiyonel)</mat-label>
                                 <input matInput formControlName="fragment" placeholder="ozellikler">
                             </mat-form-field>
 
-                            <button mat-icon-button color="warn" (click)="removeProductLink(i)" title="Sil">
+          <button mat-icon-button type="button" color="warn" aria-label="Ürün bağlantısını sil" (click)="removeProductLink(i)" title="Sil">
                                 <mat-icon>delete</mat-icon>
                             </button>
                         </div>
@@ -135,22 +134,22 @@
                     <div *ngFor="let link of supportLinksList.controls; let i = index; trackBy: trackByFn"
                         class="form-array-item">
                         <div [formGroup]="$any(link)" class="link-row">
-                            <mat-form-field appearance="outline" style="flex: 1">
+                            <mat-form-field appearance="outline" class="ui-field--grow">
                                 <mat-label>Etiket</mat-label>
                                 <input matInput formControlName="label" placeholder="SSS">
                             </mat-form-field>
 
-                            <mat-form-field appearance="outline" style="flex: 1">
+                            <mat-form-field appearance="outline" class="ui-field--grow">
                                 <mat-label>Route</mat-label>
                                 <input matInput formControlName="route" placeholder="/sss">
                             </mat-form-field>
 
-                            <mat-form-field appearance="outline" style="flex: 1">
+                            <mat-form-field appearance="outline" class="ui-field--grow">
                                 <mat-label>Fragment (opsiyonel)</mat-label>
                                 <input matInput formControlName="fragment" placeholder="">
                             </mat-form-field>
 
-                            <button mat-icon-button color="warn" (click)="removeSupportLink(i)" title="Sil">
+          <button mat-icon-button type="button" color="warn" aria-label="Destek bağlantısını sil" (click)="removeSupportLink(i)" title="Sil">
                                 <mat-icon>delete</mat-icon>
                             </button>
                         </div>
@@ -178,22 +177,22 @@
                     <div *ngFor="let link of legalLinksList.controls; let i = index; trackBy: trackByFn"
                         class="form-array-item">
                         <div [formGroup]="$any(link)" class="link-row">
-                            <mat-form-field appearance="outline" style="flex: 1">
+                            <mat-form-field appearance="outline" class="ui-field--grow">
                                 <mat-label>Etiket</mat-label>
                                 <input matInput formControlName="label" placeholder="Gizlilik Politikası">
                             </mat-form-field>
 
-                            <mat-form-field appearance="outline" style="flex: 1">
+                            <mat-form-field appearance="outline" class="ui-field--grow">
                                 <mat-label>Route</mat-label>
                                 <input matInput formControlName="route" placeholder="/legal/privacy">
                             </mat-form-field>
 
-                            <mat-form-field appearance="outline" style="flex: 1">
+                            <mat-form-field appearance="outline" class="ui-field--grow">
                                 <mat-label>Fragment (opsiyonel)</mat-label>
                                 <input matInput formControlName="fragment" placeholder="">
                             </mat-form-field>
 
-                            <button mat-icon-button color="warn" (click)="removeLegalLink(i)" title="Sil">
+          <button mat-icon-button type="button" color="warn" aria-label="Yasal bağlantıyı sil" (click)="removeLegalLink(i)" title="Sil">
                                 <mat-icon>delete</mat-icon>
                             </button>
                         </div>

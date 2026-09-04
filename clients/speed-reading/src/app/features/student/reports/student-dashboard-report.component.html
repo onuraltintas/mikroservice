@@ -1,6 +1,6 @@
 <div class="modern-dashboard">
     @if (loading()) {
-    <div class="loading-state">
+    <div class="loading-state" role="status" aria-live="polite">
         <div class="rp-spinner"></div>
         <p>Performans verileriniz yükleniyor...</p>
     </div>
@@ -21,7 +21,7 @@
                 <div class="metric-content">
                     <div class="metric-value">{{ report()?.streak || 0 }}</div>
                     <div class="metric-label">Günlük Seri</div>
-                    <div class="metric-trend positive">Devam et! 🔥</div>
+                    <div class="metric-trend positive">İstikrarını koru</div>
                 </div>
             </div>
 
@@ -105,9 +105,6 @@
                     <h3 class="rp-card__title">Egzersiz Dağılımı</h3>
                     <p class="rp-card__sub">Egzersiz tiplerine göre</p>
                 </div>
-                <button class="rp-btn--icon">
-                    <span class="material-icons">more_vert</span>
-                </button>
             </div>
         </div>
         <div class="rp-card__body">
@@ -134,9 +131,6 @@
                     <h3 class="rp-card__title">Egzersiz Trendi</h3>
                     <p class="rp-card__sub">Günlük aktiviteleriniz</p>
                 </div>
-                <button class="rp-btn--icon">
-                    <span class="material-icons">more_vert</span>
-                </button>
             </div>
         </div>
         <div class="rp-card__body">
@@ -163,11 +157,6 @@
                     <h3 class="rp-card__title">Okuma Hızı Trendi</h3>
                     <p class="rp-card__sub">Zaman içindeki gelişiminizi takip edin</p>
                 </div>
-                <div class="chart-actions">
-                    <button class="rp-btn--icon">
-                        <span class="material-icons">more_vert</span>
-                    </button>
-                </div>
             </div>
         </div>
         <div class="rp-card__body">
@@ -188,17 +177,12 @@
     </div>
 
     <!-- Comprehension Trend - Full Width -->
-    <div class="rp-card chart-card elevated full-width" style="margin-top: 24px;">
+    <div class="rp-card chart-card elevated full-width">
         <div class="rp-card__header">
             <div class="chart-header">
                 <div>
                     <h3 class="rp-card__title">Anlama Oranı Trendi</h3>
                     <p class="rp-card__sub">Okuduğunu anlama başarınızın değişimi</p>
-                </div>
-                <div class="chart-actions">
-                    <button class="rp-btn--icon">
-                        <span class="material-icons">more_vert</span>
-                    </button>
                 </div>
             </div>
         </div>
@@ -260,7 +244,7 @@
                 <span class="material-icons">emoji_events</span>
                 <h3>Henüz başarım yok</h3>
                 <p>İlk başarımınızı kazanmak için egzersiz yapmaya devam edin!</p>
-                <button class="rp-btn rp-btn--primary">
+                <button type="button" class="rp-btn rp-btn--primary" routerLink="/student/daily-exercises">
                     Egzersizlere Başla
                     <span class="material-icons">arrow_forward</span>
                 </button>
@@ -274,7 +258,7 @@
         <span class="material-icons">assessment</span>
         <h2>Veri Bulunamadı</h2>
         <p>İlerlemenizi burada görmek için egzersizleri tamamlamaya başlayın</p>
-        <button class="rp-btn rp-btn--primary">
+        <button type="button" class="rp-btn rp-btn--primary" routerLink="/student/daily-exercises">
             <span class="material-icons">play_arrow</span>
             İlk Egzersizinize Başlayın
         </button>

@@ -29,11 +29,7 @@
       @for (badge of badges().slice(0, 3); track badge.id) {
         <div class="lb-badge" [class.lb-badge--locked]="!badge.unlocked" [title]="badge.description">
           <div class="lb-badge__icon">
-            @if (badge.unlocked && badge.icon) {
-              <span class="lb-badge__emoji">{{ badge.icon }}</span>
-            } @else {
-              <span class="material-icons lb-badge__mat-icon">{{ badge.unlocked ? 'workspace_premium' : 'lock' }}</span>
-            }
+            <span class="material-icons lb-badge__mat-icon" aria-hidden="true">{{ badge.unlocked ? badge.materialIcon : 'lock' }}</span>
           </div>
           <span class="lb-badge__name">{{ badge.name }}</span>
         </div>

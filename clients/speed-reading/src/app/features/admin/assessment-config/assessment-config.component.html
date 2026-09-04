@@ -127,15 +127,15 @@
                         <ng-container matColumnDef="actions">
                             <th mat-header-cell *matHeaderCellDef>İşlemler</th>
                             <td mat-cell *matCellDef="let element; let i = index">
-                                <button mat-icon-button (click)="moveUp(i)" [disabled]="i === 0"
+                                <button mat-icon-button type="button" aria-label="Egzersizi yukarı taşı" (click)="moveUp(i)" [disabled]="i === 0"
                                     matTooltip="Yukarı Taşı">
                                     <mat-icon>arrow_upward</mat-icon>
                                 </button>
-                                <button mat-icon-button (click)="moveDown(i)"
+                                <button mat-icon-button type="button" aria-label="Egzersizi aşağı taşı" (click)="moveDown(i)"
                                     [disabled]="i === selectedExercises().length - 1" matTooltip="Aşağı Taşı">
                                     <mat-icon>arrow_downward</mat-icon>
                                 </button>
-                                <button mat-icon-button color="warn" (click)="removeExercise(i)" matTooltip="Kaldır">
+                                <button mat-icon-button type="button" aria-label="Egzersizi kaldır" color="warn" (click)="removeExercise(i)" matTooltip="Kaldır">
                                     <mat-icon>delete</mat-icon>
                                 </button>
                             </td>

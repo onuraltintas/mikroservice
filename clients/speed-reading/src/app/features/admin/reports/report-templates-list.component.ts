@@ -126,8 +126,9 @@ export class ReportTemplatesListComponent extends BaseComponent implements OnIni
       });
   }
 
-  deleteTemplate(template: ReportTemplate): void {
-    if (confirm(`"${template.name}" şablonunu silmek istediğinizden emin misiniz?`)) {
+  async deleteTemplate(template: ReportTemplate): Promise<void> {
+    const confirmed = await this.toaster.confirm(`"${template.name}" şablonunu silmek istediğinizden emin misiniz?`, { title: 'Rapor şablonunu sil' });
+    if (confirmed) {
       this.templatesService.deleteTemplate(template.id)
         .pipe(takeUntil(this.destroy$))
         .subscribe({

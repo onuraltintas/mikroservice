@@ -69,7 +69,8 @@ import { Teacher } from '../../../core/models/teacher.model';
           <mat-label>{{ isEdit ? 'Yeni Şifre (Değiştirmek istemiyorsanız boş bırakın)' : 'Şifre' }}</mat-label>
           <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'">
           <mat-hint *ngIf="!isEdit">En az 8 karakter, büyük/küçük harf, rakam ve özel karakter</mat-hint>
-          <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button">
+          <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button"
+            aria-label="Parolayı göster veya gizle">
             <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
           </button>
           <mat-error *ngIf="studentForm.get('password')?.hasError('required')">Şifre zorunludur</mat-error>

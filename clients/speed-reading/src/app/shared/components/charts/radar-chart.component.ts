@@ -23,6 +23,8 @@ export interface RadarChartSeries {
     <div class="chart-container">
       <canvas
         baseChart
+        role="img"
+        [attr.aria-label]="chartLabel"
         [data]="radarChartData"
         [options]="radarChartOptions"
         [type]="'radar'">
@@ -43,6 +45,7 @@ export class RadarChartComponent implements AfterViewInit, OnChanges {
   @Input() data: RadarChartSeries[] = [];
   @Input() showLegend = true;
   @Input() height = 300;
+  @Input() chartLabel = 'Radar grafiği';
 
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 

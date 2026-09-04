@@ -27,8 +27,8 @@ import { strongPasswordValidator, PASSWORD_ERROR_MESSAGES } from '../../../share
   template: `
     <h2 mat-dialog-title>Yeni Koç Ekle</h2>
     <mat-dialog-content>
-      <form [formGroup]="form" style="display:flex;flex-direction:column;gap:12px;min-width:360px;padding-top:8px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <form [formGroup]="form" class="ui-dialog-content ui-dialog-form ui-dialog-content--md">
+        <div class="ui-grid--2">
           <mat-form-field>
             <mat-label>Ad</mat-label>
             <input matInput formControlName="firstName" />
@@ -49,7 +49,7 @@ import { strongPasswordValidator, PASSWORD_ERROR_MESSAGES } from '../../../share
         <mat-form-field>
           <mat-label>Şifre</mat-label>
           <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'" />
-          <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+          <button mat-icon-button matSuffix type="button" aria-label="Parolayı göster veya gizle" (click)="hidePassword = !hidePassword">
             <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
           </button>
           <mat-error *ngIf="form.get('password')?.errors">Geçerli bir şifre girin (min 8 karakter, büyük/küçük harf, rakam)</mat-error>
@@ -59,7 +59,7 @@ import { strongPasswordValidator, PASSWORD_ERROR_MESSAGES } from '../../../share
     <mat-dialog-actions align="end">
       <button mat-button mat-dialog-close>İptal</button>
       <button mat-flat-button color="primary" (click)="save()" [disabled]="saving">
-        <mat-spinner *ngIf="saving" diameter="20" style="display:inline-block;margin-right:8px"></mat-spinner>
+        <mat-spinner *ngIf="saving" diameter="20" class="ui-spinner--inline"></mat-spinner>
         Kaydet
       </button>
     </mat-dialog-actions>
@@ -102,7 +102,7 @@ export class CoachDialogComponent extends BaseComponent {
   ],
   template: `
     <div class="page-container">
-      <div class="page-header" style="display:flex;justify-content:space-between;align-items:center">
+      <div class="page-header ui-flex-between">
         <h2><mat-icon>sports</mat-icon> Koçlar</h2>
         <button mat-flat-button color="primary" (click)="openDialog()">
           <mat-icon>add</mat-icon> Yeni Koç
@@ -112,17 +112,17 @@ export class CoachDialogComponent extends BaseComponent {
       <div *ngIf="loading()" class="loading-container"><mat-spinner diameter="48"></mat-spinner></div>
 
       <mat-card *ngIf="!loading()">
-        <mat-card-content style="padding:0">
-          <div *ngIf="coaches.length === 0" style="text-align:center;padding:48px;color:#999">
-            <mat-icon style="font-size:48px;width:48px;height:48px;color:#ccc">sports</mat-icon>
+        <mat-card-content class="ui-card-content-flush">
+          <div *ngIf="coaches.length === 0" class="ui-empty-state">
+            <mat-icon class="ui-icon--lg">sports</mat-icon>
             <p>Henüz koç bulunmuyor. "Yeni Koç" butonu ile koç ekleyebilirsiniz.</p>
           </div>
           <table mat-table [dataSource]="coaches" *ngIf="coaches.length > 0" class="full-width-table">
             <ng-container matColumnDef="name">
               <th mat-header-cell *matHeaderCellDef>Ad Soyad</th>
               <td mat-cell *matCellDef="let c">
-                <div style="display:flex;align-items:center;gap:10px">
-                  <div style="width:36px;height:36px;border-radius:50%;background:#7B1FA2;display:flex;align-items:center;justify-content:center;color:white;font-size:13px;font-weight:600">
+                <div class="ui-inline-actions">
+                  <div class="ui-avatar--coach">
                     {{ c.firstName?.charAt(0) }}{{ c.lastName?.charAt(0) }}
                   </div>
                   <span>{{ c.firstName }} {{ c.lastName }}</span>

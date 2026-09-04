@@ -159,7 +159,7 @@
                 <td mat-cell *matCellDef="let notification">
                     <mat-chip-set>
                         <mat-chip [style.backgroundColor]="notification.isRead ? '#27ae60' : '#e74c3c'"
-                            style="color: white; --mdc-chip-label-text-color: white;" selected>
+                            class="ui-chip--contrast" selected>
                             {{notification.isRead ? 'Okundu' : 'Okunmadı'}}
                         </mat-chip>
                     </mat-chip-set>
@@ -179,11 +179,11 @@
                 <th mat-header-cell *matHeaderCellDef>İşlem</th>
                 <td mat-cell *matCellDef="let notification" (click)="$event.stopPropagation()">
                     <div class="action-buttons">
-                        <button mat-icon-button color="primary" (click)="openDetail(notification)"
+                        <button mat-icon-button type="button" aria-label="Bildirimin detayını görüntüle" color="primary" (click)="openDetail(notification)"
                             matTooltip="Detayı Görüntüle">
                             <mat-icon>visibility</mat-icon>
                         </button>
-                        <button mat-icon-button color="warn" (click)="deleteNotification(notification, $event)"
+                        <button mat-icon-button type="button" aria-label="Bildirimi sil" color="warn" (click)="deleteNotification(notification, $event)"
                             matTooltip="Sil">
                             <mat-icon>delete_outline</mat-icon>
                         </button>

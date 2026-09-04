@@ -1,6 +1,6 @@
 <app-base-layout [menuItems]="menuItems" [title]="title" [role]="'admin'">
     <div extra-header-content class="flex-row align-center gap-16">
-        <button mat-icon-button (click)="navigateToMessages()" matTooltip="İletişim Mesajları">
+        <button mat-icon-button type="button" aria-label="İletişim mesajlarını aç" (click)="navigateToMessages()" matTooltip="İletişim Mesajları">
             <mat-icon [matBadge]="unreadMessageCount()" [matBadgeHidden]="unreadMessageCount() === 0"
                 matBadgeColor="warn" aria-hidden="false">
                 mail
