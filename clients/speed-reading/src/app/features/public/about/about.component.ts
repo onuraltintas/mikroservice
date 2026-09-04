@@ -26,13 +26,13 @@ export class AboutComponent implements OnInit {
     private seoService = inject(SeoService);
 
     heroTitle = 'Hakkımızda';
-    heroSubtitle = '';
+    heroSubtitle = 'Hızlı okuma ve anlama becerilerinizi daha verimli öğrenme alışkanlıklarıyla geliştirin.';
 
-    storyTitle = '';
-    storyContent: string = '';
+    storyTitle = 'Daha verimli öğrenme için';
+    storyContent: string = '<p>Hızlı Okuma, okuma hızınızı artırırken metni anlama ve odaklanma becerilerinizi desteklemek için tasarlanmış bir öğrenme alanıdır.</p>';
 
-    missionTitle = '';
-    missionContent: string = '';
+    missionTitle = 'Misyonumuz';
+    missionContent: string = '<p>Her yaştan öğrencinin kendi hızında ilerleyebileceği, anlaşılır ve sürdürülebilir bir çalışma deneyimi sunmak.</p>';
 
     testimonials: Testimonial[] = [];
 

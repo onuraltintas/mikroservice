@@ -11,6 +11,8 @@ import { PublicCmsService, PageDto } from '../../../core/services/public-cms.ser
 import { SeoService } from '../../../core/services/seo.service';
 import { SubscriptionService, SubscriptionPlan } from '../../../core/services/subscription.service';
 import { PaymentService } from '../../../core/services/payment.service';
+import { NavbarComponent } from '../../../shared/components/navbar/navbar';
+import { FooterComponent } from '../../../shared/components/footer/footer';
 
 @Component({
     selector: 'app-payment',
@@ -23,6 +25,8 @@ import { PaymentService } from '../../../core/services/payment.service';
         MatIconModule,
         MatCardModule,
         MatProgressSpinnerModule,
+        NavbarComponent,
+        FooterComponent,
     ],
     templateUrl: './payment.component.html',
     styleUrl: './payment.component.scss'

@@ -6,13 +6,16 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { PaymentService } from '../../../core/services/payment.service';
+import { NavbarComponent } from '../../../shared/components/navbar/navbar';
+import { FooterComponent } from '../../../shared/components/footer/footer';
 
 @Component({
     selector: 'app-payment-success',
     standalone: true,
-    imports: [CommonModule, RouterModule, MatProgressSpinnerModule, MatCardModule, MatButtonModule, MatIconModule],
+    imports: [CommonModule, RouterModule, MatProgressSpinnerModule, MatCardModule, MatButtonModule, MatIconModule, NavbarComponent, FooterComponent],
     template: `
-    <div class="container mx-auto px-4 py-12 flex justify-center">
+    <app-navbar [forceOpaque]="true"></app-navbar>
+    <main class="container mx-auto px-4 py-12 flex justify-center min-h-screen">
       <mat-card class="max-w-md w-full p-6 text-center">
         @if (loading) {
           <div class="flex flex-col items-center">
@@ -51,7 +54,8 @@ import { PaymentService } from '../../../core/services/payment.service';
           </div>
         }
       </mat-card>
-    </div>
+    </main>
+    <app-footer></app-footer>
   `
 })
 export class PaymentSuccessComponent implements OnInit {

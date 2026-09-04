@@ -153,6 +153,30 @@
         }
     }
 
+    .plans-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 3rem 1.5rem;
+        margin-bottom: 3rem;
+        text-align: center;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 1rem;
+
+        mat-icon {
+            color: #667eea;
+            font-size: 2.5rem;
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+
+        h2, p { margin: 0; }
+        h2 { color: #1f2937; font-size: 1.5rem; }
+        p { max-width: 32rem; color: #6b7280; }
+    }
+
     // ── Devre dışı uyarısı ───────────────────────────────────────────────────
     .disabled-notice {
         display: flex;

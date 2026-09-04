@@ -68,9 +68,10 @@ export class FaqSectionComponent implements OnInit {
   private loadContent() {
     this.cmsService.getLandingContent().subscribe({
       next: (content) => {
-        if (content.blocks['faq_list']) {
+        const faqContent = content.blocks['faq_items'] ?? content.blocks['faq_list'];
+        if (faqContent) {
           try {
-            const parsedFaqs = JSON.parse(content.blocks['faq_list']);
+            const parsedFaqs = JSON.parse(faqContent);
             if (Array.isArray(parsedFaqs) && parsedFaqs.length > 0) {
               this.faqs = parsedFaqs;
             }

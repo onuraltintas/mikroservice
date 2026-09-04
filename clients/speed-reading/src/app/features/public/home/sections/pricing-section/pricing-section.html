@@ -39,5 +39,12 @@
                 </div>
             </div>
         </div>
+
+        <div *ngIf="!loading && plans.length === 0" class="empty-state" role="status">
+            <mat-icon>inventory_2</mat-icon>
+            <h3>Planlar yakında burada</h3>
+            <p>Size uygun eğitim planını birlikte belirlemek için bizimle iletişime geçin.</p>
+            <a mat-stroked-button routerLink="/iletisim">İletişime Geç</a>
+        </div>
     </div>
 </section>

@@ -1,3 +1,5 @@
+<app-navbar [forceOpaque]="true"></app-navbar>
+
 <div class="legal-container">
     <div class="legal-header">
         <h1>{{ title }}</h1>
@@ -9,22 +11,29 @@
                 <p>Yükleniyor...</p>
             </div>
 
-            <div *ngIf="error && !loading" class="error">
+            <div *ngIf="error && !loading" class="error" role="alert">
                 <p>Doküman yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.</p>
             </div>
 
             <div *ngIf="noDocument && !loading && !error" class="no-document">
-                <p>Çerez Politikası henüz yayınlanmamış. Lütfen admin panelinden aktif bir Çerez Politikası dokümanı
-                    oluşturun.</p>
+                <mat-icon>description</mat-icon>
+                <h2>Doküman henüz yayınlanmadı</h2>
+                <p>Çerez politikası güncellendiğinde bu sayfada yayınlanacaktır.</p>
+                <a mat-stroked-button routerLink="/iletisim">İletişime Geç</a>
             </div>
 
-            <div *ngIf="!loading && !error" class="legal-content" [innerHTML]="content"></div>
+            <div *ngIf="!loading && !error && !noDocument" class="legal-content" [innerHTML]="content"></div>
         </mat-card-content>
     </mat-card>
 
     <div class="action-buttons">
-        <button mat-raised-button routerLink="/">
+        <button mat-stroked-button routerLink="/">
             Ana Sayfaya Dön
+        </button>
+        <button mat-raised-button color="primary" routerLink="/iletisim">
+            İletişime Geç
         </button>
     </div>
 </div>
+
+<app-footer></app-footer>

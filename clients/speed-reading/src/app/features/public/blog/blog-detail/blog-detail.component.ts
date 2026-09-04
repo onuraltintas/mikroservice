@@ -11,6 +11,7 @@ import { calculateReadTime, getCategory, getCategoryColor } from '../../../../co
 import { finalize } from 'rxjs/operators';
 import { NavbarComponent } from '../../../../shared/components/navbar/navbar';
 import { SafeHtmlPipe } from '../../../../shared/pipes/safe-html.pipe';
+import { FooterComponent } from '../../../../shared/components/footer/footer';
 
 @Component({
     selector: 'app-blog-detail',
@@ -22,6 +23,7 @@ import { SafeHtmlPipe } from '../../../../shared/pipes/safe-html.pipe';
         MatButtonModule,
         MatIconModule,
         NavbarComponent,
+        FooterComponent,
         SafeHtmlPipe
     ],
     templateUrl: './blog-detail.component.html',
