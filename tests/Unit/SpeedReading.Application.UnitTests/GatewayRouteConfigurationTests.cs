@@ -7,6 +7,8 @@ public sealed class GatewayRouteConfigurationTests
 {
     [Theory]
     [InlineData("speed-reading-cms-public-route", "/api/speed-reading/cms/{**catch-all}")]
+    [InlineData("speed-reading-navigation-public-route", "/api/speed-reading/cms/navigation")]
+    [InlineData("speed-reading-sitemap-public-route", "/api/speed-reading/sitemap.xml")]
     [InlineData("speed-reading-subscription-plans-public-route", "/api/speed-reading/subscription-plans/{**catch-all}")]
     public void Public_speed_reading_routes_bypass_gateway_fallback_authorization(
         string routeName,
