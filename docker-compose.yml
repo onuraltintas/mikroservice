@@ -290,8 +290,8 @@ services:
     image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/speed-reading-frontend:${RELEASE_TAG:-dev}
     profiles: ["speed-reading"]
     build:
-      context: ./clients/speed-reading
-      dockerfile: Dockerfile
+      context: ./clients
+      dockerfile: speed-reading/Dockerfile
     expose:
       - "80"
     depends_on:

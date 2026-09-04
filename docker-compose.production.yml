@@ -189,8 +189,8 @@ services:
     profiles: !reset []
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/speed-reading-frontend:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     build:
-      context: ./clients/speed-reading
-      dockerfile: Dockerfile
+      context: ./clients
+      dockerfile: speed-reading/Dockerfile
     environment:
       NODE_ENV: production
     expose:
@@ -263,8 +263,8 @@ services:
   admin-panel:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/admin-panel:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     build:
-      context: ./clients/admin-panel
-      dockerfile: Dockerfile
+      context: ./clients
+      dockerfile: admin-panel/Dockerfile
     environment:
       NODE_ENV: production
       PORT: 4000
