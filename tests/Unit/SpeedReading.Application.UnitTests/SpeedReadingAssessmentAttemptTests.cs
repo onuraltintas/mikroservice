@@ -127,7 +127,9 @@ public sealed class SpeedReadingAssessmentAttemptTests
         using var context = new OwnedSpeedReadingDbContext(options);
 
         context.Model.FindEntityType(typeof(AssessmentAttempt)).Should().NotBeNull();
-        context.Model.FindEntityType(typeof(AssessmentAttemptExercise)).Should().NotBeNull();
+        var assessmentExerciseType = context.Model.FindEntityType(typeof(AssessmentAttemptExercise));
+        assessmentExerciseType.Should().NotBeNull();
+        assessmentExerciseType!.FindProperty("Version").Should().BeNull();
         context.Model.FindEntityType(typeof(ExerciseSession))!
             .FindProperty(nameof(ExerciseSession.AssessmentAttemptId)).Should().NotBeNull();
         context.Model.FindEntityType(typeof(ExerciseSessionResult))!
@@ -136,7 +138,8 @@ public sealed class SpeedReadingAssessmentAttemptTests
             .Should()
             .Contain("20260828130000_AddAssessmentMeasurementFoundation")
             .And.Contain("20260828140000_LinkAssessmentAttemptsToSessions")
-            .And.Contain("20260828150000_PinAssessmentFormItems");
+            .And.Contain("20260828150000_PinAssessmentFormItems")
+            .And.Contain("20260906100000_RemoveAssessmentAttemptExerciseVersion");
     }
 
     [Fact]
