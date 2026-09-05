@@ -139,7 +139,7 @@ public sealed class SpeedReadingAssessmentAttemptTests
             .Contain("20260828130000_AddAssessmentMeasurementFoundation")
             .And.Contain("20260828140000_LinkAssessmentAttemptsToSessions")
             .And.Contain("20260828150000_PinAssessmentFormItems")
-            .And.Contain("20260906100000_RemoveAssessmentAttemptExerciseVersion");
+            .And.Contain("20260906100000_AlignAssessmentAttemptExerciseVersion");
     }
 
     [Fact]
