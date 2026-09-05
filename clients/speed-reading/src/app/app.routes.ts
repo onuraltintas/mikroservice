@@ -30,6 +30,18 @@ export const routes: Routes = [
     data: { role: ['Coach', 'Admin'] },
     loadChildren: () => import('./features/coaching/coaching.routes').then(m => m.coachingRoutes)
   },
+  // Veli paneli eduivme.com üzerindeki portalda çalışır; speed-reading alanında
+  // CMS catch-all'a düşüp gereksiz bir 404 API isteği üretmemelidir.
+  {
+    path: 'parent/dashboard',
+    redirectTo: 'error/404',
+    pathMatch: 'full'
+  },
+  {
+    path: 'parent',
+    redirectTo: 'error/404',
+    pathMatch: 'full'
+  },
   {
     path: 'legal',
     children: [

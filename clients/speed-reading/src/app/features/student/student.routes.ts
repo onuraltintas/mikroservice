@@ -11,6 +11,7 @@ export const studentRoutes: Routes = [
     children: [
       {
         path: 'profile-setup',
+        canActivate: [authGuard],
         loadComponent: () => import('./profile-setup/profile-setup.component').then(m => m.ProfileSetupComponent)
       },
       {
