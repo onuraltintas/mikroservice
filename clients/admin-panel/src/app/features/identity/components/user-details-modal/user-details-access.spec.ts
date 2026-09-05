@@ -13,7 +13,8 @@ describe('UserDetailsModalComponent access management', () => {
   const systemAdminProfile: UserProfile = {
     id: 'admin-1', email: 'admin@example.com', firstName: 'System', lastName: 'Admin',
     username: 'admin', role: 'SystemAdmin', roles: ['SystemAdmin'],
-    permissions: ['Permissions.Users.View', 'Permissions.Users.Edit']
+    permissions: ['Permissions.Users.View', 'Permissions.Users.Edit'],
+    mfaVerified: true
   };
   const auth = { userProfile: signal<UserProfile | null>(systemAdminProfile) };
   const identity = {
@@ -76,5 +77,14 @@ describe('UserDetailsModalComponent access management', () => {
     expect(identity.getUserSessions).not.toHaveBeenCalled();
     expect(fixture.nativeElement.textContent).not.toContain('Tüm Oturumları Sonlandır');
     expect(fixture.nativeElement.textContent).not.toContain("MFA'yı Sıfırla");
+  });
+
+  it('does not call protected access endpoints before MFA verification', () => {
+    auth.userProfile.set({ ...systemAdminProfile, mfaVerified: false });
+
+    fixture.detectChanges();
+
+    expect(identity.getUserSessions).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('MFA doğrulaması gerekiyor');
   });
 });
