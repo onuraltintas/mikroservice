@@ -82,6 +82,12 @@ import { ADMIN_PERMISSIONS } from '../../../../core/auth/permissions';
                   </div>
                 </div>
 
+                @if (hasAccessPermission() && !isMfaVerified()) {
+                <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+                  MFA doğrulaması gerekiyor. Bu oturumda erişim yönetimi işlemleri kullanılamaz.
+                </div>
+                }
+
                 @if (canManageAccess()) {
                 <!-- Access Management -->
                 <div class="pt-6 border-t border-gray-100 dark:border-gray-700">
@@ -336,12 +342,20 @@ export class UserDetailsModalComponent implements OnInit {
     });
   }
 
-  canManageAccess() {
+  hasAccessPermission(): boolean {
     return hasRequiredAccess(
       this.auth.userProfile(),
       ADMIN_PERMISSIONS.usersEdit,
       'SystemAdmin'
     );
+  }
+
+  isMfaVerified(): boolean {
+    return this.auth.userProfile()?.mfaVerified === true;
+  }
+
+  canManageAccess(): boolean {
+    return this.hasAccessPermission() && this.isMfaVerified();
   }
 
   closeModal() {

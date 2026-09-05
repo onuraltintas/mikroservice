@@ -17,6 +17,7 @@ export interface UserProfile {
     roles: string[];
     role: string;
     permissions: string[];
+    mfaVerified?: boolean;
 }
 
 interface AuthSessionResponse {
@@ -324,6 +325,9 @@ export class AuthService implements OnDestroy {
         const permissions = parsedToken.permission || [];
         const permissionsArray = Array.isArray(permissions) ? permissions : [permissions];
         const rolesArray = Array.isArray(roles) ? roles : [roles];
+        const authenticationMethods = Array.isArray(parsedToken.amr)
+            ? parsedToken.amr
+            : [parsedToken.amr];
         const appRoles = [
             'SystemAdmin', 'Admin', 'InstitutionOwner', 'InstitutionAdmin',
             'Teacher', 'Student', 'Parent'
@@ -338,7 +342,8 @@ export class AuthService implements OnDestroy {
             username: parsedToken.preferred_username || parsedToken.email || '',
             roles: rolesArray,
             role: mainRole,
-            permissions: permissionsArray
+            permissions: permissionsArray,
+            mfaVerified: authenticationMethods.includes('mfa')
         });
     }
 
