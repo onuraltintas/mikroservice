@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, PLATFORM_ID, Inject } from '@angular/core';
+import { AfterViewInit, Component, inject, OnDestroy, OnInit, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
@@ -15,9 +15,11 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { SubscriptionService } from '../../../core/services/subscription.service';
 import { AuthResponse } from '../../../core/models/user.model';
-import { environment } from '../../../../environments/environment';
-
-declare const google: any;
+import {
+  GoogleIdentityCallback,
+  GoogleIdentityService,
+  GoogleIdentityResponse
+} from '../../../core/services/google-identity.service';
 
 @Component({
   selector: 'app-login',
@@ -39,7 +41,7 @@ declare const google: any;
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
@@ -47,6 +49,9 @@ export class LoginComponent implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly toaster = inject(ToasterService);
   private readonly subscriptionService = inject(SubscriptionService);
+  private readonly googleIdentity = inject(GoogleIdentityService);
+  private readonly googleCallback: GoogleIdentityCallback = (response: GoogleIdentityResponse) =>
+    this.handleGoogleResponse(response);
 
   loginForm: FormGroup;
   loading = false;
@@ -75,10 +80,29 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
-      this.loadGoogleScript();
       this.loadRememberedEmail();
       this.checkForRegistrationMessage();
     }
+  }
+
+  ngAfterViewInit(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const buttonElement = document.getElementById('google-signin-button');
+    if (!buttonElement) {
+      console.error('Google Sign-In button element not found');
+      return;
+    }
+
+    this.googleIdentity.renderButton(buttonElement, 'signin_with', this.googleCallback)
+      .catch(error => {
+        console.error('Error initializing Google Sign-In:', error);
+        this.error = 'Google ile giriş hizmeti şu anda kullanılamıyor. Lütfen e-posta ile giriş yapın.';
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.googleIdentity.clearCallback(this.googleCallback);
   }
 
   private checkForRegistrationMessage(): void {
@@ -96,66 +120,6 @@ export class LoginComponent implements OnInit {
         email: rememberedEmail,
         rememberMe: true
       });
-    }
-  }
-
-  private loadGoogleScript(): void {
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => this.initializeGoogleSignIn();
-    document.head.appendChild(script);
-  }
-
-  private initializeGoogleSignIn(attempt = 1): void {
-    if (typeof google !== 'undefined' && google.accounts) {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
-        try {
-          google.accounts.id.initialize({
-            client_id: environment.googleClientId,
-            callback: (response: any) => this.handleGoogleResponse(response),
-            auto_select: false,
-            cancel_on_tap_outside: true
-          });
-
-          const buttonElement = document.getElementById('google-signin-button');
-          if (buttonElement) {
-            // Calculate width in pixels for better compatibility
-            // Default to a reasonable width if offsetWidth is 0 (hidden)
-            const width = buttonElement.offsetWidth || 350;
-
-            google.accounts.id.renderButton(buttonElement, {
-              theme: 'outline',
-              size: 'large',
-              text: 'signin_with',
-              shape: 'rectangular',
-              width: width // Pass number (pixels) instead of string '100%'
-            });
-
-            // Force width style as fallback after a short delay
-            setTimeout(() => {
-              const iframe = buttonElement.querySelector('iframe');
-              if (iframe) {
-                iframe.style.width = '100%';
-              }
-            }, 100);
-          } else {
-            console.error('Google Sign-In button element not found');
-          }
-        } catch (error) {
-          console.error('Error initializing Google Sign-In:', error);
-        }
-      }, 100);
-    } else {
-      // Retry up to 5 times
-      if (attempt <= 10) {
-        setTimeout(() => this.initializeGoogleSignIn(attempt + 1), 500);
-      } else {
-        console.error('Google Sign-In script failed to load after multiple attempts');
-        this.error = 'Google ile giriş hizmeti şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin veya e-posta ile giriş yapın.';
-      }
     }
   }
 

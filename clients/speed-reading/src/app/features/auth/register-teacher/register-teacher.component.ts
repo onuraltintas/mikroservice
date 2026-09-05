@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { AfterViewInit, Component, inject, OnDestroy, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -13,10 +13,12 @@ import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { RegisterTeacherRequest } from '../../../core/models/user.model';
-import { environment } from '../../../../environments/environment';
+import {
+  GoogleIdentityCallback,
+  GoogleIdentityService,
+  GoogleIdentityResponse
+} from '../../../core/services/google-identity.service';
 import { strongPasswordValidator } from '../../../shared/validators/password.validator';
-
-declare const google: any;
 
 @Component({
   selector: 'app-register-teacher',
@@ -37,12 +39,15 @@ declare const google: any;
   templateUrl: './register-teacher.component.html',
   styleUrl: './register-teacher.component.scss'
 })
-export class RegisterTeacherComponent implements OnInit {
+export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
   private toaster = inject(ToasterService);
+  private googleIdentity = inject(GoogleIdentityService);
+  private readonly googleCallback: GoogleIdentityCallback = (response: GoogleIdentityResponse) =>
+    this.handleGoogleResponse(response);
 
   isLoading = false;
   error = '';
@@ -83,75 +88,24 @@ export class RegisterTeacherComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      this.loadGoogleScript();
-    }
-  }
+  ngAfterViewInit(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
 
-  private loadGoogleScript(): void {
-    // Check if script is already loaded to avoid duplicates
-    if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
-      this.initializeGoogleSignIn();
+    const buttonElement = document.getElementById('google-register-teacher-button');
+    if (!buttonElement) {
+      console.error('Google Teacher Sign-Up button element not found');
       return;
     }
 
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => this.initializeGoogleSignIn();
-    document.head.appendChild(script);
+    this.googleIdentity.renderButton(buttonElement, 'signup_with', this.googleCallback)
+      .catch(error => {
+        console.error('Error initializing Google Teacher Sign-Up:', error);
+        this.error = 'Google ile öğretmen kaydı şu anda kullanılamıyor.';
+      });
   }
 
-  private initializeGoogleSignIn(attempt = 1): void {
-    if (typeof google !== 'undefined' && google.accounts) {
-      setTimeout(() => {
-        try {
-          google.accounts.id.initialize({
-            client_id: environment.googleClientId,
-            callback: (response: any) => this.handleGoogleResponse(response),
-            auto_select: false,
-            cancel_on_tap_outside: true
-          });
-
-          const buttonElement = document.getElementById('google-register-teacher-button');
-          if (buttonElement) {
-            // Calculate width in pixels for better compatibility
-            // Default to a reasonable width if offsetWidth is 0 (hidden)
-            const width = buttonElement.offsetWidth || 350;
-
-            google.accounts.id.renderButton(
-              buttonElement,
-              {
-                theme: 'outline',
-                size: 'large',
-                text: 'signup_with',
-                width: width, // Pass number (pixels) instead of string '100%'
-                shape: 'rectangular'
-              }
-            );
-
-            // Force width style as fallback after a short delay
-            setTimeout(() => {
-              const iframe = buttonElement.querySelector('iframe');
-              if (iframe) {
-                iframe.style.width = '100%';
-              }
-            }, 100);
-          }
-        } catch (error) {
-          console.error('Error initializing Google Sign-In:', error);
-        }
-      }, 100);
-    } else {
-      // Retry up to 10 times
-      if (attempt <= 10) {
-        setTimeout(() => this.initializeGoogleSignIn(attempt + 1), 500);
-      } else {
-        console.error('Google Sign-In script failed to load');
-      }
-    }
+  ngOnDestroy(): void {
+    this.googleIdentity.clearCallback(this.googleCallback);
   }
 
   private handleGoogleResponse(response: any): void {

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { AfterViewInit, Component, inject, OnDestroy, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -11,10 +11,12 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuthService } from '../../../core/services/auth.service';
-import { environment } from '../../../../environments/environment';
+import {
+  GoogleIdentityCallback,
+  GoogleIdentityService,
+  GoogleIdentityResponse
+} from '../../../core/services/google-identity.service';
 import { strongPasswordValidator, PASSWORD_ERROR_MESSAGES } from '../../../shared/validators/password.validator';
-
-declare const google: any;
 
 @Component({
   selector: 'app-register',
@@ -35,11 +37,14 @@ declare const google: any;
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss'
 })
-export class RegisterComponent implements OnInit {
+export class RegisterComponent implements AfterViewInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly googleIdentity = inject(GoogleIdentityService);
+  private readonly googleCallback: GoogleIdentityCallback = (response: GoogleIdentityResponse) =>
+    this.handleGoogleResponse(response);
 
   registerForm: FormGroup;
   loading = false;
@@ -77,69 +82,24 @@ export class RegisterComponent implements OnInit {
     }
   }
 
-  ngOnInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      this.loadGoogleScript();
+  ngAfterViewInit(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const buttonElement = document.getElementById('google-signup-button');
+    if (!buttonElement) {
+      console.error('Google Sign-Up button element not found');
+      return;
     }
+
+    this.googleIdentity.renderButton(buttonElement, 'signup_with', this.googleCallback)
+      .catch(error => {
+        console.error('Error initializing Google Sign-Up:', error);
+        this.error = 'Google ile kayıt hizmeti şu anda kullanılamıyor.';
+      });
   }
 
-  private loadGoogleScript(): void {
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => this.initializeGoogleSignIn();
-    document.head.appendChild(script);
-  }
-
-  private initializeGoogleSignIn(attempt = 1): void {
-    if (typeof google !== 'undefined' && google.accounts) {
-      setTimeout(() => {
-        try {
-          google.accounts.id.initialize({
-            client_id: environment.googleClientId,
-            callback: (response: any) => this.handleGoogleResponse(response),
-            auto_select: false,
-            cancel_on_tap_outside: true
-          });
-
-          const buttonElement = document.getElementById('google-signup-button');
-          if (buttonElement) {
-            // Calculate width in pixels for better compatibility
-            // Default to a reasonable width if offsetWidth is 0 (hidden)
-            const width = buttonElement.offsetWidth || 350;
-
-            google.accounts.id.renderButton(
-              buttonElement,
-              {
-                theme: 'outline',
-                size: 'large',
-                text: 'signup_with',
-                width: width, // Pass number (pixels) instead of string '100%'
-                shape: 'rectangular'
-              }
-            );
-
-            // Force width style as fallback after a short delay
-            setTimeout(() => {
-              const iframe = buttonElement.querySelector('iframe');
-              if (iframe) {
-                iframe.style.width = '100%';
-              }
-            }, 100);
-          }
-        } catch (error) {
-          console.error('Error initializing Google Sign-In:', error);
-        }
-      }, 100);
-    } else {
-      // Retry if script hasn't loaded yet
-      if (attempt <= 10) {
-        setTimeout(() => this.initializeGoogleSignIn(attempt + 1), 500);
-      } else {
-        console.error('Google Sign-In script failed to load');
-      }
-    }
+  ngOnDestroy(): void {
+    this.googleIdentity.clearCallback(this.googleCallback);
   }
 
   private handleGoogleResponse(response: any): void {
