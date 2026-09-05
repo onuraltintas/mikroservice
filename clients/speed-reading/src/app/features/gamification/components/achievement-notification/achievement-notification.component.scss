@@ -1,6 +1,8 @@
 .achievement-notification {
   position: relative;
-  min-width: 350px;
+  width: min(100%, 420px);
+  min-width: min(350px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
   padding: 16px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 12px;
@@ -207,4 +209,30 @@
 
 .level {
   background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+}
+
+@media (max-width: 420px) {
+  .achievement-notification {
+    padding: 12px;
+  }
+
+  .notification-content {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .icon-container .achievement-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 26px;
+  }
+
+  .text-content {
+    min-width: 0;
+
+    .title,
+    .message {
+      overflow-wrap: anywhere;
+    }
+  }
 }

@@ -34,3 +34,20 @@
   font-size: 1rem;
   font-weight: 750;
 }
+
+.header-notification-dropdown {
+  width: min(24rem, calc(100vw - 1rem));
+  max-width: calc(100vw - 1rem);
+}
+
+@media (max-width: 40rem) {
+  .header-notification-dropdown {
+    position: fixed;
+    top: calc(var(--ui-header-height) + 0.5rem);
+    right: 0.5rem;
+    left: 0.5rem;
+    width: auto;
+    max-width: none;
+    margin-top: 0;
+  }
+}

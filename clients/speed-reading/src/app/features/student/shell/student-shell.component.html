@@ -24,6 +24,7 @@
          SIDEBAR
          ══════════════════════════════════════════════════ -->
     <aside
+      id="student-sidebar"
       class="sp-sidebar"
       [class.sp-sidebar--open]="sidebarOpen()"
       aria-label="Ana navigasyon">
@@ -101,9 +102,11 @@
       <header class="sp-header" role="banner">
         <!-- Hamburger (mobile) -->
         <button
+          type="button"
           class="sp-hamburger"
           (click)="toggleSidebar()"
           [attr.aria-expanded]="sidebarOpen()"
+          aria-controls="student-sidebar"
           aria-label="Menüyü aç/kapat">
           <span class="material-icons">{{ sidebarOpen() ? 'close' : 'menu' }}</span>
         </button>
@@ -116,6 +119,7 @@
 
           <!-- Dark / Light toggle -->
           <button
+            type="button"
             class="sp-header__icon-btn sp-theme-toggle"
             (click)="themeService.toggle()"
             [attr.aria-label]="themeService.isDark ? 'Aydınlık moda geç' : 'Karanlık moda geç'"
@@ -136,6 +140,7 @@
           <!-- User menu -->
           <div class="user-menu-container sp-header__user-menu">
             <button
+              type="button"
               class="sp-avatar sp-avatar--md"
               (click)="toggleUserMenu()"
               [attr.aria-expanded]="userMenuOpen()"
@@ -177,6 +182,7 @@
                 <div class="sp-dropdown__divider"></div>
 
                 <button
+                  type="button"
                   class="sp-dropdown__item sp-dropdown__item--danger"
                   role="menuitem"
                   (click)="logout()">

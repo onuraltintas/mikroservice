@@ -69,7 +69,8 @@ import { ToasterService } from '../../../core/services/toaster.service';
     }
 
     .link-form {
-      min-width: 350px;
+      width: 100%;
+      min-width: 0;
     }
 
     .full-width {

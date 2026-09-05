@@ -1,5 +1,7 @@
 mat-dialog-content {
-    min-width: 700px;
+    min-width: 0;
+    width: min(700px, 100%);
+    max-width: 100%;
     max-height: 80vh;
     overflow-y: auto;
     padding: 24px;
@@ -46,4 +48,25 @@ mat-dialog-actions button {
 mat-spinner {
     display: inline-block;
     margin-right: 8px;
+}
+
+@media (max-width: 768px) {
+    mat-dialog-content {
+        width: 100%;
+        padding: 16px !important;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    mat-dialog-actions {
+        padding: 12px 16px;
+        flex-wrap: wrap;
+
+        button {
+            flex: 1 1 140px;
+            min-width: 0;
+        }
+    }
 }

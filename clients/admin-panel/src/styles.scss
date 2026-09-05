@@ -10,6 +10,8 @@
 
 html {
     height: 100%;
+    width: 100%;
+    overflow-x: hidden;
     // LIGHT THEME (Default)
     @include mat.theme((color: (primary: mat.$azure-palette,
                 tertiary: mat.$blue-palette,
@@ -21,7 +23,9 @@ html {
 
 body {
     height: 100%;
+    width: 100%;
     margin: 0;
+    overflow-x: hidden;
 
     // Default to Light Scheme
     color-scheme: light;

@@ -82,7 +82,8 @@ import { Teacher } from '../../../core/models/teacher.model';
       width: 100%;
     }
     mat-dialog-content {
-      min-width: 350px;
+      min-width: 0;
+      width: 100%;
     }
   `]
 })

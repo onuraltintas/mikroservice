@@ -370,7 +370,8 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  width: 240px;
+  width: min(240px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
   background: var(--sp-surface);
   border: 1px solid var(--sp-border);
   border-radius: var(--sp-radius-md);
