@@ -30,6 +30,44 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.no-document {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  color: #5f6368;
+
+  mat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 40px;
+    color: #667eea;
+  }
+
+  h2,
+  p {
+    margin: 0;
+  }
+
+  h2 {
+    color: #333;
+    font-size: 22px;
+  }
+}
+
+.loading,
+.error {
+  padding: 48px 24px;
+  text-align: center;
+  color: #5f6368;
+}
+
+.error {
+  color: #b3261e;
+}
+
 .legal-content {
   line-height: 1.8;
   color: #333;

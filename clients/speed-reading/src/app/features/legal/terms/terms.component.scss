@@ -57,6 +57,17 @@
   }
 }
 
+.loading,
+.error {
+  padding: 48px 24px;
+  text-align: center;
+  color: #5f6368;
+}
+
+.error {
+  color: #b3261e;
+}
+
 .legal-content {
   line-height: 1.8;
   color: #333;
