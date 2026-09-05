@@ -29,6 +29,27 @@ describe('ToasterService contract', () => {
     );
   });
 
+  it('supports the same legacy duration form as the admin client', () => {
+    const snackBar = { open: jasmine.createSpy('open'), dismiss: jasmine.createSpy('dismiss') };
+    const dialog = { open: jasmine.createSpy('open') };
+
+    TestBed.configureTestingModule({
+      providers: [
+        ToasterService,
+        { provide: MatSnackBar, useValue: snackBar },
+        { provide: MatDialog, useValue: dialog }
+      ]
+    });
+
+    TestBed.inject(ToasterService).error('İşlem başarısız.', 2400, 'Hata');
+
+    expect(snackBar.open).toHaveBeenCalledWith(
+      'Hata: İşlem başarısız.',
+      'Kapat',
+      jasmine.objectContaining({ duration: 2400, panelClass: ['ui-toast', 'ui-toast--error'] })
+    );
+  });
+
   it('uses the same message-first confirmation contract', async () => {
     const snackBar = { open: jasmine.createSpy('open'), dismiss: jasmine.createSpy('dismiss') };
     const dialog = {

@@ -16,7 +16,8 @@ export class ChartConfigService {
         purple:  '#8b5cf6',   // mor tonu
         teal:    '#06b6d4',   // --sp-diamond (camgöbeği)
         orange:  '#f97316',   // turuncu
-        grey:    '#9ca3af'    // nötr gri
+        grey:    '#9ca3af',    // nötr gri
+        neutral: '#cbd5e1'     // --ui-border-strong
     };
 
     readonly chartColors = [

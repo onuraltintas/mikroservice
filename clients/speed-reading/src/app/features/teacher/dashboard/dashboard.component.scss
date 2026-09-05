@@ -1,4 +1,7 @@
 .teacher-dashboard {
+  background: var(--ui-page);
+  color: var(--ui-text);
+
   padding: 1.5rem;
   max-width: 87.5rem;
   margin: 0 auto;
@@ -534,5 +537,46 @@
 
   .empty-state mat-icon {
     color: var(--ui-text-subtle);
+  }
+
+  .distribution-item.excellent {
+    border-color: var(--ui-success);
+    background-color: var(--ui-success-soft);
+  }
+
+  .distribution-item.good {
+    border-color: var(--ui-info);
+    background-color: var(--ui-info-soft);
+  }
+
+  .distribution-item.average {
+    border-color: var(--ui-warning);
+    background-color: var(--ui-warning-soft);
+  }
+
+  .distribution-item.needs-improvement {
+    border-color: var(--ui-danger);
+    background-color: var(--ui-danger-soft);
+  }
+
+  .stat-icon.students {
+    background: linear-gradient(135deg, var(--ui-brand), var(--ui-accent));
+  }
+
+  .stat-icon.assignments {
+    background: linear-gradient(135deg, var(--ui-accent), var(--ui-danger));
+  }
+
+  .stat-icon.kdp {
+    background: linear-gradient(135deg, var(--ui-info), var(--ui-brand));
+  }
+
+  .stat-icon.comprehension {
+    background: linear-gradient(135deg, var(--ui-success), var(--ui-info));
+  }
+
+  .assignments-card .assignment-item,
+  .card-header {
+    border-color: var(--ui-border);
   }
 }

@@ -47,11 +47,11 @@ export interface GaugeChartData {
     .value {
       font-size: 32px;
       font-weight: bold;
-      color: var(--sp-text-1, #1e1b4b);
+      color: var(--ui-text, var(--sp-text-1, #1e1b4b));
     }
     .label {
       font-size: 12px;
-      color: var(--sp-text-3, #6b7280);
+      color: var(--ui-text-subtle, var(--sp-text-3, #6b7280));
       margin-top: 4px;
     }
   `]
@@ -75,7 +75,7 @@ export class GaugeChartComponent implements AfterViewInit, OnChanges {
   gaugeChartOptions: ChartOptions<'doughnut'> = {};
 
   get currentValue(): string {
-    return `${Math.round(this.value)}${this.unit}`;
+    return `${Math.round(this.value)}${this.unit || this.units}`;
   }
 
   ngAfterViewInit(): void {
@@ -89,7 +89,9 @@ export class GaugeChartComponent implements AfterViewInit, OnChanges {
   }
 
   private updateChart(): void {
-    const percentage = (this.value / this.max) * 100;
+    const percentage = this.max > 0
+      ? Math.min(100, Math.max(0, (this.value / this.max) * 100))
+      : 0;
     const remaining = 100 - percentage;
 
     this.gaugeChartData = {
@@ -98,7 +100,7 @@ export class GaugeChartComponent implements AfterViewInit, OnChanges {
         data: [percentage, remaining],
         backgroundColor: [
           this.chartConfig.colors.primary,
-          '#e5e7eb'
+          this.chartConfig.colors.neutral
         ],
         borderWidth: 0,
         circumference: 180,

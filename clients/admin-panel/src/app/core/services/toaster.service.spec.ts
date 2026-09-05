@@ -29,6 +29,27 @@ describe('ToasterService contract', () => {
     );
   });
 
+  it('supports the legacy duration form used by the other client', () => {
+    const snackBar = { open: vi.fn(), dismiss: vi.fn() };
+    const dialog = { open: vi.fn() };
+
+    TestBed.configureTestingModule({
+      providers: [
+        ToasterService,
+        { provide: MatSnackBar, useValue: snackBar },
+        { provide: MatDialog, useValue: dialog }
+      ]
+    });
+
+    TestBed.inject(ToasterService).error('İşlem başarısız.', 2400, 'Hata');
+
+    expect(snackBar.open).toHaveBeenCalledWith(
+      'Hata: İşlem başarısız.',
+      'Kapat',
+      expect.objectContaining({ duration: 2400, panelClass: ['ui-toast', 'ui-toast--error'] })
+    );
+  });
+
   it('uses the same message-first confirmation contract', async () => {
     const snackBar = { open: vi.fn(), dismiss: vi.fn() };
     const dialog = {

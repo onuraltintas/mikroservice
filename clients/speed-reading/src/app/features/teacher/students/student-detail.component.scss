@@ -734,4 +734,83 @@ h1 {
     .section-title {
         color: var(--ui-brand);
     }
+
+    background-color: var(--ui-page);
+
+    .student-header-card mat-card,
+    .stats-grid mat-card,
+    .content-card,
+    .chart-card {
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        color: var(--ui-text);
+        box-shadow: var(--ui-shadow-sm) !important;
+    }
+
+    .student-info h2,
+    .stat-value,
+    .goal-value,
+    .series-info h3,
+    .chart-card mat-card-title {
+        color: var(--ui-text);
+    }
+
+    .email,
+    .stat-label,
+    .stat-target,
+    .goal-label,
+    .last-activity,
+    .steps-text,
+    .empty-state,
+    .error-state {
+        color: var(--ui-text-muted);
+    }
+
+    .tab-content,
+    ::ng-deep .mat-mdc-tab-header,
+    .series-item,
+    .goal-item,
+    table th.mat-header-cell {
+        background: var(--ui-surface);
+        border-color: var(--ui-border);
+    }
+
+    .empty-state {
+        background: var(--ui-surface-muted);
+        border-color: var(--ui-border);
+    }
+
+    .student-avatar-large {
+        background: linear-gradient(135deg, var(--ui-brand), var(--ui-accent));
+        border-color: var(--ui-surface);
+    }
+
+    .stat-icon,
+    .goal-item mat-icon {
+        color: var(--ui-brand);
+    }
+
+    .above-target {
+        color: var(--ui-success);
+        background: var(--ui-success-soft);
+    }
+
+    .error-state mat-icon {
+        color: var(--ui-danger);
+    }
+}
+
+@media (max-width: 640px) {
+    .student-detail-container {
+        padding: var(--ui-space-4);
+    }
+
+    .student-detail-container .student-actions,
+    .student-detail-container .header {
+        flex-wrap: wrap;
+    }
+
+    .student-detail-container .charts-container {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }

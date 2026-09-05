@@ -1,4 +1,10 @@
 .reading-profile-widget {
+  color: var(--ui-text);
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  box-shadow: var(--ui-shadow-sm);
+
   mat-card-header {
     display: flex;
     align-items: center;
@@ -13,7 +19,7 @@
       font-weight: 600;
 
       mat-icon {
-        color: #1976d2;
+        color: var(--ui-brand);
       }
     }
   }
@@ -32,7 +38,7 @@
     }
 
     p {
-      color: #666;
+      color: var(--ui-text-muted);
       margin-bottom: 16px;
     }
   }
@@ -52,7 +58,7 @@
       margin-bottom: 12px;
 
       mat-icon {
-        color: #1976d2;
+        color: var(--ui-brand);
         font-size: 20px;
         width: 20px;
         height: 20px;
@@ -62,7 +68,7 @@
         margin: 0;
         font-size: 16px;
         font-weight: 600;
-        color: #333;
+        color: var(--ui-text);
       }
     }
   }
@@ -73,7 +79,7 @@
     align-items: center;
     gap: 16px;
     padding: 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--ui-brand) 0%, var(--ui-accent) 100%);
     border-radius: 12px;
     color: white;
 
@@ -124,13 +130,14 @@
       align-items: center;
       gap: 12px;
       padding: 16px;
-      background-color: #f8f9fa;
-      border-radius: 8px;
-      transition: transform 0.2s, box-shadow 0.2s;
+      background-color: var(--ui-surface-muted);
+      border: 1px solid var(--ui-border);
+      border-radius: var(--ui-radius-md);
+      transition: transform var(--ui-transition-fast), box-shadow var(--ui-transition-fast);
 
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: var(--ui-shadow-md);
       }
 
       mat-icon {
@@ -145,19 +152,19 @@
         .stat-value {
           font-size: 20px;
           font-weight: 700;
-          color: #333;
+          color: var(--ui-text);
           line-height: 1.2;
         }
 
         .stat-label {
           font-size: 12px;
-          color: #666;
+          color: var(--ui-text-muted);
           margin-top: 2px;
         }
 
         .stat-description {
           font-size: 11px;
-          color: #999;
+          color: var(--ui-text-subtle);
           margin-top: 4px;
         }
       }
@@ -167,13 +174,13 @@
   // Category Chips
   mat-chip-set {
     .preferred-chip {
-      background-color: #c8e6c9;
-      color: #2e7d32;
+      background-color: var(--ui-success-soft);
+      color: var(--ui-success);
     }
 
     .difficult-chip {
-      background-color: #ffcdd2;
-      color: #c62828;
+      background-color: var(--ui-danger-soft);
+      color: var(--ui-danger);
     }
   }
 
@@ -183,10 +190,10 @@
     align-items: center;
     gap: 6px;
     font-size: 12px;
-    color: #999;
+    color: var(--ui-text-subtle);
     margin-top: 16px;
     padding-top: 16px;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid var(--ui-border);
 
     mat-icon {
       font-size: 16px;

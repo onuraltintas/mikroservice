@@ -1,12 +1,13 @@
 <div class="notification-bell" (clickOutside)="closeDropdown()">
-  <button class="bell-button" (click)="toggleDropdown()" [class.has-notifications]="unreadCount.total > 0">
+  <button type="button" class="bell-button" (click)="toggleDropdown()" [class.has-notifications]="unreadCount.total > 0"
+    [attr.aria-expanded]="isDropdownOpen" aria-haspopup="menu" aria-label="Bildirimleri aç veya kapat">
     <span class="material-icons">notifications</span>
     <span class="badge" *ngIf="unreadCount.total > 0" [class.urgent]="unreadCount.urgent > 0">
       {{ unreadCount.total > 99 ? '99+' : unreadCount.total }}
     </span>
   </button>
 
-  <div class="notification-dropdown fade-in" *ngIf="isDropdownOpen">
+  <div class="notification-dropdown fade-in" *ngIf="isDropdownOpen" role="menu" aria-label="Bildirimler">
     <div class="dropdown-header">
       <div class="header-content">
         <h3>Bildirimler</h3>
@@ -43,10 +44,10 @@
     </div>
 
     <div class="dropdown-footer">
-      <button class="push-toggle" (click)="enablePushNotifications()" title="Masaüstü Bildirimlerini Aç">
+      <button type="button" class="push-toggle" (click)="enablePushNotifications()" title="Masaüstü Bildirimlerini Aç">
         <span class="material-icons">campaign</span>
       </button>
-      <button class="view-all" (click)="viewAllNotifications()">
+      <button type="button" class="view-all" (click)="viewAllNotifications()">
         Tümünü Gör
         <span class="material-icons">arrow_forward</span>
       </button>

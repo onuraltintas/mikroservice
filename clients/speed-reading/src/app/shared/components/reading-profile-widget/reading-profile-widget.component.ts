@@ -40,51 +40,40 @@ export class ReadingProfileWidgetComponent implements OnInit {
   }
 
   loadProfile(): void {
-    this.authService.currentUser$.subscribe(currentUser => {
-      if (!currentUser?.id) {
-        this.error = 'Kullanıcı bilgisi bulunamadı';
-        this.loading = false;
-        return;
-      }
-
-      this.loading = true;
-      this.error = null;
-
-      this.adaptiveTextService.getProfile(currentUser.id).subscribe({
-        next: (profile) => {
-          this.profile = profile;
-          this.loading = false;
-        },
-        error: (err) => {
-          console.error('Failed to load reading profile:', err);
-          this.error = 'Profil yüklenirken hata oluştu';
-          this.loading = false;
-        }
-      });
-    });
+    this.loadProfileData(false);
   }
 
   refresh(): void {
-    this.authService.currentUser$.subscribe(currentUser => {
-      if (currentUser?.id) {
-        this.loading = true;
-        this.adaptiveTextService.getProfile(currentUser.id, true).subscribe({
-          next: (profile) => {
-            this.profile = profile;
-            this.loading = false;
-          },
-          error: (err) => {
-            console.error('Failed to refresh profile:', err);
-            this.loading = false;
-          }
-        });
+    this.loadProfileData(true);
+  }
+
+  private loadProfileData(forceRefresh: boolean): void {
+    const currentUser = this.authService.currentUserValue;
+    if (!currentUser?.id) {
+      this.error = 'Kullanıcı bilgisi bulunamadı';
+      this.loading = false;
+      return;
+    }
+
+    this.loading = true;
+    this.error = null;
+
+    this.adaptiveTextService.getProfile(currentUser.id, forceRefresh).subscribe({
+      next: (profile) => {
+        this.profile = profile;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Failed to load reading profile:', err);
+        this.error = 'Profil yüklenirken hata oluştu';
+        this.loading = false;
       }
     });
   }
 
   getLevelProgress(): number {
     if (!this.profile) return 0;
-    return (this.profile.currentReadingLevel / 10) * 100;
+    return Math.min(100, Math.max(0, (this.profile.currentReadingLevel / 10) * 100));
   }
 
   getComprehensionColor(): string {

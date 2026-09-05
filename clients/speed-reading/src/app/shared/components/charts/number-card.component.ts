@@ -24,32 +24,36 @@ export interface NumberCardData {
   styles: [`
     .number-cards-container {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: var(--ui-space-4, 16px);
+      margin-bottom: var(--ui-space-6, 24px);
     }
 
     .number-card {
       text-align: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, var(--ui-brand) 0%, var(--ui-accent) 100%);
+      border: 0;
+      border-radius: var(--ui-radius-lg, 16px);
+      box-shadow: var(--ui-shadow-md);
       color: white;
-      transition: transform 0.2s;
+      transition: transform var(--ui-transition-fast, 150ms ease), box-shadow var(--ui-transition-fast, 150ms ease);
     }
 
     .number-card:hover {
       transform: translateY(-4px);
+      box-shadow: var(--ui-shadow-lg);
     }
 
     .card-label {
-      font-size: 14px;
+      font-size: 0.8125rem;
       opacity: 0.9;
-      margin-bottom: 8px;
+      margin-bottom: var(--ui-space-2, 8px);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.04em;
     }
 
     .card-value {
-      font-size: 32px;
+      font-size: clamp(1.75rem, 1.25rem + 1vw, 2rem);
       font-weight: bold;
     }
   `]

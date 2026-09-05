@@ -425,4 +425,95 @@
         border-color: var(--ui-border);
         background: var(--ui-surface);
     }
+
+    background-color: var(--ui-page);
+
+    .header h1 {
+        color: var(--ui-text);
+    }
+
+    .header .subtitle,
+    .loading-container,
+    .students-table td,
+    .student-email,
+    .target-item,
+    .daily-goal,
+    .no-data-content p {
+        color: var(--ui-text-muted);
+    }
+
+    .filters-card,
+    .table-card,
+    .loading-container {
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        box-shadow: var(--ui-shadow-sm);
+    }
+
+    .students-table th,
+    .students-table td {
+        border-color: var(--ui-border);
+    }
+
+    .students-table th {
+        background: var(--ui-surface-muted);
+        color: var(--ui-text-muted);
+    }
+
+    .student-row:hover {
+        background-color: var(--ui-brand-soft);
+        box-shadow: var(--ui-shadow-sm);
+    }
+
+    .target-item,
+    .no-data-content .icon-circle {
+        background: var(--ui-surface-muted);
+    }
+
+    .teacher-badge,
+    .level-badge {
+        color: var(--ui-brand);
+        background-color: var(--ui-brand-soft);
+        border-color: var(--ui-border);
+    }
+
+    .no-teacher-badge {
+        color: var(--ui-text-subtle);
+        background-color: var(--ui-surface-muted);
+        border-color: var(--ui-border);
+    }
+
+    .status-badge.active {
+        color: var(--ui-success);
+        background-color: var(--ui-success-soft);
+        border-color: color-mix(in srgb, var(--ui-success) 28%, transparent);
+    }
+
+    .status-badge.inactive {
+        color: var(--ui-danger);
+        background-color: var(--ui-danger-soft);
+        border-color: color-mix(in srgb, var(--ui-danger) 28%, transparent);
+    }
+
+    .no-data {
+        background: var(--ui-surface);
+    }
+
+    .no-data-content h3 {
+        color: var(--ui-text);
+    }
+}
+
+@media (max-width: 48rem) {
+    .students-container .header .header-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+        button {
+            width: 100%;
+            min-width: 0;
+            padding-inline: 0.75rem;
+        }
+    }
 }
