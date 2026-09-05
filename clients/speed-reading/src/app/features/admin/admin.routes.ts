@@ -284,7 +284,7 @@ export const adminRoutes: Routes = [
       },
       {
         path: 'legal-documents',
-        redirectTo: 'dashboard',
+        redirectTo: 'cms/pages',
         pathMatch: 'full'
       },
       {

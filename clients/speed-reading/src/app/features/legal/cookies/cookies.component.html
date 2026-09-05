@@ -15,7 +15,7 @@
                 <p>Doküman yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.</p>
             </div>
 
-            <div *ngIf="noDocument && !loading && !error" class="no-document">
+            <div *ngIf="noDocument && !loading && !error" class="no-document" role="status">
                 <mat-icon>description</mat-icon>
                 <h2>Doküman henüz yayınlanmadı</h2>
                 <p>Çerez politikası güncellendiğinde bu sayfada yayınlanacaktır.</p>
