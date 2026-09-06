@@ -43,10 +43,11 @@ services:
     networks:
       - edu-network
     healthcheck:
-      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
-      interval: 30s
-      timeout: 30s
-      retries: 3
+      # A TCP listener check avoids spawning a full Erlang diagnostics VM.
+      test: [ "CMD-SHELL", "nc -z -w 2 127.0.0.1 5672" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
       start_period: 30s
 
   # Redis Cache
