@@ -44,9 +44,10 @@ services:
       - edu-network
     healthcheck:
       test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 30s
 
   # Redis Cache
   redis:
@@ -138,7 +139,10 @@ services:
     environment:
       # The application accepts only JPEG/PNG/WebP attachments up to 10 MiB.
       CLAMD_CONF_MaxScanSize: 10M
+      CLAMD_CONF_MaxFileSize: 10M
       CLAMD_CONF_StreamMaxLength: 10M
+      # Avoid holding two full signature engines in memory during updates.
+      CLAMD_CONF_ConcurrentDatabaseReload: "no"
       # Keep attachment scanning bounded on the small production VPS.
       CLAMD_CONF_MaxThreads: "4"
       CLAMD_CONF_MaxQueue: "16"
