@@ -47,6 +47,16 @@ describe('ExerciseService', () => {
     request.flush({ id: 'result-1' });
   });
 
+  it('sends the admin search term to the paged exercise endpoint', () => {
+    service.getExercises(undefined, undefined, undefined, 1, 10, 'Akademik Makale').subscribe();
+
+    const request = http.expectOne(candidate => candidate.urlWithParams.startsWith('/api/speed-reading/exercises?'));
+    expect(request.request.urlWithParams).toContain('pageNumber=1');
+    expect(request.request.urlWithParams).toContain('pageSize=10');
+    expect(request.request.urlWithParams).toContain('searchTerm=Akademik%20Makale');
+    request.flush({ items: [], pageNumber: 1, pageSize: 10, totalCount: 0 });
+  });
+
   it('writes exercise commands through the dedicated service with the bounded-context contract', () => {
     service.createExercise({
       title: 'Göz Takibi',

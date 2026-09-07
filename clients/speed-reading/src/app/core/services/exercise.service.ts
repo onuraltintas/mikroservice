@@ -33,7 +33,14 @@ export class ExerciseService {
     });
   }
 
-  getExercises(exerciseTypeId?: string, difficultyLevel?: number, targetAgeGroupId?: string, pageNumber = 1, pageSize = 10): Observable<PagedResult<Exercise>> {
+  getExercises(
+    exerciseTypeId?: string,
+    difficultyLevel?: number,
+    targetAgeGroupId?: string,
+    pageNumber = 1,
+    pageSize = 10,
+    searchTerm?: string
+  ): Observable<PagedResult<Exercise>> {
     let url = `${this.API_URL}/exercises`;
     const params: string[] = [];
     if (exerciseTypeId) params.push(`exerciseTypeId=${exerciseTypeId}`);
@@ -41,6 +48,7 @@ export class ExerciseService {
     if (targetAgeGroupId) params.push(`targetAgeGroupId=${targetAgeGroupId}`);
     params.push(`pageNumber=${pageNumber}`);
     params.push(`pageSize=${pageSize}`);
+    if (searchTerm?.trim()) params.push(`searchTerm=${encodeURIComponent(searchTerm.trim())}`);
     if (params.length > 0) url += `?${params.join('&')}`;
     return this.http.get<PagedResult<Exercise>>(url);
   }

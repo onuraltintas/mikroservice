@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, firstValueFrom, map, of, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, finalize, firstValueFrom, map, of, shareReplay, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthResponse, LoginRequest, RegisterInstitutionRequest, RegisterRequest } from '../models/user.model';
 import { environment } from '../../../environments/environment';
@@ -40,6 +40,7 @@ export class AuthService {
   private readonly AUTH_URL = `${this.API_URL}/auth`;
   private accessToken: string | null = null;
   private sessionInitialized = false;
+  private refreshInFlight$: Observable<AuthResponse> | null = null;
 
   private currentUserSubject = new BehaviorSubject<AuthResponse | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
@@ -180,15 +181,25 @@ export class AuthService {
    * Service receives: AuthResponse (auto-unwrapped)
    */
   refreshToken(): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.AUTH_URL}/refresh-token`, {}, {
+    if (this.refreshInFlight$) {
+      return this.refreshInFlight$;
+    }
+
+    this.refreshInFlight$ = this.http.post<AuthResponse>(`${this.AUTH_URL}/refresh-token`, {}, {
       withCredentials: true,
       headers: { 'X-Skip-Error-Toast': 'true' }
     }).pipe(
       map(response => this.normalizeAuthResponse(response)),
       tap(response => {
         this.setUser(response);
-      })
+      }),
+      finalize(() => {
+        this.refreshInFlight$ = null;
+      }),
+      shareReplay({ bufferSize: 1, refCount: false })
     );
+
+    return this.refreshInFlight$;
   }
 
   /**

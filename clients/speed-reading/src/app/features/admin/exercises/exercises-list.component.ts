@@ -108,22 +108,13 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
       this.selectedDifficulty || undefined,
       this.selectedAgeGroupId || undefined,
       this.pageNumber,
-      this.pageSize
+      this.pageSize,
+      this.searchText
     )
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (result) => {
-          // Client-side filtering for search text
-          let filteredItems = result.items;
-          if (this.searchText && this.searchText.trim()) {
-            const search = this.searchText.toLowerCase().trim();
-            filteredItems = filteredItems.filter(exercise =>
-              exercise.title.toLowerCase().includes(search) ||
-              exercise.description?.toLowerCase().includes(search)
-            );
-          }
-
-          this.exercises = filteredItems;
+          this.exercises = result.items;
           this.totalCount = result.totalCount;
           this.pageNumber = result.pageNumber;
           this.pageSize = result.pageSize;

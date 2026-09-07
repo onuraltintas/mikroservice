@@ -22,6 +22,7 @@ public sealed class ExercisesController(
         [FromQuery] Guid? targetAgeGroupId,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] string? searchTerm = null,
         CancellationToken cancellationToken = default) =>
         catalog.GetExercisesAsync(
             exerciseTypeId,
@@ -29,6 +30,7 @@ public sealed class ExercisesController(
             targetAgeGroupId,
             pageNumber,
             pageSize,
+            searchTerm,
             cancellationToken);
 
     [HttpPost]

@@ -113,6 +113,18 @@ describe('AuthService', () => {
     });
   });
 
+  it('shares concurrent refresh requests instead of hitting the endpoint twice', () => {
+    service.refreshToken().subscribe();
+    service.refreshToken().subscribe();
+
+    const requests = http.match('/api/auth/refresh-token');
+    expect(requests.length).toBe(1);
+    requests[0].flush({
+      accessToken: '',
+      roles: []
+    });
+  });
+
   it('revokes the session through the backend revoke endpoint on logout', () => {
     const user = {
       id: 'user',

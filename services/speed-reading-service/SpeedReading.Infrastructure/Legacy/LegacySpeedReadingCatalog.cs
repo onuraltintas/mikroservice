@@ -71,6 +71,7 @@ internal sealed class LegacySpeedReadingCatalog(SpeedReadingDbContext db) : ILeg
         Guid? targetAgeGroupId,
         int pageNumber,
         int pageSize,
+        string? searchTerm,
         CancellationToken cancellationToken = default)
     {
         var (page, size) = NormalizePage(pageNumber, pageSize);
@@ -93,6 +94,14 @@ internal sealed class LegacySpeedReadingCatalog(SpeedReadingDbContext db) : ILeg
         if (targetAgeGroupId.HasValue)
         {
             query = query.Where(item => item.exercise.TargetAgeGroupConfigurationId == targetAgeGroupId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var pattern = $"%{searchTerm.Trim()}%";
+            query = query.Where(item =>
+                EF.Functions.ILike(item.exercise.Title, pattern) ||
+                EF.Functions.ILike(item.exercise.Description, pattern));
         }
 
         var totalCount = await query.CountAsync(cancellationToken);

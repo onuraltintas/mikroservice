@@ -122,6 +122,7 @@ public interface ILegacySpeedReadingCatalog
         Guid? targetAgeGroupId,
         int pageNumber,
         int pageSize,
+        string? searchTerm,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<ReadingTextSummary>> GetReadingTextsAsync(
