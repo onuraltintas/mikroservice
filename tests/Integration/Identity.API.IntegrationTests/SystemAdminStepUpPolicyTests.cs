@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using EduPlatform.Shared.Security.Extensions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace Identity.API.IntegrationTests;
 
@@ -68,5 +71,28 @@ public sealed class SystemAdminStepUpPolicyTests
             .Should().ContainSingle(claims =>
                 claims.ClaimType == "amr"
                 && claims.AllowedValues!.Contains("mfa"));
+    }
+
+    [Fact]
+    public void JwtAuthentication_ShouldPreserveStandardMfaClaimName()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["JWT_SECRET"] = "a-secure-test-secret-that-is-at-least-32-characters",
+                ["JWT_ISSUER"] = "test-issuer",
+                ["JWT_AUDIENCE"] = "test-audience"
+            })
+            .Build();
+
+        var services = new ServiceCollection();
+        services.AddCustomAuthentication(configuration);
+        using var provider = services.BuildServiceProvider();
+
+        var options = provider
+            .GetRequiredService<IOptionsMonitor<JwtBearerOptions>>()
+            .Get(JwtBearerDefaults.AuthenticationScheme);
+
+        options.MapInboundClaims.Should().BeFalse();
     }
 }

@@ -33,6 +33,9 @@ public static class SecurityExtensions
         })
         .AddJwtBearer(options =>
         {
+            // Keep standard JWT claim names (especially amr) intact. The
+            // MfaRequired policy intentionally checks the RFC 8176 amr claim.
+            options.MapInboundClaims = false;
             options.RequireHttpsMetadata = configuration.GetValue("Jwt:RequireHttpsMetadata", true);
             options.SaveToken = true;
             options.TokenValidationParameters = new TokenValidationParameters
