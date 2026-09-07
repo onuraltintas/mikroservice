@@ -12,11 +12,18 @@ import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { environment } from '../../../../environments/environment';
 import { ToasterService } from '../../../core/services/toaster.service';
+import { RolePermissionsDialogComponent } from './role-permissions-dialog.component';
 
 interface Role {
   id: string;
   name: string;
   normalizedName: string;
+}
+
+const SYSTEM_ROLE_NAMES = new Set(['Admin', 'Teacher', 'Student', 'Editor', 'SystemAdmin']);
+
+export function isSystemRoleName(roleName: string): boolean {
+  return SYSTEM_ROLE_NAMES.has(roleName);
 }
 
 @Component({
@@ -63,7 +70,15 @@ export class RolesListComponent implements OnInit {
   }
 
   isSystemRole(roleName: string): boolean {
-    return ['Admin', 'Teacher', 'Student', 'Editor'].includes(roleName);
+    return isSystemRoleName(roleName);
+  }
+
+  openPermissionsDialog(role: Role): void {
+    this.dialog.open(RolePermissionsDialogComponent, {
+      width: '720px',
+      maxWidth: '92vw',
+      data: { id: role.id, name: role.name }
+    });
   }
 
   async openCreateDialog(): Promise<void> {
