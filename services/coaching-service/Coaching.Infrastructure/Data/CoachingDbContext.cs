@@ -5,6 +5,7 @@ using System.Reflection;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using Coaching.Application.Exceptions;
 using Npgsql;
+using SharedConcurrencyException = EduPlatform.Shared.Kernel.Exceptions.ConcurrencyException;
 
 namespace Coaching.Infrastructure.Data;
 
@@ -90,6 +91,8 @@ public class CoachingDbContext : DbContext
             throw new InvalidOperationException("Admin audit records are append-only.");
         }
 
+        AdvanceConcurrencyTokens();
+
         // Timestamps are managed by entities themselves (CreatedAt defaults to UtcNow, UpdatedAt set manually)
         try
         {
@@ -99,6 +102,52 @@ public class CoachingDbContext : DbContext
         {
             throw new IdempotencyConflictException(exception);
         }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            throw ToConcurrencyException(exception);
+        }
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        if (ChangeTracker.Entries<AdminAuditRecord>()
+            .Any(entry => entry.State is EntityState.Modified or EntityState.Deleted))
+        {
+            throw new InvalidOperationException("Admin audit records are append-only.");
+        }
+
+        AdvanceConcurrencyTokens();
+
+        try
+        {
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            throw ToConcurrencyException(exception);
+        }
+    }
+
+    private void AdvanceConcurrencyTokens()
+    {
+        foreach (var entry in ChangeTracker.Entries<AcademicGoal>())
+        {
+            if (entry.State != EntityState.Modified)
+            {
+                continue;
+            }
+
+            var originalVersion = entry.Property(goal => goal.Version).OriginalValue;
+            entry.Property(goal => goal.Version).CurrentValue = originalVersion + 1;
+        }
+    }
+
+    private static SharedConcurrencyException ToConcurrencyException(DbUpdateConcurrencyException exception)
+    {
+        var entry = exception.Entries.FirstOrDefault();
+        var entityName = entry?.Metadata.ClrType.Name ?? "Entity";
+        var entityId = entry?.Property("Id").CurrentValue ?? "unknown";
+        return new SharedConcurrencyException(entityName, entityId);
     }
 
     private static bool IsIdempotencyConstraintViolation(DbUpdateException exception) =>

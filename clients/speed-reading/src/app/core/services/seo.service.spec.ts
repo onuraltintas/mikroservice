@@ -11,6 +11,16 @@ describe('SeoService', () => {
         service = TestBed.inject(SeoService);
     });
 
+    it('clears article and noindex metadata when switching to another page', () => {
+        service.updateTags({ type: 'article', author: 'Author', publishedTime: '2026-01-01' });
+        service.setNoIndex(true);
+        service.generateStructuredData('Article', { title: 'Old article' });
+        service.updateTags({ title: 'Home' });
+        expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('index, follow');
+        expect(document.querySelector('meta[property="article:published_time"]')).toBeNull();
+        expect(document.getElementById('dynamic-structured-data')).toBeNull();
+    });
+
     it('applies custom OpenGraph fields and the configured canonical URL', () => {
         service.updateTags({
             title: 'Sayfa başlığı',

@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, DestroyRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { catchError, finalize, forkJoin, of } from 'rxjs';
+import { catchError, finalize, forkJoin, of, Subject, takeUntil } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService, hasRole } from '../../../core/auth/auth.service';
 import {
   ChildSummary,
@@ -26,6 +27,9 @@ type ParentCollection = 'assignments' | 'goals' | 'sessions' | 'exams';
 export class ParentChildrenComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly coachingService = inject(CoachingPortalService);
+
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly childChanged = new Subject<void>();
 
   readonly children = signal<ChildSummary[]>([]);
   readonly selectedChild = signal<ChildSummary | null>(null);
@@ -55,7 +59,7 @@ export class ParentChildrenComponent implements OnInit {
       return;
     }
 
-    this.coachingService.getMyChildren().subscribe({
+    this.coachingService.getMyChildren().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: children => {
         this.children.set(children);
         if (children.length > 0) this.selectChild(children[0]);
@@ -69,6 +73,12 @@ export class ParentChildrenComponent implements OnInit {
   }
 
   selectChild(child: ChildSummary) {
+    this.childChanged.next();
+    this.loadingMore.set(null);
+    this.assignments.set([]);
+    this.goals.set([]);
+    this.examResults.set([]);
+    this.sessions.set([]);
     this.selectedChild.set(child);
     this.isChildLoading.set(true);
     this.errorMessage.set(null);
@@ -88,7 +98,7 @@ export class ParentChildrenComponent implements OnInit {
       examResults: this.coachingService.getStudentExamResults(child.userId, 1, 25),
       sessions: this.coachingService.getStudentSessions(child.userId, 1, 25),
       progress: this.coachingService.getStudentProgress(child.userId).pipe(catchError(() => of(null)))
-    }).subscribe({
+    }).pipe(takeUntil(this.childChanged), takeUntilDestroyed(this.destroyRef)).subscribe({
       next: result => {
         this.assignments.set(result.assignments.items);
         this.goals.set(result.goals.items);
@@ -109,19 +119,21 @@ export class ParentChildrenComponent implements OnInit {
   }
 
   completedGoals() {
-    return this.progressSummary()?.completedGoals ?? this.goals().filter(goal => goal.isCompleted).length;
+    return this.progressSummary()?.completedGoals ?? null;
   }
 
   submittedAssignments() {
-    return this.progressSummary()?.submittedAssignments ?? this.assignments().filter(assignment => !!assignment.submittedAt).length;
+    return this.progressSummary()?.submittedAssignments ?? null;
   }
 
   loadMoreAssignments() {
     const child = this.selectedChild();
-    if (!child || this.assignmentPageNumber() >= this.assignmentTotalPages() || this.loadingMore()) return;
+    if (!child || this.isChildLoading() || this.assignmentPageNumber() >= this.assignmentTotalPages() || this.loadingMore()) return;
     const nextPage = this.assignmentPageNumber() + 1;
     this.loadingMore.set('assignments');
     this.coachingService.getStudentAssignments(child.userId, nextPage, 25).pipe(
+      takeUntil(this.childChanged),
+      takeUntilDestroyed(this.destroyRef),
       finalize(() => this.loadingMore.set(null))
     ).subscribe({
       next: page => {
@@ -134,10 +146,12 @@ export class ParentChildrenComponent implements OnInit {
 
   loadMoreGoals() {
     const child = this.selectedChild();
-    if (!child || this.goalPageNumber() >= this.goalTotalPages() || this.loadingMore()) return;
+    if (!child || this.isChildLoading() || this.goalPageNumber() >= this.goalTotalPages() || this.loadingMore()) return;
     const nextPage = this.goalPageNumber() + 1;
     this.loadingMore.set('goals');
     this.coachingService.getStudentGoals(child.userId, nextPage, 25).pipe(
+      takeUntil(this.childChanged),
+      takeUntilDestroyed(this.destroyRef),
       finalize(() => this.loadingMore.set(null))
     ).subscribe({
       next: page => {
@@ -150,10 +164,12 @@ export class ParentChildrenComponent implements OnInit {
 
   loadMoreSessions() {
     const child = this.selectedChild();
-    if (!child || this.sessionPageNumber() >= this.sessionTotalPages() || this.loadingMore()) return;
+    if (!child || this.isChildLoading() || this.sessionPageNumber() >= this.sessionTotalPages() || this.loadingMore()) return;
     const nextPage = this.sessionPageNumber() + 1;
     this.loadingMore.set('sessions');
     this.coachingService.getStudentSessions(child.userId, nextPage, 25).pipe(
+      takeUntil(this.childChanged),
+      takeUntilDestroyed(this.destroyRef),
       finalize(() => this.loadingMore.set(null))
     ).subscribe({
       next: page => {
@@ -166,10 +182,12 @@ export class ParentChildrenComponent implements OnInit {
 
   loadMoreExams() {
     const child = this.selectedChild();
-    if (!child || this.examPageNumber() >= this.examTotalPages() || this.loadingMore()) return;
+    if (!child || this.isChildLoading() || this.examPageNumber() >= this.examTotalPages() || this.loadingMore()) return;
     const nextPage = this.examPageNumber() + 1;
     this.loadingMore.set('exams');
     this.coachingService.getStudentExamResults(child.userId, nextPage, 25).pipe(
+      takeUntil(this.childChanged),
+      takeUntilDestroyed(this.destroyRef),
       finalize(() => this.loadingMore.set(null))
     ).subscribe({
       next: page => {

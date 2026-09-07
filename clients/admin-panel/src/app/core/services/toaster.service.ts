@@ -75,7 +75,7 @@ export class ToasterService {
     }
 
     alert(message: string, options?: ToastOptions): void {
-        this.info(message, { title: options?.title || 'Bilgi', duration: options?.duration || 5000 });
+        this.info(message, { title: options?.title || 'Bilgi', duration: options?.duration ?? 5000 });
     }
 
     async prompt(message: string, value = '', options: PromptOptions = {}): Promise<string | null> {
@@ -112,7 +112,7 @@ export class ToasterService {
 
         return {
             title: value.title || defaultTitle,
-            duration: value.duration || defaultDuration,
+            duration: value.duration ?? defaultDuration,
             actionLabel: value.actionLabel || 'Kapat'
         };
     }

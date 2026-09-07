@@ -21,7 +21,7 @@ public class TokenService : ITokenService
         _configService = configService;
     }
 
-    public string GenerateAccessToken(User user, DateTimeOffset? mfaVerifiedAt = null)
+    public async Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null)
     {
         try 
         {
@@ -34,7 +34,7 @@ public class TokenService : ITokenService
                           ?? _configuration["Jwt:Audience"]
                           ?? throw new InvalidOperationException("JWT_AUDIENCE is not configured.");
             
-            var expiryMinutes = GetAccessTokenLifetimeMinutes();
+            var expiryMinutes = await GetAccessTokenLifetimeMinutesAsync();
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyRing.ActiveSecret))
             {
@@ -101,12 +101,10 @@ public class TokenService : ITokenService
         }
     }
 
-    public int GetAccessTokenLifetimeMinutes()
+    public async Task<int> GetAccessTokenLifetimeMinutesAsync()
     {
-        var dynamicValue = _configService
-            .GetConfigurationValueAsync("Auth.TokenLifetime", CancellationToken.None)
-            .GetAwaiter()
-            .GetResult();
+        var dynamicValue = await _configService
+            .GetConfigurationValueAsync("Auth.TokenLifetime", CancellationToken.None);
         var configuredValue = dynamicValue
             ?? Environment.GetEnvironmentVariable("JWT_EXPIRY_MINUTES")
             ?? _configuration["JWT_EXPIRY_MINUTES"];

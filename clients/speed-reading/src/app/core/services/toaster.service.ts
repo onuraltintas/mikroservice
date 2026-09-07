@@ -34,29 +34,29 @@ export class ToasterService {
   success(message: string, options?: ToastOptions): void;
   success(message: string, duration?: number, title?: string): void;
   success(message: string, title?: string): void;
-  success(message: string, value: ToastOptions | number | string = {}): void {
-    this.open(ToastType.Success, message, this.normalizeToastOptions(value, 'Başarılı', 4000));
+  success(message: string, value: ToastOptions | number | string = {}, legacyTitle?: string): void {
+    this.open(ToastType.Success, message, this.normalizeToastOptions(value, 'Başarılı', 4000, legacyTitle));
   }
 
   error(message: string, options?: ToastOptions): void;
   error(message: string, duration?: number, title?: string): void;
   error(message: string, title?: string): void;
-  error(message: string, value: ToastOptions | number | string = {}): void {
-    this.open(ToastType.Error, message, this.normalizeToastOptions(value, 'Hata', 5000));
+  error(message: string, value: ToastOptions | number | string = {}, legacyTitle?: string): void {
+    this.open(ToastType.Error, message, this.normalizeToastOptions(value, 'Hata', 5000, legacyTitle));
   }
 
   warning(message: string, options?: ToastOptions): void;
   warning(message: string, duration?: number, title?: string): void;
   warning(message: string, title?: string): void;
-  warning(message: string, value: ToastOptions | number | string = {}): void {
-    this.open(ToastType.Warning, message, this.normalizeToastOptions(value, 'Uyarı', 4500));
+  warning(message: string, value: ToastOptions | number | string = {}, legacyTitle?: string): void {
+    this.open(ToastType.Warning, message, this.normalizeToastOptions(value, 'Uyarı', 4500, legacyTitle));
   }
 
   info(message: string, options?: ToastOptions): void;
   info(message: string, duration?: number, title?: string): void;
   info(message: string, title?: string): void;
-  info(message: string, value: ToastOptions | number | string = {}): void {
-    this.open(ToastType.Info, message, this.normalizeToastOptions(value, 'Bilgi', 3500));
+  info(message: string, value: ToastOptions | number | string = {}, legacyTitle?: string): void {
+    this.open(ToastType.Info, message, this.normalizeToastOptions(value, 'Bilgi', 3500, legacyTitle));
   }
 
   dismiss(): void {
@@ -92,7 +92,7 @@ export class ToasterService {
   }
 
   alert(message: string, options?: ToastOptions): void {
-    this.info(message, { title: options?.title || 'Bilgi', duration: options?.duration || 5000 });
+    this.info(message, { title: options?.title || 'Bilgi', duration: options?.duration ?? 5000 });
   }
 
   async prompt(message: string, value = '', options: PromptOptions = {}): Promise<string | null> {
@@ -116,10 +116,11 @@ export class ToasterService {
   private normalizeToastOptions(
     value: ToastOptions | number | string,
     defaultTitle: string,
-    defaultDuration: number
+    defaultDuration: number,
+    legacyTitle?: string
   ): Required<Pick<ToastOptions, 'title' | 'duration' | 'actionLabel'>> {
     if (typeof value === 'number') {
-      return { title: defaultTitle, duration: value, actionLabel: 'Kapat' };
+      return { title: legacyTitle || defaultTitle, duration: value, actionLabel: 'Kapat' };
     }
 
     if (typeof value === 'string') {
@@ -128,7 +129,7 @@ export class ToasterService {
 
     return {
       title: value.title || defaultTitle,
-      duration: value.duration || defaultDuration,
+      duration: value.duration ?? defaultDuration,
       actionLabel: value.actionLabel || 'Kapat'
     };
   }

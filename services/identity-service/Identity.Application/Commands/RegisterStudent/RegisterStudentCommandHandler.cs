@@ -109,10 +109,10 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
 
             return Result.Success(userId);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             await _identityService.DeleteUserAsync(userId, cancellationToken);
-            return Result.Failure<Guid>(new Error("Registration.Failed", $"Database error: {ex.Message}"));
+            return Result.Failure<Guid>(new Error("Registration.Failed", "Registration could not be completed. Please try again later."));
         }
     }
 }

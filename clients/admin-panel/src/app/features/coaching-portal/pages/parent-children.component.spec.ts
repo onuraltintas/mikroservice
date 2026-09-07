@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { vi } from 'vitest';
 import { AuthService, UserProfile } from '../../../core/auth/auth.service';
 import {
@@ -13,6 +13,27 @@ import {
 import { ParentChildrenComponent } from './parent-children.component';
 
 describe('ParentChildrenComponent', () => {
+  it('ignores the previous child response after another child is selected', () => {
+    const pending = new Subject<any>();
+    const empty = { items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1 };
+    const service = {
+      getStudentAssignments: vi.fn().mockReturnValueOnce(pending).mockReturnValue(of(empty)),
+      getStudentGoals: () => of(empty), getStudentExamResults: () => of(empty),
+      getStudentSessions: () => of(empty), getStudentProgress: () => of(null)
+    };
+    TestBed.configureTestingModule({ providers: [
+      { provide: AuthService, useValue: {} }, { provide: CoachingPortalService, useValue: service },
+      { provide: ActivatedRoute, useValue: {} }
+    ] });
+    const component = TestBed.createComponent(ParentChildrenComponent).componentInstance;
+    const child = { userId: 'a', firstName: 'A', lastName: 'Test', fullName: 'A Test' };
+    component.selectChild(child);
+    component.selectChild({ ...child, userId: 'b' });
+    pending.next({ ...empty, items: [{ id: 'old' }] }); pending.complete();
+    expect(component.assignments()).toEqual([]);
+    expect(component.submittedAssignments()).toBeNull();
+  });
+
   it('filters assignments for parent review without mutating the loaded list', () => {
     const service = {
       getMyChildren: vi.fn(() => of([])),

@@ -4,7 +4,7 @@ namespace Identity.Application.Interfaces;
 
 public interface ITokenService
 {
-    string GenerateAccessToken(User user, DateTimeOffset? mfaVerifiedAt = null);
-    int GetAccessTokenLifetimeMinutes();
+    Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null);
+    Task<int> GetAccessTokenLifetimeMinutesAsync();
     RefreshToken GenerateRefreshToken(Guid userId, string ipAddress, bool isPersistent = true, DateTimeOffset? mfaVerifiedAt = null);
 }

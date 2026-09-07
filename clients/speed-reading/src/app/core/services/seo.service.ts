@@ -32,6 +32,11 @@ export class SeoService {
     };
 
     updateTags(config: SeoConfig): void {
+        this.setNoIndex(false);
+        this.meta.removeTag('name="author"');
+        this.meta.removeTag('property="article:published_time"');
+        this.meta.removeTag('property="article:modified_time"');
+        document.getElementById('dynamic-structured-data')?.remove();
         const seoConfig = { ...this.defaultConfig, ...config };
 
         const openGraphTitle = seoConfig.ogTitle || seoConfig.title;
@@ -150,7 +155,7 @@ export class SeoService {
                     ...structuredData,
                     '@type': 'Organization',
                     name: 'Hızlı Okuma Platformu',
-                    url: 'https://hizliokuma.com',
+                    url: 'https://masterhizliokuma.com',
                     logo: '/assets/images/logo.png',
                     sameAs: [
                         // Add social media URLs

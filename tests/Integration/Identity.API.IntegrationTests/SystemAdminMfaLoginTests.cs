@@ -480,8 +480,8 @@ public sealed class SystemAdminMfaLoginTests
     {
         public bool AccessTokenRequested { get; private set; }
         public bool RefreshTokenRequested { get; private set; }
-        public int GetAccessTokenLifetimeMinutes() => 15;
-        public string GenerateAccessToken(User user, DateTimeOffset? mfaVerifiedAt = null)
+        public Task<int> GetAccessTokenLifetimeMinutesAsync() => Task.FromResult(15);
+        public Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null)
         {
             AccessTokenRequested = true;
             throw new InvalidOperationException("Access token must not be issued before MFA.");
@@ -495,8 +495,8 @@ public sealed class SystemAdminMfaLoginTests
 
     private sealed class IssuingTokenService : ITokenService
     {
-        public string GenerateAccessToken(User user, DateTimeOffset? mfaVerifiedAt = null) => "access-token";
-        public int GetAccessTokenLifetimeMinutes() => 15;
+        public Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null) => Task.FromResult("access-token");
+        public Task<int> GetAccessTokenLifetimeMinutesAsync() => Task.FromResult(15);
         public RefreshToken GenerateRefreshToken(
             Guid userId,
             string ipAddress,

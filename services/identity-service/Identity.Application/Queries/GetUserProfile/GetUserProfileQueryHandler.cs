@@ -139,13 +139,6 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
                 };
             }
         }
-        else if (userRoles.Contains(Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString()) || 
-                 userRoles.Contains(Identity.Domain.Enums.UserRole.InstitutionOwner.ToString()))
-        {
-            // For admins, maybe fetch Institution details
-            var institutionId = await _institutionRepository.GetInstitutionIdByAdminIdAsync(request.UserId, cancellationToken);
-            // Can enrich further if needed
-        }
 
         return Result.Success(profile);
     }

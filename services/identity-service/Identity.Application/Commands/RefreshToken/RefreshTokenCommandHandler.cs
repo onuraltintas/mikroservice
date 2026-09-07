@@ -55,7 +55,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         }
 
         // Generate the replacement before atomically revoking the old token.
-        var newAccessToken = _tokenService.GenerateAccessToken(user, existingRefreshToken.MfaVerifiedAt);
+        var newAccessToken = await _tokenService.GenerateAccessTokenAsync(user, existingRefreshToken.MfaVerifiedAt);
         var newRefreshToken = _tokenService.GenerateRefreshToken(
             user.Id,
             "0.0.0.0",
@@ -78,7 +78,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
             newRefreshToken.Token,
             newRefreshToken.ExpiresAt,
             newRefreshToken.IsPersistent,
-            ExpiresInMinutes: _tokenService.GetAccessTokenLifetimeMinutes()));
+            ExpiresInMinutes: await _tokenService.GetAccessTokenLifetimeMinutesAsync()));
     }
 
     private static Result<RefreshTokenResponse> InvalidatedRefreshToken() =>

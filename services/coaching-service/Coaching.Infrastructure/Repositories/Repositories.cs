@@ -451,7 +451,11 @@ public class AcademicGoalRepository : IAcademicGoalRepository
 
     public Task UpdateAsync(AcademicGoal goal, CancellationToken cancellationToken = default)
     {
-        _context.AcademicGoals.Update(goal);
+        if (_context.Entry(goal).State == EntityState.Detached)
+        {
+            _context.AcademicGoals.Attach(goal);
+        }
+
         return Task.CompletedTask;
     }
 

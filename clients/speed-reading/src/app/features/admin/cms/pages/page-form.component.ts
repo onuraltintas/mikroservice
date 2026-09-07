@@ -16,7 +16,6 @@ import { BaseComponent } from '../../../../core/components/base.component';
 import { CmsService } from '../../../../core/services/cms.service';
 import { finalize } from 'rxjs/operators';
 import { CreatePageRequest, UpdatePageRequest } from '../../../../core/models/cms.models';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MatButtonToggleModule, MatButtonToggleChange } from '@angular/material/button-toggle';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
@@ -49,7 +48,6 @@ export class PageFormComponent extends BaseComponent implements OnInit {
     private fb = inject(FormBuilder);
     private route = inject(ActivatedRoute);
     private router = inject(Router);
-    private sanitizer = inject(DomSanitizer);
 
     form!: FormGroup;
     isEditMode = false;
@@ -57,8 +55,8 @@ export class PageFormComponent extends BaseComponent implements OnInit {
     seoExpanded = false;
     editorMode: 'edit' | 'preview' = 'edit';
 
-    get previewContent(): SafeHtml {
-        return this.sanitizer.bypassSecurityTrustHtml(this.form.get('content')?.value || '');
+    get previewContent(): string {
+        return this.form.get('content')?.value || '';
     }
 
     onEditorModeChange(event: MatButtonToggleChange) {

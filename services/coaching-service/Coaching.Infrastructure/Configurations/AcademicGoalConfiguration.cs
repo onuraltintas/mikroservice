@@ -75,6 +75,10 @@ public class AcademicGoalConfiguration : IEntityTypeConfiguration<AcademicGoal>
         builder.Property(x => x.UpdatedAt)
             .HasColumnName("updated_at");
 
+        builder.Property(x => x.Version)
+            .IsConcurrencyToken()
+            .IsRequired();
+
         // Indexes
         builder.HasIndex(x => x.StudentId)
             .HasDatabaseName("ix_academic_goals_student_id");

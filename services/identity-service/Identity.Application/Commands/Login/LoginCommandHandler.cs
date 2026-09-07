@@ -107,7 +107,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         }
 
         // 6. Generate Tokens
-        var accessToken = _tokenService.GenerateAccessToken(user);
+        var accessToken = await _tokenService.GenerateAccessTokenAsync(user);
         
         var ipAddress = "0.0.0.0"; // Should be passed in command but defaulting here
         var refreshToken = _tokenService.GenerateRefreshToken(user.Id, ipAddress, request.RememberMe);
@@ -136,6 +136,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             refreshToken.Token,
             refreshToken.ExpiresAt,
             refreshToken.IsPersistent,
-            ExpiresInMinutes: _tokenService.GetAccessTokenLifetimeMinutes()));
+            ExpiresInMinutes: await _tokenService.GetAccessTokenLifetimeMinutesAsync()));
     }
 }

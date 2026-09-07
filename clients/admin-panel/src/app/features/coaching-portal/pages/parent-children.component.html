@@ -27,11 +27,12 @@
     <div *ngIf="selectedChild() as child" class="space-y-5">
       <div *ngIf="isChildLoading()" class="h-40 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" aria-label="İlerleme yükleniyor"></div>
       <ng-container *ngIf="!isChildLoading()">
+        <p *ngIf="!progressSummary()" role="status" class="text-sm text-slate-500 dark:text-slate-400">İlerleme özeti şu anda alınamadı. Listelenen kayıtlar toplam başarıyı göstermez.</p>
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500 dark:text-slate-400">Ödev teslimi</p><p class="mt-2 text-3xl font-bold">{{ submittedAssignments() }}<span class="text-base font-medium text-slate-400"> / {{ progressSummary()?.totalAssignments ?? assignments().length }}</span></p></div>
-          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500 dark:text-slate-400">Tamamlanan hedef</p><p class="mt-2 text-3xl font-bold">{{ completedGoals() }}<span class="text-base font-medium text-slate-400"> / {{ progressSummary()?.totalGoals ?? goals().length }}</span></p></div>
-          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500 dark:text-slate-400">Sınav kaydı</p><p class="mt-2 text-3xl font-bold">{{ progressSummary()?.totalExams ?? examResults().length }}</p></div>
-          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500 dark:text-slate-400">Seans</p><p class="mt-2 text-3xl font-bold">{{ progressSummary()?.totalSessions ?? sessions().length }}</p></div>
+          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500 dark:text-slate-400">Ödev teslimi</p><p class="mt-2 text-3xl font-bold">{{ submittedAssignments() ?? '—' }}<span class="text-base font-medium text-slate-400"> / {{ progressSummary()?.totalAssignments ?? '—' }}</span></p></div>
+          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500 dark:text-slate-400">Tamamlanan hedef</p><p class="mt-2 text-3xl font-bold">{{ completedGoals() ?? '—' }}<span class="text-base font-medium text-slate-400"> / {{ progressSummary()?.totalGoals ?? '—' }}</span></p></div>
+          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500 dark:text-slate-400">Sınav kaydı</p><p class="mt-2 text-3xl font-bold">{{ progressSummary()?.totalExams ?? '—' }}</p></div>
+          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500 dark:text-slate-400">Seans</p><p class="mt-2 text-3xl font-bold">{{ progressSummary()?.totalSessions ?? '—' }}</p></div>
         </div>
 
         <div *ngIf="progressSummary() as summary" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

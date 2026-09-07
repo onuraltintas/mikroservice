@@ -228,32 +228,13 @@ internal sealed class LegacySpeedReadingEmailCampaigns(ISpeedReadingDataContext 
         return true;
     }
 
-    public async Task<EmailCampaignSummary?> SendAsync(
+    public Task<EmailCampaignSummary?> SendAsync(
         Guid id,
         SendEmailCampaignRequest request,
         CancellationToken cancellationToken)
     {
-        var row = await db.EmailCampaigns
-            .SingleOrDefaultAsync(item => item.Id == id && !item.IsDeleted, cancellationToken);
-        if (row is null) return null;
-        if (row.Status == "Sent") throw new InvalidOperationException("Campaign already sent.");
-
-        if (!request.SendNow && row.ScheduledFor > DateTime.UtcNow)
-        {
-            row.Status = "Scheduled";
-        }
-        else
-        {
-            // The legacy endpoint did not have a queue/SMTP worker. Preserve
-            // its state transition without inventing recipient statistics.
-            row.Status = "Sending";
-            row.SentAt = DateTime.UtcNow;
-            row.Status = "Sent";
-        }
-
-        row.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync(cancellationToken);
-        return ToSummary(row);
+        return Task.FromException<EmailCampaignSummary?>(new InvalidOperationException(
+            "Campaign delivery is not available. No emails have been sent or scheduled."));
     }
 
     public async Task<EmailCampaignStats?> GetStatsAsync(Guid id, CancellationToken cancellationToken)

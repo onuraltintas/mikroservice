@@ -91,16 +91,9 @@ public class NotificationsController : ControllerBase
         if (userIdClaim == null) return Unauthorized();
         if (!Guid.TryParse(userIdClaim.Value, out var userId)) return BadRequest("Invalid User Id");
 
-        var notifications = await _dbContext.Notifications
+        await _dbContext.Notifications
             .Where(n => n.UserId == userId && !n.IsRead)
-            .ToListAsync();
-
-        foreach (var notification in notifications)
-        {
-            notification.MarkAsRead();
-        }
-
-        await _dbContext.SaveChangesAsync();
+            .ExecuteUpdateAsync(setters => setters.SetProperty(n => n.IsRead, true), HttpContext.RequestAborted);
 
         return Ok();
     }

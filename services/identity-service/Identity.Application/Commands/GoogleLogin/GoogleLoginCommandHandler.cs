@@ -335,7 +335,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         }
 
         // 3. Generate Tokens
-        var accessToken = _tokenService.GenerateAccessToken(user);
+        var accessToken = await _tokenService.GenerateAccessTokenAsync(user);
         var refreshToken = _tokenService.GenerateRefreshToken(user.Id, request.IpAddress);
 
         // 4. Save Refresh Token (Using Safe Method)
@@ -365,7 +365,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             refreshToken.Token,
             refreshToken.ExpiresAt,
             refreshToken.IsPersistent,
-            ExpiresInMinutes: _tokenService.GetAccessTokenLifetimeMinutes()));
+            ExpiresInMinutes: await _tokenService.GetAccessTokenLifetimeMinutesAsync()));
     }
 
     private async Task CompensateProvisionedUserAsync(Guid userId)

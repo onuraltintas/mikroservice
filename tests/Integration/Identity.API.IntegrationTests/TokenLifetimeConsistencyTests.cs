@@ -11,7 +11,7 @@ namespace Identity.API.IntegrationTests;
 public sealed class TokenLifetimeConsistencyTests
 {
     [Fact]
-    public void ReportedLifetime_ShouldMatchGeneratedJwtExpiration()
+    public async Task ReportedLifetime_ShouldMatchGeneratedJwtExpiration()
     {
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
@@ -23,9 +23,9 @@ public sealed class TokenLifetimeConsistencyTests
         var service = new TokenService(configuration, new StubConfigurationService());
 
         var token = new JwtSecurityTokenHandler().ReadJwtToken(
-            service.GenerateAccessToken(User.Create(Guid.NewGuid(), "user@example.test")));
+            await service.GenerateAccessTokenAsync(User.Create(Guid.NewGuid(), "user@example.test")));
 
-        service.GetAccessTokenLifetimeMinutes().Should().Be(42);
+        (await service.GetAccessTokenLifetimeMinutesAsync()).Should().Be(42);
         (token.ValidTo - token.ValidFrom).Should().Be(TimeSpan.FromMinutes(42));
     }
 

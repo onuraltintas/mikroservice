@@ -8,7 +8,6 @@ namespace Identity.Application.Commands.UpdateUser;
 public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Result>
 {
     private readonly IUserRepository _userRepository;
-    private readonly IIdentityService _identityService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IStudentRepository _studentRepository;
     private readonly ITeacherRepository _teacherRepository;
@@ -16,14 +15,12 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Resul
 
     public UpdateUserCommandHandler(
         IUserRepository userRepository,
-        IIdentityService identityService,
         IUnitOfWork unitOfWork,
         IStudentRepository studentRepository,
         ITeacherRepository teacherRepository,
         IInstitutionRepository institutionRepository)
     {
         _userRepository = userRepository;
-        _identityService = identityService;
         _unitOfWork = unitOfWork;
         _studentRepository = studentRepository;
         _teacherRepository = teacherRepository;

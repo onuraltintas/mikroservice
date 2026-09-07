@@ -32,7 +32,7 @@ public sealed class AuthenticationSessionIssuer : IAuthenticationSessionIssuer
         DateTimeOffset? mfaVerifiedAt,
         CancellationToken cancellationToken)
     {
-        var accessToken = _tokens.GenerateAccessToken(user, mfaVerifiedAt);
+        var accessToken = await _tokens.GenerateAccessTokenAsync(user, mfaVerifiedAt);
         var refreshToken = _tokens.GenerateRefreshToken(user.Id, ipAddress, rememberMe, mfaVerifiedAt);
         var persisted = await _identity.SaveRefreshTokenAsync(user.Id, refreshToken, cancellationToken);
         if (persisted.IsFailure)
@@ -58,6 +58,6 @@ public sealed class AuthenticationSessionIssuer : IAuthenticationSessionIssuer
             refreshToken.Token,
             refreshToken.ExpiresAt,
             refreshToken.IsPersistent,
-            ExpiresInMinutes: _tokens.GetAccessTokenLifetimeMinutes()));
+            ExpiresInMinutes: await _tokens.GetAccessTokenLifetimeMinutesAsync()));
     }
 }

@@ -1,3 +1,4 @@
+using System.Net;
 using EduPlatform.Shared.Kernel.Results;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -110,6 +111,10 @@ public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestC
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.TemplateName == "Auth_SupportReceived" && t.IsActive, cancellationToken);
 
+        var firstName = WebUtility.HtmlEncode(request.FirstName);
+        var lastName = WebUtility.HtmlEncode(request.LastName);
+        var requestSubject = WebUtility.HtmlEncode(request.Subject);
+
         string subject;
         string body;
 
@@ -120,17 +125,17 @@ public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestC
                 .Replace("{{LastName}}", request.LastName);
 
             body = template.Body
-                .Replace("{{FirstName}}", request.FirstName)
-                .Replace("{{LastName}}", request.LastName)
-                .Replace("{{Subject}}", request.Subject)
+                .Replace("{{FirstName}}", firstName)
+                .Replace("{{LastName}}", lastName)
+                .Replace("{{Subject}}", requestSubject)
                 .Replace("{{Date}}", DateTime.Now.ToString("dd/MM/yyyy HH:mm"));
         }
         else
         {
             subject = "Destek Talebiniz Alındı ✅";
-            body = $@"<h1>Merhaba {request.FirstName}!</h1>
+            body = $@"<h1>Merhaba {firstName}!</h1>
                       <p>Destek talebiniz başarıyla alınmıştır. En kısa sürede size dönüş yapacağız.</p>
-                      <p><strong>Konu:</strong> {request.Subject}</p>";
+                      <p><strong>Konu:</strong> {requestSubject}</p>";
         }
 
         await _emailDeliveryQueue.QueueAsync(

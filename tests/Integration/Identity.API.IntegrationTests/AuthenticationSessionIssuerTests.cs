@@ -77,9 +77,9 @@ public sealed class AuthenticationSessionIssuerTests
 
     private sealed class StubTokenService : ITokenService
     {
-        public string GenerateAccessToken(User user, DateTimeOffset? mfaVerifiedAt = null) => "access-token";
+        public Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null) => Task.FromResult("access-token");
 
-        public int GetAccessTokenLifetimeMinutes() => 15;
+        public Task<int> GetAccessTokenLifetimeMinutesAsync() => Task.FromResult(15);
 
         public RefreshToken GenerateRefreshToken(
             Guid userId,

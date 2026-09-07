@@ -41,12 +41,12 @@ describe('ToasterService contract', () => {
       ]
     });
 
-    TestBed.inject(ToasterService).error('İşlem başarısız.', 2400, 'Hata');
+    TestBed.inject(ToasterService).error('İşlem başarısız.', 0, 'Custom');
 
     expect(snackBar.open).toHaveBeenCalledWith(
-      'Hata: İşlem başarısız.',
+      'Custom: İşlem başarısız.',
       'Kapat',
-      expect.objectContaining({ duration: 2400, panelClass: ['ui-toast', 'ui-toast--error'] })
+      expect.objectContaining({ duration: 0, panelClass: ['ui-toast', 'ui-toast--error'] })
     );
   });
 
