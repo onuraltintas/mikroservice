@@ -150,7 +150,7 @@
                     <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
                 </table>
 
-                <mat-paginator [length]="dataSource.filteredData.length" [pageSizeOptions]="[10, 25, 50]" [pageSize]="10" showFirstLastButtons>
+                <mat-paginator [length]="dataSource.data.length" [pageSizeOptions]="[10, 25, 50]" [pageSize]="10" showFirstLastButtons>
                 </mat-paginator>
             </div>
 
