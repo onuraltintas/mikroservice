@@ -19,6 +19,12 @@ services:
       OTEL_SERVICE_NAME: EduPlatform.Notification
       OTEL_TRACES_SAMPLER_ARG: ${OTEL_TRACES_SAMPLER_ARG:-0.1}
 
+  speed-reading-service:
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_SERVICE_NAME: EduPlatform.SpeedReading
+      OTEL_TRACES_SAMPLER_ARG: ${OTEL_TRACES_SAMPLER_ARG:-0.1}
+
   api-gateway:
     environment:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317

@@ -7,7 +7,26 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import { SpeedReadingAdminService, AdminStudentProgressSummary } from '../../../core/services/speed-reading-admin.service';
 import { ToasterService } from '../../../core/services/toaster.service';
-import { SpeedReadingAnalyticsComponent } from './speed-reading-analytics';
+import { SpeedReadingAnalyticsComponent, combineDailyPlatformMetrics } from './speed-reading-analytics';
+
+describe('combineDailyPlatformMetrics', () => {
+  it('merges the API series by date, keeps zeroes for missing values and sorts chronologically', () => {
+    expect(combineDailyPlatformMetrics({
+      dailyActiveUsers: [
+        { name: '2026-09-02', series: [{ name: 'Aktif kullanıcı', value: 4 }] },
+        { name: '2026-09-01', series: [{ name: 'Aktif kullanıcı', value: 2 }] }
+      ],
+      activityVolume: [
+        { name: '2026-09-02', series: [{ name: 'Aktivite', value: 9 }] },
+        { name: '2026-09-03', series: [{ name: 'Aktivite', value: 1 }] }
+      ]
+    })).toEqual([
+      { date: '2026-09-01', activeUsers: 2, activities: 0 },
+      { date: '2026-09-02', activeUsers: 4, activities: 9 },
+      { date: '2026-09-03', activeUsers: 0, activities: 1 }
+    ]);
+  });
+});
 
 describe('SpeedReadingAnalyticsComponent progress management', () => {
   it('resets progress only with ProgramManage and reloads the list', async () => {

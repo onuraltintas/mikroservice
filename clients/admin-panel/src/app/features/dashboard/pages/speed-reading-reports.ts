@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Observable, finalize, switchMap } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
@@ -58,6 +59,7 @@ export class SpeedReadingReportsComponent implements OnInit {
   private readonly service = inject(SpeedReadingAdminService);
   private readonly authService = inject(AuthService);
   private readonly toaster = inject(ToasterService);
+  private readonly route = inject(ActivatedRoute, { optional: true });
 
   readonly canManageReports = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingReportManage));
 
@@ -83,7 +85,11 @@ export class SpeedReadingReportsComponent implements OnInit {
   scheduleUpdateDraft: SpeedReadingScheduledReportUpdateRequest = this.emptyScheduleUpdate();
   snapshotTemplateId = '';
 
-  ngOnInit(): void { this.loadTemplates(); this.loadSchedules(); this.loadSnapshots(); }
+  ngOnInit(): void {
+    const requestedTab = this.route?.snapshot.queryParamMap.get('tab');
+    if (this.tabs.some(tab => tab.value === requestedTab)) this.selectedTab.set(requestedTab as ReportTab);
+    this.loadTemplates(); this.loadSchedules(); this.loadSnapshots();
+  }
 
   selectTab(tab: ReportTab): void { this.selectedTab.set(tab); this.error.set(''); }
   loadTemplates(): void { this.service.getReportTemplates(undefined, undefined, 100).subscribe({ next: value => this.templates.set(value), error: () => this.error.set('Rapor şablonları yüklenemedi.') }); }

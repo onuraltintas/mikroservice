@@ -11,6 +11,48 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingGoalConcurrencyTests
 {
     [Fact]
+    public void All_coaching_aggregate_roots_use_the_version_as_a_concurrency_token()
+    {
+        var options = new DbContextOptionsBuilder<CoachingDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
+        using var context = new CoachingDbContext(options);
+
+        foreach (var entityType in new[] { typeof(Assignment), typeof(Exam), typeof(CoachingSession), typeof(AcademicGoal) })
+        {
+            context.Model.FindEntityType(entityType)!
+                .FindProperty(nameof(Assignment.Version))!
+                .IsConcurrencyToken
+                .Should().BeTrue(entityType.Name);
+        }
+    }
+
+    [Fact]
+    public async Task Stale_assignment_edit_cannot_overwrite_a_newer_edit()
+    {
+        var options = new DbContextOptionsBuilder<CoachingDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
+        await using var setup = new CoachingDbContext(options);
+        var assignment = Assignment.Create(Guid.NewGuid(), "Original", DateTime.UtcNow.AddDays(2));
+        setup.Assignments.Add(assignment);
+        await setup.SaveChangesAsync();
+
+        await using var first = new CoachingDbContext(options);
+        await using var second = new CoachingDbContext(options);
+        var firstAssignment = await first.Assignments.SingleAsync();
+        var secondAssignment = await second.Assignments.SingleAsync();
+
+        secondAssignment.UpdateDetails(title: "Newer edit");
+        await second.SaveChangesAsync();
+
+        firstAssignment.UpdateDetails(title: "Stale edit");
+        var save = () => first.SaveChangesAsync();
+        await save.Should().ThrowAsync<ConcurrencyException>();
+
+        await using var verification = new CoachingDbContext(options);
+        (await verification.Assignments.SingleAsync()).Title.Should().Be("Newer edit");
+    }
+
+    [Fact]
     public async Task Stale_teacher_edit_cannot_overwrite_student_progress()
     {
         var options = new DbContextOptionsBuilder<CoachingDbContext>()

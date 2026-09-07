@@ -5,6 +5,7 @@ using Identity.Domain.Entities;
 using MediatR;
 
 using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Identity.Application.Commands.CreateStudent;
 
@@ -17,6 +18,7 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly ILogger<CreateStudentCommandHandler> _logger;
 
     public CreateStudentCommandHandler(
         IIdentityService identityService,
@@ -25,7 +27,8 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
         IInstitutionRepository institutionRepository,
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService,
-        IPublishEndpoint publishEndpoint)
+        IPublishEndpoint publishEndpoint,
+        ILogger<CreateStudentCommandHandler> logger)
     {
         _identityService = identityService;
         _userRepository = userRepository;
@@ -34,6 +37,7 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
         _publishEndpoint = publishEndpoint;
+        _logger = logger;
     }
 
     public async Task<Result<CreateStudentResult>> Handle(CreateStudentCommand request, CancellationToken cancellationToken)
@@ -109,8 +113,9 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Student profile provisioning failed for {UserId}.", studentUserId);
             await _identityService.DeleteUserAsync(studentUserId, cancellationToken);
-            return Result.Failure<CreateStudentResult>(new Error("CreateStudent.Failed", ex.Message));
+            return Result.Failure<CreateStudentResult>(new Error("CreateStudent.Failed", "Öğrenci oluşturulamadı. Lütfen daha sonra tekrar deneyin."));
         }
     }
 }

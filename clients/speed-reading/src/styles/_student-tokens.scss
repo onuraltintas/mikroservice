@@ -2,7 +2,7 @@
 // STUDENT PANEL — DESIGN TOKENS
 // =============================================================================
 // Tüm değişkenler --sp- (student platform) prefix'i ile başlar.
-// Admin/teacher paneli etkilenmez — onlar eski --primary-* değişkenlerini kullanır.
+// Öğretmen ve ortak platform yüzeyleri eski --primary-* değişkenlerini kullanır.
 // Tailwind config'deki 'sp' renk anahtarları bu değişkenleri okur:
 //   bg-sp-primary → background: var(--sp-primary)
 //   text-sp-text-1 → color: var(--sp-text-1)

@@ -309,55 +309,6 @@
   text-align: center;
 }
 
-// ── Admin bar ────────────────────────────────────────────────────────────────
-.db-admin-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  background: rgba(239, 68, 68, 0.06);
-  border: 1px dashed rgba(239, 68, 68, 0.3);
-  border-radius: var(--sp-radius-md);
-  padding: 10px 16px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.db-admin-bar__badge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #ef4444;
-
-  .material-icons { font-size: 18px; }
-}
-
-.db-admin-bar__actions { display: flex; gap: 8px; }
-
-.db-admin-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 34px;
-  padding: 0 14px;
-  border-radius: var(--sp-radius-sm);
-  font-family: var(--sp-font-sans);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid currentColor;
-  transition: background var(--sp-transition-fast);
-  background: transparent;
-
-  .material-icons { font-size: 16px; }
-
-  &--warn   { color: #ef4444;         &:hover { background: rgba(239,68,68,0.08); } }
-  &--accent { color: var(--sp-primary); &:hover { background: var(--sp-primary-ghost); } }
-  &:disabled { opacity: 0.45; cursor: not-allowed; }
-}
-
 // ── Main Grid ────────────────────────────────────────────────────────────────
 .db-grid {
   display: grid;
@@ -474,18 +425,11 @@
   .db-onboarding__chips { flex-direction: column; gap: 8px; }
   .db-onboarding__title { font-size: 1.25rem; }
 
-  .db-admin-bar {
-    flex-direction: column;
-    gap: 8px;
-    padding: 10px 12px;
-  }
-  .db-admin-bar__actions { width: 100%; justify-content: flex-end; }
 }
 
 // ── Dark mode token geçişi ────────────────────────────────────────────────────
 .db-hero,
 .db-onboarding__card,
-.db-no-program,
-.db-admin-bar {
+.db-no-program {
   transition: background 0.25s ease, border-color 0.25s ease;
 }

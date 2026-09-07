@@ -172,6 +172,7 @@ internal sealed class LegacySpeedReadingEmailCampaigns(ISpeedReadingDataContext 
         CancellationToken cancellationToken)
     {
         Validate(request.Name, request.Subject, request.Body);
+        EnsureSchedulingIsAvailable(request.ScheduledFor);
         var row = new LegacyEmailCampaign
         {
             Id = Guid.NewGuid(),
@@ -196,6 +197,7 @@ internal sealed class LegacySpeedReadingEmailCampaigns(ISpeedReadingDataContext 
     public async Task<bool> UpdateAsync(Guid id, UpdateEmailCampaignRequest request, CancellationToken cancellationToken)
     {
         Validate(request.Name, request.Subject, request.Body);
+        EnsureSchedulingIsAvailable(request.ScheduledFor);
         var row = await db.EmailCampaigns
             .SingleOrDefaultAsync(item => item.Id == id && !item.IsDeleted, cancellationToken);
         if (row is null) return false;
@@ -303,4 +305,13 @@ internal sealed class LegacySpeedReadingEmailCampaigns(ISpeedReadingDataContext 
     }
 
     private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static void EnsureSchedulingIsAvailable(DateTime? scheduledFor)
+    {
+        if (scheduledFor.HasValue)
+        {
+            throw new InvalidOperationException(
+                "Campaign scheduling is not available. Save the campaign as a draft until email delivery is configured.");
+        }
+    }
 }

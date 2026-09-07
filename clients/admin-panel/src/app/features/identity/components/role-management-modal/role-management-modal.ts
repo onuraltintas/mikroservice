@@ -134,6 +134,7 @@ export class RoleManagementModalComponent implements OnInit {
             case 'Teacher': return '👨‍🏫';
             case 'Student': return '🎓';
             case 'Parent': return '👨‍👩‍👦';
+            case 'Editor': return '✍️';
             default: return '👤';
         }
     }

@@ -1,7 +1,8 @@
 # Eduİvme Hızlı Okuma — bağımsız frontend
 
-Bu Angular uygulaması `HizliOkuma` deposundaki mevcut öğrenci, öğretmen ve
-admin deneyiminin EduPlatform monoreposuna taşınmış halidir. Uygulama iki
+Bu Angular uygulaması `HizliOkuma` deposundaki mevcut öğrenci ve öğretmen
+deneyiminin EduPlatform monoreposuna taşınmış halidir. Yönetim işlemleri
+`clients/admin-panel` içindeki merkezi eduivme panelinden yürütülür. Uygulama iki
 çalışma biçimini destekler:
 
 - **Bağımsız ürün:** `/api/speed-reading` üzerinden hızlı okuma servisine
@@ -17,13 +18,13 @@ Modern, responsive web application for speed reading training and comprehension 
 
 ## 📖 Overview
 
-The Speed Reading Platform frontend is built with **Angular 20** and **Angular Material 20**, providing an intuitive interface for students to improve their reading speed, teachers to manage assignments, and administrators to oversee the entire platform.
+The Speed Reading Platform frontend is built with **Angular 20** and **Angular Material 20**, providing an intuitive interface for students to improve their reading speed and teachers to manage assignments. Platform administration is centralized in the eduivme admin application.
 
 ### Key Features
 
 - **Student Dashboard**: Track reading progress, complete exercises, view achievements
 - **Teacher Portal**: Create assignments, monitor student progress, generate reports
-- **Admin Panel**: User management, system settings, announcements, email campaigns
+- **Central Admin**: User management, content, reporting, communications and platform settings live in the eduivme admin application
 - **17 Exercise Types**: Including Schulte Table, RSVP, Visual Expansion, and more
 - **Gamification**: XP points, badges, daily streaks, leaderboards
 - **Reading Comprehension**: 200+ texts with Bloom's Taxonomy questions
@@ -54,14 +55,6 @@ src/
 │   │       └── toaster.service.ts
 │   │
 │   ├── features/                # Feature modules (lazy-loaded)
-│   │   ├── admin/               # Admin dashboard and management
-│   │   │   ├── dashboard/       # Admin overview, statistics
-│   │   │   ├── users/           # User CRUD operations
-│   │   │   ├── settings/        # System settings (email, security, platform)
-│   │   │   ├── announcements/   # Announcement management
-│   │   │   ├── email-campaigns/ # Bulk email campaigns
-│   │   │   └── audit-logs/      # System audit logs viewer
-│   │   │
 │   │   ├── student/             # Student learning interface
 │   │   │   ├── dashboard/       # Progress overview, daily goals
 │   │   │   ├── exercises/       # 17 exercise types
@@ -115,9 +108,7 @@ src/
 │       ├── components/          # Shared UI components
 │       │   └── announcement-banner/
 │       ├── layouts/             # Layout components
-│       │   ├── admin-layout.component.ts
-│       │   ├── student-layout.component.ts
-│       │   └── teacher-layout.component.ts
+│       │   └── base-layout.component.ts
 │       ├── pipes/               # Custom pipes
 │       └── directives/          # Custom directives
 │
@@ -200,25 +191,17 @@ configuration in `proxy.conf.json` forwards both `/api` and
 
 ## 📦 Module Overview
 
-### Admin Module
+### Central administration
 
-**Route**: `/admin`
-**Guard**: `authGuard` (role: Admin)
+The Master application does not expose an admin module. Requests to legacy
+`/admin/...` URLs are forwarded to the matching workspace under
+`https://eduivme.com/dashboard`; the redirect exists only for old bookmarks and
+does not render or own any management screen.
 
-**Features**:
-- **Dashboard**: System statistics, user activity, recent registrations
-- **User Management**: CRUD operations for users (create, edit, delete, role assignment)
-- **System Settings**: Configure email (SMTP), platform settings, security options
-- **Announcements**: Create system-wide announcements with priority and targeting
-- **Email Campaigns**: Bulk email sending with tracking (sent, opened, clicked)
-- **Audit Logs**: View system audit trail (who did what, when)
-
-**Key Components**:
-- `DashboardComponent` - Admin overview with charts
-- `UsersComponent` - User list with search and filters
-- `SettingsComponent` - System configuration (email, platform, security)
-- `AnnouncementsComponent` - Announcement management
-- `EmailCampaignsComponent` - Email campaign creation and tracking
+When an administrator signs in through this client, a revoke request is sent and
+the local session is cleared before the user is sent to
+`https://eduivme.com/auth/login` for a fresh central login. Access tokens are
+never placed in the redirect URL.
 
 ---
 

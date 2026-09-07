@@ -38,6 +38,10 @@ public sealed class EmailCampaignsController(ISpeedReadingEmailCampaigns campaig
         {
             return BadRequest(exception.Message);
         }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
 
     [HttpPut("{id:guid}")]

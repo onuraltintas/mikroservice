@@ -97,7 +97,7 @@ export class TeacherClassOverviewReportComponent implements OnInit {
     const user = this.authService.currentUserValue;
     const teacherIdParam = this.route.snapshot.queryParamMap.get('teacherId');
 
-    // Use param if available (for Admin view), otherwise current user
+    // A teacherId query parameter is used by the institution-scoped selector.
     const teacherId = teacherIdParam || user?.id;
 
     if (!teacherId) {

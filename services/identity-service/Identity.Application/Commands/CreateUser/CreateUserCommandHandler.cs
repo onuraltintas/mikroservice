@@ -4,9 +4,10 @@ using Identity.Domain.Entities;
 using MediatR;
 using MassTransit;
 using EduPlatform.Shared.Contracts.Events.Identity;
-using Identity.Domain.Enums;
 using EduPlatform.Shared.Kernel.Primitives;
 using EduPlatform.Shared.Security.Interfaces;
+using Microsoft.Extensions.Logging;
+using UserRoleType = Identity.Domain.Enums.UserRole;
 
 namespace Identity.Application.Commands.CreateUser;
 
@@ -20,6 +21,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<CreateUserCommandHandler> _logger;
 
     public CreateUserCommandHandler(
         IIdentityService identityService,
@@ -29,7 +31,8 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         IInstitutionRepository institutionRepository,
         IUnitOfWork unitOfWork,
         IPublishEndpoint publishEndpoint,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        ILogger<CreateUserCommandHandler> logger)
     {
         _identityService = identityService;
         _userRepository = userRepository;
@@ -39,17 +42,26 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
         _currentUserService = currentUserService;
+        _logger = logger;
     }
 
     public async Task<Result<CreateUserResponse>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
-        // 0. Parse Role
-        if (!Enum.TryParse<Identity.Domain.Enums.UserRole>(request.Role, true, out var userRole))
+        var roleName = request.Role.Trim();
+        if (string.IsNullOrWhiteSpace(roleName))
         {
-            return Result.Failure<CreateUserResponse>(new Error("Validation.InvalidRole", $"Role '{request.Role}' is invalid."));
+            return Result.Failure<CreateUserResponse>(new Error("Validation.InvalidRole", "Rol seçimi zorunludur."));
         }
 
-        if (userRole == Identity.Domain.Enums.UserRole.SystemAdmin
+        // Built-in roles have profile and privilege rules. Custom roles are
+        // validated by the identity service against the active role catalog.
+        var hasBuiltInRole = Enum.TryParse<UserRoleType>(roleName, true, out var parsedRole)
+            && Enum.IsDefined(typeof(UserRoleType), parsedRole);
+        UserRoleType? userRole = hasBuiltInRole ? parsedRole : null;
+        if (hasBuiltInRole)
+            roleName = parsedRole.ToString();
+
+        if (userRole == UserRoleType.SystemAdmin
             && !_currentUserService.Roles.Any(role =>
                 string.Equals(role, Identity.Domain.Enums.UserRole.SystemAdmin.ToString(), StringComparison.OrdinalIgnoreCase)))
         {
@@ -67,7 +79,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
             request.Email,
             request.FirstName,
             request.LastName,
-            request.Role,
+            roleName,
             request.PhoneNumber,
             cancellationToken);
 
@@ -101,7 +113,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
                 request.Email,
                 request.FirstName,
                 request.LastName,
-                request.Role,
+                roleName,
                 provisionedUser.PasswordSetupToken,
                 provisionedUser.PasswordSetupTokenExpiresAt,
                 DateTime.UtcNow
@@ -112,9 +124,9 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         }
         catch (Exception ex)
         {
-             // Cleanup if profile creation fails? 
+             _logger.LogError(ex, "User profile provisioning failed for {UserId}.", userId);
              await _identityService.DeleteUserAsync(userId, cancellationToken);
-             return Result.Failure<CreateUserResponse>(new Error("CreateUser.Failed", $"Database error: {ex.Message}"));
+             return Result.Failure<CreateUserResponse>(new Error("CreateUser.Failed", "Kullanıcı oluşturulamadı. Lütfen daha sonra tekrar deneyin."));
         }
     }
 }

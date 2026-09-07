@@ -11,6 +11,7 @@ import { PushService } from '../../../core/services/push.service';
 import { ClickOutsideDirective } from '../../directives/click-outside.directive';
 
 import { AuthService } from '../../../core/services/auth.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-notification-bell',
@@ -132,7 +133,9 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
 
   viewAllNotifications(): void {
     if (this.authService.hasAdminAccess()) {
-      this.router.navigate(['/admin/notifications/all']);
+      if (typeof window !== 'undefined') {
+        window.location.replace(`${environment.centralAdminUrl}/notifications`);
+      }
     } else {
       let basePath = '/student';
       if (this.authService.hasRole('Teacher')) {

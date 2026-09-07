@@ -10,9 +10,10 @@ route guard'ları yalnızca kullanıcı deneyimi ve erken yönlendirme sağlar.
 | Bounded context | Panel yeteneği | API yüzeyi | Yetki |
 | --- | --- | --- | --- |
 | Identity | Kullanıcı listeleme ve ayrıntı (aktif tenant scope'u) | `/api/users` | `Permissions.Users.View` |
-| Identity | Kullanıcı oluşturma, düzenleme, pasifleştirme/aktifleştirme, rol, e-posta ve parola yönetimi | `/api/users` | `SystemAdmin` + ilgili `Permissions.Users.*` |
+| Identity | Kullanıcı oluşturma, düzenleme, pasifleştirme/aktifleştirme, aktif rol kataloğu (özel roller dahil), e-posta ve parola yönetimi | `/api/users` | `SystemAdmin` + ilgili `Permissions.Users.*` |
 | Identity | Öğrenci/öğretmen profil alanları ve kurum üyeliği yönetimi; eksik profil kaydını güvenli biçimde oluşturma | `/api/users/{id}/profile` | `SystemAdmin` + `Permissions.Users.Edit` + `MfaRequired` |
 | Identity | Kullanıcının aktif refresh oturumlarını metadata olarak listeleme, tek/toplu oturum sonlandırma ve MFA sıfırlama | `/api/users/{id}/sessions`, `/api/users/{id}/mfa/reset` | `SystemAdmin` + `MfaRequired` + `Permissions.Users.Edit` |
+| Identity | CSV şablonu, doğrulamalı toplu kullanıcı içe aktarma/dışa aktarma ve seçili kullanıcılara toplu rol atama | `/api/users/bulk/template`, `/api/users/bulk/import`, `/api/users/bulk/export`, `/api/users/bulk/role` | Şablon/dışa aktarma: `SystemAdmin` + `Permissions.Users.View`; içe aktarma: `SystemAdmin` + `Permissions.Users.Create` + `MfaRequired`; rol atama: `SystemAdmin` + `Permissions.Users.Edit` + `MfaRequired` (içe aktarma en fazla 5 MB/1.000 satır, rol atama en fazla 100 kullanıcı) |
 | Identity | Rol ve permission CRUD'u, role-permission eşlemesi | `/api/roles`, `/api/permissions` | `Permissions.Roles.*`, `Permissions.Permissions.*` |
 | Identity | Kurum listeleme/detay ve yönetici listesi (SystemAdmin global, diğer yöneticiler yalnız aktif kendi tenant'ı) | `/api/institutions` | `Permissions.Institutions.View` |
 | Identity | Kurum oluşturma, aktiflik ve lisans/kapasite yönetimi | `/api/institutions` | `SystemAdmin` + `Permissions.Institutions.Manage` |
@@ -34,7 +35,7 @@ route guard'ları yalnızca kullanıcı deneyimi ve erken yönlendirme sağlar.
 | Speed Reading | Rapor şablonları, snapshot, zamanlanmış rapor yönetimi ve PDF/Excel dışa aktarma | `/api/speed-reading/reports/*` | `Permissions.SpeedReading.ReportView/ReportManage` |
 | Speed Reading | CMS landing blokları, sayfalar, blog, iletişim mesajları ve bülten aboneleri | `/api/speed-reading/admin/cms/*` | `Permissions.SpeedReading.ContentManage` |
 | Speed Reading | Duyuru CRUD'u ve duyuru istatistikleri | `/api/speed-reading/announcements` | `Permissions.SpeedReading.CommunicationsManage` |
-| Speed Reading | Servis e-posta şablonları, kampanyaları ve gönderim istatistikleri | `/api/speed-reading/email-templates`, `/api/speed-reading/email-campaigns` | `Permissions.SpeedReading.CommunicationsManage` |
+| Speed Reading | Servis e-posta şablonları, kampanya taslakları ve mevcut gönderim istatistikleri | `/api/speed-reading/email-templates`, `/api/speed-reading/email-campaigns` | `Permissions.SpeedReading.CommunicationsManage`; gerçek kampanya gönderimi ve zamanlama için SMTP/worker yapılandırması gerekir |
 | Speed Reading | Toplu bildirim gönderimi ve sayfalı bildirim geçmişi | `/api/speed-reading/notifications/all`, `/api/speed-reading/notifications/bulk` | `Permissions.SpeedReading.CommunicationsManage` |
 | Identity | Kullanıcının MFA kurulumu, doğrulaması ve tek kullanımlık kurtarma kodları | `/api/auth/mfa/*` | Profil ayarlarında mevcut parola ile yeniden doğrulama; girişte yalnız MFA etkinse 5 dakikalık challenge |
 | Notification | Destek talebi listeleme, filtreleme, notlandırma, işlenmiş işareti ve yanıt | `/api/support/requests`, `/api/support/reply` | `Permissions.Support.View/Reply` |
@@ -89,6 +90,28 @@ admininin JWT'si ele geçirildiğinde blast radius'u gereksiz şekilde büyütü
 `ConfigurationDataType.Secret` ile oluşturulmuş eski kayıtlar migration sürecinde
 tanınır ancak yönetim API'sinde listelenmez, okunmaz veya değiştirilemez. Yeni
 secret kaydı oluşturma da fail-closed olarak reddedilir.
+
+## Master panel geçişi
+
+`masterhizliokuma.com/admin` artık resmi yönetim yüzeyi değildir; Master
+uygulamasındaki eski admin ekranı ve ona ait modül kodu kaldırılmıştır. Eski admin
+bağlantıları, kullanıcılar, kurumlar, programlar, içerik, raporlar, iletişim,
+koçluk ve ayarların merkezi karşılıklarına `eduivme.com/dashboard` altında
+yönlendirilir. Karşılığı olmayan test modu, sahte impersonation, yedekler,
+silinen kayıtlar ve benzeri yer tutucular merkezi panele taşınmaz; bu yollar
+merkezi panele güvenli bir geri dönüş yapar. Böylece aynı kaynağı iki farklı
+admin panelinin değiştirmesi ve yetki/audit politikasının bölünmesi engellenir.
+Eski ana sayfa, hakkımızda, iletişim ve footer editörleri ayrı ekranlar olarak
+çoğaltılmaz; aynı içerik `İletişim ve CMS > Landing blokları` sekmesinde grup ve
+anahtar bazında yönetilir. `legal-documents` yolu da CMS sayfaları kapsamına
+girer. Kullanıcıya özel bildirim tercihleri admin yönetimi değil, ilgili kullanıcı
+portalının self-service ayarıdır.
+
+Master girişinde yönetici rolü tespit edilirse Master oturumu için iptal isteği
+gönderilir, yerel oturum temizlenir ve kimlik bilgileri URL'ye taşınmadan
+`eduivme.com/auth/login` adresinde yeniden doğrulama istenir. İki alan adının
+oturum çerezleri paylaşılmadığı için bu akış merkezi panelde güvenli ve açık bir
+oturum başlatır.
 
 ## Yetkilendirme ve işletim kuralları
 

@@ -53,8 +53,8 @@ import { Teacher } from '../../../core/models/teacher.model';
           <mat-error *ngIf="studentForm.get('email')?.hasError('email')">Geçerli bir e-posta giriniz</mat-error>
         </mat-form-field>
 
-        <!-- Teacher Selection (Admin Only) -->
-        <mat-form-field appearance="outline" class="full-width" *ngIf="isAdminOrInstAdmin">
+        <!-- Teacher Selection (Institution Admin Only) -->
+        <mat-form-field appearance="outline" class="full-width" *ngIf="isInstitutionAdmin">
             <mat-label>Sınıf Öğretmeni</mat-label>
             <mat-select formControlName="teacherId">
                 <mat-option [value]="null">Atanmamış (Boş)</mat-option>
@@ -111,7 +111,7 @@ export class StudentDialogComponent implements OnInit {
   hidePassword = true;
   passwordErrorMessages = PASSWORD_ERROR_MESSAGES;
 
-  isAdminOrInstAdmin = false;
+  isInstitutionAdmin = false;
   teachers$!: Observable<Teacher[]>;
 
   constructor(
@@ -124,23 +124,21 @@ export class StudentDialogComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     this.isEdit = !!data?.student;
-    this.isAdminOrInstAdmin = this.authService.hasAdminAccess() || this.authService.hasRole('InstitutionAdmin');
+    this.isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin');
 
     this.studentForm = this.fb.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      teacherId: [null], // Field for Admin
+      teacherId: [null], // Field for institution admin
       password: [this.isEdit ? '' : '', this.isEdit ? [strongPasswordValidator()] : [Validators.required, strongPasswordValidator()]]
     });
   }
 
   ngOnInit(): void {
-    // If admin, fetch teachers
-    if (this.isAdminOrInstAdmin) {
-      if (this.isAdminOrInstAdmin) {
-        this.teachers$ = this.teachersService.getTeachers(undefined, undefined, undefined);
-      }
+    // Institution admins can assign a student to a teacher.
+    if (this.isInstitutionAdmin) {
+      this.teachers$ = this.teachersService.getTeachers(undefined, undefined, undefined);
     }
 
     if (this.isEdit && this.data.student) {
@@ -164,15 +162,13 @@ export class StudentDialogComponent implements OnInit {
           firstName: formValue.firstName,
           lastName: formValue.lastName,
           email: formValue.email,
-          teacherId: formValue.teacherId // Include teacher update if Admin
+          teacherId: formValue.teacherId // Include teacher update for institution admin
         };
         if (formValue.password) {
           updateData.password = formValue.password;
         }
 
-        // Use correct service based on context or use studentsService for everything?
-        // teachersService.updateStudent might be Teacher-restricted. 
-        // studentsService.updateStudent is generic.
+        // Use the generic student service so institution admins can update the assignment.
 
         this.studentsService.updateStudent(this.data.student.id, updateData).subscribe({
           next: () => {
@@ -185,11 +181,10 @@ export class StudentDialogComponent implements OnInit {
           }
         });
       } else {
-        // Create
-        // Use StudentsService for creation to allow passing teacherId
+        // Create through the student service so institution admins can pass teacherId.
         const createData = {
           ...formValue,
-          teacherId: this.isAdminOrInstAdmin ? formValue.teacherId : undefined
+          teacherId: this.isInstitutionAdmin ? formValue.teacherId : undefined
         };
 
         this.studentsService.createStudent(createData).subscribe({

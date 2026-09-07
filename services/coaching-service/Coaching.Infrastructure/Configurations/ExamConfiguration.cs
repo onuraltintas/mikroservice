@@ -67,6 +67,10 @@ public class ExamConfiguration : IEntityTypeConfiguration<Exam>
         builder.Property(x => x.UpdatedAt)
             .HasColumnName("updated_at");
 
+        builder.Property(x => x.Version)
+            .IsConcurrencyToken()
+            .IsRequired();
+
         // Relationships
         builder.HasMany(x => x.Results)
             .WithOne(x => x.Exam)

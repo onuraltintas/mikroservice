@@ -24,7 +24,6 @@ import { TeachersService } from '../../../core/services/teachers.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Student } from '../../../core/models/student.model';
 import { BaseComponent } from '../../../core/components/base.component';
-import { AdminContextService } from '../../../core/services/admin-context.service';
 import { StudentDialogComponent } from './student-dialog.component';
 import { LinkStudentDialogComponent } from './link-student-dialog.component';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
@@ -59,7 +58,6 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
   private studentsService = inject(StudentsService);
   private teachersService = inject(TeachersService);
   private authService = inject(AuthService);
-  private adminContext = inject(AdminContextService);
   private dialog = inject(MatDialog);
   protected override toaster = inject(ToasterService);
 
@@ -87,7 +85,7 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
     this.setupFilters();
 
     // Check role and update columns
-    const isInstitutionAdmin = this.authService.hasAdminAccess() || this.authService.hasRole('InstitutionAdmin');
+    const isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin');
     if (isInstitutionAdmin) {
       // Insert 'teacher' column after 'name'
       this.displayedColumns = ['avatar', 'name', 'teacher', 'level', 'target', 'dailyGoal', 'lastLogin', 'status', 'actions'];
@@ -135,16 +133,13 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
    */
   refreshData() {
     const user = this.authService.currentUserValue;
-    if (user && (this.authService.hasAdminAccess() || this.authService.hasRole('InstitutionAdmin'))) {
-      // Admin/InstitutionAdmin: Use admin endpoint with query params
+    if (user && this.authService.hasRole('InstitutionAdmin')) {
+      // Institution admins can filter the full institution roster.
       const searchTerm = this.searchControl.value || '';
       const level = this.levelControl.value;
       const status = this.statusControl.value;
 
-      // Check for impersonation context
-      if (this.adminContext.isImpersonatingInstitution()) {
-        this.currentInstitutionId = this.adminContext.institutionId()!;
-      }
+      this.currentInstitutionId = (user as any).institutionId;
 
       this.loadStudentsAdmin(searchTerm, level ?? undefined, status ?? undefined);
     } else {
@@ -229,7 +224,7 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
   }
 
   deleteStudent(student: Student): void {
-    const isInstitutionAdmin = this.authService.hasAdminAccess() || this.authService.hasRole('InstitutionAdmin');
+    const isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin');
 
     const dialogData: ConfirmationDialogData = {
       title: isInstitutionAdmin ? 'Öğrenciyi Kurumdan Çıkar' : 'Öğrenciyi Sınıftan Çıkar',
@@ -281,7 +276,7 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
     const file: File = event.target.files[0];
     if (file) {
       this.loading.set(true);
-      const isInstitutionAdmin = this.authService.hasAdminAccess() || this.authService.hasRole('InstitutionAdmin');
+      const isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin');
 
       const request$ = isInstitutionAdmin
         ? this.studentsService.importStudents(file)
@@ -306,7 +301,7 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
   }
 
   downloadTemplate(): void {
-    const isInstitutionAdmin = this.authService.hasAdminAccess() || this.authService.hasRole('InstitutionAdmin');
+    const isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin');
     const request$ = isInstitutionAdmin
       ? this.studentsService.getImportTemplate()
       : this.teachersService.getImportTemplate();

@@ -61,6 +61,28 @@ public class AdminManagementMetadataTests
     }
 
     [Fact]
+    public void BulkUserMutations_MustRequireSystemAdministratorAndStepUp()
+    {
+        foreach (var methodName in new[] { "Import", "AssignRole" })
+        {
+            var method = typeof(BulkUsersController).GetMethod(methodName);
+            method.Should().NotBeNull();
+            method!.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
+                .Cast<AuthorizeAttribute>()
+                .Should()
+                .Contain(attribute => attribute.Roles == "SystemAdmin")
+                .And.Contain(attribute => attribute.Policy == "MfaRequired");
+        }
+
+        typeof(BulkUsersController)
+            .GetMethod(nameof(BulkUsersController.Export))!
+            .GetCustomAttributes(typeof(HasPermissionAttribute), inherit: true)
+            .Cast<HasPermissionAttribute>()
+            .Should()
+            .Contain(attribute => attribute.Policy == "Permissions.Users.View");
+    }
+
+    [Fact]
     public void UserProfileMutation_MustRequireEditPermission()
     {
         var method = typeof(UserController).GetMethod(nameof(UserController.UpdateUserProfile));

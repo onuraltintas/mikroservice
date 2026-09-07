@@ -1,5 +1,11 @@
 namespace SpeedReading.Application.Content;
 
+public static class SpeedReadingAdminProgressSearch
+{
+    public static Guid? TryParseId(string? searchTerm) =>
+        Guid.TryParse(searchTerm?.Trim(), out var id) && id != Guid.Empty ? id : null;
+}
+
 public sealed record SpeedReadingPage<T>(
     IReadOnlyList<T> Items,
     int PageNumber,

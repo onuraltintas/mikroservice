@@ -136,7 +136,8 @@ public class LocalIdentityService : IIdentityService
         }
         catch (Exception ex)
         {
-            return Result.Failure<ProvisionedUser>(new Error("Register.Exception", ex.Message));
+            _logger.LogError(ex, "Provisioned user creation failed for {Email}.", email);
+            return Result.Failure<ProvisionedUser>(new Error("Register.Exception", "Kullanıcı oluşturulamadı. Lütfen daha sonra tekrar deneyin."));
         }
 
         return Result.Success(new ProvisionedUser(
@@ -170,7 +171,7 @@ public class LocalIdentityService : IIdentityService
             }
 
             var role = await _roleRepository.GetByNameAsync(roleName, cancellationToken);
-            if (role == null) 
+            if (role == null || role.IsDeleted)
             {
                 _logger.LogWarning("Role {RoleName} not found for role assignment", roleName);
                 return Result.Failure(new Error("Identity.RoleNotFound", $"Role '{roleName}' not found."));
@@ -188,7 +189,7 @@ public class LocalIdentityService : IIdentityService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error assigning role {RoleName} to user {UserId}", roleName, userId);
-            return Result.Failure(new Error("AssignRole.Exception", $"Role assignment failed: {ex.Message}"));
+            return Result.Failure(new Error("AssignRole.Exception", "Kullanıcı rolü atanamadı. Lütfen daha sonra tekrar deneyin."));
         }
     }
 
@@ -284,7 +285,7 @@ public class LocalIdentityService : IIdentityService
 
         // Check role existence before creating the user.
         var role = await _roleRepository.GetByNameAsync(roleName, cancellationToken);
-        if (role == null)
+        if (role == null || role.IsDeleted)
         {
             return Result.Failure<ProvisionedUser>(
                 new Error("Identity.RoleNotFound", $"Role '{roleName}' not found."));
@@ -307,7 +308,7 @@ public class LocalIdentityService : IIdentityService
             if (user == null) return Result.Failure(new Error("Identity.UserNotFound", "User not found."));
 
             var role = await _roleRepository.GetByNameAsync(roleName, cancellationToken);
-            if (role == null) return Result.Failure(new Error("Identity.RoleNotFound", $"Role '{roleName}' not found."));
+            if (role == null || role.IsDeleted) return Result.Failure(new Error("Identity.RoleNotFound", $"Role '{roleName}' not found."));
 
             if (string.Equals(role.Name, Identity.Domain.Enums.UserRole.SystemAdmin.ToString(), StringComparison.OrdinalIgnoreCase)
                 && await IsLastActiveSystemAdministratorAsync(user, cancellationToken))
@@ -327,7 +328,8 @@ public class LocalIdentityService : IIdentityService
         }
         catch (Exception ex)
         {
-            return Result.Failure(new Error("RemoveRole.Exception", $"Role removal failed: {ex.Message}"));
+            _logger.LogError(ex, "Error removing role {RoleName} from user {UserId}", roleName, userId);
+            return Result.Failure(new Error("RemoveRole.Exception", "Kullanıcı rolü kaldırılamadı. Lütfen daha sonra tekrar deneyin."));
         }
     }
 
@@ -336,11 +338,14 @@ public class LocalIdentityService : IIdentityService
         try
         {
             var roles = await _roleRepository.GetAllAsync(cancellationToken);
-            return Result.Success(roles.Select(r => r.Name));
+            return Result.Success(roles
+                .Where(role => !role.IsDeleted && !string.IsNullOrWhiteSpace(role.Name))
+                .Select(role => role.Name));
         }
         catch (Exception ex)
         {
-            return Result.Failure<IEnumerable<string>>(new Error("GetRoles.Exception", ex.Message));
+            _logger.LogError(ex, "Available roles could not be loaded.");
+            return Result.Failure<IEnumerable<string>>(new Error("GetRoles.Exception", "Roller yüklenemedi. Lütfen daha sonra tekrar deneyin."));
         }
     }
 
@@ -365,7 +370,8 @@ public class LocalIdentityService : IIdentityService
         }
         catch (Exception ex)
         {
-             return Result.Failure(new Error("SaveRefreshToken.Exception", ex.Message));
+             _logger.LogError(ex, "Refresh token could not be persisted for {UserId}.", userId);
+             return Result.Failure(new Error("SaveRefreshToken.Exception", "Oturum anahtarı kaydedilemedi. Lütfen daha sonra tekrar deneyin."));
         }
     }
 
@@ -390,7 +396,8 @@ public class LocalIdentityService : IIdentityService
         }
         catch (Exception ex)
         {
-            return Result.Failure(new Error("RevokeToken.Exception", ex.Message));
+            _logger.LogError(ex, "Refresh token could not be revoked.");
+            return Result.Failure(new Error("RevokeToken.Exception", "Oturum sonlandırılamadı. Lütfen daha sonra tekrar deneyin."));
         }
     }
 

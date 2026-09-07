@@ -127,26 +127,6 @@
       </div>
     </div>
 
-    <!-- ── Admin Test Controls ─────────────────── -->
-    @if (isAdmin) {
-      <div class="db-admin-bar">
-        <div class="db-admin-bar__badge">
-          <span class="material-icons">science</span>
-          Admin Test Modu
-        </div>
-        <div class="db-admin-bar__actions">
-          <button class="db-admin-btn db-admin-btn--warn" (click)="completeDayForTest()" [disabled]="loading()">
-            <span class="material-icons">flash_on</span>
-            Günü Tamamla
-          </button>
-          <button class="db-admin-btn db-admin-btn--accent" (click)="skipDayForTest()" [disabled]="loading()">
-            <span class="material-icons">skip_next</span>
-            Sonraki Gün
-          </button>
-        </div>
-      </div>
-    }
-
     <!-- ── Main Grid ──────────────────────────── -->
     @if (hasProgram()) {
       <div class="db-grid">

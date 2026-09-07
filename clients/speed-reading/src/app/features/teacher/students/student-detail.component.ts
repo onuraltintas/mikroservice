@@ -103,11 +103,6 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
 
     const teacherId = currentUser.id;
 
-    // Check if user is Admin, they might not have a Teacher profile
-    if (this.authService.hasAdminAccess()) {
-      console.warn('Admin user accessing teacher view. Some data may be unavailable.');
-    }
-
     // Robust fetching strategy: Try Teacher endpoint -> Generic endpoint
     const resultsObservable = this.studentsService.getStudentExerciseResults(teacherId, studentId).pipe(
       catchError(err => {

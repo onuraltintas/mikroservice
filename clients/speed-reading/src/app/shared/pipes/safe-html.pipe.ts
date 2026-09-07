@@ -4,7 +4,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 /**
  * Sanitizes HTML content using Angular's DomSanitizer.
  * Use this pipe for public-facing content that comes from CMS/API.
- * For admin-only preview content, bypassSecurityTrustHtml is acceptable.
+ * Preview content is sanitized by the same rule; callers should not bypass Angular's sanitizer.
  */
 @Pipe({
   name: 'safeHtml',

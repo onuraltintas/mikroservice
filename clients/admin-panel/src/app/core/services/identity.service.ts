@@ -134,6 +134,18 @@ export interface UpdatePermissionRequest {
     group: string;
 }
 
+export interface BulkUserOperationResult {
+    succeeded: number;
+    failed: number;
+    errors: string[];
+}
+
+export interface BulkRoleAssignmentRequest {
+    userIds: string[];
+    roleName: string;
+    removeExistingRoles: boolean;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -161,6 +173,29 @@ export class IdentityService {
 
     createUser(user: CreateUserRequest) {
         return this.http.post<CreateUserResponse>(this.baseUrl, user);
+    }
+
+    getBulkUserImportTemplate() {
+        return this.http.get(`${this.baseUrl}/bulk/template`, { responseType: 'blob' });
+    }
+
+    importUsers(file: File) {
+        const formData = new FormData();
+        formData.append('file', file, file.name);
+        return this.http.post<BulkUserOperationResult>(`${this.baseUrl}/bulk/import`, formData);
+    }
+
+    exportUsers(search = '', role = '', isActive?: boolean) {
+        let params = new HttpParams();
+        if (search) params = params.set('search', search);
+        if (role) params = params.set('role', role);
+        if (isActive !== undefined) params = params.set('isActive', isActive);
+        return this.http.get(`${this.baseUrl}/bulk/export`, { params, responseType: 'blob' });
+    }
+
+    assignBulkRole(userIds: string[], roleName: string, removeExistingRoles = false) {
+        const request: BulkRoleAssignmentRequest = { userIds, roleName, removeExistingRoles };
+        return this.http.post<BulkUserOperationResult>(`${this.baseUrl}/bulk/role`, request);
     }
 
     deleteUser(userId: string, permanent: boolean = false) {

@@ -23,9 +23,8 @@ export class NavigationService {
 
   getStudentMenuItems(): MenuItem[] {
     const user = this.authService.currentUserValue;
-    const isAdmin = this.authService.hasAdminAccess();
     const isEditor = user?.roles?.includes('Editor');
-    const canViewExercises = isAdmin || isEditor;
+    const canViewExercises = isEditor;
 
     const items: MenuItem[] = [
       {
@@ -35,7 +34,7 @@ export class NavigationService {
       }
     ];
 
-    // Only show Exercises and Reading tabs to Admin and Editor users
+    // Editors can preview the exercise catalogue from the student shell.
     if (canViewExercises) {
       items.push(
         {
@@ -170,117 +169,6 @@ export class NavigationService {
         route: '/student/exercises'
       }
     ];
-  }
-
-  getAdminMenuItems(): MenuItem[] {
-    const user = this.authService.currentUserValue;
-    const isAdmin = this.authService.hasAdminAccess();
-    const isEditor = user?.roles?.includes('Editor');
-    const isOnlyEditor = isEditor && !isAdmin;
-
-    const items: MenuItem[] = [
-      {
-        label: 'Ana Sayfa',
-        icon: 'dashboard',
-        route: '/admin/dashboard'
-      },
-      {
-        // Identity Servisi: kullanıcı, rol ve iletişim yönetimi
-        label: 'Kullanıcılar',
-        icon: 'people',
-        children: [
-          { label: 'Tüm Kullanıcılar', icon: 'group', route: '/admin/users' },
-          { label: 'Öğrenciler', icon: 'school', route: '/admin/students' },
-          { label: 'Öğretmenler', icon: 'person', route: '/admin/teachers' },
-          { label: 'Kurumlar', icon: 'business', route: '/admin/institutions' },
-          { label: 'Editörler', icon: 'edit_note', route: '/admin/editors' },
-          { label: 'Roller', icon: 'security', route: '/admin/roles' },
-          { label: 'Toplu İşlemler', icon: 'dynamic_feed', route: '/admin/bulk-operations' },
-          { label: 'Bildirimler', icon: 'list', route: '/admin/notifications/all' },
-          { label: 'Toplu Bildirim Gönder', icon: 'send', route: '/admin/notifications/send' },
-          { label: 'E-posta Şablonları', icon: 'email', route: '/admin/email-templates' },
-          { label: 'E-posta Kampanyaları', icon: 'campaign', route: '/admin/email-campaigns' }
-        ]
-      },
-      {
-        // Content Servisi: hızlı okuma içerik, program yönetimi ve raporlama
-        label: 'Hızlı Okuma',
-        icon: 'speed',
-        children: [
-          { label: 'Seviye Tespit Ayarları', icon: 'settings', route: '/admin/assessment-config' },
-          { label: 'Program Şablonları', icon: 'playlist_play', route: '/admin/program-templates' },
-          { label: 'Soru Bankası', icon: 'quiz', route: '/admin/question-bank' },
-          { label: 'Egzersizler', icon: 'fitness_center', route: '/admin/exercises' },
-          { label: 'Egzersiz Tipleri', icon: 'category', route: '/admin/exercise-types' },
-          { label: 'Okuma Metinleri', icon: 'menu_book', route: '/admin/reading-texts' },
-          { label: 'Kelime Havuzu', icon: 'translate', route: '/admin/vocabulary' },
-          { label: 'Görselleştirme Sahneleri', icon: 'panorama', route: '/admin/cms/visualization-scenes' },
-          { label: 'Başarımlar', icon: 'emoji_events', route: '/admin/achievements' },
-          { label: 'Yaş Grupları', icon: 'groups', route: '/admin/age-groups' },
-          { label: 'Öğrenci Raporları', icon: 'person', route: '/admin/reports/students' },
-          { label: 'Program Analitiği', icon: 'insights', route: '/admin/analytics/programs' },
-          { label: 'Kurum Raporu', icon: 'business', route: '/admin/reports/institutions' },
-          { label: 'Platform Kullanımı', icon: 'monitoring', route: '/admin/reports/platform-usage' },
-          { label: 'Platform Metrikleri', icon: 'speed', route: '/admin/metrics' },
-          { label: 'İçerik Analizi', icon: 'inventory', route: '/admin/reports/content' },
-          { label: 'Rapor Şablonları', icon: 'description', route: '/admin/report-templates' }
-        ]
-      },
-      {
-        // Coaching Servisi: öğrenci koçluğu, hedef ve sınav takibi
-        label: 'Koçluk',
-        icon: 'school',
-        children: [
-          { label: 'Koçlar', icon: 'sports', route: '/admin/coaches' },
-          { label: 'Koçluk Seansları', icon: 'event', route: '/admin/coaching/sessions' },
-          { label: 'Hedefler', icon: 'flag', route: '/admin/coaching/goals' },
-          { label: 'Sınav Sonuçları', icon: 'analytics', route: '/admin/coaching/exam-results' },
-          { label: 'Ödevler', icon: 'assignment', route: '/admin/coaching/assignments' }
-        ]
-      },
-      {
-        // Subscription Servisi: abonelik planları ve kullanıcı abonelikleri
-        label: 'Abonelikler',
-        icon: 'subscriptions',
-        children: [
-          { label: 'Planlar & Abonelikler', icon: 'workspace_premium', route: '/admin/subscriptions' }
-        ]
-      },
-      {
-        // CMS Servisi: web sitesi içerik yönetimi
-        label: 'Web Sitesi',
-        icon: 'web',
-        children: [
-          { label: 'Ana Sayfa', icon: 'home', route: '/admin/cms/ana-sayfa' },
-          { label: 'Hakkımızda', icon: 'info', route: '/admin/cms/hakkimizda' },
-          { label: 'Footer', icon: 'view_agenda', route: '/admin/cms/footer' },
-          { label: 'Sayfalar', icon: 'pages', route: '/admin/cms/pages' },
-          { label: 'Blog', icon: 'article', route: '/admin/cms/blog' },
-          { label: 'Bülten Aboneleri', icon: 'mark_email_read', route: '/admin/cms/newsletter' },
-          { label: 'İletişim', icon: 'contact_support', route: '/admin/cms/iletisim' }
-        ]
-      },
-      {
-        // Admin Servisi: platform yönetimi ve bakım araçları
-        label: 'Sistem',
-        icon: 'settings',
-        children: [
-          { label: 'Öğrenci Modu', icon: 'science', route: '/admin/test-mode', badge: 'BETA', badgeColor: 'warn' },
-          { label: 'Sistem Sağlığı', icon: 'health_and_safety', route: '/admin/reports/health' },
-          { label: 'Aktivite Logları', icon: 'history', route: '/admin/audit-logs' },
-          { label: 'Ayarlar', icon: 'tune', route: '/admin/settings' }
-        ]
-      }
-    ];
-
-    if (isOnlyEditor) {
-      return items.filter(item =>
-        item.label === 'Hızlı Okuma' ||
-        item.label === 'Web Sitesi'
-      );
-    }
-
-    return items;
   }
 
   navigateTo(route: string): void {

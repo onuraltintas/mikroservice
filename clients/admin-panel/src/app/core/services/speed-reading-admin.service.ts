@@ -1400,9 +1400,17 @@ export class SpeedReadingAdminService {
 
   getAgeGroups(activeOnly = false) {
     const params = new HttpParams().set('activeOnly', activeOnly);
-    return this.http.get<SpeedReadingAgeGroup[]>(
-      `${this.url}/age-group-configurations`,
-      { params }
+    return this.http.get<Array<SpeedReadingAgeGroup & {
+      minWPM?: number;
+      recommendedWPM?: number;
+      maxWPM?: number;
+    }>>(`${this.url}/age-group-configurations`, { params }).pipe(
+      map(groups => groups.map(group => ({
+        ...group,
+        minWpm: group.minWpm ?? group.minWPM ?? 0,
+        recommendedWpm: group.recommendedWpm ?? group.recommendedWPM ?? 0,
+        maxWpm: group.maxWpm ?? group.maxWPM ?? 0
+      })))
     );
   }
 

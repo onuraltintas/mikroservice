@@ -99,7 +99,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<int>("Version")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .IsConcurrencyToken();
 
                     b.HasKey("Id");
 
@@ -235,7 +236,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<int>("Version")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .IsConcurrencyToken();
 
                     b.HasKey("Id");
 
@@ -473,7 +475,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<int>("Version")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .IsConcurrencyToken();
 
                     b.HasKey("Id");
 
@@ -557,7 +560,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<int>("Version")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .IsConcurrencyToken();
 
                     b.HasKey("Id");
 

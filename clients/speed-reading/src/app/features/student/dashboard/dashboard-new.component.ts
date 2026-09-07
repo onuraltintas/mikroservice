@@ -4,7 +4,6 @@ import { Router } from '@angular/router';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { BaseComponent } from '../../../core/components/base.component';
-import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 import { AssessmentService } from '../../../services/assessment.service';
 import { GamificationService } from '../../../core/services/gamification.service';
@@ -16,8 +15,6 @@ import { LevelBadgesWidgetComponent } from './widgets/level-badges-widget.compon
 import { QuickAccessWidgetComponent } from './widgets/quick-access-widget.component';
 import { RecentAchievementsWidgetComponent } from './widgets/recent-achievements-widget.component';
 import { ExerciseProgramService } from '../../../core/services/exercise-program.service';
-import { environment } from '../../../../environments/environment';
-import { ProgramCompletionModalComponent } from '../program-completion-modal/program-completion-modal';
 
 import { QuoteWidgetComponent } from './widgets/quote-widget.component';
 import { AssignmentsWidgetComponent } from './widgets/assignments-widget.component';
@@ -42,7 +39,6 @@ import { AssignmentsWidgetComponent } from './widgets/assignments-widget.compone
 })
 export class DashboardNewComponent extends BaseComponent implements OnInit {
   private exerciseService = inject(ExerciseProgramService);
-  private http = inject(HttpClient);
   private gamificationService = inject(GamificationService);
   // snackBar inherited from BaseComponent via toaster
 
@@ -76,12 +72,6 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
 
     // Check assessment completion status
     effect(() => {
-      // Admins don't need to complete assessment (they use Test Mode)
-      if (this.isAdmin) {
-        this.showAssessmentBanner.set(false);
-        return;
-      }
-
       const hasCompleted = this.assessmentService.hasCompleted();
       // If assessment is NOT completed, show banner.
       // But if user has NO program (and assessment is done maybe?), show empty state instead of banner?
@@ -244,66 +234,4 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
     return `${(firstName?.charAt(0) || '').toUpperCase()}${(lastName?.charAt(0) || '').toUpperCase()}`;
   }
 
-  // ===== ADMIN TEST METHODS =====
-
-  get isAdmin(): boolean {
-    return this.authService.hasAdminAccess();
-  }
-
-  async completeDayForTest() {
-    const confirmed = await this.confirm('Bugünün tüm egzersizlerini otomatik tamamlamak istiyor musunuz?');
-    if (!confirmed) return;
-
-    this.loading.set(true);
-    this.http.post(`${environment.apiUrl}/admin/test-mode/complete-day`, {
-      successRate: 85
-    })
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => this.loading.set(false))
-      )
-      .subscribe({
-        next: (response: any) => {
-          this.handleSuccess('Gün başarıyla tamamlandı!');
-
-          if (response.programCompleted) {
-            // Program bitti, modal aç
-            // Not: Gerçek senaryoda backend'den stats ve recommendation gelmeli
-            // Test modunda bunları simüle edebiliriz veya backend'i güncelleyebiliriz
-            // Şimdilik basit bir mesaj gösterelim, çünkü modal için detaylı veri lazım
-            // alert('🎉 PROGRAM TAMAMLANDI! (Test Modu)');
-            this.toaster.success('Program tamamlandı! (Test Modu)', 5000);
-            // İsterseniz burada modal'ı dummy data ile açabiliriz
-          }
-
-          this.loadDashboardStats();
-        },
-        error: (error) => {
-          console.error('Error completing day:', error);
-          this.handleError(error, 'Gün tamamlanırken hata oluştu');
-        }
-      });
-  }
-
-  async skipDayForTest() {
-    const confirmed = await this.confirm('Bir sonraki güne atlamak istiyor musunuz?');
-    if (!confirmed) return;
-
-    this.loading.set(true);
-    this.http.post(`${environment.apiUrl}/admin/test-mode/skip-day`, {})
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => this.loading.set(false))
-      )
-      .subscribe({
-        next: () => {
-          this.handleSuccess('Sonraki güne geçildi!');
-          this.loadDashboardStats();
-        },
-        error: (error) => {
-          console.error('Error skipping day:', error);
-          this.handleError(error, 'Gün atlanırken hata oluştu');
-        }
-      });
-  }
 }

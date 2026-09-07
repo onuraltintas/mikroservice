@@ -1,7 +1,7 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { finalize, Observable } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
@@ -79,6 +79,7 @@ export class CoachingOperationalComponent implements OnInit {
   private readonly toaster = inject(ToasterService);
   private readonly auth = inject(AuthService);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly route = inject(ActivatedRoute, { optional: true });
   readonly resource = signal<Resource>('sessions');
   readonly sessions = signal<CoachingAdminSessionListItem[]>([]);
   readonly exams = signal<CoachingAdminExamListItem[]>([]);
@@ -97,7 +98,14 @@ export class CoachingOperationalComponent implements OnInit {
 
   canManage() { return this.auth.hasPermission(ADMIN_PERMISSIONS.coachingManage); }
 
-  ngOnInit() { if (isPlatformBrowser(this.platformId)) this.load(); }
+  ngOnInit() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const requestedResource = this.route?.snapshot.queryParamMap.get('resource');
+    if (requestedResource === 'sessions' || requestedResource === 'exams' || requestedResource === 'goals') {
+      this.resource.set(requestedResource);
+    }
+    this.load();
+  }
   select(resource: Resource) { this.resource.set(resource); this.page.set(1); this.load(); }
   applyFilters() { this.page.set(1); this.load(); }
   goTo(page: number) { if (page >= 1 && page <= this.totalPages()) { this.page.set(page); this.load(); } }

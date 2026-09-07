@@ -24,9 +24,20 @@ describe('App', () => {
     expect(compiled.querySelector('router-outlet')).toBeTruthy();
   });
 
-  it('allows SystemAdmin to enter the admin area', () => {
+  it('keeps legacy admin URLs as a central-panel redirect only', () => {
     const adminRoute = routes.find(route => route.path === 'admin');
 
-    expect(adminRoute?.data?.['role']).toContain('SystemAdmin');
+    expect(adminRoute?.canActivate).toBeUndefined();
+    expect(adminRoute?.children?.some(route => route.path === '**')).toBeTrue();
+  });
+
+  it('does not expose platform-admin roles through Master application routes', () => {
+    for (const path of ['student', 'teacher', 'coaching']) {
+      const route = routes.find(candidate => candidate.path === path);
+      const roles = route?.data?.['role'] as string[] | undefined;
+
+      expect(roles ?? []).not.toContain('Admin');
+      expect(roles ?? []).not.toContain('SystemAdmin');
+    }
   });
 });

@@ -11,6 +11,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuthService } from '../../../core/services/auth.service';
+import { environment } from '../../../../environments/environment';
 import {
   GoogleIdentityCallback,
   GoogleIdentityService,
@@ -108,13 +109,13 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
 
     this.authService.googleAuth(response.credential).subscribe({
       next: (authResponse) => {
-        const role = authResponse.roles?.[0];
-        if (role === 'Student') {
+        const role = authResponse.roles?.[0]?.toLowerCase();
+        if (role === 'student') {
           this.router.navigate(['/student/dashboard']);
-        } else if (role === 'Teacher') {
+        } else if (role === 'teacher') {
           this.router.navigate(['/teacher/dashboard']);
-        } else if (role === 'Admin') {
-          this.router.navigate(['/admin/dashboard']);
+        } else if (role === 'admin' || role === 'systemadmin' || role === 'editor') {
+          void this.redirectToCentralAdmin();
         } else {
           this.router.navigate(['/']);
         }
@@ -135,6 +136,13 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
         this.loading = false;
       }
     });
+  }
+
+  private async redirectToCentralAdmin(): Promise<void> {
+    await this.authService.handoffToCentralAdmin();
+    if (typeof window !== 'undefined') {
+      window.location.replace(environment.centralAdminLoginUrl);
+    }
   }
 
   onSubmit(): void {

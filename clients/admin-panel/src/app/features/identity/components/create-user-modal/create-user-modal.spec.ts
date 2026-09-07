@@ -6,6 +6,47 @@ import { ToasterService } from '../../../../core/services/toaster.service';
 import { CreateUserModalComponent } from './create-user-modal';
 
 describe('CreateUserModalComponent', () => {
+  it('offers every built-in identity role that the API can provision', () => {
+    TestBed.configureTestingModule({
+      imports: [CreateUserModalComponent],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: ToasterService, useValue: { success: vi.fn(), error: vi.fn() } }
+      ]
+    });
+
+    const fixture = TestBed.createComponent(CreateUserModalComponent);
+    const http = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+    http.expectOne('/api/users/roles').flush(['Student', 'Teacher', 'InstitutionAdmin', 'Parent', 'Editor']);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('option[value="Editor"]')?.textContent).toContain('Editör');
+    http.verify();
+  });
+
+  it('loads active custom roles from the identity API', () => {
+    TestBed.configureTestingModule({
+      imports: [CreateUserModalComponent],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: ToasterService, useValue: { success: vi.fn(), error: vi.fn() } }
+      ]
+    });
+
+    const fixture = TestBed.createComponent(CreateUserModalComponent);
+    const http = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+
+    http.expectOne('/api/users/roles').flush(['Student', 'Learner']);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('option[value="Learner"]')).not.toBeNull();
+    http.verify();
+  });
+
   it('confirms the password setup invitation without exposing a temporary password', () => {
     const toaster = {
       success: vi.fn(),

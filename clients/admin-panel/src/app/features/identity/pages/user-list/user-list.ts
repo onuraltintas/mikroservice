@@ -80,6 +80,7 @@ export class UserListComponent {
     { value: 'InstitutionAdmin', label: 'Kurum Yöneticisi' },
     { value: 'InstitutionOwner', label: 'Kurum Sahibi' },
     { value: 'Parent', label: 'Veli' },
+    { value: 'Editor', label: 'Editör' },
     { value: 'SystemAdmin', label: 'Sistem Yöneticisi' }
   ];
 

@@ -33,7 +33,8 @@ eksik kayıtlarını varsayılanlarla tamamlar; duyuru hedef kitlesi ve kullanı
 etkileşimleri artık sorguya dahil edilir.
 
 `014_notification_compatibility.sql` yalnızca eksik tabloları/kolonları ve
-indeksleri ekler. Gerçek SMTP/Web Push kuyruğu olmadığı için kampanya gönderimi
-legacy durum geçişini korur; alıcı gönderim istatistikleri mevcut veri yoksa
-üretilmez. Toplu bildirimde e-posta seçilirse yalnızca in-app kayıtları yaratılır
-ve sonuçta e-posta kanalının yapılandırılmadığı açıkça bildirilir.
+indeksleri ekler. Gerçek SMTP/Web Push kuyruğu olmadığı için kampanyalar yalnızca
+taslak olarak saklanır; gönderim ve zamanlama istekleri açık bir şekilde reddedilir.
+Alıcı gönderim istatistikleri mevcut veri yoksa üretilmez. Toplu bildirimde e-posta
+seçilirse yalnızca in-app kayıtları yaratılır ve sonuçta e-posta kanalının
+yapılandırılmadığı açıkça bildirilir.

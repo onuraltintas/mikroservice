@@ -15,6 +15,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { SubscriptionService } from '../../../core/services/subscription.service';
 import { AuthResponse } from '../../../core/models/user.model';
+import { environment } from '../../../../environments/environment';
 import {
   GoogleIdentityCallback,
   GoogleIdentityService,
@@ -311,16 +312,21 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
       this.router.navigate(['/teacher/dashboard']);
     } else if (normalizedRole === 'institutionadmin') {
       this.router.navigate(['/teacher/dashboard']);
-    } else if (normalizedRole === 'admin' || normalizedRole === 'systemadmin') {
-      this.router.navigate(['/admin/dashboard']);
-    } else if (normalizedRole === 'editor') {
-      this.router.navigate(['/admin/dashboard']);
+    } else if (normalizedRole === 'admin' || normalizedRole === 'systemadmin' || normalizedRole === 'editor') {
+      void this.redirectToCentralAdmin();
     } else if (normalizedRole === 'coach') {
       this.router.navigate(['/coaching/dashboard']);
     } else {
       console.warn('Unknown role:', role);
       this.toaster.error(`Tanımlanamayan kullanıcı rolü: ${role}`, 5000);
       this.router.navigate(['/']);
+    }
+  }
+
+  private async redirectToCentralAdmin(): Promise<void> {
+    await this.authService.handoffToCentralAdmin();
+    if (typeof window !== 'undefined') {
+      window.location.replace(environment.centralAdminLoginUrl);
     }
   }
 

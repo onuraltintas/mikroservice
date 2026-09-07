@@ -144,6 +144,30 @@ describe('AuthService', () => {
     request.flush({});
   });
 
+  it('revokes and clears the Master session before a central admin handoff', async () => {
+    const user = {
+      id: 'system-admin',
+      token: 'master-access-token',
+      refreshToken: '',
+      email: 'admin@example.com',
+      firstName: 'System',
+      lastName: 'Admin',
+      roles: ['SystemAdmin']
+    } as AuthResponse;
+    (service as any).currentUserSubject.next(user);
+    (service as any).accessToken = 'master-access-token';
+
+    const handoffPromise = service.handoffToCentralAdmin();
+    const request = http.expectOne('/api/auth/revoke-token');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.withCredentials).toBeTrue();
+    request.flush({});
+
+    await handoffPromise;
+    expect(service.currentUserValue).toBeNull();
+    expect(service.token).toBeNull();
+  });
+
   it('does not persist the access token in browser storage after login', () => {
     const accessToken = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyIiwicm9sZSI6IlN5c3RlbUFkbWluIiwiZXhwIjo0MTAyNDQ0ODAwfQ.';
     service.login({ email: 'admin@example.com', password: 'Password1!' }).subscribe();

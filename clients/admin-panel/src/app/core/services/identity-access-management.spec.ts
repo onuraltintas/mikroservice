@@ -60,4 +60,33 @@ describe('IdentityService user access management', () => {
     expect(request.request.body).toEqual(profile);
     request.flush(null);
   });
+
+  it('uses the server-side bulk user contracts for template, import, export and role assignment', () => {
+    const service = TestBed.inject(IdentityService);
+    const file = new File(['firstName,lastName,email,phoneNumber,role\nAda,Lovelace,ada@example.com,,Editor\n'], 'users.csv', { type: 'text/csv' });
+
+    service.getBulkUserImportTemplate().subscribe();
+    expect(http.expectOne('/api/users/bulk/template').request.method).toBe('GET');
+
+    service.importUsers(file).subscribe();
+    const importRequest = http.expectOne('/api/users/bulk/import');
+    expect(importRequest.request.method).toBe('POST');
+    expect(importRequest.request.body instanceof FormData).toBe(true);
+
+    service.exportUsers('Ada', 'Editor', true).subscribe();
+    const exportRequest = http.expectOne(request => request.url === '/api/users/bulk/export');
+    expect(exportRequest.request.method).toBe('GET');
+    expect(exportRequest.request.params.get('search')).toBe('Ada');
+    expect(exportRequest.request.params.get('role')).toBe('Editor');
+    expect(exportRequest.request.params.get('isActive')).toBe('true');
+
+    service.assignBulkRole(['user-1'], 'Editor', true).subscribe();
+    const roleRequest = http.expectOne('/api/users/bulk/role');
+    expect(roleRequest.request.method).toBe('POST');
+    expect(roleRequest.request.body).toEqual({ userIds: ['user-1'], roleName: 'Editor', removeExistingRoles: true });
+
+    importRequest.flush({ succeeded: 1, failed: 0, errors: [] });
+    exportRequest.flush(new Blob(['id,email\n']));
+    roleRequest.flush({ succeeded: 1, failed: 0, errors: [] });
+  });
 });

@@ -80,10 +80,6 @@ export class AuthService {
 
   hasRole(role: string): boolean {
     const userRoles = this.currentUserValue?.roles || [];
-    // Admin has access to everything (Superuser) logic REMOVED on user request
-    // if (userRoles.includes('Admin')) {
-    //   return true;
-    // }
     return userRoles.includes(role);
   }
 
@@ -173,6 +169,22 @@ export class AuthService {
 
     // Redirect to login
     this.router.navigate(['/auth/login']);
+  }
+
+  /**
+   * End the Master session before sending an administrator to the central panel.
+   * The two applications use different origins, so their cookies and in-memory
+   * access tokens cannot be shared safely. Central login therefore requires a
+   * fresh authentication on eduivme.com.
+   */
+  async handoffToCentralAdmin(): Promise<void> {
+    try {
+      await firstValueFrom(this.http.post(`${this.AUTH_URL}/revoke-token`, {}, { withCredentials: true }));
+    } catch {
+      // The local session must still be removed if the best-effort revoke fails.
+    } finally {
+      this.clearLocalSession();
+    }
   }
 
   /**

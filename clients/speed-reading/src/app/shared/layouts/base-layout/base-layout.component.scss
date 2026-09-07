@@ -110,14 +110,6 @@
     }
   }
 
-  .admin-switch-btn {
-    margin-right: 8px;
-
-    mat-icon {
-      margin-right: 8px;
-    }
-  }
-
   // Mobile optimization
   @media (max-width: 768px) {
     height: 56px;
@@ -299,65 +291,6 @@
         gap: 16px;
       }
     }
-  }
-}
-
-/* Context Badge Styling (Framed Name & Spaced - 14px) */
-.context-badge {
-  display: flex !important;
-  align-items: center !important;
-  margin-right: 20px;
-  max-width: 240px;
-
-  mat-icon {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
-    line-height: 20px;
-    color: var(--ui-warning);
-  }
-
-  .badge-value {
-    font-size: 14px; // Increased to 14px
-    font-weight: 600;
-    color: var(--ui-warning);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: inline-block;
-
-    // Framed Style
-    border: 1px solid color-mix(in srgb, var(--ui-warning) 40%, transparent);
-    background-color: var(--ui-warning-soft);
-    border-radius: var(--ui-radius-sm);
-    padding: 3px 12px;
-    margin-left: 8px;
-    max-width: 180px;
-  }
-
-  @media (max-width: 768px) {
-    margin-right: 8px;
-
-    .badge-value {
-      max-width: 110px;
-      font-size: 12px; // Slightly smaller on mobile
-    }
-  }
-}
-
-.admin-switch-btn {
-  height: 32px !important; // Increased to 32px
-  line-height: 32px !important;
-  font-size: 13px !important; // 13px fits better than 14px for button text usually, but trying 13.5
-  padding: 0 14px !important;
-  margin-right: 8px;
-  border-radius: 16px;
-
-  mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-    margin-right: 6px;
   }
 }
 

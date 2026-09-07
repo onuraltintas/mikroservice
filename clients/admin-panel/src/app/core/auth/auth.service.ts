@@ -330,7 +330,7 @@ export class AuthService implements OnDestroy {
             : [parsedToken.amr];
         const appRoles = [
             'SystemAdmin', 'Admin', 'InstitutionOwner', 'InstitutionAdmin',
-            'Teacher', 'Student', 'Parent'
+            'Teacher', 'Student', 'Parent', 'Editor'
         ];
         const mainRole = appRoles.find(role => rolesArray.includes(role)) || rolesArray[0] || 'User';
 

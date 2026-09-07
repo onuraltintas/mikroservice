@@ -1,0 +1,10 @@
+# Both frontend Dockerfiles use clients/ as their shared build context.
+**/node_modules
+**/dist
+**/.angular
+**/.tmp-ng
+**/coverage
+**/*.log
+**/.env
+**/.env.*
+!**/.env.example

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, inject, signal } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IdentityService } from '../../../../core/services/identity.service';
@@ -113,10 +113,9 @@ import { ToasterService } from '../../../../core/services/toaster.service';
                                         <select formControlName="role" 
                                             [class.border-red-500]="f['role'].invalid && f['role'].touched"
                                             class="block w-full appearance-none rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5 pl-4 dark:bg-gray-800 dark:border-gray-600 dark:text-white cursor-pointer transition-colors">
-                                            <option value="Student">🎓 Öğrenci</option>
-                                            <option value="Teacher">👨‍🏫 Öğretmen</option>
-                                            <option value="InstitutionAdmin">🏢 Kurum Yöneticisi</option>
-                                            <option value="Parent">👨‍👩‍👦 Veli</option>
+                                            @for (role of roleOptions(); track role.value) {
+                                                <option [value]="role.value">{{ role.label }}</option>
+                                            }
                                         </select>
                                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
                                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -188,12 +187,24 @@ import { ToasterService } from '../../../../core/services/toaster.service';
     </div>
   `
 })
-export class CreateUserModalComponent {
+export class CreateUserModalComponent implements OnInit {
   @Output() close = new EventEmitter<boolean>(); // true if saved
 
   private fb = inject(FormBuilder);
   private identityService = inject(IdentityService);
   private toaster = inject(ToasterService);
+
+  private readonly builtInRoles = [
+    { value: 'Student', label: 'Öğrenci' },
+    { value: 'Teacher', label: 'Öğretmen' },
+    { value: 'InstitutionAdmin', label: 'Kurum Yöneticisi' },
+    { value: 'InstitutionOwner', label: 'Kurum Sahibi' },
+    { value: 'Parent', label: 'Veli' },
+    { value: 'Editor', label: 'Editör' },
+    { value: 'SystemAdmin', label: 'Sistem Yöneticisi' }
+  ];
+
+  roleOptions = signal(this.builtInRoles);
 
   form = this.fb.group({
     firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
@@ -209,6 +220,22 @@ export class CreateUserModalComponent {
   loading = signal(false);
   error = signal<string | null>(null);
   createdUser = signal<{ email: string, invitationSent: boolean } | null>(null);
+
+  ngOnInit(): void {
+    this.identityService.getRoles().subscribe({
+      next: roles => {
+        const merged = new Map(this.builtInRoles.map(role => [role.value.toLowerCase(), role]));
+        for (const roleName of roles) {
+          const value = roleName.trim();
+          if (!value) continue;
+          const key = value.toLowerCase();
+          if (!merged.has(key)) merged.set(key, { value, label: value });
+        }
+        this.roleOptions.set([...merged.values()]);
+      },
+      error: () => this.roleOptions.set(this.builtInRoles)
+    });
+  }
 
   closeModal(saved: boolean = false) {
     this.close.emit(saved || !!this.createdUser());

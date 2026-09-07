@@ -8,6 +8,11 @@ export const IDENTITY_ROUTES: Routes = [
         loadComponent: () => import('./pages/user-list/user-list').then(m => m.UserListComponent)
     },
     {
+        path: 'bulk-users',
+        data: { permission: ADMIN_PERMISSIONS.usersView, role: 'SystemAdmin' },
+        loadComponent: () => import('./pages/bulk-user-operations').then(m => m.BulkUserOperationsComponent)
+    },
+    {
         path: 'institutions',
         data: { permission: ADMIN_PERMISSIONS.institutionsView },
         loadComponent: () => import('./pages/institution-list').then(m => m.InstitutionListComponent)

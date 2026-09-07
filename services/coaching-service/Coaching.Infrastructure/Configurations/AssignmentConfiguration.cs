@@ -100,6 +100,10 @@ public class AssignmentConfiguration : IEntityTypeConfiguration<Assignment>
         builder.Property(x => x.UpdatedAt)
             .HasColumnName("updated_at");
 
+        builder.Property(x => x.Version)
+            .IsConcurrencyToken()
+            .IsRequired();
+
         // Relationships
         builder.HasMany(x => x.AssignedStudents)
             .WithOne(x => x.Assignment)

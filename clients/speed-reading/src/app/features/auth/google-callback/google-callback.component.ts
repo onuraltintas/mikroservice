@@ -5,6 +5,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../core/services/auth.service';
 import { SubscriptionService } from '../../../core/services/subscription.service';
 import { AuthResponse } from '../../../core/models/user.model';
+import { environment } from '../../../../environments/environment';
 
 /**
  * Handles the server-side Google OAuth redirect callback.
@@ -80,12 +81,19 @@ export class GoogleCallbackComponent implements OnInit {
       });
     } else if (role === 'teacher' || role === 'institutionadmin') {
       this.router.navigate(['/teacher/dashboard']);
-    } else if (role === 'admin' || role === 'editor') {
-      this.router.navigate(['/admin/dashboard']);
+    } else if (role === 'admin' || role === 'systemadmin' || role === 'editor') {
+      void this.redirectToCentralAdmin();
     } else if (role === 'coach') {
       this.router.navigate(['/coaching/dashboard']);
     } else {
       this.router.navigate(['/auth/login']);
+    }
+  }
+
+  private async redirectToCentralAdmin(): Promise<void> {
+    await this.authService.handoffToCentralAdmin();
+    if (typeof window !== 'undefined') {
+      window.location.replace(environment.centralAdminLoginUrl);
     }
   }
 

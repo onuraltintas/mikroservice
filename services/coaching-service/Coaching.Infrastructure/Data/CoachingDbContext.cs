@@ -5,6 +5,7 @@ using System.Reflection;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using Coaching.Application.Exceptions;
 using Npgsql;
+using EduPlatform.Shared.Kernel.Primitives;
 using SharedConcurrencyException = EduPlatform.Shared.Kernel.Exceptions.ConcurrencyException;
 
 namespace Coaching.Infrastructure.Data;
@@ -130,7 +131,7 @@ public class CoachingDbContext : DbContext
 
     private void AdvanceConcurrencyTokens()
     {
-        foreach (var entry in ChangeTracker.Entries<AcademicGoal>())
+        foreach (var entry in ChangeTracker.Entries<AggregateRoot>())
         {
             if (entry.State != EntityState.Modified)
             {

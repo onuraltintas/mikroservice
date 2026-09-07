@@ -15,7 +15,6 @@ import { TeacherClassOverviewReport } from '../../../core/models/report.model';
 import { StudentsService } from '../../../core/services/students.service';
 import { InstitutionsService } from '../../../core/services/institutions.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { AdminContextService } from '../../../core/services/admin-context.service';
 import { Student } from '../../../core/models/student.model';
 
 @Component({
@@ -40,7 +39,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private studentsService  = inject(StudentsService);
   private institutionsService = inject(InstitutionsService);
   private authService      = inject(AuthService);
-  private adminContext     = inject(AdminContextService);
   private router           = inject(Router);
   private destroy$         = new Subject<void>();
 
@@ -62,16 +60,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private get teacherId(): string {
-    if (this.adminContext.isImpersonatingTeacher()) {
-      return this.adminContext.teacherId() ?? '';
-    }
     return this.authService.currentUserValue?.id ?? '';
   }
 
   loadInstitutionCode(): void {
-    const instId = this.adminContext.isImpersonatingInstitution()
-      ? this.adminContext.institutionId()
-      : (this.authService.currentUserValue as any)?.institutionId;
+    const instId = (this.authService.currentUserValue as any)?.institutionId;
 
     if (instId) {
       this.institutionsService.getInstitutionById(instId)

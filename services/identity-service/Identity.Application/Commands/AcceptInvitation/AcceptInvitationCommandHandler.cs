@@ -4,6 +4,7 @@ using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Identity.Application.Commands.AcceptInvitation;
 
@@ -15,6 +16,7 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
     private readonly IStudentRepository _studentRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<AcceptInvitationCommandHandler> _logger;
 
     public AcceptInvitationCommandHandler(
         IInvitationRepository invitationRepository,
@@ -22,7 +24,8 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
         ITeacherRepository teacherRepository,
         IStudentRepository studentRepository,
         IUnitOfWork unitOfWork,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        ILogger<AcceptInvitationCommandHandler> logger)
     {
         _invitationRepository = invitationRepository;
         _userRepository = userRepository;
@@ -30,6 +33,7 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
         _studentRepository = studentRepository;
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _logger = logger;
     }
 
     public async Task<Result> Handle(AcceptInvitationCommand request, CancellationToken cancellationToken)
@@ -88,7 +92,8 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
         }
         catch (Exception ex)
         {
-            return Result.Failure(new Error("AcceptInvitation.Failed", ex.Message));
+            _logger.LogError(ex, "Invitation acceptance failed for {InvitationId}.", request.InvitationId);
+            return Result.Failure(new Error("AcceptInvitation.Failed", "Davet kabul edilemedi. Lütfen daha sonra tekrar deneyin."));
         }
     }
 

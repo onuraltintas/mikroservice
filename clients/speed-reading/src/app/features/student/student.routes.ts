@@ -38,7 +38,7 @@ export const studentRoutes: Routes = [
       {
         path: 'exercises',
         canActivate: [authGuard],
-        data: { role: ['Admin', 'Teacher', 'Editor', 'Student', 'InstitutionAdmin'] },
+        data: { role: ['Teacher', 'Editor', 'Student', 'InstitutionAdmin'] },
         loadComponent: () => import('./exercises/exercises-list.component').then(m => m.ExercisesListComponent)
       },
       {

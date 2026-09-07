@@ -5,6 +5,7 @@ using Identity.Domain.Entities;
 using MediatR;
 
 using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Identity.Application.Commands.CreateTeacher;
 
@@ -17,6 +18,7 @@ public class CreateTeacherCommandHandler : IRequestHandler<CreateTeacherCommand,
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly ILogger<CreateTeacherCommandHandler> _logger;
 
     public CreateTeacherCommandHandler(
         IIdentityService identityService,
@@ -25,7 +27,8 @@ public class CreateTeacherCommandHandler : IRequestHandler<CreateTeacherCommand,
         IInstitutionRepository institutionRepository,
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService,
-        IPublishEndpoint publishEndpoint)
+        IPublishEndpoint publishEndpoint,
+        ILogger<CreateTeacherCommandHandler> logger)
     {
         _identityService = identityService;
         _userRepository = userRepository;
@@ -34,6 +37,7 @@ public class CreateTeacherCommandHandler : IRequestHandler<CreateTeacherCommand,
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
         _publishEndpoint = publishEndpoint;
+        _logger = logger;
     }
 
     public async Task<Result<CreateTeacherResult>> Handle(CreateTeacherCommand request, CancellationToken cancellationToken)
@@ -109,8 +113,9 @@ public class CreateTeacherCommandHandler : IRequestHandler<CreateTeacherCommand,
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Teacher profile provisioning failed for {UserId}.", teacherUserId);
             await _identityService.DeleteUserAsync(teacherUserId, cancellationToken);
-            return Result.Failure<CreateTeacherResult>(new Error("CreateTeacher.Failed", ex.Message));
+            return Result.Failure<CreateTeacherResult>(new Error("CreateTeacher.Failed", "Öğretmen oluşturulamadı. Lütfen daha sonra tekrar deneyin."));
         }
     }
 }

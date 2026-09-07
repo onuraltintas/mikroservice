@@ -123,13 +123,14 @@ set -euo pipefail
 : "${POSTGRES_DB_IDENTITY:?Set database names from the deployment config store}"
 : "${POSTGRES_DB_COACHING:?Set database names from the deployment config store}"
 : "${POSTGRES_DB_NOTIFICATION:?Set database names from the deployment config store}"
+: "${POSTGRES_DB_SPEED_READING_OWNED:?Set the owned Speed Reading database name}"
 
 backup_root="$STAGING_BACKUP_ROOT/$(date -u +%Y-%m-%dT%H%M%SZ)"
 mkdir -p "$backup_root"
 postgres_user="$(docker compose exec -T postgres printenv POSTGRES_USER | tr -d '\r\n')"
 : "${postgres_user:?The PostgreSQL container did not expose POSTGRES_USER}"
 
-for database in "$POSTGRES_DB_IDENTITY" "$POSTGRES_DB_COACHING" "$POSTGRES_DB_NOTIFICATION"; do
+for database in "$POSTGRES_DB_IDENTITY" "$POSTGRES_DB_COACHING" "$POSTGRES_DB_NOTIFICATION" "$POSTGRES_DB_SPEED_READING_OWNED"; do
   path="$backup_root/$database.dump"
   docker compose exec -T postgres pg_dump \
     --format=custom --no-owner --no-acl \
@@ -139,6 +140,24 @@ done
 
 sha256sum "$backup_root"/*.dump | tee "$backup_root/SHA256SUMS"
 ```
+
+Bu örnek dört veritabanının aynı Compose PostgreSQL sunucusunda bulunduğunu
+varsayar. `SPEED_READING_OWNED_CONNECTION_STRING` başka bir sunucuya gidiyorsa
+owned veritabanını o sunucuda, sağlayıcının yedekleme mekanizması veya `pg_dump`
+ile ayrıca yedekleyin; parolayı komut satırına/loglara koymayın. Owned veritabanı
+doğrulanmadan üç veritabanının yedeklenmesini tam platform yedeği saymayın.
+
+Veritabanları dışında aşağıdaki verileri de aynı kurtarma planına dahil edin:
+
+- CMS: `speed_reading_media` volume içeriği (`/var/lib/eduplatform/media`).
+- Koçluk ekleri: MinIO bucket nesneleri, sürümleri ve gerekli metadata.
+- Data Protection key ring'leri ve ayrı güvenli kasada korunan sertifikaları.
+
+DB ile nesne deposu arasında tutarlı bir kurtarma noktası için yazıları kısa
+süre durdurun veya sürümlü snapshot stratejisi kullanın. Yedekleri aynı VPS'de
+tek kopya tutmayın; şifreli, erişim kontrollü ayrı depolamaya aktarın. Disposable
+restore provasında owned okuma geçmişini, bir CMS görselini ve bir koçluk ekini
+uygulama üzerinden açarak doğrulayın; yalnız arşivin varlığı yeterli değildir.
 
 Restore provası yeni, boş bir database/volume'a yapılır; canlı database'e
 `--clean`/`DROP DATABASE` uygulanmaz:

@@ -16,10 +16,6 @@ import { map, shareReplay } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { NavigationService, MenuItem } from '../../../core/services/navigation.service';
 import { NotificationBellComponent } from '../../components/notification-bell/notification-bell.component';
-import { AdminContextService } from '../../../core/services/admin-context.service';
-import { MatDialog } from '@angular/material/dialog';
-import { InstitutionSelectorDialogComponent } from '../../dialogs/institution-selector-dialog.component';
-import { TeacherSelectorDialogComponent } from '../../dialogs/teacher-selector-dialog.component';
 
 @Component({
   selector: 'app-base-layout',
@@ -44,21 +40,13 @@ import { TeacherSelectorDialogComponent } from '../../dialogs/teacher-selector-d
 export class BaseLayoutComponent implements OnInit {
   @Input() menuItems: MenuItem[] = [];
   @Input() title: string = 'Speed Reading Platform';
-  @Input() role: 'student' | 'teacher' | 'admin' = 'student';
+  @Input() role: 'student' | 'teacher' = 'student';
 
   private breakpointObserver = inject(BreakpointObserver);
   private authService = inject(AuthService);
   private navigationService = inject(NavigationService);
 
   private router = inject(Router);
-  private adminContext = inject(AdminContextService);
-  private dialog = inject(MatDialog);
-
-  // Expose context signals to template
-  instName = this.adminContext.institutionName;
-  teacherName = this.adminContext.teacherName;
-  isImpersonatingInst = this.adminContext.isImpersonatingInstitution;
-  isImpersonatingTeacher = this.adminContext.isImpersonatingTeacher;
 
   currentUser = this.authService.currentUserValue;
   expandedMenuItems: Set<string> = new Set();
@@ -140,7 +128,6 @@ export class BaseLayoutComponent implements OnInit {
     switch (this.role) {
       case 'student': return 'Öğrenci';
       case 'teacher': return 'Öğretmen';
-      case 'admin': return 'Yönetici';
       default: return '';
     }
   }
@@ -149,10 +136,6 @@ export class BaseLayoutComponent implements OnInit {
     const user = this.currentUser;
     if (!user) return 'U';
     return `${user.firstName?.charAt(0) || ''}${user.lastName?.charAt(0) || ''}`.toUpperCase();
-  }
-
-  isAdmin(): boolean {
-    return this.authService.hasAdminAccess();
   }
 
   isInstitutionAdmin(): boolean {
@@ -165,49 +148,5 @@ export class BaseLayoutComponent implements OnInit {
 
   isCoach(): boolean {
     return this.authService.hasRole('Coach');
-  }
-
-  openInstitutionSelector() {
-    this.dialog.open(InstitutionSelectorDialogComponent, { width: '600px' })
-      .afterClosed().subscribe(inst => {
-        if (inst) {
-          this.adminContext.setInstitutionContext(inst.id, inst.name);
-          // Navigate to "Teacher" dashboard which serves Institution Admin
-          this.router.navigate(['/teacher/dashboard']);
-        }
-      });
-  }
-
-  openTeacherSelector() {
-    this.dialog.open(TeacherSelectorDialogComponent, { width: '600px' })
-      .afterClosed().subscribe(teacher => {
-        if (teacher) {
-          this.adminContext.setTeacherContext(teacher.id, `${teacher.firstName} ${teacher.lastName}`);
-          // Navigate to Teacher dashboard
-          this.router.navigate(['/teacher/dashboard']);
-        }
-      });
-  }
-
-  exitImpersonation() {
-    this.adminContext.clearAll();
-    this.router.navigate(['/admin/dashboard']);
-  }
-  handleItemClick(event: Event, item: MenuItem): void {
-    if (item.route === '/admin/impersonate/institution') {
-      event.preventDefault();
-      this.openInstitutionSelector();
-    } else if (item.route === '/admin/impersonate/teacher') {
-      event.preventDefault();
-      this.openTeacherSelector();
-    }
-  }
-
-  getRouterLink(route: string | undefined): string | null {
-    if (!route) return null;
-    if (route === '/admin/impersonate/institution' || route === '/admin/impersonate/teacher') {
-      return null;
-    }
-    return route;
   }
 }

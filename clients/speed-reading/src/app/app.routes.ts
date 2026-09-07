@@ -9,25 +9,33 @@ export const routes: Routes = [
   {
     path: 'student',
     canActivate: [authGuard],
-    data: { role: ['Student', 'Editor', 'Teacher', 'InstitutionAdmin', 'Admin'] },
+    data: { role: ['Student', 'Editor', 'Teacher', 'InstitutionAdmin'] },
     loadChildren: () => import('./features/student/student.routes').then(m => m.studentRoutes)
   },
   {
     path: 'teacher',
     canActivate: [authGuard],
-    data: { role: ['Teacher', 'InstitutionAdmin', 'Admin'] },
+    data: { role: ['Teacher', 'InstitutionAdmin'] },
     loadChildren: () => import('./features/teacher/teacher.routes').then(m => m.teacherRoutes)
   },
   {
     path: 'admin',
-    canActivate: [authGuard],
-    data: { role: ['Admin', 'Editor', 'SystemAdmin'] },
-    loadChildren: () => import('./features/admin/admin.routes').then(m => m.adminRoutes)
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () => import('./features/central-admin-redirect/central-admin-redirect.component').then(m => m.CentralAdminRedirectComponent)
+      },
+      {
+        path: '**',
+        loadComponent: () => import('./features/central-admin-redirect/central-admin-redirect.component').then(m => m.CentralAdminRedirectComponent)
+      }
+    ]
   },
   {
     path: 'coaching',
     canActivate: [authGuard],
-    data: { role: ['Coach', 'Admin'] },
+    data: { role: ['Coach'] },
     loadChildren: () => import('./features/coaching/coaching.routes').then(m => m.coachingRoutes)
   },
   // Veli paneli eduivme.com üzerindeki portalda çalışır; speed-reading alanında

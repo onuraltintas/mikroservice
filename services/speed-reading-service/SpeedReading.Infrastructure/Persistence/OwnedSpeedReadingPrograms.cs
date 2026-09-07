@@ -96,6 +96,7 @@ internal sealed class OwnedSpeedReadingPrograms(
         }
 
         var normalizedSearch = searchTerm.Trim();
+        var searchId = SpeedReadingAdminProgressSearch.TryParseId(searchTerm);
         var rows = await query
             .OrderByDescending(row => row.Progress.CreatedAt)
             .ThenByDescending(row => row.Progress.Id)
@@ -105,7 +106,10 @@ internal sealed class OwnedSpeedReadingPrograms(
             cancellationToken);
         var usersById = users.Users.ToDictionary(item => item.UserId);
         var filteredRows = rows
-            .Where(row => row.TemplateName.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase)
+            .Where(row => (searchId.HasValue && (row.Progress.Id == searchId.Value
+                    || row.Progress.UserId == searchId.Value
+                    || row.Progress.ProgramTemplateId == searchId.Value))
+                || row.TemplateName.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase)
                 || (usersById.TryGetValue(row.Progress.UserId, out var user)
                     && ($"{user.FirstName} {user.LastName}".Contains(
                             normalizedSearch,

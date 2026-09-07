@@ -131,8 +131,12 @@ internal sealed class LegacySpeedReadingPrograms(SpeedReadingDbContext db) : ILe
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             var normalizedSearch = searchTerm.Trim().ToLowerInvariant();
+            var searchId = SpeedReadingAdminProgressSearch.TryParseId(searchTerm);
             query = query.Where(row =>
-                (row.User != null
+                (searchId.HasValue && (row.Progress.Id == searchId.Value
+                    || row.Progress.UserId == searchId.Value
+                    || row.Progress.ProgramTemplateId == searchId.Value))
+                || (row.User != null
                     && ((row.User.FirstName + " " + row.User.LastName).ToLower().Contains(normalizedSearch)
                         || (row.User.Email ?? string.Empty).ToLower().Contains(normalizedSearch)))
                 || (row.Template != null && row.Template.Name.ToLower().Contains(normalizedSearch)));

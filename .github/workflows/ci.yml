@@ -171,12 +171,19 @@ jobs:
           --configuration Release --no-restore --logger "trx;LogFileName=integration-tests.trx"
           --collect:"XPlat Code Coverage"
 
+      - name: Run Speed Reading unit tests
+        run: >-
+          dotnet test tests/Unit/SpeedReading.Application.UnitTests/SpeedReading.Application.UnitTests.csproj
+          --configuration Release --logger "trx;LogFileName=speed-reading-unit-tests.trx"
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: integration-test-results
-          path: tests/Integration/Identity.API.IntegrationTests/TestResults/
+          path: |
+            tests/Integration/Identity.API.IntegrationTests/TestResults/
+            tests/Unit/SpeedReading.Application.UnitTests/TestResults/
           if-no-files-found: warn
 
   migration-drift:
@@ -218,6 +225,7 @@ jobs:
           dotnet restore services/identity-service/Identity.API/Identity.API.csproj
           dotnet restore services/coaching-service/Coaching.API/Coaching.API.csproj
           dotnet restore services/notification-service/Notification.API/Notification.API.csproj
+          dotnet restore services/speed-reading-service/SpeedReading.API/SpeedReading.API.csproj
 
       - name: Fail when EF models have unapplied changes
         shell: bash
@@ -235,6 +243,11 @@ jobs:
           "$ef" migrations has-pending-model-changes \
             --project services/notification-service/Notification.Infrastructure/Notification.Infrastructure.csproj \
             --startup-project services/notification-service/Notification.API/Notification.API.csproj \
+            --configuration Release
+          "$ef" migrations has-pending-model-changes \
+            --project services/speed-reading-service/SpeedReading.Infrastructure/SpeedReading.Infrastructure.csproj \
+            --startup-project services/speed-reading-service/SpeedReading.API/SpeedReading.API.csproj \
+            --context OwnedSpeedReadingDbContext \
             --configuration Release
 
   gateway-smoke:
@@ -432,10 +445,10 @@ jobs:
             context: .
             dockerfile: services/api-gateway/Dockerfile
           - name: admin-panel
-            context: clients/admin-panel
+            context: clients
             dockerfile: clients/admin-panel/Dockerfile
           - name: speed-reading-frontend
-            context: clients/speed-reading
+            context: clients
             dockerfile: clients/speed-reading/Dockerfile
     steps:
       - name: Checkout

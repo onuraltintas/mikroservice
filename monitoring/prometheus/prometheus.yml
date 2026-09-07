@@ -43,6 +43,7 @@ scrape_configs:
           - http://identity-service:8080/health/ready
           - http://coaching-service:8080/health/ready
           - http://notification-service:8080/health/ready
+          - http://speed-reading-service:8080/health/ready
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target

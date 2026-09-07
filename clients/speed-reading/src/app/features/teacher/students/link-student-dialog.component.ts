@@ -35,7 +35,7 @@ import { Teacher } from '../../../core/models/teacher.model';
     <form [formGroup]="linkForm" (ngSubmit)="onSubmit()">
       <mat-dialog-content>
         <p class="description">
-          Sistemde kayıtlı bir öğrenciyi {{ isAdminOrInstAdmin ? 'bir öğretmene' : 'sınıfınıza' }} eklemek için e-posta adresini girin.
+          Sistemde kayıtlı bir öğrenciyi {{ isInstitutionAdmin ? 'bir öğretmene' : 'sınıfınıza' }} eklemek için e-posta adresini girin.
         </p>
         
         <mat-form-field appearance="outline" class="full-width">
@@ -46,8 +46,8 @@ import { Teacher } from '../../../core/models/teacher.model';
           <mat-error *ngIf="linkForm.get('email')?.hasError('email')">Geçerli bir e-posta giriniz</mat-error>
         </mat-form-field>
 
-        <!-- Teacher Selection (Admin Only) -->
-        <mat-form-field appearance="outline" class="full-width" *ngIf="isAdminOrInstAdmin">
+        <!-- Teacher Selection (Institution Admin Only) -->
+        <mat-form-field appearance="outline" class="full-width" *ngIf="isInstitutionAdmin">
             <mat-label>Sınıf Öğretmeni</mat-label>
             <mat-select formControlName="teacherId">
                 <mat-option *ngFor="let teacher of teachers$ | async" [value]="teacher.id">
@@ -90,7 +90,7 @@ import { Teacher } from '../../../core/models/teacher.model';
 export class LinkStudentDialogComponent implements OnInit {
   linkForm: FormGroup;
   loading = false;
-  isAdminOrInstAdmin = false;
+  isInstitutionAdmin = false;
   teachers$!: Observable<Teacher[]>;
 
   constructor(
@@ -101,16 +101,16 @@ export class LinkStudentDialogComponent implements OnInit {
     private toaster: ToasterService,
     public dialogRef: MatDialogRef<LinkStudentDialogComponent>
   ) {
-    this.isAdminOrInstAdmin = this.authService.hasAdminAccess() || this.authService.hasRole('InstitutionAdmin');
+    this.isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin');
 
     this.linkForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      teacherId: [null, this.isAdminOrInstAdmin ? [Validators.required] : []]
+      teacherId: [null, this.isInstitutionAdmin ? [Validators.required] : []]
     });
   }
 
   ngOnInit(): void {
-    if (this.isAdminOrInstAdmin) {
+    if (this.isInstitutionAdmin) {
       this.teachers$ = this.teachersService.getTeachers(undefined, undefined, undefined);
     }
   }
@@ -120,10 +120,9 @@ export class LinkStudentDialogComponent implements OnInit {
       this.loading = true;
       const email = this.linkForm.value.email;
 
-      // If Admin, use StudentsService.linkStudent(email, teacherId)
-      // If Teacher, use TeachersService.linkStudent(email)
+      // Institution admins can choose the teacher; regular teachers link to their own class.
 
-      const request$ = this.isAdminOrInstAdmin
+      const request$ = this.isInstitutionAdmin
         ? this.studentsService.linkStudent(email, this.linkForm.value.teacherId)
         : this.teachersService.linkStudent(email);
 

@@ -8,6 +8,7 @@ import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import { ToasterService } from '../../../core/services/toaster.service';
 import {
   AdminContentAnalysisAnalytics,
+  AdminAnalyticsChartData,
   AdminInstitutionAnalytics,
   AdminPlatformUsageAnalytics,
   AdminStudentProgressDetails,
@@ -23,6 +24,31 @@ import {
 } from '../../../core/services/speed-reading-admin.service';
 
 type SpeedReadingAnalyticsTab = 'platform' | 'content' | 'health' | 'institutions' | 'programs' | 'progress' | 'teacher';
+
+export interface DailyPlatformMetricRow {
+  date: string;
+  activeUsers: number;
+  activities: number;
+}
+
+export function combineDailyPlatformMetrics(
+  data: Pick<AdminPlatformUsageAnalytics, 'dailyActiveUsers' | 'activityVolume'>
+): DailyPlatformMetricRow[] {
+  const rows = new Map<string, DailyPlatformMetricRow>();
+  const rowFor = (date: string): DailyPlatformMetricRow => {
+    const existing = rows.get(date);
+    if (existing) return existing;
+    const row = { date, activeUsers: 0, activities: 0 };
+    rows.set(date, row);
+    return row;
+  };
+  const valueFor = (item: AdminAnalyticsChartData): number => item.series[0]?.value ?? 0;
+
+  for (const item of data.dailyActiveUsers ?? []) rowFor(item.name).activeUsers = valueFor(item);
+  for (const item of data.activityVolume ?? []) rowFor(item.name).activities = valueFor(item);
+
+  return [...rows.values()].sort((left, right) => left.date.localeCompare(right.date));
+}
 
 @Component({
   selector: 'app-speed-reading-analytics',
@@ -79,6 +105,7 @@ type SpeedReadingAnalyticsTab = 'platform' | 'content' | 'health' | 'institution
               <div class="data-card"><h3>Kullanıcı büyümesi</h3><p class="muted">{{ data.newUserDataAvailable ? (data.newUsers + ' yeni kullanıcı') : 'Kayıt tarihi verisi mevcut değil.' }}</p><p class="muted">{{ data.userGrowthRateDataAvailable ? ('Büyüme oranı: ' + data.userGrowthRate + '%') : 'Büyüme oranı hesaplanamadı.' }}</p></div>
               <div class="data-card"><h3>Etkileşim</h3><p class="muted">Etkileşim oranı: {{ data.engagementRate }}%</p><p class="muted">Elde tutma oranı: {{ data.retentionRate }}%</p><p class="muted">Ortalama oturum: {{ data.averageSessionDuration }} dakika</p></div>
             </div>
+            <div class="data-card"><div class="flex items-center justify-between gap-3"><h3 class="mb-0">Günlük kullanım eğilimi</h3><span class="muted">{{ data.dateFrom }} – {{ data.dateTo }}</span></div><div class="mt-3 overflow-x-auto"><table class="data-table"><thead><tr><th>Tarih</th><th>Aktif kullanıcı</th><th>Aktivite</th></tr></thead><tbody>@for (row of dailyPlatformMetrics(data); track row.date) {<tr><td>{{ row.date }}</td><td>{{ row.activeUsers }}</td><td>{{ row.activities }}</td></tr>} @empty {<tr><td colspan="3" class="empty">Günlük kullanım verisi yok.</td></tr>}</tbody></table></div></div>
             <div class="data-card"><h3>En çok kullanılan içerikler</h3><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>İçerik</th><th>Tür</th><th>Kullanım</th></tr></thead><tbody>@for (item of data.popularContent; track item.title + item.type) {<tr><td>{{ item.title }}</td><td>{{ item.type }}</td><td>{{ item.usageCount }}</td></tr>} @empty {<tr><td colspan="3" class="empty">Veri yok.</td></tr>}</tbody></table></div></div>
           </section>
         }
@@ -201,10 +228,17 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
   progressPageNumber = 1;
   private readonly progressPageSize = 25;
 
+  dailyPlatformMetrics(data: AdminPlatformUsageAnalytics): DailyPlatformMetricRow[] {
+    return combineDailyPlatformMetrics(data);
+  }
+
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
+    const requestedTab = this.route.snapshot.queryParamMap.get('tab');
+    const queryTab = this.tabs.find(tab => tab.value === requestedTab && tab.visible())?.value;
     const initialTab = this.route.snapshot.data['defaultTab'] as SpeedReadingAnalyticsTab | undefined;
-    if (initialTab) this.selectedTab.set(initialTab);
+    if (queryTab) this.selectedTab.set(queryTab);
+    else if (initialTab) this.selectedTab.set(initialTab);
     else if (!this.canPlatformAnalytics() && this.canProgress()) this.selectedTab.set('progress');
     this.load();
   }

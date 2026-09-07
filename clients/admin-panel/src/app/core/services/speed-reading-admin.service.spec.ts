@@ -177,6 +177,35 @@ describe('SpeedReadingAdminService', () => {
     deleteRequest.flush(null);
   });
 
+  it('maps the API WPM acronym fields to the admin panel model', () => {
+    let ageGroup: any;
+    service.getAgeGroups().subscribe(value => ageGroup = value[0]);
+
+    const request = http.expectOne('/api/speed-reading/age-group-configurations?activeOnly=false');
+    request.flush([{
+      id: 'age-1',
+      name: 'child',
+      displayName: 'Çocuk',
+      minAge: 7,
+      maxAge: 12,
+      minWPM: 80,
+      recommendedWPM: 120,
+      maxWPM: 180,
+      recommendedComprehension: 70,
+      recommendedDailyMinutes: 15,
+      defaultDifficultyLevel: 1,
+      orderIndex: 1,
+      isActive: true,
+      description: 'Çocuk grubu',
+      createdAt: '2026-09-07T00:00:00Z',
+      updatedAt: null
+    }]);
+
+    expect(ageGroup.minWpm).toBe(80);
+    expect(ageGroup.recommendedWpm).toBe(120);
+    expect(ageGroup.maxWpm).toBe(180);
+  });
+
   it('loads and manages assessment templates by age group', () => {
     service.getAssessmentTemplates().subscribe(value => expect(value).toEqual([]));
     const listRequest = http.expectOne('/api/speed-reading/admin/assessment-templates');

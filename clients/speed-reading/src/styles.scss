@@ -10,7 +10,7 @@
 // Sprint 0: CSS custom properties for the new student panel design system.
 // These --sp-* variables are consumed by Tailwind classes (bg-sp-primary etc.)
 // and by student component SCSS files directly.
-// Admin/teacher panels are NOT affected — they use the old --primary-* variables.
+// Teacher and shared platform surfaces continue to use the existing --primary-* variables.
 // =============================================================================
 @use 'styles/student-tokens';
 @use 'styles/animations';
@@ -1073,7 +1073,7 @@ button[mat-flat-button] {
 }
 
 // ========================================
-// COACHING ADMIN SHARED STYLES
+// COACHING SHARED STYLES
 // ========================================
 
 .page-container {
@@ -1144,7 +1144,7 @@ button[mat-flat-button] {
   }
 }
 
-// Responsive composition for the legacy coaching/admin surfaces. Tables keep
+// Responsive composition for coaching and data-table surfaces. Tables keep
 // their readable column widths and scroll inside the card on narrow screens.
 .page-container mat-card-content,
 .page-container .ui-section {
