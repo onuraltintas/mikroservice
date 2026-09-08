@@ -29,9 +29,9 @@ type SubscriptionTab = 'products' | 'plans' | 'subscriptions' | 'payments';
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Bu ekran ödeme sağlayıcısını başlatmaz veya doğrulamaz. Ürün erişimi, planlar, manuel abonelik kayıtları ve ödeme geçmişi ayrı olarak yönetilir.</p>
       </header>
 
-      <nav class="flex flex-wrap gap-2" aria-label="Abonelik yönetim sekmeleri">
+      <nav class="ui-tab-list flex flex-wrap gap-2" aria-label="Abonelik yönetim sekmeleri">
         @for (tab of tabs; track tab.value) {
-          <button type="button" (click)="selectTab(tab.value)" [attr.aria-pressed]="selectedTab() === tab.value" [class.bg-indigo-600]="selectedTab() === tab.value" [class.text-white]="selectedTab() === tab.value" class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 dark:border-gray-600 dark:text-gray-200">{{ tab.label }}</button>
+          <button type="button" (click)="selectTab(tab.value)" [attr.aria-pressed]="selectedTab() === tab.value" [class.bg-indigo-600]="selectedTab() === tab.value" [class.text-white]="selectedTab() === tab.value" class="ui-tab rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 dark:border-gray-600 dark:text-gray-200">{{ tab.label }}</button>
         }
       </nav>
 
@@ -69,32 +69,28 @@ type SubscriptionTab = 'products' | 'plans' | 'subscriptions' | 'payments';
     </main>
   `,
   styles: [`
-    .data-card, .form-card { border: 1px solid rgb(229 231 235); border-radius: .75rem; background: white; padding: 1rem; }
-    .form-card h3 { margin-bottom: .75rem; font-weight: 600; color: rgb(17 24 39); }
+    .data-card, .form-card { border: 1px solid var(--ui-border); border-radius: .75rem; background: var(--ui-surface); padding: 1rem; }
+    .form-card h3 { margin-bottom: .75rem; font-weight: 600; color: var(--ui-text); }
     .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
-    .form-grid label { display: flex; flex-direction: column; gap: .25rem; font-size: .875rem; color: rgb(55 65 81); }
+    .form-grid label { display: flex; flex-direction: column; gap: .25rem; font-size: .875rem; color: var(--ui-text); }
     .form-grid .wide { grid-column: 1 / -1; }
     .form-grid .check { flex-direction: row; align-items: center; padding-top: 1.5rem; }
-    input, select, textarea { border: 1px solid rgb(209 213 219); border-radius: .5rem; background: transparent; padding: .5rem .75rem; color: inherit; }
+    input, select, textarea { border: 1px solid var(--ui-border-strong); border-radius: .5rem; background: transparent; padding: .5rem .75rem; color: inherit; }
     textarea { min-height: 4rem; }
     .form-actions, .pager, .inline-filter { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; }
     .form-actions { margin-top: 1rem; }
     .primary, .secondary, .actions button, .pager button { border-radius: .5rem; padding: .5rem .75rem; font-size: .875rem; }
-    .primary { background: rgb(79 70 229); color: white; }
-    .secondary, .actions button, .pager button { border: 1px solid rgb(209 213 219); }
+    .primary { background: var(--ui-brand); color: var(--ui-brand-contrast); }
+    .secondary, .actions button, .pager button { border: 1px solid var(--ui-border-strong); }
     .data-table { width: 100%; text-align: left; font-size: .875rem; }
-    .data-table th { border-bottom: 1px solid rgb(229 231 235); padding: .625rem .75rem; font-size: .7rem; text-transform: uppercase; color: rgb(107 114 128); }
-    .data-table td { border-bottom: 1px solid rgb(243 244 246); padding: .625rem .75rem; color: rgb(55 65 81); vertical-align: top; }
-    .actions { white-space: nowrap; }
+    .data-table th { border-bottom: 1px solid var(--ui-border); padding: .625rem .75rem; font-size: .7rem; text-transform: uppercase; color: var(--ui-text-muted); }
+    .data-table td { border-bottom: 1px solid var(--ui-border); padding: .625rem .75rem; color: var(--ui-text); vertical-align: top; }
+    .actions { white-space: normal; }
     .actions button + button { margin-left: .35rem; }
-    .muted { color: rgb(107 114 128); font-size: .8rem; }
-    .empty { padding: 2rem; text-align: center; color: rgb(107 114 128); }
-    .pager { justify-content: space-between; margin-top: .75rem; font-size: .8rem; color: rgb(107 114 128); }
+    .muted { color: var(--ui-text-muted); font-size: .8rem; }
+    .empty { padding: 2rem; text-align: center; color: var(--ui-text-muted); }
+    .pager { justify-content: space-between; margin-top: .75rem; font-size: .8rem; color: var(--ui-text-muted); }
     @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } .form-grid .wide { grid-column: auto; } .inline-filter { flex-wrap: wrap; justify-content: stretch; } .inline-filter input, .inline-filter select { min-width: 0; width: 100%; } }
-    :host-context(.dark) .data-card, :host-context(.dark) .form-card { border-color: rgb(55 65 81); background: rgb(31 41 55); }
-    :host-context(.dark) .data-table th { border-color: rgb(55 65 81); color: rgb(156 163 175); }
-    :host-context(.dark) .data-table td { border-color: rgb(55 65 81); color: rgb(229 231 235); }
-    :host-context(.dark) .form-grid label, :host-context(.dark) .form-card h3 { color: rgb(229 231 235); }
   `]
 })
 export class SpeedReadingSubscriptionsComponent implements OnInit {

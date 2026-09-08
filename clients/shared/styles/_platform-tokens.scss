@@ -5,7 +5,9 @@
 :root {
   --ui-brand: #4f46e5;
   --ui-brand-strong: #4338ca;
+  --ui-brand-hover: #4338ca;
   --ui-brand-soft: #eef2ff;
+  --ui-brand-contrast: #ffffff;
   --ui-accent: #7c3aed;
 
   --ui-page: #f8fafc;
@@ -67,7 +69,9 @@ html.dark,
 [data-theme='dark'] {
   --ui-brand: #818cf8;
   --ui-brand-strong: #6366f1;
+  --ui-brand-hover: #a5b4fc;
   --ui-brand-soft: #1e1b4b;
+  --ui-brand-contrast: #0f172a;
 
   --ui-page: #0f172a;
   --ui-surface: #1e293b;

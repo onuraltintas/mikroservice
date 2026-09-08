@@ -19,13 +19,13 @@ import {
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Yönetim işlemlerinin servis bazlı, değiştirilemez işlem ve değişen alan geçmişi.</p>
       </header>
 
-      <nav class="flex flex-wrap gap-2 mb-5" aria-label="Audit servisi">
+      <nav class="ui-tab-list flex flex-wrap gap-2 mb-5" aria-label="Audit servisi">
         @for (service of services; track service.value) {
           <button type="button" (click)="selectService(service.value)"
             [attr.aria-pressed]="selectedService() === service.value"
             [class.bg-indigo-600]="selectedService() === service.value"
             [class.text-white]="selectedService() === service.value"
-            class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium">
+            class="ui-tab px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium">
             {{ service.label }}
           </button>
         }

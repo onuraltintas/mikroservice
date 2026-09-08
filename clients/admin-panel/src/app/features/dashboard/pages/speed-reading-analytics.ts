@@ -75,12 +75,12 @@ export function combineDailyPlatformMetrics(
         <button type="submit" class="self-end rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50" [disabled]="loading() || !dateFrom || !dateTo">Yenile</button>
       </form>
 
-      <nav class="flex flex-wrap gap-2" aria-label="Hızlı Okuma analitik sekmeleri">
+      <nav class="ui-tab-list flex flex-wrap gap-2" aria-label="Hızlı Okuma analitik sekmeleri">
         @for (tab of tabs; track tab.value) {
           @if (tab.visible()) {
             <button type="button" (click)="selectTab(tab.value)" [attr.aria-pressed]="selectedTab() === tab.value"
               [class.bg-indigo-600]="selectedTab() === tab.value" [class.text-white]="selectedTab() === tab.value"
-              class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">
+              class="ui-tab rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">
               {{ tab.label }}
             </button>
           }
@@ -163,26 +163,18 @@ export function combineDailyPlatformMetrics(
     </main>
   `,
   styles: [`
-    .metric-card, .data-card { border: 1px solid rgb(229 231 235); border-radius: .75rem; background: white; padding: 1rem; }
-    .metric-card span { display: block; font-size: .75rem; font-weight: 500; color: rgb(107 114 128); }
-    .metric-card strong { display: block; margin-top: .5rem; font-size: 1.25rem; font-weight: 700; color: rgb(17 24 39); }
-    .data-card h3 { margin-bottom: .75rem; font-size: .875rem; font-weight: 600; color: rgb(17 24 39); }
-    .muted { font-size: .875rem; color: rgb(107 114 128); }
+    .metric-card, .data-card { border: 1px solid var(--ui-border); border-radius: .75rem; background: var(--ui-surface); padding: 1rem; }
+    .metric-card span { display: block; font-size: .75rem; font-weight: 500; color: var(--ui-text-muted); }
+    .metric-card strong { display: block; margin-top: .5rem; font-size: 1.25rem; font-weight: 700; color: var(--ui-text); }
+    .data-card h3 { margin-bottom: .75rem; font-size: .875rem; font-weight: 600; color: var(--ui-text); }
+    .muted { font-size: .875rem; color: var(--ui-text-muted); }
     .data-table { width: 100%; text-align: left; font-size: .875rem; }
-    .data-table th { border-bottom: 1px solid rgb(229 231 235); padding: .5rem .75rem; font-size: .75rem; text-transform: uppercase; color: rgb(107 114 128); }
-    .data-table td { border-bottom: 1px solid rgb(243 244 246); padding: .5rem .75rem; color: rgb(55 65 81); }
-    .simple-list { display: grid; gap: .5rem; font-size: .875rem; color: rgb(55 65 81); }
-    .simple-list li { display: flex; align-items: center; justify-content: space-between; gap: .75rem; border-bottom: 1px solid rgb(243 244 246); padding-bottom: .5rem; }
-    .empty { padding: 1.5rem 0; text-align: center; font-size: .875rem; color: rgb(107 114 128); }
-    .teacher-form { display: flex; align-items: end; gap: .75rem; margin-top: 1rem; } .teacher-form label { display: grid; gap: .35rem; width: min(100%, 28rem); font-size: .875rem; font-weight: 500; color: rgb(55 65 81); } .teacher-form input { border: 1px solid rgb(209 213 219); border-radius: .5rem; padding: .5rem .75rem; background: transparent; }
-    @media (prefers-color-scheme: dark) {
-      .metric-card, .data-card { border-color: rgb(55 65 81); background: rgb(31 41 55); }
-      .metric-card span, .muted, .data-table th, .empty { color: rgb(156 163 175); }
-      .metric-card strong, .data-card h3 { color: white; }
-      .data-table th, .data-table td, .simple-list li { border-color: rgb(55 65 81); }
-      .data-table td, .simple-list, .teacher-form label { color: rgb(209 213 219); }
-      .teacher-form input { border-color: rgb(75 85 99); }
-    }
+    .data-table th { border-bottom: 1px solid var(--ui-border); padding: .5rem .75rem; font-size: .75rem; text-transform: uppercase; color: var(--ui-text-muted); }
+    .data-table td { border-bottom: 1px solid var(--ui-border); padding: .5rem .75rem; color: var(--ui-text); }
+    .simple-list { display: grid; gap: .5rem; font-size: .875rem; color: var(--ui-text); }
+    .simple-list li { display: flex; align-items: center; justify-content: space-between; gap: .75rem; border-bottom: 1px solid var(--ui-border); padding-bottom: .5rem; }
+    .empty { padding: 1.5rem 0; text-align: center; font-size: .875rem; color: var(--ui-text-muted); }
+    .teacher-form { display: flex; align-items: end; gap: .75rem; margin-top: 1rem; } .teacher-form label { display: grid; gap: .35rem; width: min(100%, 28rem); font-size: .875rem; font-weight: 500; color: var(--ui-text); } .teacher-form input { border: 1px solid var(--ui-border-strong); border-radius: .5rem; padding: .5rem .75rem; background: transparent; }
   `]
 })
 export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {

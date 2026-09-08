@@ -12,6 +12,7 @@ html {
     height: 100%;
     width: 100%;
     overflow-x: hidden;
+    color-scheme: light;
     // LIGHT THEME (Default)
     @include mat.theme((color: (primary: mat.$azure-palette,
                 tertiary: mat.$blue-palette,
@@ -79,21 +80,22 @@ button,
     min-height: var(--ui-control-height);
 }
 
-// DARK MODE SUPPORT check (System Preference)
-@media (prefers-color-scheme: dark) {
-    html {
-        @include mat.theme((color: (primary: mat.$azure-palette,
-                    tertiary: mat.$blue-palette,
-                    theme-type: dark),
-                typography: Roboto,
-                density: 0,
-            ));
-    }
+// The theme service controls the document class. Keeping Material and native
+// controls tied to that same class avoids an OS preference overriding the
+// user-selected theme.
+html.dark {
+    color-scheme: dark;
 
-    body {
-        color-scheme: dark;
-        // Variables update automatically with mat.theme include
-    }
+    @include mat.theme((color: (primary: mat.$azure-palette,
+                tertiary: mat.$blue-palette,
+                theme-type: dark),
+            typography: Roboto,
+            density: 0,
+        ));
+}
+
+html.dark body {
+    color-scheme: dark;
 }
 
 @keyframes fadeInUp {

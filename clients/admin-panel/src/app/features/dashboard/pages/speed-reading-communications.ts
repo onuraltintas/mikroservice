@@ -50,15 +50,15 @@ type CmsTab = 'blocks' | 'pages' | 'blog' | 'media' | 'navigation' | 'contacts' 
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">CMS içeriğini, duyuruları, servis e-postalarını ve toplu bildirimleri gerçek API sözleşmeleriyle yönetin.</p>
       </header>
 
-      <nav class="flex flex-wrap gap-2" aria-label="İletişim sekmeleri">
-        @for (tab of visibleTabs(); track tab.value) { <button type="button" (click)="selectTab(tab.value)" [attr.aria-pressed]="selectedTab() === tab.value" [class.bg-indigo-600]="selectedTab() === tab.value" [class.text-white]="selectedTab() === tab.value" class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 dark:border-gray-600 dark:text-gray-200">{{ tab.label }}</button> }
+      <nav class="ui-tab-list flex flex-wrap gap-2" aria-label="İletişim sekmeleri">
+        @for (tab of visibleTabs(); track tab.value) { <button type="button" (click)="selectTab(tab.value)" [attr.aria-pressed]="selectedTab() === tab.value" [class.bg-indigo-600]="selectedTab() === tab.value" [class.text-white]="selectedTab() === tab.value" class="ui-tab rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 dark:border-gray-600 dark:text-gray-200">{{ tab.label }}</button> }
       </nav>
       @if (error()) { <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">{{ error() }}</div> }
 
       @if (selectedTab() === 'cms') {
         <section class="space-y-4" aria-labelledby="cms-title">
           <div class="flex flex-wrap items-end justify-between gap-3"><div><h2 id="cms-title" class="text-lg font-semibold text-gray-900 dark:text-white">CMS</h2><p class="muted">Landing blokları, sayfalar, blog, medya, menüler, iletişim mesajları ve bülten aboneleri.</p></div><button type="button" class="primary" (click)="startCmsCreate()">{{ cmsTab() === 'blocks' ? 'Yeni blok' : cmsTab() === 'pages' ? 'Yeni sayfa' : cmsTab() === 'blog' ? 'Yeni blog yazısı' : cmsTab() === 'navigation' ? 'Yeni menü öğesi' : 'Yenile' }}</button></div>
-          <nav class="flex flex-wrap gap-2" aria-label="CMS sekmeleri">@for (tab of cmsTabs; track tab.value) {<button type="button" class="secondary" [class.bg-gray-100]="cmsTab() === tab.value" (click)="selectCmsTab(tab.value)">{{ tab.label }}</button>}</nav>
+          <nav class="ui-tab-list flex flex-wrap gap-2" aria-label="CMS sekmeleri">@for (tab of cmsTabs; track tab.value) {<button type="button" class="ui-tab secondary" [attr.aria-pressed]="cmsTab() === tab.value" [class.bg-gray-100]="cmsTab() === tab.value" (click)="selectCmsTab(tab.value)">{{ tab.label }}</button>}</nav>
 
           @if (cmsTab() === 'blocks') {<form class="form-card" (ngSubmit)="saveCmsBlock()"><h3>{{ blockEditingId ? 'Bloğu düzenle' : 'Landing içerik bloğu' }}</h3><div class="form-grid"><label>Anahtar<input [(ngModel)]="blockDraft.key" name="blockKey" required maxlength="150" /></label><label>Grup<input [(ngModel)]="blockDraft.group" name="blockGroup" required maxlength="100" /></label><label>Etiket<input [(ngModel)]="blockDraft.label" name="blockLabel" maxlength="150" /></label><label>Tür<input type="number" [(ngModel)]="blockDraft.type" name="blockType" min="0" max="20" /></label><label class="wide">Değer<textarea [(ngModel)]="blockDraft.value" name="blockValue" required maxlength="100000"></textarea></label></div><div class="form-actions"><button type="button" class="secondary" (click)="cancelCmsEdit()">İptal</button><button class="primary" type="submit" [disabled]="saving()">Kaydet</button></div></form><div class="data-card"><div class="inline-filter"><input [(ngModel)]="cmsGroup" name="cmsGroup" placeholder="Grup (HomePage)" maxlength="100" /><button type="button" class="secondary" (click)="loadBlocks()">Filtrele</button><button type="button" class="secondary" (click)="saveLanding()">Grubu landing olarak kaydet</button></div><table class="data-table"><thead><tr><th>Grup</th><th>Anahtar</th><th>Etiket</th><th>Değer</th><th></th></tr></thead><tbody>@for (block of blocks(); track block.id) {<tr><td>{{ block.group }}</td><td class="font-mono">{{ block.key }}</td><td>{{ block.label || '—' }}</td><td class="max-w-xl whitespace-pre-wrap">{{ block.value }}</td><td class="actions"><button type="button" (click)="editBlock(block)">Düzenle</button><button type="button" class="danger" (click)="deleteBlock(block)">Sil</button></td></tr>} @empty {<tr><td colspan="5" class="empty">İçerik bloğu bulunamadı.</td></tr>}</tbody></table></div>}
 
@@ -92,32 +92,30 @@ type CmsTab = 'blocks' | 'pages' | 'blog' | 'media' | 'navigation' | 'contacts' 
   `,
   styles: [`
     :host { display: block; }
-    .muted { color: rgb(107 114 128); font-size: .85rem; }
-    .data-card, .form-card { border: 1px solid rgb(229 231 235); border-radius: .75rem; padding: 1rem; background: white; }
+    .muted { color: var(--ui-text-muted); font-size: .85rem; }
+    .data-card, .form-card { border: 1px solid var(--ui-border); border-radius: .75rem; padding: 1rem; background: var(--ui-surface); }
     .form-card { display: grid; gap: 1rem; }
     .form-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
-    label { display: grid; gap: .35rem; font-size: .875rem; font-weight: 500; color: rgb(55 65 81); }
-    input, textarea, select { width: 100%; border: 1px solid rgb(209 213 219); border-radius: .5rem; padding: .55rem .7rem; background: transparent; font: inherit; color: inherit; }
+    label { display: grid; gap: .35rem; font-size: .875rem; font-weight: 500; color: var(--ui-text); }
+    input, textarea, select { width: 100%; border: 1px solid var(--ui-border-strong); border-radius: .5rem; padding: .55rem .7rem; background: transparent; font: inherit; color: inherit; }
     textarea { min-height: 5rem; resize: vertical; }
     .wide { grid-column: 1 / -1; }
     .check { display: flex; align-items: center; gap: .5rem; } .check input { width: auto; }
     .primary, .secondary, .danger { border-radius: .5rem; padding: .55rem .8rem; font-size: .875rem; font-weight: 600; }
-    .primary { background: rgb(79 70 229); color: white; } .secondary { border: 1px solid rgb(209 213 219); } .danger { color: rgb(185 28 28); }
+    .primary { background: var(--ui-brand); color: var(--ui-brand-contrast); } .secondary { border: 1px solid var(--ui-border-strong); } .danger { color: var(--ui-danger); }
     .actions, .form-actions, .inline-filter, .pager { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
     .form-actions { justify-content: flex-end; } .inline-filter { margin-bottom: 1rem; }
     .data-table { width: 100%; text-align: left; font-size: .875rem; }
     .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
-    .media-card { overflow: hidden; border: 1px solid rgb(229 231 235); border-radius: .75rem; background: rgb(249 250 251); }
-    .media-card img { display: block; width: 100%; height: 150px; object-fit: cover; background: rgb(229 231 235); }
+    .media-card { overflow: hidden; border: 1px solid var(--ui-border); border-radius: .75rem; background: var(--ui-surface-muted); }
+    .media-card img { display: block; width: 100%; height: 150px; object-fit: cover; background: var(--ui-border); }
     .media-card > div { padding: .75rem; }
-    .data-table th { border-bottom: 1px solid rgb(229 231 235); padding: .625rem .75rem; font-size: .7rem; text-transform: uppercase; color: rgb(107 114 128); }
-    .data-table td { border-bottom: 1px solid rgb(243 244 246); padding: .625rem .75rem; color: rgb(55 65 81); vertical-align: top; }
-    .actions { white-space: nowrap; } .actions button + button { margin-left: .35rem; }
-    .empty { padding: 2rem; text-align: center; color: rgb(107 114 128); } .pager { justify-content: space-between; margin-top: .75rem; font-size: .8rem; color: rgb(107 114 128); }
-    .preview { margin-top: .75rem; border-top: 1px solid rgb(229 231 235); padding-top: .75rem; }
+    .data-table th { border-bottom: 1px solid var(--ui-border); padding: .625rem .75rem; font-size: .7rem; text-transform: uppercase; color: var(--ui-text-muted); }
+    .data-table td { border-bottom: 1px solid var(--ui-border); padding: .625rem .75rem; color: var(--ui-text); vertical-align: top; }
+    .actions { white-space: normal; } .actions button + button { margin-left: .35rem; }
+    .empty { padding: 2rem; text-align: center; color: var(--ui-text-muted); } .pager { justify-content: space-between; margin-top: .75rem; font-size: .8rem; color: var(--ui-text-muted); }
+    .preview { margin-top: .75rem; border-top: 1px solid var(--ui-border); padding-top: .75rem; }
     @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } .wide { grid-column: auto; } .inline-filter input, .inline-filter select { min-width: 0; width: 100%; } }
-    :host-context(.dark) .data-card, :host-context(.dark) .form-card { border-color: rgb(55 65 81); background: rgb(31 41 55); }
-    :host-context(.dark) .data-table th, :host-context(.dark) .data-table td { border-color: rgb(55 65 81); } :host-context(.dark) .data-table th { color: rgb(156 163 175); } :host-context(.dark) .data-table td, :host-context(.dark) label { color: rgb(229 231 235); }
   `]
 })
 export class SpeedReadingCommunicationsComponent implements OnInit {

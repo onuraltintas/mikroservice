@@ -36,15 +36,15 @@ type OperationalPage = { items: unknown[]; totalCount: number; totalPages: numbe
         }
       </div>
 
-      <div class="flex flex-wrap gap-2">
-        <button type="button" (click)="select('sessions')" [class.bg-indigo-600]="resource() === 'sessions'" [class.text-white]="resource() === 'sessions'" class="rounded-lg border px-4 py-2 text-sm">Seanslar</button>
-        <button type="button" (click)="select('exams')" [class.bg-indigo-600]="resource() === 'exams'" [class.text-white]="resource() === 'exams'" class="rounded-lg border px-4 py-2 text-sm">Sınavlar</button>
-        <button type="button" (click)="select('goals')" [class.bg-indigo-600]="resource() === 'goals'" [class.text-white]="resource() === 'goals'" class="rounded-lg border px-4 py-2 text-sm">Hedefler</button>
+      <div class="ui-tab-list" role="group" aria-label="Koçluk kaynakları">
+        <button type="button" (click)="select('sessions')" [attr.aria-pressed]="resource() === 'sessions'" class="ui-tab px-4 py-2 text-sm">Seanslar</button>
+        <button type="button" (click)="select('exams')" [attr.aria-pressed]="resource() === 'exams'" class="ui-tab px-4 py-2 text-sm">Sınavlar</button>
+        <button type="button" (click)="select('goals')" [attr.aria-pressed]="resource() === 'goals'" class="ui-tab px-4 py-2 text-sm">Hedefler</button>
       </div>
 
       <div class="flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-        <label class="min-w-64 text-sm text-gray-600 dark:text-gray-300">Arama
-          <input [(ngModel)]="search" (keyup.enter)="applyFilters()" maxlength="200" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-900" placeholder="Başlık, konu veya açıklama" />
+        <label class="min-w-0 flex-1 basis-64 text-sm text-gray-600 dark:text-gray-300">Arama
+          <input [(ngModel)]="search" (keyup.enter)="applyFilters()" maxlength="200" class="mt-1 w-full min-w-0 rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-900" placeholder="Başlık, konu veya açıklama" />
         </label>
         @if (resource() === 'sessions') {
           <label class="text-sm text-gray-600 dark:text-gray-300">Durum

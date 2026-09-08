@@ -11,8 +11,10 @@ export class DarkModeService {
     constructor() {
         if (isPlatformBrowser(this.platformId)) {
             // Check local storage or system preference
+            const prefersDark = typeof window.matchMedia === 'function' &&
+                window.matchMedia('(prefers-color-scheme: dark)').matches;
             const isDark = localStorage.getItem('theme') === 'dark' ||
-                (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                (localStorage.getItem('theme') === null && prefersDark);
 
             this.isDarkMode.set(isDark);
             this.updateClass(isDark);

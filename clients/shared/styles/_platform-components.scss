@@ -189,6 +189,360 @@
   opacity: 0.5;
 }
 
+// Legacy admin surfaces use these compact names while they are migrated to
+// the shared primitives. Keep them on the same semantic contract so tables,
+// forms and actions remain legible in both theme modes. The scope prevents
+// these short legacy names from changing student or public client components.
+.admin-shell {
+  .data-card,
+  .form-card,
+  .result-card {
+  min-width: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  box-shadow: var(--ui-shadow-sm);
+  }
+
+  .data-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: var(--ui-space-4);
+  }
+
+  .form-card,
+  .result-card {
+    padding: var(--ui-space-5);
+  }
+
+  .form-card {
+    display: grid;
+    gap: var(--ui-space-4);
+  }
+
+.data-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  color: var(--ui-text);
+  font-size: 0.875rem;
+  text-align: start;
+}
+
+.data-table th {
+  background: var(--ui-surface-muted);
+  color: var(--ui-text-muted);
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-align: start;
+  text-transform: uppercase;
+}
+
+.data-table th,
+.data-table td {
+  padding: var(--ui-space-3) var(--ui-space-4);
+  border-bottom: 1px solid var(--ui-border);
+  vertical-align: top;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.data-table tbody tr:hover {
+  background: var(--ui-brand-soft);
+}
+
+.data-table .empty {
+  color: var(--ui-text-muted);
+  text-align: center;
+}
+
+.muted,
+.empty {
+  color: var(--ui-text-muted);
+}
+
+.empty {
+  padding: var(--ui-space-6);
+  text-align: center;
+}
+
+.primary,
+.secondary,
+.danger {
+  min-height: var(--ui-control-height);
+  border: 1px solid transparent;
+  border-radius: var(--ui-radius-md);
+  padding: 0.55rem 0.8rem;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 650;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background-color var(--ui-transition-fast), border-color var(--ui-transition-fast), color var(--ui-transition-fast), box-shadow var(--ui-transition-fast);
+}
+
+.primary {
+  background: var(--ui-brand);
+  border-color: var(--ui-brand);
+  color: var(--ui-brand-contrast);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--ui-brand-hover);
+  border-color: var(--ui-brand-hover);
+}
+
+.secondary {
+  background: var(--ui-surface);
+  border-color: var(--ui-border-strong);
+  color: var(--ui-text);
+}
+
+.secondary:hover:not(:disabled) {
+  background: var(--ui-surface-muted);
+  border-color: var(--ui-brand);
+  color: var(--ui-brand-hover);
+}
+
+.danger {
+  background: var(--ui-danger-soft);
+  border-color: color-mix(in srgb, var(--ui-danger) 28%, transparent);
+  color: var(--ui-danger);
+}
+
+.danger:hover:not(:disabled) {
+  border-color: var(--ui-danger);
+}
+
+.primary:disabled,
+.secondary:disabled,
+.danger:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.actions,
+.form-actions,
+.inline-filter,
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2);
+}
+
+.actions button,
+.actions a,
+.form-actions button,
+.inline-filter button,
+.pager button {
+  min-height: var(--ui-control-height);
+}
+
+.actions > button:not(.primary):not(.secondary):not(.danger),
+.pager > button:not(.primary):not(.secondary):not(.danger) {
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  padding: 0.55rem 0.8rem;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 650;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background-color var(--ui-transition-fast), border-color var(--ui-transition-fast), color var(--ui-transition-fast);
+}
+
+.actions > button:not(.primary):not(.secondary):not(.danger):hover:not(:disabled),
+.pager > button:not(.primary):not(.secondary):not(.danger):hover:not(:disabled) {
+  background: var(--ui-surface-muted);
+  border-color: var(--ui-brand);
+  color: var(--ui-brand-hover);
+}
+
+.actions > button:not(.primary):not(.secondary):not(.danger):disabled,
+.pager > button:not(.primary):not(.secondary):not(.danger):disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.form-actions {
+  justify-content: flex-end;
+}
+
+.inline-filter {
+  min-width: 0;
+}
+
+.inline-filter input,
+.inline-filter select {
+  min-width: 12rem;
+  flex: 1 1 14rem;
+}
+
+.pager {
+  justify-content: space-between;
+  color: var(--ui-text-muted);
+  font-size: 0.8125rem;
+}
+
+.form-card label,
+.data-card label {
+  color: var(--ui-text);
+}
+
+  .form-card input:not([type='checkbox']):not([type='radio']):not([type='file']),
+  .form-card textarea,
+  .form-card select,
+  .data-card input:not([type='checkbox']):not([type='radio']):not([type='file']),
+  .data-card textarea,
+  .data-card select {
+  width: 100%;
+  min-height: var(--ui-control-height);
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font: inherit;
+}
+
+.form-card textarea,
+.data-card textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.ui-tab-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+}
+
+.ui-tab,
+.ui-tab-list > button {
+  min-height: var(--ui-control-height);
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 650;
+  line-height: 1.2;
+  transition: background-color var(--ui-transition-fast), border-color var(--ui-transition-fast), color var(--ui-transition-fast), box-shadow var(--ui-transition-fast);
+}
+
+.ui-tab:hover,
+.ui-tab-list > button:hover {
+  background: var(--ui-surface-muted);
+  border-color: var(--ui-brand);
+  color: var(--ui-brand-hover);
+}
+
+.ui-tab[aria-selected='true'],
+.ui-tab[aria-pressed='true'],
+.ui-tab.is-active,
+.ui-tab-list > button[aria-selected='true'],
+.ui-tab-list > button[aria-pressed='true'],
+.ui-tab-list > button.is-active,
+.secondary[aria-selected='true'],
+.secondary[aria-pressed='true'],
+.secondary.bg-gray-100 {
+  background: var(--ui-brand) !important;
+  border-color: var(--ui-brand) !important;
+  color: var(--ui-brand-contrast) !important;
+}
+
+.ui-tab:focus-visible,
+.ui-tab-list > button:focus-visible {
+  outline: 2px solid var(--ui-brand);
+  outline-offset: 2px;
+  box-shadow: var(--ui-focus-ring);
+}
+
+@media (max-width: 768px) {
+  .data-card,
+  .form-card,
+  .result-card {
+    padding: var(--ui-space-4);
+  }
+
+  .data-table {
+    min-width: 560px;
+  }
+
+  .actions {
+    white-space: normal;
+  }
+
+  .actions > button,
+  .actions > a {
+    flex: 1 1 8rem;
+  }
+
+  .inline-filter {
+    align-items: stretch;
+  }
+
+  .inline-filter > input,
+  .inline-filter > select,
+  .inline-filter > button {
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  .form-actions > button {
+    flex: 1 1 9rem;
+  }
+
+  .ui-tab,
+  .ui-tab-list > button {
+    flex: 1 1 auto;
+  }
+
+  .actions > button:not(.primary):not(.secondary):not(.danger),
+  .pager > button:not(.primary):not(.secondary):not(.danger) {
+    flex: 1 1 8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .data-table th,
+  .data-table td {
+    padding: var(--ui-space-3);
+  }
+
+  .pager {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pager > button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary,
+  .secondary,
+  .danger,
+  .ui-tab,
+  .ui-tab-list > button,
+  .actions > button:not(.primary):not(.secondary):not(.danger),
+  .pager > button:not(.primary):not(.secondary):not(.danger) {
+    transition: none;
+  }
+}
+
+}
+
 // Shared composition utilities for legacy feature surfaces. These keep
 // dialogs, tables and status messaging on the same spacing and color scale.
 .ui-inline-actions {

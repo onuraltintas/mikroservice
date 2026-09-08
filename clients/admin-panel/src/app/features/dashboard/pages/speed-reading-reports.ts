@@ -27,7 +27,7 @@ type ReportTab = 'templates' | 'schedules' | 'snapshots';
   template: `
     <main class="space-y-6">
       <header><p class="text-sm font-medium text-indigo-600 dark:text-indigo-400">Hızlı Okuma servisi</p><h1 class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Rapor yönetimi</h1><p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Rapor şablonlarını, dashboard snapshot'larını ve zamanlanmış raporları yönetin.</p></header>
-      <nav class="flex flex-wrap gap-2" aria-label="Rapor sekmeleri">@for (tab of tabs; track tab.value) {<button type="button" (click)="selectTab(tab.value)" [attr.aria-pressed]="selectedTab() === tab.value" [class.bg-indigo-600]="selectedTab() === tab.value" [class.text-white]="selectedTab() === tab.value" class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 dark:border-gray-600 dark:text-gray-200">{{ tab.label }}</button>}</nav>
+      <nav class="ui-tab-list flex flex-wrap gap-2" aria-label="Rapor sekmeleri">@for (tab of tabs; track tab.value) {<button type="button" (click)="selectTab(tab.value)" [attr.aria-pressed]="selectedTab() === tab.value" [class.bg-indigo-600]="selectedTab() === tab.value" [class.text-white]="selectedTab() === tab.value" class="ui-tab rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 dark:border-gray-600 dark:text-gray-200">{{ tab.label }}</button>}</nav>
       @if (error()) {<div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">{{ error() }}</div>}
 
       @if (selectedTab() === 'templates') {<section class="space-y-4"><div class="flex items-end justify-between gap-3"><div><h2 class="text-lg font-semibold text-gray-900 dark:text-white">Rapor şablonları</h2><p class="muted">Sistem şablonları salt okunur; özel şablonlar yönetilebilir.</p></div>@if (canManageReports()) {<button type="button" (click)="startTemplateCreate()" class="primary">Yeni şablon</button>}</div>@if (templateEditing()) {<form (ngSubmit)="saveTemplate()" class="form-card"><h3>{{ templateEditingId ? 'Şablonu düzenle' : 'Yeni şablon' }}</h3><div class="form-grid"><label>Ad<input [(ngModel)]="templateDraft.name" name="reportName" required maxlength="150" /></label><label>Tür<input type="number" [(ngModel)]="templateDraft.type" name="reportType" min="0" max="100" required /></label><label>Kategori<input type="number" [(ngModel)]="templateDraft.category" name="reportCategory" min="0" max="100" required /></label><label class="wide">Açıklama<textarea [(ngModel)]="templateDraft.description" name="reportDescription" required maxlength="1000"></textarea></label><label class="wide">Yapılandırma JSON<textarea [(ngModel)]="templateDraft.configurationJson" name="reportConfig" required maxlength="50000"></textarea></label>@if (templateEditingId) {<label class="check"><input type="checkbox" [(ngModel)]="templateUpdateDraft.isActive" name="reportActive" /> Aktif</label>}</div><div class="form-actions"><button type="button" (click)="cancelTemplateEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form>}<div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Ad</th><th>Tür</th><th>Kategori</th><th>Kaynak</th><th>Durum</th><th></th></tr></thead><tbody>@for (template of templates(); track template.id) {<tr><td><strong>{{ template.name }}</strong><div class="muted">{{ template.description }}</div></td><td>{{ template.type }}</td><td>{{ template.category }}</td><td>{{ template.isSystemTemplate ? 'Sistem' : 'Özel' }}</td><td>{{ template.isActive ? 'Aktif' : 'Pasif' }}</td><td class="actions">@if (canManageReports()) {<button type="button" (click)="startTemplateEdit(template)" [disabled]="template.isSystemTemplate">Düzenle</button><button type="button" (click)="deleteTemplate(template)" class="danger" [disabled]="template.isSystemTemplate">Sil</button>}</td></tr>} @empty {<tr><td colspan="6" class="empty">Şablon bulunamadı.</td></tr>}</tbody></table></div></div></section>}
@@ -39,20 +39,19 @@ type ReportTab = 'templates' | 'schedules' | 'snapshots';
   `,
   styles: [`
     :host { display: block; }
-    .muted { color: rgb(107 114 128); font-size: .85rem; }
-    .data-card, .form-card { border: 1px solid rgb(229 231 235); border-radius: .75rem; padding: 1rem; background: white; }
+    .muted { color: var(--ui-text-muted); font-size: .85rem; }
+    .data-card, .form-card { border: 1px solid var(--ui-border); border-radius: .75rem; padding: 1rem; background: var(--ui-surface); }
     .form-card { display: grid; gap: 1rem; }
     .form-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); }
-    label { display: grid; gap: .35rem; font-size: .875rem; font-weight: 500; color: rgb(55 65 81); }
-    input, textarea, select { width: 100%; border: 1px solid rgb(209 213 219); border-radius: .5rem; padding: .55rem .7rem; background: transparent; font: inherit; color: inherit; }
+    label { display: grid; gap: .35rem; font-size: .875rem; font-weight: 500; color: var(--ui-text); }
+    input, textarea, select { width: 100%; border: 1px solid var(--ui-border-strong); border-radius: .5rem; padding: .55rem .7rem; background: transparent; font: inherit; color: inherit; }
     textarea { min-height: 5rem; resize: vertical; }
     .wide { grid-column: 1 / -1; }
     .check { display: flex; align-items: center; gap: .5rem; } .check input { width: auto; }
     .primary, .secondary, .danger { border-radius: .5rem; padding: .55rem .8rem; font-size: .875rem; font-weight: 600; }
-    .primary { background: rgb(79 70 229); color: white; } .secondary { border: 1px solid rgb(209 213 219); } .danger { color: rgb(185 28 28); }
+    .primary { background: var(--ui-brand); color: var(--ui-brand-contrast); } .secondary { border: 1px solid var(--ui-border-strong); } .danger { color: var(--ui-danger); }
     .actions, .form-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; } .form-actions { justify-content: flex-end; }
-    .actions select { min-width: 14rem; } .empty { color: rgb(107 114 128); padding: 1.25rem; text-align: center; }
-    @media (prefers-color-scheme: dark) { .data-card, .form-card { background: rgb(17 24 39); border-color: rgb(55 65 81); } label { color: rgb(229 231 235); } input, textarea, select { border-color: rgb(75 85 99); } }
+    .actions select { min-width: 14rem; } .empty { color: var(--ui-text-muted); padding: 1.25rem; text-align: center; }
   `]
 })
 export class SpeedReadingReportsComponent implements OnInit {
