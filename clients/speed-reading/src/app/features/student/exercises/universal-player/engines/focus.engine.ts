@@ -14,6 +14,7 @@ interface MentalRegistrationConfig extends EngineConfig {
     NLevel: number;            // 1-Back, 2-Back, etc.
     SpeedMs: number;           // Duration per item in ms
     GridSize: number;          // 3 for 3x3, 4 for 4x4
+    AssessmentMode?: boolean;
     WordSequence?: string[];
     WordTargetIndices?: number[];
     PositionSequence?: number[];
@@ -63,29 +64,69 @@ export class FocusEngine implements BaseEngine {
     private hasRespondedWord = false;
 
     private sequenceLength = 0;
+    private assessmentMode = false;
 
     // Timing drift correction
     private expectedTime = 0;
     private nextStepTime = 0;
+    private assessmentStepTimeout: any;
+    private awaitingAssessmentStep = false;
 
     initialize(config: EngineConfig, callbacks: EngineCallbacks): void {
         this.callbacks = callbacks;
 
         const backendData = (config as any).SessionData || config;
+        const nLevel = Number(backendData.NLevel ?? backendData.nLevel ?? 1) || 1;
+        const wordSequence = Array.isArray(backendData.WordSequence)
+            ? backendData.WordSequence
+            : (Array.isArray(backendData.wordSequence) ? backendData.wordSequence : []);
+        const positionSequence = Array.isArray(backendData.PositionSequence)
+            ? backendData.PositionSequence
+            : (Array.isArray(backendData.positionSequence) ? backendData.positionSequence : []);
+        const configuredTotalSteps = Number(
+            backendData.TotalSteps ?? backendData.totalSteps ?? (config as any).totalSteps ?? 0);
+        const configuredWordTargets = Array.isArray(backendData.WordTargetIndices)
+            ? backendData.WordTargetIndices
+            : (Array.isArray(backendData.wordTargetIndices) ? backendData.wordTargetIndices : []);
+        const configuredPositionTargets = Array.isArray(backendData.PositionTargetIndices)
+            ? backendData.PositionTargetIndices
+            : (Array.isArray(backendData.positionTargetIndices) ? backendData.positionTargetIndices : []);
+        const assessmentMode = backendData.IsAssessmentMode === true
+            || backendData.isAssessmentMode === true
+            || (config as any).AssessmentMode === true
+            || (config as any).assessmentMode === true;
 
         this.config = {
             ...config,
-            Mode: backendData.Mode || 'position',
-            NLevel: backendData.NLevel || 1,
-            SpeedMs: backendData.SpeedMs || 1500,
-            GridSize: backendData.GridSize || 3,
-            WordSequence: backendData.WordSequence || [],
-            WordTargetIndices: backendData.WordTargetIndices || [],
-            PositionSequence: backendData.PositionSequence || [],
-            PositionTargetIndices: backendData.PositionTargetIndices || []
+            AssessmentMode: assessmentMode,
+            Mode: backendData.Mode || backendData.mode || backendData.FocusMode || 'position',
+            NLevel: nLevel,
+            SpeedMs: backendData.SpeedMs
+                || backendData.speedMs
+                || backendData.FocusSpeedMs
+                || backendData.focusSpeedMs
+                || 1500,
+            GridSize: backendData.GridSize || backendData.gridSize || 3,
+            WordSequence: wordSequence,
+            // Target arrays are optional presentation hints. The server is
+            // always the scoring authority; public payloads omit configured
+            // target indices while the N-back level remains visible because it
+            // is the task rule the student must follow.
+            WordTargetIndices: assessmentMode
+                ? []
+                : (configuredWordTargets.length > 0
+                    ? configuredWordTargets
+                    : this.deriveTargetIndices(wordSequence, nLevel)),
+            PositionSequence: positionSequence,
+            PositionTargetIndices: assessmentMode
+                ? []
+                : (configuredPositionTargets.length > 0
+                    ? configuredPositionTargets
+                    : this.deriveTargetIndices(positionSequence, nLevel))
         } as MentalRegistrationConfig;
 
         this.mode = this.config.Mode;
+        this.assessmentMode = assessmentMode;
 
         // Determine sequence length based on mode
         if (this.mode === 'position') {
@@ -99,6 +140,9 @@ export class FocusEngine implements BaseEngine {
                 this.config.WordSequence?.length || 0
             );
         }
+        if (this.assessmentMode && configuredTotalSteps > 0) {
+            this.sequenceLength = configuredTotalSteps;
+        }
 
         this.state.totalSteps = this.sequenceLength;
         this.state.currentStep = 0;
@@ -110,12 +154,23 @@ export class FocusEngine implements BaseEngine {
 
     }
 
+    private deriveTargetIndices(sequence: readonly unknown[], nLevel: number): number[] {
+        const targets: number[] = [];
+        for (let index = Math.max(1, nLevel); index < sequence.length; index++) {
+            if (sequence[index] === sequence[index - nLevel]) {
+                targets.push(index);
+            }
+        }
+        return targets;
+    }
+
     start(): void {
         this.state.isRunning = true;
         this.state.isPaused = false;
         this.state.isCompleted = false;
         this.startTime = Date.now();
         this.currentIndex = -1;
+        this.awaitingAssessmentStep = false;
 
         this.timerInterval = setInterval(() => {
             if (!this.state.isPaused) {
@@ -129,6 +184,11 @@ export class FocusEngine implements BaseEngine {
     }
 
     private startPacer(): void {
+        if (this.assessmentMode) {
+            this.advanceStep();
+            return;
+        }
+
         this.expectedTime = Date.now();
         this.calculateNextStepTime();
         this.advanceStep();
@@ -165,6 +225,16 @@ export class FocusEngine implements BaseEngine {
             return;
         }
 
+        if (this.assessmentMode) {
+            this.awaitingAssessmentStep = true;
+            this.callbacks.onAction({
+                action: 'focus_step',
+                index: this.currentIndex,
+                timestamp: new Date()
+            });
+            return;
+        }
+
         // Get next values
         const nextPosition = this.config.PositionSequence?.[this.currentIndex] || 1;
         const nextWord = this.config.WordSequence?.[this.currentIndex] || '';
@@ -188,13 +258,13 @@ export class FocusEngine implements BaseEngine {
         }
     }
 
-    private showStep(position: number, word: string): void {
+    private showStep(position: number | null | undefined, word: string | null | undefined): void {
         // Update current values based on mode
-        if (this.mode === 'position' || this.mode === 'dual') {
+        if ((this.mode === 'position' || this.mode === 'dual') && position !== null && position !== undefined) {
             this.currentPosition = position;
         }
 
-        if (this.mode === 'word' || this.mode === 'dual') {
+        if ((this.mode === 'word' || this.mode === 'dual') && word !== null && word !== undefined) {
             this.currentWord = word;
         }
 
@@ -227,10 +297,12 @@ export class FocusEngine implements BaseEngine {
             }
         });
 
-        this.calculateNextStepTime();
+        if (!this.assessmentMode) this.calculateNextStepTime();
     }
 
     private checkMisses(): void {
+        if (this.assessmentMode) return;
+
         const idx = this.currentIndex;
 
         // Check position miss (for position and dual modes)
@@ -257,6 +329,28 @@ export class FocusEngine implements BaseEngine {
 
     handleInput(input: any): void {
         if (!this.state.isRunning || this.state.isPaused || this.state.isCompleted) return;
+
+        // Assessment attempts must not expose client-derived correctness or
+        // feedback. The server records and scores the action; the client only
+        // forwards the user's channel/index response.
+        if (this.assessmentMode) {
+            if (this.awaitingAssessmentStep || this.currentIndex < 0) return;
+
+            const isPositionInput = input.type === 'position_match'
+                || (input.type === 'match' && this.mode === 'position');
+            const isWordInput = input.type === 'word_match'
+                || (input.type === 'match' && this.mode !== 'position');
+
+            if (isPositionInput && !this.hasRespondedPosition) {
+                this.hasRespondedPosition = true;
+                this.callbacks.onAction({ action: 'position_match', index: this.currentIndex });
+            }
+            if (isWordInput && !this.hasRespondedWord) {
+                this.hasRespondedWord = true;
+                this.callbacks.onAction({ action: 'word_match', index: this.currentIndex });
+            }
+            return;
+        }
 
         // Handle position match (for position and dual modes)
         if (input.type === 'position_match') {
@@ -324,6 +418,85 @@ export class FocusEngine implements BaseEngine {
         }
     }
 
+    /**
+     * Applies the server's authoritative aggregate after a focus action.
+     * Local feedback keeps the interaction responsive, while the persisted
+     * counters are reconciled as soon as the validation response arrives.
+     */
+    reconcileServerResponse(action: any, response: any): void {
+        if (this.assessmentMode) {
+            const actionName = String(action?.action || '').toLowerCase();
+            if (actionName === 'focus_step') {
+                this.awaitingAssessmentStep = false;
+                if (response?.isValid === false) {
+                    this.callbacks.onError(response?.message || 'Focus uyaranı alınamadı.');
+                    return;
+                }
+
+                const feedback = response?.feedbackData;
+                if (!feedback || typeof feedback !== 'object') {
+                    this.callbacks.onError('Focus uyaranı sunucudan eksik döndü.');
+                    return;
+                }
+
+                this.showStep(
+                    feedback.position == null ? undefined : Number(feedback.position),
+                    feedback.word == null ? undefined : String(feedback.word));
+                this.scheduleNextAssessmentStep();
+                return;
+            }
+
+            if (response?.isValid === false) {
+                if (actionName === 'position_match') this.hasRespondedPosition = false;
+                if (actionName === 'word_match') this.hasRespondedWord = false;
+            }
+            return;
+        }
+
+        const actionName = String(action?.action || '').toLowerCase();
+        const feedback = response?.feedbackData;
+
+        if (response?.isValid === false && (actionName === 'position_match' || actionName === 'word_match')) {
+            const channel = actionName === 'position_match' ? 'position' : 'word';
+            const index = Number(action?.index);
+            const wasTarget = Number.isInteger(index)
+                && (channel === 'position'
+                    ? this.config.PositionTargetIndices?.includes(index)
+                    : this.config.WordTargetIndices?.includes(index));
+
+            if (wasTarget) {
+                this.hits = Math.max(0, this.hits - 1);
+                this.state.score = Math.max(0, this.state.score - 10);
+            } else {
+                this.falseAlarms = Math.max(0, this.falseAlarms - 1);
+                this.state.errors = Math.max(0, this.state.errors - 1);
+            }
+            this.state.score = Math.max(0, this.hits * 10 - this.falseAlarms * 5);
+            this.updateAccuracy();
+            this.callbacks.onStateChange({ ...this.state });
+            return;
+        }
+
+        if (!feedback || typeof feedback !== 'object') {
+            return;
+        }
+
+        const hits = Number(feedback.hits);
+        const misses = Number(feedback.misses);
+        const falseAlarms = Number(feedback.falseAlarms);
+        if (![hits, misses, falseAlarms].every(Number.isFinite)) {
+            return;
+        }
+
+        this.hits = Math.max(0, Math.trunc(hits));
+        this.misses = Math.max(0, Math.trunc(misses));
+        this.falseAlarms = Math.max(0, Math.trunc(falseAlarms));
+        this.state.errors = this.misses + this.falseAlarms;
+        this.state.score = Math.max(0, this.hits * 10 - this.falseAlarms * 5);
+        this.updateAccuracy();
+        this.callbacks.onStateChange({ ...this.state });
+    }
+
     private updateAccuracy(): void {
         const totalTrials = this.currentIndex + 1;
         if (totalTrials <= 0) return;
@@ -332,10 +505,26 @@ export class FocusEngine implements BaseEngine {
         this.state.accuracy = Math.round(100 * (1 - (errors / (totalTrials * (this.mode === 'dual' ? 2 : 1) || 1))));
     }
 
+    private scheduleNextAssessmentStep(): void {
+        if (this.assessmentStepTimeout) clearTimeout(this.assessmentStepTimeout);
+        this.assessmentStepTimeout = null;
+        if (!this.assessmentMode || !this.state.isRunning || this.state.isPaused || this.awaitingAssessmentStep)
+            return;
+
+        this.assessmentStepTimeout = setTimeout(() => {
+            this.assessmentStepTimeout = null;
+            if (this.state.isRunning && !this.state.isPaused) this.advanceStep();
+        }, Math.max(1, this.config.SpeedMs));
+    }
+
     pause(): void {
         if (this.state.isPaused) return;
         this.state.isPaused = true;
         this.pauseStartTime = Date.now();
+        if (this.assessmentStepTimeout) {
+            clearTimeout(this.assessmentStepTimeout);
+            this.assessmentStepTimeout = null;
+        }
         this.callbacks.onPause();
         this.callbacks.onStateChange({ ...this.state });
     }
@@ -349,6 +538,7 @@ export class FocusEngine implements BaseEngine {
         this.nextStepTime += pauseDuration;
 
         this.state.isPaused = false;
+        this.scheduleNextAssessmentStep();
         this.callbacks.onResume();
         this.callbacks.onStateChange({ ...this.state });
     }
@@ -357,6 +547,8 @@ export class FocusEngine implements BaseEngine {
         this.state.isRunning = false;
         clearInterval(this.timerInterval);
         clearInterval(this.pacerInterval);
+        if (this.assessmentStepTimeout) clearTimeout(this.assessmentStepTimeout);
+        this.assessmentStepTimeout = null;
     }
 
     reset(): void {
@@ -375,6 +567,7 @@ export class FocusEngine implements BaseEngine {
         this.currentIndex = -1;
         this.currentWord = '';
         this.currentPosition = 0;
+        this.awaitingAssessmentStep = false;
         this.hits = 0;
         this.misses = 0;
         this.falseAlarms = 0;
@@ -395,6 +588,8 @@ export class FocusEngine implements BaseEngine {
         this.state.isRunning = false;
         clearInterval(this.timerInterval);
         clearInterval(this.pacerInterval);
+        if (this.assessmentStepTimeout) clearTimeout(this.assessmentStepTimeout);
+        this.assessmentStepTimeout = null;
 
         this.callbacks.onAction({
             action: 'complete',
@@ -508,6 +703,14 @@ export class FocusEngine implements BaseEngine {
 
     get nLevel(): number {
         return this.config?.NLevel || 1;
+    }
+
+    get isAssessmentMode(): boolean {
+        return this.assessmentMode;
+    }
+
+    get isAwaitingAssessmentStep(): boolean {
+        return this.awaitingAssessmentStep;
     }
 
     get isPositionMode(): boolean {

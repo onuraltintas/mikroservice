@@ -40,7 +40,8 @@ public sealed record ExerciseSummary(
     Guid ExerciseTypeId,
     string ExerciseTypeName,
     string ConfigurationJson,
-    Guid? TargetAgeGroupConfigurationId);
+    Guid? TargetAgeGroupConfigurationId,
+    bool IsActive = true);
 
 public sealed record ReadingTextSummary(
     Guid Id,
@@ -129,6 +130,14 @@ public interface ILegacySpeedReadingCatalog
         int pageNumber,
         int pageSize,
         string? searchTerm,
+        CancellationToken cancellationToken = default,
+        bool includeInactive = false,
+        bool includeConfiguration = false);
+
+    Task<ExerciseSummary?> GetExerciseAsync(
+        Guid id,
+        bool includeInactive = false,
+        bool includeConfiguration = false,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<ReadingTextSummary>> GetReadingTextsAsync(

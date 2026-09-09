@@ -19,6 +19,7 @@ describe('ExerciseService', () => {
 
   it('writes an exercise result through the dedicated service with idempotency', () => {
     service.submitExerciseResult({
+      sessionId: 'session-1',
       exerciseId: 'exercise-1',
       readingTextId: 'reading-1',
       timeSpentSeconds: 90,
@@ -34,6 +35,7 @@ describe('ExerciseService', () => {
     expect(request.request.method).toBe('POST');
     expect(request.request.headers.get('Idempotency-Key')).toBe('result-key-123456');
     expect(request.request.body).toEqual({
+      sessionId: 'session-1',
       exerciseId: 'exercise-1',
       readingTextId: 'reading-1',
       wordsRead: 450,

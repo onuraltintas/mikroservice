@@ -79,6 +79,15 @@ public sealed class ReadingTextsController(
             canManageContent,
             canManageContent,
             cancellationToken);
+        if (result is not null && !canManageContent)
+        {
+            result = result with
+            {
+                Questions = result.Questions
+                    .Select(question => question with { Explanation = null })
+                    .ToList()
+            };
+        }
         return result is null ? NotFound() : Ok(result);
     }
 

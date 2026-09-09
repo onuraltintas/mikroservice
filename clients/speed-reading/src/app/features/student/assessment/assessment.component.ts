@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AssessmentService } from '../../../services/assessment.service';
 import { ToasterService } from '../../../core/services/toaster.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { switchMap } from 'rxjs';
 
 interface AssessmentExercise {
@@ -29,6 +30,7 @@ interface AssessmentExercise {
 })
 export class AssessmentComponent implements OnInit, OnDestroy {
   private assessmentService = inject(AssessmentService);
+  private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private toaster = inject(ToasterService);
@@ -81,6 +83,7 @@ export class AssessmentComponent implements OnInit, OnDestroy {
       phase: this.assessmentPhase(),
       formVersion: this.formVersionForPhase(),
       language: 'tr-TR',
+      ageGroupConfigurationId: this.authService.currentUserValue?.ageGroupId ?? undefined,
       expectedExerciseCount: 3
     }).pipe(
       switchMap(attempt => {

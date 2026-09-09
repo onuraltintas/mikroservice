@@ -8,11 +8,12 @@ import {
   SpeedReadingAgeGroupRequest,
   SpeedReadingAssessmentExerciseInput,
   SpeedReadingAssessmentTemplate,
-  SpeedReadingExercise
+  SpeedReadingExercise,
+  SpeedReadingLevelDefinition
 } from '../../../core/services/speed-reading-admin.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 
-type ConfigurationTab = 'age-groups' | 'assessments';
+type ConfigurationTab = 'age-groups' | 'assessments' | 'levels';
 
 interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
   exerciseTitle: string;
@@ -59,7 +60,7 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
                 <label>Max. WPM<input type="number" [(ngModel)]="ageDraft.maxWpm" name="ageMaxWpm" min="0" max="5000" required /></label>
                 <label>Önerilen anlama (%)<input type="number" [(ngModel)]="ageDraft.recommendedComprehension" name="ageComprehension" min="0" max="100" required /></label>
                 <label>Günlük dakika<input type="number" [(ngModel)]="ageDraft.recommendedDailyMinutes" name="ageMinutes" min="1" max="1440" required /></label>
-                <label>Varsayılan zorluk<input type="number" [(ngModel)]="ageDraft.defaultDifficultyLevel" name="ageDifficulty" min="1" max="10" required /></label>
+                <label>Varsayılan zorluk<input type="number" [(ngModel)]="ageDraft.defaultDifficultyLevel" name="ageDifficulty" min="1" max="5" required /></label>
                 <label>Sıra<input type="number" [(ngModel)]="ageDraft.orderIndex" name="ageOrder" min="0" max="10000" required /></label>
                 <label class="wide">Açıklama<textarea [(ngModel)]="ageDraft.description" name="ageDescription" maxlength="1000"></textarea></label>
                 <label class="check"><input type="checkbox" [(ngModel)]="ageDraft.isActive" name="ageActive" /> Aktif</label>
@@ -76,7 +77,7 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
         </section>
       }
 
-      @if (selectedTab() === 'assessments') {
+        @if (selectedTab() === 'assessments') {
         <section class="space-y-4" aria-labelledby="assessments-title">
           <div><h2 id="assessments-title" class="text-lg font-semibold text-gray-900 dark:text-white">Seviye tespit şablonları</h2><p class="muted">Her yaş grubu için kullanılacak egzersizleri ve sıralamayı belirleyin.</p></div>
           <div class="data-card"><label class="block max-w-xl">Yaş grubu<select [ngModel]="assessmentAgeGroupId()" name="assessmentAgeGroup" (ngModelChange)="assessmentAgeGroupId.set($event); loadAssessmentForAgeGroup()"><option value="">Seçin</option>@for (ageGroup of ageGroups(); track ageGroup.id) {<option [value]="ageGroup.id">{{ ageGroup.displayName }}</option>}</select></label></div>
@@ -88,9 +89,20 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
               <div class="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"><div><h4 class="font-medium">Egzersiz ekle</h4><select [(ngModel)]="exerciseToAdd" name="exerciseToAdd" (ngModelChange)="addAssessmentExercise($event)"><option value="">Seçin</option>@for (exercise of exercises(); track exercise.id) {<option [value]="exercise.id">{{ exercise.title }} — Seviye {{ exercise.difficultyLevel }}</option>}</select></div><div><h4 class="font-medium">Seçilen egzersizler</h4>@if (selectedAssessmentExercises().length === 0) {<p class="empty">En az bir egzersiz ekleyin.</p>} @for (exercise of selectedAssessmentExercises(); track exercise.exerciseId; let index = $index) {<div class="exercise-row"><div class="min-w-0 flex-1"><strong>{{ index + 1 }}. {{ exercise.customTitle || exercise.exerciseTitle }}</strong><div class="muted">{{ exercise.exerciseType }} · Seviye {{ exercise.difficultyLevel }}</div><input [(ngModel)]="exercise.customTitle" [name]="'assessmentTitle' + index" placeholder="Özel başlık" maxlength="150" /><input [(ngModel)]="exercise.customDescription" [name]="'assessmentDescription' + index" placeholder="Özel açıklama" maxlength="500" /></div><div class="actions"><button type="button" (click)="moveAssessmentExercise(index, -1)" [disabled]="index === 0">↑</button><button type="button" (click)="moveAssessmentExercise(index, 1)" [disabled]="index === selectedAssessmentExercises().length - 1">↓</button><button type="button" (click)="removeAssessmentExercise(index)">Sil</button></div></div>}</div></div>
               <div class="form-actions"><button type="button" (click)="resetAssessmentSelection()" class="secondary">Temizle</button><button type="submit" class="primary" [disabled]="saving() || selectedAssessmentExercises().length === 0">Kaydet</button></div>
             </form>
-          }
+        }
 
           <div class="data-card"><h3 class="mb-3 font-medium text-gray-900 dark:text-white">Kayıtlı şablonlar</h3><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Şablon</th><th>Yaş grubu</th><th>Egzersiz</th><th>Durum</th><th></th></tr></thead><tbody>@for (template of assessmentTemplates(); track template.id) {<tr><td>{{ template.name }}</td><td>{{ template.ageGroupDisplayName }}</td><td>{{ template.exercises.length }}</td><td>{{ template.isActive ? 'Aktif' : 'Pasif' }}</td><td><button type="button" (click)="selectAssessmentTemplate(template)">Aç</button></td></tr>} @empty {<tr><td colspan="5" class="empty">Şablon bulunamadı.</td></tr>}</tbody></table></div></div>
+        </section>
+      }
+
+      @if (selectedTab() === 'levels') {
+        <section class="space-y-4" aria-labelledby="levels-title">
+          <div><h2 id="levels-title" class="text-lg font-semibold text-gray-900 dark:text-white">Seviye sözlüğü</h2><p class="muted">Assessment yerleştirmesinde kullanılan sürüm 1 güvenli varsayılanları. Normlama tamamlanana kadar salt okunur tutulur.</p></div>
+          <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Seviye</th><th>Kod</th><th>Ad</th><th>Minimum WPM</th><th>Minimum anlama</th></tr></thead><tbody>
+            @for (level of levels(); track level.level) {
+              <tr><td>{{ level.level }}</td><td>{{ level.code }}</td><td>{{ level.displayName }}</td><td>{{ level.minimumWpm }}</td><td>%{{ level.minimumComprehension }}</td></tr>
+            } @empty { <tr><td colspan="5" class="empty">Seviye sözlüğü yüklenemedi.</td></tr> }
+          </tbody></table></div></div>
         </section>
       }
     </main>
@@ -125,12 +137,14 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
 
   readonly tabs: { value: ConfigurationTab; label: string }[] = [
     { value: 'age-groups', label: 'Yaş grupları' },
-    { value: 'assessments', label: 'Seviye tespit' }
+    { value: 'assessments', label: 'Seviye tespit' },
+    { value: 'levels', label: 'Seviye sözlüğü' }
   ];
   readonly selectedTab = signal<ConfigurationTab>('age-groups');
   readonly ageGroups = signal<SpeedReadingAgeGroup[]>([]);
   readonly assessmentTemplates = signal<SpeedReadingAssessmentTemplate[]>([]);
   readonly exercises = signal<SpeedReadingExercise[]>([]);
+  readonly levels = signal<SpeedReadingLevelDefinition[]>([]);
   readonly selectedAssessmentExercises = signal<AssessmentExerciseDraft[]>([]);
   readonly currentTemplate = signal<SpeedReadingAssessmentTemplate | null>(null);
   readonly assessmentAgeGroupId = signal('');
@@ -147,6 +161,7 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
     this.loadAgeGroups();
     this.loadAssessmentTemplates();
     this.loadExercises();
+    this.loadLevels();
   }
 
   selectTab(tab: ConfigurationTab): void {
@@ -172,6 +187,13 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
     this.service.getAllExercises().subscribe({
       next: value => this.exercises.set(value),
       error: () => this.error.set('Egzersiz listesi yüklenemedi.')
+    });
+  }
+
+  loadLevels(): void {
+    this.service.getAssessmentLevels().subscribe({
+      next: value => this.levels.set(value),
+      error: () => this.error.set('Seviye sözlüğü yüklenemedi.')
     });
   }
 

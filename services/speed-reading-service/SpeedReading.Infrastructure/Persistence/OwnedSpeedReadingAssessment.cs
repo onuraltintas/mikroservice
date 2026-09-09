@@ -1,6 +1,8 @@
 using System.Text.Json;
+using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.Assessment;
+using SpeedReading.Application.Content;
 using SpeedReading.Domain.Assessment;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Profiles;
@@ -9,6 +11,7 @@ namespace SpeedReading.Infrastructure.Persistence;
 
 internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db) : ISpeedReadingAssessment
 {
+    private const int ServerAssessmentExerciseCount = 3;
     private static readonly JsonSerializerOptions SnapshotJsonOptions = new(JsonSerializerDefaults.Web);
 
     public async Task<AssessmentAttemptSummary> StartAttemptAsync(
@@ -23,15 +26,56 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
         var formVersion = string.IsNullOrWhiteSpace(request.FormVersion)
             ? GetDefaultFormVersion(request.Phase, request.Language)
             : request.FormVersion.Trim();
-        if (AssessmentAttemptPhaseRules.TryGetPrerequisite(request.Phase, out var prerequisitePhase)
-            && !await db.AssessmentAttempts.AsNoTracking().AnyAsync(item =>
-                item.StudentId == userId
-                && item.Phase == prerequisitePhase
-                && item.Status == AssessmentAttemptStatus.Completed,
+        var profileAgeGroupConfigurationId = await db.UserProfiles
+            .AsNoTracking()
+            .Where(item => item.UserId == userId && item.IsActive)
+            .Select(item => item.AgeGroupConfigurationId)
+            .SingleOrDefaultAsync(cancellationToken);
+        if (profileAgeGroupConfigurationId.HasValue
+            && request.AgeGroupConfigurationId.HasValue
+            && request.AgeGroupConfigurationId != profileAgeGroupConfigurationId)
+        {
+            throw new ArgumentException(
+                "The requested age group does not match the authenticated student's profile.",
+                nameof(request));
+        }
+
+        var ageGroupConfigurationId = profileAgeGroupConfigurationId ?? request.AgeGroupConfigurationId;
+        if (ageGroupConfigurationId.HasValue
+            && !await db.AgeGroupConfigurations.AsNoTracking().AnyAsync(item =>
+                item.Id == ageGroupConfigurationId.Value
+                && item.IsActive
+                && !item.IsDeleted,
                 cancellationToken))
         {
-            throw new InvalidOperationException(
-                $"A completed {prerequisitePhase} assessment is required before starting {request.Phase}.");
+            throw new ArgumentException("The selected age group is not active.", nameof(request));
+        }
+        var now = DateTime.UtcNow;
+        if (AssessmentAttemptPhaseRules.TryGetPrerequisite(request.Phase, out var prerequisitePhase))
+        {
+            var prerequisiteCompletedAt = await db.AssessmentAttempts
+                .AsNoTracking()
+                .Where(item => item.StudentId == userId
+                    && item.Phase == prerequisitePhase
+                    && item.Status == AssessmentAttemptStatus.Completed
+                    && item.CompletedAt.HasValue)
+                .OrderByDescending(item => item.CompletedAt)
+                .Select(item => item.CompletedAt)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (!prerequisiteCompletedAt.HasValue)
+            {
+                throw new InvalidOperationException(
+                    $"A completed {prerequisitePhase} assessment is required before starting {request.Phase}.");
+            }
+
+            var availableAt = AssessmentPhaseTimingRules.AvailableAt(
+                request.Phase,
+                prerequisiteCompletedAt);
+            if (availableAt.HasValue && availableAt.Value > now)
+            {
+                throw new InvalidOperationException(
+                    $"The {request.Phase} assessment becomes available at {availableAt.Value:O}.");
+            }
         }
         var existing = await db.AssessmentAttempts
             .SingleOrDefaultAsync(item => item.StudentId == userId
@@ -41,26 +85,35 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
                 cancellationToken);
         if (existing is not null)
         {
+            if (existing.ExpectedExerciseCount != ServerAssessmentExerciseCount)
+            {
+                existing.Abandon(now);
+                await db.SaveChangesAsync(cancellationToken);
+                existing = null;
+            }
+        }
+        if (existing is not null)
+        {
             await EnsurePinnedFormItemsAsync(existing, cancellationToken);
             return await MapAttemptSummaryAsync(existing, cancellationToken);
         }
 
-        var now = DateTime.UtcNow;
         var attempt = AssessmentAttempt.Start(
             Guid.NewGuid(),
             userId,
             request.Phase,
             formVersion,
             request.Language,
-            request.AgeGroupConfigurationId,
-            request.ExpectedExerciseCount,
+            ageGroupConfigurationId,
+            ServerAssessmentExerciseCount,
             now,
             userId.ToString());
         var formItems = await BuildPinnedFormItemsAsync(
             attempt.Id,
-            attempt.ExpectedExerciseCount,
+            ServerAssessmentExerciseCount,
             attempt.Phase,
             attempt.FormVersion,
+            attempt.AgeGroupConfigurationId,
             now,
             userId.ToString(),
             cancellationToken);
@@ -90,7 +143,7 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             .AsNoTracking()
             .Where(item => item.AssessmentAttemptId.HasValue
                 && attemptIds.Contains(item.AssessmentAttemptId.Value)
-                && item.IsMeasured)
+                && item.IsAssessmentMode)
             .Select(item => new { item.AssessmentAttemptId, item.ExerciseId })
             .Distinct()
             .ToListAsync(cancellationToken);
@@ -261,7 +314,8 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
         }
         var completedResults = db.ExerciseSessionResults
             .AsNoTracking()
-            .Where(item => item.StudentId == userId && item.IsAssessmentMode && item.IsMeasured);
+            .Where(item => item.StudentId == userId
+                && item.IsAssessmentMode);
         var completedIds = activeAttemptId.HasValue
             ? await completedResults
                 .Where(item => item.AssessmentAttemptId == activeAttemptId.Value)
@@ -281,7 +335,8 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             GetSnapshot(item)?.Exercise.Description ?? item.Description,
             GetSnapshot(item)?.Exercise.DifficultyLevel ?? item.DifficultyLevel,
             completedIds.Contains(item.Id),
-            GetSnapshot(item)?.Exercise.ConfigurationJson ?? item.ConfigurationJson)).ToList();
+            SpeedReadingContentSecurity.SanitizeAssessmentConfiguration(
+                GetSnapshot(item)?.Exercise.ConfigurationJson ?? item.ConfigurationJson))).ToList();
 
         var comprehension = items.FirstOrDefault(item => IsType(item.TypeName, "comprehension", "reading"));
         var visual = items.FirstOrDefault(item => IsType(item.TypeName, "visual", "expansion"));
@@ -328,25 +383,63 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             .AsNoTracking()
             .Where(item => item.StudentId == userId
                 && item.IsAssessmentMode
-                && item.IsMeasured
                 && (attemptId.HasValue
                     ? item.AssessmentAttemptId == attemptId.Value
                     : item.AssessmentAttemptId == null))
-            .OrderByDescending(item => item.CreatedAt)
-            .Take(attempt?.ExpectedExerciseCount ?? 3);
-        var results = await resultsQuery.ToListAsync(cancellationToken);
+            .OrderByDescending(item => item.CreatedAt);
+        var allResults = await resultsQuery.ToListAsync(cancellationToken);
+        var measuredResults = allResults
+            .Where(item => item.IsMeasured)
+            .GroupBy(item => item.ExerciseId)
+            .Select(group => group.OrderByDescending(item => item.CreatedAt).First())
+            .ToList();
+        var expectedExerciseIds = attempt is null
+            ? []
+            : await db.AssessmentAttemptExercises
+                .AsNoTracking()
+                .Where(item => item.AssessmentAttemptId == attempt.Id)
+                .Select(item => item.ExerciseId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+        if (attempt is not null)
+        {
+            var expectedTypeNames = await (
+                from exercise in db.Exercises.AsNoTracking()
+                join exerciseType in db.ExerciseTypes.AsNoTracking()
+                    on exercise.ExerciseTypeId equals exerciseType.Id into exerciseTypes
+                from exerciseType in exerciseTypes.DefaultIfEmpty()
+                where expectedExerciseIds.Contains(exercise.Id)
+                select new { exercise.Id, TypeName = exerciseType == null ? string.Empty : exerciseType.Name })
+                .ToDictionaryAsync(item => item.Id, item => item.TypeName, cancellationToken);
+            var serverMeasuredExerciseIds = expectedExerciseIds
+                .Where(item => expectedTypeNames.TryGetValue(item, out var typeName)
+                    && IsServerMeasuredExerciseType(typeName))
+                .ToHashSet();
+            if (expectedExerciseIds.Count != ServerAssessmentExerciseCount
+                || serverMeasuredExerciseIds.Count == 0
+                || serverMeasuredExerciseIds.Any(item => !measuredResults.Any(result => result.ExerciseId == item)))
+            {
+                throw new BusinessRuleException(
+                    "SpeedReading.Assessment.Incomplete",
+                    "All server-measurable assessment exercises must be completed before placement.");
+            }
+        }
+        else if (measuredResults.Select(item => item.ExerciseId).Distinct().Count() < ServerAssessmentExerciseCount)
+        {
+            throw new BusinessRuleException(
+                "SpeedReading.Assessment.Incomplete",
+                "All assessment exercises must be completed with a server-measured result before placement.");
+        }
+
+        var results = attempt is null
+            ? measuredResults.OrderByDescending(item => item.CreatedAt).Take(ServerAssessmentExerciseCount).ToList()
+            : measuredResults.Where(item => expectedExerciseIds.Contains(item.ExerciseId)).ToList();
         if (results.Count == 0)
             return null;
-        if (attempt is not null
-            && results.Select(item => item.ExerciseId).Distinct().Count() < attempt.ExpectedExerciseCount)
-            return null;
 
-        var requestedExerciseIds = request?.ExerciseResults?.Select(item => item.ExerciseId) ?? [];
-        var exerciseIds = results
-            .Select(item => item.ExerciseId)
-            .Concat(requestedExerciseIds)
-            .Distinct()
-            .ToArray();
+        // Placement is calculated only from server-measured session results.
+        // Client supplied scores remain a compatibility field and are ignored.
+        var exerciseIds = results.Select(item => item.ExerciseId).Distinct().ToArray();
         var typeNames = await (
             from exercise in db.Exercises.AsNoTracking()
             join exerciseType in db.ExerciseTypes.AsNoTracking()
@@ -388,18 +481,10 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             .Select(item => Math.Clamp(item.Item.Score, 0, 100))
             .DefaultIfEmpty()
             .Average();
-        var level = averageWpm switch
-        {
-            < 100 => 1,
-            < 150 => 2,
-            < 200 => 3,
-            < 250 => 4,
-            < 300 => 5,
-            < 400 => 6,
-            < 500 => 7,
-            _ => 8
-        };
-        var comprehensionScore = comprehensionValues.DefaultIfEmpty().Average();
+        var level = SpeedReadingAssessmentMeasurementRules.CalculateLevel(
+            averageWpm,
+            averageComprehension);
+        var comprehensionScore = averageComprehension;
         var tachistoscopeScore = resultRoles
             .Where(item => item.Role == "tachistoscope")
             .Select(item => Math.Clamp(item.Item.Score, 0, 100))
@@ -417,36 +502,35 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             .Average();
         var focusScore = fixationScore;
 
-        if (request?.ExerciseResults is { Count: > 0 })
-        {
-            foreach (var item in request.ExerciseResults)
-            {
-                if (!typeNames.TryGetValue(item.ExerciseId, out var typeName))
-                    continue;
-                var score = Math.Clamp(item.Score, 0, 100);
-                if (IsType(typeName, "comprehension", "reading")) comprehensionScore = score;
-                else if (IsType(typeName, "visual", "expansion")) visualExpansionScore = score;
-                else if (IsType(typeName, "focus", "fixation")) fixationScore = focusScore = score;
-                else if (IsType(typeName, "rsvp", "tachistoscope")) tachistoscopeScore = score;
-            }
-        }
-
         var profile = await GetOrCreateProfileAsync(userId, cancellationToken);
         var targetWpm = (int)(averageWpm * 1.2m);
         var targetComprehension = Math.Max(70m, averageComprehension);
         profile.ApplyAssessment(level, targetWpm, targetComprehension, userId, DateTime.UtcNow);
+        var recommendationAgeGroupId = attempt?.AgeGroupConfigurationId ?? profile.AgeGroupConfigurationId;
 
         var template = await db.ProgramTemplates
             .AsNoTracking()
             .Where(item => item.IsActive && !item.IsDeleted
+                && !item.IsAssessment
+                && (!recommendationAgeGroupId.HasValue
+                    || item.TargetAgeGroupConfigurationId == recommendationAgeGroupId.Value)
                 && item.MinAssessmentScore <= (int)averageComprehension
                 && item.MaxAssessmentScore >= (int)averageComprehension)
-            .OrderBy(item => item.MinAssessmentScore)
+            .OrderBy(item => recommendationAgeGroupId.HasValue
+                && item.TargetAgeGroupConfigurationId == recommendationAgeGroupId.Value
+                    ? 0
+                    : 1)
+            .ThenBy(item => item.MinAssessmentScore)
             .FirstOrDefaultAsync(cancellationToken)
             ?? await db.ProgramTemplates
                 .AsNoTracking()
-                .Where(item => item.IsActive && !item.IsDeleted)
-                .OrderBy(item => item.MinAssessmentScore)
+                .Where(item => item.IsActive
+                    && !item.IsDeleted
+                    && !item.IsAssessment
+                    && (!recommendationAgeGroupId.HasValue
+                        || item.TargetAgeGroupConfigurationId == recommendationAgeGroupId.Value))
+                .OrderBy(item => item.TargetAgeGroupConfigurationId == recommendationAgeGroupId)
+                .ThenBy(item => item.MinAssessmentScore)
                 .FirstOrDefaultAsync(cancellationToken);
 
         await db.SaveChangesAsync(cancellationToken);
@@ -643,7 +727,7 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
     {
         var completedExerciseCount = await db.ExerciseSessionResults
             .AsNoTracking()
-            .Where(item => item.AssessmentAttemptId == attempt.Id && item.IsMeasured)
+            .Where(item => item.AssessmentAttemptId == attempt.Id && item.IsAssessmentMode)
             .Select(item => item.ExerciseId)
             .Distinct()
             .CountAsync(cancellationToken);
@@ -676,6 +760,7 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             attempt.ExpectedExerciseCount,
             attempt.Phase,
             attempt.FormVersion,
+            attempt.AgeGroupConfigurationId,
             attempt.StartedAt,
             attempt.CreatedBy,
             cancellationToken);
@@ -688,6 +773,7 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
         int expectedExerciseCount,
         AssessmentAttemptPhase phase,
         string formVersion,
+        Guid? ageGroupConfigurationId,
         DateTime createdAt,
         string? createdBy,
         CancellationToken cancellationToken)
@@ -700,6 +786,9 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
                 && !exercise.IsDeleted
                 && exerciseType.IsActive
                 && !exerciseType.IsDeleted
+                && (!ageGroupConfigurationId.HasValue
+                    || exercise.TargetAgeGroupId == null
+                    || exercise.TargetAgeGroupId == ageGroupConfigurationId.Value)
             orderby exercise.DifficultyLevel, exercise.Title
             select new AssessmentFormCandidate(
                 exercise.Id,
@@ -711,10 +800,46 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
                 exerciseType.EngineType))
             .ToListAsync(cancellationToken);
 
-        var selected = SelectFormCandidates(candidates, expectedExerciseCount, phase, formVersion);
+        var assessmentPattern = ageGroupConfigurationId.HasValue
+            ? await db.ProgramTemplates
+                .AsNoTracking()
+                .Where(item => item.IsActive
+                    && !item.IsDeleted
+                    && item.IsAssessment
+                    && item.TargetAgeGroupConfigurationId == ageGroupConfigurationId.Value)
+                .OrderBy(item => item.DisplayOrder)
+                .Select(item => item.WeeklyPatternJson)
+                .FirstOrDefaultAsync(cancellationToken)
+            : null;
+        var templateEntries = ParseExerciseEntries(assessmentPattern);
+        var candidatePool = candidates;
+        if (templateEntries.Count > 0)
+        {
+            var templateOrder = templateEntries
+                .Select((item, index) => new { item.ExerciseId, Index = item.DisplayOrder ?? index })
+                .GroupBy(item => item.ExerciseId)
+                .ToDictionary(group => group.Key, group => group.Min(item => item.Index));
+            candidatePool = candidates
+                .Where(item => templateOrder.ContainsKey(item.ExerciseId))
+                .OrderBy(item => templateOrder[item.ExerciseId])
+                .ThenBy(item => item.DifficultyLevel)
+                .ThenBy(item => item.Title)
+                .ToList();
+            if (candidatePool.Count < expectedExerciseCount)
+            {
+                throw new InvalidOperationException(
+                    "The active age-group assessment template does not contain enough active exercises.");
+            }
+        }
+
+        var selected = SelectFormCandidates(candidatePool, expectedExerciseCount, phase, formVersion);
         var readingTexts = await (
             from readingText in db.ReadingTexts.AsNoTracking()
-            where readingText.IsActive && !readingText.IsDeleted
+            where readingText.IsActive
+                && !readingText.IsDeleted
+                && (!ageGroupConfigurationId.HasValue
+                    || readingText.TargetAgeGroupId == null
+                    || readingText.TargetAgeGroupId == ageGroupConfigurationId.Value)
             select new AssessmentReadingTextCandidate(
                 readingText.Id,
                 readingText.ExerciseId,
@@ -879,7 +1004,7 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
         CancellationToken cancellationToken)
     {
         if (!await db.AgeGroupConfigurations.AsNoTracking().AnyAsync(
-                item => item.Id == ageGroupId && !item.IsDeleted,
+                item => item.Id == ageGroupId && item.IsActive && !item.IsDeleted,
                 cancellationToken))
         {
             throw new ArgumentException("Age group not found.", nameof(ageGroupId));
@@ -893,7 +1018,7 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
     {
         var ids = exercises.Select(item => item.ExerciseId).Distinct().ToArray();
         var count = await db.Exercises.AsNoTracking()
-            .CountAsync(item => ids.Contains(item.Id) && item.IsActive, cancellationToken);
+            .CountAsync(item => ids.Contains(item.Id) && item.IsActive && !item.IsDeleted, cancellationToken);
         if (count != ids.Length)
             throw new ArgumentException("Every assessment exercise must exist and be active.", nameof(exercises));
     }
@@ -915,7 +1040,7 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             join exerciseType in db.ExerciseTypes.AsNoTracking()
                 on exercise.ExerciseTypeId equals exerciseType.Id into exerciseTypes
             from exerciseType in exerciseTypes.DefaultIfEmpty()
-            where exerciseIds.Contains(exercise.Id) && exercise.IsActive
+            where exerciseIds.Contains(exercise.Id) && exercise.IsActive && !exercise.IsDeleted
             select new
             {
                 exercise.Id,
@@ -1046,18 +1171,24 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
         return "supplementary";
     }
 
-    private static string LevelName(int level) => level switch
-    {
-        1 => "Başlangıç",
-        2 => "Temel",
-        3 => "Orta-Alt",
-        4 => "Orta",
-        5 => "Orta-Üst",
-        6 => "İleri",
-        7 => "Uzman",
-        8 => "Elit",
-        _ => $"Seviye {level}"
-    };
+    private static bool IsServerMeasuredExerciseType(string typeName) =>
+        IsType(
+            typeName,
+            "speedreading",
+            "rsvp",
+            "comprehension",
+            "reading",
+            "free",
+            "chunking",
+            "textfading",
+            "skimming",
+            "scanning",
+            "schulte",
+            "focus",
+            "attention",
+            "fixation");
+
+    private static string LevelName(int level) => SpeedReadingLevelRules.GetDisplayName(level);
 
     private static string GetDefaultFormVersion(
         AssessmentAttemptPhase phase,

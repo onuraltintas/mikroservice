@@ -17,6 +17,9 @@ public sealed class AssessmentAdminController(ISpeedReadingAssessment assessment
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken = default) =>
         Ok(await assessment.GetTemplatesAsync(cancellationToken));
 
+    [HttpGet("levels")]
+    public IActionResult GetLevels() => Ok(SpeedReadingLevelRules.Definitions);
+
     [HttpGet("age-group/{ageGroupId:guid}")]
     public async Task<IActionResult> GetByAgeGroup(Guid ageGroupId, CancellationToken cancellationToken = default)
     {

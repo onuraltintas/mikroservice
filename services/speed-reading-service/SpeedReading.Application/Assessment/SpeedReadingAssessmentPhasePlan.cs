@@ -32,12 +32,35 @@ public sealed record AssessmentPhasePlanSummary(
     IReadOnlyList<AssessmentPhasePlanItem> Phases,
     AssessmentAttemptPhase? NextPhase);
 
+public static class AssessmentPhaseTimingRules
+{
+    public static TimeSpan MinimumWait(AssessmentAttemptPhase phase) =>
+        phase == AssessmentAttemptPhase.Retention
+            ? TimeSpan.FromDays(7)
+            : TimeSpan.Zero;
+
+    public static DateTime? AvailableAt(
+        AssessmentAttemptPhase phase,
+        DateTime? prerequisiteCompletedAt)
+    {
+        if (!prerequisiteCompletedAt.HasValue)
+            return null;
+
+        var completedAt = prerequisiteCompletedAt.Value.Kind == DateTimeKind.Utc
+            ? prerequisiteCompletedAt.Value
+            : prerequisiteCompletedAt.Value.ToUniversalTime();
+        return completedAt.Add(MinimumWait(phase));
+    }
+}
+
 public static class AssessmentPhasePlanCalculator
 {
     public static AssessmentPhasePlanSummary Calculate(
-        IReadOnlyList<AssessmentPhasePlanAttemptInput> attempts)
+        IReadOnlyList<AssessmentPhasePlanAttemptInput> attempts,
+        DateTime? nowUtc = null)
     {
         ArgumentNullException.ThrowIfNull(attempts);
+        var now = EnsureUtc(nowUtc ?? DateTime.UtcNow);
 
         var latestCompletedByPhase = attempts
             .Where(item => item.Status == AssessmentAttemptStatus.Completed)
@@ -64,7 +87,8 @@ public static class AssessmentPhasePlanCalculator
                 phase,
                 latestCompletedByPhase,
                 latestInProgressByPhase,
-                language))
+                language,
+                now))
             .ToList();
         var nextPhase = phases.FirstOrDefault(item => item.Status == AssessmentPhasePlanStatus.InProgress)?.Phase
             ?? phases.FirstOrDefault(item => item.Status == AssessmentPhasePlanStatus.Available)?.Phase;
@@ -76,7 +100,8 @@ public static class AssessmentPhasePlanCalculator
         AssessmentAttemptPhase phase,
         IReadOnlyDictionary<AssessmentAttemptPhase, AssessmentPhasePlanAttemptInput> latestCompletedByPhase,
         IReadOnlyDictionary<AssessmentAttemptPhase, AssessmentPhasePlanAttemptInput> latestInProgressByPhase,
-        string language)
+        string language,
+        DateTime now)
     {
         AssessmentAttemptPhase? prerequisite = AssessmentAttemptPhaseRules.TryGetPrerequisite(
             phase,
@@ -126,13 +151,19 @@ public static class AssessmentPhasePlanCalculator
             prerequisiteAttempt = completedPrerequisite;
         }
 
+        var prerequisiteCompletedAt = prerequisiteAttempt?.CompletedAt ?? prerequisiteAttempt?.StartedAt;
+        var availableAt = AssessmentPhaseTimingRules.AvailableAt(phase, prerequisiteCompletedAt);
+        var status = availableAt.HasValue && availableAt.Value > now
+            ? AssessmentPhasePlanStatus.Locked
+            : AssessmentPhasePlanStatus.Available;
+
         return new AssessmentPhasePlanItem(
             phase,
-            AssessmentPhasePlanStatus.Available,
+            status,
             prerequisite,
             null,
             GetDefaultFormVersion(phase, language),
-            prerequisiteAttempt?.CompletedAt ?? prerequisiteAttempt?.StartedAt,
+            availableAt,
             null);
     }
 
@@ -149,4 +180,7 @@ public static class AssessmentPhasePlanCalculator
 
         return $"{languageCode}-{phase.ToString().ToLowerInvariant()}-v1";
     }
+
+    private static DateTime EnsureUtc(DateTime value) =>
+        value.Kind == DateTimeKind.Utc ? value : value.ToUniversalTime();
 }

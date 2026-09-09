@@ -155,7 +155,7 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
         var hash = Hash(actorId, scope, Guid.Empty,
             request.Title, request.Description, request.DifficultyLevel.ToString(),
             request.ExerciseTypeId.ToString("D"), request.ConfigurationJson,
-            request.TargetAgeGroupConfigurationId?.ToString("D"));
+            request.TargetAgeGroupConfigurationId?.ToString("D"), request.IsActive.ToString());
         var existing = await GetLedgerAsync(scope, key, cancellationToken);
         if (existing is not null)
         {
@@ -178,7 +178,7 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
             now,
             request.TargetAgeGroupConfigurationId,
             request.Description,
-            true,
+            request.IsActive,
             actorId.ToString(),
             null,
             null);
@@ -204,7 +204,7 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
         var hash = Hash(actorId, scope, exerciseId,
             request.Title, request.Description, request.DifficultyLevel.ToString(),
             request.ExerciseTypeId.ToString("D"), request.ConfigurationJson,
-            request.TargetAgeGroupConfigurationId?.ToString("D"));
+            request.TargetAgeGroupConfigurationId?.ToString("D"), request.IsActive.ToString());
         var existing = await GetLedgerAsync(scope, key, cancellationToken);
         if (existing is not null)
         {
@@ -228,6 +228,10 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
             request.TargetAgeGroupConfigurationId,
             actorId,
             DateTime.UtcNow);
+        if (request.IsActive)
+            exercise.Activate();
+        else
+            exercise.Deactivate();
         AddLedger(scope, key, hash, exercise.Id, DateTime.UtcNow);
         await SaveAsync(scope, key, hash, cancellationToken);
         return await GetExerciseSummaryAsync(exercise.Id, cancellationToken)
@@ -595,7 +599,7 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
     private async Task EnsureAgeGroupExistsAsync(Guid? ageGroupId, CancellationToken cancellationToken)
     {
         if (ageGroupId.HasValue && !await db.AgeGroupConfigurations.AsNoTracking().AnyAsync(
-                item => item.Id == ageGroupId.Value && !item.IsDeleted,
+                item => item.Id == ageGroupId.Value && item.IsActive && !item.IsDeleted,
                 cancellationToken))
             throw new NotFoundException("AgeGroupConfiguration", ageGroupId.Value);
     }
@@ -615,7 +619,7 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
                select new ExerciseSummary(
                    exercise.Id, exercise.Title, exercise.Description, exercise.DifficultyLevel,
                    exercise.ExerciseTypeId, type.DisplayName, exercise.ConfigurationJson,
-                   exercise.TargetAgeGroupId))
+                   exercise.TargetAgeGroupId, exercise.IsActive))
             .SingleOrDefaultAsync(cancellationToken);
 
     private async Task<ReadingTextSummary?> GetReadingTextSummaryAsync(Guid id, CancellationToken cancellationToken)

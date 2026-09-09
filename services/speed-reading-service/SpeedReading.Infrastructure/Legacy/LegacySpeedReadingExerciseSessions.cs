@@ -1,12 +1,13 @@
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
+using SpeedReading.Application.Content;
 using SpeedReading.Application.ExerciseSessions;
 
 namespace SpeedReading.Infrastructure.Legacy;
 
 internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext db) : ISpeedReadingExerciseSessions
 {
+    private const string TimeoutAnswer = "__timeout__";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private static readonly HashSet<string> ReadingExerciseTypes = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -17,7 +18,9 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
         "Chunking",
         "TextFading",
         "Skimming",
-        "Scanning"
+        "Scanning",
+        "RegressionReduction",
+        "SubvocalizationReduction"
     };
 
     public async Task<StartExerciseSessionResponse> StartAsync(
@@ -30,13 +33,28 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
             throw new ArgumentException("A valid student and exercise are required.");
         }
 
+        // Legacy storage has no authoritative assessment-attempt table. A
+        // client-supplied attempt id must therefore never be allowed to turn
+        // an ordinary exercise session into an assessment result.
+        if (request.AssessmentAttemptId.HasValue)
+        {
+            throw new NotSupportedException(
+                "Versioned assessment attempts require owned Speed Reading data.");
+        }
+
+        var profileAgeGroupId = await GetAgeGroupIdAsync(studentId, cancellationToken);
+
         var exercise = await db.Exercises
             .AsNoTracking()
-            .SingleOrDefaultAsync(item => item.Id == request.ExerciseId && !item.IsDeleted, cancellationToken)
+            .SingleOrDefaultAsync(item => item.Id == request.ExerciseId
+                && !item.IsDeleted
+                && item.IsActive, cancellationToken)
             ?? throw new KeyNotFoundException("Exercise not found.");
         var exerciseType = await db.ExerciseTypes
             .AsNoTracking()
-            .SingleOrDefaultAsync(item => item.Id == exercise.ExerciseTypeId && !item.IsDeleted, cancellationToken)
+            .SingleOrDefaultAsync(item => item.Id == exercise.ExerciseTypeId
+                && !item.IsDeleted
+                && item.IsActive, cancellationToken)
             ?? throw new KeyNotFoundException("Exercise type not found.");
 
         if (request.ReadingTextId.HasValue)
@@ -45,6 +63,10 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
                 .AsNoTracking()
                 .AnyAsync(item => item.Id == request.ReadingTextId.Value
                     && !item.IsDeleted
+                    && item.IsActive
+                    && (!profileAgeGroupId.HasValue
+                        || item.TargetAgeGroupConfigurationId == null
+                        || item.TargetAgeGroupConfigurationId == profileAgeGroupId.Value)
                     && (item.ExerciseId == null || item.ExerciseId == request.ExerciseId), cancellationToken);
             if (!readingTextMatches)
             {
@@ -92,6 +114,9 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
                 .Where(item => !item.IsDeleted
                     && item.IsActive
                     && item.Content != string.Empty
+                    && (!profileAgeGroupId.HasValue
+                        || item.TargetAgeGroupConfigurationId == null
+                        || item.TargetAgeGroupConfigurationId == profileAgeGroupId.Value)
                     && (item.ExerciseId == null || item.ExerciseId == request.ExerciseId))
                 .OrderBy(item => item.Id)
                 .Select(item => (Guid?)item.Id)
@@ -104,6 +129,7 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
             exercise,
             exerciseType.Name,
             readingTextId,
+            request.AssessmentAttemptId,
             request.CustomData,
             cancellationToken);
         var now = DateTime.UtcNow;
@@ -130,7 +156,9 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
         await db.SaveChangesAsync(cancellationToken);
 
         var publicState = ToPublicJson(state);
-        var publicConfiguration = RemoveAnswerKeys(ParseJsonOrEmpty(exercise.ConfigurationJson));
+        var publicConfiguration = state.IsAssessmentMode
+            ? SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(ParseJsonOrEmpty(exercise.ConfigurationJson))
+            : RemoveAssessmentKeys(ParseJsonOrEmpty(exercise.ConfigurationJson));
         return new StartExerciseSessionResponse(
             session.Id,
             session.ExerciseId,
@@ -155,7 +183,8 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
         }
 
         var now = DateTime.UtcNow;
-        if (IsTimedOut(session, now))
+        var state = DeserializeState(session.SessionDataJson);
+        if (IsTimedOut(session, state, now))
         {
             session.Status = (int)ExerciseSessionStatus.Timeout;
             session.EndTime = now;
@@ -168,16 +197,31 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
             throw new InvalidOperationException("Actions can only be submitted to an active session.");
         }
 
-        var state = DeserializeState(session.SessionDataJson);
-        var response = request.Action?.Trim().ToLowerInvariant() switch
+        var actionName = request.Action?.Trim().ToLowerInvariant();
+        var response = actionName switch
         {
             "start_reading" => StartReading(session, state, now),
             "finish_reading" => FinishReading(session, state, now),
+            "focus_start" => StartFocus(session, state, now),
+            "focus_step" => AdvanceFocus(session, state, request, now),
             "answer_question" => AnswerQuestion(session, state, request),
+            "position_match" => ValidateFocusMatch(session, state, request, "position", now),
+            "word_match" => ValidateFocusMatch(session, state, request, "word", now),
+            "match_attempt" => ValidateFocusMatch(session, state, request, "position", now),
+            "complete" when IsFocusExercise(state) => CompleteFocus(session, state),
             "advance" => Advance(session, state),
-            _ when state.CurrentNumber.HasValue => ClickGrid(session, state, request),
+            "grid_click" when state.CurrentNumber.HasValue => ClickGrid(session, state, request),
+            "grid_click" => Invalid("Grid cell action is not valid for this exercise."),
+            _ when state.CurrentNumber.HasValue => Invalid("Grid cell action is required."),
             _ => AdvanceGeneric(session, state)
         };
+
+        // Start the server clock only after an action was understood. A wrong
+        // grid attempt still counts as a real attempt and therefore starts it.
+        if (response.IsValid || actionName == "grid_click" && state.CurrentNumber.HasValue)
+        {
+            EnsureTimingStarted(session, state, now);
+        }
 
         session.SessionDataJson = JsonSerializer.Serialize(state, JsonOptions);
         if (request.ActionId is { } actionId && actionId != Guid.Empty)
@@ -196,8 +240,13 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
         CancellationToken cancellationToken = default)
     {
         var session = await GetOwnedSessionAsync(studentId, sessionId, cancellationToken);
+        var state = DeserializeState(session.SessionDataJson);
+        if (request.IsAssessmentMode != state.IsAssessmentMode)
+        {
+            throw new InvalidOperationException("Assessment mode must match the server-owned session.");
+        }
         var now = DateTime.UtcNow;
-        if (IsTimedOut(session, now))
+        if (IsTimedOut(session, state, now))
         {
             session.Status = (int)ExerciseSessionStatus.Timeout;
             session.EndTime = now;
@@ -218,7 +267,15 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
             return ToResult(existingResult, session, DeserializeState(session.SessionDataJson));
         }
 
-        var state = DeserializeState(session.SessionDataJson);
+        if (state.CurrentNumber.HasValue && state.CurrentNumber.Value <= state.TotalSteps)
+        {
+            throw new InvalidOperationException("All grid targets must be completed before the session can be completed.");
+        }
+        if (IsFocusExercise(state) && !state.FocusCompleted)
+        {
+            throw new InvalidOperationException("The focus exercise must be completed through its validated action flow.");
+        }
+
         if (request.CustomData is not null)
         {
             session.CustomDataJson = SerializeOptional(request.CustomData);
@@ -247,18 +304,26 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
         session.Status = (int)ExerciseSessionStatus.Completed;
         session.EndTime = now;
         var timeSpent = SpeedReadingExerciseSessionRules.CalculateActiveSeconds(
-            session.StartTime,
+            GetTimingStartTime(session, state, now),
             now,
-            session.TotalPausedSeconds,
+            GetTimingPausedSeconds(session, state),
             null,
             isPaused: false);
         var accuracy = SpeedReadingExerciseSessionRules.CalculateAccuracy(
             session.CorrectCount,
             session.IncorrectCount);
         var wordsRead = state.WordCount > 0 ? (int?)state.WordCount : null;
-        var rawWpm = wordsRead.HasValue && timeSpent > 0
-            ? Math.Round((decimal)wordsRead.Value / timeSpent * 60, 2)
-            : (decimal?)null;
+        var rawWpmCandidate = wordsRead.HasValue
+            ? SpeedReadingExerciseSessionRules.CalculateValidatedRawWpm(wordsRead.Value, timeSpent)
+            : null;
+        var measurementStatus = SpeedReadingExerciseSessionRules.ResolveMeasurementStatus(
+            state.Questions.Count,
+            session.CorrectCount,
+            session.IncorrectCount,
+            hasValidWpm: (rawWpmCandidate.HasValue && SupportsServerReadingMeasurement(state))
+                || (IsFocusExercise(state) && state.FocusCompleted && HasFocusStimulus(state)));
+        var isMeasured = measurementStatus == SpeedReadingMeasurementStatus.Measured;
+        var rawWpm = isMeasured ? rawWpmCandidate : null;
         var comprehension = state.Questions.Count > 0
             ? Math.Round((decimal)correctQuestions / state.Questions.Count * 100, 2)
             : accuracy;
@@ -268,7 +333,9 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
                 : 0), 0, 100), 2)
             : accuracy;
         var weightedKdp = rawWpm.HasValue ? Math.Round(rawWpm.Value * comprehension / 100, 2) : (decimal?)null;
-        var xp = SpeedReadingExerciseSessionRules.CalculateXp(score, accuracy, timeSpent);
+        var xp = isMeasured
+            ? SpeedReadingExerciseSessionRules.CalculateXp(score, accuracy, timeSpent)
+            : 0;
         state.FinalWpm = rawWpm;
         state.ComprehensionScore = comprehension;
         state.WeightedKdp = weightedKdp;
@@ -287,6 +354,9 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
             RawWPM = rawWpm ?? 0,
             ComprehensionScore = comprehension,
             WeightedKDP = weightedKdp ?? 0,
+            IsMeasured = isMeasured,
+            IsAssessmentMode = state.IsAssessmentMode,
+            AssessmentAttemptId = state.AssessmentAttemptId,
             QuestionAnswersJson = JsonSerializer.Serialize(answers, JsonOptions),
             ReadingMovementsJson = "[]",
             CompletedAt = now,
@@ -335,7 +405,25 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
             }
         }
 
-        await db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            db.ChangeTracker.Clear();
+            var concurrent = await db.StudentExerciseResults
+                .AsNoTracking()
+                .SingleOrDefaultAsync(item => item.SessionId == sessionId && !item.IsDeleted, cancellationToken);
+            if (concurrent is null)
+                throw;
+
+            var persistedSession = await db.ExerciseSessions
+                .AsNoTracking()
+                .SingleAsync(item => item.Id == sessionId && item.StudentId == studentId && !item.IsDeleted, cancellationToken);
+            return ToResult(concurrent, persistedSession, DeserializeState(persistedSession.SessionDataJson));
+        }
+
         return ToResult(result, session, state, score, xp, now);
     }
 
@@ -376,8 +464,9 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
         CancellationToken cancellationToken = default)
     {
         var session = await GetOwnedSessionAsync(studentId, sessionId, cancellationToken);
+        var state = DeserializeState(session.SessionDataJson);
         var now = DateTime.UtcNow;
-        var timedOut = IsTimedOut(session, now);
+        var timedOut = IsTimedOut(session, state, now);
         if (timedOut && session.Status == (int)ExerciseSessionStatus.Active)
         {
             session.Status = (int)ExerciseSessionStatus.Timeout;
@@ -394,9 +483,9 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
             session.CorrectCount,
             session.IncorrectCount,
             SpeedReadingExerciseSessionRules.CalculateActiveSeconds(
-                session.StartTime,
+                GetTimingStartTime(session, state, now),
                 session.EndTime ?? now,
-                session.TotalPausedSeconds,
+                GetTimingPausedSeconds(session, state),
                 session.PausedAt,
                 session.Status == (int)ExerciseSessionStatus.Paused),
             session.TimeLimitSeconds,
@@ -409,6 +498,7 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
         CancellationToken cancellationToken = default)
     {
         var session = await GetOwnedSessionAsync(studentId, sessionId, cancellationToken);
+        var state = DeserializeState(session.SessionDataJson);
         var exercise = await db.Exercises.AsNoTracking()
             .SingleOrDefaultAsync(item => item.Id == session.ExerciseId, cancellationToken)
             ?? throw new KeyNotFoundException("Exercise not found.");
@@ -431,9 +521,9 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
             session.IncorrectCount,
             SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount),
             SpeedReadingExerciseSessionRules.CalculateActiveSeconds(
-                session.StartTime,
+                GetTimingStartTime(session, state, now),
                 session.EndTime ?? now,
-                session.TotalPausedSeconds,
+                GetTimingPausedSeconds(session, state),
                 session.PausedAt,
                 session.Status == (int)ExerciseSessionStatus.Paused));
     }
@@ -487,12 +577,22 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
             && !item.IsDeleted, cancellationToken)
         ?? throw new KeyNotFoundException("Exercise session not found.");
 
+    private async Task<Guid?> GetAgeGroupIdAsync(
+        Guid studentId,
+        CancellationToken cancellationToken) =>
+        await db.Users
+            .AsNoTracking()
+            .Where(item => item.Id == studentId && !item.IsDeleted)
+            .Select(item => item.AgeGroupConfigurationId)
+            .SingleOrDefaultAsync(cancellationToken);
+
     private async Task<SessionState> CreateSessionStateAsync(
         Guid studentId,
         Guid exerciseId,
         LegacyExercise exercise,
         string exerciseTypeName,
         Guid? readingTextId,
+        Guid? assessmentAttemptId,
         Dictionary<string, JsonElement>? customData,
         CancellationToken cancellationToken)
     {
@@ -502,16 +602,31 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
             ExerciseId = exerciseId,
             ExerciseTypeName = exerciseTypeName,
             DifficultyLevel = exercise.DifficultyLevel,
-            CurrentNumber = exerciseTypeName.Equals("SchulteTable", StringComparison.OrdinalIgnoreCase)
-                ? 1
-                : null,
+            IsAssessmentMode = assessmentAttemptId.HasValue,
+            AssessmentAttemptId = assessmentAttemptId,
+            TimingStartsOnAction = true,
+            CurrentNumber = IsGridExercise(exerciseTypeName, config) ? 1 : null,
             TimeLimitSeconds = ReadPositiveInt(config, "timeLimitSeconds")
         };
+        var engineConfig = ReadObject(config, "engineConfig");
+        if (IsFocusExercise(exerciseTypeName))
+        {
+            var focusConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
+            state.FocusMode = ReadString(focusConfig, "mode") ?? "position";
+            state.FocusNLevel = ReadPositiveInt(focusConfig, "nLevel") ?? 1;
+            state.FocusSpeedMs = ReadPositiveInt(focusConfig, "speedMs") ?? 1500;
+            state.PositionSequence = ReadIntArray(focusConfig, "positionSequence");
+            state.WordSequence = ReadStringArray(focusConfig, "wordSequence");
+            state.PositionTargetIndices = ReadIntArray(focusConfig, "positionTargetIndices");
+            state.WordTargetIndices = ReadIntArray(focusConfig, "wordTargetIndices");
+        }
 
         if (readingTextId.HasValue)
         {
             var readingText = await db.ReadingTexts.AsNoTracking()
-                .SingleOrDefaultAsync(item => item.Id == readingTextId.Value && !item.IsDeleted, cancellationToken)
+                .SingleOrDefaultAsync(item => item.Id == readingTextId.Value
+                    && !item.IsDeleted
+                    && item.IsActive, cancellationToken)
                 ?? throw new KeyNotFoundException("Reading text not found.");
             state.ReadingTextId = readingText.Id;
             state.ReadingTextTitle = readingText.Title;
@@ -540,7 +655,16 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
             state.Questions = questions;
         }
 
-        var gridSize = exerciseTypeName.Equals("SchulteTable", StringComparison.OrdinalIgnoreCase)
+        if (IsVisualizationExercise(exerciseTypeName) && state.Questions.Count == 0)
+        {
+            state.VisualizationScenes = await LoadVisualizationScenesAsync(exerciseId, config, cancellationToken);
+            state.Questions = state.VisualizationScenes
+                .SelectMany(scene => scene.Questions)
+                .Select(ToSessionQuestion)
+                .ToList();
+        }
+
+        var gridSize = IsGridExercise(exerciseTypeName, config)
             ? ReadPositiveInt(config, "gridSize") ?? (int?)Math.Clamp(exercise.DifficultyLevel + 2, 3, 7)
             : null;
         if (gridSize.HasValue)
@@ -557,7 +681,9 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
             state.TotalSteps = ReadPositiveInt(config, "totalSteps")
                 ?? ReadPositiveInt(config, "itemCount")
                 ?? ReadPositiveInt(config, "rounds")
-                ?? (state.Questions.Count > 0 ? 1 + state.Questions.Count : state.Words.Length);
+                ?? (IsVisualizationExercise(exerciseTypeName)
+                    ? state.Questions.Count
+                    : state.Questions.Count > 0 ? 1 + state.Questions.Count : state.Words.Length);
             if (state.TotalSteps <= 0)
             {
                 state.TotalSteps = 1;
@@ -568,6 +694,13 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
             && state.Words.Length > 0)
         {
             state.TotalSteps = state.Words.Length;
+        }
+
+        if (IsFocusExercise(state))
+        {
+            state.TotalSteps = Math.Max(
+                state.TotalSteps,
+                Math.Max(state.PositionSequence.Length, state.WordSequence.Length));
         }
 
         if (customData is not null)
@@ -583,6 +716,7 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
         SessionState state,
         DateTime now)
     {
+        EnsureTimingStarted(session, state, now);
         state.ReadingStartTime ??= now;
         session.CurrentStep = Math.Max(session.CurrentStep, 1);
         return Valid("Okuma başlatıldı. Zamanınız işliyor...", nextStep: session.CurrentStep);
@@ -593,12 +727,90 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
         SessionState state,
         DateTime now)
     {
-        state.ReadingStartTime ??= session.StartTime;
+        EnsureTimingStarted(session, state, now);
+        state.ReadingStartTime ??= state.TimingStartedAt ?? now;
         state.ReadingEndTime = now;
         session.CurrentStep = Math.Max(session.CurrentStep, 1);
-        var seconds = Math.Max(1, (int)(now - state.ReadingStartTime.Value).TotalSeconds);
-        var wpm = state.WordCount == 0 ? 0 : Math.Round((decimal)state.WordCount / seconds * 60, 2);
-        return Valid($"Okuma tamamlandı! Hızınız: {wpm} WPM.", nextStep: session.CurrentStep, currentWpm: wpm);
+        var seconds = Math.Max(0, (int)(now - state.ReadingStartTime.Value).TotalSeconds);
+        var wpm = SpeedReadingExerciseSessionRules.CalculateValidatedRawWpm(state.WordCount, seconds);
+        var message = wpm.HasValue
+            ? $"Okuma tamamlandı! Hızınız: {wpm.Value} WPM."
+            : "Okuma tamamlandı; güvenilir WPM için yeterli ölçüm alınamadı.";
+        return Valid(message, nextStep: session.CurrentStep, currentWpm: wpm);
+    }
+
+    private static ExerciseActionValidationResponse StartFocus(
+        LegacyExerciseSession session,
+        SessionState state,
+        DateTime now)
+    {
+        if (!IsFocusExercise(state))
+            return Invalid("Focus start is only valid for focus exercises.");
+        if (!HasFocusStimulus(state))
+            return Invalid("Focus exercise data is unavailable for server validation.");
+
+        state.FocusStartTime ??= now.ToUniversalTime();
+        return Valid(
+            "Odak egzersizi başlatıldı.",
+            nextStep: session.CurrentStep,
+            isCompleted: false,
+            isCorrect: null);
+    }
+
+    private static ExerciseActionValidationResponse AdvanceFocus(
+        LegacyExerciseSession session,
+        SessionState state,
+        ExerciseActionRequest request,
+        DateTime now)
+    {
+        if (!IsFocusExercise(state) || !state.IsAssessmentMode)
+            return Invalid("Focus step streaming is only valid for assessments.");
+        if (!HasFocusStimulus(state))
+            return Invalid("Focus exercise data is unavailable for server validation.");
+        if (!state.FocusStartTime.HasValue)
+            return Invalid("Focus exercise has not been started.");
+        if (request.Index is not { } index
+            || index < 0
+            || index >= state.TotalSteps)
+            return Invalid("A valid focus trial index is required.");
+        if (index != state.FocusPresentedIndex + 1)
+            return Invalid("Focus trials must be requested in sequence.");
+
+        var speedMs = Math.Max(1, state.FocusSpeedMs);
+        var focusStart = state.FocusStartTime ?? session.StartTime;
+        var activeMilliseconds = Math.Max(
+            0,
+            (now.ToUniversalTime() - focusStart.ToUniversalTime()).TotalMilliseconds
+                - GetTimingPausedSeconds(session, state) * 1000d);
+        var expectedIndex = Math.Clamp(
+            (int)Math.Floor(activeMilliseconds / speedMs),
+            0,
+            Math.Max(0, state.TotalSteps - 1));
+        var earliestAcceptableIndex = state.FocusPresentedIndex < 0
+            ? 0
+            : Math.Max(0, expectedIndex - 1);
+        if (index < earliestAcceptableIndex || index > expectedIndex)
+            return Invalid("Focus step arrived outside its trial time window.");
+
+        state.FocusPresentedIndex = index;
+        state.FocusPresentedAt = now.ToUniversalTime();
+        var feedback = JsonSerializer.SerializeToElement(new
+        {
+            index,
+            position = (state.FocusMode.Equals("position", StringComparison.OrdinalIgnoreCase)
+                || state.FocusMode.Equals("dual", StringComparison.OrdinalIgnoreCase))
+                && index < state.PositionSequence.Length
+                ? state.PositionSequence[index]
+                : (int?)null,
+            word = (state.FocusMode.Equals("word", StringComparison.OrdinalIgnoreCase)
+                || state.FocusMode.Equals("dual", StringComparison.OrdinalIgnoreCase))
+                && index < state.WordSequence.Length
+                ? state.WordSequence[index]
+                : null,
+            mode = state.FocusMode,
+            level = state.FocusNLevel
+        }, JsonOptions);
+        return Valid("Odak uyaranı hazır.", index, feedbackData: feedback);
     }
 
     private static ExerciseActionValidationResponse AnswerQuestion(
@@ -606,7 +818,8 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
         SessionState state,
         ExerciseActionRequest request)
     {
-        if (!request.QuestionId.HasValue || string.IsNullOrWhiteSpace(request.Answer))
+        if (!request.QuestionId.HasValue
+            || (!request.IsTimeout && string.IsNullOrWhiteSpace(request.Answer)))
         {
             return Invalid("Soru ID ve cevap gereklidir.");
         }
@@ -622,14 +835,15 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
             return Invalid("Bu soru zaten yanıtlandı.");
         }
 
-        var isCorrect = string.Equals(
-            request.Answer.Trim(),
+        var answer = request.IsTimeout ? TimeoutAnswer : request.Answer!.Trim();
+        var isCorrect = !request.IsTimeout && string.Equals(
+            answer,
             question.CorrectAnswer.Trim(),
             StringComparison.OrdinalIgnoreCase);
         state.Answers.Add(new SessionAnswer
         {
             QuestionId = question.QuestionId,
-            Answer = request.Answer.Trim(),
+            Answer = answer,
             IsCorrect = isCorrect,
             TimeSpentSeconds = Math.Max(0, (request.ResponseTime ?? 0) / 1000),
             BloomLevel = question.BloomLevel
@@ -637,16 +851,19 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
         if (isCorrect) session.CorrectCount++;
         else session.IncorrectCount++;
         session.CurrentStep = Math.Min(session.TotalSteps, session.CurrentStep + 1);
+        var isAssessment = state.IsAssessmentMode;
         return new ExerciseActionValidationResponse(
-            isCorrect,
-            isCorrect ? "Doğru cevap!" : "Yanlış cevap.",
+            true,
+            request.IsTimeout
+                ? (isAssessment ? "Süre doldu; cevap kaydedildi." : "Süre doldu!")
+                : (isAssessment ? "Cevap kaydedildi." : (isCorrect ? "Doğru cevap!" : "Yanlış cevap.")),
             null,
             session.CurrentStep,
             null,
             state.Answers.Count == state.Questions.Count,
-            isCorrect,
-            question.CorrectAnswer,
-            question.Explanation,
+            isAssessment ? null : isCorrect,
+            isAssessment ? null : question.CorrectAnswer,
+            isAssessment ? null : question.Explanation,
             null,
             null);
     }
@@ -674,8 +891,25 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
         SessionState state,
         ExerciseActionRequest request)
     {
+        if (request.Number is not { } number)
+        {
+            return Invalid("A grid number is required.");
+        }
+
+        if (state.Grid is { Length: > 0 })
+        {
+            var grid = state.Grid.SelectMany(row => row ?? []).ToArray();
+            if (request.Index is not { } cellIndex
+                || cellIndex < 0
+                || cellIndex >= grid.Length
+                || grid[cellIndex] != number)
+            {
+                return Invalid("Grid cell does not match the server-owned layout.");
+            }
+        }
+
         var expected = state.CurrentNumber!.Value;
-        var isCorrect = request.Number == expected;
+        var isCorrect = number == expected;
         if (isCorrect)
         {
             session.CorrectCount++;
@@ -688,14 +922,15 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
         }
 
         var completed = state.CurrentNumber > state.TotalSteps;
+        var isAssessment = state.IsAssessmentMode;
         return new ExerciseActionValidationResponse(
-            isCorrect,
-            isCorrect ? "Doğru!" : $"Yanlış! Doğru sıra: {expected}",
-            completed ? null : state.CurrentNumber,
+            isAssessment || isCorrect,
+            isAssessment ? "Yanıt kaydedildi." : (isCorrect ? "Doğru!" : $"Yanlış! Doğru sıra: {expected}"),
+            isAssessment ? null : (completed ? null : state.CurrentNumber),
             session.CurrentStep,
             null,
             completed,
-            isCorrect,
+            isAssessment ? null : isCorrect,
             null,
             null,
             null,
@@ -707,13 +942,381 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
         SessionState state)
     {
         session.CurrentStep = Math.Min(session.TotalSteps, session.CurrentStep + 1);
-        session.CorrectCount++;
         return Valid(
             session.CurrentStep >= session.TotalSteps ? "Egzersiz tamamlandı." : "",
             nextStep: session.CurrentStep,
             isCompleted: session.CurrentStep >= session.TotalSteps,
-            isCorrect: true);
+            isCorrect: null);
     }
+
+    private static ExerciseActionValidationResponse ValidateFocusMatch(
+        LegacyExerciseSession session,
+        SessionState state,
+        ExerciseActionRequest request,
+        string channel,
+        DateTime now)
+    {
+        if (!IsFocusExercise(state)
+            || !FocusChannels(state).Contains(channel, StringComparer.OrdinalIgnoreCase)
+            || (channel == "position" && state.PositionSequence.Length == 0)
+            || (channel == "word" && state.WordSequence.Length == 0))
+        {
+            return Invalid("Focus exercise data is unavailable for server validation.");
+        }
+        if (!state.FocusStartTime.HasValue)
+        {
+            return Invalid("Focus exercise has not been started.");
+        }
+
+        if (request.Index is not { } index
+            || index < 0
+            || index >= state.TotalSteps)
+        {
+            return Invalid("A valid focus trial index is required.");
+        }
+
+        if (state.FocusResponses.Any(item =>
+                item.Channel.Equals(channel, StringComparison.OrdinalIgnoreCase)
+                && item.Index == index))
+        {
+            return Invalid("This focus trial was already recorded.");
+        }
+
+        var lastIndex = channel.Equals("position", StringComparison.OrdinalIgnoreCase)
+            ? state.FocusLastPositionIndex
+            : state.FocusLastWordIndex;
+        if (!lastIndex.HasValue)
+        {
+            lastIndex = state.FocusResponses
+                .Where(item => item.Channel.Equals(channel, StringComparison.OrdinalIgnoreCase))
+                .Select(item => (int?)item.Index)
+                .Max();
+        }
+        if (lastIndex.HasValue && index < lastIndex.Value)
+        {
+            return Invalid("Focus responses must be submitted in trial order.");
+        }
+
+        var speedMs = Math.Max(1, state.FocusSpeedMs);
+        if (state.IsAssessmentMode)
+        {
+            if (index != state.FocusPresentedIndex)
+                return Invalid("Focus response does not match the currently presented trial.");
+            if (state.FocusPresentedAt.HasValue
+                && (now.ToUniversalTime() - state.FocusPresentedAt.Value.ToUniversalTime()).TotalMilliseconds
+                    > speedMs * 2d)
+                return Invalid("Focus response arrived after the trial window.");
+        }
+        else
+        {
+            var focusStart = state.FocusStartTime ?? session.StartTime;
+            var activeMilliseconds = Math.Max(
+                0,
+                (now.ToUniversalTime() - focusStart.ToUniversalTime()).TotalMilliseconds
+                    - GetTimingPausedSeconds(session, state) * 1000d);
+            var expectedIndex = Math.Clamp(
+                (int)Math.Floor(activeMilliseconds / speedMs),
+                0,
+                Math.Max(0, state.TotalSteps - 1));
+            if (index < expectedIndex - 1 || index > expectedIndex + 1)
+            {
+                return Invalid("Focus response arrived outside its trial time window.");
+            }
+        }
+
+        var isCorrect = IsFocusTarget(state, channel, index);
+        state.FocusResponses.Add(new FocusResponse
+        {
+            Channel = channel,
+            Index = index,
+            IsCorrect = isCorrect
+        });
+        if (channel.Equals("position", StringComparison.OrdinalIgnoreCase))
+            state.FocusLastPositionIndex = index;
+        else
+            state.FocusLastWordIndex = index;
+
+        if (isCorrect) session.CorrectCount++;
+        else session.IncorrectCount++;
+        session.CurrentStep = Math.Min(session.TotalSteps, session.CurrentStep + 1);
+
+        var isAssessment = state.IsAssessmentMode;
+        return new ExerciseActionValidationResponse(
+            true,
+            isAssessment ? "Yanıt kaydedildi." : (isCorrect ? "Doğru." : "Yanlış."),
+            null,
+            session.CurrentStep,
+            null,
+            false,
+            isAssessment ? null : isCorrect,
+            null,
+            null,
+            null,
+            isAssessment ? null : BuildFocusFeedback(state));
+    }
+
+    private static ExerciseActionValidationResponse CompleteFocus(
+        LegacyExerciseSession session,
+        SessionState state)
+    {
+        if (!IsFocusExercise(state))
+            return AdvanceGeneric(session, state);
+
+        if (!HasFocusStimulus(state))
+            return Invalid("Focus exercise data is unavailable for server validation.");
+        if (state.IsAssessmentMode && state.FocusPresentedIndex < state.TotalSteps - 1)
+            return Invalid("All focus trials must be presented before completion.");
+        if (!state.IsAssessmentMode && state.FocusResponses.Count == 0)
+            return Invalid("At least one focus response is required before completion.");
+
+        if (!state.FocusCompleted)
+        {
+            foreach (var channel in FocusChannels(state))
+            {
+                var length = channel == "position"
+                    ? state.PositionSequence.Length
+                    : state.WordSequence.Length;
+                for (var index = 0; index < length; index++)
+                {
+                    if (IsFocusTarget(state, channel, index)
+                        && !state.FocusResponses.Any(item =>
+                            item.Channel.Equals(channel, StringComparison.OrdinalIgnoreCase)
+                            && item.Index == index))
+                    {
+                        state.FocusResponses.Add(new FocusResponse
+                        {
+                            Channel = channel,
+                            Index = index,
+                            IsCorrect = false,
+                            IsMiss = true
+                        });
+                        session.IncorrectCount++;
+                    }
+                }
+            }
+            state.FocusCompleted = true;
+            session.CurrentStep = session.TotalSteps;
+        }
+
+        return Valid(
+            "Odak egzersizi tamamlandı.",
+            nextStep: session.TotalSteps,
+            isCompleted: true,
+            isCorrect: null,
+            feedbackData: state.IsAssessmentMode ? null : BuildFocusFeedback(state));
+    }
+
+    private static bool IsFocusTarget(SessionState state, string channel, int index)
+    {
+        var configuredTargets = channel == "position"
+            ? state.PositionTargetIndices
+            : state.WordTargetIndices;
+        if (configuredTargets.Length > 0)
+            return configuredTargets.Contains(index);
+
+        var nLevel = Math.Max(1, state.FocusNLevel);
+        if (index < nLevel)
+            return false;
+        if (channel == "position")
+            return state.PositionSequence[index] == state.PositionSequence[index - nLevel];
+        return string.Equals(
+            state.WordSequence[index],
+            state.WordSequence[index - nLevel],
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string[] FocusChannels(SessionState state) =>
+        state.FocusMode.Equals("dual", StringComparison.OrdinalIgnoreCase)
+            ? ["position", "word"]
+            : state.FocusMode.Equals("word", StringComparison.OrdinalIgnoreCase)
+                ? ["word"]
+                : ["position"];
+
+    private static bool IsFocusExercise(SessionState state) =>
+        IsFocusExercise(state.ExerciseTypeName);
+
+    private static bool HasFocusStimulus(SessionState state) =>
+        state.FocusMode.Equals("word", StringComparison.OrdinalIgnoreCase)
+            ? state.WordSequence.Length >= state.TotalSteps
+            : state.FocusMode.Equals("dual", StringComparison.OrdinalIgnoreCase)
+                ? state.PositionSequence.Length >= state.TotalSteps
+                    && state.WordSequence.Length >= state.TotalSteps
+                : state.PositionSequence.Length >= state.TotalSteps;
+
+    private static bool IsFocusExercise(string exerciseTypeName) =>
+        exerciseTypeName.Contains("focus", StringComparison.OrdinalIgnoreCase)
+        || exerciseTypeName.Contains("attention", StringComparison.OrdinalIgnoreCase)
+        || exerciseTypeName.Contains("fixation", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsVisualizationExercise(string exerciseTypeName) =>
+        exerciseTypeName.Contains("visualization", StringComparison.OrdinalIgnoreCase)
+        || exerciseTypeName.Contains("visualisation", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsGridExercise(string exerciseTypeName, JsonElement config)
+    {
+        if (exerciseTypeName.Contains("schulte", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(ReadString(config, "engineType"), "grid_interaction", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var nestedConfig = ReadObject(config, "engineConfig");
+        return string.Equals(ReadString(nestedConfig, "engineType"), "grid_interaction", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task<List<VisualizationSceneState>> LoadVisualizationScenesAsync(
+        Guid exerciseId,
+        JsonElement config,
+        CancellationToken cancellationToken)
+    {
+        var configuredScenes = ReadVisualizationScenes(config);
+        if (configuredScenes.Count > 0)
+            return configuredScenes;
+
+        var scenes = await db.VisualizationScenes.AsNoTracking()
+            .Where(item => item.ExerciseId == exerciseId && !item.IsDeleted)
+            .OrderBy(item => item.DisplayOrder)
+            .ToListAsync(cancellationToken);
+        if (scenes.Count == 0)
+            return [];
+
+        var sceneIds = scenes.Select(item => item.Id).ToArray();
+        var questions = await db.VisualizationQuestions.AsNoTracking()
+            .Where(item => sceneIds.Contains(item.SceneId) && !item.IsDeleted)
+            .OrderBy(item => item.DisplayOrder)
+            .ToListAsync(cancellationToken);
+        var questionsByScene = questions
+            .GroupBy(item => item.SceneId)
+            .ToDictionary(group => group.Key, group => group.ToList());
+
+        return scenes.Select(scene => new VisualizationSceneState
+        {
+            SceneId = scene.Id.ToString("D"),
+            Description = scene.Description,
+            ImageUrl = scene.ImageUrl,
+            Duration = scene.Duration,
+            DisplayOrder = scene.DisplayOrder,
+            Questions = questionsByScene.GetValueOrDefault(scene.Id, [])
+                .Select(question => new VisualizationQuestionState
+                {
+                    QuestionId = question.Id,
+                    QuestionText = question.QuestionText,
+                    Options = ParseOptions(question.OptionsJson).ToList(),
+                    CorrectAnswer = question.CorrectAnswer,
+                    QuestionType = question.QuestionType,
+                    DisplayOrder = question.DisplayOrder,
+                    HintText = question.HintText
+                })
+                .ToList()
+        }).ToList();
+    }
+
+    private static List<VisualizationSceneState> ReadVisualizationScenes(JsonElement config)
+    {
+        var scenesElement = ReadProperty(config, "scenes");
+        if (scenesElement.ValueKind != JsonValueKind.Array)
+            scenesElement = ReadProperty(config, "Scenes");
+        if (scenesElement.ValueKind != JsonValueKind.Array)
+            return [];
+
+        var scenes = new List<VisualizationSceneState>();
+        foreach (var scene in scenesElement.EnumerateArray())
+        {
+            if (scene.ValueKind != JsonValueKind.Object)
+                continue;
+
+            var questions = new List<VisualizationQuestionState>();
+            var questionsElement = ReadProperty(scene, "questions");
+            if (questionsElement.ValueKind != JsonValueKind.Array)
+                questionsElement = ReadProperty(scene, "Questions");
+            if (questionsElement.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var question in questionsElement.EnumerateArray())
+                {
+                    var questionId = ReadString(question, "questionId") ?? ReadString(question, "id");
+                    if (!Guid.TryParse(questionId, out var parsedQuestionId))
+                        continue;
+                    questions.Add(new VisualizationQuestionState
+                    {
+                        QuestionId = parsedQuestionId,
+                        QuestionText = ReadString(question, "questionText") ?? ReadString(question, "text") ?? string.Empty,
+                        Options = ReadStringArray(question, "options").ToList(),
+                        CorrectAnswer = ReadString(question, "correctAnswer") ?? string.Empty,
+                        QuestionType = ReadString(question, "questionType") ?? "detail",
+                        DisplayOrder = ReadPositiveInt(question, "displayOrder") ?? questions.Count,
+                        HintText = ReadString(question, "hintText")
+                    });
+                }
+            }
+
+            scenes.Add(new VisualizationSceneState
+            {
+                SceneId = ReadString(scene, "sceneId") ?? ReadString(scene, "id") ?? Guid.NewGuid().ToString("D"),
+                Description = ReadString(scene, "description") ?? string.Empty,
+                ImageUrl = ReadString(scene, "imageUrl"),
+                Duration = ReadPositiveInt(scene, "duration") ?? 30,
+                DisplayOrder = ReadPositiveInt(scene, "displayOrder") ?? scenes.Count,
+                Steps = ReadStringArray(scene, "steps").ToList(),
+                StepDurationMs = ReadPositiveInt(scene, "stepDurationMs") ?? 3000,
+                Questions = questions
+            });
+        }
+
+        return scenes.OrderBy(item => item.DisplayOrder).ToList();
+    }
+
+    private static SessionQuestion ToSessionQuestion(VisualizationQuestionState question) => new()
+    {
+        QuestionId = question.QuestionId,
+        QuestionText = question.QuestionText,
+        OptionA = question.Options.ElementAtOrDefault(0) ?? string.Empty,
+        OptionB = question.Options.ElementAtOrDefault(1) ?? string.Empty,
+        OptionC = question.Options.ElementAtOrDefault(2) ?? string.Empty,
+        OptionD = question.Options.ElementAtOrDefault(3) ?? string.Empty,
+        CorrectAnswer = question.CorrectAnswer,
+        BloomLevel = 1,
+        DifficultyLevel = 1
+    };
+
+    private static JsonElement ReadProperty(JsonElement element, string propertyName)
+    {
+        if (element.ValueKind != JsonValueKind.Object)
+            return default;
+        foreach (var property in element.EnumerateObject())
+        {
+            if (property.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+                return property.Value;
+        }
+        return default;
+    }
+
+    private static string[] ParseOptions(string? optionsJson)
+    {
+        if (string.IsNullOrWhiteSpace(optionsJson))
+            return [];
+        try
+        {
+            using var document = JsonDocument.Parse(optionsJson);
+            return document.RootElement.ValueKind == JsonValueKind.Array
+                ? document.RootElement.EnumerateArray()
+                    .Where(item => item.ValueKind == JsonValueKind.String)
+                    .Select(item => item.GetString() ?? string.Empty)
+                    .ToArray()
+                : [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private static JsonElement BuildFocusFeedback(SessionState state) =>
+        JsonSerializer.SerializeToElement(new
+        {
+            hits = state.FocusResponses.Count(item => item.IsCorrect && !item.IsMiss),
+            misses = state.FocusResponses.Count(item => item.IsMiss),
+            falseAlarms = state.FocusResponses.Count(item => !item.IsCorrect && !item.IsMiss)
+        }, JsonOptions);
 
     private static List<SessionAnswer> ResolveAnswers(
         SessionState state,
@@ -731,22 +1334,41 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
             throw new InvalidOperationException("A question cannot be submitted more than once.");
         }
 
-        return submittedAnswers.Select(answer =>
+        var resolved = submittedAnswers.Select(answer =>
         {
             if (!questionMap.TryGetValue(answer.QuestionId, out var question))
             {
                 throw new InvalidOperationException("Submitted question does not belong to this session.");
             }
 
+            var normalizedAnswer = string.IsNullOrWhiteSpace(answer.Answer)
+                ? TimeoutAnswer
+                : answer.Answer.Trim();
+            var existing = state.Answers.SingleOrDefault(item => item.QuestionId == question.QuestionId);
+            if (existing is not null)
+            {
+                if (!string.Equals(existing.Answer, normalizedAnswer, StringComparison.Ordinal))
+                {
+                    throw new InvalidOperationException("A submitted answer cannot change after it is recorded.");
+                }
+
+                // Preserve the server-recorded correctness, timing and Bloom
+                // metadata when a completed session is retried.
+                return existing;
+            }
+
             return new SessionAnswer
             {
                 QuestionId = answer.QuestionId,
-                Answer = answer.Answer.Trim(),
-                IsCorrect = string.Equals(answer.Answer.Trim(), question.CorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase),
+                Answer = normalizedAnswer,
+                IsCorrect = normalizedAnswer != TimeoutAnswer
+                    && string.Equals(normalizedAnswer, question.CorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase),
                 TimeSpentSeconds = Math.Max(answer.TimeSpentSeconds, 0),
                 BloomLevel = question.BloomLevel
             };
         }).ToList();
+
+        return resolved;
     }
 
     private static ExerciseSessionResult ToResult(
@@ -762,32 +1384,86 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
             result.ExerciseId,
             session.CorrectCount,
             session.IncorrectCount,
-            SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount),
+            result.IsMeasured
+                ? SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount)
+                : null,
             result.TimeSpentSeconds,
-            score ?? result.WeightedKDP,
+            result.IsMeasured ? score ?? CalculateServerScore(result) : null,
             result.WordsRead == 0 ? null : result.WordsRead,
-            result.RawWPM == 0 ? null : result.RawWPM,
-            result.ComprehensionScore,
-            result.WeightedKDP,
-            xp ?? SpeedReadingExerciseSessionRules.CalculateXp(
-                score ?? result.WeightedKDP,
-                result.ComprehensionScore,
-                result.TimeSpentSeconds),
+            result.IsMeasured && result.RawWPM > 0 ? result.RawWPM : null,
+            result.IsMeasured ? result.ComprehensionScore : null,
+            result.IsMeasured && result.RawWPM > 0 ? result.WeightedKDP : null,
+            result.IsMeasured
+                ? xp ?? SpeedReadingExerciseSessionRules.CalculateXp(
+                    score ?? CalculateServerScore(result),
+                    result.ComprehensionScore,
+                    result.TimeSpentSeconds)
+                : 0,
             [],
             false,
             null,
-            RemoveAnswerKeys(JsonSerializer.SerializeToElement(state, JsonOptions)),
+            ToPublicJson(state),
             score.HasValue ? "Egzersiz tamamlandı." : "Bu oturum daha önce tamamlandı.",
-            null);
+            null,
+            result.IsMeasured
+                ? nameof(SpeedReadingMeasurementStatus.Measured)
+                : nameof(SpeedReadingMeasurementStatus.NotMeasured));
 
-    private static bool IsTimedOut(LegacyExerciseSession session, DateTime now) =>
-        session.TimeLimitSeconds is > 0
-        && SpeedReadingExerciseSessionRules.CalculateActiveSeconds(
-            session.StartTime,
-            now,
-            session.TotalPausedSeconds,
-            session.PausedAt,
-            session.Status == (int)ExerciseSessionStatus.Paused) > session.TimeLimitSeconds.Value;
+    private static decimal CalculateServerScore(LegacyStudentExerciseResult result)
+    {
+        var comprehension = Math.Clamp(result.ComprehensionScore, 0, 100);
+        var speed = Math.Clamp(result.RawWPM / 5m, 0, 100);
+        return Math.Round(Math.Clamp((comprehension * 0.6m) + (speed * 0.4m), 0, 100), 2);
+    }
+
+    private static bool IsTimedOut(LegacyExerciseSession session, SessionState state, DateTime now) =>
+        state.TimingStartsOnAction
+            ? state.TimingStartedAt.HasValue
+                && session.TimeLimitSeconds is > 0
+                && SpeedReadingExerciseSessionRules.CalculateActiveSeconds(
+                    state.TimingStartedAt.Value,
+                    now,
+                    GetTimingPausedSeconds(session, state),
+                    session.PausedAt,
+                    session.Status == (int)ExerciseSessionStatus.Paused) > session.TimeLimitSeconds.Value
+            : session.TimeLimitSeconds is > 0
+                && SpeedReadingExerciseSessionRules.CalculateActiveSeconds(
+                    session.StartTime,
+                    now,
+                    GetTimingPausedSeconds(session, state),
+                    session.PausedAt,
+                    session.Status == (int)ExerciseSessionStatus.Paused) > session.TimeLimitSeconds.Value;
+
+    private static void EnsureTimingStarted(
+        LegacyExerciseSession session,
+        SessionState state,
+        DateTime now)
+    {
+        if (state.TimingStartedAt.HasValue)
+        {
+            return;
+        }
+
+        state.TimingStartedAt = now.ToUniversalTime();
+        state.TimingPausedSecondsBeforeStart = Math.Max(0, session.TotalPausedSeconds);
+    }
+
+    private static int GetTimingPausedSeconds(LegacyExerciseSession session, SessionState state) =>
+        state.TimingStartedAt.HasValue
+            ? Math.Max(0, session.TotalPausedSeconds - Math.Max(0, state.TimingPausedSecondsBeforeStart))
+            : Math.Max(0, session.TotalPausedSeconds);
+
+    private static DateTime GetTimingStartTime(
+        LegacyExerciseSession session,
+        SessionState state,
+        DateTime now) =>
+        state.TimingStartedAt
+        ?? (state.TimingStartsOnAction ? now : session.StartTime);
+
+    private static bool SupportsServerReadingMeasurement(SessionState state) =>
+        ReadingExerciseTypes.Contains(state.ExerciseTypeName)
+        && state.ReadingStartTime.HasValue
+        && state.ReadingEndTime.HasValue;
 
     private static bool TryGetCachedAction(
         LegacyExerciseSession session,
@@ -858,40 +1534,82 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
     }
 
     private static JsonElement ToPublicJson(SessionState state) =>
-        RemoveAnswerKeys(JsonSerializer.SerializeToElement(state, JsonOptions));
+        state.IsAssessmentMode
+            ? SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(
+                JsonSerializer.SerializeToElement(state, JsonOptions))
+            : RemoveAssessmentKeys(JsonSerializer.SerializeToElement(state, JsonOptions));
 
-    private static JsonElement RemoveAnswerKeys(JsonElement element)
+    private static JsonElement RemoveAssessmentKeys(JsonElement element) =>
+        SpeedReadingContentSecurity.SanitizeAssessmentJson(element);
+
+    private static JsonElement ReadObject(JsonElement element, string propertyName)
     {
-        var node = JsonNode.Parse(element.GetRawText());
-        RemoveAnswerKeys(node);
-        using var document = JsonDocument.Parse(node?.ToJsonString() ?? "{}");
-        return document.RootElement.Clone();
+        if (element.ValueKind != JsonValueKind.Object)
+            return default;
+
+        foreach (var property in element.EnumerateObject())
+        {
+            if (property.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase)
+                && property.Value.ValueKind == JsonValueKind.Object)
+                return property.Value;
+        }
+
+        return default;
     }
 
-    private static void RemoveAnswerKeys(JsonNode? node)
+    private static string? ReadString(JsonElement element, string propertyName)
     {
-        if (node is JsonObject jsonObject)
+        if (element.ValueKind != JsonValueKind.Object)
+            return null;
+
+        foreach (var property in element.EnumerateObject())
         {
-            foreach (var property in jsonObject.ToList())
-            {
-                if (property.Key.Equals("correctAnswer", StringComparison.OrdinalIgnoreCase)
-                    || property.Key.Equals("correctOption", StringComparison.OrdinalIgnoreCase))
-                {
-                    jsonObject.Remove(property.Key);
-                }
-                else
-                {
-                    RemoveAnswerKeys(property.Value);
-                }
-            }
+            if (property.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase)
+                && property.Value.ValueKind == JsonValueKind.String)
+                return property.Value.GetString();
         }
-        else if (node is JsonArray jsonArray)
+
+        return null;
+    }
+
+    private static int[] ReadIntArray(JsonElement element, string propertyName)
+    {
+        if (element.ValueKind != JsonValueKind.Object)
+            return [];
+
+        foreach (var property in element.EnumerateObject())
         {
-            foreach (var item in jsonArray)
-            {
-                RemoveAnswerKeys(item);
-            }
+            if (!property.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase)
+                || property.Value.ValueKind != JsonValueKind.Array)
+                continue;
+
+            return property.Value.EnumerateArray()
+                .Where(item => item.TryGetInt32(out _))
+                .Select(item => item.GetInt32())
+                .ToArray();
         }
+
+        return [];
+    }
+
+    private static string[] ReadStringArray(JsonElement element, string propertyName)
+    {
+        if (element.ValueKind != JsonValueKind.Object)
+            return [];
+
+        foreach (var property in element.EnumerateObject())
+        {
+            if (!property.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase)
+                || property.Value.ValueKind != JsonValueKind.Array)
+                continue;
+
+            return property.Value.EnumerateArray()
+                .Where(item => item.ValueKind == JsonValueKind.String)
+                .Select(item => item.GetString() ?? string.Empty)
+                .ToArray();
+        }
+
+        return [];
     }
 
     private static int? ReadPositiveInt(JsonElement element, string propertyName)
@@ -928,8 +1646,9 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
         string? nextWord = null,
         bool isCompleted = false,
         bool? isCorrect = null,
-        decimal? currentWpm = null) =>
-        new(true, message, null, nextStep, nextWord, isCompleted, isCorrect, null, null, currentWpm, null);
+        decimal? currentWpm = null,
+        JsonElement? feedbackData = null) =>
+        new(true, message, null, nextStep, nextWord, isCompleted, isCorrect, null, null, currentWpm, feedbackData);
 
     private static ExerciseActionValidationResponse Invalid(string message) =>
         new(false, message, null, null, null, false, false, null, null, null, null);
@@ -938,6 +1657,8 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
     {
         public Guid ExerciseId { get; set; }
         public string ExerciseTypeName { get; set; } = string.Empty;
+        public bool IsAssessmentMode { get; set; }
+        public Guid? AssessmentAttemptId { get; set; }
         public Guid? ReadingTextId { get; set; }
         public string ReadingTextTitle { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
@@ -949,15 +1670,56 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
         public int GridSize { get; set; }
         public int[][]? Grid { get; set; }
         public int? TimeLimitSeconds { get; set; }
+        public bool TimingStartsOnAction { get; set; }
+        public DateTime? TimingStartedAt { get; set; }
+        public int TimingPausedSecondsBeforeStart { get; set; }
         public DateTime? ReadingStartTime { get; set; }
         public DateTime? ReadingEndTime { get; set; }
         public decimal? FinalWpm { get; set; }
         public decimal? ComprehensionScore { get; set; }
         public decimal? WeightedKdp { get; set; }
         public string[] Words { get; set; } = [];
+        public string FocusMode { get; set; } = "position";
+        public int FocusNLevel { get; set; } = 1;
+        public int FocusSpeedMs { get; set; } = 1500;
+        public DateTime? FocusStartTime { get; set; }
+        public int[] PositionSequence { get; set; } = [];
+        public string[] WordSequence { get; set; } = [];
+        public int FocusPresentedIndex { get; set; } = -1;
+        public DateTime? FocusPresentedAt { get; set; }
+        public int[] PositionTargetIndices { get; set; } = [];
+        public int[] WordTargetIndices { get; set; } = [];
+        public int? FocusLastPositionIndex { get; set; }
+        public int? FocusLastWordIndex { get; set; }
+        public List<FocusResponse> FocusResponses { get; set; } = [];
+        public bool FocusCompleted { get; set; }
         public List<SessionQuestion> Questions { get; set; } = [];
         public List<SessionAnswer> Answers { get; set; } = [];
+        public List<VisualizationSceneState> VisualizationScenes { get; set; } = [];
         public Dictionary<string, JsonElement>? CustomData { get; set; }
+    }
+
+    private sealed class VisualizationSceneState
+    {
+        public string SceneId { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string? ImageUrl { get; set; }
+        public int Duration { get; set; }
+        public int DisplayOrder { get; set; }
+        public List<string> Steps { get; set; } = [];
+        public int StepDurationMs { get; set; } = 3000;
+        public List<VisualizationQuestionState> Questions { get; set; } = [];
+    }
+
+    private sealed class VisualizationQuestionState
+    {
+        public Guid QuestionId { get; set; }
+        public string QuestionText { get; set; } = string.Empty;
+        public List<string> Options { get; set; } = [];
+        public string CorrectAnswer { get; set; } = string.Empty;
+        public string QuestionType { get; set; } = "detail";
+        public int DisplayOrder { get; set; }
+        public string? HintText { get; set; }
     }
 
     private sealed class SessionQuestion
@@ -981,5 +1743,13 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
         public bool IsCorrect { get; set; }
         public int TimeSpentSeconds { get; set; }
         public int BloomLevel { get; set; }
+    }
+
+    private sealed class FocusResponse
+    {
+        public string Channel { get; set; } = string.Empty;
+        public int Index { get; set; }
+        public bool IsCorrect { get; set; }
+        public bool IsMiss { get; set; }
     }
 }

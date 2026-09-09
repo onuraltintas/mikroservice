@@ -103,6 +103,13 @@ public sealed class SpeedReadingExerciseSessionRulesTests
     }
 
     [Fact]
+    public void A_valid_server_wpm_measures_a_reading_without_questions()
+    {
+        SpeedReadingExerciseSessionRules.ResolveMeasurementStatus(0, 0, 0, hasValidWpm: true)
+            .Should().Be(SpeedReadingMeasurementStatus.Measured);
+    }
+
+    [Fact]
     public void Xp_is_zero_for_a_zero_score_and_has_a_floor_for_a_valid_attempt()
     {
         SpeedReadingExerciseSessionRules.CalculateXp(0, 0, 90).Should().Be(0);

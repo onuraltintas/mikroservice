@@ -842,8 +842,8 @@
             <div class="options-grid">
                 <button class="ep-btn ep-btn--primary" class="option-button" *ngFor="let option of ['A', 'B', 'C', 'D']"
                     [class.selected]="selectedAnswer === option"
-                    [class.correct]="questionFeedback && questionFeedback.correctAnswer === option"
-                    [class.wrong]="questionFeedback && selectedAnswer === option && !questionFeedback.isCorrect"
+                    [class.correct]="questionFeedback?.isCorrect === true && questionFeedback?.correctAnswer === option"
+                    [class.wrong]="questionFeedback?.isCorrect === false && selectedAnswer === option"
                     [disabled]="questionFeedback !== null" (click)="!questionFeedback && (selectedAnswer = option)">
                     <span class="option-label">{{ option }}</span>
                     <span class="option-text">{{ (questionFeedback?.question || getRegressionCurrentQuestion())['Option'
@@ -922,9 +922,9 @@
                 <div class="answer-options">
                     <button class="answer-option" *ngFor="let option of ['A', 'B', 'C', 'D']"
                         [class.selected]="selectedAnswer === option"
-                        [class.correct]="questionFeedback && option === questionFeedback.correctAnswer"
-                        [class.wrong]="questionFeedback && selectedAnswer === option && !questionFeedback.isCorrect"
-                        [disabled]="questionFeedback !== null" (click)="selectAnswer(option)">
+                    [class.correct]="questionFeedback?.isCorrect === true && option === questionFeedback?.correctAnswer"
+                    [class.wrong]="questionFeedback?.isCorrect === false && selectedAnswer === option"
+                        [disabled]="questionFeedback !== null || questionSubmissionPending" (click)="selectAnswer(option)">
                         <span class="option-letter">{{ option }}</span>
                         <span class="option-text">{{ getOptionText(option) }}</span>
                     </button>
@@ -1219,19 +1219,19 @@
                 <div *ngFor="let option of getVisualizationCurrentQuestion().options; let i = index"
                     class="feedback-option" [class.selected]="option === getVisualizationLastAnswer()"
                     [class.correct]="option === getVisualizationCorrectAnswer()"
-                    [class.wrong]="option === getVisualizationLastAnswer() && option !== getVisualizationCorrectAnswer()">
+                    [class.wrong]="isVisualizationAnswerEvaluated() && option === getVisualizationLastAnswer() && option !== getVisualizationCorrectAnswer()">
                     <span class="option-letter">{{ ['A', 'B', 'C', 'D'][i] }}</span>
                     <span class="option-text">{{ option }}</span>
                     <span class="material-icons feedback-icon"
-                        *ngIf="option === getVisualizationCorrectAnswer()">check_circle</span>
+                        *ngIf="isVisualizationAnswerEvaluated() && option === getVisualizationCorrectAnswer()">check_circle</span>
                     <span class="material-icons feedback-icon"
-                        *ngIf="option === getVisualizationLastAnswer() && option !== getVisualizationCorrectAnswer()">cancel</span>
+                        *ngIf="isVisualizationAnswerEvaluated() && option === getVisualizationLastAnswer() && option !== getVisualizationCorrectAnswer()">cancel</span>
                 </div>
             </div>
 
             <!-- Next Button -->
             <button class="ep-btn ep-btn--primary" class="next-question-btn" *ngIf="isVisualizationShowingFeedback()"
-                (click)="nextVisualizationQuestion()">
+                [disabled]="isVisualizationAnswerPending()" (click)="nextVisualizationQuestion()">
                 <span>{{ getVisualizationQuestionProgress().current >= getVisualizationQuestionProgress().total ?
                     'Sonraki Sahne' : 'Sonraki Soru' }}</span>
                 <span class="material-icons">arrow_forward</span>
@@ -1276,7 +1276,7 @@
                     <span>{{ (engineState.totalSteps || 0) - (engineState.currentStep || 0) }}</span>
                 </div>
 
-                <div class="focus-stats">
+                <div class="focus-stats" *ngIf="!asFocusEngine?.isAssessmentMode">
                     <div class="stat-pill correct" [class.pulse]="hitsAnim">
                         <span class="material-icons">check_circle</span>
                         <span>{{ asFocusEngine?.hits || 0 }}</span>
@@ -1325,14 +1325,14 @@
             <div class="interaction-area" *ngIf="!asFocusEngine?.isDualMode">
                 <!-- Position Mode Button -->
                 <button *ngIf="asFocusEngine?.mode === 'position'" class="ep-btn ep-btn--primary" color="accent"
-                    class="match-btn big-btn" (click)="handlePositionMatchClick()" [disabled]="engineState.isPaused">
+                    class="match-btn big-btn" (click)="handlePositionMatchClick()" [disabled]="engineState.isPaused || asFocusEngine?.isAwaitingAssessmentStep">
                     <span class="material-icons">grid_on</span>
                     KONUM EŞLEŞME (Space)
                 </button>
 
                 <!-- Word Mode Button -->
                 <button *ngIf="asFocusEngine?.mode === 'word'" class="ep-btn ep-btn--primary" color="accent"
-                    class="match-btn big-btn" (click)="handleWordMatchClick()" [disabled]="engineState.isPaused">
+                    class="match-btn big-btn" (click)="handleWordMatchClick()" [disabled]="engineState.isPaused || asFocusEngine?.isAwaitingAssessmentStep">
                     <span class="material-icons">text_fields</span>
                     KELİME EŞLEŞME (Space)
                 </button>
@@ -1341,12 +1341,12 @@
             <!-- DUAL MODE BUTTONS -->
             <div class="interaction-area dual-buttons" *ngIf="asFocusEngine?.isDualMode">
                 <button class="ep-btn ep-btn--primary" class="match-btn dual-btn position-btn"
-                    (click)="handlePositionMatchClick()" [disabled]="engineState.isPaused">
+                    (click)="handlePositionMatchClick()" [disabled]="engineState.isPaused || asFocusEngine?.isAwaitingAssessmentStep">
                     <span class="material-icons">grid_on</span>
                     KONUM (Q)
                 </button>
                 <button class="ep-btn ep-btn--primary" color="accent" class="match-btn dual-btn word-btn"
-                    (click)="handleWordMatchClick()" [disabled]="engineState.isPaused">
+                    (click)="handleWordMatchClick()" [disabled]="engineState.isPaused || asFocusEngine?.isAwaitingAssessmentStep">
                     <span class="material-icons">text_fields</span>
                     KELİME (P)
                 </button>
@@ -1650,7 +1650,7 @@
 
             <!-- Question Answers Detail (Exam Simulation) -->
             <div class="question-answers-detail"
-                *ngIf="result?.details?.answers?.length > 0 && engine?.engineType === 'exam_simulation'">
+                *ngIf="!isAssessmentMode && result?.details?.answers?.length > 0 && engine?.engineType === 'exam_simulation'">
                 <div class="answers-header">
                     <span class="material-icons">list_alt</span>
                     <span>Cevap Detayları</span>
@@ -1708,7 +1708,7 @@
 
             <!-- Soru Detayları (Regression Reduction) -->
             <div class="answers-summary"
-                *ngIf="result?.details?.answers && result?.details?.answers.length > 0 && engine?.engineType !== 'exam_simulation'">
+                *ngIf="!isAssessmentMode && result?.details?.answers && result?.details?.answers.length > 0 && engine?.engineType !== 'exam_simulation'">
                 <div class="section-header">
                     <span class="material-icons">quiz</span>
                     <span>Soru Sonuçları</span>

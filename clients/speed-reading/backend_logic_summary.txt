@@ -1,5 +1,6 @@
-Backend Recommendation Logic:
-1. Excellent Performance (Avg >= 80%): Recommends Next Level program.
-2. Good Performance (Avg >= 60%): Recommends Different Type at Same Level (or Next Level fallback).
-3. Weak Performance (Avg < 60%): Recommends Repeating Current Program.
-4. Ultimate Completion: If no higher level/type exists, returns null, triggering 'Zirvedesiniz!' UI.
+Backend measurement and recommendation notes:
+1. Owned assessment results are scoped to a versioned attempt and use server-created exercise-session results.
+2. Assessment level is bounded by both average validated WPM and comprehension; speed alone cannot produce an advanced level.
+3. Age-group assessment attempts use the student's active age-group configuration and its active admin assessment template when available.
+4. Recommended training programs are active, non-deleted, non-assessment templates and are filtered by the student's age group when known.
+5. Retention assessment is held until its minimum waiting window has elapsed; the API returns the future availability time.

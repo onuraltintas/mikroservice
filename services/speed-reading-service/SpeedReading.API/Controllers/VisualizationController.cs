@@ -17,7 +17,8 @@ public sealed class VisualizationController(ISpeedReadingVisualization visualiza
     {
         try
         {
-            return Ok(await visualization.GetExerciseScenesAsync(exerciseId, limit, cancellationToken));
+            var scenes = await visualization.GetExerciseScenesAsync(exerciseId, limit, cancellationToken);
+            return Ok(scenes.Select(ToStudentScene));
         }
         catch (KeyNotFoundException exception)
         {
@@ -31,7 +32,7 @@ public sealed class VisualizationController(ISpeedReadingVisualization visualiza
         var scene = await visualization.GetSceneAsync(sceneId, cancellationToken);
         return scene is null
             ? NotFound(new { success = false, message = "Scene not found" })
-            : Ok(scene);
+            : Ok(ToStudentScene(scene));
     }
 
     [HttpGet("scenes/difficulty/{difficultyLevel:int}")]
@@ -41,11 +42,32 @@ public sealed class VisualizationController(ISpeedReadingVisualization visualiza
     {
         try
         {
-            return Ok(await visualization.GetScenesByDifficultyAsync(difficultyLevel, cancellationToken));
+            var scenes = await visualization.GetScenesByDifficultyAsync(difficultyLevel, cancellationToken);
+            return Ok(scenes.Select(ToStudentScene));
         }
         catch (ArgumentOutOfRangeException exception)
         {
             return BadRequest(new { success = false, message = exception.Message });
         }
     }
+
+    private static object ToStudentScene(VisualizationSceneSummary scene) => new
+    {
+        scene.Id,
+        scene.ExerciseId,
+        scene.Description,
+        scene.ImageUrl,
+        scene.Duration,
+        scene.DisplayOrder,
+        scene.DifficultyLevel,
+        Questions = scene.Questions.Select(question => new
+        {
+            question.Id,
+            question.QuestionText,
+            question.Options,
+            question.QuestionType,
+            question.DisplayOrder,
+            question.HintText
+        })
+    };
 }

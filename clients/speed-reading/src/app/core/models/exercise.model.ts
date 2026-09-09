@@ -88,6 +88,7 @@ export interface ComprehensionQuestion {
 }
 
 export interface ExerciseResult {
+  sessionId?: string;
   studentAssignmentId?: string;
   exerciseId: string;
   readingTextId?: string;

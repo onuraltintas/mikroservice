@@ -42,11 +42,13 @@ public sealed class ExerciseActionRequest
     public Guid? ActionId { get; init; }
     public string? Action { get; init; }
     public int? Number { get; init; }
+    public int? Index { get; init; }
     public int? Row { get; init; }
     public int? Col { get; init; }
     public string? Answer { get; init; }
     public List<string>? Answers { get; init; }
     public Guid? QuestionId { get; init; }
+    public bool IsTimeout { get; init; }
     public int? ResponseTime { get; init; }
     public DateTime Timestamp { get; init; } = DateTime.UtcNow;
     public double? EyeX { get; init; }
@@ -248,9 +250,12 @@ public static class SpeedReadingExerciseSessionRules
     public static SpeedReadingMeasurementStatus ResolveMeasurementStatus(
         int questionCount,
         int correctCount,
-        int incorrectCount)
+        int incorrectCount,
+        bool hasValidWpm = false)
     {
-        return questionCount > 0 || Math.Max(correctCount, 0) + Math.Max(incorrectCount, 0) > 0
+        return questionCount > 0
+            || Math.Max(correctCount, 0) + Math.Max(incorrectCount, 0) > 0
+            || hasValidWpm
             ? SpeedReadingMeasurementStatus.Measured
             : SpeedReadingMeasurementStatus.NotMeasured;
     }

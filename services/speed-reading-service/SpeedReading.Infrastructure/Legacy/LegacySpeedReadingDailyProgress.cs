@@ -1,6 +1,11 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using SpeedReading.Application.Content;
 using SpeedReading.Application.DailyProgress;
+using SpeedReading.Application.ExerciseSessions;
+using SpeedReading.Application.Progress;
+using EduPlatform.Shared.Kernel.Exceptions;
 
 namespace SpeedReading.Infrastructure.Legacy;
 
@@ -48,16 +53,13 @@ internal sealed class LegacySpeedReadingDailyProgress(SpeedReadingDbContext db) 
         string idempotencyKey,
         CancellationToken cancellationToken = default)
     {
-        _ = idempotencyKey;
         if (userId == Guid.Empty)
         {
             throw new ArgumentException("A valid authenticated user is required.", nameof(userId));
         }
 
-        var score = SpeedReadingDailyProgressRules.ResolveScore(request.Score, request.SuccessRate);
-        var duration = SpeedReadingDailyProgressRules.ResolveDuration(
-            request.DurationSeconds,
-            request.TimeSpentSeconds);
+        SpeedReadingDailyProgressRules.ValidateIdempotencyKey(idempotencyKey);
+        var sessionId = SpeedReadingProgressWriteRules.RequireAuthoritativeSession(request.SessionId);
         var program = await GetActiveProgramAsync(userId, cancellationToken)
             ?? throw new InvalidOperationException("Aktif program bulunamadı.");
 
@@ -76,14 +78,104 @@ internal sealed class LegacySpeedReadingDailyProgress(SpeedReadingDbContext db) 
                     && item.StudentProgramProgressId == progress.Id
                     && !item.IsDeleted, cancellationToken)
                 ?? throw new KeyNotFoundException("Exercise log not found.");
+            if (log.WeekNumber != week || log.DayNumber != day)
+            {
+                throw new BusinessRuleException(
+                    "DailyProgress.SlotMismatch",
+                    "The exercise log does not belong to the current scheduled day.");
+            }
         }
 
         var exerciseId = log?.ExerciseId ?? request.ExerciseId
             ?? throw new ArgumentException("ExerciseId or ExerciseLogId is required.", nameof(request));
+        var scheduledExercises = await BuildExercisesAsync(
+            userId,
+            progress,
+            template,
+            week,
+            day,
+            cancellationToken);
+        if (!scheduledExercises.Any(item => item.ExerciseId == exerciseId))
+        {
+            throw new BusinessRuleException(
+                "DailyProgress.SlotMismatch",
+                "The exercise is not part of the current scheduled day.");
+        }
         var exercise = await db.Exercises
             .AsNoTracking()
-            .SingleOrDefaultAsync(item => item.Id == exerciseId && !item.IsDeleted, cancellationToken)
+            .SingleOrDefaultAsync(item => item.Id == exerciseId
+                && item.IsActive
+                && !item.IsDeleted,
+                cancellationToken)
             ?? throw new KeyNotFoundException("Exercise not found.");
+
+        var sessionResult = await db.StudentExerciseResults
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.SessionId == sessionId
+                && item.StudentId == userId
+                && item.ExerciseId == exerciseId
+                && !item.IsDeleted,
+                cancellationToken)
+            ?? throw new KeyNotFoundException("Completed exercise session result not found.");
+        if (sessionResult.IsAssessmentMode || sessionResult.AssessmentAttemptId.HasValue)
+        {
+            throw new BusinessRuleException(
+                "DailyProgress.AssessmentSessionNotAllowed",
+                "Assessment sessions cannot be added to daily progress.");
+        }
+        var authoritativeSession = await db.ExerciseSessions
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == sessionId
+                && item.StudentId == userId
+                && !item.IsDeleted,
+                cancellationToken)
+            ?? throw new KeyNotFoundException("Completed exercise session not found.");
+        var isMeasured = sessionResult.IsMeasured;
+        var score = isMeasured ? CalculateServerScore(sessionResult) : 0;
+        var duration = SpeedReadingDailyProgressRules.ValidateDuration(
+            Math.Max(1, sessionResult.TimeSpentSeconds));
+        var authoritativeCorrectCount = isMeasured ? Math.Max(authoritativeSession.CorrectCount, 0) : 0;
+        var authoritativeIncorrectCount = isMeasured ? Math.Max(authoritativeSession.IncorrectCount, 0) : 0;
+        var authoritativeTotalAttempts = authoritativeCorrectCount + authoritativeIncorrectCount;
+        var authoritativeResultData = CreateAuthoritativeResultData(sessionResult, isMeasured, score);
+        var sessionMarker = sessionId.ToString("D");
+        var alreadyCompleted = await db.DailyExerciseLogs
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.UserId == userId
+                && item.StudentProgramProgressId == progress.Id
+                && !item.IsDeleted
+                && (item.SessionId == sessionId
+                    || (item.SessionId == null && item.ResultDataJson.Contains(sessionMarker))),
+                cancellationToken);
+        if (alreadyCompleted is not null)
+        {
+            return AlreadyCompletedResponse(progress);
+        }
+
+        // A scheduled exercise is a single slot. Reusing another session for
+        // an already completed slot must not create a second progress log.
+        // The database unique index below closes the concurrent-request race.
+        var existingSlotLog = await db.DailyExerciseLogs
+            .AsNoTracking()
+            .Where(item => item.StudentProgramProgressId == progress.Id
+                && item.ExerciseId == exerciseId
+                && item.WeekNumber == week
+                && item.DayNumber == day
+                && !item.IsDeleted)
+            .OrderBy(item => item.CompletedDate)
+            .ThenBy(item => item.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (existingSlotLog is not null)
+        {
+            return AlreadyCompletedResponse(progress);
+        }
+
+        if (log?.SessionId is { } existingLogSessionId && existingLogSessionId != sessionId)
+        {
+            throw new BusinessRuleException(
+                "DailyProgress.SessionMismatch",
+                "The daily exercise log is already linked to a different exercise session.");
+        }
 
         var wasPassed = log?.IsPassed == true;
         var oldDay = progress.CurrentDay;
@@ -107,6 +199,7 @@ internal sealed class LegacySpeedReadingDailyProgress(SpeedReadingDbContext db) 
                 UserId = userId,
                 StudentProgramProgressId = progress.Id,
                 ExerciseId = exerciseId,
+                SessionId = sessionId,
                 ExerciseTypeId = exercise.ExerciseTypeId,
                 DayNumber = day,
                 WeekNumber = week,
@@ -119,23 +212,29 @@ internal sealed class LegacySpeedReadingDailyProgress(SpeedReadingDbContext db) 
             };
             db.DailyExerciseLogs.Add(log);
         }
+        else
+        {
+            log.SessionId = sessionId;
+        }
 
         log.CompletedDate = now;
         log.TimeSpentSeconds = duration;
         log.SuccessRate = score;
         log.IsPassed = score >= PassingScore;
-        log.ResultDataJson = string.IsNullOrWhiteSpace(request.ResultDataJson) ? "{}" : request.ResultDataJson;
+        log.ResultDataJson = JsonSerializer.Serialize(new
+        {
+            sessionId = sessionMarker,
+            payload = authoritativeResultData
+        });
         log.DevicePlatform = string.IsNullOrWhiteSpace(request.DevicePlatform) ? "web-desktop" : request.DevicePlatform.Trim();
-        log.CorrectCount = Math.Max(request.CorrectCount, 0);
-        log.IncorrectCount = Math.Max(request.IncorrectCount, 0);
-        log.TotalAttempts = request.TotalAttempts > 0
-            ? request.TotalAttempts
-            : log.CorrectCount + log.IncorrectCount;
-        log.AverageResponseTimeMs = Math.Max(request.AverageResponseTimeMs, 0);
-        log.MedianResponseTimeMs = Math.Max(request.MedianResponseTimeMs, 0);
-        log.StdDevResponseTimeMs = Math.Max(request.StdDevResponseTimeMs, 0);
-        log.PauseCount = Math.Max(request.PauseCount, 0);
-        log.TotalPausedSeconds = Math.Max(request.TotalPausedSeconds, 0);
+        log.CorrectCount = authoritativeCorrectCount;
+        log.IncorrectCount = authoritativeIncorrectCount;
+        log.TotalAttempts = authoritativeTotalAttempts;
+        log.AverageResponseTimeMs = 0;
+        log.MedianResponseTimeMs = 0;
+        log.StdDevResponseTimeMs = 0;
+        log.PauseCount = 0;
+        log.TotalPausedSeconds = Math.Max(authoritativeSession.TotalPausedSeconds, 0);
         log.DayOfWeek = (int)now.DayOfWeek;
         log.TimeOfDay = now.TimeOfDay;
         log.UpdatedAt = now;
@@ -168,7 +267,11 @@ internal sealed class LegacySpeedReadingDailyProgress(SpeedReadingDbContext db) 
             week,
             day,
             cancellationToken);
-        var completedCount = allLogs.Count(item => item.WeekNumber == week && item.DayNumber == day);
+        var completedCount = allLogs
+            .Where(item => item.WeekNumber == week && item.DayNumber == day)
+            .Select(item => item.ExerciseId)
+            .Distinct()
+            .Count();
         var dayCompleted = expectedCount > 0 && completedCount >= expectedCount;
         var weekChanged = false;
         var difficultyIncreased = false;
@@ -208,7 +311,33 @@ internal sealed class LegacySpeedReadingDailyProgress(SpeedReadingDbContext db) 
             }
         }
 
-        await db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception)
+            when (exception.InnerException is PostgresException postgres
+                && postgres.SqlState == PostgresErrorCodes.UniqueViolation
+                && (string.Equals(postgres.ConstraintName, "IX_DailyExerciseLogs_UserSession", StringComparison.Ordinal)
+                    || string.Equals(postgres.ConstraintName, "IX_DailyExerciseLogs_ProgressSlot", StringComparison.Ordinal)))
+        {
+            db.ChangeTracker.Clear();
+            var concurrent = await db.DailyExerciseLogs
+                .AsNoTracking()
+                .Where(item => item.UserId == userId
+                    && item.StudentProgramProgressId == progress.Id
+                    && !item.IsDeleted
+                    && (item.SessionId == sessionId
+                        || (item.ExerciseId == exerciseId
+                            && item.WeekNumber == week
+                            && item.DayNumber == day)))
+                .OrderBy(item => item.CompletedDate)
+                .ThenBy(item => item.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (concurrent is not null)
+                return AlreadyCompletedResponse(progress);
+            throw;
+        }
 
         return new CompleteDailyExerciseResponse(
             true,
@@ -235,6 +364,48 @@ internal sealed class LegacySpeedReadingDailyProgress(SpeedReadingDbContext db) 
                 : null);
     }
 
+    private static decimal CalculateServerScore(LegacyStudentExerciseResult result)
+    {
+        var comprehension = Math.Clamp(result.ComprehensionScore, 0, 100);
+        var speed = Math.Clamp(result.RawWPM / 5m, 0, 100);
+        return Math.Round(Math.Clamp((comprehension * 0.6m) + (speed * 0.4m), 0, 100), 2);
+    }
+
+    private static string CreateAuthoritativeResultData(
+        LegacyStudentExerciseResult result,
+        bool isMeasured,
+        decimal score) =>
+        JsonSerializer.Serialize(new
+        {
+            measurementStatus = isMeasured
+                ? nameof(SpeedReadingMeasurementStatus.Measured)
+                : nameof(SpeedReadingMeasurementStatus.NotMeasured),
+            score = isMeasured ? score : (decimal?)null,
+            rawWpm = isMeasured && result.RawWPM > 0 ? result.RawWPM : (decimal?)null,
+            comprehensionScore = isMeasured ? result.ComprehensionScore : (decimal?)null,
+            weightedKdp = isMeasured && result.RawWPM > 0 ? result.WeightedKDP : (decimal?)null
+        }, JsonOptions);
+
+    private static CompleteDailyExerciseResponse AlreadyCompletedResponse(
+        LegacyStudentProgramProgress progress) =>
+        new(
+            true,
+            "Egzersiz daha önce tamamlandı.",
+            false,
+            progress.CurrentDay,
+            progress.CurrentWeek,
+            progress.CurrentDifficultyLevel,
+            false,
+            progress.CurrentDifficultyLevel,
+            false,
+            progress.CurrentWeek,
+            progress.CurrentDifficultyLevel,
+            progress.CurrentStreak,
+            progress.LongestStreak,
+            progress.CompletedDate.HasValue,
+            null,
+            null);
+
     public async Task<DailyProgressSummary?> GetProgressSummaryAsync(
         Guid userId,
         CancellationToken cancellationToken = default)
@@ -252,7 +423,7 @@ internal sealed class LegacySpeedReadingDailyProgress(SpeedReadingDbContext db) 
         var completed = logs.Where(item => item.IsPassed).ToList();
         var results = await db.StudentExerciseResults
             .AsNoTracking()
-            .Where(item => item.StudentId == userId && !item.IsDeleted && item.RawWPM > 0)
+            .Where(item => item.StudentId == userId && !item.IsDeleted && item.IsMeasured && item.RawWPM > 0)
             .OrderBy(item => item.CreatedAt)
             .Select(item => new { item.RawWPM, item.ComprehensionScore })
             .ToListAsync(cancellationToken);
@@ -435,7 +606,7 @@ internal sealed class LegacySpeedReadingDailyProgress(SpeedReadingDbContext db) 
                     completed is not null,
                     completed?.CompletedDate,
                     order++,
-                    exercise.ConfigurationJson));
+                    SpeedReadingContentSecurity.SanitizeExerciseConfiguration(exercise.ConfigurationJson)));
             }
         }
 
@@ -486,6 +657,7 @@ internal sealed class LegacySpeedReadingDailyProgress(SpeedReadingDbContext db) 
             .AsNoTracking()
             .Where(item => item.ExerciseTypeId == exerciseTypeId
                 && item.DifficultyLevel == difficulty
+                && item.IsActive
                 && (item.TargetAgeGroupConfigurationId == null
                     || item.TargetAgeGroupConfigurationId == template.TargetAgeGroupConfigurationId)
                 && !item.IsDeleted)
@@ -500,6 +672,7 @@ internal sealed class LegacySpeedReadingDailyProgress(SpeedReadingDbContext db) 
                     .AsNoTracking()
                     .Where(item => item.ExerciseTypeId == exerciseTypeId
                         && item.DifficultyLevel == fallbackDifficulty
+                        && item.IsActive
                         && (item.TargetAgeGroupConfigurationId == null
                             || item.TargetAgeGroupConfigurationId == template.TargetAgeGroupConfigurationId)
                         && !item.IsDeleted)
@@ -513,9 +686,11 @@ internal sealed class LegacySpeedReadingDailyProgress(SpeedReadingDbContext db) 
             return [];
         }
 
-        return Enumerable.Range(0, requestedCount)
-            .Select(index => candidates[index % candidates.Count])
-            .ToList();
+        // A schedule slot must point to one distinct exercise. Repeating the
+        // same candidate when the pool is smaller than requestedCount would
+        // make the slot impossible to complete once duplicate protection is
+        // enabled.
+        return candidates.Take(Math.Min(requestedCount, candidates.Count)).ToList();
     }
 
     private static List<ExercisePattern> GetPatterns(string json, int week, int day)

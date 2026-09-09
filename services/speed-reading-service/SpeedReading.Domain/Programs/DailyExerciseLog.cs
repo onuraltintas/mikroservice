@@ -11,6 +11,7 @@ public sealed class DailyExerciseLog : Entity
     public Guid UserId { get; private set; }
     public Guid StudentProgramProgressId { get; private set; }
     public Guid ExerciseId { get; private set; }
+    public Guid? SessionId { get; private set; }
     public Guid ExerciseTypeId { get; private set; }
     public int DayNumber { get; private set; }
     public int WeekNumber { get; private set; }
@@ -86,7 +87,8 @@ public sealed class DailyExerciseLog : Entity
         string? createdBy,
         DateTime? updatedAt,
         string? updatedBy,
-        bool isMeasured = true)
+        bool isMeasured = true,
+        Guid? sessionId = null)
     {
         if (id == Guid.Empty || userId == Guid.Empty || studentProgramProgressId == Guid.Empty
             || exerciseId == Guid.Empty || exerciseTypeId == Guid.Empty)
@@ -100,6 +102,7 @@ public sealed class DailyExerciseLog : Entity
             UserId = userId,
             StudentProgramProgressId = studentProgramProgressId,
             ExerciseId = exerciseId,
+            SessionId = sessionId,
             ExerciseTypeId = exerciseTypeId,
             DayNumber = dayNumber,
             WeekNumber = weekNumber,
@@ -156,7 +159,8 @@ public sealed class DailyExerciseLog : Entity
         int pauseCount,
         int totalPausedSeconds,
         Guid actorId,
-        bool isMeasured = true)
+        bool isMeasured = true,
+        Guid? sessionId = null)
     {
         if (actorId == Guid.Empty)
             throw new ArgumentException("Completion actor is required.", nameof(actorId));
@@ -171,6 +175,7 @@ public sealed class DailyExerciseLog : Entity
         SuccessRate = successRate;
         IsPassed = isPassed;
         IsMeasured = isMeasured;
+        SessionId = sessionId ?? SessionId;
         ResultDataJson = string.IsNullOrWhiteSpace(resultDataJson) ? "{}" : resultDataJson;
         DevicePlatform = string.IsNullOrWhiteSpace(devicePlatform) ? "web-desktop" : devicePlatform.Trim();
         CorrectCount = Math.Max(correctCount, 0);

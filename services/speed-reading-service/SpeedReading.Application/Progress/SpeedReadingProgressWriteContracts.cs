@@ -13,10 +13,11 @@ public sealed record CreateExerciseResultRequest(
     decimal RawWpm,
     decimal ComprehensionScore,
     decimal WeightedKdp,
-    string QuestionAnswersJson,
-    string ReadingMovementsJson,
+    string? QuestionAnswersJson,
+    string? ReadingMovementsJson,
     DateTime? CompletedAt = null,
-    bool? IsMeasured = null);
+    bool? IsMeasured = null,
+    Guid? SessionId = null);
 
 public interface ISpeedReadingProgressWriter
 {
@@ -25,6 +26,36 @@ public interface ISpeedReadingProgressWriter
         CreateExerciseResultRequest request,
         string idempotencyKey,
         CancellationToken cancellationToken = default);
+}
+
+public static class SpeedReadingProgressWriteRules
+{
+    public static string ValidateIdempotencyKey(string? key)
+    {
+        var normalized = key?.Trim() ?? string.Empty;
+        if (!System.Text.RegularExpressions.Regex.IsMatch(
+                normalized,
+                "^[A-Za-z0-9._~-]{16,128}$"))
+        {
+            throw new ArgumentException(
+                "Idempotency-Key must contain 16-128 letters, numbers, dots, underscores, hyphens or tildes.",
+                nameof(key));
+        }
+
+        return normalized;
+    }
+
+    public static Guid RequireAuthoritativeSession(Guid? sessionId)
+    {
+        if (sessionId is not { } value || value == Guid.Empty)
+        {
+            throw new EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException(
+                "ExerciseResult.ServerAuthoritative",
+                "Exercise results must reference a completed server-owned exercise session.");
+        }
+
+        return value;
+    }
 }
 
 /// <summary>
@@ -48,7 +79,8 @@ public static class SpeedReadingRequestHasher
             request.QuestionAnswersJson,
             request.ReadingMovementsJson,
             Format(request.CompletedAt),
-            request.IsMeasured?.ToString() ?? string.Empty);
+            request.IsMeasured?.ToString() ?? string.Empty,
+            Format(request.SessionId));
 
     public static string Create(params string?[] values)
     {

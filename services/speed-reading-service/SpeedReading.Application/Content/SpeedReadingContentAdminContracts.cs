@@ -28,7 +28,8 @@ public sealed record CreateExerciseRequest(
     int DifficultyLevel,
     Guid ExerciseTypeId,
     string ConfigurationJson,
-    Guid? TargetAgeGroupConfigurationId);
+    Guid? TargetAgeGroupConfigurationId,
+    bool IsActive = true);
 
 public sealed record UpdateExerciseRequest(
     string Title,
@@ -36,7 +37,8 @@ public sealed record UpdateExerciseRequest(
     int DifficultyLevel,
     Guid ExerciseTypeId,
     string ConfigurationJson,
-    Guid? TargetAgeGroupConfigurationId);
+    Guid? TargetAgeGroupConfigurationId,
+    bool IsActive = true);
 
 public sealed record CreateReadingTextRequest(
     string Title,

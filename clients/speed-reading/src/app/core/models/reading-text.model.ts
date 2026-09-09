@@ -25,6 +25,7 @@ export enum BloomLevel {
 
 export interface ReadingText {
   id: string;
+  sessionId?: string;
   title: string;
   content: string;
   wordCount: number;
@@ -153,6 +154,7 @@ export interface StartReadingSessionDto {
 
 export interface CompleteReadingSessionDto {
   readingTextId?: string; // Set in component, overridden in API
+  sessionId: string;
   readingTimeSeconds: number;
   answers: AnswerDto[];
 }

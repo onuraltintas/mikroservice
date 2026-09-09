@@ -62,6 +62,12 @@ internal sealed class OwnedSpeedReadingAgeGroups(OwnedSpeedReadingDbContext db) 
         CreateAgeGroupRequest request,
         CancellationToken cancellationToken)
     {
+        await EnsureNoActiveRangeOverlapAsync(
+            request.MinAge,
+            request.MaxAge,
+            excludedId: null,
+            isActive: request.IsActive,
+            cancellationToken: cancellationToken);
         var item = AgeGroupConfiguration.Create(
             Guid.NewGuid(),
             request.Name,
@@ -94,6 +100,13 @@ internal sealed class OwnedSpeedReadingAgeGroups(OwnedSpeedReadingDbContext db) 
             .SingleOrDefaultAsync(row => row.Id == id && !row.IsDeleted, cancellationToken);
         if (item is null)
             return false;
+
+        await EnsureNoActiveRangeOverlapAsync(
+            request.MinAge,
+            request.MaxAge,
+            id,
+            request.IsActive,
+            cancellationToken);
 
         item.Update(
             request.Name,
@@ -141,6 +154,32 @@ internal sealed class OwnedSpeedReadingAgeGroups(OwnedSpeedReadingDbContext db) 
                 && (!item.MaxAge.HasValue || item.MaxAge.Value >= age))
             .OrderBy(item => item.MinAge)
             .FirstOrDefaultAsync(cancellationToken);
+
+    private async Task EnsureNoActiveRangeOverlapAsync(
+        int minAge,
+        int? maxAge,
+        Guid? excludedId,
+        bool isActive,
+        CancellationToken cancellationToken)
+    {
+        if (!isActive)
+            return;
+
+        var activeRanges = await db.AgeGroupConfigurations
+            .AsNoTracking()
+            .Where(item => item.IsActive && !item.IsDeleted
+                && (!excludedId.HasValue || item.Id != excludedId.Value))
+            .Select(item => new { item.MinAge, item.MaxAge })
+            .ToListAsync(cancellationToken);
+        if (activeRanges.Any(item => AgeGroupRangeRules.Overlaps(
+                minAge,
+                maxAge,
+                item.MinAge,
+                item.MaxAge)))
+        {
+            throw new ArgumentException("Active age-group ranges cannot overlap.");
+        }
+    }
 
     private static System.Linq.Expressions.Expression<Func<AgeGroupConfiguration, AgeGroupSummary>> ToSummary() =>
         item => new AgeGroupSummary(

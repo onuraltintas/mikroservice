@@ -204,6 +204,30 @@ public sealed class ExerciseSession : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Advances a passive or client-observed step without inventing a score.
+    /// The step is persisted for lifecycle/progress purposes, while the
+    /// measurement remains unscored until the server can validate it.
+    /// </summary>
+    public void AdvanceUnscored()
+    {
+        EnsureStatus(ExerciseSessionStatus.Active, "Only an active session can advance.");
+        CurrentStep = Math.Min(TotalSteps, CurrentStep + 1);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Records an incorrect active attempt without advancing the exercise.
+    /// This is used by ordered tasks such as Schulte tables where a wrong
+    /// click must be counted but the next target remains the same.
+    /// </summary>
+    public void RecordIncorrectAttempt()
+    {
+        EnsureStatus(ExerciseSessionStatus.Active, "Only an active session can record an attempt.");
+        IncorrectCount++;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void SetCurrentStep(int step)
     {
         EnsureStatus(ExerciseSessionStatus.Active, "Only an active session can change progress.");
@@ -256,14 +280,23 @@ public sealed class ExerciseSession : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public bool IsTimedOut(DateTime now)
+    public bool IsTimedOut(
+        DateTime now,
+        DateTime? timingStartedAt = null,
+        int pausedSecondsBeforeTiming = 0)
     {
         if (TimeLimitSeconds is not > 0 || Status is ExerciseSessionStatus.Completed or ExerciseSessionStatus.Timeout)
             return false;
 
         var end = EnsureUtc(now);
-        var elapsed = Math.Max(0, (end - StartTime).TotalSeconds);
-        elapsed -= Math.Max(0, TotalPausedSeconds);
+        var start = timingStartedAt.HasValue
+            ? EnsureUtc(timingStartedAt.Value)
+            : StartTime;
+        var pausedSeconds = timingStartedAt.HasValue
+            ? Math.Max(0, TotalPausedSeconds - Math.Max(0, pausedSecondsBeforeTiming))
+            : Math.Max(0, TotalPausedSeconds);
+        var elapsed = Math.Max(0, (end - start).TotalSeconds);
+        elapsed -= pausedSeconds;
         if (Status == ExerciseSessionStatus.Paused && PausedAt.HasValue)
             elapsed -= Math.Max(0, (end - PausedAt.Value).TotalSeconds);
 

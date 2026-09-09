@@ -46,6 +46,7 @@ export class StudentReadingService {
         const text = response?.data ?? response;
         return {
           ...text,
+          sessionId: text?.sessionId,
           readingQuestions: text?.readingQuestions ?? text?.questions ?? []
         } as ReadingText;
       })
@@ -70,8 +71,7 @@ export class StudentReadingService {
   completeSession(textId: string, dto: CompleteReadingSessionDto): Observable<ReadingSessionResult> {
     return this.http.post<ReadingSessionResult>(`${this.API_URL}/${textId}/complete`, {
       timeSpentSeconds: dto.readingTimeSeconds,
-      // The API calculates the score from submitted answers when available.
-      comprehensionScore: 0,
+      sessionId: dto.sessionId,
       answers: dto.answers
     });
   }

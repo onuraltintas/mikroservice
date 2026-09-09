@@ -72,7 +72,9 @@ internal sealed class LegacySpeedReadingCatalog(SpeedReadingDbContext db) : ILeg
         int pageNumber,
         int pageSize,
         string? searchTerm,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool includeInactive = false,
+        bool includeConfiguration = false)
     {
         var (page, size) = NormalizePage(pageNumber, pageSize);
         var query = from exercise in db.Exercises.AsNoTracking()
@@ -80,6 +82,11 @@ internal sealed class LegacySpeedReadingCatalog(SpeedReadingDbContext db) : ILeg
                         on exercise.ExerciseTypeId equals type.Id
                     where !exercise.IsDeleted && !type.IsDeleted
                     select new { exercise, type };
+
+        if (!includeInactive)
+        {
+            query = query.Where(item => item.type.IsActive && item.exercise.IsActive);
+        }
 
         if (exerciseTypeId.HasValue)
         {
@@ -110,18 +117,84 @@ internal sealed class LegacySpeedReadingCatalog(SpeedReadingDbContext db) : ILeg
             .ThenBy(item => item.exercise.Id)
             .Skip((page - 1) * size)
             .Take(size)
-            .Select(item => new ExerciseSummary(
+            .Select(item => new
+            {
                 item.exercise.Id,
                 item.exercise.Title,
                 item.exercise.Description,
                 item.exercise.DifficultyLevel,
                 item.exercise.ExerciseTypeId,
-                item.type.DisplayName,
+                ExerciseTypeName = item.type.DisplayName,
                 item.exercise.ConfigurationJson,
-                item.exercise.TargetAgeGroupConfigurationId))
+                TargetAgeGroupId = item.exercise.TargetAgeGroupConfigurationId,
+                item.exercise.IsActive
+            })
             .ToListAsync(cancellationToken);
 
-        return new SpeedReadingPage<ExerciseSummary>(items, page, size, totalCount);
+        return new SpeedReadingPage<ExerciseSummary>(
+            items.Select(item => new ExerciseSummary(
+                item.Id,
+                item.Title,
+                item.Description,
+                item.DifficultyLevel,
+                item.ExerciseTypeId,
+                item.ExerciseTypeName,
+                includeConfiguration
+                    ? item.ConfigurationJson
+                    : SpeedReadingContentSecurity.SanitizeExerciseConfiguration(item.ConfigurationJson),
+                item.TargetAgeGroupId,
+                item.IsActive)).ToList(),
+            page,
+            size,
+            totalCount);
+    }
+
+    public async Task<ExerciseSummary?> GetExerciseAsync(
+        Guid id,
+        bool includeInactive = false,
+        bool includeConfiguration = false,
+        CancellationToken cancellationToken = default)
+    {
+        if (id == Guid.Empty)
+        {
+            return null;
+        }
+
+        var item = await (
+            from exercise in db.Exercises.AsNoTracking()
+            join type in db.ExerciseTypes.AsNoTracking()
+                on exercise.ExerciseTypeId equals type.Id
+            where exercise.Id == id
+                && !exercise.IsDeleted
+                && !type.IsDeleted
+                && (includeInactive || (type.IsActive && exercise.IsActive))
+            select new
+            {
+                exercise.Id,
+                exercise.Title,
+                exercise.Description,
+                exercise.DifficultyLevel,
+                exercise.ExerciseTypeId,
+                ExerciseTypeName = type.DisplayName,
+                exercise.ConfigurationJson,
+                TargetAgeGroupId = exercise.TargetAgeGroupConfigurationId,
+                exercise.IsActive
+            }).SingleOrDefaultAsync(cancellationToken);
+
+        return item is null
+            ? null
+            : new ExerciseSummary(
+                item.Id,
+                item.Title,
+                item.Description,
+                item.DifficultyLevel,
+                item.ExerciseTypeId,
+                item.ExerciseTypeName,
+                includeConfiguration
+                    ? item.ConfigurationJson
+                    : SpeedReadingContentSecurity.SanitizeExerciseConfiguration(item.ConfigurationJson),
+                item.TargetAgeGroupId,
+                item.IsActive);
     }
 
     public async Task<IReadOnlyList<ReadingTextSummary>> GetReadingTextsAsync(

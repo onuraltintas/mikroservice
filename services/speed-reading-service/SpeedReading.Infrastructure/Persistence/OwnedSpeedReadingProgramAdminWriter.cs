@@ -34,6 +34,8 @@ internal sealed class OwnedSpeedReadingProgramAdminWriter(OwnedSpeedReadingDbCon
         if (existing is not null)
             return await ReplayAsync(existing, requestHash, cancellationToken);
 
+        await EnsureActiveAgeGroupAsync(request.TargetAgeGroupConfigurationId, cancellationToken);
+
         var now = DateTime.UtcNow;
         var template = ProgramTemplate.Create(
             request.Name,
@@ -85,6 +87,8 @@ internal sealed class OwnedSpeedReadingProgramAdminWriter(OwnedSpeedReadingDbCon
         var existing = await GetLedgerAsync(UpdateScope, key, cancellationToken);
         if (existing is not null)
             return await ReplayAsync(existing, requestHash, cancellationToken);
+
+        await EnsureActiveAgeGroupAsync(request.TargetAgeGroupConfigurationId, cancellationToken);
 
         var template = await db.ProgramTemplates
             .SingleOrDefaultAsync(item => item.Id == programTemplateId && !item.IsDeleted, cancellationToken)
@@ -219,6 +223,18 @@ internal sealed class OwnedSpeedReadingProgramAdminWriter(OwnedSpeedReadingDbCon
         await db.IdempotencyRecords
             .AsNoTracking()
             .SingleOrDefaultAsync(item => item.Scope == scope && item.Key == key, cancellationToken);
+
+    private async Task EnsureActiveAgeGroupAsync(
+        Guid ageGroupId,
+        CancellationToken cancellationToken)
+    {
+        if (!await db.AgeGroupConfigurations.AsNoTracking().AnyAsync(
+                item => item.Id == ageGroupId && item.IsActive && !item.IsDeleted,
+                cancellationToken))
+        {
+            throw new NotFoundException("AgeGroupConfiguration", ageGroupId);
+        }
+    }
 
     private async Task<ExerciseProgramTemplateAdminSummary> ReplayAsync(
         OwnedIdempotencyRecord record,

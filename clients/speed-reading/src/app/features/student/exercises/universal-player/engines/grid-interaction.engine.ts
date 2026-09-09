@@ -98,8 +98,15 @@ export class GridInteractionEngine implements BaseEngine {
             this.sequence = Array.from({ length: totalCells }, (_, i) => i + 1);
         }
 
-        // Shuffle for grid display
-        this.grid = [...this.sequence].sort(() => Math.random() - 0.5);
+        // Use the server-owned layout when a session supplies one. This keeps
+        // the visible board and the layout validated by the API identical.
+        const serverGrid = (this.config as any).Grid || (this.config as any).grid;
+        const flattenedServerGrid = Array.isArray(serverGrid)
+            ? serverGrid.flat().filter((value: unknown) => typeof value === 'number' || typeof value === 'string')
+            : [];
+        this.grid = flattenedServerGrid.length === totalCells
+            ? flattenedServerGrid
+            : [...this.sequence].sort(() => Math.random() - 0.5);
     }
 
     start(): void {
@@ -224,6 +231,16 @@ export class GridInteractionEngine implements BaseEngine {
             this.callbacks.onStepComplete(this.currentTarget, false);
         }
 
+        this.callbacks.onAction({
+            action: 'grid_click',
+            number: typeof input.value === 'number' ? input.value : Number(input.value),
+            index: input.cellIndex,
+            row: clickData.row,
+            col: clickData.col,
+            responseTime,
+            timestamp: new Date().toISOString()
+        });
+
         this.state.accuracy = this.totalClicks > 0
             ? Math.round((this.correctClicks / this.totalClicks) * 100)
             : 100;
@@ -331,4 +348,3 @@ export class GridInteractionEngine implements BaseEngine {
         return SCHULTE_BENCHMARKS[gridSize] || SCHULTE_BENCHMARKS[5];
     }
 }
-

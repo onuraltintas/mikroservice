@@ -100,11 +100,11 @@ internal sealed class LegacySpeedReadingProgress(SpeedReadingDbContext db) : ILe
                 item.ReadingTextId,
                 item.WordsRead,
                 item.TimeSpentSeconds,
-                item.RawWPM,
-                item.ComprehensionScore,
-                item.WeightedKDP,
+                item.IsMeasured && item.RawWPM > 0 ? item.RawWPM : null,
+                item.IsMeasured && item.ReadingTextId.HasValue ? item.ComprehensionScore : null,
+                item.IsMeasured && item.RawWPM > 0 ? item.WeightedKDP : null,
                 item.CompletedAt,
-                "Measured"))
+                item.IsMeasured ? "Measured" : "NotMeasured"))
             .ToListAsync(cancellationToken);
 
         return new SpeedReadingPage<ExerciseResultSummary>(items, page, size, totalCount);

@@ -33,10 +33,12 @@ export interface ActionData {
   // Common fields
   action?: string;  // For RSVP, SpeedReading (start_reading, finish_reading, answer_question, etc.)
   number?: number;  // For Schulte Table
+  index?: number;  // For server-validated focus/attention trials
   row?: number;
   col?: number;
   answer?: string;  // For Tachistoscope, SpeedReading
   questionId?: string;  // For SpeedReading
+  isTimeout?: boolean;  // For timed comprehension questions
   responseTime?: number;  // Response time in milliseconds
   timestamp: Date;
 

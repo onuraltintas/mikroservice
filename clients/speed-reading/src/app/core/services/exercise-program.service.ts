@@ -26,7 +26,7 @@ export interface DailyExercise {
  */
 export interface CompleteExerciseRequest {
   exerciseId: string;
-  sessionId?: string;
+  sessionId: string;
   successRate?: number;
   timeSpentSeconds: number;
   measurementStatus?: 'Measured' | 'NotMeasured';

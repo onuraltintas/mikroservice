@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using EduPlatform.Shared.Kernel.Exceptions;
 using SpeedReading.Application.Assessment;
+using SpeedReading.Application.Content;
 
 namespace SpeedReading.Infrastructure.Legacy;
 
@@ -8,12 +10,25 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
 {
     public async Task<AssessmentExercisesSummary> GetExercisesAsync(Guid userId, CancellationToken cancellationToken)
     {
+        var ageGroupId = await db.Users
+            .AsNoTracking()
+            .Where(item => item.Id == userId && !item.IsDeleted)
+            .Select(item => item.AgeGroupConfigurationId)
+            .SingleOrDefaultAsync(cancellationToken);
+
         var exercises = await (
             from exercise in db.Exercises.AsNoTracking()
             join exerciseType in db.ExerciseTypes.AsNoTracking()
                 on exercise.ExerciseTypeId equals exerciseType.Id into exerciseTypes
             from exerciseType in exerciseTypes.DefaultIfEmpty()
             where !exercise.IsDeleted
+                && exercise.IsActive
+                && exerciseType != null
+                && !exerciseType.IsDeleted
+                && exerciseType.IsActive
+                && (!ageGroupId.HasValue
+                    || exercise.TargetAgeGroupConfigurationId == null
+                    || exercise.TargetAgeGroupConfigurationId == ageGroupId.Value)
             orderby exercise.DifficultyLevel, exercise.Title
             select new
             {
@@ -29,7 +44,10 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
 
         var completedIds = await db.StudentExerciseResults
             .AsNoTracking()
-            .Where(item => item.StudentId == userId && !item.IsDeleted)
+            .Where(item => item.StudentId == userId
+                && !item.IsDeleted
+                && item.IsMeasured
+                && item.IsAssessmentMode)
             .Select(item => item.ExerciseId)
             .Distinct()
             .ToListAsync(cancellationToken);
@@ -41,7 +59,7 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
             item.Description,
             item.DifficultyLevel,
             completedIds.Contains(item.Id),
-            item.ConfigurationJson)).ToList();
+            SpeedReadingContentSecurity.SanitizeAssessmentConfiguration(item.ConfigurationJson))).ToList();
 
         var comprehension = items.FirstOrDefault(item => IsType(item.TypeName, "comprehension", "reading"));
         var visual = items.FirstOrDefault(item => IsType(item.TypeName, "visual", "expansion"));
@@ -62,7 +80,10 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
     {
         var hasCompleted = await db.StudentExerciseResults
             .AsNoTracking()
-            .AnyAsync(item => item.StudentId == userId && !item.IsDeleted, cancellationToken);
+            .AnyAsync(item => item.StudentId == userId
+                && !item.IsDeleted
+                && item.IsMeasured
+                && item.IsAssessmentMode, cancellationToken);
         return new AssessmentStatusSummary(hasCompleted, null);
     }
 
@@ -71,27 +92,34 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
         AssessmentCalculationRequest? request,
         CancellationToken cancellationToken)
     {
-        var results = await db.StudentExerciseResults
+        var resultsQuery = db.StudentExerciseResults
             .AsNoTracking()
-            .Where(item => item.StudentId == userId && !item.IsDeleted)
+            .Where(item => item.StudentId == userId
+                && !item.IsDeleted
+                && item.IsMeasured
+                && item.IsAssessmentMode);
+        if (request?.AttemptId is { } attemptId)
+            resultsQuery = resultsQuery.Where(item => item.AssessmentAttemptId == attemptId);
+        var allResults = await resultsQuery
             .OrderByDescending(item => item.CreatedAt)
-            .Take(3)
             .ToListAsync(cancellationToken);
-        if (results.Count == 0) return null;
+        var results = allResults
+            .GroupBy(item => item.ExerciseId)
+            .Select(group => group.First())
+            .Take(3)
+            .ToList();
+        if (results.Count < 3)
+        {
+            throw new BusinessRuleException(
+                "SpeedReading.Assessment.Incomplete",
+                "All assessment exercises must be completed with a server-measured result before placement.");
+        }
 
         var averageWpm = results.Average(item => item.RawWPM);
         var averageComprehension = results.Average(item => item.ComprehensionScore);
-        var level = averageWpm switch
-        {
-            < 100 => 1,
-            < 150 => 2,
-            < 200 => 3,
-            < 250 => 4,
-            < 300 => 5,
-            < 400 => 6,
-            < 500 => 7,
-            _ => 8
-        };
+        var level = SpeedReadingAssessmentMeasurementRules.CalculateLevel(
+            averageWpm,
+            averageComprehension);
         var recommendedLevel = LevelName(level);
         var comprehensionScore = averageComprehension;
         var tachistoscopeScore = averageComprehension;
@@ -99,28 +127,14 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
         var fixationScore = averageComprehension;
         var focusScore = averageComprehension;
 
-        if (request?.ExerciseResults is { Count: > 0 })
-        {
-            var exerciseIds = request.ExerciseResults.Select(item => item.ExerciseId).Distinct().ToList();
-            var typeNames = await (
-                from exercise in db.Exercises.AsNoTracking()
-                join exerciseType in db.ExerciseTypes.AsNoTracking()
-                    on exercise.ExerciseTypeId equals exerciseType.Id into exerciseTypes
-                from exerciseType in exerciseTypes.DefaultIfEmpty()
-                where exerciseIds.Contains(exercise.Id)
-                select new { exercise.Id, TypeName = exerciseType == null ? string.Empty : exerciseType.Name })
-                .ToDictionaryAsync(item => item.Id, item => item.TypeName, cancellationToken);
+        var ageGroupId = await db.Users
+            .AsNoTracking()
+            .Where(item => item.Id == userId && !item.IsDeleted)
+            .Select(item => item.AgeGroupConfigurationId)
+            .SingleOrDefaultAsync(cancellationToken);
 
-            foreach (var item in request.ExerciseResults)
-            {
-                if (!typeNames.TryGetValue(item.ExerciseId, out var typeName)) continue;
-                var score = Math.Clamp(item.Score, 0, 100);
-                if (IsType(typeName, "comprehension", "reading")) comprehensionScore = score;
-                else if (IsType(typeName, "visual", "expansion")) visualExpansionScore = score;
-                else if (IsType(typeName, "focus", "fixation")) fixationScore = focusScore = score;
-                else if (IsType(typeName, "rsvp", "tachistoscope")) tachistoscopeScore = score;
-            }
-        }
+        // Legacy clients may still send ExerciseResults, but placement remains
+        // based on server-computed StudentExerciseResults only.
 
         var user = await db.Users
             .SingleOrDefaultAsync(item => item.Id == userId && !item.IsDeleted, cancellationToken);
@@ -134,13 +148,18 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
         var template = await db.ExerciseProgramTemplates
             .AsNoTracking()
             .Where(item => item.IsActive && !item.IsDeleted
+                && !item.IsAssessment
+                && (!ageGroupId.HasValue || item.TargetAgeGroupConfigurationId == ageGroupId.Value)
                 && item.MinAssessmentScore <= (int)averageComprehension
                 && item.MaxAssessmentScore >= (int)averageComprehension)
             .OrderBy(item => item.MinAssessmentScore)
             .FirstOrDefaultAsync(cancellationToken)
             ?? await db.ExerciseProgramTemplates
                 .AsNoTracking()
-                .Where(item => item.IsActive && !item.IsDeleted)
+                .Where(item => item.IsActive
+                    && !item.IsDeleted
+                    && !item.IsAssessment
+                    && (!ageGroupId.HasValue || item.TargetAgeGroupConfigurationId == ageGroupId.Value))
                 .OrderBy(item => item.MinAssessmentScore)
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -381,18 +400,7 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
     private static bool IsType(string value, params string[] parts) =>
         parts.Any(part => value.Contains(part, StringComparison.OrdinalIgnoreCase));
 
-    private static string LevelName(int level) => level switch
-    {
-        1 => "Başlangıç",
-        2 => "Temel",
-        3 => "Orta-Alt",
-        4 => "Orta",
-        5 => "Orta-Üst",
-        6 => "İleri",
-        7 => "Uzman",
-        8 => "Elit",
-        _ => $"Seviye {level}"
-    };
+    private static string LevelName(int level) => SpeedReadingLevelRules.GetDisplayName(level);
 
     private static bool TryGetProperty(JsonElement element, string name, out JsonElement value)
     {

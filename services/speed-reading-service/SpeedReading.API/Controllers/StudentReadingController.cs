@@ -34,7 +34,8 @@ public sealed class StudentReadingController(ISpeedReadingStudentReading student
     [HttpGet("{textId:guid}/start")]
     public async Task<IActionResult> Start(Guid textId, CancellationToken cancellationToken = default)
     {
-        var result = await studentReading.StartAsync(textId, cancellationToken);
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        var result = await studentReading.StartAsync(userId, textId, cancellationToken);
         return result is null ? NotFound("Reading text not found.") : Ok(result);
     }
 

@@ -170,6 +170,7 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
             ExerciseTypeId = request.ExerciseTypeId,
             ConfigurationJson = request.ConfigurationJson,
             TargetAgeGroupConfigurationId = request.TargetAgeGroupConfigurationId,
+            IsActive = request.IsActive,
             CreatorId = actorId,
             CreatedAt = now,
             CreatedBy = actorId
@@ -212,6 +213,7 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         exercise.ExerciseTypeId = request.ExerciseTypeId;
         exercise.ConfigurationJson = request.ConfigurationJson;
         exercise.TargetAgeGroupConfigurationId = request.TargetAgeGroupConfigurationId;
+        exercise.IsActive = request.IsActive;
         exercise.UpdatedAt = DateTime.UtcNow;
         exercise.UpdatedBy = actorId;
 
@@ -1417,7 +1419,8 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
                    exercise.ExerciseTypeId,
                    type.DisplayName,
                    exercise.ConfigurationJson,
-                   exercise.TargetAgeGroupConfigurationId))
+                   exercise.TargetAgeGroupConfigurationId,
+                   exercise.IsActive))
             .SingleOrDefaultAsync(cancellationToken);
 
     private static void ValidateRequest(

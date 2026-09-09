@@ -38,6 +38,10 @@ public sealed class ReadingSession : Entity
             throw new ArgumentException("Reading session identifiers are required.");
         if (readingTimeSeconds < 0 || calculatedWpm < 0 || correctAnswers < 0 || totalQuestions < 0)
             throw new ArgumentOutOfRangeException(nameof(readingTimeSeconds));
+        if (correctAnswers > totalQuestions)
+            throw new ArgumentOutOfRangeException(nameof(correctAnswers));
+        if (comprehensionRate is < 0 or > 100)
+            throw new ArgumentOutOfRangeException(nameof(comprehensionRate));
 
         return new ReadingSession
         {

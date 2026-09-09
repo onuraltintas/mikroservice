@@ -9,7 +9,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef,
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 
 import { EngineFactory, EngineType } from './engines/engine-factory';
@@ -31,7 +31,12 @@ import { ExerciseSessionService } from '../../../../core/services/exercise-sessi
 import { ExerciseProgramService, CompleteExerciseRequest } from '../../../../core/services/exercise-program.service';
 import { StudentProgramService } from '../../../../core/services/student-program.service'; // INJECTED
 import { ToasterService } from '../../../../core/services/toaster.service';
-import { StartSessionRequest, ExerciseResult as SessionResult } from '../../../../core/models/exercise-session.model';
+import {
+  ActionData,
+  StartSessionRequest,
+  ExerciseResult as SessionResult,
+  ValidationResponse
+} from '../../../../core/models/exercise-session.model';
 import { toCompleteSessionRequest } from '../../../../core/services/exercise-session-completion';
 
 interface ExerciseData {
@@ -276,7 +281,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   readingWpm = 0;
   exercisePhase: 'reading' | 'questions' | 'completed' = 'reading';
   selectedAnswer: string | null = null;
-  questionFeedback: { isCorrect: boolean; correctAnswer: string; explanation?: string; question?: any } | null = null;
+  questionFeedback: { isCorrect: boolean | null; correctAnswer?: string; explanation?: string; question?: any } | null = null;
 
   // Question Timer (for Exam Simulation)
   questionTimeRemaining = 0;
@@ -298,6 +303,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private readingTrackingFinished = false;
   private readingTrackingStartCompleted = false;
   private pendingReadingCompletion?: () => void;
+  private actionQueue: Promise<void> = Promise.resolve();
+  questionSubmissionPending = false;
 
   // Timer for Duration-based exercises
   private activeTimer: any = null;
@@ -553,20 +560,23 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         next: (response) => {
           this.sessionId = response.sessionId;
 
-          // Store backend session config (contains stimuli, questions, etc. from Backend Engine)
-          // For ExamSimulation, Backend already puts sessionData (with Questions) into Configuration
-          if (response.configuration) {
-            this.backendSessionConfig = response.configuration;
-          } else {
-            this.backendSessionConfig = {};
-          }
+          const initialData = response.initialData || (response as any).InitialData || {};
+          // Keep the public session state and engine configuration together;
+          // the state is sanitized by the server and contains assessment text/questions.
+          this.backendSessionConfig = {
+            ...(initialData || {}),
+            ...(response.configuration || {})
+          };
 
-          // Extract comprehension/exam questions for question phase
-          // Backend sends PascalCase (Questions), also check camelCase for safety
-          const questions = this.backendSessionConfig.Questions ||
-            this.backendSessionConfig.questions ||
-            (this.backendSessionConfig.Content && this.backendSessionConfig.Content.Questions) ||
-            (this.backendSessionConfig.content && this.backendSessionConfig.content.questions);
+          // Assessment questions are part of the sanitized initial session
+          // state; configuration is reserved for engine settings.
+          const questionSources = [this.backendSessionConfig, initialData];
+          const questions = questionSources.map(source =>
+            source?.Questions ||
+            source?.questions ||
+            source?.Content?.Questions ||
+            source?.content?.questions
+          ).find(candidate => Array.isArray(candidate));
           if (questions && Array.isArray(questions)) {
             this.comprehensionQuestions = questions;
           }
@@ -626,6 +636,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       const callbacks: EngineCallbacks = {
         onStart: () => {
           this.startTimer();
+          if (this.engine?.engineType === 'focus' || this.engine?.engineType === 'attention_training') {
+            void this.enqueueAction({
+              action: 'focus_start',
+              timestamp: new Date()
+            } as ActionData).catch(() => undefined);
+          }
         },
         onPause: () => {
           this.stopTimer();
@@ -695,7 +711,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           this.cdr.detectChanges();
           };
 
-          this.finishReadingTracking(finalizeCompletion);
+          this.waitForPendingActions(() => this.finishReadingTracking(finalizeCompletion));
         },
         onError: (error) => {
           this.error = error;
@@ -758,6 +774,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
           // Validation GEREKEN egzersizler (kullanıcı aktif input yapıyor)
           const requiresValidation = [
+            'grid_interaction',    // Schulte/grid tıklamaları server layout ile doğrulanır
             'schulte_grid',      // Tıklama sırası doğrulanmalı
             'memory_grid',       // Hafıza testi, seçimler doğrulanmalı
           ];
@@ -777,11 +794,17 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
           // Focus engine için özel mantık: sadece match aksiyonlarını backend'e gönder
           if (engineType === 'focus' || engineType === 'attention_training') {
-            const validFocusActions = ['position_match', 'word_match', 'match_attempt', 'complete'];
+            const validFocusActions = ['focus_start', 'focus_step', 'position_match', 'word_match', 'match_attempt', 'complete'];
             if (!validFocusActions.includes(action.action)) {
               // step_change, feedback gibi internal aksiyonları atla
               return;
             }
+          }
+
+          if (engineType === 'visualization' && action.action !== 'answer_question') {
+            // Scene timing is a presentation concern. Only answer events are
+            // persisted and checked against the server-owned question bank.
+            return;
           }
 
           if (skipValidation.includes(engineType || '') || skipValidation.includes(engineMode || '')) {
@@ -790,11 +813,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           }
 
           // Sadece kullanıcı input gerektiren egzersizlerde validation yap
-          this.sessionService.validateAction(this.sessionId!, action).subscribe({
-            next: (res: any) => {
-            },
-            error: (err: any) => console.error('[ExercisePlayer] Action validation error:', err)
-          });
+          const onResponse = (engineType === 'focus' || engineType === 'attention_training')
+            ? (response: ValidationResponse) =>
+              (this.engine as FocusEngine).reconcileServerResponse(action, response)
+            : engineType === 'visualization'
+              ? (response: ValidationResponse) =>
+                (this.engine as VisualizationEngine).applyServerResponse(response)
+              : undefined;
+          void this.enqueueAction(action as ActionData, onResponse).catch(() => undefined);
         }
       };
 
@@ -811,6 +837,38 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           this.backendSessionConfig?.['engineConfig']?.['grid']?.['rows'] || 5,
         sequenceType: 'numeric',
         exerciseTypeName: this.exercise?.exerciseTypeName,
+        mode: this.backendSessionConfig?.FocusMode
+          || this.backendSessionConfig?.focusMode
+          || this.backendSessionConfig?.mode
+          || this.parsedConfig?.engineConfig?.['mode'],
+        NLevel: this.backendSessionConfig?.FocusNLevel
+          || this.backendSessionConfig?.focusNLevel
+          || this.backendSessionConfig?.NLevel
+          || this.parsedConfig?.engineConfig?.['NLevel'],
+        PositionSequence: this.isAssessmentMode
+          ? undefined
+          : (this.backendSessionConfig?.PositionSequence
+            || this.backendSessionConfig?.positionSequence
+            || this.parsedConfig?.engineConfig?.['PositionSequence']),
+        positionSequence: this.isAssessmentMode
+          ? undefined
+          : (this.backendSessionConfig?.positionSequence
+            || this.parsedConfig?.engineConfig?.['positionSequence']),
+        WordSequence: this.isAssessmentMode
+          ? undefined
+          : (this.backendSessionConfig?.WordSequence
+            || this.backendSessionConfig?.wordSequence
+            || this.parsedConfig?.engineConfig?.['WordSequence']),
+        wordSequence: this.isAssessmentMode
+          ? undefined
+          : (this.backendSessionConfig?.wordSequence
+            || this.parsedConfig?.engineConfig?.['wordSequence']),
+        isAssessmentMode: this.isAssessmentMode,
+        scenes: this.backendSessionConfig?.VisualizationScenes
+          || this.backendSessionConfig?.visualizationScenes
+          || this.parsedConfig?.['scenes']
+          || this.parsedConfig?.['Scenes'],
+        serverAuthoritative: !!this.sessionId && this.sessionId !== 'preview-mode',
         // Metadata ve yaş grubu/zorluk bilgisini ekle
         metadata: this.parsedConfig?.['metadata'],
         difficultyLevel: this.parsedConfig?.['difficultyLevel'] || this.backendSessionConfig?.DifficultyLevel
@@ -840,7 +898,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         'reading_comprehension',
         'text_fade',
         'text_stream',
-        'free_reading'
+        'free_reading',
+        'regression_reduction',
+        'subvocalization_reduction'
       ].includes(this.engine?.engineType || '');
   }
 
@@ -896,6 +956,56 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         onFinished();
       }
     });
+  }
+
+  private enqueueAction(
+    action: ActionData,
+    onResponse?: (response: ValidationResponse) => void): Promise<void> {
+    if (!this.sessionId || this.sessionId === 'preview-mode') {
+      return Promise.resolve();
+    }
+
+    const validation = this.actionQueue
+      .catch(() => undefined)
+      .then(() => firstValueFrom(this.sessionService.validateAction(this.sessionId!, action)));
+    const queued = validation.then(
+      response => onResponse?.(response),
+      error => {
+        // A failed focus/visualization action must release the engine's
+        // pending state; otherwise a transient network error can leave an
+        // assessment waiting forever for a response that will never arrive.
+        if (onResponse) {
+          try {
+            onResponse({
+              isValid: false,
+              message: this.getActionValidationErrorMessage(error),
+              isCompleted: false
+            });
+          } catch (callbackError) {
+            console.error('[ExercisePlayer] Action error callback failed:', callbackError);
+          }
+        }
+        throw error;
+      });
+
+    this.actionQueue = queued.catch(error => {
+      console.error('[ExercisePlayer] Action validation error:', error);
+    });
+    return queued;
+  }
+
+  private getActionValidationErrorMessage(error: unknown): string {
+    const response = (error as any)?.error;
+    const message = response?.message || response?.title || (error as any)?.message;
+    return typeof message === 'string' && message.trim()
+      ? message
+      : 'Egzersiz doğrulaması alınamadı. Lütfen bağlantınızı kontrol edip tekrar deneyin.';
+  }
+
+  private waitForPendingActions(onFinished: () => void): void {
+    this.actionQueue
+      .then(onFinished)
+      .catch(() => onFinished());
   }
 
   startExercise(): void {
@@ -1184,51 +1294,107 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   selectAnswer(option: string): void {
-    if (this.questionFeedback) return; // Already answered
+    if (this.questionFeedback || this.questionSubmissionPending) return; // Already answered or being saved
 
     this.stopQuestionTimer();
     this.selectedAnswer = option;
+    this.submitQuestionAnswer(option, false);
+  }
+
+  private submitQuestionAnswer(answer: string, isTimeout: boolean): void {
     const question = this.getCurrentQuestion();
+    if (!question || this.questionFeedback || this.questionSubmissionPending) return;
 
-    if (question) {
-      // C# sends PascalCase (CorrectAnswer or CorrectOption), check both
-      let correctAnswer = question.CorrectAnswer || question.correctAnswer;
+    const questionId = question.QuestionId || question.questionId;
+    if (!questionId) {
+      this.showToast('Soru kimliği bulunamadı; cevap kaydedilemedi.', 'error');
+      return;
+    }
 
-      // If correctAnswer is missing, check CorrectOption
-      if (!correctAnswer && (question.CorrectOption !== undefined || question.correctOption !== undefined)) {
-        const correctOpt = question.CorrectOption ?? question.correctOption;
-        // Backend may send as string ('A', 'B', 'C', 'D') or as number (1-based index)
-        if (typeof correctOpt === 'string') {
-          correctAnswer = correctOpt.toUpperCase();
-        } else if (typeof correctOpt === 'number') {
-          correctAnswer = String.fromCharCode(64 + correctOpt); // 1 -> 'A', 2 -> 'B'
-        }
+    const targetTime = question.TargetTimeSeconds || question.targetTimeSeconds || 60;
+    const timeSpent = isTimeout
+      ? targetTime
+      : Math.max(0, targetTime - this.questionTimeRemaining);
+    this.questionSubmissionPending = true;
+
+    const action: ActionData = {
+      action: 'answer_question',
+      questionId,
+      answer,
+      isTimeout,
+      responseTime: Math.max(0, Math.round(timeSpent * 1000)),
+      timestamp: new Date()
+    };
+
+    const applyResponse = (response: ValidationResponse): void => {
+      if (!response.isValid) {
+        throw new Error(response.message || 'Cevap kaydedilemedi.');
       }
 
-      const isCorrect = option === correctAnswer;
-
+      const isCorrect = response.isCorrect === true;
       this.questionFeedback = {
-        isCorrect,
-        correctAnswer: correctAnswer,
-        explanation: question.Explanation || question.explanation
+        isCorrect: this.isAssessmentMode ? null : response.isCorrect ?? false,
+        correctAnswer: this.isAssessmentMode ? undefined : response.correctAnswer,
+        explanation: this.isAssessmentMode
+          ? (isTimeout ? 'Süre doldu; cevap kaydedildi.' : 'Cevabınız kaydedildi.')
+          : (response.explanation || response.message)
       };
-
-      // Calculate time spent on this question
-      const targetTime = question.TargetTimeSeconds || question.targetTimeSeconds || 60;
-      const timeSpent = targetTime - this.questionTimeRemaining;
-
       this.questionAnswers.push({
-        questionId: question.QuestionId || question.questionId,
-        selectedAnswer: option,
+        questionId,
+        selectedAnswer: isTimeout ? '' : answer,
         isCorrect,
         timeSpent,
         targetTime,
         questionText: question.QuestionText || question.questionText || question.Text || question.text,
-        correctAnswer: correctAnswer
+        correctAnswer: this.isAssessmentMode ? undefined : response.correctAnswer
       });
-
+      this.questionSubmissionPending = false;
       this.cdr.detectChanges();
+    };
+
+    if (this.sessionId === 'preview-mode') {
+      const correctAnswer = this.getQuestionCorrectAnswer(question);
+      applyResponse({
+        isValid: true,
+        message: isTimeout ? 'Süre doldu!' : 'Cevap değerlendirildi.',
+        isCompleted: false,
+        isCorrect: !isTimeout && answer === correctAnswer,
+        correctAnswer,
+        explanation: question.Explanation || question.explanation
+      });
+      return;
     }
+
+    if (!this.sessionId) {
+      this.questionSubmissionPending = false;
+      this.showToast('Oturum bulunamadı; cevap kaydedilemedi.', 'error');
+      return;
+    }
+
+    this.enqueueAction(action, applyResponse).catch(error => {
+      this.questionSubmissionPending = false;
+      this.selectedAnswer = null;
+      this.showToast(
+        error?.message || 'Cevap sunucuya kaydedilemedi; lütfen tekrar deneyin.',
+        'error');
+      this.cdr.detectChanges();
+    });
+  }
+
+  private getQuestionCorrectAnswer(question: any): string | undefined {
+    let correctAnswer = question.CorrectAnswer || question.correctAnswer;
+    if (correctAnswer) {
+      return String(correctAnswer).toUpperCase();
+    }
+
+    const correctOption = question.CorrectOption ?? question.correctOption;
+    if (typeof correctOption === 'string') {
+      return correctOption.toUpperCase();
+    }
+    if (typeof correctOption === 'number' && correctOption >= 1) {
+      return String.fromCharCode(64 + correctOption);
+    }
+    return undefined;
   }
 
   nextQuestion(): void {
@@ -1284,41 +1450,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   handleQuestionTimeout(): void {
     this.stopQuestionTimer();
     const question = this.getCurrentQuestion();
-    if (!question || this.questionFeedback) return;
-
-    // Get correct answer
-    let correctAnswer = question.CorrectAnswer || question.correctAnswer;
-    if (!correctAnswer && (question.CorrectOption !== undefined || question.correctOption !== undefined)) {
-      const correctOpt = question.CorrectOption ?? question.correctOption;
-      if (typeof correctOpt === 'string') {
-        correctAnswer = correctOpt.toUpperCase();
-      } else if (typeof correctOpt === 'number') {
-        correctAnswer = String.fromCharCode(64 + correctOpt);
-      }
-    }
+    if (!question || this.questionFeedback || this.questionSubmissionPending) return;
 
     // Mark as wrong (no answer given)
     this.selectedAnswer = null;
-    this.questionFeedback = {
-      isCorrect: false,
-      correctAnswer: correctAnswer || '',
-      explanation: 'Süre doldu!'
-    };
-
-    // Time spent equals target time (ran out of time)
-    const targetTime = question.TargetTimeSeconds || question.targetTimeSeconds || 60;
-
-    this.questionAnswers.push({
-      questionId: question.QuestionId || question.questionId,
-      selectedAnswer: '',
-      isCorrect: false,
-      timeSpent: targetTime,
-      targetTime,
-      questionText: question.QuestionText || question.questionText || question.Text || question.text,
-      correctAnswer: correctAnswer || ''
-    });
-
-    this.cdr.detectChanges();
+    this.submitQuestionAnswer('', true);
   }
 
   isQuestionTimeUrgent(): boolean {
@@ -1781,6 +1917,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   isVisualizationLastAnswerCorrect(): boolean {
     return (this.engine as VisualizationEngine)?.lastAnswerCorrect || false;
+  }
+
+  isVisualizationAnswerPending(): boolean {
+    return (this.engine as VisualizationEngine)?.isAnswerPending?.() || false;
+  }
+
+  isVisualizationAnswerEvaluated(): boolean {
+    return (this.engine as VisualizationEngine)?.isAnswerEvaluated?.() || false;
   }
 
   getVisualizationCorrectAnswer(): string {
@@ -2346,7 +2490,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       || result.details?.totalQuestions > 0
       || result.details?.totalAnswers > 0
       || result.details?.correctAnswers > 0
-      || result.details?.trials?.length > 0) {
+      || result.details?.trials?.length > 0
+      || result.details?.answers?.length > 0) {
       return true;
     }
 
@@ -2445,15 +2590,31 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const state = history.state;
     const isPracticeMode = state?.practiceMode === true;
     const isAssessmentMode = this.isAssessmentMode;
+    const completionQuestionAnswers = this.engine?.engineType === 'visualization'
+      ? undefined
+      : this.questionAnswers;
 
     // 1. Session kaydet (gamification için) - Assessment modunda XP kazanımı backend tarafında engellenir
     this.sessionService.completeSession(this.sessionId, toCompleteSessionRequest(
-      this.questionAnswers,
+      completionQuestionAnswers,
       customData,
       isAssessmentMode
     )).subscribe({
       next: (sessionResult: SessionResult) => {
         this.sessionResult = sessionResult;
+        this.result = {
+          ...(this.result || result),
+          score: sessionResult.score ?? 0,
+          accuracy: sessionResult.accuracy ?? 0,
+          details: {
+            ...((this.result || result).details || {}),
+            wpm: sessionResult.rawWPM ?? null,
+            comprehensionScore: sessionResult.comprehensionScore ?? null,
+            weightedKDP: sessionResult.weightedKDP ?? null,
+            measurementStatus: sessionResult.measurementStatus
+          }
+        };
+        this.cdr.detectChanges();
 
         let msg = 'Sonuç kaydedildi.';
         if (sessionResult.xpGained > 0) {

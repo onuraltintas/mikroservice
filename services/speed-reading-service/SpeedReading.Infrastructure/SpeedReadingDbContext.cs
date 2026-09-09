@@ -286,6 +286,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasKey(item => item.Id);
             entity.HasIndex(item => item.ExerciseTypeId);
             entity.HasIndex(item => item.TargetAgeGroupConfigurationId);
+            entity.HasIndex(item => item.IsActive);
             entity.Property(item => item.TargetAgeGroupConfigurationId)
                 .HasColumnName("TargetAgeGroupId");
             // The legacy table has no CreatorId column; CreatedBy is the
@@ -535,12 +536,12 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasIndex(item => item.ExerciseId);
             entity.HasIndex(item => item.ReadingTextId);
             entity.HasIndex(item => item.StudentAssignmentId);
-            // These fields were introduced after the legacy database schema;
-            // owned sessions persist them in the new schema.
-            entity.Ignore(item => item.PausedAt);
-            entity.Ignore(item => item.TimeLimitSeconds);
-            // Added only in the owned schema; legacy rows predate this field.
-            entity.Ignore(item => item.ProcessedActionsJson);
+            // The additive compatibility script provisions these columns before
+            // the legacy service starts, so session timing and action idempotency
+            // use the same persisted contract as the owned store.
+            entity.Property(item => item.PausedAt).HasColumnName("PausedAt");
+            entity.Property(item => item.TimeLimitSeconds).HasColumnName("TimeLimitSeconds");
+            entity.Property(item => item.ProcessedActionsJson).HasColumnName("ProcessedActionsJson");
         });
 
         modelBuilder.Entity<LegacyStudentExerciseResult>(entity =>
@@ -550,9 +551,16 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasIndex(item => item.StudentId);
             entity.HasIndex(item => item.ExerciseId);
             entity.HasIndex(item => item.ReadingTextId);
-            // StudentExerciseResults in the legacy database does not retain
-            // a session link; owned backfill keeps those results unlinked.
-            entity.Ignore(item => item.SessionId);
+            // The additive compatibility script provisions this nullable link
+            // so legacy result writes can still be bound to a server session.
+            entity.Property(item => item.SessionId).HasColumnName("SessionId");
+            entity.HasIndex(item => item.SessionId)
+                .IsUnique()
+                .HasFilter("\"SessionId\" IS NOT NULL");
+            entity.Property(item => item.IsMeasured).HasColumnName("IsMeasured");
+            entity.Property(item => item.IsAssessmentMode).HasColumnName("IsAssessmentMode");
+            entity.Property(item => item.AssessmentAttemptId).HasColumnName("AssessmentAttemptId");
+            entity.HasIndex(item => item.AssessmentAttemptId);
             entity.Property(item => item.RawWPM).HasPrecision(18, 2);
             entity.Property(item => item.ComprehensionScore).HasPrecision(18, 2);
         });
@@ -615,6 +623,19 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasIndex(item => item.StudentProgramProgressId);
             entity.HasIndex(item => item.ExerciseId);
             entity.HasIndex(item => item.ExerciseTypeId);
+            entity.HasIndex(item => item.SessionId)
+                .IsUnique()
+                .HasFilter("\"SessionId\" IS NOT NULL AND \"IsDeleted\" = false");
+            entity.HasIndex(item => new
+                {
+                    item.StudentProgramProgressId,
+                    item.WeekNumber,
+                    item.DayNumber,
+                    item.ExerciseId
+                })
+                .HasDatabaseName("IX_DailyExerciseLogs_ProgressSlot")
+                .IsUnique()
+                .HasFilter("\"SessionId\" IS NOT NULL AND \"IsDeleted\" = false");
             entity.HasIndex(item => new { item.IsDeleted, item.UserId, item.CompletedDate });
             entity.Property(item => item.ResultDataJson).IsRequired();
             entity.Property(item => item.DevicePlatform).HasMaxLength(50).IsRequired();

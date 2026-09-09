@@ -46,6 +46,46 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class SpeedReadingOwnedDomainTests
 {
     [Fact]
+    public void Exercise_session_timeout_can_start_at_the_first_measured_action()
+    {
+        var sessionStart = new DateTime(2026, 9, 10, 10, 0, 0, DateTimeKind.Utc);
+        var timingStart = sessionStart.AddMinutes(5);
+        var session = ExerciseSession.Start(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            null,
+            totalSteps: 3,
+            startedAt: sessionStart,
+            timeLimitSeconds: 300);
+
+        session.IsTimedOut(sessionStart.AddMinutes(9)).Should().BeTrue();
+        session.IsTimedOut(sessionStart.AddMinutes(9), timingStart).Should().BeFalse();
+        session.IsTimedOut(sessionStart.AddMinutes(11), timingStart).Should().BeTrue();
+    }
+
+    [Fact]
+    public void Timeout_ignores_pauses_that_finished_before_timing_started()
+    {
+        var sessionStart = new DateTime(2026, 9, 10, 10, 0, 0, DateTimeKind.Utc);
+        var session = ExerciseSession.Start(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            null,
+            totalSteps: 1,
+            sessionStart,
+            timeLimitSeconds: 300);
+
+        session.Pause(sessionStart.AddMinutes(1));
+        session.Resume(sessionStart.AddMinutes(4));
+
+        session.IsTimedOut(
+                sessionStart.AddMinutes(11),
+                sessionStart.AddMinutes(5),
+                pausedSecondsBeforeTiming: 180)
+            .Should().BeTrue();
+    }
+
+    [Fact]
     public void Owned_runtime_does_not_require_legacy_connection()
     {
         var configuration = new ConfigurationManager
@@ -156,6 +196,7 @@ public sealed class SpeedReadingOwnedDomainTests
         context.Model.FindEntityType(typeof(ReadingText))!.GetTableName().Should().Be("reading_texts");
         context.Model.FindEntityType(typeof(ExerciseSession))!.GetTableName().Should().Be("exercise_sessions");
         context.Model.FindEntityType(typeof(ExerciseSessionResult))!.GetTableName().Should().Be("exercise_session_results");
+        context.Model.FindEntityType(typeof(StudentReadingAttempt))!.GetTableName().Should().Be("student_reading_attempts");
         var readingSession = context.Model.FindEntityType(typeof(ReadingSession))!;
         readingSession.GetTableName().Should().Be("reading_sessions");
         var readingSessionTable = StoreObjectIdentifier.Table("reading_sessions", "speed_reading");
@@ -1168,6 +1209,42 @@ public sealed class SpeedReadingOwnedDomainTests
         var act = () => session.RecordAnswer(questionId, "A", isCorrect: true, 3, 2);
 
         act.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void Passive_session_step_does_not_invent_a_correct_answer()
+    {
+        var session = ExerciseSession.Start(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            null,
+            totalSteps: 2,
+            DateTime.UtcNow,
+            timeLimitSeconds: null);
+
+        session.AdvanceUnscored();
+
+        session.CurrentStep.Should().Be(1);
+        session.CorrectCount.Should().Be(0);
+        session.IncorrectCount.Should().Be(0);
+    }
+
+    [Fact]
+    public void Ordered_session_records_a_wrong_attempt_without_advancing()
+    {
+        var session = ExerciseSession.Start(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            null,
+            totalSteps: 3,
+            DateTime.UtcNow,
+            timeLimitSeconds: null);
+
+        session.RecordIncorrectAttempt();
+
+        session.CurrentStep.Should().Be(0);
+        session.CorrectCount.Should().Be(0);
+        session.IncorrectCount.Should().Be(1);
     }
 
     [Fact]

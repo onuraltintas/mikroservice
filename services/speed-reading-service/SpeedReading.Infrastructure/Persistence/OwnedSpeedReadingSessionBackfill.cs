@@ -171,7 +171,8 @@ public sealed class OwnedSpeedReadingSessionBackfill(
                 ToAuditValue(source.CreatedBy),
                 NormalizeUtc(source.UpdatedAt),
                 ToAuditValue(source.UpdatedBy),
-                !string.Equals(source.QuestionAnswersJson, "[]", StringComparison.Ordinal)));
+                !string.Equals(source.QuestionAnswersJson, "[]", StringComparison.Ordinal),
+                source.IsMeasured));
             resultsInserted++;
         }
 

@@ -206,6 +206,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
                 <textarea name="configurationJson" [(ngModel)]="exerciseDraft.configurationJson" required rows="4"
                   class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-xs dark:border-gray-600 dark:bg-gray-800"></textarea>
               </label>
+              <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200 sm:col-span-2"><input type="checkbox" name="exerciseActive" [(ngModel)]="exerciseDraft.isActive" /> Aktif</label>
               <div class="flex justify-end gap-2 sm:col-span-2">
                 <button type="button" (click)="cancelExerciseEdit()" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">Vazgeç</button>
                 <button type="submit" [disabled]="saving()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50">
@@ -222,7 +223,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
                   <div class="flex items-start justify-between gap-3">
                     <div>
                       <h3 class="font-medium text-gray-900 dark:text-white">{{ exercise.title }}</h3>
-                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ exercise.exerciseTypeName }} · Zorluk {{ exercise.difficultyLevel }}</p>
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ exercise.exerciseTypeName }} · Zorluk {{ exercise.difficultyLevel }} · {{ exercise.isActive ? 'Aktif' : 'Pasif' }}</p>
                     </div>
                     @if (canManageContent()) {
                       <div class="flex shrink-0 gap-2">
@@ -955,7 +956,8 @@ export class SpeedReadingOverviewComponent implements OnInit {
       difficultyLevel: exercise.difficultyLevel,
       exerciseTypeId: exercise.exerciseTypeId,
       configurationJson: exercise.configurationJson,
-      targetAgeGroupConfigurationId: exercise.targetAgeGroupConfigurationId
+      targetAgeGroupConfigurationId: exercise.targetAgeGroupConfigurationId,
+      isActive: exercise.isActive
     };
   }
 
@@ -1528,7 +1530,8 @@ export class SpeedReadingOverviewComponent implements OnInit {
       difficultyLevel: 0,
       exerciseTypeId: '',
       configurationJson: '{}',
-      targetAgeGroupConfigurationId: null
+      targetAgeGroupConfigurationId: null,
+      isActive: true
     };
   }
 

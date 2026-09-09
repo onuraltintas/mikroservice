@@ -1,4 +1,5 @@
 using FluentAssertions;
+using EduPlatform.Shared.Kernel.Exceptions;
 using SpeedReading.Application.Progress;
 
 namespace SpeedReading.Application.UnitTests;
@@ -33,6 +34,25 @@ public sealed class SpeedReadingProgressWriteTests
 
         SpeedReadingRequestHasher.Create(firstStudent, request)
             .Should().NotBe(SpeedReadingRequestHasher.Create(secondStudent, request));
+    }
+
+    [Fact]
+    public void Request_hash_changes_when_the_server_session_changes()
+    {
+        var first = CreateRequest() with { SessionId = Guid.NewGuid() };
+        var second = first with { SessionId = Guid.NewGuid() };
+
+        SpeedReadingRequestHasher.Create(first)
+            .Should().NotBe(SpeedReadingRequestHasher.Create(second));
+    }
+
+    [Fact]
+    public void Measured_result_writes_require_a_server_owned_session()
+    {
+        var action = () => SpeedReadingProgressWriteRules.RequireAuthoritativeSession(null);
+
+        action.Should().Throw<BusinessRuleException>()
+            .Which.Message.Should().Contain("server-owned");
     }
 
     private static CreateExerciseResultRequest CreateRequest() => new(

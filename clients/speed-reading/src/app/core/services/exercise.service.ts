@@ -208,7 +208,12 @@ export class ExerciseService {
    * Service receives: any (auto-unwrapped)
    */
   submitExerciseResult(result: ExerciseResult, idempotencyKey?: string): Observable<any> {
+    if (!result.sessionId) {
+      throw new Error('A completed server-owned exercise session is required.');
+    }
+
     const payload = {
+      sessionId: result.sessionId,
       exerciseId: result.exerciseId,
       readingTextId: result.readingTextId ?? null,
       wordsRead: result.wordsRead,

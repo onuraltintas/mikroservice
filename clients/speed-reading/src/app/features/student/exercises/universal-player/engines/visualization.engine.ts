@@ -28,7 +28,7 @@ interface VisualizationQuestion {
     questionId: string;
     questionText: string;
     options: string[];
-    correctAnswer: string;
+    correctAnswer?: string;
     questionType: string;
     hintText?: string;
 }
@@ -62,6 +62,9 @@ export class VisualizationEngine implements BaseEngine {
     private timerInterval: any;
     private sceneTimeout: any;
     private sceneDisplayRemaining = 0;
+    private serverAuthoritative = false;
+    private pendingServerAnswer: { questionId: string; answer: string; sceneId: string } | null = null;
+    private answerEvaluated = false;
 
     // Guided Mode
     private currentGuidedStepIndex = 0;
@@ -77,6 +80,7 @@ export class VisualizationEngine implements BaseEngine {
         this.config = config;
         this.callbacks = callbacks;
         this.mode = config.mode || 'static';
+        this.serverAuthoritative = config['serverAuthoritative'] === true;
 
         // Get scenes from config (try both cases)
         const rawScenes = config.scenes || config.Scenes || [];
@@ -94,7 +98,7 @@ export class VisualizationEngine implements BaseEngine {
                 questionId: q.questionId || q.QuestionId,
                 questionText: q.questionText || q.QuestionText,
                 options: q.options || q.Options || [],
-                correctAnswer: q.correctAnswer || q.CorrectAnswer,
+                correctAnswer: q.correctAnswer || q.CorrectAnswer || '',
                 questionType: q.questionType || q.QuestionType,
                 hintText: q.hintText || q.HintText
             }))
@@ -118,6 +122,8 @@ export class VisualizationEngine implements BaseEngine {
         this.currentQuestionIndex = 0;
         this.phase = 'scene';
         this.questionAnswers = [];
+        this.pendingServerAnswer = null;
+        this.answerEvaluated = false;
 
     }
 
@@ -337,6 +343,8 @@ export class VisualizationEngine implements BaseEngine {
         this.currentQuestionIndex = 0;
         this.phase = 'scene';
         this.questionAnswers = [];
+        this.pendingServerAnswer = null;
+        this.answerEvaluated = false;
         this.state = {
             isRunning: false,
             isPaused: false,
@@ -383,13 +391,44 @@ export class VisualizationEngine implements BaseEngine {
         const scene = this.scenes[this.currentSceneIndex];
         const question = scene.questions[this.currentQuestionIndex];
 
-        const isCorrect = question.correctAnswer.toLowerCase() === answer.toLowerCase();
+        if (this.serverAuthoritative && !question.correctAnswer?.trim()) {
+            this.pendingServerAnswer = {
+                questionId: question.questionId,
+                answer,
+                sceneId: scene.sceneId
+            };
+            this.showingFeedback = true;
+            this.answerEvaluated = false;
+            this.lastAnswer = answer;
+            this.lastAnswerCorrect = false;
+            this.correctAnswer = '';
+            this.callbacks.onAction({
+                action: 'answer_question',
+                questionId: question.questionId,
+                answer,
+                customData: { sceneId: scene.sceneId },
+                timestamp: new Date()
+            });
+            this.callbacks.onStateChange({
+                ...this.state,
+                phase: 'questions',
+                currentSceneIndex: this.currentSceneIndex,
+                currentQuestionIndex: this.currentQuestionIndex
+            } as any);
+            return;
+        }
+
+        const expectedAnswer = question.correctAnswer?.trim() ?? '';
+        const normalizedAnswer = String(answer ?? '').trim();
+        const isCorrect = expectedAnswer.length > 0
+            && expectedAnswer.toLowerCase() === normalizedAnswer.toLowerCase();
 
         // Store feedback state
         this.showingFeedback = true;
+        this.answerEvaluated = true;
         this.lastAnswer = answer;
         this.lastAnswerCorrect = isCorrect;
-        this.correctAnswer = question.correctAnswer;
+        this.correctAnswer = expectedAnswer;
 
         this.questionAnswers.push({
             questionId: question.questionId,
@@ -410,9 +449,7 @@ export class VisualizationEngine implements BaseEngine {
             questionId: question.questionId,
             answer: answer,
             customData: {
-                sceneId: scene.sceneId,
-                isCorrect: isCorrect,
-                correctAnswer: question.correctAnswer
+                sceneId: scene.sceneId
             },
             timestamp: new Date()
         });
@@ -428,7 +465,7 @@ export class VisualizationEngine implements BaseEngine {
 
     // Called when user clicks "Next Question" button
     nextQuestion(): void {
-        if (!this.showingFeedback) return;
+        if (!this.showingFeedback || this.pendingServerAnswer) return;
 
         this.showingFeedback = false;
         this.lastAnswer = '';
@@ -453,6 +490,60 @@ export class VisualizationEngine implements BaseEngine {
                 currentQuestionIndex: this.currentQuestionIndex
             } as any);
         }
+    }
+
+    /** Applies an accepted answer from the authoritative session endpoint. */
+    applyServerResponse(response: any): void {
+        const pending = this.pendingServerAnswer;
+        if (!pending) return;
+
+        if (response?.isValid === false) {
+            this.pendingServerAnswer = null;
+            this.showingFeedback = false;
+            this.lastAnswer = '';
+            this.correctAnswer = '';
+            this.answerEvaluated = false;
+            this.callbacks.onStateChange({
+                ...this.state,
+                phase: 'questions',
+                currentSceneIndex: this.currentSceneIndex,
+                currentQuestionIndex: this.currentQuestionIndex
+            } as any);
+            return;
+        }
+
+        const isAssessment = response?.isCorrect === null || response?.isCorrect === undefined;
+        const isCorrect = response?.isCorrect === true;
+        this.lastAnswerCorrect = isCorrect;
+        this.answerEvaluated = !isAssessment;
+        this.correctAnswer = isAssessment ? '' : String(response?.correctAnswer || '');
+        this.questionAnswers.push({
+            questionId: pending.questionId,
+            answer: pending.answer,
+            isCorrect
+        });
+        if (isCorrect) {
+            this.state.score++;
+        } else if (!isAssessment) {
+            this.state.errors++;
+        }
+        this.state.currentStep++;
+        this.pendingServerAnswer = null;
+        this.callbacks.onStepComplete(this.state.currentStep, isCorrect);
+        this.callbacks.onStateChange({
+            ...this.state,
+            phase: 'questions',
+            currentSceneIndex: this.currentSceneIndex,
+            currentQuestionIndex: this.currentQuestionIndex
+        } as any);
+    }
+
+    isAnswerPending(): boolean {
+        return this.pendingServerAnswer !== null;
+    }
+
+    isAnswerEvaluated(): boolean {
+        return this.answerEvaluated;
     }
 
     private complete(): void {

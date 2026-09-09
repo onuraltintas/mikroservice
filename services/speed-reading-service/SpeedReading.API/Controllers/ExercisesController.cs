@@ -23,15 +23,34 @@ public sealed class ExercisesController(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] string? searchTerm = null,
-        CancellationToken cancellationToken = default) =>
-        catalog.GetExercisesAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var canManageContent = CanManageContent();
+        return catalog.GetExercisesAsync(
             exerciseTypeId,
             difficultyLevel,
             targetAgeGroupId,
             pageNumber,
             pageSize,
             searchTerm,
-            cancellationToken);
+            cancellationToken,
+            includeInactive: canManageContent,
+            includeConfiguration: canManageContent);
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<ExerciseSummary>> GetExercise(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var canManageContent = CanManageContent();
+        var result = await catalog.GetExerciseAsync(
+            id,
+            includeInactive: canManageContent,
+            includeConfiguration: canManageContent,
+            cancellationToken: cancellationToken);
+        return result is null ? NotFound() : Ok(result);
+    }
 
     [HttpPost]
     [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
@@ -99,4 +118,8 @@ public sealed class ExercisesController(
             ?? User.FindFirst("sub")?.Value;
         return Guid.TryParse(value, out userId);
     }
+
+    private bool CanManageContent() => User.Claims.Any(claim =>
+        claim.Type == "permission" &&
+        claim.Value == PlatformPermissions.SpeedReading.ContentManage);
 }

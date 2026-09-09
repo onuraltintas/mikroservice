@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Application.StudentReading;
 
 namespace SpeedReading.Infrastructure.Legacy;
@@ -14,6 +15,7 @@ internal sealed class LegacySpeedReadingStudentReading(SpeedReadingDbContext db)
             .Where(item => item.Id == userId && !item.IsDeleted)
             .Select(item => (int?)item.CurrentLevel)
             .SingleOrDefaultAsync(cancellationToken) ?? 1;
+        var ageGroupId = await GetAgeGroupIdAsync(userId, cancellationToken);
         var minLevel = Math.Max(1, currentLevel - 2);
         var maxLevel = Math.Min(10, currentLevel + 2);
 
@@ -23,6 +25,9 @@ internal sealed class LegacySpeedReadingStudentReading(SpeedReadingDbContext db)
                 && item.IsActive
                 && item.DifficultyLevel >= minLevel
                 && item.DifficultyLevel <= maxLevel
+                && (!ageGroupId.HasValue
+                    || item.TargetAgeGroupConfigurationId == null
+                    || item.TargetAgeGroupConfigurationId == ageGroupId.Value)
                 && item.Category != string.Empty)
             .Select(item => item.Category)
             .Distinct()
@@ -43,6 +48,7 @@ internal sealed class LegacySpeedReadingStudentReading(SpeedReadingDbContext db)
             .Where(item => item.Id == userId && !item.IsDeleted)
             .Select(item => (int?)item.CurrentLevel)
             .SingleOrDefaultAsync(cancellationToken) ?? 1;
+        var ageGroupId = await GetAgeGroupIdAsync(userId, cancellationToken);
         var lowerLevel = Math.Clamp(minLevel ?? currentLevel - 2, 1, 10);
         var upperLevel = Math.Clamp(maxLevel ?? currentLevel + 2, lowerLevel, 10);
 
@@ -51,7 +57,10 @@ internal sealed class LegacySpeedReadingStudentReading(SpeedReadingDbContext db)
             .Where(item => !item.IsDeleted
                 && item.IsActive
                 && item.DifficultyLevel >= lowerLevel
-                && item.DifficultyLevel <= upperLevel);
+                && item.DifficultyLevel <= upperLevel
+                && (!ageGroupId.HasValue
+                    || item.TargetAgeGroupConfigurationId == null
+                    || item.TargetAgeGroupConfigurationId == ageGroupId.Value));
         if (!string.IsNullOrWhiteSpace(category)) query = query.Where(item => item.Category == category);
         if (specificLevel.HasValue) query = query.Where(item => item.DifficultyLevel == specificLevel.Value);
 
@@ -70,12 +79,22 @@ internal sealed class LegacySpeedReadingStudentReading(SpeedReadingDbContext db)
     }
 
     public async Task<StudentReadingStart?> StartAsync(
+        Guid userId,
         Guid textId,
         CancellationToken cancellationToken)
     {
+        if (userId == Guid.Empty)
+            throw new ArgumentException("A valid authenticated user is required.", nameof(userId));
+
+        var ageGroupId = await GetAgeGroupIdAsync(userId, cancellationToken);
         var text = await db.ReadingTexts
             .AsNoTracking()
-            .SingleOrDefaultAsync(item => item.Id == textId && item.IsActive && !item.IsDeleted, cancellationToken);
+            .SingleOrDefaultAsync(item => item.Id == textId
+                && item.IsActive
+                && !item.IsDeleted
+                && (!ageGroupId.HasValue
+                    || item.TargetAgeGroupConfigurationId == null
+                    || item.TargetAgeGroupConfigurationId == ageGroupId.Value), cancellationToken);
         if (text is null) return null;
 
         var questions = await db.ReadingQuestions
@@ -89,17 +108,39 @@ internal sealed class LegacySpeedReadingStudentReading(SpeedReadingDbContext db)
                 item.Type,
                 item.BloomLevel,
                 item.DifficultyLevel,
-                item.Explanation,
+                null,
                 item.OptionA,
                 item.OptionB,
                 item.OptionC,
                 item.OptionD,
-                item.CorrectAnswer,
                 item.OrderIndex))
             .ToListAsync(cancellationToken);
 
+        var now = DateTime.UtcNow;
+        var attempt = new LegacyReadingSession
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            ReadingTextId = textId,
+            ReadingTimeSeconds = 0,
+            CalculatedWPM = 0,
+            CorrectAnswers = 0,
+            TotalQuestions = 0,
+            ComprehensionRate = 0,
+            EfficiencyScore = 0,
+            CompletedAt = now,
+            CreatedAt = now,
+            CreatedBy = userId,
+            IsDeleted = true,
+            DeletedAt = null,
+            DeletedBy = null
+        };
+        db.ReadingSessions.Add(attempt);
+        await db.SaveChangesAsync(cancellationToken);
+
         return new StudentReadingStart(
             text.Id,
+            attempt.Id,
             text.Title,
             text.Content,
             text.Category,
@@ -116,8 +157,26 @@ internal sealed class LegacySpeedReadingStudentReading(SpeedReadingDbContext db)
     {
         var text = await db.ReadingTexts
             .AsNoTracking()
-            .SingleOrDefaultAsync(item => item.Id == textId && !item.IsDeleted, cancellationToken);
+            .SingleOrDefaultAsync(item => item.Id == textId && item.IsActive && !item.IsDeleted, cancellationToken);
         if (text is null) return null;
+
+        if (request.SessionId == Guid.Empty)
+            throw new ArgumentException("A valid reading session is required.", nameof(request));
+
+        var session = await db.ReadingSessions
+            .SingleOrDefaultAsync(item => item.Id == request.SessionId
+                && item.UserId == userId
+                && item.ReadingTextId == textId
+                && (!item.IsDeleted
+                    || (item.DeletedAt == null
+                        && item.ReadingTimeSeconds == 0
+                        && item.CalculatedWPM == 0
+                        && item.TotalQuestions == 0)),
+                cancellationToken);
+        if (session is null)
+            return null;
+        if (!session.IsDeleted)
+            return ToCompletion(session);
 
         var questions = await db.ReadingQuestions
             .AsNoTracking()
@@ -125,38 +184,44 @@ internal sealed class LegacySpeedReadingStudentReading(SpeedReadingDbContext db)
             .Select(item => new { item.Id, item.CorrectAnswer })
             .ToListAsync(cancellationToken);
         var answers = request.Answers ?? [];
+        ValidateAnswers(questions.Select(item => item.Id).ToHashSet(), answers);
         var correctAnswers = answers
             .Join(questions, answer => answer.QuestionId, question => question.Id, (answer, question) =>
                 string.Equals(answer.SelectedAnswer?.Trim(), question.CorrectAnswer?.Trim(), StringComparison.OrdinalIgnoreCase))
             .Count(isCorrect => isCorrect);
-        var timeSpentSeconds = Math.Max(0, request.TimeSpentSeconds);
-        var calculatedWpm = text.WordCount > 0 && timeSpentSeconds > 0
-            ? (int)(text.WordCount * 60d / timeSpentSeconds)
-            : 0;
-        var comprehensionRate = answers.Count > 0 && questions.Count > 0
-            ? Math.Round(correctAnswers * 100m / questions.Count, 2)
-            : Math.Clamp(request.ComprehensionScore, 0, 100);
-        var efficiencyScore = calculatedWpm * (comprehensionRate / 100m);
         var now = DateTime.UtcNow;
-        var session = new LegacyReadingSession
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            ReadingTextId = textId,
-            ReadingTimeSeconds = timeSpentSeconds,
-            CalculatedWPM = calculatedWpm,
-            CorrectAnswers = correctAnswers,
-            TotalQuestions = questions.Count,
-            ComprehensionRate = comprehensionRate,
-            EfficiencyScore = efficiencyScore,
-            CompletedAt = now,
-            CreatedAt = now,
-            CreatedBy = userId
-        };
-        db.ReadingSessions.Add(session);
+        var timeSpentSeconds = CalculateServerDuration(session.CreatedAt, now);
+        var calculatedWpm = text.WordCount > 0
+            ? SpeedReadingExerciseSessionRules.CalculateValidatedRawWpm(text.WordCount, timeSpentSeconds) is { } rawWpm
+                ? (int)Math.Round(rawWpm)
+                : 0
+            : 0;
+        var comprehensionRate = questions.Count > 0
+            ? Math.Round(correctAnswers * 100m / questions.Count, 2)
+            : 0;
+        session.ReadingTimeSeconds = timeSpentSeconds;
+        session.CalculatedWPM = calculatedWpm;
+        session.CorrectAnswers = correctAnswers;
+        session.TotalQuestions = questions.Count;
+        session.ComprehensionRate = comprehensionRate;
+        session.EfficiencyScore = calculatedWpm * (comprehensionRate / 100m);
+        session.CompletedAt = now;
+        session.IsDeleted = false;
+        session.UpdatedAt = now;
+        session.UpdatedBy = userId;
         await db.SaveChangesAsync(cancellationToken);
 
-        return new StudentReadingCompletion(
+        return ToCompletion(session);
+    }
+
+    private static int CalculateServerDuration(DateTime startedAt, DateTime completedAt)
+    {
+        var seconds = (completedAt.ToUniversalTime() - startedAt.ToUniversalTime()).TotalSeconds;
+        return (int)Math.Clamp(Math.Floor(seconds), 1, 86_400);
+    }
+
+    private static StudentReadingCompletion ToCompletion(LegacyReadingSession session) =>
+        new(
             session.Id,
             session.ReadingTimeSeconds,
             session.CalculatedWPM,
@@ -165,7 +230,6 @@ internal sealed class LegacySpeedReadingStudentReading(SpeedReadingDbContext db)
             session.ComprehensionRate,
             session.EfficiencyScore,
             PerformanceLevel(session.CalculatedWPM));
-    }
 
     public async Task<IReadOnlyList<StudentReadingHistoryItem>> GetHistoryAsync(
         Guid userId,
@@ -275,6 +339,27 @@ internal sealed class LegacySpeedReadingStudentReading(SpeedReadingDbContext db)
             session.EfficiencyScore,
             session.CompletedAt,
             PerformanceLevel(session.CalculatedWPM));
+
+    private async Task<Guid?> GetAgeGroupIdAsync(Guid userId, CancellationToken cancellationToken) =>
+        await db.Users
+            .AsNoTracking()
+            .Where(item => item.Id == userId && !item.IsDeleted)
+            .Select(item => item.AgeGroupConfigurationId)
+            .SingleOrDefaultAsync(cancellationToken);
+
+    private static void ValidateAnswers(
+        IReadOnlySet<Guid> questionIds,
+        IReadOnlyList<StudentReadingAnswer> answers)
+    {
+        if (answers.Count != questionIds.Count)
+            throw new ArgumentException("Every reading question must be answered.", nameof(answers));
+        if (answers.Any(item => item.QuestionId == Guid.Empty || string.IsNullOrWhiteSpace(item.SelectedAnswer)))
+            throw new ArgumentException("Every reading answer must contain a question and a selected option.", nameof(answers));
+        if (answers.Select(item => item.QuestionId).Distinct().Count() != answers.Count)
+            throw new ArgumentException("A reading question cannot be answered more than once.", nameof(answers));
+        if (answers.Any(item => !questionIds.Contains(item.QuestionId)))
+            throw new ArgumentException("An answer does not belong to the reading session.", nameof(answers));
+    }
 
     private static string PerformanceLevel(int wpm) => wpm switch
     {

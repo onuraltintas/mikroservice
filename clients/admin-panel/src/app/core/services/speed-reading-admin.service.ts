@@ -432,6 +432,14 @@ export interface SpeedReadingAssessmentTemplateUpdateRequest {
   exercises: SpeedReadingAssessmentExerciseInput[];
 }
 
+export interface SpeedReadingLevelDefinition {
+  level: number;
+  code: string;
+  displayName: string;
+  minimumWpm: number;
+  minimumComprehension: number;
+}
+
 export interface SpeedReadingVisualizationQuestion {
   id: string;
   questionText: string;
@@ -708,6 +716,7 @@ export interface SpeedReadingExercise {
   exerciseTypeName: string;
   configurationJson: string;
   targetAgeGroupConfigurationId: string | null;
+  isActive: boolean;
 }
 
 export interface SpeedReadingExerciseRequest {
@@ -717,6 +726,7 @@ export interface SpeedReadingExerciseRequest {
   exerciseTypeId: string;
   configurationJson: string;
   targetAgeGroupConfigurationId?: string | null;
+  isActive?: boolean;
 }
 
 export interface SpeedReadingReadingText {
@@ -1429,6 +1439,12 @@ export class SpeedReadingAdminService {
   getAssessmentTemplates() {
     return this.http.get<SpeedReadingAssessmentTemplate[]>(
       `${this.url}/admin/assessment-templates`
+    );
+  }
+
+  getAssessmentLevels() {
+    return this.http.get<SpeedReadingLevelDefinition[]>(
+      `${this.url}/admin/assessment-templates/levels`
     );
   }
 

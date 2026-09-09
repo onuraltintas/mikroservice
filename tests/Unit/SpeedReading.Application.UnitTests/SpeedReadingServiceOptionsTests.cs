@@ -515,13 +515,14 @@ public sealed class SpeedReadingServiceOptionsTests
         var exerciseSession = context.Model.GetEntityTypes()
             .Single(entity => entity.GetTableName() == "ExerciseSessions");
         exerciseSession.FindProperty("Status")!.GetColumnType().Should().Be("integer");
-        exerciseSession.FindProperty("PausedAt").Should().BeNull();
-        exerciseSession.FindProperty("TimeLimitSeconds").Should().BeNull();
-        exerciseSession.FindProperty("ProcessedActionsJson").Should().BeNull();
+        exerciseSession.FindProperty("PausedAt")!.GetColumnName().Should().Be("PausedAt");
+        exerciseSession.FindProperty("TimeLimitSeconds")!.GetColumnName().Should().Be("TimeLimitSeconds");
+        exerciseSession.FindProperty("ProcessedActionsJson")!.GetColumnName().Should().Be("ProcessedActionsJson");
 
-        exerciseResult.FindProperty("SessionId").Should().BeNull();
+        exerciseResult.FindProperty("SessionId")!.GetColumnName().Should().Be("SessionId");
+        exerciseResult.FindProperty("IsMeasured")!.GetColumnName().Should().Be("IsMeasured");
         exerciseResult.GetIndexes()
-            .Should().NotContain(index => index.Properties
+            .Should().Contain(index => index.Properties
                 .Select(property => property.Name)
                 .SequenceEqual(new[] { "SessionId" }));
 

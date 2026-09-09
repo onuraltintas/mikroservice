@@ -140,6 +140,7 @@ internal sealed class LegacyExercise : LegacyBaseEntity
     public int DifficultyLevel { get; set; }
     public Guid ExerciseTypeId { get; set; }
     public string ConfigurationJson { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
     public Guid? TargetAgeGroupConfigurationId { get; set; }
     public Guid CreatorId { get; set; }
 }
@@ -205,6 +206,9 @@ internal sealed class LegacyStudentExerciseResult : LegacyBaseEntity
     public Guid StudentId { get; set; }
     public Guid ExerciseId { get; set; }
     public Guid? SessionId { get; set; }
+    public bool IsMeasured { get; set; }
+    public bool IsAssessmentMode { get; set; }
+    public Guid? AssessmentAttemptId { get; set; }
     public Guid? ReadingTextId { get; set; }
     public int WordsRead { get; set; }
     public int TimeSpentSeconds { get; set; }
@@ -272,6 +276,7 @@ internal sealed class LegacyDailyExerciseLog : LegacyBaseEntity
     public Guid UserId { get; set; }
     public Guid StudentProgramProgressId { get; set; }
     public Guid ExerciseId { get; set; }
+    public Guid? SessionId { get; set; }
     public Guid ExerciseTypeId { get; set; }
     public int DayNumber { get; set; }
     public int WeekNumber { get; set; }

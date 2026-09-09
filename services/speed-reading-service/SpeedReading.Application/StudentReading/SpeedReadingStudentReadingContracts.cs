@@ -20,11 +20,11 @@ public sealed record StudentReadingQuestion(
     string OptionB,
     string OptionC,
     string OptionD,
-    string CorrectAnswer,
     int OrderIndex);
 
 public sealed record StudentReadingStart(
     Guid Id,
+    Guid SessionId,
     string Title,
     string Content,
     string Category,
@@ -33,6 +33,7 @@ public sealed record StudentReadingStart(
     IReadOnlyList<StudentReadingQuestion> Questions);
 
 public sealed record CompleteStudentReadingRequest(
+    Guid SessionId,
     int TimeSpentSeconds,
     decimal ComprehensionScore,
     IReadOnlyList<StudentReadingAnswer>? Answers);
@@ -89,7 +90,7 @@ public interface ISpeedReadingStudentReading
 {
     Task<IReadOnlyList<string>> GetCategoriesAsync(Guid userId, CancellationToken cancellationToken);
     Task<IReadOnlyList<StudentReadingTextSummary>> GetAvailableTextsAsync(Guid userId, string? category, int? minLevel, int? maxLevel, int? specificLevel, CancellationToken cancellationToken);
-    Task<StudentReadingStart?> StartAsync(Guid textId, CancellationToken cancellationToken);
+    Task<StudentReadingStart?> StartAsync(Guid userId, Guid textId, CancellationToken cancellationToken);
     Task<StudentReadingCompletion?> CompleteAsync(Guid userId, Guid textId, CompleteStudentReadingRequest request, CancellationToken cancellationToken);
     Task<IReadOnlyList<StudentReadingHistoryItem>> GetHistoryAsync(Guid userId, Guid? readingTextId, DateTime? dateFrom, DateTime? dateTo, string? category, CancellationToken cancellationToken);
     Task<StudentReadingSessionDetails?> GetSessionDetailsAsync(Guid userId, Guid sessionId, CancellationToken cancellationToken);

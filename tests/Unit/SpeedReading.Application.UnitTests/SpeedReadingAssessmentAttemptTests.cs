@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Domain.Assessment;
+using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Sessions;
 using SpeedReading.Infrastructure.Persistence;
 
@@ -134,12 +135,16 @@ public sealed class SpeedReadingAssessmentAttemptTests
             .FindProperty(nameof(ExerciseSession.AssessmentAttemptId)).Should().NotBeNull();
         context.Model.FindEntityType(typeof(ExerciseSessionResult))!
             .FindProperty(nameof(ExerciseSessionResult.AssessmentAttemptId)).Should().NotBeNull();
+        context.Model.FindEntityType(typeof(DailyExerciseLog))!
+            .FindProperty(nameof(DailyExerciseLog.SessionId)).Should().NotBeNull();
         context.Database.GetMigrations()
             .Should()
             .Contain("20260828130000_AddAssessmentMeasurementFoundation")
             .And.Contain("20260828140000_LinkAssessmentAttemptsToSessions")
             .And.Contain("20260828150000_PinAssessmentFormItems")
-            .And.Contain("20260906100000_AlignAssessmentAttemptExerciseVersion");
+            .And.Contain("20260906100000_AlignAssessmentAttemptExerciseVersion")
+            .And.Contain("20260908160000_AddStudentReadingAttempts")
+            .And.Contain("20260908170000_LinkDailyExerciseLogsToSessions");
     }
 
     [Fact]
@@ -180,6 +185,52 @@ public sealed class SpeedReadingAssessmentAttemptTests
             assessmentAttemptId: assessmentAttemptId);
 
         result.AssessmentAttemptId.Should().Be(assessmentAttemptId);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(100.01)]
+    public void Reading_session_rejects_comprehension_outside_percentage_bounds(decimal comprehensionRate)
+    {
+        var act = () => ReadingSession.Import(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            60,
+            200,
+            1,
+            2,
+            comprehensionRate,
+            160,
+            DateTime.UtcNow,
+            DateTime.UtcNow,
+            "test",
+            null,
+            null);
+
+        act.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void Reading_session_rejects_more_correct_answers_than_questions()
+    {
+        var act = () => ReadingSession.Import(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            60,
+            200,
+            3,
+            2,
+            100,
+            200,
+            DateTime.UtcNow,
+            DateTime.UtcNow,
+            "test",
+            null,
+            null);
+
+        act.Should().Throw<ArgumentOutOfRangeException>();
     }
 
     [Fact]

@@ -230,4 +230,13 @@ public static class SpeedReadingDailyProgressRules
 
         return (((cumulativeDay - 1) / 7) + 1, ((cumulativeDay - 1) % 7) + 1);
     }
+
+    public static IReadOnlyList<T> TakeUnique<T>(IReadOnlyList<T> candidates, int requestedCount)
+    {
+        ArgumentNullException.ThrowIfNull(candidates);
+        if (requestedCount <= 0 || candidates.Count == 0)
+            return [];
+
+        return candidates.Take(requestedCount).ToList();
+    }
 }

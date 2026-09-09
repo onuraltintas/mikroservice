@@ -18,16 +18,16 @@ Modern, responsive web application for speed reading training and comprehension 
 
 ## 📖 Overview
 
-The Speed Reading Platform frontend is built with **Angular 20** and **Angular Material 20**, providing an intuitive interface for students to improve their reading speed and teachers to manage assignments. Platform administration is centralized in the eduivme admin application.
+The Speed Reading Platform frontend is built with **Angular 21** and **Angular Material 21**, providing an interface for students to improve reading fluency and comprehension and for teachers to manage assignments. Platform administration is centralized in the eduivme admin application.
 
 ### Key Features
 
 - **Student Dashboard**: Track reading progress, complete exercises, view achievements
 - **Teacher Portal**: Create assignments, monitor student progress, generate reports
 - **Central Admin**: User management, content, reporting, communications and platform settings live in the eduivme admin application
-- **17 Exercise Types**: Including Schulte Table, RSVP, Visual Expansion, and more
+- **Multiple Exercise Engines**: Including Schulte Table, RSVP, Visual Expansion, comprehension, focus and vocabulary engines
 - **Gamification**: XP points, badges, daily streaks, leaderboards
-- **Reading Comprehension**: 200+ texts with Bloom's Taxonomy questions
+- **Reading Comprehension**: Admin-managed texts with Bloom's Taxonomy questions; the live count depends on the configured database
 - **Responsive Design**: Mobile-friendly interface with Angular Material
 - **Real-time Updates**: Progress tracking, notifications, announcements
 
@@ -57,7 +57,7 @@ src/
 │   ├── features/                # Feature modules (lazy-loaded)
 │   │   ├── student/             # Student learning interface
 │   │   │   ├── dashboard/       # Progress overview, daily goals
-│   │   │   ├── exercises/       # 17 exercise types
+│   │   │   ├── exercises/       # Universal exercise engines
 │   │   │   │   ├── schulte-table/
 │   │   │   │   ├── tachistoscope/
 │   │   │   │   ├── visual-expansion/
@@ -130,7 +130,7 @@ src/
 
 - **Node.js**: 18.x or higher
 - **npm**: 9.x or higher
-- **Angular CLI**: 20.x
+- **Angular CLI**: 21.x
 - **Backend API**: Running on `https://localhost:7264`
 
 ### Installation
@@ -212,8 +212,8 @@ never placed in the redirect URL.
 
 **Features**:
 - **Dashboard**: Personal progress (WPM, comprehension, XP, streak)
-- **Exercises**: 17 exercise types for speed reading improvement
-- **Reading Comprehension**: 200+ texts with questions (Bloom's Taxonomy)
+- **Exercises**: Universal exercise engines for speed, attention, visual span and comprehension
+- **Reading Comprehension**: Admin-managed texts with Bloom's Taxonomy questions
 - **RSVP Reader**: Rapid Serial Visual Presentation reader
 - **Progress Reports**: Personal analytics and growth charts
 
@@ -680,4 +680,4 @@ This project is licensed under the MIT License - see the [LICENSE](../../LICENSE
 
 ---
 
-**Built with ❤️ using Angular 20 and Angular Material**
+**Built with ❤️ using Angular 21 and Angular Material 21**

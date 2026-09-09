@@ -34,6 +34,7 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<ExerciseSessionAnswer> ExerciseSessionAnswers => Set<ExerciseSessionAnswer>();
     public DbSet<ExerciseSessionResult> ExerciseSessionResults => Set<ExerciseSessionResult>();
     public DbSet<ReadingSession> ReadingSessions => Set<ReadingSession>();
+    public DbSet<StudentReadingAttempt> StudentReadingAttempts => Set<StudentReadingAttempt>();
     public DbSet<Assignment> Assignments => Set<Assignment>();
     public DbSet<StudentAssignment> StudentAssignments => Set<StudentAssignment>();
     public DbSet<AgeGroupConfiguration> AgeGroupConfigurations => Set<AgeGroupConfiguration>();
@@ -107,6 +108,7 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<ExerciseSessionAnswer>());
         ConfigureEntity(modelBuilder.Entity<ExerciseSessionResult>());
         ConfigureEntity(modelBuilder.Entity<ReadingSession>());
+        ConfigureEntity(modelBuilder.Entity<StudentReadingAttempt>());
         modelBuilder.Entity<ReadingSession>(entity =>
         {
             entity.ToTable("reading_sessions");
@@ -121,6 +123,19 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.CompletedAt).HasColumnName("completed_at");
             entity.HasIndex(item => item.ReadingTextId);
             entity.HasIndex(item => new { item.UserId, item.CompletedAt });
+            entity.HasOne<ReadingText>()
+                .WithMany()
+                .HasForeignKey(item => item.ReadingTextId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<StudentReadingAttempt>(entity =>
+        {
+            entity.ToTable("student_reading_attempts");
+            entity.Property(item => item.UserId).HasColumnName("user_id").IsRequired();
+            entity.Property(item => item.ReadingTextId).HasColumnName("reading_text_id").IsRequired();
+            entity.Property(item => item.StartedAt).HasColumnName("started_at").IsRequired();
+            entity.Property(item => item.CompletedAt).HasColumnName("completed_at");
+            entity.HasIndex(item => new { item.UserId, item.ReadingTextId, item.StartedAt });
             entity.HasOne<ReadingText>()
                 .WithMany()
                 .HasForeignKey(item => item.ReadingTextId)
@@ -1079,6 +1094,10 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.ProcessedActionsJson).HasColumnType("jsonb").IsRequired();
             entity.HasIndex(item => new { item.StudentId, item.Status });
             entity.HasIndex(item => new { item.StudentId, item.ExerciseId, item.Status });
+            entity.HasIndex(item => new { item.AssessmentAttemptId, item.ExerciseId })
+                .HasDatabaseName("ux_exercise_sessions_assessment_exercise")
+                .IsUnique()
+                .HasFilter("assessment_attempt_id IS NOT NULL");
             entity.HasOne<Exercise>()
                 .WithMany()
                 .HasForeignKey(item => item.ExerciseId)
@@ -1242,6 +1261,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.ResultDataJson).HasColumnType("jsonb").IsRequired();
             entity.Property(item => item.SuccessRate).HasPrecision(5, 2);
             entity.Property(item => item.IsMeasured).HasColumnName("is_measured");
+            entity.Property(item => item.SessionId).HasColumnName("session_id");
             entity.Property(item => item.AverageWPM).HasPrecision(10, 2);
             entity.Property(item => item.AverageComprehension).HasPrecision(5, 2);
             entity.Property(item => item.AverageResponseTimeMs).HasPrecision(10, 2);
@@ -1257,6 +1277,20 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.HasIndex(item => new { item.UserId, item.CompletedDate });
             entity.HasIndex(item => new { item.StudentProgramProgressId, item.WeekNumber, item.DayNumber });
             entity.HasIndex(item => item.ExerciseId);
+            entity.HasIndex(item => new { item.UserId, item.SessionId })
+                .HasDatabaseName("ux_daily_exercise_logs_user_session")
+                .IsUnique()
+                .HasFilter("session_id IS NOT NULL");
+            entity.HasIndex(item => new
+                {
+                    item.StudentProgramProgressId,
+                    item.WeekNumber,
+                    item.DayNumber,
+                    item.ExerciseId
+                })
+                .HasDatabaseName("ux_daily_exercise_logs_progress_slot")
+                .IsUnique()
+                .HasFilter("session_id IS NOT NULL");
             entity.HasOne<StudentProgramProgress>()
                 .WithMany()
                 .HasForeignKey(item => item.StudentProgramProgressId)

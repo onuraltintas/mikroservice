@@ -121,6 +121,7 @@ internal sealed class LegacySpeedReadingAdaptiveLearning(SpeedReadingDbContext d
             .AsNoTracking()
             .Where(item => item.StudentId == userId
                 && !item.IsDeleted
+                && item.IsMeasured
                 && item.ReadingTextId.HasValue
                 && readingTextIds.Contains(item.ReadingTextId.Value))
             .Select(item => item.ReadingTextId!.Value)
@@ -240,7 +241,7 @@ internal sealed class LegacySpeedReadingAdaptiveLearning(SpeedReadingDbContext d
             .FirstOrDefaultAsync(item => item.Id == userId && !item.IsDeleted, cancellationToken);
         var exerciseResults = await db.StudentExerciseResults
             .AsNoTracking()
-            .Where(item => item.StudentId == userId && !item.IsDeleted)
+            .Where(item => item.StudentId == userId && !item.IsDeleted && item.IsMeasured)
             .OrderByDescending(item => item.CompletedAt)
             .ToListAsync(cancellationToken);
         var readingSessions = await db.ReadingSessions

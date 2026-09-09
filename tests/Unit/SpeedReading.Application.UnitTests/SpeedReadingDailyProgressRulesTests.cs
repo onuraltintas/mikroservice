@@ -77,4 +77,11 @@ public sealed class SpeedReadingDailyProgressRulesTests
         SpeedReadingDailyProgressRules.GetWeekAndDay(cumulativeDay)
             .Should().Be((expectedWeek, expectedDay));
     }
+
+    [Fact]
+    public void Never_repeats_the_same_exercise_to_fill_a_daily_slot()
+    {
+        SpeedReadingDailyProgressRules.TakeUnique(["exercise-1", "exercise-2"], 4)
+            .Should().Equal("exercise-1", "exercise-2");
+    }
 }

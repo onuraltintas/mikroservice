@@ -79,7 +79,7 @@ public sealed class AssessmentPhasePlanCalculatorTests
         var postTraining = CreateAttempt(
             AssessmentAttemptPhase.PostTraining,
             AssessmentAttemptStatus.Completed,
-            DateTime.UtcNow.AddDays(-1),
+            DateTime.UtcNow.AddDays(-10),
             "tr-posttraining-v1");
 
         var result = AssessmentPhasePlanCalculator.Calculate([firstBaseline, latestBaseline, postTraining]);
@@ -92,6 +92,39 @@ public sealed class AssessmentPhasePlanCalculatorTests
         result.Phases.Single(item => item.Phase == AssessmentAttemptPhase.Transfer)
             .Status.Should().Be(AssessmentPhasePlanStatus.Locked);
         result.NextPhase.Should().Be(AssessmentAttemptPhase.Retention);
+    }
+
+    [Fact]
+    public void Keeps_retention_locked_until_the_minimum_wait_window_has_elapsed()
+    {
+        var now = new DateTime(2026, 9, 8, 12, 0, 0, DateTimeKind.Utc);
+        var postTraining = CreateAttempt(
+            AssessmentAttemptPhase.PostTraining,
+            AssessmentAttemptStatus.Completed,
+            now.AddDays(-1),
+            "tr-posttraining-v1");
+
+        var result = AssessmentPhasePlanCalculator.Calculate([postTraining], now);
+
+        var retention = result.Phases.Single(item => item.Phase == AssessmentAttemptPhase.Retention);
+        retention.Status.Should().Be(AssessmentPhasePlanStatus.Locked);
+        retention.AvailableAt.Should().Be(postTraining.CompletedAt!.Value.AddDays(7));
+        result.NextPhase.Should().Be(AssessmentAttemptPhase.Baseline);
+    }
+
+    [Fact]
+    public void Exposes_the_same_retention_wait_window_used_by_the_phase_plan()
+    {
+        AssessmentPhaseTimingRules.MinimumWait(AssessmentAttemptPhase.Retention)
+            .Should().Be(TimeSpan.FromDays(7));
+        AssessmentPhaseTimingRules.MinimumWait(AssessmentAttemptPhase.PostTraining)
+            .Should().Be(TimeSpan.Zero);
+
+        var completedAt = new DateTime(2026, 9, 1, 12, 0, 0, DateTimeKind.Utc);
+        AssessmentPhaseTimingRules.AvailableAt(
+                AssessmentAttemptPhase.Retention,
+                completedAt)
+            .Should().Be(completedAt.AddDays(7));
     }
 
     private static AssessmentPhasePlanAttemptInput CreateAttempt(
