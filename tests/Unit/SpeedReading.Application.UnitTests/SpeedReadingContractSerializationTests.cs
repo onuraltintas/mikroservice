@@ -135,6 +135,18 @@ public sealed class SpeedReadingContractSerializationTests
     }
 
     [Fact]
+    public void Student_payload_hides_pending_visual_expansion_stimuli()
+    {
+        using var document = JsonDocument.Parse(
+            "{\"visualExpansionExpectedStimuli\":[\"A\",\"7\"],\"visualExpansionRound\":2}");
+
+        var sanitized = SpeedReadingContentSecurity.SanitizeStudentJson(document.RootElement).GetRawText();
+
+        sanitized.Should().Contain("\"visualExpansionRound\":2");
+        sanitized.ToLowerInvariant().Should().NotContain("expectedstimuli");
+    }
+
+    [Fact]
     public void Focus_assessment_payload_hides_complete_sequences()
     {
         using var document = JsonDocument.Parse(
