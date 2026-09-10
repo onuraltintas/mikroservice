@@ -73,6 +73,9 @@ export class VisualExpansionEngine implements BaseEngine {
         timestamp: string;
     }> = [];
     private stimulusShownTime = 0;
+    private serverAuthoritative = false;
+    private awaitingServer = false;
+    private pendingAnswers: string[] = [];
 
     // Stimulus State
     currentStimuli: Array<{ content: string; x: number; y: number }> = [];
@@ -87,6 +90,7 @@ export class VisualExpansionEngine implements BaseEngine {
         // Backend'den gelen yaş ve zorluk bazlı parametreleri al
         // Backend hem PascalCase hem camelCase gönderebilir
         const backendConfig = config as any;
+        this.serverAuthoritative = backendConfig.serverAuthoritative === true;
 
         // Başlangıç açısı (backend'den veya varsayılan)
         this.currentDegrees = backendConfig.StartDegrees
@@ -164,7 +168,12 @@ export class VisualExpansionEngine implements BaseEngine {
         const interval = this.config.timing?.intervalMs || 1500;
         this.stimulusInterval = setTimeout(() => {
             if (this.state.isRunning && !this.state.isPaused) {
-                this.showStimulus();
+                if (this.serverAuthoritative) {
+                    this.awaitingServer = true;
+                    this.callbacks.onAction({ action: 'visual_expansion_present', timestamp: new Date() });
+                } else {
+                    this.showStimulus();
+                }
             }
         }, interval);
     }
@@ -201,6 +210,18 @@ export class VisualExpansionEngine implements BaseEngine {
      */
     handleInput(input: { answers?: string[] }): void {
         if (!this.isWaitingForInput || !input.answers) return;
+
+        if (this.serverAuthoritative) {
+            this.isWaitingForInput = false;
+            this.awaitingServer = true;
+            this.pendingAnswers = input.answers.map(answer => answer.trim());
+            this.callbacks.onAction({
+                action: 'visual_expansion_answer',
+                answers: this.pendingAnswers,
+                timestamp: new Date()
+            });
+            return;
+        }
 
         const userAnswers = input.answers.map(a => a.toUpperCase().trim());
         const correctAnswers = this.lastShownStimuli.map(s => s.toUpperCase());
@@ -261,6 +282,73 @@ export class VisualExpansionEngine implements BaseEngine {
         this.callbacks.onStateChange({ ...this.state });
 
         this.scheduleNextStimulus();
+    }
+
+    reconcileServerResponse(action: any, response: any): void {
+        const actionName = String(action?.action || '').toLowerCase();
+        this.awaitingServer = false;
+        if (response?.isValid === false) {
+            if (actionName === 'visual_expansion_answer') {
+                this.isWaitingForInput = false;
+                this.scheduleNextStimulus();
+            }
+            this.callbacks.onError(response?.message || 'Görsel genişleme işlemi doğrulanamadı.');
+            return;
+        }
+
+        if (actionName === 'visual_expansion_present') {
+            const stimuli = response?.feedbackData?.stimuli;
+            if (!Array.isArray(stimuli) || stimuli.length < 2) {
+                this.callbacks.onError('Görsel genişleme uyaranı sunucudan eksik döndü.');
+                return;
+            }
+            this.currentStimuli = this.positionStimuli(stimuli.map(String));
+            this.isStimulusVisible = true;
+            this.callbacks.onStateChange({ ...this.state });
+            this.hideTimeout = setTimeout(
+                () => this.hideStimulus(),
+                Number(response?.feedbackData?.displayDurationMs) || this.config.timing?.durationMs || 250);
+            return;
+        }
+
+        if (actionName === 'visual_expansion_answer') {
+            const isCorrect = response?.isCorrect === true;
+            const correctAnswers = this.lastShownStimuli.map(value => value.toUpperCase());
+            const responseTimeMs = Date.now() - this.stimulusShownTime;
+            this.totalAnswers++;
+            if (isCorrect) this.correctAnswers++; else this.state.errors++;
+            this.roundResults.push({
+                round: this.state.currentStep + 1,
+                degrees: this.currentDegrees,
+                correct: isCorrect,
+                leftChar: correctAnswers[0] || '',
+                rightChar: correctAnswers[1] || '',
+                userLeftAnswer: this.pendingAnswers[0] || '',
+                userRightAnswer: this.pendingAnswers[1] || '',
+                responseTimeMs,
+                timestamp: new Date().toISOString()
+            });
+            this.state.currentStep++;
+            this.state.accuracy = Math.round((this.correctAnswers / this.totalAnswers) * 100);
+            this.callbacks.onStepComplete(this.state.currentStep, isCorrect);
+            this.callbacks.onStateChange({ ...this.state });
+            this.scheduleNextStimulus();
+        }
+    }
+
+    private positionStimuli(contents: string[]): Array<{ content: string; x: number; y: number }> {
+        const spacingPx = ScreenHelper.degreesToPixels(this.currentDegrees);
+        const x = Math.max(5, Math.min(45, spacingPx / window.innerWidth * 50));
+        const y = Math.max(5, Math.min(45, spacingPx / window.innerHeight * 50));
+        const pattern = this.config.expansion?.pattern || 'horizontal';
+        if (pattern === 'vertical') {
+            return contents.map((content, index) => ({ content, x: 50, y: index === 0 ? 50 - y : 50 + y }));
+        }
+        if (pattern === 'radial') {
+            const positions = [[50 - x, 50 - y], [50 + x, 50 - y], [50 - x, 50 + y], [50 + x, 50 + y]];
+            return contents.map((content, index) => ({ content, x: positions[index][0], y: positions[index][1] }));
+        }
+        return contents.map((content, index) => ({ content, x: index === 0 ? 50 - x : 50 + x, y: 50 }));
     }
 
     /**

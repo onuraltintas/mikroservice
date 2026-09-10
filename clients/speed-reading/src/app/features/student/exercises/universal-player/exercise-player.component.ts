@@ -782,7 +782,6 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           // Validation GEREKMİYEN egzersizler (pasif gözlem/okuma)
           const skipValidation = [
             'motion_path',             // Saccade/Fixation - gözlem bazlı
-            'visual_expansion',        // Görsel genişleme - gözlem bazlı
             'text_fade',               // Metin solma - pasif okuma
             'regression_reduction',    // Regresyon - pasif okuma
             'subvocalization_reduction', // Alt ses - pasif okuma
@@ -819,6 +818,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             : engineType === 'visualization'
               ? (response: ValidationResponse) =>
                 (this.engine as VisualizationEngine).applyServerResponse(response)
+              : engineType === 'visual_expansion'
+                ? (response: ValidationResponse) =>
+                  (this.engine as VisualExpansionEngine).reconcileServerResponse(action, response)
               : undefined;
           void this.enqueueAction(action as ActionData, onResponse).catch(() => undefined);
         }

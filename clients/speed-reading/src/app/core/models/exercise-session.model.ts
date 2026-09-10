@@ -37,6 +37,7 @@ export interface ActionData {
   row?: number;
   col?: number;
   answer?: string;  // For Tachistoscope, SpeedReading
+  answers?: string[]; // Server-validated multi-answer rounds
   questionId?: string;  // For SpeedReading
   isTimeout?: boolean;  // For timed comprehension questions
   responseTime?: number;  // Response time in milliseconds

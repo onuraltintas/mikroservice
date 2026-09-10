@@ -251,6 +251,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             "finish_reading" => FinishReading(session, state, now),
             "focus_start" => StartFocus(session, state, now),
             "focus_step" => AdvanceFocus(session, state, request, now),
+            "visual_expansion_present" => PresentVisualExpansion(session, state, now),
+            "visual_expansion_answer" => AnswerVisualExpansion(session, state, request, now),
             "answer_question" => AnswerQuestion(session, state, request),
             "position_match" => ValidateFocusMatch(session, state, request, "position", now),
             "word_match" => ValidateFocusMatch(session, state, request, "word", now),
@@ -305,6 +307,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             throw new InvalidOperationException("All grid targets must be completed before the session can be completed.");
         if (IsFocusExercise(state) && !state.FocusCompleted)
             throw new InvalidOperationException("The focus exercise must be completed through its validated action flow.");
+        if (IsVisualExpansionExercise(state.ExerciseTypeName)
+            && state.VisualExpansionRound < state.TotalSteps)
+            throw new InvalidOperationException("All visual expansion rounds must be validated before completion.");
 
         var answers = ResolveAnswers(session, state, request.QuestionAnswers);
         if (state.Questions.Count > 0 && answers.Count != state.Questions.Count)
@@ -581,6 +586,14 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             TimeLimitSeconds = ReadPositiveInt(config, "timeLimitSeconds")
         };
         var engineConfig = ReadObject(config, "engineConfig");
+        if (IsVisualExpansionExercise(exerciseTypeName))
+        {
+            var expansion = ReadObject(engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config, "expansion");
+            var timing = ReadObject(engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config, "timing");
+            state.VisualExpansionStimulusType = ReadString(expansion, "stimulusType") ?? "letter";
+            state.VisualExpansionPattern = ReadString(expansion, "pattern") ?? "horizontal";
+            state.VisualExpansionDisplayDurationMs = Math.Clamp(ReadPositiveInt(timing, "durationMs") ?? 250, 100, 5_000);
+        }
         if (IsFocusExercise(exerciseTypeName))
         {
             var focusConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
@@ -743,6 +756,72 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             nextStep: session.CurrentStep,
             isCompleted: false,
             isCorrect: null);
+    }
+
+    private static ExerciseActionValidationResponse PresentVisualExpansion(
+        ExerciseSession session,
+        SessionState state,
+        DateTime now)
+    {
+        if (!IsVisualExpansionExercise(state.ExerciseTypeName))
+            return Invalid("Visual expansion presentation is not valid for this exercise.");
+        if (state.VisualExpansionExpectedStimuli.Length > 0)
+            return Invalid("The current visual expansion round is still awaiting an answer.");
+        if (state.VisualExpansionRound >= state.TotalSteps)
+            return Invalid("All visual expansion rounds are complete.");
+
+        state.VisualExpansionExpectedStimuli = VisualExpansionRoundRules.CreateStimuli(
+            session.Id.GetHashCode(),
+            state.VisualExpansionRound,
+            state.VisualExpansionStimulusType,
+            state.VisualExpansionPattern.Equals("radial", StringComparison.OrdinalIgnoreCase) ? 4 : 2).ToArray();
+        state.VisualExpansionPresentedAt = now.ToUniversalTime();
+        state.VisualExpansionPausedSecondsAtPresentation = session.TotalPausedSeconds;
+        var feedback = JsonSerializer.SerializeToElement(new
+        {
+            round = state.VisualExpansionRound,
+            stimuli = state.VisualExpansionExpectedStimuli,
+            displayDurationMs = state.VisualExpansionDisplayDurationMs
+        }, JsonOptions);
+        return Valid("Görsel genişleme uyaranı hazır.", state.VisualExpansionRound, feedbackData: feedback);
+    }
+
+    private static ExerciseActionValidationResponse AnswerVisualExpansion(
+        ExerciseSession session,
+        SessionState state,
+        ExerciseActionRequest request,
+        DateTime now)
+    {
+        if (!IsVisualExpansionExercise(state.ExerciseTypeName)
+            || state.VisualExpansionExpectedStimuli.Length == 0
+            || !state.VisualExpansionPresentedAt.HasValue)
+            return Invalid("No visual expansion round is awaiting an answer.");
+
+        var elapsedMs = (int)Math.Round(Math.Max(0,
+            (now.ToUniversalTime() - state.VisualExpansionPresentedAt.Value).TotalMilliseconds
+            - Math.Max(0, session.TotalPausedSeconds - state.VisualExpansionPausedSecondsAtPresentation) * 1000d));
+        var result = VisualExpansionRoundRules.Evaluate(
+            state.VisualExpansionExpectedStimuli,
+            request.Answers ?? [],
+            elapsedMs,
+            state.VisualExpansionDisplayDurationMs,
+            state.VisualExpansionDisplayDurationMs + 5_000);
+        if (!result.IsAccepted)
+        {
+            state.VisualExpansionExpectedStimuli = [];
+            state.VisualExpansionPresentedAt = null;
+            return Invalid("Visual expansion answer arrived outside its response window.");
+        }
+
+        session.Advance(result.IsCorrect);
+        state.VisualExpansionRound++;
+        state.VisualExpansionExpectedStimuli = [];
+        state.VisualExpansionPresentedAt = null;
+        return Valid(
+            session.AssessmentAttemptId.HasValue ? "Yanıt kaydedildi." : result.IsCorrect ? "Doğru." : "Yanlış.",
+            state.VisualExpansionRound,
+            isCompleted: state.VisualExpansionRound >= state.TotalSteps,
+            isCorrect: session.AssessmentAttemptId.HasValue ? null : result.IsCorrect);
     }
 
     private static ExerciseActionValidationResponse AdvanceFocus(
@@ -1125,6 +1204,11 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         exerciseTypeName.Contains("focus", StringComparison.OrdinalIgnoreCase)
         || exerciseTypeName.Contains("attention", StringComparison.OrdinalIgnoreCase)
         || exerciseTypeName.Contains("fixation", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsVisualExpansionExercise(string exerciseTypeName) =>
+        exerciseTypeName.Contains("visualexpansion", StringComparison.OrdinalIgnoreCase)
+        || exerciseTypeName.Contains("visual expansion", StringComparison.OrdinalIgnoreCase)
+        || exerciseTypeName.Contains("görsel genişleme", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsVisualizationExercise(string exerciseTypeName) =>
         exerciseTypeName.Contains("visualization", StringComparison.OrdinalIgnoreCase)
@@ -1608,6 +1692,13 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public int? FocusLastWordIndex { get; set; }
         public List<FocusResponse> FocusResponses { get; set; } = [];
         public bool FocusCompleted { get; set; }
+        public string VisualExpansionStimulusType { get; set; } = "letter";
+        public string VisualExpansionPattern { get; set; } = "horizontal";
+        public int VisualExpansionDisplayDurationMs { get; set; } = 250;
+        public int VisualExpansionRound { get; set; }
+        public string[] VisualExpansionExpectedStimuli { get; set; } = [];
+        public DateTime? VisualExpansionPresentedAt { get; set; }
+        public int VisualExpansionPausedSecondsAtPresentation { get; set; }
         public List<SessionQuestion> Questions { get; set; } = [];
         public List<SessionAnswer> Answers { get; set; } = [];
         public List<VisualizationSceneState> VisualizationScenes { get; set; } = [];
