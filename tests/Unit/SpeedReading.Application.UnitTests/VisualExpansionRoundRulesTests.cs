@@ -5,6 +5,28 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class VisualExpansionRoundRulesTests
 {
+    [Theory]
+    [InlineData("letter")]
+    [InlineData("number")]
+    [InlineData("symbol")]
+    public void Server_stimuli_are_deterministic_and_distinct(string stimulusType)
+    {
+        var first = VisualExpansionRoundRules.CreateStimuli(42, 3, stimulusType, 2);
+        var retry = VisualExpansionRoundRules.CreateStimuli(42, 3, stimulusType, 2);
+
+        first.Should().Equal(retry);
+        first.Should().HaveCount(2).And.OnlyHaveUniqueItems();
+        first.Should().OnlyContain(item => !string.IsNullOrWhiteSpace(item));
+    }
+
+    [Fact]
+    public void Unsupported_stimulus_type_is_rejected()
+    {
+        var act = () => VisualExpansionRoundRules.CreateStimuli(42, 0, "html", 2);
+
+        act.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
     [Fact]
     public void Answers_are_compared_without_case_or_surrounding_whitespace()
     {
