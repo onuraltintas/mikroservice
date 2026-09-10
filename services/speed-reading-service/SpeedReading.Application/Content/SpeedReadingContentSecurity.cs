@@ -41,6 +41,8 @@ public static class SpeedReadingContentSecurity
         "position_target_indices",
         "wordTargetIndices",
         "word_target_indices",
+        "visualExpansionExpectedStimuli",
+        "visual_expansion_expected_stimuli",
         "isMiss",
         "is_miss"
     };
