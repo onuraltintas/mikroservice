@@ -155,6 +155,8 @@ public static class DependencyInjection
             services.AddScoped<ISpeedReadingAgeGroups, LegacySpeedReadingAgeGroups>();
             services.AddScoped<ISpeedReadingAssessment, LegacySpeedReadingAssessment>();
             services.AddScoped<ISpeedReadingLevelCatalog, DefaultSpeedReadingLevelCatalog>();
+            services.AddScoped<ISpeedReadingCalibrationAnalytics, UnavailableSpeedReadingCalibrationAnalytics>();
+            services.AddScoped<ISpeedReadingStudyEnrollments, UnavailableSpeedReadingStudyEnrollments>();
             services.AddScoped<ISpeedReadingReview, LegacySpeedReadingReview>();
             services.AddScoped<ISpeedReadingSeriesAccess, LegacySpeedReadingSeriesAccess>();
             services.AddScoped<ISpeedReadingStudentReading, LegacySpeedReadingStudentReading>();
@@ -179,6 +181,8 @@ public static class DependencyInjection
             services.AddScoped<ISpeedReadingStudentProgram, OwnedSpeedReadingStudentProgram>();
             services.AddScoped<ISpeedReadingAssessment, OwnedSpeedReadingAssessment>();
             services.AddScoped<ISpeedReadingLevelCatalog, OwnedSpeedReadingLevelCatalog>();
+            services.AddScoped<ISpeedReadingCalibrationAnalytics, OwnedSpeedReadingCalibrationAnalytics>();
+            services.AddScoped<ISpeedReadingStudyEnrollments, OwnedSpeedReadingStudyEnrollments>();
             services.AddScoped<ISpeedReadingCatalogAdminWriter, OwnedSpeedReadingCatalogAdminWriter>();
             services.AddScoped<ISpeedReadingContentAdminWriter, OwnedSpeedReadingContentAdminWriter>();
             services.AddScoped<ILegacySpeedReadingLearningPaths, OwnedSpeedReadingLearningPaths>();

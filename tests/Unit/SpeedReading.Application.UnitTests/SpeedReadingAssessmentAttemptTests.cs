@@ -149,6 +149,8 @@ public sealed class SpeedReadingAssessmentAttemptTests
             .And.Contain("20260908170000_LinkDailyExerciseLogsToSessions");
         context.Database.GetMigrations()
             .Should().Contain("20260911100000_AddVersionedAssessmentLevelCatalogs");
+        context.Database.GetMigrations()
+            .Should().Contain("20260911110000_AddAssessmentStudyEnrollments");
     }
 
     [Fact]

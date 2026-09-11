@@ -102,6 +102,11 @@ internal sealed class OwnedSpeedReadingAssessment(
         }
 
         var activeLevelCatalog = await levelCatalog.GetActiveAsync(cancellationToken);
+        var studyEnrollment = await db.AssessmentStudyEnrollments
+            .AsNoTracking()
+            .Where(item => item.StudentId == userId && item.IsActive)
+            .OrderByDescending(item => item.EnrolledAt)
+            .FirstOrDefaultAsync(cancellationToken);
         var attempt = AssessmentAttempt.Start(
             Guid.NewGuid(),
             userId,
@@ -112,7 +117,10 @@ internal sealed class OwnedSpeedReadingAssessment(
             ServerAssessmentExerciseCount,
             now,
             userId.ToString(),
-            activeLevelCatalog.Version);
+            activeLevelCatalog.Version,
+            studyEnrollment?.StudyCode,
+            studyEnrollment?.ProtocolVersion,
+            studyEnrollment?.CohortCode);
         var formItems = await BuildPinnedFormItemsAsync(
             attempt.Id,
             ServerAssessmentExerciseCount,
@@ -162,6 +170,9 @@ internal sealed class OwnedSpeedReadingAssessment(
             attempt.Status,
             attempt.FormVersion,
             attempt.LevelCatalogVersion,
+            attempt.StudyCode,
+            attempt.StudyProtocolVersion,
+            attempt.StudyCohortCode,
             attempt.Language,
             attempt.ExpectedExerciseCount,
             completedCounts.GetValueOrDefault(attempt.Id),
@@ -749,6 +760,9 @@ internal sealed class OwnedSpeedReadingAssessment(
             attempt.Status,
             attempt.FormVersion,
             attempt.LevelCatalogVersion,
+            attempt.StudyCode,
+            attempt.StudyProtocolVersion,
+            attempt.StudyCohortCode,
             attempt.Language,
             attempt.ExpectedExerciseCount,
             completedExerciseCount,

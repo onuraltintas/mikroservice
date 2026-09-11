@@ -14,7 +14,9 @@ namespace SpeedReading.API.Controllers;
 [HasPermission(PlatformPermissions.SpeedReading.SettingsManage)]
 public sealed class AssessmentAdminController(
     ISpeedReadingAssessment assessment,
-    ISpeedReadingLevelCatalog levelCatalog) : ControllerBase
+    ISpeedReadingLevelCatalog levelCatalog,
+    ISpeedReadingCalibrationAnalytics calibrationAnalytics,
+    ISpeedReadingStudyEnrollments studyEnrollments) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken = default) =>
@@ -77,6 +79,37 @@ public sealed class AssessmentAdminController(
 
     [HttpGet("measurement-capabilities")]
     public IActionResult GetMeasurementCapabilities() => Ok(SpeedReadingMeasurementCapabilities.Definitions);
+
+    [HttpGet("calibration")]
+    public async Task<IActionResult> GetCalibration(CancellationToken cancellationToken = default) =>
+        Ok(await calibrationAnalytics.GetAsync(cancellationToken));
+
+    [HttpGet("study-enrollments")]
+    public async Task<IActionResult> GetStudyEnrollments(CancellationToken cancellationToken = default) =>
+        Ok(await studyEnrollments.GetAllAsync(cancellationToken));
+
+    [HttpPost("study-enrollments")]
+    public async Task<IActionResult> CreateStudyEnrollment(
+        [FromBody] CreateSpeedReadingStudyEnrollmentRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        try
+        {
+            return Ok(await studyEnrollments.CreateAsync(userId, request, cancellationToken));
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
+    [HttpPost("study-enrollments/{id:guid}/withdraw")]
+    public async Task<IActionResult> WithdrawStudyEnrollment(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        return await studyEnrollments.WithdrawAsync(id, userId, cancellationToken) ? NoContent() : NotFound();
+    }
 
     [HttpGet("age-group/{ageGroupId:guid}")]
     public async Task<IActionResult> GetByAgeGroup(Guid ageGroupId, CancellationToken cancellationToken = default)

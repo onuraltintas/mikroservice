@@ -8,10 +8,12 @@ import {
   SpeedReadingAgeGroupRequest,
   SpeedReadingAssessmentExerciseInput,
   SpeedReadingAssessmentTemplate,
+  SpeedReadingCalibrationReport,
   SpeedReadingExercise,
-  SpeedReadingLevelDefinition,
   SpeedReadingLevelCatalog,
-  SpeedReadingMeasurementCapability
+  SpeedReadingLevelDefinition,
+  SpeedReadingMeasurementCapability,
+  SpeedReadingStudyEnrollment
 } from '../../../core/services/speed-reading-admin.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 
@@ -122,6 +124,17 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
               <tr><td><strong>{{ capability.displayName }}</strong><div class="muted">{{ capability.code }}</div></td><td>{{ capability.measurementMode }}</td><td>{{ capability.isAssessmentEligible ? 'Uygun' : 'NotMeasured' }}</td><td>{{ capability.evidence }}</td></tr>
             } @empty { <tr><td colspan="4" class="empty">Ölçüm yetenekleri yüklenemedi.</td></tr> }
           </tbody></table></div></div>
+          <div class="data-card"><h3 class="mb-1 font-medium text-gray-900 dark:text-white">Kalibrasyon ve normlama kanıtı</h3><p class="muted mb-3">Kimlik içermeyen faz, katalog ve yaş grubu segmentleri. En az {{ calibration()?.minimumPublishableSampleSize || 30 }} tamamlanmış ölçüm olmadan eşik yayına hazır sayılmaz.</p>
+            @if (calibration()?.dataAvailable === false) {<p class="empty">{{ calibration()?.unavailableReason }}</p>}
+            <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Faz</th><th>Katalog</th><th>Yaş grubu</th><th>N</th><th>WPM ort./medyan</th><th>SS</th><th>Anlama ort./medyan</th><th>Kanıt</th></tr></thead><tbody>
+              @for (segment of calibration()?.segments || []; track segment.phase + segment.levelCatalogVersion + segment.ageGroup + segment.cohortCode) {<tr><td>{{ assessmentPhaseName(segment.phase) }}</td><td>{{ segment.levelCatalogVersion }}<div class="muted">{{ segment.studyCode || 'Rutin' }}{{ segment.cohortCode ? ' · ' + segment.cohortCode : '' }}</div></td><td>{{ segment.ageGroup }}</td><td>{{ segment.sampleSize }}</td><td>{{ segment.meanWpm }} / {{ segment.medianWpm }}</td><td>{{ segment.standardDeviationWpm }}</td><td>%{{ segment.meanComprehension }} / %{{ segment.medianComprehension }}</td><td>{{ segment.isPublishable ? 'Yayına hazır örneklem' : 'Pilot kanıtı' }}</td></tr>}
+              @empty {<tr><td colspan="8" class="empty">Henüz tamamlanmış, kalibrasyona uygun değerlendirme yok.</td></tr>}
+            </tbody></table></div>
+          </div>
+          <div class="data-card space-y-3"><div class="flex items-center justify-between gap-3"><div><h3 class="font-medium text-gray-900 dark:text-white">Pilot/RCT katılımcı atamaları</h3><p class="muted">Onamı kaydedilmiş öğrenciyi protokol ve kohorta bağlar. Öğrenci istemcisi bu alanları değiştiremez.</p></div><button type="button" (click)="studyEditing.set(true)" class="primary">Katılımcı ekle</button></div>
+            @if (studyEditing()) {<form (ngSubmit)="saveStudyEnrollment()" class="form-card"><div class="form-grid"><label>Öğrenci ID<input [(ngModel)]="studyDraft.studentId" name="studyStudent" required /></label><label>Çalışma kodu<input [(ngModel)]="studyDraft.studyCode" name="studyCode" required maxlength="100" /></label><label>Protokol sürümü<input [(ngModel)]="studyDraft.protocolVersion" name="studyProtocol" required maxlength="100" /></label><label>Kohort<input [(ngModel)]="studyDraft.cohortCode" name="studyCohort" required maxlength="100" /></label><label>Onam zamanı<input type="datetime-local" [(ngModel)]="studyDraft.consentRecordedAt" name="studyConsent" required /></label></div><div class="form-actions"><button type="button" (click)="studyEditing.set(false)" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form>}
+            <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Çalışma</th><th>Protokol</th><th>Kohort</th><th>Öğrenci ID</th><th>Onam</th><th>Durum</th><th></th></tr></thead><tbody>@for (enrollment of studyEnrollments(); track enrollment.id) {<tr><td>{{ enrollment.studyCode }}</td><td>{{ enrollment.protocolVersion }}</td><td>{{ enrollment.cohortCode }}</td><td>{{ enrollment.studentId }}</td><td>{{ enrollment.consentRecordedAt | date:'short' }}</td><td>{{ enrollment.isActive ? 'Aktif' : 'Çekildi' }}</td><td>@if (enrollment.isActive) {<button type="button" class="danger" (click)="withdrawStudyEnrollment(enrollment)">Çalışmadan çek</button>}</td></tr>} @empty {<tr><td colspan="7" class="empty">Çalışma katılımcısı bulunmuyor.</td></tr>}</tbody></table></div>
+          </div>
         </section>
       }
     </main>
@@ -166,6 +179,9 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
   readonly levelCatalogs = signal<SpeedReadingLevelCatalog[]>([]);
   readonly levels = signal<SpeedReadingLevelDefinition[]>([]);
   readonly measurementCapabilities = signal<SpeedReadingMeasurementCapability[]>([]);
+  readonly calibration = signal<SpeedReadingCalibrationReport | null>(null);
+  readonly studyEnrollments = signal<SpeedReadingStudyEnrollment[]>([]);
+  readonly studyEditing = signal(false);
   readonly selectedAssessmentExercises = signal<AssessmentExerciseDraft[]>([]);
   readonly currentTemplate = signal<SpeedReadingAssessmentTemplate | null>(null);
   readonly assessmentAgeGroupId = signal('');
@@ -182,6 +198,7 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
   levelCatalogVersion = '';
   levelCatalogName = '';
   levelDraft: SpeedReadingLevelDefinition[] = [];
+  studyDraft = this.emptyStudyEnrollment();
 
   ngOnInit(): void {
     this.loadAgeGroups();
@@ -189,6 +206,8 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
     this.loadExercises();
     this.loadLevels();
     this.loadMeasurementCapabilities();
+    this.loadCalibration();
+    this.loadStudyEnrollments();
   }
 
   selectTab(tab: ConfigurationTab): void {
@@ -300,6 +319,41 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
     this.service.getAssessmentMeasurementCapabilities().subscribe({
       next: value => this.measurementCapabilities.set(value),
       error: () => this.error.set('Motor ölçüm yetenekleri yüklenemedi.')
+    });
+  }
+
+  loadCalibration(): void {
+    this.service.getAssessmentCalibration().subscribe({
+      next: value => this.calibration.set(value),
+      error: () => this.error.set('Kalibrasyon kanıtı yüklenemedi.')
+    });
+  }
+
+  assessmentPhaseName(phase: number): string {
+    return phase === 1 ? 'Başlangıç' : phase === 2 ? 'Eğitim sonrası' : phase === 3 ? 'Kalıcılık' : phase === 4 ? 'Transfer' : `Faz ${phase}`;
+  }
+
+  loadStudyEnrollments(): void {
+    this.service.getAssessmentStudyEnrollments().subscribe({
+      next: value => this.studyEnrollments.set(value),
+      error: () => this.error.set('Çalışma katılımcıları yüklenemedi.')
+    });
+  }
+
+  saveStudyEnrollment(): void {
+    const request = { ...this.studyDraft, consentRecordedAt: new Date(this.studyDraft.consentRecordedAt).toISOString() };
+    this.saving.set(true);
+    this.service.createAssessmentStudyEnrollment(request).pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => { this.studyEditing.set(false); this.studyDraft = this.emptyStudyEnrollment(); this.loadStudyEnrollments(); },
+      error: response => this.error.set(response?.error || 'Çalışma katılımcısı kaydedilemedi.')
+    });
+  }
+
+  async withdrawStudyEnrollment(enrollment: SpeedReadingStudyEnrollment): Promise<void> {
+    if (!await this.toaster.confirm(`Öğrenci ${enrollment.studentId} “${enrollment.studyCode}” çalışmasından çekilsin mi?`, { title: 'Katılımcıyı çalışmadan çek' })) return;
+    this.service.withdrawAssessmentStudyEnrollment(enrollment.id).subscribe({
+      next: () => this.loadStudyEnrollments(),
+      error: () => this.error.set('Katılımcı çalışmadan çekilemedi.')
     });
   }
 
@@ -475,5 +529,11 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
       maxWpm: 0, recommendedComprehension: 0, recommendedDailyMinutes: 15,
       defaultDifficultyLevel: 1, orderIndex: 0, isActive: true, description: ''
     };
+  }
+
+  private emptyStudyEnrollment() {
+    const now = new Date();
+    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+    return { studentId: '', studyCode: '', protocolVersion: '', cohortCode: '', consentRecordedAt: local };
   }
 }

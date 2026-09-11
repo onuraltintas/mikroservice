@@ -33,6 +33,9 @@ public sealed class AssessmentAttempt : AggregateRoot
     public AssessmentAttemptStatus Status { get; private set; }
     public string FormVersion { get; private set; } = string.Empty;
     public string LevelCatalogVersion { get; private set; } = string.Empty;
+    public string? StudyCode { get; private set; }
+    public string? StudyProtocolVersion { get; private set; }
+    public string? StudyCohortCode { get; private set; }
     public string Language { get; private set; } = string.Empty;
     public Guid? AgeGroupConfigurationId { get; private set; }
     public int ExpectedExerciseCount { get; private set; }
@@ -49,7 +52,10 @@ public sealed class AssessmentAttempt : AggregateRoot
         int expectedExerciseCount,
         DateTime startedAt,
         string? createdBy,
-        string levelCatalogVersion = "tr-standard-v1")
+        string levelCatalogVersion = "tr-standard-v1",
+        string? studyCode = null,
+        string? studyProtocolVersion = null,
+        string? studyCohortCode = null)
     {
         if (id == Guid.Empty || studentId == Guid.Empty)
             throw new ArgumentException("Assessment attempt identifiers are required.");
@@ -72,6 +78,9 @@ public sealed class AssessmentAttempt : AggregateRoot
             Status = AssessmentAttemptStatus.InProgress,
             FormVersion = formVersion.Trim(),
             LevelCatalogVersion = levelCatalogVersion.Trim(),
+            StudyCode = Normalize(studyCode),
+            StudyProtocolVersion = Normalize(studyProtocolVersion),
+            StudyCohortCode = Normalize(studyCohortCode),
             Language = language.Trim(),
             AgeGroupConfigurationId = ageGroupConfigurationId,
             ExpectedExerciseCount = expectedExerciseCount,
@@ -80,6 +89,8 @@ public sealed class AssessmentAttempt : AggregateRoot
             CreatedBy = createdBy
         };
     }
+
+    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     public void Complete(DateTime completedAt)
     {
