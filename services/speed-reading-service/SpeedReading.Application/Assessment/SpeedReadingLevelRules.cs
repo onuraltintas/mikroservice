@@ -13,6 +13,8 @@ public sealed record SpeedReadingLevelDefinition(
 /// </summary>
 public static class SpeedReadingLevelRules
 {
+    public const string DefaultCatalogVersion = "tr-standard-v1";
+
     public static IReadOnlyList<SpeedReadingLevelDefinition> Definitions { get; } =
     [
         new(1, "beginner", "Başlangıç", 0, 0),
@@ -26,21 +28,70 @@ public static class SpeedReadingLevelRules
     ];
 
     public static int CalculateSpeedLevel(decimal averageWpm) =>
-        FindLevel(Math.Max(0, averageWpm), item => item.MinimumWpm);
+        CalculateSpeedLevel(averageWpm, Definitions);
+
+    public static int CalculateSpeedLevel(
+        decimal averageWpm,
+        IReadOnlyList<SpeedReadingLevelDefinition> definitions) =>
+        FindLevel(Math.Max(0, averageWpm), definitions, item => item.MinimumWpm);
 
     public static int CalculateComprehensionLevel(decimal averageComprehension) =>
-        FindLevel(Math.Clamp(averageComprehension, 0, 100), item => item.MinimumComprehension);
+        CalculateComprehensionLevel(averageComprehension, Definitions);
+
+    public static int CalculateComprehensionLevel(
+        decimal averageComprehension,
+        IReadOnlyList<SpeedReadingLevelDefinition> definitions) =>
+        FindLevel(Math.Clamp(averageComprehension, 0, 100), definitions, item => item.MinimumComprehension);
 
     public static string GetDisplayName(int level) =>
-        Definitions.FirstOrDefault(item => item.Level == level)?.DisplayName
+        GetDisplayName(level, Definitions);
+
+    public static string GetDisplayName(
+        int level,
+        IReadOnlyList<SpeedReadingLevelDefinition> definitions) =>
+        definitions.FirstOrDefault(item => item.Level == level)?.DisplayName
         ?? $"Seviye {level}";
 
-    private static int FindLevel(decimal value, Func<SpeedReadingLevelDefinition, int> selector)
+    public static void ValidateDefinitions(IReadOnlyList<SpeedReadingLevelDefinition> definitions)
     {
-        var level = Definitions
+        ArgumentNullException.ThrowIfNull(definitions);
+        if (definitions.Count is < 2 or > 20)
+            throw new ArgumentException("A level catalog must contain between 2 and 20 levels.", nameof(definitions));
+        if (!definitions.Select(item => item.Level).SequenceEqual(Enumerable.Range(1, definitions.Count)))
+            throw new ArgumentException("Level numbers must be contiguous and start at one.", nameof(definitions));
+        if (definitions.Select(item => item.Code.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).Count() != definitions.Count)
+            throw new ArgumentException("Level codes must be unique.", nameof(definitions));
+
+        for (var index = 0; index < definitions.Count; index++)
+        {
+            var item = definitions[index];
+            if (string.IsNullOrWhiteSpace(item.Code) || item.Code.Trim().Length > 50)
+                throw new ArgumentException("Level codes are required and must not exceed 50 characters.", nameof(definitions));
+            if (string.IsNullOrWhiteSpace(item.DisplayName) || item.DisplayName.Trim().Length > 100)
+                throw new ArgumentException("Level names are required and must not exceed 100 characters.", nameof(definitions));
+            if (item.MinimumWpm is < 0 or > 2000 || item.MinimumComprehension is < 0 or > 100)
+                throw new ArgumentException("Level thresholds are outside their supported ranges.", nameof(definitions));
+            if (index == 0 && (item.MinimumWpm != 0 || item.MinimumComprehension != 0))
+                throw new ArgumentException("The first level must start at zero.", nameof(definitions));
+            if (index > 0
+                && (item.MinimumWpm <= definitions[index - 1].MinimumWpm
+                    || item.MinimumComprehension <= definitions[index - 1].MinimumComprehension))
+            {
+                throw new ArgumentException("Level thresholds must increase strictly.", nameof(definitions));
+            }
+        }
+    }
+
+    private static int FindLevel(
+        decimal value,
+        IReadOnlyList<SpeedReadingLevelDefinition> definitions,
+        Func<SpeedReadingLevelDefinition, int> selector)
+    {
+        ValidateDefinitions(definitions);
+        var level = definitions
             .Where(item => value >= selector(item))
             .OrderBy(item => selector(item))
             .LastOrDefault();
-        return level?.Level ?? Definitions[0].Level;
+        return level?.Level ?? definitions[0].Level;
     }
 }

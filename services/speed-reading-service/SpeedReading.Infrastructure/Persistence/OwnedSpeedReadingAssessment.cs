@@ -10,7 +10,9 @@ using SpeedReading.Domain.Profiles;
 
 namespace SpeedReading.Infrastructure.Persistence;
 
-internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db) : ISpeedReadingAssessment
+internal sealed class OwnedSpeedReadingAssessment(
+    OwnedSpeedReadingDbContext db,
+    ISpeedReadingLevelCatalog levelCatalog) : ISpeedReadingAssessment
 {
     private const int ServerAssessmentExerciseCount = 3;
     private static readonly JsonSerializerOptions SnapshotJsonOptions = new(JsonSerializerDefaults.Web);
@@ -99,6 +101,7 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             return await MapAttemptSummaryAsync(existing, cancellationToken);
         }
 
+        var activeLevelCatalog = await levelCatalog.GetActiveAsync(cancellationToken);
         var attempt = AssessmentAttempt.Start(
             Guid.NewGuid(),
             userId,
@@ -108,7 +111,8 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             ageGroupConfigurationId,
             ServerAssessmentExerciseCount,
             now,
-            userId.ToString());
+            userId.ToString(),
+            activeLevelCatalog.Version);
         var formItems = await BuildPinnedFormItemsAsync(
             attempt.Id,
             ServerAssessmentExerciseCount,
@@ -157,6 +161,7 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             attempt.Phase,
             attempt.Status,
             attempt.FormVersion,
+            attempt.LevelCatalogVersion,
             attempt.Language,
             attempt.ExpectedExerciseCount,
             completedCounts.GetValueOrDefault(attempt.Id),
@@ -482,9 +487,15 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             .Select(item => Math.Clamp(item.Item.Score, 0, 100))
             .DefaultIfEmpty()
             .Average();
+        var catalog = attempt is null
+            ? await levelCatalog.GetActiveAsync(cancellationToken)
+            : await levelCatalog.GetByVersionAsync(attempt.LevelCatalogVersion, cancellationToken)
+                ?? throw new InvalidOperationException($"Pinned level catalog '{attempt.LevelCatalogVersion}' was not found.");
         var level = SpeedReadingAssessmentMeasurementRules.CalculateLevel(
             averageWpm,
-            averageComprehension);
+            averageComprehension,
+            catalog.Definitions);
+        var levelName = SpeedReadingLevelRules.GetDisplayName(level, catalog.Definitions);
         var comprehensionScore = averageComprehension;
         var tachistoscopeScore = resultRoles
             .Where(item => item.Role == "tachistoscope")
@@ -542,7 +553,7 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
 
         return new AssessmentResultSummary(
             level,
-            LevelName(level),
+            levelName,
             Math.Round(averageWpm, 1),
             (int)Math.Round(averageScore),
             Math.Round(averageComprehension, 1),
@@ -556,7 +567,7 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             template?.Id,
             null,
             template?.Name ?? "Başlangıç Programı",
-            $"{LevelName(level)} okuyucu olarak tespit edildiniz. Ortalama {(int)averageWpm} kelime/dk hızınız ve %{(int)averageComprehension} kavrama oranınız var.");
+            $"{levelName} okuyucu olarak tespit edildiniz. Ortalama {(int)averageWpm} kelime/dk hızınız ve %{(int)averageComprehension} kavrama oranınız var.");
     }
 
     public async Task<AssessmentSkipResult?> SkipAsync(
@@ -737,6 +748,7 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
             attempt.Phase,
             attempt.Status,
             attempt.FormVersion,
+            attempt.LevelCatalogVersion,
             attempt.Language,
             attempt.ExpectedExerciseCount,
             completedExerciseCount,

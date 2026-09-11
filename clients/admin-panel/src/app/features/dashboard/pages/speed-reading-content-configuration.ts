@@ -10,6 +10,7 @@ import {
   SpeedReadingAssessmentTemplate,
   SpeedReadingExercise,
   SpeedReadingLevelDefinition,
+  SpeedReadingLevelCatalog,
   SpeedReadingMeasurementCapability
 } from '../../../core/services/speed-reading-admin.service';
 import { ToasterService } from '../../../core/services/toaster.service';
@@ -98,7 +99,19 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
 
       @if (selectedTab() === 'levels') {
         <section class="space-y-4" aria-labelledby="levels-title">
-          <div><h2 id="levels-title" class="text-lg font-semibold text-gray-900 dark:text-white">Seviye sözlüğü</h2><p class="muted">Assessment yerleştirmesinde kullanılan sürüm 1 güvenli varsayılanları. Normlama tamamlanana kadar salt okunur tutulur.</p></div>
+          <div class="flex items-center justify-between gap-3"><div><h2 id="levels-title" class="text-lg font-semibold text-gray-900 dark:text-white">Seviye sözlüğü</h2><p class="muted">Değerlendirme eşiklerini sürümleyin. Yayınlanan sürümler geçmiş sonuçların tekrar üretilebilmesi için kilitlenir.</p></div><button type="button" (click)="startLevelCatalogCreate()" class="primary">Yeni sürüm</button></div>
+          @if (levelEditing()) {
+            <form (ngSubmit)="saveLevelCatalog()" class="form-card">
+              <div class="form-grid"><label>Sürüm kodu<input [(ngModel)]="levelCatalogVersion" name="levelCatalogVersion" required maxlength="100" [disabled]="!!levelCatalogEditingId" /></label><label>Katalog adı<input [(ngModel)]="levelCatalogName" name="levelCatalogName" required maxlength="200" /></label></div>
+              <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Seviye</th><th>Kod</th><th>Ad</th><th>Minimum WPM</th><th>Minimum anlama</th><th></th></tr></thead><tbody>
+                @for (level of levelDraft; track $index; let index = $index) {<tr><td>{{ index + 1 }}</td><td><input [(ngModel)]="level.code" [name]="'levelCode' + index" required maxlength="50" /></td><td><input [(ngModel)]="level.displayName" [name]="'levelName' + index" required maxlength="100" /></td><td><input type="number" [(ngModel)]="level.minimumWpm" [name]="'levelWpm' + index" min="0" max="2000" required /></td><td><input type="number" [(ngModel)]="level.minimumComprehension" [name]="'levelComprehension' + index" min="0" max="100" required /></td><td><button type="button" (click)="removeLevel(index)" [disabled]="levelDraft.length <= 2" class="danger">Sil</button></td></tr>}
+              </tbody></table></div>
+              <div class="form-actions"><button type="button" (click)="addLevel()" class="secondary" [disabled]="levelDraft.length >= 20">Seviye ekle</button><button type="button" (click)="cancelLevelCatalogEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Taslağı kaydet</button></div>
+            </form>
+          }
+          <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Sürüm</th><th>Ad</th><th>Durum</th><th>Seviye</th><th>Yayın tarihi</th><th></th></tr></thead><tbody>
+            @for (catalog of levelCatalogs(); track catalog.version) {<tr><td><strong>{{ catalog.version }}</strong></td><td>{{ catalog.name }}</td><td>{{ levelCatalogStatus(catalog.status) }}</td><td>{{ catalog.definitions.length }}</td><td>{{ catalog.publishedAt ? (catalog.publishedAt | date:'short') : '—' }}</td><td class="actions">@if (catalog.status === 1 && catalog.id) {<button type="button" (click)="startLevelCatalogEdit(catalog)">Düzenle</button><button type="button" (click)="publishLevelCatalog(catalog)">Yayınla</button>}</td></tr>}
+          </tbody></table></div></div>
           <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Seviye</th><th>Kod</th><th>Ad</th><th>Minimum WPM</th><th>Minimum anlama</th></tr></thead><tbody>
             @for (level of levels(); track level.level) {
               <tr><td>{{ level.level }}</td><td>{{ level.code }}</td><td>{{ level.displayName }}</td><td>{{ level.minimumWpm }}</td><td>%{{ level.minimumComprehension }}</td></tr>
@@ -150,6 +163,7 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
   readonly ageGroups = signal<SpeedReadingAgeGroup[]>([]);
   readonly assessmentTemplates = signal<SpeedReadingAssessmentTemplate[]>([]);
   readonly exercises = signal<SpeedReadingExercise[]>([]);
+  readonly levelCatalogs = signal<SpeedReadingLevelCatalog[]>([]);
   readonly levels = signal<SpeedReadingLevelDefinition[]>([]);
   readonly measurementCapabilities = signal<SpeedReadingMeasurementCapability[]>([]);
   readonly selectedAssessmentExercises = signal<AssessmentExerciseDraft[]>([]);
@@ -158,11 +172,16 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
   readonly error = signal('');
   readonly saving = signal(false);
   readonly ageEditing = signal(false);
+  readonly levelEditing = signal(false);
 
   ageEditingId: string | null = null;
   ageDraft: SpeedReadingAgeGroupRequest = this.emptyAgeGroup();
   assessmentName = '';
   exerciseToAdd = '';
+  levelCatalogEditingId: string | null = null;
+  levelCatalogVersion = '';
+  levelCatalogName = '';
+  levelDraft: SpeedReadingLevelDefinition[] = [];
 
   ngOnInit(): void {
     this.loadAgeGroups();
@@ -200,9 +219,81 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
 
   loadLevels(): void {
     this.service.getAssessmentLevels().subscribe({
-      next: value => this.levels.set(value),
+      next: value => {
+        this.levelCatalogs.set(value);
+        this.levels.set((value.find(item => item.status === 2) ?? value[0])?.definitions ?? []);
+      },
       error: () => this.error.set('Seviye sözlüğü yüklenemedi.')
     });
+  }
+
+  startLevelCatalogCreate(): void {
+    const active = this.levelCatalogs().find(item => item.status === 2) ?? this.levelCatalogs()[0];
+    this.levelCatalogEditingId = null;
+    this.levelCatalogVersion = '';
+    this.levelCatalogName = active ? `${active.name} - Yeni Sürüm` : 'Yeni Seviye Kataloğu';
+    this.levelDraft = (active?.definitions ?? [
+      { level: 1, code: 'beginner', displayName: 'Başlangıç', minimumWpm: 0, minimumComprehension: 0 },
+      { level: 2, code: 'basic', displayName: 'Temel', minimumWpm: 100, minimumComprehension: 40 }
+    ]).map(item => ({ ...item }));
+    this.levelEditing.set(true);
+  }
+
+  startLevelCatalogEdit(catalog: SpeedReadingLevelCatalog): void {
+    if (!catalog.id || catalog.status !== 1) return;
+    this.levelCatalogEditingId = catalog.id;
+    this.levelCatalogVersion = catalog.version;
+    this.levelCatalogName = catalog.name;
+    this.levelDraft = catalog.definitions.map(item => ({ ...item }));
+    this.levelEditing.set(true);
+  }
+
+  cancelLevelCatalogEdit(): void {
+    this.levelEditing.set(false);
+    this.levelCatalogEditingId = null;
+    this.levelDraft = [];
+  }
+
+  addLevel(): void {
+    const previous = this.levelDraft[this.levelDraft.length - 1];
+    this.levelDraft = [...this.levelDraft, {
+      level: this.levelDraft.length + 1,
+      code: `level_${this.levelDraft.length + 1}`,
+      displayName: `Seviye ${this.levelDraft.length + 1}`,
+      minimumWpm: Math.min(2000, (previous?.minimumWpm ?? 0) + 50),
+      minimumComprehension: Math.min(100, (previous?.minimumComprehension ?? 0) + 5)
+    }];
+  }
+
+  removeLevel(index: number): void {
+    if (this.levelDraft.length <= 2) return;
+    this.levelDraft = this.levelDraft.filter((_, itemIndex) => itemIndex !== index)
+      .map((item, itemIndex) => ({ ...item, level: itemIndex + 1 }));
+  }
+
+  saveLevelCatalog(): void {
+    if (!this.levelCatalogVersion.trim() || !this.levelCatalogName.trim()) return;
+    const definitions = this.levelDraft.map((item, index) => ({ ...item, level: index + 1 }));
+    this.saving.set(true);
+    const request: Observable<unknown> = this.levelCatalogEditingId
+      ? this.service.updateAssessmentLevelCatalog(this.levelCatalogEditingId, { name: this.levelCatalogName.trim(), definitions })
+      : this.service.createAssessmentLevelCatalog({ version: this.levelCatalogVersion.trim(), name: this.levelCatalogName.trim(), definitions });
+    request.pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => { this.cancelLevelCatalogEdit(); this.loadLevels(); },
+      error: response => this.error.set(response?.error || 'Seviye kataloğu kaydedilemedi.')
+    });
+  }
+
+  async publishLevelCatalog(catalog: SpeedReadingLevelCatalog): Promise<void> {
+    if (!catalog.id || !await this.toaster.confirm(`“${catalog.version}” sürümü yayınlansın mı?`, { title: 'Seviye kataloğunu yayınla' })) return;
+    this.service.publishAssessmentLevelCatalog(catalog.id).subscribe({
+      next: () => this.loadLevels(),
+      error: response => this.error.set(response?.error || 'Seviye kataloğu yayınlanamadı.')
+    });
+  }
+
+  levelCatalogStatus(status: number): string {
+    return status === 2 ? 'Yayında' : status === 3 ? 'Emekli' : 'Taslak';
   }
 
   loadMeasurementCapabilities(): void {

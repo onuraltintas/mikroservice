@@ -61,6 +61,7 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<ReviewItem> ReviewItems => Set<ReviewItem>();
     public DbSet<AssessmentAttempt> AssessmentAttempts => Set<AssessmentAttempt>();
     public DbSet<AssessmentAttemptExercise> AssessmentAttemptExercises => Set<AssessmentAttemptExercise>();
+    public DbSet<AssessmentLevelCatalog> AssessmentLevelCatalogs => Set<AssessmentLevelCatalog>();
     internal DbSet<LegacyUserContentFeedback> ContentFeedbacks => Set<LegacyUserContentFeedback>();
     internal DbSet<LegacyStudentLearningProfile> AdaptiveLearningProfiles => Set<LegacyStudentLearningProfile>();
     internal DbSet<LegacyContentRecommendation> AdaptiveContentRecommendations => Set<LegacyContentRecommendation>();
@@ -166,6 +167,7 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<ReviewItem>());
         ConfigureEntity(modelBuilder.Entity<AssessmentAttempt>());
         ConfigureEntity(modelBuilder.Entity<AssessmentAttemptExercise>());
+        ConfigureEntity(modelBuilder.Entity<AssessmentLevelCatalog>());
         modelBuilder.Entity<AdminAuditRecord>(entity =>
         {
             entity.ToTable("admin_audit_records");
@@ -1313,6 +1315,8 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.Status).HasColumnName("status");
             entity.Property(item => item.FormVersion).HasMaxLength(100).IsRequired();
             entity.Property(item => item.FormVersion).HasColumnName("form_version");
+            entity.Property(item => item.LevelCatalogVersion).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.LevelCatalogVersion).HasColumnName("level_catalog_version");
             entity.Property(item => item.Language).HasMaxLength(20).IsRequired();
             entity.Property(item => item.Language).HasColumnName("language");
             entity.Property(item => item.AgeGroupConfigurationId).HasColumnName("age_group_configuration_id");
@@ -1322,6 +1326,21 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.HasIndex(item => new { item.StudentId, item.Phase, item.Status, item.StartedAt });
             entity.HasIndex(item => new { item.StudentId, item.Phase, item.FormVersion })
                 .HasFilter("status = 1");
+        });
+
+        modelBuilder.Entity<AssessmentLevelCatalog>(entity =>
+        {
+            entity.ToTable("assessment_level_catalogs");
+            entity.Property(item => item.CatalogVersion).HasColumnName("catalog_version").HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Name).HasColumnName("name").HasMaxLength(200).IsRequired();
+            entity.Property(item => item.DefinitionsJson).HasColumnName("definitions_json").HasColumnType("text").IsRequired();
+            entity.Property(item => item.Status).HasColumnName("status").IsRequired();
+            entity.Property(item => item.PublishedAt).HasColumnName("published_at");
+            entity.HasIndex(item => item.CatalogVersion).IsUnique();
+            entity.HasIndex(item => item.Status)
+                .HasDatabaseName("ux_assessment_level_catalogs_published")
+                .IsUnique()
+                .HasFilter("status = 2");
         });
 
         modelBuilder.Entity<AssessmentAttemptExercise>(entity =>

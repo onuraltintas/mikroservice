@@ -32,6 +32,7 @@ public sealed class AssessmentAttempt : AggregateRoot
     public AssessmentAttemptPhase Phase { get; private set; }
     public AssessmentAttemptStatus Status { get; private set; }
     public string FormVersion { get; private set; } = string.Empty;
+    public string LevelCatalogVersion { get; private set; } = string.Empty;
     public string Language { get; private set; } = string.Empty;
     public Guid? AgeGroupConfigurationId { get; private set; }
     public int ExpectedExerciseCount { get; private set; }
@@ -47,7 +48,8 @@ public sealed class AssessmentAttempt : AggregateRoot
         Guid? ageGroupConfigurationId,
         int expectedExerciseCount,
         DateTime startedAt,
-        string? createdBy)
+        string? createdBy,
+        string levelCatalogVersion = "tr-standard-v1")
     {
         if (id == Guid.Empty || studentId == Guid.Empty)
             throw new ArgumentException("Assessment attempt identifiers are required.");
@@ -57,6 +59,8 @@ public sealed class AssessmentAttempt : AggregateRoot
             throw new ArgumentException("Assessment form version is required and must not exceed 100 characters.", nameof(formVersion));
         if (string.IsNullOrWhiteSpace(language) || language.Trim().Length > 20)
             throw new ArgumentException("Assessment language is required and must not exceed 20 characters.", nameof(language));
+        if (string.IsNullOrWhiteSpace(levelCatalogVersion) || levelCatalogVersion.Trim().Length > 100)
+            throw new ArgumentException("Level catalog version is required and must not exceed 100 characters.", nameof(levelCatalogVersion));
         if (expectedExerciseCount is < 1 or > 50)
             throw new ArgumentOutOfRangeException(nameof(expectedExerciseCount));
 
@@ -67,6 +71,7 @@ public sealed class AssessmentAttempt : AggregateRoot
             Phase = phase,
             Status = AssessmentAttemptStatus.InProgress,
             FormVersion = formVersion.Trim(),
+            LevelCatalogVersion = levelCatalogVersion.Trim(),
             Language = language.Trim(),
             AgeGroupConfigurationId = ageGroupConfigurationId,
             ExpectedExerciseCount = expectedExerciseCount,

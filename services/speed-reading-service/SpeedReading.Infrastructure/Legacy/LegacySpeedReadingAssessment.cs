@@ -6,7 +6,9 @@ using SpeedReading.Application.Content;
 
 namespace SpeedReading.Infrastructure.Legacy;
 
-internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : ISpeedReadingAssessment
+internal sealed class LegacySpeedReadingAssessment(
+    SpeedReadingDbContext db,
+    ISpeedReadingLevelCatalog levelCatalog) : ISpeedReadingAssessment
 {
     public async Task<AssessmentExercisesSummary> GetExercisesAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -117,10 +119,12 @@ internal sealed class LegacySpeedReadingAssessment(SpeedReadingDbContext db) : I
 
         var averageWpm = results.Average(item => item.RawWPM);
         var averageComprehension = results.Average(item => item.ComprehensionScore);
+        var catalog = await levelCatalog.GetActiveAsync(cancellationToken);
         var level = SpeedReadingAssessmentMeasurementRules.CalculateLevel(
             averageWpm,
-            averageComprehension);
-        var recommendedLevel = LevelName(level);
+            averageComprehension,
+            catalog.Definitions);
+        var recommendedLevel = SpeedReadingLevelRules.GetDisplayName(level, catalog.Definitions);
         var comprehensionScore = averageComprehension;
         var tachistoscopeScore = averageComprehension;
         var visualExpansionScore = averageComprehension;

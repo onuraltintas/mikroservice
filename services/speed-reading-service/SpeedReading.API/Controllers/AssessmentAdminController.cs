@@ -12,14 +12,68 @@ namespace SpeedReading.API.Controllers;
 [Route("api/speed-reading/admin/assessment-templates")]
 [Authorize]
 [HasPermission(PlatformPermissions.SpeedReading.SettingsManage)]
-public sealed class AssessmentAdminController(ISpeedReadingAssessment assessment) : ControllerBase
+public sealed class AssessmentAdminController(
+    ISpeedReadingAssessment assessment,
+    ISpeedReadingLevelCatalog levelCatalog) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken = default) =>
         Ok(await assessment.GetTemplatesAsync(cancellationToken));
 
     [HttpGet("levels")]
-    public IActionResult GetLevels() => Ok(SpeedReadingLevelRules.Definitions);
+    public async Task<IActionResult> GetLevels(CancellationToken cancellationToken = default) =>
+        Ok(await levelCatalog.GetAllAsync(cancellationToken));
+
+    [HttpPost("levels")]
+    public async Task<IActionResult> CreateLevelCatalog(
+        [FromBody] CreateSpeedReadingLevelCatalogRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        try
+        {
+            return Ok(await levelCatalog.CreateAsync(userId, request, cancellationToken));
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
+    [HttpPut("levels/{id:guid}")]
+    public async Task<IActionResult> UpdateLevelCatalog(
+        Guid id,
+        [FromBody] UpdateSpeedReadingLevelCatalogRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        try
+        {
+            return await levelCatalog.UpdateAsync(id, userId, request, cancellationToken) ? NoContent() : NotFound();
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(exception.Message);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(exception.Message);
+        }
+    }
+
+    [HttpPost("levels/{id:guid}/publish")]
+    public async Task<IActionResult> PublishLevelCatalog(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        try
+        {
+            return await levelCatalog.PublishAsync(id, userId, cancellationToken) ? NoContent() : NotFound();
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(exception.Message);
+        }
+    }
 
     [HttpGet("measurement-capabilities")]
     public IActionResult GetMeasurementCapabilities() => Ok(SpeedReadingMeasurementCapabilities.Definitions);

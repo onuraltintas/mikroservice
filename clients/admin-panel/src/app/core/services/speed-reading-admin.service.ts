@@ -440,6 +440,28 @@ export interface SpeedReadingLevelDefinition {
   minimumComprehension: number;
 }
 
+export interface SpeedReadingLevelCatalog {
+  id: string | null;
+  version: string;
+  name: string;
+  status: number;
+  definitions: SpeedReadingLevelDefinition[];
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface SpeedReadingLevelCatalogCreateRequest {
+  version: string;
+  name: string;
+  definitions: SpeedReadingLevelDefinition[];
+}
+
+export interface SpeedReadingLevelCatalogUpdateRequest {
+  name: string;
+  definitions: SpeedReadingLevelDefinition[];
+}
+
 export interface SpeedReadingMeasurementCapability {
   code: string;
   displayName: string;
@@ -1451,9 +1473,21 @@ export class SpeedReadingAdminService {
   }
 
   getAssessmentLevels() {
-    return this.http.get<SpeedReadingLevelDefinition[]>(
+    return this.http.get<SpeedReadingLevelCatalog[]>(
       `${this.url}/admin/assessment-templates/levels`
     );
+  }
+
+  createAssessmentLevelCatalog(request: SpeedReadingLevelCatalogCreateRequest) {
+    return this.http.post<SpeedReadingLevelCatalog>(`${this.url}/admin/assessment-templates/levels`, request);
+  }
+
+  updateAssessmentLevelCatalog(id: string, request: SpeedReadingLevelCatalogUpdateRequest) {
+    return this.http.put<void>(`${this.url}/admin/assessment-templates/levels/${id}`, request);
+  }
+
+  publishAssessmentLevelCatalog(id: string) {
+    return this.http.post<void>(`${this.url}/admin/assessment-templates/levels/${id}/publish`, {});
   }
 
   getAssessmentMeasurementCapabilities() {

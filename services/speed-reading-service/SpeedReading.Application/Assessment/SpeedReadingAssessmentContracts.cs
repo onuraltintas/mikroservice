@@ -16,6 +16,7 @@ public sealed record AssessmentAttemptSummary(
     AssessmentAttemptPhase Phase,
     AssessmentAttemptStatus Status,
     string FormVersion,
+    string LevelCatalogVersion,
     string Language,
     int ExpectedExerciseCount,
     int CompletedExerciseCount,
