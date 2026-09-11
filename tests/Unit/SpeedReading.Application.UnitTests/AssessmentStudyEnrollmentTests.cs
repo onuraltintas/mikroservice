@@ -6,6 +6,23 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class AssessmentStudyEnrollmentTests
 {
     [Fact]
+    public void Study_definition_pins_protocol_cohort_and_consent_document()
+    {
+        var now = DateTime.UtcNow;
+        var study = AssessmentStudyDefinition.Create(
+            Guid.NewGuid(), "HO-PILOT-2026", "Hızlı Okuma Pilot Çalışması",
+            "v1.2", "2026-Güz-5", "KVKK-Onam-v3", "consent/ho-pilot-v3",
+            Guid.NewGuid(), now);
+
+        study.StudyCode.Should().Be("HO-PILOT-2026");
+        study.ProtocolVersion.Should().Be("v1.2");
+        study.CohortCode.Should().Be("2026-Güz-5");
+        study.ConsentDocumentVersion.Should().Be("KVKK-Onam-v3");
+        study.ConsentDocumentReference.Should().Be("consent/ho-pilot-v3");
+        study.IsActive.Should().BeTrue();
+    }
+
+    [Fact]
     public void Enrollment_pins_protocol_and_cohort_and_can_be_withdrawn()
     {
         var now = DateTime.UtcNow;
