@@ -38,11 +38,13 @@ public sealed class SpeedReadingAssessmentAttemptTests
             ageGroupConfigurationId: null,
             expectedExerciseCount: 3,
             startedAt,
-            studentId.ToString());
+            studentId.ToString(),
+            levelCatalogVersion: "tr-standard-v1");
 
         attempt.StudentId.Should().Be(studentId);
         attempt.Phase.Should().Be(AssessmentAttemptPhase.Baseline);
         attempt.FormVersion.Should().Be("tr-baseline-v1");
+        attempt.LevelCatalogVersion.Should().Be("tr-standard-v1");
         attempt.Language.Should().Be("tr-TR");
         attempt.ExpectedExerciseCount.Should().Be(3);
         attempt.Status.Should().Be(AssessmentAttemptStatus.InProgress);

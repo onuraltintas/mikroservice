@@ -52,4 +52,34 @@ public sealed class SpeedReadingAssessmentMeasurementRulesTests
         SpeedReadingAssessmentMeasurementRules.CalculateLevel(300, 150)
             .Should().Be(6);
     }
+
+    [Fact]
+    public void Versioned_level_catalog_rejects_gaps_duplicates_and_non_increasing_thresholds()
+    {
+        var invalid = new[]
+        {
+            new SpeedReadingLevelDefinition(1, "starter", "Başlangıç", 0, 0),
+            new SpeedReadingLevelDefinition(3, "starter", "Tekrar", 90, 0)
+        };
+
+        var act = () => SpeedReadingLevelRules.ValidateDefinitions(invalid);
+
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Placement_uses_the_definitions_pinned_to_the_catalog_version()
+    {
+        var definitions = new[]
+        {
+            new SpeedReadingLevelDefinition(1, "starter", "Başlangıç", 0, 0),
+            new SpeedReadingLevelDefinition(2, "fluent", "Akıcı", 180, 70),
+            new SpeedReadingLevelDefinition(3, "advanced", "İleri", 260, 80)
+        };
+
+        SpeedReadingLevelRules.ValidateDefinitions(definitions);
+        SpeedReadingAssessmentMeasurementRules.CalculateLevel(250, 75, definitions)
+            .Should().Be(2);
+        SpeedReadingLevelRules.GetDisplayName(2, definitions).Should().Be("Akıcı");
+    }
 }
