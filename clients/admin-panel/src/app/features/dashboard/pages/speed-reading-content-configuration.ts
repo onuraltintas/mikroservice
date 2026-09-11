@@ -98,7 +98,7 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
             </form>
           }
 
-          <div class="data-card"><h3 class="mb-3 font-medium text-gray-900 dark:text-white">Kayıtlı şablonlar</h3><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Şablon</th><th>Yaş grubu</th><th>Egzersiz</th><th>Durum</th><th></th></tr></thead><tbody>@for (template of assessmentTemplates(); track template.id) {<tr><td>{{ template.name }}</td><td>{{ template.ageGroupDisplayName }}</td><td>{{ template.exercises.length }}</td><td>{{ template.isActive ? 'Aktif' : 'Pasif' }}</td><td><button type="button" (click)="selectAssessmentTemplate(template)">Düzenle</button></td></tr>} @empty {<tr><td colspan="5" class="empty">Şablon bulunamadı.</td></tr>}</tbody></table></div></div>
+          <div class="data-card"><h3 class="mb-3 font-medium text-gray-900 dark:text-white">Kayıtlı şablonlar</h3><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Şablon</th><th>Yaş grubu</th><th>Egzersiz</th><th>Durum</th><th>İşlemler</th></tr></thead><tbody>@for (template of assessmentTemplates(); track template.id) {<tr><td>{{ template.name }}</td><td>{{ template.ageGroupDisplayName }}</td><td>{{ template.exercises.length }}</td><td>{{ template.isActive ? 'Aktif' : 'Pasif' }}</td><td class="table-actions"><button type="button" class="action-button" (click)="selectAssessmentTemplate(template)">Düzenle</button><button type="button" class="action-button danger" (click)="deleteAssessment(template)">Sil</button></td></tr>} @empty {<tr><td colspan="5" class="empty">Şablon bulunamadı.</td></tr>}</tbody></table></div></div>
         </section>
       }
 
@@ -164,6 +164,10 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
     .danger { color: var(--ui-danger); }
     .actions { display: flex; flex-wrap: wrap; gap: .4rem; }
     .actions button { color: var(--ui-brand); font-size: .8rem; }
+    .table-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .action-button { border: 1px solid var(--ui-border-strong); border-radius: .5rem; padding: .4rem .65rem; background: var(--ui-surface); color: var(--ui-brand); font-size: .8rem; font-weight: 600; }
+    .action-button:hover { background: var(--ui-surface-muted); }
+    .action-button.danger { border-color: color-mix(in srgb, var(--ui-danger) 45%, var(--ui-border-strong)); color: var(--ui-danger); }
     .exercise-row { display: flex; gap: .75rem; align-items: flex-start; border-top: 1px solid var(--ui-border); padding: .75rem 0; }
     .exercise-row input { margin-top: .4rem; }
     .empty { color: var(--ui-text-muted); padding: 1.25rem; text-align: center; }
@@ -552,14 +556,17 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
     });
   }
 
-  async deleteAssessment(): Promise<void> {
-    const template = this.currentTemplate();
+  async deleteAssessment(template = this.currentTemplate()): Promise<void> {
     if (this.saving() || !template || !await this.toaster.confirm(`“${template.name}” şablonu silinsin mi?`, { title: 'Seviye tespit şablonunu sil' })) return;
+    const deletedCurrentTemplate = this.currentTemplate()?.id === template.id;
     this.saving.set(true);
     this.service.deleteAssessmentTemplate(template.id).pipe(finalize(() => this.saving.set(false))).subscribe({
       next: () => {
-        this.dismissAssessmentDialog();
-        this.resetAssessmentForm();
+        if (deletedCurrentTemplate) {
+          this.dismissAssessmentDialog();
+          this.resetAssessmentForm();
+          this.loadAssessmentForAgeGroup();
+        }
         this.loadAssessmentTemplates();
       },
       error: () => this.error.set('Seviye tespit şablonu silinemedi.')
