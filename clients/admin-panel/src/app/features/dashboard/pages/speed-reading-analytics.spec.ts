@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { PLATFORM_ID } from '@angular/core';
+import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
@@ -7,6 +8,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import { SpeedReadingAdminService, AdminStudentProgressSummary } from '../../../core/services/speed-reading-admin.service';
 import { ToasterService } from '../../../core/services/toaster.service';
+import { IdentityService, SpeedReadingTeacherDirectoryItem } from '../../../core/services/identity.service';
 import { SpeedReadingAnalyticsComponent, combineDailyPlatformMetrics } from './speed-reading-analytics';
 
 describe('combineDailyPlatformMetrics', () => {
@@ -46,6 +48,7 @@ describe('SpeedReadingAnalyticsComponent progress management', () => {
         { provide: ActivatedRoute, useValue: { snapshot: { data: {} } } },
         { provide: AuthService, useValue: auth },
         { provide: SpeedReadingAdminService, useValue: service },
+        { provide: IdentityService, useValue: { getSpeedReadingTeachers: vi.fn(() => of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 100 })) } },
         { provide: ToasterService, useValue: toaster }
       ]
     });
@@ -66,5 +69,37 @@ describe('SpeedReadingAnalyticsComponent progress management', () => {
     expect(toaster.confirm).toHaveBeenCalledWith('Bu öğrencinin program ilerlemesi sıfırlansın mı?', { title: 'İlerlemeyi sıfırla' });
     expect(service.resetStudentProgress).toHaveBeenCalledWith('progress-1');
     expect(service.getStudentProgress).toHaveBeenCalledWith(1, 25, '');
+  });
+});
+
+describe('SpeedReadingAnalyticsComponent teacher directory', () => {
+  it('groups teachers by institution and stores the selected teacher id', () => {
+    const schoolTeacher = {
+      userId: 'teacher-1', fullName: 'Ayşe Yılmaz', email: 'ayse@example.com',
+      institutionId: 'school-1', institutionName: 'Atatürk Okulu'
+    } as SpeedReadingTeacherDirectoryItem;
+    const independentTeacher = {
+      userId: 'teacher-2', fullName: 'Mehmet Kaya', email: 'mehmet@example.com'
+    } as SpeedReadingTeacherDirectoryItem;
+
+    TestBed.configureTestingModule({
+      imports: [SpeedReadingAnalyticsComponent],
+      providers: [
+        { provide: PLATFORM_ID, useValue: 'browser' },
+        { provide: ActivatedRoute, useValue: { snapshot: { data: {} } } },
+        { provide: AuthService, useValue: { hasPermission: vi.fn(() => true) } },
+        { provide: SpeedReadingAdminService, useValue: {} },
+        { provide: IdentityService, useValue: { getSpeedReadingTeachers: vi.fn(() => of({ items: [independentTeacher, schoolTeacher], totalCount: 2, pageNumber: 1, pageSize: 100 })) } },
+        { provide: ToasterService, useValue: {} }
+      ]
+    });
+
+    const component = TestBed.createComponent(SpeedReadingAnalyticsComponent).componentInstance;
+    component.teachers.set([independentTeacher, schoolTeacher]);
+    component.selectTeacher({ option: { value: schoolTeacher } } as MatAutocompleteSelectedEvent);
+
+    expect(component.teacherGroups().map(group => group.institutionName)).toEqual(['Atatürk Okulu', 'Kuruma bağlı olmayanlar']);
+    expect(component.teacherId).toBe('teacher-1');
+    expect(component.displayTeacher(schoolTeacher)).toBe('Ayşe Yılmaz · ayse@example.com');
   });
 });

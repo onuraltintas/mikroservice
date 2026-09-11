@@ -342,7 +342,8 @@ public class UserRepository : IUserRepository
             query = query.Where(u =>
                 EF.Functions.ILike(u.Email, searchPattern) ||
                 EF.Functions.ILike(u.FirstName, searchPattern) ||
-                EF.Functions.ILike(u.LastName, searchPattern));
+                EF.Functions.ILike(u.LastName, searchPattern) ||
+                EF.Functions.ILike(u.FirstName + " " + u.LastName, searchPattern));
         }
 
         if (isActive.HasValue)
@@ -365,6 +366,13 @@ public class UserRepository : IUserRepository
             .ThenInclude(ur => ur.Role)
             .ToListAsync(cancellationToken);
 
+        var userIds = users.Select(user => user.Id).ToArray();
+        var teacherProfiles = await _context.TeacherProfiles
+            .AsNoTracking()
+            .Where(profile => userIds.Contains(profile.UserId) && profile.IsActive)
+            .Include(profile => profile.Institution)
+            .ToDictionaryAsync(profile => profile.UserId, cancellationToken);
+
         var dtos = users.Select(u => new UserProfileDto
         {
             UserId = u.Id,
@@ -381,7 +389,18 @@ public class UserRepository : IUserRepository
             PhoneNumber = u.PhoneNumber,
             LastLoginAt = u.LastLoginAt,
             CreatedAt = u.CreatedAt,
-            Roles = u.Roles.Select(ur => ur.Role.Name).ToList()
+            Roles = u.Roles.Select(ur => ur.Role.Name).ToList(),
+            TeacherDetails = teacherProfiles.TryGetValue(u.Id, out var teacher)
+                ? new TeacherDetailsDto
+                {
+                    Title = teacher.Title,
+                    Subjects = teacher.Subjects.ToArray(),
+                    ExperienceYears = teacher.ExperienceYears,
+                    Bio = teacher.Bio,
+                    InstitutionId = teacher.InstitutionId,
+                    InstitutionName = teacher.Institution?.Name
+                }
+                : null
         }).ToList();
 
         return new PagedList<UserProfileDto>(dtos, totalCount, page, pageSize);

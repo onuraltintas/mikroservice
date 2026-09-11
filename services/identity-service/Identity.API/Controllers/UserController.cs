@@ -143,6 +143,37 @@ public class UserController : ControllerBase
         return BadRequest(new { Error = result.Error });
     }
 
+    [HttpGet("speed-reading-teachers")]
+    [HasPermission(Permissions.SpeedReading.ReportView)]
+    public async Task<IActionResult> GetSpeedReadingTeachers(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 100,
+        [FromQuery] string? search = null)
+    {
+        var result = await _mediator.Send(new GetAllUsersQuery(page, pageSize, search, "Teacher", true));
+        if (result.IsFailure)
+        {
+            if (result.Error.Code == "Error.Unauthorized") return Unauthorized();
+            if (result.Error.Code == "Error.Forbidden") return Forbid();
+            return BadRequest(new { Error = result.Error });
+        }
+
+        return Ok(new
+        {
+            items = result.Value.Items.Select(teacher => new
+            {
+                teacher.UserId,
+                teacher.FullName,
+                teacher.Email,
+                InstitutionId = teacher.TeacherDetails?.InstitutionId,
+                InstitutionName = teacher.TeacherDetails?.InstitutionName
+            }),
+            result.Value.TotalCount,
+            result.Value.PageNumber,
+            result.Value.PageSize
+        });
+    }
+
     /// <summary>
     /// Lists the active children linked to the authenticated parent.
     /// </summary>

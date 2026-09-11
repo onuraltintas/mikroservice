@@ -15,6 +15,15 @@ export interface UserDto {
     lastLoginAt?: string;
     roles: string[];
     permissions: string[];
+    teacherDetails?: TeacherDetailsDto;
+}
+
+export interface SpeedReadingTeacherDirectoryItem {
+    userId: string;
+    fullName: string;
+    email: string;
+    institutionId?: string;
+    institutionName?: string;
 }
 
 export interface TeacherDetailsDto {
@@ -165,6 +174,12 @@ export class IdentityService {
         if (isActive !== undefined && isActive !== null) params = params.set('isActive', isActive);
 
         return this.http.get<PagedResult<UserDto>>(this.baseUrl, { params });
+    }
+
+    getSpeedReadingTeachers(page = 1, pageSize = 100, search = '') {
+        let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+        if (search.trim()) params = params.set('search', search.trim());
+        return this.http.get<PagedResult<SpeedReadingTeacherDirectoryItem>>(`${this.baseUrl}/speed-reading-teachers`, { params });
     }
 
     getUserSummary() {

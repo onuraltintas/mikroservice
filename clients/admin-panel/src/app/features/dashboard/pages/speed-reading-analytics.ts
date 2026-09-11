@@ -1,11 +1,15 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, OnDestroy, OnInit, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { ActivatedRoute } from '@angular/router';
-import { Observable, Subscription, finalize, forkJoin } from 'rxjs';
+import { Observable, Subscription, finalize, forkJoin, map, switchMap } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import { ToasterService } from '../../../core/services/toaster.service';
+import { IdentityService, SpeedReadingTeacherDirectoryItem } from '../../../core/services/identity.service';
 import {
   AdminContentAnalysisAnalytics,
   AdminAnalyticsChartData,
@@ -24,6 +28,11 @@ import {
 } from '../../../core/services/speed-reading-admin.service';
 
 type SpeedReadingAnalyticsTab = 'platform' | 'content' | 'health' | 'institutions' | 'programs' | 'progress' | 'teacher';
+
+interface TeacherGroup {
+  institutionName: string;
+  teachers: SpeedReadingTeacherDirectoryItem[];
+}
 
 export interface DailyPlatformMetricRow {
   date: string;
@@ -53,7 +62,7 @@ export function combineDailyPlatformMetrics(
 @Component({
   selector: 'app-speed-reading-analytics',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatAutocompleteModule, MatFormFieldModule, MatInputModule],
   template: `
     <main class="space-y-6" aria-labelledby="speed-reading-analytics-title">
       <header>
@@ -148,7 +157,32 @@ export function combineDailyPlatformMetrics(
 
       @if (selectedTab() === 'teacher') {
         <section class="space-y-4" aria-labelledby="teacher-analytics-title">
-          <div class="data-card"><h2 id="teacher-analytics-title">Öğretmen analitiği</h2><p class="muted">Öğretmen ID’si üzerinden sınıf, atama, içerik ve zaman/ilerleme özetlerini servis kapsam politikasıyla görüntüleyin.</p><form (ngSubmit)="loadTeacherAnalytics()" class="teacher-form"><label>Öğretmen ID<input [(ngModel)]="teacherId" name="teacherId" required maxlength="36" placeholder="GUID" /></label><button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white" [disabled]="loading() || !teacherId.trim()">Yükle</button></form></div>
+          <div class="data-card">
+            <h2 id="teacher-analytics-title">Öğretmen analitiği</h2>
+            <p class="muted">Sınıf, atama, içerik ve zaman/ilerleme özetlerini görmek için yetki kapsamınızdaki öğretmenlerden birini seçin.</p>
+            <form (ngSubmit)="loadTeacherAnalytics()" class="teacher-form">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>Öğretmen ara ve seç</mat-label>
+                <input matInput [(ngModel)]="teacherSearch" (ngModelChange)="searchTeachers($event)" name="teacherSearch"
+                  [matAutocomplete]="teacherAutocomplete" autocomplete="off" placeholder="Ad veya e-posta yazın" />
+                <mat-autocomplete #teacherAutocomplete="matAutocomplete" [displayWith]="displayTeacher" (optionSelected)="selectTeacher($event)">
+                  @for (group of teacherGroups(); track group.institutionName) {
+                    <mat-optgroup [label]="group.institutionName">
+                      @for (teacher of group.teachers; track teacher.userId) {
+                        <mat-option [value]="teacher">
+                          <span class="teacher-option-name">{{ teacher.fullName }}</span>
+                          <span class="teacher-option-email">{{ teacher.email }}</span>
+                        </mat-option>
+                      }
+                    </mat-optgroup>
+                  }
+                </mat-autocomplete>
+              </mat-form-field>
+              <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50" [disabled]="loading() || !teacherId">Göster</button>
+            </form>
+            @if (teachersLoading()) { <p class="muted mt-2" role="status">Öğretmenler yükleniyor…</p> }
+            @if (!teachersLoading() && teacherGroups().length === 0) { <p class="muted mt-2">Aramanızla eşleşen aktif öğretmen bulunamadı.</p> }
+          </div>
           @if (teacherClassOverview(); as overview) {
             <div class="grid grid-cols-2 gap-3 lg:grid-cols-4"><div class="metric-card"><span>Öğrenci</span><strong>{{ overview.totalStudents }}</strong></div><div class="metric-card"><span>Aktif öğrenci</span><strong>{{ overview.activeStudentsDataAvailable ? overview.activeStudents : 'Veri yok' }}</strong></div><div class="metric-card"><span>Ort. WPM</span><strong>{{ overview.classAverageWpmDataAvailable ? overview.classAverageWpm : 'Veri yok' }}</strong></div><div class="metric-card"><span>Ort. anlama</span><strong>{{ overview.classAverageComprehensionDataAvailable ? (overview.classAverageComprehension + '%') : 'Veri yok' }}</strong></div></div>
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2"><div class="data-card"><h3>En iyi performans</h3><table class="data-table"><thead><tr><th>Öğrenci</th><th>WPM</th><th>Anlama</th><th>Aktivite</th></tr></thead><tbody>@for (student of overview.topPerformers; track student.studentIdentifier) {<tr><td>{{ student.studentIdentifier }}</td><td>{{ student.averageWpm }}</td><td>{{ student.averageComprehension }}%</td><td>{{ student.activitiesCompleted }}</td></tr>} @empty {<tr><td colspan="4" class="empty">Veri yok.</td></tr>}</tbody></table></div><div class="data-card"><h3>Destek gerekenler</h3><table class="data-table"><thead><tr><th>Öğrenci</th><th>WPM</th><th>Anlama</th><th>Düzey</th></tr></thead><tbody>@for (student of overview.studentsNeedingSupport; track student.studentIdentifier) {<tr><td>{{ student.studentIdentifier }}</td><td>{{ student.averageWpm }}</td><td>{{ student.averageComprehension }}%</td><td>{{ student.performanceLevel }}</td></tr>} @empty {<tr><td colspan="4" class="empty">Veri yok.</td></tr>}</tbody></table></div></div>
@@ -174,16 +208,23 @@ export function combineDailyPlatformMetrics(
     .simple-list { display: grid; gap: .5rem; font-size: .875rem; color: var(--ui-text); }
     .simple-list li { display: flex; align-items: center; justify-content: space-between; gap: .75rem; border-bottom: 1px solid var(--ui-border); padding-bottom: .5rem; }
     .empty { padding: 1.5rem 0; text-align: center; font-size: .875rem; color: var(--ui-text-muted); }
-    .teacher-form { display: flex; align-items: end; gap: .75rem; margin-top: 1rem; } .teacher-form label { display: grid; gap: .35rem; width: min(100%, 28rem); font-size: .875rem; font-weight: 500; color: var(--ui-text); } .teacher-form input { border: 1px solid var(--ui-border-strong); border-radius: .5rem; padding: .5rem .75rem; background: transparent; }
+    .teacher-form { display: flex; align-items: center; gap: .75rem; margin-top: 1rem; }
+    .teacher-form mat-form-field { width: min(100%, 32rem); }
+    .teacher-option-name, .teacher-option-email { display: block; line-height: 1.25rem; }
+    .teacher-option-email { color: var(--ui-text-muted); font-size: .75rem; }
+    @media (max-width: 640px) { .teacher-form { align-items: stretch; flex-direction: column; } .teacher-form mat-form-field { width: 100%; } }
   `]
 })
 export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
   private readonly service = inject(SpeedReadingAdminService);
   private readonly authService = inject(AuthService);
   private readonly toaster = inject(ToasterService);
+  private readonly identityService = inject(IdentityService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly route = inject(ActivatedRoute);
   private request?: Subscription;
+  private teacherDirectoryRequest?: Subscription;
+  private teacherSearchTimer?: ReturnType<typeof setTimeout>;
 
   readonly canPlatformAnalytics = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingPlatformAnalytics));
   readonly canProgress = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingProgressView));
@@ -213,10 +254,33 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
   readonly teacherAssignmentAnalytics = signal<SpeedReadingTeacherAssignmentAnalytics | null>(null);
   readonly teacherContentAnalysis = signal<SpeedReadingTeacherContentAnalysisAnalytics | null>(null);
   readonly teacherTimeProgress = signal<SpeedReadingTeacherTimeProgressAnalytics | null>(null);
+  readonly teachers = signal<SpeedReadingTeacherDirectoryItem[]>([]);
+  readonly teachersLoading = signal(false);
+  readonly teacherGroups = computed<TeacherGroup[]>(() => {
+    const groups = new Map<string, { name: string; teachers: SpeedReadingTeacherDirectoryItem[] }>();
+    for (const teacher of this.teachers()) {
+      const key = teacher.institutionId || 'independent';
+      const name = teacher.institutionName?.trim() || 'Kuruma bağlı olmayanlar';
+      const group = groups.get(key) ?? { name, teachers: [] };
+      group.teachers.push(teacher);
+      groups.set(key, group);
+    }
+    const nameCounts = [...groups.values()].reduce((counts, group) =>
+      counts.set(group.name, (counts.get(group.name) ?? 0) + 1), new Map<string, number>());
+    return [...groups.entries()]
+      .sort(([, left], [, right]) => left.name.localeCompare(right.name, 'tr'))
+      .map(([key, group]) => ({
+        institutionName: (nameCounts.get(group.name) ?? 0) > 1 && key !== 'independent'
+          ? `${group.name} · ${key.slice(0, 8)}`
+          : group.name,
+        teachers: group.teachers.sort((left, right) => left.fullName.localeCompare(right.fullName, 'tr'))
+      }));
+  });
   dateFrom = this.defaultDate(-29);
   dateTo = this.defaultDate(0);
   progressSearch = '';
   teacherId = '';
+  teacherSearch: string | SpeedReadingTeacherDirectoryItem = '';
   progressPageNumber = 1;
   private readonly progressPageSize = 25;
 
@@ -235,12 +299,17 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
     this.load();
   }
 
-  ngOnDestroy(): void { this.request?.unsubscribe(); }
+  ngOnDestroy(): void {
+    this.request?.unsubscribe();
+    this.teacherDirectoryRequest?.unsubscribe();
+    if (this.teacherSearchTimer) clearTimeout(this.teacherSearchTimer);
+  }
 
   selectTab(tab: SpeedReadingAnalyticsTab): void {
     if (this.selectedTab() === tab) return;
     this.selectedTab.set(tab);
     this.error.set('');
+    if (tab === 'teacher') this.loadTeachers();
     this.load();
   }
 
@@ -306,7 +375,7 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
         return;
       }
       if (!this.teacherId.trim()) {
-        this.error.set('Öğretmen analitiği için bir öğretmen ID’si girin.');
+        if (!this.teachersLoading() && this.teachers().length === 0) this.loadTeachers();
         return;
       }
       this.loadTeacherAnalytics();
@@ -343,7 +412,7 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
 
   loadTeacherAnalytics(): void {
     if (!this.teacherId.trim()) {
-      this.error.set('Geçerli bir öğretmen ID’si girin.');
+      this.error.set('Analitiği görüntülemek için bir öğretmen seçin.');
       return;
     }
 
@@ -358,8 +427,62 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
       time: this.service.getTeacherTimeProgress(this.teacherId.trim(), ...range)
     }).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: result => { this.teacherClassOverview.set(result.overview); this.teacherAssignmentAnalytics.set(result.assignments); this.teacherContentAnalysis.set(result.content); this.teacherTimeProgress.set(result.time); },
-      error: () => this.error.set('Öğretmen analitik verisi yüklenemedi; öğretmen kapsam yetkisini ve ID’yi kontrol edin.')
+      error: () => this.error.set('Öğretmen analitik verisi yüklenemedi; öğretmenin yetki kapsamınızda olduğunu kontrol edin.')
     });
+  }
+
+  readonly displayTeacher = (teacher: SpeedReadingTeacherDirectoryItem | string | null): string =>
+    typeof teacher === 'string' || !teacher ? teacher ?? '' : `${teacher.fullName} · ${teacher.email}`;
+
+  searchTeachers(value: string | SpeedReadingTeacherDirectoryItem): void {
+    if (typeof value !== 'string') return;
+    this.teacherId = '';
+    this.clearTeacherAnalytics();
+    if (this.teacherSearchTimer) clearTimeout(this.teacherSearchTimer);
+    this.teacherSearchTimer = setTimeout(() => this.loadTeachers(value), 250);
+  }
+
+  selectTeacher(event: MatAutocompleteSelectedEvent): void {
+    const teacher = event.option.value as SpeedReadingTeacherDirectoryItem;
+    this.clearTeacherAnalytics();
+    this.teacherId = teacher.userId;
+    this.teacherSearch = teacher;
+    this.error.set('');
+  }
+
+  private loadTeachers(search = ''): void {
+    this.teacherDirectoryRequest?.unsubscribe();
+    this.teachersLoading.set(true);
+    const normalizedSearch = search.trim();
+    this.teacherDirectoryRequest = this.identityService.getSpeedReadingTeachers(1, 100, normalizedSearch)
+      .pipe(
+        switchMap(firstPage => {
+          const pageCount = Math.ceil(firstPage.totalCount / firstPage.pageSize);
+          if (pageCount <= 1) return [firstPage.items ?? []];
+          const remainingPages = Array.from({ length: pageCount - 1 }, (_, index) =>
+            this.identityService.getSpeedReadingTeachers(index + 2, 100, normalizedSearch));
+          return forkJoin(remainingPages).pipe(
+            map(pages => [firstPage.items ?? [], ...pages.map(page => page.items ?? [])].flat()));
+        }),
+        finalize(() => this.teachersLoading.set(false))
+      )
+      .subscribe({
+        next: teachers => this.teachers.set(teachers),
+        error: () => {
+          this.teachers.set([]);
+          this.error.set('Öğretmen listesi yüklenemedi.');
+        }
+      });
+  }
+
+  private clearTeacherAnalytics(): void {
+    this.request?.unsubscribe();
+    this.request = undefined;
+    this.loading.set(false);
+    this.teacherClassOverview.set(null);
+    this.teacherAssignmentAnalytics.set(null);
+    this.teacherContentAnalysis.set(null);
+    this.teacherTimeProgress.set(null);
   }
 
   private loadAnalyticsRequest<T>(request: Observable<T>, apply: (value: T) => void): void {
