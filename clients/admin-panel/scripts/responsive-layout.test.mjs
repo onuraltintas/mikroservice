@@ -6,6 +6,7 @@ const responsiveFormFiles = [
   '../src/app/features/auth/support/support.component.html',
   '../src/app/features/auth/register/teacher/teacher-register.component.html',
   '../src/app/features/auth/register/student/student-register.component.html',
+  '../src/app/features/auth/register/parent/parent-register.component.html',
   '../src/app/features/auth/register/institution/institution-register.component.html',
   '../src/app/features/identity/components/create-user-modal/create-user-modal.ts',
   '../src/app/features/identity/components/edit-user-modal/edit-user-modal.ts',

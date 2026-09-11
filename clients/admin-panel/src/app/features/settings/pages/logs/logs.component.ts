@@ -170,7 +170,7 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
                 </button>
             </div>
             <div class="p-6 overflow-y-auto font-mono text-sm">
-                <div class="grid grid-cols-2 gap-4 mb-6 text-xs text-gray-500 dark:text-gray-400">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 text-xs text-gray-500 dark:text-gray-400">
                     <div><strong class="text-gray-700 dark:text-gray-300">Tarih:</strong> {{ selectedLog.timestamp | date:'medium' }}</div>
                     <div><strong class="text-gray-700 dark:text-gray-300">Uygulama:</strong> {{ selectedLog.application }}</div>
                 </div>

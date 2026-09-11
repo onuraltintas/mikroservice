@@ -50,7 +50,7 @@ import { ToasterService } from '../../../../core/services/toaster.service';
                 <div class="p-6 space-y-5">
                     <form [formGroup]="form">
                         <div class="space-y-4">
-                            <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div class="group">
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 ml-0.5">Ad</label>
                                     <input type="text" formControlName="firstName" 
