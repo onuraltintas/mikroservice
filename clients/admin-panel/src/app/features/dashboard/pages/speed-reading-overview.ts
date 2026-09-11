@@ -107,6 +107,36 @@ type ManagementSection = 'types' | 'exercises' | 'texts' | 'programs' | 'paths' 
           }
         </nav>
 
+        @if (activeTabHelp(); as help) {
+          <aside class="rounded-xl border border-blue-200 bg-blue-50 p-4 text-blue-950 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-100">
+            <div class="flex items-start gap-3">
+              <mat-icon class="mt-0.5 shrink-0 text-blue-600 dark:text-blue-300">info</mat-icon>
+              <div class="min-w-0 flex-1">
+                <h2 class="font-semibold">{{ help.label }} hakkında</h2>
+                <p class="mt-1 text-sm leading-6 text-blue-900 dark:text-blue-200">{{ help.purpose }}</p>
+                <div class="mt-3 grid gap-4 text-sm md:grid-cols-2">
+                  <div>
+                    <h3 class="font-semibold">Neler yapılabilir?</h3>
+                    <ul class="mt-1 list-disc space-y-1 pl-5 text-blue-900 dark:text-blue-200">
+                      @for (capability of help.capabilities; track capability) {
+                        <li>{{ capability }}</li>
+                      }
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 class="font-semibold">Nasıl kullanılır?</h3>
+                    <ol class="mt-1 list-decimal space-y-1 pl-5 text-blue-900 dark:text-blue-200">
+                      @for (step of help.steps; track step) {
+                        <li>{{ step }}</li>
+                      }
+                    </ol>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        }
+
         @if (activeSection() === 'types') {
         <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <div class="flex items-center justify-between gap-3">
@@ -906,14 +936,49 @@ export class SpeedReadingOverviewComponent implements OnInit {
     icon: string;
     permission?: 'programs' | 'gamification';
     count: () => number | null;
+    purpose: string;
+    capabilities: readonly string[];
+    steps: readonly string[];
   }> = [
-    { value: 'types', label: 'Egzersiz türleri', icon: 'category', count: () => this.exerciseTypes().length },
-    { value: 'exercises', label: 'Egzersizler', icon: 'fitness_center', count: () => this.exercises().length },
-    { value: 'texts', label: 'Okuma metinleri', icon: 'menu_book', count: () => this.readingTexts().length },
-    { value: 'programs', label: 'Programlar', icon: 'calendar_month', permission: 'programs', count: () => this.programTemplates().length },
-    { value: 'paths', label: 'Öğrenme yolları', icon: 'account_tree', permission: 'programs', count: () => this.learningPathTemplates().length },
-    { value: 'achievements', label: 'Kazanımlar', icon: 'emoji_events', permission: 'gamification', count: () => this.achievements().length }
+    {
+      value: 'types', label: 'Egzersiz türleri', icon: 'category', count: () => this.exerciseTypes().length,
+      purpose: 'Öğrenci panelinde gösterilecek egzersiz kategorilerini ve bu kategorilerin hangi egzersiz motoruyla çalışacağını belirler.',
+      capabilities: ['Yeni egzersiz türü oluşturabilir veya mevcut türü düzenleyebilirsiniz.', 'Öğrenci panelindeki görünen ad, renk, ikon ve sıralamayı yönetebilirsiniz.', 'Bir türü geçici olarak pasif yapabilir veya kullanılmıyorsa silebilirsiniz.'],
+      steps: ['Yeni tür düğmesine basın veya mevcut bir kayıtta Düzenle seçeneğini açın.', 'Teknik ad ve motor tipini değiştirmeden önce bu türü kullanan egzersizleri kontrol edin.', 'Görsel ayarları seçip Kaydet düğmesine basın.']
+    },
+    {
+      value: 'exercises', label: 'Egzersizler', icon: 'fitness_center', count: () => this.exercises().length,
+      purpose: 'Öğrencinin uygulayacağı çalışma içeriklerini, zorluklarını ve ilgili çalışma motorunun ayarlarını yönetir.',
+      capabilities: ['Egzersiz oluşturabilir, düzenleyebilir, etkinleştirebilir veya silebilirsiniz.', 'Egzersizi bir egzersiz türüne bağlayabilir ve zorluk seviyesini belirleyebilirsiniz.', 'Motorun çalışma davranışını konfigürasyon ayarlarıyla tanımlayabilirsiniz.'],
+      steps: ['Önce gerekli egzersiz türünün mevcut olduğundan emin olun.', 'Yeni egzersiz düğmesiyle başlık, tür, zorluk ve açıklamayı girin.', 'Motor ayarlarını doğrulayıp egzersizi aktif olarak kaydedin.']
+    },
+    {
+      value: 'texts', label: 'Okuma metinleri', icon: 'menu_book', count: () => this.readingTexts().length,
+      purpose: 'Hızlı okuma çalışmalarında kullanılan metinleri ve metinlere bağlı anlama sorularını merkezi olarak yönetir.',
+      capabilities: ['Yaş, seviye, dil ve zorluk bilgileriyle okuma metni ekleyebilirsiniz.', 'Metni bir egzersizle ilişkilendirebilir veya ortak kullanım için tanımlayabilirsiniz.', 'Seçilen metne çoktan seçmeli anlama soruları ve doğru cevap ekleyebilirsiniz.'],
+      steps: ['Yeni metin düğmesiyle metin bilgilerini ve içeriğini kaydedin.', 'Listeden Soruları yönet seçeneğiyle ilgili metni açın.', 'Soruları ve doğru cevapları ekleyip metni kullanıma hazır hale getirin.']
+    },
+    {
+      value: 'programs', label: 'Programlar', icon: 'calendar_month', permission: 'programs', count: () => this.programTemplates().length,
+      purpose: 'Öğrencilerin yaşına ve başlangıç ölçümüne göre atanabilecek haftalık hızlı okuma programlarının genel kurallarını tanımlar.',
+      capabilities: ['Program süresi, başlangıç ve üst zorluk seviyelerini belirleyebilirsiniz.', 'Programa uygun değerlendirme puanı ve yaş grubu aralığını tanımlayabilirsiniz.', 'Haftalık çalışma düzenini ve programın aktiflik durumunu yönetebilirsiniz.'],
+      steps: ['Yeni program düğmesine basıp hedef yaş ve puan aralığını belirleyin.', 'Süre, zorluk ilerlemesi ve haftalık planı girin.', 'Çakışan puan aralıklarını kontrol ederek programı kaydedin.']
+    },
+    {
+      value: 'paths', label: 'Öğrenme yolları', icon: 'account_tree', permission: 'programs', count: () => this.learningPathTemplates().length,
+      purpose: 'Egzersiz ve metinlerin öğrenciye hangi sırayla açılacağını, aralarındaki bağlantıları ve ön koşulları düzenler.',
+      capabilities: ['Yaş grubuna uygun öğrenme yolu şablonları oluşturabilirsiniz.', 'Yola düğümler ekleyip her düğüme egzersiz veya okuma metni bağlayabilirsiniz.', 'Bir sonraki çalışmanın açılması için ön koşul düğümleri belirleyebilirsiniz.'],
+      steps: ['Öğrenme yolu şablonunu oluşturun veya mevcut bir yolu seçin.', 'Düğümleri hedef sıraya göre ekleyip içeriklerini bağlayın.', 'Gerekli ön koşulları tanımlayıp yolu aktif hale getirin.']
+    },
+    {
+      value: 'achievements', label: 'Kazanımlar', icon: 'emoji_events', permission: 'gamification', count: () => this.achievements().length,
+      purpose: 'Öğrencilerin çalışma, gelişim ve devamlılık hedeflerine ulaştığında kazanacağı rozetleri ve XP ödüllerini tanımlar.',
+      capabilities: ['Yeni kazanım, rozet açıklaması ve emoji oluşturabilirsiniz.', 'Kazanma kriterini, seviyeyi ve verilecek XP miktarını ayarlayabilirsiniz.', 'Kazanımı tekrarlanabilir veya tek seferlik olarak yapılandırabilirsiniz.'],
+      steps: ['Yeni kazanım düğmesine basıp ad, açıklama ve görsel bilgilerini girin.', 'Kriter tipi ile kriter değerini birlikte ve uyumlu biçimde tanımlayın.', 'XP ödülünü ve tekrarlanma durumunu kontrol edip kaydedin.']
+    }
   ];
+  readonly activeTabHelp = computed(() =>
+    this.managementTabs.find(tab => tab.value === this.activeSection()) ?? null);
   readonly exerciseTypeColors = [
     { value: '#2563eb', label: 'Mavi' },
     { value: '#4f46e5', label: 'Çivit mavisi' },
