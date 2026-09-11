@@ -160,12 +160,43 @@ internal sealed class OwnedSpeedReadingPrograms(
         if (progress is null)
             return null;
 
-        var recentLogs = await db.DailyExerciseLogs
-            .AsNoTracking()
-            .Where(item => item.UserId == progress.UserId)
-            .OrderByDescending(item => item.CompletedDate)
+        var recentLogs = await (
+                from log in db.DailyExerciseLogs.AsNoTracking()
+                join exercise in db.Exercises.AsNoTracking() on log.ExerciseId equals exercise.Id into exerciseRows
+                from exercise in exerciseRows.DefaultIfEmpty()
+                join exerciseType in db.ExerciseTypes.AsNoTracking() on log.ExerciseTypeId equals exerciseType.Id into exerciseTypeRows
+                from exerciseType in exerciseTypeRows.DefaultIfEmpty()
+                join sessionResult in db.ExerciseSessionResults.AsNoTracking() on log.SessionId equals sessionResult.SessionId into sessionResultRows
+                from sessionResult in sessionResultRows.DefaultIfEmpty()
+                where log.StudentProgramProgressId == progress.Id
+                orderby log.CompletedDate descending
+                select new DailyExerciseLogSummary(
+                    log.Id,
+                    log.ExerciseId,
+                    log.ExerciseTypeId,
+                    log.DayNumber,
+                    log.WeekNumber,
+                    log.DifficultyLevel,
+                    log.CompletedDate,
+                    log.TimeSpentSeconds,
+                    log.IsMeasured ? log.SuccessRate : null,
+                    log.IsPassed,
+                    log.AttemptNumber,
+                    log.IsRetry,
+                    log.DevicePlatform,
+                    log.CorrectCount,
+                    log.IncorrectCount,
+                    log.TotalAttempts,
+                    sessionResult != null && sessionResult.IsMeasured && sessionResult.RawWpm > 0
+                        ? sessionResult.RawWpm
+                        : log.AverageWPM,
+                    sessionResult != null && sessionResult.IsMeasured
+                        ? sessionResult.ComprehensionScore
+                        : log.AverageComprehension,
+                    log.IsMeasured ? "Measured" : "NotMeasured",
+                    exercise == null ? null : exercise.Title,
+                    exerciseType == null ? null : exerciseType.DisplayName))
             .Take(30)
-            .Select(ToDailyLogSummary())
             .ToListAsync(cancellationToken);
 
         return new AdminStudentProgressDetails(ToProgressSummary(progress), recentLogs);
@@ -324,7 +355,9 @@ internal sealed class OwnedSpeedReadingPrograms(
             item.TotalAttempts,
             item.AverageWPM,
             item.AverageComprehension,
-            item.IsMeasured ? "Measured" : "NotMeasured");
+            item.IsMeasured ? "Measured" : "NotMeasured",
+            null,
+            null);
 
     private static DailyExerciseLogSummary ToDailyLogSummary(DailyExerciseLog item) =>
         new(
@@ -346,7 +379,9 @@ internal sealed class OwnedSpeedReadingPrograms(
             item.TotalAttempts,
             item.AverageWPM,
             item.AverageComprehension,
-            item.IsMeasured ? "Measured" : "NotMeasured");
+            item.IsMeasured ? "Measured" : "NotMeasured",
+            null,
+            null);
 
     private static ExerciseProgramTemplateAdminSummary ToAdminSummary(ProgramTemplate item) =>
         new(

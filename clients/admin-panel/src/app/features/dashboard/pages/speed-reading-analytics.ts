@@ -64,6 +64,10 @@ export function progressStudentLabel(progress: AdminStudentProgressSummary): str
   return progress.studentName?.trim() || 'Öğrenci profili';
 }
 
+export function measurementStatusLabel(status: string): string {
+  return status === 'Measured' ? 'Ölçümlü' : 'Ölçümsüz';
+}
+
 @Component({
   selector: 'app-speed-reading-analytics',
   standalone: true,
@@ -170,7 +174,8 @@ export function progressStudentLabel(progress: AdminStudentProgressSummary): str
               <div class="metric-card"><span>Başarı</span><strong>{{ details.progress.averageSuccessRate }}%</strong></div>
             </div>
             <p class="muted mt-4">Tamamlanan gün: {{ details.progress.daysCompleted }} · Tamamlanan egzersiz: {{ details.progress.exercisesCompleted }} · Güncel seri: {{ details.progress.currentStreak }}</p>
-            <div class="mt-4 overflow-x-auto"><table class="data-table"><thead><tr><th>Tarih</th><th>Gün/hafta</th><th>Sonuç</th><th>WPM</th><th>Anlama</th><th>Ölçüm</th></tr></thead><tbody>@for (log of details.recentLogs; track log.id) {<tr><td>{{ log.completedDate | date:'dd.MM.yyyy HH:mm' }}</td><td>{{ log.dayNumber }} / {{ log.weekNumber }}</td><td>{{ log.isPassed ? 'Geçti' : 'Başarısız' }}</td><td>{{ log.averageWpm ?? '-' }}</td><td>{{ log.averageComprehension ?? '-' }}</td><td>{{ log.measurementStatus }}</td></tr>} @empty {<tr><td colspan="6" class="empty">Son kayıt yok.</td></tr>}</tbody></table></div>
+            <p class="muted mt-4">WPM ve anlama yalnızca bu değerleri üreten ölçümlü egzersizlerde görünür. “Veri yok”, bu etkinlik kaydı için değer oluşmadığını gösterir.</p>
+            <div class="mt-2 overflow-x-auto"><table class="data-table"><thead><tr><th>Tarih</th><th>Egzersiz</th><th>Tür</th><th>Gün/hafta</th><th>Sonuç</th><th>Süre</th><th>Doğru</th><th>Başarı</th><th>WPM</th><th>Anlama</th><th>Ölçüm</th></tr></thead><tbody>@for (log of details.recentLogs; track log.id) {<tr><td>{{ log.completedDate | date:'dd.MM.yyyy HH:mm' }}</td><td>{{ log.exerciseTitle || 'Egzersiz bilgisi yok' }}</td><td>{{ log.exerciseTypeDisplayName || 'Tür bilgisi yok' }}</td><td>{{ log.dayNumber }} / {{ log.weekNumber }}</td><td>{{ log.isPassed ? 'Geçti' : 'Başarısız' }}</td><td>{{ log.timeSpentSeconds }} sn</td><td>{{ log.correctCount }} / {{ log.totalAttempts }}</td><td>{{ log.successRate === null ? 'Veri yok' : (log.successRate + '%') }}</td><td>{{ log.averageWpm === null ? 'Veri yok' : (log.averageWpm + ' WPM') }}</td><td>{{ log.averageComprehension === null ? 'Veri yok' : (log.averageComprehension + '%') }}</td><td>{{ measurementStatusLabel(log.measurementStatus) }}</td></tr>} @empty {<tr><td colspan="11" class="empty">Son kayıt yok.</td></tr>}</tbody></table></div>
           </section>
         }
         </section>
@@ -320,6 +325,10 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
 
   progressStudentLabel(progress: AdminStudentProgressSummary): string {
     return progressStudentLabel(progress);
+  }
+
+  measurementStatusLabel(status: string): string {
+    return measurementStatusLabel(status);
   }
 
   selectedProgressLabel(): string {

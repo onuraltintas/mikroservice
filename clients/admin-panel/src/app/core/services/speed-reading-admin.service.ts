@@ -244,6 +244,8 @@ export interface AdminStudentProgressDetails {
     averageWpm: number | null;
     averageComprehension: number | null;
     measurementStatus: string;
+    exerciseTitle: string | null;
+    exerciseTypeDisplayName: string | null;
   }[];
 }
 

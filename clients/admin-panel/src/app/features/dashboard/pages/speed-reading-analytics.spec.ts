@@ -9,7 +9,7 @@ import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import { SpeedReadingAdminService, AdminStudentProgressSummary } from '../../../core/services/speed-reading-admin.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { IdentityService, SpeedReadingTeacherDirectoryItem } from '../../../core/services/identity.service';
-import { SpeedReadingAnalyticsComponent, combineDailyPlatformMetrics, progressStudentLabel } from './speed-reading-analytics';
+import { SpeedReadingAnalyticsComponent, combineDailyPlatformMetrics, measurementStatusLabel, progressStudentLabel } from './speed-reading-analytics';
 
 describe('combineDailyPlatformMetrics', () => {
   it('merges the API series by date, keeps zeroes for missing values and sorts chronologically', () => {
@@ -33,6 +33,13 @@ describe('combineDailyPlatformMetrics', () => {
 describe('progressStudentLabel', () => {
   it('prefers the student name supplied by the progress API', () => {
     expect(progressStudentLabel({ studentName: 'Elif Demir' } as unknown as AdminStudentProgressSummary)).toBe('Elif Demir');
+  });
+});
+
+describe('measurementStatusLabel', () => {
+  it('translates both persisted measurement states into Turkish', () => {
+    expect(measurementStatusLabel('Measured')).toBe('Ölçümlü');
+    expect(measurementStatusLabel('NotMeasured')).toBe('Ölçümsüz');
   });
 });
 

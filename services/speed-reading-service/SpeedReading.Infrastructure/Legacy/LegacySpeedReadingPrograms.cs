@@ -190,7 +190,7 @@ internal sealed class LegacySpeedReadingPrograms(SpeedReadingDbContext db) : ILe
 
         var recentLogs = await db.DailyExerciseLogs
             .AsNoTracking()
-            .Where(item => item.UserId == progress.UserId && !item.IsDeleted)
+            .Where(item => item.StudentProgramProgressId == progress.Id && !item.IsDeleted)
             .OrderByDescending(item => item.CompletedDate)
             .Take(30)
             .Select(item => new DailyExerciseLogSummary(
@@ -212,7 +212,9 @@ internal sealed class LegacySpeedReadingPrograms(SpeedReadingDbContext db) : ILe
                 item.TotalAttempts,
                 item.AverageWPM,
                 item.AverageComprehension,
-                "Measured"))
+                "Measured",
+                null,
+                null))
             .ToListAsync(cancellationToken);
 
         return new AdminStudentProgressDetails(
@@ -302,7 +304,9 @@ internal sealed class LegacySpeedReadingPrograms(SpeedReadingDbContext db) : ILe
                 item.TotalAttempts,
                 item.AverageWPM,
                 item.AverageComprehension,
-                "Measured"))
+                "Measured",
+                null,
+                null))
             .ToListAsync(cancellationToken);
     }
 

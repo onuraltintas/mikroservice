@@ -344,7 +344,9 @@ public sealed record DailyExerciseLogSummary(
     int TotalAttempts,
     decimal? AverageWpm,
     decimal? AverageComprehension,
-    string MeasurementStatus = "Measured");
+    string MeasurementStatus,
+    string? ExerciseTitle,
+    string? ExerciseTypeDisplayName);
 
 public sealed record LearningPathTemplateSummary(
     Guid Id,
