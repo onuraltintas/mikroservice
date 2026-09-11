@@ -69,11 +69,16 @@ internal sealed class OwnedSpeedReadingPrograms(
             join template in db.ProgramTemplates.AsNoTracking()
                 on progress.ProgramTemplateId equals template.Id into templateRows
             from template in templateRows.DefaultIfEmpty()
+            join profile in db.UserProfiles.AsNoTracking()
+                on progress.UserId equals profile.UserId into profileRows
+            from profile in profileRows.DefaultIfEmpty()
             where template == null || !template.IsDeleted
             select new
             {
                 Progress = progress,
-                TemplateName = template == null ? string.Empty : template.Name
+                TemplateName = template == null ? string.Empty : template.Name,
+                HistoricalDisplayName = profile == null ? null : profile.HistoricalDisplayName,
+                HistoricalEmail = profile == null ? null : profile.HistoricalEmail
             };
 
         if (!accessScope.IsGlobal)
@@ -99,7 +104,7 @@ internal sealed class OwnedSpeedReadingPrograms(
                 cancellationToken);
             var pageUsersById = pageUsers.Users.ToDictionary(item => item.UserId);
             var items = pageRows
-                .Select(row => ToAdminProgressSummary(row.Progress, row.TemplateName, pageUsersById))
+                .Select(row => ToAdminProgressSummary(row.Progress, row.TemplateName, row.HistoricalDisplayName, row.HistoricalEmail, pageUsersById))
                 .ToList();
 
             return new SpeedReadingPage<AdminStudentProgressSummary>(items, page, size, totalCount);
@@ -133,7 +138,7 @@ internal sealed class OwnedSpeedReadingPrograms(
             cancellationToken);
         var searchPageUsersById = searchPageUsers.Users.ToDictionary(item => item.UserId);
         var filteredItems = searchPageRows
-            .Select(row => ToAdminProgressSummary(row.Progress, row.TemplateName, searchPageUsersById))
+            .Select(row => ToAdminProgressSummary(row.Progress, row.TemplateName, row.HistoricalDisplayName, row.HistoricalEmail, searchPageUsersById))
             .ToList();
 
         return new SpeedReadingPage<AdminStudentProgressSummary>(
@@ -280,6 +285,8 @@ internal sealed class OwnedSpeedReadingPrograms(
     private static AdminStudentProgressSummary ToAdminProgressSummary(
         StudentProgramProgress progress,
         string templateName,
+        string? historicalDisplayName,
+        string? historicalEmail,
         IReadOnlyDictionary<Guid, EduPlatform.Shared.Contracts.Reporting.SpeedReadingUserDirectoryItem> usersById)
     {
         usersById.TryGetValue(progress.UserId, out var user);
@@ -292,8 +299,8 @@ internal sealed class OwnedSpeedReadingPrograms(
             progress.DaysCompleted,
             progress.ExercisesCompleted,
             progress.AssignedDate,
-            studentName,
-            user?.Email,
+            string.IsNullOrWhiteSpace(studentName) ? historicalDisplayName : studentName,
+            string.IsNullOrWhiteSpace(user?.Email) ? historicalEmail : user.Email,
             templateName);
     }
 

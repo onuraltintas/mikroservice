@@ -1399,6 +1399,8 @@ public sealed class OwnedSpeedReadingDbContext(
         {
             entity.ToTable("user_profiles");
             entity.Property(item => item.TargetComprehension).HasPrecision(5, 2);
+            entity.Property(item => item.HistoricalDisplayName).HasMaxLength(200);
+            entity.Property(item => item.HistoricalEmail).HasMaxLength(320);
             entity.HasIndex(item => item.UserId).IsUnique();
             entity.HasIndex(item => item.AgeGroupConfigurationId);
             entity.HasOne<AgeGroupConfiguration>()

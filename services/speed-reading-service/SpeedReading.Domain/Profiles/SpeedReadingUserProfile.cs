@@ -16,6 +16,8 @@ public sealed class SpeedReadingUserProfile : AggregateRoot
     public Guid? AgeGroupConfigurationId { get; private set; }
     public Guid? InstitutionId { get; private set; }
     public bool IsActive { get; private set; }
+    public string? HistoricalDisplayName { get; private set; }
+    public string? HistoricalEmail { get; private set; }
 
     public static SpeedReadingUserProfile CreateDefault(
         Guid id,
@@ -54,7 +56,9 @@ public sealed class SpeedReadingUserProfile : AggregateRoot
         DateTime createdAt,
         string? createdBy,
         DateTime? updatedAt,
-        string? updatedBy)
+        string? updatedBy,
+        string? historicalDisplayName = null,
+        string? historicalEmail = null)
     {
         var profile = CreateDefault(id, userId, createdAt, createdBy, targetWpm, targetComprehension);
         profile.CurrentLevel = Math.Max(currentLevel, 1);
@@ -64,7 +68,14 @@ public sealed class SpeedReadingUserProfile : AggregateRoot
         profile.IsActive = isActive;
         profile.UpdatedAt = updatedAt.HasValue ? EnsureUtc(updatedAt.Value) : null;
         profile.UpdatedBy = updatedBy;
+        profile.RefreshHistoricalDisplay(historicalDisplayName, historicalEmail);
         return profile;
+    }
+
+    public void RefreshHistoricalDisplay(string? displayName, string? email)
+    {
+        HistoricalDisplayName = Normalize(displayName, 200);
+        HistoricalEmail = Normalize(email, 320);
     }
 
     public void ApplyAssessment(
@@ -123,4 +134,12 @@ public sealed class SpeedReadingUserProfile : AggregateRoot
             : value.Kind == DateTimeKind.Local
                 ? value.ToUniversalTime()
                 : DateTime.SpecifyKind(value, DateTimeKind.Utc);
+
+    private static string? Normalize(string? value, int maxLength)
+    {
+        var normalized = value?.Trim();
+        return string.IsNullOrWhiteSpace(normalized)
+            ? null
+            : normalized.Length <= maxLength ? normalized : normalized[..maxLength];
+    }
 }

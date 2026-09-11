@@ -46,6 +46,20 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class SpeedReadingOwnedDomainTests
 {
     [Fact]
+    public void Historical_profile_display_is_trimmed_and_can_be_refreshed()
+    {
+        var profile = SpeedReadingUserProfile.CreateDefault(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            DateTime.UtcNow);
+
+        profile.RefreshHistoricalDisplay("  Elif Demir  ", "  elif@example.com ");
+
+        profile.HistoricalDisplayName.Should().Be("Elif Demir");
+        profile.HistoricalEmail.Should().Be("elif@example.com");
+    }
+
+    [Fact]
     public void Exercise_session_timeout_can_start_at_the_first_measured_action()
     {
         var sessionStart = new DateTime(2026, 9, 10, 10, 0, 0, DateTimeKind.Utc);
@@ -213,6 +227,9 @@ public sealed class SpeedReadingOwnedDomainTests
             .Should().Be("age_group_configurations");
         context.Model.FindEntityType(typeof(SpeedReadingUserProfile))!.GetTableName()
             .Should().Be("user_profiles");
+        var userProfile = context.Model.FindEntityType(typeof(SpeedReadingUserProfile))!;
+        userProfile.FindProperty(nameof(SpeedReadingUserProfile.HistoricalDisplayName))!.GetMaxLength().Should().Be(200);
+        userProfile.FindProperty(nameof(SpeedReadingUserProfile.HistoricalEmail))!.GetMaxLength().Should().Be(320);
         context.Model.FindEntityType(typeof(LearningPathTemplate))!.GetTableName()
             .Should().Be("learning_path_templates");
         context.Model.FindEntityType(typeof(LearningPathNode))!.GetTableName()

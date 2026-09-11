@@ -44,17 +44,17 @@ public sealed class OwnedSpeedReadingUserProfileBackfill(
             }
         }
 
-        var existingIds = await owned.UserProfiles
-            .AsNoTracking()
-            .Select(item => item.UserId)
-            .ToHashSetAsync(cancellationToken);
+        var existingProfiles = await owned.UserProfiles
+            .ToDictionaryAsync(item => item.UserId, cancellationToken);
         var inserted = 0;
         var existing = 0;
 
         foreach (var source in sourceRows)
         {
-            if (existingIds.Contains(source.Id))
+            var displayName = $"{source.FirstName} {source.LastName}".Trim();
+            if (existingProfiles.TryGetValue(source.Id, out var existingProfile))
             {
+                existingProfile.RefreshHistoricalDisplay(displayName, source.Email);
                 existing++;
                 continue;
             }
@@ -72,7 +72,9 @@ public sealed class OwnedSpeedReadingUserProfileBackfill(
                 NormalizeUtc(DateTime.UtcNow),
                 source.Id.ToString(),
                 null,
-                null));
+                null,
+                displayName,
+                source.Email));
             inserted++;
         }
 
