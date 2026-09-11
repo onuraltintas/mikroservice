@@ -31,6 +31,27 @@ describe('combineDailyPlatformMetrics', () => {
 });
 
 describe('SpeedReadingAnalyticsComponent progress management', () => {
+  it('clears the selected progress detail when its dialog is closed', () => {
+    const service = {};
+    TestBed.configureTestingModule({
+      imports: [SpeedReadingAnalyticsComponent],
+      providers: [
+        { provide: PLATFORM_ID, useValue: 'browser' },
+        { provide: ActivatedRoute, useValue: { snapshot: { data: {} } } },
+        { provide: AuthService, useValue: { hasPermission: vi.fn(() => true) } },
+        { provide: SpeedReadingAdminService, useValue: service },
+        { provide: IdentityService, useValue: { getSpeedReadingTeachers: vi.fn(() => of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 100 })) } },
+        { provide: ToasterService, useValue: {} }
+      ]
+    });
+
+    const component = TestBed.createComponent(SpeedReadingAnalyticsComponent).componentInstance;
+    component.progressDetails.set({} as never);
+    component.closeProgressDetails();
+
+    expect(component.progressDetails()).toBeNull();
+  });
+
   it('resets progress only with ProgramManage and reloads the list', async () => {
     const service = {
       resetStudentProgress: vi.fn(() => of(void 0)),
