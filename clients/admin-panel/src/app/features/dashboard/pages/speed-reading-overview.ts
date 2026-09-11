@@ -78,10 +78,6 @@ import { ToasterService } from '../../../core/services/toaster.service';
           </div>
         </div>
 
-        <div class="rounded-xl border border-indigo-100 bg-indigo-50 p-5 text-sm text-indigo-900 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-200">
-          Mevcut hızlı okuma veritabanı korunarak içerik kataloğu bu servisten okunuyor. İçerik değişiklikleri yalnızca ContentManage yetkisine sahip yöneticilere açıktır ve her mutation idempotency ile audit edilir.
-        </div>
-
         <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <div class="flex items-center justify-between gap-3">
               <div>
