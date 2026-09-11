@@ -9,7 +9,7 @@ import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import { SpeedReadingAdminService, AdminStudentProgressSummary } from '../../../core/services/speed-reading-admin.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { IdentityService, SpeedReadingTeacherDirectoryItem } from '../../../core/services/identity.service';
-import { SpeedReadingAnalyticsComponent, combineDailyPlatformMetrics } from './speed-reading-analytics';
+import { SpeedReadingAnalyticsComponent, combineDailyPlatformMetrics, progressStudentLabel } from './speed-reading-analytics';
 
 describe('combineDailyPlatformMetrics', () => {
   it('merges the API series by date, keeps zeroes for missing values and sorts chronologically', () => {
@@ -27,6 +27,12 @@ describe('combineDailyPlatformMetrics', () => {
       { date: '2026-09-02', activeUsers: 4, activities: 9 },
       { date: '2026-09-03', activeUsers: 0, activities: 1 }
     ]);
+  });
+});
+
+describe('progressStudentLabel', () => {
+  it('prefers the student name supplied by the progress API', () => {
+    expect(progressStudentLabel({ studentName: 'Elif Demir' } as unknown as AdminStudentProgressSummary)).toBe('Elif Demir');
   });
 });
 
