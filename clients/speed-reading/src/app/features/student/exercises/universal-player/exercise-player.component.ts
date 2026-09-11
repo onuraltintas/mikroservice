@@ -14,6 +14,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 
 import { EngineFactory, EngineType } from './engines/engine-factory';
 import { FocusEngine } from './engines/focus.engine';
+import { AdaptiveFluencyEngine, AdaptiveFluencyStageFeedback } from './engines/adaptive-fluency.engine';
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './engines/base-engine.interface';
 import { GridInteractionEngine } from './engines/grid-interaction.engine';
 import { MotionPathEngine } from './engines/motion-path.engine';
@@ -278,6 +279,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     questionText?: string;
     correctAnswer?: string;
   }[] = [];
+  private adaptiveQuestionHistory: any[] = [];
   readingWpm = 0;
   exercisePhase: 'reading' | 'questions' | 'completed' = 'reading';
   selectedAnswer: string | null = null;
@@ -652,6 +654,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         onComplete: (result) => {
           this.stopTimer();
 
+          if (this.engine?.engineType === 'adaptive_fluency') {
+            this.handleAdaptiveReadingCompleted(result);
+            return;
+          }
+
           const finalizeCompletion = () => {
 
           // For word_highlight or reading_comprehension with questions, go to question phase
@@ -902,7 +909,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         'text_stream',
         'free_reading',
         'regression_reduction',
-        'subvocalization_reduction'
+        'subvocalization_reduction',
+        'adaptive_fluency'
       ].includes(this.engine?.engineType || '');
   }
 
@@ -936,7 +944,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     });
   }
 
-  private finishReadingTracking(onFinished: () => void): void {
+  private finishReadingTracking(onFinished: (response?: ValidationResponse) => void): void {
     if (!this.shouldTrackReading() || !this.readingTrackingStarted || this.readingTrackingFinished) {
       onFinished();
       return;
@@ -952,7 +960,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       action: 'finish_reading',
       timestamp: new Date()
     }).pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => onFinished(),
+      next: response => onFinished(response),
       error: (error) => {
         console.error('[ExercisePlayer] Reading finish tracking failed:', error);
         onFinished();
@@ -1145,6 +1153,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.readingTrackingStartCompleted = false;
     this.pendingReadingCompletion = undefined;
     this.questionAnswers = [];
+    this.adaptiveQuestionHistory = [];
     this.selectedAnswer = null;
     this.questionFeedback = null;
     this.tachistoscopeAnswer = '';
@@ -1474,6 +1483,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   private finishQuestionPhase(): void {
     this.stopQuestionTimer();
+    if (this.engine?.engineType === 'adaptive_fluency') {
+      this.adaptiveQuestionHistory.push(...this.questionAnswers);
+      this.advanceAdaptiveStage();
+      return;
+    }
     const correctCount = this.questionAnswers.filter(a => a.isCorrect).length;
     const totalQuestions = this.comprehensionQuestions.length;
     const comprehensionAccuracy = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
@@ -2695,28 +2709,28 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private readingScrollProgress = 0;
 
   getComprehensionText(): string {
-    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation') {
+    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
       return (this.engine as any).getText?.() || '';
     }
     return '';
   }
 
   getComprehensionWordCount(): number {
-    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation') {
+    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
       return (this.engine as any).getWordCount?.() || 0;
     }
     return 0;
   }
 
   getComprehensionFontSize(): string {
-    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation') {
+    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
       return (this.engine as any).getFontSize?.() || 'medium';
     }
     return 'medium';
   }
 
   getCurrentReadingWpm(): number {
-    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation') {
+    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
       const wordCount = (this.engine as any).getWordCount?.() || 0;
       const timeMinutes = this.engineState.timeElapsed / 1000 / 60;
       if (timeMinutes > 0) {
@@ -2737,16 +2751,107 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.readingScrollProgress = Math.min(100, Math.max(0, scrollPercent));
 
       // Notify engine about scroll progress
-      if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation') {
+      if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
         this.engine.handleInput({ scrollProgress: this.readingScrollProgress });
       }
     }
   }
 
   completeReading(): void {
-    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation') {
+    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
       (this.engine as any).completeReading();
     }
+  }
+
+  getAdaptivePurpose(): string {
+    return this.engine?.engineType === 'adaptive_fluency'
+      ? (this.engine as AdaptiveFluencyEngine).getPurpose()
+      : '';
+  }
+
+  getAdaptiveStageLabel(): string {
+    if (this.engine?.engineType !== 'adaptive_fluency') return '';
+    return ['Başlangıç ölçümü', 'Amaçlı tekrar 1', 'Amaçlı tekrar 2', 'Yeni metin aktarım testi']
+      [(this.engine as AdaptiveFluencyEngine).getStage()] || '';
+  }
+
+  private handleAdaptiveReadingCompleted(result: EngineResult): void {
+    this.waitForPendingActions(() => this.finishReadingTracking(response => {
+      if (!response?.isValid) {
+        this.showToast(response?.message || 'Okuma aşaması doğrulanamadı.', 'error');
+        this.readingTrackingFinished = false;
+        (this.engine as AdaptiveFluencyEngine).start();
+        return;
+      }
+      const engine = this.engine as AdaptiveFluencyEngine;
+      const questions = engine.getQuestions();
+      this.readingWpm = Number(response.currentWPM ?? result.details?.wpm ?? 0);
+      if (questions.length > 0) {
+        this.comprehensionQuestions = questions;
+        this.currentQuestionIndex = 0;
+        this.questionAnswers = [];
+        this.selectedAnswer = null;
+        this.questionFeedback = null;
+        this.exercisePhase = 'questions';
+        this.startQuestionTimer();
+        this.cdr.detectChanges();
+        return;
+      }
+      this.advanceAdaptiveStage();
+    }));
+  }
+
+  private advanceAdaptiveStage(): void {
+    if (!this.sessionId || this.sessionId === 'preview-mode') return;
+    this.enqueueAction({ action: 'adaptive_next_stage', timestamp: new Date() } as ActionData, response => {
+      if (!response.isValid) {
+        this.showToast(response.message || 'Sonraki aşamaya geçilemedi.', 'error');
+        return;
+      }
+      const feedback = (response.feedbackData || {}) as AdaptiveFluencyStageFeedback;
+      if (feedback.completed) {
+        const stages = (response.feedbackData as any)?.stageResults || [];
+        const baseline = stages.find((item: any) => item.stage === 0);
+        const transfer = stages.find((item: any) => item.stage === 3);
+        const comprehension = Number(feedback.transferComprehension ?? 0);
+        this.result = {
+          score: comprehension,
+          accuracy: comprehension,
+          totalTime: stages.reduce((sum: number, item: any) => sum + Number(item.readingSeconds || 0) * 1000, 0),
+          totalSteps: 4,
+          completedSteps: 4,
+          errors: this.questionAnswers.filter(answer => !answer.isCorrect).length,
+          details: {
+            wpm: transfer?.wpm,
+            baselineWpm: baseline?.wpm,
+            comprehensionScore: comprehension,
+            baselineComprehension: feedback.baselineComprehension,
+            transferGainPercent: feedback.transferGainPercent,
+            performanceLevel: feedback.transferGainPercent == null ? 'Anlama eşiği korunamadı' : 'Aktarım ölçüldü',
+            answers: [...this.adaptiveQuestionHistory]
+          }
+        };
+        this.exercisePhase = 'completed';
+        this.engineState.isCompleted = true;
+        this.saveResult(this.result);
+        this.cdr.detectChanges();
+        return;
+      }
+
+      const engine = this.engine as AdaptiveFluencyEngine;
+      engine.applyStage(feedback);
+      this.comprehensionQuestions = engine.getQuestions();
+      this.questionAnswers = [];
+      this.selectedAnswer = null;
+      this.questionFeedback = null;
+      this.readingTrackingStarted = false;
+      this.readingTrackingStartCompleted = false;
+      this.readingTrackingFinished = false;
+      this.exercisePhase = 'reading';
+      this.startReadingTracking();
+      engine.start();
+      this.cdr.detectChanges();
+    }).catch(error => this.showToast(error?.message || 'Sonraki aşamaya geçilemedi.', 'error'));
   }
 
   // ============ Scan Find Helper Methods ============

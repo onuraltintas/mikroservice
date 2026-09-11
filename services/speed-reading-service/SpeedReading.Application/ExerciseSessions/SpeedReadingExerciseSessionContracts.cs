@@ -276,3 +276,53 @@ public static class SpeedReadingExerciseSessionRules
         return Math.Max(xp, 10);
     }
 }
+
+public static class AdaptiveFluencyRules
+{
+    public static decimal ResolveTargetChangePercent(
+        decimal comprehension,
+        decimal increaseThreshold,
+        decimal maintainThreshold,
+        decimal supportThreshold,
+        decimal increasePercent,
+        decimal decreasePercent,
+        decimal supportDecreasePercent)
+    {
+        if (increaseThreshold is < 0 or > 100
+            || maintainThreshold is < 0 or > 100
+            || supportThreshold is < 0 or > 100
+            || increaseThreshold < maintainThreshold
+            || maintainThreshold < supportThreshold
+            || increasePercent is < 0 or > 25
+            || decreasePercent is < 0 or > 25
+            || supportDecreasePercent is < 0 or > 25)
+        {
+            throw new ArgumentOutOfRangeException(nameof(increaseThreshold), "Adaptive fluency thresholds or target changes are invalid.");
+        }
+
+        var boundedComprehension = Math.Clamp(comprehension, 0, 100);
+        if (boundedComprehension >= increaseThreshold)
+            return Math.Abs(increasePercent);
+        if (boundedComprehension >= maintainThreshold)
+            return 0;
+        if (boundedComprehension >= supportThreshold)
+            return -Math.Abs(decreasePercent);
+        return -Math.Abs(supportDecreasePercent);
+    }
+
+    public static decimal? CalculateTransferGainPercent(
+        decimal? baselineWpm,
+        decimal baselineComprehension,
+        decimal? transferWpm,
+        decimal transferComprehension,
+        decimal minimumComprehension)
+    {
+        if (baselineWpm is not > 0 || transferWpm is not > 0)
+            return null;
+        if (Math.Clamp(baselineComprehension, 0, 100) < minimumComprehension
+            || Math.Clamp(transferComprehension, 0, 100) < minimumComprehension)
+            return null;
+
+        return Math.Round((transferWpm.Value - baselineWpm.Value) / baselineWpm.Value * 100, 2);
+    }
+}

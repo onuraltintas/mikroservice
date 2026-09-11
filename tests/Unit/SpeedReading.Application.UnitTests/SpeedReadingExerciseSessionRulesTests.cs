@@ -115,4 +115,70 @@ public sealed class SpeedReadingExerciseSessionRulesTests
         SpeedReadingExerciseSessionRules.CalculateXp(0, 0, 90).Should().Be(0);
         SpeedReadingExerciseSessionRules.CalculateXp(50, 50, 30).Should().BeGreaterThanOrEqualTo(10);
     }
+
+    [Theory]
+    [InlineData(90, 8)]
+    [InlineData(85, 8)]
+    [InlineData(80, 0)]
+    [InlineData(75, 0)]
+    [InlineData(70, -5)]
+    [InlineData(65, -5)]
+    [InlineData(64.99, -10)]
+    public void Adaptive_fluency_changes_the_target_only_after_comprehension_is_known(
+        decimal comprehension,
+        decimal expectedChange)
+    {
+        AdaptiveFluencyRules.ResolveTargetChangePercent(
+            comprehension,
+            increaseThreshold: 85,
+            maintainThreshold: 75,
+            supportThreshold: 65,
+            increasePercent: 8,
+            decreasePercent: 5,
+            supportDecreasePercent: 10).Should().Be(expectedChange);
+    }
+
+    [Fact]
+    public void Adaptive_fluency_reports_transfer_gain_only_when_comprehension_is_preserved()
+    {
+        AdaptiveFluencyRules.CalculateTransferGainPercent(
+            baselineWpm: 220,
+            baselineComprehension: 80,
+            transferWpm: 242,
+            transferComprehension: 82,
+            minimumComprehension: 75).Should().Be(10);
+
+        AdaptiveFluencyRules.CalculateTransferGainPercent(
+            baselineWpm: 220,
+            baselineComprehension: 80,
+            transferWpm: 290,
+            transferComprehension: 60,
+            minimumComprehension: 75).Should().BeNull();
+    }
+
+    [Fact]
+    public void Adaptive_fluency_never_uses_repeated_passage_speed_as_transfer_gain()
+    {
+        AdaptiveFluencyRules.CalculateTransferGainPercent(
+            baselineWpm: 220,
+            baselineComprehension: 80,
+            transferWpm: 220,
+            transferComprehension: 85,
+            minimumComprehension: 75).Should().Be(0);
+    }
+
+    [Fact]
+    public void Adaptive_fluency_rejects_unsafe_target_changes()
+    {
+        var action = () => AdaptiveFluencyRules.ResolveTargetChangePercent(
+            comprehension: 90,
+            increaseThreshold: 85,
+            maintainThreshold: 75,
+            supportThreshold: 65,
+            increasePercent: 50,
+            decreasePercent: 5,
+            supportDecreasePercent: 10);
+
+        action.Should().Throw<ArgumentOutOfRangeException>();
+    }
 }

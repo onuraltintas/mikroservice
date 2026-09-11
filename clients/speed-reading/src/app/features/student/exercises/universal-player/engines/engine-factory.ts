@@ -18,6 +18,7 @@ import { VisualizationEngine } from './visualization.engine';
 import { FocusEngine } from './focus.engine';
 import { VocabularyBuilderEngine } from './vocabulary-builder.engine';
 import { ErrorAnalysisEngine } from './error-analysis.engine';
+import { AdaptiveFluencyEngine } from './adaptive-fluency.engine';
 
 import { ExamSimulationEngine } from './exam-simulation.engine';
 
@@ -40,6 +41,7 @@ export type EngineType =
     | 'focus'                       // Focus Training alias
     | 'vocabulary_builder'          // Vocabulary Builder (Kelime Hazinesi)
     | 'error_analysis'              // Error Analysis (Hata Analizi / Proofreading)
+    | 'adaptive_fluency'            // Comprehension-preserving repeated and transfer reading
     | 'scanning'                   // Alias for scan_find
     | 'skimming';                  // Alias for scan_find (Skimming)
 
@@ -65,6 +67,7 @@ const engineRegistry: Partial<Record<EngineType, EngineConstructor>> = {
     'focus': FocusEngine,
     'vocabulary_builder': VocabularyBuilderEngine,
     'error_analysis': ErrorAnalysisEngine,
+    'adaptive_fluency': AdaptiveFluencyEngine,
     'scanning': ScanFindEngine,
     'skimming': ScanFindEngine, // Fix for Skimming exercise type alias
 };

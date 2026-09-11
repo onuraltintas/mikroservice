@@ -30,7 +30,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         "Skimming",
         "Scanning",
         "RegressionReduction",
-        "SubvocalizationReduction"
+        "SubvocalizationReduction",
+        "AdaptiveFluency"
     };
 
     public async Task<StartExerciseSessionResponse> StartAsync(
@@ -157,9 +158,11 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         var readingTextId = assessmentSnapshot is not null
             ? assessmentSnapshot.ReadingText?.Id
             : pinnedReadingTextId ?? request.ReadingTextId;
+        var requiresReadingText = ReadingExerciseTypes.Contains(exerciseTypeName)
+            || IsAdaptiveFluency(exerciseTypeName, ParseJsonOrEmpty(configurationJson));
         if (assessmentSnapshot is null
             && !readingTextId.HasValue
-            && ReadingExerciseTypes.Contains(exerciseTypeName))
+            && requiresReadingText)
         {
             readingTextId = await db.ReadingTexts
                 .AsNoTracking()
@@ -184,6 +187,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             assessmentSnapshot,
             request.AssessmentAttemptId.HasValue,
             request.CustomData,
+            profileAgeGroupId,
             cancellationToken);
         var now = DateTime.UtcNow;
         var session = ExerciseSession.Start(
@@ -249,6 +253,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         {
             "start_reading" => StartReading(session, state, now),
             "finish_reading" => FinishReading(session, state, now),
+            "adaptive_next_stage" => AdvanceAdaptiveStage(session, state),
             "focus_start" => StartFocus(session, state, now),
             "focus_step" => AdvanceFocus(session, state, request, now),
             "visual_expansion_present" => PresentVisualExpansion(session, state, now),
@@ -310,6 +315,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         if (IsVisualExpansionExercise(state.ExerciseTypeName)
             && state.VisualExpansionRound < state.TotalSteps)
             throw new InvalidOperationException("All visual expansion rounds must be validated before completion.");
+        if (IsAdaptiveFluency(state) && !state.AdaptiveCompleted)
+            throw new InvalidOperationException("The adaptive fluency flow must be completed before the session can be completed.");
 
         var answers = ResolveAnswers(session, state, request.QuestionAnswers);
         if (state.Questions.Count > 0 && answers.Count != state.Questions.Count)
@@ -340,9 +347,11 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             session.CorrectCount,
             session.IncorrectCount);
         var wordsRead = state.WordCount > 0 ? (int?)state.WordCount : null;
-        var rawWpmCandidate = SpeedReadingExerciseSessionRules.CalculateValidatedRawWpm(
-            wordsRead ?? 0,
-            timeSpent);
+        var adaptiveTransferResult = IsAdaptiveFluency(state)
+            ? state.AdaptiveStageResults.SingleOrDefault(item => item.Stage == 3)
+            : null;
+        var rawWpmCandidate = adaptiveTransferResult?.Wpm
+            ?? SpeedReadingExerciseSessionRules.CalculateValidatedRawWpm(wordsRead ?? 0, timeSpent);
         var measurementStatus = SpeedReadingExerciseSessionRules.ResolveMeasurementStatus(
             state.Questions.Count,
             session.CorrectCount,
@@ -352,7 +361,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         var rawWpm = measurementStatus == SpeedReadingMeasurementStatus.Measured
             ? rawWpmCandidate
             : null;
-        var comprehension = state.Questions.Count > 0
+        var comprehension = IsAdaptiveFluency(state) && state.AdaptiveTransferComprehension.HasValue
+            ? state.AdaptiveTransferComprehension.Value
+            : state.Questions.Count > 0
             ? Math.Round((decimal)answers.Count(item => item.IsCorrect) / state.Questions.Count * 100, 2)
             : 0;
         var score = measurementStatus == SpeedReadingMeasurementStatus.NotMeasured
@@ -572,6 +583,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         AssessmentContentSnapshot? assessmentSnapshot,
         bool isAssessmentMode,
         Dictionary<string, JsonElement>? customData,
+        Guid? profileAgeGroupId,
         CancellationToken cancellationToken)
     {
         var config = ParseJsonOrEmpty(configurationJson);
@@ -586,6 +598,31 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             TimeLimitSeconds = ReadPositiveInt(config, "timeLimitSeconds")
         };
         var engineConfig = ReadObject(config, "engineConfig");
+        var effectiveConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
+        if (IsAdaptiveFluency(exerciseTypeName, config))
+        {
+            state.AdaptiveEnabled = true;
+            state.AdaptiveIncreaseThreshold = ReadDecimal(effectiveConfig, "increaseThreshold") ?? 85;
+            state.AdaptiveMaintainThreshold = ReadDecimal(effectiveConfig, "maintainThreshold") ?? 75;
+            state.AdaptiveSupportThreshold = ReadDecimal(effectiveConfig, "supportThreshold") ?? 65;
+            state.AdaptiveIncreasePercent = ReadDecimal(effectiveConfig, "increasePercent") ?? 8;
+            state.AdaptiveDecreasePercent = ReadDecimal(effectiveConfig, "decreasePercent") ?? 5;
+            state.AdaptiveSupportDecreasePercent = ReadDecimal(effectiveConfig, "supportDecreasePercent") ?? 10;
+            state.AdaptiveMinimumComprehension = ReadDecimal(effectiveConfig, "minimumComprehension") ?? 75;
+            _ = AdaptiveFluencyRules.ResolveTargetChangePercent(
+                100,
+                state.AdaptiveIncreaseThreshold,
+                state.AdaptiveMaintainThreshold,
+                state.AdaptiveSupportThreshold,
+                state.AdaptiveIncreasePercent,
+                state.AdaptiveDecreasePercent,
+                state.AdaptiveSupportDecreasePercent);
+            if (state.AdaptiveMinimumComprehension is < 0 or > 100)
+                throw new InvalidOperationException("Adaptive fluency minimumComprehension must be between 0 and 100.");
+            state.AdaptivePurposes = ReadStringArray(effectiveConfig, "repeatPurposes") is { Length: > 0 } purposes
+                ? purposes
+                : ["Ana fikri belirleyin.", "Neden-sonuç ilişkilerine ve önemli ayrıntılara odaklanın."];
+        }
         if (IsVisualExpansionExercise(exerciseTypeName))
         {
             var expansion = ReadObject(engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config, "expansion");
@@ -662,6 +699,51 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 .ToListAsync(cancellationToken);
         }
 
+        if (state.AdaptiveEnabled)
+        {
+            state.AdaptivePrimaryQuestions = state.Questions.Select(CloneQuestion).ToList();
+            var transferTextId = ReadGuid(effectiveConfig, "transferReadingTextId")
+                ?? throw new InvalidOperationException("Adaptive fluency requires a transferReadingTextId.");
+            if (transferTextId == state.ReadingTextId)
+                throw new InvalidOperationException("Adaptive fluency transfer text must differ from the primary text.");
+
+            var transferText = await db.ReadingTexts.AsNoTracking()
+                .SingleOrDefaultAsync(item => item.Id == transferTextId
+                    && item.IsActive
+                    && !item.IsDeleted
+                    && item.DifficultyLevel == state.DifficultyLevel
+                    && (!profileAgeGroupId.HasValue
+                        || item.TargetAgeGroupId == null
+                        || item.TargetAgeGroupId == profileAgeGroupId.Value)
+                    && (item.ExerciseId == null || item.ExerciseId == exerciseId),
+                    cancellationToken);
+            if (transferText is null)
+                throw new KeyNotFoundException("Adaptive fluency transfer text was not found.");
+            state.AdaptiveTransferTextId = transferText.Id;
+            state.AdaptiveTransferTitle = transferText.Title;
+            state.AdaptiveTransferContent = transferText.Content;
+            state.AdaptiveTransferWordCount = transferText.WordCount > 0 ? transferText.WordCount : CountWords(transferText.Content);
+            state.AdaptiveTransferQuestions = await db.ReadingQuestions.AsNoTracking()
+                .Where(item => item.ReadingTextId == transferText.Id && !item.IsDeleted)
+                .OrderBy(item => item.OrderIndex)
+                .Select(item => new SessionQuestion
+                {
+                    QuestionId = item.Id,
+                    QuestionText = item.QuestionText,
+                    OptionA = item.OptionA,
+                    OptionB = item.OptionB,
+                    OptionC = item.OptionC,
+                    OptionD = item.OptionD,
+                    CorrectAnswer = item.CorrectAnswer,
+                    Explanation = item.Explanation,
+                    BloomLevel = item.BloomLevel,
+                    DifficultyLevel = item.DifficultyLevel
+                }).ToListAsync(cancellationToken);
+            if (state.AdaptivePrimaryQuestions.Count == 0 || state.AdaptiveTransferQuestions.Count == 0)
+                throw new InvalidOperationException("Adaptive fluency primary and transfer texts both require questions.");
+            state.TotalSteps = 4;
+        }
+
         if (IsVisualizationExercise(exerciseTypeName) && state.Questions.Count == 0)
         {
             state.VisualizationScenes = await LoadVisualizationScenesAsync(exerciseId, config, cancellationToken);
@@ -671,10 +753,14 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 .ToList();
         }
 
-        var gridSize = IsGridExercise(exerciseTypeName, config)
+        var gridSize = !state.AdaptiveEnabled && IsGridExercise(exerciseTypeName, config)
             ? ReadPositiveInt(config, "gridSize") ?? Math.Clamp(difficultyLevel + 2, 3, 7)
             : (int?)null;
-        if (gridSize.HasValue)
+        if (state.AdaptiveEnabled)
+        {
+            state.TotalSteps = 4;
+        }
+        else if (gridSize.HasValue)
         {
             state.GridSize = gridSize.Value;
             state.TotalSteps = gridSize.Value * gridSize.Value;
@@ -712,6 +798,17 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         SessionState state,
         DateTime now)
     {
+        if (IsAdaptiveFluency(state))
+        {
+            if (state.AdaptiveAwaitingQuestions)
+                return Invalid("Complete the current comprehension check before starting the next reading.");
+            if (state.AdaptiveStageStartedAt.HasValue)
+                return Invalid("This adaptive fluency stage has already started.");
+            EnsureTimingStarted(session, state, now);
+            state.AdaptiveStageStartedAt = now;
+            state.AdaptivePausedSecondsAtStart = session.TotalPausedSeconds;
+            return Valid("Okuma aşaması başlatıldı.", state.AdaptiveStage + 1);
+        }
         EnsureTimingStarted(session, state, now);
         state.ReadingStartTime ??= now;
         session.SetCurrentStep(Math.Max(session.CurrentStep, 1));
@@ -723,6 +820,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         SessionState state,
         DateTime now)
     {
+        if (IsAdaptiveFluency(state))
+            return FinishAdaptiveStage(session, state, now);
         EnsureTimingStarted(session, state, now);
         state.ReadingStartTime ??= state.TimingStartedAt ?? now;
         state.ReadingEndTime = now;
@@ -738,6 +837,105 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             ? "Okuma tamamlandı! Hızınız: " + wpm.Value + " WPM."
             : "Okuma tamamlandı; güvenilir WPM için yeterli ölçüm alınamadı.";
         return Valid(message, session.CurrentStep, currentWpm: wpm);
+    }
+
+    private static ExerciseActionValidationResponse FinishAdaptiveStage(
+        ExerciseSession session,
+        SessionState state,
+        DateTime now)
+    {
+        if (!state.AdaptiveStageStartedAt.HasValue)
+            return Invalid("Adaptive fluency reading has not started.");
+        var seconds = SpeedReadingExerciseSessionRules.CalculateActiveSeconds(
+            state.AdaptiveStageStartedAt.Value,
+            now,
+            Math.Max(0, session.TotalPausedSeconds - state.AdaptivePausedSecondsAtStart),
+            null,
+            false);
+        var wordCount = state.AdaptiveStage == 3 ? state.AdaptiveTransferWordCount : state.WordCount;
+        var wpm = SpeedReadingExerciseSessionRules.CalculateValidatedRawWpm(wordCount, seconds);
+        if (!wpm.HasValue)
+            return Invalid("Reliable WPM could not be measured for this stage.");
+        state.AdaptiveStageResults.Add(new AdaptiveStageResult
+        {
+            Stage = state.AdaptiveStage,
+            Wpm = wpm.Value,
+            ReadingSeconds = seconds
+        });
+        state.AdaptiveStageStartedAt = null;
+        state.AdaptiveAwaitingQuestions = state.AdaptiveStage is 0 or 3;
+        if (!state.AdaptiveAwaitingQuestions)
+            session.SetCurrentStep(Math.Min(session.TotalSteps, state.AdaptiveStage + 1));
+        return Valid(
+            state.AdaptiveAwaitingQuestions ? "Okuma tamamlandı; anlama sorularına geçin." : "Amaçlı tekrar tamamlandı.",
+            state.AdaptiveStage + 1,
+            currentWpm: wpm,
+            feedbackData: AdaptiveFeedback(state));
+    }
+
+    private static ExerciseActionValidationResponse AdvanceAdaptiveStage(ExerciseSession session, SessionState state)
+    {
+        if (!IsAdaptiveFluency(state) || state.AdaptiveStageStartedAt.HasValue)
+            return Invalid("Adaptive fluency stage cannot be advanced now.");
+        if (state.AdaptiveStageResults.All(item => item.Stage != state.AdaptiveStage))
+            return Invalid("Complete the current reading before advancing.");
+        if (state.AdaptiveAwaitingQuestions && state.Answers.Count != state.Questions.Count)
+            return Invalid("Answer all comprehension questions before advancing.");
+
+        if (state.AdaptiveStage == 0)
+        {
+            state.AdaptiveBaselineComprehension = Math.Round(
+                (decimal)state.Answers.Count(item => item.IsCorrect) / state.Questions.Count * 100, 2);
+            var baselineWpm = state.AdaptiveStageResults.Single(item => item.Stage == 0).Wpm;
+            var change = AdaptiveFluencyRules.ResolveTargetChangePercent(
+                state.AdaptiveBaselineComprehension.Value,
+                state.AdaptiveIncreaseThreshold,
+                state.AdaptiveMaintainThreshold,
+                state.AdaptiveSupportThreshold,
+                state.AdaptiveIncreasePercent,
+                state.AdaptiveDecreasePercent,
+                state.AdaptiveSupportDecreasePercent);
+            state.AdaptiveTargetWpm = Math.Round(baselineWpm * (1 + change / 100), 0);
+            state.AdaptiveBaselineAnswers = state.Answers.Select(item => new SessionAnswer
+            {
+                QuestionId = item.QuestionId,
+                Answer = item.Answer,
+                IsCorrect = item.IsCorrect,
+                TimeSpentSeconds = item.TimeSpentSeconds,
+                BloomLevel = item.BloomLevel
+            }).ToList();
+            state.Answers.Clear();
+            state.Questions.Clear();
+        }
+        else if (state.AdaptiveStage == 2)
+        {
+            state.Questions = state.AdaptiveTransferQuestions.Select(CloneQuestion).ToList();
+            state.Answers.Clear();
+            state.Content = state.AdaptiveTransferContent;
+            state.ReadingTextTitle = state.AdaptiveTransferTitle;
+            state.WordCount = state.AdaptiveTransferWordCount;
+            state.Words = SplitWords(state.Content);
+        }
+        else if (state.AdaptiveStage == 3)
+        {
+            state.AdaptiveTransferComprehension = Math.Round(
+                (decimal)state.Answers.Count(item => item.IsCorrect) / state.Questions.Count * 100, 2);
+            state.AdaptiveTransferGainPercent = AdaptiveFluencyRules.CalculateTransferGainPercent(
+                state.AdaptiveStageResults.Single(item => item.Stage == 0).Wpm,
+                state.AdaptiveBaselineComprehension ?? 0,
+                state.AdaptiveStageResults.Single(item => item.Stage == 3).Wpm,
+                state.AdaptiveTransferComprehension.Value,
+                state.AdaptiveMinimumComprehension);
+            state.AdaptiveCompleted = true;
+            state.AdaptiveAwaitingQuestions = false;
+            session.SetCurrentStep(session.TotalSteps);
+            return Valid("Aktarım ölçümü tamamlandı.", session.CurrentStep, isCompleted: true, feedbackData: AdaptiveFeedback(state));
+        }
+
+        state.AdaptiveStage++;
+        state.AdaptiveAwaitingQuestions = false;
+        session.SetCurrentStep(Math.Min(session.TotalSteps, state.AdaptiveStage));
+        return Valid("Sonraki aşama hazır.", session.CurrentStep, feedbackData: AdaptiveFeedback(state));
     }
 
     private static ExerciseActionValidationResponse StartFocus(
@@ -1194,6 +1392,46 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         || exerciseTypeName.Contains("attention", StringComparison.OrdinalIgnoreCase)
         || exerciseTypeName.Contains("fixation", StringComparison.OrdinalIgnoreCase);
 
+    private static bool IsAdaptiveFluency(SessionState state) => state.AdaptiveEnabled;
+
+    private static bool IsAdaptiveFluency(string exerciseTypeName, JsonElement config)
+    {
+        if (exerciseTypeName.Contains("adaptivefluency", StringComparison.OrdinalIgnoreCase)
+            || exerciseTypeName.Contains("adaptive fluency", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(ReadString(config, "engineType"), "adaptive_fluency", StringComparison.OrdinalIgnoreCase))
+            return true;
+        var nestedConfig = ReadObject(config, "engineConfig");
+        return string.Equals(ReadString(nestedConfig, "engineType"), "adaptive_fluency", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static SessionQuestion CloneQuestion(SessionQuestion question) => new()
+    {
+        QuestionId = question.QuestionId,
+        QuestionText = question.QuestionText,
+        OptionA = question.OptionA,
+        OptionB = question.OptionB,
+        OptionC = question.OptionC,
+        OptionD = question.OptionD,
+        CorrectAnswer = question.CorrectAnswer,
+        Explanation = question.Explanation,
+        BloomLevel = question.BloomLevel,
+        DifficultyLevel = question.DifficultyLevel
+    };
+
+    private static JsonElement AdaptiveFeedback(SessionState state) => JsonSerializer.SerializeToElement(new
+    {
+        stage = state.AdaptiveStage,
+        targetWpm = state.AdaptiveTargetWpm,
+        purpose = state.AdaptiveStage is 1 or 2 && state.AdaptivePurposes.Length >= state.AdaptiveStage
+            ? state.AdaptivePurposes[state.AdaptiveStage - 1]
+            : state.AdaptiveStage == 3 ? "Yeni metinde hızınızı ve anlamanızı koruyun." : "Başlangıç düzeyinizi ölçün.",
+        baselineComprehension = state.AdaptiveBaselineComprehension,
+        transferComprehension = state.AdaptiveTransferComprehension,
+        transferGainPercent = state.AdaptiveTransferGainPercent,
+        completed = state.AdaptiveCompleted,
+        stageResults = state.AdaptiveStageResults
+    }, JsonOptions);
+
     private static bool IsVisualExpansionExercise(string exerciseTypeName) =>
         exerciseTypeName.Contains("visualexpansion", StringComparison.OrdinalIgnoreCase)
         || exerciseTypeName.Contains("visual expansion", StringComparison.OrdinalIgnoreCase)
@@ -1587,6 +1825,25 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         return null;
     }
 
+    private static decimal? ReadDecimal(JsonElement element, string propertyName)
+    {
+        if (element.ValueKind != JsonValueKind.Object)
+            return null;
+        foreach (var property in element.EnumerateObject())
+        {
+            if (property.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase)
+                && property.Value.TryGetDecimal(out var value))
+                return value;
+        }
+        return null;
+    }
+
+    private static Guid? ReadGuid(JsonElement element, string propertyName)
+    {
+        var value = ReadString(element, propertyName);
+        return Guid.TryParse(value, out var id) && id != Guid.Empty ? id : null;
+    }
+
     private static int[] ReadIntArray(JsonElement element, string propertyName)
     {
         if (element.ValueKind != JsonValueKind.Object)
@@ -1666,6 +1923,32 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public decimal? FinalWpm { get; set; }
         public decimal? ComprehensionScore { get; set; }
         public decimal? WeightedKdp { get; set; }
+        public bool AdaptiveEnabled { get; set; }
+        public int AdaptiveStage { get; set; }
+        public DateTime? AdaptiveStageStartedAt { get; set; }
+        public int AdaptivePausedSecondsAtStart { get; set; }
+        public bool AdaptiveAwaitingQuestions { get; set; }
+        public bool AdaptiveCompleted { get; set; }
+        public decimal AdaptiveIncreaseThreshold { get; set; }
+        public decimal AdaptiveMaintainThreshold { get; set; }
+        public decimal AdaptiveSupportThreshold { get; set; }
+        public decimal AdaptiveIncreasePercent { get; set; }
+        public decimal AdaptiveDecreasePercent { get; set; }
+        public decimal AdaptiveSupportDecreasePercent { get; set; }
+        public decimal AdaptiveMinimumComprehension { get; set; }
+        public decimal? AdaptiveTargetWpm { get; set; }
+        public decimal? AdaptiveBaselineComprehension { get; set; }
+        public decimal? AdaptiveTransferComprehension { get; set; }
+        public decimal? AdaptiveTransferGainPercent { get; set; }
+        public Guid? AdaptiveTransferTextId { get; set; }
+        public string AdaptiveTransferTitle { get; set; } = string.Empty;
+        public string AdaptiveTransferContent { get; set; } = string.Empty;
+        public int AdaptiveTransferWordCount { get; set; }
+        public string[] AdaptivePurposes { get; set; } = [];
+        public List<SessionQuestion> AdaptivePrimaryQuestions { get; set; } = [];
+        public List<SessionQuestion> AdaptiveTransferQuestions { get; set; } = [];
+        public List<SessionAnswer> AdaptiveBaselineAnswers { get; set; } = [];
+        public List<AdaptiveStageResult> AdaptiveStageResults { get; set; } = [];
         public string[] Words { get; set; } = [];
         public string FocusMode { get; set; } = "position";
         public int FocusNLevel { get; set; } = 1;
@@ -1693,6 +1976,13 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public List<SessionAnswer> Answers { get; set; } = [];
         public List<VisualizationSceneState> VisualizationScenes { get; set; } = [];
         public Dictionary<string, JsonElement>? CustomData { get; set; }
+    }
+
+    private sealed class AdaptiveStageResult
+    {
+        public int Stage { get; set; }
+        public decimal Wpm { get; set; }
+        public int ReadingSeconds { get; set; }
     }
 
     private sealed class VisualizationSceneState

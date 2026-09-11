@@ -501,7 +501,7 @@
     </div>
 
     <!-- Exercise Running - Reading Comprehension (Serbest Okuma + Anlama) -->
-    <div *ngIf="engine && engineState.isRunning && (engine.engineType === 'reading_comprehension' || engine.engineType === 'exam_simulation') && exercisePhase === 'reading'"
+    <div *ngIf="engine && engineState.isRunning && (engine.engineType === 'reading_comprehension' || engine.engineType === 'exam_simulation' || engine.engineType === 'adaptive_fluency') && exercisePhase === 'reading'"
         class="game-container reading-comprehension-container">
         <div class="game-header">
             <div class="timer" [class.countdown]="hasTimeLimit()" [class.urgent]="isTimeUrgent()">
@@ -521,9 +521,14 @@
         </div>
 
         <!-- Reading Instructions -->
-        <div class="reading-instruction" *ngIf="!engineState.isPaused">
+        <div class="reading-instruction" *ngIf="!engineState.isPaused && engine.engineType !== 'adaptive_fluency'">
             <span class="material-icons">menu_book</span>
             <span>Metni kendi hızınızda okuyun. Okuma bitince "Okudum" butonuna basın.</span>
+        </div>
+        <div class="reading-instruction" *ngIf="!engineState.isPaused && engine.engineType === 'adaptive_fluency'">
+            <span class="material-icons">track_changes</span>
+            <span><strong>{{ getAdaptiveStageLabel() }}:</strong> {{ getAdaptivePurpose() }}</span>
+            <span *ngIf="engineState.targetWPM">Hedef: {{ engineState.targetWPM }} WPM</span>
         </div>
 
         <!-- Text Reading Area -->
@@ -1599,7 +1604,29 @@
             </div>
 
             <!-- Speed Reading / RSVP Results (WPM) -->
-            <div class="speed-reading-results" *ngIf="result?.details?.wpm && result?.details?.measurementStatus !== 'NotMeasured' && engine?.engineType !== 'exam_simulation'">
+            <div class="speed-reading-results" *ngIf="engine?.engineType === 'adaptive_fluency' && result?.details">
+                <div class="result-box wpm-box">
+                    <span class="material-icons">flag</span>
+                    <div class="result-value">{{ result?.details?.baselineWpm }} WPM</div>
+                    <div class="result-label">Başlangıç</div>
+                </div>
+                <div class="result-box wpm-box">
+                    <span class="material-icons">speed</span>
+                    <div class="result-value">{{ result?.details?.wpm }} WPM</div>
+                    <div class="result-label">Yeni metin</div>
+                </div>
+                <div class="result-box comprehension-box">
+                    <span class="material-icons">psychology</span>
+                    <div class="result-value">{{ result?.details?.comprehensionScore }}%</div>
+                    <div class="result-label">Transfer anlama</div>
+                </div>
+                <div class="result-box questions-box">
+                    <span class="material-icons">trending_up</span>
+                    <div class="result-value">{{ result?.details?.transferGainPercent == null ? 'Geçersiz' : ((result?.details?.transferGainPercent | number:'1.0-2') + '%') }}</div>
+                    <div class="result-label">Anlam korunarak kazanım</div>
+                </div>
+            </div>
+            <div class="speed-reading-results" *ngIf="result?.details?.wpm && result?.details?.measurementStatus !== 'NotMeasured' && engine?.engineType !== 'exam_simulation' && engine?.engineType !== 'adaptive_fluency'">
                 <!-- WPM Box -->
                 <div class="result-box wpm-box">
                     <span class="material-icons">speed</span>
