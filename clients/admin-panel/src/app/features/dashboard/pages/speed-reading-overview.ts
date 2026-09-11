@@ -1,6 +1,7 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Component, OnInit, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
 import { finalize, forkJoin, of } from 'rxjs';
 import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -32,7 +33,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
 @Component({
   selector: 'app-speed-reading-overview',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatIconModule],
   template: `
     <section class="space-y-6">
       <div class="flex flex-wrap items-center justify-between gap-3">
@@ -110,14 +111,50 @@ import { ToasterService } from '../../../core/services/toaster.service';
                 <input name="engineType" [(ngModel)]="draft.engineType" required maxlength="100"
                   class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
               </label>
-              <label class="text-sm text-gray-700 dark:text-gray-200">Renk (#RRGGBB)
-                <input name="colorCode" [(ngModel)]="draft.colorCode" maxlength="7" placeholder="#2563eb"
-                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
-              </label>
-              <label class="text-sm text-gray-700 dark:text-gray-200">İkon adı
-                <input name="iconName" [(ngModel)]="draft.iconName" maxlength="100" placeholder="grid"
-                  class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
-              </label>
+              <fieldset class="text-sm text-gray-700 dark:text-gray-200">
+                <legend>Renk</legend>
+                <div class="mt-2 flex flex-wrap items-center gap-2">
+                  @for (color of exerciseTypeColors; track color.value) {
+                    <button type="button" (click)="draft.colorCode = color.value"
+                      class="h-9 w-9 rounded-full border-2 shadow-sm transition-transform hover:scale-110"
+                      [class.border-gray-900]="draft.colorCode === color.value"
+                      [class.dark:border-white]="draft.colorCode === color.value"
+                      [class.border-transparent]="draft.colorCode !== color.value"
+                      [style.backgroundColor]="color.value"
+                      [attr.aria-label]="color.label"
+                      [attr.title]="color.label"
+                      [attr.aria-pressed]="draft.colorCode === color.value">
+                      @if (draft.colorCode === color.value) {
+                        <span class="text-base font-bold text-white drop-shadow">✓</span>
+                      }
+                    </button>
+                  }
+                  <label class="flex h-9 cursor-pointer items-center gap-2 rounded-md border border-gray-300 bg-white px-2 dark:border-gray-600 dark:bg-gray-800">
+                    <span>Özel</span>
+                    <input type="color" name="customColorCode" [(ngModel)]="draft.colorCode"
+                      class="h-6 w-8 cursor-pointer border-0 bg-transparent p-0" aria-label="Özel renk seç" />
+                  </label>
+                </div>
+              </fieldset>
+              <fieldset class="text-sm text-gray-700 dark:text-gray-200 sm:col-span-2">
+                <legend>İkon</legend>
+                <div class="mt-2 grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-8">
+                  @for (icon of exerciseTypeIcons; track icon.value) {
+                    <button type="button" (click)="draft.iconName = icon.value"
+                      class="flex min-h-16 flex-col items-center justify-center gap-1 rounded-lg border p-2 transition-colors"
+                      [class.border-indigo-600]="draft.iconName === icon.value"
+                      [class.bg-indigo-50]="draft.iconName === icon.value"
+                      [class.dark:bg-indigo-950]="draft.iconName === icon.value"
+                      [class.border-gray-200]="draft.iconName !== icon.value"
+                      [class.dark:border-gray-700]="draft.iconName !== icon.value"
+                      [attr.aria-pressed]="draft.iconName === icon.value"
+                      [attr.title]="icon.label">
+                      <mat-icon [style.color]="draft.iconName === icon.value ? draft.colorCode : null">{{ icon.value }}</mat-icon>
+                      <span class="text-center text-xs">{{ icon.label }}</span>
+                    </button>
+                  }
+                </div>
+              </fieldset>
               <label class="text-sm text-gray-700 dark:text-gray-200">Sıra
                 <input type="number" name="sortOrder" [(ngModel)]="draft.sortOrder" min="0" max="10000"
                   class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800" />
@@ -828,6 +865,47 @@ export class SpeedReadingOverviewComponent implements OnInit {
   readonly learningPathNodes = signal<SpeedReadingLearningPathNode[]>([]);
   readonly achievements = signal<SpeedReadingAchievement[]>([]);
   readonly saving = signal(false);
+  readonly exerciseTypeColors = [
+    { value: '#2563eb', label: 'Mavi' },
+    { value: '#4f46e5', label: 'Çivit mavisi' },
+    { value: '#7c3aed', label: 'Mor' },
+    { value: '#db2777', label: 'Pembe' },
+    { value: '#dc2626', label: 'Kırmızı' },
+    { value: '#ea580c', label: 'Turuncu' },
+    { value: '#ca8a04', label: 'Sarı' },
+    { value: '#16a34a', label: 'Yeşil' },
+    { value: '#0d9488', label: 'Turkuaz' },
+    { value: '#0891b2', label: 'Camgöbeği' },
+    { value: '#475569', label: 'Füme' },
+    { value: '#111827', label: 'Siyah' }
+  ] as const;
+  readonly exerciseTypeIcons = [
+    { value: 'visibility', label: 'Göz takibi' },
+    { value: 'center_focus_strong', label: 'Odak' },
+    { value: 'speed', label: 'Hız' },
+    { value: 'timer', label: 'Süre' },
+    { value: 'menu_book', label: 'Okuma' },
+    { value: 'auto_stories', label: 'Metin' },
+    { value: 'psychology', label: 'Zihin' },
+    { value: 'memory', label: 'Hafıza' },
+    { value: 'travel_explore', label: 'Tarama' },
+    { value: 'swap_horiz', label: 'Yatay takip' },
+    { value: 'swap_vert', label: 'Dikey takip' },
+    { value: 'zoom_out_map', label: 'Görüş alanı' },
+    { value: 'filter_center_focus', label: 'Merkezleme' },
+    { value: 'format_line_spacing', label: 'Satır takibi' },
+    { value: 'text_fields', label: 'Kelime' },
+    { value: 'grid', label: 'Izgara (mevcut)' },
+    { value: 'grid_view', label: 'Izgara' },
+    { value: 'flash_on', label: 'Hızlı gösterim' },
+    { value: 'track_changes', label: 'Hedef' },
+    { value: 'trending_up', label: 'Gelişim' },
+    { value: 'school', label: 'Öğrenme' },
+    { value: 'lightbulb', label: 'Anlama' },
+    { value: 'fitness_center', label: 'Egzersiz' },
+    { value: 'extension', label: 'Eşleştirme' },
+    { value: 'category', label: 'Genel' }
+  ] as const;
   readonly canManageContent = computed(() =>
     this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingContentManage));
   readonly canManagePrograms = computed(() =>
