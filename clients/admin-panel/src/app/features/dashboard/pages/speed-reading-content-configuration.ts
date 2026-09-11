@@ -9,7 +9,8 @@ import {
   SpeedReadingAssessmentExerciseInput,
   SpeedReadingAssessmentTemplate,
   SpeedReadingExercise,
-  SpeedReadingLevelDefinition
+  SpeedReadingLevelDefinition,
+  SpeedReadingMeasurementCapability
 } from '../../../core/services/speed-reading-admin.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 
@@ -103,6 +104,11 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
               <tr><td>{{ level.level }}</td><td>{{ level.code }}</td><td>{{ level.displayName }}</td><td>{{ level.minimumWpm }}</td><td>%{{ level.minimumComprehension }}</td></tr>
             } @empty { <tr><td colspan="5" class="empty">Seviye sözlüğü yüklenemedi.</td></tr> }
           </tbody></table></div></div>
+          <div class="data-card"><h3 class="mb-3 font-medium text-gray-900 dark:text-white">Motor ölçüm yetenekleri</h3><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Motor</th><th>Ölçüm modu</th><th>Placement</th><th>Kanıt</th></tr></thead><tbody>
+            @for (capability of measurementCapabilities(); track capability.code) {
+              <tr><td><strong>{{ capability.displayName }}</strong><div class="muted">{{ capability.code }}</div></td><td>{{ capability.measurementMode }}</td><td>{{ capability.isAssessmentEligible ? 'Uygun' : 'NotMeasured' }}</td><td>{{ capability.evidence }}</td></tr>
+            } @empty { <tr><td colspan="4" class="empty">Ölçüm yetenekleri yüklenemedi.</td></tr> }
+          </tbody></table></div></div>
         </section>
       }
     </main>
@@ -145,6 +151,7 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
   readonly assessmentTemplates = signal<SpeedReadingAssessmentTemplate[]>([]);
   readonly exercises = signal<SpeedReadingExercise[]>([]);
   readonly levels = signal<SpeedReadingLevelDefinition[]>([]);
+  readonly measurementCapabilities = signal<SpeedReadingMeasurementCapability[]>([]);
   readonly selectedAssessmentExercises = signal<AssessmentExerciseDraft[]>([]);
   readonly currentTemplate = signal<SpeedReadingAssessmentTemplate | null>(null);
   readonly assessmentAgeGroupId = signal('');
@@ -162,6 +169,7 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
     this.loadAssessmentTemplates();
     this.loadExercises();
     this.loadLevels();
+    this.loadMeasurementCapabilities();
   }
 
   selectTab(tab: ConfigurationTab): void {
@@ -194,6 +202,13 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
     this.service.getAssessmentLevels().subscribe({
       next: value => this.levels.set(value),
       error: () => this.error.set('Seviye sözlüğü yüklenemedi.')
+    });
+  }
+
+  loadMeasurementCapabilities(): void {
+    this.service.getAssessmentMeasurementCapabilities().subscribe({
+      next: value => this.measurementCapabilities.set(value),
+      error: () => this.error.set('Motor ölçüm yetenekleri yüklenemedi.')
     });
   }
 

@@ -440,6 +440,14 @@ export interface SpeedReadingLevelDefinition {
   minimumComprehension: number;
 }
 
+export interface SpeedReadingMeasurementCapability {
+  code: string;
+  displayName: string;
+  measurementMode: string;
+  isAssessmentEligible: boolean;
+  evidence: string;
+}
+
 export interface SpeedReadingVisualizationQuestion {
   id: string;
   questionText: string;
@@ -1445,6 +1453,12 @@ export class SpeedReadingAdminService {
   getAssessmentLevels() {
     return this.http.get<SpeedReadingLevelDefinition[]>(
       `${this.url}/admin/assessment-templates/levels`
+    );
+  }
+
+  getAssessmentMeasurementCapabilities() {
+    return this.http.get<SpeedReadingMeasurementCapability[]>(
+      `${this.url}/admin/assessment-templates/measurement-capabilities`
     );
   }
 
