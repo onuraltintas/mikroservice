@@ -27,12 +27,13 @@ public sealed class AssessmentStudyEnrollmentTests
     {
         var now = DateTime.UtcNow;
         var enrollment = AssessmentStudyEnrollment.Create(
-            Guid.NewGuid(), Guid.NewGuid(), "pilot-2026", "protocol-v1", "treatment",
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "pilot-2026", "protocol-v1", "treatment", "Onam-v1", "consent/v1",
             consentRecordedAt: now.AddMinutes(-1), Guid.NewGuid(), now);
 
         enrollment.StudyCode.Should().Be("pilot-2026");
         enrollment.ProtocolVersion.Should().Be("protocol-v1");
         enrollment.CohortCode.Should().Be("treatment");
+        enrollment.ConsentDocumentVersion.Should().Be("Onam-v1");
         enrollment.IsActive.Should().BeTrue();
 
         enrollment.Withdraw(Guid.NewGuid(), now.AddDays(1));
@@ -47,7 +48,7 @@ public sealed class AssessmentStudyEnrollmentTests
     public void Enrollment_rejects_missing_research_metadata(string study, string protocol, string cohort)
     {
         var act = () => AssessmentStudyEnrollment.Create(
-            Guid.NewGuid(), Guid.NewGuid(), study, protocol, cohort,
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), study, protocol, cohort, "Onam-v1", "consent/v1",
             DateTime.UtcNow, Guid.NewGuid(), DateTime.UtcNow);
 
         act.Should().Throw<ArgumentException>();
@@ -58,7 +59,7 @@ public sealed class AssessmentStudyEnrollmentTests
     {
         var enrolledAt = DateTime.UtcNow;
         var act = () => AssessmentStudyEnrollment.Create(
-            Guid.NewGuid(), Guid.NewGuid(), "study", "v1", "control",
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "study", "v1", "control", "Onam-v1", "consent/v1",
             enrolledAt.AddSeconds(1), Guid.NewGuid(), enrolledAt);
 
         act.Should().Throw<ArgumentException>();

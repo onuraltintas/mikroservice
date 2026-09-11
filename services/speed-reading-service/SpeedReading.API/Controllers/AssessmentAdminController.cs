@@ -16,7 +16,8 @@ public sealed class AssessmentAdminController(
     ISpeedReadingAssessment assessment,
     ISpeedReadingLevelCatalog levelCatalog,
     ISpeedReadingCalibrationAnalytics calibrationAnalytics,
-    ISpeedReadingStudyEnrollments studyEnrollments) : ControllerBase
+    ISpeedReadingStudyEnrollments studyEnrollments,
+    ISpeedReadingStudyCatalog studyCatalog) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken = default) =>
@@ -87,6 +88,44 @@ public sealed class AssessmentAdminController(
     [HttpGet("study-enrollments")]
     public async Task<IActionResult> GetStudyEnrollments(CancellationToken cancellationToken = default) =>
         Ok(await studyEnrollments.GetAllAsync(cancellationToken));
+
+    [HttpGet("study-enrollments/students")]
+    public async Task<IActionResult> SearchStudyStudents(
+        [FromQuery] string search,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        return Ok(await studyEnrollments.SearchStudentsAsync(userId, search, cancellationToken));
+    }
+
+    [HttpGet("studies")]
+    public async Task<IActionResult> GetStudies(CancellationToken cancellationToken = default) =>
+        Ok(await studyCatalog.GetAllAsync(cancellationToken));
+
+    [HttpPost("studies")]
+    public async Task<IActionResult> CreateStudy(
+        [FromBody] CreateSpeedReadingStudyDefinitionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        try { return Ok(await studyCatalog.CreateAsync(userId, request, cancellationToken)); }
+        catch (ArgumentException exception) { return BadRequest(exception.Message); }
+    }
+
+    [HttpPut("studies/{id:guid}")]
+    public async Task<IActionResult> UpdateStudy(Guid id, [FromBody] UpdateSpeedReadingStudyDefinitionRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        try { return await studyCatalog.UpdateAsync(id, userId, request, cancellationToken) ? NoContent() : NotFound(); }
+        catch (ArgumentException exception) { return BadRequest(exception.Message); }
+    }
+
+    [HttpPost("studies/{id:guid}/retire")]
+    public async Task<IActionResult> RetireStudy(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        return await studyCatalog.RetireAsync(id, userId, cancellationToken) ? NoContent() : NotFound();
+    }
 
     [HttpPost("study-enrollments")]
     public async Task<IActionResult> CreateStudyEnrollment(

@@ -511,13 +511,41 @@ export interface SpeedReadingStudyEnrollment {
   enrolledAt: string;
   isActive: boolean;
   withdrawnAt: string | null;
+  studentName: string | null;
+  studentEmail: string | null;
+  consentDocumentVersion: string | null;
+  consentDocumentReference: string | null;
+}
+
+export interface SpeedReadingStudyDefinition {
+  id: string;
+  studyCode: string;
+  name: string;
+  protocolVersion: string;
+  cohortCode: string;
+  consentDocumentVersion: string;
+  consentDocumentReference: string;
+  isActive: boolean;
+}
+
+export interface SpeedReadingStudyDefinitionRequest {
+  studyCode: string;
+  name: string;
+  protocolVersion: string;
+  cohortCode: string;
+  consentDocumentVersion: string;
+  consentDocumentReference: string;
+}
+
+export interface SpeedReadingStudyStudentOption {
+  studentId: string;
+  displayName: string;
+  email: string | null;
 }
 
 export interface SpeedReadingStudyEnrollmentRequest {
   studentId: string;
-  studyCode: string;
-  protocolVersion: string;
-  cohortCode: string;
+  studyDefinitionId: string;
   consentRecordedAt: string;
 }
 
@@ -1557,6 +1585,29 @@ export class SpeedReadingAdminService {
     return this.http.get<SpeedReadingStudyEnrollment[]>(
       `${this.url}/admin/assessment-templates/study-enrollments`
     );
+  }
+
+  searchAssessmentStudyStudents(searchTerm: string) {
+    return this.http.get<SpeedReadingStudyStudentOption[]>(
+      `${this.url}/admin/assessment-templates/study-enrollments/students`,
+      { params: new HttpParams().set('search', searchTerm.trim()) }
+    );
+  }
+
+  getAssessmentStudies() {
+    return this.http.get<SpeedReadingStudyDefinition[]>(`${this.url}/admin/assessment-templates/studies`);
+  }
+
+  createAssessmentStudy(request: SpeedReadingStudyDefinitionRequest) {
+    return this.http.post<SpeedReadingStudyDefinition>(`${this.url}/admin/assessment-templates/studies`, request);
+  }
+
+  updateAssessmentStudy(id: string, request: Omit<SpeedReadingStudyDefinitionRequest, 'studyCode'>) {
+    return this.http.put<void>(`${this.url}/admin/assessment-templates/studies/${id}`, request);
+  }
+
+  retireAssessmentStudy(id: string) {
+    return this.http.post<void>(`${this.url}/admin/assessment-templates/studies/${id}/retire`, {});
   }
 
   createAssessmentStudyEnrollment(request: SpeedReadingStudyEnrollmentRequest) {

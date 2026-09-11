@@ -14,7 +14,10 @@ import {
   SpeedReadingLevelCatalog,
   SpeedReadingLevelDefinition,
   SpeedReadingMeasurementCapability,
-  SpeedReadingStudyEnrollment
+  SpeedReadingStudyDefinition,
+  SpeedReadingStudyDefinitionRequest,
+  SpeedReadingStudyEnrollment,
+  SpeedReadingStudyStudentOption
 } from '../../../core/services/speed-reading-admin.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 
@@ -137,9 +140,13 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
               @empty {<tr><td colspan="8" class="empty">Henüz tamamlanmış, kalibrasyona uygun değerlendirme yok.</td></tr>}
             </tbody></table></div>
           </div>
+          <div class="data-card space-y-3"><div class="flex items-center justify-between gap-3"><div><h3 class="font-medium text-gray-900 dark:text-white">Araştırma çalışmaları</h3><p class="muted">Çalışma kodu, protokol, kohort ve onam belgesi burada bir kez tanımlanır.</p></div><button type="button" (click)="openStudyDefinitionDialog()" class="primary">Yeni çalışma</button></div>
+            @if (studyDefinitionEditing()) {<div class="dialog-backdrop" (click)="closeStudyDefinitionDialog()" aria-hidden="true"></div><form (ngSubmit)="saveStudyDefinition()" (click)="$event.stopPropagation()" class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="study-definition-dialog-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"><header class="dialog-header"><h3 id="study-definition-dialog-title">{{ studyDefinitionEditingId ? 'Çalışmayı düzenle' : 'Yeni çalışma' }}</h3><button type="button" (click)="closeStudyDefinitionDialog()" class="secondary">Kapat</button></header><div class="form-grid dialog-body"><label>Çalışma kodu<input [(ngModel)]="studyDefinitionDraft.studyCode" name="studyDefinitionCode" required maxlength="100" [disabled]="!!studyDefinitionEditingId" /></label><label>Çalışma adı<input [(ngModel)]="studyDefinitionDraft.name" name="studyDefinitionName" required maxlength="200" /></label><label>Protokol sürümü<input [(ngModel)]="studyDefinitionDraft.protocolVersion" name="studyDefinitionProtocol" required maxlength="100" /></label><label>Kohort<input [(ngModel)]="studyDefinitionDraft.cohortCode" name="studyDefinitionCohort" required maxlength="100" /></label><label>Onam metni sürümü<input [(ngModel)]="studyDefinitionDraft.consentDocumentVersion" name="studyDefinitionConsentVersion" required maxlength="100" /></label><label class="wide">Onam belge kaydı<input [(ngModel)]="studyDefinitionDraft.consentDocumentReference" name="studyDefinitionConsentReference" required maxlength="500" placeholder="Belge numarası veya güvenli kayıt yolu" /></label></div><div class="form-actions"><button type="button" (click)="closeStudyDefinitionDialog()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form>}
+            <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Çalışma</th><th>Protokol</th><th>Kohort</th><th>Onam</th><th>Durum</th><th></th></tr></thead><tbody>@for (study of studyDefinitions(); track study.id) {<tr><td><strong>{{ study.studyCode }}</strong><div class="muted">{{ study.name }}</div></td><td>{{ study.protocolVersion }}</td><td>{{ study.cohortCode }}</td><td>{{ study.consentDocumentVersion }}<div class="muted">{{ study.consentDocumentReference }}</div></td><td>{{ study.isActive ? 'Aktif' : 'Emekli' }}</td><td class="actions"><button type="button" (click)="editStudyDefinition(study)">Düzenle</button>@if (study.isActive) {<button type="button" class="danger" (click)="retireStudyDefinition(study)">Emekliye ayır</button>}</td></tr>} @empty {<tr><td colspan="6" class="empty">Araştırma çalışması tanımlanmadı.</td></tr>}</tbody></table></div>
+          </div>
           <div class="data-card space-y-3"><div class="flex items-center justify-between gap-3"><div><h3 class="font-medium text-gray-900 dark:text-white">Pilot/RCT katılımcı atamaları</h3><p class="muted">Onamı kaydedilmiş öğrenciyi protokol ve kohorta bağlar. Öğrenci istemcisi bu alanları değiştiremez.</p></div><button type="button" (click)="openStudyDialog()" class="primary">Katılımcı ekle</button></div>
-            @if (studyEditing()) {<div class="dialog-backdrop" (click)="closeStudyDialog()" aria-hidden="true"></div><form (ngSubmit)="saveStudyEnrollment()" (click)="$event.stopPropagation()" class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="study-dialog-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"><header class="dialog-header"><h3 id="study-dialog-title">Katılımcı ekle</h3><button type="button" (click)="closeStudyDialog()" class="secondary">Kapat</button></header><div class="form-grid dialog-body"><label>Öğrenci ID<input [(ngModel)]="studyDraft.studentId" name="studyStudent" required /></label><label>Çalışma kodu<input [(ngModel)]="studyDraft.studyCode" name="studyCode" required maxlength="100" /></label><label>Protokol sürümü<input [(ngModel)]="studyDraft.protocolVersion" name="studyProtocol" required maxlength="100" /></label><label>Kohort<input [(ngModel)]="studyDraft.cohortCode" name="studyCohort" required maxlength="100" /></label><label>Onam zamanı<input type="datetime-local" [(ngModel)]="studyDraft.consentRecordedAt" name="studyConsent" required /></label></div><div class="form-actions"><button type="button" (click)="closeStudyDialog()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form>}
-            <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Çalışma</th><th>Protokol</th><th>Kohort</th><th>Öğrenci ID</th><th>Onam</th><th>Durum</th><th></th></tr></thead><tbody>@for (enrollment of studyEnrollments(); track enrollment.id) {<tr><td>{{ enrollment.studyCode }}</td><td>{{ enrollment.protocolVersion }}</td><td>{{ enrollment.cohortCode }}</td><td>{{ enrollment.studentId }}</td><td>{{ enrollment.consentRecordedAt | date:'short' }}</td><td>{{ enrollment.isActive ? 'Aktif' : 'Çekildi' }}</td><td>@if (enrollment.isActive) {<button type="button" class="danger" (click)="withdrawStudyEnrollment(enrollment)">Çalışmadan çek</button>}</td></tr>} @empty {<tr><td colspan="7" class="empty">Çalışma katılımcısı bulunmuyor.</td></tr>}</tbody></table></div>
+            @if (studyEditing()) {<div class="dialog-backdrop" (click)="closeStudyDialog()" aria-hidden="true"></div><form (ngSubmit)="saveStudyEnrollment()" (click)="$event.stopPropagation()" class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="study-dialog-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"><header class="dialog-header"><h3 id="study-dialog-title">Katılımcı ekle</h3><button type="button" (click)="closeStudyDialog()" class="secondary">Kapat</button></header><div class="form-grid dialog-body"><div class="student-picker"><label>Öğrenci ara<input [(ngModel)]="studyStudentSearch" (ngModelChange)="searchStudyStudents($event)" name="studyStudentSearch" required placeholder="Ad, soyad veya e-posta yazın" autocomplete="off" /></label><input type="hidden" [(ngModel)]="studyDraft.studentId" name="studyStudent" required />@if (studyStudentSearch.trim().length > 0 && studyStudentSearch.trim().length < 2) {<p class="muted">En az iki karakter yazın.</p>} @if (studyStudents().length > 0) {<div class="student-results" role="listbox" aria-label="Öğrenci sonuçları">@for (student of studyStudents(); track student.studentId) {<button type="button" role="option" (click)="selectStudyStudent(student)"><strong>{{ student.displayName }}</strong><span>{{ student.email || student.studentId }}</span></button>}</div>}</div><label>Çalışma<select [(ngModel)]="studyDraft.studyDefinitionId" name="studyDefinition" required><option value="">Çalışma seçin</option>@for (study of activeStudyDefinitions(); track study.id) {<option [value]="study.id">{{ study.studyCode }} · {{ study.cohortCode }} · {{ study.protocolVersion }}</option>}</select></label>@if (selectedStudyDefinition(); as study) {<p class="muted wide">Onam: {{ study.consentDocumentVersion }} · {{ study.consentDocumentReference }}</p>}<label>Onam zamanı<input type="datetime-local" [(ngModel)]="studyDraft.consentRecordedAt" name="studyConsent" required /></label></div><div class="form-actions"><button type="button" (click)="closeStudyDialog()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving() || !studyDraft.studentId || !studyDraft.studyDefinitionId">Kaydet</button></div></form>}
+            <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Çalışma</th><th>Protokol</th><th>Kohort</th><th>Öğrenci</th><th>Onam</th><th>Durum</th><th></th></tr></thead><tbody>@for (enrollment of studyEnrollments(); track enrollment.id) {<tr><td>{{ enrollment.studyCode }}</td><td>{{ enrollment.protocolVersion }}</td><td>{{ enrollment.cohortCode }}</td><td>{{ enrollment.studentName || 'Öğrenci profili' }}<div class="muted">{{ enrollment.studentEmail || enrollment.studentId }}</div></td><td>{{ enrollment.consentRecordedAt | date:'short' }}</td><td>{{ enrollment.isActive ? 'Aktif' : 'Çekildi' }}</td><td>@if (enrollment.isActive) {<button type="button" class="danger" (click)="withdrawStudyEnrollment(enrollment)">Çalışmadan çek</button>}</td></tr>} @empty {<tr><td colspan="7" class="empty">Çalışma katılımcısı bulunmuyor.</td></tr>}</tbody></table></div>
           </div>
         </section>
       }
@@ -168,6 +175,11 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
     .action-button { border: 1px solid var(--ui-border-strong); border-radius: .5rem; padding: .4rem .65rem; background: var(--ui-surface); color: var(--ui-brand); font-size: .8rem; font-weight: 600; }
     .action-button:hover { background: var(--ui-surface-muted); }
     .action-button.danger { border-color: color-mix(in srgb, var(--ui-danger) 45%, var(--ui-border-strong)); color: var(--ui-danger); }
+    .student-picker { position: relative; }
+    .student-results { position: absolute; z-index: 1; width: 100%; max-height: 13rem; overflow: auto; border: 1px solid var(--ui-border-strong); border-radius: .5rem; background: var(--ui-surface); box-shadow: 0 10px 20px rgb(0 0 0 / .12); }
+    .student-results button { display: grid; width: 100%; gap: .15rem; border: 0; border-bottom: 1px solid var(--ui-border); padding: .65rem .75rem; text-align: left; color: var(--ui-text); }
+    .student-results button:hover { background: var(--ui-surface-muted); }
+    .student-results span { color: var(--ui-text-muted); font-size: .8rem; }
     .exercise-row { display: flex; gap: .75rem; align-items: flex-start; border-top: 1px solid var(--ui-border); padding: .75rem 0; }
     .exercise-row input { margin-top: .4rem; }
     .empty { color: var(--ui-text-muted); padding: 1.25rem; text-align: center; }
@@ -197,7 +209,10 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
   readonly measurementCapabilities = signal<SpeedReadingMeasurementCapability[]>([]);
   readonly calibration = signal<SpeedReadingCalibrationReport | null>(null);
   readonly studyEnrollments = signal<SpeedReadingStudyEnrollment[]>([]);
+  readonly studyDefinitions = signal<SpeedReadingStudyDefinition[]>([]);
+  readonly studyStudents = signal<SpeedReadingStudyStudentOption[]>([]);
   readonly studyEditing = signal(false);
+  readonly studyDefinitionEditing = signal(false);
   readonly assessmentEditing = signal(false);
   readonly selectedAssessmentExercises = signal<AssessmentExerciseDraft[]>([]);
   readonly currentTemplate = signal<SpeedReadingAssessmentTemplate | null>(null);
@@ -216,6 +231,11 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
   levelCatalogName = '';
   levelDraft: SpeedReadingLevelDefinition[] = [];
   studyDraft = this.emptyStudyEnrollment();
+  studyDefinitionEditingId: string | null = null;
+  studyDefinitionDraft: SpeedReadingStudyDefinitionRequest = this.emptyStudyDefinition();
+  studyStudentSearch = '';
+  private studyStudentSearchTimer?: ReturnType<typeof setTimeout>;
+  private studyStudentSearchRequest = 0;
 
   ngOnInit(): void {
     this.loadAgeGroups();
@@ -225,6 +245,7 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
     this.loadMeasurementCapabilities();
     this.loadCalibration();
     this.loadStudyEnrollments();
+    this.loadStudyDefinitions();
   }
 
   selectTab(tab: ConfigurationTab): void {
@@ -237,6 +258,7 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
     if (this.ageEditing()) this.cancelAgeGroupEdit();
     else if (this.assessmentEditing()) this.closeAssessmentDialog();
     else if (this.levelEditing()) this.cancelLevelCatalogEdit();
+    else if (this.studyDefinitionEditing()) this.closeStudyDefinitionDialog();
     else if (this.studyEditing()) this.closeStudyDialog();
   }
 
@@ -371,6 +393,70 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
     });
   }
 
+  loadStudyDefinitions(): void {
+    this.service.getAssessmentStudies().subscribe({
+      next: value => this.studyDefinitions.set(value),
+      error: () => this.error.set('Araştırma çalışmaları yüklenemedi.')
+    });
+  }
+
+  activeStudyDefinitions(): SpeedReadingStudyDefinition[] {
+    return this.studyDefinitions().filter(study => study.isActive);
+  }
+
+  selectedStudyDefinition(): SpeedReadingStudyDefinition | undefined {
+    return this.studyDefinitions().find(study => study.id === this.studyDraft.studyDefinitionId);
+  }
+
+  openStudyDefinitionDialog(): void {
+    if (this.saving()) return;
+    this.studyDefinitionEditingId = null;
+    this.studyDefinitionDraft = this.emptyStudyDefinition();
+    this.studyDefinitionEditing.set(true);
+  }
+
+  editStudyDefinition(study: SpeedReadingStudyDefinition): void {
+    if (this.saving()) return;
+    this.studyDefinitionEditingId = study.id;
+    this.studyDefinitionDraft = {
+      studyCode: study.studyCode, name: study.name, protocolVersion: study.protocolVersion,
+      cohortCode: study.cohortCode, consentDocumentVersion: study.consentDocumentVersion,
+      consentDocumentReference: study.consentDocumentReference
+    };
+    this.studyDefinitionEditing.set(true);
+  }
+
+  closeStudyDefinitionDialog(): void {
+    if (this.saving()) return;
+    this.dismissStudyDefinitionDialog();
+  }
+
+  private dismissStudyDefinitionDialog(): void {
+    this.studyDefinitionEditing.set(false);
+    this.studyDefinitionEditingId = null;
+    this.studyDefinitionDraft = this.emptyStudyDefinition();
+  }
+
+  saveStudyDefinition(): void {
+    if (this.saving()) return;
+    this.saving.set(true);
+    const request: Observable<unknown> = this.studyDefinitionEditingId
+      ? this.service.updateAssessmentStudy(this.studyDefinitionEditingId, this.studyDefinitionDraft)
+      : this.service.createAssessmentStudy(this.studyDefinitionDraft);
+    request.pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => { this.dismissStudyDefinitionDialog(); this.loadStudyDefinitions(); },
+      error: (response: { error?: string }) => this.error.set(response?.error || 'Araştırma çalışması kaydedilemedi.')
+    });
+  }
+
+  async retireStudyDefinition(study: SpeedReadingStudyDefinition): Promise<void> {
+    if (!await this.toaster.confirm(`“${study.studyCode} · ${study.cohortCode}” çalışması emekliye ayrılsın mı?`, { title: 'Araştırma çalışmasını emekliye ayır' })) return;
+    this.service.retireAssessmentStudy(study.id).subscribe({
+      next: () => this.loadStudyDefinitions(),
+      error: () => this.error.set('Araştırma çalışması emekliye ayrılamadı.')
+    });
+  }
+
   saveStudyEnrollment(): void {
     if (this.saving()) return;
     const request = { ...this.studyDraft, consentRecordedAt: new Date(this.studyDraft.consentRecordedAt).toISOString() };
@@ -393,8 +479,42 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
   }
 
   private dismissStudyDialog(): void {
+    this.studyStudentSearchRequest++;
+    if (this.studyStudentSearchTimer) clearTimeout(this.studyStudentSearchTimer);
     this.studyEditing.set(false);
     this.studyDraft = this.emptyStudyEnrollment();
+    this.studyStudentSearch = '';
+    this.studyStudents.set([]);
+  }
+
+  searchStudyStudents(searchTerm: string): void {
+    this.studyDraft.studentId = '';
+    this.studyStudents.set([]);
+    this.studyStudentSearchRequest++;
+    if (this.studyStudentSearchTimer) clearTimeout(this.studyStudentSearchTimer);
+    const term = searchTerm.trim();
+    if (term.length < 2) return;
+    const requestId = this.studyStudentSearchRequest;
+    this.studyStudentSearchTimer = setTimeout(() => {
+      this.service.searchAssessmentStudyStudents(term).subscribe({
+        next: students => {
+          if (requestId === this.studyStudentSearchRequest) this.studyStudents.set(students);
+        },
+        error: () => {
+          if (requestId === this.studyStudentSearchRequest) this.error.set('Öğrenci araması yapılamadı.');
+        }
+      });
+    }, 250);
+  }
+
+  selectStudyStudent(student: SpeedReadingStudyStudentOption): void {
+    this.studyDraft.studentId = student.studentId;
+    this.studyStudentSearch = student.email
+      ? `${student.displayName} — ${student.email}`
+      : student.displayName;
+    this.studyStudentSearchRequest++;
+    if (this.studyStudentSearchTimer) clearTimeout(this.studyStudentSearchTimer);
+    this.studyStudents.set([]);
   }
 
   async withdrawStudyEnrollment(enrollment: SpeedReadingStudyEnrollment): Promise<void> {
@@ -625,6 +745,10 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
   private emptyStudyEnrollment() {
     const now = new Date();
     const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
-    return { studentId: '', studyCode: '', protocolVersion: '', cohortCode: '', consentRecordedAt: local };
+    return { studentId: '', studyDefinitionId: '', consentRecordedAt: local };
+  }
+
+  private emptyStudyDefinition(): SpeedReadingStudyDefinitionRequest {
+    return { studyCode: '', name: '', protocolVersion: '', cohortCode: '', consentDocumentVersion: '', consentDocumentReference: '' };
   }
 }
