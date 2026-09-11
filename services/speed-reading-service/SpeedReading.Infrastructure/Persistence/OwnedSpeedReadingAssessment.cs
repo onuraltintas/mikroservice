@@ -3,6 +3,7 @@ using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.Assessment;
 using SpeedReading.Application.Content;
+using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Domain.Assessment;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Profiles;
@@ -1172,21 +1173,7 @@ internal sealed class OwnedSpeedReadingAssessment(OwnedSpeedReadingDbContext db)
     }
 
     private static bool IsServerMeasuredExerciseType(string typeName) =>
-        IsType(
-            typeName,
-            "speedreading",
-            "rsvp",
-            "comprehension",
-            "reading",
-            "free",
-            "chunking",
-            "textfading",
-            "skimming",
-            "scanning",
-            "schulte",
-            "focus",
-            "attention",
-            "fixation");
+        SpeedReadingMeasurementCapabilities.IsAssessmentEligible(typeName);
 
     private static string LevelName(int level) => SpeedReadingLevelRules.GetDisplayName(level);
 

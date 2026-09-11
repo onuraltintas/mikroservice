@@ -4,6 +4,7 @@ using EduPlatform.Shared.Security.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SpeedReading.Application.Assessment;
+using SpeedReading.Application.ExerciseSessions;
 
 namespace SpeedReading.API.Controllers;
 
@@ -19,6 +20,9 @@ public sealed class AssessmentAdminController(ISpeedReadingAssessment assessment
 
     [HttpGet("levels")]
     public IActionResult GetLevels() => Ok(SpeedReadingLevelRules.Definitions);
+
+    [HttpGet("measurement-capabilities")]
+    public IActionResult GetMeasurementCapabilities() => Ok(SpeedReadingMeasurementCapabilities.Definitions);
 
     [HttpGet("age-group/{ageGroupId:guid}")]
     public async Task<IActionResult> GetByAgeGroup(Guid ageGroupId, CancellationToken cancellationToken = default)
