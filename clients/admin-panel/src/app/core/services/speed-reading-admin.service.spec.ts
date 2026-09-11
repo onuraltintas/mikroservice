@@ -452,6 +452,18 @@ describe('SpeedReadingAdminService', () => {
     request.flush({ id: 'type-1' });
   });
 
+  it('loads every exercise type page for exercise selection', () => {
+    service.getAllExerciseTypes().subscribe(value => {
+      expect(value.map(type => type.id)).toEqual(['type-1', 'type-2']);
+    });
+
+    const firstPage = http.expectOne('/api/speed-reading/exercise-types?pageNumber=1&pageSize=100');
+    firstPage.flush({ items: [{ id: 'type-1' }], pageNumber: 1, pageSize: 100, totalCount: 101 });
+
+    const secondPage = http.expectOne('/api/speed-reading/exercise-types?pageNumber=2&pageSize=100');
+    secondPage.flush({ items: [{ id: 'type-2' }], pageNumber: 2, pageSize: 100, totalCount: 101 });
+  });
+
   it('loads exercises with paging and writes through the dedicated route', () => {
     service.getExercises(2, 10).subscribe();
     const listRequest = http.expectOne('/api/speed-reading/exercises?pageNumber=2&pageSize=10');

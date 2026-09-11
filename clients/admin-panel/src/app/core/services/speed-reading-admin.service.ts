@@ -1888,6 +1888,23 @@ export class SpeedReadingAdminService {
     );
   }
 
+  getAllExerciseTypes(pageSize = 100) {
+    const boundedPageSize = Math.min(Math.max(pageSize, 1), 100);
+    return this.getExerciseTypes(1, boundedPageSize).pipe(
+      switchMap(firstPage => {
+        const totalPages = Math.max(1, Math.ceil(firstPage.totalCount / firstPage.pageSize));
+        if (totalPages === 1) return of(firstPage.items);
+
+        const remainingPages = Array.from({ length: totalPages - 1 }, (_, index) =>
+          this.getExerciseTypes(index + 2, boundedPageSize)
+        );
+        return forkJoin(remainingPages).pipe(
+          map(pages => [firstPage, ...pages].flatMap(page => page.items))
+        );
+      })
+    );
+  }
+
   createExerciseType(request: SpeedReadingExerciseTypeRequest, idempotencyKey?: string) {
     return this.http.post<SpeedReadingExerciseType>(
       `${this.url}/exercise-types`,
