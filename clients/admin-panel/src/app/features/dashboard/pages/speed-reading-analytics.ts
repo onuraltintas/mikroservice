@@ -151,7 +151,23 @@ export function combineDailyPlatformMetrics(
 
   @if (selectedTab() === 'progress') {
         <section class="space-y-4" aria-labelledby="progress-title"><div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><h2 id="progress-title" class="text-lg font-semibold text-gray-900 dark:text-white">Öğrenci program ilerlemeleri</h2><p class="muted">İlerleme kayıtlarını inceleyin; sıfırlama işlemi yalnızca ProgramManage yetkisi olan yöneticilere açıktır.</p></div><label class="text-sm font-medium text-gray-700 dark:text-gray-200">Öğrenci ara<input [(ngModel)]="progressSearch" (ngModelChange)="searchProgress()" name="progressSearch" maxlength="100" class="mt-1 block rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-600" /></label></div><div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>İlerleme ID</th><th>Kullanıcı ID</th><th>Program ID</th><th>Gün</th><th>Tamamlanan gün</th><th>Egzersiz</th><th>Atanma</th><th></th></tr></thead><tbody>@for (item of progressPage()?.items; track item.id) {<tr><td class="font-mono text-xs">{{ item.id }}</td><td class="font-mono text-xs">{{ item.userId }}</td><td class="font-mono text-xs">{{ item.programTemplateId }}</td><td>{{ item.currentDay }}</td><td>{{ item.daysCompleted }}</td><td>{{ item.exercisesCompleted }}</td><td>{{ item.assignedDate | date:'dd.MM.yyyy' }}</td><td class="flex gap-2"><button type="button" (click)="openProgress(item)" class="rounded-md border px-2 py-1 text-xs">Detay</button>@if (canResetProgress()) {<button type="button" (click)="resetProgress(item)" [disabled]="loading()" class="rounded-md border border-amber-300 px-2 py-1 text-xs text-amber-700">Sıfırla</button>}</td></tr>} @empty {<tr><td colspan="8" class="empty">{{ loading() ? 'Yükleniyor…' : 'İlerleme kaydı bulunamadı.' }}</td></tr>}</tbody></table></div><div class="mt-3 flex items-center justify-between text-xs text-gray-500"><span>Toplam {{ progressPage()?.totalCount ?? 0 }} kayıt</span><div class="flex gap-2"><button type="button" (click)="changeProgressPage(progressPageNumber - 1)" [disabled]="progressPageNumber <= 1 || loading()" class="rounded border px-2 py-1 disabled:opacity-40">Önceki</button><button type="button" (click)="changeProgressPage(progressPageNumber + 1)" [disabled]="!progressPage() || progressPageNumber >= progressTotalPages() || loading()" class="rounded border px-2 py-1 disabled:opacity-40">Sonraki</button></div></div></div>
-        @if (progressDetails(); as details) {<div class="data-card"><div class="flex items-center justify-between"><h3>İlerleme ayrıntısı</h3><button type="button" (click)="progressDetails.set(null)" class="text-sm text-gray-500">Kapat</button></div><p class="muted">Güncel hafta: {{ details.progress.currentWeek }} · Zorluk: {{ details.progress.currentDifficultyLevel }} · Başarı: {{ details.progress.averageSuccessRate }}%</p><div class="mt-3 overflow-x-auto"><table class="data-table"><thead><tr><th>Tarih</th><th>Gün/hafta</th><th>Sonuç</th><th>WPM</th><th>Anlama</th><th>Ölçüm</th></tr></thead><tbody>@for (log of details.recentLogs; track log.id) {<tr><td>{{ log.completedDate | date:'dd.MM.yyyy HH:mm' }}</td><td>{{ log.dayNumber }} / {{ log.weekNumber }}</td><td>{{ log.isPassed ? 'Geçti' : 'Başarısız' }}</td><td>{{ log.averageWpm ?? '—' }}</td><td>{{ log.averageComprehension ?? '—' }}</td><td>{{ log.measurementStatus }}</td></tr>} @empty {<tr><td colspan="6" class="empty">Son kayıt yok.</td></tr>}</tbody></table></div></div>}
+        @if (progressDetails(); as details) {
+          <div class="dialog-backdrop" (click)="closeProgressDetails()" aria-hidden="true"></div>
+          <section class="progress-dialog" role="dialog" aria-modal="true" aria-labelledby="progress-detail-title">
+            <header class="progress-dialog-header">
+              <div><p class="muted">Öğrenci program ilerlemesi</p><h3 id="progress-detail-title">İlerleme ayrıntısı</h3></div>
+              <button type="button" (click)="closeProgressDetails()" class="rounded-md border px-3 py-1 text-sm" aria-label="İlerleme ayrıntısını kapat">Kapat</button>
+            </header>
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div class="metric-card"><span>Güncel gün</span><strong>{{ details.progress.currentDay }}</strong></div>
+              <div class="metric-card"><span>Güncel hafta</span><strong>{{ details.progress.currentWeek }}</strong></div>
+              <div class="metric-card"><span>Zorluk</span><strong>{{ details.progress.currentDifficultyLevel }}</strong></div>
+              <div class="metric-card"><span>Başarı</span><strong>{{ details.progress.averageSuccessRate }}%</strong></div>
+            </div>
+            <p class="muted mt-4">Tamamlanan gün: {{ details.progress.daysCompleted }} · Tamamlanan egzersiz: {{ details.progress.exercisesCompleted }} · Güncel seri: {{ details.progress.currentStreak }}</p>
+            <div class="mt-4 overflow-x-auto"><table class="data-table"><thead><tr><th>Tarih</th><th>Gün/hafta</th><th>Sonuç</th><th>WPM</th><th>Anlama</th><th>Ölçüm</th></tr></thead><tbody>@for (log of details.recentLogs; track log.id) {<tr><td>{{ log.completedDate | date:'dd.MM.yyyy HH:mm' }}</td><td>{{ log.dayNumber }} / {{ log.weekNumber }}</td><td>{{ log.isPassed ? 'Geçti' : 'Başarısız' }}</td><td>{{ log.averageWpm ?? '-' }}</td><td>{{ log.averageComprehension ?? '-' }}</td><td>{{ log.measurementStatus }}</td></tr>} @empty {<tr><td colspan="6" class="empty">Son kayıt yok.</td></tr>}</tbody></table></div>
+          </section>
+        }
         </section>
       }
 
@@ -212,6 +228,10 @@ export function combineDailyPlatformMetrics(
     .teacher-form mat-form-field { width: min(100%, 32rem); }
     .teacher-option-name, .teacher-option-email { display: block; line-height: 1.25rem; }
     .teacher-option-email { color: var(--ui-text-muted); font-size: .75rem; }
+    .dialog-backdrop { position: fixed; inset: 0; z-index: 999; background: rgb(15 23 42 / .5); }
+    .progress-dialog { position: fixed; z-index: 1000; top: 50%; left: 50%; width: min(56rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; transform: translate(-50%, -50%); border: 1px solid var(--ui-border); border-radius: .75rem; background: var(--ui-surface); padding: 1.25rem; box-shadow: 0 25px 50px rgb(0 0 0 / .25); }
+    .progress-dialog-header { display: flex; align-items: start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+    .progress-dialog-header h3 { margin: 0; }
     @media (max-width: 640px) { .teacher-form { align-items: stretch; flex-direction: column; } .teacher-form mat-form-field { width: 100%; } }
   `]
 })
@@ -429,6 +449,10 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
       next: result => { this.teacherClassOverview.set(result.overview); this.teacherAssignmentAnalytics.set(result.assignments); this.teacherContentAnalysis.set(result.content); this.teacherTimeProgress.set(result.time); },
       error: () => this.error.set('Öğretmen analitik verisi yüklenemedi; öğretmenin yetki kapsamınızda olduğunu kontrol edin.')
     });
+  }
+
+  closeProgressDetails(): void {
+    this.progressDetails.set(null);
   }
 
   readonly displayTeacher = (teacher: SpeedReadingTeacherDirectoryItem | string | null): string =>
