@@ -111,6 +111,7 @@ internal sealed class LegacySpeedReadingPrograms(SpeedReadingDbContext db) : ILe
             .ToListAsync(cancellationToken);
 
     public async Task<SpeedReadingPage<AdminStudentProgressSummary>> GetAdminStudentProgressAsync(
+        SpeedReadingProgressAccessScope accessScope,
         int pageNumber,
         int pageSize,
         string? searchTerm,
@@ -127,6 +128,14 @@ internal sealed class LegacySpeedReadingPrograms(SpeedReadingDbContext db) : ILe
             from template in templateRows.DefaultIfEmpty()
             where !progress.IsDeleted
             select new { Progress = progress, User = user, Template = template };
+
+        if (!accessScope.IsGlobal)
+        {
+            var allowedStudentIds = accessScope.StudentUserIds.Distinct().ToArray();
+            if (allowedStudentIds.Length == 0)
+                return new SpeedReadingPage<AdminStudentProgressSummary>([], page, size, 0);
+            query = query.Where(row => allowedStudentIds.Contains(row.Progress.UserId));
+        }
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
@@ -155,19 +164,25 @@ internal sealed class LegacySpeedReadingPrograms(SpeedReadingDbContext db) : ILe
                 row.Progress.CurrentDay,
                 row.Progress.DaysCompleted,
                 row.Progress.ExercisesCompleted,
-                row.Progress.AssignedDate))
+                row.Progress.AssignedDate,
+                row.User == null ? null : (row.User.FirstName + " " + row.User.LastName).Trim(),
+                row.User == null ? null : row.User.Email,
+                row.Template == null ? null : row.Template.Name))
             .ToListAsync(cancellationToken);
 
         return new SpeedReadingPage<AdminStudentProgressSummary>(items, page, size, totalCount);
     }
 
     public async Task<AdminStudentProgressDetails?> GetAdminStudentProgressDetailsAsync(
+        SpeedReadingProgressAccessScope accessScope,
         Guid progressId,
         CancellationToken cancellationToken = default)
     {
         var progress = await db.StudentProgramProgresses
             .AsNoTracking()
-            .SingleOrDefaultAsync(item => item.Id == progressId && !item.IsDeleted, cancellationToken);
+            .SingleOrDefaultAsync(item => item.Id == progressId
+                && !item.IsDeleted
+                && (accessScope.IsGlobal || accessScope.StudentUserIds.Contains(item.UserId)), cancellationToken);
         if (progress is null)
         {
             return null;
@@ -220,12 +235,15 @@ internal sealed class LegacySpeedReadingPrograms(SpeedReadingDbContext db) : ILe
     }
 
     public async Task<bool> ResetStudentProgressAsync(
+        SpeedReadingProgressAccessScope accessScope,
         Guid progressId,
         Guid actorId,
         CancellationToken cancellationToken = default)
     {
         var progress = await db.StudentProgramProgresses
-            .SingleOrDefaultAsync(item => item.Id == progressId && !item.IsDeleted, cancellationToken);
+            .SingleOrDefaultAsync(item => item.Id == progressId
+                && !item.IsDeleted
+                && (accessScope.IsGlobal || accessScope.StudentUserIds.Contains(item.UserId)), cancellationToken);
         if (progress is null)
         {
             return false;

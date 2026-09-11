@@ -95,6 +95,31 @@ public sealed class InternalCoachingController : ControllerBase
             : Ok(new CoachingStudentReadResponse(authorization.AllowedStudentUserIds));
     }
 
+    [HttpPost("search-students")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    [RequestSizeLimit(4_096)]
+    public async Task<IActionResult> SearchSpeedReadingStudents(
+        [FromBody] SpeedReadingStudentSearchRequest? request,
+        CancellationToken cancellationToken)
+    {
+        if (request is null
+            || request.ViewerUserId == Guid.Empty
+            || string.IsNullOrWhiteSpace(request.SearchTerm)
+            || request.SearchTerm.Trim().Length is < 2 or > 100)
+        {
+            return BadRequest("Student search request is invalid.");
+        }
+
+        var result = await _institutionRepository.SearchSpeedReadingStudentsAsync(
+            request.ViewerUserId,
+            request.SearchTerm,
+            cancellationToken);
+        return result is null
+            ? Forbid()
+            : Ok(new SpeedReadingStudentSearchResponse(result.StudentUserIds, result.HasMore));
+    }
+
     [HttpPost("report-students")]
     [AllowAnonymous]
     [InternalServiceKey]
@@ -172,6 +197,12 @@ public sealed record CoachingStudentReadRequest(
 
 public sealed record CoachingStudentReadResponse(
     IReadOnlyCollection<Guid> AllowedStudentUserIds);
+
+public sealed record SpeedReadingStudentSearchRequest(Guid ViewerUserId, string SearchTerm);
+
+public sealed record SpeedReadingStudentSearchResponse(
+    IReadOnlyCollection<Guid> StudentUserIds,
+    bool HasMore);
 
 public sealed record CoachingReportStudentRequest(
     Guid ViewerUserId,

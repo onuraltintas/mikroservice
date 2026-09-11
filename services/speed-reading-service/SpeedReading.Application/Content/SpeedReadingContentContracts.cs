@@ -252,16 +252,19 @@ public interface ILegacySpeedReadingPrograms
         CancellationToken cancellationToken = default);
 
     Task<SpeedReadingPage<AdminStudentProgressSummary>> GetAdminStudentProgressAsync(
+        SpeedReadingProgressAccessScope accessScope,
         int pageNumber,
         int pageSize,
         string? searchTerm,
         CancellationToken cancellationToken = default);
 
     Task<AdminStudentProgressDetails?> GetAdminStudentProgressDetailsAsync(
+        SpeedReadingProgressAccessScope accessScope,
         Guid progressId,
         CancellationToken cancellationToken = default);
 
     Task<bool> ResetStudentProgressAsync(
+        SpeedReadingProgressAccessScope accessScope,
         Guid progressId,
         Guid actorId,
         CancellationToken cancellationToken = default);
@@ -313,7 +316,10 @@ public sealed record AdminStudentProgressSummary(
     int CurrentDay,
     int DaysCompleted,
     int ExercisesCompleted,
-    DateTime AssignedDate);
+    DateTime AssignedDate,
+    string? StudentName = null,
+    string? StudentEmail = null,
+    string? ProgramTemplateName = null);
 
 public sealed record AdminStudentProgressDetails(
     StudentProgramProgressSummary Progress,

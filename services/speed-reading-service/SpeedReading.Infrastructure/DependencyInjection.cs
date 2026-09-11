@@ -220,6 +220,10 @@ public static class DependencyInjection
         {
             client.Timeout = TimeSpan.FromSeconds(5);
         }).AddCorrelationIdPropagation();
+        services.AddHttpClient<ISpeedReadingProgressAccess, IdentityProgressAccessClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
+        }).AddCorrelationIdPropagation();
         services.AddHttpClient<ISpeedReadingUserDirectory, IdentityUserDirectoryClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);

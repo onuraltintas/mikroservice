@@ -81,6 +81,10 @@ public interface IInstitutionRepository
     Task<CoachingAdminAccessAuthorization?> AuthorizeCoachingAdminAsync(
         Guid viewerUserId,
         CancellationToken cancellationToken);
+    Task<SpeedReadingStudentSearch?> SearchSpeedReadingStudentsAsync(
+        Guid viewerUserId,
+        string searchTerm,
+        CancellationToken cancellationToken);
     Task<CoachingTeacherAuthorization?> AuthorizeCoachingTeacherTargetsAsync(
         Guid teacherUserId,
         IReadOnlyCollection<Guid> studentUserIds,
@@ -109,6 +113,7 @@ public interface IInstitutionRepository
 
 public sealed record CoachingTeacherAuthorization(Guid? InstitutionId);
 public sealed record CoachingAdminAccessAuthorization(bool IsGlobal, Guid? InstitutionId);
+public sealed record SpeedReadingStudentSearch(IReadOnlyCollection<Guid> StudentUserIds, bool HasMore);
 public sealed record CoachingStudentReadAuthorization(IReadOnlyCollection<Guid> AllowedStudentUserIds);
 public sealed record CoachingReportStudentPage(
     IReadOnlyCollection<Guid> StudentUserIds,

@@ -776,6 +776,49 @@ public class InstitutionRepository : IInstitutionRepository
             : null;
     }
 
+    public async Task<SpeedReadingStudentSearch?> SearchSpeedReadingStudentsAsync(
+        Guid viewerUserId,
+        string searchTerm,
+        CancellationToken cancellationToken)
+    {
+        var access = await AuthorizeCoachingAdminAsync(viewerUserId, cancellationToken);
+        if (access is null)
+        {
+            return null;
+        }
+
+        var normalizedSearch = searchTerm.Trim().ToLowerInvariant();
+        if (normalizedSearch.Length < 2)
+        {
+            return new SpeedReadingStudentSearch(Array.Empty<Guid>(), false);
+        }
+
+        var query = _context.Users
+            .AsNoTracking()
+            .Where(user => user.IsActive
+                && user.Roles.Any(userRole =>
+                    !userRole.Role.IsDeleted
+                    && userRole.Role.Name == "Student")
+                && ((user.FirstName + " " + user.LastName).ToLower().Contains(normalizedSearch)
+                    || user.Email.ToLower().Contains(normalizedSearch)));
+
+        if (!access.IsGlobal)
+        {
+            query = query.Where(user => user.StudentProfile != null
+                && user.StudentProfile.IsActive
+                && user.StudentProfile.InstitutionId == access.InstitutionId
+                && user.StudentProfile.Institution != null
+                && user.StudentProfile.Institution.IsActive);
+        }
+
+        var studentIds = await query
+            .OrderBy(user => user.Id)
+            .Take(501)
+            .Select(user => user.Id)
+            .ToListAsync(cancellationToken);
+        return new SpeedReadingStudentSearch(studentIds.Take(500).ToArray(), studentIds.Count > 500);
+    }
+
     public async Task<CoachingTeacherAuthorization?> AuthorizeCoachingTeacherTargetsAsync(
         Guid teacherUserId,
         IReadOnlyCollection<Guid> studentUserIds,

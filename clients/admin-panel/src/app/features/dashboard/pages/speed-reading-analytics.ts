@@ -1,5 +1,6 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, OnDestroy, OnInit, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { A11yModule } from '@angular/cdk/a11y';
+import { Component, HostListener, OnDestroy, OnInit, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -59,10 +60,14 @@ export function combineDailyPlatformMetrics(
   return [...rows.values()].sort((left, right) => left.date.localeCompare(right.date));
 }
 
+export function progressStudentLabel(progress: AdminStudentProgressSummary): string {
+  return progress.studentName?.trim() || 'Öğrenci profili';
+}
+
 @Component({
   selector: 'app-speed-reading-analytics',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatAutocompleteModule, MatFormFieldModule, MatInputModule],
+  imports: [CommonModule, FormsModule, A11yModule, MatAutocompleteModule, MatFormFieldModule, MatInputModule],
   template: `
     <main class="space-y-6" aria-labelledby="speed-reading-analytics-title">
       <header>
@@ -150,12 +155,12 @@ export function combineDailyPlatformMetrics(
       }
 
   @if (selectedTab() === 'progress') {
-        <section class="space-y-4" aria-labelledby="progress-title"><div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><h2 id="progress-title" class="text-lg font-semibold text-gray-900 dark:text-white">Öğrenci program ilerlemeleri</h2><p class="muted">İlerleme kayıtlarını inceleyin; sıfırlama işlemi yalnızca ProgramManage yetkisi olan yöneticilere açıktır.</p></div><label class="text-sm font-medium text-gray-700 dark:text-gray-200">Öğrenci ara<input [(ngModel)]="progressSearch" (ngModelChange)="searchProgress()" name="progressSearch" maxlength="100" class="mt-1 block rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-600" /></label></div><div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>İlerleme ID</th><th>Kullanıcı ID</th><th>Program ID</th><th>Gün</th><th>Tamamlanan gün</th><th>Egzersiz</th><th>Atanma</th><th></th></tr></thead><tbody>@for (item of progressPage()?.items; track item.id) {<tr><td class="font-mono text-xs">{{ item.id }}</td><td class="font-mono text-xs">{{ item.userId }}</td><td class="font-mono text-xs">{{ item.programTemplateId }}</td><td>{{ item.currentDay }}</td><td>{{ item.daysCompleted }}</td><td>{{ item.exercisesCompleted }}</td><td>{{ item.assignedDate | date:'dd.MM.yyyy' }}</td><td class="flex gap-2"><button type="button" (click)="openProgress(item)" class="rounded-md border px-2 py-1 text-xs">Detay</button>@if (canResetProgress()) {<button type="button" (click)="resetProgress(item)" [disabled]="loading()" class="rounded-md border border-amber-300 px-2 py-1 text-xs text-amber-700">Sıfırla</button>}</td></tr>} @empty {<tr><td colspan="8" class="empty">{{ loading() ? 'Yükleniyor…' : 'İlerleme kaydı bulunamadı.' }}</td></tr>}</tbody></table></div><div class="mt-3 flex items-center justify-between text-xs text-gray-500"><span>Toplam {{ progressPage()?.totalCount ?? 0 }} kayıt</span><div class="flex gap-2"><button type="button" (click)="changeProgressPage(progressPageNumber - 1)" [disabled]="progressPageNumber <= 1 || loading()" class="rounded border px-2 py-1 disabled:opacity-40">Önceki</button><button type="button" (click)="changeProgressPage(progressPageNumber + 1)" [disabled]="!progressPage() || progressPageNumber >= progressTotalPages() || loading()" class="rounded border px-2 py-1 disabled:opacity-40">Sonraki</button></div></div></div>
+        <section class="space-y-4" aria-labelledby="progress-title"><div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><h2 id="progress-title" class="text-lg font-semibold text-gray-900 dark:text-white">Öğrenci program ilerlemeleri</h2><p class="muted">Öğrencinin programdaki konumunu, tamamladığı çalışmaları ve son etkinliklerini inceleyin. Sıfırlama işlemi yalnızca ProgramManage yetkisi olan yöneticilere açıktır.</p></div><label class="text-sm font-medium text-gray-700 dark:text-gray-200">Öğrenci ara<input [(ngModel)]="progressSearch" (ngModelChange)="searchProgress()" name="progressSearch" maxlength="100" placeholder="Ad, e-posta veya program" class="mt-1 block rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-600" /></label></div><div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Öğrenci</th><th>Program</th><th>Gün</th><th>Tamamlanan gün</th><th>Egzersiz</th><th>Atanma</th><th></th></tr></thead><tbody>@for (item of progressPage()?.items; track item.id) {<tr><td><div class="font-medium">{{ progressStudentLabel(item) }}</div>@if (item.studentEmail) {<div class="muted">{{ item.studentEmail }}</div>}</td><td>{{ item.programTemplateName || 'Program bilgisi yok' }}</td><td>{{ item.currentDay }}</td><td>{{ item.daysCompleted }}</td><td>{{ item.exercisesCompleted }}</td><td>{{ item.assignedDate | date:'dd.MM.yyyy' }}</td><td class="flex gap-2"><button type="button" (click)="openProgress(item)" class="rounded-md border px-2 py-1 text-xs">Detay</button>@if (canResetProgress()) {<button type="button" (click)="resetProgress(item)" [disabled]="loading()" class="rounded-md border border-amber-300 px-2 py-1 text-xs text-amber-700">Sıfırla</button>}</td></tr>} @empty {<tr><td colspan="7" class="empty">{{ loading() ? 'Yükleniyor…' : 'İlerleme kaydı bulunamadı.' }}</td></tr>}</tbody></table></div><div class="mt-3 flex items-center justify-between text-xs text-gray-500"><span>Toplam {{ progressPage()?.totalCount ?? 0 }} kayıt</span><div class="flex gap-2"><button type="button" (click)="changeProgressPage(progressPageNumber - 1)" [disabled]="progressPageNumber <= 1 || loading()" class="rounded border px-2 py-1 disabled:opacity-40">Önceki</button><button type="button" (click)="changeProgressPage(progressPageNumber + 1)" [disabled]="!progressPage() || progressPageNumber >= progressTotalPages() || loading()" class="rounded border px-2 py-1 disabled:opacity-40">Sonraki</button></div></div></div>
         @if (progressDetails(); as details) {
           <div class="dialog-backdrop" (click)="closeProgressDetails()" aria-hidden="true"></div>
-          <section class="progress-dialog" role="dialog" aria-modal="true" aria-labelledby="progress-detail-title">
+          <section class="progress-dialog" role="dialog" aria-modal="true" aria-labelledby="progress-detail-title" cdkTrapFocus cdkTrapFocusAutoCapture>
             <header class="progress-dialog-header">
-              <div><p class="muted">Öğrenci program ilerlemesi</p><h3 id="progress-detail-title">İlerleme ayrıntısı</h3></div>
+              <div><p class="muted">{{ selectedProgress()?.programTemplateName || 'Öğrenci program ilerlemesi' }}</p><h3 id="progress-detail-title">{{ selectedProgressLabel() }}</h3></div>
               <button type="button" (click)="closeProgressDetails()" class="rounded-md border px-3 py-1 text-sm" aria-label="İlerleme ayrıntısını kapat">Kapat</button>
             </header>
             <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -243,8 +248,12 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly route = inject(ActivatedRoute);
   private request?: Subscription;
+  private progressDetailsRequest?: Subscription;
   private teacherDirectoryRequest?: Subscription;
   private teacherSearchTimer?: ReturnType<typeof setTimeout>;
+  private progressSearchTimer?: ReturnType<typeof setTimeout>;
+  private progressDetailsRequestId = 0;
+  private progressDetailsOpener?: HTMLElement;
 
   readonly canPlatformAnalytics = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingPlatformAnalytics));
   readonly canProgress = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingProgressView));
@@ -270,6 +279,7 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
   readonly programAnalytics = signal<SpeedReadingProgramAnalytics | null>(null);
   readonly progressPage = signal<SpeedReadingPage<AdminStudentProgressSummary> | null>(null);
   readonly progressDetails = signal<AdminStudentProgressDetails | null>(null);
+  readonly selectedProgress = signal<AdminStudentProgressSummary | null>(null);
   readonly teacherClassOverview = signal<SpeedReadingTeacherClassOverviewAnalytics | null>(null);
   readonly teacherAssignmentAnalytics = signal<SpeedReadingTeacherAssignmentAnalytics | null>(null);
   readonly teacherContentAnalysis = signal<SpeedReadingTeacherContentAnalysisAnalytics | null>(null);
@@ -308,6 +318,15 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
     return combineDailyPlatformMetrics(data);
   }
 
+  progressStudentLabel(progress: AdminStudentProgressSummary): string {
+    return progressStudentLabel(progress);
+  }
+
+  selectedProgressLabel(): string {
+    const progress = this.selectedProgress();
+    return progress ? progressStudentLabel(progress) : 'İlerleme ayrıntısı';
+  }
+
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
     const requestedTab = this.route.snapshot.queryParamMap.get('tab');
@@ -321,8 +340,10 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.request?.unsubscribe();
+    this.progressDetailsRequest?.unsubscribe();
     this.teacherDirectoryRequest?.unsubscribe();
     if (this.teacherSearchTimer) clearTimeout(this.teacherSearchTimer);
+    if (this.progressSearchTimer) clearTimeout(this.progressSearchTimer);
   }
 
   selectTab(tab: SpeedReadingAnalyticsTab): void {
@@ -344,7 +365,8 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
   searchProgress(): void {
     if (this.selectedTab() !== 'progress') return;
     this.progressPageNumber = 1;
-    this.loadProgress();
+    if (this.progressSearchTimer) clearTimeout(this.progressSearchTimer);
+    this.progressSearchTimer = setTimeout(() => this.loadProgress(), 250);
   }
 
   changeProgressPage(page: number): void {
@@ -358,10 +380,24 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
   }
 
   openProgress(item: AdminStudentProgressSummary): void {
+    this.progressDetailsRequest?.unsubscribe();
+    const requestId = ++this.progressDetailsRequestId;
+    this.progressDetailsOpener = isPlatformBrowser(this.platformId)
+      && document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : undefined;
     this.loading.set(true);
     this.error.set('');
-    this.service.getStudentProgressDetails(item.id).pipe(finalize(() => this.loading.set(false))).subscribe({
-      next: details => this.progressDetails.set(details),
+    this.selectedProgress.set(item);
+    this.progressDetails.set(null);
+    this.progressDetailsRequest = this.service.getStudentProgressDetails(item.id).pipe(
+      finalize(() => {
+        if (requestId === this.progressDetailsRequestId) this.loading.set(false);
+      })
+    ).subscribe({
+      next: details => {
+        if (requestId === this.progressDetailsRequestId) this.progressDetails.set(details);
+      },
       error: () => this.error.set('Öğrenci ilerleme ayrıntısı yüklenemedi.')
     });
   }
@@ -373,6 +409,7 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
     this.error.set('');
     this.service.resetStudentProgress(item.id).subscribe({
       next: () => {
+        this.selectedProgress.set(null);
         this.progressDetails.set(null);
         this.loadProgress();
       },
@@ -452,7 +489,19 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
   }
 
   closeProgressDetails(): void {
+    this.progressDetailsRequest?.unsubscribe();
+    ++this.progressDetailsRequestId;
+    this.loading.set(false);
+    this.selectedProgress.set(null);
     this.progressDetails.set(null);
+    const opener = this.progressDetailsOpener;
+    this.progressDetailsOpener = undefined;
+    if (opener && isPlatformBrowser(this.platformId)) setTimeout(() => opener.focus());
+  }
+
+  @HostListener('document:keydown.escape')
+  closeProgressDetailsOnEscape(): void {
+    if (this.progressDetails()) this.closeProgressDetails();
   }
 
   readonly displayTeacher = (teacher: SpeedReadingTeacherDirectoryItem | string | null): string =>

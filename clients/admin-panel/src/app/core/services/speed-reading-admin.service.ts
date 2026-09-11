@@ -202,6 +202,9 @@ export interface AdminStudentProgressSummary {
   daysCompleted: number;
   exercisesCompleted: number;
   assignedDate: string;
+  studentName?: string | null;
+  studentEmail?: string | null;
+  programTemplateName?: string | null;
 }
 
 export interface AdminStudentProgressDetails {

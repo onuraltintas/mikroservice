@@ -12,7 +12,9 @@ namespace SpeedReading.API.Controllers;
 [Route("api/speed-reading/student-progress")]
 [Authorize]
 [HasPermission(PlatformPermissions.SpeedReading.ProgressView)]
-public sealed class StudentProgressAdminController(ILegacySpeedReadingPrograms programs) : ControllerBase
+public sealed class StudentProgressAdminController(
+    ILegacySpeedReadingPrograms programs,
+    ISpeedReadingProgressAccess progressAccess) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<SpeedReadingPage<AdminStudentProgressSummary>>> GetAll(
@@ -21,7 +23,12 @@ public sealed class StudentProgressAdminController(ILegacySpeedReadingPrograms p
         [FromQuery] string? searchTerm = null,
         CancellationToken cancellationToken = default)
     {
+        var accessScope = await GetAccessScopeAsync(cancellationToken);
+        if (accessScope is null)
+            return User.Identity?.IsAuthenticated == true ? Forbid() : Unauthorized();
+
         return Ok(await programs.GetAdminStudentProgressAsync(
+            accessScope,
             pageNumber,
             pageSize,
             searchTerm,
@@ -33,7 +40,11 @@ public sealed class StudentProgressAdminController(ILegacySpeedReadingPrograms p
         Guid progressId,
         CancellationToken cancellationToken = default)
     {
-        var result = await programs.GetAdminStudentProgressDetailsAsync(progressId, cancellationToken);
+        var accessScope = await GetAccessScopeAsync(cancellationToken);
+        if (accessScope is null)
+            return User.Identity?.IsAuthenticated == true ? Forbid() : Unauthorized();
+
+        var result = await programs.GetAdminStudentProgressDetailsAsync(accessScope, progressId, cancellationToken);
         return result is null ? NotFound() : Ok(result);
     }
 
@@ -43,15 +54,29 @@ public sealed class StudentProgressAdminController(ILegacySpeedReadingPrograms p
         Guid progressId,
         CancellationToken cancellationToken = default)
     {
-        var actorId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
-        if (!Guid.TryParse(actorId, out var parsedActorId))
+        if (!TryGetCurrentUserId(out var actorId))
         {
             return Unauthorized();
         }
 
-        return await programs.ResetStudentProgressAsync(progressId, parsedActorId, cancellationToken)
+        var accessScope = await progressAccess.GetScopeAsync(actorId, cancellationToken);
+        if (accessScope is null)
+            return Forbid();
+
+        return await programs.ResetStudentProgressAsync(accessScope, progressId, actorId, cancellationToken)
             ? Ok()
             : NotFound();
+    }
+
+    private async Task<SpeedReadingProgressAccessScope?> GetAccessScopeAsync(CancellationToken cancellationToken) =>
+        TryGetCurrentUserId(out var userId)
+            ? await progressAccess.GetScopeAsync(userId, cancellationToken)
+            : null;
+
+    private bool TryGetCurrentUserId(out Guid userId)
+    {
+        var value = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value;
+        return Guid.TryParse(value, out userId);
     }
 }

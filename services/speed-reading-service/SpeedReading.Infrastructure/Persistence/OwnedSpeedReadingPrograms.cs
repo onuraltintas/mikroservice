@@ -12,7 +12,8 @@ namespace SpeedReading.Infrastructure.Persistence;
 /// </summary>
 internal sealed class OwnedSpeedReadingPrograms(
     OwnedSpeedReadingDbContext db,
-    ISpeedReadingUserDirectory userDirectory) : ILegacySpeedReadingPrograms
+    ISpeedReadingUserDirectory userDirectory,
+    ISpeedReadingProgressAccess progressAccess) : ILegacySpeedReadingPrograms
 {
     public async Task<IReadOnlyList<ExerciseProgramTemplateSummary>> GetProgramTemplatesAsync(
         CancellationToken cancellationToken = default) =>
@@ -56,6 +57,7 @@ internal sealed class OwnedSpeedReadingPrograms(
             .ToListAsync(cancellationToken);
 
     public async Task<SpeedReadingPage<AdminStudentProgressSummary>> GetAdminStudentProgressAsync(
+        SpeedReadingProgressAccessScope accessScope,
         int pageNumber,
         int pageSize,
         string? searchTerm,
@@ -74,76 +76,82 @@ internal sealed class OwnedSpeedReadingPrograms(
                 TemplateName = template == null ? string.Empty : template.Name
             };
 
+        if (!accessScope.IsGlobal)
+        {
+            var allowedStudentIds = accessScope.StudentUserIds.Distinct().ToArray();
+            if (allowedStudentIds.Length == 0)
+                return new SpeedReadingPage<AdminStudentProgressSummary>([], page, size, 0);
+            query = query.Where(row => allowedStudentIds.Contains(row.Progress.UserId));
+        }
+
         if (string.IsNullOrWhiteSpace(searchTerm))
         {
             var totalCount = await query.CountAsync(cancellationToken);
-            var items = await query
+            var pageRows = await query
                 .OrderByDescending(row => row.Progress.CreatedAt)
                 .ThenByDescending(row => row.Progress.Id)
                 .Skip((page - 1) * size)
                 .Take(size)
-                .Select(row => new AdminStudentProgressSummary(
-                    row.Progress.Id,
-                    row.Progress.UserId,
-                    row.Progress.ProgramTemplateId,
-                    row.Progress.CurrentDay,
-                    row.Progress.DaysCompleted,
-                    row.Progress.ExercisesCompleted,
-                    row.Progress.AssignedDate))
                 .ToListAsync(cancellationToken);
+
+            var pageUsers = await userDirectory.GetUsersAsync(
+                pageRows.Select(row => row.Progress.UserId).Distinct().ToArray(),
+                cancellationToken);
+            var pageUsersById = pageUsers.Users.ToDictionary(item => item.UserId);
+            var items = pageRows
+                .Select(row => ToAdminProgressSummary(row.Progress, row.TemplateName, pageUsersById))
+                .ToList();
 
             return new SpeedReadingPage<AdminStudentProgressSummary>(items, page, size, totalCount);
         }
 
-        var normalizedSearch = searchTerm.Trim();
+        var normalizedSearch = searchTerm.Trim().ToLowerInvariant();
         var searchId = SpeedReadingAdminProgressSearch.TryParseId(searchTerm);
-        var rows = await query
+        var matchingUserIds = searchId.HasValue || normalizedSearch.Length < 2
+            ? Array.Empty<Guid>()
+            : await progressAccess.SearchStudentUserIdsAsync(
+                accessScope.ViewerUserId,
+                normalizedSearch,
+                cancellationToken);
+
+        query = query.Where(row =>
+            (searchId.HasValue && (row.Progress.Id == searchId.Value
+                || row.Progress.UserId == searchId.Value
+                || row.Progress.ProgramTemplateId == searchId.Value))
+            || row.TemplateName.ToLower().Contains(normalizedSearch)
+            || matchingUserIds.Contains(row.Progress.UserId));
+
+        var searchTotalCount = await query.CountAsync(cancellationToken);
+        var searchPageRows = await query
             .OrderByDescending(row => row.Progress.CreatedAt)
             .ThenByDescending(row => row.Progress.Id)
-            .ToListAsync(cancellationToken);
-        var users = await userDirectory.GetUsersAsync(
-            rows.Select(row => row.Progress.UserId).Distinct().ToArray(),
-            cancellationToken);
-        var usersById = users.Users.ToDictionary(item => item.UserId);
-        var filteredRows = rows
-            .Where(row => (searchId.HasValue && (row.Progress.Id == searchId.Value
-                    || row.Progress.UserId == searchId.Value
-                    || row.Progress.ProgramTemplateId == searchId.Value))
-                || row.TemplateName.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase)
-                || (usersById.TryGetValue(row.Progress.UserId, out var user)
-                    && ($"{user.FirstName} {user.LastName}".Contains(
-                            normalizedSearch,
-                            StringComparison.OrdinalIgnoreCase)
-                        || (user.Email?.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase) ?? false))))
-            .ToList();
-
-        var filteredItems = filteredRows
             .Skip((page - 1) * size)
             .Take(size)
-            .Select(row => new AdminStudentProgressSummary(
-                row.Progress.Id,
-                row.Progress.UserId,
-                row.Progress.ProgramTemplateId,
-                row.Progress.CurrentDay,
-                row.Progress.DaysCompleted,
-                row.Progress.ExercisesCompleted,
-                row.Progress.AssignedDate))
+            .ToListAsync(cancellationToken);
+        var searchPageUsers = await userDirectory.GetUsersAsync(
+            searchPageRows.Select(row => row.Progress.UserId).Distinct().ToArray(),
+            cancellationToken);
+        var searchPageUsersById = searchPageUsers.Users.ToDictionary(item => item.UserId);
+        var filteredItems = searchPageRows
+            .Select(row => ToAdminProgressSummary(row.Progress, row.TemplateName, searchPageUsersById))
             .ToList();
 
         return new SpeedReadingPage<AdminStudentProgressSummary>(
             filteredItems,
             page,
             size,
-            filteredRows.Count);
+            searchTotalCount);
     }
 
     public async Task<AdminStudentProgressDetails?> GetAdminStudentProgressDetailsAsync(
+        SpeedReadingProgressAccessScope accessScope,
         Guid progressId,
         CancellationToken cancellationToken = default)
     {
         var progress = await db.StudentProgramProgresses
             .AsNoTracking()
-            .SingleOrDefaultAsync(item => item.Id == progressId, cancellationToken);
+            .SingleOrDefaultAsync(item => item.Id == progressId
+                && (accessScope.IsGlobal || accessScope.StudentUserIds.Contains(item.UserId)), cancellationToken);
         if (progress is null)
             return null;
 
@@ -159,12 +167,14 @@ internal sealed class OwnedSpeedReadingPrograms(
     }
 
     public async Task<bool> ResetStudentProgressAsync(
+        SpeedReadingProgressAccessScope accessScope,
         Guid progressId,
         Guid actorId,
         CancellationToken cancellationToken = default)
     {
         var progress = await db.StudentProgramProgresses
-            .SingleOrDefaultAsync(item => item.Id == progressId, cancellationToken);
+            .SingleOrDefaultAsync(item => item.Id == progressId
+                && (accessScope.IsGlobal || accessScope.StudentUserIds.Contains(item.UserId)), cancellationToken);
         if (progress is null)
             return false;
 
@@ -266,6 +276,26 @@ internal sealed class OwnedSpeedReadingPrograms(
             item.AverageSuccessRate,
             item.CurrentStreak,
             item.LongestStreak);
+
+    private static AdminStudentProgressSummary ToAdminProgressSummary(
+        StudentProgramProgress progress,
+        string templateName,
+        IReadOnlyDictionary<Guid, EduPlatform.Shared.Contracts.Reporting.SpeedReadingUserDirectoryItem> usersById)
+    {
+        usersById.TryGetValue(progress.UserId, out var user);
+        var studentName = user is null ? null : $"{user.FirstName} {user.LastName}".Trim();
+        return new AdminStudentProgressSummary(
+            progress.Id,
+            progress.UserId,
+            progress.ProgramTemplateId,
+            progress.CurrentDay,
+            progress.DaysCompleted,
+            progress.ExercisesCompleted,
+            progress.AssignedDate,
+            studentName,
+            user?.Email,
+            templateName);
+    }
 
     private static System.Linq.Expressions.Expression<Func<DailyExerciseLog, DailyExerciseLogSummary>> ToDailyLogSummary() =>
         item => new DailyExerciseLogSummary(
