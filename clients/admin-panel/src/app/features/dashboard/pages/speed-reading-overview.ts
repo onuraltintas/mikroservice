@@ -30,6 +30,8 @@ import {
 } from '../../../core/services/speed-reading-admin.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 
+type ManagementSection = 'types' | 'exercises' | 'texts' | 'programs' | 'paths' | 'achievements';
+
 @Component({
   selector: 'app-speed-reading-overview',
   standalone: true,
@@ -79,6 +81,33 @@ import { ToasterService } from '../../../core/services/toaster.service';
           </div>
         </div>
 
+        <nav class="flex gap-2 overflow-x-auto rounded-xl border border-gray-200 bg-white p-2 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+          aria-label="Hızlı okuma yönetim bölümleri">
+          @for (tab of managementTabs; track tab.value) {
+            @if (!tab.permission || (tab.permission === 'programs' ? canManagePrograms() : canManageGamification())) {
+              <button type="button" (click)="activeSection.set(tab.value)"
+                class="flex shrink-0 items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
+                [class.bg-indigo-600]="activeSection() === tab.value"
+                [class.text-white]="activeSection() === tab.value"
+                [class.text-gray-600]="activeSection() !== tab.value"
+                [class.hover:bg-gray-100]="activeSection() !== tab.value"
+                [class.dark:text-gray-300]="activeSection() !== tab.value"
+                [class.dark:hover:bg-gray-700]="activeSection() !== tab.value"
+                [attr.aria-current]="activeSection() === tab.value ? 'page' : null">
+                <mat-icon class="!h-5 !w-5 !text-xl">{{ tab.icon }}</mat-icon>
+                {{ tab.label }}
+                @if (tab.count() !== null) {
+                  <span class="rounded-full px-2 py-0.5 text-xs"
+                    [class.bg-white/20]="activeSection() === tab.value"
+                    [class.bg-gray-100]="activeSection() !== tab.value"
+                    [class.dark:bg-gray-700]="activeSection() !== tab.value">{{ tab.count() }}</span>
+                }
+              </button>
+            }
+          }
+        </nav>
+
+        @if (activeSection() === 'types') {
         <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <div class="flex items-center justify-between gap-3">
               <div>
@@ -198,7 +227,9 @@ import { ToasterService } from '../../../core/services/toaster.service';
             <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Katalogda gösterilecek aktif egzersiz türü bulunamadı.</p>
           }
         </div>
+        }
 
+        @if (activeSection() === 'exercises') {
         <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <div class="flex items-center justify-between gap-3">
             <div>
@@ -273,7 +304,9 @@ import { ToasterService } from '../../../core/services/toaster.service';
             <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Katalogda gösterilecek egzersiz bulunamadı.</p>
           }
         </div>
+        }
 
+        @if (activeSection() === 'texts') {
         <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <div class="flex items-center justify-between gap-3">
             <div>
@@ -483,8 +516,9 @@ import { ToasterService } from '../../../core/services/toaster.service';
             </div>
           }
         </div>
+        }
 
-        @if (canManagePrograms()) {
+        @if (activeSection() === 'programs' && canManagePrograms()) {
           <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <div class="flex items-center justify-between gap-3">
               <div>
@@ -572,7 +606,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
           </div>
         }
 
-        @if (canManagePrograms()) {
+        @if (activeSection() === 'paths' && canManagePrograms()) {
           <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <div class="flex items-center justify-between gap-3">
               <div>
@@ -773,7 +807,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
           </div>
         }
 
-        @if (canManageGamification()) {
+        @if (activeSection() === 'achievements' && canManageGamification()) {
           <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -865,6 +899,21 @@ export class SpeedReadingOverviewComponent implements OnInit {
   readonly learningPathNodes = signal<SpeedReadingLearningPathNode[]>([]);
   readonly achievements = signal<SpeedReadingAchievement[]>([]);
   readonly saving = signal(false);
+  readonly activeSection = signal<ManagementSection>('types');
+  readonly managementTabs: ReadonlyArray<{
+    value: ManagementSection;
+    label: string;
+    icon: string;
+    permission?: 'programs' | 'gamification';
+    count: () => number | null;
+  }> = [
+    { value: 'types', label: 'Egzersiz türleri', icon: 'category', count: () => this.exerciseTypes().length },
+    { value: 'exercises', label: 'Egzersizler', icon: 'fitness_center', count: () => this.exercises().length },
+    { value: 'texts', label: 'Okuma metinleri', icon: 'menu_book', count: () => this.readingTexts().length },
+    { value: 'programs', label: 'Programlar', icon: 'calendar_month', permission: 'programs', count: () => this.programTemplates().length },
+    { value: 'paths', label: 'Öğrenme yolları', icon: 'account_tree', permission: 'programs', count: () => this.learningPathTemplates().length },
+    { value: 'achievements', label: 'Kazanımlar', icon: 'emoji_events', permission: 'gamification', count: () => this.achievements().length }
+  ];
   readonly exerciseTypeColors = [
     { value: '#2563eb', label: 'Mavi' },
     { value: '#4f46e5', label: 'Çivit mavisi' },
