@@ -30,6 +30,8 @@ public sealed class AssessmentStudyEnrollment : AggregateRoot
         if (id == Guid.Empty || studentId == Guid.Empty || actorId == Guid.Empty)
             throw new ArgumentException("Enrollment identifiers are required.");
         Validate(studyCode, protocolVersion, cohortCode);
+        if (EnsureUtc(consentRecordedAt) > EnsureUtc(enrolledAt))
+            throw new ArgumentException("Consent cannot be recorded after enrollment.", nameof(consentRecordedAt));
         return new AssessmentStudyEnrollment
         {
             Id = id,

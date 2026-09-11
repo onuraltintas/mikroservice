@@ -35,4 +35,15 @@ public sealed class AssessmentStudyEnrollmentTests
 
         act.Should().Throw<ArgumentException>();
     }
+
+    [Fact]
+    public void Enrollment_rejects_consent_recorded_after_enrollment()
+    {
+        var enrolledAt = DateTime.UtcNow;
+        var act = () => AssessmentStudyEnrollment.Create(
+            Guid.NewGuid(), Guid.NewGuid(), "study", "v1", "control",
+            enrolledAt.AddSeconds(1), Guid.NewGuid(), enrolledAt);
+
+        act.Should().Throw<ArgumentException>();
+    }
 }

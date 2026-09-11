@@ -67,6 +67,12 @@ public sealed class AssessmentAttempt : AggregateRoot
             throw new ArgumentException("Assessment language is required and must not exceed 20 characters.", nameof(language));
         if (string.IsNullOrWhiteSpace(levelCatalogVersion) || levelCatalogVersion.Trim().Length > 100)
             throw new ArgumentException("Level catalog version is required and must not exceed 100 characters.", nameof(levelCatalogVersion));
+        var studyValues = new[] { studyCode, studyProtocolVersion, studyCohortCode };
+        if (studyValues.Any(value => !string.IsNullOrWhiteSpace(value))
+            && studyValues.Any(string.IsNullOrWhiteSpace))
+            throw new ArgumentException("Study code, protocol version, and cohort code must be pinned together.");
+        if (studyValues.Any(value => value?.Trim().Length > 100))
+            throw new ArgumentException("Study metadata must not exceed 100 characters.");
         if (expectedExerciseCount is < 1 or > 50)
             throw new ArgumentOutOfRangeException(nameof(expectedExerciseCount));
 
