@@ -9,6 +9,7 @@ const hasAdminCredentials = Boolean(process.env.E2E_ADMIN_EMAIL && process.env.E
 const runsSupportWrite = process.env.E2E_RUN_SUPPORT_WRITE === 'true';
 const runsRegistration = process.env.E2E_RUN_REGISTRATION === 'true';
 const runsCoaching = process.env.E2E_RUN_COACHING === 'true';
+const runsSpeedReadingWrite = process.env.E2E_RUN_SPEED_READING_WRITE === 'true';
 
 if (process.env.E2E_REQUIRED === 'true' && !hasAdminCredentials) {
   throw new Error('E2E_REQUIRED=true requires E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD.');
@@ -41,6 +42,10 @@ if (runsCoaching) {
   if (missing.length > 0) {
     throw new Error(`E2E_RUN_COACHING=true requires ${missing.join(', ')}.`);
   }
+}
+
+if (runsSpeedReadingWrite && process.env.E2E_DISPOSABLE_ENV !== 'true') {
+  throw new Error('E2E_RUN_SPEED_READING_WRITE=true requires E2E_DISPOSABLE_ENV=true.');
 }
 
 export default defineConfig({

@@ -845,22 +845,14 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
 
         var speedMs = Math.Max(1, state.FocusSpeedMs);
         var focusStart = state.FocusStartTime ?? session.StartTime;
-        var activeMilliseconds = Math.Max(
-            0,
-            (now.ToUniversalTime() - focusStart.ToUniversalTime()).TotalMilliseconds
-                - GetTimingPausedSeconds(session, state) * 1000d);
-        var expectedIndex = Math.Clamp(
-            (int)Math.Floor(activeMilliseconds / speedMs),
-            0,
-            Math.Max(0, state.TotalSteps - 1));
-        var earliestAcceptableIndex = state.FocusPresentedIndex < 0
-            ? 0
-            : Math.Max(0, expectedIndex - 1);
-        if (index < earliestAcceptableIndex || index > expectedIndex)
+        var expectedIndex = FocusTrialTimingRules.ExpectedIndex(
+            focusStart, now, GetTimingPausedSeconds(session, state), speedMs, state.TotalSteps);
+        if (!FocusTrialTimingRules.CanPresent(index, state.FocusPresentedIndex, expectedIndex))
             return Invalid("Focus step arrived outside its trial time window.");
 
         state.FocusPresentedIndex = index;
         state.FocusPresentedAt = now.ToUniversalTime();
+        state.FocusPausedSecondsAtPresentation = session.TotalPausedSeconds;
         var feedback = JsonSerializer.SerializeToElement(new
         {
             index,
@@ -1037,24 +1029,21 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         var speedMs = Math.Max(1, state.FocusSpeedMs);
         if (state.IsAssessmentMode)
         {
-            if (index != state.FocusPresentedIndex)
+            if (!FocusTrialTimingRules.IsCurrentTrial(index, state.FocusPresentedIndex))
                 return Invalid("Focus response does not match the currently presented trial.");
             if (state.FocusPresentedAt.HasValue
-                && (now.ToUniversalTime() - state.FocusPresentedAt.Value.ToUniversalTime()).TotalMilliseconds
-                    > speedMs * 2d)
+                && !FocusTrialTimingRules.IsAssessmentResponseOnTime(
+                    state.FocusPresentedAt.Value,
+                    now,
+                    Math.Max(0, session.TotalPausedSeconds - state.FocusPausedSecondsAtPresentation),
+                    speedMs))
                 return Invalid("Focus response arrived after the trial window.");
         }
         else
         {
             var focusStart = state.FocusStartTime ?? session.StartTime;
-            var activeMilliseconds = Math.Max(
-                0,
-                (now.ToUniversalTime() - focusStart.ToUniversalTime()).TotalMilliseconds
-                    - GetTimingPausedSeconds(session, state) * 1000d);
-            var expectedIndex = Math.Clamp(
-                (int)Math.Floor(activeMilliseconds / speedMs),
-                0,
-                Math.Max(0, state.TotalSteps - 1));
+            var expectedIndex = FocusTrialTimingRules.ExpectedIndex(
+                focusStart, now, GetTimingPausedSeconds(session, state), speedMs, state.TotalSteps);
             if (index < expectedIndex - 1 || index > expectedIndex + 1)
                 return Invalid("Focus response arrived outside its trial time window.");
         }
@@ -1686,6 +1675,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public string[] WordSequence { get; set; } = [];
         public int FocusPresentedIndex { get; set; } = -1;
         public DateTime? FocusPresentedAt { get; set; }
+        public int FocusPausedSecondsAtPresentation { get; set; }
         public int[] PositionTargetIndices { get; set; } = [];
         public int[] WordTargetIndices { get; set; } = [];
         public int? FocusLastPositionIndex { get; set; }
