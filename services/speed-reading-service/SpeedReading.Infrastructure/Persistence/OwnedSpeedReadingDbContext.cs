@@ -85,6 +85,7 @@ public sealed class OwnedSpeedReadingDbContext(
     DbSet<LegacySubscriptionPlan> ISpeedReadingDataContext.SubscriptionPlans => Set<LegacySubscriptionPlan>();
     DbSet<LegacyUserSubscription> ISpeedReadingDataContext.UserSubscriptions => Set<LegacyUserSubscription>();
     DbSet<LegacyInstitutionAccessLicense> ISpeedReadingDataContext.InstitutionAccessLicenses => Set<LegacyInstitutionAccessLicense>();
+    DbSet<LegacyInstitutionAccessAction> ISpeedReadingDataContext.InstitutionAccessActions => Set<LegacyInstitutionAccessAction>();
     DbSet<LegacyPayment> ISpeedReadingDataContext.Payments => Set<LegacyPayment>();
     DbSet<LegacyUserNotification> ISpeedReadingDataContext.Notifications => Set<LegacyUserNotification>();
     DbSet<LegacyNotificationPreference> ISpeedReadingDataContext.NotificationPreferences => Set<LegacyNotificationPreference>();
@@ -619,6 +620,15 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.HasIndex(item => new { item.InstitutionId, item.Status, item.EndDate });
             entity.HasIndex(item => new { item.InstitutionId, item.PaymentReference }).IsUnique().HasFilter("\"PaymentReference\" IS NOT NULL");
             entity.HasOne<LegacySubscriptionPlan>().WithMany().HasForeignKey(item => item.PlanId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<LegacyInstitutionAccessAction>(entity =>
+        {
+            entity.ToTable("institution_access_actions");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Action).HasMaxLength(30).IsRequired();
+            entity.Property(item => item.Reason).HasMaxLength(1_000);
+            entity.HasIndex(item => new { item.InstitutionAccessLicenseId, item.StudentId, item.PerformedAt });
+            entity.HasOne<LegacyInstitutionAccessLicense>().WithMany().HasForeignKey(item => item.InstitutionAccessLicenseId).OnDelete(DeleteBehavior.Cascade);
         });
         modelBuilder.Entity<LegacyPayment>(entity =>
         {

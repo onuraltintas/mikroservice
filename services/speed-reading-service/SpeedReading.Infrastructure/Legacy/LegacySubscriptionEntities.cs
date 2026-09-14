@@ -68,6 +68,17 @@ internal sealed class LegacyInstitutionAccessLicense
     public DateTime ApprovedAt { get; set; }
 }
 
+internal sealed class LegacyInstitutionAccessAction
+{
+    public Guid Id { get; set; }
+    public Guid InstitutionAccessLicenseId { get; set; }
+    public Guid StudentId { get; set; }
+    public string Action { get; set; } = string.Empty;
+    public string? Reason { get; set; }
+    public Guid PerformedBy { get; set; }
+    public DateTime PerformedAt { get; set; }
+}
+
 internal sealed class LegacyPayment
 {
     public Guid Id { get; set; }

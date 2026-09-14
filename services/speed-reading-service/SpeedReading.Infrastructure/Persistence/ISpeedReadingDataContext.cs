@@ -20,6 +20,7 @@ internal interface ISpeedReadingDataContext
     DbSet<LegacySubscriptionPlan> SubscriptionPlans { get; }
     DbSet<LegacyUserSubscription> UserSubscriptions { get; }
     DbSet<LegacyInstitutionAccessLicense> InstitutionAccessLicenses { get; }
+    DbSet<LegacyInstitutionAccessAction> InstitutionAccessActions { get; }
     DbSet<LegacyPayment> Payments { get; }
     DbSet<LegacyUserNotification> Notifications { get; }
     DbSet<LegacyNotificationPreference> NotificationPreferences { get; }

@@ -117,4 +117,15 @@ describe('InstitutionsService', () => {
       }
     });
   });
+
+  it('sends a scoped suspend request for an institution student', () => {
+    const subscriptions = TestBed.inject(SubscriptionService);
+
+    subscriptions.changeMyInstitutionStudentAccess('student-1', true, 'Kurum talebi').subscribe();
+
+    const request = http.expectOne('/api/speed-reading/subscriptions/institution-access/my/students/student-1/suspension');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ isSuspended: true, reason: 'Kurum talebi' });
+    request.flush(null);
+  });
 });

@@ -67,6 +67,23 @@ public sealed class SubscriptionsController(ISpeedReadingSubscription subscripti
         return Ok(new { success = true, data = result, message = "Institution access retrieved" });
     }
 
+    [HttpPost("institution-access/my/students/{studentId:guid}/suspension")]
+    [Authorize(Roles = "InstitutionAdmin,InstitutionOwner")]
+    public async Task<IActionResult> ChangeMyInstitutionStudentAccess(
+        Guid studentId,
+        [FromBody] InstitutionStudentAccessChangeRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetActor(out var actorId)) return Unauthorized();
+        var institutionValue = User.FindFirstValue("institutionId") ?? User.FindFirstValue("InstitutionId");
+        if (!Guid.TryParse(institutionValue, out var institutionId)) return Forbid();
+        var changed = await subscriptions.ChangeInstitutionStudentAccessAsync(
+            institutionId, studentId, request, actorId, cancellationToken);
+        return changed
+            ? Ok(new { success = true, message = request.IsSuspended ? "Student access suspended" : "Student access resumed" })
+            : NotFound(new { success = false, message = "Active institution access was not found for the student" });
+    }
+
     [HttpPut("{id:guid}")]
     [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserSubscriptionRequest request, CancellationToken cancellationToken = default)

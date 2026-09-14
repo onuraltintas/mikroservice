@@ -157,6 +157,7 @@ export interface InstitutionAccessLicense {
   seatCount: number;
   usedSeatCount: number;
   activeStudentIds: string[];
+  suspendedStudentIds: string[];
   startDate: string;
   endDate: string;
   paymentReference: string | null;
@@ -290,5 +291,12 @@ export class SubscriptionService {
   getMyInstitutionAccess(): Observable<InstitutionAccessLicense | null> {
     return this.http.get<any>(`${this.subsUrl}/institution-access/my`)
       .pipe(map(result => result?.data ?? null));
+  }
+
+  changeMyInstitutionStudentAccess(studentId: string, isSuspended: boolean, reason?: string): Observable<void> {
+    return this.http.post<void>(`${this.subsUrl}/institution-access/my/students/${studentId}/suspension`, {
+      isSuspended,
+      reason: reason?.trim() || null
+    });
   }
 }

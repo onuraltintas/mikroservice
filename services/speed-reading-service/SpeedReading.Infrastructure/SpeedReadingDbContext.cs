@@ -25,6 +25,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     internal DbSet<LegacySubscriptionPlan> SubscriptionPlans => Set<LegacySubscriptionPlan>();
     internal DbSet<LegacyUserSubscription> UserSubscriptions => Set<LegacyUserSubscription>();
     internal DbSet<LegacyInstitutionAccessLicense> InstitutionAccessLicenses => Set<LegacyInstitutionAccessLicense>();
+    internal DbSet<LegacyInstitutionAccessAction> InstitutionAccessActions => Set<LegacyInstitutionAccessAction>();
     internal DbSet<LegacyPayment> Payments => Set<LegacyPayment>();
     internal DbSet<LegacyExerciseType> ExerciseTypes => Set<LegacyExerciseType>();
     internal DbSet<LegacyExercise> Exercises => Set<LegacyExercise>();
@@ -91,6 +92,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     DbSet<LegacySubscriptionPlan> ISpeedReadingDataContext.SubscriptionPlans => SubscriptionPlans;
     DbSet<LegacyUserSubscription> ISpeedReadingDataContext.UserSubscriptions => UserSubscriptions;
     DbSet<LegacyInstitutionAccessLicense> ISpeedReadingDataContext.InstitutionAccessLicenses => InstitutionAccessLicenses;
+    DbSet<LegacyInstitutionAccessAction> ISpeedReadingDataContext.InstitutionAccessActions => InstitutionAccessActions;
     DbSet<LegacyPayment> ISpeedReadingDataContext.Payments => Payments;
     DbSet<LegacyUserNotification> ISpeedReadingDataContext.Notifications => Notifications;
     DbSet<LegacyNotificationPreference> ISpeedReadingDataContext.NotificationPreferences => NotificationPreferences;
@@ -260,6 +262,15 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.Property(item => item.Notes).HasMaxLength(2000);
             entity.HasIndex(item => new { item.InstitutionId, item.Status, item.EndDate });
             entity.HasIndex(item => new { item.InstitutionId, item.PaymentReference }).IsUnique().HasFilter("\"PaymentReference\" IS NOT NULL");
+        });
+
+        modelBuilder.Entity<LegacyInstitutionAccessAction>(entity =>
+        {
+            entity.ToTable("InstitutionAccessActions");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Action).HasMaxLength(30).IsRequired();
+            entity.Property(item => item.Reason).HasMaxLength(1000);
+            entity.HasIndex(item => new { item.InstitutionAccessLicenseId, item.StudentId, item.PerformedAt });
         });
 
         modelBuilder.Entity<LegacyPayment>(entity =>

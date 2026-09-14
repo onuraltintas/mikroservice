@@ -83,6 +83,7 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
 
   currentInstitutionId?: string;
   activeAccessStudentIds = new Set<string>();
+  suspendedAccessStudentIds = new Set<string>();
 
   ngOnInit() {
     this.setupFilters();
@@ -101,11 +102,51 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
   loadInstitutionAccess() {
     this.subscriptionService.getMyInstitutionAccess()
       .pipe(takeUntil(this.destroy$))
-      .subscribe({ next: license => this.activeAccessStudentIds = new Set(license?.activeStudentIds ?? []) });
+      .subscribe({ next: license => {
+        this.activeAccessStudentIds = new Set(license?.activeStudentIds ?? []);
+        this.suspendedAccessStudentIds = new Set(license?.suspendedStudentIds ?? []);
+      }});
   }
 
   hasInstitutionAccess(student: Student): boolean {
     return this.activeAccessStudentIds.has(student.id);
+  }
+
+  isInstitutionAccessSuspended(student: Student): boolean {
+    return this.suspendedAccessStudentIds.has(student.id);
+  }
+
+  isInstitutionAdmin(): boolean {
+    return this.authService.hasRole('InstitutionAdmin');
+  }
+
+  changeInstitutionAccess(student: Student, isSuspended: boolean): void {
+    if (!this.isInstitutionAdmin()) return;
+    const action = isSuspended ? 'duraklatmak' : 'yeniden açmak';
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: isSuspended ? 'Hızlı okuma erişimini duraklat' : 'Hızlı okuma erişimini yeniden aç',
+        message: `${student.firstName} ${student.lastName} için hızlı okuma erişimini ${action} istiyor musunuz? İşlem kayıt altına alınır.`,
+        confirmText: isSuspended ? 'Duraklat' : 'Erişimi aç',
+        cancelText: 'İptal'
+      } as ConfirmationDialogData
+    });
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+      this.loading.set(true);
+      this.subscriptionService.changeMyInstitutionStudentAccess(
+        student.id,
+        isSuspended,
+        `Kurum yöneticisi tarafından ${isSuspended ? 'duraklatıldı' : 'yeniden açıldı'}.`
+      ).pipe(finalize(() => this.loading.set(false))).subscribe({
+        next: () => {
+          this.toaster.success(isSuspended ? 'Hızlı okuma erişimi duraklatıldı.' : 'Hızlı okuma erişimi yeniden açıldı.');
+          this.loadInstitutionAccess();
+        },
+        error: error => this.handleError(error, 'Öğrenci erişim durumu güncellenemedi')
+      });
+    });
   }
 
   override ngOnDestroy() {

@@ -297,7 +297,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         var activeUserIds = await db.UserSubscriptions.AsNoTracking()
             .Where(item => !item.IsDeleted
                 && item.PlanId == plan.Id
-                && item.Status == "Active"
+                && (item.Status == "Active" || item.Status == "Paused")
                 && recipientIds.Contains(item.UserId)
                 && (!item.EndDate.HasValue || item.EndDate > now))
             .Select(item => item.UserId)
@@ -371,6 +371,43 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             .ThenByDescending(item => item.ApprovedAt)
             .FirstOrDefaultAsync(cancellationToken);
         return license is null ? null : await ToInstitutionAccessLicenseSummaryAsync(license, cancellationToken);
+    }
+
+    public async Task<bool> ChangeInstitutionStudentAccessAsync(
+        Guid institutionId,
+        Guid studentId,
+        InstitutionStudentAccessChangeRequest request,
+        Guid actorId,
+        CancellationToken cancellationToken = default)
+    {
+        if (institutionId == Guid.Empty || studentId == Guid.Empty || actorId == Guid.Empty) return false;
+        var now = DateTime.UtcNow;
+        var subscription = await (from item in db.UserSubscriptions
+                                  join license in db.InstitutionAccessLicenses on item.InstitutionAccessLicenseId equals license.Id
+                                  where license.InstitutionId == institutionId
+                                      && item.UserId == studentId
+                                      && !item.IsDeleted
+                                      && item.Status == (request.IsSuspended ? "Active" : "Paused")
+                                      && (!item.EndDate.HasValue || item.EndDate > now)
+                                  orderby license.EndDate descending, item.CreatedAt descending
+                                  select item).FirstOrDefaultAsync(cancellationToken);
+        if (subscription is null || subscription.InstitutionAccessLicenseId is null) return false;
+
+        subscription.Status = request.IsSuspended ? "Paused" : "Active";
+        subscription.UpdatedAt = now;
+        subscription.UpdatedBy = actorId;
+        db.InstitutionAccessActions.Add(new LegacyInstitutionAccessAction
+        {
+            Id = Guid.NewGuid(),
+            InstitutionAccessLicenseId = subscription.InstitutionAccessLicenseId.Value,
+            StudentId = studentId,
+            Action = request.IsSuspended ? "Suspend" : "Resume",
+            Reason = NormalizeActionReason(request.Reason),
+            PerformedBy = actorId,
+            PerformedAt = now
+        });
+        await db.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     public async Task<UserSubscriptionSummary?> UpdateSubscriptionAsync(Guid id, UpdateUserSubscriptionRequest request, Guid actorId, CancellationToken cancellationToken = default)
@@ -864,29 +901,40 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
                          where plan.Id == license.PlanId
                          select new { plan, product }).SingleOrDefaultAsync(cancellationToken);
         if (row is null) return null;
-        var activeStudentIds = await db.UserSubscriptions.AsNoTracking()
+        var accessRows = await db.UserSubscriptions.AsNoTracking()
             .Where(item => item.InstitutionAccessLicenseId == license.Id
                 && !item.IsDeleted
-                && item.Status == "Active"
                 && (!item.EndDate.HasValue || item.EndDate > DateTime.UtcNow))
-            .Select(item => item.UserId)
+            .Select(item => new { item.UserId, item.Status })
             .ToListAsync(cancellationToken);
-        return ToInstitutionAccessLicenseSummary(license, row.plan, row.product, activeStudentIds);
+        return ToInstitutionAccessLicenseSummary(
+            license,
+            row.plan,
+            row.product,
+            accessRows.Where(item => item.Status == "Active").Select(item => item.UserId).ToList(),
+            accessRows.Where(item => item.Status == "Paused").Select(item => item.UserId).ToList());
     }
 
     private static InstitutionAccessLicenseSummary ToInstitutionAccessLicenseSummary(
         LegacyInstitutionAccessLicense license,
         LegacySubscriptionPlan plan,
         LegacyProduct product,
-        IReadOnlyList<Guid> activeStudentIds) =>
+        IReadOnlyList<Guid> activeStudentIds,
+        IReadOnlyList<Guid>? suspendedStudentIds = null) =>
         new(license.Id, license.InstitutionId, ToSummary(plan, product), license.Status, license.SeatCount,
-            activeStudentIds.Count, activeStudentIds, license.StartDate, license.EndDate, license.PaymentReference, license.Notes,
+            activeStudentIds.Count + (suspendedStudentIds?.Count ?? 0), activeStudentIds, suspendedStudentIds ?? [], license.StartDate, license.EndDate, license.PaymentReference, license.Notes,
             license.ApprovedAt);
 
     private static string? NormalizePaymentReference(string? value)
     {
         var normalized = value?.Trim();
         return string.IsNullOrWhiteSpace(normalized) ? null : normalized[..Math.Min(normalized.Length, 200)];
+    }
+
+    private static string? NormalizeActionReason(string? value)
+    {
+        var normalized = value?.Trim();
+        return string.IsNullOrWhiteSpace(normalized) ? null : normalized[..Math.Min(normalized.Length, 1_000)];
     }
 
     private static ProductSummary ToSummary(LegacyProduct product) =>

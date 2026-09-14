@@ -136,11 +136,14 @@ public sealed record InstitutionAccessLicenseSummary(
     int SeatCount,
     int UsedSeatCount,
     IReadOnlyList<Guid> ActiveStudentIds,
+    IReadOnlyList<Guid> SuspendedStudentIds,
     DateTime StartDate,
     DateTime EndDate,
     string? PaymentReference,
     string? Notes,
     DateTime ApprovedAt);
+
+public sealed record InstitutionStudentAccessChangeRequest(bool IsSuspended, string? Reason);
 
 public sealed record InstitutionAccessApprovalSummary(
     int CreatedCount,
@@ -261,6 +264,7 @@ public interface ISpeedReadingSubscription
     Task<UserSubscriptionSummary?> CreateSubscriptionAsync(CreateUserSubscriptionRequest request, Guid actorId, CancellationToken cancellationToken = default);
     Task<InstitutionAccessApprovalSummary?> CreateInstitutionAccessAsync(CreateInstitutionAccessRequest request, Guid actorId, CancellationToken cancellationToken = default);
     Task<InstitutionAccessLicenseSummary?> GetInstitutionAccessOverviewAsync(Guid institutionId, CancellationToken cancellationToken = default);
+    Task<bool> ChangeInstitutionStudentAccessAsync(Guid institutionId, Guid studentId, InstitutionStudentAccessChangeRequest request, Guid actorId, CancellationToken cancellationToken = default);
     Task<UserSubscriptionSummary?> UpdateSubscriptionAsync(Guid id, UpdateUserSubscriptionRequest request, Guid actorId, CancellationToken cancellationToken = default);
     Task<bool> DeleteSubscriptionAsync(Guid id, Guid actorId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<UserSubscriptionSummary>> GetMySubscriptionsAsync(Guid userId, CancellationToken cancellationToken = default);
