@@ -354,15 +354,30 @@ export interface SpeedReadingInstitutionAccessRecipient {
 }
 
 export interface SpeedReadingInstitutionAccessRequest {
+  institutionId: string;
   planId: string;
   startDate: string;
   recipients: SpeedReadingInstitutionAccessRecipient[];
+  paymentReference?: string | null;
   notes?: string | null;
 }
 
 export interface SpeedReadingInstitutionAccessApproval {
   createdCount: number;
   existingCount: number;
+  license?: SpeedReadingInstitutionAccessLicense | null;
+}
+
+export interface SpeedReadingInstitutionAccessLicense {
+  id: string;
+  institutionId: string;
+  status: string;
+  seatCount: number;
+  usedSeatCount: number;
+  startDate: string;
+  endDate: string;
+  paymentReference: string | null;
+  notes: string | null;
 }
 
 export interface SpeedReadingPayment {

@@ -24,6 +24,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     internal DbSet<LegacyProduct> Products => Set<LegacyProduct>();
     internal DbSet<LegacySubscriptionPlan> SubscriptionPlans => Set<LegacySubscriptionPlan>();
     internal DbSet<LegacyUserSubscription> UserSubscriptions => Set<LegacyUserSubscription>();
+    internal DbSet<LegacyInstitutionAccessLicense> InstitutionAccessLicenses => Set<LegacyInstitutionAccessLicense>();
     internal DbSet<LegacyPayment> Payments => Set<LegacyPayment>();
     internal DbSet<LegacyExerciseType> ExerciseTypes => Set<LegacyExerciseType>();
     internal DbSet<LegacyExercise> Exercises => Set<LegacyExercise>();
@@ -89,6 +90,7 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
     DbSet<LegacyCmsContentRevision> ISpeedReadingDataContext.CmsContentRevisions => CmsContentRevisions;
     DbSet<LegacySubscriptionPlan> ISpeedReadingDataContext.SubscriptionPlans => SubscriptionPlans;
     DbSet<LegacyUserSubscription> ISpeedReadingDataContext.UserSubscriptions => UserSubscriptions;
+    DbSet<LegacyInstitutionAccessLicense> ISpeedReadingDataContext.InstitutionAccessLicenses => InstitutionAccessLicenses;
     DbSet<LegacyPayment> ISpeedReadingDataContext.Payments => Payments;
     DbSet<LegacyUserNotification> ISpeedReadingDataContext.Notifications => Notifications;
     DbSet<LegacyNotificationPreference> ISpeedReadingDataContext.NotificationPreferences => NotificationPreferences;
@@ -246,6 +248,18 @@ public sealed class SpeedReadingDbContext(DbContextOptions<SpeedReadingDbContext
             entity.HasIndex(item => new { item.UserId, item.Status });
             entity.HasIndex(item => new { item.UserId, item.PlanId });
             entity.HasIndex(item => new { item.UserId, item.ProductId });
+            entity.HasIndex(item => item.InstitutionAccessLicenseId);
+        });
+
+        modelBuilder.Entity<LegacyInstitutionAccessLicense>(entity =>
+        {
+            entity.ToTable("InstitutionAccessLicenses");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Status).HasMaxLength(50).IsRequired();
+            entity.Property(item => item.PaymentReference).HasMaxLength(200);
+            entity.Property(item => item.Notes).HasMaxLength(2000);
+            entity.HasIndex(item => new { item.InstitutionId, item.Status, item.EndDate });
+            entity.HasIndex(item => new { item.InstitutionId, item.PaymentReference }).IsUnique().HasFilter("\"PaymentReference\" IS NOT NULL");
         });
 
         modelBuilder.Entity<LegacyPayment>(entity =>

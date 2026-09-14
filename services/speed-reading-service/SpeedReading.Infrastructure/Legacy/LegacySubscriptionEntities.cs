@@ -44,12 +44,28 @@ internal sealed class LegacyUserSubscription
     public DateTime StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public string? Notes { get; set; }
+    public Guid? InstitutionAccessLicenseId { get; set; }
     public Guid CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public Guid? UpdatedBy { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
+}
+
+internal sealed class LegacyInstitutionAccessLicense
+{
+    public Guid Id { get; set; }
+    public Guid InstitutionId { get; set; }
+    public Guid PlanId { get; set; }
+    public string Status { get; set; } = "Active";
+    public int SeatCount { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public string? PaymentReference { get; set; }
+    public string? Notes { get; set; }
+    public Guid ApprovedBy { get; set; }
+    public DateTime ApprovedAt { get; set; }
 }
 
 internal sealed class LegacyPayment

@@ -27,6 +27,7 @@ import { BaseComponent } from '../../../core/components/base.component';
 import { StudentDialogComponent } from './student-dialog.component';
 import { LinkStudentDialogComponent } from './link-student-dialog.component';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
+import { SubscriptionService } from '../../../core/services/subscription.service';
 
 @Component({
   selector: 'app-teacher-students-list',
@@ -58,6 +59,7 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
   private studentsService = inject(StudentsService);
   private teachersService = inject(TeachersService);
   private authService = inject(AuthService);
+  private subscriptionService = inject(SubscriptionService);
   private dialog = inject(MatDialog);
   protected override toaster = inject(ToasterService);
 
@@ -80,6 +82,7 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
   statusControl = new FormControl<boolean | null>(null);
 
   currentInstitutionId?: string;
+  activeAccessStudentIds = new Set<string>();
 
   ngOnInit() {
     this.setupFilters();
@@ -88,10 +91,21 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
     const isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin');
     if (isInstitutionAdmin) {
       // Insert 'teacher' column after 'name'
-      this.displayedColumns = ['avatar', 'name', 'teacher', 'level', 'target', 'dailyGoal', 'lastLogin', 'status', 'actions'];
+      this.displayedColumns = ['avatar', 'name', 'teacher', 'access', 'level', 'target', 'dailyGoal', 'lastLogin', 'status', 'actions'];
+      this.loadInstitutionAccess();
     }
 
     this.refreshData(); // Initial load
+  }
+
+  loadInstitutionAccess() {
+    this.subscriptionService.getMyInstitutionAccess()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({ next: license => this.activeAccessStudentIds = new Set(license?.activeStudentIds ?? []) });
+  }
+
+  hasInstitutionAccess(student: Student): boolean {
+    return this.activeAccessStudentIds.has(student.id);
   }
 
   override ngOnDestroy() {

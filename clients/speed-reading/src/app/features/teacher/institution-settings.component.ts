@@ -13,6 +13,7 @@ import { InstitutionsService } from '../../core/services/institutions.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToasterService } from '../../core/services/toaster.service';
 import { Institution } from '../../core/models/institution.model';
+import { InstitutionAccessLicense, SubscriptionService } from '../../core/services/subscription.service';
 
 @Component({
     selector: 'app-institution-settings',
@@ -162,6 +163,7 @@ export class InstitutionSettingsComponent implements OnInit {
     private fb = inject(FormBuilder);
     private institutionsService = inject(InstitutionsService);
     private authService = inject(AuthService);
+    private subscriptionService = inject(SubscriptionService);
     private toaster = inject(ToasterService);
 
     settingsForm: FormGroup;
@@ -172,6 +174,7 @@ export class InstitutionSettingsComponent implements OnInit {
 
     institutionId: string | null = null;
     institution = signal<Institution | null>(null);
+    accessLicense = signal<InstitutionAccessLicense | null>(null);
 
     constructor() {
         this.settingsForm = this.fb.group({
@@ -206,10 +209,18 @@ export class InstitutionSettingsComponent implements OnInit {
         if (user && (user as any).institutionId) {
             this.institutionId = (user as any).institutionId;
             this.loadInstitution();
+            this.loadAccessLicense();
         } else {
             this.toaster.error('Kurum bilgisine ulaşılamadı. Lütfen yönetici ile iletişime geçin.');
             console.error('Institution ID not found in user object:', user);
         }
+    }
+
+    loadAccessLicense() {
+        this.subscriptionService.getMyInstitutionAccess().subscribe({
+            next: license => this.accessLicense.set(license),
+            error: () => this.accessLicense.set(null)
+        });
     }
 
     loadInstitution() {
@@ -239,7 +250,9 @@ export class InstitutionSettingsComponent implements OnInit {
     }
 
     licenseName(): string {
-        return ['Bilinmiyor', 'Deneme', 'Basic', 'Premium', 'Kurumsal'][this.institution()?.licenseType ?? 0] ?? 'Tanımsız';
+        return this.accessLicense()?.plan.name
+            ?? ['Bilinmiyor', 'Deneme', 'Basic', 'Premium', 'Kurumsal'][this.institution()?.licenseType ?? 0]
+            ?? 'Tanımsız';
     }
 
     formatDate(value?: Date): string {
@@ -247,10 +260,23 @@ export class InstitutionSettingsComponent implements OnInit {
     }
 
     daysRemaining(): string {
-        const endDate = this.institution()?.subscriptionEndDate;
+        const licenseEndDate = this.accessLicense()?.endDate;
+        const endDate = licenseEndDate ? new Date(licenseEndDate) : this.institution()?.subscriptionEndDate;
         if (!endDate) return 'Tanımlı değil';
         const days = Math.ceil((endDate.getTime() - Date.now()) / 86_400_000);
         return days < 0 ? 'Süresi doldu' : `${days} gün kaldı`;
+    }
+
+    accessStartDate(): Date | undefined {
+        return this.accessLicense()?.startDate
+            ? new Date(this.accessLicense()!.startDate)
+            : this.institution()?.subscriptionStartDate;
+    }
+
+    accessEndDate(): Date | undefined {
+        return this.accessLicense()?.endDate
+            ? new Date(this.accessLicense()!.endDate)
+            : this.institution()?.subscriptionEndDate;
     }
 
     onSubmit() {

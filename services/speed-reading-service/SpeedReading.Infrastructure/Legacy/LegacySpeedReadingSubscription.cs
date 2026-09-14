@@ -263,7 +263,9 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
     {
         var plan = await db.SubscriptionPlans.AsNoTracking()
             .SingleOrDefaultAsync(item => item.Id == request.PlanId, cancellationToken);
-        if (plan is null || !SpeedReadingAccessRules.IsInstitutionAccessPlan(plan.DurationDays))
+        if (request.InstitutionId == Guid.Empty
+            || plan is null
+            || !SpeedReadingAccessRules.IsInstitutionAccessPlan(plan.DurationDays))
         {
             return null;
         }
@@ -278,6 +280,19 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         }
 
         var now = DateTime.UtcNow;
+        var paymentReference = NormalizePaymentReference(request.PaymentReference);
+        if (paymentReference is not null)
+        {
+            var existingLicense = await db.InstitutionAccessLicenses.AsNoTracking()
+                .SingleOrDefaultAsync(item => item.InstitutionId == request.InstitutionId
+                    && item.PaymentReference == paymentReference, cancellationToken);
+            if (existingLicense is not null)
+            {
+                var existingSummary = await ToInstitutionAccessLicenseSummaryAsync(existingLicense, cancellationToken);
+                return new InstitutionAccessApprovalSummary(0, recipients.Count, [], existingSummary);
+            }
+        }
+
         var recipientIds = recipients.Select(item => item.UserId).ToList();
         var activeUserIds = await db.UserSubscriptions.AsNoTracking()
             .Where(item => !item.IsDeleted
@@ -290,6 +305,10 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
 
         var startDate = DateTime.SpecifyKind(request.StartDate, DateTimeKind.Utc);
         var endDate = SpeedReadingAccessRules.ResolveEndDate(startDate, null, plan.DurationDays);
+        if (endDate is null)
+        {
+            return null;
+        }
         var newSubscriptions = recipients
             .Where(recipient => !activeUserIds.Contains(recipient.UserId))
             .Select(recipient => new LegacyUserSubscription
@@ -309,17 +328,49 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             })
             .ToList();
 
-        if (newSubscriptions.Count > 0)
+        if (newSubscriptions.Count == 0)
         {
-            db.UserSubscriptions.AddRange(newSubscriptions);
-            await db.SaveChangesAsync(cancellationToken);
+            return new InstitutionAccessApprovalSummary(0, recipients.Count, [], null);
         }
+
+        var license = new LegacyInstitutionAccessLicense
+        {
+            Id = Guid.NewGuid(),
+            InstitutionId = request.InstitutionId,
+            PlanId = plan.Id,
+            Status = "Active",
+            SeatCount = newSubscriptions.Count,
+            StartDate = startDate,
+            EndDate = endDate.Value,
+            PaymentReference = paymentReference,
+            Notes = request.Notes?.Trim(),
+            ApprovedBy = actorId,
+            ApprovedAt = now
+        };
+        newSubscriptions.ForEach(subscription => subscription.InstitutionAccessLicenseId = license.Id);
+        db.InstitutionAccessLicenses.Add(license);
+        db.UserSubscriptions.AddRange(newSubscriptions);
+        await db.SaveChangesAsync(cancellationToken);
 
         var product = await db.Products.AsNoTracking().SingleAsync(item => item.Id == plan.ProductId, cancellationToken);
         return new InstitutionAccessApprovalSummary(
             newSubscriptions.Count,
             recipients.Count - newSubscriptions.Count,
-            newSubscriptions.Select(subscription => ToSummary(subscription, plan, product)).ToList());
+            newSubscriptions.Select(subscription => ToSummary(subscription, plan, product)).ToList(),
+            ToInstitutionAccessLicenseSummary(license, plan, product, newSubscriptions.Select(item => item.UserId).ToList()));
+    }
+
+    public async Task<InstitutionAccessLicenseSummary?> GetInstitutionAccessOverviewAsync(
+        Guid institutionId,
+        CancellationToken cancellationToken = default)
+    {
+        if (institutionId == Guid.Empty) return null;
+        var license = await db.InstitutionAccessLicenses.AsNoTracking()
+            .Where(item => item.InstitutionId == institutionId && item.Status == "Active")
+            .OrderByDescending(item => item.EndDate)
+            .ThenByDescending(item => item.ApprovedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+        return license is null ? null : await ToInstitutionAccessLicenseSummaryAsync(license, cancellationToken);
     }
 
     public async Task<UserSubscriptionSummary?> UpdateSubscriptionAsync(Guid id, UpdateUserSubscriptionRequest request, Guid actorId, CancellationToken cancellationToken = default)
@@ -802,6 +853,40 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         return row is null
             ? null
             : ToSummary(row.Subscription, row.Plan, row.Product);
+    }
+
+    private async Task<InstitutionAccessLicenseSummary?> ToInstitutionAccessLicenseSummaryAsync(
+        LegacyInstitutionAccessLicense license,
+        CancellationToken cancellationToken)
+    {
+        var row = await (from plan in db.SubscriptionPlans.AsNoTracking()
+                         join product in db.Products.AsNoTracking() on plan.ProductId equals product.Id
+                         where plan.Id == license.PlanId
+                         select new { plan, product }).SingleOrDefaultAsync(cancellationToken);
+        if (row is null) return null;
+        var activeStudentIds = await db.UserSubscriptions.AsNoTracking()
+            .Where(item => item.InstitutionAccessLicenseId == license.Id
+                && !item.IsDeleted
+                && item.Status == "Active"
+                && (!item.EndDate.HasValue || item.EndDate > DateTime.UtcNow))
+            .Select(item => item.UserId)
+            .ToListAsync(cancellationToken);
+        return ToInstitutionAccessLicenseSummary(license, row.plan, row.product, activeStudentIds);
+    }
+
+    private static InstitutionAccessLicenseSummary ToInstitutionAccessLicenseSummary(
+        LegacyInstitutionAccessLicense license,
+        LegacySubscriptionPlan plan,
+        LegacyProduct product,
+        IReadOnlyList<Guid> activeStudentIds) =>
+        new(license.Id, license.InstitutionId, ToSummary(plan, product), license.Status, license.SeatCount,
+            activeStudentIds.Count, activeStudentIds, license.StartDate, license.EndDate, license.PaymentReference, license.Notes,
+            license.ApprovedAt);
+
+    private static string? NormalizePaymentReference(string? value)
+    {
+        var normalized = value?.Trim();
+        return string.IsNullOrWhiteSpace(normalized) ? null : normalized[..Math.Min(normalized.Length, 200)];
     }
 
     private static ProductSummary ToSummary(LegacyProduct product) =>

@@ -60,7 +60,7 @@ type SubscriptionTab = 'products' | 'plans' | 'subscriptions' | 'institutions' |
       @if (selectedTab() === 'institutions') {
         <section class="space-y-4" aria-labelledby="institution-access-title">
           <div><h2 id="institution-access-title" class="text-lg font-semibold text-gray-900 dark:text-white">Kurum için toplu erişim onayı</h2><p class="muted">Kurum ödemesini banka hesabında teyit ettikten sonra 365 günlük gizli planı seçin ve öğrencileri tek işlemle etkinleştirin. Mevcut aktif erişimler tekrar oluşturulmaz.</p></div>
-          <form (ngSubmit)="approveInstitutionAccess()" class="form-card"><div class="form-grid"><label>Kurum<select [(ngModel)]="institutionId" (ngModelChange)="selectInstitution()" name="institutionId" required><option value="">Kurum seçin</option>@for (institution of institutions(); track institution.id) {<option [value]="institution.id">{{ institution.name }} · {{ institution.studentCount }} öğrenci</option>}</select></label><label>1 yıllık kurum planı<select [(ngModel)]="institutionPlanId" name="institutionPlanId" required><option value="">Plan seçin</option>@for (plan of plans(); track plan.id) {@if (plan.durationDays === 365 && plan.isActive) {<option [value]="plan.id">{{ plan.name }}</option>}}</select></label><label>Onay tarihi<input [(ngModel)]="institutionStartDate" name="institutionStartDate" type="date" required /></label><label class="wide">Ödeme / kurum notu<textarea [(ngModel)]="institutionNotes" name="institutionNotes" maxlength="1000" placeholder="Ödeme tarihi, banka referansı veya kurum sözleşme numarası"></textarea></label></div>
+          <form (ngSubmit)="approveInstitutionAccess()" class="form-card"><div class="form-grid"><label>Kurum<select [(ngModel)]="institutionId" (ngModelChange)="selectInstitution()" name="institutionId" required><option value="">Kurum seçin</option>@for (institution of institutions(); track institution.id) {<option [value]="institution.id">{{ institution.name }} · {{ institution.studentCount }} öğrenci</option>}</select></label><label>1 yıllık kurum planı<select [(ngModel)]="institutionPlanId" name="institutionPlanId" required><option value="">Plan seçin</option>@for (plan of plans(); track plan.id) {@if (plan.durationDays === 365 && plan.isActive) {<option [value]="plan.id">{{ plan.name }}</option>}}</select></label><label>Onay tarihi<input [(ngModel)]="institutionStartDate" name="institutionStartDate" type="date" required /></label><label>Havale / EFT referansı<input [(ngModel)]="institutionPaymentReference" name="institutionPaymentReference" maxlength="200" required placeholder="Banka dekont veya işlem no" /></label><label class="wide">Ödeme / kurum notu<textarea [(ngModel)]="institutionNotes" name="institutionNotes" maxlength="1000" placeholder="Sözleşme, ödeme veya kontenjan notu"></textarea></label></div>
             @if (institutionId) {<div class="mt-4"><div class="mb-2 flex items-center justify-between gap-3"><strong>Öğrenciler</strong><button type="button" class="secondary" (click)="selectAllInstitutionStudents()">Tümünü seç</button></div><div class="student-grid">@for (student of institutionStudents(); track student.userId) {<label class="student-option"><input type="checkbox" [checked]="selectedInstitutionStudentIds.has(student.userId)" (change)="toggleInstitutionStudent(student.userId)" /><span>{{ student.fullName }}<small>{{ student.email }}</small></span></label>} @empty {<p class="muted">Bu kurumda aktif öğrenci bulunamadı.</p>}</div><p class="muted">Seçili öğrenci: {{ selectedInstitutionStudentIds.size }}</p></div>}
             <div class="form-actions"><button type="submit" class="primary" [disabled]="saving()">Seçilen öğrencilere 1 yıllık erişim aç</button></div></form>
         </section>
@@ -149,6 +149,7 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
   institutionId = '';
   institutionPlanId = '';
   institutionStartDate = new Date().toISOString().slice(0, 10);
+  institutionPaymentReference = '';
   institutionNotes = '';
   readonly selectedInstitutionStudentIds = new Set<string>();
   subscriptionPage = 1;
@@ -319,20 +320,23 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
     const recipients = this.institutionStudents()
       .filter(student => this.selectedInstitutionStudentIds.has(student.userId))
       .map(student => ({ userId: student.userId, userName: student.fullName, userEmail: student.email }));
-    if (!this.institutionId || !this.institutionPlanId || recipients.length === 0) {
-      this.error.set('Kurum, 1 yıllık plan ve en az bir öğrenci seçin.');
+    if (!this.institutionId || !this.institutionPlanId || !this.institutionPaymentReference.trim() || recipients.length === 0) {
+      this.error.set('Kurum, 1 yıllık plan, EFT referansı ve en az bir öğrenci seçin.');
       return;
     }
     const institution = this.institutions().find(item => item.id === this.institutionId);
     const request: SpeedReadingInstitutionAccessRequest = {
+      institutionId: this.institutionId,
       planId: this.institutionPlanId,
       startDate: this.institutionStartDate,
       recipients,
+      paymentReference: this.institutionPaymentReference.trim(),
       notes: [institution?.name, this.institutionNotes.trim()].filter(Boolean).join(' · ') || null
     };
     this.saveRequest(this.service.createInstitutionAccess(request), result => {
       this.toaster.success(`${result.createdCount} öğrenciye erişim açıldı${result.existingCount ? `; ${result.existingCount} öğrencinin aktif erişimi zaten vardı.` : '.'}`);
       this.selectedInstitutionStudentIds.clear();
+      this.institutionPaymentReference = '';
       this.loadSubscriptions();
     });
   }

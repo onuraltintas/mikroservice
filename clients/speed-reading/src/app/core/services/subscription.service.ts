@@ -149,6 +149,21 @@ export interface UserModules {
   hasCoaching: boolean;
 }
 
+export interface InstitutionAccessLicense {
+  id: string;
+  institutionId: string;
+  plan: SubscriptionPlan;
+  status: string;
+  seatCount: number;
+  usedSeatCount: number;
+  activeStudentIds: string[];
+  startDate: string;
+  endDate: string;
+  paymentReference: string | null;
+  notes: string | null;
+  approvedAt: string;
+}
+
 // ---------------------------------------------------------------------------
 // Misc
 // ---------------------------------------------------------------------------
@@ -270,5 +285,10 @@ export class SubscriptionService {
   /** Geriye dönük uyumluluk */
   getMyModules(): Observable<UserModules> {
     return this.http.get<any>(`${this.subsUrl}/my-modules`).pipe(map(result => result?.data ?? result));
+  }
+
+  getMyInstitutionAccess(): Observable<InstitutionAccessLicense | null> {
+    return this.http.get<any>(`${this.subsUrl}/institution-access/my`)
+      .pipe(map(result => result?.data ?? null));
   }
 }

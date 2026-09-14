@@ -87,18 +87,21 @@ describe('SpeedReadingSubscriptionsComponent', () => {
     component.institutionId = 'institution-1';
     component.institutionPlanId = 'annual-plan';
     component.institutionStartDate = '2026-09-14';
+    component.institutionPaymentReference = 'EFT-2026-0001';
     component.selectedInstitutionStudentIds.add('student-1');
     component.selectedInstitutionStudentIds.add('student-2');
 
     component.approveInstitutionAccess();
 
     expect(service.createInstitutionAccess).toHaveBeenCalledWith({
+      institutionId: 'institution-1',
       planId: 'annual-plan',
       startDate: '2026-09-14',
       recipients: [
         { userId: 'student-1', userName: 'Ada', userEmail: 'ada@example.test' },
         { userId: 'student-2', userName: 'Can', userEmail: 'can@example.test' }
       ],
+      paymentReference: 'EFT-2026-0001',
       notes: 'Örnek Okul'
     });
   });

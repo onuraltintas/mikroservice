@@ -121,15 +121,32 @@ public sealed record InstitutionAccessRecipient(
     string? UserEmail);
 
 public sealed record CreateInstitutionAccessRequest(
+    Guid InstitutionId,
     Guid PlanId,
     DateTime StartDate,
     IReadOnlyList<InstitutionAccessRecipient> Recipients,
+    string? PaymentReference,
     string? Notes);
+
+public sealed record InstitutionAccessLicenseSummary(
+    Guid Id,
+    Guid InstitutionId,
+    SubscriptionPlanSummary Plan,
+    string Status,
+    int SeatCount,
+    int UsedSeatCount,
+    IReadOnlyList<Guid> ActiveStudentIds,
+    DateTime StartDate,
+    DateTime EndDate,
+    string? PaymentReference,
+    string? Notes,
+    DateTime ApprovedAt);
 
 public sealed record InstitutionAccessApprovalSummary(
     int CreatedCount,
     int ExistingCount,
-    IReadOnlyList<UserSubscriptionSummary> Subscriptions);
+    IReadOnlyList<UserSubscriptionSummary> Subscriptions,
+    InstitutionAccessLicenseSummary? License);
 
 public sealed record UpdateUserSubscriptionRequest(
     string Status,
@@ -243,6 +260,7 @@ public interface ISpeedReadingSubscription
     Task<IReadOnlyList<UserSubscriptionSummary>> GetUserSubscriptionsAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<UserSubscriptionSummary?> CreateSubscriptionAsync(CreateUserSubscriptionRequest request, Guid actorId, CancellationToken cancellationToken = default);
     Task<InstitutionAccessApprovalSummary?> CreateInstitutionAccessAsync(CreateInstitutionAccessRequest request, Guid actorId, CancellationToken cancellationToken = default);
+    Task<InstitutionAccessLicenseSummary?> GetInstitutionAccessOverviewAsync(Guid institutionId, CancellationToken cancellationToken = default);
     Task<UserSubscriptionSummary?> UpdateSubscriptionAsync(Guid id, UpdateUserSubscriptionRequest request, Guid actorId, CancellationToken cancellationToken = default);
     Task<bool> DeleteSubscriptionAsync(Guid id, Guid actorId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<UserSubscriptionSummary>> GetMySubscriptionsAsync(Guid userId, CancellationToken cancellationToken = default);

@@ -84,6 +84,7 @@ public sealed class OwnedSpeedReadingDbContext(
     DbSet<LegacyCmsContentRevision> ISpeedReadingDataContext.CmsContentRevisions => Set<LegacyCmsContentRevision>();
     DbSet<LegacySubscriptionPlan> ISpeedReadingDataContext.SubscriptionPlans => Set<LegacySubscriptionPlan>();
     DbSet<LegacyUserSubscription> ISpeedReadingDataContext.UserSubscriptions => Set<LegacyUserSubscription>();
+    DbSet<LegacyInstitutionAccessLicense> ISpeedReadingDataContext.InstitutionAccessLicenses => Set<LegacyInstitutionAccessLicense>();
     DbSet<LegacyPayment> ISpeedReadingDataContext.Payments => Set<LegacyPayment>();
     DbSet<LegacyUserNotification> ISpeedReadingDataContext.Notifications => Set<LegacyUserNotification>();
     DbSet<LegacyNotificationPreference> ISpeedReadingDataContext.NotificationPreferences => Set<LegacyNotificationPreference>();
@@ -601,11 +602,23 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.UserEmail).HasMaxLength(256);
             entity.Property(item => item.Status).HasMaxLength(50).IsRequired();
             entity.Property(item => item.Notes).HasMaxLength(2_000);
+            entity.Property(item => item.InstitutionAccessLicenseId).HasColumnName("InstitutionAccessLicenseId");
             entity.HasIndex(item => new { item.UserId, item.Status });
             entity.HasIndex(item => new { item.UserId, item.PlanId });
             entity.HasIndex(item => new { item.UserId, item.ProductId });
             entity.HasOne<LegacySubscriptionPlan>().WithMany().HasForeignKey(item => item.PlanId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<LegacyProduct>().WithMany().HasForeignKey(item => item.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<LegacyInstitutionAccessLicense>(entity =>
+        {
+            entity.ToTable("institution_access_licenses");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.Status).HasMaxLength(50).IsRequired();
+            entity.Property(item => item.PaymentReference).HasMaxLength(200);
+            entity.Property(item => item.Notes).HasMaxLength(2_000);
+            entity.HasIndex(item => new { item.InstitutionId, item.Status, item.EndDate });
+            entity.HasIndex(item => new { item.InstitutionId, item.PaymentReference }).IsUnique().HasFilter("\"PaymentReference\" IS NOT NULL");
+            entity.HasOne<LegacySubscriptionPlan>().WithMany().HasForeignKey(item => item.PlanId).OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<LegacyPayment>(entity =>
         {

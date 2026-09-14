@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { InstitutionsService } from './institutions.service';
+import { SubscriptionService } from './subscription.service';
 
 describe('InstitutionsService', () => {
   let service: InstitutionsService;
@@ -94,5 +95,26 @@ describe('InstitutionsService', () => {
       email: 'okul@example.com'
     });
     request.flush(null);
+  });
+
+  it('loads the signed-in institution administrator’s access summary', () => {
+    const subscriptions = TestBed.inject(SubscriptionService);
+
+    subscriptions.getMyInstitutionAccess().subscribe(license => {
+      expect(license?.seatCount).toBe(30);
+      expect(license?.activeStudentIds).toEqual(['student-1']);
+    });
+
+    const request = http.expectOne('/api/speed-reading/subscriptions/institution-access/my');
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      success: true,
+      data: {
+        id: 'license-1', institutionId: 'institution-1', status: 'Active', seatCount: 30,
+        usedSeatCount: 1, activeStudentIds: ['student-1'], startDate: '2026-09-01T00:00:00Z',
+        endDate: '2027-09-01T00:00:00Z', paymentReference: 'EFT-2026-0001', notes: null,
+        approvedAt: '2026-09-01T00:00:00Z', plan: { id: 'plan-1', name: 'Kurum' }
+      }
+    });
   });
 });

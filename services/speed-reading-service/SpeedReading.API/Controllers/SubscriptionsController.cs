@@ -57,6 +57,16 @@ public sealed class SubscriptionsController(ISpeedReadingSubscription subscripti
             : Ok(new { success = true, data = result, message = "Institution access approved" });
     }
 
+    [HttpGet("institution-access/my")]
+    [Authorize(Roles = "InstitutionAdmin,InstitutionOwner")]
+    public async Task<IActionResult> GetMyInstitutionAccess(CancellationToken cancellationToken = default)
+    {
+        var institutionValue = User.FindFirstValue("institutionId") ?? User.FindFirstValue("InstitutionId");
+        if (!Guid.TryParse(institutionValue, out var institutionId)) return Forbid();
+        var result = await subscriptions.GetInstitutionAccessOverviewAsync(institutionId, cancellationToken);
+        return Ok(new { success = true, data = result, message = "Institution access retrieved" });
+    }
+
     [HttpPut("{id:guid}")]
     [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserSubscriptionRequest request, CancellationToken cancellationToken = default)
