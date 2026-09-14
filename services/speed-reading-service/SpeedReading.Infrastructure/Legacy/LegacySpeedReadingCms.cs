@@ -58,7 +58,11 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
             .Where(item => !item.IsDeleted && item.Group == normalizedGroup)
             .OrderBy(item => item.Key)
             .ToListAsync(cancellationToken);
-        var blocks = blockRows.Select(ToSummary).ToList();
+        var blocks = blockRows
+            .Select(ToSummary)
+            .Where(block => !string.Equals(normalizedGroup, EvidenceMetricRules.Group, StringComparison.Ordinal)
+                || EvidenceMetricRules.IsPubliclyVisible(block.Value))
+            .ToList();
 
         cache.Set(cacheKey, blocks, new MemoryCacheEntryOptions
         {

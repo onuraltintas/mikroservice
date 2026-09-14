@@ -7,8 +7,19 @@ interface Stat {
   icon: string;
   value: string;
   label: string;
+  evidence?: string;
   target: number;
   format: 'number' | 'number_plus' | 'millions' | 'percent';
+}
+
+interface PublishedEvidenceMetric {
+  title: string;
+  value: string;
+  description?: string;
+  source: string;
+  period: string;
+  sampleSize: number;
+  icon?: string;
 }
 
 @Component({
@@ -45,8 +56,21 @@ export class StatsSectionComponent implements OnInit, AfterViewInit {
   }
 
   private loadContent() {
-    this.cmsService.getLandingContent().subscribe({
+    this.cmsService.getLandingContent('EvidenceMetrics').subscribe({
       next: (content) => {
+        const publishedMetrics = Object.values(content.blocks)
+          .map(value => this.toPublishedEvidenceMetric(value))
+          .filter((metric): metric is PublishedEvidenceMetric => metric !== null);
+        if (publishedMetrics.length) {
+          this.stats = publishedMetrics.map(metric => ({
+            icon: metric.icon || 'insights',
+            value: metric.value,
+            label: metric.title,
+            evidence: [metric.description, metric.source, metric.period, `n=${metric.sampleSize}`].filter(Boolean).join(' · '),
+            target: 0,
+            format: 'number'
+          }));
+        }
         this.isContentLoaded = true;
         // If already in view, start animation now
         if (this.isInView && !this.hasAnimated) {
@@ -103,6 +127,17 @@ export class StatsSectionComponent implements OnInit, AfterViewInit {
 
   animateCounters() {
     // Static product principles do not need animated numerical counters.
+  }
+
+  private toPublishedEvidenceMetric(rawValue: string): PublishedEvidenceMetric | null {
+    try {
+      const value = JSON.parse(rawValue) as Partial<PublishedEvidenceMetric>;
+      const sampleSize = value.sampleSize;
+      if (!value.title || !value.value || !value.source || !value.period || typeof sampleSize !== 'number' || !Number.isInteger(sampleSize) || sampleSize < 1) return null;
+      return value as PublishedEvidenceMetric;
+    } catch {
+      return null;
+    }
   }
 
   animateValue(index: number, start: number, end: number, duration: number) {

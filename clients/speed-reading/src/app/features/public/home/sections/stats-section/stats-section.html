@@ -7,6 +7,7 @@
                 </div>
                 <div #statValue class="stat-value">{{ stat.value }}</div>
                 <div class="stat-label">{{ stat.label }}</div>
+                @if (stat.evidence) { <div class="stat-evidence">{{ stat.evidence }}</div> }
             </div>
         </div>
     </div>

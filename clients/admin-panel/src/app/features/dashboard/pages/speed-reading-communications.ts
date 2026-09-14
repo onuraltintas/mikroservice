@@ -37,7 +37,26 @@ import {
 } from '../../../core/services/speed-reading-admin.service';
 
 type CommunicationTab = 'cms' | 'announcements' | 'email-templates' | 'campaigns' | 'notifications';
-type CmsTab = 'blocks' | 'pages' | 'blog' | 'media' | 'navigation' | 'contacts' | 'subscribers';
+type CmsTab = 'blocks' | 'evidence' | 'pages' | 'blog' | 'media' | 'navigation' | 'contacts' | 'subscribers';
+
+interface EvidenceMetricDraft {
+  title: string;
+  value: string;
+  description: string;
+  source: string;
+  period: string;
+  sampleSize: number | null;
+  icon: string;
+  isVisible: boolean;
+}
+
+interface EvidenceMetric extends EvidenceMetricDraft {
+  id: string;
+  key: string;
+}
+
+const evidenceMetricsGroup = 'EvidenceMetrics';
+const evidenceMetricIcons = ['insights', 'groups', 'quiz', 'speed', 'trending_up', 'school'];
 
 @Component({
   selector: 'app-speed-reading-communications',
@@ -58,10 +77,38 @@ type CmsTab = 'blocks' | 'pages' | 'blog' | 'media' | 'navigation' | 'contacts' 
 
       @if (selectedTab() === 'cms') {
         <section class="space-y-4" aria-labelledby="cms-title">
-          <div class="flex flex-wrap items-end justify-between gap-3"><div><h2 id="cms-title" class="text-lg font-semibold text-gray-900 dark:text-white">CMS</h2><p class="muted">Landing blokları, sayfalar, blog, medya, menüler, iletişim mesajları ve bülten aboneleri.</p></div><button type="button" class="primary" (click)="startCmsCreate()">{{ cmsTab() === 'blocks' ? 'Yeni blok' : cmsTab() === 'pages' ? 'Yeni sayfa' : cmsTab() === 'blog' ? 'Yeni blog yazısı' : cmsTab() === 'media' ? 'Medya yükle' : cmsTab() === 'navigation' ? 'Yeni menü öğesi' : 'Yenile' }}</button></div>
+          <div class="flex flex-wrap items-end justify-between gap-3"><div><h2 id="cms-title" class="text-lg font-semibold text-gray-900 dark:text-white">CMS</h2><p class="muted">Landing blokları, sayfalar, blog, medya, menüler, iletişim mesajları ve bülten aboneleri.</p></div><button type="button" class="primary" (click)="startCmsCreate()">{{ cmsTab() === 'blocks' ? 'Yeni blok' : cmsTab() === 'evidence' ? 'Yeni kanıtlı istatistik' : cmsTab() === 'pages' ? 'Yeni sayfa' : cmsTab() === 'blog' ? 'Yeni blog yazısı' : cmsTab() === 'media' ? 'Medya yükle' : cmsTab() === 'navigation' ? 'Yeni menü öğesi' : 'Yenile' }}</button></div>
           <nav class="ui-tab-list flex flex-wrap gap-2" aria-label="CMS sekmeleri">@for (tab of cmsTabs; track tab.value) {<button type="button" class="ui-tab secondary" [attr.aria-pressed]="cmsTab() === tab.value" [class.bg-gray-100]="cmsTab() === tab.value" (click)="selectCmsTab(tab.value)">{{ tab.label }}</button>}</nav>
 
           @if (cmsTab() === 'blocks') {@if (blockEditing()) {<div class="dialog-backdrop-shield" aria-hidden="true"></div><form class="form-card dialog-form" role="dialog" aria-modal="true" aria-label="Düzenleme formu" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (ngSubmit)="saveCmsBlock()"><h3>{{ blockEditingId ? 'Bloğu düzenle' : 'Landing içerik bloğu' }}</h3><div class="form-grid"><label>Anahtar<input [(ngModel)]="blockDraft.key" name="blockKey" required maxlength="150" /></label><label>Grup<input [(ngModel)]="blockDraft.group" name="blockGroup" required maxlength="100" /></label><label>Etiket<input [(ngModel)]="blockDraft.label" name="blockLabel" maxlength="150" /></label><label>Tür<input type="number" [(ngModel)]="blockDraft.type" name="blockType" min="0" max="20" /></label><label class="wide">Değer<textarea [(ngModel)]="blockDraft.value" name="blockValue" required maxlength="100000"></textarea></label></div><div class="form-actions"><button type="button" class="secondary" (click)="cancelCmsEdit()">İptal</button><button class="primary" type="submit" [disabled]="saving()">Kaydet</button></div></form>}<div class="data-card"><div class="inline-filter"><input [(ngModel)]="cmsGroup" name="cmsGroup" placeholder="Grup (HomePage)" maxlength="100" /><button type="button" class="secondary" (click)="loadBlocks()">Filtrele</button><button type="button" class="secondary" (click)="saveLanding()">Grubu landing olarak kaydet</button></div><table class="data-table"><thead><tr><th>Grup</th><th>Anahtar</th><th>Etiket</th><th>Değer</th><th></th></tr></thead><tbody>@for (block of blocks(); track block.id) {<tr><td>{{ block.group }}</td><td class="font-mono">{{ block.key }}</td><td>{{ block.label || '—' }}</td><td class="max-w-xl whitespace-pre-wrap">{{ block.value }}</td><td class="actions"><button type="button" (click)="editBlock(block)">Düzenle</button><button type="button" class="danger" (click)="deleteBlock(block)">Sil</button></td></tr>} @empty {<tr><td colspan="5" class="empty">İçerik bloğu bulunamadı.</td></tr>}</tbody></table></div>}
+
+          @if (cmsTab() === 'evidence') {
+            @if (evidenceEditing()) {
+              <div class="dialog-backdrop-shield" aria-hidden="true"></div>
+              <form class="form-card dialog-form" role="dialog" aria-modal="true" aria-label="Kanıtlı istatistik düzenleme formu" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (ngSubmit)="saveEvidenceMetric()">
+                <h3>{{ evidenceEditingId ? 'Kanıtlı istatistiği düzenle' : 'Yeni kanıtlı istatistik' }}</h3>
+                <p class="muted">Bu kayıt yalnızca kaynak, dönem ve örneklem bilgisiyle saklanır. Görünürlük kapalıyken public API ve ana sayfa kaydı sunmaz.</p>
+                <div class="form-grid">
+                  <label>Başlık<input [(ngModel)]="evidenceDraft.title" name="evidenceTitle" required maxlength="150" /></label>
+                  <label>Değer<input [(ngModel)]="evidenceDraft.value" name="evidenceValue" required maxlength="60" placeholder="%82 veya 120" /></label>
+                  <label>Kaynak<input [(ngModel)]="evidenceDraft.source" name="evidenceSource" required maxlength="500" placeholder="Pilot çalışması veya rapor bağlantısı" /></label>
+                  <label>Dönem<input [(ngModel)]="evidenceDraft.period" name="evidencePeriod" required maxlength="150" placeholder="Ocak–Mart 2026" /></label>
+                  <label>Örneklem<input type="number" [(ngModel)]="evidenceDraft.sampleSize" name="evidenceSampleSize" required min="1" max="10000000" /></label>
+                  <label>İkon<select [(ngModel)]="evidenceDraft.icon" name="evidenceIcon">@for (icon of evidenceIcons; track icon) {<option [value]="icon">{{ icon }}</option>}</select></label>
+                  <label class="wide">Açıklama<textarea [(ngModel)]="evidenceDraft.description" name="evidenceDescription" maxlength="500" placeholder="Ölçütün nasıl hesaplandığını kısaca açıklayın."></textarea></label>
+                  <label class="check wide"><input type="checkbox" [(ngModel)]="evidenceDraft.isVisible" name="evidenceVisible" /> Son kullanıcıya göster</label>
+                </div>
+                <div class="form-actions"><button type="button" class="secondary" (click)="cancelEvidenceEdit()">İptal</button><button class="primary" type="submit" [disabled]="saving()">Kaydet</button></div>
+              </form>
+            }
+            <div class="data-card">
+              <div class="mb-4"><h3 class="font-semibold">Kanıtlı istatistikler</h3><p class="muted">Public görünürlük varsayılan olarak kapalıdır. Yalnız açık ve geçerli kayıtlar ana sayfaya ulaşır.</p></div>
+              <table class="data-table"><thead><tr><th>Başlık</th><th>Değer</th><th>Kanıt</th><th>Görünürlük</th><th></th></tr></thead><tbody>
+                @for (metric of evidenceMetrics(); track metric.id) {<tr><td><strong>{{ metric.title }}</strong><div class="muted">{{ metric.description || '—' }}</div></td><td>{{ metric.value }}</td><td>{{ metric.source }}<div class="muted">{{ metric.period }} · n={{ metric.sampleSize }}</div></td><td>{{ metric.isVisible ? 'Son kullanıcıya açık' : 'Gizli' }}</td><td class="actions"><button type="button" (click)="editEvidenceMetric(metric)">Düzenle</button><button type="button" class="danger" (click)="deleteEvidenceMetric(metric)">Sil</button></td></tr>}
+                @empty {<tr><td colspan="5" class="empty">Henüz kanıtlı istatistik eklenmedi.</td></tr>}
+              </tbody></table>
+            </div>
+          }
 
           @if (cmsTab() === 'pages') { @if (cmsPageEditing()) {<div class="dialog-backdrop-shield" aria-hidden="true"></div><form class="form-card dialog-form" role="dialog" aria-modal="true" aria-label="Düzenleme formu" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (ngSubmit)="saveCmsPage()"><h3>{{ cmsPageEditingId ? 'Sayfayı düzenle' : 'Yeni CMS sayfası' }}</h3><div class="form-grid"><label>Başlık<input [(ngModel)]="pageDraft.title" name="pageTitle" required maxlength="200" /></label><label>Slug<input [(ngModel)]="pageDraft.slug" name="pageSlug" required maxlength="200" [disabled]="!!cmsPageEditingId" /></label><label class="wide">İçerik<textarea [(ngModel)]="pageDraft.content" name="pageContent" required maxlength="200000"></textarea></label><label class="check"><input type="checkbox" [(ngModel)]="pageDraft.isPublished" name="pagePublished" /> Yayında</label><label>Planlı yayın<input type="datetime-local" [(ngModel)]="pageDraft.scheduledPublishAt" name="pageScheduledPublishAt" /><small class="muted">İleri bir tarih seçilirse o zamana kadar public tarafta görünmez.</small></label><label class="wide">SEO JSON<textarea [(ngModel)]="pageSeoJson" name="pageSeo" required maxlength="10000"></textarea></label></div><div class="form-actions"><button type="button" class="secondary" (click)="cancelCmsEdit()">İptal</button><button class="primary" type="submit" [disabled]="saving()">Kaydet</button></div></form>} @else {<div class="data-card"><table class="data-table"><thead><tr><th>Başlık</th><th>Slug</th><th>Yayın</th><th>Güncelleme</th><th></th></tr></thead><tbody>@for (page of pages().items; track page.id) {<tr><td>{{ page.title }}</td><td class="font-mono">{{ page.slug }}</td><td>{{ page.isPublished ? (page.scheduledPublishAt && page.scheduledPublishAt > nowIso() ? 'Planlandı' : 'Yayında') : 'Taslak' }}</td><td>{{ page.updatedAt ? (page.updatedAt | date:'dd.MM.yyyy HH:mm') : '—' }}</td><td class="actions"><button type="button" (click)="editPage(page)">Düzenle</button><button type="button" (click)="previewPage(page)">Önizle</button><button type="button" (click)="showRevisions('Page', page.id)">Geçmiş</button><button type="button" class="danger" (click)="deletePage(page)">Sil</button></td></tr>} @empty {<tr><td colspan="5" class="empty">CMS sayfası bulunamadı.</td></tr>}</tbody></table><div class="pager"><span>Toplam {{ pages().totalCount }}</span><button type="button" class="secondary" (click)="changePage('pages', -1)" [disabled]="cmsPageNumber <= 1">Önceki</button><button type="button" class="secondary" (click)="changePage('pages', 1)" [disabled]="cmsPageNumber >= cmsTotalPages(pages())">Sonraki</button></div></div>}}
 
@@ -135,12 +182,13 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
   readonly canManageCommunications = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingCommunicationsManage));
   readonly visibleTabs = computed(() => this.tabs.filter(tab => tab.value === 'cms' ? this.canManageContent() : this.canManageCommunications()));
   readonly cmsTabs: { value: CmsTab; label: string }[] = [
-    { value: 'blocks', label: 'Landing blokları' }, { value: 'pages', label: 'Sayfalar' }, { value: 'blog', label: 'Blog' }, { value: 'media', label: 'Medya' }, { value: 'navigation', label: 'Menü' }, { value: 'contacts', label: 'İletişim' }, { value: 'subscribers', label: 'Bülten aboneleri' }
+    { value: 'blocks', label: 'Landing blokları' }, { value: 'evidence', label: 'Kanıtlı istatistikler' }, { value: 'pages', label: 'Sayfalar' }, { value: 'blog', label: 'Blog' }, { value: 'media', label: 'Medya' }, { value: 'navigation', label: 'Menü' }, { value: 'contacts', label: 'İletişim' }, { value: 'subscribers', label: 'Bülten aboneleri' }
   ];
   readonly selectedTab = signal<CommunicationTab>('cms');
   readonly cmsTab = signal<CmsTab>('blocks');
   readonly loading = signal(false); readonly saving = signal(false); readonly error = signal('');
   readonly blocks = signal<SpeedReadingCmsContentBlock[]>([]);
+  readonly evidenceMetrics = signal<EvidenceMetric[]>([]);
   readonly pages = signal<{ items: SpeedReadingCmsPage[]; totalCount: number; pageNumber: number; pageSize: number }>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
   readonly blogPosts = signal<{ items: SpeedReadingCmsBlogPost[]; totalCount: number; pageNumber: number; pageSize: number }>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
   readonly contacts = signal<{ items: SpeedReadingCmsContactMessage[]; totalCount: number; pageNumber: number; pageSize: number }>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
@@ -161,15 +209,19 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
   mediaFile: File | null = null; mediaAltText = '';
   contactReadFilter = ''; contactReplyFilter = ''; announcementActiveFilter = ''; announcementIncludeExpired = false;
   blockEditingId: string | null = null; cmsPageEditingId: string | null = null; cmsBlogEditingId: string | null = null;
+  evidenceEditingId: string | null = null;
   navigationEditingId: string | null = null;
   announcementEditingId: string | null = null; emailTemplateEditingId: string | null = null; campaignEditingId: string | null = null;
   blockDraft: SpeedReadingCmsContentBlockRequest = this.emptyBlock(); pageDraft: SpeedReadingCmsPageRequest = this.emptyPage(); blogDraft: SpeedReadingCmsBlogPostRequest = this.emptyBlog();
+  evidenceDraft: EvidenceMetricDraft = this.emptyEvidenceMetric();
   navigationDraft: SpeedReadingCmsNavigationItemRequest = this.emptyNavigation();
   pageSeoJson = '{}'; blogSeoJson = '{}'; blogTags = '';
   announcementDraft: SpeedReadingAnnouncementRequest = this.emptyAnnouncement(); announcementTargetRoles = '';
   emailTemplateDraft: SpeedReadingEmailTemplateRequest = this.emptyEmailTemplate(); campaignDraft: SpeedReadingEmailCampaignRequest = this.emptyCampaign();
   bulkDraft: SpeedReadingBulkNotificationRequest = { targetType: 'All', targetRole: null, title: '', message: '', type: 9, priority: 2, actionUrl: null, sendEmail: false };
   readonly selectedContact = signal<SpeedReadingCmsContactMessage | null>(null); contactReplyDraft = '';
+  readonly evidenceEditing = signal(false);
+  readonly evidenceIcons = evidenceMetricIcons;
 
   ngOnInit(): void {
     const requestedTab = this.route?.snapshot.queryParamMap.get('tab');
@@ -188,6 +240,7 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
     else if (this.emailPreview()) this.emailPreview.set(null);
     else if (this.campaignStats()) this.campaignStats.set(null);
     else if (this.blockEditing() || this.cmsPageEditing() || this.cmsBlogEditing() || this.mediaEditing() || this.navigationEditing()) this.cancelCmsEdit();
+    else if (this.evidenceEditing()) this.cancelEvidenceEdit();
     else if (this.announcementEditing()) this.announcementEditing.set(false);
     else if (this.emailTemplateEditing()) this.emailTemplateEditing.set(false);
     else if (this.campaignEditing()) this.campaignEditing.set(false);
@@ -204,15 +257,60 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
       case 'notifications': if (this.canManageCommunications()) this.loadNotifications(); break;
     }
   }
-  selectCmsTab(tab: CmsTab): void { this.closeAllDialogs(); this.cmsTab.set(tab); if (tab === 'blocks') this.loadBlocks(); if (tab === 'pages') this.loadPages(); if (tab === 'blog') this.loadBlogPosts(); if (tab === 'media') this.loadMedia(); if (tab === 'navigation') this.loadNavigation(); if (tab === 'contacts') this.loadContacts(); if (tab === 'subscribers') this.loadSubscribers(); }
-   startCmsCreate(): void { if (this.cmsTab() === 'blocks') { this.blockEditingId = null; this.blockDraft = this.emptyBlock(); this.blockEditing.set(true); } else if (this.cmsTab() === 'pages') { this.cmsPageEditingId = null; this.pageDraft = this.emptyPage(); this.pageSeoJson = '{}'; this.cmsPageEditing.set(true); } else if (this.cmsTab() === 'blog') { this.cmsBlogEditingId = null; this.blogDraft = this.emptyBlog(); this.blogSeoJson = '{}'; this.blogTags = ''; this.cmsBlogEditing.set(true); } else if (this.cmsTab() === 'media') { this.mediaFile = null; this.mediaAltText = ''; this.mediaEditing.set(true); } else if (this.cmsTab() === 'navigation') { this.navigationEditingId = null; this.navigationDraft = this.emptyNavigation(); this.navigationEditing.set(true); } else { this.loadCmsTab(); } }
-  private loadCmsTab(): void { if (this.cmsTab() === 'blocks') this.loadBlocks(); if (this.cmsTab() === 'pages') this.loadPages(); if (this.cmsTab() === 'blog') this.loadBlogPosts(); if (this.cmsTab() === 'media') this.loadMedia(); if (this.cmsTab() === 'navigation') this.loadNavigation(); if (this.cmsTab() === 'contacts') this.loadContacts(); if (this.cmsTab() === 'subscribers') this.loadSubscribers(); }
+  selectCmsTab(tab: CmsTab): void { this.closeAllDialogs(); this.cmsTab.set(tab); if (tab === 'blocks') this.loadBlocks(); if (tab === 'evidence') this.loadEvidenceMetrics(); if (tab === 'pages') this.loadPages(); if (tab === 'blog') this.loadBlogPosts(); if (tab === 'media') this.loadMedia(); if (tab === 'navigation') this.loadNavigation(); if (tab === 'contacts') this.loadContacts(); if (tab === 'subscribers') this.loadSubscribers(); }
+   startCmsCreate(): void { if (this.cmsTab() === 'blocks') { this.blockEditingId = null; this.blockDraft = this.emptyBlock(); this.blockEditing.set(true); } else if (this.cmsTab() === 'evidence') { this.evidenceEditingId = null; this.evidenceDraft = this.emptyEvidenceMetric(); this.evidenceEditing.set(true); } else if (this.cmsTab() === 'pages') { this.cmsPageEditingId = null; this.pageDraft = this.emptyPage(); this.pageSeoJson = '{}'; this.cmsPageEditing.set(true); } else if (this.cmsTab() === 'blog') { this.cmsBlogEditingId = null; this.blogDraft = this.emptyBlog(); this.blogSeoJson = '{}'; this.blogTags = ''; this.cmsBlogEditing.set(true); } else if (this.cmsTab() === 'media') { this.mediaFile = null; this.mediaAltText = ''; this.mediaEditing.set(true); } else if (this.cmsTab() === 'navigation') { this.navigationEditingId = null; this.navigationDraft = this.emptyNavigation(); this.navigationEditing.set(true); } else { this.loadCmsTab(); } }
+  private loadCmsTab(): void { if (this.cmsTab() === 'blocks') this.loadBlocks(); if (this.cmsTab() === 'evidence') this.loadEvidenceMetrics(); if (this.cmsTab() === 'pages') this.loadPages(); if (this.cmsTab() === 'blog') this.loadBlogPosts(); if (this.cmsTab() === 'media') this.loadMedia(); if (this.cmsTab() === 'navigation') this.loadNavigation(); if (this.cmsTab() === 'contacts') this.loadContacts(); if (this.cmsTab() === 'subscribers') this.loadSubscribers(); }
   readonly blockEditing = signal(false); readonly cmsPageEditing = signal(false); readonly cmsBlogEditing = signal(false); readonly mediaEditing = signal(false); readonly navigationEditing = signal(false); readonly announcementEditing = signal(false); readonly emailTemplateEditing = signal(false); readonly campaignEditing = signal(false); readonly bulkEditing = signal(false);
   loadBlocks(): void { this.service.getCmsBlocks(this.cmsGroup).subscribe({ next: value => this.blocks.set(value), error: () => this.error.set('CMS blokları yüklenemedi.') }); }
   saveLanding(): void { const blocks = Object.fromEntries(this.blocks().filter(block => block.group === this.cmsGroup).map(block => [block.key, block.value])); this.run(this.service.updateCmsLanding({ group: this.cmsGroup, blocks }), () => this.loadBlocks(), 'Landing içeriği kaydedilemedi.'); }
   editBlock(block: SpeedReadingCmsContentBlock): void { this.blockEditingId = block.id; this.blockDraft = { key: block.key, group: block.group, label: block.label, type: block.type, value: block.value }; this.blockEditing.set(true); }
   saveCmsBlock(): void { const request = this.blockEditingId ? this.service.updateCmsBlock(this.blockEditingId, this.blockDraft) : this.service.createCmsBlock(this.blockDraft); this.run(request, () => { this.blockEditingId = null; this.blockDraft = this.emptyBlock(); this.blockEditing.set(false); this.loadBlocks(); }, 'CMS bloğu kaydedilemedi.'); }
   async deleteBlock(block: SpeedReadingCmsContentBlock): Promise<void> { if (!await this.toaster.confirm('Bu CMS bloğu silinsin mi?', { title: 'CMS bloğunu sil' })) return; this.run(this.service.deleteCmsBlock(block.id), () => this.loadBlocks(), 'CMS bloğu silinemedi.'); }
+
+  loadEvidenceMetrics(): void {
+    this.service.getCmsBlocks(evidenceMetricsGroup).subscribe({
+      next: blocks => this.evidenceMetrics.set(blocks.map(block => this.toEvidenceMetric(block)).filter((metric): metric is EvidenceMetric => metric !== null)),
+      error: () => this.error.set('Kanıtlı istatistikler yüklenemedi.')
+    });
+  }
+
+  editEvidenceMetric(metric: EvidenceMetric): void {
+    this.evidenceEditingId = metric.id;
+    this.evidenceDraft = { title: metric.title, value: metric.value, description: metric.description, source: metric.source, period: metric.period, sampleSize: metric.sampleSize, icon: metric.icon, isVisible: metric.isVisible };
+    this.evidenceEditing.set(true);
+  }
+
+  cancelEvidenceEdit(): void {
+    this.evidenceEditingId = null;
+    this.evidenceDraft = this.emptyEvidenceMetric();
+    this.evidenceEditing.set(false);
+  }
+
+  saveEvidenceMetric(): void {
+    const draft = this.evidenceDraft;
+    if (!draft.title.trim() || !draft.value.trim() || !draft.source.trim() || !draft.period.trim() || !draft.sampleSize || draft.sampleSize < 1) {
+      this.error.set('Başlık, değer, kaynak, dönem ve en az 1 kişilik örneklem zorunludur.');
+      return;
+    }
+
+    const existing = this.evidenceMetrics().find(metric => metric.id === this.evidenceEditingId);
+    const request: SpeedReadingCmsContentBlockRequest = {
+      key: existing?.key ?? `evidence-${Date.now()}`,
+      group: evidenceMetricsGroup,
+      label: draft.title.trim(),
+      type: 0,
+      value: JSON.stringify({ title: draft.title.trim(), value: draft.value.trim(), description: draft.description.trim(), source: draft.source.trim(), period: draft.period.trim(), sampleSize: draft.sampleSize, icon: draft.icon, isVisible: draft.isVisible })
+    };
+    const action = this.evidenceEditingId
+      ? this.service.updateCmsBlock(this.evidenceEditingId, request)
+      : this.service.createCmsBlock(request);
+    this.run(action, () => { this.cancelEvidenceEdit(); this.loadEvidenceMetrics(); }, 'Kanıtlı istatistik kaydedilemedi.');
+  }
+
+  async deleteEvidenceMetric(metric: EvidenceMetric): Promise<void> {
+    if (!await this.toaster.confirm(`“${metric.title}” kaydını silmek istiyor musunuz?`, { title: 'Kanıtlı istatistiği sil' })) return;
+    this.run(this.service.deleteCmsBlock(metric.id), () => this.loadEvidenceMetrics(), 'Kanıtlı istatistik silinemedi.');
+  }
 
   loadMedia(): void { this.service.getCmsMedia(this.cmsMediaPageNumber).subscribe({ next: value => this.mediaAssets.set(value), error: () => this.error.set('CMS medyası yüklenemedi.') }); }
   selectMediaFile(event: Event): void { this.mediaFile = (event.target as HTMLInputElement).files?.[0] ?? null; }
@@ -278,11 +376,32 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
   nowIso(): string { return new Date().toISOString(); }
 
   cancelCmsEdit(): void { this.blockEditingId = null; this.cmsPageEditingId = null; this.cmsBlogEditingId = null; this.navigationEditingId = null; this.blockEditing.set(false); this.cmsPageEditing.set(false); this.cmsBlogEditing.set(false); this.mediaEditing.set(false); this.navigationEditing.set(false); }
-  private closeAllDialogs(): void { this.cancelCmsEdit(); this.announcementEditing.set(false); this.emailTemplateEditing.set(false); this.campaignEditing.set(false); this.bulkEditing.set(false); this.selectedContact.set(null); this.cmsPreview.set(null); this.cmsRevisions.set([]); this.announcementStats.set(null); this.emailPreview.set(null); this.campaignStats.set(null); }
+  private closeAllDialogs(): void { this.cancelCmsEdit(); this.cancelEvidenceEdit(); this.announcementEditing.set(false); this.emailTemplateEditing.set(false); this.campaignEditing.set(false); this.bulkEditing.set(false); this.selectedContact.set(null); this.cmsPreview.set(null); this.cmsRevisions.set([]); this.announcementStats.set(null); this.emailPreview.set(null); this.campaignStats.set(null); }
   private withSeo<T extends { seoSettings: SpeedReadingCmsSeoSettings }>(draft: T, raw: string): T | null { try { return { ...draft, seoSettings: JSON.parse(raw) as SpeedReadingCmsSeoSettings }; } catch { this.error.set('SEO JSON geçerli değil.'); return null; } }
   private run(request: Observable<unknown>, onSuccess: () => void, errorMessage: string): void { this.saving.set(true); this.error.set(''); request.pipe(finalize(() => this.saving.set(false))).subscribe({ next: onSuccess, error: () => this.error.set(errorMessage) }); }
   private emptySeo(): SpeedReadingCmsSeoSettings { return { metaTitle: null, metaDescription: null, metaKeywords: null, canonicalUrl: null, ogTitle: null, ogDescription: null, ogImage: null, noIndex: false }; }
   private emptyBlock(): SpeedReadingCmsContentBlockRequest { return { key: '', group: 'HomePage', label: null, type: 0, value: '' }; }
+  private emptyEvidenceMetric(): EvidenceMetricDraft { return { title: '', value: '', description: '', source: '', period: '', sampleSize: null, icon: 'insights', isVisible: false }; }
+  private toEvidenceMetric(block: SpeedReadingCmsContentBlock): EvidenceMetric | null {
+    try {
+      const value = JSON.parse(block.value) as Partial<EvidenceMetricDraft>;
+      if (!block.label?.trim() || typeof value.value !== 'string' || typeof value.source !== 'string' || typeof value.period !== 'string' || typeof value.sampleSize !== 'number' || value.sampleSize < 1) return null;
+      return {
+        id: block.id,
+        key: block.key,
+        title: block.label,
+        value: value.value,
+        description: typeof value.description === 'string' ? value.description : '',
+        source: value.source,
+        period: value.period,
+        sampleSize: value.sampleSize,
+        icon: evidenceMetricIcons.includes(value.icon ?? '') ? value.icon! : 'insights',
+        isVisible: value.isVisible === true
+      };
+    } catch {
+      return null;
+    }
+  }
   private emptyPage(): SpeedReadingCmsPageRequest { return { title: '', slug: '', content: '', isPublished: false, scheduledPublishAt: null, seoSettings: this.emptySeo() }; }
   private emptyBlog(): SpeedReadingCmsBlogPostRequest { return { title: '', slug: '', summary: null, content: '', author: null, publishedAt: null, scheduledPublishAt: null, tags: [], coverImageUrl: null, isPublished: false, seoSettings: this.emptySeo() }; }
   private emptyNavigation(): SpeedReadingCmsNavigationItemRequest { return { menu: 'Main', label: '', url: '/', fragment: null, icon: null, sortOrder: 0, isVisible: true, openInNewTab: false }; }
