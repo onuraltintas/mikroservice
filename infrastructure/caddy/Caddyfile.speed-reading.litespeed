@@ -378,6 +378,16 @@
         }
     }
 
+    # Institution and teacher invitations are accepted only by an authenticated
+    # recipient, but the standalone client still needs this explicit route to
+    # reach the identity service through the gateway.
+    @identityInvitations path /api/invitations /api/invitations/*
+    handle @identityInvitations {
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
     # The admin client uses the coaching service's dedicated administrative
     # contract. Keep it explicit so generic /api paths remain closed.
     @versionedCoachingAdmin path /api/v1/coaching-admin /api/v1/coaching-admin/*
