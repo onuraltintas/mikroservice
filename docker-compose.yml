@@ -301,6 +301,8 @@ services:
     build:
       context: ./clients
       dockerfile: speed-reading/Dockerfile
+      args:
+        RELEASE_TAG: ${RELEASE_TAG:-dev}
     expose:
       - "80"
     depends_on:

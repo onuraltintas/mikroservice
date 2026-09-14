@@ -10,8 +10,13 @@ COPY shared/ /workspace/clients/shared/
 RUN npm run build -- --configuration production
 
 FROM nginx:1.27.5-alpine AS runtime
+ARG RELEASE_TAG=dev
 COPY speed-reading/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /workspace/clients/speed-reading/dist/speed-reading-frontend/browser /usr/share/nginx/html
+# Angular only changes ngsw.json for an application release. Versioning the
+# worker script itself lets already-open clients activate the release instead
+# of indefinitely serving their previous cached application shell.
+RUN printf '\n// release: %s\n' "$RELEASE_TAG" >> /usr/share/nginx/html/ngsw-worker.js
 
 EXPOSE 80
 HEALTHCHECK --interval=10s --timeout=5s --retries=6 \
