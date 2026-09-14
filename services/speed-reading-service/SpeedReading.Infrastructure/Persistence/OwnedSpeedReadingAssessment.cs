@@ -615,7 +615,7 @@ internal sealed class OwnedSpeedReadingAssessment(
             1,
             profile.TargetWPM,
             profile.TargetComprehension,
-            "Değerlendirme atlandı. Başlangıç seviyesi atandı.");
+            "Değerlendirme atlandı. Başlangıç seviyesi atandı; ilk üç ölçülmüş egzersizden sonra planınız performansınıza göre güncellenecek.");
     }
 
     public async Task<IReadOnlyList<AssessmentTemplateSummary>> GetTemplatesAsync(

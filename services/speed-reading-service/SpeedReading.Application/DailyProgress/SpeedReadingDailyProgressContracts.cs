@@ -73,7 +73,8 @@ public sealed record CompleteDailyExerciseResponse(
     int LongestStreak,
     bool ProgramCompleted,
     RecommendedProgramSummary? RecommendedNextProgram,
-    ProgramCompletionStats? CompletionStats);
+    ProgramCompletionStats? CompletionStats,
+    bool AdaptationUpdated = false);
 
 public sealed record StudentProgressSummary(
     int CurrentWeek,

@@ -2698,6 +2698,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             this.showToast('Bugünün tüm egzersizlerini tamamladınız!', 'info', 5000);
           }, 2000);
         }
+
+        if (response.adaptationUpdated) {
+          setTimeout(() => {
+            this.showToast('Son ölçümlerinize göre egzersiz seviyeniz ve öğrenme yolunuz güncellendi.', 'info', 5000);
+          }, 2000);
+        }
       },
       error: (err) => {
         console.error('[ExercisePlayer] Daily progress update failed:', err);

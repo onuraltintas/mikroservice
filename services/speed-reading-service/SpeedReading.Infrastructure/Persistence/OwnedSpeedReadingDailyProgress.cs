@@ -382,7 +382,8 @@ internal sealed class OwnedSpeedReadingDailyProgress(
                     progress.AverageSuccessRate,
                     progress.LongestStreak,
                     progress.ExercisesCompleted)
-            : null);
+            : null,
+            AdaptationUpdated: adaptivePlanUpdated);
     }
 
     private async Task<CompleteDailyExerciseResponse> ReplayCompletedSessionAsync(
