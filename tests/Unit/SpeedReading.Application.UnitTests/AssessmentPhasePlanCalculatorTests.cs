@@ -127,6 +127,25 @@ public sealed class AssessmentPhasePlanCalculatorTests
             .Should().Be(completedAt.AddDays(7));
     }
 
+    [Fact]
+    public void Keeps_transfer_locked_until_twenty_one_days_after_retention()
+    {
+        var now = new DateTime(2026, 9, 28, 12, 0, 0, DateTimeKind.Utc);
+        var retention = CreateAttempt(
+            AssessmentAttemptPhase.Retention,
+            AssessmentAttemptStatus.Completed,
+            now.AddDays(-20),
+            "tr-retention-v1");
+
+        var result = AssessmentPhasePlanCalculator.Calculate([retention], now);
+
+        var transfer = result.Phases.Single(item => item.Phase == AssessmentAttemptPhase.Transfer);
+        transfer.Status.Should().Be(AssessmentPhasePlanStatus.Locked);
+        transfer.AvailableAt.Should().Be(retention.CompletedAt!.Value.AddDays(21));
+        AssessmentPhaseTimingRules.MinimumWait(AssessmentAttemptPhase.Transfer)
+            .Should().Be(TimeSpan.FromDays(21));
+    }
+
     private static AssessmentPhasePlanAttemptInput CreateAttempt(
         AssessmentAttemptPhase phase,
         AssessmentAttemptStatus status,

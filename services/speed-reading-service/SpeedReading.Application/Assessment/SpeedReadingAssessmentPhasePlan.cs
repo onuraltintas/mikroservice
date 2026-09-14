@@ -34,10 +34,14 @@ public sealed record AssessmentPhasePlanSummary(
 
 public static class AssessmentPhaseTimingRules
 {
-    public static TimeSpan MinimumWait(AssessmentAttemptPhase phase) =>
-        phase == AssessmentAttemptPhase.Retention
-            ? TimeSpan.FromDays(7)
-            : TimeSpan.Zero;
+    public static TimeSpan MinimumWait(AssessmentAttemptPhase phase) => phase switch
+    {
+        AssessmentAttemptPhase.Retention => TimeSpan.FromDays(7),
+        // Retention cannot start before day seven. Waiting another 21 days
+        // keeps transfer from opening before the post-training day-28 window.
+        AssessmentAttemptPhase.Transfer => TimeSpan.FromDays(21),
+        _ => TimeSpan.Zero
+    };
 
     public static DateTime? AvailableAt(
         AssessmentAttemptPhase phase,
