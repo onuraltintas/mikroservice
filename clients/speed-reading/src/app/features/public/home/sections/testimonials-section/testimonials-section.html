@@ -5,23 +5,12 @@
             <p>{{ content.subtitle }}</p>
         </div>
 
-        <div class="testimonials-grid">
-            <mat-card *ngFor="let testimonial of testimonials" class="testimonial-card">
-                <div class="card-header">
-                    <div class="avatar">{{ testimonial.avatar }}</div>
-                    <div class="user-info">
-                        <h4>{{ testimonial.title }}</h4>
-                        <p>{{ testimonial.role }}</p>
-                    </div>
-                </div>
-
-                <div class="rating">
-                    <mat-icon *ngFor="let star of getStars(testimonial.rating)" [class.filled]="star === 1">
-                        star
-                    </mat-icon>
-                </div>
-
-                <p class="testimonial-text">{{ testimonial.description }}</p>
+        <div class="approach-grid">
+            <mat-card *ngFor="let item of content.items; let index = index" class="approach-card">
+                <span class="step-number" aria-hidden="true">{{ index + 1 }}</span>
+                <p class="eyebrow">{{ item.role }}</p>
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.description }}</p>
             </mat-card>
         </div>
     </div>
