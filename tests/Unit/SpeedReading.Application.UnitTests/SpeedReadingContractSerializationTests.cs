@@ -26,6 +26,17 @@ public sealed class SpeedReadingContractSerializationTests
         request.PaymentReference.Should().Be("EFT-2026-0001");
     }
 
+    [Fact]
+    public void Institution_student_access_change_keeps_the_action_and_reason()
+    {
+        var request = new InstitutionStudentAccessChangeRequest(
+            IsSuspended: true,
+            Reason: "Kurum talebi");
+
+        request.IsSuspended.Should().BeTrue();
+        request.Reason.Should().Be("Kurum talebi");
+    }
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
