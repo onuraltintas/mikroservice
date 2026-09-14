@@ -1,7 +1,9 @@
 # .NET 10 LTS Geçiş Planı
 
-Proje şu anda .NET 9 kullanır. Microsoft'un destek tablosuna göre .NET 9'un
-destek bitişi 10 Kasım 2026, .NET 10 LTS'in destek bitişi 14 Kasım 2028'dir.
+14 Eylül 2026 itibarıyla tüm servisler ve test projeleri `net10.0` hedefler;
+production Docker imajları da .NET 10 tabanına taşınmıştır. Microsoft'un destek
+tablosuna göre .NET 9'un destek bitişi 10 Kasım 2026, .NET 10 LTS'in destek
+bitişi 14 Kasım 2028'dir.
 Kaynak: <https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core>.
 
 ## Hedef ve kapsam

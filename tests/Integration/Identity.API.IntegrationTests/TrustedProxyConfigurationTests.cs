@@ -21,7 +21,7 @@ public sealed class TrustedProxyConfigurationTests
         options.ForwardedHeaders.Should().Be(ForwardedHeaders.None);
         options.ForwardLimit.Should().Be(1);
         options.KnownProxies.Should().BeEmpty();
-        options.KnownNetworks.Should().BeEmpty();
+        options.KnownIPNetworks.Should().BeEmpty();
     }
 
     [Fact]
@@ -41,9 +41,9 @@ public sealed class TrustedProxyConfigurationTests
         options.ForwardLimit.Should().Be(2);
         options.KnownProxies.Should().HaveCount(2);
         options.KnownProxies.Should().Contain(IPAddress.Parse("192.0.2.10"));
-        options.KnownNetworks.Should().HaveCount(2);
-        options.KnownNetworks.Should().Contain(network => network.Contains(IPAddress.Parse("10.42.0.7")));
-        options.KnownNetworks.Should().Contain(network => network.Contains(IPAddress.Parse("172.20.0.7")));
+        options.KnownIPNetworks.Should().HaveCount(2);
+        options.KnownIPNetworks.Should().Contain(network => network.Contains(IPAddress.Parse("10.42.0.7")));
+        options.KnownIPNetworks.Should().Contain(network => network.Contains(IPAddress.Parse("172.20.0.7")));
     }
 
     [Fact]

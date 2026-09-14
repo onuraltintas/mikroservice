@@ -2,7 +2,7 @@ using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
-using AspNetIPNetwork = Microsoft.AspNetCore.HttpOverrides.IPNetwork;
+using SystemNetIPNetwork = System.Net.IPNetwork;
 
 namespace EduPlatform.Gateway;
 
@@ -34,12 +34,12 @@ public static class TrustedProxyConfiguration
 
         // Clear framework defaults so only explicitly configured ingress addresses are trusted.
         options.KnownProxies.Clear();
-        options.KnownNetworks.Clear();
+        options.KnownIPNetworks.Clear();
 
         AddKnownProxies(options, ReadValues(section, "KnownProxies"));
         AddKnownNetworks(options, ReadValues(section, "KnownNetworks"));
 
-        if (options.KnownProxies.Count > 0 || options.KnownNetworks.Count > 0)
+        if (options.KnownProxies.Count > 0 || options.KnownIPNetworks.Count > 0)
         {
             options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
         }
@@ -64,13 +64,13 @@ public static class TrustedProxyConfiguration
     {
         foreach (var value in values)
         {
-            if (!AspNetIPNetwork.TryParse(value.AsSpan(), out var network) || network.PrefixLength == 0)
+            if (!SystemNetIPNetwork.TryParse(value, out var network) || network.PrefixLength == 0)
             {
                 throw new InvalidOperationException(
                     "ForwardedHeaders:KnownNetworks must contain a specific, non-catch-all network.");
             }
 
-            options.KnownNetworks.Add(network);
+            options.KnownIPNetworks.Add(network);
         }
     }
 
