@@ -31,9 +31,25 @@ public sealed class IdentityTeacherAccessClient : ISpeedReadingTeacherAccess
         Guid studentUserId,
         CancellationToken cancellationToken = default)
     {
-        if (viewerUserId == Guid.Empty || studentUserId == Guid.Empty)
+        var readableStudentIds = await GetReadableStudentIdsAsync(
+            viewerUserId,
+            [studentUserId],
+            cancellationToken);
+        return readableStudentIds.Contains(studentUserId);
+    }
+
+    public async Task<IReadOnlySet<Guid>> GetReadableStudentIdsAsync(
+        Guid viewerUserId,
+        IReadOnlyCollection<Guid> studentUserIds,
+        CancellationToken cancellationToken = default)
+    {
+        var requestedStudentIds = studentUserIds
+            .Where(id => id != Guid.Empty)
+            .Distinct()
+            .ToArray();
+        if (viewerUserId == Guid.Empty || requestedStudentIds.Length == 0)
         {
-            return false;
+            return new HashSet<Guid>();
         }
 
         if (string.IsNullOrWhiteSpace(serviceApiKey))
@@ -48,7 +64,7 @@ public sealed class IdentityTeacherAccessClient : ISpeedReadingTeacherAccess
             Content = JsonContent.Create(new
             {
                 ViewerUserId = viewerUserId,
-                StudentIds = new[] { studentUserId }
+                StudentIds = requestedStudentIds
             })
         };
         request.Headers.Add(InternalServiceAuthentication.HeaderName, serviceApiKey);
@@ -63,30 +79,31 @@ public sealed class IdentityTeacherAccessClient : ISpeedReadingTeacherAccess
             if (response.StatusCode is System.Net.HttpStatusCode.Forbidden
                 or System.Net.HttpStatusCode.Unauthorized)
             {
-                return false;
+                return new HashSet<Guid>();
             }
 
             response.EnsureSuccessStatusCode();
             var result = await response.Content.ReadFromJsonAsync<StudentReadAuthorizationResponse>(
                 cancellationToken: cancellationToken);
-            return result?.AllowedStudentUserIds?.Contains(studentUserId) == true;
+            var requested = requestedStudentIds.ToHashSet();
+            return (result?.AllowedStudentUserIds ?? [])
+                .Where(requested.Contains)
+                .ToHashSet();
         }
         catch (HttpRequestException ex)
         {
             logger.LogError(
                 ex,
-                "Identity teacher student authorization failed for viewer {ViewerUserId} and student {StudentUserId}",
-                viewerUserId,
-                studentUserId);
+                "Identity teacher student authorization failed for viewer {ViewerUserId}",
+                viewerUserId);
             throw new InvalidOperationException("Identity authorization service is unavailable.", ex);
         }
         catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
         {
             logger.LogError(
                 ex,
-                "Identity teacher student authorization timed out for viewer {ViewerUserId} and student {StudentUserId}",
-                viewerUserId,
-                studentUserId);
+                "Identity teacher student authorization timed out for viewer {ViewerUserId}",
+                viewerUserId);
             throw new InvalidOperationException("Identity authorization service timed out.", ex);
         }
     }

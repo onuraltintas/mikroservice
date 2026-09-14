@@ -8,6 +8,11 @@ namespace SpeedReading.Application.Analytics;
 /// </summary>
 public interface ISpeedReadingTeacherAccess
 {
+    Task<IReadOnlySet<Guid>> GetReadableStudentIdsAsync(
+        Guid viewerUserId,
+        IReadOnlyCollection<Guid> studentUserIds,
+        CancellationToken cancellationToken = default);
+
     Task<bool> CanReadStudentAsync(
         Guid viewerUserId,
         Guid studentUserId,

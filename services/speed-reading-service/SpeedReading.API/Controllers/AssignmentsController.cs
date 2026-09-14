@@ -4,6 +4,7 @@ using EduPlatform.Shared.Security.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SpeedReading.Application.Assignments;
+using SpeedReading.Application.Analytics;
 using SpeedReading.Application.Content;
 using System.Security.Claims;
 
@@ -13,9 +14,12 @@ namespace SpeedReading.API.Controllers;
 [ApiVersion(1.0)]
 [Route("api/speed-reading/assignments")]
 [Authorize]
-public sealed class AssignmentsController(ISpeedReadingAssignments assignments) : ControllerBase
+public sealed class AssignmentsController(
+    ISpeedReadingAssignments assignments,
+    ISpeedReadingTeacherAccess teacherAccess) : ControllerBase
 {
     [HttpPost]
+    [Authorize(Roles = "Teacher")]
     [HasPermission(PlatformPermissions.SpeedReading.ReportView)]
     public async Task<IActionResult> Create(
         [FromBody] CreateAssignmentRequest? request,
@@ -29,6 +33,11 @@ public sealed class AssignmentsController(ISpeedReadingAssignments assignments) 
         if (request is null)
         {
             return BadRequest("Request body is required.");
+        }
+
+        if (!await CanManageStudentsAsync(teacherId, request.StudentIds, cancellationToken))
+        {
+            return Forbid();
         }
 
         var id = await assignments.CreateAsync(teacherId, request, cancellationToken);
@@ -48,6 +57,7 @@ public sealed class AssignmentsController(ISpeedReadingAssignments assignments) 
     }
 
     [HttpGet("teacher-assignments")]
+    [Authorize(Roles = "Teacher")]
     [HasPermission(PlatformPermissions.SpeedReading.ReportView)]
     public async Task<ActionResult<SpeedReadingPage<AssignmentSummary>>> GetTeacherAssignments(
         [FromQuery] int pageNumber = 1,
@@ -73,6 +83,7 @@ public sealed class AssignmentsController(ISpeedReadingAssignments assignments) 
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Teacher")]
     [HasPermission(PlatformPermissions.SpeedReading.ReportView)]
     public async Task<IActionResult> Delete(
         Guid id,
@@ -89,6 +100,7 @@ public sealed class AssignmentsController(ISpeedReadingAssignments assignments) 
     }
 
     [HttpGet("{id:guid}/details")]
+    [Authorize(Roles = "Teacher")]
     [HasPermission(PlatformPermissions.SpeedReading.ReportView)]
     public async Task<ActionResult<AssignmentDetails>> GetDetails(
         Guid id,
@@ -104,6 +116,7 @@ public sealed class AssignmentsController(ISpeedReadingAssignments assignments) 
     }
 
     [HttpPost("{id:guid}/students")]
+    [Authorize(Roles = "Teacher")]
     [HasPermission(PlatformPermissions.SpeedReading.ReportView)]
     public async Task<IActionResult> AddStudent(
         Guid id,
@@ -120,6 +133,11 @@ public sealed class AssignmentsController(ISpeedReadingAssignments assignments) 
             return BadRequest("A valid student is required.");
         }
 
+        if (!await CanManageStudentsAsync(teacherId, [request.StudentId], cancellationToken))
+        {
+            return Forbid();
+        }
+
         var result = await assignments.AddStudentAsync(teacherId, id, request.StudentId, cancellationToken);
         return result switch
         {
@@ -131,6 +149,7 @@ public sealed class AssignmentsController(ISpeedReadingAssignments assignments) 
     }
 
     [HttpDelete("{id:guid}/students/{studentId:guid}")]
+    [Authorize(Roles = "Teacher")]
     [HasPermission(PlatformPermissions.SpeedReading.ReportView)]
     public async Task<IActionResult> RemoveStudent(
         Guid id,
@@ -156,6 +175,24 @@ public sealed class AssignmentsController(ISpeedReadingAssignments assignments) 
         var value = User.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? User.FindFirstValue("sub");
         return Guid.TryParse(value, out userId);
+    }
+
+    private async Task<bool> CanManageStudentsAsync(
+        Guid teacherId,
+        IEnumerable<Guid>? studentIds,
+        CancellationToken cancellationToken)
+    {
+        var requestedStudentIds = SpeedReadingAssignmentRules.NormalizeStudentIds(studentIds);
+        if (requestedStudentIds.Count == 0)
+        {
+            return true;
+        }
+
+        var readableStudentIds = await teacherAccess.GetReadableStudentIdsAsync(
+            teacherId,
+            requestedStudentIds,
+            cancellationToken);
+        return TeacherStudentAccessRules.ContainsAll(requestedStudentIds, readableStudentIds);
     }
 }
 
