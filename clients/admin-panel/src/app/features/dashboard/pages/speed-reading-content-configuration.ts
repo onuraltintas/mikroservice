@@ -22,6 +22,24 @@ import {
 import { ToasterService } from '../../../core/services/toaster.service';
 
 type ConfigurationTab = 'age-groups' | 'assessments' | 'levels';
+export type MeasurementDataScope = 'all' | 'routine' | 'research';
+
+export function measurementDataScopeLabel(scope: MeasurementDataScope): string {
+  return scope === 'routine'
+    ? 'Rutin kullanım'
+    : scope === 'research'
+      ? 'Araştırma katılımı'
+      : 'Tüm ölçümler';
+}
+
+export function filterCalibrationSegments<T extends { studyCode: string | null }>(
+  segments: readonly T[],
+  scope: MeasurementDataScope
+): T[] {
+  return scope === 'all'
+    ? [...segments]
+    : segments.filter(segment => scope === 'research' ? !!segment.studyCode : !segment.studyCode);
+}
 
 interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
   exerciseTitle: string;
@@ -133,10 +151,11 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
               <tr><td><strong>{{ capability.displayName }}</strong><div class="muted">{{ capability.code }}</div></td><td>{{ capability.measurementMode }}</td><td>{{ capability.isAssessmentEligible ? 'Uygun' : 'NotMeasured' }}</td><td>{{ capability.evidence }}</td></tr>
             } @empty { <tr><td colspan="4" class="empty">Ölçüm yetenekleri yüklenemedi.</td></tr> }
           </tbody></table></div></div>
-          <div class="data-card"><h3 class="mb-1 font-medium text-gray-900 dark:text-white">Kalibrasyon ve normlama kanıtı</h3><p class="muted mb-3">Kimlik içermeyen faz, katalog ve yaş grubu segmentleri. En az {{ calibration()?.minimumPublishableSampleSize || 30 }} tamamlanmış ölçüm olmadan eşik yayına hazır sayılmaz.</p>
+          <div class="data-card"><h3 class="mb-1 font-medium text-gray-900 dark:text-white">Kalibrasyon ve normlama kanıtı</h3><p class="muted mb-3">Her öğrenci normal programını kullanır. Açık onamla bir çalışmaya eklenen öğrencinin, katılımcılığı aktifken başlattığı seviye tespitleri ayrıca araştırma ölçümü olarak etiketlenir. En az {{ calibration()?.minimumPublishableSampleSize || 30 }} tamamlanmış ölçüm olmadan eşik yayına hazır sayılmaz.</p>
+            <div class="scope-filter" aria-label="Ölçüm kapsamı filtresi">@for (scope of measurementScopes; track scope) {<button type="button" (click)="calibrationScope.set(scope)" [attr.aria-pressed]="calibrationScope() === scope" [class.scope-selected]="calibrationScope() === scope">{{ measurementDataScopeLabel(scope) }}</button>}</div>
             @if (calibration()?.dataAvailable === false) {<p class="empty">{{ calibration()?.unavailableReason }}</p>}
             <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Faz</th><th>Katalog</th><th>Yaş grubu</th><th>N</th><th>WPM ort./medyan</th><th>SS</th><th>Anlama ort./medyan</th><th>Kanıt</th></tr></thead><tbody>
-              @for (segment of calibration()?.segments || []; track segment.phase + segment.levelCatalogVersion + segment.ageGroup + segment.cohortCode) {<tr><td>{{ assessmentPhaseName(segment.phase) }}</td><td>{{ segment.levelCatalogVersion }}<div class="muted">{{ segment.studyCode || 'Rutin' }}{{ segment.cohortCode ? ' · ' + segment.cohortCode : '' }}</div></td><td>{{ segment.ageGroup }}</td><td>{{ segment.sampleSize }}</td><td>{{ segment.meanWpm }} / {{ segment.medianWpm }}</td><td>{{ segment.standardDeviationWpm }}</td><td>%{{ segment.meanComprehension }} / %{{ segment.medianComprehension }}</td><td>{{ segment.isPublishable ? 'Yayına hazır örneklem' : 'Pilot kanıtı' }}</td></tr>}
+              @for (segment of filteredCalibrationSegments(); track segment.phase + segment.levelCatalogVersion + segment.ageGroup + segment.cohortCode) {<tr><td>{{ assessmentPhaseName(segment.phase) }}</td><td>{{ segment.levelCatalogVersion }}<div class="muted">{{ segment.studyCode ? 'Araştırma katılımı · ' + segment.studyCode : 'Rutin kullanım' }}{{ segment.cohortCode ? ' · ' + segment.cohortCode : '' }}</div></td><td>{{ segment.ageGroup }}</td><td>{{ segment.sampleSize }}</td><td>{{ segment.meanWpm }} / {{ segment.medianWpm }}</td><td>{{ segment.standardDeviationWpm }}</td><td>%{{ segment.meanComprehension }} / %{{ segment.medianComprehension }}</td><td>{{ segment.isPublishable ? 'Yayına hazır örneklem' : 'Pilot kanıtı' }}</td></tr>}
               @empty {<tr><td colspan="8" class="empty">Henüz tamamlanmış, kalibrasyona uygun değerlendirme yok.</td></tr>}
             </tbody></table></div>
           </div>
@@ -144,7 +163,7 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
             @if (studyDefinitionEditing()) {<div class="dialog-backdrop" (click)="closeStudyDefinitionDialog()" aria-hidden="true"></div><form (ngSubmit)="saveStudyDefinition()" (click)="$event.stopPropagation()" class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="study-definition-dialog-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"><header class="dialog-header"><h3 id="study-definition-dialog-title">{{ studyDefinitionEditingId ? 'Çalışmayı düzenle' : 'Yeni çalışma' }}</h3><button type="button" (click)="closeStudyDefinitionDialog()" class="secondary">Kapat</button></header><div class="form-grid dialog-body"><label>Çalışma kodu<input [(ngModel)]="studyDefinitionDraft.studyCode" name="studyDefinitionCode" required maxlength="100" [disabled]="!!studyDefinitionEditingId" /></label><label>Çalışma adı<input [(ngModel)]="studyDefinitionDraft.name" name="studyDefinitionName" required maxlength="200" /></label><label>Protokol sürümü<input [(ngModel)]="studyDefinitionDraft.protocolVersion" name="studyDefinitionProtocol" required maxlength="100" /></label><label>Kohort<input [(ngModel)]="studyDefinitionDraft.cohortCode" name="studyDefinitionCohort" required maxlength="100" /></label><label>Onam metni sürümü<input [(ngModel)]="studyDefinitionDraft.consentDocumentVersion" name="studyDefinitionConsentVersion" required maxlength="100" /></label><label class="wide">Onam belge kaydı<input [(ngModel)]="studyDefinitionDraft.consentDocumentReference" name="studyDefinitionConsentReference" required maxlength="500" placeholder="Belge numarası veya güvenli kayıt yolu" /></label></div><div class="form-actions"><button type="button" (click)="closeStudyDefinitionDialog()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form>}
             <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Çalışma</th><th>Protokol</th><th>Kohort</th><th>Onam</th><th>Durum</th><th></th></tr></thead><tbody>@for (study of studyDefinitions(); track study.id) {<tr><td><strong>{{ study.studyCode }}</strong><div class="muted">{{ study.name }}</div></td><td>{{ study.protocolVersion }}</td><td>{{ study.cohortCode }}</td><td>{{ study.consentDocumentVersion }}<div class="muted">{{ study.consentDocumentReference }}</div></td><td>{{ study.isActive ? 'Aktif' : 'Emekli' }}</td><td class="actions"><button type="button" (click)="editStudyDefinition(study)">Düzenle</button>@if (study.isActive) {<button type="button" class="danger" (click)="retireStudyDefinition(study)">Emekliye ayır</button>}</td></tr>} @empty {<tr><td colspan="6" class="empty">Araştırma çalışması tanımlanmadı.</td></tr>}</tbody></table></div>
           </div>
-          <div class="data-card space-y-3"><div class="flex items-center justify-between gap-3"><div><h3 class="font-medium text-gray-900 dark:text-white">Pilot/RCT katılımcı atamaları</h3><p class="muted">Onamı kaydedilmiş öğrenciyi protokol ve kohorta bağlar. Öğrenci istemcisi bu alanları değiştiremez.</p></div><button type="button" (click)="openStudyDialog()" class="primary">Katılımcı ekle</button></div>
+          <div class="data-card space-y-3"><div class="flex items-center justify-between gap-3"><div><h3 class="font-medium text-gray-900 dark:text-white">Araştırma katılımcılığı</h3><p class="muted">Öğrenci normal programını kullanmaya devam eder. Onamla katılımcı eklendiğinde yalnızca sonraki seviye tespit ölçümleri çalışma kodu, protokol ve kohortla etiketlenir.</p></div><button type="button" (click)="openStudyDialog()" class="primary">Katılımcı ekle</button></div>
             @if (studyEditing()) {<div class="dialog-backdrop" (click)="closeStudyDialog()" aria-hidden="true"></div><form (ngSubmit)="saveStudyEnrollment()" (click)="$event.stopPropagation()" class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="study-dialog-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"><header class="dialog-header"><h3 id="study-dialog-title">Katılımcı ekle</h3><button type="button" (click)="closeStudyDialog()" class="secondary">Kapat</button></header><div class="form-grid dialog-body"><div class="student-picker"><label>Öğrenci ara<input [(ngModel)]="studyStudentSearch" (ngModelChange)="searchStudyStudents($event)" name="studyStudentSearch" required placeholder="Ad, soyad veya e-posta yazın" autocomplete="off" /></label><input type="hidden" [(ngModel)]="studyDraft.studentId" name="studyStudent" required />@if (studyStudentSearch.trim().length > 0 && studyStudentSearch.trim().length < 2) {<p class="muted">En az iki karakter yazın.</p>} @if (studyStudents().length > 0) {<div class="student-results" role="listbox" aria-label="Öğrenci sonuçları">@for (student of studyStudents(); track student.studentId) {<button type="button" role="option" (click)="selectStudyStudent(student)"><strong>{{ student.displayName }}</strong><span>{{ student.email || student.studentId }}</span></button>}</div>}</div><label>Çalışma<select [(ngModel)]="studyDraft.studyDefinitionId" name="studyDefinition" required><option value="">Çalışma seçin</option>@for (study of activeStudyDefinitions(); track study.id) {<option [value]="study.id">{{ study.studyCode }} · {{ study.cohortCode }} · {{ study.protocolVersion }}</option>}</select></label>@if (selectedStudyDefinition(); as study) {<p class="muted wide">Onam: {{ study.consentDocumentVersion }} · {{ study.consentDocumentReference }}</p>}<label>Onam zamanı<input type="datetime-local" [(ngModel)]="studyDraft.consentRecordedAt" name="studyConsent" required /></label></div><div class="form-actions"><button type="button" (click)="closeStudyDialog()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving() || !studyDraft.studentId || !studyDraft.studyDefinitionId">Kaydet</button></div></form>}
             <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Çalışma</th><th>Protokol</th><th>Kohort</th><th>Öğrenci</th><th>Onam</th><th>Durum</th><th></th></tr></thead><tbody>@for (enrollment of studyEnrollments(); track enrollment.id) {<tr><td>{{ enrollment.studyCode }}</td><td>{{ enrollment.protocolVersion }}</td><td>{{ enrollment.cohortCode }}</td><td>{{ enrollment.studentName || 'Öğrenci profili' }}<div class="muted">{{ enrollment.studentEmail || enrollment.studentId }}</div></td><td>{{ enrollment.consentRecordedAt | date:'short' }}</td><td>{{ enrollment.isActive ? 'Aktif' : 'Çekildi' }}</td><td>@if (enrollment.isActive) {<button type="button" class="danger" (click)="withdrawStudyEnrollment(enrollment)">Çalışmadan çek</button>}</td></tr>} @empty {<tr><td colspan="7" class="empty">Çalışma katılımcısı bulunmuyor.</td></tr>}</tbody></table></div>
           </div>
@@ -175,6 +194,9 @@ interface AssessmentExerciseDraft extends SpeedReadingAssessmentExerciseInput {
     .action-button { border: 1px solid var(--ui-border-strong); border-radius: .5rem; padding: .4rem .65rem; background: var(--ui-surface); color: var(--ui-brand); font-size: .8rem; font-weight: 600; }
     .action-button:hover { background: var(--ui-surface-muted); }
     .action-button.danger { border-color: color-mix(in srgb, var(--ui-danger) 45%, var(--ui-border-strong)); color: var(--ui-danger); }
+    .scope-filter { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .75rem; }
+    .scope-filter button { border: 1px solid var(--ui-border-strong); border-radius: .5rem; padding: .4rem .65rem; color: var(--ui-text); font-size: .8rem; font-weight: 600; }
+    .scope-filter button.scope-selected { border-color: var(--ui-brand); background: var(--ui-brand); color: var(--ui-brand-contrast); }
     .student-picker { position: relative; }
     .student-results { position: absolute; z-index: 1; width: 100%; max-height: 13rem; overflow: auto; border: 1px solid var(--ui-border-strong); border-radius: .5rem; background: var(--ui-surface); box-shadow: 0 10px 20px rgb(0 0 0 / .12); }
     .student-results button { display: grid; width: 100%; gap: .15rem; border: 0; border-bottom: 1px solid var(--ui-border); padding: .65rem .75rem; text-align: left; color: var(--ui-text); }
@@ -208,6 +230,8 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
   readonly levels = signal<SpeedReadingLevelDefinition[]>([]);
   readonly measurementCapabilities = signal<SpeedReadingMeasurementCapability[]>([]);
   readonly calibration = signal<SpeedReadingCalibrationReport | null>(null);
+  readonly measurementScopes: MeasurementDataScope[] = ['all', 'routine', 'research'];
+  readonly calibrationScope = signal<MeasurementDataScope>('all');
   readonly studyEnrollments = signal<SpeedReadingStudyEnrollment[]>([]);
   readonly studyDefinitions = signal<SpeedReadingStudyDefinition[]>([]);
   readonly studyStudents = signal<SpeedReadingStudyStudentOption[]>([]);
@@ -384,6 +408,14 @@ export class SpeedReadingContentConfigurationComponent implements OnInit {
 
   assessmentPhaseName(phase: number): string {
     return phase === 1 ? 'Başlangıç' : phase === 2 ? 'Eğitim sonrası' : phase === 3 ? 'Kalıcılık' : phase === 4 ? 'Transfer' : `Faz ${phase}`;
+  }
+
+  measurementDataScopeLabel(scope: MeasurementDataScope): string {
+    return measurementDataScopeLabel(scope);
+  }
+
+  filteredCalibrationSegments(): SpeedReadingCalibrationReport['segments'] {
+    return filterCalibrationSegments(this.calibration()?.segments ?? [], this.calibrationScope());
   }
 
   loadStudyEnrollments(): void {
