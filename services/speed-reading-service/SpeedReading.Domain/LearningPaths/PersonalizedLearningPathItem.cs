@@ -101,6 +101,20 @@ public sealed class PersonalizedLearningPathItem : Entity
         UpdatedBy = actorId.ToString();
     }
 
+    public void Retire(Guid actorId, DateTime at)
+    {
+        if (actorId == Guid.Empty)
+            throw new ArgumentException("Personalized path actor is required.", nameof(actorId));
+        if (IsCompleted || IsDeleted)
+            return;
+
+        IsDeleted = true;
+        DeletedAt = EnsureUtc(at);
+        DeletedBy = actorId.ToString();
+        UpdatedAt = DeletedAt;
+        UpdatedBy = DeletedBy;
+    }
+
     private static DateTime EnsureUtc(DateTime value) =>
         value.Kind == DateTimeKind.Utc
             ? value

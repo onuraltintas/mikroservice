@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SpeedReading.Application.AdaptiveLearning;
 using SpeedReading.Application.Content;
 using SpeedReading.Domain.LearningPaths;
 
@@ -378,10 +379,10 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         Guid studentId,
         CancellationToken cancellationToken = default)
     {
-        var hasPath = await db.PersonalizedLearningPathItems
+        var hasPendingPath = await db.PersonalizedLearningPathItems
             .AsNoTracking()
-            .AnyAsync(item => item.StudentId == studentId && !item.IsDeleted, cancellationToken);
-        if (hasPath)
+            .AnyAsync(item => item.StudentId == studentId && !item.IsDeleted && !item.IsCompleted, cancellationToken);
+        if (hasPendingPath)
         {
             return 0;
         }
@@ -391,11 +392,34 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
             .Where(item => item.UserId == studentId && item.IsActive)
             .Select(item => (int?)item.CurrentLevel)
             .SingleOrDefaultAsync(cancellationToken) ?? 1;
+        return await CreatePersonalizedPathAsync(
+            studentId,
+            userLevel,
+            "Başlangıç seviyesi ve yaş grubuna uygun çalışma yolu.",
+            cancellationToken);
+    }
+
+    private async Task<int> CreatePersonalizedPathAsync(
+        Guid studentId,
+        int userLevel,
+        string recommendationReason,
+        CancellationToken cancellationToken)
+    {
+        var completedContentIds = await db.PersonalizedLearningPathItems
+            .AsNoTracking()
+            .Where(item => item.StudentId == studentId
+                && item.IsCompleted
+                && item.ContentId.HasValue)
+            .Select(item => item.ContentId!.Value)
+            .Distinct()
+            .ToListAsync(cancellationToken);
         var minDifficulty = Math.Max(1, userLevel - 1);
         var maxDifficulty = userLevel + 2;
         var exercises = await db.Exercises
             .AsNoTracking()
             .Where(item => !item.IsDeleted
+                && item.IsActive
+                && !completedContentIds.Contains(item.Id)
                 && item.DifficultyLevel >= minDifficulty
                 && item.DifficultyLevel <= maxDifficulty)
             .OrderBy(item => item.DifficultyLevel)
@@ -406,6 +430,7 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
             .AsNoTracking()
             .Where(item => !item.IsDeleted
                 && item.IsActive
+                && !completedContentIds.Contains(item.Id)
                 && item.DifficultyLevel >= minDifficulty
                 && item.DifficultyLevel <= maxDifficulty)
             .OrderBy(item => item.DifficultyLevel)
@@ -416,7 +441,12 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         var pathItems = new List<PersonalizedLearningPathItem>();
         var exerciseIndex = 0;
         var readingIndex = 0;
-        var pathIndex = 0;
+        var lastPathIndex = await db.PersonalizedLearningPathItems
+            .AsNoTracking()
+            .Where(item => item.StudentId == studentId)
+            .Select(item => (int?)item.PathIndex)
+            .MaxAsync(cancellationToken) ?? -1;
+        var pathIndex = lastPathIndex + 1;
         var now = DateTime.UtcNow;
         while (exerciseIndex < exercises.Count || readingIndex < readingTexts.Count)
         {
@@ -436,8 +466,8 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
                     false,
                     null,
                     null,
-                    $"Seviye {exercise.DifficultyLevel} egzersiz",
-                    pathIndex == 1,
+                    recommendationReason,
+                    pathItems.Count == 0,
                     false,
                     null,
                     null,
@@ -463,8 +493,8 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
                     false,
                     null,
                     null,
-                    $"Seviye {readingText.DifficultyLevel} okuma metni",
-                    pathIndex == 1,
+                    recommendationReason,
+                    pathItems.Count == 0,
                     false,
                     null,
                     null,
@@ -479,7 +509,6 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         {
             pathItems[0].Unlock(studentId, now);
             db.PersonalizedLearningPathItems.AddRange(pathItems);
-            await db.SaveChangesAsync(cancellationToken);
         }
 
         return pathItems.Count;
@@ -510,12 +539,66 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
 
         var now = DateTime.UtcNow;
         item.Complete(achievedScore, studentId, now);
-        var nextItem = await db.PersonalizedLearningPathItems
-            .SingleOrDefaultAsync(path => path.StudentId == studentId
-                && path.PathIndex == item.PathIndex + 1
-                && !path.IsDeleted, cancellationToken);
-        nextItem?.Unlock(studentId, now);
+        var activeItems = await db.PersonalizedLearningPathItems
+            .Where(path => path.StudentId == studentId && !path.IsDeleted)
+            .OrderBy(path => path.PathIndex)
+            .ToListAsync(cancellationToken);
+        var completedCount = activeItems.Count(path => path.IsCompleted);
+        var decision = await EvaluateProgressionAsync(studentId, activeItems, cancellationToken);
+        if (decision.Kind is AdaptiveProgressionDecisionKind.Advance or AdaptiveProgressionDecisionKind.Support
+            && completedCount % AdaptiveProgressionPolicy.Default.MinimumMeasuredSessions == 0)
+        {
+            var profile = await db.UserProfiles
+                .SingleOrDefaultAsync(profile => profile.UserId == studentId && profile.IsActive, cancellationToken);
+            if (profile is not null)
+            {
+                profile.ApplyAdaptiveLevel(profile.CurrentLevel + decision.DifficultyAdjustment, studentId, now);
+                foreach (var pending in activeItems.Where(path => !path.IsCompleted))
+                    pending.Retire(studentId, now);
+
+                var reason = decision.Kind == AdaptiveProgressionDecisionKind.Support
+                    ? "Son ölçümlerde destek ihtiyacı görüldü; anlama odaklı telafi paketi oluşturuldu."
+                    : "Son ölçümlerde yeterli başarı görüldü; bir sonraki zorluk seviyesi açıldı.";
+                await CreatePersonalizedPathAsync(studentId, profile.CurrentLevel, reason, cancellationToken);
+            }
+        }
+        else
+        {
+            activeItems.FirstOrDefault(path => !path.IsCompleted && !path.IsUnlocked)?.Unlock(studentId, now);
+        }
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<AdaptiveProgressionDecision> EvaluateProgressionAsync(
+        Guid studentId,
+        IReadOnlyList<PersonalizedLearningPathItem> activeItems,
+        CancellationToken cancellationToken)
+    {
+        var recentMeasuredResults = await db.ExerciseSessionResults
+            .AsNoTracking()
+            .Where(result => result.StudentId == studentId
+                && result.IsMeasured
+                && !result.IsAssessmentMode)
+            .OrderByDescending(result => result.CompletedAt)
+            .Take(AdaptiveProgressionPolicy.Default.MinimumMeasuredSessions)
+            .Select(result => new AdaptiveProgressionEvidence(
+                result.RawWpm > 0 ? result.RawWpm : null,
+                result.ComprehensionScore))
+            .ToListAsync(cancellationToken);
+        recentMeasuredResults.Reverse();
+
+        if (recentMeasuredResults.Count < AdaptiveProgressionPolicy.Default.MinimumMeasuredSessions)
+        {
+            recentMeasuredResults = activeItems
+                .Where(path => path.IsCompleted && path.AchievedScore.HasValue)
+                .OrderByDescending(path => path.CompletedAt)
+                .Take(AdaptiveProgressionPolicy.Default.MinimumMeasuredSessions)
+                .Select(path => new AdaptiveProgressionEvidence(null, path.AchievedScore!.Value))
+                .Reverse()
+                .ToList();
+        }
+
+        return AdaptiveProgressionRules.Evaluate(recentMeasuredResults, AdaptiveProgressionPolicy.Default);
     }
 
     public async Task<PersonalizedLearningPathProgressSummary> GetPersonalizedProgressAsync(

@@ -104,6 +104,16 @@ public sealed class SpeedReadingUserProfile : AggregateRoot
         ApplyAssessment(1, targetWpm, targetComprehension, actorId, at);
     }
 
+    public void ApplyAdaptiveLevel(int level, Guid actorId, DateTime at)
+    {
+        if (actorId == Guid.Empty)
+            throw new ArgumentException("Profile actor is required.", nameof(actorId));
+
+        CurrentLevel = Math.Max(level, 1);
+        UpdatedAt = EnsureUtc(at);
+        UpdatedBy = actorId.ToString();
+    }
+
     public void UpdateSettings(
         int currentLevel,
         int targetWpm,
