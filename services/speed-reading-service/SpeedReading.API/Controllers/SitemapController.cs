@@ -13,6 +13,7 @@ namespace SpeedReading.API.Controllers;
 public sealed class SitemapController(ISpeedReadingCms cms, IConfiguration configuration) : ControllerBase
 {
     [HttpGet("sitemap.xml")]
+    [HttpHead("sitemap.xml")]
     [AllowAnonymous]
     public async Task<IActionResult> GetSitemap(CancellationToken cancellationToken = default)
     {
