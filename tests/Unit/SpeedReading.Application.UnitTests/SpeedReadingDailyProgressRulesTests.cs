@@ -84,4 +84,23 @@ public sealed class SpeedReadingDailyProgressRulesTests
         SpeedReadingDailyProgressRules.TakeUnique(["exercise-1", "exercise-2"], 4)
             .Should().Equal("exercise-1", "exercise-2");
     }
+
+    [Theory]
+    [InlineData(2, 2, 2, 5, 2)]
+    [InlineData(2, 3, 2, 5, 3)]
+    [InlineData(2, 1, 2, 5, 1)]
+    [InlineData(1, 0, 2, 5, 0)]
+    public void Resolves_daily_exercise_difficulty_from_adaptive_program_level(
+        int configuredDifficulty,
+        int currentDifficulty,
+        int initialDifficulty,
+        int maximumDifficulty,
+        int expectedDifficulty)
+    {
+        SpeedReadingDailyProgressRules.ResolveExerciseDifficulty(
+            configuredDifficulty,
+            currentDifficulty,
+            initialDifficulty,
+            maximumDifficulty).Should().Be(expectedDifficulty);
+    }
 }

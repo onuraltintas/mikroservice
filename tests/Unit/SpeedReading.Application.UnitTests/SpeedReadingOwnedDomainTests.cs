@@ -1210,6 +1210,26 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Fact]
+    public void Student_program_adapts_difficulty_within_template_bounds()
+    {
+        var at = DateTime.UtcNow;
+        var actorId = Guid.NewGuid();
+        var template = ProgramTemplate.Import(
+            Guid.NewGuid(), "Uyarlanabilir", "", Guid.NewGuid(), 0, 100, "{}", 1, 2, 4, 4, 28,
+            true, 1, 1, null, false, at, null, null, null);
+        var progress = StudentProgramProgress.Import(
+            Guid.NewGuid(), Guid.NewGuid(), template.Id, at, 1, 1, 1, 0, 0, null, true, null,
+            0, 0, 0, at, null, null, null);
+
+        progress.ApplyAdaptiveDifficultyAdjustment(1, template, actorId, at).Should().BeTrue();
+        progress.CurrentDifficultyLevel.Should().Be(2);
+
+        progress.ApplyAdaptiveDifficultyAdjustment(-5, template, actorId, at).Should().BeTrue();
+        progress.CurrentDifficultyLevel.Should().Be(1);
+        progress.ApplyAdaptiveDifficultyAdjustment(-1, template, actorId, at).Should().BeFalse();
+    }
+
+    [Fact]
     public void Session_rejects_the_same_question_twice()
     {
         var session = ExerciseSession.Start(
