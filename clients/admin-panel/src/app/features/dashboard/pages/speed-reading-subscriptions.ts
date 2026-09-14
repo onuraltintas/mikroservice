@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { finalize, firstValueFrom } from 'rxjs';
 import {
   SpeedReadingAdminService,
+  SpeedReadingInstitutionAccessRequest,
   SpeedReadingManualSubscriptionRequest,
   SpeedReadingPayment,
   SpeedReadingPlan,
@@ -14,9 +15,10 @@ import {
   SpeedReadingSubscriptionUpdateRequest
 } from '../../../core/services/speed-reading-admin.service';
 import { IdentityService, UserDto } from '../../../core/services/identity.service';
+import { InstitutionDto, InstitutionService } from '../../../core/services/institution.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 
-type SubscriptionTab = 'products' | 'plans' | 'subscriptions' | 'payments';
+type SubscriptionTab = 'products' | 'plans' | 'subscriptions' | 'institutions' | 'payments';
 
 @Component({
   selector: 'app-speed-reading-subscriptions',
@@ -52,6 +54,15 @@ type SubscriptionTab = 'products' | 'plans' | 'subscriptions' | 'payments';
           <p class="muted">Bireysel planı 180 gün ve herkese açık, kurum planını 365 gün ve gizli tanımlayın. Ödeme, havale/EFT ile doğrulandıktan sonra erişim onayından açılır.</p>
           @if (planEditing()) { <form (ngSubmit)="savePlan()" class="form-card"><h3>{{ planEditingId ? 'Planı düzenle' : 'Yeni plan' }}</h3><div class="form-grid"><label class="wide">Ad<input [(ngModel)]="planDraft.name" name="planName" required maxlength="150" /></label><label>Slug<input [(ngModel)]="planDraft.slug" name="planSlug" required maxlength="80" [disabled]="!!planEditingId" /></label><label>Ürün<select [(ngModel)]="planDraft.productId" name="planProductId" required [disabled]="!!planEditingId"><option value="">Seçin</option>@for (product of products(); track product.id) {<option [value]="product.id">{{ product.name }}</option>}</select></label><label>Fiyat<input type="number" [(ngModel)]="planDraft.price" name="planPrice" min="0" step="0.01" required /></label><label>Satış biçimi<select [(ngModel)]="planDraft.billingPeriod" name="planBillingPeriod"><option value="OneTime">Tek seferlik erişim</option><option value="Monthly">Aylık</option><option value="Quarterly">Üç aylık</option><option value="Annual">Yıllık</option></select></label><label>Erişim süresi (gün)<input type="number" [(ngModel)]="planDraft.durationDays" name="planDurationDays" min="1" required /></label><label>Sıra<input type="number" [(ngModel)]="planDraft.sortOrder" name="planSortOrder" min="0" max="10000" /></label><label class="wide">Açıklama<textarea [(ngModel)]="planDraft.description" name="planDescription" required maxlength="1000"></textarea></label><label class="wide">Özellikler (virgülle)<input [(ngModel)]="planFeatures" name="planFeatures" placeholder="Günlük egzersiz, Raporlar" /></label><label class="check"><input type="checkbox" [(ngModel)]="planDraft.isActive" name="planActive" /> Aktif</label><label class="check"><input type="checkbox" [(ngModel)]="planDraft.isPublic" name="planPublic" /> Herkese açık</label></div><div class="form-actions"><button type="button" (click)="cancelPlanEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form> }
           <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Plan</th><th>Ürün</th><th>Fiyat</th><th>Dönem</th><th>Durum</th><th></th></tr></thead><tbody>@for (plan of plans(); track plan.id) {<tr><td><strong>{{ plan.name }}</strong><div class="muted">{{ plan.slug }}</div></td><td>{{ plan.productName }}</td><td>{{ plan.price | number:'1.2-2' }}</td><td>{{ plan.billingPeriod }}</td><td>{{ plan.isActive ? 'Aktif' : 'Pasif' }}</td><td class="actions"><button type="button" (click)="startPlanEdit(plan)">Düzenle</button><button type="button" (click)="deactivatePlan(plan)" [disabled]="!plan.isActive">Pasifleştir</button></td></tr>} @empty {<tr><td colspan="6" class="empty">Plan bulunamadı.</td></tr>}</tbody></table></div></div>
+        </section>
+      }
+
+      @if (selectedTab() === 'institutions') {
+        <section class="space-y-4" aria-labelledby="institution-access-title">
+          <div><h2 id="institution-access-title" class="text-lg font-semibold text-gray-900 dark:text-white">Kurum için toplu erişim onayı</h2><p class="muted">Kurum ödemesini banka hesabında teyit ettikten sonra 365 günlük gizli planı seçin ve öğrencileri tek işlemle etkinleştirin. Mevcut aktif erişimler tekrar oluşturulmaz.</p></div>
+          <form (ngSubmit)="approveInstitutionAccess()" class="form-card"><div class="form-grid"><label>Kurum<select [(ngModel)]="institutionId" (ngModelChange)="selectInstitution()" name="institutionId" required><option value="">Kurum seçin</option>@for (institution of institutions(); track institution.id) {<option [value]="institution.id">{{ institution.name }} · {{ institution.studentCount }} öğrenci</option>}</select></label><label>1 yıllık kurum planı<select [(ngModel)]="institutionPlanId" name="institutionPlanId" required><option value="">Plan seçin</option>@for (plan of plans(); track plan.id) {@if (plan.durationDays === 365 && plan.isActive) {<option [value]="plan.id">{{ plan.name }}</option>}}</select></label><label>Onay tarihi<input [(ngModel)]="institutionStartDate" name="institutionStartDate" type="date" required /></label><label class="wide">Ödeme / kurum notu<textarea [(ngModel)]="institutionNotes" name="institutionNotes" maxlength="1000" placeholder="Ödeme tarihi, banka referansı veya kurum sözleşme numarası"></textarea></label></div>
+            @if (institutionId) {<div class="mt-4"><div class="mb-2 flex items-center justify-between gap-3"><strong>Öğrenciler</strong><button type="button" class="secondary" (click)="selectAllInstitutionStudents()">Tümünü seç</button></div><div class="student-grid">@for (student of institutionStudents(); track student.userId) {<label class="student-option"><input type="checkbox" [checked]="selectedInstitutionStudentIds.has(student.userId)" (change)="toggleInstitutionStudent(student.userId)" /><span>{{ student.fullName }}<small>{{ student.email }}</small></span></label>} @empty {<p class="muted">Bu kurumda aktif öğrenci bulunamadı.</p>}</div><p class="muted">Seçili öğrenci: {{ selectedInstitutionStudentIds.size }}</p></div>}
+            <div class="form-actions"><button type="submit" class="primary" [disabled]="saving()">Seçilen öğrencilere 1 yıllık erişim aç</button></div></form>
         </section>
       }
 
@@ -92,18 +103,23 @@ type SubscriptionTab = 'products' | 'plans' | 'subscriptions' | 'payments';
     .muted { color: var(--ui-text-muted); font-size: .8rem; }
     .empty { padding: 2rem; text-align: center; color: var(--ui-text-muted); }
     .pager { justify-content: space-between; margin-top: .75rem; font-size: .8rem; color: var(--ui-text-muted); }
-    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } .form-grid .wide { grid-column: auto; } .inline-filter { flex-wrap: wrap; justify-content: stretch; } .inline-filter input, .inline-filter select { min-width: 0; width: 100%; } }
+    .student-grid { display: grid; max-height: 22rem; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; overflow-y: auto; border: 1px solid var(--ui-border); border-radius: .5rem; padding: .75rem; }
+    .student-option { display: flex; flex-direction: row !important; align-items: flex-start; gap: .5rem; padding: .35rem; }
+    .student-option small { display: block; color: var(--ui-text-muted); }
+    @media (max-width: 640px) { .form-grid, .student-grid { grid-template-columns: 1fr; } .form-grid .wide { grid-column: auto; } .inline-filter { flex-wrap: wrap; justify-content: stretch; } .inline-filter input, .inline-filter select { min-width: 0; width: 100%; } }
   `]
 })
 export class SpeedReadingSubscriptionsComponent implements OnInit {
   private readonly service = inject(SpeedReadingAdminService);
   private readonly identity = inject(IdentityService);
+  private readonly institutionService = inject(InstitutionService);
   private readonly toaster = inject(ToasterService);
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly tabs: ReadonlyArray<{ value: SubscriptionTab; label: string }> = [
     { value: 'products', label: 'Ürünler' }, { value: 'plans', label: 'Planlar' },
-    { value: 'subscriptions', label: 'Kullanıcı abonelikleri' }, { value: 'payments', label: 'Ödeme geçmişi' }
+    { value: 'subscriptions', label: 'Bireysel onaylar' }, { value: 'institutions', label: 'Kurum toplu onayı' },
+    { value: 'payments', label: 'Ödeme geçmişi' }
   ];
   readonly selectedTab = signal<SubscriptionTab>('products');
   readonly products = signal<SpeedReadingProduct[]>([]);
@@ -111,6 +127,8 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
   readonly subscriptions = signal<{ items: SpeedReadingSubscription[]; totalCount: number; pageNumber: number; pageSize: number }>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
   readonly payments = signal<{ items: SpeedReadingPayment[]; totalCount: number; pageNumber: number; pageSize: number }>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
   readonly students = signal<UserDto[]>([]);
+  readonly institutions = signal<InstitutionDto[]>([]);
+  readonly institutionStudents = signal<UserDto[]>([]);
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly error = signal('');
@@ -128,6 +146,11 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
   paymentSearch = '';
   paymentStatus = '';
   studentSearch = '';
+  institutionId = '';
+  institutionPlanId = '';
+  institutionStartDate = new Date().toISOString().slice(0, 10);
+  institutionNotes = '';
+  readonly selectedInstitutionStudentIds = new Set<string>();
   subscriptionPage = 1;
   paymentPage = 1;
   readonly pageSize = 25;
@@ -143,6 +166,7 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
     if (tab === 'products') this.loadProducts();
     if (tab === 'plans') this.loadPlans();
     if (tab === 'subscriptions') { this.loadPlans(); this.loadSubscriptions(); }
+    if (tab === 'institutions') { this.loadPlans(); this.loadInstitutions(); }
     if (tab === 'payments') this.loadPayments();
   }
 
@@ -253,6 +277,66 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
     }
   }
 
+  async loadInstitutions(): Promise<void> {
+    try {
+      const result = await firstValueFrom(this.institutionService.getAll(1, 100, '', true));
+      this.institutions.set(result.items ?? []);
+    } catch {
+      this.institutions.set([]);
+    }
+  }
+
+  async selectInstitution(): Promise<void> {
+    this.selectedInstitutionStudentIds.clear();
+    this.institutionStudents.set([]);
+    if (!this.institutionId) return;
+    try {
+      const students: UserDto[] = [];
+      let pageNumber = 1;
+      let totalCount = 0;
+      do {
+        const result = await firstValueFrom(this.identity.getAllUsers(pageNumber, 100, '', 'Student', true));
+        students.push(...(result.items ?? []));
+        totalCount = result.totalCount ?? students.length;
+        pageNumber += 1;
+      } while (students.length < totalCount && pageNumber <= 50);
+      this.institutionStudents.set(students.filter(student => student.studentDetails?.institutionId === this.institutionId));
+    } catch {
+      this.error.set('Kurum öğrencileri yüklenemedi.');
+    }
+  }
+
+  toggleInstitutionStudent(userId: string): void {
+    if (this.selectedInstitutionStudentIds.has(userId)) this.selectedInstitutionStudentIds.delete(userId);
+    else this.selectedInstitutionStudentIds.add(userId);
+  }
+
+  selectAllInstitutionStudents(): void {
+    this.institutionStudents().forEach(student => this.selectedInstitutionStudentIds.add(student.userId));
+  }
+
+  approveInstitutionAccess(): void {
+    const recipients = this.institutionStudents()
+      .filter(student => this.selectedInstitutionStudentIds.has(student.userId))
+      .map(student => ({ userId: student.userId, userName: student.fullName, userEmail: student.email }));
+    if (!this.institutionId || !this.institutionPlanId || recipients.length === 0) {
+      this.error.set('Kurum, 1 yıllık plan ve en az bir öğrenci seçin.');
+      return;
+    }
+    const institution = this.institutions().find(item => item.id === this.institutionId);
+    const request: SpeedReadingInstitutionAccessRequest = {
+      planId: this.institutionPlanId,
+      startDate: this.institutionStartDate,
+      recipients,
+      notes: [institution?.name, this.institutionNotes.trim()].filter(Boolean).join(' · ') || null
+    };
+    this.saveRequest(this.service.createInstitutionAccess(request), result => {
+      this.toaster.success(`${result.createdCount} öğrenciye erişim açıldı${result.existingCount ? `; ${result.existingCount} öğrencinin aktif erişimi zaten vardı.` : '.'}`);
+      this.selectedInstitutionStudentIds.clear();
+      this.loadSubscriptions();
+    });
+  }
+
   changeSubscriptionPage(page: number): void { if (page < 1 || page > this.subscriptionTotalPages()) return; this.subscriptionPage = page; this.loadSubscriptions(); }
   changePaymentPage(page: number): void { if (page < 1 || page > this.paymentTotalPages()) return; this.paymentPage = page; this.loadPayments(); }
   subscriptionTotalPages(): number { return Math.max(1, Math.ceil(this.subscriptions().totalCount / this.pageSize)); }
@@ -263,7 +347,7 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
     request.pipe(finalize(() => this.loading.set(false))).subscribe({ next: apply, error: () => this.error.set('Abonelik verisi yüklenemedi.') });
   }
 
-  private saveRequest<T>(request: import('rxjs').Observable<T>, afterSave: () => void): void {
+  private saveRequest<T>(request: import('rxjs').Observable<T>, afterSave: (value: T) => void): void {
     this.saving.set(true); this.error.set('');
     request.pipe(finalize(() => this.saving.set(false))).subscribe({ next: afterSave, error: () => this.error.set('Abonelik değişikliği kaydedilemedi.') });
   }

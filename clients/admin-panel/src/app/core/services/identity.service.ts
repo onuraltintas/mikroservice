@@ -16,6 +16,7 @@ export interface UserDto {
     roles: string[];
     permissions: string[];
     teacherDetails?: TeacherDetailsDto;
+    studentDetails?: StudentDetailsDto;
 }
 
 export interface SpeedReadingTeacherDirectoryItem {

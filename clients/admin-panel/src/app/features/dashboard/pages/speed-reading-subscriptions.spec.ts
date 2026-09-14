@@ -7,6 +7,7 @@ import {
   SpeedReadingSubscription
 } from '../../../core/services/speed-reading-admin.service';
 import { IdentityService } from '../../../core/services/identity.service';
+import { InstitutionService } from '../../../core/services/institution.service';
 import { SpeedReadingSubscriptionsComponent } from './speed-reading-subscriptions';
 
 describe('SpeedReadingSubscriptionsComponent', () => {
@@ -17,14 +18,16 @@ describe('SpeedReadingSubscriptionsComponent', () => {
       getSubscriptionProducts: vi.fn(() => of([])),
       getSubscriptionPlans: vi.fn(() => of([])),
       getUserSubscriptions: vi.fn(() => of(emptyPage)),
-      updateUserSubscription: vi.fn(() => of({}))
+      updateUserSubscription: vi.fn(() => of({})),
+      createInstitutionAccess: vi.fn(() => of({ createdCount: 2, existingCount: 0 }))
     };
 
     TestBed.configureTestingModule({
       imports: [SpeedReadingSubscriptionsComponent],
       providers: [
         { provide: SpeedReadingAdminService, useValue: service },
-        { provide: IdentityService, useValue: { getAllUsers: vi.fn(() => of({ items: [] })) } }
+        { provide: IdentityService, useValue: { getAllUsers: vi.fn(() => of({ items: [] })) } },
+        { provide: InstitutionService, useValue: { getAll: vi.fn(() => of({ items: [] })) } }
       ]
     });
 
@@ -71,6 +74,32 @@ describe('SpeedReadingSubscriptionsComponent', () => {
       status: 'Cancelled',
       endDate: '2026-09-30',
       notes: 'Kullanıcı talebi'
+    });
+  });
+
+  it('approves one-year access for the selected institution students in one request', () => {
+    const { component, service } = createComponent();
+    component.institutions.set([{ id: 'institution-1', name: 'Örnek Okul' } as any]);
+    component.institutionStudents.set([
+      { userId: 'student-1', fullName: 'Ada', email: 'ada@example.test' },
+      { userId: 'student-2', fullName: 'Can', email: 'can@example.test' }
+    ] as any);
+    component.institutionId = 'institution-1';
+    component.institutionPlanId = 'annual-plan';
+    component.institutionStartDate = '2026-09-14';
+    component.selectedInstitutionStudentIds.add('student-1');
+    component.selectedInstitutionStudentIds.add('student-2');
+
+    component.approveInstitutionAccess();
+
+    expect(service.createInstitutionAccess).toHaveBeenCalledWith({
+      planId: 'annual-plan',
+      startDate: '2026-09-14',
+      recipients: [
+        { userId: 'student-1', userName: 'Ada', userEmail: 'ada@example.test' },
+        { userId: 'student-2', userName: 'Can', userEmail: 'can@example.test' }
+      ],
+      notes: 'Örnek Okul'
     });
   });
 });

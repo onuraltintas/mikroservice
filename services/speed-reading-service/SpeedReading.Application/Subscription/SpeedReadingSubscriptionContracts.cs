@@ -115,6 +115,22 @@ public sealed record CreateUserSubscriptionRequest(
     DateTime? EndDate,
     string? Notes);
 
+public sealed record InstitutionAccessRecipient(
+    Guid UserId,
+    string? UserName,
+    string? UserEmail);
+
+public sealed record CreateInstitutionAccessRequest(
+    Guid PlanId,
+    DateTime StartDate,
+    IReadOnlyList<InstitutionAccessRecipient> Recipients,
+    string? Notes);
+
+public sealed record InstitutionAccessApprovalSummary(
+    int CreatedCount,
+    int ExistingCount,
+    IReadOnlyList<UserSubscriptionSummary> Subscriptions);
+
 public sealed record UpdateUserSubscriptionRequest(
     string Status,
     DateTime? EndDate,
@@ -226,6 +242,7 @@ public interface ISpeedReadingSubscription
     Task<SpeedReadingPage<UserSubscriptionSummary>> GetSubscriptionsAsync(string? search, string? status, int page, int pageSize, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<UserSubscriptionSummary>> GetUserSubscriptionsAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<UserSubscriptionSummary?> CreateSubscriptionAsync(CreateUserSubscriptionRequest request, Guid actorId, CancellationToken cancellationToken = default);
+    Task<InstitutionAccessApprovalSummary?> CreateInstitutionAccessAsync(CreateInstitutionAccessRequest request, Guid actorId, CancellationToken cancellationToken = default);
     Task<UserSubscriptionSummary?> UpdateSubscriptionAsync(Guid id, UpdateUserSubscriptionRequest request, Guid actorId, CancellationToken cancellationToken = default);
     Task<bool> DeleteSubscriptionAsync(Guid id, Guid actorId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<UserSubscriptionSummary>> GetMySubscriptionsAsync(Guid userId, CancellationToken cancellationToken = default);

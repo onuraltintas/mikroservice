@@ -44,6 +44,19 @@ public sealed class SubscriptionsController(ISpeedReadingSubscription subscripti
             : Ok(new { success = true, data = result, message = "Subscription created" });
     }
 
+    [HttpPost("institution-access")]
+    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    public async Task<IActionResult> CreateInstitutionAccess(
+        [FromBody] CreateInstitutionAccessRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetActor(out var actorId)) return Unauthorized();
+        var result = await subscriptions.CreateInstitutionAccessAsync(request, actorId, cancellationToken);
+        return result is null
+            ? BadRequest(new { success = false, message = "A one-year institution plan and at least one student are required" })
+            : Ok(new { success = true, data = result, message = "Institution access approved" });
+    }
+
     [HttpPut("{id:guid}")]
     [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserSubscriptionRequest request, CancellationToken cancellationToken = default)

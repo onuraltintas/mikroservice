@@ -256,6 +256,72 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         return ToSummary(subscription, plan, product);
     }
 
+    public async Task<InstitutionAccessApprovalSummary?> CreateInstitutionAccessAsync(
+        CreateInstitutionAccessRequest request,
+        Guid actorId,
+        CancellationToken cancellationToken = default)
+    {
+        var plan = await db.SubscriptionPlans.AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == request.PlanId, cancellationToken);
+        if (plan is null || !SpeedReadingAccessRules.IsInstitutionAccessPlan(plan.DurationDays))
+        {
+            return null;
+        }
+
+        var recipients = request.Recipients
+            .GroupBy(item => item.UserId)
+            .Select(group => group.First())
+            .ToList();
+        if (recipients.Count == 0)
+        {
+            return null;
+        }
+
+        var now = DateTime.UtcNow;
+        var recipientIds = recipients.Select(item => item.UserId).ToList();
+        var activeUserIds = await db.UserSubscriptions.AsNoTracking()
+            .Where(item => !item.IsDeleted
+                && item.PlanId == plan.Id
+                && item.Status == "Active"
+                && recipientIds.Contains(item.UserId)
+                && (!item.EndDate.HasValue || item.EndDate > now))
+            .Select(item => item.UserId)
+            .ToHashSetAsync(cancellationToken);
+
+        var startDate = DateTime.SpecifyKind(request.StartDate, DateTimeKind.Utc);
+        var endDate = SpeedReadingAccessRules.ResolveEndDate(startDate, null, plan.DurationDays);
+        var newSubscriptions = recipients
+            .Where(recipient => !activeUserIds.Contains(recipient.UserId))
+            .Select(recipient => new LegacyUserSubscription
+            {
+                Id = Guid.NewGuid(),
+                UserId = recipient.UserId,
+                UserName = recipient.UserName,
+                UserEmail = recipient.UserEmail,
+                PlanId = plan.Id,
+                ProductId = plan.ProductId,
+                Status = "Active",
+                StartDate = startDate,
+                EndDate = endDate,
+                Notes = request.Notes,
+                CreatedBy = actorId,
+                CreatedAt = now
+            })
+            .ToList();
+
+        if (newSubscriptions.Count > 0)
+        {
+            db.UserSubscriptions.AddRange(newSubscriptions);
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        var product = await db.Products.AsNoTracking().SingleAsync(item => item.Id == plan.ProductId, cancellationToken);
+        return new InstitutionAccessApprovalSummary(
+            newSubscriptions.Count,
+            recipients.Count - newSubscriptions.Count,
+            newSubscriptions.Select(subscription => ToSummary(subscription, plan, product)).ToList());
+    }
+
     public async Task<UserSubscriptionSummary?> UpdateSubscriptionAsync(Guid id, UpdateUserSubscriptionRequest request, Guid actorId, CancellationToken cancellationToken = default)
     {
         var subscription = await db.UserSubscriptions.SingleOrDefaultAsync(item => item.Id == id && !item.IsDeleted, cancellationToken);

@@ -347,6 +347,24 @@ export interface SpeedReadingSubscriptionUpdateRequest {
   notes?: string | null;
 }
 
+export interface SpeedReadingInstitutionAccessRecipient {
+  userId: string;
+  userName?: string | null;
+  userEmail?: string | null;
+}
+
+export interface SpeedReadingInstitutionAccessRequest {
+  planId: string;
+  startDate: string;
+  recipients: SpeedReadingInstitutionAccessRecipient[];
+  notes?: string | null;
+}
+
+export interface SpeedReadingInstitutionAccessApproval {
+  createdCount: number;
+  existingCount: number;
+}
+
 export interface SpeedReadingPayment {
   id: string;
   userId: string;
@@ -1510,6 +1528,14 @@ export class SpeedReadingAdminService {
   createManualSubscription(request: SpeedReadingManualSubscriptionRequest) {
     return this.http.post<{ success: boolean; data: SpeedReadingSubscription }>(`${this.url}/subscriptions`, request)
       .pipe(map(response => response.data));
+  }
+
+  createInstitutionAccess(request: SpeedReadingInstitutionAccessRequest) {
+    return this.http.post<{ success: boolean; data: SpeedReadingInstitutionAccessApproval }>(
+      `${this.url}/subscriptions/institution-access`,
+      request,
+      { headers: this.idempotencyHeaders() }
+    ).pipe(map(response => response.data));
   }
 
   updateUserSubscription(id: string, request: SpeedReadingSubscriptionUpdateRequest) {
