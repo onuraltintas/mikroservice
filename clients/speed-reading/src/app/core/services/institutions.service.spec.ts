@@ -56,12 +56,20 @@ describe('InstitutionsService', () => {
       expect(institution.phoneNumber).toBe('555');
       expect(institution.city).toBe('Ankara');
       expect(institution.district).toBe('Çankaya');
+      expect(institution.licenseType).toBe(4);
+      expect(institution.maxStudents).toBe(120);
+      expect(institution.maxTeachers).toBe(12);
+      expect(institution.subscriptionStartDate).toEqual(new Date('2026-09-01T00:00:00.000Z'));
+      expect(institution.subscriptionEndDate).toEqual(new Date('2027-09-01T00:00:00.000Z'));
     });
 
     const request = http.expectOne('/api/v1/institutions/institution-1');
     request.flush({
       id: 'institution-1', name: 'Örnek Kolej', email: 'okul@example.com', phone: '555',
-      address: 'Adres', city: 'Ankara', district: 'Çankaya', isActive: true
+      address: 'Adres', city: 'Ankara', district: 'Çankaya', isActive: true,
+      licenseType: 4, maxStudents: 120, maxTeachers: 12,
+      subscriptionStartDate: '2026-09-01T00:00:00.000Z',
+      subscriptionEndDate: '2027-09-01T00:00:00.000Z'
     });
   });
 
