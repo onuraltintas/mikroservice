@@ -21,6 +21,7 @@ import {
   GoogleIdentityService,
   GoogleIdentityResponse
 } from '../../../core/services/google-identity.service';
+import { resolveAuthDestination } from '../auth-role-routing';
 
 @Component({
   selector: 'app-login',
@@ -297,29 +298,27 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
 
   private handleAuthenticatedResponse(response: AuthResponse | null): void {
     this.loading = false;
-    const role = response?.roles?.[0];
-    console.log('Login Role:', role);
+    const destination = resolveAuthDestination(response?.roles);
 
-    if (!role) {
+    if (!destination) {
       this.toaster.error('Kullanıcı rolü bulunamadı.', 5000);
       return;
     }
 
-    const normalizedRole = role.toLowerCase();
-    if (normalizedRole === 'student') {
-      this.navigateStudent();
-    } else if (normalizedRole === 'teacher') {
-      this.router.navigate(['/teacher/dashboard']);
-    } else if (normalizedRole === 'institutionadmin') {
-      this.router.navigate(['/teacher/dashboard']);
-    } else if (normalizedRole === 'admin' || normalizedRole === 'systemadmin' || normalizedRole === 'editor') {
-      void this.redirectToCentralAdmin();
-    } else if (normalizedRole === 'coach') {
-      this.router.navigate(['/coaching/dashboard']);
-    } else {
-      console.warn('Unknown role:', role);
-      this.toaster.error(`Tanımlanamayan kullanıcı rolü: ${role}`, 5000);
-      this.router.navigate(['/']);
+    switch (destination) {
+      case 'student':
+        this.navigateStudent();
+        break;
+      case 'teacher':
+      case 'institution':
+        this.router.navigate(['/teacher/dashboard']);
+        break;
+      case 'admin':
+        void this.redirectToCentralAdmin();
+        break;
+      case 'coach':
+        this.router.navigate(['/coaching/dashboard']);
+        break;
     }
   }
 

@@ -1,18 +1,15 @@
-<div class="login-container">
-  <a routerLink="/" class="auth-logo">
-    <div class="logo-icon">
-      <img src="assets/icons/apple-touch-icon.png" alt="Logo">
-    </div>
-    <span>Hızlı Okuma</span>
-  </a>
-  <div class="login-content-wrapper">
-    <div class="login-logo-container">
-      <img src="assets/images/logo.png" alt="Hızlı Okuma" class="login-logo">
-    </div>
+<div class="auth-page">
+  <div class="auth-shell">
+    <a routerLink="/" class="auth-brand" aria-label="Master Hızlı Okuma ana sayfası">
+      <img src="brand/onal-mark.svg" alt="ONAL" class="auth-brand-mark">
+      <span><strong>Master Hızlı Okuma</strong><small>ONAL Yazılım ve Otomasyon</small></span>
+    </a>
     <mat-card class="login-card">
-      <mat-card-header>
-        <mat-card-title>Giriş Yap</mat-card-title>
-      </mat-card-header>
+      <header class="auth-heading">
+        <p class="auth-eyebrow">HESABINIZA ERİŞİN</p>
+        <h1>Giriş yapın</h1>
+        <p>Çalışma planınıza kaldığınız yerden devam edin.</p>
+      </header>
       <mat-card-content>
         @if (mfaStage === 'none') {
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">

@@ -18,6 +18,7 @@ import {
   GoogleIdentityResponse
 } from '../../../core/services/google-identity.service';
 import { strongPasswordValidator, PASSWORD_ERROR_MESSAGES } from '../../../shared/validators/password.validator';
+import { resolveAuthDestination } from '../auth-role-routing';
 
 @Component({
   selector: 'app-register',
@@ -109,13 +110,15 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
 
     this.authService.googleAuth(response.credential).subscribe({
       next: (authResponse) => {
-        const role = authResponse.roles?.[0]?.toLowerCase();
-        if (role === 'student') {
+        const destination = resolveAuthDestination(authResponse.roles);
+        if (destination === 'student') {
           this.router.navigate(['/student/dashboard']);
-        } else if (role === 'teacher') {
+        } else if (destination === 'teacher' || destination === 'institution') {
           this.router.navigate(['/teacher/dashboard']);
-        } else if (role === 'admin' || role === 'systemadmin' || role === 'editor') {
+        } else if (destination === 'admin') {
           void this.redirectToCentralAdmin();
+        } else if (destination === 'coach') {
+          this.router.navigate(['/coaching/dashboard']);
         } else {
           this.router.navigate(['/']);
         }

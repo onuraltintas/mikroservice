@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { SubscriptionService } from '../../../core/services/subscription.service';
 import { AuthResponse } from '../../../core/models/user.model';
 import { environment } from '../../../../environments/environment';
+import { resolveAuthDestination } from '../auth-role-routing';
 
 /**
  * Handles the server-side Google OAuth redirect callback.
@@ -67,23 +68,24 @@ export class GoogleCallbackComponent implements OnInit {
       };
 
       this.authService.loginFromCallback(authResponse);
-      this.navigateByRole(roles[0]?.toLowerCase() ?? '');
+      this.navigateByRole(roles);
     });
   }
 
-  private navigateByRole(role: string): void {
-    if (role === 'student') {
+  private navigateByRole(roles: readonly string[]): void {
+    const destination = resolveAuthDestination(roles);
+    if (destination === 'student') {
       this.subscriptionService.getMyModules().subscribe({
         next: (m) => this.router.navigate(
           m.hasSpeedReading ? ['/student/dashboard'] : ['/no-access']
         ),
         error: () => this.router.navigate(['/student/dashboard'])
       });
-    } else if (role === 'teacher' || role === 'institutionadmin') {
+    } else if (destination === 'teacher' || destination === 'institution') {
       this.router.navigate(['/teacher/dashboard']);
-    } else if (role === 'admin' || role === 'systemadmin' || role === 'editor') {
+    } else if (destination === 'admin') {
       void this.redirectToCentralAdmin();
-    } else if (role === 'coach') {
+    } else if (destination === 'coach') {
       this.router.navigate(['/coaching/dashboard']);
     } else {
       this.router.navigate(['/auth/login']);
