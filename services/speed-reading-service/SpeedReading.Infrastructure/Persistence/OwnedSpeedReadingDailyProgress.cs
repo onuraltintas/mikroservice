@@ -695,7 +695,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
                 exerciseType.Id,
                 SpeedReadingDailyProgressRules.ResolveExerciseDifficulty(
                     pattern.Difficulty,
-                    progress.CurrentDifficultyLevel,
+                    template.InitialDifficultyLevel + progress.AdaptiveDifficultyOffset,
                     template.InitialDifficultyLevel,
                     template.MaxDifficultyLevel),
                 template,
@@ -749,7 +749,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
                 typeId.Value,
                 SpeedReadingDailyProgressRules.ResolveExerciseDifficulty(
                     pattern.Difficulty,
-                    progress.CurrentDifficultyLevel,
+                    template.InitialDifficultyLevel + progress.AdaptiveDifficultyOffset,
                     template.InitialDifficultyLevel,
                     template.MaxDifficultyLevel),
                 template,

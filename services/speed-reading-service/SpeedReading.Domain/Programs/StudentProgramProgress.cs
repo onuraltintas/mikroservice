@@ -23,6 +23,7 @@ public sealed class StudentProgramProgress : AggregateRoot
     public int CurrentDay { get; private set; }
     public int CurrentWeek { get; private set; }
     public int CurrentDifficultyLevel { get; private set; }
+    public int AdaptiveDifficultyOffset { get; private set; }
     public int DaysCompleted { get; private set; }
     public int ExercisesCompleted { get; private set; }
     public DateTime? LastCompletionDate { get; private set; }
@@ -57,6 +58,7 @@ public sealed class StudentProgramProgress : AggregateRoot
             CurrentDay = 1,
             CurrentWeek = 1,
             CurrentDifficultyLevel = template.InitialDifficultyLevel,
+            AdaptiveDifficultyOffset = 0,
             DaysCompleted = 0,
             ExercisesCompleted = 0,
             AverageSuccessRate = 0,
@@ -87,7 +89,8 @@ public sealed class StudentProgramProgress : AggregateRoot
         DateTime createdAt,
         string? createdBy,
         DateTime? updatedAt,
-        string? updatedBy)
+        string? updatedBy,
+        int adaptiveDifficultyOffset = 0)
     {
         if (id == Guid.Empty || userId == Guid.Empty || programTemplateId == Guid.Empty)
             throw new ArgumentException("Student program identifiers are required.");
@@ -106,6 +109,7 @@ public sealed class StudentProgramProgress : AggregateRoot
             CurrentDay = currentDay,
             CurrentWeek = currentWeek,
             CurrentDifficultyLevel = currentDifficultyLevel,
+            AdaptiveDifficultyOffset = adaptiveDifficultyOffset,
             DaysCompleted = daysCompleted,
             ExercisesCompleted = exercisesCompleted,
             LastCompletionDate = lastCompletionDate.HasValue ? EnsureUtc(lastCompletionDate.Value) : null,
@@ -128,6 +132,7 @@ public sealed class StudentProgramProgress : AggregateRoot
 
         CurrentDay = 1;
         CurrentWeek = 1;
+        AdaptiveDifficultyOffset = 0;
         DaysCompleted = 0;
         ExercisesCompleted = 0;
         AverageSuccessRate = 0;
@@ -165,10 +170,16 @@ public sealed class StudentProgramProgress : AggregateRoot
             CurrentDifficultyLevel + difficultyAdjustment,
             template.InitialDifficultyLevel,
             template.MaxDifficultyLevel);
-        if (adjustedDifficulty == CurrentDifficultyLevel)
+        var adjustedOffset = Math.Clamp(
+            AdaptiveDifficultyOffset + difficultyAdjustment,
+            -template.MaxDifficultyLevel,
+            template.MaxDifficultyLevel);
+        if (adjustedDifficulty == CurrentDifficultyLevel
+            && adjustedOffset == AdaptiveDifficultyOffset)
             return false;
 
         CurrentDifficultyLevel = adjustedDifficulty;
+        AdaptiveDifficultyOffset = adjustedOffset;
         UpdatedAt = EnsureUtc(at);
         UpdatedBy = actorId.ToString();
         return true;
