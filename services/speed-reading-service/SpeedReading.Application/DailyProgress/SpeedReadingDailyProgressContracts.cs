@@ -231,6 +231,21 @@ public static class SpeedReadingDailyProgressRules
         return (((cumulativeDay - 1) / 7) + 1, ((cumulativeDay - 1) % 7) + 1);
     }
 
+    public static int ResolveExerciseDifficulty(
+        int configuredDifficulty,
+        int currentDifficulty,
+        int initialDifficulty,
+        int maximumDifficulty)
+    {
+        if (configuredDifficulty < 0 || initialDifficulty < 0 || maximumDifficulty < initialDifficulty)
+            throw new ArgumentOutOfRangeException(nameof(configuredDifficulty));
+
+        return Math.Clamp(
+            configuredDifficulty + (currentDifficulty - initialDifficulty),
+            0,
+            maximumDifficulty);
+    }
+
     public static IReadOnlyList<T> TakeUnique<T>(IReadOnlyList<T> candidates, int requestedCount)
     {
         ArgumentNullException.ThrowIfNull(candidates);

@@ -577,6 +577,11 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
             if (profile is not null)
             {
                 profile.ApplyAdaptiveLevel(profile.CurrentLevel + decision.DifficultyAdjustment, studentId, now);
+                await ApplyAdaptiveProgramDifficultyAsync(
+                    studentId,
+                    decision.DifficultyAdjustment,
+                    now,
+                    cancellationToken);
                 foreach (var pending in activeItems.Where(path => !path.IsCompleted))
                     pending.Retire(studentId, now);
 
@@ -599,6 +604,25 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
             activeItems.FirstOrDefault(path => !path.IsCompleted && !path.IsUnlocked)?.Unlock(studentId, now);
         }
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task ApplyAdaptiveProgramDifficultyAsync(
+        Guid studentId,
+        int difficultyAdjustment,
+        DateTime at,
+        CancellationToken cancellationToken)
+    {
+        var progress = await db.StudentProgramProgresses
+            .SingleOrDefaultAsync(item => item.UserId == studentId && item.IsActive, cancellationToken);
+        if (progress is null)
+            return;
+
+        var template = await db.ProgramTemplates
+            .SingleOrDefaultAsync(item => item.Id == progress.ProgramTemplateId && !item.IsDeleted, cancellationToken);
+        if (template is null)
+            return;
+
+        progress.ApplyAdaptiveDifficultyAdjustment(difficultyAdjustment, template, studentId, at);
     }
 
     private async Task<AdaptiveProgressionDecision> EvaluateProgressionAsync(

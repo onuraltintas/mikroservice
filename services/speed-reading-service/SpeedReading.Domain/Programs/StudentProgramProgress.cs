@@ -150,6 +150,30 @@ public sealed class StudentProgramProgress : AggregateRoot
         UpdatedBy = actorId.ToString();
     }
 
+    public bool ApplyAdaptiveDifficultyAdjustment(
+        int difficultyAdjustment,
+        ProgramTemplate template,
+        Guid actorId,
+        DateTime at)
+    {
+        if (template is null)
+            throw new ArgumentNullException(nameof(template));
+        if (actorId == Guid.Empty)
+            throw new ArgumentException("Student program actor is required.", nameof(actorId));
+
+        var adjustedDifficulty = Math.Clamp(
+            CurrentDifficultyLevel + difficultyAdjustment,
+            template.InitialDifficultyLevel,
+            template.MaxDifficultyLevel);
+        if (adjustedDifficulty == CurrentDifficultyLevel)
+            return false;
+
+        CurrentDifficultyLevel = adjustedDifficulty;
+        UpdatedAt = EnsureUtc(at);
+        UpdatedBy = actorId.ToString();
+        return true;
+    }
+
     public StudentProgramCompletionResult ApplyExerciseCompletion(
         decimal averageSuccessRate,
         bool wasPreviouslyPassed,

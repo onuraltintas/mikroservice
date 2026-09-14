@@ -683,7 +683,11 @@ internal sealed class OwnedSpeedReadingDailyProgress(OwnedSpeedReadingDbContext 
 
             var candidates = await FindCandidatesAsync(
                 exerciseType.Id,
-                pattern.Difficulty,
+                SpeedReadingDailyProgressRules.ResolveExerciseDifficulty(
+                    pattern.Difficulty,
+                    progress.CurrentDifficultyLevel,
+                    template.InitialDifficultyLevel,
+                    template.MaxDifficultyLevel),
                 template,
                 pattern.Count,
                 cancellationToken);
@@ -733,7 +737,11 @@ internal sealed class OwnedSpeedReadingDailyProgress(OwnedSpeedReadingDbContext 
 
             var candidates = await FindCandidatesAsync(
                 typeId.Value,
-                pattern.Difficulty,
+                SpeedReadingDailyProgressRules.ResolveExerciseDifficulty(
+                    pattern.Difficulty,
+                    progress.CurrentDifficultyLevel,
+                    template.InitialDifficultyLevel,
+                    template.MaxDifficultyLevel),
                 template,
                 pattern.Count,
                 cancellationToken);
