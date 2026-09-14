@@ -11,6 +11,11 @@ export interface Institution {
   isActive: boolean;
   teacherCount: number;
   studentCount: number;
+  licenseType?: number;
+  maxStudents?: number;
+  maxTeachers?: number;
+  subscriptionStartDate?: Date;
+  subscriptionEndDate?: Date;
 }
 
 export interface CreateInstitutionRequest {

@@ -101,6 +101,24 @@
             </div>
         </mat-tab>
 
+        <mat-tab label="Lisans ve Kontenjan">
+            <div class="tab-content" *ngIf="institution(); else licenseLoading">
+                <div class="settings-card">
+                    <h2><mat-icon>verified</mat-icon> Kurum erişimi</h2>
+                    <div class="license-summary">
+                        <div class="license-metric"><span>Paket</span><strong>{{ licenseName() }}</strong></div>
+                        <div class="license-metric"><span>Erişim başlangıcı</span><strong>{{ formatDate(institution()?.subscriptionStartDate) }}</strong></div>
+                        <div class="license-metric"><span>Erişim bitişi</span><strong>{{ formatDate(institution()?.subscriptionEndDate) }}</strong></div>
+                        <div class="license-metric"><span>Kalan süre</span><strong>{{ daysRemaining() }}</strong></div>
+                        <div class="license-metric"><span>Öğrenci kontenjanı</span><strong>{{ institution()?.studentCount ?? 0 }} / {{ institution()?.maxStudents ?? '—' }}</strong></div>
+                        <div class="license-metric"><span>Öğretmen kontenjanı</span><strong>{{ institution()?.teacherCount ?? 0 }} / {{ institution()?.maxTeachers ?? '—' }}</strong></div>
+                    </div>
+                    <p class="license-note">Ödeme ve erişim onayı merkez yönetim tarafından yapılır. Yenileme veya kontenjan talebi için bu bilgilerle merkez yönetimle iletişime geçin.</p>
+                </div>
+            </div>
+            <ng-template #licenseLoading><div class="tab-content"><mat-spinner diameter="32"></mat-spinner></div></ng-template>
+        </mat-tab>
+
         <!-- Tab 2: Security -->
         <mat-tab label="Güvenlik">
             <div class="tab-content">

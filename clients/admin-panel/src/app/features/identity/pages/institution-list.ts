@@ -5,6 +5,7 @@ import { computed } from '@angular/core';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import { InstitutionAdminDto, InstitutionDto, InstitutionService } from '../../../core/services/institution.service';
+import { IdentityService, UserDto } from '../../../core/services/identity.service';
 
 @Component({
   selector: 'app-institution-list',
@@ -54,7 +55,7 @@ import { InstitutionAdminDto, InstitutionDto, InstitutionService } from '../../.
       @if (adminInstitution(); as institution) {
         <form class="grid gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm dark:border-emerald-900 dark:bg-emerald-950/30 md:grid-cols-4" (ngSubmit)="assignAdmin()">
           <div class="md:col-span-4 font-semibold text-gray-900 dark:text-white">{{ institution.name }} kurumuna yönetici ata</div>
-          <input class="rounded-lg border p-2 dark:bg-gray-900 md:col-span-2" name="adminUserId" [(ngModel)]="adminDraft.userId" placeholder="Kullanıcı ID (önce yönetici rolünü atayın)" required>
+          <div class="relative md:col-span-2"><label class="sr-only" for="institution-admin-search">Kurum yöneticisi ara</label><input id="institution-admin-search" class="w-full rounded-lg border p-2 dark:bg-gray-900" name="adminUserSearch" [(ngModel)]="adminUserSearch" (ngModelChange)="searchAdminCandidates($event)" placeholder="Yönetici adı veya e-postası ara" autocomplete="off" required>@if (adminCandidates().length > 0) {<div class="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900" role="listbox" aria-label="Yönetici adayları">@for (candidate of adminCandidates(); track candidate.userId) {<button type="button" role="option" class="block w-full border-b px-3 py-2 text-left text-sm last:border-0 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800" (click)="selectAdminCandidate(candidate)"><strong>{{ candidate.fullName }}</strong><span class="block text-xs text-gray-500">{{ candidate.email }} · {{ candidate.roles.join(', ') }}</span></button>}</div>}</div>
           <select class="rounded-lg border p-2 dark:bg-gray-900" name="adminRole" [(ngModel)]="adminDraft.role">@for (role of adminRoles; track role.value) { <option [ngValue]="role.value">{{ role.label }}</option> }</select>
           <div class="flex gap-2"><button class="rounded-lg bg-emerald-600 px-4 py-2 text-white" [disabled]="saving()">Ata</button><button type="button" class="rounded-lg border px-4 py-2" (click)="adminInstitution.set(null)">Vazgeç</button></div>
           <div class="md:col-span-4 rounded-lg border bg-white p-3 dark:border-gray-700 dark:bg-gray-900"><div class="mb-2 text-sm font-semibold">Mevcut yöneticiler</div>@for (admin of admins(); track admin.userId) { <div class="flex flex-wrap items-center justify-between gap-2 border-b py-2 text-sm last:border-0 dark:border-gray-700"><span>{{ admin.firstName }} {{ admin.lastName }} · {{ admin.email }} · {{ adminRoleName(admin.role) }}</span><button type="button" class="rounded border px-2 py-1" (click)="toggleAdmin(admin)">{{ admin.isActive ? 'Pasifleştir' : 'Aktifleştir' }}</button></div> } @empty { <span class="text-sm text-gray-500">Henüz yönetici atanmamış.</span> }</div>
@@ -85,6 +86,7 @@ import { InstitutionAdminDto, InstitutionDto, InstitutionService } from '../../.
 })
 export class InstitutionListComponent {
   private readonly service = inject(InstitutionService);
+  private readonly identityService = inject(IdentityService);
   private readonly authService = inject(AuthService);
   private readonly platformId = inject(PLATFORM_ID);
   canManage = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.institutionsManage));
@@ -102,11 +104,13 @@ export class InstitutionListComponent {
   editing = signal<InstitutionDto | null>(null);
   adminInstitution = signal<InstitutionDto | null>(null);
   admins = signal<InstitutionAdminDto[]>([]);
+  adminCandidates = signal<UserDto[]>([]);
   search = '';
   activeFilter: boolean | undefined = true;
   draft = { name: '', type: 1, city: '', email: '' };
   editDraft = { name: '', city: '', district: '', phone: '', email: '', website: '', licenseType: 1, maxStudents: 50, maxTeachers: 5 };
   adminDraft = { userId: '', role: 2 };
+  adminUserSearch = '';
   institutionTypes = [{ value: 1, label: 'Okul' }, { value: 2, label: 'Dershane' }, { value: 3, label: 'Etüt Merkezi' }, { value: 4, label: 'Online Platform' }];
   licenseTypes = [{ value: 1, label: 'Deneme' }, { value: 2, label: 'Basic' }, { value: 3, label: 'Premium' }, { value: 4, label: 'Enterprise' }];
   adminRoles = [{ value: 1, label: 'Kurum sahibi' }, { value: 2, label: 'Yönetici' }, { value: 3, label: 'Müdür' }];
@@ -184,6 +188,8 @@ export class InstitutionListComponent {
     this.editing.set(null);
     this.adminInstitution.set(institution);
     this.adminDraft = { userId: '', role: 2 };
+    this.adminUserSearch = '';
+    this.adminCandidates.set([]);
     this.admins.set([]);
     this.service.getAdmins(institution.id).subscribe({
       next: admins => this.admins.set(admins),
@@ -191,9 +197,33 @@ export class InstitutionListComponent {
     });
   }
 
+  searchAdminCandidates(search: string) {
+    this.adminDraft.userId = '';
+    const term = search.trim();
+    if (term.length < 2) {
+      this.adminCandidates.set([]);
+      return;
+    }
+
+    this.identityService.getAllUsers(1, 20, term, undefined, true).subscribe({
+      next: result => this.adminCandidates.set(result.items.filter(user =>
+        user.roles.includes('InstitutionAdmin') || user.roles.includes('InstitutionOwner'))),
+      error: () => { this.adminCandidates.set([]); this.error.set('Yönetici adayları yüklenemedi.'); }
+    });
+  }
+
+  selectAdminCandidate(candidate: UserDto) {
+    this.adminDraft.userId = candidate.userId;
+    this.adminUserSearch = `${candidate.fullName} · ${candidate.email}`;
+    this.adminCandidates.set([]);
+  }
+
   assignAdmin() {
     const institution = this.adminInstitution();
-    if (!institution || !this.adminDraft.userId.trim()) return;
+    if (!institution || !this.adminDraft.userId.trim()) {
+      this.error.set('Listeden bir kurum yöneticisi seçin.');
+      return;
+    }
     this.saving.set(true);
     this.service.assignAdmin(institution.id, this.adminDraft.userId.trim(), this.adminDraft.role).subscribe({
       next: () => { this.saving.set(false); this.adminInstitution.set(null); this.load(); },

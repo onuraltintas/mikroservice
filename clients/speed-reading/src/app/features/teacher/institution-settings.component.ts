@@ -130,7 +130,31 @@ import { Institution } from '../../core/models/institution.model';
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 16px;
+      border-radius: 16px;
+    }
+
+    .license-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
+    .license-metric {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+
+      span { display: block; color: #697386; font-size: 13px; margin-bottom: 6px; }
+      strong { color: #1a1f36; font-size: 18px; }
+    }
+
+    .license-note {
+      margin-top: 20px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      background: #eff6ff;
+      color: #1e3a5f;
+      font-size: 14px;
     }
   `]
 })
@@ -212,6 +236,21 @@ export class InstitutionSettingsComponent implements OnInit {
                 this.loading.set(false);
             }
         });
+    }
+
+    licenseName(): string {
+        return ['Bilinmiyor', 'Deneme', 'Basic', 'Premium', 'Kurumsal'][this.institution()?.licenseType ?? 0] ?? 'Tanımsız';
+    }
+
+    formatDate(value?: Date): string {
+        return value ? new Intl.DateTimeFormat('tr-TR').format(value) : 'Tanımlı değil';
+    }
+
+    daysRemaining(): string {
+        const endDate = this.institution()?.subscriptionEndDate;
+        if (!endDate) return 'Tanımlı değil';
+        const days = Math.ceil((endDate.getTime() - Date.now()) / 86_400_000);
+        return days < 0 ? 'Süresi doldu' : `${days} gün kaldı`;
     }
 
     onSubmit() {
