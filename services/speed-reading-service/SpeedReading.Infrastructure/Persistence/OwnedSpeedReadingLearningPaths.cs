@@ -566,44 +566,64 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
             .Where(path => path.StudentId == studentId && !path.IsDeleted)
             .OrderBy(path => path.PathIndex)
             .ToListAsync(cancellationToken);
-        var completedCount = activeItems.Count(path => path.IsCompleted);
-        var policy = await ResolveProgressionPolicyAsync(studentId, cancellationToken);
-        var decision = await EvaluateProgressionAsync(studentId, activeItems, policy, cancellationToken);
-        if (decision.Kind is AdaptiveProgressionDecisionKind.Advance or AdaptiveProgressionDecisionKind.Support
-            && completedCount % policy.MinimumMeasuredSessions == 0)
-        {
-            var profile = await db.UserProfiles
-                .SingleOrDefaultAsync(profile => profile.UserId == studentId && profile.IsActive, cancellationToken);
-            if (profile is not null)
-            {
-                profile.ApplyAdaptiveLevel(profile.CurrentLevel + decision.DifficultyAdjustment, studentId, now);
-                await ApplyAdaptiveProgramDifficultyAsync(
-                    studentId,
-                    decision.DifficultyAdjustment,
-                    now,
-                    cancellationToken);
-                foreach (var pending in activeItems.Where(path => !path.IsCompleted))
-                    pending.Retire(studentId, now);
-
-                var reason = decision.Kind == AdaptiveProgressionDecisionKind.Support
-                    ? "Son ölçümlerde destek ihtiyacı görüldü; anlama odaklı telafi paketi oluşturuldu."
-                    : "Son ölçümlerde yeterli başarı görüldü; bir sonraki zorluk seviyesi açıldı.";
-                var weakBloomLevels = decision.Kind == AdaptiveProgressionDecisionKind.Support
-                    ? await GetWeakBloomLevelsAsync(studentId, cancellationToken)
-                    : [];
-                await CreatePersonalizedPathAsync(
-                    studentId,
-                    profile.CurrentLevel,
-                    reason,
-                    cancellationToken,
-                    weakBloomLevels);
-            }
-        }
-        else
-        {
-            activeItems.FirstOrDefault(path => !path.IsCompleted && !path.IsUnlocked)?.Unlock(studentId, now);
-        }
+        activeItems.FirstOrDefault(path => !path.IsCompleted && !path.IsUnlocked)?.Unlock(studentId, now);
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<bool> RefreshAdaptiveProgressionAsync(
+        Guid studentId,
+        CancellationToken cancellationToken = default)
+    {
+        var policy = await ResolveProgressionPolicyAsync(studentId, cancellationToken);
+        var measuredSessionCount = await db.ExerciseSessionResults
+            .AsNoTracking()
+            .CountAsync(result => result.StudentId == studentId
+                && result.IsMeasured
+                && !result.IsAssessmentMode,
+                cancellationToken);
+        if (measuredSessionCount < policy.MinimumMeasuredSessions
+            || measuredSessionCount % policy.MinimumMeasuredSessions != 0)
+        {
+            return false;
+        }
+
+        var decision = await EvaluateProgressionAsync(studentId, [], policy, cancellationToken);
+        if (decision.Kind is not (AdaptiveProgressionDecisionKind.Advance or AdaptiveProgressionDecisionKind.Support))
+            return false;
+
+        var profile = await db.UserProfiles
+            .SingleOrDefaultAsync(profile => profile.UserId == studentId && profile.IsActive, cancellationToken);
+        if (profile is null)
+            return false;
+
+        var now = DateTime.UtcNow;
+        profile.ApplyAdaptiveLevel(profile.CurrentLevel + decision.DifficultyAdjustment, studentId, now);
+        await ApplyAdaptiveProgramDifficultyAsync(
+            studentId,
+            decision.DifficultyAdjustment,
+            now,
+            cancellationToken);
+
+        var activeItems = await db.PersonalizedLearningPathItems
+            .Where(path => path.StudentId == studentId && !path.IsDeleted)
+            .OrderBy(path => path.PathIndex)
+            .ToListAsync(cancellationToken);
+        foreach (var pending in activeItems.Where(path => !path.IsCompleted))
+            pending.Retire(studentId, now);
+
+        var reason = decision.Kind == AdaptiveProgressionDecisionKind.Support
+            ? "Son ölçümlerde destek ihtiyacı görüldü; anlama odaklı telafi paketi oluşturuldu."
+            : "Son ölçümlerde yeterli başarı görüldü; bir sonraki zorluk seviyesi açıldı.";
+        var weakBloomLevels = decision.Kind == AdaptiveProgressionDecisionKind.Support
+            ? await GetWeakBloomLevelsAsync(studentId, cancellationToken)
+            : [];
+        await CreatePersonalizedPathAsync(
+            studentId,
+            profile.CurrentLevel,
+            reason,
+            cancellationToken,
+            weakBloomLevels);
+        return true;
     }
 
     private async Task ApplyAdaptiveProgramDifficultyAsync(

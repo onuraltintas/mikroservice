@@ -472,6 +472,10 @@ public interface ILegacySpeedReadingLearningPaths
         decimal? achievedScore,
         CancellationToken cancellationToken = default);
 
+    Task<bool> RefreshAdaptiveProgressionAsync(
+        Guid studentId,
+        CancellationToken cancellationToken = default);
+
     Task<PersonalizedLearningPathProgressSummary> GetPersonalizedProgressAsync(
         Guid studentId,
         CancellationToken cancellationToken = default);

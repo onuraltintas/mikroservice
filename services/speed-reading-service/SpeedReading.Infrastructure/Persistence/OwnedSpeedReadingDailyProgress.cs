@@ -17,7 +17,9 @@ namespace SpeedReading.Infrastructure.Persistence;
 /// Daily exercise selection and completion backed only by owned Speed Reading
 /// data. Reading-speed history is read from the owned session-result store.
 /// </summary>
-internal sealed class OwnedSpeedReadingDailyProgress(OwnedSpeedReadingDbContext db)
+internal sealed class OwnedSpeedReadingDailyProgress(
+    OwnedSpeedReadingDbContext db,
+    ILegacySpeedReadingLearningPaths learningPaths)
     : ISpeedReadingDailyProgress
 {
     private const decimal PassingScore = 70m;
@@ -296,6 +298,8 @@ internal sealed class OwnedSpeedReadingDailyProgress(OwnedSpeedReadingDbContext 
             template,
             userId,
             now);
+        var adaptivePlanUpdated = isMeasured
+            && await learningPaths.RefreshAdaptiveProgressionAsync(userId, cancellationToken);
 
         db.IdempotencyRecords.Add(new OwnedIdempotencyRecord
         {
@@ -353,12 +357,17 @@ internal sealed class OwnedSpeedReadingDailyProgress(OwnedSpeedReadingDbContext 
 
         return new CompleteDailyExerciseResponse(
             true,
-            completion.ProgramCompleted ? "Program başarıyla tamamlandı." : "Egzersiz başarıyla tamamlandı.",
+            completion.ProgramCompleted
+                ? "Program başarıyla tamamlandı."
+                : adaptivePlanUpdated
+                    ? "Egzersiz tamamlandı; yeni ölçümlere göre planınız güncellendi."
+                    : "Egzersiz başarıyla tamamlandı.",
             completion.DayCompleted,
             progress.CurrentDay,
             progress.CurrentWeek,
             progress.CurrentDifficultyLevel,
-            completion.DifficultyIncreased,
+            completion.DifficultyIncreased
+                || (adaptivePlanUpdated && progress.CurrentDifficultyLevel > completion.OldDifficultyLevel),
             completion.OldDifficultyLevel,
             completion.WeekChanged,
             completion.OldWeek,

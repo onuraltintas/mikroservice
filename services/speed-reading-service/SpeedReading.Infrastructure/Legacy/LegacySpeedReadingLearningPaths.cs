@@ -579,6 +579,15 @@ internal sealed class LegacySpeedReadingLearningPaths(SpeedReadingDbContext db) 
         }
     }
 
+    public Task<bool> RefreshAdaptiveProgressionAsync(
+        Guid studentId,
+        CancellationToken cancellationToken = default)
+    {
+        _ = studentId;
+        _ = cancellationToken;
+        return Task.FromResult(false);
+    }
+
     public async Task<PersonalizedLearningPathProgressSummary> GetPersonalizedProgressAsync(
         Guid studentId,
         CancellationToken cancellationToken = default)
