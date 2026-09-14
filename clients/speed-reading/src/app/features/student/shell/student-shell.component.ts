@@ -51,7 +51,8 @@ export class StudentShellComponent implements OnInit, OnDestroy {
   // ── Lifecycle ──────────────────────────────────────────────────────────────
   ngOnInit(): void {
     const isTeacher        = this.authService.hasRole('Teacher');
-    const isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin');
+    const isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin')
+      || this.authService.hasRole('InstitutionOwner');
     const preview          = isTeacher || isInstitutionAdmin;
     this.isTeacherPreview.set(preview);
 

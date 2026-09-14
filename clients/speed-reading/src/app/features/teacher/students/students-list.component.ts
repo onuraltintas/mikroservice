@@ -89,7 +89,7 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
     this.setupFilters();
 
     // Check role and update columns
-    const isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin');
+    const isInstitutionAdmin = this.isInstitutionAdmin();
     if (isInstitutionAdmin) {
       // Insert 'teacher' column after 'name'
       this.displayedColumns = ['avatar', 'name', 'teacher', 'access', 'level', 'target', 'dailyGoal', 'lastLogin', 'status', 'actions'];
@@ -117,7 +117,8 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
   }
 
   isInstitutionAdmin(): boolean {
-    return this.authService.hasRole('InstitutionAdmin');
+    return this.authService.hasRole('InstitutionAdmin')
+      || this.authService.hasRole('InstitutionOwner');
   }
 
   changeInstitutionAccess(student: Student, isSuspended: boolean): void {
@@ -188,7 +189,7 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
    */
   refreshData() {
     const user = this.authService.currentUserValue;
-    if (user && this.authService.hasRole('InstitutionAdmin')) {
+    if (user && this.isInstitutionAdmin()) {
       // Institution admins can filter the full institution roster.
       const searchTerm = this.searchControl.value || '';
       const level = this.levelControl.value;
@@ -279,7 +280,7 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
   }
 
   deleteStudent(student: Student): void {
-    const isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin');
+    const isInstitutionAdmin = this.isInstitutionAdmin();
 
     const dialogData: ConfirmationDialogData = {
       title: isInstitutionAdmin ? 'Öğrenciyi Kurumdan Çıkar' : 'Öğrenciyi Sınıftan Çıkar',
@@ -331,7 +332,7 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
     const file: File = event.target.files[0];
     if (file) {
       this.loading.set(true);
-      const isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin');
+      const isInstitutionAdmin = this.isInstitutionAdmin();
 
       const request$ = isInstitutionAdmin
         ? this.studentsService.importStudents(file)
@@ -356,7 +357,7 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
   }
 
   downloadTemplate(): void {
-    const isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin');
+    const isInstitutionAdmin = this.isInstitutionAdmin();
     const request$ = isInstitutionAdmin
       ? this.studentsService.getImportTemplate()
       : this.teachersService.getImportTemplate();

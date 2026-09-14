@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { institutionManagerGuard } from '../../core/guards/institution-manager.guard';
 
 export const teacherRoutes: Routes = [
   {
@@ -23,6 +24,7 @@ export const teacherRoutes: Routes = [
       },
       {
         path: 'teachers',
+        canActivate: [institutionManagerGuard],
         loadComponent: () => import('./teachers/teachers-list.component').then(m => m.TeachersListComponent)
       },
       {
@@ -68,6 +70,7 @@ export const teacherRoutes: Routes = [
       },
       {
         path: 'institution-settings',
+        canActivate: [institutionManagerGuard],
         loadComponent: () => import('./institution-settings.component').then(m => m.InstitutionSettingsComponent)
       },
       {

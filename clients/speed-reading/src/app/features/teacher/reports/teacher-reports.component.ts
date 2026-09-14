@@ -38,7 +38,8 @@ export class TeacherReportsComponent implements OnInit {
     // Check role and query params
     this.route.queryParams.subscribe(params => {
       const mode = params['mode'];
-      const isInstAdmin = this.authService.hasRole('InstitutionAdmin');
+      const isInstAdmin = this.authService.hasRole('InstitutionAdmin')
+        || this.authService.hasRole('InstitutionOwner');
 
       // Institution admins can select a teacher for the teacher-scoped report.
       if (isInstAdmin && mode === 'teacher') {

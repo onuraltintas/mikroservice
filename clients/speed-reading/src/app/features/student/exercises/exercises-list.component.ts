@@ -77,7 +77,9 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
   };
 
   ngOnInit(): void {
-    this.isTeacher = this.authService.hasRole('Teacher') || this.authService.hasRole('InstitutionAdmin');
+    this.isTeacher = this.authService.hasRole('Teacher')
+      || this.authService.hasRole('InstitutionAdmin')
+      || this.authService.hasRole('InstitutionOwner');
     this.loadData();
   }
 

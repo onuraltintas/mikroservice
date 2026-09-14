@@ -17,7 +17,8 @@ export class TeacherLayoutComponent implements OnInit {
   title = 'Öğretmen Paneli';
 
   ngOnInit(): void {
-    const isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin');
+    const isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin')
+      || this.authService.hasRole('InstitutionOwner');
 
     if (isInstitutionAdmin) {
       this.menuItems = this.navigationService.getInstitutionAdminMenuItems();

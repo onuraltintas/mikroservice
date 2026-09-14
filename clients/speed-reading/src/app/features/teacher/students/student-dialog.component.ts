@@ -124,7 +124,8 @@ export class StudentDialogComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     this.isEdit = !!data?.student;
-    this.isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin');
+    this.isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin')
+      || this.authService.hasRole('InstitutionOwner');
 
     this.studentForm = this.fb.group({
       firstName: ['', Validators.required],

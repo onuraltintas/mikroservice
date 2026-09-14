@@ -139,7 +139,8 @@ export class BaseLayoutComponent implements OnInit {
   }
 
   isInstitutionAdmin(): boolean {
-    return this.authService.hasRole('InstitutionAdmin');
+    return this.authService.hasRole('InstitutionAdmin')
+      || this.authService.hasRole('InstitutionOwner');
   }
 
   isOnlyEditor(): boolean {

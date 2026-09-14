@@ -101,7 +101,8 @@ export class LinkStudentDialogComponent implements OnInit {
     private toaster: ToasterService,
     public dialogRef: MatDialogRef<LinkStudentDialogComponent>
   ) {
-    this.isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin');
+    this.isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin')
+      || this.authService.hasRole('InstitutionOwner');
 
     this.linkForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
