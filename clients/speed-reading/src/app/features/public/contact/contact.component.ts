@@ -9,8 +9,10 @@ import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { BaseComponent } from '../../../core/components/base.component';
 import { PublicCmsService } from '../../../core/services/public-cms.service';
+import { SeoService } from '../../../core/services/seo.service';
 import { finalize } from 'rxjs/operators';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { isTrustedMapEmbedUrl } from '../../../core/security/trusted-resource-url';
 
 import { NavbarComponent } from '../../../shared/components/navbar/navbar';
 import { FooterComponent } from '../../../shared/components/footer/footer';
@@ -37,6 +39,7 @@ export class ContactComponent extends BaseComponent {
     private cmsService = inject(PublicCmsService);
     private fb = inject(FormBuilder);
     private sanitizer = inject(DomSanitizer);
+    private seoService = inject(SeoService);
 
     contactForm!: FormGroup;
     @ViewChild(FormGroupDirective) formDir!: FormGroupDirective;
@@ -51,7 +54,7 @@ export class ContactComponent extends BaseComponent {
         workingHours: 'Pazartesi - Cuma\n09:00 - 18:00'
     };
 
-    mapUrl: any;
+    mapUrl: SafeResourceUrl | null = null;
 
     constructor() {
         super();
@@ -74,13 +77,22 @@ export class ContactComponent extends BaseComponent {
                 if (content.blocks['contact_hero_title']) this.heroTitle = content.blocks['contact_hero_title'];
                 if (content.blocks['contact_hero_subtitle']) this.heroSubtitle = content.blocks['contact_hero_subtitle'];
 
+                this.seoService.updateTags({
+                    title: content.blocks['contact_seo_title'] || `${this.heroTitle} | Master Hızlı Okuma`,
+                    description: content.blocks['contact_seo_description'] || this.heroSubtitle,
+                    keywords: content.blocks['contact_seo_keywords'] || undefined,
+                    url: window.location.href,
+                    type: 'website'
+                });
+
                 if (content.blocks['contact_email']) this.contactInfo.email = content.blocks['contact_email'];
                 if (content.blocks['contact_phone']) this.contactInfo.phone = content.blocks['contact_phone'];
                 if (content.blocks['contact_address']) this.contactInfo.address = content.blocks['contact_address'];
                 if (content.blocks['contact_working_hours']) this.contactInfo.workingHours = content.blocks['contact_working_hours'];
 
-                if (content.blocks['contact_map_url']) {
-                    this.mapUrl = this.sanitizer.bypassSecurityTrustResourceUrl(content.blocks['contact_map_url']);
+                const mapUrl = content.blocks['contact_map_url'];
+                if (isTrustedMapEmbedUrl(mapUrl)) {
+                    this.mapUrl = this.sanitizer.bypassSecurityTrustResourceUrl(mapUrl);
                 }
             },
             error: (err) => console.warn('Failed to load contact content', err)

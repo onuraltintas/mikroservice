@@ -28,9 +28,9 @@ export class FooterComponent implements OnInit {
   currentYear = new Date().getFullYear();
 
   // Branding
-  logoText = 'Hızlı Okuma';
-  tagline = 'Okuma hızınızı bilimsel yöntemlerle 3 katına çıkarın';
-  copyrightText = 'Hızlı Okuma Platformu. Tüm hakları saklıdır.';
+  logoText = 'Master Hızlı Okuma';
+  tagline = 'Hız ve anlamayı birlikte izleyen kişisel çalışma deneyimi.';
+  copyrightText = 'ONAL Yazılım ve Otomasyon. Tüm hakları saklıdır.';
 
   // Links - Defaults
   productLinks: FooterLink[] = [
@@ -42,9 +42,7 @@ export class FooterComponent implements OnInit {
 
   supportLinks: FooterLink[] = [
     { label: 'SSS', route: '/sss' },
-    { label: 'İletişim', route: '/iletisim' },
-    { label: 'Yardım Merkezi', route: '/help' },
-    { label: 'Durum', route: '/status' }
+    { label: 'İletişim', route: '/iletisim' }
   ];
 
   legalLinks: FooterLink[] = [
@@ -54,12 +52,7 @@ export class FooterComponent implements OnInit {
     { label: 'Çerez Politikası', route: '/legal/cookies' }
   ];
 
-  socialLinks: SocialLink[] = [
-    { icon: 'facebook', url: '#' },
-    { icon: 'twitter', url: '#' },
-    { icon: 'instagram', url: '#' },
-    { icon: 'linkedin', url: '#' }
-  ];
+  socialLinks: SocialLink[] = [];
 
   ngOnInit() {
     this.loadContent();

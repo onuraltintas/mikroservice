@@ -2,10 +2,10 @@
     <div class="container">
         <div class="newsletter-content">
             <div class="newsletter-text">
-                <h2>{{ title }}</h2>
-                <p>{{ description }}</p>
+                <h2>{{ content.title }}</h2>
+                <p>{{ content.subtitle }}</p>
                 <ul class="benefits">
-                    <li *ngFor="let benefit of benefits">
+                    <li *ngFor="let benefit of content.benefits">
                         <mat-icon>check_circle</mat-icon> {{ benefit }}
                     </li>
                 </ul>

@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { Router } from '@angular/router';
+import { DEFAULT_HOME_PAGE_CONTENT, HomeSectionHeading } from '../../home-page-content';
 
 @Component({
   selector: 'app-cta-section',
@@ -12,11 +13,7 @@ import { Router } from '@angular/router';
 })
 export class CtaSectionComponent {
   private router = inject(Router);
-
-  title = 'Okuma Becerilerinizi Geliştirmeye Hazır mısınız?';
-  subtitle = 'Başlangıç seviyenizi görün, düzenli çalışmalarla hız ve anlamayı birlikte takip edin.';
-  buttonText = 'Hemen Başla';
-  smallText = 'Sonuçlar başlangıç seviyesine ve düzenli çalışmaya göre değişir.';
+  @Input() content: HomeSectionHeading = DEFAULT_HOME_PAGE_CONTENT.cta;
 
   startTrial() {
     this.router.navigate(['/auth/register']);

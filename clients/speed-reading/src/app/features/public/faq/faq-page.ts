@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar';
 import { FooterComponent } from '../../../shared/components/footer/footer';
 import { PublicCmsService } from '../../../core/services/public-cms.service';
+import { SeoService } from '../../../core/services/seo.service';
 
 interface FaqItem {
     question: string;
@@ -22,6 +23,7 @@ interface FaqItem {
 })
 export class FaqPageComponent implements OnInit {
     private cmsService = inject(PublicCmsService);
+    private seoService = inject(SeoService);
 
     faqs: FaqItem[] = [];
     categories: string[] = [];
@@ -34,6 +36,13 @@ export class FaqPageComponent implements OnInit {
     private loadContent() {
         this.cmsService.getLandingContent().subscribe({
             next: (content) => {
+                this.seoService.updateTags({
+                    title: content.blocks['faq_seo_title'] || 'Sık Sorulan Sorular | Master Hızlı Okuma',
+                    description: content.blocks['faq_seo_description'] || 'Master Hızlı Okuma ve çalışma düzeni hakkında sık sorulan sorular.',
+                    keywords: content.blocks['faq_seo_keywords'] || undefined,
+                    url: window.location.href,
+                    type: 'website'
+                });
                 const faqContent = content.blocks['faq_items'] ?? content.blocks['faq_list'];
                 if (faqContent) {
                     try {

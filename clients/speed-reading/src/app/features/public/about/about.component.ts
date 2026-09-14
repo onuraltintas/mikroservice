@@ -57,8 +57,9 @@ export class AboutComponent implements OnInit {
                 }
 
                 this.seoService.updateTags({
-                    title: (this.heroTitle || 'Hakkımızda') + ' | Hızlı Okuma',
-                    description: this.heroSubtitle || 'Hızlı Okuma Platformu hakkında bilgi edinin.',
+                    title: content.blocks['about_seo_title'] || (this.heroTitle || 'Hakkımızda') + ' | Master Hızlı Okuma',
+                    description: content.blocks['about_seo_description'] || this.heroSubtitle || 'Master Hızlı Okuma hakkında bilgi edinin.',
+                    keywords: content.blocks['about_seo_keywords'] || undefined,
                     url: window.location.href,
                     type: 'website'
                 });

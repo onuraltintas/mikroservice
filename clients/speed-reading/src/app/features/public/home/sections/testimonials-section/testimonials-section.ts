@@ -1,15 +1,15 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { DEFAULT_HOME_PAGE_CONTENT, HomeApproachContent, HomeSectionHeading } from '../../home-page-content';
 
-interface Testimonial {
-  name: string;
-  role: string;
+interface Testimonial extends HomeApproachContent {
   rating: number;
-  text: string;
   avatar: string;
 }
+
+type ApproachContent = HomeSectionHeading & { items: HomeApproachContent[] };
 
 @Component({
   selector: 'app-testimonials-section',
@@ -19,37 +19,11 @@ interface Testimonial {
   styleUrl: './testimonials-section.scss'
 })
 export class TestimonialsSectionComponent {
-  // Default testimonials (fallback)
-  testimonials: Testimonial[] = [
-    {
-      name: 'Ölçüm odaklı çalışma',
-      role: 'Kişisel hedefler',
-      rating: 5,
-      text: 'Her çalışma sonrasında hız ve anlama birlikte değerlendirilir; sonraki içerik bu sonuca göre planlanır.',
-      avatar: 'ÖÇ'
-    },
-    {
-      name: 'Kademeli ilerleme',
-      role: 'Uygun zorluk',
-      rating: 5,
-      text: 'Yeterli ve tutarlı ölçüm olmadan seviye yükseltilmez; anlama zorlanırsa destek çalışmaları sunulur.',
-      avatar: 'Kİ'
-    },
-    {
-      name: 'Şeffaf sonuçlar',
-      role: 'Hız ve anlama',
-      rating: 5,
-      text: 'İlerleme; başlangıç düzeyi, düzenli çalışma ve anlama sonuçlarıyla birlikte değerlendirilir.',
-      avatar: 'ŞS'
-    },
-    {
-      name: 'İçerik ve geri bildirim',
-      role: 'Öğrenme akışı',
-      rating: 5,
-      text: 'Egzersizler, metinler ve sorular öğrencinin çalışma geçmişiyle birlikte değerlendirilir.',
-      avatar: 'İG'
-    }
-  ];
+  @Input() content: ApproachContent = DEFAULT_HOME_PAGE_CONTENT.approach;
+
+  get testimonials(): Testimonial[] {
+    return this.content.items.map(item => ({ ...item, rating: 5, avatar: this.getInitials(item.title) }));
+  }
 
   private getInitials(name: string): string {
     return name

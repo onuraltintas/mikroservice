@@ -1,10 +1,10 @@
 <section class="cta-section">
     <div class="container">
-        <h2>{{ title }}</h2>
-        <p>{{ subtitle }}</p>
+        <h2>{{ content.title }}</h2>
+        <p>{{ content.subtitle }}</p>
         <button mat-raised-button class="cta-button" (click)="startTrial()">
-            {{ buttonText }}
+            {{ content.actionLabel || 'Başla' }}
         </button>
-        <p class="small-text">{{ smallText }}</p>
+        <p class="small-text">{{ content.smallText }}</p>
     </div>
 </section>

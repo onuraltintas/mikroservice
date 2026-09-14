@@ -1,5 +1,6 @@
 using DotNetEnv;
 using System.Text.Json;
+using System.Threading.RateLimiting;
 using EduPlatform.Shared.Infrastructure.Extensions;
 using EduPlatform.Shared.Infrastructure.Logging;
 using EduPlatform.Shared.Infrastructure.Middleware;
@@ -19,6 +20,24 @@ if (File.Exists(envPath))
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("public-cms-write", context =>
+    {
+        var forwardedAddress = context.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim();
+        var partitionKey = !string.IsNullOrWhiteSpace(forwardedAddress)
+            ? forwardedAddress
+            : context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 8,
+            Window = TimeSpan.FromMinutes(10),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        });
+    });
+});
 var ownedDataEnabled = builder.Configuration.GetValue<bool>("SpeedReading:OwnedDataEnabled");
 var migrationOnly = args.Any(argument =>
     string.Equals(argument, "--migrate-only", StringComparison.OrdinalIgnoreCase));
@@ -459,6 +478,7 @@ else
 var app = builder.Build();
 app.UseRequestLogging();
 app.UseExceptionHandler();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseMiddleware<EduPlatform.Shared.Infrastructure.Middleware.AdminAuditMiddleware>();
 app.UseAuthorization();

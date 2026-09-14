@@ -1,11 +1,11 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterModule } from '@angular/router';
-import { PublicCmsService } from '../../../../../core/services/public-cms.service';
 import { SubscriptionService, SubscriptionPlan } from '../../../../../core/services/subscription.service';
+import { DEFAULT_HOME_PAGE_CONTENT, HomeSectionHeading } from '../../home-page-content';
 
 @Component({
   selector: 'app-pricing-section',
@@ -15,11 +15,8 @@ import { SubscriptionService, SubscriptionPlan } from '../../../../../core/servi
   styleUrl: './pricing-section.scss'
 })
 export class PricingSectionComponent implements OnInit {
-  private cmsService = inject(PublicCmsService);
   private subscriptionService = inject(SubscriptionService);
-
-  title = 'Hızlı Okuma Programına Katılın';
-  subtitle = 'Bireysel erişiminiz, havale/EFT ödemeniz teyit edildikten sonra açılır.';
+  @Input() content: HomeSectionHeading = DEFAULT_HOME_PAGE_CONTENT.pricing;
   plans: SubscriptionPlan[] = [];
   loading = true;
 
@@ -32,21 +29,7 @@ export class PricingSectionComponent implements OnInit {
   };
 
   ngOnInit() {
-    this.loadTitle();
     this.loadPlans();
-  }
-
-  private loadTitle() {
-    this.cmsService.getLandingContent().subscribe({
-      next: (content) => {
-        if (content.blocks['pricing_title']) {
-          this.title = content.blocks['pricing_title'];
-        }
-        if (content.blocks['pricing_subtitle']) {
-          this.subtitle = content.blocks['pricing_subtitle'];
-        }
-      }
-    });
   }
 
   private loadPlans() {

@@ -1,8 +1,8 @@
 <section class="blog-section">
     <div class="container">
         <div class="section-header">
-            <h2>{{ sectionTitle }}</h2>
-            <p>{{ sectionSubtitle }}</p>
+            <h2>{{ content.title }}</h2>
+            <p>{{ content.subtitle }}</p>
         </div>
 
         <div class="blog-grid">
@@ -39,7 +39,7 @@
 
         <div class="cta-button">
             <button mat-stroked-button routerLink="/blog" class="view-all-btn">
-                Tüm Blog Yazılarını Gör
+                {{ content.actionLabel || 'Tüm yazıları gör' }}
                 <mat-icon>arrow_forward</mat-icon>
             </button>
         </div>

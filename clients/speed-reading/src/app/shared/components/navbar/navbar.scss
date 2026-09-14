@@ -41,17 +41,25 @@
             color: var(--ui-text);
         }
 
+        small {
+            display: block;
+            font-size: 0.58em;
+            letter-spacing: 0.14em;
+            line-height: 1.1;
+            opacity: 0.78;
+        }
+
         .logo-icon {
             padding: 0.5rem;
             border-radius: 0.5rem;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.12);
             display: flex;
             align-items: center;
             justify-content: center;
             transition: background 0.3s ease;
 
             &.scrolled {
-                background: linear-gradient(135deg, var(--ui-brand), var(--ui-accent));
+                background: transparent;
             }
 
             img {

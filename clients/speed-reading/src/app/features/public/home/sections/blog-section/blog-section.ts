@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { PublicCmsService, BlogPostDto } from '../../../../../core/services/public-cms.service';
 import { calculateReadTime, getCategory, getCategoryColor } from '../../../../../core/models/blog.model';
+import { DEFAULT_HOME_PAGE_CONTENT, HomeSectionHeading } from '../../home-page-content';
 
 @Component({
   selector: 'app-blog-section',
@@ -17,23 +18,12 @@ import { calculateReadTime, getCategory, getCategoryColor } from '../../../../..
 export class BlogSectionComponent implements OnInit {
   private cmsService = inject(PublicCmsService);
 
-  sectionTitle = 'Blog & Kaynaklar';
-  sectionSubtitle = 'Hızlı okuma, öğrenme teknikleri ve başarı hikayeleri hakkında en güncel içerikler';
+  @Input() content: HomeSectionHeading = DEFAULT_HOME_PAGE_CONTENT.blog;
   posts: BlogPostDto[] = [];
   loading = true;
 
   ngOnInit() {
-    this.loadContent();
     this.loadPosts();
-  }
-
-  private loadContent() {
-    this.cmsService.getLandingContent().subscribe({
-      next: (content) => {
-        if (content.blocks['blog_section_title'])    this.sectionTitle    = content.blocks['blog_section_title'];
-        if (content.blocks['blog_section_subtitle']) this.sectionSubtitle = content.blocks['blog_section_subtitle'];
-      }
-    });
   }
 
   private loadPosts() {

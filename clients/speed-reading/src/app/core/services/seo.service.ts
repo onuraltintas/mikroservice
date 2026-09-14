@@ -24,10 +24,10 @@ export class SeoService {
     private title = inject(Title);
 
     private readonly defaultConfig: SeoConfig = {
-        title: 'Hızlı Okuma Platformu',
-        description: 'Okuma hızınızı artırın, anlama yeteneğinizi geliştirin. Bilimsel yöntemlerle hızlı okuma eğitimi.',
-        keywords: 'hızlı okuma, speed reading, okuma hızı, anlama, eğitim',
-        image: '/assets/images/og-image.jpg',
+        title: 'Master Hızlı Okuma | Hız ve Anlamayı Birlikte Geliştirin',
+        description: 'Başlangıç düzeyinizi ölçün, size uygun çalışmalarla ilerleyin ve hız ile anlama gelişiminizi birlikte görün.',
+        keywords: 'hızlı okuma, okuduğunu anlama, okuma egzersizleri, kişisel öğrenme planı',
+        image: '/brand/onal-mark.svg',
         type: 'website'
     };
 
@@ -129,10 +129,10 @@ export class SeoService {
                     },
                     publisher: {
                         '@type': 'Organization',
-                        name: 'Hızlı Okuma Platformu',
+                        name: 'ONAL Yazılım ve Otomasyon',
                         logo: {
                             '@type': 'ImageObject',
-                            url: '/assets/images/logo.png'
+                            url: '/brand/onal-mark.svg'
                         }
                     },
                     datePublished: data.publishedTime,
@@ -154,9 +154,9 @@ export class SeoService {
                 structuredData = {
                     ...structuredData,
                     '@type': 'Organization',
-                    name: 'Hızlı Okuma Platformu',
+                    name: data.name || 'ONAL Yazılım ve Otomasyon',
                     url: 'https://masterhizliokuma.com',
-                    logo: '/assets/images/logo.png',
+                    logo: '/brand/onal-mark.svg',
                     sameAs: [
                         // Add social media URLs
                     ]

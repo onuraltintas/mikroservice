@@ -2,9 +2,9 @@
     <div class="container">
         <a routerLink="/" class="logo" (click)="onLogoClick($event)">
             <div class="logo-icon" [class.scrolled]="isScrolled">
-                <img src="assets/icons/apple-touch-icon.png" alt="Hızlı Okuma Logo">
+                <img src="brand/onal-mark.svg" alt="ONAL Yazılım ve Otomasyon logosu">
             </div>
-            <span [class.scrolled]="isScrolled">Hızlı Okuma</span>
+            <span [class.scrolled]="isScrolled">Master Hızlı Okuma <small>ONAL</small></span>
         </a>
 
         <!-- Desktop Navigation -->
@@ -28,7 +28,7 @@
             <a routerLink="/auth/login" [class.scrolled]="isScrolled">Giriş Yap</a>
             <button mat-raised-button [class.primary]="!isScrolled" [class.white]="isScrolled"
                 routerLink="/auth/register">
-                Ücretsiz Dene
+                Başlangıç yap
             </button>
         </div>
 
@@ -57,7 +57,7 @@
             </ng-container>
             <a routerLink="/auth/login" (click)="closeMobileMenu()">Giriş Yap</a>
             <button mat-raised-button color="primary" routerLink="/auth/register" (click)="closeMobileMenu()">
-                Ücretsiz Dene
+                Başlangıç yap
             </button>
         </div>
     </div>

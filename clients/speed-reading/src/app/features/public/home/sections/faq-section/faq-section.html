@@ -1,10 +1,11 @@
 <section class="faq-section">
     <div class="container">
         <div class="section-header">
-            <h2>Sıkça Sorulan Sorular</h2>
+            <h2>{{ content.title }}</h2>
+            <p>{{ content.subtitle }}</p>
         </div>
 
-        <mat-accordion class="faq-accordion">
+        <mat-accordion *ngIf="faqs.length" class="faq-accordion">
             <mat-expansion-panel *ngFor="let faq of faqs">
                 <mat-expansion-panel-header>
                     <mat-panel-title>
@@ -21,7 +22,7 @@
         <div class="view-all-container">
             <a routerLink="/sss" class="view-all-btn">
                 <mat-icon>help_outline</mat-icon>
-                Tüm Soruları Gör
+                {{ content.actionLabel || 'Tüm soruları gör' }}
                 <mat-icon>arrow_forward</mat-icon>
             </a>
         </div>

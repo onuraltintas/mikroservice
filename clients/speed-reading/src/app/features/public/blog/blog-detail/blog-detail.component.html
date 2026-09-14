@@ -147,8 +147,8 @@
 
                     <!-- CTA Card -->
                     <mat-card class="cta-card">
-                        <h3>Hızlı Okumayı Öğren</h3>
-                        <p>7 günlük ücretsiz deneme ile okuma hızınızı 2 katına çıkarın.</p>
+                        <h3>Çalışma yolunuzu keşfedin</h3>
+                        <p>Başlangıç düzeyinizi görün ve size uygun egzersizlerle ilerleyin.</p>
                         <button mat-raised-button color="primary" class="full-width" routerLink="/auth/register">
                             Ücretsiz Başla
                         </button>
@@ -159,7 +159,7 @@
                         <h3>Etiketler</h3>
                         <div class="tags">
                             <span
-                                *ngFor="let tag of ['Hızlı Okuma', 'Öğrenme', 'Beyin', 'Teknikler', 'Verimlilik', 'Eğitim']"
+                                *ngFor="let tag of post.tags"
                                 class="tag">
                                 {{ tag }}
                             </span>

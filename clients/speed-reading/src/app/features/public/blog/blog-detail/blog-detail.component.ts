@@ -116,7 +116,7 @@ export class BlogDetailComponent implements OnInit {
             url: canonicalUrl,
             image,
             author: post.author || 'Anonim',
-            publishedAt: post.publishedAt
+            publishedTime: post.publishedAt
         });
     }
 

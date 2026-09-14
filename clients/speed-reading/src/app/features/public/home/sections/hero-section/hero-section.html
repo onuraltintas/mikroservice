@@ -11,31 +11,27 @@
             <!-- Left Content -->
             <div class="text-content">
                 <h1 class="title">
-                    {{ title }}
+                    {{ content.title }}
                 </h1>
 
                 <p class="subtitle">
-                    {{ subtitle }}
+                    {{ content.subtitle }}
                 </p>
 
                 <div class="cta-buttons">
                     <button mat-raised-button color="accent" class="primary-btn" (click)="startFreeTrial()">
-                        Hemen Başlayın
+                        {{ content.primaryActionLabel }}
                     </button>
                     <button mat-stroked-button class="secondary-btn" (click)="scrollToFeatures()">
-                        Nasıl Çalışır?
+                        {{ content.secondaryActionLabel }}
                     </button>
                 </div>
 
                 <!-- Trust badges -->
                 <div class="trust-badges">
-                    <div class="badge">
-                        <mat-icon>shield</mat-icon>
-                        <span>Başlangıç ölçümü</span>
-                    </div>
-                    <div class="badge">
-                        <mat-icon>credit_card</mat-icon>
-                        <span>Hız ve anlama birlikte</span>
+                    <div *ngFor="let trustPoint of content.trustPoints; let index = index" class="badge">
+                        <mat-icon>{{ index === 0 ? 'shield' : index === 1 ? 'insights' : 'route' }}</mat-icon>
+                        <span>{{ trustPoint }}</span>
                     </div>
                 </div>
             </div>

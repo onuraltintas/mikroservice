@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, ViewEncapsulation } from '@angular/core';
+import { Component, Input, OnInit, inject, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { PublicCmsService } from '../../../../../core/services/public-cms.service';
+import { DEFAULT_HOME_PAGE_CONTENT, HomeSectionHeading } from '../../home-page-content';
 
 interface FaqItem {
   question: string;
@@ -21,45 +22,9 @@ interface FaqItem {
 })
 export class FaqSectionComponent implements OnInit {
   private cmsService = inject(PublicCmsService);
+  @Input() content: HomeSectionHeading = DEFAULT_HOME_PAGE_CONTENT.faq;
 
-  // Default FAQs (fallback)
-  faqs: FaqItem[] = [
-    {
-      question: 'Hızlı okuma öğrenmek ne kadar sürer?',
-      answer: 'Ortalama 4-6 hafta düzenli çalışma ile belirgin gelişme görürsünüz. Günde 15-20 dakika pratik yapmanız yeterlidir.',
-      category: 'Genel'
-    },
-    {
-      question: 'Anlama seviyem düşer mi?',
-      answer: 'Hayır, aksine anlama seviyeniz artar! Programımız hızlı okuma ile birlikte kavrama tekniklerini de öğretir.',
-      category: 'Genel'
-    },
-    {
-      question: 'Hangi yaş grupları için uygun?',
-      answer: '10 yaş ve üzeri herkes için uygundur. Özellikle öğrenciler ve profesyoneller için idealdir.',
-      category: 'Genel'
-    },
-    {
-      question: 'Mobil cihazlardan kullanabilir miyim?',
-      answer: 'Evet! Platformumuz responsive tasarıma sahiptir ve tüm cihazlarda sorunsuz çalışır.',
-      category: 'Teknik'
-    },
-    {
-      question: 'Para iade garantiniz var mı?',
-      answer: 'Evet, ilk 7 gün içinde %100 para iadesi garantisi sunuyoruz. Hiçbir soru sormadan iade yapabilirsiniz.',
-      category: 'Fiyatlandırma'
-    },
-    {
-      question: 'Sertifika alabilir miyim?',
-      answer: 'Pro ve Kurumsal planlarda dijital sertifika alırsınız. Sertifika LinkedIn profilinizde paylaşılabilir.',
-      category: 'Sertifika'
-    },
-    {
-      question: 'Öğretmen desteği var mı?',
-      answer: 'Pro planda öncelikli email desteği, Kurumsal planda ise özel eğitmen desteği bulunmaktadır.',
-      category: 'Destek'
-    }
-  ];
+  faqs: FaqItem[] = [];
 
   ngOnInit() {
     this.loadContent();
@@ -73,15 +38,11 @@ export class FaqSectionComponent implements OnInit {
           try {
             const parsedFaqs = JSON.parse(faqContent);
             if (Array.isArray(parsedFaqs) && parsedFaqs.length > 0) {
-              this.faqs = parsedFaqs;
+              this.faqs = parsedFaqs.filter((faq): faq is FaqItem =>
+                faq && typeof faq.question === 'string' && typeof faq.answer === 'string' && typeof faq.category === 'string').slice(0, 8);
             }
-          } catch (e) {
-            console.warn('Failed to parse faq_list, using defaults');
-          }
+          } catch { /* CMS payload is ignored until corrected. */ }
         }
-      },
-      error: (err) => {
-        console.warn('Failed to load landing content, using defaults', err);
       }
     });
   }

@@ -1,11 +1,11 @@
 <app-navbar></app-navbar>
-<app-hero-section></app-hero-section>
-<app-features-section></app-features-section>
-<app-stats-section></app-stats-section>
-<app-testimonials-section></app-testimonials-section>
-<app-pricing-section></app-pricing-section>
-<app-blog-section></app-blog-section>
-<app-newsletter-section></app-newsletter-section>
-<app-faq-section></app-faq-section>
-<app-cta-section></app-cta-section>
+<app-hero-section [content]="content.hero"></app-hero-section>
+@if (content.visibility.features) { <app-features-section [content]="content.features"></app-features-section> }
+@if (content.visibility.stats) { <app-stats-section></app-stats-section> }
+@if (content.visibility.approach) { <app-testimonials-section [content]="content.approach"></app-testimonials-section> }
+@if (content.visibility.pricing) { <app-pricing-section [content]="content.pricing"></app-pricing-section> }
+@if (content.visibility.blog) { <app-blog-section [content]="content.blog"></app-blog-section> }
+@if (content.visibility.newsletter) { <app-newsletter-section [content]="content.newsletter"></app-newsletter-section> }
+@if (content.visibility.faq) { <app-faq-section [content]="content.faq"></app-faq-section> }
+@if (content.visibility.cta) { <app-cta-section [content]="content.cta"></app-cta-section> }
 <app-footer></app-footer>

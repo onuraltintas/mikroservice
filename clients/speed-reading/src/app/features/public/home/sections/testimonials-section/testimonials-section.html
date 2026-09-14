@@ -1,8 +1,8 @@
 <section class="testimonials-section">
     <div class="container">
         <div class="section-header">
-            <h2>Çalışma yaklaşımımız</h2>
-            <p>Hız, anlama ve düzenli çalışma verileri birlikte değerlendirilir.</p>
+            <h2>{{ content.title }}</h2>
+            <p>{{ content.subtitle }}</p>
         </div>
 
         <div class="testimonials-grid">
@@ -10,7 +10,7 @@
                 <div class="card-header">
                     <div class="avatar">{{ testimonial.avatar }}</div>
                     <div class="user-info">
-                        <h4>{{ testimonial.name }}</h4>
+                        <h4>{{ testimonial.title }}</h4>
                         <p>{{ testimonial.role }}</p>
                     </div>
                 </div>
@@ -21,7 +21,7 @@
                     </mat-icon>
                 </div>
 
-                <p class="testimonial-text">"{{ testimonial.text }}"</p>
+                <p class="testimonial-text">{{ testimonial.description }}</p>
             </mat-card>
         </div>
     </div>

@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using SpeedReading.Application.Content;
 
 namespace SpeedReading.API.Controllers;
@@ -88,6 +89,7 @@ public sealed class CmsController(ISpeedReadingCms cms) : ControllerBase
 
     [HttpPost("contact")]
     [AllowAnonymous]
+    [EnableRateLimiting("public-cms-write")]
     public async Task<IActionResult> SubmitContact(
         [FromBody] CmsContactMessageRequest request,
         CancellationToken cancellationToken = default)
@@ -106,6 +108,7 @@ public sealed class CmsController(ISpeedReadingCms cms) : ControllerBase
 
     [HttpPost("newsletter/subscribe")]
     [AllowAnonymous]
+    [EnableRateLimiting("public-cms-write")]
     public async Task<IActionResult> Subscribe(
         [FromBody] CmsNewsletterSubscriptionRequest request,
         CancellationToken cancellationToken = default)
