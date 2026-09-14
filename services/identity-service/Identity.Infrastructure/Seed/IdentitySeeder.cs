@@ -38,6 +38,8 @@ public static class IdentitySeeder
 
             logger.LogInformation("🌱 Seeding Starting...");
 
+            await EnsureTurkeyLocationsAsync(context, logger);
+
             // 1. Seed Roles (Dynamic Update)
             logger.LogInformation("Checking for new roles...");
             var existingRoles = await context.Roles.ToDictionaryAsync(r => r.Name);
@@ -364,6 +366,87 @@ public static class IdentitySeeder
 
     private static string? GetSetting(IConfiguration configuration, string key) =>
         Environment.GetEnvironmentVariable(key) ?? configuration[key];
+
+    private static async Task EnsureTurkeyLocationsAsync(
+        IdentityDbContext context,
+        ILogger logger)
+    {
+        var existingProvinceIds = await context.Provinces
+            .Select(province => province.Id)
+            .ToHashSetAsync();
+        var provinces = TurkeyLocationSeedData.Provinces
+            .Where(province => !existingProvinceIds.Contains(province.Id))
+            .Select(province => Province.Create(province.Id, province.Name))
+            .ToList();
+
+        if (provinces.Count > 0)
+        {
+            await context.Provinces.AddRangeAsync(provinces);
+            await context.SaveChangesAsync();
+        }
+
+        var existingDistrictIds = await context.Districts
+            .Select(district => district.Id)
+            .ToHashSetAsync();
+        var districts = TurkeyLocationSeedData.Districts
+            .Where(district => !existingDistrictIds.Contains(district.Id))
+            .Select(district => District.Create(district.Id, district.ProvinceId, district.Name))
+            .ToList();
+
+        if (districts.Count > 0)
+        {
+            await context.Districts.AddRangeAsync(districts);
+            await context.SaveChangesAsync();
+        }
+
+        var unlinkedInstitutions = await context.Institutions
+            .Where(institution => institution.ProvinceId == null && institution.City != null)
+            .ToListAsync();
+        var provincesByName = TurkeyLocationSeedData.Provinces.ToDictionary(
+            province => province.Name,
+            StringComparer.OrdinalIgnoreCase);
+        var districtsByProvinceAndName = TurkeyLocationSeedData.Districts.ToDictionary(
+            district => (district.ProvinceId, district.Name),
+            EqualityComparer<(string ProvinceId, string Name)>.Default);
+        var linkedInstitutionCount = 0;
+
+        foreach (var institution in unlinkedInstitutions)
+        {
+            var city = institution.City!.Trim();
+            var district = institution.District?.Trim();
+            if (string.IsNullOrEmpty(district) && city.Contains(',', StringComparison.Ordinal))
+            {
+                var parts = city.Split(',', 2, StringSplitOptions.TrimEntries);
+                city = parts[0];
+                district = parts.ElementAtOrDefault(1);
+            }
+
+            if (string.IsNullOrWhiteSpace(district)
+                || !provincesByName.TryGetValue(city, out var provinceSeed)
+                || !districtsByProvinceAndName.TryGetValue((provinceSeed.Id, district), out var districtSeed))
+            {
+                continue;
+            }
+
+            var province = await context.Provinces.FindAsync([provinceSeed.Id]);
+            var districtReference = await context.Districts.FindAsync([districtSeed.Id]);
+            if (province is null || districtReference is null) continue;
+
+            institution.SetLocation(province, districtReference);
+            linkedInstitutionCount++;
+        }
+
+        if (linkedInstitutionCount > 0)
+        {
+            await context.SaveChangesAsync();
+        }
+
+        logger.LogInformation(
+            "Türkiye konum referans verisi hazır: {ProvinceCount} il, {DistrictCount} ilçe, {LinkedInstitutionCount} kurum eşleştirildi.",
+            TurkeyLocationSeedData.Provinces.Count,
+            TurkeyLocationSeedData.Districts.Count,
+            linkedInstitutionCount);
+    }
 
     private static async Task EnsureBootstrapAdminAsync(
         string email,

@@ -7,13 +7,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { InstitutionsService } from '../../core/services/institutions.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToasterService } from '../../core/services/toaster.service';
 import { Institution } from '../../core/models/institution.model';
 import { InstitutionAccessLicense, SubscriptionService } from '../../core/services/subscription.service';
+import { DistrictOption, LocationsService, ProvinceOption } from '../../core/services/locations.service';
+import { MatSelectModule } from '@angular/material/select';
+import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 
 @Component({
     selector: 'app-institution-settings',
@@ -27,7 +30,9 @@ import { InstitutionAccessLicense, SubscriptionService } from '../../core/servic
         MatIconModule,
         MatProgressSpinnerModule,
         MatTabsModule,
-        ReactiveFormsModule
+        ReactiveFormsModule,
+        MatSelectModule,
+        NgxMatSelectSearchModule
     ],
     templateUrl: './institution-settings.component.html',
     styles: [`
@@ -165,6 +170,7 @@ export class InstitutionSettingsComponent implements OnInit {
     private authService = inject(AuthService);
     private subscriptionService = inject(SubscriptionService);
     private toaster = inject(ToasterService);
+    private locations = inject(LocationsService);
 
     settingsForm: FormGroup;
     passwordForm: FormGroup;
@@ -175,14 +181,20 @@ export class InstitutionSettingsComponent implements OnInit {
     institutionId: string | null = null;
     institution = signal<Institution | null>(null);
     accessLicense = signal<InstitutionAccessLicense | null>(null);
+    provinces: ProvinceOption[] = [];
+    districts: DistrictOption[] = [];
+    filteredProvinces: ProvinceOption[] = [];
+    filteredDistricts: DistrictOption[] = [];
+    readonly provinceFilter = new FormControl('', { nonNullable: true });
+    readonly districtFilter = new FormControl('', { nonNullable: true });
 
     constructor() {
         this.settingsForm = this.fb.group({
             name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
             contactEmail: ['', [Validators.required, Validators.email]],
             phoneNumber: ['', [Validators.pattern('^[0-9\\+\\-\\(\\) \\s]{10,20}$')]],
-            city: ['', [Validators.maxLength(100)]],
-            district: ['', [Validators.maxLength(100)]],
+            provinceId: [''],
+            districtId: [''],
             address: ['']
         });
 
@@ -203,6 +215,7 @@ export class InstitutionSettingsComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        this.loadLocations();
         const user = this.authService.currentUserValue;
 
         // Check if user has institutionId claim/property
@@ -236,9 +249,12 @@ export class InstitutionSettingsComponent implements OnInit {
                     contactEmail: data.contactEmail,
                     phoneNumber: data.phoneNumber,
                     address: data.address,
-                    city: data.city,
-                    district: data.district
-                });
+                    provinceId: data.provinceId,
+                    districtId: data.districtId
+                }, { emitEvent: false });
+                if (data.provinceId) {
+                    this.loadDistricts(data.provinceId, data.districtId);
+                }
                 this.loading.set(false);
             },
             error: (err: any) => {
@@ -247,6 +263,48 @@ export class InstitutionSettingsComponent implements OnInit {
                 this.loading.set(false);
             }
         });
+    }
+
+    onProvinceChange(): void {
+        const provinceId = this.settingsForm.controls['provinceId'].value;
+        this.settingsForm.controls['districtId'].reset();
+        this.loadDistricts(provinceId);
+    }
+
+    private loadLocations(): void {
+        this.locations.getProvinces().subscribe({
+            next: provinces => {
+                this.provinces = provinces;
+                this.filteredProvinces = provinces;
+            },
+            error: () => this.toaster.error('İl seçenekleri yüklenemedi.')
+        });
+        this.provinceFilter.valueChanges.subscribe(search => {
+            this.filteredProvinces = this.filterOptions(this.provinces, search);
+        });
+        this.districtFilter.valueChanges.subscribe(search => {
+            this.filteredDistricts = this.filterOptions(this.districts, search);
+        });
+    }
+
+    private loadDistricts(provinceId?: string, selectedDistrictId?: string): void {
+        this.districtFilter.setValue('');
+        this.districts = [];
+        this.filteredDistricts = [];
+        if (!provinceId) return;
+        this.locations.getDistricts(provinceId).subscribe({
+            next: districts => {
+                this.districts = districts;
+                this.filteredDistricts = districts;
+                if (selectedDistrictId) this.settingsForm.controls['districtId'].setValue(selectedDistrictId);
+            },
+            error: () => this.toaster.error('İlçe seçenekleri yüklenemedi.')
+        });
+    }
+
+    private filterOptions<T extends ProvinceOption>(options: T[], search: string): T[] {
+        const normalized = search.trim().toLocaleLowerCase('tr-TR');
+        return normalized ? options.filter(option => option.name.toLocaleLowerCase('tr-TR').includes(normalized)) : options;
     }
 
     licenseName(): string {
@@ -290,8 +348,8 @@ export class InstitutionSettingsComponent implements OnInit {
             email: formValue.contactEmail,
             phone: formValue.phoneNumber,
             address: formValue.address,
-            city: formValue.city,
-            district: formValue.district
+            provinceId: formValue.provinceId || undefined,
+            districtId: formValue.districtId || undefined
         }).subscribe({
             next: (updated: any) => {
                 this.toaster.success('Kurum ayarları güncellendi');

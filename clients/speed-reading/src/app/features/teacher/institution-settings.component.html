@@ -69,12 +69,18 @@
                             <div class="form-row">
                                 <mat-form-field appearance="outline" class="modern-input">
                                     <mat-label>İl</mat-label>
-                                    <input matInput formControlName="city" placeholder="Örn: Ankara">
+                                    <mat-select formControlName="provinceId" (selectionChange)="onProvinceChange()">
+                                        <ngx-mat-select-search [formControl]="provinceFilter" placeholderLabel="İl ara" noEntriesFoundLabel="İl bulunamadı"></ngx-mat-select-search>
+                                        @for (province of filteredProvinces; track province.id) { <mat-option [value]="province.id">{{ province.name }}</mat-option> }
+                                    </mat-select>
                                 </mat-form-field>
 
                                 <mat-form-field appearance="outline" class="modern-input">
                                     <mat-label>İlçe</mat-label>
-                                    <input matInput formControlName="district" placeholder="Örn: Çankaya">
+                                    <mat-select formControlName="districtId" [disabled]="!settingsForm.controls['provinceId'].value">
+                                        <ngx-mat-select-search [formControl]="districtFilter" placeholderLabel="İlçe ara" noEntriesFoundLabel="İlçe bulunamadı"></ngx-mat-select-search>
+                                        @for (district of filteredDistricts; track district.id) { <mat-option [value]="district.id">{{ district.name }}</mat-option> }
+                                    </mat-select>
                                 </mat-form-field>
                             </div>
 

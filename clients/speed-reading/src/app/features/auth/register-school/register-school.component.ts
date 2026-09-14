@@ -1,6 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,9 +10,12 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSelectModule } from '@angular/material/select';
+import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { AuthService } from '../../../core/services/auth.service';
 import { RegisterInstitutionRequest } from '../../../core/models/user.model';
 import { strongPasswordValidator } from '../../../shared/validators/password.validator';
+import { DistrictOption, LocationsService, ProvinceOption } from '../../../core/services/locations.service';
 
 @Component({
   selector: 'app-register-school',
@@ -28,29 +31,38 @@ import { strongPasswordValidator } from '../../../shared/validators/password.val
     MatCheckboxModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatDividerModule
+    MatDividerModule,
+    MatSelectModule,
+    NgxMatSelectSearchModule
   ],
   templateUrl: './register-school.component.html',
   styleUrls: ['./register-school.component.scss']
 })
-export class RegisterSchoolComponent {
+export class RegisterSchoolComponent implements OnInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private locations = inject(LocationsService);
 
   isLoading = false;
   error = '';
   successMessage = '';
   hidePassword = true;
   hideConfirmPassword = true;
+  provinces: ProvinceOption[] = [];
+  districts: DistrictOption[] = [];
+  filteredProvinces: ProvinceOption[] = [];
+  filteredDistricts: DistrictOption[] = [];
+  readonly provinceFilter = new FormControl('', { nonNullable: true });
+  readonly districtFilter = new FormControl('', { nonNullable: true });
 
   registerForm = this.fb.group({
     schoolName: ['', [Validators.required, Validators.minLength(3)]],
     contactEmail: ['', [Validators.required, Validators.email]],
     phoneNumber: ['', [Validators.required, Validators.pattern('^[0-9\\+\\-\\(\\) \\s]{10,20}$')]], // Standardized Validation
     address: [''], // Optional
-    city: ['', [Validators.required, Validators.maxLength(100)]],
-    district: ['', [Validators.required, Validators.maxLength(100)]],
+    provinceId: ['', Validators.required],
+    districtId: ['', Validators.required],
     firstName: ['', [Validators.required, Validators.minLength(2)]],
     lastName: ['', [Validators.required, Validators.minLength(2)]],
     adminEmail: ['', [Validators.required, Validators.email]],
@@ -79,6 +91,45 @@ export class RegisterSchoolComponent {
     }
   }
 
+  ngOnInit(): void {
+    this.locations.getProvinces().subscribe({
+      next: provinces => {
+        this.provinces = provinces;
+        this.filteredProvinces = provinces;
+      },
+      error: () => this.error = 'Konum seçenekleri yüklenemedi. Lütfen sayfayı yenileyin.'
+    });
+    this.provinceFilter.valueChanges.subscribe(search => {
+      this.filteredProvinces = this.filterOptions(this.provinces, search);
+    });
+    this.districtFilter.valueChanges.subscribe(search => {
+      this.filteredDistricts = this.filterOptions(this.districts, search);
+    });
+  }
+
+  onProvinceChange(): void {
+    const provinceId = this.registerForm.controls.provinceId.value;
+    this.registerForm.controls.districtId.reset();
+    this.districtFilter.setValue('');
+    this.districts = [];
+    this.filteredDistricts = [];
+    if (!provinceId) return;
+
+    this.locations.getDistricts(provinceId).subscribe({
+      next: districts => {
+        this.districts = districts;
+        this.filteredDistricts = districts;
+      },
+      error: () => this.error = 'İlçe seçenekleri yüklenemedi. Lütfen ili yeniden seçin.'
+    });
+  }
+
+  private filterOptions<T extends ProvinceOption>(options: T[], search: string): T[] {
+    const normalized = search.trim().toLocaleLowerCase('tr-TR');
+    return normalized ? options.filter(option =>
+      option.name.toLocaleLowerCase('tr-TR').includes(normalized)) : options;
+  }
+
   onSubmit() {
     if (this.registerForm.invalid) return;
 
@@ -94,7 +145,8 @@ export class RegisterSchoolComponent {
       InstitutionName: formValue.schoolName!,
       InstitutionType: 1,
       Phone: formValue.phoneNumber!,
-      City: `${formValue.city}, ${formValue.district}`
+      ProvinceId: formValue.provinceId!,
+      DistrictId: formValue.districtId!
     };
 
     this.authService.registerInstitution(request).subscribe({

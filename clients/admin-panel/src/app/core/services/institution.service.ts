@@ -10,6 +10,8 @@ export interface InstitutionDto {
   address?: string;
   city?: string;
   district?: string;
+  provinceId?: string;
+  districtId?: string;
   phone?: string;
   email?: string;
   website?: string;
@@ -52,7 +54,7 @@ export class InstitutionService {
     return this.http.get<PagedInstitutions>(this.url, { params });
   }
 
-  create(request: { name: string; type: number; city?: string; email?: string }) {
+  create(request: { name: string; type: number; provinceId?: string; districtId?: string; email?: string }) {
     const idempotencyKey = globalThis.crypto?.randomUUID?.()
       ?? `institution-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     return this.http.post<{ institutionId: string }>(this.url, request, {

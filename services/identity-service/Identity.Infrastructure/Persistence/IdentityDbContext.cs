@@ -25,6 +25,8 @@ public class IdentityDbContext : DbContext
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<Institution> Institutions => Set<Institution>();
+    public DbSet<Province> Provinces => Set<Province>();
+    public DbSet<District> Districts => Set<District>();
     public DbSet<InstitutionAdmin> InstitutionAdmins => Set<InstitutionAdmin>();
     public DbSet<StudentProfile> StudentProfiles => Set<StudentProfile>();
     public DbSet<TeacherProfile> TeacherProfiles => Set<TeacherProfile>();

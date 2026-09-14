@@ -16,6 +16,7 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly IConfigurationService _configurationService;
+    private readonly ILocationRepository _locationRepository;
 
     public RegisterInstitutionCommandHandler(
         IIdentityService identityService,
@@ -23,7 +24,8 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
         IInstitutionRepository institutionRepository,
         IUnitOfWork unitOfWork,
         IPublishEndpoint publishEndpoint,
-        IConfigurationService configurationService)
+        IConfigurationService configurationService,
+        ILocationRepository locationRepository)
     {
         _identityService = identityService;
         _userRepository = userRepository;
@@ -31,6 +33,7 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
         _configurationService = configurationService;
+        _locationRepository = locationRepository;
     }
 
     public async Task<Result<Guid>> Handle(RegisterInstitutionCommand request, CancellationToken cancellationToken)
@@ -40,6 +43,17 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
         if (!string.Equals(allowRegistration, "true", StringComparison.OrdinalIgnoreCase))
         {
             return Result.Failure<Guid>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları sistem yöneticisi tarafından geçici olarak durdurulmuştur."));
+        }
+
+        var location = await _locationRepository.GetLocationAsync(
+            request.ProvinceId,
+            request.DistrictId,
+            cancellationToken);
+        if (location is null)
+        {
+            return Result.Failure<Guid>(new Error(
+                "Institution.InvalidLocation",
+                "Seçilen il ve ilçe eşleşmiyor."));
         }
 
         // 1. Create User in Keycloak
@@ -74,8 +88,8 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
         var institution = Institution.Create(
             request.InstitutionName,
             request.InstitutionType,
-            request.City,
-            request.Email);
+            email: request.Email);
+        institution.SetLocation(location.Value.Province, location.Value.District);
 
         var admin = InstitutionAdmin.Create(
             userId,

@@ -29,7 +29,8 @@ export interface RegisterInstitutionRequest {
   InstitutionName: string;
   InstitutionType: number;
   Phone?: string;
-  City: string;
+  ProvinceId: string;
+  DistrictId: string;
 }
 
 export interface RegistrationResponse {

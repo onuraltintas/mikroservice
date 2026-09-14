@@ -33,6 +33,12 @@ public class InstitutionConfiguration : IEntityTypeConfiguration<Institution>
         builder.Property(i => i.District)
             .HasMaxLength(100);
 
+        builder.Property(i => i.ProvinceId)
+            .HasMaxLength(12);
+
+        builder.Property(i => i.DistrictId)
+            .HasMaxLength(16);
+
         builder.Property(i => i.Phone)
             .HasMaxLength(20);
 
@@ -50,6 +56,18 @@ public class InstitutionConfiguration : IEntityTypeConfiguration<Institution>
 
         builder.HasIndex(i => i.Type);
         builder.HasIndex(i => i.City);
+        builder.HasIndex(i => i.ProvinceId);
+        builder.HasIndex(i => i.DistrictId);
+
+        builder.HasOne(i => i.Province)
+            .WithMany()
+            .HasForeignKey(i => i.ProvinceId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(i => i.DistrictReference)
+            .WithMany()
+            .HasForeignKey(i => i.DistrictId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Relationships
         builder.HasMany(i => i.Admins)

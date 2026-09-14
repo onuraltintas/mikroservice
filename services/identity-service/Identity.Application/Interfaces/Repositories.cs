@@ -111,6 +111,21 @@ public interface IInstitutionRepository
         CancellationToken cancellationToken);
 }
 
+public interface ILocationRepository
+{
+    Task<IReadOnlyList<Identity.Application.DTOs.ProvinceDto>> GetProvincesAsync(
+        string? search,
+        CancellationToken cancellationToken);
+    Task<IReadOnlyList<Identity.Application.DTOs.DistrictDto>> GetDistrictsAsync(
+        string provinceId,
+        string? search,
+        CancellationToken cancellationToken);
+    Task<(Province Province, District District)?> GetLocationAsync(
+        string provinceId,
+        string districtId,
+        CancellationToken cancellationToken);
+}
+
 public sealed record CoachingTeacherAuthorization(Guid? InstitutionId);
 public sealed record CoachingAdminAccessAuthorization(bool IsGlobal, Guid? InstitutionId);
 public sealed record SpeedReadingStudentSearch(IReadOnlyCollection<Guid> StudentUserIds, bool HasMore);

@@ -8,10 +8,69 @@ using Identity.Application.Queries.GetAllUsers;
 using Identity.Application.Queries.GetUserProfile;
 using Identity.Application.Queries.GetTeacherStudents;
 using Identity.Application.DTOs.Institutions;
+using Identity.Application.DTOs;
 using Identity.Domain.Enums;
 using EduPlatform.Shared.Contracts.Reporting;
 
 namespace Identity.Infrastructure.Repositories;
+
+public sealed class LocationRepository : ILocationRepository
+{
+    private readonly IdentityDbContext _context;
+
+    public LocationRepository(IdentityDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<IReadOnlyList<ProvinceDto>> GetProvincesAsync(
+        string? search,
+        CancellationToken cancellationToken)
+    {
+        IQueryable<Province> query = _context.Provinces.AsNoTracking();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var pattern = $"%{search.Trim()}%";
+            query = query.Where(province => EF.Functions.ILike(province.Name, pattern));
+        }
+
+        return await query.OrderBy(province => province.Name)
+            .Select(province => new ProvinceDto(province.Id, province.Name))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<DistrictDto>> GetDistrictsAsync(
+        string provinceId,
+        string? search,
+        CancellationToken cancellationToken)
+    {
+        IQueryable<District> query = _context.Districts.AsNoTracking()
+            .Where(district => district.ProvinceId == provinceId);
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var pattern = $"%{search.Trim()}%";
+            query = query.Where(district => EF.Functions.ILike(district.Name, pattern));
+        }
+
+        return await query.OrderBy(district => district.Name)
+            .Select(district => new DistrictDto(district.Id, district.ProvinceId, district.Name))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<(Province Province, District District)?> GetLocationAsync(
+        string provinceId,
+        string districtId,
+        CancellationToken cancellationToken)
+    {
+        var district = await _context.Districts
+            .Include(candidate => candidate.Province)
+            .SingleOrDefaultAsync(candidate =>
+                candidate.Id == districtId && candidate.ProvinceId == provinceId,
+                cancellationToken);
+
+        return district is null ? null : (district.Province, district);
+    }
+}
 
 public class UserRepository : IUserRepository
 {
@@ -521,6 +580,8 @@ public class InstitutionRepository : IInstitutionRepository
                 institution.Address,
                 institution.City,
                 institution.District,
+                institution.ProvinceId,
+                institution.DistrictId,
                 institution.Phone,
                 institution.Email,
                 institution.Website,
@@ -557,6 +618,8 @@ public class InstitutionRepository : IInstitutionRepository
                 institution.Address,
                 institution.City,
                 institution.District,
+                institution.ProvinceId,
+                institution.DistrictId,
                 institution.Phone,
                 institution.Email,
                 institution.Website,

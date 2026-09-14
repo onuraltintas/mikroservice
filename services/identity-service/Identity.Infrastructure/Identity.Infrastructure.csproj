@@ -23,4 +23,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Seed\Data\turkey-locations.json" />
+  </ItemGroup>
+
 </Project>

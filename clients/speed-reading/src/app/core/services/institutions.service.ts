@@ -74,6 +74,8 @@ export class InstitutionsService {
       address: item.address,
       city: item.city,
       district: item.district,
+      provinceId: item.provinceId,
+      districtId: item.districtId,
       isActive: item.isActive,
       studentCount: item.studentCount ?? 0,
       teacherCount: item.teacherCount ?? 0,

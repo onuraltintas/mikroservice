@@ -30,7 +30,12 @@ public class RegisterInstitutionCommandValidator : AbstractValidator<RegisterIns
         RuleFor(x => x.LastName)
             .NotEmpty().WithMessage("Last name is required");
             
-        RuleFor(x => x.City)
-            .NotEmpty();
+        RuleFor(x => x.ProvinceId)
+            .NotEmpty()
+            .MaximumLength(12);
+
+        RuleFor(x => x.DistrictId)
+            .NotEmpty()
+            .MaximumLength(16);
     }
 }

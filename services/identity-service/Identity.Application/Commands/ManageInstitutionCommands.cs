@@ -15,7 +15,8 @@ namespace Identity.Application.Commands.ManageInstitutions;
 public sealed record CreateInstitutionCommand(
     string Name,
     InstitutionType Type,
-    string? City,
+    string? ProvinceId,
+    string? DistrictId,
     string? Email,
     string? IdempotencyKey = null) : IRequest<Result<Guid>>;
 
@@ -24,7 +25,8 @@ public sealed class CreateInstitutionCommandValidator : AbstractValidator<Create
     public CreateInstitutionCommandValidator()
     {
         RuleFor(command => command.Name).NotEmpty().MaximumLength(200);
-        RuleFor(command => command.City).MaximumLength(100).When(command => command.City is not null);
+        RuleFor(command => command.ProvinceId).NotEmpty().MaximumLength(12);
+        RuleFor(command => command.DistrictId).NotEmpty().MaximumLength(16);
         RuleFor(command => command.Email).EmailAddress().MaximumLength(255)
             .When(command => !string.IsNullOrWhiteSpace(command.Email));
         RuleFor(command => command.Type).IsInEnum();
@@ -39,8 +41,8 @@ public sealed record UpdateInstitutionCommand(
     Guid Id,
     string? Name,
     string? Address,
-    string? City,
-    string? District,
+    string? ProvinceId,
+    string? DistrictId,
     string? Phone,
     string? Email,
     string? Website,
@@ -56,8 +58,10 @@ public sealed class UpdateInstitutionCommandValidator : AbstractValidator<Update
         RuleFor(command => command.Id).NotEmpty();
         RuleFor(command => command.Name).MaximumLength(200).When(command => command.Name is not null);
         RuleFor(command => command.Address).MaximumLength(500).When(command => command.Address is not null);
-        RuleFor(command => command.City).MaximumLength(100).When(command => command.City is not null);
-        RuleFor(command => command.District).MaximumLength(100).When(command => command.District is not null);
+        RuleFor(command => command.ProvinceId).MaximumLength(12).When(command => command.ProvinceId is not null);
+        RuleFor(command => command.DistrictId).MaximumLength(16).When(command => command.DistrictId is not null);
+        RuleFor(command => command.DistrictId).NotEmpty().When(command => command.ProvinceId is not null);
+        RuleFor(command => command.ProvinceId).NotEmpty().When(command => command.DistrictId is not null);
         RuleFor(command => command.Phone).MaximumLength(50).When(command => command.Phone is not null);
         RuleFor(command => command.Email).EmailAddress().MaximumLength(255)
             .When(command => !string.IsNullOrWhiteSpace(command.Email));
@@ -86,17 +90,20 @@ public sealed class CreateInstitutionCommandHandler : IRequestHandler<CreateInst
     private readonly IUnitOfWork _unitOfWork;
     private readonly InstitutionManagementAuthorization _authorization;
     private readonly IIdempotencyRepository _idempotencyRepository;
+    private readonly ILocationRepository _locationRepository;
 
     public CreateInstitutionCommandHandler(
         IInstitutionRepository repository,
         IUnitOfWork unitOfWork,
         InstitutionManagementAuthorization authorization,
-        IIdempotencyRepository idempotencyRepository)
+        IIdempotencyRepository idempotencyRepository,
+        ILocationRepository locationRepository)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _authorization = authorization;
         _idempotencyRepository = idempotencyRepository;
+        _locationRepository = locationRepository;
     }
 
     public async Task<Result<Guid>> Handle(CreateInstitutionCommand request, CancellationToken cancellationToken)
@@ -109,9 +116,10 @@ public sealed class CreateInstitutionCommandHandler : IRequestHandler<CreateInst
 
         var key = request.IdempotencyKey?.Trim();
         var normalizedName = request.Name.Trim();
-        var normalizedCity = request.City?.Trim();
+        var normalizedProvinceId = request.ProvinceId?.Trim();
+        var normalizedDistrictId = request.DistrictId?.Trim();
         var normalizedEmail = request.Email?.Trim();
-        var requestHash = CreateRequestHash(normalizedName, request.Type, normalizedCity, normalizedEmail);
+        var requestHash = CreateRequestHash(normalizedName, request.Type, normalizedProvinceId, normalizedDistrictId, normalizedEmail);
 
         if (string.IsNullOrWhiteSpace(key))
         {
@@ -133,7 +141,22 @@ public sealed class CreateInstitutionCommandHandler : IRequestHandler<CreateInst
                     "Aynı Idempotency-Key farklı bir istek gövdesiyle tekrar kullanılamaz."));
         }
 
-        var institution = Institution.Create(normalizedName, request.Type, normalizedCity, normalizedEmail);
+        var institution = Institution.Create(normalizedName, request.Type, email: normalizedEmail);
+        if (normalizedProvinceId is not null && normalizedDistrictId is not null)
+        {
+            var location = await _locationRepository.GetLocationAsync(
+                normalizedProvinceId,
+                normalizedDistrictId,
+                cancellationToken);
+            if (location is null)
+            {
+                return Result.Failure<Guid>(new Error(
+                    "Institution.InvalidLocation",
+                    "Seçilen il ve ilçe eşleşmiyor."));
+            }
+
+            institution.SetLocation(location.Value.Province, location.Value.District);
+        }
         await _repository.AddAsync(institution, cancellationToken);
 
         await _idempotencyRepository.AddAsync(
@@ -168,7 +191,8 @@ public sealed class CreateInstitutionCommandHandler : IRequestHandler<CreateInst
     private static string CreateRequestHash(
         string name,
         InstitutionType type,
-        string? city,
+        string? provinceId,
+        string? districtId,
         string? email)
     {
         var canonical = string.Join(
@@ -176,8 +200,10 @@ public sealed class CreateInstitutionCommandHandler : IRequestHandler<CreateInst
             name.Length,
             name,
             (int)type,
-            city?.Length ?? 0,
-            city ?? string.Empty,
+            provinceId?.Length ?? 0,
+            provinceId ?? string.Empty,
+            districtId?.Length ?? 0,
+            districtId ?? string.Empty,
             email?.ToLowerInvariant().Length ?? 0,
             email?.ToLowerInvariant() ?? string.Empty);
 
@@ -190,15 +216,18 @@ public sealed class UpdateInstitutionCommandHandler : IRequestHandler<UpdateInst
     private readonly IInstitutionRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly InstitutionManagementAuthorization _authorization;
+    private readonly ILocationRepository _locationRepository;
 
     public UpdateInstitutionCommandHandler(
         IInstitutionRepository repository,
         IUnitOfWork unitOfWork,
-        InstitutionManagementAuthorization authorization)
+        InstitutionManagementAuthorization authorization,
+        ILocationRepository locationRepository)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _authorization = authorization;
+        _locationRepository = locationRepository;
     }
 
     public async Task<Result> Handle(UpdateInstitutionCommand request, CancellationToken cancellationToken)
@@ -224,8 +253,24 @@ public sealed class UpdateInstitutionCommandHandler : IRequestHandler<UpdateInst
             return Result.Failure(new Error("Institution.NotFound", "Kurum bulunamadı."));
         }
 
-        institution.UpdateInfo(request.Name?.Trim(), request.Address?.Trim(), request.City?.Trim(),
-            request.District?.Trim(), request.Phone?.Trim(), request.Email?.Trim(), request.Website?.Trim());
+        if (request.ProvinceId is not null || request.DistrictId is not null)
+        {
+            var location = await _locationRepository.GetLocationAsync(
+                request.ProvinceId!,
+                request.DistrictId!,
+                cancellationToken);
+            if (location is null)
+            {
+                return Result.Failure(new Error(
+                    "Institution.InvalidLocation",
+                    "Seçilen il ve ilçe eşleşmiyor."));
+            }
+
+            institution.SetLocation(location.Value.Province, location.Value.District);
+        }
+
+        institution.UpdateInfo(request.Name?.Trim(), request.Address?.Trim(), null,
+            null, request.Phone?.Trim(), request.Email?.Trim(), request.Website?.Trim());
 
         if (request.LicenseType.HasValue || request.MaxStudents.HasValue || request.MaxTeachers.HasValue || request.SubscriptionEndDate.HasValue)
         {

@@ -14,6 +14,10 @@ public class Institution : AggregateRoot
     public string? Address { get; private set; }
     public string? City { get; private set; }
     public string? District { get; private set; }
+    public string? ProvinceId { get; private set; }
+    public Province? Province { get; private set; }
+    public string? DistrictId { get; private set; }
+    public District? DistrictReference { get; private set; }
     public string? Phone { get; private set; }
     public string? Email { get; private set; }
     public string? Website { get; private set; }
@@ -90,6 +94,20 @@ public class Institution : AggregateRoot
         if (phone != null) Phone = phone;
         if (email != null) Email = email;
         if (website != null) Website = website;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetLocation(Province province, District district)
+    {
+        if (!string.Equals(district.ProvinceId, province.Id, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("İlçe seçilen ile bağlı olmalıdır.");
+        }
+
+        ProvinceId = province.Id;
+        DistrictId = district.Id;
+        City = province.Name;
+        District = district.Name;
         UpdatedAt = DateTime.UtcNow;
     }
 

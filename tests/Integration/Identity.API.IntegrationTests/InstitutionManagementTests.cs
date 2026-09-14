@@ -213,12 +213,14 @@ public sealed class InstitutionManagementTests
             repository,
             new UnitOfWork(context),
             authorization,
-            new IdempotencyRepository(context));
+            new IdempotencyRepository(context),
+            new LocationRepository(context));
 
         var command = new CreateInstitutionCommand(
             "Idempotent School",
             InstitutionType.School,
-            "Istanbul",
+            null,
+            null,
             "school@idempotency.test",
             "institution-create-key");
 
@@ -234,6 +236,85 @@ public sealed class InstitutionManagementTests
         changedPayload.IsFailure.Should().BeTrue();
         changedPayload.Error.Code.Should().Be("Idempotency.Conflict");
         (await context.Institutions.CountAsync()).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task UpdateInstitution_AssignsOnlyADistrictThatBelongsToTheSelectedProvince()
+    {
+        await using var context = CreateContext();
+        var institution = Institution.Create("Konum Test Kurumu", InstitutionType.School);
+        var ankara = Province.Create("TUR007", "Ankara");
+        var cankaya = District.Create("TUR007001", ankara.Id, "Çankaya");
+        context.AddRange(institution, ankara, cankaya);
+        await context.SaveChangesAsync();
+
+        var repository = new InstitutionRepository(context);
+        var handler = new UpdateInstitutionCommandHandler(
+            repository,
+            new UnitOfWork(context),
+            new InstitutionManagementAuthorization(
+                new StubCurrentUserService(Guid.NewGuid(), "SystemAdmin"),
+                repository),
+            new LocationRepository(context));
+
+        var result = await handler.Handle(new UpdateInstitutionCommand(
+            institution.Id,
+            null,
+            null,
+            ankara.Id,
+            cankaya.Id,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        var saved = await context.Institutions.SingleAsync();
+        saved.ProvinceId.Should().Be(ankara.Id);
+        saved.DistrictId.Should().Be(cankaya.Id);
+        saved.City.Should().Be("Ankara");
+        saved.District.Should().Be("Çankaya");
+    }
+
+    [Fact]
+    public async Task UpdateInstitution_RejectsDistrictFromAnotherProvince()
+    {
+        await using var context = CreateContext();
+        var institution = Institution.Create("Konum Test Kurumu", InstitutionType.School);
+        var ankara = Province.Create("TUR007", "Ankara");
+        var istanbul = Province.Create("TUR040", "İstanbul");
+        var kadikoy = District.Create("TUR040001", istanbul.Id, "Kadıköy");
+        context.AddRange(institution, ankara, istanbul, kadikoy);
+        await context.SaveChangesAsync();
+
+        var repository = new InstitutionRepository(context);
+        var handler = new UpdateInstitutionCommandHandler(
+            repository,
+            new UnitOfWork(context),
+            new InstitutionManagementAuthorization(
+                new StubCurrentUserService(Guid.NewGuid(), "SystemAdmin"),
+                repository),
+            new LocationRepository(context));
+
+        var result = await handler.Handle(new UpdateInstitutionCommand(
+            institution.Id,
+            null,
+            null,
+            ankara.Id,
+            kadikoy.Id,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Institution.InvalidLocation");
     }
 
     private static IdentityDbContext CreateContext()

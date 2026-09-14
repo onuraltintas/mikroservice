@@ -7,6 +7,8 @@ export interface Institution {
   address?: string;
   city?: string;
   district?: string;
+  provinceId?: string;
+  districtId?: string;
   createdAt: Date;
   isActive: boolean;
   teacherCount: number;
@@ -26,8 +28,8 @@ export interface CreateInstitutionRequest {
 export interface UpdateInstitutionRequest {
   name?: string;
   address?: string;
-  city?: string;
-  district?: string;
+  provinceId?: string;
+  districtId?: string;
   phone?: string;
   email?: string;
   website?: string;

@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import { InstitutionAdminDto, InstitutionDto, InstitutionService } from '../../../core/services/institution.service';
 import { IdentityService, UserDto } from '../../../core/services/identity.service';
+import { DistrictOption, LocationService, ProvinceOption } from '../../../core/services/location.service';
 
 @Component({
   selector: 'app-institution-list',
@@ -29,7 +30,8 @@ import { IdentityService, UserDto } from '../../../core/services/identity.servic
           <select class="rounded-lg border p-2 dark:bg-gray-900" name="type" [(ngModel)]="draft.type">
             @for (type of institutionTypes; track type.value) { <option [ngValue]="type.value">{{ type.label }}</option> }
           </select>
-          <input class="rounded-lg border p-2 dark:bg-gray-900" name="city" [(ngModel)]="draft.city" placeholder="Şehir" maxlength="100">
+          <select class="rounded-lg border p-2 dark:bg-gray-900" name="provinceId" [(ngModel)]="draft.provinceId" (ngModelChange)="onCreateProvinceChange()"><option value="">İl seçin</option>@for (province of provinces(); track province.id) { <option [value]="province.id">{{ province.name }}</option> }</select>
+          <select class="rounded-lg border p-2 dark:bg-gray-900" name="districtId" [(ngModel)]="draft.districtId" [disabled]="!draft.provinceId"><option value="">İlçe seçin</option>@for (district of createDistricts(); track district.id) { <option [value]="district.id">{{ district.name }}</option> }</select>
           <div class="flex gap-2"><input class="min-w-0 flex-1 rounded-lg border p-2 dark:bg-gray-900" name="email" [(ngModel)]="draft.email" placeholder="E-posta" type="email" maxlength="255"><button class="rounded-lg bg-emerald-600 px-4 py-2 text-white" [disabled]="saving()">Kaydet</button></div>
         </form>
       }
@@ -38,8 +40,8 @@ import { IdentityService, UserDto } from '../../../core/services/identity.servic
         <form class="grid gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-4 shadow-sm dark:border-indigo-900 dark:bg-indigo-950/30 md:grid-cols-4" (ngSubmit)="saveEdit()">
           <div class="md:col-span-4 font-semibold text-gray-900 dark:text-white">{{ institution.name }} kurumunu düzenle</div>
           <input class="rounded-lg border p-2 dark:bg-gray-900" name="editName" [(ngModel)]="editDraft.name" placeholder="Kurum adı" required maxlength="200">
-          <input class="rounded-lg border p-2 dark:bg-gray-900" name="editCity" [(ngModel)]="editDraft.city" placeholder="Şehir" maxlength="100">
-          <input class="rounded-lg border p-2 dark:bg-gray-900" name="editDistrict" [(ngModel)]="editDraft.district" placeholder="İlçe" maxlength="100">
+          <select class="rounded-lg border p-2 dark:bg-gray-900" name="editProvinceId" [(ngModel)]="editDraft.provinceId" (ngModelChange)="onEditProvinceChange()"><option value="">İl seçin</option>@for (province of provinces(); track province.id) { <option [value]="province.id">{{ province.name }}</option> }</select>
+          <select class="rounded-lg border p-2 dark:bg-gray-900" name="editDistrictId" [(ngModel)]="editDraft.districtId" [disabled]="!editDraft.provinceId"><option value="">İlçe seçin</option>@for (district of editDistricts(); track district.id) { <option [value]="district.id">{{ district.name }}</option> }</select>
           <input class="rounded-lg border p-2 dark:bg-gray-900" name="editPhone" [(ngModel)]="editDraft.phone" placeholder="Telefon" maxlength="50">
           <input class="rounded-lg border p-2 dark:bg-gray-900" name="editEmail" [(ngModel)]="editDraft.email" placeholder="E-posta" type="email" maxlength="255">
           <input class="rounded-lg border p-2 dark:bg-gray-900" name="editWebsite" [(ngModel)]="editDraft.website" placeholder="Web sitesi" maxlength="500">
@@ -88,6 +90,7 @@ export class InstitutionListComponent {
   private readonly service = inject(InstitutionService);
   private readonly identityService = inject(IdentityService);
   private readonly authService = inject(AuthService);
+  private readonly locations = inject(LocationService);
   private readonly platformId = inject(PLATFORM_ID);
   canManage = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.institutionsManage));
   canCreate = computed(() => this.canManage() && this.authService.userProfile()?.roles.includes('SystemAdmin'));
@@ -105,10 +108,13 @@ export class InstitutionListComponent {
   adminInstitution = signal<InstitutionDto | null>(null);
   admins = signal<InstitutionAdminDto[]>([]);
   adminCandidates = signal<UserDto[]>([]);
+  provinces = signal<ProvinceOption[]>([]);
+  createDistricts = signal<DistrictOption[]>([]);
+  editDistricts = signal<DistrictOption[]>([]);
   search = '';
   activeFilter: boolean | undefined = true;
-  draft = { name: '', type: 1, city: '', email: '' };
-  editDraft = { name: '', city: '', district: '', phone: '', email: '', website: '', licenseType: 1, maxStudents: 50, maxTeachers: 5 };
+  draft = { name: '', type: 1, provinceId: '', districtId: '', email: '' };
+  editDraft = { name: '', provinceId: '', districtId: '', phone: '', email: '', website: '', licenseType: 1, maxStudents: 50, maxTeachers: 5 };
   adminDraft = { userId: '', role: 2 };
   adminUserSearch = '';
   institutionTypes = [{ value: 1, label: 'Okul' }, { value: 2, label: 'Dershane' }, { value: 3, label: 'Etüt Merkezi' }, { value: 4, label: 'Online Platform' }];
@@ -118,6 +124,10 @@ export class InstitutionListComponent {
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
       this.load();
+      this.locations.getProvinces().subscribe({
+        next: provinces => this.provinces.set(provinces),
+        error: () => this.error.set('İl seçenekleri yüklenemedi.')
+      });
     }
   }
 
@@ -136,10 +146,10 @@ export class InstitutionListComponent {
   }
 
   create() {
-    if (!this.draft.name.trim()) return;
+    if (!this.draft.name.trim() || !this.draft.provinceId || !this.draft.districtId) return;
     this.saving.set(true);
     this.service.create(this.draft).subscribe({
-      next: () => { this.showCreate.set(false); this.draft = { name: '', type: 1, city: '', email: '' }; this.saving.set(false); this.load(); },
+      next: () => { this.showCreate.set(false); this.draft = { name: '', type: 1, provinceId: '', districtId: '', email: '' }; this.createDistricts.set([]); this.saving.set(false); this.load(); },
       error: () => { this.error.set('Kurum oluşturulamadı.'); this.saving.set(false); }
     });
   }
@@ -153,8 +163,8 @@ export class InstitutionListComponent {
     this.editing.set(institution);
     this.editDraft = {
       name: institution.name,
-      city: institution.city ?? '',
-      district: institution.district ?? '',
+      provinceId: institution.provinceId ?? '',
+      districtId: institution.districtId ?? '',
       phone: institution.phone ?? '',
       email: institution.email ?? '',
       website: institution.website ?? '',
@@ -162,6 +172,7 @@ export class InstitutionListComponent {
       maxStudents: institution.maxStudents,
       maxTeachers: institution.maxTeachers
     };
+    if (this.editDraft.provinceId) this.loadEditDistricts(this.editDraft.provinceId);
   }
 
   saveEdit() {
@@ -172,8 +183,8 @@ export class InstitutionListComponent {
       ? this.editDraft
       : {
           name: this.editDraft.name,
-          city: this.editDraft.city,
-          district: this.editDraft.district,
+          provinceId: this.editDraft.provinceId || undefined,
+          districtId: this.editDraft.districtId || undefined,
           phone: this.editDraft.phone,
           email: this.editDraft.email,
           website: this.editDraft.website
@@ -181,6 +192,30 @@ export class InstitutionListComponent {
     this.service.update(institution.id, payload).subscribe({
       next: () => { this.saving.set(false); this.editing.set(null); this.load(); },
       error: () => { this.saving.set(false); this.error.set('Kurum güncellenemedi.'); }
+    });
+  }
+
+  onCreateProvinceChange() {
+    this.draft.districtId = '';
+    this.createDistricts.set([]);
+    if (this.draft.provinceId) {
+      this.locations.getDistricts(this.draft.provinceId).subscribe({
+        next: districts => this.createDistricts.set(districts),
+        error: () => this.error.set('İlçe seçenekleri yüklenemedi.')
+      });
+    }
+  }
+
+  onEditProvinceChange() {
+    this.editDraft.districtId = '';
+    if (this.editDraft.provinceId) this.loadEditDistricts(this.editDraft.provinceId);
+    else this.editDistricts.set([]);
+  }
+
+  private loadEditDistricts(provinceId: string) {
+    this.locations.getDistricts(provinceId).subscribe({
+      next: districts => this.editDistricts.set(districts),
+      error: () => this.error.set('İlçe seçenekleri yüklenemedi.')
     });
   }
 

@@ -378,6 +378,15 @@
         }
     }
 
+    # The public institution registration form and institution settings use the
+    # same read-only province/district reference data.
+    @identityLocations path /api/locations /api/locations/*
+    handle @identityLocations {
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
     # Institution and teacher invitations are accepted only by an authenticated
     # recipient, but the standalone client still needs this explicit route to
     # reach the identity service through the gateway.

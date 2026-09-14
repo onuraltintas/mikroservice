@@ -10,6 +10,8 @@ public sealed record InstitutionDto(
     string? Address,
     string? City,
     string? District,
+    string? ProvinceId,
+    string? DistrictId,
     string? Phone,
     string? Email,
     string? Website,

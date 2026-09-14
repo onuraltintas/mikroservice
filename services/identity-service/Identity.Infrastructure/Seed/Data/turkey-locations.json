@@ -1,0 +1,5195 @@
+{
+  "provinces": [
+    {
+      "id": "TUR001",
+      "name": "Adana"
+    },
+    {
+      "id": "TUR002",
+      "name": "Adiyaman"
+    },
+    {
+      "id": "TUR003",
+      "name": "Afyonkarahi̇sar"
+    },
+    {
+      "id": "TUR004",
+      "name": "Ağri"
+    },
+    {
+      "id": "TUR068",
+      "name": "Aksaray"
+    },
+    {
+      "id": "TUR005",
+      "name": "Amasya"
+    },
+    {
+      "id": "TUR006",
+      "name": "Ankara"
+    },
+    {
+      "id": "TUR007",
+      "name": "Antalya"
+    },
+    {
+      "id": "TUR075",
+      "name": "Ardahan"
+    },
+    {
+      "id": "TUR008",
+      "name": "Artvi̇n"
+    },
+    {
+      "id": "TUR009",
+      "name": "Aydin"
+    },
+    {
+      "id": "TUR010",
+      "name": "Balikesi̇r"
+    },
+    {
+      "id": "TUR074",
+      "name": "Bartin"
+    },
+    {
+      "id": "TUR072",
+      "name": "Batman"
+    },
+    {
+      "id": "TUR069",
+      "name": "Bayburt"
+    },
+    {
+      "id": "TUR011",
+      "name": "Bi̇leci̇k"
+    },
+    {
+      "id": "TUR012",
+      "name": "Bi̇ngöl"
+    },
+    {
+      "id": "TUR013",
+      "name": "Bi̇tli̇s"
+    },
+    {
+      "id": "TUR014",
+      "name": "Bolu"
+    },
+    {
+      "id": "TUR015",
+      "name": "Burdur"
+    },
+    {
+      "id": "TUR016",
+      "name": "Bursa"
+    },
+    {
+      "id": "TUR017",
+      "name": "Çanakkale"
+    },
+    {
+      "id": "TUR018",
+      "name": "Çankiri"
+    },
+    {
+      "id": "TUR019",
+      "name": "Çorum"
+    },
+    {
+      "id": "TUR020",
+      "name": "Deni̇zli̇"
+    },
+    {
+      "id": "TUR021",
+      "name": "Di̇yarbakir"
+    },
+    {
+      "id": "TUR081",
+      "name": "Düzce"
+    },
+    {
+      "id": "TUR022",
+      "name": "Edi̇rne"
+    },
+    {
+      "id": "TUR023",
+      "name": "Elaziğ"
+    },
+    {
+      "id": "TUR024",
+      "name": "Erzi̇ncan"
+    },
+    {
+      "id": "TUR025",
+      "name": "Erzurum"
+    },
+    {
+      "id": "TUR026",
+      "name": "Eski̇şehir"
+    },
+    {
+      "id": "TUR027",
+      "name": "Gazi̇antep"
+    },
+    {
+      "id": "TUR028",
+      "name": "Gi̇resun"
+    },
+    {
+      "id": "TUR029",
+      "name": "Gümüşhane"
+    },
+    {
+      "id": "TUR030",
+      "name": "Hakkari̇"
+    },
+    {
+      "id": "TUR031",
+      "name": "Hatay"
+    },
+    {
+      "id": "TUR076",
+      "name": "Iğdir"
+    },
+    {
+      "id": "TUR032",
+      "name": "Isparta"
+    },
+    {
+      "id": "TUR034",
+      "name": "İstanbul"
+    },
+    {
+      "id": "TUR035",
+      "name": "İzmi̇r"
+    },
+    {
+      "id": "TUR046",
+      "name": "Kahramanmaraş"
+    },
+    {
+      "id": "TUR078",
+      "name": "Karabük"
+    },
+    {
+      "id": "TUR070",
+      "name": "Karaman"
+    },
+    {
+      "id": "TUR036",
+      "name": "Kars"
+    },
+    {
+      "id": "TUR037",
+      "name": "Kastamonu"
+    },
+    {
+      "id": "TUR038",
+      "name": "Kayseri̇"
+    },
+    {
+      "id": "TUR079",
+      "name": "Ki̇li̇s"
+    },
+    {
+      "id": "TUR071",
+      "name": "Kirikkale"
+    },
+    {
+      "id": "TUR039",
+      "name": "Kirklareli̇"
+    },
+    {
+      "id": "TUR040",
+      "name": "Kirşehi̇r"
+    },
+    {
+      "id": "TUR041",
+      "name": "Kocaeli̇"
+    },
+    {
+      "id": "TUR042",
+      "name": "Konya"
+    },
+    {
+      "id": "TUR043",
+      "name": "Kütahya"
+    },
+    {
+      "id": "TUR044",
+      "name": "Malatya"
+    },
+    {
+      "id": "TUR045",
+      "name": "Mani̇sa"
+    },
+    {
+      "id": "TUR047",
+      "name": "Mardi̇n"
+    },
+    {
+      "id": "TUR033",
+      "name": "Mersi̇n"
+    },
+    {
+      "id": "TUR048",
+      "name": "Muğla"
+    },
+    {
+      "id": "TUR049",
+      "name": "Muş"
+    },
+    {
+      "id": "TUR050",
+      "name": "Nevşehi̇r"
+    },
+    {
+      "id": "TUR051",
+      "name": "Ni̇ğde"
+    },
+    {
+      "id": "TUR052",
+      "name": "Ordu"
+    },
+    {
+      "id": "TUR080",
+      "name": "Osmani̇ye"
+    },
+    {
+      "id": "TUR053",
+      "name": "Ri̇ze"
+    },
+    {
+      "id": "TUR054",
+      "name": "Sakarya"
+    },
+    {
+      "id": "TUR055",
+      "name": "Samsun"
+    },
+    {
+      "id": "TUR063",
+      "name": "Şanliurfa"
+    },
+    {
+      "id": "TUR056",
+      "name": "Si̇i̇rt"
+    },
+    {
+      "id": "TUR057",
+      "name": "Si̇nop"
+    },
+    {
+      "id": "TUR073",
+      "name": "Şirnak"
+    },
+    {
+      "id": "TUR058",
+      "name": "Si̇vas"
+    },
+    {
+      "id": "TUR059",
+      "name": "Teki̇rdağ"
+    },
+    {
+      "id": "TUR060",
+      "name": "Tokat"
+    },
+    {
+      "id": "TUR061",
+      "name": "Trabzon"
+    },
+    {
+      "id": "TUR062",
+      "name": "Tunceli̇"
+    },
+    {
+      "id": "TUR064",
+      "name": "Uşak"
+    },
+    {
+      "id": "TUR065",
+      "name": "Van"
+    },
+    {
+      "id": "TUR077",
+      "name": "Yalova"
+    },
+    {
+      "id": "TUR066",
+      "name": "Yozgat"
+    },
+    {
+      "id": "TUR067",
+      "name": "Zonguldak"
+    }
+  ],
+  "districts": [
+    {
+      "id": "TUR001001",
+      "provinceId": "TUR001",
+      "name": "Aladağ"
+    },
+    {
+      "id": "TUR001002",
+      "provinceId": "TUR001",
+      "name": "Ceyhan"
+    },
+    {
+      "id": "TUR001003",
+      "provinceId": "TUR001",
+      "name": "Çukurova"
+    },
+    {
+      "id": "TUR001004",
+      "provinceId": "TUR001",
+      "name": "Feke"
+    },
+    {
+      "id": "TUR001005",
+      "provinceId": "TUR001",
+      "name": "İmamoğlu"
+    },
+    {
+      "id": "TUR001006",
+      "provinceId": "TUR001",
+      "name": "Karai̇sali"
+    },
+    {
+      "id": "TUR001007",
+      "provinceId": "TUR001",
+      "name": "Karataş"
+    },
+    {
+      "id": "TUR001008",
+      "provinceId": "TUR001",
+      "name": "Kozan"
+    },
+    {
+      "id": "TUR001009",
+      "provinceId": "TUR001",
+      "name": "Pozanti"
+    },
+    {
+      "id": "TUR001010",
+      "provinceId": "TUR001",
+      "name": "Sai̇mbeyli̇"
+    },
+    {
+      "id": "TUR001011",
+      "provinceId": "TUR001",
+      "name": "Sariçam"
+    },
+    {
+      "id": "TUR001012",
+      "provinceId": "TUR001",
+      "name": "Seyhan"
+    },
+    {
+      "id": "TUR001013",
+      "provinceId": "TUR001",
+      "name": "Tufanbeyli̇"
+    },
+    {
+      "id": "TUR001014",
+      "provinceId": "TUR001",
+      "name": "Yumurtalik"
+    },
+    {
+      "id": "TUR001015",
+      "provinceId": "TUR001",
+      "name": "Yüreği̇r"
+    },
+    {
+      "id": "TUR002001",
+      "provinceId": "TUR002",
+      "name": "Adiyaman"
+    },
+    {
+      "id": "TUR002002",
+      "provinceId": "TUR002",
+      "name": "Besni̇"
+    },
+    {
+      "id": "TUR002003",
+      "provinceId": "TUR002",
+      "name": "Çeli̇khan"
+    },
+    {
+      "id": "TUR002004",
+      "provinceId": "TUR002",
+      "name": "Gerger"
+    },
+    {
+      "id": "TUR002005",
+      "provinceId": "TUR002",
+      "name": "Gölbaşi"
+    },
+    {
+      "id": "TUR002006",
+      "provinceId": "TUR002",
+      "name": "Kâhta"
+    },
+    {
+      "id": "TUR002007",
+      "provinceId": "TUR002",
+      "name": "Samsat"
+    },
+    {
+      "id": "TUR002008",
+      "provinceId": "TUR002",
+      "name": "Si̇nci̇k"
+    },
+    {
+      "id": "TUR002009",
+      "provinceId": "TUR002",
+      "name": "Tut"
+    },
+    {
+      "id": "TUR003001",
+      "provinceId": "TUR003",
+      "name": "Afyonkarahisar"
+    },
+    {
+      "id": "TUR003002",
+      "provinceId": "TUR003",
+      "name": "Başmakçi"
+    },
+    {
+      "id": "TUR003003",
+      "provinceId": "TUR003",
+      "name": "Bayat"
+    },
+    {
+      "id": "TUR003004",
+      "provinceId": "TUR003",
+      "name": "Bolvadi̇n"
+    },
+    {
+      "id": "TUR003005",
+      "provinceId": "TUR003",
+      "name": "Çay"
+    },
+    {
+      "id": "TUR003006",
+      "provinceId": "TUR003",
+      "name": "Çobanlar"
+    },
+    {
+      "id": "TUR003007",
+      "provinceId": "TUR003",
+      "name": "Dazkiri"
+    },
+    {
+      "id": "TUR003008",
+      "provinceId": "TUR003",
+      "name": "Di̇nar"
+    },
+    {
+      "id": "TUR003009",
+      "provinceId": "TUR003",
+      "name": "Emi̇rdağ"
+    },
+    {
+      "id": "TUR003010",
+      "provinceId": "TUR003",
+      "name": "Evci̇ler"
+    },
+    {
+      "id": "TUR003011",
+      "provinceId": "TUR003",
+      "name": "Hocalar"
+    },
+    {
+      "id": "TUR003012",
+      "provinceId": "TUR003",
+      "name": "İhsani̇ye"
+    },
+    {
+      "id": "TUR003013",
+      "provinceId": "TUR003",
+      "name": "İscehi̇sar"
+    },
+    {
+      "id": "TUR003014",
+      "provinceId": "TUR003",
+      "name": "Kizilören"
+    },
+    {
+      "id": "TUR003015",
+      "provinceId": "TUR003",
+      "name": "Sandikli"
+    },
+    {
+      "id": "TUR003016",
+      "provinceId": "TUR003",
+      "name": "Si̇nanpaşa"
+    },
+    {
+      "id": "TUR003017",
+      "provinceId": "TUR003",
+      "name": "Sultandaği"
+    },
+    {
+      "id": "TUR003018",
+      "provinceId": "TUR003",
+      "name": "Şuhut"
+    },
+    {
+      "id": "TUR004001",
+      "provinceId": "TUR004",
+      "name": "Ağri"
+    },
+    {
+      "id": "TUR004002",
+      "provinceId": "TUR004",
+      "name": "Di̇yadi̇n"
+    },
+    {
+      "id": "TUR004003",
+      "provinceId": "TUR004",
+      "name": "Doğubayazit"
+    },
+    {
+      "id": "TUR004004",
+      "provinceId": "TUR004",
+      "name": "Eleşki̇rt"
+    },
+    {
+      "id": "TUR004005",
+      "provinceId": "TUR004",
+      "name": "Hamur"
+    },
+    {
+      "id": "TUR004006",
+      "provinceId": "TUR004",
+      "name": "Patnos"
+    },
+    {
+      "id": "TUR004007",
+      "provinceId": "TUR004",
+      "name": "Taşliçay"
+    },
+    {
+      "id": "TUR004008",
+      "provinceId": "TUR004",
+      "name": "Tutak"
+    },
+    {
+      "id": "TUR005001",
+      "provinceId": "TUR005",
+      "name": "Amasya"
+    },
+    {
+      "id": "TUR005002",
+      "provinceId": "TUR005",
+      "name": "Göynücek"
+    },
+    {
+      "id": "TUR005003",
+      "provinceId": "TUR005",
+      "name": "Gümüşhaciköy"
+    },
+    {
+      "id": "TUR005004",
+      "provinceId": "TUR005",
+      "name": "Hamamözü"
+    },
+    {
+      "id": "TUR005005",
+      "provinceId": "TUR005",
+      "name": "Merzi̇fon"
+    },
+    {
+      "id": "TUR005006",
+      "provinceId": "TUR005",
+      "name": "Suluova"
+    },
+    {
+      "id": "TUR005007",
+      "provinceId": "TUR005",
+      "name": "Taşova"
+    },
+    {
+      "id": "TUR006001",
+      "provinceId": "TUR006",
+      "name": "Akyurt"
+    },
+    {
+      "id": "TUR006002",
+      "provinceId": "TUR006",
+      "name": "Altindağ"
+    },
+    {
+      "id": "TUR006003",
+      "provinceId": "TUR006",
+      "name": "Ayaş"
+    },
+    {
+      "id": "TUR006004",
+      "provinceId": "TUR006",
+      "name": "Bala"
+    },
+    {
+      "id": "TUR006005",
+      "provinceId": "TUR006",
+      "name": "Beypazari"
+    },
+    {
+      "id": "TUR006006",
+      "provinceId": "TUR006",
+      "name": "Çamlidere"
+    },
+    {
+      "id": "TUR006007",
+      "provinceId": "TUR006",
+      "name": "Çankaya"
+    },
+    {
+      "id": "TUR006008",
+      "provinceId": "TUR006",
+      "name": "Çubuk"
+    },
+    {
+      "id": "TUR006009",
+      "provinceId": "TUR006",
+      "name": "Elmadağ"
+    },
+    {
+      "id": "TUR006010",
+      "provinceId": "TUR006",
+      "name": "Eti̇mesgut"
+    },
+    {
+      "id": "TUR006011",
+      "provinceId": "TUR006",
+      "name": "Evren"
+    },
+    {
+      "id": "TUR006012",
+      "provinceId": "TUR006",
+      "name": "Gölbaşi"
+    },
+    {
+      "id": "TUR006013",
+      "provinceId": "TUR006",
+      "name": "Güdül"
+    },
+    {
+      "id": "TUR006014",
+      "provinceId": "TUR006",
+      "name": "Haymana"
+    },
+    {
+      "id": "TUR006015",
+      "provinceId": "TUR006",
+      "name": "Kahramankazan"
+    },
+    {
+      "id": "TUR006016",
+      "provinceId": "TUR006",
+      "name": "Kaleci̇k"
+    },
+    {
+      "id": "TUR006017",
+      "provinceId": "TUR006",
+      "name": "Keçi̇ören"
+    },
+    {
+      "id": "TUR006018",
+      "provinceId": "TUR006",
+      "name": "Kizilcahamam"
+    },
+    {
+      "id": "TUR006019",
+      "provinceId": "TUR006",
+      "name": "Mamak"
+    },
+    {
+      "id": "TUR006020",
+      "provinceId": "TUR006",
+      "name": "Nallihan"
+    },
+    {
+      "id": "TUR006021",
+      "provinceId": "TUR006",
+      "name": "Polatli"
+    },
+    {
+      "id": "TUR006022",
+      "provinceId": "TUR006",
+      "name": "Pursaklar"
+    },
+    {
+      "id": "TUR006023",
+      "provinceId": "TUR006",
+      "name": "Si̇ncan"
+    },
+    {
+      "id": "TUR006024",
+      "provinceId": "TUR006",
+      "name": "Şerefli̇koçhi̇sar"
+    },
+    {
+      "id": "TUR006025",
+      "provinceId": "TUR006",
+      "name": "Yeni̇mahalle"
+    },
+    {
+      "id": "TUR007001",
+      "provinceId": "TUR007",
+      "name": "Akseki̇"
+    },
+    {
+      "id": "TUR007002",
+      "provinceId": "TUR007",
+      "name": "Aksu"
+    },
+    {
+      "id": "TUR007003",
+      "provinceId": "TUR007",
+      "name": "Alanya"
+    },
+    {
+      "id": "TUR007004",
+      "provinceId": "TUR007",
+      "name": "Demre"
+    },
+    {
+      "id": "TUR007005",
+      "provinceId": "TUR007",
+      "name": "Döşemealti"
+    },
+    {
+      "id": "TUR007006",
+      "provinceId": "TUR007",
+      "name": "Elmali"
+    },
+    {
+      "id": "TUR007007",
+      "provinceId": "TUR007",
+      "name": "Fi̇ni̇ke"
+    },
+    {
+      "id": "TUR007008",
+      "provinceId": "TUR007",
+      "name": "Gazi̇paşa"
+    },
+    {
+      "id": "TUR007009",
+      "provinceId": "TUR007",
+      "name": "Gündoğmuş"
+    },
+    {
+      "id": "TUR007010",
+      "provinceId": "TUR007",
+      "name": "İbradi"
+    },
+    {
+      "id": "TUR007011",
+      "provinceId": "TUR007",
+      "name": "Kaş"
+    },
+    {
+      "id": "TUR007012",
+      "provinceId": "TUR007",
+      "name": "Kemer"
+    },
+    {
+      "id": "TUR007013",
+      "provinceId": "TUR007",
+      "name": "Kepez"
+    },
+    {
+      "id": "TUR007014",
+      "provinceId": "TUR007",
+      "name": "Konyaalti"
+    },
+    {
+      "id": "TUR007015",
+      "provinceId": "TUR007",
+      "name": "Korkuteli̇"
+    },
+    {
+      "id": "TUR007016",
+      "provinceId": "TUR007",
+      "name": "Kumluca"
+    },
+    {
+      "id": "TUR007017",
+      "provinceId": "TUR007",
+      "name": "Manavgat"
+    },
+    {
+      "id": "TUR007018",
+      "provinceId": "TUR007",
+      "name": "Muratpaşa"
+    },
+    {
+      "id": "TUR007019",
+      "provinceId": "TUR007",
+      "name": "Seri̇k"
+    },
+    {
+      "id": "TUR008001",
+      "provinceId": "TUR008",
+      "name": "Ardanuç"
+    },
+    {
+      "id": "TUR008002",
+      "provinceId": "TUR008",
+      "name": "Arhavi̇"
+    },
+    {
+      "id": "TUR008003",
+      "provinceId": "TUR008",
+      "name": "Artvin"
+    },
+    {
+      "id": "TUR008004",
+      "provinceId": "TUR008",
+      "name": "Borçka"
+    },
+    {
+      "id": "TUR008005",
+      "provinceId": "TUR008",
+      "name": "Hopa"
+    },
+    {
+      "id": "TUR008006",
+      "provinceId": "TUR008",
+      "name": "Kemalpaşa"
+    },
+    {
+      "id": "TUR008007",
+      "provinceId": "TUR008",
+      "name": "Murgul"
+    },
+    {
+      "id": "TUR008008",
+      "provinceId": "TUR008",
+      "name": "Şavşat"
+    },
+    {
+      "id": "TUR008009",
+      "provinceId": "TUR008",
+      "name": "Yusufeli̇"
+    },
+    {
+      "id": "TUR009001",
+      "provinceId": "TUR009",
+      "name": "Bozdoğan"
+    },
+    {
+      "id": "TUR009002",
+      "provinceId": "TUR009",
+      "name": "Buharkent"
+    },
+    {
+      "id": "TUR009003",
+      "provinceId": "TUR009",
+      "name": "Çi̇ne"
+    },
+    {
+      "id": "TUR009004",
+      "provinceId": "TUR009",
+      "name": "Di̇di̇m"
+    },
+    {
+      "id": "TUR009005",
+      "provinceId": "TUR009",
+      "name": "Efeler"
+    },
+    {
+      "id": "TUR009006",
+      "provinceId": "TUR009",
+      "name": "Germenci̇k"
+    },
+    {
+      "id": "TUR009007",
+      "provinceId": "TUR009",
+      "name": "İnci̇rli̇ova"
+    },
+    {
+      "id": "TUR009008",
+      "provinceId": "TUR009",
+      "name": "Karacasu"
+    },
+    {
+      "id": "TUR009009",
+      "provinceId": "TUR009",
+      "name": "Karpuzlu"
+    },
+    {
+      "id": "TUR009010",
+      "provinceId": "TUR009",
+      "name": "Koçarli"
+    },
+    {
+      "id": "TUR009011",
+      "provinceId": "TUR009",
+      "name": "Köşk"
+    },
+    {
+      "id": "TUR009012",
+      "provinceId": "TUR009",
+      "name": "Kuşadasi"
+    },
+    {
+      "id": "TUR009013",
+      "provinceId": "TUR009",
+      "name": "Kuyucak"
+    },
+    {
+      "id": "TUR009014",
+      "provinceId": "TUR009",
+      "name": "Nazi̇lli̇"
+    },
+    {
+      "id": "TUR009015",
+      "provinceId": "TUR009",
+      "name": "Söke"
+    },
+    {
+      "id": "TUR009016",
+      "provinceId": "TUR009",
+      "name": "Sultanhi̇sar"
+    },
+    {
+      "id": "TUR009017",
+      "provinceId": "TUR009",
+      "name": "Yeni̇pazar"
+    },
+    {
+      "id": "TUR010001",
+      "provinceId": "TUR010",
+      "name": "Altieylül"
+    },
+    {
+      "id": "TUR010002",
+      "provinceId": "TUR010",
+      "name": "Ayvalik"
+    },
+    {
+      "id": "TUR010003",
+      "provinceId": "TUR010",
+      "name": "Balya"
+    },
+    {
+      "id": "TUR010004",
+      "provinceId": "TUR010",
+      "name": "Bandirma"
+    },
+    {
+      "id": "TUR010005",
+      "provinceId": "TUR010",
+      "name": "Bi̇gadi̇ç"
+    },
+    {
+      "id": "TUR010006",
+      "provinceId": "TUR010",
+      "name": "Burhani̇ye"
+    },
+    {
+      "id": "TUR010007",
+      "provinceId": "TUR010",
+      "name": "Dursunbey"
+    },
+    {
+      "id": "TUR010008",
+      "provinceId": "TUR010",
+      "name": "Edremi̇t"
+    },
+    {
+      "id": "TUR010009",
+      "provinceId": "TUR010",
+      "name": "Erdek"
+    },
+    {
+      "id": "TUR010010",
+      "provinceId": "TUR010",
+      "name": "Gömeç"
+    },
+    {
+      "id": "TUR010011",
+      "provinceId": "TUR010",
+      "name": "Gönen"
+    },
+    {
+      "id": "TUR010012",
+      "provinceId": "TUR010",
+      "name": "Havran"
+    },
+    {
+      "id": "TUR010013",
+      "provinceId": "TUR010",
+      "name": "İvri̇ndi̇"
+    },
+    {
+      "id": "TUR010014",
+      "provinceId": "TUR010",
+      "name": "Karesi̇"
+    },
+    {
+      "id": "TUR010015",
+      "provinceId": "TUR010",
+      "name": "Kepsut"
+    },
+    {
+      "id": "TUR010016",
+      "provinceId": "TUR010",
+      "name": "Manyas"
+    },
+    {
+      "id": "TUR010017",
+      "provinceId": "TUR010",
+      "name": "Marmara"
+    },
+    {
+      "id": "TUR010018",
+      "provinceId": "TUR010",
+      "name": "Savaştepe"
+    },
+    {
+      "id": "TUR010019",
+      "provinceId": "TUR010",
+      "name": "Sindirgi"
+    },
+    {
+      "id": "TUR010020",
+      "provinceId": "TUR010",
+      "name": "Susurluk"
+    },
+    {
+      "id": "TUR011001",
+      "provinceId": "TUR011",
+      "name": "Bilecik"
+    },
+    {
+      "id": "TUR011002",
+      "provinceId": "TUR011",
+      "name": "Bozüyük"
+    },
+    {
+      "id": "TUR011003",
+      "provinceId": "TUR011",
+      "name": "Gölpazari"
+    },
+    {
+      "id": "TUR011004",
+      "provinceId": "TUR011",
+      "name": "İnhi̇sar"
+    },
+    {
+      "id": "TUR011005",
+      "provinceId": "TUR011",
+      "name": "Osmaneli̇"
+    },
+    {
+      "id": "TUR011006",
+      "provinceId": "TUR011",
+      "name": "Pazaryeri̇"
+    },
+    {
+      "id": "TUR011007",
+      "provinceId": "TUR011",
+      "name": "Söğüt"
+    },
+    {
+      "id": "TUR011008",
+      "provinceId": "TUR011",
+      "name": "Yeni̇pazar"
+    },
+    {
+      "id": "TUR012001",
+      "provinceId": "TUR012",
+      "name": "Adakli"
+    },
+    {
+      "id": "TUR012002",
+      "provinceId": "TUR012",
+      "name": "Bingöl"
+    },
+    {
+      "id": "TUR012003",
+      "provinceId": "TUR012",
+      "name": "Genç"
+    },
+    {
+      "id": "TUR012004",
+      "provinceId": "TUR012",
+      "name": "Karliova"
+    },
+    {
+      "id": "TUR012005",
+      "provinceId": "TUR012",
+      "name": "Ki̇ği"
+    },
+    {
+      "id": "TUR012006",
+      "provinceId": "TUR012",
+      "name": "Solhan"
+    },
+    {
+      "id": "TUR012007",
+      "provinceId": "TUR012",
+      "name": "Yayladere"
+    },
+    {
+      "id": "TUR012008",
+      "provinceId": "TUR012",
+      "name": "Yedi̇su"
+    },
+    {
+      "id": "TUR013001",
+      "provinceId": "TUR013",
+      "name": "Adi̇lcevaz"
+    },
+    {
+      "id": "TUR013002",
+      "provinceId": "TUR013",
+      "name": "Ahlat"
+    },
+    {
+      "id": "TUR013003",
+      "provinceId": "TUR013",
+      "name": "Bitlis"
+    },
+    {
+      "id": "TUR013004",
+      "provinceId": "TUR013",
+      "name": "Güroymak"
+    },
+    {
+      "id": "TUR013005",
+      "provinceId": "TUR013",
+      "name": "Hi̇zan"
+    },
+    {
+      "id": "TUR013006",
+      "provinceId": "TUR013",
+      "name": "Mutki̇"
+    },
+    {
+      "id": "TUR013007",
+      "provinceId": "TUR013",
+      "name": "Tatvan"
+    },
+    {
+      "id": "TUR014001",
+      "provinceId": "TUR014",
+      "name": "Bolu"
+    },
+    {
+      "id": "TUR014002",
+      "provinceId": "TUR014",
+      "name": "Dörtdi̇van"
+    },
+    {
+      "id": "TUR014003",
+      "provinceId": "TUR014",
+      "name": "Gerede"
+    },
+    {
+      "id": "TUR014004",
+      "provinceId": "TUR014",
+      "name": "Göynük"
+    },
+    {
+      "id": "TUR014005",
+      "provinceId": "TUR014",
+      "name": "Kibriscik"
+    },
+    {
+      "id": "TUR014006",
+      "provinceId": "TUR014",
+      "name": "Mengen"
+    },
+    {
+      "id": "TUR014007",
+      "provinceId": "TUR014",
+      "name": "Mudurnu"
+    },
+    {
+      "id": "TUR014008",
+      "provinceId": "TUR014",
+      "name": "Seben"
+    },
+    {
+      "id": "TUR014009",
+      "provinceId": "TUR014",
+      "name": "Yeni̇çağa"
+    },
+    {
+      "id": "TUR015001",
+      "provinceId": "TUR015",
+      "name": "Ağlasun"
+    },
+    {
+      "id": "TUR015002",
+      "provinceId": "TUR015",
+      "name": "Altinyayla"
+    },
+    {
+      "id": "TUR015003",
+      "provinceId": "TUR015",
+      "name": "Bucak"
+    },
+    {
+      "id": "TUR015004",
+      "provinceId": "TUR015",
+      "name": "Burdur"
+    },
+    {
+      "id": "TUR015005",
+      "provinceId": "TUR015",
+      "name": "Çavdir"
+    },
+    {
+      "id": "TUR015006",
+      "provinceId": "TUR015",
+      "name": "Çelti̇kçi̇"
+    },
+    {
+      "id": "TUR015007",
+      "provinceId": "TUR015",
+      "name": "Gölhi̇sar"
+    },
+    {
+      "id": "TUR015008",
+      "provinceId": "TUR015",
+      "name": "Karamanli"
+    },
+    {
+      "id": "TUR015009",
+      "provinceId": "TUR015",
+      "name": "Kemer"
+    },
+    {
+      "id": "TUR015010",
+      "provinceId": "TUR015",
+      "name": "Tefenni̇"
+    },
+    {
+      "id": "TUR015011",
+      "provinceId": "TUR015",
+      "name": "Yeşi̇lova"
+    },
+    {
+      "id": "TUR016001",
+      "provinceId": "TUR016",
+      "name": "Büyükorhan"
+    },
+    {
+      "id": "TUR016002",
+      "provinceId": "TUR016",
+      "name": "Gemli̇k"
+    },
+    {
+      "id": "TUR016003",
+      "provinceId": "TUR016",
+      "name": "Gürsu"
+    },
+    {
+      "id": "TUR016004",
+      "provinceId": "TUR016",
+      "name": "Harmancik"
+    },
+    {
+      "id": "TUR016005",
+      "provinceId": "TUR016",
+      "name": "İnegöl"
+    },
+    {
+      "id": "TUR016006",
+      "provinceId": "TUR016",
+      "name": "İzni̇k"
+    },
+    {
+      "id": "TUR016007",
+      "provinceId": "TUR016",
+      "name": "Karacabey"
+    },
+    {
+      "id": "TUR016008",
+      "provinceId": "TUR016",
+      "name": "Keles"
+    },
+    {
+      "id": "TUR016009",
+      "provinceId": "TUR016",
+      "name": "Kestel"
+    },
+    {
+      "id": "TUR016010",
+      "provinceId": "TUR016",
+      "name": "Mudanya"
+    },
+    {
+      "id": "TUR016011",
+      "provinceId": "TUR016",
+      "name": "Mustafakemalpaşa"
+    },
+    {
+      "id": "TUR016012",
+      "provinceId": "TUR016",
+      "name": "Ni̇lüfer"
+    },
+    {
+      "id": "TUR016013",
+      "provinceId": "TUR016",
+      "name": "Orhaneli̇"
+    },
+    {
+      "id": "TUR016014",
+      "provinceId": "TUR016",
+      "name": "Orhangazi̇"
+    },
+    {
+      "id": "TUR016015",
+      "provinceId": "TUR016",
+      "name": "Osmangazi̇"
+    },
+    {
+      "id": "TUR016016",
+      "provinceId": "TUR016",
+      "name": "Yeni̇şehi̇r"
+    },
+    {
+      "id": "TUR016017",
+      "provinceId": "TUR016",
+      "name": "Yildirim"
+    },
+    {
+      "id": "TUR017001",
+      "provinceId": "TUR017",
+      "name": "Ayvacik"
+    },
+    {
+      "id": "TUR017002",
+      "provinceId": "TUR017",
+      "name": "Bayrami̇ç"
+    },
+    {
+      "id": "TUR017003",
+      "provinceId": "TUR017",
+      "name": "Bi̇ga"
+    },
+    {
+      "id": "TUR017004",
+      "provinceId": "TUR017",
+      "name": "Bozcaada"
+    },
+    {
+      "id": "TUR017005",
+      "provinceId": "TUR017",
+      "name": "Çan"
+    },
+    {
+      "id": "TUR017006",
+      "provinceId": "TUR017",
+      "name": "Çanakkale"
+    },
+    {
+      "id": "TUR017007",
+      "provinceId": "TUR017",
+      "name": "Eceabat"
+    },
+    {
+      "id": "TUR017008",
+      "provinceId": "TUR017",
+      "name": "Ezi̇ne"
+    },
+    {
+      "id": "TUR017009",
+      "provinceId": "TUR017",
+      "name": "Geli̇bolu"
+    },
+    {
+      "id": "TUR017010",
+      "provinceId": "TUR017",
+      "name": "Gökçeada"
+    },
+    {
+      "id": "TUR017011",
+      "provinceId": "TUR017",
+      "name": "Lâpseki̇"
+    },
+    {
+      "id": "TUR017012",
+      "provinceId": "TUR017",
+      "name": "Yeni̇ce"
+    },
+    {
+      "id": "TUR018001",
+      "provinceId": "TUR018",
+      "name": "Atkaracalar"
+    },
+    {
+      "id": "TUR018002",
+      "provinceId": "TUR018",
+      "name": "Bayramören"
+    },
+    {
+      "id": "TUR018003",
+      "provinceId": "TUR018",
+      "name": "Çankiri"
+    },
+    {
+      "id": "TUR018004",
+      "provinceId": "TUR018",
+      "name": "Çerkeş"
+    },
+    {
+      "id": "TUR018005",
+      "provinceId": "TUR018",
+      "name": "Eldi̇van"
+    },
+    {
+      "id": "TUR018006",
+      "provinceId": "TUR018",
+      "name": "Ilgaz"
+    },
+    {
+      "id": "TUR018007",
+      "provinceId": "TUR018",
+      "name": "Kizilirmak"
+    },
+    {
+      "id": "TUR018008",
+      "provinceId": "TUR018",
+      "name": "Korgun"
+    },
+    {
+      "id": "TUR018009",
+      "provinceId": "TUR018",
+      "name": "Kurşunlu"
+    },
+    {
+      "id": "TUR018010",
+      "provinceId": "TUR018",
+      "name": "Orta"
+    },
+    {
+      "id": "TUR018011",
+      "provinceId": "TUR018",
+      "name": "Şabanözü"
+    },
+    {
+      "id": "TUR018012",
+      "provinceId": "TUR018",
+      "name": "Yaprakli"
+    },
+    {
+      "id": "TUR019001",
+      "provinceId": "TUR019",
+      "name": "Alaca"
+    },
+    {
+      "id": "TUR019002",
+      "provinceId": "TUR019",
+      "name": "Bayat"
+    },
+    {
+      "id": "TUR019003",
+      "provinceId": "TUR019",
+      "name": "Boğazkale"
+    },
+    {
+      "id": "TUR019004",
+      "provinceId": "TUR019",
+      "name": "Çorum"
+    },
+    {
+      "id": "TUR019005",
+      "provinceId": "TUR019",
+      "name": "Dodurga"
+    },
+    {
+      "id": "TUR019006",
+      "provinceId": "TUR019",
+      "name": "İski̇li̇p"
+    },
+    {
+      "id": "TUR019007",
+      "provinceId": "TUR019",
+      "name": "Kargi"
+    },
+    {
+      "id": "TUR019008",
+      "provinceId": "TUR019",
+      "name": "Lâçi̇n"
+    },
+    {
+      "id": "TUR019009",
+      "provinceId": "TUR019",
+      "name": "Meci̇tözü"
+    },
+    {
+      "id": "TUR019010",
+      "provinceId": "TUR019",
+      "name": "Oğuzlar"
+    },
+    {
+      "id": "TUR019011",
+      "provinceId": "TUR019",
+      "name": "Ortaköy"
+    },
+    {
+      "id": "TUR019012",
+      "provinceId": "TUR019",
+      "name": "Osmancik"
+    },
+    {
+      "id": "TUR019013",
+      "provinceId": "TUR019",
+      "name": "Sungurlu"
+    },
+    {
+      "id": "TUR019014",
+      "provinceId": "TUR019",
+      "name": "Uğurludağ"
+    },
+    {
+      "id": "TUR020001",
+      "provinceId": "TUR020",
+      "name": "Acipayam"
+    },
+    {
+      "id": "TUR020002",
+      "provinceId": "TUR020",
+      "name": "Babadağ"
+    },
+    {
+      "id": "TUR020003",
+      "provinceId": "TUR020",
+      "name": "Baklan"
+    },
+    {
+      "id": "TUR020004",
+      "provinceId": "TUR020",
+      "name": "Beki̇lli̇"
+    },
+    {
+      "id": "TUR020005",
+      "provinceId": "TUR020",
+      "name": "Beyağaç"
+    },
+    {
+      "id": "TUR020006",
+      "provinceId": "TUR020",
+      "name": "Bozkurt"
+    },
+    {
+      "id": "TUR020007",
+      "provinceId": "TUR020",
+      "name": "Buldan"
+    },
+    {
+      "id": "TUR020008",
+      "provinceId": "TUR020",
+      "name": "Çal"
+    },
+    {
+      "id": "TUR020009",
+      "provinceId": "TUR020",
+      "name": "Çameli̇"
+    },
+    {
+      "id": "TUR020010",
+      "provinceId": "TUR020",
+      "name": "Çardak"
+    },
+    {
+      "id": "TUR020011",
+      "provinceId": "TUR020",
+      "name": "Çi̇vri̇l"
+    },
+    {
+      "id": "TUR020012",
+      "provinceId": "TUR020",
+      "name": "Güney"
+    },
+    {
+      "id": "TUR020013",
+      "provinceId": "TUR020",
+      "name": "Honaz"
+    },
+    {
+      "id": "TUR020014",
+      "provinceId": "TUR020",
+      "name": "Kale"
+    },
+    {
+      "id": "TUR020015",
+      "provinceId": "TUR020",
+      "name": "Merkezefendi̇"
+    },
+    {
+      "id": "TUR020016",
+      "provinceId": "TUR020",
+      "name": "Pamukkale"
+    },
+    {
+      "id": "TUR020017",
+      "provinceId": "TUR020",
+      "name": "Sarayköy"
+    },
+    {
+      "id": "TUR020018",
+      "provinceId": "TUR020",
+      "name": "Seri̇nhi̇sar"
+    },
+    {
+      "id": "TUR020019",
+      "provinceId": "TUR020",
+      "name": "Tavas"
+    },
+    {
+      "id": "TUR021001",
+      "provinceId": "TUR021",
+      "name": "Bağlar"
+    },
+    {
+      "id": "TUR021002",
+      "provinceId": "TUR021",
+      "name": "Bi̇smi̇l"
+    },
+    {
+      "id": "TUR021003",
+      "provinceId": "TUR021",
+      "name": "Çermi̇k"
+    },
+    {
+      "id": "TUR021004",
+      "provinceId": "TUR021",
+      "name": "Çinar"
+    },
+    {
+      "id": "TUR021005",
+      "provinceId": "TUR021",
+      "name": "Çüngüş"
+    },
+    {
+      "id": "TUR021006",
+      "provinceId": "TUR021",
+      "name": "Di̇cle"
+    },
+    {
+      "id": "TUR021007",
+      "provinceId": "TUR021",
+      "name": "Eği̇l"
+    },
+    {
+      "id": "TUR021008",
+      "provinceId": "TUR021",
+      "name": "Ergani̇"
+    },
+    {
+      "id": "TUR021009",
+      "provinceId": "TUR021",
+      "name": "Hani̇"
+    },
+    {
+      "id": "TUR021010",
+      "provinceId": "TUR021",
+      "name": "Hazro"
+    },
+    {
+      "id": "TUR021011",
+      "provinceId": "TUR021",
+      "name": "Kayapinar"
+    },
+    {
+      "id": "TUR021012",
+      "provinceId": "TUR021",
+      "name": "Kocaköy"
+    },
+    {
+      "id": "TUR021013",
+      "provinceId": "TUR021",
+      "name": "Kulp"
+    },
+    {
+      "id": "TUR021014",
+      "provinceId": "TUR021",
+      "name": "Li̇ce"
+    },
+    {
+      "id": "TUR021015",
+      "provinceId": "TUR021",
+      "name": "Si̇lvan"
+    },
+    {
+      "id": "TUR021016",
+      "provinceId": "TUR021",
+      "name": "Sur"
+    },
+    {
+      "id": "TUR021017",
+      "provinceId": "TUR021",
+      "name": "Yeni̇şehi̇r"
+    },
+    {
+      "id": "TUR022001",
+      "provinceId": "TUR022",
+      "name": "Edirne"
+    },
+    {
+      "id": "TUR022002",
+      "provinceId": "TUR022",
+      "name": "Enez"
+    },
+    {
+      "id": "TUR022003",
+      "provinceId": "TUR022",
+      "name": "Havsa"
+    },
+    {
+      "id": "TUR022004",
+      "provinceId": "TUR022",
+      "name": "İpsala"
+    },
+    {
+      "id": "TUR022005",
+      "provinceId": "TUR022",
+      "name": "Keşan"
+    },
+    {
+      "id": "TUR022006",
+      "provinceId": "TUR022",
+      "name": "Lalapaşa"
+    },
+    {
+      "id": "TUR022007",
+      "provinceId": "TUR022",
+      "name": "Meri̇ç"
+    },
+    {
+      "id": "TUR022008",
+      "provinceId": "TUR022",
+      "name": "Süloğlu"
+    },
+    {
+      "id": "TUR022009",
+      "provinceId": "TUR022",
+      "name": "Uzunköprü"
+    },
+    {
+      "id": "TUR023001",
+      "provinceId": "TUR023",
+      "name": "Ağin"
+    },
+    {
+      "id": "TUR023002",
+      "provinceId": "TUR023",
+      "name": "Alacakaya"
+    },
+    {
+      "id": "TUR023003",
+      "provinceId": "TUR023",
+      "name": "Aricak"
+    },
+    {
+      "id": "TUR023004",
+      "provinceId": "TUR023",
+      "name": "Baski̇l"
+    },
+    {
+      "id": "TUR023005",
+      "provinceId": "TUR023",
+      "name": "Elaziğ"
+    },
+    {
+      "id": "TUR023006",
+      "provinceId": "TUR023",
+      "name": "Karakoçan"
+    },
+    {
+      "id": "TUR023007",
+      "provinceId": "TUR023",
+      "name": "Keban"
+    },
+    {
+      "id": "TUR023008",
+      "provinceId": "TUR023",
+      "name": "Kovancilar"
+    },
+    {
+      "id": "TUR023009",
+      "provinceId": "TUR023",
+      "name": "Maden"
+    },
+    {
+      "id": "TUR023010",
+      "provinceId": "TUR023",
+      "name": "Palu"
+    },
+    {
+      "id": "TUR023011",
+      "provinceId": "TUR023",
+      "name": "Si̇vri̇ce"
+    },
+    {
+      "id": "TUR024001",
+      "provinceId": "TUR024",
+      "name": "Çayirli"
+    },
+    {
+      "id": "TUR024002",
+      "provinceId": "TUR024",
+      "name": "Erzincan"
+    },
+    {
+      "id": "TUR024003",
+      "provinceId": "TUR024",
+      "name": "İli̇ç"
+    },
+    {
+      "id": "TUR024004",
+      "provinceId": "TUR024",
+      "name": "Kemah"
+    },
+    {
+      "id": "TUR024005",
+      "provinceId": "TUR024",
+      "name": "Kemali̇ye"
+    },
+    {
+      "id": "TUR024006",
+      "provinceId": "TUR024",
+      "name": "Otlukbeli̇"
+    },
+    {
+      "id": "TUR024007",
+      "provinceId": "TUR024",
+      "name": "Refahi̇ye"
+    },
+    {
+      "id": "TUR024008",
+      "provinceId": "TUR024",
+      "name": "Tercan"
+    },
+    {
+      "id": "TUR024009",
+      "provinceId": "TUR024",
+      "name": "Üzümlü"
+    },
+    {
+      "id": "TUR025001",
+      "provinceId": "TUR025",
+      "name": "Aşkale"
+    },
+    {
+      "id": "TUR025002",
+      "provinceId": "TUR025",
+      "name": "Azi̇zi̇ye"
+    },
+    {
+      "id": "TUR025003",
+      "provinceId": "TUR025",
+      "name": "Çat"
+    },
+    {
+      "id": "TUR025004",
+      "provinceId": "TUR025",
+      "name": "Hinis"
+    },
+    {
+      "id": "TUR025005",
+      "provinceId": "TUR025",
+      "name": "Horasan"
+    },
+    {
+      "id": "TUR025006",
+      "provinceId": "TUR025",
+      "name": "İspi̇r"
+    },
+    {
+      "id": "TUR025007",
+      "provinceId": "TUR025",
+      "name": "Karaçoban"
+    },
+    {
+      "id": "TUR025008",
+      "provinceId": "TUR025",
+      "name": "Karayazi"
+    },
+    {
+      "id": "TUR025009",
+      "provinceId": "TUR025",
+      "name": "Köprüköy"
+    },
+    {
+      "id": "TUR025010",
+      "provinceId": "TUR025",
+      "name": "Narman"
+    },
+    {
+      "id": "TUR025011",
+      "provinceId": "TUR025",
+      "name": "Oltu"
+    },
+    {
+      "id": "TUR025012",
+      "provinceId": "TUR025",
+      "name": "Olur"
+    },
+    {
+      "id": "TUR025013",
+      "provinceId": "TUR025",
+      "name": "Palandöken"
+    },
+    {
+      "id": "TUR025014",
+      "provinceId": "TUR025",
+      "name": "Pasi̇nler"
+    },
+    {
+      "id": "TUR025015",
+      "provinceId": "TUR025",
+      "name": "Pazaryolu"
+    },
+    {
+      "id": "TUR025016",
+      "provinceId": "TUR025",
+      "name": "Şenkaya"
+    },
+    {
+      "id": "TUR025017",
+      "provinceId": "TUR025",
+      "name": "Tekman"
+    },
+    {
+      "id": "TUR025018",
+      "provinceId": "TUR025",
+      "name": "Tortum"
+    },
+    {
+      "id": "TUR025019",
+      "provinceId": "TUR025",
+      "name": "Uzundere"
+    },
+    {
+      "id": "TUR025020",
+      "provinceId": "TUR025",
+      "name": "Yakuti̇ye"
+    },
+    {
+      "id": "TUR026001",
+      "provinceId": "TUR026",
+      "name": "Alpu"
+    },
+    {
+      "id": "TUR026002",
+      "provinceId": "TUR026",
+      "name": "Beyli̇kova"
+    },
+    {
+      "id": "TUR026003",
+      "provinceId": "TUR026",
+      "name": "Çi̇fteler"
+    },
+    {
+      "id": "TUR026004",
+      "provinceId": "TUR026",
+      "name": "Günyüzü"
+    },
+    {
+      "id": "TUR026005",
+      "provinceId": "TUR026",
+      "name": "Han"
+    },
+    {
+      "id": "TUR026006",
+      "provinceId": "TUR026",
+      "name": "İnönü"
+    },
+    {
+      "id": "TUR026007",
+      "provinceId": "TUR026",
+      "name": "Mahmudi̇ye"
+    },
+    {
+      "id": "TUR026008",
+      "provinceId": "TUR026",
+      "name": "Mi̇halgazi̇"
+    },
+    {
+      "id": "TUR026009",
+      "provinceId": "TUR026",
+      "name": "Mi̇haliççik"
+    },
+    {
+      "id": "TUR026010",
+      "provinceId": "TUR026",
+      "name": "Odunpazari"
+    },
+    {
+      "id": "TUR026011",
+      "provinceId": "TUR026",
+      "name": "Saricakaya"
+    },
+    {
+      "id": "TUR026012",
+      "provinceId": "TUR026",
+      "name": "Seyi̇tgazi̇"
+    },
+    {
+      "id": "TUR026013",
+      "provinceId": "TUR026",
+      "name": "Si̇vri̇hi̇sar"
+    },
+    {
+      "id": "TUR026014",
+      "provinceId": "TUR026",
+      "name": "Tepebaşi"
+    },
+    {
+      "id": "TUR027001",
+      "provinceId": "TUR027",
+      "name": "Araban"
+    },
+    {
+      "id": "TUR027002",
+      "provinceId": "TUR027",
+      "name": "İslahi̇ye"
+    },
+    {
+      "id": "TUR027003",
+      "provinceId": "TUR027",
+      "name": "Karkamiş"
+    },
+    {
+      "id": "TUR027004",
+      "provinceId": "TUR027",
+      "name": "Ni̇zi̇p"
+    },
+    {
+      "id": "TUR027005",
+      "provinceId": "TUR027",
+      "name": "Nurdaği"
+    },
+    {
+      "id": "TUR027006",
+      "provinceId": "TUR027",
+      "name": "Oğuzeli̇"
+    },
+    {
+      "id": "TUR027007",
+      "provinceId": "TUR027",
+      "name": "Şahi̇nbey"
+    },
+    {
+      "id": "TUR027008",
+      "provinceId": "TUR027",
+      "name": "Şehi̇tkami̇l"
+    },
+    {
+      "id": "TUR027009",
+      "provinceId": "TUR027",
+      "name": "Yavuzeli̇"
+    },
+    {
+      "id": "TUR028001",
+      "provinceId": "TUR028",
+      "name": "Alucra"
+    },
+    {
+      "id": "TUR028002",
+      "provinceId": "TUR028",
+      "name": "Bulancak"
+    },
+    {
+      "id": "TUR028003",
+      "provinceId": "TUR028",
+      "name": "Çamoluk"
+    },
+    {
+      "id": "TUR028004",
+      "provinceId": "TUR028",
+      "name": "Çanakçi"
+    },
+    {
+      "id": "TUR028005",
+      "provinceId": "TUR028",
+      "name": "Dereli̇"
+    },
+    {
+      "id": "TUR028006",
+      "provinceId": "TUR028",
+      "name": "Doğankent"
+    },
+    {
+      "id": "TUR028007",
+      "provinceId": "TUR028",
+      "name": "Espi̇ye"
+    },
+    {
+      "id": "TUR028008",
+      "provinceId": "TUR028",
+      "name": "Eynesi̇l"
+    },
+    {
+      "id": "TUR028009",
+      "provinceId": "TUR028",
+      "name": "Giresun"
+    },
+    {
+      "id": "TUR028010",
+      "provinceId": "TUR028",
+      "name": "Görele"
+    },
+    {
+      "id": "TUR028011",
+      "provinceId": "TUR028",
+      "name": "Güce"
+    },
+    {
+      "id": "TUR028012",
+      "provinceId": "TUR028",
+      "name": "Keşap"
+    },
+    {
+      "id": "TUR028013",
+      "provinceId": "TUR028",
+      "name": "Pi̇razi̇z"
+    },
+    {
+      "id": "TUR028014",
+      "provinceId": "TUR028",
+      "name": "Şebi̇nkarahi̇sar"
+    },
+    {
+      "id": "TUR028015",
+      "provinceId": "TUR028",
+      "name": "Ti̇rebolu"
+    },
+    {
+      "id": "TUR028016",
+      "provinceId": "TUR028",
+      "name": "Yağlidere"
+    },
+    {
+      "id": "TUR029001",
+      "provinceId": "TUR029",
+      "name": "Gümüşhane"
+    },
+    {
+      "id": "TUR029002",
+      "provinceId": "TUR029",
+      "name": "Kelki̇t"
+    },
+    {
+      "id": "TUR029003",
+      "provinceId": "TUR029",
+      "name": "Köse"
+    },
+    {
+      "id": "TUR029004",
+      "provinceId": "TUR029",
+      "name": "Kürtün"
+    },
+    {
+      "id": "TUR029005",
+      "provinceId": "TUR029",
+      "name": "Şi̇ran"
+    },
+    {
+      "id": "TUR029006",
+      "provinceId": "TUR029",
+      "name": "Torul"
+    },
+    {
+      "id": "TUR030001",
+      "provinceId": "TUR030",
+      "name": "Çukurca"
+    },
+    {
+      "id": "TUR030002",
+      "provinceId": "TUR030",
+      "name": "Hakkari"
+    },
+    {
+      "id": "TUR030003",
+      "provinceId": "TUR030",
+      "name": "Şemdi̇nli̇"
+    },
+    {
+      "id": "TUR030004",
+      "provinceId": "TUR030",
+      "name": "Yüksekova"
+    },
+    {
+      "id": "TUR030005",
+      "provinceId": "TUR030",
+      "name": "Dereci̇k"
+    },
+    {
+      "id": "TUR031001",
+      "provinceId": "TUR031",
+      "name": "Altinözü"
+    },
+    {
+      "id": "TUR031002",
+      "provinceId": "TUR031",
+      "name": "Antakya"
+    },
+    {
+      "id": "TUR031003",
+      "provinceId": "TUR031",
+      "name": "Arsuz"
+    },
+    {
+      "id": "TUR031004",
+      "provinceId": "TUR031",
+      "name": "Belen"
+    },
+    {
+      "id": "TUR031005",
+      "provinceId": "TUR031",
+      "name": "Defne"
+    },
+    {
+      "id": "TUR031006",
+      "provinceId": "TUR031",
+      "name": "Dörtyol"
+    },
+    {
+      "id": "TUR031007",
+      "provinceId": "TUR031",
+      "name": "Erzi̇n"
+    },
+    {
+      "id": "TUR031008",
+      "provinceId": "TUR031",
+      "name": "Hassa"
+    },
+    {
+      "id": "TUR031009",
+      "provinceId": "TUR031",
+      "name": "İskenderun"
+    },
+    {
+      "id": "TUR031010",
+      "provinceId": "TUR031",
+      "name": "Kirikhan"
+    },
+    {
+      "id": "TUR031011",
+      "provinceId": "TUR031",
+      "name": "Kumlu"
+    },
+    {
+      "id": "TUR031012",
+      "provinceId": "TUR031",
+      "name": "Payas"
+    },
+    {
+      "id": "TUR031013",
+      "provinceId": "TUR031",
+      "name": "Reyhanli"
+    },
+    {
+      "id": "TUR031014",
+      "provinceId": "TUR031",
+      "name": "Samandağ"
+    },
+    {
+      "id": "TUR031015",
+      "provinceId": "TUR031",
+      "name": "Yayladaği"
+    },
+    {
+      "id": "TUR032001",
+      "provinceId": "TUR032",
+      "name": "Aksu"
+    },
+    {
+      "id": "TUR032002",
+      "provinceId": "TUR032",
+      "name": "Atabey"
+    },
+    {
+      "id": "TUR032003",
+      "provinceId": "TUR032",
+      "name": "Eği̇rdi̇r"
+    },
+    {
+      "id": "TUR032004",
+      "provinceId": "TUR032",
+      "name": "Gelendost"
+    },
+    {
+      "id": "TUR032005",
+      "provinceId": "TUR032",
+      "name": "Gönen"
+    },
+    {
+      "id": "TUR032006",
+      "provinceId": "TUR032",
+      "name": "Isparta"
+    },
+    {
+      "id": "TUR032007",
+      "provinceId": "TUR032",
+      "name": "Keçi̇borlu"
+    },
+    {
+      "id": "TUR032008",
+      "provinceId": "TUR032",
+      "name": "Seni̇rkent"
+    },
+    {
+      "id": "TUR032009",
+      "provinceId": "TUR032",
+      "name": "Sütçüler"
+    },
+    {
+      "id": "TUR032010",
+      "provinceId": "TUR032",
+      "name": "Şarki̇karaağaç"
+    },
+    {
+      "id": "TUR032011",
+      "provinceId": "TUR032",
+      "name": "Uluborlu"
+    },
+    {
+      "id": "TUR032012",
+      "provinceId": "TUR032",
+      "name": "Yalvaç"
+    },
+    {
+      "id": "TUR032013",
+      "provinceId": "TUR032",
+      "name": "Yeni̇şarbademli̇"
+    },
+    {
+      "id": "TUR033001",
+      "provinceId": "TUR033",
+      "name": "Akdeni̇z"
+    },
+    {
+      "id": "TUR033002",
+      "provinceId": "TUR033",
+      "name": "Anamur"
+    },
+    {
+      "id": "TUR033003",
+      "provinceId": "TUR033",
+      "name": "Aydincik"
+    },
+    {
+      "id": "TUR033004",
+      "provinceId": "TUR033",
+      "name": "Bozyazi"
+    },
+    {
+      "id": "TUR033005",
+      "provinceId": "TUR033",
+      "name": "Çamliyayla"
+    },
+    {
+      "id": "TUR033006",
+      "provinceId": "TUR033",
+      "name": "Erdemli̇"
+    },
+    {
+      "id": "TUR033007",
+      "provinceId": "TUR033",
+      "name": "Gülnar"
+    },
+    {
+      "id": "TUR033008",
+      "provinceId": "TUR033",
+      "name": "Mezi̇tli̇"
+    },
+    {
+      "id": "TUR033009",
+      "provinceId": "TUR033",
+      "name": "Mut"
+    },
+    {
+      "id": "TUR033010",
+      "provinceId": "TUR033",
+      "name": "Si̇li̇fke"
+    },
+    {
+      "id": "TUR033011",
+      "provinceId": "TUR033",
+      "name": "Tarsus"
+    },
+    {
+      "id": "TUR033012",
+      "provinceId": "TUR033",
+      "name": "Toroslar"
+    },
+    {
+      "id": "TUR033013",
+      "provinceId": "TUR033",
+      "name": "Yeni̇şehi̇r"
+    },
+    {
+      "id": "TUR034001",
+      "provinceId": "TUR034",
+      "name": "Adalar"
+    },
+    {
+      "id": "TUR034002",
+      "provinceId": "TUR034",
+      "name": "Arnavutköy"
+    },
+    {
+      "id": "TUR034003",
+      "provinceId": "TUR034",
+      "name": "Ataşehi̇r"
+    },
+    {
+      "id": "TUR034004",
+      "provinceId": "TUR034",
+      "name": "Avcilar"
+    },
+    {
+      "id": "TUR034005",
+      "provinceId": "TUR034",
+      "name": "Bağcilar"
+    },
+    {
+      "id": "TUR034006",
+      "provinceId": "TUR034",
+      "name": "Bahçeli̇evler"
+    },
+    {
+      "id": "TUR034007",
+      "provinceId": "TUR034",
+      "name": "Bakirköy"
+    },
+    {
+      "id": "TUR034008",
+      "provinceId": "TUR034",
+      "name": "Başakşehi̇r"
+    },
+    {
+      "id": "TUR034009",
+      "provinceId": "TUR034",
+      "name": "Bayrampaşa"
+    },
+    {
+      "id": "TUR034010",
+      "provinceId": "TUR034",
+      "name": "Beşi̇ktaş"
+    },
+    {
+      "id": "TUR034011",
+      "provinceId": "TUR034",
+      "name": "Beykoz"
+    },
+    {
+      "id": "TUR034012",
+      "provinceId": "TUR034",
+      "name": "Beyli̇kdüzü"
+    },
+    {
+      "id": "TUR034013",
+      "provinceId": "TUR034",
+      "name": "Beyoğlu"
+    },
+    {
+      "id": "TUR034014",
+      "provinceId": "TUR034",
+      "name": "Büyükçekmece"
+    },
+    {
+      "id": "TUR034015",
+      "provinceId": "TUR034",
+      "name": "Çatalca"
+    },
+    {
+      "id": "TUR034016",
+      "provinceId": "TUR034",
+      "name": "Çekmeköy"
+    },
+    {
+      "id": "TUR034017",
+      "provinceId": "TUR034",
+      "name": "Esenler"
+    },
+    {
+      "id": "TUR034018",
+      "provinceId": "TUR034",
+      "name": "Esenyurt"
+    },
+    {
+      "id": "TUR034019",
+      "provinceId": "TUR034",
+      "name": "Eyüpsultan"
+    },
+    {
+      "id": "TUR034020",
+      "provinceId": "TUR034",
+      "name": "Fati̇h"
+    },
+    {
+      "id": "TUR034021",
+      "provinceId": "TUR034",
+      "name": "Gazi̇ Osmanpaşa"
+    },
+    {
+      "id": "TUR034022",
+      "provinceId": "TUR034",
+      "name": "Güngören"
+    },
+    {
+      "id": "TUR034023",
+      "provinceId": "TUR034",
+      "name": "Kadiköy"
+    },
+    {
+      "id": "TUR034024",
+      "provinceId": "TUR034",
+      "name": "Kağithane"
+    },
+    {
+      "id": "TUR034025",
+      "provinceId": "TUR034",
+      "name": "Kartal"
+    },
+    {
+      "id": "TUR034026",
+      "provinceId": "TUR034",
+      "name": "Küçükçekmece"
+    },
+    {
+      "id": "TUR034027",
+      "provinceId": "TUR034",
+      "name": "Maltepe"
+    },
+    {
+      "id": "TUR034028",
+      "provinceId": "TUR034",
+      "name": "Pendi̇k"
+    },
+    {
+      "id": "TUR034029",
+      "provinceId": "TUR034",
+      "name": "Sancaktepe"
+    },
+    {
+      "id": "TUR034030",
+      "provinceId": "TUR034",
+      "name": "Sariyer"
+    },
+    {
+      "id": "TUR034031",
+      "provinceId": "TUR034",
+      "name": "Si̇li̇vri̇"
+    },
+    {
+      "id": "TUR034032",
+      "provinceId": "TUR034",
+      "name": "Sultanbeyli̇"
+    },
+    {
+      "id": "TUR034033",
+      "provinceId": "TUR034",
+      "name": "Sultangazi̇"
+    },
+    {
+      "id": "TUR034034",
+      "provinceId": "TUR034",
+      "name": "Şi̇le"
+    },
+    {
+      "id": "TUR034035",
+      "provinceId": "TUR034",
+      "name": "Şi̇şli̇"
+    },
+    {
+      "id": "TUR034036",
+      "provinceId": "TUR034",
+      "name": "Tuzla"
+    },
+    {
+      "id": "TUR034037",
+      "provinceId": "TUR034",
+      "name": "Ümrani̇ye"
+    },
+    {
+      "id": "TUR034038",
+      "provinceId": "TUR034",
+      "name": "Üsküdar"
+    },
+    {
+      "id": "TUR034039",
+      "provinceId": "TUR034",
+      "name": "Zeyti̇nburnu"
+    },
+    {
+      "id": "TUR035001",
+      "provinceId": "TUR035",
+      "name": "Ali̇ağa"
+    },
+    {
+      "id": "TUR035002",
+      "provinceId": "TUR035",
+      "name": "Balçova"
+    },
+    {
+      "id": "TUR035003",
+      "provinceId": "TUR035",
+      "name": "Bayindir"
+    },
+    {
+      "id": "TUR035004",
+      "provinceId": "TUR035",
+      "name": "Bayrakli"
+    },
+    {
+      "id": "TUR035005",
+      "provinceId": "TUR035",
+      "name": "Bergama"
+    },
+    {
+      "id": "TUR035006",
+      "provinceId": "TUR035",
+      "name": "Beydağ"
+    },
+    {
+      "id": "TUR035007",
+      "provinceId": "TUR035",
+      "name": "Bornova"
+    },
+    {
+      "id": "TUR035008",
+      "provinceId": "TUR035",
+      "name": "Buca"
+    },
+    {
+      "id": "TUR035009",
+      "provinceId": "TUR035",
+      "name": "Çeşme"
+    },
+    {
+      "id": "TUR035010",
+      "provinceId": "TUR035",
+      "name": "Çi̇ğli̇"
+    },
+    {
+      "id": "TUR035011",
+      "provinceId": "TUR035",
+      "name": "Di̇ki̇li̇"
+    },
+    {
+      "id": "TUR035012",
+      "provinceId": "TUR035",
+      "name": "Foça"
+    },
+    {
+      "id": "TUR035013",
+      "provinceId": "TUR035",
+      "name": "Gazi̇emi̇r"
+    },
+    {
+      "id": "TUR035014",
+      "provinceId": "TUR035",
+      "name": "Güzelbahçe"
+    },
+    {
+      "id": "TUR035015",
+      "provinceId": "TUR035",
+      "name": "Karabağlar"
+    },
+    {
+      "id": "TUR035016",
+      "provinceId": "TUR035",
+      "name": "Karaburun"
+    },
+    {
+      "id": "TUR035017",
+      "provinceId": "TUR035",
+      "name": "Karşiyaka"
+    },
+    {
+      "id": "TUR035018",
+      "provinceId": "TUR035",
+      "name": "Kemalpaşa"
+    },
+    {
+      "id": "TUR035019",
+      "provinceId": "TUR035",
+      "name": "Kinik"
+    },
+    {
+      "id": "TUR035020",
+      "provinceId": "TUR035",
+      "name": "Ki̇raz"
+    },
+    {
+      "id": "TUR035021",
+      "provinceId": "TUR035",
+      "name": "Konak"
+    },
+    {
+      "id": "TUR035022",
+      "provinceId": "TUR035",
+      "name": "Menderes"
+    },
+    {
+      "id": "TUR035023",
+      "provinceId": "TUR035",
+      "name": "Menemen"
+    },
+    {
+      "id": "TUR035024",
+      "provinceId": "TUR035",
+      "name": "Narlidere"
+    },
+    {
+      "id": "TUR035025",
+      "provinceId": "TUR035",
+      "name": "Ödemi̇ş"
+    },
+    {
+      "id": "TUR035026",
+      "provinceId": "TUR035",
+      "name": "Seferi̇hi̇sar"
+    },
+    {
+      "id": "TUR035027",
+      "provinceId": "TUR035",
+      "name": "Selçuk"
+    },
+    {
+      "id": "TUR035028",
+      "provinceId": "TUR035",
+      "name": "Ti̇re"
+    },
+    {
+      "id": "TUR035029",
+      "provinceId": "TUR035",
+      "name": "Torbali"
+    },
+    {
+      "id": "TUR035030",
+      "provinceId": "TUR035",
+      "name": "Urla"
+    },
+    {
+      "id": "TUR036001",
+      "provinceId": "TUR036",
+      "name": "Akyaka"
+    },
+    {
+      "id": "TUR036002",
+      "provinceId": "TUR036",
+      "name": "Arpaçay"
+    },
+    {
+      "id": "TUR036003",
+      "provinceId": "TUR036",
+      "name": "Di̇gor"
+    },
+    {
+      "id": "TUR036004",
+      "provinceId": "TUR036",
+      "name": "Kağizman"
+    },
+    {
+      "id": "TUR036005",
+      "provinceId": "TUR036",
+      "name": "Kars"
+    },
+    {
+      "id": "TUR036006",
+      "provinceId": "TUR036",
+      "name": "Sarikamiş"
+    },
+    {
+      "id": "TUR036007",
+      "provinceId": "TUR036",
+      "name": "Seli̇m"
+    },
+    {
+      "id": "TUR036008",
+      "provinceId": "TUR036",
+      "name": "Susuz"
+    },
+    {
+      "id": "TUR037001",
+      "provinceId": "TUR037",
+      "name": "Abana"
+    },
+    {
+      "id": "TUR037002",
+      "provinceId": "TUR037",
+      "name": "Ağli"
+    },
+    {
+      "id": "TUR037003",
+      "provinceId": "TUR037",
+      "name": "Araç"
+    },
+    {
+      "id": "TUR037004",
+      "provinceId": "TUR037",
+      "name": "Azdavay"
+    },
+    {
+      "id": "TUR037005",
+      "provinceId": "TUR037",
+      "name": "Bozkurt"
+    },
+    {
+      "id": "TUR037006",
+      "provinceId": "TUR037",
+      "name": "Ci̇de"
+    },
+    {
+      "id": "TUR037007",
+      "provinceId": "TUR037",
+      "name": "Çatalzeyti̇n"
+    },
+    {
+      "id": "TUR037008",
+      "provinceId": "TUR037",
+      "name": "Daday"
+    },
+    {
+      "id": "TUR037009",
+      "provinceId": "TUR037",
+      "name": "Devrekâni̇"
+    },
+    {
+      "id": "TUR037010",
+      "provinceId": "TUR037",
+      "name": "Doğanyurt"
+    },
+    {
+      "id": "TUR037011",
+      "provinceId": "TUR037",
+      "name": "Hanönü"
+    },
+    {
+      "id": "TUR037012",
+      "provinceId": "TUR037",
+      "name": "İhsangazi̇"
+    },
+    {
+      "id": "TUR037013",
+      "provinceId": "TUR037",
+      "name": "İnebolu"
+    },
+    {
+      "id": "TUR037014",
+      "provinceId": "TUR037",
+      "name": "Kastamonu"
+    },
+    {
+      "id": "TUR037015",
+      "provinceId": "TUR037",
+      "name": "Küre"
+    },
+    {
+      "id": "TUR037016",
+      "provinceId": "TUR037",
+      "name": "Pinarbaşi"
+    },
+    {
+      "id": "TUR037017",
+      "provinceId": "TUR037",
+      "name": "Seydi̇ler"
+    },
+    {
+      "id": "TUR037018",
+      "provinceId": "TUR037",
+      "name": "Şenpazar"
+    },
+    {
+      "id": "TUR037019",
+      "provinceId": "TUR037",
+      "name": "Taşköprü"
+    },
+    {
+      "id": "TUR037020",
+      "provinceId": "TUR037",
+      "name": "Tosya"
+    },
+    {
+      "id": "TUR038001",
+      "provinceId": "TUR038",
+      "name": "Akkişla"
+    },
+    {
+      "id": "TUR038002",
+      "provinceId": "TUR038",
+      "name": "Bünyan"
+    },
+    {
+      "id": "TUR038003",
+      "provinceId": "TUR038",
+      "name": "Develi̇"
+    },
+    {
+      "id": "TUR038004",
+      "provinceId": "TUR038",
+      "name": "Felahi̇ye"
+    },
+    {
+      "id": "TUR038005",
+      "provinceId": "TUR038",
+      "name": "Hacilar"
+    },
+    {
+      "id": "TUR038006",
+      "provinceId": "TUR038",
+      "name": "İncesu"
+    },
+    {
+      "id": "TUR038007",
+      "provinceId": "TUR038",
+      "name": "Kocasi̇nan"
+    },
+    {
+      "id": "TUR038008",
+      "provinceId": "TUR038",
+      "name": "Meli̇kgazi̇"
+    },
+    {
+      "id": "TUR038009",
+      "provinceId": "TUR038",
+      "name": "Özvatan"
+    },
+    {
+      "id": "TUR038010",
+      "provinceId": "TUR038",
+      "name": "Pinarbaşi"
+    },
+    {
+      "id": "TUR038011",
+      "provinceId": "TUR038",
+      "name": "Sarioğlan"
+    },
+    {
+      "id": "TUR038012",
+      "provinceId": "TUR038",
+      "name": "Sariz"
+    },
+    {
+      "id": "TUR038013",
+      "provinceId": "TUR038",
+      "name": "Talas"
+    },
+    {
+      "id": "TUR038014",
+      "provinceId": "TUR038",
+      "name": "Tomarza"
+    },
+    {
+      "id": "TUR038015",
+      "provinceId": "TUR038",
+      "name": "Yahyali"
+    },
+    {
+      "id": "TUR038016",
+      "provinceId": "TUR038",
+      "name": "Yeşi̇lhi̇sar"
+    },
+    {
+      "id": "TUR039001",
+      "provinceId": "TUR039",
+      "name": "Babaeski̇"
+    },
+    {
+      "id": "TUR039002",
+      "provinceId": "TUR039",
+      "name": "Demi̇rköy"
+    },
+    {
+      "id": "TUR039003",
+      "provinceId": "TUR039",
+      "name": "Kirklareli"
+    },
+    {
+      "id": "TUR039004",
+      "provinceId": "TUR039",
+      "name": "Kofçaz"
+    },
+    {
+      "id": "TUR039005",
+      "provinceId": "TUR039",
+      "name": "Lüleburgaz"
+    },
+    {
+      "id": "TUR039006",
+      "provinceId": "TUR039",
+      "name": "Pehli̇vanköy"
+    },
+    {
+      "id": "TUR039007",
+      "provinceId": "TUR039",
+      "name": "Pinarhi̇sar"
+    },
+    {
+      "id": "TUR039008",
+      "provinceId": "TUR039",
+      "name": "Vi̇ze"
+    },
+    {
+      "id": "TUR040001",
+      "provinceId": "TUR040",
+      "name": "Akçakent"
+    },
+    {
+      "id": "TUR040002",
+      "provinceId": "TUR040",
+      "name": "Akpinar"
+    },
+    {
+      "id": "TUR040003",
+      "provinceId": "TUR040",
+      "name": "Boztepe"
+    },
+    {
+      "id": "TUR040004",
+      "provinceId": "TUR040",
+      "name": "Çi̇çekdaği"
+    },
+    {
+      "id": "TUR040005",
+      "provinceId": "TUR040",
+      "name": "Kaman"
+    },
+    {
+      "id": "TUR040006",
+      "provinceId": "TUR040",
+      "name": "Kirşehir"
+    },
+    {
+      "id": "TUR040007",
+      "provinceId": "TUR040",
+      "name": "Mucur"
+    },
+    {
+      "id": "TUR041001",
+      "provinceId": "TUR041",
+      "name": "Başi̇skele"
+    },
+    {
+      "id": "TUR041002",
+      "provinceId": "TUR041",
+      "name": "Çayirova"
+    },
+    {
+      "id": "TUR041003",
+      "provinceId": "TUR041",
+      "name": "Darica"
+    },
+    {
+      "id": "TUR041004",
+      "provinceId": "TUR041",
+      "name": "Deri̇nce"
+    },
+    {
+      "id": "TUR041005",
+      "provinceId": "TUR041",
+      "name": "Di̇lovasi"
+    },
+    {
+      "id": "TUR041006",
+      "provinceId": "TUR041",
+      "name": "Gebze"
+    },
+    {
+      "id": "TUR041007",
+      "provinceId": "TUR041",
+      "name": "Gölcük"
+    },
+    {
+      "id": "TUR041008",
+      "provinceId": "TUR041",
+      "name": "İzmi̇t"
+    },
+    {
+      "id": "TUR041009",
+      "provinceId": "TUR041",
+      "name": "Kandira"
+    },
+    {
+      "id": "TUR041010",
+      "provinceId": "TUR041",
+      "name": "Karamürsel"
+    },
+    {
+      "id": "TUR041011",
+      "provinceId": "TUR041",
+      "name": "Kartepe"
+    },
+    {
+      "id": "TUR041012",
+      "provinceId": "TUR041",
+      "name": "Körfez"
+    },
+    {
+      "id": "TUR042001",
+      "provinceId": "TUR042",
+      "name": "Ahirli"
+    },
+    {
+      "id": "TUR042002",
+      "provinceId": "TUR042",
+      "name": "Akören"
+    },
+    {
+      "id": "TUR042003",
+      "provinceId": "TUR042",
+      "name": "Akşehi̇r"
+    },
+    {
+      "id": "TUR042004",
+      "provinceId": "TUR042",
+      "name": "Altineki̇n"
+    },
+    {
+      "id": "TUR042005",
+      "provinceId": "TUR042",
+      "name": "Beyşehi̇r"
+    },
+    {
+      "id": "TUR042006",
+      "provinceId": "TUR042",
+      "name": "Bozkir"
+    },
+    {
+      "id": "TUR042007",
+      "provinceId": "TUR042",
+      "name": "Ci̇hanbeyli̇"
+    },
+    {
+      "id": "TUR042008",
+      "provinceId": "TUR042",
+      "name": "Çelti̇k"
+    },
+    {
+      "id": "TUR042009",
+      "provinceId": "TUR042",
+      "name": "Çumra"
+    },
+    {
+      "id": "TUR042010",
+      "provinceId": "TUR042",
+      "name": "Derbent"
+    },
+    {
+      "id": "TUR042011",
+      "provinceId": "TUR042",
+      "name": "Derebucak"
+    },
+    {
+      "id": "TUR042012",
+      "provinceId": "TUR042",
+      "name": "Doğanhi̇sar"
+    },
+    {
+      "id": "TUR042013",
+      "provinceId": "TUR042",
+      "name": "Emi̇rgazi̇"
+    },
+    {
+      "id": "TUR042014",
+      "provinceId": "TUR042",
+      "name": "Ereğli̇"
+    },
+    {
+      "id": "TUR042015",
+      "provinceId": "TUR042",
+      "name": "Güneysinir"
+    },
+    {
+      "id": "TUR042016",
+      "provinceId": "TUR042",
+      "name": "Hadi̇m"
+    },
+    {
+      "id": "TUR042017",
+      "provinceId": "TUR042",
+      "name": "Halkapinar"
+    },
+    {
+      "id": "TUR042018",
+      "provinceId": "TUR042",
+      "name": "Hüyük"
+    },
+    {
+      "id": "TUR042019",
+      "provinceId": "TUR042",
+      "name": "Ilgin"
+    },
+    {
+      "id": "TUR042020",
+      "provinceId": "TUR042",
+      "name": "Kadinhani"
+    },
+    {
+      "id": "TUR042021",
+      "provinceId": "TUR042",
+      "name": "Karapinar"
+    },
+    {
+      "id": "TUR042022",
+      "provinceId": "TUR042",
+      "name": "Karatay"
+    },
+    {
+      "id": "TUR042023",
+      "provinceId": "TUR042",
+      "name": "Kulu"
+    },
+    {
+      "id": "TUR042024",
+      "provinceId": "TUR042",
+      "name": "Meram"
+    },
+    {
+      "id": "TUR042025",
+      "provinceId": "TUR042",
+      "name": "Sarayönü"
+    },
+    {
+      "id": "TUR042026",
+      "provinceId": "TUR042",
+      "name": "Selçuklu"
+    },
+    {
+      "id": "TUR042027",
+      "provinceId": "TUR042",
+      "name": "Seydi̇şehi̇r"
+    },
+    {
+      "id": "TUR042028",
+      "provinceId": "TUR042",
+      "name": "Taşkent"
+    },
+    {
+      "id": "TUR042029",
+      "provinceId": "TUR042",
+      "name": "Tuzlukçu"
+    },
+    {
+      "id": "TUR042030",
+      "provinceId": "TUR042",
+      "name": "Yalihüyük"
+    },
+    {
+      "id": "TUR042031",
+      "provinceId": "TUR042",
+      "name": "Yunak"
+    },
+    {
+      "id": "TUR043001",
+      "provinceId": "TUR043",
+      "name": "Altintaş"
+    },
+    {
+      "id": "TUR043002",
+      "provinceId": "TUR043",
+      "name": "Aslanapa"
+    },
+    {
+      "id": "TUR043003",
+      "provinceId": "TUR043",
+      "name": "Çavdarhi̇sar"
+    },
+    {
+      "id": "TUR043004",
+      "provinceId": "TUR043",
+      "name": "Domani̇ç"
+    },
+    {
+      "id": "TUR043005",
+      "provinceId": "TUR043",
+      "name": "Dumlupinar"
+    },
+    {
+      "id": "TUR043006",
+      "provinceId": "TUR043",
+      "name": "Emet"
+    },
+    {
+      "id": "TUR043007",
+      "provinceId": "TUR043",
+      "name": "Gedi̇z"
+    },
+    {
+      "id": "TUR043008",
+      "provinceId": "TUR043",
+      "name": "Hi̇sarcik"
+    },
+    {
+      "id": "TUR043009",
+      "provinceId": "TUR043",
+      "name": "Kütahya"
+    },
+    {
+      "id": "TUR043010",
+      "provinceId": "TUR043",
+      "name": "Pazarlar"
+    },
+    {
+      "id": "TUR043011",
+      "provinceId": "TUR043",
+      "name": "Si̇mav"
+    },
+    {
+      "id": "TUR043012",
+      "provinceId": "TUR043",
+      "name": "Şaphane"
+    },
+    {
+      "id": "TUR043013",
+      "provinceId": "TUR043",
+      "name": "Tavşanli"
+    },
+    {
+      "id": "TUR044001",
+      "provinceId": "TUR044",
+      "name": "Akçadağ"
+    },
+    {
+      "id": "TUR044002",
+      "provinceId": "TUR044",
+      "name": "Arapgi̇r"
+    },
+    {
+      "id": "TUR044003",
+      "provinceId": "TUR044",
+      "name": "Arguvan"
+    },
+    {
+      "id": "TUR044004",
+      "provinceId": "TUR044",
+      "name": "Battalgazi̇"
+    },
+    {
+      "id": "TUR044005",
+      "provinceId": "TUR044",
+      "name": "Darende"
+    },
+    {
+      "id": "TUR044006",
+      "provinceId": "TUR044",
+      "name": "Doğanşehi̇r"
+    },
+    {
+      "id": "TUR044007",
+      "provinceId": "TUR044",
+      "name": "Doğanyol"
+    },
+    {
+      "id": "TUR044008",
+      "provinceId": "TUR044",
+      "name": "Heki̇mhan"
+    },
+    {
+      "id": "TUR044009",
+      "provinceId": "TUR044",
+      "name": "Kale"
+    },
+    {
+      "id": "TUR044010",
+      "provinceId": "TUR044",
+      "name": "Kuluncak"
+    },
+    {
+      "id": "TUR044011",
+      "provinceId": "TUR044",
+      "name": "Pütürge"
+    },
+    {
+      "id": "TUR044012",
+      "provinceId": "TUR044",
+      "name": "Yazihan"
+    },
+    {
+      "id": "TUR044013",
+      "provinceId": "TUR044",
+      "name": "Yeşi̇lyurt"
+    },
+    {
+      "id": "TUR045001",
+      "provinceId": "TUR045",
+      "name": "Ahmetli̇"
+    },
+    {
+      "id": "TUR045002",
+      "provinceId": "TUR045",
+      "name": "Akhi̇sar"
+    },
+    {
+      "id": "TUR045003",
+      "provinceId": "TUR045",
+      "name": "Alaşehi̇r"
+    },
+    {
+      "id": "TUR045004",
+      "provinceId": "TUR045",
+      "name": "Demi̇rci̇"
+    },
+    {
+      "id": "TUR045005",
+      "provinceId": "TUR045",
+      "name": "Gölmarmara"
+    },
+    {
+      "id": "TUR045006",
+      "provinceId": "TUR045",
+      "name": "Gördes"
+    },
+    {
+      "id": "TUR045007",
+      "provinceId": "TUR045",
+      "name": "Kirkağaç"
+    },
+    {
+      "id": "TUR045008",
+      "provinceId": "TUR045",
+      "name": "Köprübaşi"
+    },
+    {
+      "id": "TUR045009",
+      "provinceId": "TUR045",
+      "name": "Kula"
+    },
+    {
+      "id": "TUR045010",
+      "provinceId": "TUR045",
+      "name": "Sali̇hli̇"
+    },
+    {
+      "id": "TUR045011",
+      "provinceId": "TUR045",
+      "name": "Sarigöl"
+    },
+    {
+      "id": "TUR045012",
+      "provinceId": "TUR045",
+      "name": "Saruhanli"
+    },
+    {
+      "id": "TUR045013",
+      "provinceId": "TUR045",
+      "name": "Selendi̇"
+    },
+    {
+      "id": "TUR045014",
+      "provinceId": "TUR045",
+      "name": "Soma"
+    },
+    {
+      "id": "TUR045015",
+      "provinceId": "TUR045",
+      "name": "Şehzadeler"
+    },
+    {
+      "id": "TUR045016",
+      "provinceId": "TUR045",
+      "name": "Turgutlu"
+    },
+    {
+      "id": "TUR045017",
+      "provinceId": "TUR045",
+      "name": "Yunusemre"
+    },
+    {
+      "id": "TUR046001",
+      "provinceId": "TUR046",
+      "name": "Afşi̇n"
+    },
+    {
+      "id": "TUR046002",
+      "provinceId": "TUR046",
+      "name": "Andirin"
+    },
+    {
+      "id": "TUR046003",
+      "provinceId": "TUR046",
+      "name": "Çağlayanceri̇t"
+    },
+    {
+      "id": "TUR046004",
+      "provinceId": "TUR046",
+      "name": "Dulkadi̇roğlu"
+    },
+    {
+      "id": "TUR046005",
+      "provinceId": "TUR046",
+      "name": "Eki̇nözü"
+    },
+    {
+      "id": "TUR046006",
+      "provinceId": "TUR046",
+      "name": "Elbi̇stan"
+    },
+    {
+      "id": "TUR046007",
+      "provinceId": "TUR046",
+      "name": "Göksun"
+    },
+    {
+      "id": "TUR046008",
+      "provinceId": "TUR046",
+      "name": "Nurhak"
+    },
+    {
+      "id": "TUR046009",
+      "provinceId": "TUR046",
+      "name": "Oni̇ki̇ Şubat"
+    },
+    {
+      "id": "TUR046010",
+      "provinceId": "TUR046",
+      "name": "Pazarcik"
+    },
+    {
+      "id": "TUR046011",
+      "provinceId": "TUR046",
+      "name": "Türkoğlu"
+    },
+    {
+      "id": "TUR047001",
+      "provinceId": "TUR047",
+      "name": "Artuklu"
+    },
+    {
+      "id": "TUR047002",
+      "provinceId": "TUR047",
+      "name": "Dargeçi̇t"
+    },
+    {
+      "id": "TUR047003",
+      "provinceId": "TUR047",
+      "name": "Deri̇k"
+    },
+    {
+      "id": "TUR047004",
+      "provinceId": "TUR047",
+      "name": "Kiziltepe"
+    },
+    {
+      "id": "TUR047005",
+      "provinceId": "TUR047",
+      "name": "Mazidaği"
+    },
+    {
+      "id": "TUR047006",
+      "provinceId": "TUR047",
+      "name": "Mi̇dyat"
+    },
+    {
+      "id": "TUR047007",
+      "provinceId": "TUR047",
+      "name": "Nusaybi̇n"
+    },
+    {
+      "id": "TUR047008",
+      "provinceId": "TUR047",
+      "name": "Ömerli̇"
+    },
+    {
+      "id": "TUR047009",
+      "provinceId": "TUR047",
+      "name": "Savur"
+    },
+    {
+      "id": "TUR047010",
+      "provinceId": "TUR047",
+      "name": "Yeşi̇lli̇"
+    },
+    {
+      "id": "TUR048001",
+      "provinceId": "TUR048",
+      "name": "Bodrum"
+    },
+    {
+      "id": "TUR048002",
+      "provinceId": "TUR048",
+      "name": "Dalaman"
+    },
+    {
+      "id": "TUR048003",
+      "provinceId": "TUR048",
+      "name": "Datça"
+    },
+    {
+      "id": "TUR048004",
+      "provinceId": "TUR048",
+      "name": "Fethi̇ye"
+    },
+    {
+      "id": "TUR048005",
+      "provinceId": "TUR048",
+      "name": "Kavaklidere"
+    },
+    {
+      "id": "TUR048006",
+      "provinceId": "TUR048",
+      "name": "Köyceği̇z"
+    },
+    {
+      "id": "TUR048007",
+      "provinceId": "TUR048",
+      "name": "Marmari̇s"
+    },
+    {
+      "id": "TUR048008",
+      "provinceId": "TUR048",
+      "name": "Menteşe"
+    },
+    {
+      "id": "TUR048009",
+      "provinceId": "TUR048",
+      "name": "Mi̇las"
+    },
+    {
+      "id": "TUR048010",
+      "provinceId": "TUR048",
+      "name": "Ortaca"
+    },
+    {
+      "id": "TUR048011",
+      "provinceId": "TUR048",
+      "name": "Seydi̇kemer"
+    },
+    {
+      "id": "TUR048012",
+      "provinceId": "TUR048",
+      "name": "Ula"
+    },
+    {
+      "id": "TUR048013",
+      "provinceId": "TUR048",
+      "name": "Yatağan"
+    },
+    {
+      "id": "TUR049001",
+      "provinceId": "TUR049",
+      "name": "Bulanik"
+    },
+    {
+      "id": "TUR049002",
+      "provinceId": "TUR049",
+      "name": "Hasköy"
+    },
+    {
+      "id": "TUR049003",
+      "provinceId": "TUR049",
+      "name": "Korkut"
+    },
+    {
+      "id": "TUR049004",
+      "provinceId": "TUR049",
+      "name": "Malazgi̇rt"
+    },
+    {
+      "id": "TUR049005",
+      "provinceId": "TUR049",
+      "name": "Muş"
+    },
+    {
+      "id": "TUR049006",
+      "provinceId": "TUR049",
+      "name": "Varto"
+    },
+    {
+      "id": "TUR050001",
+      "provinceId": "TUR050",
+      "name": "Acigöl"
+    },
+    {
+      "id": "TUR050002",
+      "provinceId": "TUR050",
+      "name": "Avanos"
+    },
+    {
+      "id": "TUR050003",
+      "provinceId": "TUR050",
+      "name": "Deri̇nkuyu"
+    },
+    {
+      "id": "TUR050004",
+      "provinceId": "TUR050",
+      "name": "Gülşehi̇r"
+    },
+    {
+      "id": "TUR050005",
+      "provinceId": "TUR050",
+      "name": "Hacibektaş"
+    },
+    {
+      "id": "TUR050006",
+      "provinceId": "TUR050",
+      "name": "Kozakli"
+    },
+    {
+      "id": "TUR050007",
+      "provinceId": "TUR050",
+      "name": "Nevşehir"
+    },
+    {
+      "id": "TUR050008",
+      "provinceId": "TUR050",
+      "name": "Ürgüp"
+    },
+    {
+      "id": "TUR051001",
+      "provinceId": "TUR051",
+      "name": "Altunhi̇sar"
+    },
+    {
+      "id": "TUR051002",
+      "provinceId": "TUR051",
+      "name": "Bor"
+    },
+    {
+      "id": "TUR051003",
+      "provinceId": "TUR051",
+      "name": "Çamardi"
+    },
+    {
+      "id": "TUR051004",
+      "provinceId": "TUR051",
+      "name": "Çi̇ftli̇k"
+    },
+    {
+      "id": "TUR051005",
+      "provinceId": "TUR051",
+      "name": "Niğde"
+    },
+    {
+      "id": "TUR051006",
+      "provinceId": "TUR051",
+      "name": "Ulukişla"
+    },
+    {
+      "id": "TUR052001",
+      "provinceId": "TUR052",
+      "name": "Akkuş"
+    },
+    {
+      "id": "TUR052002",
+      "provinceId": "TUR052",
+      "name": "Altinordu"
+    },
+    {
+      "id": "TUR052003",
+      "provinceId": "TUR052",
+      "name": "Aybasti"
+    },
+    {
+      "id": "TUR052004",
+      "provinceId": "TUR052",
+      "name": "Çamaş"
+    },
+    {
+      "id": "TUR052005",
+      "provinceId": "TUR052",
+      "name": "Çatalpinar"
+    },
+    {
+      "id": "TUR052006",
+      "provinceId": "TUR052",
+      "name": "Çaybaşi"
+    },
+    {
+      "id": "TUR052007",
+      "provinceId": "TUR052",
+      "name": "Fatsa"
+    },
+    {
+      "id": "TUR052008",
+      "provinceId": "TUR052",
+      "name": "Gölköy"
+    },
+    {
+      "id": "TUR052009",
+      "provinceId": "TUR052",
+      "name": "Gülyali"
+    },
+    {
+      "id": "TUR052010",
+      "provinceId": "TUR052",
+      "name": "Gürgentepe"
+    },
+    {
+      "id": "TUR052011",
+      "provinceId": "TUR052",
+      "name": "İki̇zce"
+    },
+    {
+      "id": "TUR052012",
+      "provinceId": "TUR052",
+      "name": "Kabadüz"
+    },
+    {
+      "id": "TUR052013",
+      "provinceId": "TUR052",
+      "name": "Kabataş"
+    },
+    {
+      "id": "TUR052014",
+      "provinceId": "TUR052",
+      "name": "Korgan"
+    },
+    {
+      "id": "TUR052015",
+      "provinceId": "TUR052",
+      "name": "Kumru"
+    },
+    {
+      "id": "TUR052016",
+      "provinceId": "TUR052",
+      "name": "Mesudi̇ye"
+    },
+    {
+      "id": "TUR052017",
+      "provinceId": "TUR052",
+      "name": "Perşembe"
+    },
+    {
+      "id": "TUR052018",
+      "provinceId": "TUR052",
+      "name": "Ulubey"
+    },
+    {
+      "id": "TUR052019",
+      "provinceId": "TUR052",
+      "name": "Ünye"
+    },
+    {
+      "id": "TUR053001",
+      "provinceId": "TUR053",
+      "name": "Ardeşen"
+    },
+    {
+      "id": "TUR053002",
+      "provinceId": "TUR053",
+      "name": "Çamlihemşi̇n"
+    },
+    {
+      "id": "TUR053003",
+      "provinceId": "TUR053",
+      "name": "Çayeli̇"
+    },
+    {
+      "id": "TUR053004",
+      "provinceId": "TUR053",
+      "name": "Derepazari"
+    },
+    {
+      "id": "TUR053005",
+      "provinceId": "TUR053",
+      "name": "Findikli"
+    },
+    {
+      "id": "TUR053006",
+      "provinceId": "TUR053",
+      "name": "Güneysu"
+    },
+    {
+      "id": "TUR053007",
+      "provinceId": "TUR053",
+      "name": "Hemşi̇n"
+    },
+    {
+      "id": "TUR053008",
+      "provinceId": "TUR053",
+      "name": "İki̇zdere"
+    },
+    {
+      "id": "TUR053009",
+      "provinceId": "TUR053",
+      "name": "İyi̇dere"
+    },
+    {
+      "id": "TUR053010",
+      "provinceId": "TUR053",
+      "name": "Kalkandere"
+    },
+    {
+      "id": "TUR053011",
+      "provinceId": "TUR053",
+      "name": "Pazar"
+    },
+    {
+      "id": "TUR053012",
+      "provinceId": "TUR053",
+      "name": "Rize"
+    },
+    {
+      "id": "TUR054001",
+      "provinceId": "TUR054",
+      "name": "Adapazari"
+    },
+    {
+      "id": "TUR054002",
+      "provinceId": "TUR054",
+      "name": "Akyazi"
+    },
+    {
+      "id": "TUR054003",
+      "provinceId": "TUR054",
+      "name": "Ari̇fi̇ye"
+    },
+    {
+      "id": "TUR054004",
+      "provinceId": "TUR054",
+      "name": "Erenler"
+    },
+    {
+      "id": "TUR054005",
+      "provinceId": "TUR054",
+      "name": "Feri̇zli̇"
+    },
+    {
+      "id": "TUR054006",
+      "provinceId": "TUR054",
+      "name": "Geyve"
+    },
+    {
+      "id": "TUR054007",
+      "provinceId": "TUR054",
+      "name": "Hendek"
+    },
+    {
+      "id": "TUR054008",
+      "provinceId": "TUR054",
+      "name": "Karapürçek"
+    },
+    {
+      "id": "TUR054009",
+      "provinceId": "TUR054",
+      "name": "Karasu"
+    },
+    {
+      "id": "TUR054010",
+      "provinceId": "TUR054",
+      "name": "Kaynarca"
+    },
+    {
+      "id": "TUR054011",
+      "provinceId": "TUR054",
+      "name": "Kocaali̇"
+    },
+    {
+      "id": "TUR054012",
+      "provinceId": "TUR054",
+      "name": "Pamukova"
+    },
+    {
+      "id": "TUR054013",
+      "provinceId": "TUR054",
+      "name": "Sapanca"
+    },
+    {
+      "id": "TUR054014",
+      "provinceId": "TUR054",
+      "name": "Serdi̇van"
+    },
+    {
+      "id": "TUR054015",
+      "provinceId": "TUR054",
+      "name": "Söğütlü"
+    },
+    {
+      "id": "TUR054016",
+      "provinceId": "TUR054",
+      "name": "Tarakli"
+    },
+    {
+      "id": "TUR055001",
+      "provinceId": "TUR055",
+      "name": "19 Mayis"
+    },
+    {
+      "id": "TUR055002",
+      "provinceId": "TUR055",
+      "name": "Alaçam"
+    },
+    {
+      "id": "TUR055003",
+      "provinceId": "TUR055",
+      "name": "Asarcik"
+    },
+    {
+      "id": "TUR055004",
+      "provinceId": "TUR055",
+      "name": "Atakum"
+    },
+    {
+      "id": "TUR055005",
+      "provinceId": "TUR055",
+      "name": "Ayvacik"
+    },
+    {
+      "id": "TUR055006",
+      "provinceId": "TUR055",
+      "name": "Bafra"
+    },
+    {
+      "id": "TUR055007",
+      "provinceId": "TUR055",
+      "name": "Cani̇k"
+    },
+    {
+      "id": "TUR055008",
+      "provinceId": "TUR055",
+      "name": "Çarşamba"
+    },
+    {
+      "id": "TUR055009",
+      "provinceId": "TUR055",
+      "name": "Havza"
+    },
+    {
+      "id": "TUR055010",
+      "provinceId": "TUR055",
+      "name": "İlkadim"
+    },
+    {
+      "id": "TUR055011",
+      "provinceId": "TUR055",
+      "name": "Kavak"
+    },
+    {
+      "id": "TUR055012",
+      "provinceId": "TUR055",
+      "name": "Ladi̇k"
+    },
+    {
+      "id": "TUR055013",
+      "provinceId": "TUR055",
+      "name": "Salipazari"
+    },
+    {
+      "id": "TUR055014",
+      "provinceId": "TUR055",
+      "name": "Tekkeköy"
+    },
+    {
+      "id": "TUR055015",
+      "provinceId": "TUR055",
+      "name": "Terme"
+    },
+    {
+      "id": "TUR055016",
+      "provinceId": "TUR055",
+      "name": "Vezi̇rköprü"
+    },
+    {
+      "id": "TUR055017",
+      "provinceId": "TUR055",
+      "name": "Yakakent"
+    },
+    {
+      "id": "TUR056001",
+      "provinceId": "TUR056",
+      "name": "Baykan"
+    },
+    {
+      "id": "TUR056002",
+      "provinceId": "TUR056",
+      "name": "Eruh"
+    },
+    {
+      "id": "TUR056003",
+      "provinceId": "TUR056",
+      "name": "Kurtalan"
+    },
+    {
+      "id": "TUR056004",
+      "provinceId": "TUR056",
+      "name": "Pervari̇"
+    },
+    {
+      "id": "TUR056005",
+      "provinceId": "TUR056",
+      "name": "Siirt"
+    },
+    {
+      "id": "TUR056006",
+      "provinceId": "TUR056",
+      "name": "Şi̇rvan"
+    },
+    {
+      "id": "TUR056007",
+      "provinceId": "TUR056",
+      "name": "Ti̇llo"
+    },
+    {
+      "id": "TUR057001",
+      "provinceId": "TUR057",
+      "name": "Ayancik"
+    },
+    {
+      "id": "TUR057002",
+      "provinceId": "TUR057",
+      "name": "Boyabat"
+    },
+    {
+      "id": "TUR057003",
+      "provinceId": "TUR057",
+      "name": "Di̇kmen"
+    },
+    {
+      "id": "TUR057004",
+      "provinceId": "TUR057",
+      "name": "Durağan"
+    },
+    {
+      "id": "TUR057005",
+      "provinceId": "TUR057",
+      "name": "Erfelek"
+    },
+    {
+      "id": "TUR057006",
+      "provinceId": "TUR057",
+      "name": "Gerze"
+    },
+    {
+      "id": "TUR057007",
+      "provinceId": "TUR057",
+      "name": "Saraydüzü"
+    },
+    {
+      "id": "TUR057008",
+      "provinceId": "TUR057",
+      "name": "Sinop"
+    },
+    {
+      "id": "TUR057009",
+      "provinceId": "TUR057",
+      "name": "Türkeli̇"
+    },
+    {
+      "id": "TUR058001",
+      "provinceId": "TUR058",
+      "name": "Akincilar"
+    },
+    {
+      "id": "TUR058002",
+      "provinceId": "TUR058",
+      "name": "Altinyayla"
+    },
+    {
+      "id": "TUR058003",
+      "provinceId": "TUR058",
+      "name": "Di̇vri̇ği̇"
+    },
+    {
+      "id": "TUR058004",
+      "provinceId": "TUR058",
+      "name": "Doğanşar"
+    },
+    {
+      "id": "TUR058005",
+      "provinceId": "TUR058",
+      "name": "Gemerek"
+    },
+    {
+      "id": "TUR058006",
+      "provinceId": "TUR058",
+      "name": "Gölova"
+    },
+    {
+      "id": "TUR058007",
+      "provinceId": "TUR058",
+      "name": "Gürün"
+    },
+    {
+      "id": "TUR058008",
+      "provinceId": "TUR058",
+      "name": "Hafi̇k"
+    },
+    {
+      "id": "TUR058009",
+      "provinceId": "TUR058",
+      "name": "İmranli"
+    },
+    {
+      "id": "TUR058010",
+      "provinceId": "TUR058",
+      "name": "Kangal"
+    },
+    {
+      "id": "TUR058011",
+      "provinceId": "TUR058",
+      "name": "Koyulhi̇sar"
+    },
+    {
+      "id": "TUR058012",
+      "provinceId": "TUR058",
+      "name": "Sivas"
+    },
+    {
+      "id": "TUR058013",
+      "provinceId": "TUR058",
+      "name": "Suşehri̇"
+    },
+    {
+      "id": "TUR058014",
+      "provinceId": "TUR058",
+      "name": "Sarkişla"
+    },
+    {
+      "id": "TUR058015",
+      "provinceId": "TUR058",
+      "name": "Ulaş"
+    },
+    {
+      "id": "TUR058016",
+      "provinceId": "TUR058",
+      "name": "Yildizeli̇"
+    },
+    {
+      "id": "TUR058017",
+      "provinceId": "TUR058",
+      "name": "Zara"
+    },
+    {
+      "id": "TUR059001",
+      "provinceId": "TUR059",
+      "name": "Çerkezköy"
+    },
+    {
+      "id": "TUR059002",
+      "provinceId": "TUR059",
+      "name": "Çorlu"
+    },
+    {
+      "id": "TUR059003",
+      "provinceId": "TUR059",
+      "name": "Ergene"
+    },
+    {
+      "id": "TUR059004",
+      "provinceId": "TUR059",
+      "name": "Hayrabolu"
+    },
+    {
+      "id": "TUR059005",
+      "provinceId": "TUR059",
+      "name": "Kapakli"
+    },
+    {
+      "id": "TUR059006",
+      "provinceId": "TUR059",
+      "name": "Malkara"
+    },
+    {
+      "id": "TUR059007",
+      "provinceId": "TUR059",
+      "name": "Marmara Ereğli̇si̇"
+    },
+    {
+      "id": "TUR059008",
+      "provinceId": "TUR059",
+      "name": "Muratli"
+    },
+    {
+      "id": "TUR059009",
+      "provinceId": "TUR059",
+      "name": "Saray"
+    },
+    {
+      "id": "TUR059010",
+      "provinceId": "TUR059",
+      "name": "Süleymanpaşa"
+    },
+    {
+      "id": "TUR059011",
+      "provinceId": "TUR059",
+      "name": "Şarköy"
+    },
+    {
+      "id": "TUR060001",
+      "provinceId": "TUR060",
+      "name": "Almus"
+    },
+    {
+      "id": "TUR060002",
+      "provinceId": "TUR060",
+      "name": "Artova"
+    },
+    {
+      "id": "TUR060003",
+      "provinceId": "TUR060",
+      "name": "Başçi̇ftli̇k"
+    },
+    {
+      "id": "TUR060004",
+      "provinceId": "TUR060",
+      "name": "Erbaa"
+    },
+    {
+      "id": "TUR060005",
+      "provinceId": "TUR060",
+      "name": "Ni̇ksar"
+    },
+    {
+      "id": "TUR060006",
+      "provinceId": "TUR060",
+      "name": "Pazar"
+    },
+    {
+      "id": "TUR060007",
+      "provinceId": "TUR060",
+      "name": "Reşadi̇ye"
+    },
+    {
+      "id": "TUR060008",
+      "provinceId": "TUR060",
+      "name": "Sulusaray"
+    },
+    {
+      "id": "TUR060009",
+      "provinceId": "TUR060",
+      "name": "Tokat"
+    },
+    {
+      "id": "TUR060010",
+      "provinceId": "TUR060",
+      "name": "Turhal"
+    },
+    {
+      "id": "TUR060011",
+      "provinceId": "TUR060",
+      "name": "Yeşi̇lyurt"
+    },
+    {
+      "id": "TUR060012",
+      "provinceId": "TUR060",
+      "name": "Zi̇le"
+    },
+    {
+      "id": "TUR061001",
+      "provinceId": "TUR061",
+      "name": "Akçaabat"
+    },
+    {
+      "id": "TUR061002",
+      "provinceId": "TUR061",
+      "name": "Arakli"
+    },
+    {
+      "id": "TUR061003",
+      "provinceId": "TUR061",
+      "name": "Arsi̇n"
+    },
+    {
+      "id": "TUR061004",
+      "provinceId": "TUR061",
+      "name": "Beşi̇kdüzü"
+    },
+    {
+      "id": "TUR061005",
+      "provinceId": "TUR061",
+      "name": "Çarşibaşi"
+    },
+    {
+      "id": "TUR061006",
+      "provinceId": "TUR061",
+      "name": "Çaykara"
+    },
+    {
+      "id": "TUR061007",
+      "provinceId": "TUR061",
+      "name": "Dernekpazari"
+    },
+    {
+      "id": "TUR061008",
+      "provinceId": "TUR061",
+      "name": "Düzköy"
+    },
+    {
+      "id": "TUR061009",
+      "provinceId": "TUR061",
+      "name": "Hayrat"
+    },
+    {
+      "id": "TUR061010",
+      "provinceId": "TUR061",
+      "name": "Köprübaşi"
+    },
+    {
+      "id": "TUR061011",
+      "provinceId": "TUR061",
+      "name": "Maçka"
+    },
+    {
+      "id": "TUR061012",
+      "provinceId": "TUR061",
+      "name": "Of"
+    },
+    {
+      "id": "TUR061013",
+      "provinceId": "TUR061",
+      "name": "Ortahi̇sar"
+    },
+    {
+      "id": "TUR061014",
+      "provinceId": "TUR061",
+      "name": "Sürmene"
+    },
+    {
+      "id": "TUR061015",
+      "provinceId": "TUR061",
+      "name": "Şalpazari"
+    },
+    {
+      "id": "TUR061016",
+      "provinceId": "TUR061",
+      "name": "Tonya"
+    },
+    {
+      "id": "TUR061017",
+      "provinceId": "TUR061",
+      "name": "Vakfikebi̇r"
+    },
+    {
+      "id": "TUR061018",
+      "provinceId": "TUR061",
+      "name": "Yomra"
+    },
+    {
+      "id": "TUR062001",
+      "provinceId": "TUR062",
+      "name": "Çemi̇şgezek"
+    },
+    {
+      "id": "TUR062002",
+      "provinceId": "TUR062",
+      "name": "Hozat"
+    },
+    {
+      "id": "TUR062003",
+      "provinceId": "TUR062",
+      "name": "Mazgi̇rt"
+    },
+    {
+      "id": "TUR062004",
+      "provinceId": "TUR062",
+      "name": "Nazimi̇ye"
+    },
+    {
+      "id": "TUR062005",
+      "provinceId": "TUR062",
+      "name": "Ovacik"
+    },
+    {
+      "id": "TUR062006",
+      "provinceId": "TUR062",
+      "name": "Pertek"
+    },
+    {
+      "id": "TUR062007",
+      "provinceId": "TUR062",
+      "name": "Pülümür"
+    },
+    {
+      "id": "TUR062008",
+      "provinceId": "TUR062",
+      "name": "Tunceli"
+    },
+    {
+      "id": "TUR063001",
+      "provinceId": "TUR063",
+      "name": "Akçakale"
+    },
+    {
+      "id": "TUR063002",
+      "provinceId": "TUR063",
+      "name": "Bi̇reci̇k"
+    },
+    {
+      "id": "TUR063003",
+      "provinceId": "TUR063",
+      "name": "Bozova"
+    },
+    {
+      "id": "TUR063004",
+      "provinceId": "TUR063",
+      "name": "Ceylanpinar"
+    },
+    {
+      "id": "TUR063005",
+      "provinceId": "TUR063",
+      "name": "Eyyübi̇ye"
+    },
+    {
+      "id": "TUR063006",
+      "provinceId": "TUR063",
+      "name": "Halfeti̇"
+    },
+    {
+      "id": "TUR063007",
+      "provinceId": "TUR063",
+      "name": "Hali̇li̇ye"
+    },
+    {
+      "id": "TUR063008",
+      "provinceId": "TUR063",
+      "name": "Harran"
+    },
+    {
+      "id": "TUR063009",
+      "provinceId": "TUR063",
+      "name": "Hi̇lvan"
+    },
+    {
+      "id": "TUR063010",
+      "provinceId": "TUR063",
+      "name": "Karaköprü"
+    },
+    {
+      "id": "TUR063011",
+      "provinceId": "TUR063",
+      "name": "Si̇verek"
+    },
+    {
+      "id": "TUR063012",
+      "provinceId": "TUR063",
+      "name": "Suruç"
+    },
+    {
+      "id": "TUR063013",
+      "provinceId": "TUR063",
+      "name": "Vi̇ranşehi̇r"
+    },
+    {
+      "id": "TUR064001",
+      "provinceId": "TUR064",
+      "name": "Banaz"
+    },
+    {
+      "id": "TUR064002",
+      "provinceId": "TUR064",
+      "name": "Eşme"
+    },
+    {
+      "id": "TUR064003",
+      "provinceId": "TUR064",
+      "name": "Karahalli"
+    },
+    {
+      "id": "TUR064004",
+      "provinceId": "TUR064",
+      "name": "Si̇vasli"
+    },
+    {
+      "id": "TUR064005",
+      "provinceId": "TUR064",
+      "name": "Ulubey"
+    },
+    {
+      "id": "TUR064006",
+      "provinceId": "TUR064",
+      "name": "Uşak"
+    },
+    {
+      "id": "TUR065001",
+      "provinceId": "TUR065",
+      "name": "Bahçesaray"
+    },
+    {
+      "id": "TUR065002",
+      "provinceId": "TUR065",
+      "name": "Başkale"
+    },
+    {
+      "id": "TUR065003",
+      "provinceId": "TUR065",
+      "name": "Çaldiran"
+    },
+    {
+      "id": "TUR065004",
+      "provinceId": "TUR065",
+      "name": "Çatak"
+    },
+    {
+      "id": "TUR065005",
+      "provinceId": "TUR065",
+      "name": "Edremi̇t"
+    },
+    {
+      "id": "TUR065006",
+      "provinceId": "TUR065",
+      "name": "Erci̇ş"
+    },
+    {
+      "id": "TUR065007",
+      "provinceId": "TUR065",
+      "name": "Gevaş"
+    },
+    {
+      "id": "TUR065008",
+      "provinceId": "TUR065",
+      "name": "Gürpinar"
+    },
+    {
+      "id": "TUR065009",
+      "provinceId": "TUR065",
+      "name": "İpekyolu"
+    },
+    {
+      "id": "TUR065010",
+      "provinceId": "TUR065",
+      "name": "Muradi̇ye"
+    },
+    {
+      "id": "TUR065011",
+      "provinceId": "TUR065",
+      "name": "Özalp"
+    },
+    {
+      "id": "TUR065012",
+      "provinceId": "TUR065",
+      "name": "Saray"
+    },
+    {
+      "id": "TUR065013",
+      "provinceId": "TUR065",
+      "name": "Tuşba"
+    },
+    {
+      "id": "TUR066001",
+      "provinceId": "TUR066",
+      "name": "Akdağmadeni̇"
+    },
+    {
+      "id": "TUR066002",
+      "provinceId": "TUR066",
+      "name": "Aydincik"
+    },
+    {
+      "id": "TUR066003",
+      "provinceId": "TUR066",
+      "name": "Boğazliyan"
+    },
+    {
+      "id": "TUR066004",
+      "provinceId": "TUR066",
+      "name": "Çandir"
+    },
+    {
+      "id": "TUR066005",
+      "provinceId": "TUR066",
+      "name": "Çayiralan"
+    },
+    {
+      "id": "TUR066006",
+      "provinceId": "TUR066",
+      "name": "Çekerek"
+    },
+    {
+      "id": "TUR066007",
+      "provinceId": "TUR066",
+      "name": "Kadişehri̇"
+    },
+    {
+      "id": "TUR066008",
+      "provinceId": "TUR066",
+      "name": "Saraykent"
+    },
+    {
+      "id": "TUR066009",
+      "provinceId": "TUR066",
+      "name": "Sarikaya"
+    },
+    {
+      "id": "TUR066010",
+      "provinceId": "TUR066",
+      "name": "Sorgun"
+    },
+    {
+      "id": "TUR066011",
+      "provinceId": "TUR066",
+      "name": "Şefaatli̇"
+    },
+    {
+      "id": "TUR066012",
+      "provinceId": "TUR066",
+      "name": "Yeni̇fakili"
+    },
+    {
+      "id": "TUR066013",
+      "provinceId": "TUR066",
+      "name": "Yerköy"
+    },
+    {
+      "id": "TUR066014",
+      "provinceId": "TUR066",
+      "name": "Yozgat"
+    },
+    {
+      "id": "TUR067001",
+      "provinceId": "TUR067",
+      "name": "Alapli"
+    },
+    {
+      "id": "TUR067002",
+      "provinceId": "TUR067",
+      "name": "Çaycuma"
+    },
+    {
+      "id": "TUR067003",
+      "provinceId": "TUR067",
+      "name": "Devrek"
+    },
+    {
+      "id": "TUR067004",
+      "provinceId": "TUR067",
+      "name": "Ereğli̇"
+    },
+    {
+      "id": "TUR067005",
+      "provinceId": "TUR067",
+      "name": "Gökçebey"
+    },
+    {
+      "id": "TUR067006",
+      "provinceId": "TUR067",
+      "name": "Ki̇li̇mli̇"
+    },
+    {
+      "id": "TUR067007",
+      "provinceId": "TUR067",
+      "name": "Kozlu"
+    },
+    {
+      "id": "TUR067008",
+      "provinceId": "TUR067",
+      "name": "Zonguldak"
+    },
+    {
+      "id": "TUR068001",
+      "provinceId": "TUR068",
+      "name": "Ağaçören"
+    },
+    {
+      "id": "TUR068002",
+      "provinceId": "TUR068",
+      "name": "Aksaray"
+    },
+    {
+      "id": "TUR068003",
+      "provinceId": "TUR068",
+      "name": "Eski̇l"
+    },
+    {
+      "id": "TUR068004",
+      "provinceId": "TUR068",
+      "name": "Gülağaç"
+    },
+    {
+      "id": "TUR068005",
+      "provinceId": "TUR068",
+      "name": "Güzelyurt"
+    },
+    {
+      "id": "TUR068006",
+      "provinceId": "TUR068",
+      "name": "Ortaköy"
+    },
+    {
+      "id": "TUR068007",
+      "provinceId": "TUR068",
+      "name": "Sariyahşi̇"
+    },
+    {
+      "id": "TUR068008",
+      "provinceId": "TUR068",
+      "name": "Sultanhani"
+    },
+    {
+      "id": "TUR069001",
+      "provinceId": "TUR069",
+      "name": "Aydintepe"
+    },
+    {
+      "id": "TUR069002",
+      "provinceId": "TUR069",
+      "name": "Bayburt"
+    },
+    {
+      "id": "TUR069003",
+      "provinceId": "TUR069",
+      "name": "Demi̇rözü"
+    },
+    {
+      "id": "TUR070001",
+      "provinceId": "TUR070",
+      "name": "Ayranci"
+    },
+    {
+      "id": "TUR070002",
+      "provinceId": "TUR070",
+      "name": "Başyayla"
+    },
+    {
+      "id": "TUR070003",
+      "provinceId": "TUR070",
+      "name": "Ermenek"
+    },
+    {
+      "id": "TUR070004",
+      "provinceId": "TUR070",
+      "name": "Karaman"
+    },
+    {
+      "id": "TUR070005",
+      "provinceId": "TUR070",
+      "name": "Kazimkarabeki̇r"
+    },
+    {
+      "id": "TUR070006",
+      "provinceId": "TUR070",
+      "name": "Sariveli̇ler"
+    },
+    {
+      "id": "TUR071001",
+      "provinceId": "TUR071",
+      "name": "Bahşi̇li̇"
+    },
+    {
+      "id": "TUR071002",
+      "provinceId": "TUR071",
+      "name": "Balişeyh"
+    },
+    {
+      "id": "TUR071003",
+      "provinceId": "TUR071",
+      "name": "Çelebi̇"
+    },
+    {
+      "id": "TUR071004",
+      "provinceId": "TUR071",
+      "name": "Deli̇ce"
+    },
+    {
+      "id": "TUR071005",
+      "provinceId": "TUR071",
+      "name": "Karakeçi̇li̇"
+    },
+    {
+      "id": "TUR071006",
+      "provinceId": "TUR071",
+      "name": "Keski̇n"
+    },
+    {
+      "id": "TUR071007",
+      "provinceId": "TUR071",
+      "name": "Kirikkale"
+    },
+    {
+      "id": "TUR071008",
+      "provinceId": "TUR071",
+      "name": "Sulakyurt"
+    },
+    {
+      "id": "TUR071009",
+      "provinceId": "TUR071",
+      "name": "Yahşi̇han"
+    },
+    {
+      "id": "TUR072001",
+      "provinceId": "TUR072",
+      "name": "Batman"
+    },
+    {
+      "id": "TUR072002",
+      "provinceId": "TUR072",
+      "name": "Beşi̇ri̇"
+    },
+    {
+      "id": "TUR072003",
+      "provinceId": "TUR072",
+      "name": "Gercüş"
+    },
+    {
+      "id": "TUR072004",
+      "provinceId": "TUR072",
+      "name": "Hasankeyf"
+    },
+    {
+      "id": "TUR072005",
+      "provinceId": "TUR072",
+      "name": "Kozluk"
+    },
+    {
+      "id": "TUR072006",
+      "provinceId": "TUR072",
+      "name": "Sason"
+    },
+    {
+      "id": "TUR073001",
+      "provinceId": "TUR073",
+      "name": "Beytüşşebap"
+    },
+    {
+      "id": "TUR073002",
+      "provinceId": "TUR073",
+      "name": "Ci̇zre"
+    },
+    {
+      "id": "TUR073003",
+      "provinceId": "TUR073",
+      "name": "Güçlükonak"
+    },
+    {
+      "id": "TUR073004",
+      "provinceId": "TUR073",
+      "name": "İdi̇l"
+    },
+    {
+      "id": "TUR073005",
+      "provinceId": "TUR073",
+      "name": "Si̇lopi̇"
+    },
+    {
+      "id": "TUR073006",
+      "provinceId": "TUR073",
+      "name": "Şirnak"
+    },
+    {
+      "id": "TUR073007",
+      "provinceId": "TUR073",
+      "name": "Uludere"
+    },
+    {
+      "id": "TUR074001",
+      "provinceId": "TUR074",
+      "name": "Amasra"
+    },
+    {
+      "id": "TUR074002",
+      "provinceId": "TUR074",
+      "name": "Bartin"
+    },
+    {
+      "id": "TUR074003",
+      "provinceId": "TUR074",
+      "name": "Kurucaşi̇le"
+    },
+    {
+      "id": "TUR074004",
+      "provinceId": "TUR074",
+      "name": "Ulus"
+    },
+    {
+      "id": "TUR075001",
+      "provinceId": "TUR075",
+      "name": "Ardahan"
+    },
+    {
+      "id": "TUR075002",
+      "provinceId": "TUR075",
+      "name": "Çildir"
+    },
+    {
+      "id": "TUR075003",
+      "provinceId": "TUR075",
+      "name": "Damal"
+    },
+    {
+      "id": "TUR075004",
+      "provinceId": "TUR075",
+      "name": "Göle"
+    },
+    {
+      "id": "TUR075005",
+      "provinceId": "TUR075",
+      "name": "Hanak"
+    },
+    {
+      "id": "TUR075006",
+      "provinceId": "TUR075",
+      "name": "Posof"
+    },
+    {
+      "id": "TUR076001",
+      "provinceId": "TUR076",
+      "name": "Aralik"
+    },
+    {
+      "id": "TUR076002",
+      "provinceId": "TUR076",
+      "name": "Iğdir"
+    },
+    {
+      "id": "TUR076003",
+      "provinceId": "TUR076",
+      "name": "Karakoyunlu"
+    },
+    {
+      "id": "TUR076004",
+      "provinceId": "TUR076",
+      "name": "Tuzluca"
+    },
+    {
+      "id": "TUR077001",
+      "provinceId": "TUR077",
+      "name": "Altinova"
+    },
+    {
+      "id": "TUR077002",
+      "provinceId": "TUR077",
+      "name": "Armutlu"
+    },
+    {
+      "id": "TUR077003",
+      "provinceId": "TUR077",
+      "name": "Çi̇ftli̇kköy"
+    },
+    {
+      "id": "TUR077004",
+      "provinceId": "TUR077",
+      "name": "Çinarcik"
+    },
+    {
+      "id": "TUR077005",
+      "provinceId": "TUR077",
+      "name": "Termal"
+    },
+    {
+      "id": "TUR077006",
+      "provinceId": "TUR077",
+      "name": "Yalova"
+    },
+    {
+      "id": "TUR078001",
+      "provinceId": "TUR078",
+      "name": "Eflani̇"
+    },
+    {
+      "id": "TUR078002",
+      "provinceId": "TUR078",
+      "name": "Eski̇pazar"
+    },
+    {
+      "id": "TUR078003",
+      "provinceId": "TUR078",
+      "name": "Karabük"
+    },
+    {
+      "id": "TUR078004",
+      "provinceId": "TUR078",
+      "name": "Ovacik"
+    },
+    {
+      "id": "TUR078005",
+      "provinceId": "TUR078",
+      "name": "Safranbolu"
+    },
+    {
+      "id": "TUR078006",
+      "provinceId": "TUR078",
+      "name": "Yeni̇ce"
+    },
+    {
+      "id": "TUR079001",
+      "provinceId": "TUR079",
+      "name": "Elbeyli̇"
+    },
+    {
+      "id": "TUR079002",
+      "provinceId": "TUR079",
+      "name": "Kilis"
+    },
+    {
+      "id": "TUR079003",
+      "provinceId": "TUR079",
+      "name": "Musabeyli̇"
+    },
+    {
+      "id": "TUR079004",
+      "provinceId": "TUR079",
+      "name": "Polateli̇"
+    },
+    {
+      "id": "TUR080001",
+      "provinceId": "TUR080",
+      "name": "Bahçe"
+    },
+    {
+      "id": "TUR080002",
+      "provinceId": "TUR080",
+      "name": "Düzi̇çi̇"
+    },
+    {
+      "id": "TUR080003",
+      "provinceId": "TUR080",
+      "name": "Hasanbeyli̇"
+    },
+    {
+      "id": "TUR080004",
+      "provinceId": "TUR080",
+      "name": "Kadi̇rli̇"
+    },
+    {
+      "id": "TUR080005",
+      "provinceId": "TUR080",
+      "name": "Osmaniye"
+    },
+    {
+      "id": "TUR080006",
+      "provinceId": "TUR080",
+      "name": "Sumbas"
+    },
+    {
+      "id": "TUR080007",
+      "provinceId": "TUR080",
+      "name": "Toprakkale"
+    },
+    {
+      "id": "TUR081001",
+      "provinceId": "TUR081",
+      "name": "Akçakoca"
+    },
+    {
+      "id": "TUR081002",
+      "provinceId": "TUR081",
+      "name": "Cumayeri̇"
+    },
+    {
+      "id": "TUR081003",
+      "provinceId": "TUR081",
+      "name": "Çi̇li̇mli̇"
+    },
+    {
+      "id": "TUR081004",
+      "provinceId": "TUR081",
+      "name": "Düzce"
+    },
+    {
+      "id": "TUR081005",
+      "provinceId": "TUR081",
+      "name": "Gölyaka"
+    },
+    {
+      "id": "TUR081006",
+      "provinceId": "TUR081",
+      "name": "Gümüşova"
+    },
+    {
+      "id": "TUR081007",
+      "provinceId": "TUR081",
+      "name": "Kaynaşli"
+    },
+    {
+      "id": "TUR081008",
+      "provinceId": "TUR081",
+      "name": "Yiğilca"
+    }
+  ]
+}
