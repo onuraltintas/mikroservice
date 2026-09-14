@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.AdaptiveLearning;
 using SpeedReading.Application.Content;
@@ -544,9 +545,10 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
             .OrderBy(path => path.PathIndex)
             .ToListAsync(cancellationToken);
         var completedCount = activeItems.Count(path => path.IsCompleted);
-        var decision = await EvaluateProgressionAsync(studentId, activeItems, cancellationToken);
+        var policy = await ResolveProgressionPolicyAsync(studentId, cancellationToken);
+        var decision = await EvaluateProgressionAsync(studentId, activeItems, policy, cancellationToken);
         if (decision.Kind is AdaptiveProgressionDecisionKind.Advance or AdaptiveProgressionDecisionKind.Support
-            && completedCount % AdaptiveProgressionPolicy.Default.MinimumMeasuredSessions == 0)
+            && completedCount % policy.MinimumMeasuredSessions == 0)
         {
             var profile = await db.UserProfiles
                 .SingleOrDefaultAsync(profile => profile.UserId == studentId && profile.IsActive, cancellationToken);
@@ -572,6 +574,7 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
     private async Task<AdaptiveProgressionDecision> EvaluateProgressionAsync(
         Guid studentId,
         IReadOnlyList<PersonalizedLearningPathItem> activeItems,
+        AdaptiveProgressionPolicy policy,
         CancellationToken cancellationToken)
     {
         var recentMeasuredResults = await db.ExerciseSessionResults
@@ -580,26 +583,81 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
                 && result.IsMeasured
                 && !result.IsAssessmentMode)
             .OrderByDescending(result => result.CompletedAt)
-            .Take(AdaptiveProgressionPolicy.Default.MinimumMeasuredSessions)
+            .Take(policy.MinimumMeasuredSessions)
             .Select(result => new AdaptiveProgressionEvidence(
                 result.RawWpm > 0 ? result.RawWpm : null,
                 result.ComprehensionScore))
             .ToListAsync(cancellationToken);
         recentMeasuredResults.Reverse();
 
-        if (recentMeasuredResults.Count < AdaptiveProgressionPolicy.Default.MinimumMeasuredSessions)
+        if (recentMeasuredResults.Count < policy.MinimumMeasuredSessions)
         {
             recentMeasuredResults = activeItems
                 .Where(path => path.IsCompleted && path.AchievedScore.HasValue)
                 .OrderByDescending(path => path.CompletedAt)
-                .Take(AdaptiveProgressionPolicy.Default.MinimumMeasuredSessions)
+                .Take(policy.MinimumMeasuredSessions)
                 .Select(path => new AdaptiveProgressionEvidence(null, path.AchievedScore!.Value))
                 .Reverse()
                 .ToList();
         }
 
-        return AdaptiveProgressionRules.Evaluate(recentMeasuredResults, AdaptiveProgressionPolicy.Default);
+        return AdaptiveProgressionRules.Evaluate(recentMeasuredResults, policy);
     }
+
+    private async Task<AdaptiveProgressionPolicy> ResolveProgressionPolicyAsync(
+        Guid studentId,
+        CancellationToken cancellationToken)
+    {
+        var weeklyPatternJson = await (
+                from progress in db.StudentProgramProgresses.AsNoTracking()
+                join template in db.ProgramTemplates.AsNoTracking()
+                    on progress.ProgramTemplateId equals template.Id
+                where progress.UserId == studentId
+                    && progress.IsActive
+                    && !template.IsDeleted
+                orderby progress.CreatedAt descending
+                select template.WeeklyPatternJson)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(weeklyPatternJson))
+            return AdaptiveProgressionPolicy.Default;
+
+        try
+        {
+            using var document = JsonDocument.Parse(weeklyPatternJson);
+            if (!document.RootElement.TryGetProperty("adaptation", out var adaptation)
+                || adaptation.ValueKind != JsonValueKind.Object)
+            {
+                return AdaptiveProgressionPolicy.Default;
+            }
+
+            var policy = new AdaptiveProgressionPolicy(
+                GetInt(adaptation, "minimumMeasuredSessions", AdaptiveProgressionPolicy.Default.MinimumMeasuredSessions),
+                GetDecimal(adaptation, "advanceComprehensionThreshold", AdaptiveProgressionPolicy.Default.AdvanceComprehensionThreshold),
+                GetDecimal(adaptation, "maintainComprehensionThreshold", AdaptiveProgressionPolicy.Default.MaintainComprehensionThreshold),
+                GetDecimal(adaptation, "minimumWpmTrendPercent", AdaptiveProgressionPolicy.Default.MinimumWpmTrendPercent),
+                GetDecimal(adaptation, "supportTrendPercent", AdaptiveProgressionPolicy.Default.SupportTrendPercent));
+            _ = AdaptiveProgressionRules.Evaluate([], policy);
+            return policy;
+        }
+        catch (JsonException)
+        {
+            return AdaptiveProgressionPolicy.Default;
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return AdaptiveProgressionPolicy.Default;
+        }
+    }
+
+    private static int GetInt(JsonElement element, string name, int fallback) =>
+        element.TryGetProperty(name, out var property) && property.TryGetInt32(out var value)
+            ? value
+            : fallback;
+
+    private static decimal GetDecimal(JsonElement element, string name, decimal fallback) =>
+        element.TryGetProperty(name, out var property) && property.TryGetDecimal(out var value)
+            ? value
+            : fallback;
 
     public async Task<PersonalizedLearningPathProgressSummary> GetPersonalizedProgressAsync(
         Guid studentId,
