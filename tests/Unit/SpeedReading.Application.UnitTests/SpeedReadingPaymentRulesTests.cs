@@ -39,6 +39,17 @@ public sealed class SpeedReadingPaymentRulesTests
         SpeedReadingPaymentRules.ResolveEndDate(start, 0).Should().BeNull();
     }
 
+    [Fact]
+    public void Resolves_manual_access_expiry_from_the_plan_when_the_admin_does_not_override_it()
+    {
+        var start = new DateTime(2026, 9, 14, 0, 0, 0, DateTimeKind.Utc);
+        var overrideEndDate = start.AddDays(14);
+
+        SpeedReadingAccessRules.ResolveEndDate(start, null, 180).Should().Be(start.AddDays(180));
+        SpeedReadingAccessRules.ResolveEndDate(start, null, 365).Should().Be(start.AddDays(365));
+        SpeedReadingAccessRules.ResolveEndDate(start, overrideEndDate, 180).Should().Be(overrideEndDate);
+    }
+
     [Theory]
     [InlineData("12345678901", true)]
     [InlineData("1234567890", false)]
