@@ -45,4 +45,12 @@ describe('TeachersService', () => {
       }]
     });
   });
+
+  it('sends student invitations through the supported teacher endpoint', () => {
+    service.linkStudent('ada@example.test').subscribe();
+
+    const request = http.expectOne('/api/teachers/invite-student');
+    expect(request.request.body).toEqual({ studentEmail: 'ada@example.test' });
+    request.flush({ invitationId: 'invitation-1' });
+  });
 });

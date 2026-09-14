@@ -125,14 +125,14 @@ export class TeachersService {
    * Link existing student to teacher
    */
   linkStudent(email: string): Observable<any> {
-    return this.http.post<any>(`${this.API_URL}/students/link`, { studentEmail: email }, { headers: { 'X-Skip-Error-Toast': 'true' } });
+    return this.http.post<any>(`${environment.apiUrl}/teachers/invite-student`, { studentEmail: email }, { headers: { 'X-Skip-Error-Toast': 'true' } });
   }
 
   /**
    * Unlink student from teacher (removes TeacherId, doesn't delete)
    */
   unlinkStudent(studentId: string): Observable<any> {
-    return this.http.delete<any>(`${this.API_URL}/students/${studentId}/unlink`);
+    return this.http.delete<any>(`${environment.apiUrl}/teachers/students/${studentId}`);
   }
   /**
    * Import students from Excel file

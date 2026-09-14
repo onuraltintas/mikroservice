@@ -9,7 +9,7 @@
     #f5f8f8;
 }
 
-.register-card { width: min(100%, 38rem); box-sizing: border-box; padding: 1.45rem; border: 1px solid #dbe7e5; border-radius: 1.25rem; background: #fff; box-shadow: 0 1.5rem 3.5rem rgba(25, 70, 67, 0.12); }
+.register-card { width: min(100%, 35rem); box-sizing: border-box; padding: 1.2rem; border: 1px solid #dbe7e5; border-radius: 1.1rem; background: #fff; box-shadow: 0 1.25rem 3rem rgba(25, 70, 67, 0.11); }
 .register-card mat-card-header { display: block; padding: 0; margin: 0 0 1.15rem; text-align: center; }
 .header-content { display: grid; justify-items: center; gap: 0.3rem; }
 .auth-brand { display: inline-flex; align-items: center; gap: 0.65rem; margin-bottom: 0.65rem; color: #153e3d; text-decoration: none; text-align: left; }
@@ -27,8 +27,9 @@ form { display: flex; flex-direction: column; gap: 0.65rem; }
 .row > * { flex: 1; min-width: 0; }
 .divider-text { display: flex; align-items: center; gap: 0.7rem; color: #778785; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; }
 .divider-text::before, .divider-text::after { content: ''; flex: 1; border-top: 1px solid #e2ebea; }
-.institution-section { padding: 0.7rem; border: 1px solid #d7ebe8; border-radius: 0.75rem; background: #f4fbf9; }
-.section-hint { margin: 0.35rem 0 0 1.75rem; color: #617271; font-size: 0.75rem; }
+.google-btn-wrapper { min-height: 2.75rem; display: flex; justify-content: center; }
+.institution-section { display: flex; gap: 0.5rem; align-items: flex-start; padding: 0.7rem; border: 1px solid #d7ebe8; border-radius: 0.75rem; background: #f4fbf9; color: #426360; font-size: 0.8rem; line-height: 1.4; }
+.institution-section mat-icon { flex: 0 0 auto; font-size: 1.15rem; width: 1.15rem; height: 1.15rem; }
 .actions-container { display: grid; gap: 0.45rem; }
 .submit-btn { min-height: 3rem; border-radius: 0.75rem; background: #0f766e !important; color: #fff !important; font-weight: 800; box-shadow: 0 0.5rem 1rem rgba(15, 118, 110, 0.2); }
 .submit-btn:hover:not(:disabled) { background: #0b5e58 !important; }

@@ -1,10 +1,12 @@
 using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
+using Identity.Application.Services;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using MediatR;
 using MassTransit;
+using Microsoft.Extensions.Configuration;
 
 namespace Identity.Application.Commands.InviteTeacher;
 
@@ -17,6 +19,7 @@ public class InviteTeacherCommandHandler : IRequestHandler<InviteTeacherCommand,
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly IConfiguration _configuration;
 
     public InviteTeacherCommandHandler(
         IInvitationRepository invitationRepository,
@@ -25,7 +28,8 @@ public class InviteTeacherCommandHandler : IRequestHandler<InviteTeacherCommand,
         ITeacherRepository teacherRepository,
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService,
-        IPublishEndpoint publishEndpoint)
+        IPublishEndpoint publishEndpoint,
+        IConfiguration configuration)
     {
         _invitationRepository = invitationRepository;
         _institutionRepository = institutionRepository;
@@ -34,6 +38,7 @@ public class InviteTeacherCommandHandler : IRequestHandler<InviteTeacherCommand,
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
         _publishEndpoint = publishEndpoint;
+        _configuration = configuration;
     }
 
     public async Task<Result<Guid>> Handle(InviteTeacherCommand request, CancellationToken cancellationToken)
@@ -87,7 +92,7 @@ public class InviteTeacherCommandHandler : IRequestHandler<InviteTeacherCommand,
             InviteeId: inviteeUser?.Id,
             InvitationType: invitation.Type.ToString(),
             Message: request.Message,
-            Link: $"http://localhost:3000/accept-invitation?id={invitation.Id}",
+            Link: PublicAppInvitationLink.Create(_configuration, invitation.Id),
             CreatedAt: invitation.CreatedAt
         );
 

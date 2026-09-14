@@ -32,12 +32,15 @@ export interface RegisterInstitutionRequest {
   City: string;
 }
 
+export interface RegistrationResponse {
+  userId: string;
+}
+
 export interface RegisterTeacherRequest {
   email: string;
   password: string;
   firstName: string;
   lastName: string;
-  institutionCode?: string;
   acceptTerms: boolean;
   acceptKVKK: boolean;
 }

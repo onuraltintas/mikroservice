@@ -15,6 +15,28 @@ namespace Identity.API.IntegrationTests;
 public sealed class SystemAdminMfaLoginTests
 {
     [Fact]
+    public async Task PasswordLogin_WhenInstitutionOwnerEmailIsNotConfirmed_ShouldRejectLogin()
+    {
+        var user = CreateUserWithRole("InstitutionOwner");
+        var handler = new LoginCommandHandler(
+            new StubUserRepository(user),
+            new AcceptingPasswordHasher(),
+            new RejectingTokenService(),
+            new StubUnitOfWork(),
+            new RejectingIdentityService(),
+            new StubConfigurationService(),
+            new StubMfaService(user.Id),
+            NullLogger<LoginCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new LoginCommand(user.Email, "correct-password", RememberMe: false),
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.EmailNotConfirmed");
+    }
+
+    [Fact]
     public async Task PasswordLogin_WhenMfaIsDisabled_ShouldIssueNormalSession()
     {
         var user = CreateSystemAdministrator();
@@ -376,6 +398,16 @@ public sealed class SystemAdminMfaLoginTests
         {
             user.EnableMfa("protected-secret", ["recovery-hash"], DateTimeOffset.UtcNow);
         }
+        return user;
+    }
+
+    private static User CreateUserWithRole(string roleName)
+    {
+        var user = User.Create(Guid.NewGuid(), "institution-owner@example.com");
+        var role = Role.Create(roleName, roleName);
+        var userRole = new UserRole(user.Id, role.Id);
+        typeof(UserRole).GetProperty(nameof(UserRole.Role))!.SetValue(userRole, role);
+        user.AddRole(userRole);
         return user;
     }
 

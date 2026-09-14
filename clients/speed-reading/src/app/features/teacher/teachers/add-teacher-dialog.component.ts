@@ -49,12 +49,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
           <mat-error *ngIf="form.get('email')?.hasError('email')">Geçerli bir e-posta giriniz</mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Şifre</mat-label>
-          <input matInput formControlName="password" type="password">
-          <mat-error *ngIf="form.get('password')?.hasError('required')">Zorunlu alan</mat-error>
-          <mat-error *ngIf="form.get('password')?.hasError('minlength')">En az 6 karakter</mat-error>
-        </mat-form-field>
+        <p class="info-text">Öğretmene parolasını oluşturabileceği güvenli davet e-postası gönderilir.</p>
 
         <div *ngIf="error" class="error-message">
           <mat-icon>error</mat-icon>
@@ -97,6 +92,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
       color: #f44336;
       margin-top: 8px;
     }
+    .info-text { margin: 0; color: #617271; font-size: 0.875rem; line-height: 1.45; }
   `]
 })
 export class AddTeacherDialogComponent {
@@ -113,8 +109,7 @@ export class AddTeacherDialogComponent {
     this.form = this.fb.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
+      email: ['', [Validators.required, Validators.email]]
     });
   }
 
@@ -124,9 +119,16 @@ export class AddTeacherDialogComponent {
     this.loading = true;
     this.error = '';
 
-    this.http.post(`${environment.apiUrl}/v1/teachers`, this.form.value).subscribe({
+    const value = this.form.value;
+    this.http.post(`${environment.apiUrl}/institution/teachers`, {
+      email: value.email,
+      firstName: value.firstName,
+      lastName: value.lastName,
+      title: null,
+      subjects: []
+    }).subscribe({
       next: () => {
-        this.toaster.success('Öğretmen başarıyla eklendi');
+        this.toaster.success('Öğretmen oluşturuldu; parola oluşturma e-postası gönderildi.');
         this.dialogRef.close(true);
       },
       error: (err) => {

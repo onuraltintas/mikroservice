@@ -298,6 +298,12 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
 
   private handleAuthenticatedResponse(response: AuthResponse | null): void {
     this.loading = false;
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (returnUrl?.startsWith('/') && !returnUrl.startsWith('//')) {
+      this.router.navigateByUrl(returnUrl);
+      return;
+    }
+
     const destination = resolveAuthDestination(response?.roles);
 
     if (!destination) {

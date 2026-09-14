@@ -32,21 +32,21 @@ export class VerifyEmailComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
-      const email = params['email'];
+      const userId = params['userId'];
       const token = params['token'];
 
-      if (!email || !token) {
+      if (!userId || !token) {
         this.error = 'Geçersiz doğrulama bağlantısı';
         this.loading = false;
         return;
       }
 
-      this.verifyEmail(email, token);
+      this.verifyEmail(userId, token);
     });
   }
 
-  verifyEmail(email: string, token: string): void {
-    this.authService.verifyEmail({ email, token }).subscribe({
+  verifyEmail(userId: string, token: string): void {
+    this.authService.verifyEmail({ userId, token }).subscribe({
       next: () => {
         this.success = true;
         this.loading = false;

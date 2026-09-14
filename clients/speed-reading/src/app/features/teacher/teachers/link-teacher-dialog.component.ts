@@ -126,9 +126,9 @@ export class LinkTeacherDialogComponent {
 
         const payload = { email: this.form.get('email')?.value };
 
-        this.http.post(`${environment.apiUrl}/v1/teachers/link`, payload).subscribe({
+        this.http.post(`${environment.apiUrl}/institution/invite-teacher`, { teacherEmail: payload.email }).subscribe({
             next: () => {
-                this.success = 'Öğretmen kurumunuza başarıyla bağlandı!';
+                this.success = 'Öğretmene kurum daveti gönderildi.';
                 this.loading = false;
                 setTimeout(() => {
                     this.dialogRef.close(true);

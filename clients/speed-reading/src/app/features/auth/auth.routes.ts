@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from '../../core/guards/auth.guard';
 
 export const authRoutes: Routes = [
   {
@@ -28,6 +29,11 @@ export const authRoutes: Routes = [
   {
     path: 'verify-email',
     loadComponent: () => import('./verify-email/verify-email.component').then(m => m.VerifyEmailComponent)
+  },
+  {
+    path: 'accept-invitation',
+    canActivate: [authGuard],
+    loadComponent: () => import('./accept-invitation/accept-invitation.component').then(m => m.AcceptInvitationComponent)
   },
   {
     path: 'google-callback',

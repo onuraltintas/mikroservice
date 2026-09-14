@@ -52,7 +52,6 @@ export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
   isLoading = false;
   error = '';
   successMessage = '';
-  showInstitutionCode = false;
   hidePassword = true;
   hideConfirmPassword = true;
 
@@ -62,31 +61,11 @@ export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, strongPasswordValidator()]],
     confirmPassword: ['', [Validators.required]],
-    joinInstitution: [false],
-    institutionCode: [''], // Optional initially
     acceptTerms: [false, [Validators.requiredTrue]],
     acceptKVKK: [false, [Validators.requiredTrue]]
   }, {
     validators: this.passwordMatchValidator
   });
-
-  constructor() {
-    this.registerForm.get('joinInstitution')?.valueChanges.subscribe(checked => {
-      this.showInstitutionCode = !!checked;
-      const codeControl = this.registerForm.get('institutionCode');
-      if (checked) {
-        codeControl?.setValidators([
-          Validators.required,
-          Validators.minLength(6),
-          Validators.pattern('^[A-Za-z0-9]*$')
-        ]);
-      } else {
-        codeControl?.clearValidators();
-        codeControl?.setValue('');
-      }
-      codeControl?.updateValueAndValidity();
-    });
-  }
 
   ngAfterViewInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
@@ -160,15 +139,19 @@ export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
       email: formValue.email!,
       password: formValue.password!,
       acceptTerms: formValue.acceptTerms!,
-      acceptKVKK: formValue.acceptKVKK!,
-      institutionCode: formValue.joinInstitution ? formValue.institutionCode! : undefined
+      acceptKVKK: formValue.acceptKVKK!
     };
 
     this.authService.registerTeacher(request).subscribe({
       next: () => {
-        this.successMessage = 'Öğretmen kaydınız başarıyla oluşturuldu! Yönlendiriliyorsunuz...';
+        this.successMessage = 'Öğretmen kaydınız oluşturuldu. E-posta adresinizi doğruladıktan sonra giriş yapabilirsiniz.';
         setTimeout(() => {
-          this.router.navigate(['/teacher/dashboard']);
+          this.router.navigate(['/auth/login'], {
+            queryParams: {
+              registered: 'true',
+              message: 'Kayıt oluşturuldu. Lütfen e-posta adresinizi onaylayıp giriş yapın.'
+            }
+          });
         }, 2000);
       },
       error: (err) => {

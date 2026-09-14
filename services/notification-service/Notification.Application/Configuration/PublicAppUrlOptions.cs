@@ -46,7 +46,7 @@ public sealed class PublicAppUrlOptions
         }
 
         var baseUrl = BaseUrl.TrimEnd('/');
-        return $"{baseUrl}/auth/confirm-email?token={Uri.EscapeDataString(token)}&userId={Uri.EscapeDataString(userId.ToString())}";
+        return $"{baseUrl}/auth/verify-email?token={Uri.EscapeDataString(token)}&userId={Uri.EscapeDataString(userId.ToString())}";
     }
 
     public string BuildPasswordResetLink(string token, string email)

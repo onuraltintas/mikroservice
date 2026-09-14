@@ -72,7 +72,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             r.Role.Name == "InstitutionAdmin" || 
             r.Role.Name == "InstitutionOwner");
 
-        if (!user.EmailConfirmed && !isAdmin)
+        var isSystemAdministrator = user.Roles.Any(role =>
+            string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
+
+        if (!user.EmailConfirmed && !isSystemAdministrator)
         {
             return Result.Failure<LoginResponse>(new Error("Auth.EmailNotConfirmed", "Lütfen e-posta adresinizi doğrulayın."));
         }
@@ -92,8 +95,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             }
         }
 
-        var isSystemAdministrator = user.Roles.Any(role =>
-            string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
         if (isSystemAdministrator && user.MfaEnabled)
         {
             if (passwordRehashed)

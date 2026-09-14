@@ -84,6 +84,30 @@ describe('AuthService', () => {
     });
   });
 
+  it('registers a student through the supported endpoint without creating a session', () => {
+    service.register({
+      firstName: 'Ada',
+      lastName: 'Yılmaz',
+      email: 'ada@example.com',
+      password: 'Password1!'
+    }).subscribe();
+
+    const request = http.expectOne('/api/auth/register/student');
+    expect(request.request.withCredentials).toBeTrue();
+    request.flush({ userId: 'student-id' });
+
+    expect(service.currentUserValue).toBeNull();
+    expect(localStorage.getItem('currentUser')).toBeNull();
+  });
+
+  it('confirms email with the user identifier and verification token from the email link', () => {
+    service.verifyEmail({ userId: 'student-id', token: 'verification-token' }).subscribe();
+
+    const request = http.expectOne('/api/auth/confirm-email');
+    expect(request.request.body).toEqual({ userId: 'student-id', token: 'verification-token' });
+    request.flush({});
+  });
+
   it('keeps an MFA login challenge outside the authenticated session state', () => {
     let response: AuthResponse | undefined;
     service.login({ email: 'admin@example.com', password: 'Password1!' }).subscribe(value => response = value);

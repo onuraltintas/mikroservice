@@ -2,7 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, finalize, firstValueFrom, map, of, shareReplay, tap } from 'rxjs';
 import { Router } from '@angular/router';
-import { AuthResponse, LoginRequest, RegisterInstitutionRequest, RegisterRequest } from '../models/user.model';
+import {
+  AuthResponse,
+  LoginRequest,
+  RegisterInstitutionRequest,
+  RegisterRequest,
+  RegisterTeacherRequest,
+  RegistrationResponse
+} from '../models/user.model';
 import { environment } from '../../../environments/environment';
 import { SettingsService } from './settings.service';
 
@@ -112,39 +119,23 @@ export class AuthService {
     );
   }
 
-  /**
-   * Register new user
-   * Backend returns: ApiResponse<AuthResponse>
-   * Service receives: AuthResponse (auto-unwrapped)
-   */
-  register(data: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.AUTH_URL}/register`, data, { withCredentials: true }).pipe(
-      tap(response => {
-        this.setUser(response);
-      })
-    );
+  /** Registers an independent student. Registration requires a later login. */
+  register(data: RegisterRequest): Observable<RegistrationResponse> {
+    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/register/student`, data, { withCredentials: true });
   }
 
   /**
    * Register new institution
    */
-  registerInstitution(data: RegisterInstitutionRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.AUTH_URL}/register-institution`, data, { withCredentials: true }).pipe(
-      tap(response => {
-        this.setUser(response);
-      })
-    );
+  registerInstitution(data: RegisterInstitutionRequest): Observable<RegistrationResponse> {
+    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/register-institution`, data, { withCredentials: true });
   }
 
   /**
    * Register new teacher
    */
-  registerTeacher(data: any): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.AUTH_URL}/register-teacher`, data, { withCredentials: true }).pipe(
-      tap(response => {
-        this.setUser(response);
-      })
-    );
+  registerTeacher(data: RegisterTeacherRequest): Observable<RegistrationResponse> {
+    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/register-teacher`, data, { withCredentials: true });
   }
 
   registerCoach(data: any): Observable<void> {
@@ -257,7 +248,7 @@ export class AuthService {
    * Backend returns: ApiResponse<void>
    * Service receives: void (auto-unwrapped)
    */
-  verifyEmail(data: { email: string; token: string }): Observable<any> {
+  verifyEmail(data: { userId: string; token: string }): Observable<any> {
     return this.http.post(`${this.AUTH_URL}/confirm-email`, data, { withCredentials: true });
   }
 
