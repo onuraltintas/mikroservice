@@ -345,7 +345,14 @@ public sealed class LearningPathsController(
             pathItemId,
             request?.AchievedScore,
             cancellationToken);
-        return Ok(new { message = "Path item completed" });
+        var progress = await paths.GetPersonalizedProgressAsync(userId, cancellationToken);
+        return Ok(new
+        {
+            success = true,
+            completedCount = progress.CompletedItems,
+            totalCount = progress.TotalItems,
+            nextItemId = progress.NextItem?.Id
+        });
     }
 
     [HttpGet("personalized/progress")]

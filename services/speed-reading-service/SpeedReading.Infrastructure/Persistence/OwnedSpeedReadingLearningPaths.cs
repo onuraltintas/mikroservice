@@ -441,10 +441,9 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
                 && !completedContentIds.Contains(item.Id)
                 && item.DifficultyLevel >= minDifficulty
                 && item.DifficultyLevel <= maxDifficulty);
-        if (supportExerciseIds.Count > 0)
-            exercisesQuery = exercisesQuery.Where(item => supportExerciseIds.Contains(item.Id));
         var exercises = await exercisesQuery
-            .OrderBy(item => item.DifficultyLevel)
+            .OrderBy(item => supportExerciseIds.Count > 0 && supportExerciseIds.Contains(item.Id) ? 0 : 1)
+            .ThenBy(item => item.DifficultyLevel)
             .ThenBy(item => item.Id)
             .Take(20)
             .ToListAsync(cancellationToken);
@@ -455,10 +454,9 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
                 && !completedContentIds.Contains(item.Id)
                 && item.DifficultyLevel >= minDifficulty
                 && item.DifficultyLevel <= maxDifficulty);
-        if (supportTextIds.Count > 0)
-            readingTextsQuery = readingTextsQuery.Where(item => supportTextIds.Contains(item.Id));
         var readingTexts = await readingTextsQuery
-            .OrderBy(item => item.DifficultyLevel)
+            .OrderBy(item => supportTextIds.Count > 0 && supportTextIds.Contains(item.Id) ? 0 : 1)
+            .ThenBy(item => item.DifficultyLevel)
             .ThenBy(item => item.Id)
             .Take(10)
             .ToListAsync(cancellationToken);
