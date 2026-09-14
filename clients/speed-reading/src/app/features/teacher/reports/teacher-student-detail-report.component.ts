@@ -136,7 +136,7 @@ export class TeacherStudentDetailReportComponent implements OnInit {
     this.teachersService.getMyStudents().subscribe({
       next: (data) => {
         this.students = data.map(s => ({
-          id: s.id ?? s.userId,
+          id: s.id,
           name: `${s.firstName ?? ''} ${s.lastName ?? ''}`.trim()
         }));
         this.loadingStudents.set(false);

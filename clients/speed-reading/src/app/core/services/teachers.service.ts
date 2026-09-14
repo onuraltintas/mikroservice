@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Teacher, CreateTeacherRequest, UpdateTeacherRequest } from '../models/teacher.model';
+import { Student } from '../models/student.model';
 
 /**
  * Teachers Service - Refactored for ApiResponse<T> compatibility
@@ -92,8 +93,14 @@ export class TeachersService {
    * Backend returns: ApiResponse<User[]>
    * Service receives: User[] (auto-unwrapped)
    */
-  getMyStudents(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.API_URL}/me/students`);
+  getMyStudents(): Observable<Student[]> {
+    const params = new HttpParams().set('pageSize', '100');
+    return this.http.get<any>(`${this.API_URL}/me/students`, { params }).pipe(
+      map(result => {
+        const rows = Array.isArray(result) ? result : (result?.items ?? []);
+        return rows.map((student: any) => this.toStudent(student));
+      })
+    );
   }
 
   /**
@@ -160,6 +167,27 @@ export class TeachersService {
    */
   getTeacherImportTemplate(): Observable<Blob> {
     return this.http.get(`${this.API_URL}/import/template`, { responseType: 'blob' });
+  }
+
+  private toStudent(student: any): Student {
+    return {
+      id: student.id ?? student.userId,
+      firstName: student.firstName ?? '',
+      lastName: student.lastName ?? '',
+      email: student.email ?? '',
+      institutionId: student.institutionId ?? undefined,
+      institutionName: student.institutionName ?? undefined,
+      currentLevel: student.currentLevel ?? 0,
+      targetWPM: student.targetWPM ?? 0,
+      targetComprehension: student.targetComprehension ?? 0,
+      dailyGoalMinutes: student.dailyGoalMinutes ?? 30,
+      learningStyle: student.learningStyle ?? 'Belirtilmedi',
+      lastLoginAt: student.lastLoginAt ? new Date(student.lastLoginAt) : undefined,
+      isActive: student.isActive ?? true,
+      createdAt: student.createdAt ? new Date(student.createdAt) : new Date(student.assignmentStartDate ?? 0),
+      teacherId: student.teacherId ?? undefined,
+      teacherName: student.teacherName ?? undefined
+    };
   }
 }
 
