@@ -38,8 +38,8 @@ export class HomeComponent implements OnInit {
 
     ngOnInit() {
         this.seoService.updateTags({
-            title: 'Hızlı Okuma Platformu - Okuma Hızınızı 3 Katına Çıkarın',
-            description: 'Bilimsel yöntemlerle okuma hızınızı artırın, anlama yeteneğinizi geliştirin. 50,000+ kullanıcımıza katılın!',
+            title: 'Hızlı Okuma Platformu - Hız ve Anlama Odaklı Çalışma',
+            description: 'Hızınızı ve anlama becerinizi birlikte ölçerek size uygun hızlı okuma çalışmaları oluşturun.',
             url: window.location.href,
             type: 'website'
         });

@@ -1,8 +1,7 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { Router } from '@angular/router';
-import { PublicCmsService } from '../../../../../core/services/public-cms.service';
 
 @Component({
   selector: 'app-cta-section',
@@ -11,25 +10,13 @@ import { PublicCmsService } from '../../../../../core/services/public-cms.servic
   templateUrl: './cta-section.html',
   styleUrl: './cta-section.scss'
 })
-export class CtaSectionComponent implements OnInit {
+export class CtaSectionComponent {
   private router = inject(Router);
-  private cmsService = inject(PublicCmsService);
 
   title = 'Okuma Becerilerinizi Geliştirmeye Hazır mısınız?';
-  subtitle = 'Bugün başlayın ve 30 gün içinde okuma hızınızı ikiye katlayın';
+  subtitle = 'Başlangıç seviyenizi görün, düzenli çalışmalarla hız ve anlamayı birlikte takip edin.';
   buttonText = 'Hemen Başla';
-  smallText = 'İlk 7 gün ücretsiz!';
-
-  ngOnInit() {
-    this.cmsService.getLandingContent().subscribe({
-      next: (content) => {
-        if (content.blocks['cta_title'])       this.title      = content.blocks['cta_title'];
-        if (content.blocks['cta_subtitle'])    this.subtitle   = content.blocks['cta_subtitle'];
-        if (content.blocks['cta_button_text']) this.buttonText = content.blocks['cta_button_text'];
-        if (content.blocks['cta_small_text'])  this.smallText  = content.blocks['cta_small_text'];
-      }
-    });
-  }
+  smallText = 'Sonuçlar başlangıç seviyesine ve düzenli çalışmaya göre değişir.';
 
   startTrial() {
     this.router.navigate(['/auth/register']);

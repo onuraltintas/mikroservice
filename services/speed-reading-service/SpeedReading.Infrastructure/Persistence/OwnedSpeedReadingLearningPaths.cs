@@ -404,7 +404,8 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         Guid studentId,
         int userLevel,
         string recommendationReason,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyCollection<int>? supportBloomLevels = null)
     {
         var completedContentIds = await db.PersonalizedLearningPathItems
             .AsNoTracking()
@@ -416,24 +417,47 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
             .ToListAsync(cancellationToken);
         var minDifficulty = Math.Max(1, userLevel - 1);
         var maxDifficulty = userLevel + 2;
-        var exercises = await db.Exercises
+        var supportTextIds = supportBloomLevels is { Count: > 0 }
+            ? await db.ReadingQuestions
+                .AsNoTracking()
+                .Where(question => supportBloomLevels.Contains(question.BloomLevel)
+                    && !question.IsDeleted)
+                .Select(question => question.ReadingTextId)
+                .Distinct()
+                .ToListAsync(cancellationToken)
+            : [];
+        var supportExerciseIds = supportTextIds.Count == 0
+            ? []
+            : await db.ReadingTexts
+                .AsNoTracking()
+                .Where(text => supportTextIds.Contains(text.Id) && text.ExerciseId.HasValue)
+                .Select(text => text.ExerciseId!.Value)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+        var exercisesQuery = db.Exercises
             .AsNoTracking()
             .Where(item => !item.IsDeleted
                 && item.IsActive
                 && !completedContentIds.Contains(item.Id)
                 && item.DifficultyLevel >= minDifficulty
-                && item.DifficultyLevel <= maxDifficulty)
+                && item.DifficultyLevel <= maxDifficulty);
+        if (supportExerciseIds.Count > 0)
+            exercisesQuery = exercisesQuery.Where(item => supportExerciseIds.Contains(item.Id));
+        var exercises = await exercisesQuery
             .OrderBy(item => item.DifficultyLevel)
             .ThenBy(item => item.Id)
             .Take(20)
             .ToListAsync(cancellationToken);
-        var readingTexts = await db.ReadingTexts
+        var readingTextsQuery = db.ReadingTexts
             .AsNoTracking()
             .Where(item => !item.IsDeleted
                 && item.IsActive
                 && !completedContentIds.Contains(item.Id)
                 && item.DifficultyLevel >= minDifficulty
-                && item.DifficultyLevel <= maxDifficulty)
+                && item.DifficultyLevel <= maxDifficulty);
+        if (supportTextIds.Count > 0)
+            readingTextsQuery = readingTextsQuery.Where(item => supportTextIds.Contains(item.Id));
+        var readingTexts = await readingTextsQuery
             .OrderBy(item => item.DifficultyLevel)
             .ThenBy(item => item.Id)
             .Take(10)
@@ -561,7 +585,15 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
                 var reason = decision.Kind == AdaptiveProgressionDecisionKind.Support
                     ? "Son ölçümlerde destek ihtiyacı görüldü; anlama odaklı telafi paketi oluşturuldu."
                     : "Son ölçümlerde yeterli başarı görüldü; bir sonraki zorluk seviyesi açıldı.";
-                await CreatePersonalizedPathAsync(studentId, profile.CurrentLevel, reason, cancellationToken);
+                var weakBloomLevels = decision.Kind == AdaptiveProgressionDecisionKind.Support
+                    ? await GetWeakBloomLevelsAsync(studentId, cancellationToken)
+                    : [];
+                await CreatePersonalizedPathAsync(
+                    studentId,
+                    profile.CurrentLevel,
+                    reason,
+                    cancellationToken,
+                    weakBloomLevels);
             }
         }
         else
@@ -602,6 +634,56 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         }
 
         return AdaptiveProgressionRules.Evaluate(recentMeasuredResults, policy);
+    }
+
+    private async Task<IReadOnlyList<int>> GetWeakBloomLevelsAsync(
+        Guid studentId,
+        CancellationToken cancellationToken)
+    {
+        var results = await db.ExerciseSessionResults
+            .AsNoTracking()
+            .Where(result => result.StudentId == studentId
+                && result.IsMeasured
+                && !result.IsAssessmentMode)
+            .OrderByDescending(result => result.CompletedAt)
+            .Take(30)
+            .Select(result => result.QuestionAnswersJson)
+            .ToListAsync(cancellationToken);
+        var metrics = new Dictionary<int, (int Correct, int Total)>();
+        foreach (var answersJson in results)
+        {
+            try
+            {
+                using var document = JsonDocument.Parse(answersJson);
+                if (document.RootElement.ValueKind != JsonValueKind.Array)
+                    continue;
+
+                foreach (var answer in document.RootElement.EnumerateArray())
+                {
+                    if (!TryGetInt(answer, "BloomLevel", out var bloomLevel)
+                        || bloomLevel is < 1 or > 6
+                        || !TryGetBool(answer, "IsCorrect", out var isCorrect))
+                    {
+                        continue;
+                    }
+
+                    metrics.TryGetValue(bloomLevel, out var current);
+                    metrics[bloomLevel] = (current.Correct + (isCorrect ? 1 : 0), current.Total + 1);
+                }
+            }
+            catch (JsonException)
+            {
+                // Historical malformed answer payloads cannot justify an automatic intervention.
+            }
+        }
+
+        return metrics
+            .Where(item => item.Value.Total >= 2
+                && (decimal)item.Value.Correct / item.Value.Total < .70m)
+            .OrderBy(item => item.Value.Correct)
+            .ThenBy(item => item.Key)
+            .Select(item => item.Key)
+            .ToList();
     }
 
     private async Task<AdaptiveProgressionPolicy> ResolveProgressionPolicyAsync(
@@ -658,6 +740,26 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         element.TryGetProperty(name, out var property) && property.TryGetDecimal(out var value)
             ? value
             : fallback;
+
+    private static bool TryGetBool(JsonElement element, string propertyName, out bool value)
+    {
+        value = false;
+        if (!element.TryGetProperty(propertyName, out var property)
+            || property.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+        {
+            return false;
+        }
+
+        value = property.GetBoolean();
+        return true;
+    }
+
+    private static bool TryGetInt(JsonElement element, string propertyName, out int value)
+    {
+        value = 0;
+        return element.TryGetProperty(propertyName, out var property)
+            && property.TryGetInt32(out value);
+    }
 
     public async Task<PersonalizedLearningPathProgressSummary> GetPersonalizedProgressAsync(
         Guid studentId,

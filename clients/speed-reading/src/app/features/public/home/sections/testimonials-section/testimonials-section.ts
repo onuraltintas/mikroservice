@@ -1,8 +1,7 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { PublicCmsService } from '../../../../../core/services/public-cms.service';
 
 interface Testimonial {
   name: string;
@@ -19,71 +18,38 @@ interface Testimonial {
   templateUrl: './testimonials-section.html',
   styleUrl: './testimonials-section.scss'
 })
-export class TestimonialsSectionComponent implements OnInit {
-  private cmsService = inject(PublicCmsService);
-
+export class TestimonialsSectionComponent {
   // Default testimonials (fallback)
   testimonials: Testimonial[] = [
     {
-      name: 'Ahmet Yılmaz',
-      role: 'Üniversite Öğrencisi',
+      name: 'Ölçüm odaklı çalışma',
+      role: 'Kişisel hedefler',
       rating: 5,
-      text: 'Okuma hızım dakikada 200 kelimeden 600 kelimeye çıktı! Sınavlara hazırlanırken çok büyük avantaj sağladı.',
-      avatar: 'AY'
+      text: 'Her çalışma sonrasında hız ve anlama birlikte değerlendirilir; sonraki içerik bu sonuca göre planlanır.',
+      avatar: 'ÖÇ'
     },
     {
-      name: 'Zeynep Kaya',
-      role: 'Yazılım Geliştirici',
+      name: 'Kademeli ilerleme',
+      role: 'Uygun zorluk',
       rating: 5,
-      text: 'Teknik dokümantasyonları çok daha hızlı okuyabiliyorum. İş verimliliğim %40 arttı.',
-      avatar: 'ZK'
+      text: 'Yeterli ve tutarlı ölçüm olmadan seviye yükseltilmez; anlama zorlanırsa destek çalışmaları sunulur.',
+      avatar: 'Kİ'
     },
     {
-      name: 'Mehmet Demir',
-      role: 'Lise Öğrencisi',
-      rating: 4,
-      text: 'Ders çalışma sürem yarıya indi ama anlama seviyem aynı kaldı. Harika bir platform!',
-      avatar: 'MD'
+      name: 'Şeffaf sonuçlar',
+      role: 'Hız ve anlama',
+      rating: 5,
+      text: 'İlerleme; başlangıç düzeyi, düzenli çalışma ve anlama sonuçlarıyla birlikte değerlendirilir.',
+      avatar: 'ŞS'
     },
     {
-      name: 'Ayşe Şahin',
-      role: 'Öğretmen',
+      name: 'İçerik ve geri bildirim',
+      role: 'Öğrenme akışı',
       rating: 5,
-      text: 'Öğrencilerime de tavsiye ediyorum. Gamification özellikleri motivasyonu çok artırıyor.',
-      avatar: 'AŞ'
+      text: 'Egzersizler, metinler ve sorular öğrencinin çalışma geçmişiyle birlikte değerlendirilir.',
+      avatar: 'İG'
     }
   ];
-
-  ngOnInit() {
-    this.loadContent();
-  }
-
-  private loadContent() {
-    // Fetch from 'AboutPage' to share the same testimonials
-    this.cmsService.getLandingContent('AboutPage').subscribe({
-      next: (content) => {
-        if (content.blocks['about_testimonials']) {
-          try {
-            const parsedTestimonials = JSON.parse(content.blocks['about_testimonials']);
-            if (Array.isArray(parsedTestimonials) && parsedTestimonials.length > 0) {
-              this.testimonials = parsedTestimonials.map((t: any) => ({
-                name: t.name,
-                role: t.role,
-                rating: t.rating,
-                text: t.text,
-                avatar: t.avatar || this.getInitials(t.name)
-              }));
-            }
-          } catch (e) {
-            console.warn('Failed to parse about_testimonials, using defaults');
-          }
-        }
-      },
-      error: (err) => {
-        console.warn('Failed to load landing content, using defaults', err);
-      }
-    });
-  }
 
   private getInitials(name: string): string {
     return name

@@ -23,11 +23,11 @@ export class HeroSectionComponent implements OnInit {
 
   // Default content (fallback)
   title = 'Hızlı Okuma Öğrenin, Hayatınızı Değiştirin';
-  subtitle = 'Bilimsel yöntemlerle okuma hızınızı 3 katına çıkarın. 50,000+ mutlu kullanıcımıza katılın!';
+  subtitle = 'Hızınızı ve anlama becerinizi birlikte ölçerek size uygun bir çalışma akışı oluşturun.';
   stats: Stat[] = [
-    { label: 'Aktif Kullanıcı', value: '50,000+' },
-    { label: 'Okunan Kitap', value: '1M+' },
-    { label: 'Başarı Oranı', value: '%95' }
+    { label: 'Başlangıç', value: 'Ölçüm' },
+    { label: 'Çalışma', value: 'Kişisel plan' },
+    { label: 'İlerleme', value: 'Hız + anlama' }
   ];
 
   ngOnInit() {
@@ -53,20 +53,8 @@ export class HeroSectionComponent implements OnInit {
           this.title = content.blocks['hero_title'];
         }
 
-        if (content.blocks['hero_subtitle']) {
-          this.subtitle = content.blocks['hero_subtitle'];
-        }
-
-        if (content.blocks['hero_stats']) {
-          try {
-            const parsedStats = JSON.parse(content.blocks['hero_stats']);
-            if (Array.isArray(parsedStats) && parsedStats.length > 0) {
-              this.stats = parsedStats;
-            }
-          } catch (e) {
-            console.warn('Failed to parse hero_stats, using default');
-          }
-        }
+        // Outcome claims are code-owned until a controlled study provides
+        // verifiable population-level evidence.
       },
       error: (err) => {
         console.warn('Failed to load landing content, using defaults', err);

@@ -23,12 +23,12 @@ export class StatsSectionComponent implements OnInit, AfterViewInit {
 
   @ViewChildren('statValue') statValues!: QueryList<ElementRef>;
 
-  // Default stats (fallback)
+  // These are product principles, not unverified population outcome claims.
   stats: Stat[] = [
-    { icon: 'people', value: '0', label: 'Aktif Kullanıcı', target: 50000, format: 'number_plus' },
-    { icon: 'menu_book', value: '0', label: 'Okunan Kitap', target: 1000000, format: 'millions' },
-    { icon: 'trending_up', value: '0', label: 'Hız Artışı', target: 300, format: 'percent' },
-    { icon: 'star', value: '0', label: 'Başarı Oranı', target: 95, format: 'percent' }
+    { icon: 'speed', value: 'Ölç', label: 'Okuma hızını takip edin', target: 0, format: 'number' },
+    { icon: 'quiz', value: 'Anla', label: 'Kavramayı birlikte değerlendirin', target: 0, format: 'number' },
+    { icon: 'route', value: 'Uyarla', label: 'Uygun içerikle ilerleyin', target: 0, format: 'number' },
+    { icon: 'insights', value: 'İzle', label: 'Gelişimi görün', target: 0, format: 'number' }
   ];
 
   private observer!: IntersectionObserver;
@@ -47,23 +47,6 @@ export class StatsSectionComponent implements OnInit, AfterViewInit {
   private loadContent() {
     this.cmsService.getLandingContent().subscribe({
       next: (content) => {
-        if (content.blocks['stats_data']) {
-          try {
-            const parsedStats = JSON.parse(content.blocks['stats_data']);
-            if (Array.isArray(parsedStats) && parsedStats.length > 0) {
-              // Merge CMS stats with defaults (keep icon and value='0' for animation)
-              this.stats = parsedStats.map((stat: any, index: number) => ({
-                icon: stat.icon || this.stats[index]?.icon || 'star',
-                value: '0',
-                label: stat.label || this.stats[index]?.label || '',
-                target: stat.target || this.stats[index]?.target || 0,
-                format: stat.format || this.stats[index]?.format || 'number'
-              }));
-            }
-          } catch (e) {
-            console.warn('Failed to parse stats_data, using defaults', e);
-          }
-        }
         this.isContentLoaded = true;
         // If already in view, start animation now
         if (this.isInView && !this.hasAnimated) {
@@ -119,9 +102,7 @@ export class StatsSectionComponent implements OnInit, AfterViewInit {
   }
 
   animateCounters() {
-    this.stats.forEach((stat, index) => {
-      this.animateValue(index, 0, stat.target, 2000);
-    });
+    // Static product principles do not need animated numerical counters.
   }
 
   animateValue(index: number, start: number, end: number, duration: number) {

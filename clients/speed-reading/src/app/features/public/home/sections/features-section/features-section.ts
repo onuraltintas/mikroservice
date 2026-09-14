@@ -1,8 +1,7 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { PublicCmsService } from '../../../../../core/services/public-cms.service';
 
 interface Feature {
   icon: string;
@@ -17,25 +16,23 @@ interface Feature {
   templateUrl: './features-section.html',
   styleUrl: './features-section.scss'
 })
-export class FeaturesSectionComponent implements OnInit {
-  private cmsService = inject(PublicCmsService);
-
+export class FeaturesSectionComponent {
   // Default features (fallback)
   features: Feature[] = [
     {
       icon: 'speed',
       title: 'Hızlı Okuma Teknikleri',
-      description: 'Göz hareketleri, periferal görüş ve chunking teknikleriyle okuma hızınızı artırın'
+      description: 'Odak, metin takibi ve kelime gruplama çalışmalarıyla akıcılığınızı geliştirin'
     },
     {
       icon: 'psychology',
       title: 'Kavrama Geliştirme',
-      description: 'Aktif okuma stratejileri ve hafıza teknikleriyle anlama düzeyinizi %80\'in üzerine çıkarın'
+      description: 'Aktif okuma ve soru çalışmalarıyla anlama becerinizi düzenli olarak ölçün'
     },
     {
       icon: 'trending_up',
       title: 'Kişiselleştirilmiş Program',
-      description: 'Yapay zeka destekli sistem, seviyenize özel egzersizler ve hedefler belirler'
+      description: 'Ölçülen hız ve anlama verilerine göre uygun egzersizler ve hedefler önerilir'
     },
     {
       icon: 'analytics',
@@ -54,27 +51,4 @@ export class FeaturesSectionComponent implements OnInit {
     }
   ];
 
-  ngOnInit() {
-    this.loadContent();
-  }
-
-  private loadContent() {
-    this.cmsService.getLandingContent().subscribe({
-      next: (content) => {
-        if (content.blocks['features_list']) {
-          try {
-            const parsedFeatures = JSON.parse(content.blocks['features_list']);
-            if (Array.isArray(parsedFeatures) && parsedFeatures.length > 0) {
-              this.features = parsedFeatures;
-            }
-          } catch (e) {
-            console.warn('Failed to parse features_list, using defaults');
-          }
-        }
-      },
-      error: (err) => {
-        console.warn('Failed to load landing content, using defaults', err);
-      }
-    });
-  }
 }
