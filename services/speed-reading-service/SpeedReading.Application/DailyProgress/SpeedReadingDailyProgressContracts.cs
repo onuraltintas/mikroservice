@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace SpeedReading.Application.DailyProgress;
 
 public sealed record DailyExerciseSummary(
@@ -245,6 +247,45 @@ public static class SpeedReadingDailyProgressRules
             configuredDifficulty + (currentDifficulty - initialDifficulty),
             0,
             maximumDifficulty);
+    }
+
+    public static string? GetDailyPatternJson(string programJson, int week, int day)
+    {
+        if (string.IsNullOrWhiteSpace(programJson) || week < 1 || day < 1)
+            return null;
+
+        try
+        {
+            using var document = JsonDocument.Parse(programJson);
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+                return null;
+
+            if (!document.RootElement.TryGetProperty($"week{week}", out var weekPattern)
+                && !document.RootElement.TryGetProperty("week1", out weekPattern))
+            {
+                return null;
+            }
+
+            if (weekPattern.ValueKind == JsonValueKind.Array)
+                return weekPattern.GetRawText();
+
+            if (weekPattern.ValueKind != JsonValueKind.Object)
+                return null;
+
+            if (!weekPattern.TryGetProperty($"day{day}", out var dayPattern)
+                && !weekPattern.TryGetProperty("day1", out dayPattern))
+            {
+                return null;
+            }
+
+            return dayPattern.ValueKind == JsonValueKind.Array
+                ? dayPattern.GetRawText()
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     public static IReadOnlyList<T> TakeUnique<T>(IReadOnlyList<T> candidates, int requestedCount)

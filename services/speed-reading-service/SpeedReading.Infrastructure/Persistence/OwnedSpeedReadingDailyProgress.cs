@@ -808,37 +808,13 @@ internal sealed class OwnedSpeedReadingDailyProgress(
 
     private static List<ExercisePattern> GetPatterns(string json, int week, int day)
     {
-        if (string.IsNullOrWhiteSpace(json))
+        var patternJson = SpeedReadingDailyProgressRules.GetDailyPatternJson(json, week, day);
+        if (patternJson is null)
             return [];
 
         try
         {
-            var daily = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, List<ExercisePattern>>>>(
-                json,
-                JsonOptions);
-            if (daily is not null && daily.Count > 0)
-            {
-                var weekData = daily.GetValueOrDefault($"week{week}")
-                    ?? daily.GetValueOrDefault("week1");
-                if (weekData is null)
-                    return [];
-
-                return weekData.GetValueOrDefault($"day{day}")
-                    ?? weekData.GetValueOrDefault("day1")
-                    ?? [];
-            }
-        }
-        catch (JsonException)
-        {
-            // Try the original one-level pattern below.
-        }
-
-        try
-        {
-            var legacy = JsonSerializer.Deserialize<Dictionary<string, List<ExercisePattern>>>(json, JsonOptions);
-            return legacy?.GetValueOrDefault($"week{week}")
-                ?? legacy?.GetValueOrDefault("week1")
-                ?? [];
+            return JsonSerializer.Deserialize<List<ExercisePattern>>(patternJson, JsonOptions) ?? [];
         }
         catch (JsonException)
         {
