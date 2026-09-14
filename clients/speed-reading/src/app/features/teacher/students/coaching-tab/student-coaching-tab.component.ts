@@ -66,6 +66,7 @@ export class StudentCoachingTabComponent extends BaseComponent implements OnInit
   assignments: CoachingAssignment[] = [];
   exams: ExamResult[] = [];
   pendingReviewCount = 0;
+  loadWarning = false;
 
   dataLoading = false;
   startingRelationship = false;
@@ -80,13 +81,14 @@ export class StudentCoachingTabComponent extends BaseComponent implements OnInit
 
   loadAll(): void {
     this.dataLoading = true;
+    this.loadWarning = false;
 
     forkJoin({
-      rel: this.coaching.getRelationships({ studentId: this.studentId, pageSize: 1 }).pipe(catchError(() => of({ items: [], total: 0, page: 1, pageSize: 1 }))),
-      goals: this.coaching.getGoals({ studentId: this.studentId, status: 'Active', pageSize: 10 }).pipe(catchError(() => of({ items: [], total: 0, page: 1, pageSize: 10 }))),
-      sessions: this.coaching.getSessions({ studentId: this.studentId, pageSize: 5 }).pipe(catchError(() => of({ items: [], total: 0, page: 1, pageSize: 5 }))),
-      assignments: this.coaching.getAssignments({ studentId: this.studentId, pageSize: 10 }).pipe(catchError(() => of({ items: [], total: 0, page: 1, pageSize: 10 }))),
-      exams: this.coaching.getExamResults({ studentId: this.studentId, pageSize: 5 }).pipe(catchError(() => of({ items: [], total: 0, page: 1, pageSize: 5 }))),
+      rel: this.coaching.getRelationships({ studentId: this.studentId, pageSize: 1 }).pipe(catchError(() => this.withLoadWarning({ items: [], total: 0, page: 1, pageSize: 1 }))),
+      goals: this.coaching.getGoals({ studentId: this.studentId, status: 'Active', pageSize: 10 }).pipe(catchError(() => this.withLoadWarning({ items: [], total: 0, page: 1, pageSize: 10 }))),
+      sessions: this.coaching.getSessions({ studentId: this.studentId, pageSize: 5 }).pipe(catchError(() => this.withLoadWarning({ items: [], total: 0, page: 1, pageSize: 5 }))),
+      assignments: this.coaching.getAssignments({ studentId: this.studentId, pageSize: 10 }).pipe(catchError(() => this.withLoadWarning({ items: [], total: 0, page: 1, pageSize: 10 }))),
+      exams: this.coaching.getExamResults({ studentId: this.studentId, pageSize: 5 }).pipe(catchError(() => this.withLoadWarning({ items: [], total: 0, page: 1, pageSize: 5 }))),
     }).pipe(takeUntil(this.destroy$), finalize(() => this.dataLoading = false))
       .subscribe(({ rel, goals, sessions, assignments, exams }) => {
         const activeRel = rel.items.find(r => r.status === 'Active');
@@ -99,6 +101,11 @@ export class StudentCoachingTabComponent extends BaseComponent implements OnInit
           a => (a.status === 'Completed' || a.status === 'PartiallyCompleted') && a.isApprovedByCoach === null
         ).length;
       });
+  }
+
+  private withLoadWarning<T>(fallback: T) {
+    this.loadWarning = true;
+    return of(fallback);
   }
 
   // ── Relationship ──────────────────────────────────────────────────────────

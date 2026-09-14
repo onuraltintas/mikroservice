@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
+import { of } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,14 +10,13 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { debounceTime, distinctUntilChanged, takeUntil, finalize, catchError, map } from 'rxjs/operators';
-import { StudentsService } from '../../../core/services/students.service';
+import { takeUntil, finalize, map, switchMap } from 'rxjs/operators';
 import { TeachersService } from '../../../core/services/teachers.service';
 import { ReportsService } from '../../../core/services/reports.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { BaseComponent } from '../../../core/components/base.component';
-import { Student, StudentExerciseResult } from '../../../core/models/student.model';
+import { Student } from '../../../core/models/student.model';
 import { LineChartComponent } from '../../../shared/components/charts/line-chart.component';
 import { StudentCoachingTabComponent } from './coaching-tab/student-coaching-tab.component';
 
@@ -61,8 +60,7 @@ interface RecentActivity {
 export class StudentDetailComponent extends BaseComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private studentsService = inject(StudentsService);
-  private teachersService = inject(TeachersService); // Injected but used via fallback strategy
+  private teachersService = inject(TeachersService);
   private reportsService = inject(ReportsService);
   private authService = inject(AuthService);
   protected override toaster = inject(ToasterService);
@@ -97,165 +95,79 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
 
   loadStudentData(studentId: string): void {
     this.loading.set(true);
-
-    const currentUser = this.authService.currentUserValue;
-    if (!currentUser) return;
-
-    const teacherId = currentUser.id;
-
-    // Robust fetching strategy: Try Teacher endpoint -> Generic endpoint
-    const resultsObservable = this.studentsService.getStudentExerciseResults(teacherId, studentId).pipe(
-      catchError(err => {
-        console.warn('Teacher endpoint failed, trying generic student endpoint...', err);
-        return this.studentsService.getStudentResults(studentId).pipe(
-          catchError(fallbackErr => {
-            console.error('Generic endpoint also failed:', fallbackErr);
-            return of([]); // Return empty if both fail
-          })
-        );
-      })
-    );
-
-    // Fetch Series Report
     const endDate = new Date();
     const startDate = new Date(endDate.getTime() - 90 * 24 * 60 * 60 * 1000); // Last 90 days
-    const reportObservable = this.reportsService.getTeacherStudentDetailReport(teacherId, studentId, startDate, endDate).pipe(
-      catchError(err => {
-        console.error('Failed to load student report:', err);
-        return of(null);
-      })
-    );
+    const teacherId = this.authService.currentUserValue?.id;
+    if (!teacherId) {
+      this.loading.set(false);
+      return;
+    }
 
-    forkJoin({
-      student: this.studentsService.getStudentById(studentId),
-      results: resultsObservable,
-      report: reportObservable
-    }).pipe(takeUntil(this.destroy$))
+    this.teachersService.getMyStudents().pipe(
+      map(students => students.find(student => student.id === studentId) ?? null),
+      switchMap(student => {
+        if (!student) {
+          this.student = null;
+          return of(null);
+        }
+
+        this.student = student;
+        return this.reportsService.getTeacherStudentDetailReport(teacherId, studentId, startDate, endDate);
+      }),
+      takeUntil(this.destroy$),
+      finalize(() => this.loading.set(false))
+    )
       .subscribe({
-        next: ({ student, results, report }) => {
-          this.student = student;
-
-          // Process Exercise Results
-          if (results && results.length > 0) {
-            this.calculateStats(results);
-            this.prepareRecentActivities(results);
-            this.prepareChartData(results);
-            this.setupReferenceLines();
-          } else {
-            // If no results, init empty stats
-            this.stats = {
-              totalExercises: 0,
-              completedExercises: 0,
-              averageKDP: 0,
-              averageComprehension: 0,
-              totalTimeMinutes: 0,
-              currentStreak: 0
-            };
+        next: report => {
+          if (report) {
+            this.applyReport(report);
           }
-
-          // Process Series Data from Report
-          if (report && report.studentReports && report.studentReports.series) {
-            this.seriesData = report.studentReports.series.activeSeries || [];
-          }
-
-          this.loading.set(false);
         },
         error: (err) => {
           console.error('Error loading student data:', err);
-          this.loading.set(false);
+          this.student = null;
         }
       });
   }
 
-  calculateStats(results: StudentExerciseResult[]): void {
-    const completedResults = results.filter(r => r.isCompleted);
-    const totalTime = completedResults.reduce((sum, r) => sum + (r.timeSpentSeconds || 0), 0);
+  private applyReport(report: any): void {
+    const dashboard = report.studentReports.dashboard;
+    const readingSpeed = report.studentReports.readingSpeed;
+    const comprehension = report.studentReports.comprehension;
+    const activity = report.studentReports.activity;
 
     this.stats = {
-      totalExercises: results.length,
-      completedExercises: completedResults.length,
-      averageKDP: Math.round(completedResults.reduce((sum, r) => sum + (r.wordsPerMinute || 0), 0) / completedResults.length) || 0,
-      averageComprehension: Math.round(completedResults.reduce((sum, r) => sum + (r.comprehensionScore || 0), 0) / completedResults.length) || 0,
-      totalTimeMinutes: Math.round(totalTime / 60),
-      currentStreak: this.calculateStreak(results)
+      totalExercises: dashboard.totalActivities,
+      completedExercises: dashboard.totalActivities,
+      averageKDP: Math.round(readingSpeed.statistics.averageWPM),
+      averageComprehension: Math.round(comprehension.overallComprehension),
+      totalTimeMinutes: activity.studyTime.totalMinutes,
+      currentStreak: activity.currentStreak.days
     };
-  }
+    this.seriesData = report.studentReports.series.activeSeries || [];
 
-  calculateStreak(results: any[]): number {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const dates = results
-      .map(r => {
-        const date = new Date(r.completedAt);
-        date.setHours(0, 0, 0, 0);
-        return date.getTime();
-      })
-      .filter((date, index, self) => self.indexOf(date) === index)
-      .sort((a, b) => b - a);
-
-    let streak = 0;
-    let currentDate = today.getTime();
-
-    for (const date of dates) {
-      if (date === currentDate) {
-        streak++;
-        currentDate -= 86400000; // 1 day in milliseconds
-      } else if (date < currentDate) {
-        break;
-      }
-    }
-
-    return streak;
-  }
-
-  prepareRecentActivities(results: StudentExerciseResult[]): void {
-    this.recentActivities = results
-      .filter(r => r.isCompleted)
-      .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
-      .slice(0, 10)
-      .map(r => ({
-        date: r.completedAt,
-        exerciseName: r.exerciseTitle || 'Egzersiz',
-        kdp: r.wordsPerMinute || 0,
-        comprehension: r.comprehensionScore || 0,
-        duration: Math.round((r.timeSpentSeconds || 0) / 60)
+    const comprehensionByDate = new Map<string, number>(
+      (comprehension.comprehensionTrend?.data?.[0]?.series ?? [])
+        .map((point: any) => [point.name, point.value])
+    );
+    const averageSessionMinutes = Math.round(activity.studyTime.averageSessionLength || 0);
+    const progress = readingSpeed.wpmTrendChart?.data?.[0]?.series ?? [];
+    this.recentActivities = progress
+      .slice(-10)
+      .reverse()
+      .map((point: any) => ({
+        date: point.name,
+        exerciseName: 'Hızlı okuma çalışması',
+        kdp: point.value ?? 0,
+        comprehension: comprehensionByDate.get(point.name) ?? 0,
+        duration: averageSessionMinutes
       }));
-  }
-
-  prepareChartData(results: StudentExerciseResult[]): void {
-    // Show all completed results (no date filter)
-    const allResults = results
-      .filter(r => r.isCompleted)
-      .sort((a, b) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime());
-
-    if (allResults.length === 0) {
-      this.kdpChartData = [];
-      this.comprehensionChartData = [];
-      return;
-    }
-
-    // Prepare KDP chart data
-    const kdpData = allResults.map(r => ({
-      name: this.formatDateForChart(r.completedAt),
-      value: r.wordsPerMinute || 0
-    }));
-
-    this.kdpChartData = [{
-      name: 'KDP',
-      series: kdpData
-    }];
-
-    // Prepare Comprehension chart data
-    const comprehensionData = allResults.map(r => ({
-      name: this.formatDateForChart(r.completedAt),
-      value: r.comprehensionScore || 0
-    }));
-
+    this.kdpChartData = [{ name: 'KDP', series: progress }];
     this.comprehensionChartData = [{
       name: 'Anlama Oranı',
-      series: comprehensionData
+      series: comprehension.comprehensionTrend?.data?.[0]?.series ?? []
     }];
+    this.setupReferenceLines();
   }
 
   setupReferenceLines(): void {
@@ -272,11 +184,6 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
         value: this.student.targetComprehension
       }];
     }
-  }
-
-  formatDateForChart(dateString: string): string {
-    const date = new Date(dateString);
-    return `${date.getDate()}/${date.getMonth() + 1}`;
   }
 
   getInitials(firstName: string, lastName: string): string {

@@ -16,8 +16,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Observable, combineLatest, BehaviorSubject } from 'rxjs';
 
 import { AssignmentService, AssignmentDetailDto, AssignmentStudentDto } from '../../../../core/services/assignment.service';
-import { StudentsService } from '../../../../core/services/students.service';
-import { AuthService } from '../../../../core/services/auth.service';
+import { TeachersService } from '../../../../core/services/teachers.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { Student } from '../../../../core/models/student.model';
 
@@ -70,8 +69,7 @@ export class AssignmentDetailDialogComponent implements OnInit {
   }
 
   private assignmentService = inject(AssignmentService);
-  private studentsService = inject(StudentsService);
-  private authService = inject(AuthService);
+  private teachersService = inject(TeachersService);
   private toaster = inject(ToasterService);
 
   constructor(
@@ -106,8 +104,7 @@ export class AssignmentDetailDialogComponent implements OnInit {
       next: (details) => {
         this.assignment = details;
         if (details.teacherId) {
-          // Fetch ALL students (Active + Passive) using Assignment's TeacherId
-          this.studentsService.getStudents(undefined, undefined, undefined, undefined, details.teacherId)
+          this.teachersService.getMyStudents()
             .pipe(finalize(() => this.loading = false))
             .subscribe({
               next: (students) => {

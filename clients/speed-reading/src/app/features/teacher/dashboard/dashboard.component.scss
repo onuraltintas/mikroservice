@@ -41,6 +41,55 @@
   margin-bottom: 1.5rem;
 }
 
+.alerts-card {
+  margin-bottom: 1.5rem;
+
+  .card-header {
+    align-items: center;
+  }
+
+  h2 mat-icon {
+    color: #d97706;
+  }
+
+  .alert-caption {
+    color: #6b7280;
+    font-size: 0.8125rem;
+  }
+
+  .alert-row {
+    align-items: center;
+    border-top: 1px solid #f3f4f6;
+    color: inherit;
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.875rem 1.25rem;
+    text-decoration: none;
+
+    &:hover {
+      background: #fffbeb;
+    }
+
+    div {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      gap: 0.125rem;
+    }
+
+    span {
+      color: #6b7280;
+      font-size: 0.8125rem;
+    }
+
+    .decline-value {
+      color: #b45309;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+  }
+}
+
 .stat-card {
   display: flex;
   align-items: center;

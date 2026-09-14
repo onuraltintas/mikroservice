@@ -7,6 +7,11 @@
   </div>
 
   <ng-container *ngIf="!dataLoading">
+    <div class="load-warning" *ngIf="loadWarning">
+      <mat-icon>error_outline</mat-icon>
+      <span>Koçluk verilerinin bir bölümü yüklenemedi.</span>
+      <button mat-button type="button" (click)="loadAll()">Tekrar dene</button>
+    </div>
 
     <!-- ══ İLİŞKİ YOK ════════════════════════════════════════════════════════ -->
     <div *ngIf="!relationship" class="no-relationship">

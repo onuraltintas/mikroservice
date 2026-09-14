@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { Subject, forkJoin, of } from 'rxjs';
-import { takeUntil, catchError, finalize } from 'rxjs/operators';
+import { Subject, forkJoin } from 'rxjs';
+import { takeUntil, finalize } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,8 +11,8 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { ReportsService } from '../../../core/services/reports.service';
-import { TeacherClassOverviewReport } from '../../../core/models/report.model';
-import { StudentsService } from '../../../core/services/students.service';
+import { TeacherClassOverviewReport, TeacherTimeBasedProgressReport } from '../../../core/models/report.model';
+import { TeachersService } from '../../../core/services/teachers.service';
 import { InstitutionsService } from '../../../core/services/institutions.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Student } from '../../../core/models/student.model';
@@ -36,15 +36,17 @@ import { Student } from '../../../core/models/student.model';
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   private reportsService   = inject(ReportsService);
-  private studentsService  = inject(StudentsService);
+  private teachersService  = inject(TeachersService);
   private institutionsService = inject(InstitutionsService);
   private authService      = inject(AuthService);
   private router           = inject(Router);
   private destroy$         = new Subject<void>();
 
   overview: TeacherClassOverviewReport | null = null;
+  progress: TeacherTimeBasedProgressReport | null = null;
   students: Student[] = [];
   loading = true;
+  errorMessage: string | null = null;
   institutionCode: string | null = null;
 
   displayedColumns: string[] = ['studentName', 'exercises', 'kdp', 'comprehension', 'performance', 'actions'];
@@ -75,6 +77,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   loadDashboard(): void {
     this.loading = true;
+    this.errorMessage = null;
     const tid = this.teacherId;
     if (!tid) { this.loading = false; return; }
 
@@ -82,14 +85,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const startDate = new Date(endDate.getTime() - 90 * 24 * 60 * 60 * 1000);
 
     forkJoin({
-      overview: this.reportsService.getTeacherClassOverviewReport(tid, startDate, endDate)
-        .pipe(catchError(() => of(null))),
-      students: this.studentsService.getStudents(undefined, undefined, undefined, undefined, tid)
-        .pipe(catchError(() => of([]))),
+      overview: this.reportsService.getTeacherClassOverviewReport(tid, startDate, endDate),
+      progress: this.reportsService.getTeacherTimeBasedProgressReport(tid, startDate, endDate),
+      students: this.teachersService.getMyStudents(),
     }).pipe(takeUntil(this.destroy$), finalize(() => this.loading = false))
-      .subscribe(({ overview, students }) => {
+      .subscribe(({ overview, progress, students }) => {
         this.overview = overview;
-        this.students = students ?? [];
+        this.progress = progress;
+        this.students = students;
+      }, () => {
+        this.errorMessage = 'Panel verileri yüklenemedi. Lütfen tekrar deneyin.';
       });
   }
 

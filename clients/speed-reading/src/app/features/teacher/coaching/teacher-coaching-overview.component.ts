@@ -32,6 +32,12 @@ import { CoachingApiService, CoachingSession, CoachingAssignment, CoachingRelati
       </div>
 
       <ng-container *ngIf="!loading()">
+        <div class="load-warning" *ngIf="loadWarning">
+          <mat-icon>error_outline</mat-icon>
+          <span>Koçluk verilerinin bir bölümü yüklenemedi.</span>
+          <button mat-button type="button" (click)="load()">Tekrar dene</button>
+        </div>
+
         <!-- Özet Kartlar -->
         <div class="stats-row">
           <mat-card class="stat-card">
@@ -150,6 +156,7 @@ import { CoachingApiService, CoachingSession, CoachingAssignment, CoachingRelati
       .subtitle { margin: 4px 0 0; color: #6b7280; font-size: 0.9rem; }
     }
     .loading-center { display: flex; justify-content: center; padding: 60px; }
+    .load-warning { align-items: center; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; color: #92400e; display: flex; gap: 8px; margin-bottom: 16px; padding: 8px 12px; }
 
     .stats-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
     .stat-card {
@@ -225,6 +232,7 @@ export class TeacherCoachingOverviewComponent extends BaseComponent implements O
   relationships:    CoachingRelationship[] = [];
   upcomingSessions: CoachingSession[]      = [];
   pendingReviews:   CoachingAssignment[]   = [];
+  loadWarning = false;
 
   ngOnInit(): void {
     this.load();
@@ -232,21 +240,27 @@ export class TeacherCoachingOverviewComponent extends BaseComponent implements O
 
   load(): void {
     this.loading.set(true);
+    this.loadWarning = false;
     const coachId = this.auth.currentUserValue?.id ?? '';
 
     const now = new Date();
     const to  = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
     forkJoin({
-      rels:    this.coaching.getRelationships({ status: 'Active', pageSize: 50 }).pipe(catchError(() => of({ items: [], total: 0, page: 1, pageSize: 50 }))),
-      sessions: this.coaching.getSessions({ status: 'Scheduled', from: now.toISOString(), to: to.toISOString(), pageSize: 20 }).pipe(catchError(() => of({ items: [], total: 0, page: 1, pageSize: 20 }))),
-      pending:  this.coaching.getAssignments({ pendingReview: true, pageSize: 20 }).pipe(catchError(() => of({ items: [], total: 0, page: 1, pageSize: 20 }))),
+      rels:    this.coaching.getRelationships({ status: 'Active', pageSize: 50 }).pipe(catchError(() => this.withLoadWarning({ items: [], total: 0, page: 1, pageSize: 50 }))),
+      sessions: this.coaching.getSessions({ status: 'Scheduled', from: now.toISOString(), to: to.toISOString(), pageSize: 20 }).pipe(catchError(() => this.withLoadWarning({ items: [], total: 0, page: 1, pageSize: 20 }))),
+      pending:  this.coaching.getAssignments({ pendingReview: true, pageSize: 20 }).pipe(catchError(() => this.withLoadWarning({ items: [], total: 0, page: 1, pageSize: 20 }))),
     }).pipe(takeUntil(this.destroy$), finalize(() => this.loading.set(false)))
       .subscribe(({ rels, sessions, pending }) => {
         this.relationships    = rels.items;
         this.upcomingSessions = sessions.items.sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
         this.pendingReviews   = pending.items;
       });
+  }
+
+  private withLoadWarning<T>(fallback: T) {
+    this.loadWarning = true;
+    return of(fallback);
   }
 
   sessionTypeLabel(t: string): string {

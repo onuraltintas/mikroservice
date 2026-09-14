@@ -5,6 +5,13 @@
 </div>
 
 <div class="teacher-dashboard" *ngIf="!loading">
+  <div class="error-state" *ngIf="errorMessage">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ errorMessage }}</span>
+    <button mat-stroked-button type="button" (click)="loadDashboard()">Tekrar dene</button>
+  </div>
+
+  <ng-container *ngIf="!errorMessage">
   <!-- Header -->
   <div class="dashboard-header">
     <div class="header-row">
@@ -57,6 +64,22 @@
       </div>
     </mat-card>
   </div>
+
+  <mat-card class="alerts-card" *ngIf="progress?.decliningStudents?.length">
+    <div class="card-header">
+      <h2><mat-icon>warning_amber</mat-icon> Dikkat Gerektiren Öğrenciler</h2>
+      <span class="alert-caption">Son 90 gündeki performans düşüşleri</span>
+    </div>
+    <a class="alert-row" *ngFor="let student of progress?.decliningStudents | slice:0:5"
+       [routerLink]="['/teacher/students', student.studentId]">
+      <div>
+        <strong>{{ student.studentName }}</strong>
+        <span>Skor: {{ student.previousScore | number:'1.0-0' }} → {{ student.currentScore | number:'1.0-0' }}</span>
+      </div>
+      <span class="decline-value">{{ student.improvement | number:'1.0-0' }} puan</span>
+      <mat-icon>chevron_right</mat-icon>
+    </a>
+  </mat-card>
 
   <!-- Class Distribution (from report) -->
   <mat-card class="distribution-card" *ngIf="overview">
@@ -156,4 +179,5 @@
       </table>
     </div>
   </mat-card>
+  </ng-container>
 </div>
