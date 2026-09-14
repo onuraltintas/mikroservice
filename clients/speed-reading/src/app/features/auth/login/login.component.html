@@ -78,12 +78,21 @@
 
           <div id="google-signin-button" class="google-button"></div>
 
-          <div class="register-link ui-stack ui-form-section">
-            <div>Hesabınız yok mu?</div>
-            <a routerLink="/auth/register">Öğrenci Olarak Kaydol</a>
-            <a routerLink="/auth/register-teacher">Öğretmen Olarak Kaydol</a>
-            <a routerLink="/auth/register-school">Okulunuzu Kaydedin</a>
-          </div>
+          <section class="register-options" aria-label="Kayıt seçenekleri">
+            <p>Hesabınız yok mu? Size uygun kayıt türünü seçin.</p>
+            <a routerLink="/auth/register" class="register-option">
+              <span><strong>Öğrenci kaydı</strong><small>Bireysel erişim için</small></span>
+              <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+            </a>
+            <a routerLink="/auth/register-teacher" class="register-option">
+              <span><strong>Öğretmen kaydı</strong><small>Öğrencilerinizle çalışmak için</small></span>
+              <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+            </a>
+            <a routerLink="/auth/register-school" class="register-option">
+              <span><strong>Kurum kaydı</strong><small>Kurumsal erişim için</small></span>
+              <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+            </a>
+          </section>
         </form>
         } @else if (mfaStage === 'recovery') {
         <section class="mfa-login-panel">
