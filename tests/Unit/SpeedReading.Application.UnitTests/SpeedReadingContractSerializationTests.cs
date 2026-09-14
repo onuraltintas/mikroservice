@@ -5,6 +5,7 @@ using SpeedReading.Application.Gamification;
 using SpeedReading.Application.StudentReading;
 using SpeedReading.Application.Content;
 using SpeedReading.Application.Subscription;
+using SpeedReading.Application.Analytics;
 
 namespace SpeedReading.Application.UnitTests;
 
@@ -35,6 +36,17 @@ public sealed class SpeedReadingContractSerializationTests
 
         request.IsSuspended.Should().BeTrue();
         request.Reason.Should().Be("Kurum talebi");
+    }
+
+    [Fact]
+    public void Assignment_recipients_must_all_be_within_the_teacher_scope()
+    {
+        var assignedStudent = Guid.NewGuid();
+        var otherStudent = Guid.NewGuid();
+
+        TeacherStudentAccessRules.ContainsAll(
+            [assignedStudent, otherStudent],
+            [assignedStudent]).Should().BeFalse();
     }
 
     private static readonly JsonSerializerOptions JsonOptions = new()
