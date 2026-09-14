@@ -103,4 +103,20 @@ public sealed class SpeedReadingDailyProgressRulesTests
             initialDifficulty,
             maximumDifficulty).Should().Be(expectedDifficulty);
     }
+
+    [Fact]
+    public void Selects_the_daily_pattern_when_adaptation_settings_share_the_program_json()
+    {
+        const string programJson = """
+            {
+              "adaptation": { "minimumMeasuredSessions": 3 },
+              "week1": {
+                "day1": [{ "type": "RSVP", "count": 2, "difficulty": 1 }]
+              }
+            }
+            """;
+
+        SpeedReadingDailyProgressRules.GetDailyPatternJson(programJson, week: 1, day: 1)
+            .Should().Contain("RSVP");
+    }
 }
