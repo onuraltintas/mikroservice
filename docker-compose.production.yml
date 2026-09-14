@@ -286,3 +286,11 @@ services:
 volumes:
   production_caddy_data:
   production_caddy_config:
+
+networks:
+  edu-network:
+    name: ${PRODUCTION_NETWORK_NAME:-eduplatform-production}
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${PRODUCTION_NETWORK_SUBNET:-172.31.0.0/16}
