@@ -14,8 +14,7 @@ public class MailCatcherFixture : IAsyncLifetime
 
     public MailCatcherFixture()
     {
-        _container = new ContainerBuilder()
-            .WithImage("dockage/mailcatcher:0.8.2")
+        _container = new ContainerBuilder("dockage/mailcatcher:0.8.2")
             .WithPortBinding(1025, true) // SMTP port
             .WithPortBinding(1080, true) // Web UI port
             .WithWaitStrategy(Wait.ForUnixContainer()

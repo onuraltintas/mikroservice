@@ -270,7 +270,7 @@ public class DatabaseCrudTests : IAsyncLifetime
             .ToListAsync();
 
         // Assert
-        allUsers.Should().HaveCountGreaterOrEqualTo(3);
+        allUsers.Count.Should().BeGreaterThanOrEqualTo(3);
         allUsers.Select(u => u.FirstName).Should().Contain(new[] { "Alice", "Bob", "Charlie" });
 
         filteredByEmail.Should().HaveCount(1);
@@ -335,7 +335,7 @@ public class DatabaseCrudTests : IAsyncLifetime
 
         // Assert
         var retrieved = await _dbContext.Institutions.ToListAsync();
-        retrieved.Should().HaveCountGreaterOrEqualTo(3);
+        retrieved.Count.Should().BeGreaterThanOrEqualTo(3);
         
         var school = retrieved.FirstOrDefault(i => i.Type == InstitutionType.School);
         school.Should().NotBeNull();

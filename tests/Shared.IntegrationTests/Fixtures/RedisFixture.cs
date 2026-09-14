@@ -13,8 +13,7 @@ public class RedisFixture : IAsyncLifetime
 
     public RedisFixture()
     {
-        _container = new RedisBuilder()
-            .WithImage("redis:7.2-alpine")
+        _container = new RedisBuilder("redis:7.2-alpine")
             .WithCleanUp(true)
             .Build();
     }

@@ -30,7 +30,7 @@ public sealed class GatewayRouteConfigurationTests
     {
         var caddy = File.ReadAllText(GetSpeedReadingCaddyPath());
         var identityRouteIndex = caddy.IndexOf("@identityAuth path /api/auth /api/auth/*", StringComparison.Ordinal);
-        identityRouteIndex.Should().BeGreaterOrEqualTo(0);
+        identityRouteIndex.Should().BeGreaterThanOrEqualTo(0);
 
         if (identityRouteIndex < 0)
         {
@@ -56,7 +56,7 @@ public sealed class GatewayRouteConfigurationTests
         var versionedHandlerIndex = caddy.IndexOf("handle @versionedApi", StringComparison.Ordinal);
         var blockedApiIndex = caddy.IndexOf("@blockedApi path /api/*", StringComparison.Ordinal);
 
-        versionedUsersPathIndex.Should().BeGreaterOrEqualTo(0);
+        versionedUsersPathIndex.Should().BeGreaterThanOrEqualTo(0);
         versionedHandlerIndex.Should().BeGreaterThan(versionedUsersPathIndex);
         versionedHandlerIndex.Should().BeLessThan(blockedApiIndex);
     }
@@ -71,7 +71,7 @@ public sealed class GatewayRouteConfigurationTests
         var coachingHandlerIndex = caddy.IndexOf("handle @versionedCoachingAdmin", StringComparison.Ordinal);
         var blockedApiIndex = caddy.IndexOf("@blockedApi path /api/*", StringComparison.Ordinal);
 
-        coachingPathIndex.Should().BeGreaterOrEqualTo(0);
+        coachingPathIndex.Should().BeGreaterThanOrEqualTo(0);
         coachingHandlerIndex.Should().BeGreaterThan(coachingPathIndex);
         coachingHandlerIndex.Should().BeLessThan(blockedApiIndex);
     }
