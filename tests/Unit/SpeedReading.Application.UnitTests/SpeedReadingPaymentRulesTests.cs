@@ -51,6 +51,15 @@ public sealed class SpeedReadingPaymentRulesTests
     }
 
     [Theory]
+    [InlineData(365, true)]
+    [InlineData(180, false)]
+    [InlineData(null, false)]
+    public void Accepts_only_a_one_year_plan_for_institution_access(int? durationDays, bool expected)
+    {
+        SpeedReadingAccessRules.IsInstitutionAccessPlan(durationDays).Should().Be(expected);
+    }
+
+    [Theory]
     [InlineData("12345678901", true)]
     [InlineData("1234567890", false)]
     [InlineData("1234567890A", false)]
