@@ -239,3 +239,20 @@ Kalan teknik sınırlar:
 - Hız/kavrama eşikleri tek bir seviye sözlüğünde toplanıp admin’de salt okunur olarak gösteriliyor; ancak henüz sürümlü/persisted bir admin kataloğundan düzenlenmiyor. Türkçe yaş/sınıf normları, alternate-form kalibrasyonu ve bağımsız kontrol gruplu etki çalışması tamamlanmadan platform bilimsel olarak standardize edilmiş kabul edilmemeli.
 
 Bu nedenle mevcut durum, ölçüm güvenliği ve yazılım davranışı açısından belirgin biçimde standardize edilmiş bir temel; akademik geçerlilik ve tüm motorlarda tam server-authoritative değerlendirme açısından ise tamamlanmamış bir v2 adayıdır.
+
+## Durum güncellemesi (2026-09-14)
+
+P0 ve P1 yazılım düzeltmeleri kapatıldı. P2 kapsamında sürümlü seviye kataloğu,
+çalışma/katılımcı kaydı, yaş-faz-seviye bazlı kalibrasyon görünümü, yedi günlük
+kalıcılık ve en erken 28. gün transfer penceresi ile içerik kalite ön kontrolü
+uygulandı. CI'da hızlı okuma birim testleri ve owned EF model drift kontrolü
+çalışır; Prometheus readiness hedefi ile yedek/restore runbook'u owned veri
+tabanını kapsar.
+
+Gerçek normatif pilot, kurum/katılımcı onamı, bağımsız karşılaştırma grubu ve
+toplanan verinin bilimsel analizi uygulama dışı operasyonlardır. Bu süreç için
+uygulanabilir adımlar `SPEED_READING_RESEARCH_PROTOCOL.md` belgesinde yer alır.
+P3 bakımında .NET 10 LTS geçişi planlıdır; ayrıntılı kapanış kapıları
+`DOTNET_10_LTS_MIGRATION_PLAN.md` belgesindedir. Alertmanager'ın dış e-posta veya
+webhook alıcısı ise hedef adresin deployment secret store'a girilmesini gerektirir;
+repo bu hedefi bilinçli olarak içermez.
