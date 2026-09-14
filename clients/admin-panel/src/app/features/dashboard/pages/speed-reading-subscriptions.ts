@@ -1,7 +1,7 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { finalize, firstValueFrom } from 'rxjs';
 import {
   SpeedReadingAdminService,
   SpeedReadingManualSubscriptionRequest,
@@ -13,6 +13,7 @@ import {
   SpeedReadingSubscription,
   SpeedReadingSubscriptionUpdateRequest
 } from '../../../core/services/speed-reading-admin.service';
+import { IdentityService, UserDto } from '../../../core/services/identity.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 
 type SubscriptionTab = 'products' | 'plans' | 'subscriptions' | 'payments';
@@ -25,8 +26,8 @@ type SubscriptionTab = 'products' | 'plans' | 'subscriptions' | 'payments';
     <main class="space-y-6" aria-labelledby="subscriptions-title">
       <header>
         <p class="text-sm font-medium text-indigo-600 dark:text-indigo-400">Hızlı Okuma servisi</p>
-        <h1 id="subscriptions-title" class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Ürün, plan ve abonelik yönetimi</h1>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Bu ekran ödeme sağlayıcısını başlatmaz veya doğrulamaz. Ürün erişimi, planlar, manuel abonelik kayıtları ve ödeme geçmişi ayrı olarak yönetilir.</p>
+        <h1 id="subscriptions-title" class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Erişim ve ödeme onayı yönetimi</h1>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Havale/EFT teyidinden sonra öğrenciye buradan erişim açın. Bireysel planlar 6 ay, kurum planları 1 yıl olarak tanımlanır; plan süresi bitiş tarihini otomatik belirler.</p>
       </header>
 
       <nav class="ui-tab-list flex flex-wrap gap-2" aria-label="Abonelik yönetim sekmeleri">
@@ -39,7 +40,7 @@ type SubscriptionTab = 'products' | 'plans' | 'subscriptions' | 'payments';
 
       @if (selectedTab() === 'products') {
         <section class="space-y-4" aria-labelledby="products-title">
-          <div class="flex items-center justify-between"><h2 id="products-title" class="text-lg font-semibold text-gray-900 dark:text-white">Ürünler</h2><button type="button" (click)="startProductCreate()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white">Yeni ürün</button></div>
+          <div class="flex items-center justify-between"><h2 id="products-title" class="text-lg font-semibold text-gray-900 dark:text-white">Erişim ürünleri</h2><button type="button" (click)="startProductCreate()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white">Yeni ürün</button></div>
           @if (productEditing()) { <form (ngSubmit)="saveProduct()" class="form-card"><h3>{{ productEditingId ? 'Ürünü düzenle' : 'Yeni ürün' }}</h3><div class="form-grid"><label>Slug<input [(ngModel)]="productDraft.slug" name="productSlug" required maxlength="80" [disabled]="!!productEditingId" /></label><label>Ad<input [(ngModel)]="productDraft.name" name="productName" required maxlength="150" /></label><label class="wide">Açıklama<textarea [(ngModel)]="productDraft.description" name="productDescription" required maxlength="1000"></textarea></label><label>İçerilen ürün slug’ları<input [(ngModel)]="productIncluded" name="productIncluded" placeholder="kocluk, hizliokuma" /></label><label>Sıra<input type="number" [(ngModel)]="productDraft.sortOrder" name="productSortOrder" min="0" max="10000" /></label><label class="check"><input type="checkbox" [(ngModel)]="productDraft.isActive" name="productActive" /> Aktif</label><label class="check"><input type="checkbox" [(ngModel)]="productDraft.isPublic" name="productPublic" /> Herkese açık</label></div><div class="form-actions"><button type="button" (click)="cancelProductEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form> }
           <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Ürün</th><th>Slug</th><th>Durum</th><th>Görünürlük</th><th>Sıra</th><th></th></tr></thead><tbody>@for (product of products(); track product.id) {<tr><td><strong>{{ product.name }}</strong><div class="muted">{{ product.description }}</div></td><td class="font-mono">{{ product.slug }}</td><td>{{ product.isActive ? 'Aktif' : 'Pasif' }}</td><td>{{ product.isPublic ? 'Açık' : 'Gizli' }}</td><td>{{ product.sortOrder }}</td><td class="actions"><button type="button" (click)="startProductEdit(product)">Düzenle</button><button type="button" (click)="deactivateProduct(product)" [disabled]="!product.isActive">Pasifleştir</button></td></tr>} @empty {<tr><td colspan="6" class="empty">Ürün bulunamadı.</td></tr>}</tbody></table></div></div>
         </section>
@@ -47,15 +48,16 @@ type SubscriptionTab = 'products' | 'plans' | 'subscriptions' | 'payments';
 
       @if (selectedTab() === 'plans') {
         <section class="space-y-4" aria-labelledby="plans-title">
-          <div class="flex items-center justify-between"><h2 id="plans-title" class="text-lg font-semibold text-gray-900 dark:text-white">Abonelik planları</h2><button type="button" (click)="startPlanCreate()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white">Yeni plan</button></div>
-          @if (planEditing()) { <form (ngSubmit)="savePlan()" class="form-card"><h3>{{ planEditingId ? 'Planı düzenle' : 'Yeni plan' }}</h3><div class="form-grid"><label class="wide">Ad<input [(ngModel)]="planDraft.name" name="planName" required maxlength="150" /></label><label>Slug<input [(ngModel)]="planDraft.slug" name="planSlug" required maxlength="80" [disabled]="!!planEditingId" /></label><label>Ürün<select [(ngModel)]="planDraft.productId" name="planProductId" required [disabled]="!!planEditingId"><option value="">Seçin</option>@for (product of products(); track product.id) {<option [value]="product.id">{{ product.name }}</option>}</select></label><label>Fiyat<input type="number" [(ngModel)]="planDraft.price" name="planPrice" min="0" step="0.01" required /></label><label>Faturalama<select [(ngModel)]="planDraft.billingPeriod" name="planBillingPeriod"><option value="Monthly">Aylık</option><option value="Quarterly">Üç aylık</option><option value="Annual">Yıllık</option><option value="Lifetime">Ömür boyu</option></select></label><label>Süre (gün)<input type="number" [(ngModel)]="planDraft.durationDays" name="planDurationDays" min="1" /></label><label>Sıra<input type="number" [(ngModel)]="planDraft.sortOrder" name="planSortOrder" min="0" max="10000" /></label><label class="wide">Açıklama<textarea [(ngModel)]="planDraft.description" name="planDescription" required maxlength="1000"></textarea></label><label class="wide">Özellikler (virgülle)<input [(ngModel)]="planFeatures" name="planFeatures" placeholder="Günlük egzersiz, Raporlar" /></label><label class="check"><input type="checkbox" [(ngModel)]="planDraft.isActive" name="planActive" /> Aktif</label><label class="check"><input type="checkbox" [(ngModel)]="planDraft.isPublic" name="planPublic" /> Herkese açık</label></div><div class="form-actions"><button type="button" (click)="cancelPlanEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form> }
+          <div class="flex items-center justify-between"><h2 id="plans-title" class="text-lg font-semibold text-gray-900 dark:text-white">Erişim planları</h2><button type="button" (click)="startPlanCreate()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white">Yeni plan</button></div>
+          <p class="muted">Bireysel planı 180 gün ve herkese açık, kurum planını 365 gün ve gizli tanımlayın. Ödeme, havale/EFT ile doğrulandıktan sonra erişim onayından açılır.</p>
+          @if (planEditing()) { <form (ngSubmit)="savePlan()" class="form-card"><h3>{{ planEditingId ? 'Planı düzenle' : 'Yeni plan' }}</h3><div class="form-grid"><label class="wide">Ad<input [(ngModel)]="planDraft.name" name="planName" required maxlength="150" /></label><label>Slug<input [(ngModel)]="planDraft.slug" name="planSlug" required maxlength="80" [disabled]="!!planEditingId" /></label><label>Ürün<select [(ngModel)]="planDraft.productId" name="planProductId" required [disabled]="!!planEditingId"><option value="">Seçin</option>@for (product of products(); track product.id) {<option [value]="product.id">{{ product.name }}</option>}</select></label><label>Fiyat<input type="number" [(ngModel)]="planDraft.price" name="planPrice" min="0" step="0.01" required /></label><label>Satış biçimi<select [(ngModel)]="planDraft.billingPeriod" name="planBillingPeriod"><option value="OneTime">Tek seferlik erişim</option><option value="Monthly">Aylık</option><option value="Quarterly">Üç aylık</option><option value="Annual">Yıllık</option></select></label><label>Erişim süresi (gün)<input type="number" [(ngModel)]="planDraft.durationDays" name="planDurationDays" min="1" required /></label><label>Sıra<input type="number" [(ngModel)]="planDraft.sortOrder" name="planSortOrder" min="0" max="10000" /></label><label class="wide">Açıklama<textarea [(ngModel)]="planDraft.description" name="planDescription" required maxlength="1000"></textarea></label><label class="wide">Özellikler (virgülle)<input [(ngModel)]="planFeatures" name="planFeatures" placeholder="Günlük egzersiz, Raporlar" /></label><label class="check"><input type="checkbox" [(ngModel)]="planDraft.isActive" name="planActive" /> Aktif</label><label class="check"><input type="checkbox" [(ngModel)]="planDraft.isPublic" name="planPublic" /> Herkese açık</label></div><div class="form-actions"><button type="button" (click)="cancelPlanEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form> }
           <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Plan</th><th>Ürün</th><th>Fiyat</th><th>Dönem</th><th>Durum</th><th></th></tr></thead><tbody>@for (plan of plans(); track plan.id) {<tr><td><strong>{{ plan.name }}</strong><div class="muted">{{ plan.slug }}</div></td><td>{{ plan.productName }}</td><td>{{ plan.price | number:'1.2-2' }}</td><td>{{ plan.billingPeriod }}</td><td>{{ plan.isActive ? 'Aktif' : 'Pasif' }}</td><td class="actions"><button type="button" (click)="startPlanEdit(plan)">Düzenle</button><button type="button" (click)="deactivatePlan(plan)" [disabled]="!plan.isActive">Pasifleştir</button></td></tr>} @empty {<tr><td colspan="6" class="empty">Plan bulunamadı.</td></tr>}</tbody></table></div></div>
         </section>
       }
 
       @if (selectedTab() === 'subscriptions') {
-        <section class="space-y-4" aria-labelledby="user-subscriptions-title"><div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><h2 id="user-subscriptions-title" class="text-lg font-semibold text-gray-900 dark:text-white">Kullanıcı abonelikleri</h2><p class="muted">Manuel tanımlama, ödeme sağlayıcısından bağımsız bir erişim operasyonudur.</p></div><button type="button" (click)="startSubscriptionCreate()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white">Manuel abonelik</button></div>
-          @if (subscriptionEditing()) { <form (ngSubmit)="saveSubscription()" class="form-card"><h3>{{ subscriptionEditingId ? 'Aboneliği düzenle' : 'Manuel abonelik tanımla' }}</h3><div class="form-grid"><label>Kullanıcı ID<input [(ngModel)]="subscriptionDraft.userId" name="subscriptionUserId" required [disabled]="!!subscriptionEditingId" /></label><label>Plan<select [(ngModel)]="subscriptionDraft.planId" name="subscriptionPlanId" required [disabled]="!!subscriptionEditingId"><option value="">Seçin</option>@for (plan of plans(); track plan.id) {<option [value]="plan.id">{{ plan.name }}</option>}</select></label><label>Başlangıç<input type="date" [(ngModel)]="subscriptionDraft.startDate" name="subscriptionStartDate" required [disabled]="!!subscriptionEditingId" /></label><label>Bitiş<input type="date" [(ngModel)]="subscriptionDraft.endDate" name="subscriptionEndDate" /></label>@if (subscriptionEditingId) {<label>Durum<select [(ngModel)]="subscriptionUpdateStatus" name="subscriptionUpdateStatus"><option value="Active">Aktif</option><option value="Cancelled">İptal</option><option value="Expired">Süresi dolmuş</option></select></label>}<label class="wide">Not<textarea [(ngModel)]="subscriptionDraft.notes" name="subscriptionNotes" maxlength="1000"></textarea></label></div><div class="form-actions"><button type="button" (click)="cancelSubscriptionEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form> }
+        <section class="space-y-4" aria-labelledby="user-subscriptions-title"><div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><h2 id="user-subscriptions-title" class="text-lg font-semibold text-gray-900 dark:text-white">Havale/EFT erişim onayları</h2><p class="muted">Banka hesabındaki ödeme teyit edildikten sonra burada erişim açılır. Planın süresi, bitiş tarihini otomatik hesaplar.</p></div><button type="button" (click)="startSubscriptionCreate()" class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white">Ödeme sonrası erişim aç</button></div>
+          @if (subscriptionEditing()) { <form (ngSubmit)="saveSubscription()" class="form-card"><h3>{{ subscriptionEditingId ? 'Erişimi düzenle' : 'Havale/EFT sonrası erişim aç' }}</h3><div class="form-grid">@if (!subscriptionEditingId) {<label class="wide">Öğrenci ara<input [(ngModel)]="studentSearch" (ngModelChange)="searchStudents()" name="studentSearch" placeholder="Ad veya e-posta yazın" maxlength="100" /></label><label>Öğrenci<select [(ngModel)]="subscriptionDraft.userId" name="subscriptionUserId" required><option value="">Öğrenci seçin</option>@for (student of students(); track student.userId) {<option [value]="student.userId">{{ student.fullName }} · {{ student.email }}</option>}</select></label>} @else {<label>Öğrenci<input [value]="subscriptionDraft.userId" disabled /></label>}<label>Plan<select [(ngModel)]="subscriptionDraft.planId" name="subscriptionPlanId" required [disabled]="!!subscriptionEditingId"><option value="">Seçin</option>@for (plan of plans(); track plan.id) {<option [value]="plan.id">{{ plan.name }}</option>}</select></label><label>Onay tarihi<input type="date" [(ngModel)]="subscriptionDraft.startDate" name="subscriptionStartDate" required [disabled]="!!subscriptionEditingId" /></label><label>Bitiş (isteğe bağlı düzeltme)<input type="date" [(ngModel)]="subscriptionDraft.endDate" name="subscriptionEndDate" /></label>@if (subscriptionEditingId) {<label>Durum<select [(ngModel)]="subscriptionUpdateStatus" name="subscriptionUpdateStatus"><option value="Active">Aktif</option><option value="Cancelled">İptal</option><option value="Expired">Süresi dolmuş</option></select></label>}<label class="wide">Ödeme / kurum notu<textarea [(ngModel)]="subscriptionDraft.notes" name="subscriptionNotes" maxlength="1000" placeholder="Ödeme tarihi, banka referansı veya kurum adı"></textarea></label></div><div class="form-actions"><button type="button" (click)="cancelSubscriptionEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Erişimi onayla</button></div></form> }
           <form (ngSubmit)="loadSubscriptions()" class="inline-filter"><input [(ngModel)]="subscriptionSearch" name="subscriptionSearch" placeholder="Kullanıcı ara" maxlength="100" /><select [(ngModel)]="subscriptionStatus" name="subscriptionStatus"><option value="">Tüm durumlar</option><option value="Active">Aktif</option><option value="Cancelled">İptal</option><option value="Expired">Süresi dolmuş</option></select><button type="submit" class="secondary">Filtrele</button></form>
           <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Kullanıcı</th><th>Plan</th><th>Durum</th><th>Başlangıç</th><th>Bitiş</th><th></th></tr></thead><tbody>@for (subscription of subscriptions().items; track subscription.id) {<tr><td>{{ subscription.userName || subscription.userEmail || subscription.userId }}</td><td>{{ subscription.plan.name }}</td><td>{{ subscription.status }}</td><td>{{ subscription.startDate | date:'dd.MM.yyyy' }}</td><td>{{ subscription.endDate ? (subscription.endDate | date:'dd.MM.yyyy') : '—' }}</td><td class="actions"><button type="button" (click)="editSubscription(subscription)">Düzenle</button><button type="button" (click)="cancelSubscription(subscription)">Sil</button></td></tr>} @empty {<tr><td colspan="6" class="empty">Abonelik bulunamadı.</td></tr>}</tbody></table></div><div class="pager"><span>Toplam {{ subscriptions().totalCount }}</span><button type="button" (click)="changeSubscriptionPage(subscriptionPage - 1)" [disabled]="subscriptionPage <= 1 || loading()">Önceki</button><button type="button" (click)="changeSubscriptionPage(subscriptionPage + 1)" [disabled]="subscriptionPage >= subscriptionTotalPages() || loading()">Sonraki</button></div></div>
         </section>
@@ -95,6 +97,7 @@ type SubscriptionTab = 'products' | 'plans' | 'subscriptions' | 'payments';
 })
 export class SpeedReadingSubscriptionsComponent implements OnInit {
   private readonly service = inject(SpeedReadingAdminService);
+  private readonly identity = inject(IdentityService);
   private readonly toaster = inject(ToasterService);
   private readonly platformId = inject(PLATFORM_ID);
 
@@ -107,6 +110,7 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
   readonly plans = signal<SpeedReadingPlan[]>([]);
   readonly subscriptions = signal<{ items: SpeedReadingSubscription[]; totalCount: number; pageNumber: number; pageSize: number }>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
   readonly payments = signal<{ items: SpeedReadingPayment[]; totalCount: number; pageNumber: number; pageSize: number }>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
+  readonly students = signal<UserDto[]>([]);
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly error = signal('');
@@ -123,6 +127,7 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
   subscriptionUpdateStatus = 'Active';
   paymentSearch = '';
   paymentStatus = '';
+  studentSearch = '';
   subscriptionPage = 1;
   paymentPage = 1;
   readonly pageSize = 25;
@@ -179,6 +184,7 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
     this.subscriptionDraft = this.emptySubscription();
     this.subscriptionEditing.set(true);
     if (!this.plans().length) this.loadPlans();
+    this.searchStudents();
   }
 
   editSubscription(subscription: SpeedReadingSubscription): void {
@@ -214,7 +220,14 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
       return;
     }
 
-    const request = { ...this.subscriptionDraft, endDate: this.subscriptionDraft.endDate || null, notes: this.subscriptionDraft.notes || null };
+    const student = this.students().find(item => item.userId === this.subscriptionDraft.userId);
+    const request = {
+      ...this.subscriptionDraft,
+      userName: student?.fullName ?? null,
+      userEmail: student?.email ?? null,
+      endDate: this.subscriptionDraft.endDate || null,
+      notes: this.subscriptionDraft.notes || null
+    };
     this.saveRequest(this.service.createManualSubscription(request), () => {
       this.cancelSubscriptionEdit();
       this.loadSubscriptions();
@@ -230,6 +243,15 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
   loadPlans(): void { this.loadRequest(this.service.getSubscriptionPlans(), value => this.plans.set(value)); }
   loadSubscriptions(): void { this.loadRequest(this.service.getUserSubscriptions(this.subscriptionPage, this.pageSize, this.subscriptionStatus || undefined, this.subscriptionSearch), value => this.subscriptions.set(value)); }
   loadPayments(): void { this.loadRequest(this.service.getPaymentHistory(this.paymentPage, this.pageSize, this.paymentStatus || undefined, this.paymentSearch), value => this.payments.set(value)); }
+
+  async searchStudents(): Promise<void> {
+    try {
+      const page = await firstValueFrom(this.identity.getAllUsers(1, 100, this.studentSearch.trim(), 'Student', true));
+      this.students.set(page.items ?? []);
+    } catch {
+      this.students.set([]);
+    }
+  }
 
   changeSubscriptionPage(page: number): void { if (page < 1 || page > this.subscriptionTotalPages()) return; this.subscriptionPage = page; this.loadSubscriptions(); }
   changePaymentPage(page: number): void { if (page < 1 || page > this.paymentTotalPages()) return; this.paymentPage = page; this.loadPayments(); }
@@ -248,6 +270,6 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
 
   private csv(value: string): string[] { return value.split(',').map(item => item.trim()).filter(Boolean); }
   private emptyProduct(): SpeedReadingProductRequest { return { slug: '', name: '', description: '', includedProductSlugs: [], isActive: true, isPublic: true, sortOrder: 0 }; }
-  private emptyPlan(): SpeedReadingPlanRequest { return { name: '', description: '', slug: '', productId: '', price: 0, billingPeriod: 'Monthly', durationDays: 30, isActive: true, isPublic: true, sortOrder: 0, features: [] }; }
+  private emptyPlan(): SpeedReadingPlanRequest { return { name: '', description: '', slug: '', productId: '', price: 0, billingPeriod: 'OneTime', durationDays: 180, isActive: true, isPublic: false, sortOrder: 0, features: [] }; }
   private emptySubscription(): SpeedReadingManualSubscriptionRequest { return { userId: '', planId: '', startDate: new Date().toISOString().slice(0, 10), endDate: null, notes: null }; }
 }

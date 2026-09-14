@@ -18,12 +18,13 @@ export class PricingSectionComponent implements OnInit {
   private cmsService = inject(PublicCmsService);
   private subscriptionService = inject(SubscriptionService);
 
-  title = 'Size Uygun Paketi Seçin';
-  subtitle = 'İster bireysel ister kurumsal, her ihtiyaca uygun esnek planlar';
+  title = 'Hızlı Okuma Programına Katılın';
+  subtitle = 'Bireysel erişiminiz, havale/EFT ödemeniz teyit edildikten sonra açılır.';
   plans: SubscriptionPlan[] = [];
   loading = true;
 
   private readonly periodLabel: Record<string, string> = {
+    OneTime: 'tek seferlik',
     Monthly: '/ay',
     Quarterly: '/3 ay',
     Annual: '/yıl',

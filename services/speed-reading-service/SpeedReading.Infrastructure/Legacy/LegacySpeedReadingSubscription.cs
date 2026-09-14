@@ -241,7 +241,10 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             ProductId = plan.ProductId,
             Status = "Active",
             StartDate = DateTime.SpecifyKind(request.StartDate, DateTimeKind.Utc),
-            EndDate = request.EndDate.HasValue ? DateTime.SpecifyKind(request.EndDate.Value, DateTimeKind.Utc) : null,
+            EndDate = SpeedReadingAccessRules.ResolveEndDate(
+                DateTime.SpecifyKind(request.StartDate, DateTimeKind.Utc),
+                request.EndDate.HasValue ? DateTime.SpecifyKind(request.EndDate.Value, DateTimeKind.Utc) : null,
+                plan.DurationDays),
             Notes = request.Notes,
             CreatedBy = actorId,
             CreatedAt = DateTime.UtcNow

@@ -6,6 +6,7 @@ import {
   SpeedReadingPlan,
   SpeedReadingSubscription
 } from '../../../core/services/speed-reading-admin.service';
+import { IdentityService } from '../../../core/services/identity.service';
 import { SpeedReadingSubscriptionsComponent } from './speed-reading-subscriptions';
 
 describe('SpeedReadingSubscriptionsComponent', () => {
@@ -21,7 +22,10 @@ describe('SpeedReadingSubscriptionsComponent', () => {
 
     TestBed.configureTestingModule({
       imports: [SpeedReadingSubscriptionsComponent],
-      providers: [{ provide: SpeedReadingAdminService, useValue: service }]
+      providers: [
+        { provide: SpeedReadingAdminService, useValue: service },
+        { provide: IdentityService, useValue: { getAllUsers: vi.fn(() => of({ items: [] })) } }
+      ]
     });
 
     return {

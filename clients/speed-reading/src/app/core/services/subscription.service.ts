@@ -56,7 +56,7 @@ export interface SubscriptionPlan {
   /** Geriye dönük uyumluluk — eski kod için */
   modules: string[];
   price: number;
-  billingPeriod: 'Monthly' | 'Quarterly' | 'Annual' | 'Lifetime';
+  billingPeriod: 'OneTime' | 'Monthly' | 'Quarterly' | 'Annual' | 'Lifetime';
   durationDays: number | null;
   isActive: boolean;
   isPublic: boolean;
