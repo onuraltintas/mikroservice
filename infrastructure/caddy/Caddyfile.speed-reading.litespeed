@@ -353,7 +353,7 @@
     @sitemap path /sitemap.xml
     handle @sitemap {
         uri replace /sitemap.xml /api/speed-reading/sitemap.xml
-        reverse_proxy api-gateway:8080 {
+        reverse_proxy speed-reading-service:8080 {
             header_up X-Forwarded-Proto https
         }
     }

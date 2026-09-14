@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://masterhizliokuma.com/api/speed-reading/sitemap.xml
+Sitemap: https://masterhizliokuma.com/sitemap.xml
 
 # Admin, Auth ve Dashboard sayfalarını indeksleme (private areas)
 Disallow: /admin/
