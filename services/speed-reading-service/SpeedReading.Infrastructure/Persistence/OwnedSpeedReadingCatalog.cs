@@ -345,7 +345,8 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
             text.ExerciseId,
             questions,
             text.RecommendedMinLevel,
-            text.RecommendedMaxLevel)
+            text.RecommendedMaxLevel,
+            TurkishReadingTextQualityAnalyzer.Analyze(text.Content, text.Language, questions))
         {
             CreatedAt = text.CreatedAt,
             UpdatedAt = text.UpdatedAt

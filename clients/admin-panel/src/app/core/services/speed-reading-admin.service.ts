@@ -890,6 +890,24 @@ export interface SpeedReadingReadingTextDetails extends SpeedReadingReadingText 
   recommendedMinLevel: number;
   recommendedMaxLevel: number;
   questions: SpeedReadingReadingQuestion[];
+  qualityMetrics?: SpeedReadingReadingTextQualityMetrics | null;
+}
+
+export interface SpeedReadingReadingTextQualityDistribution {
+  level: number;
+  count: number;
+}
+
+export interface SpeedReadingReadingTextQualityMetrics {
+  wordCount: number;
+  sentenceCount: number;
+  averageWordsPerSentence: number;
+  averageCharactersPerWord: number;
+  estimatedAtesmanReadability: number | null;
+  readabilityBand: string | null;
+  bloomDistribution: SpeedReadingReadingTextQualityDistribution[];
+  difficultyDistribution: SpeedReadingReadingTextQualityDistribution[];
+  warnings: string[];
 }
 
 export interface SpeedReadingReadingQuestion {

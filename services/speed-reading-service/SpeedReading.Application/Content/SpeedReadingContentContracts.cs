@@ -94,7 +94,8 @@ public sealed record ReadingTextDetails(
     Guid? ExerciseId,
     IReadOnlyList<ReadingQuestionSummary> Questions,
     int RecommendedMinLevel,
-    int RecommendedMaxLevel)
+    int RecommendedMaxLevel,
+    ReadingTextQualityMetrics? QualityMetrics = null)
 {
     public DateTime CreatedAt { get; init; }
     public DateTime? UpdatedAt { get; init; }
