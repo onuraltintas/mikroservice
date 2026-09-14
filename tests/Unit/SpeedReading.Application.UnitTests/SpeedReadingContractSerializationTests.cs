@@ -4,11 +4,28 @@ using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Application.Gamification;
 using SpeedReading.Application.StudentReading;
 using SpeedReading.Application.Content;
+using SpeedReading.Application.Subscription;
 
 namespace SpeedReading.Application.UnitTests;
 
 public sealed class SpeedReadingContractSerializationTests
 {
+    [Fact]
+    public void Institution_access_request_keeps_the_institution_and_transfer_reference()
+    {
+        var institutionId = Guid.NewGuid();
+        var request = new CreateInstitutionAccessRequest(
+            institutionId,
+            Guid.NewGuid(),
+            DateTime.UtcNow,
+            [new InstitutionAccessRecipient(Guid.NewGuid(), "Ada Yılmaz", "ada@example.test")],
+            "EFT-2026-0001",
+            "Eylül dönemi");
+
+        request.InstitutionId.Should().Be(institutionId);
+        request.PaymentReference.Should().Be("EFT-2026-0001");
+    }
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
