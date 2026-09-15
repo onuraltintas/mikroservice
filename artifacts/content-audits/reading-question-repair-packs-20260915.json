@@ -53,7 +53,7 @@
         "C": 3,
         "D": 1
       },
-      "uniqueLongestCorrectCount": 3
+      "uniqueLongestCorrectCount": 0
     },
     {
       "file": "content-packs\\reading-question-repair\\v1\\gercek-sihir-parmak-uclarinda.json",
@@ -65,7 +65,7 @@
         "C": 4,
         "A": 3
       },
-      "uniqueLongestCorrectCount": 4
+      "uniqueLongestCorrectCount": 0
     },
     {
       "file": "content-packs\\reading-question-repair\\v1\\kod-adi-gelecegim.json",
