@@ -1,4 +1,5 @@
 using DotNetEnv;
+using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.RateLimiting;
 using EduPlatform.Shared.Infrastructure.Extensions;
@@ -32,6 +33,27 @@ builder.Services.AddRateLimiter(options =>
         return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = 8,
+            Window = TimeSpan.FromMinutes(10),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        });
+    });
+
+    options.AddPolicy("payment-request", context =>
+    {
+        var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? context.User.FindFirst("sub")?.Value;
+        var forwardedAddress = context.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim();
+        var address = !string.IsNullOrWhiteSpace(forwardedAddress)
+            ? forwardedAddress
+            : context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var partitionKey = !string.IsNullOrWhiteSpace(userId)
+            ? $"user:{userId}"
+            : $"address:{address}";
+
+        return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 5,
             Window = TimeSpan.FromMinutes(10),
             QueueLimit = 0,
             AutoReplenishment = true
@@ -153,8 +175,8 @@ builder.Services.AddHealthChecks()
 var app = builder.Build();
 app.UseRequestLogging();
 app.UseExceptionHandler();
-app.UseRateLimiter();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseMiddleware<EduPlatform.Shared.Infrastructure.Middleware.AdminAuditMiddleware>();
 app.UseAuthorization();
 

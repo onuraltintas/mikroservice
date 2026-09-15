@@ -82,6 +82,17 @@ public sealed class DistributedRateLimitingMiddleware
             return new RateLimitRule("support-submit", PermitLimit: 10, TimeSpan.FromMinutes(1));
         }
 
+        if (string.Equals(path.Value, "/api/speed-reading/cms/contact", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(path.Value, "/api/speed-reading/cms/newsletter/subscribe", StringComparison.OrdinalIgnoreCase))
+        {
+            return new RateLimitRule("speed-reading-public-write", PermitLimit: 8, TimeSpan.FromMinutes(10));
+        }
+
+        if (string.Equals(path.Value, "/api/speed-reading/bank-transfer/requests", StringComparison.OrdinalIgnoreCase))
+        {
+            return new RateLimitRule("bank-transfer-request", PermitLimit: 5, TimeSpan.FromMinutes(10));
+        }
+
         return null;
     }
 

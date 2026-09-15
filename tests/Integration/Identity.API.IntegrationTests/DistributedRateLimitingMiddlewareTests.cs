@@ -36,11 +36,19 @@ public sealed class DistributedRateLimitingMiddlewareTests
         connectionResolved.Should().BeFalse();
     }
 
-    [Fact]
-    public async Task RateLimitedRoute_ShouldContinueWhenRedisConnectionFails()
+    [Theory]
+    [InlineData("/api/auth/login")]
+    [InlineData("/api/speed-reading/cms/contact")]
+    [InlineData("/api/speed-reading/cms/newsletter/subscribe")]
+    [InlineData("/api/speed-reading/bank-transfer/requests")]
+    public async Task RateLimitedRoute_ShouldContinueWhenRedisConnectionFails(string path)
     {
+        var connectionResolved = false;
         var redis = new Lazy<IConnectionMultiplexer>(() =>
-            throw new RedisConnectionException(ConnectionFailureType.UnableToConnect, "Redis is unavailable"));
+        {
+            connectionResolved = true;
+            throw new RedisConnectionException(ConnectionFailureType.UnableToConnect, "Redis is unavailable");
+        });
         var nextCalled = false;
         var middleware = new DistributedRateLimitingMiddleware(
             _ =>
@@ -51,11 +59,12 @@ public sealed class DistributedRateLimitingMiddlewareTests
             redis,
             NullLogger<DistributedRateLimitingMiddleware>.Instance);
         var context = new DefaultHttpContext();
-        context.Request.Path = "/api/auth/login";
+        context.Request.Path = path;
 
         await middleware.InvokeAsync(context);
 
         nextCalled.Should().BeTrue();
+        connectionResolved.Should().BeTrue();
         context.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
     }
 }

@@ -3,6 +3,7 @@ using EduPlatform.Shared.Contracts.Authorization;
 using EduPlatform.Shared.Security.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using SpeedReading.Application.Subscription;
 using System.Security.Claims;
 
@@ -48,6 +49,7 @@ public sealed class BankTransferPaymentsController(ISpeedReadingSubscription sub
 
     [HttpPost("requests")]
     [Authorize]
+    [EnableRateLimiting("payment-request")]
     public async Task<IActionResult> CreateRequest(
         [FromBody] CreateBankTransferPaymentRequest request,
         [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
