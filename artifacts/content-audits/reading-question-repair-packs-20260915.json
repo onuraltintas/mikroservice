@@ -1,7 +1,7 @@
 {
   "catalogTextCount": 300,
-  "packCount": 10,
-  "packedQuestionCount": 92,
+  "packCount": 11,
+  "packedQuestionCount": 101,
   "packs": [
     {
       "file": "content-packs\\reading-question-repair\\v1\\biyomimetik-dogadan-ilham.json",
@@ -129,6 +129,19 @@
         "A": 2,
         "C": 2,
         "D": 2
+      },
+      "uniqueLongestCorrectCount": 0
+    },
+    {
+      "file": "content-packs\\reading-question-repair\\v1\\yapay-sinir-aglari-derin-ogrenme-mimarileri.json",
+      "title": "Yapay Sinir Ağları: Derin Öğrenme Mimarileri",
+      "readingTextId": "112bb32b-46c8-4035-a4df-92994e72d102",
+      "questionCount": 9,
+      "answerDistribution": {
+        "D": 3,
+        "B": 2,
+        "A": 2,
+        "C": 2
       },
       "uniqueLongestCorrectCount": 0
     }
