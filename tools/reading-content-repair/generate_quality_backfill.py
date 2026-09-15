@@ -167,6 +167,8 @@ def generate(
     explanations_added = 0
     options_compacted = 0
     unrepairable_length_flags = 0
+    unique_longest_texts_before = 0
+    unique_longest_texts_after = 0
 
     for row in rows:
         for question in row["questions"]:
@@ -211,13 +213,22 @@ def generate(
     # meaningful even if a future strategy changes more than one option.
     updates_by_id = {item["questionId"]: item for item in updates}
     for row in rows:
+        text_before = 0
+        text_after = 0
         for question in row["questions"]:
+            if correct_is_unique_longest(question):
+                text_before += 1
             candidate = dict(question)
             update = updates_by_id.get(question["questionId"])
             if update:
                 candidate.update(update)
             if correct_is_unique_longest(candidate):
                 after_flagged += 1
+                text_after += 1
+        if len(row["questions"]) >= 4 and text_before * 100 >= len(row["questions"]) * 70:
+            unique_longest_texts_before += 1
+        if len(row["questions"]) >= 4 and text_after * 100 >= len(row["questions"]) * 70:
+            unique_longest_texts_after += 1
 
     report = {
         "sourceTextCount": len(rows),
@@ -227,6 +238,8 @@ def generate(
         "optionsCompacted": options_compacted,
         "uniqueLongestBefore": before_flagged,
         "uniqueLongestAfter": after_flagged,
+        "uniqueLongestTextCountBefore": unique_longest_texts_before,
+        "uniqueLongestTextCountAfter": unique_longest_texts_after,
         "unrepairableLengthFlags": unrepairable_length_flags,
         "answerDistribution": dict(
             Counter(
@@ -246,6 +259,11 @@ def main() -> None:
     parser.add_argument("output", type=Path)
     parser.add_argument("--report", type=Path, required=True)
     parser.add_argument(
+        "--sql",
+        type=Path,
+        help="Write an idempotent PostgreSQL patch for legacy and owned reading-question tables.",
+    )
+    parser.add_argument(
         "--compact-options",
         action="store_true",
         help="Use the conservative option compactor; review every generated option before publishing.",
@@ -260,7 +278,50 @@ def main() -> None:
         encoding="utf-8",
     )
     args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    if args.sql:
+        args.sql.parent.mkdir(parents=True, exist_ok=True)
+        args.sql.write_text(to_sql(updates), encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False, indent=2))
+
+
+def sql_literal(value: str) -> str:
+    return "'" + value.replace("'", "''") + "'"
+
+
+def to_sql(updates: list[dict[str, Any]]) -> str:
+    """Render a transaction-safe, idempotent patch for both catalog stores."""
+
+    lines = [
+        "BEGIN;",
+        "CREATE TEMP TABLE reading_content_quality_backfill (id uuid PRIMARY KEY, explanation text NOT NULL);",
+        "INSERT INTO reading_content_quality_backfill (id, explanation) VALUES",
+    ]
+    values = []
+    for item in updates:
+        values.append(f"({sql_literal(item['questionId'])}::uuid, {sql_literal(item['explanation'])})")
+    lines.append(",\n".join(values) + ";")
+    lines.extend(
+        [
+            "DO $quality$",
+            "DECLARE",
+            "    relation text;",
+            "BEGIN",
+            "    relation := to_regclass('public.\"ReadingQuestions\"')::text;",
+            "    IF relation IS NOT NULL THEN",
+            "        EXECUTE 'UPDATE public.\"ReadingQuestions\" AS q SET \"Explanation\" = p.explanation, \"UpdatedAt\" = CURRENT_TIMESTAMP, \"UpdatedBy\" = ' || quote_literal('content-repair-20260915') || ' FROM reading_content_quality_backfill AS p WHERE q.\"Id\" = p.id AND q.\"IsDeleted\" = FALSE AND (q.\"Explanation\" IS NULL OR btrim(q.\"Explanation\") = '''')';",
+            "    END IF;",
+            "    relation := to_regclass('speed_reading.reading_questions')::text;",
+            "    IF relation IS NOT NULL THEN",
+            "        EXECUTE 'UPDATE speed_reading.reading_questions AS q SET explanation = p.explanation, updated_at = CURRENT_TIMESTAMP, updated_by = ' || quote_literal('content-repair-20260915') || ' FROM reading_content_quality_backfill AS p WHERE q.id = p.id AND q.is_deleted = FALSE AND (q.explanation IS NULL OR btrim(q.explanation) = '''')';",
+            "    END IF;",
+            "    IF relation IS NULL AND to_regclass('public.\"ReadingQuestions\"') IS NULL THEN",
+            "        RAISE EXCEPTION 'Reading question table was not found in public or speed_reading schema';",
+            "    END IF;",
+            "END $quality$;",
+            "COMMIT;",
+        ]
+    )
+    return "\n".join(lines) + "\n"
 
 
 if __name__ == "__main__":

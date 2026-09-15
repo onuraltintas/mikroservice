@@ -6,6 +6,8 @@
   "optionsCompacted": 0,
   "uniqueLongestBefore": 2180,
   "uniqueLongestAfter": 2180,
+  "uniqueLongestTextCountBefore": 248,
+  "uniqueLongestTextCountAfter": 248,
   "unrepairableLengthFlags": 0,
   "answerDistribution": {
     "C": 697,
