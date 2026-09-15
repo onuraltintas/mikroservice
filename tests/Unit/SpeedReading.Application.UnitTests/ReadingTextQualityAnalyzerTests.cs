@@ -60,6 +60,20 @@ public sealed class ReadingTextQualityAnalyzerTests
         result.Warnings.Should().Contain(warning => warning.Contains("en uzun", StringComparison.OrdinalIgnoreCase));
     }
 
+    [Fact]
+    public void Analyze_reports_publish_blockers_for_a_short_text_without_enough_questions()
+    {
+        var result = TurkishReadingTextQualityAnalyzer.Analyze(
+            "Kısa bir metin.",
+            "tr",
+            []);
+
+        result.PublicationBlockers.Should().Contain(blocker =>
+            blocker.Contains("80", StringComparison.OrdinalIgnoreCase));
+        result.PublicationBlockers.Should().Contain(blocker =>
+            blocker.Contains("en az üç soru", StringComparison.OrdinalIgnoreCase));
+    }
+
     private static ReadingQuestionSummary Question(
         string text,
         int bloomLevel,
