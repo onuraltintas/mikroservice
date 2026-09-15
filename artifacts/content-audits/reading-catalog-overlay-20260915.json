@@ -1,0 +1,14 @@
+{
+  "catalogQuestionCount": 2624,
+  "overlayQuestionCount": 2184,
+  "manualPackQuestionCount": 109,
+  "uniqueLongestBefore": 2180,
+  "uniqueLongestAfterOverlay": 0,
+  "overlayAnswerDistribution": {
+    "B": 536,
+    "D": 493,
+    "A": 562,
+    "C": 593
+  },
+  "coveragePercent": 83.23
+}
