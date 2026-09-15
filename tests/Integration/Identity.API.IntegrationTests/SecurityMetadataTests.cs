@@ -48,6 +48,15 @@ public class SecurityMetadataTests
     }
 
     [Fact]
+    public void InternalEmailEndpoint_MustBypassJwtFallbackWhileRetainingServiceAuthentication()
+    {
+        var controller = typeof(InternalEmailController);
+
+        controller.GetCustomAttributes(typeof(AllowAnonymousAttribute), inherit: true).Should().NotBeEmpty();
+        controller.GetCustomAttributes(typeof(Notification.API.InternalServiceKeyAttribute), inherit: true).Should().NotBeEmpty();
+    }
+
+    [Fact]
     public void PublicSupportSubmit_MustAllowAnonymousAccess()
     {
         var action = typeof(SupportController).GetMethod(nameof(SupportController.Submit));
