@@ -31,11 +31,14 @@ public sealed class OwnedSpeedReadingContentAudit(OwnedSpeedReadingDbContext db)
             .Select(item => new SceneAuditRow(item.Id, item.ExerciseId, item.Description, item.Mode))
             .ToListAsync(cancellationToken);
         var sceneIds = scenes.Select(item => item.Id).ToArray();
-        var visualizationQuestions = await db.VisualizationQuestions.AsNoTracking()
-            .Where(item => sceneIds.Contains(item.SceneId) && !item.IsDeleted)
+        var allVisualizationQuestions = await db.VisualizationQuestions.AsNoTracking()
+            .Where(item => !item.IsDeleted)
             .Select(item => new VisualizationQuestionAuditRow(item.Id, item.SceneId, item.QuestionText,
                 item.OptionsJson, item.CorrectAnswer))
             .ToListAsync(cancellationToken);
+        var visualizationQuestions = allVisualizationQuestions
+            .Where(item => sceneIds.Contains(item.SceneId))
+            .ToList();
 
         var findings = new List<OwnedContentAuditFinding>();
         AddQuestionFindings(questions, findings);
