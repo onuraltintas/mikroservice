@@ -42,6 +42,32 @@ public sealed class ReadingTextQualityAnalyzerTests
         result.Warnings.Should().NotContain(warning => warning.Contains("en az üç soru", StringComparison.OrdinalIgnoreCase));
     }
 
-    private static ReadingQuestionSummary Question(string text, int bloomLevel, int difficultyLevel) =>
-        new(Guid.NewGuid(), text, 1, bloomLevel, difficultyLevel, null, "A", "B", "C", "D", "A", 1);
+    [Fact]
+    public void Analyze_flags_answer_key_and_option_length_patterns_that_make_answers_guessable()
+    {
+        var questions = new[]
+        {
+            Question("Soru 1", bloomLevel: 1, difficultyLevel: 1, correctAnswer: "A", optionA: "Bu seçenek diğer seçeneklerden belirgin biçimde daha uzundur.", optionB: "Kısa", optionC: "Kısa", optionD: "Kısa"),
+            Question("Soru 2", bloomLevel: 2, difficultyLevel: 2, correctAnswer: "A", optionA: "Bu seçenek diğer seçeneklerden belirgin biçimde daha uzundur.", optionB: "Kısa", optionC: "Kısa", optionD: "Kısa"),
+            Question("Soru 3", bloomLevel: 3, difficultyLevel: 3, correctAnswer: "A", optionA: "Bu seçenek diğer seçeneklerden belirgin biçimde daha uzundur.", optionB: "Kısa", optionC: "Kısa", optionD: "Kısa"),
+            Question("Soru 4", bloomLevel: 1, difficultyLevel: 1, correctAnswer: "A", optionA: "Bu seçenek diğer seçeneklerden belirgin biçimde daha uzundur.", optionB: "Kısa", optionC: "Kısa", optionD: "Kısa")
+        };
+
+        var result = TurkishReadingTextQualityAnalyzer.Analyze("Yeterli uzunlukta bir metin. İkinci cümle örnek sağlar.", "tr", questions);
+
+        result.CorrectAnswerDistribution.Should().BeEquivalentTo([new ReadingTextQualityDistribution(1, 4)]);
+        result.Warnings.Should().Contain(warning => warning.Contains("cevap anahtarı", StringComparison.OrdinalIgnoreCase));
+        result.Warnings.Should().Contain(warning => warning.Contains("en uzun", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static ReadingQuestionSummary Question(
+        string text,
+        int bloomLevel,
+        int difficultyLevel,
+        string correctAnswer = "A",
+        string optionA = "A",
+        string optionB = "B",
+        string optionC = "C",
+        string optionD = "D") =>
+        new(Guid.NewGuid(), text, 1, bloomLevel, difficultyLevel, null, optionA, optionB, optionC, optionD, correctAnswer, 1);
 }
