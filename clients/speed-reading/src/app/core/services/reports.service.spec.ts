@@ -236,6 +236,20 @@ describe('ReportsService', () => {
       heatmap: [{ date: '2026-01-15', value: 45, level: 3 }],
       hourlyDistribution: [{ label: '18:00', value: 2 }],
       dailyDistribution: [{ label: 'Çarşamba', value: 3 }],
+      recentActivities: [{
+        completedAt: '2026-01-15T18:00:00.000Z',
+        activityType: 'exercise',
+        contentId: 'exercise-1',
+        contentTitle: 'Çevresel Görüş',
+        exerciseTypeName: 'Görsel Tarama',
+        difficultyLevel: 2,
+        durationSeconds: 120,
+        wpm: null,
+        comprehension: null,
+        successRate: 88,
+        isMeasured: true,
+        isPassed: true
+      }],
       studyTime: {
         totalMinutes: 45,
         averageSessionLength: 15,
@@ -251,6 +265,8 @@ describe('ReportsService', () => {
     expect(report.hourlyDistributionChart.data[0].series[0].value).toBe(2);
     expect(report.dailyDistributionChart.data[0].name).toBe('Çarşamba');
     expect(report.studyTime.totalMinutes).toBe(45);
+    expect(report.recentActivities[0].contentTitle).toBe('Çevresel Görüş');
+    expect(report.recentActivities[0].durationSeconds).toBe(120);
   });
 
   it('loads admin platform usage from the central analytics endpoint', () => {

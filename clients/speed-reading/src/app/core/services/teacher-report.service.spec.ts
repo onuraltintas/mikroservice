@@ -210,11 +210,64 @@ describe('TeacherReportService', () => {
       weeklyProgressChart: [],
       monthlyProgressChart: [],
       activityIntensityChart: [],
-      improvingStudents: [],
+      improvingStudents: [{
+        studentId: 'student-1',
+        studentName: 'Ada Yılmaz',
+        previousScore: 70,
+        currentScore: 82,
+        improvement: 12,
+        trend: 'improving',
+        metric: 'comprehension'
+      }],
       decliningStudents: []
     });
 
     expect(report.weeklyProgressChart).toEqual([]);
+    expect(report.improvingStudents[0].metric).toBe('comprehension');
     expect(report.metadata.reportType).toBe('Teacher');
+  });
+
+  it('maps real activity details instead of synthesizing chart points', () => {
+    let report: any;
+    service.getStudentActivityReport('student-1').subscribe(value => report = value);
+
+    const request = http.expectOne(
+      candidate => candidate.url === '/api/speed-reading/analytics/teacher/students/student-1/activity');
+    request.flush({
+      dateFrom: '2026-01-01T00:00:00.000Z',
+      dateTo: '2026-01-31T00:00:00.000Z',
+      dataAvailable: true,
+      unavailableReason: null,
+      currentStreak: { days: 1, longestStreak: 1, lastActivityDate: null, isActive: true },
+      heatmap: [],
+      hourlyDistribution: [],
+      dailyDistribution: [],
+      recentActivities: [{
+        completedAt: '2026-01-30T10:00:00.000Z',
+        activityType: 'reading',
+        contentId: 'text-1',
+        contentTitle: 'Bilim',
+        exerciseTypeName: null,
+        difficultyLevel: 2,
+        durationSeconds: 180,
+        wpm: 310,
+        comprehension: 84,
+        successRate: null,
+        isMeasured: true,
+        isPassed: true
+      }],
+      studyTime: {
+        totalMinutes: 3,
+        averageSessionLength: 3,
+        totalSessions: 1,
+        mostActiveHour: 10,
+        mostActiveDay: 'Cuma',
+        consistency: 100
+      }
+    });
+
+    expect(report.recentActivities).toHaveLength(1);
+    expect(report.recentActivities[0].contentTitle).toBe('Bilim');
+    expect(report.recentActivities[0].durationSeconds).toBe(180);
   });
 });

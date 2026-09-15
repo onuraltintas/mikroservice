@@ -45,6 +45,22 @@ public class InstitutionAccessScopeTests
         result.Error.Should().Be(Error.Forbidden("Kullanıcının erişebileceği aktif bir kurum bulunamadı."));
     }
 
+    [Theory]
+    [InlineData("InstitutionAdmin")]
+    [InlineData("InstitutionOwner")]
+    public void Institution_admin_without_target_teacher_uses_institution_wide_teacher_scope(string role)
+    {
+        TeacherStudentScopeRules.ShouldUseInstitutionScope([role], targetTeacherUserId: null)
+            .Should().BeTrue();
+    }
+
+    [Fact]
+    public void Institution_admin_targeting_a_teacher_keeps_target_scope()
+    {
+        TeacherStudentScopeRules.ShouldUseInstitutionScope(
+            ["InstitutionAdmin"], Guid.NewGuid()).Should().BeFalse();
+    }
+
     [Fact]
     public void GetAllUsersQuery_ShouldCapPageSize()
     {
