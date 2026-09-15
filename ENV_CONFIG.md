@@ -58,7 +58,7 @@ Aşağıdaki veritabanları otomatik oluşturulur:
 - `identity_db` - Identity Service
 - `notification_db` - Notification Service  
 - `coaching_db` - Coaching Service
-- `speedreading_db` - Speed Reading Service
+- `speedreading_owned_db` - Speed Reading Service
 - `blog_db`, `content_db`, `exam_db`, `analytics_db` - Gelecek servisler
 
 ## Güvenlik Notları

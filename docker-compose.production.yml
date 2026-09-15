@@ -134,7 +134,6 @@ services:
     environment: !override
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__SpeedReadingOwned: ${SPEED_READING_OWNED_CONNECTION_STRING:-}
-      SpeedReading__OwnedDataEnabled: "true"
       SpeedReading__Mode: ${SPEED_READING_MODE:-Standalone}
       SpeedReading__CoachingIntegrationEnabled: ${SPEED_READING_COACHING_INTEGRATION_ENABLED:-false}
       SpeedReading__NotificationIntegrationEnabled: ${SPEED_READING_NOTIFICATION_INTEGRATION_ENABLED:-false}
@@ -179,7 +178,6 @@ services:
     environment: !override
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__SpeedReadingOwned: ${SPEED_READING_OWNED_CONNECTION_STRING:-}
-      SpeedReading__OwnedDataEnabled: "true"
     depends_on:
       postgres:
         condition: service_healthy

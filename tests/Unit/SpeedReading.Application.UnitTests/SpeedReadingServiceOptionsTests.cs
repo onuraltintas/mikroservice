@@ -28,7 +28,7 @@ public sealed class SpeedReadingServiceOptionsTests
         options.CoachingIntegrationEnabled.Should().BeFalse();
         options.NotificationIntegrationEnabled.Should().BeFalse();
         options.SubscriptionIntegrationEnabled.Should().BeFalse();
-        options.OwnedDataEnabled.Should().BeFalse();
+        options.OwnedDataEnabled.Should().BeTrue();
     }
 
     [Fact]
@@ -63,21 +63,19 @@ public sealed class SpeedReadingServiceOptionsTests
     }
 
     [Fact]
-    public void Owned_data_mode_requires_a_separate_connection()
+    public void Runtime_requires_only_the_owned_connection()
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ConnectionStrings:SpeedReading"] = "Host=legacy;Database=legacy",
-                ["SpeedReading:OwnedDataEnabled"] = "true"
+                ["ConnectionStrings:SpeedReadingOwned"] = "Host=owned;Database=owned"
             })
             .Build();
         var services = new ServiceCollection();
 
         var action = () => services.AddSpeedReadingInfrastructure(configuration);
 
-        action.Should().Throw<InvalidOperationException>()
-            .WithMessage("*OwnedDataEnabled*");
+        action.Should().NotThrow();
     }
 
     [Fact]
@@ -104,7 +102,7 @@ public sealed class SpeedReadingServiceOptionsTests
     }
 
     [Fact]
-    public void Owned_runtime_rejects_a_legacy_connection_when_legacy_data_is_disabled()
+    public void Runtime_does_not_register_a_legacy_database_context()
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -116,12 +114,9 @@ public sealed class SpeedReadingServiceOptionsTests
             .Build();
         var services = new ServiceCollection();
 
-        var action = () => services.AddSpeedReadingInfrastructure(
-            configuration,
-            includeLegacyData: false);
+        services.AddSpeedReadingInfrastructure(configuration);
 
-        action.Should().Throw<InvalidOperationException>()
-            .WithMessage("*legacy*owned runtime*");
+        services.Should().NotContain(item => item.ServiceType.Name == "SpeedReadingDbContext");
     }
 
     [Fact]
@@ -458,95 +453,4 @@ public sealed class SpeedReadingServiceOptionsTests
             .Be("OwnedSpeedReadingProgressWriter");
     }
 
-    [Fact]
-    public void Legacy_content_model_preserves_existing_tables_and_adds_only_the_write_ledger()
-    {
-        var options = new DbContextOptionsBuilder<SpeedReadingDbContext>()
-            .UseNpgsql("Host=unused;Database=unused;Username=unused;Password=unused")
-            .Options;
-
-        using var context = new SpeedReadingDbContext(options);
-        var tables = context.Model.GetEntityTypes()
-            .Select(entity => entity.GetTableName())
-            .Where(table => table is not null)
-            .ToArray();
-
-        tables.Should().Contain(new[]
-        {
-            "ExerciseTypes",
-            "Exercises",
-            "ReadingTexts",
-            "ReadingQuestions",
-            "ExerciseSessions",
-            "StudentExerciseResults",
-            "ReadingSessions",
-            "ExerciseProgramTemplates",
-            "StudentProgramProgresses",
-            "DailyExerciseLogs",
-            "LearningPathTemplates",
-            "LearningPathNodes",
-            "NodeContents",
-            "NodePrerequisites",
-            "StudentPathProgresses",
-            "StudentNodeProgresses",
-            "PersonalizedLearningPaths",
-            "SpeedReadingIdempotencyRecords",
-            "SpeedReadingAdminAuditRecords"
-        });
-        context.Database.ProviderName.Should().Contain("Npgsql");
-
-        var readingText = context.Model.GetEntityTypes()
-            .Single(entity => entity.GetTableName() == "ReadingTexts");
-        readingText.FindProperty("Tags")!.GetColumnType().Should().Be("text");
-        readingText.FindProperty("TargetAgeGroupConfigurationId")!
-            .GetColumnName()
-            .Should().Be("TargetAgeGroupId");
-
-        var exercise = context.Model.GetEntityTypes()
-            .Single(entity => entity.GetTableName() == "Exercises");
-        exercise.FindProperty("TargetAgeGroupConfigurationId")!
-            .GetColumnName()
-            .Should().Be("TargetAgeGroupId");
-
-        var exerciseResult = context.Model.GetEntityTypes()
-            .Single(entity => entity.GetTableName() == "StudentExerciseResults");
-        exerciseResult.FindProperty("RawWPM")!.GetColumnType().Should().Be("numeric(18,2)");
-
-        var exerciseSession = context.Model.GetEntityTypes()
-            .Single(entity => entity.GetTableName() == "ExerciseSessions");
-        exerciseSession.FindProperty("Status")!.GetColumnType().Should().Be("integer");
-        exerciseSession.FindProperty("PausedAt")!.GetColumnName().Should().Be("PausedAt");
-        exerciseSession.FindProperty("TimeLimitSeconds")!.GetColumnName().Should().Be("TimeLimitSeconds");
-        exerciseSession.FindProperty("ProcessedActionsJson")!.GetColumnName().Should().Be("ProcessedActionsJson");
-
-        exerciseResult.FindProperty("SessionId")!.GetColumnName().Should().Be("SessionId");
-        exerciseResult.FindProperty("IsMeasured")!.GetColumnName().Should().Be("IsMeasured");
-        exerciseResult.GetIndexes()
-            .Should().Contain(index => index.Properties
-                .Select(property => property.Name)
-                .SequenceEqual(new[] { "SessionId" }));
-
-        var dailyExerciseLog = context.Model.GetEntityTypes()
-            .Single(entity => entity.GetTableName() == "DailyExerciseLogs");
-        dailyExerciseLog.FindProperty("ResultDataJson")!.IsNullable.Should().BeFalse();
-        dailyExerciseLog.FindProperty("AverageWPM").Should().BeNull();
-        dailyExerciseLog.FindProperty("AverageComprehension").Should().BeNull();
-        dailyExerciseLog.FindProperty("AverageResponseTimeMs")!.GetColumnType()
-            .Should().Be("numeric(18,2)");
-        dailyExerciseLog.FindProperty("TimeOfDay")!.GetColumnType()
-            .Should().Be("interval");
-
-        var gamification = context.Model.GetEntityTypes()
-            .Single(entity => entity.GetTableName() == "UserGameifications");
-        gamification.FindProperty("MaxWPM").Should().NotBeNull();
-        gamification.FindProperty("MaxComprehensionScore")!.GetColumnType()
-            .Should().Be("numeric(18,2)");
-
-        var idempotencyLedger = context.Model.GetEntityTypes()
-            .Single(entity => entity.GetTableName() == "SpeedReadingIdempotencyRecords");
-        idempotencyLedger.GetIndexes()
-            .Should().Contain(index => index.IsUnique
-                && index.Properties.Select(property => property.Name)
-                    .SequenceEqual(new[] { "Scope", "Key" }));
-    }
 }

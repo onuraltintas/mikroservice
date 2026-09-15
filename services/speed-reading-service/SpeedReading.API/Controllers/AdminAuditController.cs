@@ -13,9 +13,7 @@ namespace SpeedReading.API.Controllers;
 [Route("api/admin-audit/speed-reading")]
 [Authorize(Roles = "SystemAdmin")]
 [HasPermission(PlatformPermissions.Operations.View)]
-public sealed class AdminAuditController(
-    IServiceProvider services,
-    IConfiguration configuration) : ControllerBase
+public sealed class AdminAuditController(OwnedSpeedReadingDbContext db) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<AdminAuditPage>> GetAsync(
@@ -61,14 +59,7 @@ public sealed class AdminAuditController(
     }
 
     private DbSet<AdminAuditRecord> GetRecords()
-    {
-        if (configuration.GetValue<bool>("SpeedReading:OwnedDataEnabled"))
-        {
-            return services.GetRequiredService<OwnedSpeedReadingDbContext>().AdminAuditRecords;
-        }
-
-        return services.GetRequiredService<SpeedReadingDbContext>().AdminAuditRecords;
-    }
+        => db.AdminAuditRecords;
 
     private static IQueryable<AdminAuditRecord> ApplyFilters(
         IQueryable<AdminAuditRecord> query,

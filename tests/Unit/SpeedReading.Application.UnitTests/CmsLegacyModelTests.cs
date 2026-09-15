@@ -69,7 +69,12 @@ public sealed class CmsLegacyModelTests
             .Options;
 
         using var context = new SpeedReadingDbContext(options);
-        var service = new LegacySpeedReadingSubscription(context);
+        var service = (LegacySpeedReadingSubscription)Activator.CreateInstance(
+            typeof(LegacySpeedReadingSubscription),
+            BindingFlags.Instance | BindingFlags.NonPublic,
+            binder: null,
+            args: [context, null!, null!, null!],
+            culture: null)!;
         var method = typeof(LegacySpeedReadingSubscription)
             .GetMethod("SubscriptionRows", BindingFlags.Instance | BindingFlags.NonPublic)!;
         var query = (IQueryable)method.Invoke(service, null)!;

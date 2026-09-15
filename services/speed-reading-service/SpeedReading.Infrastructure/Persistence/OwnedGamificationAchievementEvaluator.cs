@@ -56,6 +56,8 @@ internal static class OwnedGamificationAchievementEvaluator
         {
             using var document = JsonDocument.Parse(achievement.CriteriaValue);
             var criteria = document.RootElement;
+            if (criteria.ValueKind != JsonValueKind.Object)
+                return false;
             return achievement.CriteriaType.Trim().ToLowerInvariant() switch
             {
                 "streak" => MeetsInt(criteria, "days", stats.CurrentStreak),

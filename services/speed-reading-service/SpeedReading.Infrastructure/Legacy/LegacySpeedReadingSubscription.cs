@@ -28,10 +28,6 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         this.userDirectory = userDirectory;
     }
 
-    public LegacySpeedReadingSubscription(SpeedReadingDbContext db)
-        : this(db, new UnconfiguredPaymentProvider(), new IyzicoOptions(), new UnconfiguredUserDirectory())
-    {
-    }
     public async Task<IReadOnlyList<ProductSummary>> GetProductsAsync(bool includeInactive, CancellationToken cancellationToken = default)
     {
         var query = db.Products.AsNoTracking();

@@ -133,10 +133,9 @@ Aşağıdaki veritabanları otomatik oluşturuldu:
 - `coaching_db` - Coaching Service
 - `notification_db` - Notification Service
 
-Hızlı okuma verileri owned modda `speedreading_owned_db` veritabanında tutulur.
-`SPEED_READING_CONNECTION_STRING` yalnızca geçiş/backfill veya legacy fallback
-modu için kullanılır; ayrıntı için `docs/SPEED_READING_SERVICE.md` belgesine
-bakın.
+Hızlı okuma verileri `speedreading_owned_db` veritabanında tutulur ve
+`SPEED_READING_OWNED_CONNECTION_STRING` ile bağlanır. Serviste eski veri
+kaynağı veya geçiş/backfill çalışma modu bulunmaz.
 
 ### Veritabanına Bağlanma:
 

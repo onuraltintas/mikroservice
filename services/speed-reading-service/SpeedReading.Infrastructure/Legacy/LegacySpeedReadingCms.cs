@@ -31,14 +31,6 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         this.mediaStorage = mediaStorage;
     }
 
-    public LegacySpeedReadingCms(SpeedReadingDbContext db, IMemoryCache cache)
-        : this(
-            (ISpeedReadingDataContext)db,
-            cache,
-            NullSpeedReadingEmailDelivery.Instance,
-            NullSpeedReadingCmsMediaStorage.Instance)
-    {
-    }
     private static readonly TimeSpan LandingCacheDuration = TimeSpan.FromMinutes(10);
 
     public async Task<IReadOnlyList<CmsContentBlockSummary>> GetLandingContentAsync(

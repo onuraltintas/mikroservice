@@ -38,428 +38,65 @@ builder.Services.AddRateLimiter(options =>
         });
     });
 });
-var ownedDataEnabled = builder.Configuration.GetValue<bool>("SpeedReading:OwnedDataEnabled");
+
 var migrationOnly = args.Any(argument =>
     string.Equals(argument, "--migrate-only", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedCatalog = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-catalog", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedSessions = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-sessions", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedAssignments = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-assignments", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedPrograms = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-programs", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedAgeGroups = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-age-groups", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedUserProfiles = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-user-profiles", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedLearningPaths = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-learning-paths", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedAdminAudit = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-admin-audit", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedGamification = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-gamification", StringComparison.OrdinalIgnoreCase));
 var recalculateOwnedGamification = args.Any(argument =>
     string.Equals(argument, "--recalculate-owned-gamification", StringComparison.OrdinalIgnoreCase));
 var bootstrapOwnedExerciseTaxonomy = args.Any(argument =>
     string.Equals(argument, "--bootstrap-owned-exercise-taxonomy", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedQuestions = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-questions", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedVisualization = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-visualization", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedVocabulary = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-vocabulary", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedSubscriptions = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-subscriptions", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedCms = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-cms", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedNotifications = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-notifications", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedRsvp = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-rsvp", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedReview = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-review", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedContentFeedback = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-content-feedback", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedAdaptiveLearning = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-adaptive-learning", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedAdaptiveText = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-adaptive-text", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedReports = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-reports", StringComparison.OrdinalIgnoreCase));
-var backfillOwnedReadingTextWordCounts = args.Any(argument =>
-    string.Equals(argument, "--backfill-owned-reading-text-word-counts", StringComparison.OrdinalIgnoreCase));
-var verifyOwnedParity = args.Any(argument =>
-    string.Equals(argument, "--verify-owned-parity", StringComparison.OrdinalIgnoreCase));
 var auditOwnedContent = args.Any(argument =>
     string.Equals(argument, "--audit-owned-content", StringComparison.OrdinalIgnoreCase));
+var refreshReadingTextWordCounts = args.Any(argument =>
+    string.Equals(argument, "--refresh-reading-text-word-counts", StringComparison.OrdinalIgnoreCase));
 
-// The legacy speed-reading schema is not managed by EF migrations. This
-// one-shot mode applies only idempotent additive compatibility objects before
-// web replicas start, leaving existing business rows untouched.
 if (migrationOnly)
 {
-    builder.Services.AddSpeedReadingInfrastructure(
-        builder.Configuration,
-        includeLegacyData: !ownedDataEnabled);
-
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
     await using var migrationApp = builder.Build();
     await using var migrationScope = migrationApp.Services.CreateAsyncScope();
-    if (!ownedDataEnabled)
-    {
-        var migrationDb = migrationScope.ServiceProvider.GetRequiredService<SpeedReadingDbContext>();
-        var scriptDirectory = Path.Combine(AppContext.BaseDirectory, "Database");
-        var scriptPaths = Directory.Exists(scriptDirectory)
-            ? Directory.GetFiles(scriptDirectory, "*.sql").Order(StringComparer.OrdinalIgnoreCase).ToArray()
-            : [];
-        if (scriptPaths.Length == 0)
-        {
-            throw new DirectoryNotFoundException(
-                $"Speed Reading migration scripts are missing: {scriptDirectory}");
-        }
-
-        foreach (var scriptPath in scriptPaths)
-        {
-            var script = await File.ReadAllTextAsync(scriptPath);
-            await migrationDb.Database.ExecuteSqlRawAsync(
-                script.Replace("{", "{{").Replace("}", "}}"));
-        }
-    }
-
-    var ownedMigrationDb = migrationScope.ServiceProvider.GetService<OwnedSpeedReadingDbContext>();
-    if (ownedMigrationDb is not null)
-    {
-        await ownedMigrationDb.Database.MigrateAsync();
-    }
-
-    return;
-}
-
-if (backfillOwnedCatalog)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingCatalogBackfill>()
-        ?? throw new InvalidOperationException(
-            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-catalog.");
-    var backfillResult = await backfill.RunAsync();
-    Console.WriteLine(JsonSerializer.Serialize(backfillResult));
-    return;
-}
-
-if (backfillOwnedSessions)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingSessionBackfill>()
-        ?? throw new InvalidOperationException(
-            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-sessions.");
-    var backfillResult = await backfill.RunAsync();
-    Console.WriteLine(JsonSerializer.Serialize(backfillResult));
-    return;
-}
-
-if (backfillOwnedAssignments)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingAssignmentBackfill>()
-        ?? throw new InvalidOperationException(
-            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-assignments.");
-    var backfillResult = await backfill.RunAsync();
-    Console.WriteLine(JsonSerializer.Serialize(backfillResult));
-    return;
-}
-
-if (backfillOwnedPrograms)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingProgramBackfill>()
-        ?? throw new InvalidOperationException(
-            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-programs.");
-    var backfillResult = await backfill.RunAsync();
-    Console.WriteLine(JsonSerializer.Serialize(backfillResult));
-    return;
-}
-
-if (backfillOwnedAgeGroups)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingAgeGroupBackfill>()
-        ?? throw new InvalidOperationException(
-            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-age-groups.");
-    var backfillResult = await backfill.RunAsync();
-    Console.WriteLine(JsonSerializer.Serialize(backfillResult));
-    return;
-}
-
-if (backfillOwnedUserProfiles)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingUserProfileBackfill>()
-        ?? throw new InvalidOperationException(
-            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-user-profiles.");
-    var backfillResult = await backfill.RunAsync();
-    Console.WriteLine(JsonSerializer.Serialize(backfillResult));
-    return;
-}
-
-if (backfillOwnedLearningPaths)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingLearningPathBackfill>()
-        ?? throw new InvalidOperationException(
-            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-learning-paths.");
-    var backfillResult = await backfill.RunAsync();
-    Console.WriteLine(JsonSerializer.Serialize(backfillResult));
-    return;
-}
-
-if (backfillOwnedAdminAudit)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingAdminAuditBackfill>()
-        ?? throw new InvalidOperationException(
-            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-admin-audit.");
-    var backfillResult = await backfill.RunAsync();
-    Console.WriteLine(JsonSerializer.Serialize(backfillResult));
-    return;
-}
-
-if (backfillOwnedGamification)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingGamificationBackfill>()
-        ?? throw new InvalidOperationException(
-            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-gamification.");
-    var backfillResult = await backfill.RunAsync();
-    Console.WriteLine(JsonSerializer.Serialize(backfillResult));
+    var migrationDb = migrationScope.ServiceProvider.GetRequiredService<OwnedSpeedReadingDbContext>();
+    await migrationDb.Database.MigrateAsync();
     return;
 }
 
 if (recalculateOwnedGamification)
 {
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration, includeLegacyData: false);
-
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
     await using var recalculationApp = builder.Build();
     await using var recalculationScope = recalculationApp.Services.CreateAsyncScope();
-    var recalculation = recalculationScope.ServiceProvider.GetService<OwnedSpeedReadingGamificationRecalculation>()
-        ?? throw new InvalidOperationException(
-            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --recalculate-owned-gamification.");
-    var recalculationResult = await recalculation.RunAsync();
-    Console.WriteLine(JsonSerializer.Serialize(recalculationResult));
+    var recalculation = recalculationScope.ServiceProvider.GetRequiredService<OwnedSpeedReadingGamificationRecalculation>();
+    Console.WriteLine(JsonSerializer.Serialize(await recalculation.RunAsync()));
     return;
 }
 
 if (bootstrapOwnedExerciseTaxonomy)
 {
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration, includeLegacyData: false);
-
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
     await using var taxonomyApp = builder.Build();
     await using var taxonomyScope = taxonomyApp.Services.CreateAsyncScope();
-    var taxonomy = taxonomyScope.ServiceProvider.GetService<OwnedExerciseTaxonomyBootstrap>()
-        ?? throw new InvalidOperationException(
-            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --bootstrap-owned-exercise-taxonomy.");
-    var taxonomyResult = await taxonomy.RunAsync();
-    Console.WriteLine(JsonSerializer.Serialize(taxonomyResult));
+    var taxonomy = taxonomyScope.ServiceProvider.GetRequiredService<OwnedExerciseTaxonomyBootstrap>();
+    Console.WriteLine(JsonSerializer.Serialize(await taxonomy.RunAsync()));
     return;
 }
 
 if (auditOwnedContent)
 {
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration, includeLegacyData: false);
-
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
     await using var auditApp = builder.Build();
     await using var auditScope = auditApp.Services.CreateAsyncScope();
-    var audit = auditScope.ServiceProvider.GetService<OwnedSpeedReadingContentAudit>()
-        ?? throw new InvalidOperationException(
-            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --audit-owned-content.");
+    var audit = auditScope.ServiceProvider.GetRequiredService<OwnedSpeedReadingContentAudit>();
     Console.WriteLine(JsonSerializer.Serialize(await audit.RunAsync()));
     return;
 }
 
-if (backfillOwnedQuestions)
+if (refreshReadingTextWordCounts)
 {
     builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingQuestionBackfill>()
-        ?? throw new InvalidOperationException(
-            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-questions.");
-    var backfillResult = await backfill.RunAsync();
-    Console.WriteLine(JsonSerializer.Serialize(backfillResult));
-    return;
-}
-
-if (backfillOwnedVisualization)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingVisualizationBackfill>()
-        ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-visualization.");
-    Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
-    return;
-}
-
-if (backfillOwnedVocabulary)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingVocabularyBackfill>()
-        ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-vocabulary.");
-    Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
-    return;
-}
-
-if (backfillOwnedSubscriptions)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingSubscriptionBackfill>()
-        ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-subscriptions.");
-    Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
-    return;
-}
-
-if (backfillOwnedCms)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingCmsBackfill>()
-        ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-cms.");
-    Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
-    return;
-}
-
-if (backfillOwnedNotifications)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingNotificationBackfill>()
-        ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-notifications.");
-    Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
-    return;
-}
-
-if (backfillOwnedRsvp)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingRsvpBackfill>()
-        ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-rsvp.");
-    Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
-    return;
-}
-
-if (backfillOwnedReview)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingReviewBackfill>()
-        ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-review.");
-    Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
-    return;
-}
-
-if (backfillOwnedContentFeedback)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingContentFeedbackBackfill>()
-        ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-content-feedback.");
-    Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
-    return;
-}
-
-if (backfillOwnedAdaptiveLearning)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingAdaptiveLearningBackfill>()
-        ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-adaptive-learning.");
-    Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
-    return;
-}
-
-if (backfillOwnedAdaptiveText)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingAdaptiveTextBackfill>()
-        ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-adaptive-text.");
-    Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
-    return;
-}
-
-if (backfillOwnedReports)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingReportsBackfill>()
-        ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-reports.");
-    Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
-    return;
-}
-
-if (backfillOwnedReadingTextWordCounts)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration, includeLegacyData: false);
-    await using var backfillApp = builder.Build();
-    await using var backfillScope = backfillApp.Services.CreateAsyncScope();
-    var backfill = backfillScope.ServiceProvider.GetService<OwnedSpeedReadingReadingTextWordCountBackfill>()
-        ?? throw new InvalidOperationException("SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-reading-text-word-counts.");
-    Console.WriteLine(JsonSerializer.Serialize(await backfill.RunAsync()));
-    return;
-}
-
-if (verifyOwnedParity)
-{
-    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
-    await using var parityApp = builder.Build();
-    await using var parityScope = parityApp.Services.CreateAsyncScope();
-    var parityChecker = parityScope.ServiceProvider.GetService<OwnedSpeedReadingParityChecker>()
-        ?? throw new InvalidOperationException(
-            "Both SPEED_READING_CONNECTION_STRING and SPEED_READING_OWNED_CONNECTION_STRING must be configured for --verify-owned-parity.");
-    var parityReport = await parityChecker.RunAsync();
-    Console.WriteLine(JsonSerializer.Serialize(parityReport));
-    if (!parityReport.IsMatch)
-        Environment.ExitCode = 2;
+    await using var refreshApp = builder.Build();
+    await using var refreshScope = refreshApp.Services.CreateAsyncScope();
+    var refresh = refreshScope.ServiceProvider.GetRequiredService<OwnedSpeedReadingReadingTextWordCountBackfill>();
+    Console.WriteLine(JsonSerializer.Serialize(await refresh.RunAsync()));
     return;
 }
 
@@ -469,8 +106,6 @@ var runtimeOptions = builder.Configuration
     ?? new SpeedReadingServiceOptions();
 runtimeOptions.Validate();
 
-// Teacher analytics resolve student scope through Identity on every request,
-// so the shared service key is required even when optional integrations are off.
 InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
 
 builder.Services.AddSingleton(runtimeOptions);
@@ -484,7 +119,7 @@ builder.Services.AddEduPlatformOpenTelemetry(
     builder.Environment,
     "EduPlatform.SpeedReading");
 builder.Services.AddGlobalExceptionHandler();
-builder.Services.AddSpeedReadingInfrastructure(builder.Configuration, includeLegacyData: !ownedDataEnabled);
+builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
 builder.Services.AddHostedService<SpeedReadingIdempotencyCleanupWorker>();
 builder.Services.AddCustomAuthentication(builder.Configuration);
 builder.Services.AddCustomAuthorization();
@@ -512,15 +147,8 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-var healthChecks = builder.Services.AddHealthChecks();
-if (ownedDataEnabled)
-{
-    healthChecks.AddDbContextCheck<OwnedSpeedReadingDbContext>("owned-database", tags: ["ready"]);
-}
-else
-{
-    healthChecks.AddDbContextCheck<SpeedReadingDbContext>("database", tags: ["ready"]);
-}
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<OwnedSpeedReadingDbContext>("owned-database", tags: ["ready"]);
 
 var app = builder.Build();
 app.UseRequestLogging();

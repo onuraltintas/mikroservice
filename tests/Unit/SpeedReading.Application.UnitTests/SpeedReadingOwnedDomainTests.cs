@@ -289,17 +289,16 @@ public sealed class SpeedReadingOwnedDomainTests
     {
         var configuration = new ConfigurationManager
         {
-            ["SpeedReading:OwnedDataEnabled"] = "true",
             ["ConnectionStrings:SpeedReadingOwned"] = "Host=localhost;Database=unused;Username=unused;Password=unused"
         };
         var services = new ServiceCollection();
 
-        var action = () => services.AddSpeedReadingInfrastructure(configuration, includeLegacyData: false);
+        var action = () => services.AddSpeedReadingInfrastructure(configuration);
 
         action.Should().NotThrow();
         services.Should().Contain(item => item.ServiceType == typeof(OwnedSpeedReadingDbContext));
         services.Should().Contain(item => item.ServiceType == typeof(OwnedSpeedReadingReadingTextWordCountBackfill));
-        services.Should().NotContain(item => item.ServiceType == typeof(SpeedReadingDbContext));
+        services.Should().NotContain(item => item.ServiceType.Name == "SpeedReadingDbContext");
     }
 
     [Fact]
@@ -307,12 +306,11 @@ public sealed class SpeedReadingOwnedDomainTests
     {
         var configuration = new ConfigurationManager
         {
-            ["SpeedReading:OwnedDataEnabled"] = "true",
             ["ConnectionStrings:SpeedReadingOwned"] = "Host=localhost;Database=unused;Username=unused;Password=unused"
         };
         var services = new ServiceCollection();
 
-        services.AddSpeedReadingInfrastructure(configuration, includeLegacyData: false);
+        services.AddSpeedReadingInfrastructure(configuration);
 
         services.Last(item => item.ServiceType == typeof(ILegacySpeedReadingAnalytics))
             .ImplementationType!.Name.Should().Be("OwnedSpeedReadingAnalytics");
@@ -331,14 +329,13 @@ public sealed class SpeedReadingOwnedDomainTests
     {
         var configuration = new ConfigurationManager
         {
-            ["SpeedReading:OwnedDataEnabled"] = "true",
             ["ConnectionStrings:SpeedReadingOwned"] = "Host=localhost;Database=unused;Username=unused;Password=unused"
         };
         var services = new ServiceCollection();
         services.AddHttpContextAccessor();
         services.AddLogging();
         services.AddSingleton<IConfiguration>(configuration);
-        services.AddSpeedReadingInfrastructure(configuration, includeLegacyData: false);
+        services.AddSpeedReadingInfrastructure(configuration);
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
         using var scope = provider.CreateScope();
 
