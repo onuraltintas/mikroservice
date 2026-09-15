@@ -11,12 +11,14 @@ public sealed record TeacherMetricSample(
     decimal AverageWpm,
     decimal AverageComprehension,
     int TotalSeconds,
-    bool IsReading);
+    bool IsReading,
+    int? ComprehensionActivityCount = null);
 
 public sealed record TeacherStudentMetricSummary(
     Guid StudentId,
     int ReadingActivities,
     int ExerciseActivities,
+    int ComprehensionActivities,
     decimal AverageWpm,
     decimal AverageComprehension,
     int TotalSeconds)
@@ -59,15 +61,17 @@ public static class TeacherAnalyticsRules
                 var reading = group.Where(item => item.IsReading).ToArray();
                 var exercises = group.Where(item => !item.IsReading).ToArray();
                 var readingActivities = reading.Sum(item => item.ActivityCount);
+                var comprehensionActivities = reading.Sum(item => item.ComprehensionActivityCount ?? item.ActivityCount);
                 return new TeacherStudentMetricSummary(
                     group.Key,
                     readingActivities,
                     exercises.Sum(item => item.ActivityCount),
+                    comprehensionActivities,
                     readingActivities > 0
                         ? reading.Sum(item => item.AverageWpm * item.ActivityCount) / readingActivities
                         : 0,
-                    readingActivities > 0
-                        ? reading.Sum(item => item.AverageComprehension * item.ActivityCount) / readingActivities
+                    comprehensionActivities > 0
+                        ? reading.Sum(item => item.AverageComprehension * (item.ComprehensionActivityCount ?? item.ActivityCount)) / comprehensionActivities
                         : 0,
                     group.Sum(item => item.TotalSeconds));
             })
@@ -77,8 +81,9 @@ public static class TeacherAnalyticsRules
         var classAverageWpm = readingActivitiesTotal > 0
             ? rows.Sum(item => item.AverageWpm * item.ReadingActivities) / readingActivitiesTotal
             : 0;
-        var classAverageComprehension = readingActivitiesTotal > 0
-            ? rows.Sum(item => item.AverageComprehension * item.ReadingActivities) / readingActivitiesTotal
+        var comprehensionActivitiesTotal = rows.Sum(item => item.ComprehensionActivities);
+        var classAverageComprehension = comprehensionActivitiesTotal > 0
+            ? rows.Sum(item => item.AverageComprehension * item.ComprehensionActivities) / comprehensionActivitiesTotal
             : 0;
         var readingStudents = rows.Where(item => item.ReadingActivities > 0).ToList();
 

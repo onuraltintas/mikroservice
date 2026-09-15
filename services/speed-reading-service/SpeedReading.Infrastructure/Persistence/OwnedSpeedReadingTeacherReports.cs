@@ -27,7 +27,10 @@ internal sealed class OwnedSpeedReadingTeacherReports(
                 group.Key,
                 group.Count(),
                 group.Average(item => (decimal)item.CalculatedWpm),
-                group.Average(item => item.ComprehensionRate),
+                group.Where(item => item.TotalQuestions > 0)
+                    .Select(item => (decimal?)item.ComprehensionRate)
+                    .Average() ?? 0,
+                group.Count(item => item.TotalQuestions > 0),
                 group.Sum(item => item.ReadingTimeSeconds)))
             .ToListAsync(cancellationToken);
         var exercises = await db.DailyExerciseLogs.AsNoTracking()
@@ -38,21 +41,26 @@ internal sealed class OwnedSpeedReadingTeacherReports(
                 group.Count(),
                 0,
                 group.Average(item => item.SuccessRate),
+                0,
                 group.Sum(item => item.TimeSpentSeconds)))
             .ToListAsync(cancellationToken);
         var summary = TeacherAnalyticsRules.Summarize(
             reading.Select(item => new TeacherMetricSample(
                 item.StudentId, item.ActivityCount, item.AverageWpm, item.AverageComprehension,
-                item.TotalSeconds, IsReading: true))
+                item.TotalSeconds, IsReading: true,
+                ComprehensionActivityCount: item.ComprehensionActivityCount))
             .Concat(exercises.Select(item => new TeacherMetricSample(
                 item.StudentId, item.ActivityCount, item.AverageWpm, item.AverageComprehension,
-                item.TotalSeconds, IsReading: false))));
+                item.TotalSeconds, IsReading: false,
+                ComprehensionActivityCount: item.ComprehensionActivityCount))));
+        var names = await GetNamesAsync(summary.ReadingStudents.Select(item => item.StudentId), cancellationToken);
         var top = summary.ReadingStudents
             .OrderByDescending(item => item.AverageWpm)
             .ThenBy(item => item.StudentId)
             .Take(10)
             .ToList();
         var support = summary.ReadingStudents
+            .Where(item => item.AverageWpm < summary.ClassAverageWpm || item.AverageComprehension < 60)
             .OrderBy(item => item.AverageWpm)
             .ThenBy(item => item.StudentId)
             .Take(10)
@@ -72,8 +80,8 @@ internal sealed class OwnedSpeedReadingTeacherReports(
             summary.StudentsAboveAverage,
             summary.StudentsAtAverage,
             summary.StudentsBelowAverage,
-            top.Select(item => ToStudentPerformance(item, "high")).ToList(),
-            support.Select(item => ToStudentPerformance(item, "support")).ToList());
+            top.Select(item => ToStudentPerformance(item, names, "high")).ToList(),
+            support.Select(item => ToStudentPerformance(item, names, "support")).ToList());
     }
 
     public Task<TeacherAssignmentAnalytics> GetAssignmentsAsync(
@@ -228,14 +236,22 @@ internal sealed class OwnedSpeedReadingTeacherReports(
 
     private static TeacherStudentPerformance ToStudentPerformance(
         TeacherStudentMetricSummary item,
+        IReadOnlyDictionary<Guid, SpeedReadingUserDirectoryItem> names,
         string level) =>
         new(
-            item.StudentId.ToString("D"),
+            DisplayName(item.StudentId, names),
             Math.Round(item.AverageWpm, 2),
             Math.Round(item.AverageComprehension, 2),
             item.TotalActivities,
             item.TotalSeconds / 60,
             level);
+
+    private static string DisplayName(Guid studentId, IReadOnlyDictionary<Guid, SpeedReadingUserDirectoryItem> names)
+    {
+        var name = names.GetValueOrDefault(studentId);
+        var displayName = name is null ? string.Empty : $"{name.FirstName} {name.LastName}".Trim();
+        return string.IsNullOrWhiteSpace(displayName) ? studentId.ToString("D") : displayName;
+    }
 
     private static TeacherProgressStudent ToProgressStudent(
         TeacherProgressMetric item,
@@ -283,6 +299,12 @@ internal sealed class OwnedSpeedReadingTeacherReports(
         _ => value.ToUniversalTime()
     };
 
-    private sealed record StudentMetrics(Guid StudentId, int ActivityCount, decimal AverageWpm, decimal AverageComprehension, int TotalSeconds);
+    private sealed record StudentMetrics(
+        Guid StudentId,
+        int ActivityCount,
+        decimal AverageWpm,
+        decimal AverageComprehension,
+        int ComprehensionActivityCount,
+        int TotalSeconds);
     private sealed record ActivityRow(Guid StudentId, DateTime Date, int ActivityCount, int TotalSeconds, decimal Score, bool IsReading);
 }
