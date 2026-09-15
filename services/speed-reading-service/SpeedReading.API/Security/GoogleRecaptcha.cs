@@ -71,6 +71,10 @@ public sealed record GoogleRecaptchaVerification(
 public static class GoogleRecaptchaRules
 {
     public const string ContactAction = "contact_submit";
+    public const int MaximumResponseTokenLength = 16_384;
+
+    public static bool HasAcceptableToken(string? token) =>
+        !string.IsNullOrWhiteSpace(token) && token.Length <= MaximumResponseTokenLength;
 
     public static bool IsAccepted(GoogleRecaptchaOptions options, GoogleRecaptchaVerification verification)
     {
@@ -101,14 +105,21 @@ public sealed class GoogleRecaptchaValidator(
     public async Task<bool> VerifyContactAsync(string? token, string? remoteIp, CancellationToken cancellationToken)
     {
         if (!options.Enabled) return true;
-        if (string.IsNullOrWhiteSpace(token) || token.Length > 2_048) return false;
+        if (!GoogleRecaptchaRules.HasAcceptableToken(token))
+        {
+            logger.LogWarning(
+                "Google reCAPTCHA request was rejected before verification because the response token was missing or exceeded {MaximumLength} characters. TokenLength: {TokenLength}",
+                GoogleRecaptchaRules.MaximumResponseTokenLength,
+                token?.Length ?? 0);
+            return false;
+        }
 
         try
         {
             using var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 ["secret"] = options.SecretKey!,
-                ["response"] = token,
+                ["response"] = token!,
                 ["remoteip"] = remoteIp ?? string.Empty
             });
             using var response = await httpClient.PostAsync("siteverify", content, cancellationToken);

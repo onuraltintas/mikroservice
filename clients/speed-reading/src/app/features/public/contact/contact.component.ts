@@ -10,7 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { BaseComponent } from '../../../core/components/base.component';
 import { ContactMessageRequest, GoogleRecaptchaConfiguration, PublicCmsService } from '../../../core/services/public-cms.service';
 import { SeoService } from '../../../core/services/seo.service';
-import { from } from 'rxjs';
+import { firstValueFrom, from } from 'rxjs';
 import { finalize, switchMap } from 'rxjs/operators';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { isTrustedMapEmbedUrl } from '../../../core/security/trusted-resource-url';
@@ -59,6 +59,7 @@ export class ContactComponent extends BaseComponent {
     mapUrl: SafeResourceUrl | null = null;
     recaptchaConfiguration: GoogleRecaptchaConfiguration | null = null;
     private recaptchaScript?: Promise<void>;
+    private recaptchaConfigurationRequest?: Promise<GoogleRecaptchaConfiguration>;
 
     constructor() {
         super();
@@ -105,10 +106,10 @@ export class ContactComponent extends BaseComponent {
     }
 
     private loadRecaptchaConfiguration() {
-        this.cmsService.getGoogleRecaptchaConfiguration().subscribe({
-            next: configuration => this.recaptchaConfiguration = configuration,
-            error: () => this.recaptchaConfiguration = null
-        });
+        this.recaptchaConfigurationRequest = firstValueFrom(this.cmsService.getGoogleRecaptchaConfiguration());
+        this.recaptchaConfigurationRequest.then(
+            configuration => this.recaptchaConfiguration = configuration,
+            () => this.recaptchaConfiguration = null);
     }
 
     onSubmit() {
@@ -136,7 +137,8 @@ export class ContactComponent extends BaseComponent {
     }
 
     private async getRecaptchaToken(): Promise<string | undefined> {
-        const configuration = this.recaptchaConfiguration;
+        const configuration = this.recaptchaConfiguration
+            ?? await this.recaptchaConfigurationRequest;
         if (!configuration?.enabled) return undefined;
         if (!configuration.siteKey) throw new Error('reCAPTCHA site key is missing.');
 
