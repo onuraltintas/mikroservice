@@ -8,6 +8,8 @@ namespace Identity.API.IntegrationTests;
 public class InternalServiceAuthenticationTests
 {
     private const string ValidKey = "test-service-key-with-at-least-32-bytes";
+    private const string EnvironmentKey = "environment-service-key-with-at-least-32-bytes";
+    private static readonly object EnvironmentVariableLock = new();
 
     [Fact]
     public void MatchingServiceKey_ShouldBeAccepted()
@@ -17,6 +19,28 @@ public class InternalServiceAuthenticationTests
         var configuration = CreateConfiguration(ValidKey);
 
         InternalServiceAuthentication.IsValid(context.Request, configuration).Should().BeTrue();
+    }
+
+    [Fact]
+    public void ProcessEnvironmentKey_ShouldTakePrecedenceOverOtherConfigurationSources()
+    {
+        lock (EnvironmentVariableLock)
+        {
+            var previousValue = Environment.GetEnvironmentVariable("INTERNAL_SERVICE_API_KEY");
+            try
+            {
+                Environment.SetEnvironmentVariable("INTERNAL_SERVICE_API_KEY", EnvironmentKey);
+
+                var context = new DefaultHttpContext();
+                context.Request.Headers[InternalServiceAuthentication.HeaderName] = EnvironmentKey;
+
+                InternalServiceAuthentication.IsValid(context.Request, CreateConfiguration(ValidKey)).Should().BeTrue();
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("INTERNAL_SERVICE_API_KEY", previousValue);
+            }
+        }
     }
 
     [Fact]
