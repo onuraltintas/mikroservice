@@ -231,6 +231,7 @@ public sealed class SpeedReadingOwnedDomainTests
     [Theory]
     [InlineData("SchulteTable", "attention-and-eye-movement")]
     [InlineData("RSVP", "reading-fluency")]
+    [InlineData("TextFading", "reading-fluency")]
     [InlineData("Visualization", "comprehension-and-strategy")]
     [InlineData("Vocabulary", "vocabulary-and-language")]
     public void Exercise_taxonomy_classifies_supported_engines(string engine, string categoryKey)

@@ -28,6 +28,8 @@ public static class ExerciseConfigurationRules
             ["saccade"] = "motion_path",
             ["tachistoscope"] = "text_stream",
             ["rsvp"] = "text_stream",
+            ["textfading"] = "text_fade",
+            ["text_fading"] = "text_fade",
             ["speedreading"] = "word_highlight",
             ["speed_reading"] = "word_highlight",
             ["chunking"] = "word_highlight",
