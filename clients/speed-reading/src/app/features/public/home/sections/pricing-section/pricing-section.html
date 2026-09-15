@@ -18,7 +18,7 @@
                     <p class="plan-description">{{ plan.description }}</p>
                     <div class="price">
                         <span class="amount">{{ formatPrice(plan) }}</span>
-                        <span class="period" *ngIf="getPeriod(plan)">{{ getPeriod(plan) }}</span>
+                        <span class="period" *ngIf="!plan.isContactOnly && getPeriod(plan)">{{ getPeriod(plan) }}</span>
                     </div>
                 </div>
 
