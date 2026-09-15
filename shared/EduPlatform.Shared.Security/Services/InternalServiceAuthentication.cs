@@ -17,16 +17,14 @@ public static class InternalServiceAuthentication
 
     public static void ValidateConfiguration(IConfiguration configuration)
     {
-        var configuredKey = configuration["INTERNAL_SERVICE_API_KEY"]
-            ?? configuration["Internal:ServiceApiKey"];
+        var configuredKey = GetConfiguredKey(configuration);
 
         SecretConfigurationValidation.Validate(configuredKey, HeaderName, configuration);
     }
 
     public static bool IsValid(HttpRequest request, IConfiguration configuration)
     {
-        var expectedKey = configuration["INTERNAL_SERVICE_API_KEY"]
-            ?? configuration["Internal:ServiceApiKey"];
+        var expectedKey = GetConfiguredKey(configuration);
 
         if (string.IsNullOrWhiteSpace(expectedKey)
             || Encoding.UTF8.GetByteCount(expectedKey) < MinimumKeyLength
@@ -41,4 +39,9 @@ public static class InternalServiceAuthentication
         return expectedBytes.Length == providedBytes.Length
             && CryptographicOperations.FixedTimeEquals(expectedBytes, providedBytes);
     }
+
+    private static string? GetConfiguredKey(IConfiguration configuration) =>
+        Environment.GetEnvironmentVariable("INTERNAL_SERVICE_API_KEY")
+        ?? configuration["INTERNAL_SERVICE_API_KEY"]
+        ?? configuration["Internal:ServiceApiKey"];
 }
