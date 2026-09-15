@@ -78,6 +78,15 @@ public interface IInstitutionRepository
     Task<Guid?> GetInstitutionIdByAdminIdAsync(Guid adminUserId, CancellationToken cancellationToken);
     Task<Guid?> GetPrimaryInstitutionIdByUserIdAsync(Guid userId, CancellationToken cancellationToken);
     Task<bool> IsUserInInstitutionAsync(Guid userId, Guid institutionId, CancellationToken cancellationToken);
+    Task<PagedList<InstitutionStudentRosterItem>> GetStudentRosterAsync(
+        Guid institutionId,
+        int pageNumber,
+        int pageSize,
+        string? searchTerm,
+        int? gradeLevel,
+        bool? isActive,
+        Guid? teacherUserId,
+        CancellationToken cancellationToken);
     Task<CoachingAdminAccessAuthorization?> AuthorizeCoachingAdminAsync(
         Guid viewerUserId,
         CancellationToken cancellationToken);
@@ -134,6 +143,18 @@ public sealed record CoachingReportStudentPage(
     IReadOnlyCollection<Guid> StudentUserIds,
     int TotalCount);
 
+public sealed record InstitutionStudentRosterItem(
+    Guid UserId,
+    string FirstName,
+    string LastName,
+    string Email,
+    int? GradeLevel,
+    bool IsActive,
+    DateTime? LastLoginAt,
+    DateTime CreatedAt,
+    Guid? TeacherUserId,
+    string? TeacherName);
+
 public interface IUnitOfWork
 {
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
@@ -158,6 +179,14 @@ public interface ITeacherRepository
         CancellationToken cancellationToken);
     Task AddStudentAssignmentAsync(TeacherStudentAssignment assignment, CancellationToken cancellationToken);
     Task<TeacherStudentAssignment?> GetAssignmentAsync(Guid teacherId, Guid studentId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<TeacherStudentAssignment>> GetActiveAssignmentsForStudentAsync(
+        Guid studentId,
+        Guid institutionId,
+        CancellationToken cancellationToken);
+    Task<IReadOnlyList<TeacherStudentAssignment>> GetActiveAssignmentsForTeacherAsync(
+        Guid teacherId,
+        Guid institutionId,
+        CancellationToken cancellationToken);
 }
 
 public interface IStudentRepository

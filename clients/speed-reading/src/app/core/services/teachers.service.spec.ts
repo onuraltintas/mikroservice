@@ -30,7 +30,7 @@ describe('TeachersService', () => {
       }));
     });
 
-    const request = http.expectOne(candidate => candidate.url === '/api/v1/teachers/me/students');
+    const request = http.expectOne(candidate => candidate.url === '/api/teachers/me/students');
     expect(request.request.params.get('pageSize')).toBe('100');
     request.flush({
       items: [{
@@ -41,6 +41,33 @@ describe('TeachersService', () => {
         institutionId: 'institution-1',
         institutionName: 'Örnek Kolej',
         dailyGoalMinutes: 30,
+        isActive: true
+      }]
+    });
+  });
+
+  it('loads the signed-in institution teacher directory through the scoped users endpoint', () => {
+    service.getTeachers('Ayşe', undefined, true).subscribe(teachers => {
+      expect(teachers).toEqual([jasmine.objectContaining({
+        id: 'teacher-1',
+        firstName: 'Ayşe',
+        lastName: 'Öğretmen',
+        email: 'ayse@example.test',
+        studentCount: 3
+      })]);
+    });
+
+    const request = http.expectOne(candidate => candidate.url === '/api/users');
+    expect(request.request.params.get('role')).toBe('Teacher');
+    expect(request.request.params.get('search')).toBe('Ayşe');
+    expect(request.request.params.get('isActive')).toBe('true');
+    request.flush({
+      items: [{
+        userId: 'teacher-1',
+        firstName: 'Ayşe',
+        lastName: 'Öğretmen',
+        email: 'ayse@example.test',
+        studentCount: 3,
         isActive: true
       }]
     });

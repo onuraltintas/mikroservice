@@ -29,6 +29,7 @@ import {
 export class StudentsService {
   private readonly http = inject(HttpClient);
   private readonly API_URL = `${environment.apiUrl}/v1/students`;
+  private readonly identityApiUrl = environment.apiUrl;
 
   /**
    * Get all students with optional filters
@@ -37,32 +38,38 @@ export class StudentsService {
    */
   getStudents(
     searchTerm?: string,
-    institutionId?: string,
-    currentLevel?: number,
+    _institutionId?: string,
+    _currentLevel?: number,
     isActive?: boolean,
-    teacherId?: string
+    _teacherId?: string
   ): Observable<Student[]> {
-    let params = new HttpParams();
+    let params = new HttpParams().set('pageSize', '100').set('role', 'Student');
 
     if (searchTerm) {
-      params = params.set('searchTerm', searchTerm);
-    }
-    if (institutionId) {
-      params = params.set('institutionId', institutionId);
-    }
-    if (currentLevel !== undefined) {
-      params = params.set('currentLevel', currentLevel.toString());
+      params = params.set('search', searchTerm);
     }
     if (isActive !== undefined) {
       params = params.set('isActive', isActive.toString());
     }
-    if (teacherId) {
-      params = params.set('teacherId', teacherId);
-    }
+    return this.http.get<any>(`${this.identityApiUrl}/users`, { params }).pipe(
+      map(result => (Array.isArray(result) ? result : (result?.items ?? [])).map((student: any) => this.toStudent(student)))
+    );
+  }
 
-    // Backend returns PagedResult<UserDto>; extract items array
-    return this.http.get<any>(this.API_URL, { params }).pipe(
-      map(result => Array.isArray(result) ? result : (result?.items ?? []))
+  getInstitutionStudents(
+    searchTerm?: string,
+    gradeLevel?: number,
+    isActive?: boolean,
+    teacherUserId?: string
+  ): Observable<Student[]> {
+    let params = new HttpParams().set('pageSize', '100');
+    if (searchTerm) params = params.set('search', searchTerm);
+    if (gradeLevel !== undefined) params = params.set('gradeLevel', gradeLevel.toString());
+    if (isActive !== undefined) params = params.set('isActive', isActive.toString());
+    if (teacherUserId) params = params.set('teacherUserId', teacherUserId);
+
+    return this.http.get<any>(`${this.identityApiUrl}/institution/students`, { params }).pipe(
+      map(result => (Array.isArray(result) ? result : (result?.items ?? [])).map((student: any) => this.toStudent(student)))
     );
   }
 
@@ -81,7 +88,7 @@ export class StudentsService {
    * Service receives: Student (auto-unwrapped)
    */
   createStudent(request: CreateStudentRequest): Observable<Student> {
-    return this.http.post<Student>(this.API_URL, request);
+    return this.http.post<Student>(`${this.identityApiUrl}/institution/students`, request);
   }
 
   /**
@@ -90,7 +97,7 @@ export class StudentsService {
    * Service receives: Student (auto-unwrapped)
    */
   updateStudent(id: string, request: UpdateStudentRequest): Observable<Student> {
-    return this.http.put<Student>(`${this.API_URL}/${id}`, request);
+    return this.http.put<Student>(`${this.identityApiUrl}/institution/students/${id}`, request);
   }
 
   /**
@@ -99,7 +106,7 @@ export class StudentsService {
    * Service receives: void (auto-unwrapped)
    */
   deleteStudent(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.API_URL}/${id}`);
+    return this.http.delete<void>(`${this.identityApiUrl}/institution/students/${id}`);
   }
 
   /**
@@ -107,7 +114,7 @@ export class StudentsService {
    * Backend returns: ApiResponse<void>
    */
   unlinkStudentFromInstitution(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.API_URL}/${id}/unlink-institution`);
+    return this.deleteStudent(id);
   }
 
   /**
@@ -194,17 +201,31 @@ export class StudentsService {
     );
   }
 
-  importStudents(file: File): Observable<any> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<any>(`${this.API_URL}/import`, formData);
+  linkStudent(email: string, teacherId?: string | null): Observable<any> {
+    return this.http.post<any>(`${this.identityApiUrl}/institution/invite-student`, {
+      studentEmail: email,
+      teacherUserId: teacherId
+    });
   }
 
-  getImportTemplate(): Observable<Blob> {
-    return this.http.get(`${this.API_URL}/import/template`, { responseType: 'blob' });
-  }
-
-  linkStudent(email: string, teacherId: string): Observable<any> {
-    return this.http.post<any>(`${this.API_URL}/link`, { studentEmail: email, teacherId });
+  private toStudent(student: any): Student {
+    return {
+      id: student.id ?? student.userId,
+      firstName: student.firstName ?? '',
+      lastName: student.lastName ?? '',
+      email: student.email ?? '',
+      institutionId: student.institutionId ?? student.studentDetails?.institutionId ?? undefined,
+      institutionName: student.institutionName ?? student.studentDetails?.institutionName ?? undefined,
+      currentLevel: student.gradeLevel ?? student.currentLevel ?? student.studentDetails?.gradeLevel ?? 0,
+      targetWPM: student.targetWPM ?? 0,
+      targetComprehension: student.targetComprehension ?? 0,
+      dailyGoalMinutes: student.dailyGoalMinutes ?? 30,
+      learningStyle: student.learningStyle ?? student.studentDetails?.learningStyle ?? 'Belirtilmedi',
+      lastLoginAt: student.lastLoginAt ? new Date(student.lastLoginAt) : undefined,
+      isActive: student.isActive ?? true,
+      createdAt: student.createdAt ? new Date(student.createdAt) : new Date(),
+      teacherId: student.teacherUserId ?? student.teacherId ?? undefined,
+      teacherName: student.teacherName ?? undefined
+    };
   }
 }

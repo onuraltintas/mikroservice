@@ -431,6 +431,24 @@ public class UserRepository : IUserRepository
             .Where(profile => userIds.Contains(profile.UserId) && profile.IsActive)
             .Include(profile => profile.Institution)
             .ToDictionaryAsync(profile => profile.UserId, cancellationToken);
+        var studentProfiles = await _context.StudentProfiles
+            .AsNoTracking()
+            .Where(profile => userIds.Contains(profile.UserId) && profile.IsActive)
+            .Include(profile => profile.Institution)
+            .ToDictionaryAsync(profile => profile.UserId, cancellationToken);
+        var teacherUserIds = teacherProfiles.Keys.ToArray();
+        var teacherStudentCounts = await (
+            from assignment in _context.TeacherStudentAssignments.AsNoTracking()
+            join teacher in _context.TeacherProfiles.AsNoTracking()
+                on assignment.TeacherId equals teacher.Id
+            where teacherUserIds.Contains(teacher.UserId)
+                && assignment.IsActive
+                && assignment.InstitutionId == teacher.InstitutionId
+                && assignment.Student.IsActive
+                && assignment.Student.User.IsActive
+            group assignment by teacher.UserId into grouped
+            select new { TeacherUserId = grouped.Key, StudentCount = grouped.Count() })
+            .ToDictionaryAsync(row => row.TeacherUserId, row => row.StudentCount, cancellationToken);
 
         var dtos = users.Select(u => new UserProfileDto
         {
@@ -448,6 +466,7 @@ public class UserRepository : IUserRepository
             PhoneNumber = u.PhoneNumber,
             LastLoginAt = u.LastLoginAt,
             CreatedAt = u.CreatedAt,
+            StudentCount = teacherStudentCounts.TryGetValue(u.Id, out var studentCount) ? studentCount : null,
             Roles = u.Roles.Select(ur => ur.Role.Name).ToList(),
             TeacherDetails = teacherProfiles.TryGetValue(u.Id, out var teacher)
                 ? new TeacherDetailsDto
@@ -458,6 +477,17 @@ public class UserRepository : IUserRepository
                     Bio = teacher.Bio,
                     InstitutionId = teacher.InstitutionId,
                     InstitutionName = teacher.Institution?.Name
+                }
+                : null,
+            StudentDetails = studentProfiles.TryGetValue(u.Id, out var student)
+                ? new StudentDetailsDto
+                {
+                    GradeLevel = student.GradeLevel,
+                    Bio = student.Bio,
+                    InstitutionId = student.InstitutionId,
+                    InstitutionName = student.Institution?.Name,
+                    BirthDate = student.BirthDate,
+                    LearningStyle = student.LearningStyle?.ToString()
                 }
                 : null
         }).ToList();
@@ -786,6 +816,101 @@ public class InstitutionRepository : IInstitutionRepository
                    && s.Institution != null
                    && s.Institution.IsActive,
                    cancellationToken);
+    }
+
+    public async Task<PagedList<InstitutionStudentRosterItem>> GetStudentRosterAsync(
+        Guid institutionId,
+        int pageNumber,
+        int pageSize,
+        string? searchTerm,
+        int? gradeLevel,
+        bool? isActive,
+        Guid? teacherUserId,
+        CancellationToken cancellationToken)
+    {
+        var query = _context.StudentProfiles
+            .AsNoTracking()
+            .Where(student => student.InstitutionId == institutionId
+                && student.Institution != null
+                && student.Institution.IsActive);
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var pattern = $"%{searchTerm.Trim()}%";
+            query = query.Where(student =>
+                EF.Functions.ILike(student.FirstName, pattern)
+                || EF.Functions.ILike(student.LastName, pattern)
+                || EF.Functions.ILike(student.User.Email, pattern));
+        }
+
+        if (gradeLevel.HasValue)
+        {
+            query = query.Where(student => student.GradeLevel == gradeLevel.Value);
+        }
+
+        if (isActive.HasValue)
+        {
+            query = query.Where(student => student.IsActive == isActive.Value && student.User.IsActive == isActive.Value);
+        }
+
+        if (teacherUserId.HasValue)
+        {
+            query = query.Where(student => _context.TeacherStudentAssignments.Any(assignment =>
+                assignment.StudentId == student.Id
+                && assignment.InstitutionId == institutionId
+                && assignment.IsActive
+                && assignment.Teacher.UserId == teacherUserId.Value
+                && assignment.Teacher.IsActive
+                && assignment.Teacher.User.IsActive));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var students = await query
+            .OrderBy(student => student.LastName)
+            .ThenBy(student => student.FirstName)
+            .ThenBy(student => student.Id)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(student => new
+            {
+                student.UserId,
+                student.FirstName,
+                student.LastName,
+                Email = student.User.Email,
+                student.GradeLevel,
+                IsActive = student.IsActive && student.User.IsActive,
+                student.User.LastLoginAt,
+                CreatedAt = student.CreatedAt,
+                Assignment = _context.TeacherStudentAssignments
+                    .Where(assignment => assignment.StudentId == student.Id
+                        && assignment.InstitutionId == institutionId
+                        && assignment.IsActive
+                        && assignment.Teacher.IsActive
+                        && assignment.Teacher.User.IsActive)
+                    .OrderByDescending(assignment => assignment.StartDate)
+                    .ThenByDescending(assignment => assignment.Id)
+                    .Select(assignment => new
+                    {
+                        TeacherUserId = (Guid?)assignment.Teacher.UserId,
+                        TeacherName = assignment.Teacher.FirstName + " " + assignment.Teacher.LastName
+                    })
+                    .FirstOrDefault()
+            })
+            .ToListAsync(cancellationToken);
+
+        var items = students.Select(student => new InstitutionStudentRosterItem(
+            student.UserId,
+            student.FirstName,
+            student.LastName,
+            student.Email,
+            student.GradeLevel,
+            student.IsActive,
+            student.LastLoginAt,
+            student.CreatedAt,
+            student.Assignment == null ? null : student.Assignment.TeacherUserId,
+            student.Assignment == null ? null : student.Assignment.TeacherName)).ToList();
+
+        return new PagedList<InstitutionStudentRosterItem>(items, totalCount, pageNumber, pageSize);
     }
 
     public async Task<CoachingAdminAccessAuthorization?> AuthorizeCoachingAdminAsync(
@@ -1549,6 +1674,30 @@ public class TeacherRepository : ITeacherRepository
     {
         return await _context.TeacherStudentAssignments
             .FirstOrDefaultAsync(a => a.TeacherId == teacherId && a.StudentId == studentId && a.IsActive, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<TeacherStudentAssignment>> GetActiveAssignmentsForStudentAsync(
+        Guid studentId,
+        Guid institutionId,
+        CancellationToken cancellationToken)
+    {
+        return await _context.TeacherStudentAssignments
+            .Where(assignment => assignment.StudentId == studentId
+                && assignment.InstitutionId == institutionId
+                && assignment.IsActive)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<TeacherStudentAssignment>> GetActiveAssignmentsForTeacherAsync(
+        Guid teacherId,
+        Guid institutionId,
+        CancellationToken cancellationToken)
+    {
+        return await _context.TeacherStudentAssignments
+            .Where(assignment => assignment.TeacherId == teacherId
+                && assignment.InstitutionId == institutionId
+                && assignment.IsActive)
+            .ToListAsync(cancellationToken);
     }
 }
 

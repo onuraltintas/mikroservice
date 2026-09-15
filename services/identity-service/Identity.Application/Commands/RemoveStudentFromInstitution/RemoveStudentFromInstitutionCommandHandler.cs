@@ -9,17 +9,20 @@ public class RemoveStudentFromInstitutionCommandHandler : IRequestHandler<Remove
 {
     private readonly IInstitutionRepository _institutionRepository;
     private readonly IStudentRepository _studentRepository;
+    private readonly ITeacherRepository _teacherRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
 
     public RemoveStudentFromInstitutionCommandHandler(
         IInstitutionRepository institutionRepository,
         IStudentRepository studentRepository,
+        ITeacherRepository teacherRepository,
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService)
     {
         _institutionRepository = institutionRepository;
         _studentRepository = studentRepository;
+        _teacherRepository = teacherRepository;
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
     }
@@ -37,7 +40,7 @@ public class RemoveStudentFromInstitutionCommandHandler : IRequestHandler<Remove
             return Result.Failure(new Error("Forbidden", "You are not an institution admin"));
 
         // 2. Get Student
-        var student = await _studentRepository.GetByIdAsync(request.StudentId, cancellationToken);
+        var student = await _studentRepository.GetByUserIdAsync(request.StudentId, institutionId, cancellationToken);
         if (student == null)
         {
             return Result.Failure(new Error("Student.NotFound", "Student not found"));
@@ -49,7 +52,17 @@ public class RemoveStudentFromInstitutionCommandHandler : IRequestHandler<Remove
             return Result.Failure(new Error("RemoveStudent.Forbidden", "This student does not belong to your institution"));
         }
 
-        // 4. Remove from Institution
+        // 4. End teacher assignments that only apply while the student is in this institution.
+        var assignments = await _teacherRepository.GetActiveAssignmentsForStudentAsync(
+            student.Id,
+            institutionId.Value,
+            cancellationToken);
+        foreach (var assignment in assignments)
+        {
+            assignment.End();
+        }
+
+        // 5. Remove from Institution
         student.RemoveFromInstitution();
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

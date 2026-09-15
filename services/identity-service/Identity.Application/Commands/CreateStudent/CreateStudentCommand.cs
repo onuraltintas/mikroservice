@@ -7,8 +7,8 @@ public record CreateStudentCommand(
     string Email,
     string FirstName,
     string LastName,
-    string StudentNumber,
-    int GradeLevel
+    int GradeLevel,
+    Guid? TeacherUserId = null
 ) : IRequest<Result<CreateStudentResult>>;
 
 /// <summary>

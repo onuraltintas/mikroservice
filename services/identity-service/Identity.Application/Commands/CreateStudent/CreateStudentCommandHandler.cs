@@ -14,6 +14,7 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
     private readonly IIdentityService _identityService;
     private readonly IUserRepository _userRepository;
     private readonly IStudentRepository _studentRepository;
+    private readonly ITeacherRepository _teacherRepository;
     private readonly IInstitutionRepository _institutionRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
@@ -24,6 +25,7 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
         IIdentityService identityService,
         IUserRepository userRepository,
         IStudentRepository studentRepository,
+        ITeacherRepository teacherRepository,
         IInstitutionRepository institutionRepository,
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService,
@@ -33,6 +35,7 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
         _identityService = identityService;
         _userRepository = userRepository;
         _studentRepository = studentRepository;
+        _teacherRepository = teacherRepository;
         _institutionRepository = institutionRepository;
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
@@ -87,10 +90,31 @@ public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand,
         
         student.UpdateEducationInfo(gradeLevel: request.GradeLevel);
 
+        TeacherProfile? teacher = null;
+        if (request.TeacherUserId is { } teacherUserId)
+        {
+            teacher = await _teacherRepository.GetByUserIdAsync(teacherUserId, institutionId.Value, cancellationToken);
+            if (teacher is null)
+            {
+                await _identityService.DeleteUserAsync(studentUserId, cancellationToken);
+                return Result.Failure<CreateStudentResult>(new Error("CreateStudent.TeacherNotFound", "Selected teacher does not belong to this institution."));
+            }
+        }
+
         try
         {
             // await _userRepository.AddAsync(user, cancellationToken); // REMOVED
             await _studentRepository.AddAsync(student, cancellationToken);
+            if (teacher is not null)
+            {
+                await _teacherRepository.AddStudentAssignmentAsync(
+                    TeacherStudentAssignment.Create(
+                        teacher.Id,
+                        student.Id,
+                        institutionId,
+                        createdByUserId: adminUserId),
+                    cancellationToken);
+            }
             
             // Publish UserCreated Event
             var eventMessage = new EduPlatform.Shared.Contracts.Events.Identity.UserCreatedEvent(

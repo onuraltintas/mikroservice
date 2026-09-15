@@ -19,6 +19,47 @@ public class InstitutionController : ControllerBase
     }
 
     /// <summary>
+    /// Lists students belonging to the authenticated institution and their current teacher assignment.
+    /// </summary>
+    [HttpGet("students")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetStudents(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 100,
+        [FromQuery] string? search = null,
+        [FromQuery] int? gradeLevel = null,
+        [FromQuery] bool? isActive = null,
+        [FromQuery] Guid? teacherUserId = null)
+    {
+        var result = await _mediator.Send(new Identity.Application.Queries.GetInstitutionStudents.GetInstitutionStudentsQuery(
+            page,
+            pageSize,
+            search,
+            gradeLevel,
+            isActive,
+            teacherUserId));
+
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value);
+        }
+
+        if (result.Error.Code == "Auth.Unauthorized")
+        {
+            return Unauthorized();
+        }
+
+        if (result.Error.Code == "Institution.Forbidden")
+        {
+            return Forbid();
+        }
+
+        return BadRequest(new { Error = result.Error });
+    }
+
+    /// <summary>
     /// Kuruma yeni bir öğretmen ekler. (Sadece kurum yöneticileri)
     /// Geçici şifre ile birlikte TeacherId döner.
     /// </summary>
@@ -55,6 +96,43 @@ public class InstitutionController : ControllerBase
         if (result.IsSuccess)
         {
             return Ok(result.Value);
+        }
+
+        return BadRequest(new { Error = result.Error });
+    }
+
+    /// <summary>
+    /// Updates a student belonging to the authenticated institution, including the teacher assignment.
+    /// </summary>
+    [HttpPut("students/{studentId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UpdateStudent(
+        Guid studentId,
+        [FromBody] UpdateInstitutionStudentRequest request)
+    {
+        var result = await _mediator.Send(new Identity.Application.Commands.UpdateInstitutionStudent.UpdateInstitutionStudentCommand(
+            studentId,
+            request.FirstName,
+            request.LastName,
+            request.GradeLevel,
+            request.TeacherUserId));
+
+        if (result.IsSuccess)
+        {
+            return NoContent();
+        }
+
+        if (result.Error.Code == "Auth.Unauthorized")
+        {
+            return Unauthorized();
+        }
+
+        if (result.Error.Code == "Institution.Forbidden")
+        {
+            return Forbid();
         }
 
         return BadRequest(new { Error = result.Error });
@@ -131,4 +209,10 @@ public class InstitutionController : ControllerBase
 
         return BadRequest(new { Error = result.Error });
     }
+
+    public sealed record UpdateInstitutionStudentRequest(
+        string FirstName,
+        string LastName,
+        int GradeLevel,
+        Guid? TeacherUserId);
 }

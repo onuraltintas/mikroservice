@@ -18,6 +18,6 @@ public class CreateTeacherCommandValidator : AbstractValidator<CreateTeacherComm
             .NotEmpty().WithMessage("Last name is required");
 
         RuleFor(x => x.Subjects)
-            .NotEmpty().WithMessage("At least one subject is required");
+            .NotNull().WithMessage("Subjects must be provided");
     }
 }

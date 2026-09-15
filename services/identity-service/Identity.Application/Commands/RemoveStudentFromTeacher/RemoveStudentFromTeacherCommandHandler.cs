@@ -38,7 +38,7 @@ public class RemoveStudentFromTeacherCommandHandler : IRequestHandler<RemoveStud
             return Result.Failure(new Error("Forbidden", "You are not a teacher"));
 
         // 3. Get Student (to ensure exists, or just use ID if we trust it)
-        var student = await _studentRepository.GetByIdAsync(request.StudentId, cancellationToken);
+        var student = await _studentRepository.GetByUserIdAsync(request.StudentId, cancellationToken);
         if (student == null)
             return Result.Failure(new Error("Student.NotFound", "Student not found"));
 

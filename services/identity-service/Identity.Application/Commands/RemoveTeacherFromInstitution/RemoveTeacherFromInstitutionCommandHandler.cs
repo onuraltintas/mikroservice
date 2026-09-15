@@ -36,11 +36,8 @@ public class RemoveTeacherFromInstitutionCommandHandler : IRequestHandler<Remove
         if (institutionId == null)
             return Result.Failure(new Error("Forbidden", "You are not an institution admin"));
 
-        if (institutionId == null)
-            return Result.Failure(new Error("Forbidden", "You are not an institution admin"));
-
         // 2. Get Teacher
-        var teacher = await _teacherRepository.GetByIdAsync(request.TeacherId, cancellationToken);
+        var teacher = await _teacherRepository.GetByUserIdAsync(request.TeacherId, institutionId, cancellationToken);
         if (teacher == null)
         {
             return Result.Failure(new Error("Teacher.NotFound", "Teacher not found"));
@@ -52,7 +49,17 @@ public class RemoveTeacherFromInstitutionCommandHandler : IRequestHandler<Remove
             return Result.Failure(new Error("RemoveTeacher.Forbidden", "This teacher does not belong to your institution"));
         }
 
-        // 4. Remove from Institution
+        // 4. End the institution-specific assignments before the teacher is detached.
+        var assignments = await _teacherRepository.GetActiveAssignmentsForTeacherAsync(
+            teacher.Id,
+            institutionId.Value,
+            cancellationToken);
+        foreach (var assignment in assignments)
+        {
+            assignment.End();
+        }
+
+        // 5. Remove from Institution
         teacher.RemoveFromInstitution();
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

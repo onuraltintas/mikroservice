@@ -5,13 +5,10 @@ import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/materia
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { TeachersService } from '../../../core/services/teachers.service';
 import { StudentsService } from '../../../core/services/students.service';
 import { ToasterService } from '../../../core/services/toaster.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { strongPasswordValidator, PASSWORD_ERROR_MESSAGES } from '../../../shared/validators/password.validator';
 import { Observable } from 'rxjs';
 import { Teacher } from '../../../core/models/teacher.model';
 
@@ -25,7 +22,6 @@ import { Teacher } from '../../../core/models/teacher.model';
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
-    MatIconModule,
     MatSelectModule
   ],
   template: `
@@ -35,170 +31,119 @@ import { Teacher } from '../../../core/models/teacher.model';
         <div class="form-row">
           <mat-form-field appearance="outline">
             <mat-label>Ad</mat-label>
-            <input matInput formControlName="firstName" placeholder="Örn: Ahmet">
+            <input matInput formControlName="firstName" autocomplete="given-name">
             <mat-error *ngIf="studentForm.get('firstName')?.hasError('required')">Ad zorunludur</mat-error>
           </mat-form-field>
-
           <mat-form-field appearance="outline">
             <mat-label>Soyad</mat-label>
-            <input matInput formControlName="lastName" placeholder="Örn: Yılmaz">
+            <input matInput formControlName="lastName" autocomplete="family-name">
             <mat-error *ngIf="studentForm.get('lastName')?.hasError('required')">Soyad zorunludur</mat-error>
           </mat-form-field>
         </div>
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>E-posta</mat-label>
-          <input matInput formControlName="email" type="email" placeholder="ahmet@ornek.com">
+          <input matInput formControlName="email" type="email" autocomplete="email">
+          <mat-hint *ngIf="!isEdit">Öğrenciye güvenli parola oluşturma bağlantısı gönderilir.</mat-hint>
           <mat-error *ngIf="studentForm.get('email')?.hasError('required')">E-posta zorunludur</mat-error>
           <mat-error *ngIf="studentForm.get('email')?.hasError('email')">Geçerli bir e-posta giriniz</mat-error>
         </mat-form-field>
 
-        <!-- Teacher Selection (Institution Admin Only) -->
-        <mat-form-field appearance="outline" class="full-width" *ngIf="isInstitutionAdmin">
-            <mat-label>Sınıf Öğretmeni</mat-label>
-            <mat-select formControlName="teacherId">
-                <mat-option [value]="null">Atanmamış (Boş)</mat-option>
-                <mat-option *ngFor="let teacher of teachers$ | async" [value]="teacher.id">
-                    {{ teacher.firstName }} {{ teacher.lastName }}
-                </mat-option>
-            </mat-select>
-            <mat-hint>Öğrencinin atanacağı öğretmeni seçiniz.</mat-hint>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Sınıf seviyesi</mat-label>
+          <mat-select formControlName="gradeLevel">
+            <mat-option *ngFor="let grade of grades" [value]="grade">{{ grade }}. sınıf</mat-option>
+          </mat-select>
+          <mat-error *ngIf="studentForm.get('gradeLevel')?.hasError('required')">Sınıf seviyesi zorunludur</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>{{ isEdit ? 'Yeni Şifre (Değiştirmek istemiyorsanız boş bırakın)' : 'Şifre' }}</mat-label>
-          <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'">
-          <mat-hint *ngIf="!isEdit">En az 8 karakter, büyük/küçük harf, rakam ve özel karakter</mat-hint>
-          <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button"
-            aria-label="Parolayı göster veya gizle">
-            <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
-          </button>
-          <mat-error *ngIf="studentForm.get('password')?.hasError('required')">Şifre zorunludur</mat-error>
-          <mat-error *ngIf="studentForm.get('password')?.getError('passwordStrength')?.minLength">{{ passwordErrorMessages['minLength'] }}</mat-error>
-          <mat-error *ngIf="studentForm.get('password')?.getError('passwordStrength')?.uppercase">{{ passwordErrorMessages['uppercase'] }}</mat-error>
-          <mat-error *ngIf="studentForm.get('password')?.getError('passwordStrength')?.lowercase">{{ passwordErrorMessages['lowercase'] }}</mat-error>
-          <mat-error *ngIf="studentForm.get('password')?.getError('passwordStrength')?.digit">{{ passwordErrorMessages['digit'] }}</mat-error>
-          <mat-error *ngIf="studentForm.get('password')?.getError('passwordStrength')?.specialChar">{{ passwordErrorMessages['specialChar'] }}</mat-error>
+          <mat-label>Sınıf öğretmeni</mat-label>
+          <mat-select formControlName="teacherUserId">
+            <mat-option [value]="null">Şimdilik atama yapma</mat-option>
+            <mat-option *ngFor="let teacher of teachers$ | async" [value]="teacher.id">
+              {{ teacher.firstName }} {{ teacher.lastName }}
+            </mat-option>
+          </mat-select>
+          <mat-hint>Atama daha sonra bu ekrandan değiştirilebilir.</mat-hint>
         </mat-form-field>
       </mat-dialog-content>
 
       <mat-dialog-actions align="end">
         <button mat-button mat-dialog-close type="button">İptal</button>
         <button mat-raised-button color="primary" type="submit" [disabled]="studentForm.invalid || loading">
-          {{ loading ? 'Kaydediliyor...' : 'Kaydet' }}
+          {{ loading ? 'Kaydediliyor...' : (isEdit ? 'Değişiklikleri Kaydet' : 'Öğrenciyi Ekle') }}
         </button>
       </mat-dialog-actions>
     </form>
   `,
   styles: [`
-    .form-row {
-      display: flex;
-      gap: 16px;
-    }
-    .full-width {
-      width: 100%;
-      margin-bottom: 8px;
-    }
-    mat-form-field {
-      width: 100%;
-    }
+    .form-row { display: flex; gap: 16px; }
+    .full-width, mat-form-field { width: 100%; }
+    .full-width { margin-bottom: 8px; }
+    @media (max-width: 520px) { .form-row { flex-direction: column; gap: 0; } }
   `]
 })
 export class StudentDialogComponent implements OnInit {
+  readonly grades = Array.from({ length: 12 }, (_, index) => index + 1);
+  isEdit = false;
   studentForm: FormGroup;
-  isEdit: boolean = false;
-  loading: boolean = false;
-  hidePassword = true;
-  passwordErrorMessages = PASSWORD_ERROR_MESSAGES;
-
-  isInstitutionAdmin = false;
   teachers$!: Observable<Teacher[]>;
+  loading = false;
 
   constructor(
-    private fb: FormBuilder,
-    private teachersService: TeachersService,
-    private studentsService: StudentsService,
-    private toaster: ToasterService,
-    private authService: AuthService,
-    public dialogRef: MatDialogRef<StudentDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    private readonly fb: FormBuilder,
+    private readonly teachersService: TeachersService,
+    private readonly studentsService: StudentsService,
+    private readonly toaster: ToasterService,
+    public readonly dialogRef: MatDialogRef<StudentDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public readonly data: { student?: any }
   ) {
     this.isEdit = !!data?.student;
-    this.isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin')
-      || this.authService.hasRole('InstitutionOwner');
-
     this.studentForm = this.fb.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      teacherId: [null], // Field for institution admin
-      password: [this.isEdit ? '' : '', this.isEdit ? [strongPasswordValidator()] : [Validators.required, strongPasswordValidator()]]
+      gradeLevel: [null, Validators.required],
+      teacherUserId: [null]
     });
   }
 
   ngOnInit(): void {
-    // Institution admins can assign a student to a teacher.
-    if (this.isInstitutionAdmin) {
-      this.teachers$ = this.teachersService.getTeachers(undefined, undefined, undefined);
-    }
-
+    this.teachers$ = this.teachersService.getTeachers(undefined, undefined, true);
     if (this.isEdit && this.data.student) {
       this.studentForm.patchValue({
         firstName: this.data.student.firstName,
         lastName: this.data.student.lastName,
         email: this.data.student.email,
-        teacherId: this.data.student.teacherId
+        gradeLevel: this.data.student.currentLevel || null,
+        teacherUserId: this.data.student.teacherId ?? null
       });
+      this.studentForm.get('email')?.disable();
     }
   }
 
   onSubmit(): void {
-    if (this.studentForm.valid) {
-      this.loading = true;
-      const formValue = this.studentForm.value;
+    if (this.studentForm.invalid) return;
 
-      if (this.isEdit) {
-        // Update
-        const updateData: any = {
-          firstName: formValue.firstName,
-          lastName: formValue.lastName,
-          email: formValue.email,
-          teacherId: formValue.teacherId // Include teacher update for institution admin
-        };
-        if (formValue.password) {
-          updateData.password = formValue.password;
-        }
+    this.loading = true;
+    const value = this.studentForm.getRawValue();
+    const request = {
+      firstName: value.firstName.trim(),
+      lastName: value.lastName.trim(),
+      gradeLevel: Number(value.gradeLevel),
+      teacherUserId: value.teacherUserId || null
+    };
+    const operation = this.isEdit
+      ? this.studentsService.updateStudent(this.data.student.id, request)
+      : this.studentsService.createStudent({ ...request, email: value.email.trim() });
 
-        // Use the generic student service so institution admins can update the assignment.
-
-        this.studentsService.updateStudent(this.data.student.id, updateData).subscribe({
-          next: () => {
-            this.toaster.success('Öğrenci başarıyla güncellendi');
-            this.dialogRef.close(true);
-          },
-          error: (err) => {
-            // Error handled globally by interceptor
-            this.loading = false;
-          }
-        });
-      } else {
-        // Create through the student service so institution admins can pass teacherId.
-        const createData = {
-          ...formValue,
-          teacherId: this.isInstitutionAdmin ? formValue.teacherId : undefined
-        };
-
-        this.studentsService.createStudent(createData).subscribe({
-          next: () => {
-            this.toaster.success('Öğrenci başarıyla oluşturuldu');
-            this.dialogRef.close(true);
-          },
-          error: (err) => {
-            // Error handled globally by interceptor
-            this.loading = false;
-          }
-        });
-      }
-    }
+    operation.subscribe({
+      next: () => {
+        this.toaster.success(this.isEdit ? 'Öğrenci güncellendi.' : 'Öğrenci eklendi; parola oluşturma bağlantısı gönderildi.');
+        this.dialogRef.close(true);
+      },
+      error: () => this.loading = false
+    });
   }
 }

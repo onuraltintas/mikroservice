@@ -17,9 +17,6 @@ public class CreateStudentCommandValidator : AbstractValidator<CreateStudentComm
         RuleFor(x => x.LastName)
             .NotEmpty().WithMessage("Last name is required");
 
-        RuleFor(x => x.StudentNumber)
-            .NotEmpty().WithMessage("Student number is required");
-
         RuleFor(x => x.GradeLevel)
             .InclusiveBetween(1, 12).WithMessage("Grade level must be between 1 and 12");
     }

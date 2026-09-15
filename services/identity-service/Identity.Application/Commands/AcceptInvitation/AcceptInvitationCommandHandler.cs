@@ -80,6 +80,10 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
 
                 case InvitationType.StudentToInstitution:
                     await AssignStudentToInstitution(userId, invitation.InstitutionId!.Value, cancellationToken);
+                    if (invitation.TeacherId is { } teacherId)
+                    {
+                        await AssignStudentToTeacher(userId, teacherId, cancellationToken);
+                    }
                     break;
 
                 case InvitationType.StudentToTeacher:

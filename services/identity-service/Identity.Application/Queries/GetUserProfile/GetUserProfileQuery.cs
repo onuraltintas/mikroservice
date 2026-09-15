@@ -16,6 +16,7 @@ public class UserProfileDto
     public bool MfaEnabled { get; set; }
     public DateTime? LastLoginAt { get; set; }
     public DateTime? CreatedAt { get; set; }
+    public int? StudentCount { get; set; }
     
     // Common fields
     public string? AvatarUrl { get; set; }

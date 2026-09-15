@@ -16,6 +16,7 @@ public class InviteStudentCommandHandler : IRequestHandler<InviteStudentCommand,
     private readonly IInvitationRepository _invitationRepository;
     private readonly IInstitutionRepository _institutionRepository;
     private readonly IUserRepository _userRepository;
+    private readonly ITeacherRepository _teacherRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
     private readonly IPublishEndpoint _publishEndpoint;
@@ -25,6 +26,7 @@ public class InviteStudentCommandHandler : IRequestHandler<InviteStudentCommand,
         IInvitationRepository invitationRepository,
         IInstitutionRepository institutionRepository,
         IUserRepository userRepository,
+        ITeacherRepository teacherRepository,
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService,
         IPublishEndpoint publishEndpoint,
@@ -33,6 +35,7 @@ public class InviteStudentCommandHandler : IRequestHandler<InviteStudentCommand,
         _invitationRepository = invitationRepository;
         _institutionRepository = institutionRepository;
         _userRepository = userRepository;
+        _teacherRepository = teacherRepository;
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
         _publishEndpoint = publishEndpoint;
@@ -55,6 +58,18 @@ public class InviteStudentCommandHandler : IRequestHandler<InviteStudentCommand,
             return Result.Failure<Guid>(new Error("InviteStudent.Forbidden", "You are not an admin of any institution"));
         }
 
+        Guid? teacherProfileId = null;
+        if (request.TeacherUserId is { } teacherUserId)
+        {
+            var teacher = await _teacherRepository.GetByUserIdAsync(teacherUserId, institutionId.Value, cancellationToken);
+            if (teacher is null)
+            {
+                return Result.Failure<Guid>(new Error("InviteStudent.TeacherNotFound", "Selected teacher does not belong to this institution"));
+            }
+
+            teacherProfileId = teacher.Id;
+        }
+
         // 2. Check if there's already a pending invitation
         var existingInvitations = await _invitationRepository.GetPendingByEmailAsync(request.StudentEmail, cancellationToken);
         var duplicateInvitation = existingInvitations.FirstOrDefault(i => 
@@ -72,6 +87,7 @@ public class InviteStudentCommandHandler : IRequestHandler<InviteStudentCommand,
             inviteeEmail: request.StudentEmail,
             type: InvitationType.StudentToInstitution,
             institutionId: institutionId,
+            teacherId: teacherProfileId,
             message: request.Message
         );
 

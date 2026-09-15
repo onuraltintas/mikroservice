@@ -84,6 +84,8 @@ public sealed class TeacherStudentsQueryTests
             CancellationToken cancellationToken) => Task.FromResult<SpeedReadingTeacherStudentScopeResponse?>(null);
         public Task AddStudentAssignmentAsync(TeacherStudentAssignment assignment, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<TeacherStudentAssignment?> GetAssignmentAsync(Guid teacherId, Guid studentId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<IReadOnlyList<TeacherStudentAssignment>> GetActiveAssignmentsForStudentAsync(Guid studentId, Guid institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<IReadOnlyList<TeacherStudentAssignment>> GetActiveAssignmentsForTeacherAsync(Guid teacherId, Guid institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 
     private sealed class StubCurrentUserService(Guid? userId, IEnumerable<string> roles) : ICurrentUserService

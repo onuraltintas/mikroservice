@@ -1,6 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
@@ -13,22 +12,11 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { environment } from '../../../../environments/environment';
 import { AddTeacherDialogComponent } from './add-teacher-dialog.component';
-import { ResetPasswordDialogComponent } from './reset-password-dialog.component';
 import { LinkTeacherDialogComponent } from './link-teacher-dialog.component';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { TeachersService } from '../../../core/services/teachers.service';
-
-interface Teacher {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  studentCount?: number;
-  isActive: boolean;
-  createdAt: string;
-}
+import { Teacher } from '../../../core/models/teacher.model';
 
 @Component({
   selector: 'app-teachers-list',
@@ -56,15 +44,6 @@ interface Teacher {
           <p class="subtitle">Kurumunuzdaki öğretmenleri yönetin ve performanslarını takip edin.</p>
         </div>
         <div class="header-actions">
-           <input type="file" id="teacherFileInput" (change)="onFileSelected($event)" accept=".xlsx, .xls" class="visually-hidden-file">
-          <button mat-stroked-button color="accent" (click)="downloadTemplate()" [disabled]="loading" class="action-btn">
-            <mat-icon>download</mat-icon>
-            Şablon İndir
-          </button>
-          <button mat-stroked-button color="primary" (click)="triggerFileInput()" [disabled]="loading" class="action-btn">
-             <mat-icon>upload_file</mat-icon>
-             Excel ile Yükle
-          </button>
           <button mat-stroked-button class="action-btn link-btn"(click) = "openLinkDialog()" >
             <mat-icon > link </mat-icon>
             Öğretmen Bağla
@@ -151,10 +130,6 @@ interface Teacher {
                       <mat-icon>more_vert</mat-icon>
                     </button>
                     <mat-menu #menu="matMenu">
-                      <button mat-menu-item (click)="openResetPasswordDialog(teacher)">
-                        <mat-icon>lock_reset</mat-icon>
-                        <span>Şifre Sıfırla</span>
-                      </button>
                       <button mat-menu-item (click)="deleteTeacher(teacher)" class="delete-item">
                         <mat-icon>delete_outline</mat-icon>
                         <span>Sil / Bağlantıyı Kes</span>
@@ -194,18 +169,6 @@ interface Teacher {
     </div>
   `,
   styles: [`
-    .visually-hidden-file {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-
     :host {
       display: block;
       min-height: 100vh;
@@ -503,11 +466,7 @@ interface Teacher {
   `]
 })
 export class TeachersListComponent implements OnInit {
-  private http = inject(HttpClient);
   private teachersService = inject(TeachersService);
-  // Wait, I cannot use dynamic import here easily for type safety.
-  // I need to add the import statement at the top first.
-  // Let me update the imports first.
   private dialog = inject(MatDialog);
   private toaster = inject(ToasterService);
 
@@ -522,7 +481,7 @@ export class TeachersListComponent implements OnInit {
 
   loadTeachers(): void {
     this.loading = true;
-    this.http.get<Teacher[]>(`${environment.apiUrl}/v1/teachers`).subscribe({
+    this.teachersService.getTeachers(undefined, undefined, undefined).subscribe({
       next: (data) => {
         this.dataSource.data = data;
         this.loading = false;
@@ -571,31 +530,13 @@ export class TeachersListComponent implements OnInit {
   }
 
   viewReports(teacher: Teacher): void {
-    // Navigate to reports section with teacherId query param
-    // We use window.location.href or router.navigate. Since other methods use window.location, we can stick to it or better use Router if injected.
-    // BaseComponent usually has router but this is standalone.
-    // I can't easily add Router injection without breaking constructor signature in pure replace.
-    // But wait, "private http = inject(HttpClient)" style is used. I can add router injection!
     window.location.href = `/teacher/reports/class-overview?teacherId=${teacher.id}`;
-  }
-
-  openResetPasswordDialog(teacher: Teacher): void {
-    const dialogRef = this.dialog.open(ResetPasswordDialogComponent, {
-      width: '400px',
-      data: { teacherId: teacher.id, teacherName: `${teacher.firstName} ${teacher.lastName}` }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.toaster.success('Şifre başarıyla güncellendi');
-      }
-    });
   }
 
   async deleteTeacher(teacher: Teacher): Promise<void> {
     const confirmed = await this.toaster.confirm(`${teacher.firstName} ${teacher.lastName} adlı öğretmeni silmek veya bağlantısını kesmek istediğinize emin misiniz?`, { title: 'Öğretmeni sil veya bağlantıyı kes' });
     if (confirmed) {
-      this.http.delete(`${environment.apiUrl}/v1/teachers/${teacher.id}`).subscribe({
+      this.teachersService.deleteTeacher(teacher.id).subscribe({
         next: () => {
           this.toaster.success('Öğretmen başarıyla silindi/bağlantı kesildi');
           this.loadTeachers();
@@ -607,76 +548,6 @@ export class TeachersListComponent implements OnInit {
     }
   }
 
-  triggerFileInput(): void {
-    const fileInput = document.getElementById('teacherFileInput') as HTMLInputElement;
-    if (fileInput) {
-      fileInput.click();
-    }
-  }
-
-  onFileSelected(event: any): void {
-    const file: File = event.target.files[0];
-    if (file) {
-      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-        this.toaster.error('Lütfen geçerli bir Excel dosyası yükleyin (.xlsx, .xls)');
-        return;
-      }
-
-      this.loading = true;
-      // Note: teachersService is not injected as a public property but as private.
-      // But looking at the class, it is injected as 'private http'.
-      // Wait, 'TeachersService' is NOT injected in the constructor or via inject() in the original file I viewed?
-      // Let me double check the file content.
-      // Ah, line 488: `private http = inject(HttpClient);`
-      // But I need `TeachersService` to call `importTeachers`. 
-      // I should inject `TeachersService`.
-      // I will assume I can access it if I inject it.
-      // Wait, I need to check if TeachersService is already injected.
-      // It is NOT in the original file. I only see HttpClient.
-      // So I will fix the Injection in a separate step or try to use HttpClient directly?
-      // Better to use TeachersService.
-      // I will add the logic assuming I will add the injection next.
-
-      // Since I can't easily add injection in the middle of lines without context, 
-      // I'll add the methods first, then I'll add the injection.
-
-      // Actually, I can use the existing 'http' to call the service methods logic if I wanted to, 
-      // but proper way is to use the service.
-
-      // I'll assume 'teachersService' will be available.
-      this.teachersService.importTeachers(file).subscribe({
-        next: (result: any) => {
-          this.loading = false;
-          if (result.failureCount > 0) {
-            this.toaster.warning(`${result.successCount} öğretmen eklendi, ${result.failureCount} hata oluştu. Hatalar: \n${result.errors.join('\n')}`);
-          } else {
-            this.toaster.success(`${result.successCount} öğretmen başarıyla eklendi.`);
-          }
-          this.loadTeachers();
-        },
-        error: (err: any) => {
-          this.loading = false;
-          this.toaster.error('Dosya yüklenirken bir hata oluştu. Lütfen dosya formatını kontrol edin.');
-        }
-      });
-    }
-  }
-
-  downloadTemplate(): void {
-    this.teachersService.getTeacherImportTemplate().subscribe({
-      next: (blob: Blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'Ogretmen_Yukleme_Sablonu.xlsx';
-        a.click();
-        window.URL.revokeObjectURL(url);
-      },
-      error: (err: any) => {
-        this.toaster.error('Şablon indirilemedi.');
-      }
-    });
-  }
 
   // Helpers
   getInitials(teacher: Teacher): string {

@@ -21,29 +21,15 @@ export interface CreateStudentRequest {
   firstName: string;
   lastName: string;
   email: string;
-  password: string;
-  institutionId?: string;
-  teacherId?: string;
-  currentLevel: number;
-  targetWPM: number;
-  targetComprehension: number;
-  dailyGoalMinutes: number;
-  learningStyle: string;
+  gradeLevel: number;
+  teacherUserId?: string | null;
 }
 
 export interface UpdateStudentRequest {
-  id: string;
   firstName: string;
   lastName: string;
-  email: string;
-  institutionId?: string;
-  teacherId?: string;
-  currentLevel: number;
-  targetWPM: number;
-  targetComprehension: number;
-  dailyGoalMinutes: number;
-  learningStyle: string;
-  isActive: boolean;
+  gradeLevel: number;
+  teacherUserId?: string | null;
 }
 
 export interface StudentExerciseResult {
