@@ -250,6 +250,17 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Fact]
+    public void Question_quality_review_ignores_small_length_differences_in_short_labels()
+    {
+        var review = ExamQuestionQualityAnalyzer.Analyze(new ExamQuestionRequest(
+            "İstanbul, Roma, Bizans ve Osmanlı olmak üzere üç imparatorluğa başkentlik yapmıştır.",
+            "Parçaya göre İstanbul kaç imparatorluğa başkentlik yapmıştır?",
+            "İki", "Üç", "Dört", "Beş", "Bir", "B", 6, 1, 0, null, 1));
+
+        review.Warnings.Should().NotContain(item => item.Code == "correct-option-length-cue");
+    }
+
+    [Fact]
     public void Visualization_scene_keeps_an_explicit_practice_mode()
     {
         var scene = VisualizationScene.Create(

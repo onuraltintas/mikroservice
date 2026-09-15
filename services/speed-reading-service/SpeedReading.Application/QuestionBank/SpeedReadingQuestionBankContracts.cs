@@ -98,13 +98,24 @@ public static class ExamQuestionQualityAnalyzer
             .Where(length => length > 0)
             .ToList();
         var correctLength = VisibleLength(correctAnswer);
-        if (otherLengths.Count >= 3
-            && (correctLength > otherLengths.Max() * 1.25m
-                || correctLength < otherLengths.Min() * .75m))
+        // Short labels such as numbers or Roman numerals naturally vary by a character or two;
+        // flag only a gap large enough to serve as a plausible answer shortcut.
+        const int materialLengthDifference = 8;
+        const decimal maximumRelativeLengthRatio = 1.5m;
+        if (otherLengths.Count >= 3)
         {
-            warnings.Add(new(
-                "correct-option-length-cue",
-                "Doğru seçenek diğerlerinden belirgin biçimde uzun veya kısa; uzunluk ipucu oluşturabilir."));
+            var longestOtherLength = otherLengths.Max();
+            var shortestOtherLength = otherLengths.Min();
+            var correctAnswerIsMateriallyLonger = correctLength - longestOtherLength >= materialLengthDifference
+                && correctLength > longestOtherLength * maximumRelativeLengthRatio;
+            var correctAnswerIsMateriallyShorter = shortestOtherLength - correctLength >= materialLengthDifference
+                && correctLength < shortestOtherLength / maximumRelativeLengthRatio;
+            if (correctAnswerIsMateriallyLonger || correctAnswerIsMateriallyShorter)
+            {
+                warnings.Add(new(
+                    "correct-option-length-cue",
+                    "Doğru seçenek diğerlerinden belirgin biçimde uzun veya kısa; uzunluk ipucu oluşturabilir."));
+            }
         }
 
         if (string.IsNullOrWhiteSpace(request.Content) || WordCount(request.Content) < 8)

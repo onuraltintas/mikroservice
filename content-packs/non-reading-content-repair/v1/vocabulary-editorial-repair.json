@@ -1,0 +1,1387 @@
+{
+  "version": "v1",
+  "purpose": "Kısa tanımları genişletmek ve yinelenen kelime kayıtlarını tekilleştirmek",
+  "definitionUpdates": [
+    {
+      "id": "19191919-1919-1919-1919-191919190106",
+      "word": "Ahenk",
+      "original": "Uyum, düzen",
+      "revised": "Bir eserde ses, söz ve öğelerin uyum içinde düzenlenmesidir."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa186",
+      "word": "Altmış",
+      "original": "60 sayısı",
+      "revised": "Altı onluktan oluşan, 60 ile gösterilen doğal sayıdır."
+    },
+    {
+      "id": "19191919-1919-1919-1919-191919190097",
+      "word": "Analiz",
+      "original": "Çözümleme",
+      "revised": "Bir konuyu parçalarına ayırıp ayrıntılı biçimde inceleme işlemidir."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa191",
+      "word": "Bin",
+      "original": "1000 sayısı",
+      "revised": "On yüzlükten oluşan, 1000 ile gösterilen doğal sayıdır."
+    },
+    {
+      "id": "21212121-2121-2121-2121-212121210067",
+      "word": "Diyalog",
+      "original": "Karşılıklı konuşma",
+      "revised": "İki ya da daha çok kişi arasında karşılıklı yapılan konuşmadır."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa189",
+      "word": "Doksan",
+      "original": "90 sayısı",
+      "revised": "Dokuz onluktan oluşan, 90 ile gösterilen doğal sayıdır."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa185",
+      "word": "Elli",
+      "original": "50 sayısı",
+      "revised": "Beş onluktan oluşan, 50 ile gösterilen doğal sayıdır."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa015",
+      "word": "Endişeli",
+      "original": "Kaygılı, tedirgin",
+      "revised": "Olumsuz bir durum olabileceği düşüncesiyle kaygı duyan kişidir."
+    },
+    {
+      "id": "19191919-1919-1919-1919-191919190091",
+      "word": "Fonksiyon",
+      "original": "İşlev, görev",
+      "revised": "Bir şeyin yerine getirdiği görev veya üstlendiği işlevdir."
+    },
+    {
+      "id": "19191919-1919-1919-1919-191919190099",
+      "word": "Kalite",
+      "original": "Nitelik",
+      "revised": "Bir ürünün ya da işin beklenen nitelikleri karşılama düzeyidir."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa184",
+      "word": "Kırk",
+      "original": "40 sayısı",
+      "revised": "Dört onluktan oluşan, 40 ile gösterilen doğal sayıdır."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa003",
+      "word": "Kızgın",
+      "original": "Öfkeli, sinirlenmiş",
+      "revised": "Bir olay ya da kişiye karşı öfke duyan, sinirlenmiş kişidir."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa095",
+      "word": "Konuşmak",
+      "original": "Söz söylemek",
+      "revised": "Düşünce ve duyguları sözlerle başkasına aktarmaktır."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa100",
+      "word": "Korkmak",
+      "original": "Tehlikeden çekinmek",
+      "revised": "Tehlike veya zarar ihtimali karşısında kaygı ve çekinme duymaktır."
+    },
+    {
+      "id": "19191919-1919-1919-1919-191919190092",
+      "word": "Mekanizma",
+      "original": "Düzenek, işleyiş",
+      "revised": "Bir sistemin parçalarının birlikte nasıl çalıştığını gösteren düzenektir."
+    },
+    {
+      "id": "19191919-1919-1919-1919-191919190087",
+      "word": "Metot",
+      "original": "Yöntem, usul",
+      "revised": "Bir işi yapmak veya sonuca ulaşmak için izlenen düzenli yoldur."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa192",
+      "word": "Milyon",
+      "original": "1.000.000 sayısı",
+      "revised": "Bin binlikten oluşan, 1.000.000 ile gösterilen doğal sayıdır."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa018",
+      "word": "Neşeli",
+      "original": "Gülen, keyifli",
+      "revised": "Sevinçli, keyifli ve olumlu duygular içinde olan kişidir."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa093",
+      "word": "Okumak",
+      "original": "Yazıları anlamak",
+      "revised": "Yazılı işaretleri anlayarak sesli ya da sessiz biçimde anlamlandırmaktır."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa183",
+      "word": "Otuz",
+      "original": "30 sayısı",
+      "revised": "Üç onluktan oluşan, 30 ile gösterilen doğal sayıdır."
+    },
+    {
+      "id": "18181818-1818-1818-1818-181818180053",
+      "word": "Perspektif",
+      "original": "Bakış açısı",
+      "revised": "Bir konuya veya olaya bakma ve onu değerlendirme açısıdır."
+    },
+    {
+      "id": "19191919-1919-1919-1919-191919190068",
+      "word": "Prestij",
+      "original": "Saygınlık, itibar",
+      "revised": "Bir kişi ya da kurumun toplum içinde sahip olduğu saygınlıktır."
+    },
+    {
+      "id": "19191919-1919-1919-1919-191919190017",
+      "word": "Referandum",
+      "original": "Halk oylaması",
+      "revised": "Halkın önemli bir konuda doğrudan oy kullanarak karar vermesidir."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa013",
+      "word": "Sakin",
+      "original": "Dingin, huzurlu",
+      "revised": "Telaşlanmadan, dingin ve huzurlu davranan kişidir."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa188",
+      "word": "Seksen",
+      "original": "80 sayısı",
+      "revised": "Sekiz onluktan oluşan, 80 ile gösterilen doğal sayıdır."
+    },
+    {
+      "id": "19191919-1919-1919-1919-191919190098",
+      "word": "Sentez",
+      "original": "Bireşim",
+      "revised": "Farklı parçaları bir araya getirerek yeni ve anlamlı bir bütün oluşturmadır."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa091",
+      "word": "Su İçmek",
+      "original": "Sıvı tüketmek",
+      "revised": "Vücudun sıvı ihtiyacını karşılamak için su tüketmektir."
+    },
+    {
+      "id": "19191919-1919-1919-1919-191919190095",
+      "word": "Teori",
+      "original": "Kuram",
+      "revised": "Olayları açıklamak için kanıtlara dayalı olarak oluşturulan düşünce sistemidir."
+    },
+    {
+      "id": "21212121-2121-2121-2121-212121210007",
+      "word": "Tereddüt",
+      "original": "Kararsızlık, duraksama",
+      "revised": "Bir karar verirken kararsız kalma ve duraksama durumudur."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa089",
+      "word": "Uyanmak",
+      "original": "Uykudan kalkmak",
+      "revised": "Uyku durumundan çıkıp bilinçli hâle gelmektir."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa090",
+      "word": "Yemek Yemek",
+      "original": "Gıda tüketmek",
+      "revised": "Vücudun enerji ve besin ihtiyacını karşılamak için gıda tüketmektir."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa187",
+      "word": "Yetmiş",
+      "original": "70 sayısı",
+      "revised": "Yedi onluktan oluşan, 70 ile gösterilen doğal sayıdır."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa182",
+      "word": "Yirmi",
+      "original": "20 sayısı",
+      "revised": "İki onluktan oluşan, 20 ile gösterilen doğal sayıdır."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa190",
+      "word": "Yüz",
+      "original": "100 sayısı",
+      "revised": "On onluktan oluşan, 100 ile gösterilen doğal sayıdır."
+    },
+    {
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa020",
+      "word": "Zinde",
+      "original": "Enerjik, sağlıklı",
+      "revised": "Kendini dinç, enerjik ve sağlıklı hisseden kişidir."
+    },
+    {
+      "id": "19191919-1919-1919-1919-191919190114",
+      "word": "İroni",
+      "original": "İnce alay",
+      "revised": "Bir düşünceyi doğrudan değil, tersini söyleyerek alaylı biçimde anlatmadır."
+    }
+  ],
+  "duplicateResolutions": [
+    {
+      "word": "Alegori",
+      "category": "Edebiyat",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa526",
+      "archivedIds": [
+        "17171717-1717-1717-1717-171717170028"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Algoritma",
+      "category": "Teknoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa434",
+      "archivedIds": [
+        "13131313-1313-1313-1313-131313130001",
+        "18181818-1818-1818-1818-181818180055",
+        "21212121-2121-2121-2121-212121210062"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Analiz",
+      "category": "Akademik",
+      "targetAgeGroupId": null,
+      "canonicalId": "20202020-2020-2020-2020-202020200061",
+      "archivedIds": [
+        "18181818-1818-1818-1818-181818180012",
+        "19191919-1919-1919-1919-191919190097",
+        "bbbbbbbb-bbbb-bbbb-bbbb-000000000101"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Anayasa",
+      "category": "Hukuk",
+      "targetAgeGroupId": null,
+      "canonicalId": "19191919-1919-1919-1919-191919190036",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200032",
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa801"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Antlaşma",
+      "category": "Tarih",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa534",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200028"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Arayüz",
+      "category": "Teknoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa408",
+      "archivedIds": [
+        "15151515-1515-1515-1515-151515150003"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Arkeoloji",
+      "category": "Tarih",
+      "targetAgeGroupId": null,
+      "canonicalId": "21212121-2121-2121-2121-212121210035",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190046",
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa540"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Asimilasyon",
+      "category": "Sosyoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "15151515-1515-1515-1515-151515150019",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190064"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Atom",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa351",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa706"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Bileşik",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "20202020-2020-2020-2020-202020200003",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa714"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Bürokrasi",
+      "category": "Siyaset",
+      "targetAgeGroupId": null,
+      "canonicalId": "19191919-1919-1919-1919-191919190012",
+      "archivedIds": [
+        "16161616-1616-1616-1616-161616160018"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Cari Açık",
+      "category": "Ekonomi",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa667",
+      "archivedIds": [
+        "16161616-1616-1616-1616-161616160010"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Cumhuriyet",
+      "category": "Tarih",
+      "targetAgeGroupId": null,
+      "canonicalId": "20202020-2020-2020-2020-202020200031",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa550"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Demagoji",
+      "category": "Siyaset",
+      "targetAgeGroupId": null,
+      "canonicalId": "19191919-1919-1919-1919-191919190039",
+      "archivedIds": [
+        "16161616-1616-1616-1616-161616160020"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Deneme",
+      "category": "Edebiyat",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa517",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200081"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Deney",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa702",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa360"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Denklem",
+      "category": "Matematik",
+      "targetAgeGroupId": null,
+      "canonicalId": "20202020-2020-2020-2020-202020200045",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa387"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Devalüasyon",
+      "category": "Ekonomi",
+      "targetAgeGroupId": null,
+      "canonicalId": "16161616-1616-1616-1616-161616160003",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190003"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Devrim",
+      "category": "Tarih",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa535",
+      "archivedIds": [
+        "18181818-1818-1818-1818-181818180043"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Diplomasi",
+      "category": "Siyaset",
+      "targetAgeGroupId": null,
+      "canonicalId": "16161616-1616-1616-1616-161616160021",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190011"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Diyalektik",
+      "category": "Felsefe",
+      "targetAgeGroupId": null,
+      "canonicalId": "17171717-1717-1717-1717-171717170017",
+      "archivedIds": [
+        "13131313-1313-1313-1313-131313130012",
+        "19191919-1919-1919-1919-191919190073"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Donanım",
+      "category": "Teknoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa404",
+      "archivedIds": [
+        "21212121-2121-2121-2121-212121210042"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Egemenlik",
+      "category": "Siyaset",
+      "targetAgeGroupId": null,
+      "canonicalId": "16161616-1616-1616-1616-161616160026",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190015"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Ekosistem",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa380",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200004",
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa710"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Ekran",
+      "category": "Teknoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "21212121-2121-2121-2121-212121210059",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa412"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Element",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "20202020-2020-2020-2020-202020200002",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa713"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Empati",
+      "category": "Psikoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "15151515-1515-1515-1515-151515150042",
+      "archivedIds": [
+        "21212121-2121-2121-2121-212121210002",
+        "bbbbbbbb-bbbb-bbbb-bbbb-000000000041"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Enerji",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa354",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200008"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Enflasyon",
+      "category": "Ekonomi",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa641",
+      "archivedIds": [
+        "16161616-1616-1616-1616-161616160001",
+        "19191919-1919-1919-1919-191919190001"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Entegrasyon",
+      "category": "Teknoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "13131313-1313-1313-1313-131313130004",
+      "archivedIds": [
+        "bbbbbbbb-bbbb-bbbb-bbbb-000000000141"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Erozyon",
+      "category": "Cografya",
+      "targetAgeGroupId": null,
+      "canonicalId": "20202020-2020-2020-2020-202020200037",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa594"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Estetik",
+      "category": "Felsefe",
+      "targetAgeGroupId": null,
+      "canonicalId": "17171717-1717-1717-1717-171717170016",
+      "archivedIds": [
+        "13131313-1313-1313-1313-131313130010"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Estetik",
+      "category": "Sanat",
+      "targetAgeGroupId": null,
+      "canonicalId": "21212121-2121-2121-2121-212121210021",
+      "archivedIds": [
+        "18181818-1818-1818-1818-181818180065",
+        "19191919-1919-1919-1919-191919190044"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Etik",
+      "category": "Felsefe",
+      "targetAgeGroupId": null,
+      "canonicalId": "17171717-1717-1717-1717-171717170015",
+      "archivedIds": [
+        "13131313-1313-1313-1313-131313130009",
+        "19191919-1919-1919-1919-191919190043"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Fetih",
+      "category": "Tarih",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa544",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200022"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Fizik",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "18181818-1818-1818-1818-181818180078",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa358"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Fonksiyon",
+      "category": "Genel",
+      "targetAgeGroupId": null,
+      "canonicalId": "14141414-1414-1414-1414-141414140044",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190091"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Galaksi",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "14141414-1414-1414-1414-141414140005",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa721"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Gelenek",
+      "category": "Kültür",
+      "targetAgeGroupId": null,
+      "canonicalId": "21212121-2121-2121-2121-212121210033",
+      "archivedIds": [
+        "bbbbbbbb-bbbb-bbbb-bbbb-000000000023"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Girişimcilik",
+      "category": "Is Dunyasi",
+      "targetAgeGroupId": null,
+      "canonicalId": "15151515-1515-1515-1515-151515150010",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190104"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Grafik",
+      "category": "Matematik",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa396",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200051"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Gözlem",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa703",
+      "archivedIds": [
+        "18181818-1818-1818-1818-181818180035",
+        "20202020-2020-2020-2020-202020200016",
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa363"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Göç",
+      "category": "Cografya",
+      "targetAgeGroupId": null,
+      "canonicalId": "20202020-2020-2020-2020-202020200042",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa596"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Güncelleme",
+      "category": "Teknoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "21212121-2121-2121-2121-212121210056",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa427"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Hegemonya",
+      "category": "Siyaset",
+      "targetAgeGroupId": null,
+      "canonicalId": "16161616-1616-1616-1616-161616160017",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190013"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Hikaye",
+      "category": "Edebiyat",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa503",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200080"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Hipotez",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa361",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200047",
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa701"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Hiyerarşi",
+      "category": "Sosyoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "15151515-1515-1515-1515-151515150013",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190066"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Hücre",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa353",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa707"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "İdeoloji",
+      "category": "Siyaset",
+      "targetAgeGroupId": null,
+      "canonicalId": "16161616-1616-1616-1616-161616160022",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190016"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "İklim",
+      "category": "Cografya",
+      "targetAgeGroupId": null,
+      "canonicalId": "20202020-2020-2020-2020-202020200036",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa570"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "İnovasyon",
+      "category": "Teknoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "13131313-1313-1313-1313-131313130002",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190103"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "İroni",
+      "category": "Edebiyat",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa527",
+      "archivedIds": [
+        "17171717-1717-1717-1717-171717170027",
+        "19191919-1919-1919-1919-191919190114"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "İvme",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa372",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200006",
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa718"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "İçtihat",
+      "category": "Hukuk",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa809",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190031"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Kalite",
+      "category": "Genel",
+      "targetAgeGroupId": null,
+      "canonicalId": "18181818-1818-1818-1818-181818180049",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190099"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Kaos",
+      "category": "Genel",
+      "targetAgeGroupId": null,
+      "canonicalId": "19191919-1919-1919-1919-191919190081",
+      "archivedIds": [
+        "14141414-1414-1414-1414-141414140045"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Karakter",
+      "category": "Psikoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "18181818-1818-1818-1818-181818180066",
+      "archivedIds": [
+        "21212121-2121-2121-2121-212121210012"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Kavram",
+      "category": "Akademik",
+      "targetAgeGroupId": null,
+      "canonicalId": "20202020-2020-2020-2020-202020200065",
+      "archivedIds": [
+        "18181818-1818-1818-1818-181818180013"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Kimya",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa357",
+      "archivedIds": [
+        "18181818-1818-1818-1818-181818180079"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Klavye",
+      "category": "Teknoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "21212121-2121-2121-2121-212121210060",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa410"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Koalisyon",
+      "category": "Siyaset",
+      "targetAgeGroupId": null,
+      "canonicalId": "16161616-1616-1616-1616-161616160025",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190020"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Kronoloji",
+      "category": "Tarih",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa539",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190049"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Kuvvet",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa355",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200007"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Likidite",
+      "category": "Ekonomi",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa659",
+      "archivedIds": [
+        "16161616-1616-1616-1616-161616160004",
+        "19191919-1919-1919-1919-191919190004"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Literatür",
+      "category": "Akademik",
+      "targetAgeGroupId": null,
+      "canonicalId": "14141414-1414-1414-1414-141414140033",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190120"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Manyetizma",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa365",
+      "archivedIds": [
+        "14141414-1414-1414-1414-141414140009"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Medeniyet",
+      "category": "Tarih",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa531",
+      "archivedIds": [
+        "18181818-1818-1818-1818-181818180025"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Melankoli",
+      "category": "Psikoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "17171717-1717-1717-1717-171717170036",
+      "archivedIds": [
+        "21212121-2121-2121-2121-212121210003"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Metafor",
+      "category": "Edebiyat",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa510",
+      "archivedIds": [
+        "18181818-1818-1818-1818-181818180063"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Misyon",
+      "category": "Is Dunyasi",
+      "targetAgeGroupId": null,
+      "canonicalId": "14141414-1414-1414-1414-141414140039",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190079"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Molekül",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa352",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200019",
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa705"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Monarşi",
+      "category": "Tarih",
+      "targetAgeGroupId": null,
+      "canonicalId": "20202020-2020-2020-2020-202020200030",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa551"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Muhalefet",
+      "category": "Siyaset",
+      "targetAgeGroupId": null,
+      "canonicalId": "19191919-1919-1919-1919-191919190019",
+      "archivedIds": [
+        "16161616-1616-1616-1616-161616160028"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Norm",
+      "category": "Sosyoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "15151515-1515-1515-1515-151515150016",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190069"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Nüfus",
+      "category": "Cografya",
+      "targetAgeGroupId": null,
+      "canonicalId": "20202020-2020-2020-2020-202020200041",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa595"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Olasılık",
+      "category": "Matematik",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa398",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200043"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Oligarşi",
+      "category": "Siyaset",
+      "targetAgeGroupId": null,
+      "canonicalId": "16161616-1616-1616-1616-161616160019",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190063"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Oran",
+      "category": "Matematik",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa394",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200044"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Organizma",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa379",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200020"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Paradigma",
+      "category": "Felsefe",
+      "targetAgeGroupId": null,
+      "canonicalId": "13131313-1313-1313-1313-131313130011",
+      "archivedIds": [
+        "bbbbbbbb-bbbb-bbbb-bbbb-000000000142"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Portföy",
+      "category": "Ekonomi",
+      "targetAgeGroupId": null,
+      "canonicalId": "16161616-1616-1616-1616-161616160012",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190005"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Portre",
+      "category": "Sanat",
+      "targetAgeGroupId": null,
+      "canonicalId": "21212121-2121-2121-2121-212121210029",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa266"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Radyasyon",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "14141414-1414-1414-1414-141414140004",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa712"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Reaksiyon",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa375",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200001"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Referandum",
+      "category": "Siyaset",
+      "targetAgeGroupId": null,
+      "canonicalId": "19191919-1919-1919-1919-191919190017",
+      "archivedIds": [
+        "16161616-1616-1616-1616-161616160023"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Reform",
+      "category": "Tarih",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa554",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200024"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Resesyon",
+      "category": "Ekonomi",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa666",
+      "archivedIds": [
+        "16161616-1616-1616-1616-161616160002",
+        "19191919-1919-1919-1919-191919190002"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Roman",
+      "category": "Edebiyat",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa501",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200079"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Sentez",
+      "category": "Akademik",
+      "targetAgeGroupId": null,
+      "canonicalId": "20202020-2020-2020-2020-202020200062",
+      "archivedIds": [
+        "18181818-1818-1818-1818-181818180011",
+        "19191919-1919-1919-1919-191919190098"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Siber",
+      "category": "Teknoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "21212121-2121-2121-2121-212121210046",
+      "archivedIds": [
+        "13131313-1313-1313-1313-131313130006"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Siber Güvenlik",
+      "category": "Teknoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa430",
+      "archivedIds": [
+        "15151515-1515-1515-1515-151515150009"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Simülasyon",
+      "category": "Teknoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "21212121-2121-2121-2121-212121210063",
+      "archivedIds": [
+        "13131313-1313-1313-1313-131313130007",
+        "14141414-1414-1414-1414-141414140035"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Spekülasyon",
+      "category": "Ekonomi",
+      "targetAgeGroupId": null,
+      "canonicalId": "16161616-1616-1616-1616-161616160006",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190006"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Statü",
+      "category": "Sosyoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "19191919-1919-1919-1919-191919190067",
+      "archivedIds": [
+        "15151515-1515-1515-1515-151515150014"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Strateji",
+      "category": "Is Dunyasi",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa609",
+      "archivedIds": [
+        "16161616-1616-1616-1616-161616160031"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Sübvansiyon",
+      "category": "Ekonomi",
+      "targetAgeGroupId": null,
+      "canonicalId": "16161616-1616-1616-1616-161616160008",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190008"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Süreç",
+      "category": "Genel",
+      "targetAgeGroupId": null,
+      "canonicalId": "14141414-1414-1414-1414-141414140050",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190088"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Tasarruf",
+      "category": "Ekonomi",
+      "targetAgeGroupId": null,
+      "canonicalId": "19191919-1919-1919-1919-191919190102",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa656"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Tema",
+      "category": "Edebiyat",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa509",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200069"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Teori",
+      "category": "Akademik",
+      "targetAgeGroupId": null,
+      "canonicalId": "14141414-1414-1414-1414-141414140034",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190095",
+        "20202020-2020-2020-2020-202020200063"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Teori",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa362",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa704"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Termodinamik",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "14141414-1414-1414-1414-141414140010",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa717"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Uygulama",
+      "category": "Teknoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "21212121-2121-2121-2121-212121210052",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa405"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Veri",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "18181818-1818-1818-1818-181818180056",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200017"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Veri",
+      "category": "Teknoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa409",
+      "archivedIds": [
+        "13131313-1313-1313-1313-131313130008"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Verimlilik",
+      "category": "Is Dunyasi",
+      "targetAgeGroupId": null,
+      "canonicalId": "18181818-1818-1818-1818-181818180048",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa630"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Vizyon",
+      "category": "Is Dunyasi",
+      "targetAgeGroupId": null,
+      "canonicalId": "14141414-1414-1414-1414-141414140038",
+      "archivedIds": [
+        "19191919-1919-1919-1919-191919190078"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Yapay Zeka",
+      "category": "Teknoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa435",
+      "archivedIds": [
+        "15151515-1515-1515-1515-151515150006"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Yatırım",
+      "category": "Ekonomi",
+      "targetAgeGroupId": null,
+      "canonicalId": "19191919-1919-1919-1919-191919190101",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa646"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Yazılım",
+      "category": "Teknoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa403",
+      "archivedIds": [
+        "21212121-2121-2121-2121-212121210041"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Yoğunluk",
+      "category": "Bilim",
+      "targetAgeGroupId": null,
+      "canonicalId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa370",
+      "archivedIds": [
+        "20202020-2020-2020-2020-202020200009"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Yüzde",
+      "category": "Matematik",
+      "targetAgeGroupId": null,
+      "canonicalId": "20202020-2020-2020-2020-202020200054",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa395"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    },
+    {
+      "word": "Şifre",
+      "category": "Teknoloji",
+      "targetAgeGroupId": null,
+      "canonicalId": "21212121-2121-2121-2121-212121210048",
+      "archivedIds": [
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa431"
+      ],
+      "reason": "Aynı kelime, kategori ve yaş grubundaki yinelenen kayıtlar tek bir başlangıç düzeyindeki kayıtta birleştirildi."
+    }
+  ]
+}

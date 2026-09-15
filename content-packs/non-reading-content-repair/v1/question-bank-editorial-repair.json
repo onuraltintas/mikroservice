@@ -1,0 +1,342 @@
+{
+  "version": "v1",
+  "purpose": "Harici soru seçeneklerinde cevap uzunluğu ipucunu gidermek",
+  "updates": [
+    {
+      "id": "0610b07a-a4a7-4e7c-acfa-573fa12f75c7",
+      "field": "optionB",
+      "original": "Kamu hizmetinde süreklilik ilkesinin önemini açıklamak",
+      "revised": "Hizmette sürekliliği vurgulamak",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "0c6c95e6-715e-453c-90eb-4fd5dacccbd4",
+      "field": "optionD",
+      "original": "Gerçekliği olduğu gibi, hiç değiştirmeden yansıttığına",
+      "revised": "Gerçekliği değiştirmeden yansıttığına",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "11d346a7-a680-4cad-b287-ba052fc39a9a",
+      "field": "optionC",
+      "original": "Gizli anahtar paylaşımı sorununun olmaması (Açık anahtarın herkesle paylaşılabilmesi)",
+      "revised": "Gizli anahtarın paylaşılmaması",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "1300cb66-f16a-4470-a532-8ff41b6800ef",
+      "field": "optionB",
+      "original": "Teori ve pratiğin karşılıklı etkileşimi bilimsel ilerlemeyi sağlar.",
+      "revised": "Teori ve pratiğin birbirini geliştirmesi",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "13434d4b-87dd-4de6-9d0e-e42307d28bd5",
+      "field": "optionB",
+      "original": "Gerçek dostluk, kalıcı ve değerli bir ilişkidir.",
+      "revised": "Dostluğun kalıcı ve değerli oluşu",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "1dea4337-e81f-44a8-8215-ce96be58097d",
+      "field": "optionB",
+      "original": "Göç, hem göçmen hem de ev sahibi toplumu etkileyen çok boyutlu bir süreçtir.",
+      "revised": "Göçün toplumları çok yönlü etkilemesi",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "1ed655aa-7b87-4aa5-ac4a-64d9d6c1ac2b",
+      "field": "optionC",
+      "original": "Okuru metnin inşasına dahil etmesi ve kurgusallığı vurgulaması",
+      "revised": "Okuru kurguya ortak etmesi",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "233ccc49-c658-4c52-999b-c0690ef8f396",
+      "field": "optionB",
+      "original": "Edebiyat, toplumsal gerçekliği yansıtan önemli bir kaynaktır.",
+      "revised": "Edebiyatın toplumsal gerçekliği yansıtması",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "2560a896-fb73-48df-a261-4d4010d0114e",
+      "field": "optionB",
+      "original": "Kaliteli araştırma için hem güvenilirlik hem geçerlilik gereklidir.",
+      "revised": "Güvenilirlik ve geçerliliğin birlikte gerekli oluşu",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "28176fb2-4559-4a03-8f67-9bcf253f1ba6",
+      "field": "optionB",
+      "original": "Güçlü örgüt kültürü, kurumsal başarıya katkı sağlar.",
+      "revised": "Örgüt kültürünün başarıya katkısı",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "333333fa-334e-4fc2-8b9e-fb6d91e3ac29",
+      "field": "optionB",
+      "original": "Farklı yöntemlerin birlikte kullanılması daha kapsamlı sonuçlar verir.",
+      "revised": "Çoklu yöntemin araştırmayı güçlendirmesi",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "33a59e4d-36ed-4ff3-bcbd-e774cef1c01e",
+      "field": "optionA",
+      "original": "Sadece bütçe planlaması",
+      "revised": "Yalnızca bütçe ve mali kaynak planlaması yapmak",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "390d0e7f-f608-4cea-b16d-9a537cc9f48b",
+      "field": "optionB",
+      "original": "Hayat tecrübesi, öğütlerin değerini anlamamızı sağlar.",
+      "revised": "Tecrübenin öğütleri anlamayı artırması",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "3eab258c-eda3-4b2d-a7c0-1cbd40d5a2de",
+      "field": "optionC",
+      "original": "Trafik Kuralları ve Bilinç",
+      "revised": "Trafikte Kural Bilinci",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "3edc7909-3263-4621-a6a6-fda442f686c3",
+      "field": "optionB",
+      "original": "Doğa, insana bilim ve hayat dersleri veren bir kaynaktır.",
+      "revised": "Doğanın hayat ve bilim için öğretici olması",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "4356caa3-2548-4547-8ff0-310a20698eb6",
+      "field": "optionB",
+      "original": "Kriz yönetimi, hazırlık ve hızlı müdahale gerektirir.",
+      "revised": "Krizde iletişim ve koordinasyonun önemi",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "55349ffd-f2ad-435c-8aab-139ed8fd965e",
+      "field": "optionB",
+      "original": "Var olan düzeni sorgulamak ve değiştirmeye çalışmak",
+      "revised": "Düzeni sorgulayıp değiştirmek",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "56154016-e385-45fb-8160-20d4a945ffbf",
+      "field": "optionB",
+      "original": "Postmodern edebiyat, anlatı geleneklerini sorgulayarak yenilik getirir.",
+      "revised": "Postmodern edebiyatın yenilikçi anlatısı",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "56357126-3d4d-4cac-85f4-cc6d3d5059f3",
+      "field": "optionC",
+      "original": "Dengeli Beslenmenin Faydaları",
+      "revised": "Dengeli Beslenme",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "622242f7-8a3f-45eb-a197-8d446d324d17",
+      "field": "optionB",
+      "original": "Hipotez, bilimsel araştırmanın vazgeçilmez temelidir.",
+      "revised": "Hipotezin araştırmadaki temel rolü",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "627709bc-6412-4e20-9ea2-3466eebafcc8",
+      "field": "optionB",
+      "original": "İçsel ve dışsal motivasyonun dengeli kullanımı performansı artırır.",
+      "revised": "Dengeli motivasyon kullanımı başarıyı artırır",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "6b6fb98c-d39a-4708-ae73-7fdef843ce40",
+      "field": "optionB",
+      "original": "Danışman-öğrenci ilişkisinin önemini vurgulamak",
+      "revised": "Danışmanlığın önemini vurgulamak",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "7140f6ac-f361-40b6-8f68-7b00b124e27e",
+      "field": "optionB",
+      "original": "Dijitalleşme, kamu hizmetlerinin etkinliğini artırır.",
+      "revised": "Dijitalleşme kamu hizmetlerini geliştirir",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "88f2d165-e001-4d43-928e-2212821a3ee4",
+      "field": "optionE",
+      "original": "Tek yöntem kullanımı",
+      "revised": "Tek bir veri kaynağıyla karşılaştırma yapmadan değerlendirme yapmak",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "8931fd75-4c20-4ef6-b8c4-4a244d21e9d2",
+      "field": "optionB",
+      "original": "Araştırma tasarımı ve değişken sayısı",
+      "revised": "Araştırma tasarımı ve değişkenler",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "8a31981d-6cb6-4e6a-83e6-43e240287067",
+      "field": "optionC",
+      "original": "İnsanın kimliğini ve mutluluğunu tüketim nesnelerine bağlaması",
+      "revised": "Kimliği tüketim nesnelerine bağlamak",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "8ba6ddf2-047d-4fc4-bf1c-2e9928d7d996",
+      "field": "optionB",
+      "original": "Hayatımızdaki insanların değerini zamanında takdir etmeliyiz.",
+      "revised": "İnsanların değerini zamanında bilmek",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "972d05d1-8c5e-42ec-b96f-839540f66997",
+      "field": "optionB",
+      "original": "Başkalarıyla bilgi paylaşmak, herkesin öğrenmesini artırır.",
+      "revised": "Bilgiyi paylaşmak öğrenmeyi artırır",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "9c53d61f-00c9-462c-a9f8-27fa01bd8f6a",
+      "field": "optionB",
+      "original": "Kahramanın geçmişindeki travma",
+      "revised": "Geçmişte yaşanan travma",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "a533f056-fb6a-4161-9e55-6615277ec209",
+      "field": "optionC",
+      "original": "Olduğu gibi aktarmak",
+      "revised": "Bilgileri değiştirmeden tek tek aktarmak",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "b7eb27d8-5bf1-4c97-8923-087cef149ac8",
+      "field": "optionB",
+      "original": "Müzik, insanları geçmişe götüren duygusal bir bağ kurar.",
+      "revised": "Müziğin geçmiş anıları canlandırması",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "bda4884c-f9f5-4d01-a303-61b9ad9da4be",
+      "field": "optionB",
+      "original": "Dilin zenginliği, toplumun düşünce ve algı zenginliğini yansıtır.",
+      "revised": "Dil zenginliğinin düşünceyi yansıtması",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "c0bd53e9-3818-4c28-8f9f-f7660703bf7a",
+      "field": "optionB",
+      "original": "Kraliçeyi döllemek",
+      "revised": "Kraliçeyi dölleme görevini üstlenmek",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "d2595339-d86d-40e6-a9dd-0254115efa39",
+      "field": "optionB",
+      "original": "Vatandaşların güvenliğini sağlamak devletin temel görevidir.",
+      "revised": "Güvenliği sağlamak devletin temel görevidir",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "d28c116f-581d-4553-b019-d9aadce447f8",
+      "field": "optionB",
+      "original": "İnsan hafızasının güvenilirlik sınırlarına dikkat çekmek",
+      "revised": "Tanık ifadelerinin güvenilirliğini sorgulamak",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "df15d9f7-015d-41ae-84cb-a59a5133826a",
+      "field": "optionB",
+      "original": "Başarısızlık, başarıya ulaşmak için gereklidir.",
+      "revised": "Başarısızlıktan sonra başarı gelebilir",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "e2b3794f-5d24-4a0f-975d-0b1361acc263",
+      "field": "optionB",
+      "original": "Bir konuyu açıklığa kavuşturmak, yol göstermek",
+      "revised": "Bir konuya açıklık getirip yol göstermek",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "e5ef1ae5-5cc5-4857-b436-6f16cb477807",
+      "field": "optionB",
+      "original": "Uzay çalışmalarının insanlığın geleceği için hayati önem taşıdığı",
+      "revised": "Uzay çalışmalarının insanlık için zorunluluğu",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "ee56d572-a503-483f-a347-997bc33654cc",
+      "field": "optionE",
+      "original": "Uzun süre beklemek",
+      "revised": "Uzun süre beklemek ve etkisiz kalmak",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "eedaba06-3a60-47f6-83c6-8eb209794eaf",
+      "field": "optionB",
+      "original": "Objektif performans değerlendirmesi hem bireysel hem kurumsal gelişimi destekler.",
+      "revised": "Objektif değerlendirmenin gelişimi desteklemesi",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "f45a0454-dcab-4137-b38c-d6ab41c53d58",
+      "field": "optionB",
+      "original": "Sporun Beden ve Zihin Sağlığına Faydaları",
+      "revised": "Sporun beden ve zihin sağlığı",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "f8ba35a9-cc2e-4158-b9e7-0689fdb623f6",
+      "field": "optionA",
+      "original": "A",
+      "revised": "A markalı araç",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "f9ff1384-16a4-423c-8aba-0211c29be7ae",
+      "field": "optionE",
+      "original": "Modernleşmek",
+      "revised": "Daha hızlı ve modern çalışmak",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "fb981842-ee12-4588-991b-97487c711b0c",
+      "field": "optionB",
+      "original": "Yerel Yönetimlerin Vatandaşa Sunduğu Hizmetler",
+      "revised": "Yerel yönetimlerin temel hizmetleri",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "ff73e6ce-994f-4439-899f-811409e114ac",
+      "field": "optionB",
+      "original": "Akademik intihali tanımlamak ve sonuçlarına dikkat çekmek",
+      "revised": "İntihalin sonuçlarına dikkat çekmek",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "f8ba35a9-cc2e-4158-b9e7-0689fdb623f6",
+      "field": "optionB",
+      "original": "B",
+      "revised": "B markalı araç",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "f8ba35a9-cc2e-4158-b9e7-0689fdb623f6",
+      "field": "optionC",
+      "original": "C",
+      "revised": "C markalı araç",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    },
+    {
+      "id": "f8ba35a9-cc2e-4158-b9e7-0689fdb623f6",
+      "field": "optionD",
+      "original": "E",
+      "revised": "D markalı araç",
+      "reason": "Doğru seçeneğin biçimsel uzunluğunun cevabı ele vermemesi için anlamı koruyan editöryel düzenleme."
+    }
+  ]
+}
