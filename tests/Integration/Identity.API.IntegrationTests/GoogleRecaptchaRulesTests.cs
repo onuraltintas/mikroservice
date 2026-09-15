@@ -56,7 +56,7 @@ public sealed class GoogleRecaptchaRulesTests
     public void RejectedGoogleVerification_ShouldRetainErrorCodesForSafeServerDiagnostics()
     {
         var verification = JsonSerializer.Deserialize<GoogleRecaptchaVerification>(
-            """{\"success\":false,\"error-codes\":[\"invalid-input-secret\"]}""",
+            """{"success":false,"error-codes":["invalid-input-secret"]}""",
             new JsonSerializerOptions(JsonSerializerDefaults.Web));
 
         verification!.ErrorCodes.Should().ContainSingle().Which.Should().Be("invalid-input-secret");

@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Globalization;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -60,7 +61,12 @@ public sealed class GoogleRecaptchaOptions
 
 public sealed record GoogleRecaptchaPublicConfiguration(bool Enabled, string? SiteKey);
 
-public sealed record GoogleRecaptchaVerification(bool Success, decimal? Score, string? Action, string? Hostname);
+public sealed record GoogleRecaptchaVerification(
+    bool Success,
+    decimal? Score,
+    string? Action,
+    string? Hostname,
+    [property: JsonPropertyName("error-codes")] string[]? ErrorCodes = null);
 
 public static class GoogleRecaptchaRules
 {
@@ -113,7 +119,21 @@ public sealed class GoogleRecaptchaValidator(
             }
 
             var verification = await response.Content.ReadFromJsonAsync<GoogleRecaptchaVerification>(cancellationToken: cancellationToken);
-            return verification is not null && GoogleRecaptchaRules.IsAccepted(options, verification);
+            if (verification is null) return false;
+
+            var accepted = GoogleRecaptchaRules.IsAccepted(options, verification);
+            if (!accepted)
+            {
+                logger.LogWarning(
+                    "Google reCAPTCHA verification was rejected. Success: {Success}; Score: {Score}; Action: {Action}; Hostname: {Hostname}; ErrorCodes: {ErrorCodes}",
+                    verification.Success,
+                    verification.Score,
+                    verification.Action,
+                    verification.Hostname,
+                    verification.ErrorCodes is { Length: > 0 } ? string.Join(',', verification.ErrorCodes) : null);
+            }
+
+            return accepted;
         }
         catch (Exception exception) when (exception is HttpRequestException or JsonException
             || exception is TaskCanceledException && !cancellationToken.IsCancellationRequested)
