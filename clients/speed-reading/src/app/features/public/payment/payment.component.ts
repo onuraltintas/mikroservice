@@ -57,7 +57,7 @@ export class PaymentComponent implements OnInit {
 
     this.subscriptions.getPublicPlans().subscribe({
       next: plans => {
-        this.plans = plans;
+        this.plans = plans.filter(plan => !plan.isContactOnly);
         if (!this.selectedPlan) this.selectedPlanId.set(null);
         this.loading.set(false);
       },

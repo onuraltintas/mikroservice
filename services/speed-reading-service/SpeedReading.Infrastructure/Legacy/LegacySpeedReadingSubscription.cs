@@ -147,7 +147,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             || description is null
             || slug is null
             || product is null
-            || !BankTransferPaymentRules.IsValidPlanDefinition(request.Price, request.BillingPeriod, request.DurationDays)
+            || !BankTransferPaymentRules.IsValidPlanDefinition(request.Price, request.BillingPeriod, request.DurationDays, request.IsContactOnly)
             || (request.IsActive && request.IsPublic && !(product.IsActive && product.IsPublic))
             || await db.SubscriptionPlans.AnyAsync(item => item.Slug == slug, cancellationToken))
         {
@@ -162,6 +162,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             Slug = slug,
             ProductId = request.ProductId,
             Price = request.Price,
+            IsContactOnly = request.IsContactOnly,
             BillingPeriod = request.BillingPeriod.Trim(),
             DurationDays = request.DurationDays,
             IsActive = request.IsActive,
@@ -184,6 +185,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         }
 
         var effectivePrice = request.Price ?? plan.Price;
+        var effectiveIsContactOnly = request.IsContactOnly ?? plan.IsContactOnly;
         var effectiveBillingPeriod = request.BillingPeriod ?? plan.BillingPeriod;
         var effectiveDurationDays = request.DurationDays ?? plan.DurationDays;
         var effectiveIsActive = request.IsActive ?? plan.IsActive;
@@ -193,7 +195,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         var description = request.Description is null ? plan.Description : NormalizeRequired(request.Description, 1_000);
         if (name is null
             || description is null
-            || !BankTransferPaymentRules.IsValidPlanDefinition(effectivePrice, effectiveBillingPeriod, effectiveDurationDays)
+            || !BankTransferPaymentRules.IsValidPlanDefinition(effectivePrice, effectiveBillingPeriod, effectiveDurationDays, effectiveIsContactOnly)
             || (effectiveIsActive && effectiveIsPublic && !(product.IsActive && product.IsPublic)))
         {
             return null;
@@ -202,6 +204,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         plan.Name = name;
         plan.Description = description;
         if (request.Price.HasValue) plan.Price = request.Price.Value;
+        if (request.IsContactOnly.HasValue) plan.IsContactOnly = request.IsContactOnly.Value;
         if (request.BillingPeriod is not null) plan.BillingPeriod = request.BillingPeriod.Trim();
         if (request.DurationDays.HasValue) plan.DurationDays = request.DurationDays.Value == 0 ? null : request.DurationDays.Value;
         if (request.IsActive.HasValue) plan.IsActive = request.IsActive.Value;
@@ -332,6 +335,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
                                 && product.IsActive
                                 && product.IsPublic
                                 && plan.Price > 0
+                                && !plan.IsContactOnly
                              select new { Plan = plan, Product = product }).SingleOrDefaultAsync(cancellationToken);
         if (planRow is null)
         {
@@ -584,6 +588,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             || !BankTransferPaymentRules.IsInstitutionAccessPlan(
                 planRow.Plan.IsActive,
                 planRow.Plan.IsPublic,
+                planRow.Plan.IsContactOnly,
                 planRow.Plan.DurationDays))
         {
             return null;
@@ -820,7 +825,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             return new(true, false, null, null, null, "The selected payment plan is not available.");
         }
 
-        if (plan.Plan.Price <= 0)
+        if (!BankTransferPaymentRules.CanRequestBankTransfer(plan.Plan.Price, plan.Plan.IsContactOnly))
         {
             return new(true, false, null, null, null, "A paid plan must be selected for checkout.");
         }
@@ -1338,7 +1343,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         var modules = new List<string>();
         if (allSlugs.Contains("hizliokuma")) modules.Add("SpeedReading");
         if (allSlugs.Contains("kocluk")) modules.Add("Coaching");
-        return new SubscriptionPlanSummary(plan.Id, plan.Name, plan.Description, plan.Slug, plan.ProductId, product.Slug, product.Name, included, modules, plan.Price, plan.BillingPeriod, plan.DurationDays, plan.IsActive, plan.IsPublic, plan.SortOrder, Deserialize(plan.Features));
+        return new SubscriptionPlanSummary(plan.Id, plan.Name, plan.Description, plan.Slug, plan.ProductId, product.Slug, product.Name, included, modules, plan.Price, plan.IsContactOnly, plan.BillingPeriod, plan.DurationDays, plan.IsActive, plan.IsPublic, plan.SortOrder, Deserialize(plan.Features));
     }
 
     private static UserSubscriptionSummary ToSummary(LegacyUserSubscription subscription, LegacySubscriptionPlan plan, LegacyProduct product)

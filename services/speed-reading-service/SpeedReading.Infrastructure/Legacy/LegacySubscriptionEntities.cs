@@ -22,6 +22,7 @@ internal sealed class LegacySubscriptionPlan
     public string Slug { get; set; } = string.Empty;
     public Guid ProductId { get; set; }
     public decimal Price { get; set; }
+    public bool IsContactOnly { get; set; }
     public string BillingPeriod { get; set; } = string.Empty;
     public int? DurationDays { get; set; }
     public bool IsActive { get; set; }

@@ -39,6 +39,32 @@ public sealed class BankTransferPaymentRulesTests
     }
 
     [Theory]
+    [InlineData(0, true, true)]
+    [InlineData(499, true, false)]
+    [InlineData(499, false, true)]
+    public void Allows_contact_only_plans_only_without_a_list_price(
+        int price,
+        bool isContactOnly,
+        bool expected)
+    {
+        BankTransferPaymentRules.IsValidPlanDefinition(price, "Annual", 365, isContactOnly)
+            .Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(499, false, true)]
+    [InlineData(0, false, false)]
+    [InlineData(499, true, false)]
+    public void Excludes_contact_only_plans_from_student_bank_transfer_requests(
+        int price,
+        bool isContactOnly,
+        bool expected)
+    {
+        BankTransferPaymentRules.CanRequestBankTransfer(price, isContactOnly)
+            .Should().Be(expected);
+    }
+
+    [Theory]
     [InlineData(true, true, true, true, true)]
     [InlineData(false, true, true, true, false)]
     [InlineData(true, false, true, true, false)]
@@ -56,17 +82,19 @@ public sealed class BankTransferPaymentRulesTests
     }
 
     [Theory]
-    [InlineData(true, false, 365, true)]
-    [InlineData(true, true, 365, false)]
-    [InlineData(false, false, 365, false)]
-    [InlineData(true, false, 180, false)]
-    public void Reserves_active_hidden_one_year_plans_for_institutions(
+    [InlineData(true, false, false, 365, true)]
+    [InlineData(true, true, true, 365, true)]
+    [InlineData(true, true, false, 365, false)]
+    [InlineData(false, false, false, 365, false)]
+    [InlineData(true, false, false, 180, false)]
+    public void Allows_active_one_year_institution_plans_when_hidden_or_contact_only(
         bool planActive,
         bool planPublic,
+        bool isContactOnly,
         int durationDays,
         bool expected)
     {
-        BankTransferPaymentRules.IsInstitutionAccessPlan(planActive, planPublic, durationDays)
+        BankTransferPaymentRules.IsInstitutionAccessPlan(planActive, planPublic, isContactOnly, durationDays)
             .Should().Be(expected);
     }
 

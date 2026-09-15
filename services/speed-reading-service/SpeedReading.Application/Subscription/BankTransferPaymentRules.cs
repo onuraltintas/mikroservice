@@ -27,6 +27,13 @@ public static partial class BankTransferPaymentRules
         && SupportedBillingPeriods.Contains(billingPeriod?.Trim() ?? string.Empty)
         && durationDays is > 0 and <= 3650;
 
+    public static bool IsValidPlanDefinition(decimal price, string? billingPeriod, int? durationDays, bool isContactOnly) =>
+        IsValidPlanDefinition(price, billingPeriod, durationDays)
+        && (!isContactOnly || price == 0);
+
+    public static bool CanRequestBankTransfer(decimal price, bool isContactOnly) =>
+        price > 0 && !isContactOnly;
+
     public static bool IsPubliclyPurchasable(
         bool planActive,
         bool planPublic,
@@ -34,8 +41,8 @@ public static partial class BankTransferPaymentRules
         bool productPublic) =>
         planActive && planPublic && productActive && productPublic;
 
-    public static bool IsInstitutionAccessPlan(bool planActive, bool planPublic, int? durationDays) =>
-        planActive && !planPublic && durationDays == 365;
+    public static bool IsInstitutionAccessPlan(bool planActive, bool planPublic, bool isContactOnly, int? durationDays) =>
+        planActive && durationDays == 365 && (!planPublic || isContactOnly);
 
     public static string? NormalizeIban(string? iban)
     {

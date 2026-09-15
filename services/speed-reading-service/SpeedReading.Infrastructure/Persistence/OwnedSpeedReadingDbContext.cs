@@ -596,6 +596,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.Description).HasMaxLength(1_000).IsRequired();
             entity.Property(item => item.Slug).HasMaxLength(100).IsRequired();
             entity.Property(item => item.Price).HasPrecision(10, 2);
+            entity.Property(item => item.IsContactOnly).HasDefaultValue(false);
             entity.Property(item => item.Features).HasColumnType("jsonb");
             entity.HasIndex(item => item.ProductId);
             entity.HasIndex(item => item.Slug).IsUnique();

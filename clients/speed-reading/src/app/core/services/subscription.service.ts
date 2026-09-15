@@ -56,6 +56,7 @@ export interface SubscriptionPlan {
   /** Geriye dönük uyumluluk — eski kod için */
   modules: string[];
   price: number;
+  isContactOnly: boolean;
   billingPeriod: 'OneTime' | 'Monthly' | 'Quarterly' | 'Annual' | 'Lifetime';
   durationDays: number | null;
   isActive: boolean;
@@ -70,6 +71,7 @@ export interface CreatePlanRequest {
   slug: string;
   productId: string;
   price: number;
+  isContactOnly: boolean;
   billingPeriod: string;
   durationDays: number | null;
   isActive: boolean;
@@ -82,6 +84,7 @@ export interface UpdatePlanRequest {
   name?: string;
   description?: string;
   price?: number;
+  isContactOnly?: boolean;
   isActive?: boolean;
   isPublic?: boolean;
   sortOrder?: number;

@@ -45,6 +45,7 @@ export class PricingSectionComponent implements OnInit {
   }
 
   formatPrice(plan: SubscriptionPlan): string {
+    if (plan.isContactOnly) return 'Fiyat için iletişime geçin';
     if (plan.price === 0) return 'Ücretsiz';
     return `₺${plan.price.toLocaleString('tr-TR')}`;
   }

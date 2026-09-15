@@ -281,6 +281,7 @@ export interface SpeedReadingPlan {
   includedProductSlugs: string[];
   modules: string[];
   price: number;
+  isContactOnly: boolean;
   billingPeriod: string;
   durationDays: number | null;
   isActive: boolean;
@@ -295,6 +296,7 @@ export interface SpeedReadingPlanRequest {
   slug: string;
   productId: string;
   price: number;
+  isContactOnly: boolean;
   billingPeriod: string;
   durationDays?: number | null;
   isActive: boolean;
@@ -307,6 +309,7 @@ export interface SpeedReadingPlanUpdateRequest {
   name?: string;
   description?: string;
   price?: number;
+  isContactOnly?: boolean;
   billingPeriod?: string;
   durationDays?: number | null;
   isActive?: boolean;
