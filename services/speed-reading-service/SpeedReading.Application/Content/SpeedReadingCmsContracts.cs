@@ -105,7 +105,8 @@ public sealed record CmsContactMessageRequest(
     string Name,
     string Email,
     string Subject,
-    string Message);
+    string Message,
+    string? RecaptchaToken = null);
 
 public sealed record CmsNewsletterSubscriptionRequest(string Email, string? Name);
 

@@ -74,6 +74,12 @@ export interface ContactMessageRequest {
     email: string;
     subject: string;
     message: string;
+    recaptchaToken?: string;
+}
+
+export interface GoogleRecaptchaConfiguration {
+    enabled: boolean;
+    siteKey?: string | null;
 }
 
 export interface NewsletterSubscribeRequest {
@@ -145,6 +151,12 @@ export class PublicCmsService {
     }
 
     // Contact
+    getGoogleRecaptchaConfiguration(): Observable<GoogleRecaptchaConfiguration> {
+        return this.http.get<any>(`${this.apiUrl}/recaptcha`).pipe(
+            map(response => response?.data ?? { enabled: false })
+        );
+    }
+
     submitContact(data: ContactMessageRequest): Observable<string> {
         return this.http.post<any>(`${this.apiUrl}/contact`, data).pipe(
             map(response => response?.message ?? response?.data?.id ?? '')

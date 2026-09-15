@@ -69,6 +69,11 @@
                         <mat-icon *ngIf="!loading()">send</mat-icon>
                         {{ loading() ? 'Gönderiliyor...' : 'Gönder' }}
                     </button>
+                    <p *ngIf="recaptchaConfiguration?.enabled" class="recaptcha-notice">
+                        Bu form reCAPTCHA ile korunur. Google’ın
+                        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Gizlilik Politikası</a>
+                        ve <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer">Hizmet Şartları</a> geçerlidir.
+                    </p>
                 </form>
             </mat-card>
 

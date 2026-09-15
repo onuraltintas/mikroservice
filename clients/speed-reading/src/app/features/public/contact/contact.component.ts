@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild } from '@angular/core';
+import { Component, DOCUMENT, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormGroupDirective } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -8,9 +8,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { BaseComponent } from '../../../core/components/base.component';
-import { PublicCmsService } from '../../../core/services/public-cms.service';
+import { ContactMessageRequest, GoogleRecaptchaConfiguration, PublicCmsService } from '../../../core/services/public-cms.service';
 import { SeoService } from '../../../core/services/seo.service';
-import { finalize } from 'rxjs/operators';
+import { from } from 'rxjs';
+import { finalize, switchMap } from 'rxjs/operators';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { isTrustedMapEmbedUrl } from '../../../core/security/trusted-resource-url';
 
@@ -40,6 +41,7 @@ export class ContactComponent extends BaseComponent {
     private fb = inject(FormBuilder);
     private sanitizer = inject(DomSanitizer);
     private seoService = inject(SeoService);
+    private document = inject(DOCUMENT);
 
     contactForm!: FormGroup;
     @ViewChild(FormGroupDirective) formDir!: FormGroupDirective;
@@ -55,11 +57,14 @@ export class ContactComponent extends BaseComponent {
     };
 
     mapUrl: SafeResourceUrl | null = null;
+    recaptchaConfiguration: GoogleRecaptchaConfiguration | null = null;
+    private recaptchaScript?: Promise<void>;
 
     constructor() {
         super();
         this.initForm();
         this.loadContent();
+        this.loadRecaptchaConfiguration();
     }
 
     private initForm() {
@@ -99,11 +104,22 @@ export class ContactComponent extends BaseComponent {
         });
     }
 
+    private loadRecaptchaConfiguration() {
+        this.cmsService.getGoogleRecaptchaConfiguration().subscribe({
+            next: configuration => this.recaptchaConfiguration = configuration,
+            error: () => this.recaptchaConfiguration = null
+        });
+    }
+
     onSubmit() {
         if (this.contactForm.valid) {
             this.loading.set(true);
-            this.cmsService.submitContact(this.contactForm.value)
-                .pipe(finalize(() => this.loading.set(false)))
+            const contact = this.contactForm.getRawValue() as ContactMessageRequest;
+            from(this.getRecaptchaToken())
+                .pipe(
+                    switchMap(recaptchaToken => this.cmsService.submitContact({ ...contact, recaptchaToken })),
+                    finalize(() => this.loading.set(false))
+                )
                 .subscribe({
                     next: () => {
                         this.toaster.success('Mesajınız başarıyla gönderildi! En kısa sürede size dönüş yapacağız.', 5000);
@@ -117,5 +133,45 @@ export class ContactComponent extends BaseComponent {
         } else {
             this.toaster.warning('Lütfen tüm alanları doğru şekilde doldurun.', 3000);
         }
+    }
+
+    private async getRecaptchaToken(): Promise<string | undefined> {
+        const configuration = this.recaptchaConfiguration;
+        if (!configuration?.enabled) return undefined;
+        if (!configuration.siteKey) throw new Error('reCAPTCHA site key is missing.');
+
+        await this.loadRecaptchaScript(configuration.siteKey);
+        return window.grecaptcha.execute(configuration.siteKey, { action: 'contact_submit' });
+    }
+
+    private loadRecaptchaScript(siteKey: string): Promise<void> {
+        if (this.recaptchaScript) return this.recaptchaScript;
+
+        this.recaptchaScript = new Promise((resolve, reject) => {
+            const ready = () => window.grecaptcha.ready(resolve);
+            if (window.grecaptcha) {
+                ready();
+                return;
+            }
+
+            const script = this.document.createElement('script');
+            script.src = `https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(siteKey)}`;
+            script.async = true;
+            script.defer = true;
+            script.onload = ready;
+            script.onerror = () => reject(new Error('reCAPTCHA could not be loaded.'));
+            this.document.head.appendChild(script);
+        });
+
+        return this.recaptchaScript;
+    }
+}
+
+declare global {
+    interface Window {
+        grecaptcha: {
+            ready(callback: () => void): void;
+            execute(siteKey: string, options: { action: string }): Promise<string>;
+        };
     }
 }

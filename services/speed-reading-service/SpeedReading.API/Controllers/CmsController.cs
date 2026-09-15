@@ -3,14 +3,23 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using SpeedReading.Application.Content;
+using SpeedReading.API.Security;
 
 namespace SpeedReading.API.Controllers;
 
 [ApiController]
 [ApiVersion(1.0)]
 [Route("api/speed-reading/cms")]
-public sealed class CmsController(ISpeedReadingCms cms) : ControllerBase
+public sealed class CmsController(
+    ISpeedReadingCms cms,
+    IGoogleRecaptchaValidator recaptcha,
+    GoogleRecaptchaOptions recaptchaOptions) : ControllerBase
 {
+    [HttpGet("recaptcha")]
+    [AllowAnonymous]
+    public IActionResult GetRecaptchaConfiguration() =>
+        Ok(new { success = true, data = recaptchaOptions.ToPublicConfiguration() });
+
     [HttpGet("landing")]
     [AllowAnonymous]
     public async Task<IActionResult> GetLanding(
@@ -102,8 +111,21 @@ public sealed class CmsController(ISpeedReadingCms cms) : ControllerBase
             return BadRequest(new { success = false, message = "All contact fields are required" });
         }
 
+        if (!await recaptcha.VerifyContactAsync(request.RecaptchaToken, GetClientAddress(), cancellationToken))
+        {
+            return BadRequest(new { success = false, message = "Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin." });
+        }
+
         var id = await cms.SubmitContactMessageAsync(request, cancellationToken);
         return Ok(new { success = true, data = new { id }, message = "Message sent successfully" });
+    }
+
+    private string? GetClientAddress()
+    {
+        var forwardedAddress = Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim();
+        return !string.IsNullOrWhiteSpace(forwardedAddress)
+            ? forwardedAddress
+            : HttpContext.Connection.RemoteIpAddress?.ToString();
     }
 
     [HttpPost("newsletter/subscribe")]

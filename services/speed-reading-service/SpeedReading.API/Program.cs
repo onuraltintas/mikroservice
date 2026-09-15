@@ -10,6 +10,7 @@ using EduPlatform.Shared.Security.Extensions;
 using EduPlatform.Shared.Security.Services;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.Configuration;
+using SpeedReading.API.Security;
 using SpeedReading.Infrastructure;
 using SpeedReading.Infrastructure.Persistence;
 
@@ -128,9 +129,22 @@ var runtimeOptions = builder.Configuration
     ?? new SpeedReadingServiceOptions();
 runtimeOptions.Validate();
 
+var googleRecaptchaOptions = builder.Configuration
+    .GetSection(GoogleRecaptchaOptions.SectionName)
+    .Get<GoogleRecaptchaOptions>()
+    ?? new GoogleRecaptchaOptions();
+googleRecaptchaOptions.ApplyEnvironmentOverrides(builder.Configuration);
+googleRecaptchaOptions.Validate();
+
 InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
 
 builder.Services.AddSingleton(runtimeOptions);
+builder.Services.AddSingleton(googleRecaptchaOptions);
+builder.Services.AddHttpClient<IGoogleRecaptchaValidator, GoogleRecaptchaValidator>(client =>
+{
+    client.BaseAddress = new Uri("https://www.google.com/recaptcha/api/");
+    client.Timeout = TimeSpan.FromSeconds(5);
+});
 builder.Host.UseCustomSerilog();
 builder.Services.AddPersistentDataProtection(
     builder.Configuration,
