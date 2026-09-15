@@ -1,0 +1,15 @@
+{
+  "scope": "AboutPage",
+  "updates": [
+    {
+      "key": "about_hero_subtitle",
+      "original": "Hızlı okuma ve anlama becerilerinizi daha verimli öğrenme alışkanlıklarıyla geliştirin.",
+      "revised": "Hızlı okuma ve anlama çalışmalarınızı ölçüm, düzenli pratik ve kişisel planla sürdürün."
+    },
+    {
+      "key": "about_story_content",
+      "original": "<p>Hızlı Okuma, okuma hızınızı artırırken metni anlama ve odaklanma becerilerinizi desteklemek için tasarlanmış bir öğrenme alanıdır.</p>",
+      "revised": "<p>Master Hızlı Okuma, başlangıç ölçümü, düzenli çalışmalar ve kişiselleştirilmiş planlarla okuma hızı, anlama ve odaklanma gelişiminizi izlemenize yardımcı olur.</p>"
+    }
+  ]
+}

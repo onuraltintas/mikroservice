@@ -26,10 +26,10 @@ export class AboutComponent implements OnInit {
     private seoService = inject(SeoService);
 
     heroTitle = 'Hakkımızda';
-    heroSubtitle = 'Hızlı okuma ve anlama becerilerinizi daha verimli öğrenme alışkanlıklarıyla geliştirin.';
+    heroSubtitle = 'Hızlı okuma ve anlama çalışmalarınızı ölçüm, düzenli pratik ve kişisel planla sürdürün.';
 
     storyTitle = 'Daha verimli öğrenme için';
-    storyContent: string = '<p>Hızlı Okuma, okuma hızınızı artırırken metni anlama ve odaklanma becerilerinizi desteklemek için tasarlanmış bir öğrenme alanıdır.</p>';
+    storyContent: string = '<p>Master Hızlı Okuma, başlangıç ölçümü, düzenli çalışmalar ve kişiselleştirilmiş planlarla okuma hızı, anlama ve odaklanma gelişiminizi izlemenize yardımcı olur.</p>';
 
     missionTitle = 'Misyonumuz';
     missionContent: string = '<p>Her yaştan öğrencinin kendi hızında ilerleyebileceği, anlaşılır ve sürdürülebilir bir çalışma deneyimi sunmak.</p>';
