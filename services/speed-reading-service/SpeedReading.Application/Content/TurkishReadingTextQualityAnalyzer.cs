@@ -78,6 +78,10 @@ public static class TurkishReadingTextQualityAnalyzer
             yield return "Ortalama cümle uzunluğu yüksek; cümleleri bölerek okunabilirliği gözden geçirin.";
         if (questions.Count < 3)
             yield return "Kavrama ölçümü için en az üç soru ekleyin.";
+        var unscorableQuestionCount = questions.Count(question =>
+            !ReadingQuestionQualityRules.HasScorableAnswerKey(question.CorrectAnswer));
+        if (unscorableQuestionCount > 0)
+            yield return $"{unscorableQuestionCount} sorunun cevap anahtarı eksik veya geçersiz; öğrenciye sunmadan önce düzeltin.";
         if (questions.Count >= 3 && questions.Select(question => question.BloomLevel).Distinct().Count() == 1)
             yield return "Sorular tek bir Bloom seviyesinde; bilişsel kapsamı çeşitlendirmeyi değerlendirin.";
         if (readability is < 30)

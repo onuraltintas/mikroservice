@@ -874,13 +874,23 @@ internal sealed class OwnedSpeedReadingAssessment(
                 readingText.Content,
                 readingText.WordCount,
                 db.ReadingQuestions.Any(question =>
-                    question.ReadingTextId == readingText.Id && !question.IsDeleted)))
+                    question.ReadingTextId == readingText.Id
+                    && !question.IsDeleted
+                    && (question.CorrectAnswer == "A"
+                        || question.CorrectAnswer == "B"
+                        || question.CorrectAnswer == "C"
+                        || question.CorrectAnswer == "D"))))
             .ToListAsync(cancellationToken);
 
         var readingTextIds = readingTexts.Select(item => item.Id).ToArray();
         var questions = await db.ReadingQuestions
             .AsNoTracking()
-            .Where(item => readingTextIds.Contains(item.ReadingTextId) && !item.IsDeleted)
+            .Where(item => readingTextIds.Contains(item.ReadingTextId)
+                && !item.IsDeleted
+                && (item.CorrectAnswer == "A"
+                    || item.CorrectAnswer == "B"
+                    || item.CorrectAnswer == "C"
+                    || item.CorrectAnswer == "D"))
             .OrderBy(item => item.OrderIndex)
             .Select(item => new AssessmentQuestionSnapshot(
                 item.ReadingTextId,

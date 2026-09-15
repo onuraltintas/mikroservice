@@ -651,6 +651,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             state.WordCount = snapshotText.WordCount > 0 ? snapshotText.WordCount : CountWords(snapshotText.Content);
             state.Words = SplitWords(snapshotText.Content);
             state.Questions = assessmentSnapshot.Questions
+                .Where(item => ReadingQuestionQualityRules.HasScorableAnswerKey(item.CorrectAnswer))
                 .OrderBy(item => item.OrderIndex)
                 .Select(item => new SessionQuestion
                 {
@@ -697,6 +698,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                     DifficultyLevel = item.DifficultyLevel
                 })
                 .ToListAsync(cancellationToken);
+            state.Questions = state.Questions
+                .Where(item => ReadingQuestionQualityRules.HasScorableAnswerKey(item.CorrectAnswer))
+                .ToList();
         }
 
         if (state.AdaptiveEnabled)
@@ -739,6 +743,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                     BloomLevel = item.BloomLevel,
                     DifficultyLevel = item.DifficultyLevel
                 }).ToListAsync(cancellationToken);
+            state.AdaptiveTransferQuestions = state.AdaptiveTransferQuestions
+                .Where(item => ReadingQuestionQualityRules.HasScorableAnswerKey(item.CorrectAnswer))
+                .ToList();
             if (state.AdaptivePrimaryQuestions.Count == 0 || state.AdaptiveTransferQuestions.Count == 0)
                 throw new InvalidOperationException("Adaptive fluency primary and transfer texts both require questions.");
             state.TotalSteps = 4;
