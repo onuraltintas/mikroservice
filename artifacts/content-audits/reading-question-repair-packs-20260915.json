@@ -1,7 +1,7 @@
 {
   "catalogTextCount": 300,
-  "packCount": 11,
-  "packedQuestionCount": 101,
+  "packCount": 12,
+  "packedQuestionCount": 109,
   "packs": [
     {
       "file": "content-packs\\reading-question-repair\\v1\\biyomimetik-dogadan-ilham.json",
@@ -90,6 +90,19 @@
         "C": 3,
         "B": 2,
         "D": 2
+      },
+      "uniqueLongestCorrectCount": 0
+    },
+    {
+      "file": "content-packs\\reading-question-repair\\v1\\kuantum-hesaplama-temel-prensipler-uygulamalar.json",
+      "title": "Kuantum Hesaplama: Temel Prensipler ve Uygulamalar",
+      "readingTextId": "182d8860-2181-490d-ad81-b16fb795abbe",
+      "questionCount": 8,
+      "answerDistribution": {
+        "D": 2,
+        "C": 2,
+        "B": 2,
+        "A": 2
       },
       "uniqueLongestCorrectCount": 0
     },
