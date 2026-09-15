@@ -87,6 +87,7 @@ public static class DependencyInjection
         services.AddScoped<ISpeedReadingSubscription>(serviceProvider =>
             new LegacySpeedReadingSubscription(
                 serviceProvider.GetRequiredService<ISpeedReadingDataContext>(),
+                serviceProvider.GetRequiredService<OwnedSpeedReadingDbContext>(),
                 serviceProvider.GetRequiredService<ISpeedReadingPaymentProvider>(),
                 serviceProvider.GetRequiredService<IyzicoOptions>(),
                 serviceProvider.GetRequiredService<ISpeedReadingUserDirectory>()));

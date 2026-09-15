@@ -33,7 +33,7 @@
 
                 <div class="card-footer">
                     <a mat-flat-button [color]="isPopular(plan) ? 'primary' : ''"
-                        routerLink="/odeme" class="cta-button">
+                        routerLink="/odeme" [queryParams]="{ plan: plan.id }" class="cta-button">
                         Havale/EFT ile katıl
                     </a>
                 </div>

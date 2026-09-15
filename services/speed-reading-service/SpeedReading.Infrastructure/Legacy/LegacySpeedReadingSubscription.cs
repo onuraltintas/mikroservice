@@ -11,18 +11,26 @@ namespace SpeedReading.Infrastructure.Legacy;
 
 public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
 {
+    private static readonly Guid BankTransferSettingsId = Guid.Parse("4c18b5a8-96e8-4af6-9195-0d4fdde3dcf2");
+    private const string BankTransferSettingsScope = "speed-reading.bank-transfer.settings";
+    private const string BankTransferRequestScope = "speed-reading.bank-transfer.request";
+    private const string BankTransferReviewScope = "speed-reading.bank-transfer.review";
+
     private readonly ISpeedReadingDataContext db;
+    private readonly OwnedSpeedReadingDbContext ownedDb;
     private readonly ISpeedReadingPaymentProvider paymentProvider;
     private readonly IyzicoOptions iyzicoOptions;
     private readonly ISpeedReadingUserDirectory userDirectory;
 
     internal LegacySpeedReadingSubscription(
         ISpeedReadingDataContext db,
+        OwnedSpeedReadingDbContext ownedDb,
         ISpeedReadingPaymentProvider paymentProvider,
         IyzicoOptions iyzicoOptions,
         ISpeedReadingUserDirectory userDirectory)
     {
         this.db = db;
+        this.ownedDb = ownedDb;
         this.paymentProvider = paymentProvider;
         this.iyzicoOptions = iyzicoOptions;
         this.userDirectory = userDirectory;
@@ -109,7 +117,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
     {
         var query = from plan in db.SubscriptionPlans.AsNoTracking()
                     join product in db.Products.AsNoTracking() on plan.ProductId equals product.Id
-                    where includeInactive || (plan.IsActive && plan.IsPublic)
+                    where includeInactive || (plan.IsActive && plan.IsPublic && product.IsActive && product.IsPublic)
                     orderby plan.SortOrder
                     select new { plan, product };
         var rows = await query.ToListAsync(cancellationToken);
@@ -121,14 +129,27 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         var row = await (from plan in db.SubscriptionPlans.AsNoTracking()
                          join product in db.Products.AsNoTracking() on plan.ProductId equals product.Id
                          where plan.Id == id
+                            && plan.IsActive
+                            && plan.IsPublic
+                            && product.IsActive
+                            && product.IsPublic
                          select new { plan, product }).SingleOrDefaultAsync(cancellationToken);
         return row is null ? null : ToSummary(row.plan, row.product);
     }
 
     public async Task<Guid?> CreatePlanAsync(CreateSubscriptionPlanRequest request, Guid actorId, CancellationToken cancellationToken = default)
     {
-        if (!await db.Products.AnyAsync(item => item.Id == request.ProductId, cancellationToken)
-            || await db.SubscriptionPlans.AnyAsync(item => item.Slug == request.Slug.Trim(), cancellationToken))
+        var name = NormalizeRequired(request.Name, 200);
+        var description = NormalizeRequired(request.Description, 1_000);
+        var slug = NormalizePlanSlug(request.Slug);
+        var product = await db.Products.SingleOrDefaultAsync(item => item.Id == request.ProductId, cancellationToken);
+        if (name is null
+            || description is null
+            || slug is null
+            || product is null
+            || !BankTransferPaymentRules.IsValidPlanDefinition(request.Price, request.BillingPeriod, request.DurationDays)
+            || (request.IsActive && request.IsPublic && !(product.IsActive && product.IsPublic))
+            || await db.SubscriptionPlans.AnyAsync(item => item.Slug == slug, cancellationToken))
         {
             return null;
         }
@@ -136,9 +157,9 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         var plan = new LegacySubscriptionPlan
         {
             Id = Guid.NewGuid(),
-            Name = request.Name.Trim(),
-            Description = request.Description.Trim(),
-            Slug = request.Slug.Trim(),
+            Name = name,
+            Description = description,
+            Slug = slug,
             ProductId = request.ProductId,
             Price = request.Price,
             BillingPeriod = request.BillingPeriod.Trim(),
@@ -162,8 +183,24 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             return null;
         }
 
-        if (request.Name is not null) plan.Name = request.Name.Trim();
-        if (request.Description is not null) plan.Description = request.Description.Trim();
+        var effectivePrice = request.Price ?? plan.Price;
+        var effectiveBillingPeriod = request.BillingPeriod ?? plan.BillingPeriod;
+        var effectiveDurationDays = request.DurationDays ?? plan.DurationDays;
+        var effectiveIsActive = request.IsActive ?? plan.IsActive;
+        var effectiveIsPublic = request.IsPublic ?? plan.IsPublic;
+        var product = await db.Products.AsNoTracking().SingleAsync(item => item.Id == plan.ProductId, cancellationToken);
+        var name = request.Name is null ? plan.Name : NormalizeRequired(request.Name, 200);
+        var description = request.Description is null ? plan.Description : NormalizeRequired(request.Description, 1_000);
+        if (name is null
+            || description is null
+            || !BankTransferPaymentRules.IsValidPlanDefinition(effectivePrice, effectiveBillingPeriod, effectiveDurationDays)
+            || (effectiveIsActive && effectiveIsPublic && !(product.IsActive && product.IsPublic)))
+        {
+            return null;
+        }
+
+        plan.Name = name;
+        plan.Description = description;
         if (request.Price.HasValue) plan.Price = request.Price.Value;
         if (request.BillingPeriod is not null) plan.BillingPeriod = request.BillingPeriod.Trim();
         if (request.DurationDays.HasValue) plan.DurationDays = request.DurationDays.Value == 0 ? null : request.DurationDays.Value;
@@ -174,7 +211,6 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         plan.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
 
-        var product = await db.Products.AsNoTracking().SingleAsync(item => item.Id == plan.ProductId, cancellationToken);
         return ToSummary(plan, product);
     }
 
@@ -190,6 +226,284 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         plan.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
         return true;
+    }
+
+    public async Task<BankTransferPaymentSettingsSummary?> GetPublicBankTransferSettingsAsync(CancellationToken cancellationToken = default)
+    {
+        var settings = await db.BankTransferPaymentSettings.AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == BankTransferSettingsId, cancellationToken);
+        return settings is null || !BankTransferPaymentRules.HasCompletePublicSettings(
+            settings.IsEnabled, settings.AccountHolder, settings.BankName, settings.Iban)
+            ? null
+            : ToBankTransferSettingsSummary(settings);
+    }
+
+    public async Task<BankTransferPaymentSettingsSummary?> GetBankTransferSettingsAsync(CancellationToken cancellationToken = default)
+    {
+        var settings = await db.BankTransferPaymentSettings.AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == BankTransferSettingsId, cancellationToken);
+        return settings is null ? null : ToBankTransferSettingsSummary(settings);
+    }
+
+    public async Task<BankTransferPaymentSettingsSummary?> UpdateBankTransferSettingsAsync(
+        UpdateBankTransferPaymentSettingsRequest request,
+        Guid actorId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        OwnedContentMutationIdempotency.Validate(actorId, idempotencyKey);
+        var key = idempotencyKey.Trim();
+        var requestHash = OwnedContentMutationIdempotency.CreateRequestHash(actorId, BankTransferSettingsScope, BankTransferSettingsId, request);
+        var replay = await OwnedContentMutationIdempotency.GetAsync(ownedDb, BankTransferSettingsScope, key, cancellationToken);
+        if (replay is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(replay, requestHash);
+            return await GetBankTransferSettingsAsync(cancellationToken);
+        }
+
+        var accountHolder = NormalizeRequired(request.AccountHolder, 200);
+        var bankName = NormalizeRequired(request.BankName, 200);
+        var iban = BankTransferPaymentRules.NormalizeIban(request.Iban);
+        if (accountHolder is null || bankName is null || iban is null
+            || (request.IsEnabled && !BankTransferPaymentRules.HasCompletePublicSettings(true, accountHolder, bankName, iban)))
+        {
+            return null;
+        }
+
+        var now = DateTime.UtcNow;
+        var settings = await db.BankTransferPaymentSettings
+            .SingleOrDefaultAsync(item => item.Id == BankTransferSettingsId, cancellationToken);
+        if (settings is null)
+        {
+            settings = new LegacyBankTransferPaymentSettings
+            {
+                Id = BankTransferSettingsId,
+                CreatedAt = now,
+                CreatedBy = actorId
+            };
+            db.BankTransferPaymentSettings.Add(settings);
+        }
+
+        settings.AccountHolder = accountHolder;
+        settings.BankName = bankName;
+        settings.Iban = iban;
+        settings.Instructions = NormalizeOptional(request.Instructions, 2_000);
+        settings.IsEnabled = request.IsEnabled;
+        settings.UpdatedAt = now;
+        settings.UpdatedBy = actorId;
+        OwnedContentMutationIdempotency.Add(ownedDb, BankTransferSettingsScope, key, requestHash, BankTransferSettingsId, now);
+        var concurrent = await OwnedContentMutationIdempotency.SaveAsync(ownedDb, BankTransferSettingsScope, key, cancellationToken);
+        if (concurrent is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(concurrent, requestHash);
+        }
+
+        return await GetBankTransferSettingsAsync(cancellationToken);
+    }
+
+    public async Task<BankTransferPaymentRequestSummary?> CreateBankTransferPaymentRequestAsync(
+        Guid userId,
+        CreateBankTransferPaymentRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        OwnedContentMutationIdempotency.Validate(userId, idempotencyKey);
+        var key = idempotencyKey.Trim();
+        var requestHash = OwnedContentMutationIdempotency.CreateRequestHash(userId, BankTransferRequestScope, Guid.Empty, request);
+        var replay = await OwnedContentMutationIdempotency.GetAsync(ownedDb, BankTransferRequestScope, key, cancellationToken);
+        if (replay is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(replay, requestHash);
+            return await GetBankTransferPaymentRequestAsync(replay.ResourceId, userId, cancellationToken);
+        }
+
+        var settings = await GetPublicBankTransferSettingsAsync(cancellationToken);
+        var paymentReference = BankTransferPaymentRules.NormalizePaymentReference(request.PaymentReference);
+        if (settings is null || paymentReference is null)
+        {
+            return null;
+        }
+
+        var planRow = await (from plan in db.SubscriptionPlans.AsNoTracking()
+                             join product in db.Products.AsNoTracking() on plan.ProductId equals product.Id
+                             where plan.Id == request.PlanId
+                                && plan.IsActive
+                                && plan.IsPublic
+                                && product.IsActive
+                                && product.IsPublic
+                                && plan.Price > 0
+                             select new { Plan = plan, Product = product }).SingleOrDefaultAsync(cancellationToken);
+        if (planRow is null)
+        {
+            return null;
+        }
+
+        var existing = await db.BankTransferPaymentRequests.AsNoTracking()
+            .SingleOrDefaultAsync(item => item.UserId == userId && item.PaymentReference == paymentReference, cancellationToken);
+        if (existing is not null)
+        {
+            return await GetBankTransferPaymentRequestAsync(existing.Id, userId, cancellationToken);
+        }
+
+        var user = (await userDirectory.GetUsersAsync([userId], cancellationToken)).Users
+            .SingleOrDefault(item => item.UserId == userId);
+        if (user is null || string.IsNullOrWhiteSpace(user.Email))
+        {
+            return null;
+        }
+
+        var userName = $"{user.FirstName} {user.LastName}".Trim();
+        if (string.IsNullOrWhiteSpace(userName)) userName = user.Email.Trim();
+        var now = DateTime.UtcNow;
+        var paymentRequest = new LegacyBankTransferPaymentRequest
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            UserName = userName,
+            UserEmail = user.Email.Trim(),
+            PlanId = planRow.Plan.Id,
+            Amount = planRow.Plan.Price,
+            Currency = "TRY",
+            PaymentReference = paymentReference,
+            PayerName = NormalizeOptional(request.PayerName, 200),
+            Note = NormalizeOptional(request.Note, 2_000),
+            Status = BankTransferPaymentRules.PendingStatus,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+        db.BankTransferPaymentRequests.Add(paymentRequest);
+        OwnedContentMutationIdempotency.Add(ownedDb, BankTransferRequestScope, key, requestHash, paymentRequest.Id, now);
+        var concurrent = await OwnedContentMutationIdempotency.SaveAsync(ownedDb, BankTransferRequestScope, key, cancellationToken);
+        if (concurrent is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(concurrent, requestHash);
+            return await GetBankTransferPaymentRequestAsync(concurrent.ResourceId, userId, cancellationToken);
+        }
+
+        return ToBankTransferPaymentRequestSummary(paymentRequest, planRow.Plan);
+    }
+
+    public async Task<IReadOnlyList<BankTransferPaymentRequestSummary>> GetMyBankTransferPaymentRequestsAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var rows = await (from paymentRequest in db.BankTransferPaymentRequests.AsNoTracking()
+                          join plan in db.SubscriptionPlans.AsNoTracking() on paymentRequest.PlanId equals plan.Id
+                          where paymentRequest.UserId == userId
+                          orderby paymentRequest.CreatedAt descending
+                          select new { paymentRequest, plan }).ToListAsync(cancellationToken);
+        return rows.Select(row => ToBankTransferPaymentRequestSummary(row.paymentRequest, row.plan)).ToList();
+    }
+
+    public async Task<SpeedReadingPage<BankTransferPaymentRequestSummary>> GetBankTransferPaymentRequestsAsync(
+        string? search,
+        string? status,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var (normalizedPage, normalizedSize) = NormalizePage(page, pageSize);
+        var query = from paymentRequest in db.BankTransferPaymentRequests.AsNoTracking()
+                    join plan in db.SubscriptionPlans.AsNoTracking() on paymentRequest.PlanId equals plan.Id
+                    select new { paymentRequest, plan };
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var value = search.Trim().ToLowerInvariant();
+            query = query.Where(row => row.paymentRequest.UserName.ToLower().Contains(value)
+                || row.paymentRequest.UserEmail.ToLower().Contains(value)
+                || row.paymentRequest.PaymentReference.ToLower().Contains(value));
+        }
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            query = query.Where(row => row.paymentRequest.Status == status.Trim());
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var rows = await query.OrderByDescending(row => row.paymentRequest.CreatedAt)
+            .Skip((normalizedPage - 1) * normalizedSize)
+            .Take(normalizedSize)
+            .ToListAsync(cancellationToken);
+        return new SpeedReadingPage<BankTransferPaymentRequestSummary>(
+            rows.Select(row => ToBankTransferPaymentRequestSummary(row.paymentRequest, row.plan)).ToList(),
+            normalizedPage,
+            normalizedSize,
+            total);
+    }
+
+    public async Task<BankTransferPaymentRequestSummary?> ReviewBankTransferPaymentRequestAsync(
+        Guid id,
+        ReviewBankTransferPaymentRequest request,
+        Guid actorId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        OwnedContentMutationIdempotency.Validate(actorId, idempotencyKey);
+        var key = idempotencyKey.Trim();
+        var requestHash = OwnedContentMutationIdempotency.CreateRequestHash(actorId, BankTransferReviewScope, id, request);
+        var replay = await OwnedContentMutationIdempotency.GetAsync(ownedDb, BankTransferReviewScope, key, cancellationToken);
+        if (replay is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(replay, requestHash);
+            return await GetBankTransferPaymentRequestAsync(replay.ResourceId, null, cancellationToken);
+        }
+
+        var row = await (from paymentRequest in db.BankTransferPaymentRequests
+                         join plan in db.SubscriptionPlans.AsNoTracking() on paymentRequest.PlanId equals plan.Id
+                         join product in db.Products.AsNoTracking() on plan.ProductId equals product.Id
+                         where paymentRequest.Id == id
+                         select new { paymentRequest, plan, product }).SingleOrDefaultAsync(cancellationToken);
+        if (row is null) return null;
+
+        var targetStatus = request.Status?.Trim();
+        if (string.Equals(row.paymentRequest.Status, targetStatus, StringComparison.OrdinalIgnoreCase))
+        {
+            return ToBankTransferPaymentRequestSummary(row.paymentRequest, row.plan);
+        }
+        if (!BankTransferPaymentRules.CanTransition(row.paymentRequest.Status, targetStatus)) return null;
+
+        var reviewNote = NormalizeOptional(request.ReviewNote, 2_000);
+        if (string.Equals(targetStatus, BankTransferPaymentRules.RejectedStatus, StringComparison.OrdinalIgnoreCase)
+            && reviewNote is null)
+        {
+            return null;
+        }
+
+        var now = DateTime.UtcNow;
+        row.paymentRequest.Status = targetStatus!;
+        row.paymentRequest.ReviewedBy = actorId;
+        row.paymentRequest.ReviewedAt = now;
+        row.paymentRequest.ReviewNote = reviewNote;
+        row.paymentRequest.UpdatedAt = now;
+        if (string.Equals(targetStatus, BankTransferPaymentRules.ApprovedStatus, StringComparison.OrdinalIgnoreCase))
+        {
+            var subscription = new LegacyUserSubscription
+            {
+                Id = Guid.NewGuid(),
+                UserId = row.paymentRequest.UserId,
+                UserName = row.paymentRequest.UserName,
+                UserEmail = row.paymentRequest.UserEmail,
+                PlanId = row.plan.Id,
+                ProductId = row.plan.ProductId,
+                Status = "Active",
+                StartDate = now,
+                EndDate = SpeedReadingAccessRules.ResolveEndDate(now, null, row.plan.DurationDays),
+                Notes = $"Bank transfer payment {row.paymentRequest.Id:N}",
+                CreatedBy = actorId,
+                CreatedAt = now
+            };
+            db.UserSubscriptions.Add(subscription);
+            row.paymentRequest.SubscriptionId = subscription.Id;
+        }
+
+        OwnedContentMutationIdempotency.Add(ownedDb, BankTransferReviewScope, key, requestHash, id, now);
+        var concurrent = await OwnedContentMutationIdempotency.SaveAsync(ownedDb, BankTransferReviewScope, key, cancellationToken);
+        if (concurrent is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(concurrent, requestHash);
+            return await GetBankTransferPaymentRequestAsync(concurrent.ResourceId, null, cancellationToken);
+        }
+
+        return ToBankTransferPaymentRequestSummary(row.paymentRequest, row.plan);
     }
 
     public async Task<SpeedReadingPage<UserSubscriptionSummary>> GetSubscriptionsAsync(string? search, string? status, int page, int pageSize, CancellationToken cancellationToken = default)
@@ -221,11 +535,16 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
 
     public async Task<UserSubscriptionSummary?> CreateSubscriptionAsync(CreateUserSubscriptionRequest request, Guid actorId, CancellationToken cancellationToken = default)
     {
-        var plan = await db.SubscriptionPlans.AsNoTracking().SingleOrDefaultAsync(item => item.Id == request.PlanId, cancellationToken);
-        if (plan is null)
+        var row = await (from plan in db.SubscriptionPlans.AsNoTracking()
+                         join product in db.Products.AsNoTracking() on plan.ProductId equals product.Id
+                         where plan.Id == request.PlanId && plan.IsActive && product.IsActive
+                         select new { Plan = plan, Product = product }).SingleOrDefaultAsync(cancellationToken);
+        if (row is null)
         {
             return null;
         }
+
+        var subscriptionPlan = row.Plan;
 
         var subscription = new LegacyUserSubscription
         {
@@ -233,14 +552,14 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             UserId = request.UserId,
             UserName = request.UserName,
             UserEmail = request.UserEmail,
-            PlanId = plan.Id,
-            ProductId = plan.ProductId,
+            PlanId = subscriptionPlan.Id,
+            ProductId = subscriptionPlan.ProductId,
             Status = "Active",
             StartDate = DateTime.SpecifyKind(request.StartDate, DateTimeKind.Utc),
             EndDate = SpeedReadingAccessRules.ResolveEndDate(
                 DateTime.SpecifyKind(request.StartDate, DateTimeKind.Utc),
                 request.EndDate.HasValue ? DateTime.SpecifyKind(request.EndDate.Value, DateTimeKind.Utc) : null,
-                plan.DurationDays),
+                subscriptionPlan.DurationDays),
             Notes = request.Notes,
             CreatedBy = actorId,
             CreatedAt = DateTime.UtcNow
@@ -248,8 +567,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         db.UserSubscriptions.Add(subscription);
         await db.SaveChangesAsync(cancellationToken);
 
-        var product = await db.Products.AsNoTracking().SingleAsync(item => item.Id == plan.ProductId, cancellationToken);
-        return ToSummary(subscription, plan, product);
+        return ToSummary(subscription, subscriptionPlan, row.Product);
     }
 
     public async Task<InstitutionAccessApprovalSummary?> CreateInstitutionAccessAsync(
@@ -257,14 +575,21 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         Guid actorId,
         CancellationToken cancellationToken = default)
     {
-        var plan = await db.SubscriptionPlans.AsNoTracking()
-            .SingleOrDefaultAsync(item => item.Id == request.PlanId, cancellationToken);
+        var planRow = await (from plan in db.SubscriptionPlans.AsNoTracking()
+                             join product in db.Products.AsNoTracking() on plan.ProductId equals product.Id
+                             where plan.Id == request.PlanId && product.IsActive
+                             select new { Plan = plan, Product = product }).SingleOrDefaultAsync(cancellationToken);
         if (request.InstitutionId == Guid.Empty
-            || plan is null
-            || !SpeedReadingAccessRules.IsInstitutionAccessPlan(plan.DurationDays))
+            || planRow is null
+            || !BankTransferPaymentRules.IsInstitutionAccessPlan(
+                planRow.Plan.IsActive,
+                planRow.Plan.IsPublic,
+                planRow.Plan.DurationDays))
         {
             return null;
         }
+
+        var institutionPlan = planRow.Plan;
 
         var recipients = request.Recipients
             .GroupBy(item => item.UserId)
@@ -292,7 +617,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         var recipientIds = recipients.Select(item => item.UserId).ToList();
         var activeUserIds = await db.UserSubscriptions.AsNoTracking()
             .Where(item => !item.IsDeleted
-                && item.PlanId == plan.Id
+                && item.PlanId == institutionPlan.Id
                 && (item.Status == "Active" || item.Status == "Paused")
                 && recipientIds.Contains(item.UserId)
                 && (!item.EndDate.HasValue || item.EndDate > now))
@@ -300,7 +625,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             .ToHashSetAsync(cancellationToken);
 
         var startDate = DateTime.SpecifyKind(request.StartDate, DateTimeKind.Utc);
-        var endDate = SpeedReadingAccessRules.ResolveEndDate(startDate, null, plan.DurationDays);
+        var endDate = SpeedReadingAccessRules.ResolveEndDate(startDate, null, institutionPlan.DurationDays);
         if (endDate is null)
         {
             return null;
@@ -313,8 +638,8 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
                 UserId = recipient.UserId,
                 UserName = recipient.UserName,
                 UserEmail = recipient.UserEmail,
-                PlanId = plan.Id,
-                ProductId = plan.ProductId,
+                PlanId = institutionPlan.Id,
+                ProductId = institutionPlan.ProductId,
                 Status = "Active",
                 StartDate = startDate,
                 EndDate = endDate,
@@ -333,7 +658,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         {
             Id = Guid.NewGuid(),
             InstitutionId = request.InstitutionId,
-            PlanId = plan.Id,
+            PlanId = institutionPlan.Id,
             Status = "Active",
             SeatCount = newSubscriptions.Count,
             StartDate = startDate,
@@ -348,12 +673,11 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         db.UserSubscriptions.AddRange(newSubscriptions);
         await db.SaveChangesAsync(cancellationToken);
 
-        var product = await db.Products.AsNoTracking().SingleAsync(item => item.Id == plan.ProductId, cancellationToken);
         return new InstitutionAccessApprovalSummary(
             newSubscriptions.Count,
             recipients.Count - newSubscriptions.Count,
-            newSubscriptions.Select(subscription => ToSummary(subscription, plan, product)).ToList(),
-            ToInstitutionAccessLicenseSummary(license, plan, product, newSubscriptions.Select(item => item.UserId).ToList()));
+            newSubscriptions.Select(subscription => ToSummary(subscription, institutionPlan, planRow.Product)).ToList(),
+            ToInstitutionAccessLicenseSummary(license, institutionPlan, planRow.Product, newSubscriptions.Select(item => item.UserId).ToList()));
     }
 
     public async Task<InstitutionAccessLicenseSummary?> GetInstitutionAccessOverviewAsync(
@@ -920,6 +1244,77 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         new(license.Id, license.InstitutionId, ToSummary(plan, product), license.Status, license.SeatCount,
             activeStudentIds.Count + (suspendedStudentIds?.Count ?? 0), activeStudentIds, suspendedStudentIds ?? [], license.StartDate, license.EndDate, license.PaymentReference, license.Notes,
             license.ApprovedAt);
+
+    private async Task<BankTransferPaymentRequestSummary?> GetBankTransferPaymentRequestAsync(
+        Guid id,
+        Guid? userId,
+        CancellationToken cancellationToken)
+    {
+        var row = await (from paymentRequest in db.BankTransferPaymentRequests.AsNoTracking()
+                         join plan in db.SubscriptionPlans.AsNoTracking() on paymentRequest.PlanId equals plan.Id
+                         where paymentRequest.Id == id && (!userId.HasValue || paymentRequest.UserId == userId.Value)
+                         select new { paymentRequest, plan }).SingleOrDefaultAsync(cancellationToken);
+        return row is null ? null : ToBankTransferPaymentRequestSummary(row.paymentRequest, row.plan);
+    }
+
+    private static BankTransferPaymentSettingsSummary ToBankTransferSettingsSummary(LegacyBankTransferPaymentSettings settings) =>
+        new(
+            settings.Id,
+            settings.AccountHolder,
+            settings.BankName,
+            settings.Iban,
+            settings.Instructions,
+            settings.IsEnabled,
+            BankTransferPaymentRules.HasCompletePublicSettings(
+                settings.IsEnabled,
+                settings.AccountHolder,
+                settings.BankName,
+                settings.Iban),
+            settings.UpdatedAt ?? settings.CreatedAt);
+
+    private static BankTransferPaymentRequestSummary ToBankTransferPaymentRequestSummary(
+        LegacyBankTransferPaymentRequest paymentRequest,
+        LegacySubscriptionPlan plan) =>
+        new(
+            paymentRequest.Id,
+            paymentRequest.UserId,
+            paymentRequest.UserName,
+            paymentRequest.UserEmail,
+            paymentRequest.PlanId,
+            plan.Name,
+            paymentRequest.Amount,
+            paymentRequest.Currency,
+            paymentRequest.PaymentReference,
+            paymentRequest.PayerName,
+            paymentRequest.Note,
+            paymentRequest.Status,
+            paymentRequest.SubscriptionId,
+            paymentRequest.CreatedAt,
+            paymentRequest.ReviewedBy,
+            paymentRequest.ReviewedAt,
+            paymentRequest.ReviewNote);
+
+    private static string? NormalizeRequired(string? value, int maxLength)
+    {
+        var normalized = value?.Trim();
+        return string.IsNullOrWhiteSpace(normalized) || normalized.Length > maxLength ? null : normalized;
+    }
+
+    private static string? NormalizeOptional(string? value, int maxLength)
+    {
+        var normalized = value?.Trim();
+        return string.IsNullOrWhiteSpace(normalized) ? null : normalized[..Math.Min(normalized.Length, maxLength)];
+    }
+
+    private static string? NormalizePlanSlug(string? value)
+    {
+        var slug = value?.Trim().ToLowerInvariant();
+        return string.IsNullOrWhiteSpace(slug)
+            || slug.Length is < 3 or > 100
+            || slug.Any(character => !((character is >= 'a' and <= 'z') || char.IsDigit(character) || character == '-'))
+                ? null
+                : slug;
+    }
 
     private static string? NormalizePaymentReference(string? value)
     {

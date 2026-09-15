@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -166,6 +166,48 @@ export interface InstitutionAccessLicense {
 }
 
 // ---------------------------------------------------------------------------
+// Bank transfer payments
+// ---------------------------------------------------------------------------
+
+export interface BankTransferPaymentSettings {
+  id: string | null;
+  accountHolder: string;
+  bankName: string;
+  iban: string;
+  instructions: string | null;
+  isEnabled: boolean;
+  isPubliclyAvailable: boolean;
+  updatedAt: string | null;
+}
+
+export interface CreateBankTransferPaymentRequest {
+  planId: string;
+  paymentReference: string;
+  payerName: string | null;
+  note: string | null;
+}
+
+export interface BankTransferPaymentRequest {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  planId: string;
+  planName: string;
+  amount: number;
+  currency: string;
+  paymentReference: string;
+  payerName: string | null;
+  note: string | null;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  subscriptionId: string | null;
+  createdAt: string;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  reviewNote: string | null;
+}
+
+// ---------------------------------------------------------------------------
 // Misc
 // ---------------------------------------------------------------------------
 
@@ -186,6 +228,7 @@ export class SubscriptionService {
   private readonly productsUrl = `${environment.speedReadingApiUrl}/products`;
   private readonly plansUrl    = `${environment.speedReadingApiUrl}/subscription-plans`;
   private readonly subsUrl     = `${environment.speedReadingApiUrl}/subscriptions`;
+  private readonly bankTransferUrl = `${environment.speedReadingApiUrl}/bank-transfer`;
 
   // ── Products ──────────────────────────────────────────────────────────────
   getPublicProducts(): Observable<Product[]> {
@@ -227,6 +270,25 @@ export class SubscriptionService {
 
   deactivatePlan(id: string): Observable<void> {
     return this.http.delete<void>(`${this.plansUrl}/${id}`);
+  }
+
+  // ── Bank transfer payments ────────────────────────────────────────────────
+  getPublicBankTransferSettings(): Observable<BankTransferPaymentSettings | null> {
+    return this.http.get<any>(this.bankTransferUrl).pipe(map(result => result?.data ?? result ?? null));
+  }
+
+  createBankTransferPaymentRequest(
+    request: CreateBankTransferPaymentRequest,
+    idempotencyKey?: string
+  ): Observable<BankTransferPaymentRequest> {
+    return this.http.post<any>(`${this.bankTransferUrl}/requests`, request, {
+      headers: this.idempotencyHeaders(idempotencyKey)
+    }).pipe(map(result => result?.data ?? result));
+  }
+
+  getMyBankTransferPaymentRequests(): Observable<BankTransferPaymentRequest[]> {
+    return this.http.get<any>(`${this.bankTransferUrl}/requests/my`)
+      .pipe(map(result => result?.data ?? result ?? []));
   }
 
   // ── User search (autocomplete) ────────────────────────────────────────────
@@ -298,5 +360,14 @@ export class SubscriptionService {
       isSuspended,
       reason: reason?.trim() || null
     });
+  }
+
+  private idempotencyHeaders(idempotencyKey?: string): HttpHeaders {
+    return new HttpHeaders({ 'Idempotency-Key': idempotencyKey ?? this.newIdempotencyKey() });
+  }
+
+  private newIdempotencyKey(): string {
+    return `speed-reading-bank-transfer-${globalThis.crypto?.randomUUID?.()
+      ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`}`;
   }
 }

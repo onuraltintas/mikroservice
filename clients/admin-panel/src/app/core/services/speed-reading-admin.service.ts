@@ -1536,6 +1536,52 @@ export interface SpeedReadingBulkNotificationRequest {
   sendEmail: boolean;
 }
 
+export interface SpeedReadingBankTransferSettings {
+  id: string | null;
+  accountHolder: string;
+  bankName: string;
+  iban: string;
+  instructions: string | null;
+  isEnabled: boolean;
+  isPubliclyAvailable: boolean;
+  updatedAt: string | null;
+}
+
+export interface SpeedReadingBankTransferSettingsRequest {
+  accountHolder: string;
+  bankName: string;
+  iban: string;
+  instructions: string | null;
+  isEnabled: boolean;
+}
+
+export interface SpeedReadingBankTransferRequest {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  planId: string;
+  planName: string;
+  amount: number;
+  currency: string;
+  paymentReference: string;
+  payerName: string | null;
+  note: string | null;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  subscriptionId: string | null;
+  createdAt: string;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  reviewNote: string | null;
+}
+
+export interface SpeedReadingBankTransferRequestPage {
+  items: SpeedReadingBankTransferRequest[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+}
+
 export interface SpeedReadingBulkNotificationResult {
   success: boolean;
   totalSent: number;
@@ -1635,6 +1681,41 @@ export class SpeedReadingAdminService {
       pageNumber: response.pageNumber ?? page,
       pageSize: response.pageSize ?? pageSize
     })));
+  }
+
+  getBankTransferSettings() {
+    return this.http.get<{ success: boolean; data: SpeedReadingBankTransferSettings | null }>(`${this.url}/bank-transfer/settings`)
+      .pipe(map(response => response.data ?? null));
+  }
+
+  updateBankTransferSettings(request: SpeedReadingBankTransferSettingsRequest, idempotencyKey?: string) {
+    return this.http.put<{ success: boolean; data: SpeedReadingBankTransferSettings }>(
+      `${this.url}/bank-transfer/settings`,
+      request,
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    ).pipe(map(response => response.data));
+  }
+
+  getBankTransferRequests(page = 1, pageSize = 25, status?: string, search?: string) {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    if (status) params = params.set('status', status);
+    if (search?.trim()) params = params.set('search', search.trim());
+    return this.http.get<{ success: boolean; data: { items: SpeedReadingBankTransferRequest[]; totalCount: number; page: number; pageSize: number } }>(
+      `${this.url}/bank-transfer/requests`, { params }
+    ).pipe(map(response => ({
+      items: response.data?.items ?? [],
+      totalCount: response.data?.totalCount ?? 0,
+      pageNumber: response.data?.page ?? page,
+      pageSize: response.data?.pageSize ?? pageSize
+    } as SpeedReadingBankTransferRequestPage)));
+  }
+
+  reviewBankTransferRequest(id: string, status: 'Approved' | 'Rejected', reviewNote: string | null, idempotencyKey?: string) {
+    return this.http.put<{ success: boolean; data: SpeedReadingBankTransferRequest }>(
+      `${this.url}/bank-transfer/requests/${id}/review`,
+      { status, reviewNote },
+      { headers: this.idempotencyHeaders(idempotencyKey) }
+    ).pipe(map(response => response.data));
   }
 
   getAgeGroups(activeOnly = false) {

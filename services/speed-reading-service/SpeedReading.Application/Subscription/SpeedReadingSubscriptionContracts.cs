@@ -65,6 +65,35 @@ public sealed record PaymentSummary(
     Guid? SubscriptionId,
     DateTime CreatedAt);
 
+public sealed record BankTransferPaymentSettingsSummary(
+    Guid? Id,
+    string AccountHolder,
+    string BankName,
+    string Iban,
+    string? Instructions,
+    bool IsEnabled,
+    bool IsPubliclyAvailable,
+    DateTime? UpdatedAt);
+
+public sealed record BankTransferPaymentRequestSummary(
+    Guid Id,
+    Guid UserId,
+    string UserName,
+    string UserEmail,
+    Guid PlanId,
+    string PlanName,
+    decimal Amount,
+    string Currency,
+    string PaymentReference,
+    string? PayerName,
+    string? Note,
+    string Status,
+    Guid? SubscriptionId,
+    DateTime CreatedAt,
+    Guid? ReviewedBy,
+    DateTime? ReviewedAt,
+    string? ReviewNote);
+
 public sealed record CreateProductRequest(
     string Slug,
     string Name,
@@ -105,6 +134,23 @@ public sealed record UpdateSubscriptionPlanRequest(
     bool? IsPublic,
     int? SortOrder,
     IReadOnlyList<string>? Features);
+
+public sealed record UpdateBankTransferPaymentSettingsRequest(
+    string AccountHolder,
+    string BankName,
+    string Iban,
+    string? Instructions,
+    bool IsEnabled);
+
+public sealed record CreateBankTransferPaymentRequest(
+    Guid PlanId,
+    string PaymentReference,
+    string? PayerName,
+    string? Note);
+
+public sealed record ReviewBankTransferPaymentRequest(
+    string Status,
+    string? ReviewNote);
 
 public sealed record CreateUserSubscriptionRequest(
     Guid UserId,
@@ -258,6 +304,14 @@ public interface ISpeedReadingSubscription
     Task<Guid?> CreatePlanAsync(CreateSubscriptionPlanRequest request, Guid actorId, CancellationToken cancellationToken = default);
     Task<SubscriptionPlanSummary?> UpdatePlanAsync(Guid id, UpdateSubscriptionPlanRequest request, Guid actorId, CancellationToken cancellationToken = default);
     Task<bool> DeactivatePlanAsync(Guid id, Guid actorId, CancellationToken cancellationToken = default);
+
+    Task<BankTransferPaymentSettingsSummary?> GetPublicBankTransferSettingsAsync(CancellationToken cancellationToken = default);
+    Task<BankTransferPaymentSettingsSummary?> GetBankTransferSettingsAsync(CancellationToken cancellationToken = default);
+    Task<BankTransferPaymentSettingsSummary?> UpdateBankTransferSettingsAsync(UpdateBankTransferPaymentSettingsRequest request, Guid actorId, string idempotencyKey, CancellationToken cancellationToken = default);
+    Task<BankTransferPaymentRequestSummary?> CreateBankTransferPaymentRequestAsync(Guid userId, CreateBankTransferPaymentRequest request, string idempotencyKey, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<BankTransferPaymentRequestSummary>> GetMyBankTransferPaymentRequestsAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<SpeedReadingPage<BankTransferPaymentRequestSummary>> GetBankTransferPaymentRequestsAsync(string? search, string? status, int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<BankTransferPaymentRequestSummary?> ReviewBankTransferPaymentRequestAsync(Guid id, ReviewBankTransferPaymentRequest request, Guid actorId, string idempotencyKey, CancellationToken cancellationToken = default);
 
     Task<SpeedReadingPage<UserSubscriptionSummary>> GetSubscriptionsAsync(string? search, string? status, int page, int pageSize, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<UserSubscriptionSummary>> GetUserSubscriptionsAsync(Guid userId, CancellationToken cancellationToken = default);

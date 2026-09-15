@@ -98,3 +98,38 @@ internal sealed class LegacyPayment
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
+
+internal sealed class LegacyBankTransferPaymentSettings
+{
+    public Guid Id { get; set; }
+    public string AccountHolder { get; set; } = string.Empty;
+    public string BankName { get; set; } = string.Empty;
+    public string Iban { get; set; } = string.Empty;
+    public string? Instructions { get; set; }
+    public bool IsEnabled { get; set; }
+    public Guid CreatedBy { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public Guid? UpdatedBy { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+
+internal sealed class LegacyBankTransferPaymentRequest
+{
+    public Guid Id { get; set; }
+    public Guid UserId { get; set; }
+    public string UserName { get; set; } = string.Empty;
+    public string UserEmail { get; set; } = string.Empty;
+    public Guid PlanId { get; set; }
+    public decimal Amount { get; set; }
+    public string Currency { get; set; } = "TRY";
+    public string PaymentReference { get; set; } = string.Empty;
+    public string? PayerName { get; set; }
+    public string? Note { get; set; }
+    public string Status { get; set; } = "Pending";
+    public Guid? SubscriptionId { get; set; }
+    public Guid? ReviewedBy { get; set; }
+    public DateTime? ReviewedAt { get; set; }
+    public string? ReviewNote { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}

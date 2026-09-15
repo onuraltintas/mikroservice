@@ -22,6 +22,8 @@ internal interface ISpeedReadingDataContext
     DbSet<LegacyInstitutionAccessLicense> InstitutionAccessLicenses { get; }
     DbSet<LegacyInstitutionAccessAction> InstitutionAccessActions { get; }
     DbSet<LegacyPayment> Payments { get; }
+    DbSet<LegacyBankTransferPaymentSettings> BankTransferPaymentSettings { get; }
+    DbSet<LegacyBankTransferPaymentRequest> BankTransferPaymentRequests { get; }
     DbSet<LegacyUserNotification> Notifications { get; }
     DbSet<LegacyNotificationPreference> NotificationPreferences { get; }
     DbSet<LegacyNotificationTypePreference> NotificationTypePreferences { get; }

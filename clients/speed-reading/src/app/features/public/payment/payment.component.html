@@ -3,54 +3,138 @@
 <main class="payment-page">
   <section class="hero-section">
     <div class="container">
+      <p class="eyebrow">Güvenli erişim başvurusu</p>
       <h1>Hızlı Okuma Programına Katılım</h1>
-      <p>Ödemenizi havale/EFT ile tamamlayın; teyidin ardından erişiminiz yönetici tarafından açılır.</p>
+      <p>Planınızı seçin, banka transferini yapın ve işlem referansınızı iletin. Erişiminiz doğrulama sonrasında açılır.</p>
     </div>
   </section>
 
-  <section class="container">
+  <section class="container content-section">
     @if (loading()) {
       <div class="plans-loading"><mat-spinner diameter="40" /></div>
     } @else if (plans.length) {
-      <div class="pricing-grid">
-        @for (plan of plans; track plan.id) {
-          <mat-card class="pricing-card">
-            <div class="card-header">
-              <h2>{{ plan.name }}</h2>
-              <p class="description">{{ plan.description }}</p>
-              <p class="price">{{ formatPrice(plan) }}</p>
-            </div>
-            @if (plan.features?.length) {
-              <ul class="features-list">
-                @for (feature of plan.features; track feature) {
-                  <li><mat-icon>check</mat-icon>{{ feature }}</li>
+      <section aria-labelledby="plan-heading">
+        <div class="section-heading">
+          <p class="step">1. Adım</p>
+          <h2 id="plan-heading">Planınızı seçin</h2>
+          <p>Seçiminiz, ödeme talebiniz onaylandığında hesabınıza tanımlanacak erişimi belirler.</p>
+        </div>
+        <div class="pricing-grid">
+          @for (plan of plans; track plan.id) {
+            <mat-card class="pricing-card" [class.selected]="selectedPlanId() === plan.id">
+              <div class="card-header">
+                <h3>{{ plan.name }}</h3>
+                <p class="description">{{ plan.description }}</p>
+                <p class="price">{{ formatPrice(plan) }}</p>
+                @if (plan.durationDays) { <p class="duration">{{ plan.durationDays }} gün erişim</p> }
+              </div>
+              @if (plan.features?.length) {
+                <ul class="features-list">
+                  @for (feature of plan.features; track feature) {
+                    <li><mat-icon>check</mat-icon>{{ feature }}</li>
+                  }
+                </ul>
+              }
+              <button mat-stroked-button type="button" (click)="selectPlan(plan)" [attr.aria-pressed]="selectedPlanId() === plan.id">
+                {{ selectedPlanId() === plan.id ? 'Plan seçildi' : 'Bu planı seç' }}
+              </button>
+            </mat-card>
+          }
+        </div>
+      </section>
+
+      @if (selectedPlan; as plan) {
+        <section class="transfer-panel" aria-labelledby="transfer-heading">
+          <div class="section-heading">
+            <p class="step">2. Adım</p>
+            <h2 id="transfer-heading">Banka transferini tamamlayın</h2>
+            <p><strong>{{ plan.name }}</strong> için ödenecek tutar: <strong>{{ formatPrice(plan) }}</strong></p>
+          </div>
+
+          @if (settings(); as bankSettings) {
+            <div class="transfer-grid">
+              <article class="bank-details" aria-label="Banka hesap bilgileri">
+                <h3>Banka hesap bilgileri</h3>
+                <dl>
+                  <div><dt>Hesap sahibi</dt><dd>{{ bankSettings.accountHolder }}</dd></div>
+                  <div><dt>Banka</dt><dd>{{ bankSettings.bankName }}</dd></div>
+                  <div><dt>IBAN</dt><dd><code>{{ bankSettings.iban }}</code></dd></div>
+                </dl>
+                @if (bankSettings.instructions) { <p class="instructions">{{ bankSettings.instructions }}</p> }
+                <p class="privacy-note">Açıklama alanına adınızı ve ödeme referansınızı yazın. Kart veya kimlik bilgisi paylaşmayın.</p>
+              </article>
+
+              <form class="request-form" (ngSubmit)="submitBankTransferRequest()" novalidate>
+                <h3>Ödeme talebini iletin</h3>
+                @if (isAuthenticated) {
+                  <label>
+                    <span>Banka işlem referansı</span>
+                    <input [(ngModel)]="paymentReference" name="paymentReference" required maxlength="100" placeholder="Örn. EFT-2026-000123" autocomplete="off" />
+                  </label>
+                  <label>
+                    <span>Gönderen adı <em>(isteğe bağlı)</em></span>
+                    <input [(ngModel)]="payerName" name="payerName" maxlength="200" autocomplete="name" />
+                  </label>
+                  <label>
+                    <span>Not <em>(isteğe bağlı)</em></span>
+                    <textarea [(ngModel)]="note" name="note" maxlength="2000" rows="3" placeholder="Ödemeyle ilgili ek bilgi"></textarea>
+                  </label>
+                  @if (error()) { <p class="message error" role="alert">{{ error() }}</p> }
+                  @if (success()) { <p class="message success" role="status">{{ success() }}</p> }
+                  <button mat-raised-button color="primary" type="submit" [disabled]="submitting()">
+                    {{ submitting() ? 'Talep iletiliyor…' : 'Ödeme talebini ilet' }}
+                  </button>
+                } @else {
+                  <p>Ödeme talebini hesabınıza bağlamak için önce giriş yapın veya kayıt olun.</p>
+                  <button mat-raised-button color="primary" type="button" (click)="continueToLogin()">Giriş yapıp devam et</button>
                 }
-              </ul>
-            }
-            <a mat-raised-button color="primary" routerLink="/iletisim">Havale/EFT bilgisi için iletişime geç</a>
-          </mat-card>
-        }
-      </div>
+              </form>
+            </div>
+          } @else {
+            <mat-card class="disabled-notice">
+              <mat-icon>account_balance</mat-icon>
+              <div>
+                <h3>Havale/EFT geçici olarak kapalı</h3>
+                <p>Bu plan için banka transferi bilgisi henüz yayında değil. Lütfen daha sonra tekrar deneyin.</p>
+              </div>
+            </mat-card>
+          }
+        </section>
+      }
     } @else {
       <mat-card class="disabled-notice">
-        <mat-icon>account_balance</mat-icon>
+        <mat-icon>inventory_2</mat-icon>
         <div>
-          <h2>Katılım için bizimle iletişime geçin</h2>
-          <p>Havale/EFT bilgilerini paylaşır, ödemeniz teyit edildikten sonra erişiminizi açarız.</p>
-          <a mat-raised-button color="primary" routerLink="/iletisim">İletişime geç</a>
+          <h2>Planlar yakında burada</h2>
+          <p>Satışa açılan planlar bu sayfada listelenecek.</p>
         </div>
       </mat-card>
     }
 
-    <mat-card class="faq-section">
-      <h2>İşleyiş</h2>
+    @if (isAuthenticated && requests().length) {
+      <section class="request-history" aria-labelledby="request-history-heading">
+        <h2 id="request-history-heading">Ödeme talepleriniz</h2>
+        <div class="request-list">
+          @for (request of requests(); track request.id) {
+            <article>
+              <div><strong>{{ request.planName }}</strong><span>{{ request.paymentReference }}</span></div>
+              <div><span class="status" [class.approved]="request.status === 'Approved'" [class.rejected]="request.status === 'Rejected'">{{ request.status === 'Pending' ? 'İnceleniyor' : request.status === 'Approved' ? 'Onaylandı' : 'Reddedildi' }}</span><time>{{ request.createdAt | date:'d MMMM y, HH:mm':'':'tr' }}</time></div>
+              @if (request.reviewNote) { <p>{{ request.reviewNote }}</p> }
+            </article>
+          }
+        </div>
+      </section>
+    }
+
+    <section class="faq-section" aria-labelledby="process-heading">
+      <h2 id="process-heading">İşleyiş</h2>
       <ol>
-        <li>Havale/EFT bilgileri için iletişime geçin.</li>
-        <li>Ödemeniz banka hesabında teyit edilir.</li>
-        <li>Yönetici, seçtiğiniz planın erişimini hesabınıza tanımlar.</li>
-        <li>Erişim süresi onay tarihinde başlar.</li>
+        <li>Size uygun erişim planını seçin.</li>
+        <li>Yayınlanan banka hesabına havale/EFT yapın.</li>
+        <li>İşlem referansını ödeme talebiyle iletin.</li>
+        <li>Yönetici banka hareketini doğrular; erişim süreniz onay tarihinde başlar.</li>
       </ol>
-    </mat-card>
+    </section>
   </section>
 </main>
 

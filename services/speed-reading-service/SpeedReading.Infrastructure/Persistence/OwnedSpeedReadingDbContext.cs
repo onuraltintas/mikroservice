@@ -87,6 +87,8 @@ public sealed class OwnedSpeedReadingDbContext(
     DbSet<LegacyInstitutionAccessLicense> ISpeedReadingDataContext.InstitutionAccessLicenses => Set<LegacyInstitutionAccessLicense>();
     DbSet<LegacyInstitutionAccessAction> ISpeedReadingDataContext.InstitutionAccessActions => Set<LegacyInstitutionAccessAction>();
     DbSet<LegacyPayment> ISpeedReadingDataContext.Payments => Set<LegacyPayment>();
+    DbSet<LegacyBankTransferPaymentSettings> ISpeedReadingDataContext.BankTransferPaymentSettings => Set<LegacyBankTransferPaymentSettings>();
+    DbSet<LegacyBankTransferPaymentRequest> ISpeedReadingDataContext.BankTransferPaymentRequests => Set<LegacyBankTransferPaymentRequest>();
     DbSet<LegacyUserNotification> ISpeedReadingDataContext.Notifications => Set<LegacyUserNotification>();
     DbSet<LegacyNotificationPreference> ISpeedReadingDataContext.NotificationPreferences => Set<LegacyNotificationPreference>();
     DbSet<LegacyNotificationTypePreference> ISpeedReadingDataContext.NotificationTypePreferences => Set<LegacyNotificationTypePreference>();
@@ -652,6 +654,34 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.HasIndex(item => item.Status);
             entity.HasIndex(item => item.PlanId);
             entity.HasIndex(item => item.ProviderToken).IsUnique().HasFilter("\"ProviderToken\" IS NOT NULL");
+            entity.HasOne<LegacySubscriptionPlan>().WithMany().HasForeignKey(item => item.PlanId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<LegacyBankTransferPaymentSettings>(entity =>
+        {
+            entity.ToTable("bank_transfer_payment_settings");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.AccountHolder).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.BankName).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Iban).HasMaxLength(34).IsRequired();
+            entity.Property(item => item.Instructions).HasMaxLength(2_000);
+        });
+        modelBuilder.Entity<LegacyBankTransferPaymentRequest>(entity =>
+        {
+            entity.ToTable("bank_transfer_payment_requests");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.UserName).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.UserEmail).HasMaxLength(255).IsRequired();
+            entity.Property(item => item.Amount).HasPrecision(10, 2);
+            entity.Property(item => item.Currency).HasMaxLength(10).IsRequired();
+            entity.Property(item => item.PaymentReference).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.PayerName).HasMaxLength(200);
+            entity.Property(item => item.Note).HasMaxLength(2_000);
+            entity.Property(item => item.Status).HasMaxLength(50).IsRequired().IsConcurrencyToken();
+            entity.Property(item => item.ReviewNote).HasMaxLength(2_000);
+            entity.HasIndex(item => new { item.UserId, item.CreatedAt });
+            entity.HasIndex(item => new { item.Status, item.CreatedAt });
+            entity.HasIndex(item => new { item.UserId, item.PaymentReference }).IsUnique();
+            entity.HasIndex(item => item.SubscriptionId).IsUnique().HasFilter("\"SubscriptionId\" IS NOT NULL");
             entity.HasOne<LegacySubscriptionPlan>().WithMany().HasForeignKey(item => item.PlanId).OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<LegacyContentBlock>(entity =>
