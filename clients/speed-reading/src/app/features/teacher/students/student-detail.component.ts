@@ -159,8 +159,8 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
     const activity = report.studentReports.activity;
 
     this.stats = {
-      totalExercises: dashboard.exercisesCompleted ?? dashboard.totalActivities,
-      completedExercises: dashboard.exercisesCompleted ?? dashboard.totalActivities,
+      totalExercises: dashboard.totalActivities,
+      completedExercises: dashboard.exercisesCompleted ?? 0,
       averageKDP: Math.round(readingSpeed.statistics.averageWPM),
       averageComprehension: Math.round(comprehension.overallComprehension),
       totalTimeMinutes: activity.studyTime.totalMinutes,
@@ -170,7 +170,7 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
     };
     this.seriesData = report.studentReports.series.activeSeries || [];
 
-    const progress = readingSpeed.wpmTrendChart?.data?.[0]?.series ?? [];
+    const progress = readingSpeed.wpmTrendChart?.data ?? [];
     this.recentActivities = (activity.recentActivities ?? []).map((item: any) => ({
       date: item.completedAt,
       exerciseName: item.activityType === 'reading'
@@ -184,7 +184,7 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
     this.kdpChartData = [{ name: 'KDP', series: progress }];
     this.comprehensionChartData = [{
       name: 'Anlama Oranı',
-      series: comprehension.comprehensionTrend?.data?.[0]?.series ?? []
+      series: comprehension.comprehensionTrend?.data ?? []
     }];
     this.setupReferenceLines();
   }
