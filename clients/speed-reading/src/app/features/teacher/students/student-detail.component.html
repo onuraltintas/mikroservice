@@ -22,7 +22,7 @@
                             <h2>{{ student.firstName }} {{ student.lastName }}</h2>
                             <p class="email">{{ student.email }}</p>
                             <div class="badges">
-                                <mat-chip color="primary">Seviye {{ student.currentLevel }}</mat-chip>
+                                <mat-chip color="primary">Sınıf {{ student.currentLevel }}</mat-chip>
                                 <mat-chip [color]="student.isActive ? 'primary' : 'default'">
                                     {{ student.isActive ? 'Aktif' : 'Pasif' }}
                                 </mat-chip>
@@ -45,7 +45,7 @@
                         <div class="stat-content">
                             <div class="stat-value">{{ stats?.averageKDP || 0 }}</div>
                             <div class="stat-label">Ortalama KDP</div>
-                            <div class="stat-target">Hedef: {{ student.targetWPM }} KDP</div>
+                            <div class="stat-target">Hedef: {{ student.targetWPM ?? 'Tanımlı değil' }} KDP</div>
                         </div>
                     </div>
                 </mat-card-content>
@@ -58,7 +58,7 @@
                         <div class="stat-content">
                             <div class="stat-value">{{ stats?.averageComprehension || 0 }}%</div>
                             <div class="stat-label">Ortalama Anlama</div>
-                            <div class="stat-target">Hedef: {{ student.targetComprehension }}%</div>
+                            <div class="stat-target">Hedef: {{ student.targetComprehension ?? 'Tanımlı değil' }}<span *ngIf="student.targetComprehension != null">%</span></div>
                         </div>
                     </div>
                 </mat-card-content>
@@ -84,7 +84,7 @@
                         <div class="stat-content">
                             <div class="stat-value">{{ stats?.totalTimeMinutes || 0 }}</div>
                             <div class="stat-label">Toplam Süre (dk)</div>
-                            <div class="stat-target">Günlük Hedef: {{ student.dailyGoalMinutes }} dk</div>
+                            <div class="stat-target">Günlük Hedef: {{ student.dailyGoalMinutes ?? 'Tanımlı değil' }}<span *ngIf="student.dailyGoalMinutes != null"> dk</span></div>
                         </div>
                     </div>
                 </mat-card-content>
@@ -140,7 +140,7 @@
                                 <ng-container matColumnDef="kdp">
                                     <th mat-header-cell *matHeaderCellDef>KDP</th>
                                     <td mat-cell *matCellDef="let activity">
-                                        <span [class.above-target]="activity.kdp >= student.targetWPM">
+                                        <span [class.above-target]="student.targetWPM != null && student.targetWPM > 0 && activity.kdp >= student.targetWPM">
                                             {{ activity.kdp }}
                                         </span>
                                     </td>
@@ -150,7 +150,7 @@
                                     <th mat-header-cell *matHeaderCellDef>Anlama</th>
                                     <td mat-cell *matCellDef="let activity">
                                         <span
-                                            [class.above-target]="activity.comprehension >= student.targetComprehension">
+                                            [class.above-target]="student.targetComprehension != null && student.targetComprehension > 0 && activity.comprehension >= student.targetComprehension">
                                             {{ activity.comprehension }}%
                                         </span>
                                     </td>
@@ -247,7 +247,7 @@
                                 <mat-icon>speed</mat-icon>
                                 <div>
                                     <div class="goal-label">Hedef KDP</div>
-                                    <div class="goal-value">{{ student.targetWPM }} kelime/dakika</div>
+                                    <div class="goal-value">{{ student.targetWPM ?? 'Tanımlı değil' }}<span *ngIf="student.targetWPM != null"> kelime/dakika</span></div>
                                 </div>
                             </div>
 
@@ -255,7 +255,7 @@
                                 <mat-icon>psychology</mat-icon>
                                 <div>
                                     <div class="goal-label">Hedef Anlama Oranı</div>
-                                    <div class="goal-value">{{ student.targetComprehension }}%</div>
+                                    <div class="goal-value">{{ student.targetComprehension ?? 'Tanımlı değil' }}<span *ngIf="student.targetComprehension != null">%</span></div>
                                 </div>
                             </div>
 
@@ -263,7 +263,7 @@
                                 <mat-icon>schedule</mat-icon>
                                 <div>
                                     <div class="goal-label">Günlük Hedef Süre</div>
-                                    <div class="goal-value">{{ student.dailyGoalMinutes }} dakika</div>
+                                    <div class="goal-value">{{ student.dailyGoalMinutes ?? 'Tanımlı değil' }}<span *ngIf="student.dailyGoalMinutes != null"> dakika</span></div>
                                 </div>
                             </div>
 
@@ -272,6 +272,16 @@
                                 <div>
                                     <div class="goal-label">Öğrenme Stili</div>
                                     <div class="goal-value">{{ student.learningStyle }}</div>
+                                </div>
+                            </div>
+
+                            <div class="goal-item" *ngIf="stats?.programState as program">
+                                <mat-icon>route</mat-icon>
+                                <div>
+                                    <div class="goal-label">Aktif Program</div>
+                                    <div class="goal-value">{{ program.programName }}</div>
+                                    <div class="goal-detail">Gün {{ program.currentDay }} · Hafta {{ program.currentWeek }} · Zorluk {{ program.difficultyLevel }}</div>
+                                    <div class="goal-detail">Adaptif ayar: {{ program.adaptiveDifficultyOffset > 0 ? '+' : '' }}{{ program.adaptiveDifficultyOffset }} · İlerleme: {{ stats?.goalCompletionRate | number:'1.0-0' }}%</div>
                                 </div>
                             </div>
 

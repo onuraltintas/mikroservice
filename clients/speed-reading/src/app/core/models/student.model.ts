@@ -6,9 +6,9 @@ export interface Student {
   institutionId?: string;
   institutionName?: string;
   currentLevel: number;
-  targetWPM: number;
-  targetComprehension: number;
-  dailyGoalMinutes: number;
+  targetWPM?: number | null;
+  targetComprehension?: number | null;
+  dailyGoalMinutes?: number | null;
   learningStyle: string;
   lastLoginAt?: Date;
   isActive: boolean;

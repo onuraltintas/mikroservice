@@ -140,6 +140,20 @@ public sealed record StudentActivityStudyTime(
     string MostActiveDay,
     decimal Consistency);
 
+public sealed record StudentActivityDetail(
+    DateTime CompletedAt,
+    string ActivityType,
+    Guid ContentId,
+    string ContentTitle,
+    string? ExerciseTypeName,
+    int DifficultyLevel,
+    int DurationSeconds,
+    decimal? Wpm,
+    decimal? Comprehension,
+    decimal? SuccessRate,
+    bool IsMeasured,
+    bool IsPassed);
+
 public sealed record StudentActivityAnalytics(
     Guid UserId,
     DateTime DateFrom,
@@ -150,7 +164,21 @@ public sealed record StudentActivityAnalytics(
     IReadOnlyList<StudentActivityHeatmapPoint> Heatmap,
     IReadOnlyList<StudentActivityDistributionPoint> HourlyDistribution,
     IReadOnlyList<StudentActivityDistributionPoint> DailyDistribution,
+    IReadOnlyList<StudentActivityDetail> RecentActivities,
     StudentActivityStudyTime StudyTime);
+
+public sealed record StudentProgramState(
+    Guid ProgramId,
+    string ProgramName,
+    int CurrentDay,
+    int CurrentWeek,
+    int DifficultyLevel,
+    int AdaptiveDifficultyOffset,
+    int DaysCompleted,
+    int TotalDays,
+    decimal AverageSuccessRate,
+    DateTime? LastActivityAt,
+    bool IsActive);
 
 public sealed record StudentAnalyticsSummary(
     Guid UserId,
@@ -173,6 +201,7 @@ public sealed record StudentAnalyticsSummary(
     int MilestonesEarned,
     int DailyGoalMinutes,
     decimal GoalCompletionRate,
+    StudentProgramState? ProgramState,
     IReadOnlyList<StudentAnalyticsMilestone> RecentMilestones,
     IReadOnlyList<StudentAnalyticsDailyPoint> Daily);
 

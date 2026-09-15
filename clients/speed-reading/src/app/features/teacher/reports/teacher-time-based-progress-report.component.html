@@ -117,7 +117,7 @@
                             <div class="student-info">
                                 <div class="student-name">{{ student.studentName }}</div>
                                 <div class="score-change positive">
-                                    +{{ student.improvement | number:'1.0-1' }} puan
+                                    +{{ student.improvement | number:'1.0-1' }} puan · {{ metricLabel(student.metric) }}
                                 </div>
                             </div>
                             <div class="current-score">
@@ -145,7 +145,7 @@
                             <div class="student-info">
                                 <div class="student-name">{{ student.studentName }}</div>
                                 <div class="score-change negative">
-                                    {{ student.improvement | number:'1.0-1' }} puan
+                                    {{ student.improvement | number:'1.0-1' }} puan · {{ metricLabel(student.metric) }}
                                 </div>
                             </div>
                             <div class="current-score">

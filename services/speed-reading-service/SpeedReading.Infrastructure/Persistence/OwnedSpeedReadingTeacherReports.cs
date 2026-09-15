@@ -40,34 +40,40 @@ internal sealed class OwnedSpeedReadingTeacherReports(
                 group.Average(item => item.SuccessRate),
                 group.Sum(item => item.TimeSpentSeconds)))
             .ToListAsync(cancellationToken);
-        var readingCount = reading.Sum(item => item.ActivityCount);
-        var averageWpm = readingCount == 0 ? 0 : Math.Round(reading.Sum(item => item.AverageWpm * item.ActivityCount) / readingCount, 2);
-        var averageComprehension = readingCount == 0 ? 0 : Math.Round(reading.Sum(item => item.AverageComprehension * item.ActivityCount) / readingCount, 2);
-        var exerciseCount = exercises.Sum(item => item.ActivityCount);
-        var byUser = reading.Concat(exercises).GroupBy(item => item.StudentId).ToDictionary(
-            group => group.Key,
-            group => Merge(group));
-        var top = byUser.Values.OrderByDescending(item => item.AverageWpm).ThenBy(item => item.StudentId).Take(10).ToList();
-        var support = byUser.Values.OrderBy(item => item.AverageWpm).ThenBy(item => item.StudentId).Take(10).ToList();
-        var names = await GetNamesAsync(top.Concat(support).Select(item => item.StudentId), cancellationToken);
-        var rawAverageWpm = averageWpm;
+        var summary = TeacherAnalyticsRules.Summarize(
+            reading.Select(item => new TeacherMetricSample(
+                item.StudentId, item.ActivityCount, item.AverageWpm, item.AverageComprehension,
+                item.TotalSeconds, IsReading: true))
+            .Concat(exercises.Select(item => new TeacherMetricSample(
+                item.StudentId, item.ActivityCount, item.AverageWpm, item.AverageComprehension,
+                item.TotalSeconds, IsReading: false))));
+        var top = summary.ReadingStudents
+            .OrderByDescending(item => item.AverageWpm)
+            .ThenBy(item => item.StudentId)
+            .Take(10)
+            .ToList();
+        var support = summary.ReadingStudents
+            .OrderBy(item => item.AverageWpm)
+            .ThenBy(item => item.StudentId)
+            .Take(10)
+            .ToList();
 
         return new TeacherClassOverviewAnalytics(
             start,
             end,
             scope.TotalStudents,
-            byUser.Count,
-            true,
-            readingCount > 0,
-            readingCount > 0,
-            averageWpm,
-            averageComprehension,
-            readingCount + exerciseCount,
-            byUser.Values.Count(item => item.AverageWpm > rawAverageWpm),
-            byUser.Values.Count(item => item.AverageWpm == rawAverageWpm),
-            byUser.Values.Count(item => item.AverageWpm < rawAverageWpm),
-            top.Select(item => ToStudentPerformance(item, names, "high")).ToList(),
-            support.Select(item => ToStudentPerformance(item, names, "support")).ToList());
+            summary.ActiveStudentIds.Count,
+            summary.ActiveStudentIds.Count > 0,
+            summary.ReadingStudents.Count > 0,
+            summary.ReadingStudents.Count > 0,
+            summary.ClassAverageWpm,
+            summary.ClassAverageComprehension,
+            summary.TotalActivitiesCompleted,
+            summary.StudentsAboveAverage,
+            summary.StudentsAtAverage,
+            summary.StudentsBelowAverage,
+            top.Select(item => ToStudentPerformance(item, "high")).ToList(),
+            support.Select(item => ToStudentPerformance(item, "support")).ToList());
     }
 
     public Task<TeacherAssignmentAnalytics> GetAssignmentsAsync(
@@ -161,11 +167,11 @@ internal sealed class OwnedSpeedReadingTeacherReports(
         var studentIds = await ScopedStudentIdsAsync(scope, cancellationToken);
         var reading = await db.ReadingSessions.AsNoTracking()
             .Where(item => studentIds.Contains(item.UserId) && item.CompletedAt >= start && item.CompletedAt <= end)
-            .Select(item => new ActivityRow(item.UserId, item.CompletedAt, 1, item.ReadingTimeSeconds, item.ComprehensionRate))
+            .Select(item => new ActivityRow(item.UserId, item.CompletedAt, 1, item.ReadingTimeSeconds, item.ComprehensionRate, IsReading: true))
             .ToListAsync(cancellationToken);
         var exercise = await db.DailyExerciseLogs.AsNoTracking()
             .Where(item => studentIds.Contains(item.UserId) && item.CompletedDate >= start && item.CompletedDate <= end)
-            .Select(item => new ActivityRow(item.UserId, item.CompletedDate, 1, item.TimeSpentSeconds, item.SuccessRate))
+            .Select(item => new ActivityRow(item.UserId, item.CompletedDate, 1, item.TimeSpentSeconds, item.SuccessRate, IsReading: false))
             .ToListAsync(cancellationToken);
         var daily = reading.Concat(exercise).ToList();
         var weekly = daily.GroupBy(item => StartOfWeek(item.Date)).OrderBy(group => group.Key)
@@ -180,19 +186,16 @@ internal sealed class OwnedSpeedReadingTeacherReports(
             .Select(group => Chart(group.Key, "Dakika", Math.Round(group.Sum(item => (decimal)item.TotalSeconds) / 60, 2))).ToList();
 
         var midpoint = start + (end - start) / 2;
-        var progress = daily.GroupBy(item => item.StudentId).Select(group => new
-        {
-            StudentId = group.Key,
-            Previous = group.Where(item => item.Date < midpoint).Select(item => item.Score).DefaultIfEmpty().Average(),
-            Current = group.Where(item => item.Date >= midpoint).Select(item => item.Score).DefaultIfEmpty().Average()
-        }).ToList();
+        var progress = TeacherAnalyticsRules.CalculateProgress(
+            daily.Select(item => new TeacherProgressSample(
+                item.StudentId, item.Date, item.Score, item.IsReading)), midpoint);
         var names = await GetNamesAsync(progress.Select(item => item.StudentId), cancellationToken);
-        var improving = progress.Where(item => item.Current - item.Previous > 1)
-            .OrderByDescending(item => item.Current - item.Previous).Take(10)
-            .Select(item => ToProgressStudent(item.StudentId, item.Previous, item.Current, names, "improving")).ToList();
-        var declining = progress.Where(item => item.Current - item.Previous < -1)
-            .OrderBy(item => item.Current - item.Previous).Take(10)
-            .Select(item => ToProgressStudent(item.StudentId, item.Previous, item.Current, names, "declining")).ToList();
+        var improving = progress.Where(item => item.Improvement > 1)
+            .OrderByDescending(item => item.Improvement).Take(10)
+            .Select(item => ToProgressStudent(item, names, "improving")).ToList();
+        var declining = progress.Where(item => item.Improvement < -1)
+            .OrderBy(item => item.Improvement).Take(10)
+            .Select(item => ToProgressStudent(item, names, "declining")).ToList();
 
         return new TeacherTimeProgressAnalytics(start, end, weekly, monthly, intensity, improving, declining);
     }
@@ -223,41 +226,27 @@ internal sealed class OwnedSpeedReadingTeacherReports(
         return response.Users.ToDictionary(item => item.UserId);
     }
 
-    private static MergedStudentMetrics Merge(IEnumerable<StudentMetrics> metrics)
-    {
-        var rows = metrics.ToArray();
-        var total = rows.Sum(item => item.ActivityCount);
-        return new MergedStudentMetrics(
-            rows[0].StudentId,
-            total,
-            rows.Sum(item => item.AverageWpm * item.ActivityCount) / Math.Max(1, total),
-            rows.Sum(item => item.AverageComprehension * item.ActivityCount) / Math.Max(1, total),
-            rows.Sum(item => item.TotalSeconds));
-    }
-
     private static TeacherStudentPerformance ToStudentPerformance(
-        MergedStudentMetrics item,
-        IReadOnlyDictionary<Guid, SpeedReadingUserDirectoryItem> names,
+        TeacherStudentMetricSummary item,
         string level) =>
         new(
             item.StudentId.ToString("D"),
             Math.Round(item.AverageWpm, 2),
             Math.Round(item.AverageComprehension, 2),
-            item.ActivityCount,
+            item.TotalActivities,
             item.TotalSeconds / 60,
             level);
 
     private static TeacherProgressStudent ToProgressStudent(
-        Guid studentId,
-        decimal previous,
-        decimal current,
+        TeacherProgressMetric item,
         IReadOnlyDictionary<Guid, SpeedReadingUserDirectoryItem> names,
         string trend)
     {
-        var name = names.GetValueOrDefault(studentId);
-        var displayName = name is null ? studentId.ToString("D") : $"{name.FirstName} {name.LastName}".Trim();
-        return new TeacherProgressStudent(studentId, string.IsNullOrWhiteSpace(displayName) ? studentId.ToString("D") : displayName,
-            previous, current, Math.Round(current - previous, 2), trend);
+        var name = names.GetValueOrDefault(item.StudentId);
+        var displayName = name is null ? item.StudentId.ToString("D") : $"{name.FirstName} {name.LastName}".Trim();
+        return new TeacherProgressStudent(item.StudentId,
+            string.IsNullOrWhiteSpace(displayName) ? item.StudentId.ToString("D") : displayName,
+            item.PreviousScore, item.CurrentScore, item.Improvement, trend, item.Metric);
     }
 
     private static AdminAnalyticsChartData Chart(DateTime date, string label, decimal value) =>
@@ -295,6 +284,5 @@ internal sealed class OwnedSpeedReadingTeacherReports(
     };
 
     private sealed record StudentMetrics(Guid StudentId, int ActivityCount, decimal AverageWpm, decimal AverageComprehension, int TotalSeconds);
-    private sealed record MergedStudentMetrics(Guid StudentId, int ActivityCount, decimal AverageWpm, decimal AverageComprehension, int TotalSeconds);
-    private sealed record ActivityRow(Guid StudentId, DateTime Date, int ActivityCount, int TotalSeconds, decimal Score);
+    private sealed record ActivityRow(Guid StudentId, DateTime Date, int ActivityCount, int TotalSeconds, decimal Score, bool IsReading);
 }

@@ -19,7 +19,7 @@ public sealed class TeacherAnalyticsRulesTests
 
         var result = TeacherAnalyticsRules.Summarize(samples);
 
-        result.ActiveStudentIds.Should().BeEquivalentTo(readingStudent, exerciseOnlyStudent);
+        result.ActiveStudentIds.Should().BeEquivalentTo(new[] { readingStudent, exerciseOnlyStudent });
         result.TotalActivitiesCompleted.Should().Be(4);
         result.ClassAverageWpm.Should().Be(300);
         result.ClassAverageComprehension.Should().Be(80);

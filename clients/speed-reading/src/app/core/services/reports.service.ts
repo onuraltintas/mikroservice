@@ -10,6 +10,7 @@ import {
   StudentComprehensionReport,
   StudentSeriesReport,
   StudentActivityReport,
+  StudentActivityItem,
   TeacherClassOverviewReport,
   TeacherStudentDetailReport,
   TeacherAssignmentReport,
@@ -407,6 +408,7 @@ export class ReportsService {
           series: [{ name: 'Aktivite', value: point.value }]
         }))
       },
+      recentActivities: (value.recentActivities ?? []).map(item => this.toStudentActivityItem(item)),
       studyTime: {
         totalMinutes: value.studyTime.totalMinutes,
         averageSessionLength: value.studyTime.averageSessionLength,
@@ -415,6 +417,23 @@ export class ReportsService {
         mostActiveDay: value.studyTime.mostActiveDay,
         consistency: value.studyTime.consistency
       }
+    };
+  }
+
+  private toStudentActivityItem(item: StudentActivityAnalyticsItem): StudentActivityItem {
+    return {
+      completedAt: new Date(item.completedAt),
+      activityType: item.activityType,
+      contentId: item.contentId,
+      contentTitle: item.contentTitle,
+      exerciseTypeName: item.exerciseTypeName ?? null,
+      difficultyLevel: item.difficultyLevel,
+      durationSeconds: item.durationSeconds,
+      wpm: item.wpm ?? null,
+      comprehension: item.comprehension ?? null,
+      successRate: item.successRate ?? null,
+      isMeasured: item.isMeasured,
+      isPassed: item.isPassed
     };
   }
 
@@ -567,7 +586,8 @@ export class ReportsService {
         previousScore: item.previousScore,
         currentScore: item.currentScore,
         improvement: item.improvement,
-        trend: item.trend === 'declining' ? 'declining' : 'improving'
+        trend: item.trend === 'declining' ? 'declining' : 'improving',
+        metric: item.metric
       })),
       decliningStudents: (value.decliningStudents ?? []).map(item => ({
         studentId: item.studentId,
@@ -575,7 +595,8 @@ export class ReportsService {
         previousScore: item.previousScore,
         currentScore: item.currentScore,
         improvement: item.improvement,
-        trend: 'declining'
+        trend: 'declining',
+        metric: item.metric
       }))
     };
   }
@@ -717,6 +738,9 @@ export class ReportsService {
       },
       totalActivities: summary.readingSessions + summary.exercisesCompleted,
       totalReadingTime: summary.totalReadingMinutes,
+      readingSessions: summary.readingSessions,
+      exercisesCompleted: summary.exercisesCompleted,
+      exercisesPassed: summary.exercisesPassed,
       currentWPM: summary.latestWpm,
       averageComprehension: summary.averageComprehension,
       currentLevel: summary.currentLevel,
@@ -727,6 +751,21 @@ export class ReportsService {
       longestStreak: summary.longestStreak,
       totalXP: summary.totalXp,
       milestonesEarned: summary.milestonesEarned,
+      programState: summary.programState ? {
+        programId: summary.programState.programId,
+        programName: summary.programState.programName,
+        currentDay: summary.programState.currentDay,
+        currentWeek: summary.programState.currentWeek,
+        difficultyLevel: summary.programState.difficultyLevel,
+        adaptiveDifficultyOffset: summary.programState.adaptiveDifficultyOffset,
+        daysCompleted: summary.programState.daysCompleted,
+        totalDays: summary.programState.totalDays,
+        averageSuccessRate: summary.programState.averageSuccessRate,
+        lastActivityAt: summary.programState.lastActivityAt
+          ? new Date(summary.programState.lastActivityAt)
+          : null,
+        isActive: summary.programState.isActive
+      } : undefined,
       activityTrend,
       wpmProgress,
       comprehensionTrend,
@@ -767,6 +806,7 @@ interface StudentAnalyticsSummary {
   averageComprehension: number;
   totalReadingMinutes: number;
   exercisesCompleted: number;
+  exercisesPassed: number;
   latestWpm: number;
   latestComprehension: number;
   currentLevel: number;
@@ -776,6 +816,7 @@ interface StudentAnalyticsSummary {
   milestonesEarned: number;
   dailyGoalMinutes: number;
   goalCompletionRate: number;
+  programState?: StudentAnalyticsProgramState | null;
   recentMilestones: StudentAnalyticsMilestone[];
   daily: StudentAnalyticsDailyPoint[];
 }
@@ -1001,6 +1042,7 @@ interface TeacherProgressStudentAnalytics {
   currentScore: number;
   improvement: number;
   trend: string;
+  metric?: 'comprehension' | 'exercise_success' | string;
 }
 
 interface AdminSystemAlert {
@@ -1017,6 +1059,20 @@ interface StudentAnalyticsMilestone {
   earnedAt: string;
   type: string;
   icon: string;
+}
+
+interface StudentAnalyticsProgramState {
+  programId: string;
+  programName: string;
+  currentDay: number;
+  currentWeek: number;
+  difficultyLevel: number;
+  adaptiveDifficultyOffset: number;
+  daysCompleted: number;
+  totalDays: number;
+  averageSuccessRate: number;
+  lastActivityAt?: string | null;
+  isActive: boolean;
 }
 
 interface StudentAnalyticsTrendPoint {
@@ -1137,7 +1193,23 @@ interface StudentActivityAnalytics {
   heatmap: StudentActivityHeatmapPoint[];
   hourlyDistribution: StudentActivityDistributionPoint[];
   dailyDistribution: StudentActivityDistributionPoint[];
+  recentActivities?: StudentActivityAnalyticsItem[];
   studyTime: StudentActivityStudyTime;
+}
+
+interface StudentActivityAnalyticsItem {
+  completedAt: string;
+  activityType: string;
+  contentId: string;
+  contentTitle: string;
+  exerciseTypeName?: string | null;
+  difficultyLevel: number;
+  durationSeconds: number;
+  wpm?: number | null;
+  comprehension?: number | null;
+  successRate?: number | null;
+  isMeasured: boolean;
+  isPassed: boolean;
 }
 
 interface StudentActivityStreak {

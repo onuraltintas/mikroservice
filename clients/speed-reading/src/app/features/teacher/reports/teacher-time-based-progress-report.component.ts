@@ -87,6 +87,10 @@ export class TeacherTimeBasedProgressReportComponent implements OnInit {
     return r?.decliningStudents || [];
   });
 
+  metricLabel(metric?: string): string {
+    return metric === 'exercise_success' ? 'Egzersiz başarısı' : 'Anlama oranı';
+  }
+
   private route = inject(ActivatedRoute);
 
   // Helper to get effective teacher ID (Param or Current User)

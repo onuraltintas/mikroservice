@@ -53,6 +53,10 @@ export interface StudentDashboardReport {
   longestStreak: number;
   totalXP: number;
   milestonesEarned: number;
+  readingSessions?: number;
+  exercisesCompleted?: number;
+  exercisesPassed?: number;
+  programState?: StudentProgramState;
 
   // Chart data - matching backend DTO names
   activityTrend?: ChartData[];
@@ -60,6 +64,20 @@ export interface StudentDashboardReport {
   wpmProgress?: ChartData[];
   comprehensionTrend?: ChartData[];
   recentMilestones?: RecentMilestone[];
+}
+
+export interface StudentProgramState {
+  programId: string;
+  programName: string;
+  currentDay: number;
+  currentWeek: number;
+  difficultyLevel: number;
+  adaptiveDifficultyOffset: number;
+  daysCompleted: number;
+  totalDays: number;
+  averageSuccessRate: number;
+  lastActivityAt: Date | null;
+  isActive: boolean;
 }
 
 export interface RecentMilestone {
@@ -213,7 +231,23 @@ export interface StudentActivityReport {
   activityHeatmap: ActivityHeatmap;
   hourlyDistributionChart: HourlyDistributionChart;
   dailyDistributionChart: DailyDistributionChart;
+  recentActivities: StudentActivityItem[];
   studyTime: StudyTimeStats;
+}
+
+export interface StudentActivityItem {
+  completedAt: Date;
+  activityType: 'reading' | 'exercise' | string;
+  contentId: string;
+  contentTitle: string;
+  exerciseTypeName?: string | null;
+  difficultyLevel: number;
+  durationSeconds: number;
+  wpm?: number | null;
+  comprehension?: number | null;
+  successRate?: number | null;
+  isMeasured: boolean;
+  isPassed: boolean;
 }
 
 export interface CurrentStreak {
@@ -432,6 +466,7 @@ export interface StudentProgressSummary {
   currentScore: number;
   improvement: number;
   trend: 'improving' | 'declining';
+  metric?: 'comprehension' | 'exercise_success' | string;
 }
 
 // ==================== ADMIN REPORTS ====================

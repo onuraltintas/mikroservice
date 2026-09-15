@@ -1,4 +1,5 @@
 using Identity.Application.Interfaces;
+using Identity.Application.Authorization;
 using Identity.Domain.Entities;
 using Identity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -1440,6 +1441,44 @@ public class TeacherRepository : ITeacherRepository
         var isInstitutionAdministrator = viewer.Roles.Any(role =>
             string.Equals(role, "InstitutionAdmin", StringComparison.OrdinalIgnoreCase)
             || string.Equals(role, "InstitutionOwner", StringComparison.OrdinalIgnoreCase));
+
+        if (TeacherStudentScopeRules.ShouldUseInstitutionScope(viewer.Roles, targetTeacherUserId))
+        {
+            var institutionScopeIds = await _context.InstitutionAdmins
+                .AsNoTracking()
+                .Where(admin => admin.UserId == viewerUserId
+                    && admin.IsActive
+                    && admin.User.IsActive
+                    && admin.Institution.IsActive)
+                .Select(admin => admin.InstitutionId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            if (institutionScopeIds.Count == 0)
+            {
+                return null;
+            }
+
+            var institutionStudents = await _context.StudentProfiles
+                .AsNoTracking()
+                .Where(student => student.IsActive
+                    && student.User.IsActive
+                    && student.InstitutionId.HasValue
+                    && institutionScopeIds.Contains(student.InstitutionId.Value)
+                    && student.User.Roles.Any(userRole =>
+                        !userRole.Role.IsDeleted
+                        && userRole.Role.Name == "Student")
+                    && (student.Institution == null || student.Institution.IsActive))
+                .Select(student => student.UserId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            return new SpeedReadingTeacherStudentScopeResponse(
+                institutionScopeIds,
+                institutionStudents,
+                institutionStudents.Count);
+        }
+
         var teacherUserId = targetTeacherUserId ?? viewerUserId;
         var teacher = await _context.TeacherProfiles
             .AsNoTracking()

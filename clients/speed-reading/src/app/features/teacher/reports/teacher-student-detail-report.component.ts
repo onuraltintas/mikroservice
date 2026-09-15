@@ -20,6 +20,7 @@ import { TeacherStudentDetailReport } from '../../../core/models/report.model';
 import { RadarChartComponent } from '../../../shared/components/charts/radar-chart.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { TeachersService } from '../../../core/services/teachers.service';
+import { StudentsService } from '../../../core/services/students.service';
 import { map, startWith } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 
@@ -58,6 +59,7 @@ export class TeacherStudentDetailReportComponent implements OnInit {
   private reportsService = inject(ReportsService);
   private authService = inject(AuthService);
   private teachersService = inject(TeachersService);
+  private studentsService = inject(StudentsService);
   private route = inject(ActivatedRoute);
 
   report = signal<TeacherStudentDetailReport | null>(null);
@@ -97,7 +99,8 @@ export class TeacherStudentDetailReportComponent implements OnInit {
     );
 
     // Check for route param
-    const studentId = this.route.snapshot.paramMap.get('studentId');
+    const studentId = this.route.snapshot.paramMap.get('studentId')
+      ?? this.route.snapshot.queryParamMap.get('studentId');
     if (studentId) {
       this.selectedStudentId.set(studentId);
       this.loadReport();
@@ -133,7 +136,10 @@ export class TeacherStudentDetailReportComponent implements OnInit {
   loadStudents(): void {
     this.loadingStudents.set(true);
 
-    this.teachersService.getMyStudents().subscribe({
+    const roster$ = this.isInstitutionViewer()
+      ? this.studentsService.getInstitutionStudents()
+      : this.teachersService.getMyStudents();
+    roster$.subscribe({
       next: (data) => {
         this.students = data.map(s => ({
           id: s.id,
@@ -155,6 +161,10 @@ export class TeacherStudentDetailReportComponent implements OnInit {
         this.loadingStudents.set(false);
       }
     });
+  }
+
+  private isInstitutionViewer(): boolean {
+    return this.authService.hasRole('InstitutionAdmin') || this.authService.hasRole('InstitutionOwner');
   }
 
   onDateRangeChange(): void {

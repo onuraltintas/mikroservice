@@ -26,6 +26,11 @@
             <mat-icon class="tab-icon">timeline</mat-icon>
             Zaman Bazlı İlerleme
         </a>
+        <a mat-tab-link routerLink="student-detail" queryParamsHandling="merge" routerLinkActive #rla4="routerLinkActive"
+            [active]="rla4.isActive">
+            <mat-icon class="tab-icon">person_search</mat-icon>
+            Öğrenci Detayı
+        </a>
     </nav>
 
     <div class="tab-content">

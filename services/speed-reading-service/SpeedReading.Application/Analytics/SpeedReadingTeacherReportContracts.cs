@@ -97,7 +97,8 @@ public sealed record TeacherProgressStudent(
     decimal PreviousScore,
     decimal CurrentScore,
     decimal Improvement,
-    string Trend);
+    string Trend,
+    string Metric);
 
 public interface ILegacySpeedReadingTeacherReports
 {

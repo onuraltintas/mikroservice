@@ -266,7 +266,7 @@ describe('TeacherReportService', () => {
       }
     });
 
-    expect(report.recentActivities).toHaveLength(1);
+    expect(report.recentActivities.length).toBe(1);
     expect(report.recentActivities[0].contentTitle).toBe('Bilim');
     expect(report.recentActivities[0].durationSeconds).toBe(180);
   });

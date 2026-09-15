@@ -74,7 +74,7 @@
        [routerLink]="['/teacher/students', student.studentId]">
       <div>
         <strong>{{ student.studentName }}</strong>
-        <span>Skor: {{ student.previousScore | number:'1.0-0' }} → {{ student.currentScore | number:'1.0-0' }}</span>
+        <span>{{ student.metric === 'exercise_success' ? 'Egzersiz başarısı' : 'Anlama oranı' }}: {{ student.previousScore | number:'1.0-0' }} → {{ student.currentScore | number:'1.0-0' }}</span>
       </div>
       <span class="decline-value">{{ student.improvement | number:'1.0-0' }} puan</span>
       <mat-icon>chevron_right</mat-icon>
@@ -142,18 +142,18 @@
         </ng-container>
 
         <ng-container matColumnDef="exercises">
-          <th mat-header-cell *matHeaderCellDef>Seviye</th>
-          <td mat-cell *matCellDef="let s">Seviye {{ s.currentLevel }}</td>
+          <th mat-header-cell *matHeaderCellDef>Sınıf</th>
+          <td mat-cell *matCellDef="let s">{{ s.currentLevel }}. sınıf</td>
         </ng-container>
 
         <ng-container matColumnDef="kdp">
           <th mat-header-cell *matHeaderCellDef>Hedef KDP</th>
-          <td mat-cell *matCellDef="let s">{{ s.targetWPM }}</td>
+          <td mat-cell *matCellDef="let s">{{ s.targetWPM ?? 'Tanımlı değil' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="comprehension">
           <th mat-header-cell *matHeaderCellDef>Hedef Kavrama</th>
-          <td mat-cell *matCellDef="let s">{{ s.targetComprehension }}%</td>
+          <td mat-cell *matCellDef="let s">{{ s.targetComprehension != null ? (s.targetComprehension + '%') : 'Tanımlı değil' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="performance">

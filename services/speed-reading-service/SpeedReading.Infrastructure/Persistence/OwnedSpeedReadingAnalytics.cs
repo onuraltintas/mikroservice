@@ -133,8 +133,45 @@ internal sealed class OwnedSpeedReadingAnalytics(
                 achievement.Category,
                 achievement.IconEmoji
             })
-            .Take(5)
-            .ToListAsync(cancellationToken);
+             .Take(5)
+             .ToListAsync(cancellationToken);
+
+        var activeProgress = await db.StudentProgramProgresses.AsNoTracking()
+            .Where(item => item.UserId == userId && item.IsActive)
+            .OrderByDescending(item => item.LastCompletionDate ?? item.AssignedDate)
+            .Select(item => new
+            {
+                item.Id,
+                item.ProgramTemplateId,
+                item.CurrentDay,
+                item.CurrentWeek,
+                item.CurrentDifficultyLevel,
+                item.AdaptiveDifficultyOffset,
+                item.DaysCompleted,
+                item.AverageSuccessRate,
+                item.LastCompletionDate
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+        var activeTemplate = activeProgress is null
+            ? null
+            : await db.ProgramTemplates.AsNoTracking()
+                .Where(item => item.Id == activeProgress.ProgramTemplateId)
+                .Select(item => new { item.Name, item.TotalDays })
+                .FirstOrDefaultAsync(cancellationToken);
+        var programState = activeProgress is null
+            ? null
+            : new StudentProgramState(
+                activeProgress.Id,
+                activeTemplate?.Name ?? "Okuma programı",
+                activeProgress.CurrentDay,
+                activeProgress.CurrentWeek,
+                activeProgress.CurrentDifficultyLevel,
+                activeProgress.AdaptiveDifficultyOffset,
+                activeProgress.DaysCompleted,
+                activeTemplate?.TotalDays ?? 0,
+                activeProgress.AverageSuccessRate,
+                activeProgress.LastCompletionDate,
+                true);
 
         return new StudentAnalyticsSummary(
             userId,
@@ -157,6 +194,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
             milestonesEarned,
             dailyGoalMinutes,
             goalCompletionRate,
+            programState,
             recentMilestoneRows.Select(item => new StudentAnalyticsMilestone(
                 item.Id,
                 item.Name,
@@ -449,6 +487,82 @@ internal sealed class OwnedSpeedReadingAnalytics(
         var dataAvailable = totalSessions > 0;
         var isActive = lastActivity.HasValue && lastActivity.Value.Date >= end.Date.AddDays(-1);
 
+        var recentReadingRows = await readingQuery
+            .OrderByDescending(item => item.CompletedAt)
+            .Take(100)
+            .Select(item => new ReadingActivityRow(
+                item.CompletedAt,
+                item.ReadingTextId,
+                item.ReadingTimeSeconds,
+                item.CalculatedWpm,
+                item.ComprehensionRate))
+            .ToListAsync(cancellationToken);
+        var recentExerciseRows = await exerciseQuery
+            .OrderByDescending(item => item.CompletedDate)
+            .Take(100)
+            .Select(item => new ExerciseActivityRow(
+                item.CompletedDate,
+                item.ExerciseId,
+                item.ExerciseTypeId,
+                item.DifficultyLevel,
+                item.TimeSpentSeconds,
+                item.SuccessRate,
+                item.AverageWPM,
+                item.AverageComprehension,
+                item.IsMeasured,
+                item.IsPassed))
+            .ToListAsync(cancellationToken);
+        var readingTextIds = recentReadingRows.Select(item => item.ReadingTextId).Distinct().ToArray();
+        var exerciseIds = recentExerciseRows.Select(item => item.ExerciseId).Distinct().ToArray();
+        var exerciseTypeIds = recentExerciseRows.Select(item => item.ExerciseTypeId).Distinct().ToArray();
+        var readingTextTitles = readingTextIds.Length == 0
+            ? new Dictionary<Guid, string>()
+            : await db.ReadingTexts.AsNoTracking()
+                .Where(item => readingTextIds.Contains(item.Id))
+                .ToDictionaryAsync(item => item.Id, item => item.Title, cancellationToken);
+        var exerciseTitles = exerciseIds.Length == 0
+            ? new Dictionary<Guid, string>()
+            : await db.Exercises.AsNoTracking()
+                .Where(item => exerciseIds.Contains(item.Id))
+                .ToDictionaryAsync(item => item.Id, item => item.Title, cancellationToken);
+        var exerciseTypeNames = exerciseTypeIds.Length == 0
+            ? new Dictionary<Guid, string>()
+            : await db.ExerciseTypes.AsNoTracking()
+                .Where(item => exerciseTypeIds.Contains(item.Id))
+                .ToDictionaryAsync(item => item.Id,
+                    item => string.IsNullOrWhiteSpace(item.DisplayName) ? item.Name : item.DisplayName,
+                    cancellationToken);
+        var recentActivities = recentReadingRows
+            .Select(item => new StudentActivityDetail(
+                NormalizeUtc(item.CompletedAt),
+                "reading",
+                item.ReadingTextId,
+                readingTextTitles.GetValueOrDefault(item.ReadingTextId) ?? "Okuma metni",
+                null,
+                0,
+                item.DurationSeconds,
+                item.Wpm,
+                item.Comprehension,
+                null,
+                true,
+                true))
+            .Concat(recentExerciseRows.Select(item => new StudentActivityDetail(
+                NormalizeUtc(item.CompletedAt),
+                "exercise",
+                item.ExerciseId,
+                exerciseTitles.GetValueOrDefault(item.ExerciseId) ?? "Egzersiz",
+                exerciseTypeNames.GetValueOrDefault(item.ExerciseTypeId),
+                item.DifficultyLevel,
+                item.DurationSeconds,
+                item.Wpm,
+                item.Comprehension,
+                item.SuccessRate,
+                item.IsMeasured,
+                item.IsPassed)))
+            .OrderByDescending(item => item.CompletedAt)
+            .Take(100)
+            .ToList();
+
         return new StudentActivityAnalytics(
             userId, start, end, dataAvailable,
             dataAvailable ? null : "Bu tarih aralığında okuma veya egzersiz aktivitesi bulunamadı.",
@@ -457,6 +571,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
             heatmap,
             hourlyCounts.OrderBy(item => item.Key).Select(item => new StudentActivityDistributionPoint($"{item.Key:00}:00", item.Value)).ToList(),
             weekdayCounts.OrderBy(item => item.Key).Select(item => new StudentActivityDistributionPoint(MapDayName(item.Key), item.Value)).ToList(),
+            recentActivities,
             new StudentActivityStudyTime(
                 totalMinutes,
                 totalSessions > 0 ? Math.Round(totalSeconds / 60m / totalSessions, 2) : 0,
@@ -673,4 +788,23 @@ internal sealed class OwnedSpeedReadingAnalytics(
         int CurrentStreak);
 
     private sealed record StudentSeriesLogRow(Guid ProgressId, DateTime CompletedDate, int DayNumber);
+
+    private sealed record ReadingActivityRow(
+        DateTime CompletedAt,
+        Guid ReadingTextId,
+        int DurationSeconds,
+        int Wpm,
+        decimal Comprehension);
+
+    private sealed record ExerciseActivityRow(
+        DateTime CompletedAt,
+        Guid ExerciseId,
+        Guid ExerciseTypeId,
+        int DifficultyLevel,
+        int DurationSeconds,
+        decimal SuccessRate,
+        decimal? Wpm,
+        decimal? Comprehension,
+        bool IsMeasured,
+        bool IsPassed);
 }

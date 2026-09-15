@@ -12,6 +12,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { takeUntil, finalize, map, switchMap } from 'rxjs/operators';
 import { TeachersService } from '../../../core/services/teachers.service';
+import { StudentsService } from '../../../core/services/students.service';
 import { ReportsService } from '../../../core/services/reports.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToasterService } from '../../../core/services/toaster.service';
@@ -27,11 +28,23 @@ interface StudentStats {
   averageComprehension: number;
   totalTimeMinutes: number;
   currentStreak: number;
+  goalCompletionRate: number;
+  programState?: {
+    programName: string;
+    currentDay: number;
+    currentWeek: number;
+    difficultyLevel: number;
+    adaptiveDifficultyOffset: number;
+    daysCompleted: number;
+    totalDays: number;
+    averageSuccessRate: number;
+  };
 }
 
 interface RecentActivity {
   date: string;
   exerciseName: string;
+  activityType: string;
   kdp: number;
   comprehension: number;
   duration: number;
@@ -61,6 +74,7 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private teachersService = inject(TeachersService);
+  private studentsService = inject(StudentsService);
   private reportsService = inject(ReportsService);
   private authService = inject(AuthService);
   protected override toaster = inject(ToasterService);
@@ -103,7 +117,11 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
       return;
     }
 
-    this.teachersService.getMyStudents().pipe(
+    const roster$ = this.isInstitutionViewer()
+      ? this.studentsService.getInstitutionStudents()
+      : this.teachersService.getMyStudents();
+
+    roster$.pipe(
       map(students => students.find(student => student.id === studentId) ?? null),
       switchMap(student => {
         if (!student) {
@@ -130,6 +148,10 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
       });
   }
 
+  private isInstitutionViewer(): boolean {
+    return this.authService.hasRole('InstitutionAdmin') || this.authService.hasRole('InstitutionOwner');
+  }
+
   private applyReport(report: any): void {
     const dashboard = report.studentReports.dashboard;
     const readingSpeed = report.studentReports.readingSpeed;
@@ -137,31 +159,28 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
     const activity = report.studentReports.activity;
 
     this.stats = {
-      totalExercises: dashboard.totalActivities,
-      completedExercises: dashboard.totalActivities,
+      totalExercises: dashboard.exercisesCompleted ?? dashboard.totalActivities,
+      completedExercises: dashboard.exercisesCompleted ?? dashboard.totalActivities,
       averageKDP: Math.round(readingSpeed.statistics.averageWPM),
       averageComprehension: Math.round(comprehension.overallComprehension),
       totalTimeMinutes: activity.studyTime.totalMinutes,
-      currentStreak: activity.currentStreak.days
+      currentStreak: activity.currentStreak.days,
+      goalCompletionRate: dashboard.goalCompletionRate,
+      programState: dashboard.programState
     };
     this.seriesData = report.studentReports.series.activeSeries || [];
 
-    const comprehensionByDate = new Map<string, number>(
-      (comprehension.comprehensionTrend?.data?.[0]?.series ?? [])
-        .map((point: any) => [point.name, point.value])
-    );
-    const averageSessionMinutes = Math.round(activity.studyTime.averageSessionLength || 0);
     const progress = readingSpeed.wpmTrendChart?.data?.[0]?.series ?? [];
-    this.recentActivities = progress
-      .slice(-10)
-      .reverse()
-      .map((point: any) => ({
-        date: point.name,
-        exerciseName: 'Hızlı okuma çalışması',
-        kdp: point.value ?? 0,
-        comprehension: comprehensionByDate.get(point.name) ?? 0,
-        duration: averageSessionMinutes
-      }));
+    this.recentActivities = (activity.recentActivities ?? []).map((item: any) => ({
+      date: item.completedAt,
+      exerciseName: item.activityType === 'reading'
+        ? `Metin: ${item.contentTitle}`
+        : `Egzersiz: ${item.contentTitle}`,
+      activityType: item.activityType,
+      kdp: item.wpm ?? 0,
+      comprehension: item.comprehension ?? item.successRate ?? 0,
+      duration: Math.round((item.durationSeconds ?? 0) / 60)
+    }));
     this.kdpChartData = [{ name: 'KDP', series: progress }];
     this.comprehensionChartData = [{
       name: 'Anlama Oranı',
@@ -173,16 +192,14 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
   setupReferenceLines(): void {
     if (this.student) {
       // KDP reference line
-      this.kdpReferenceLines = [{
-        name: 'Hedef',
-        value: this.student.targetWPM
-      }];
+      this.kdpReferenceLines = this.student.targetWPM && this.student.targetWPM > 0
+        ? [{ name: 'Hedef', value: this.student.targetWPM }]
+        : [];
 
       // Comprehension reference line
-      this.comprehensionReferenceLines = [{
-        name: 'Hedef',
-        value: this.student.targetComprehension
-      }];
+      this.comprehensionReferenceLines = this.student.targetComprehension && this.student.targetComprehension > 0
+        ? [{ name: 'Hedef', value: this.student.targetComprehension }]
+        : [];
     }
   }
 

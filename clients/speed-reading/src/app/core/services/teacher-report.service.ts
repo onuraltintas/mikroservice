@@ -7,7 +7,8 @@ import {
     TeacherContentAnalysisReport,
     TeacherTimeBasedProgressReport,
     TeacherClassOverviewReport,
-    ChartData
+    ChartData,
+    StudentActivityItem
 } from '../models/report.model';
 
 // Teacher-specific report interfaces matching backend DTOs
@@ -86,6 +87,7 @@ export interface TeacherStudentActivityReport {
         name: string;
         series: Array<{ name: string; value: number }>;
     }>;
+    recentActivities: StudentActivityItem[];
     mostActiveDay: string;
 }
 
@@ -261,6 +263,20 @@ export class TeacherReportService {
                 name: point.date,
                 series: [{ name: 'Aktivite', value: point.value }]
             })),
+            recentActivities: (value.recentActivities ?? []).map(item => ({
+                completedAt: new Date(item.completedAt),
+                activityType: item.activityType,
+                contentId: item.contentId,
+                contentTitle: item.contentTitle,
+                exerciseTypeName: item.exerciseTypeName ?? null,
+                difficultyLevel: item.difficultyLevel,
+                durationSeconds: item.durationSeconds,
+                wpm: item.wpm ?? null,
+                comprehension: item.comprehension ?? null,
+                successRate: item.successRate ?? null,
+                isMeasured: item.isMeasured,
+                isPassed: item.isPassed
+            })),
             mostActiveDay: value.studyTime.mostActiveDay
         };
     }
@@ -324,7 +340,8 @@ export class TeacherReportService {
                 previousScore: item.previousScore,
                 currentScore: item.currentScore,
                 improvement: item.improvement,
-                trend: item.trend === 'declining' ? 'declining' : 'improving'
+                trend: item.trend === 'declining' ? 'declining' : 'improving',
+                metric: item.metric
             })),
             decliningStudents: (value.decliningStudents ?? []).map(item => ({
                 studentId: item.studentId,
@@ -332,7 +349,8 @@ export class TeacherReportService {
                 previousScore: item.previousScore,
                 currentScore: item.currentScore,
                 improvement: item.improvement,
-                trend: 'declining'
+                trend: 'declining',
+                metric: item.metric
             }))
         };
     }
@@ -371,8 +389,24 @@ interface StudentActivityAnalytics {
     unavailableReason?: string | null;
     currentStreak: StudentActivityStreak;
     heatmap: StudentActivityHeatmapPoint[];
-    hourlyDistribution: StudentActivityDistributionPoint[];
-    studyTime: StudentActivityStudyTime;
+  hourlyDistribution: StudentActivityDistributionPoint[];
+  recentActivities?: StudentActivityAnalyticsItem[];
+  studyTime: StudentActivityStudyTime;
+}
+
+interface StudentActivityAnalyticsItem {
+  completedAt: string;
+  activityType: string;
+  contentId: string;
+  contentTitle: string;
+  exerciseTypeName?: string | null;
+  difficultyLevel: number;
+  durationSeconds: number;
+  wpm?: number | null;
+  comprehension?: number | null;
+  successRate?: number | null;
+  isMeasured: boolean;
+  isPassed: boolean;
 }
 
 interface StudentActivityStreak {
@@ -441,8 +475,9 @@ interface TeacherProgressStudentAnalytics {
     studentName: string;
     previousScore: number;
     currentScore: number;
-    improvement: number;
-    trend: string;
+  improvement: number;
+  trend: string;
+  metric?: 'comprehension' | 'exercise_success' | string;
 }
 
 interface StudentAnalyticsTrendPoint {
