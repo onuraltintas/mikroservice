@@ -46,6 +46,7 @@ public sealed class Achievement : Entity
         DateTime createdAt)
     {
         Validate(name, description, category, tier, iconEmoji, criteriaType, criteriaValue, triggerValue, xpReward, sortOrder);
+        AchievementCriteriaRules.Validate(criteriaType, criteriaValue, isRepeatable);
         if (id == Guid.Empty || actorId == Guid.Empty)
             throw new ArgumentException("Achievement identifiers are required.");
         return new Achievement
@@ -95,6 +96,7 @@ public sealed class Achievement : Entity
         string? updatedBy)
     {
         Validate(name, description, category, tier, iconEmoji, criteriaType, criteriaValue, triggerValue, xpReward, sortOrder);
+        AchievementCriteriaRules.Validate(criteriaType, criteriaValue, isRepeatable);
         if (id == Guid.Empty)
             throw new ArgumentException("Achievement id is required.", nameof(id));
         return new Achievement

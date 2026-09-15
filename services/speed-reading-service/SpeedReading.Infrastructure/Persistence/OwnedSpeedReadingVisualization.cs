@@ -11,6 +11,9 @@ internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext 
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private static readonly string[] SupportedQuestionTypes = ["detail", "color", "position", "count"];
+    private const string CreateScope = "speed-reading.visualization-scenes.create";
+    private const string UpdateScope = "speed-reading.visualization-scenes.update";
+    private const string DeleteScope = "speed-reading.visualization-scenes.delete";
 
     public async Task<IReadOnlyList<VisualizationSceneSummary>> GetExerciseScenesAsync(Guid exerciseId, int? limit, CancellationToken cancellationToken)
     {
@@ -57,43 +60,101 @@ internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext 
             .Select(item => new VisualizationExerciseOption(item.Id, item.Title, item.DifficultyLevel))
             .ToListAsync(cancellationToken).ContinueWith(task => (IReadOnlyList<VisualizationExerciseOption>)task.Result, cancellationToken);
 
-    public async Task<Guid> CreateSceneAsync(VisualizationSceneRequest request, Guid actorId, CancellationToken cancellationToken)
+    public async Task<Guid> CreateSceneAsync(
+        VisualizationSceneRequest request,
+        Guid actorId,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
     {
+        OwnedContentMutationIdempotency.Validate(actorId, idempotencyKey);
+        var key = idempotencyKey.Trim();
+        var requestHash = OwnedContentMutationIdempotency.CreateRequestHash(actorId, CreateScope, Guid.Empty, request);
+        var existing = await OwnedContentMutationIdempotency.GetAsync(db, CreateScope, key, cancellationToken);
+        if (existing is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(existing, requestHash);
+            return existing.ResourceId;
+        }
+
         ValidateSceneRequest(request);
         await EnsureExerciseExistsAsync(request.ExerciseId, cancellationToken);
+        await EnsureAgeGroupExistsAsync(request.TargetAgeGroupConfigurationId, cancellationToken);
         var now = DateTime.UtcNow;
         var scene = VisualizationScene.Create(Guid.NewGuid(), request.ExerciseId, request.Description, request.ImageUrl,
-            request.Duration, request.DisplayOrder, request.DifficultyLevel, request.TargetAgeGroupConfigurationId, actorId, now);
+            request.Duration, request.DisplayOrder, request.DifficultyLevel, request.TargetAgeGroupConfigurationId, actorId, now,
+            request.Mode);
         db.VisualizationScenes.Add(scene);
         AddQuestions(scene.Id, request.Questions, actorId, now);
-        await db.SaveChangesAsync(cancellationToken);
+        OwnedContentMutationIdempotency.Add(db, CreateScope, key, requestHash, scene.Id, now);
+        var concurrent = await OwnedContentMutationIdempotency.SaveAsync(db, CreateScope, key, cancellationToken);
+        if (concurrent is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(concurrent, requestHash);
+            return concurrent.ResourceId;
+        }
         return scene.Id;
     }
 
-    public async Task<bool> UpdateSceneAsync(Guid sceneId, VisualizationSceneRequest request, Guid actorId, CancellationToken cancellationToken)
+    public async Task<bool> UpdateSceneAsync(
+        Guid sceneId,
+        VisualizationSceneRequest request,
+        Guid actorId,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
     {
+        OwnedContentMutationIdempotency.Validate(actorId, idempotencyKey);
+        var key = idempotencyKey.Trim();
+        var requestHash = OwnedContentMutationIdempotency.CreateRequestHash(actorId, UpdateScope, sceneId, request);
+        var existing = await OwnedContentMutationIdempotency.GetAsync(db, UpdateScope, key, cancellationToken);
+        if (existing is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(existing, requestHash);
+            return true;
+        }
+
         ValidateSceneRequest(request);
         await EnsureExerciseExistsAsync(request.ExerciseId, cancellationToken);
+        await EnsureAgeGroupExistsAsync(request.TargetAgeGroupConfigurationId, cancellationToken);
         var scene = await db.VisualizationScenes.SingleOrDefaultAsync(item => item.Id == sceneId && !item.IsDeleted, cancellationToken);
         if (scene is null) return false;
         var now = DateTime.UtcNow;
         scene.Update(request.ExerciseId, request.Description, request.ImageUrl, request.Duration, request.DisplayOrder,
-            request.DifficultyLevel, request.TargetAgeGroupConfigurationId, actorId, now);
+            request.DifficultyLevel, request.TargetAgeGroupConfigurationId, actorId, now, request.Mode);
         var questions = await db.VisualizationQuestions.Where(item => item.SceneId == sceneId && !item.IsDeleted).ToListAsync(cancellationToken);
         foreach (var question in questions) question.Delete(actorId, now);
         AddQuestions(sceneId, request.Questions, actorId, now);
-        await db.SaveChangesAsync(cancellationToken);
+        OwnedContentMutationIdempotency.Add(db, UpdateScope, key, requestHash, scene.Id, now);
+        var concurrent = await OwnedContentMutationIdempotency.SaveAsync(db, UpdateScope, key, cancellationToken);
+        if (concurrent is not null)
+            OwnedContentMutationIdempotency.EnsureReplayMatches(concurrent, requestHash);
         return true;
     }
 
-    public async Task<bool> DeleteSceneAsync(Guid sceneId, Guid actorId, CancellationToken cancellationToken)
+    public async Task<bool> DeleteSceneAsync(
+        Guid sceneId,
+        Guid actorId,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
     {
+        OwnedContentMutationIdempotency.Validate(actorId, idempotencyKey);
+        var key = idempotencyKey.Trim();
+        var requestHash = OwnedContentMutationIdempotency.CreateRequestHash(actorId, DeleteScope, sceneId);
+        var existing = await OwnedContentMutationIdempotency.GetAsync(db, DeleteScope, key, cancellationToken);
+        if (existing is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(existing, requestHash);
+            return true;
+        }
+
         var scene = await db.VisualizationScenes.SingleOrDefaultAsync(item => item.Id == sceneId && !item.IsDeleted, cancellationToken);
         if (scene is null) return false;
         var now = DateTime.UtcNow; scene.Delete(actorId, now);
         var questions = await db.VisualizationQuestions.Where(item => item.SceneId == sceneId && !item.IsDeleted).ToListAsync(cancellationToken);
         foreach (var question in questions) question.Delete(actorId, now);
-        await db.SaveChangesAsync(cancellationToken);
+        OwnedContentMutationIdempotency.Add(db, DeleteScope, key, requestHash, scene.Id, now);
+        var concurrent = await OwnedContentMutationIdempotency.SaveAsync(db, DeleteScope, key, cancellationToken);
+        if (concurrent is not null)
+            OwnedContentMutationIdempotency.EnsureReplayMatches(concurrent, requestHash);
         return true;
     }
 
@@ -108,7 +169,7 @@ internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext 
         while (await reader.ReadLineAsync(cancellationToken) is { } line)
         {
             row++; if (string.IsNullOrWhiteSpace(line)) continue;
-            try { await CreateSceneAsync(ParseImportRequest(headers, ParseCsvLine(line), row), actorId, cancellationToken); success++; }
+            try { await CreateSceneAsync(ParseImportRequest(headers, ParseCsvLine(line), row), actorId, Guid.NewGuid().ToString("N"), cancellationToken); success++; }
             catch (Exception exception) when (exception is FormatException or ArgumentException or KeyNotFoundException)
             { failed++; errors.Add($"Row {row}: {exception.Message}"); }
         }
@@ -121,6 +182,12 @@ internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext 
             throw new KeyNotFoundException("Exercise not found");
     }
 
+    private async Task EnsureAgeGroupExistsAsync(Guid? ageGroupId, CancellationToken cancellationToken)
+    {
+        if (ageGroupId.HasValue && !await db.AgeGroupConfigurations.AnyAsync(item => item.Id == ageGroupId.Value, cancellationToken))
+            throw new KeyNotFoundException("Target age group not found");
+    }
+
     private async Task<IReadOnlyList<VisualizationSceneSummary>> BuildSummariesAsync(IReadOnlyList<VisualizationScene> scenes, CancellationToken cancellationToken)
     {
         if (scenes.Count == 0) return [];
@@ -130,7 +197,8 @@ internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext 
         var byScene = questions.GroupBy(item => item.SceneId).ToDictionary(group => group.Key,
             group => (IReadOnlyList<VisualizationQuestionSummary>)group.Select(ToQuestionSummary).ToList());
         return scenes.Select(scene => new VisualizationSceneSummary(scene.Id, scene.ExerciseId, scene.Description, scene.ImageUrl,
-            scene.Duration, scene.DisplayOrder, scene.DifficultyLevel, byScene.GetValueOrDefault(scene.Id, []), scene.CreatedAt)).ToList();
+            scene.Duration, scene.DisplayOrder, scene.DifficultyLevel, byScene.GetValueOrDefault(scene.Id, []), scene.CreatedAt,
+            scene.TargetAgeGroupId, scene.Mode)).ToList();
     }
 
     private void AddQuestions(Guid sceneId, IReadOnlyList<VisualizationQuestionRequest> questions, Guid actorId, DateTime now)
@@ -152,6 +220,9 @@ internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext 
         if (request.Duration is < 1 or > 3600) throw new ArgumentException("Duration must be between 1 and 3600 seconds.");
         if (request.DisplayOrder < 0) throw new ArgumentException("DisplayOrder cannot be negative.");
         if (request.DifficultyLevel is < 1 or > 5) throw new ArgumentException("DifficultyLevel must be between 1 and 5.");
+        var mode = VisualizationScene.NormalizeMode(request.Mode);
+        if (mode == "assessment" && request.Questions.Count == 0)
+            throw new ArgumentException("Ölçme modundaki sahnede en az bir soru bulunmalıdır.");
         foreach (var question in request.Questions)
         {
             var options = question.Options.Where(value => !string.IsNullOrWhiteSpace(value)).Select(value => value.Trim()).Distinct(StringComparer.Ordinal).ToArray();
@@ -176,7 +247,8 @@ internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext 
             questions.Add(new VisualizationQuestionRequest(text, GetValue(headers, values, $"O{index}").Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
                 GetValue(headers, values, $"A{index}"), string.IsNullOrWhiteSpace(GetValue(headers, values, $"T{index}")) ? "detail" : GetValue(headers, values, $"T{index}"), index, GetValue(headers, values, $"H{index}")));
         }
-        return new VisualizationSceneRequest(exerciseId, description, GetValue(headers, values, "ImageUrl"), duration, displayOrder, difficulty, questions);
+        return new VisualizationSceneRequest(exerciseId, description, GetValue(headers, values, "ImageUrl"), duration, displayOrder, difficulty, questions,
+            Mode: questions.Count == 0 ? "practice" : "assessment");
     }
 
     private static int ParseInt(string value, int fallback, string field, int row) => string.IsNullOrWhiteSpace(value) ? fallback : int.TryParse(value, out var result) ? result : throw new FormatException($"{field} must be an integer (row {row}).");

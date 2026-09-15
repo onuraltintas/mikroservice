@@ -131,6 +131,7 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
             readingTextId,
             request.AssessmentAttemptId,
             request.CustomData,
+            profileAgeGroupId,
             cancellationToken);
         var now = DateTime.UtcNow;
         var session = new LegacyExerciseSession
@@ -599,6 +600,7 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
         Guid? readingTextId,
         Guid? assessmentAttemptId,
         Dictionary<string, JsonElement>? customData,
+        Guid? profileAgeGroupId,
         CancellationToken cancellationToken)
     {
         var config = ParseJsonOrEmpty(exercise.ConfigurationJson);
@@ -670,7 +672,11 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
 
         if (IsVisualizationExercise(exerciseTypeName) && state.Questions.Count == 0)
         {
-            state.VisualizationScenes = await LoadVisualizationScenesAsync(exerciseId, config, cancellationToken);
+            state.VisualizationScenes = await LoadVisualizationScenesAsync(
+                exerciseId,
+                config,
+                profileAgeGroupId,
+                cancellationToken);
             state.Questions = state.VisualizationScenes
                 .SelectMany(scene => scene.Questions)
                 .Select(ToSessionQuestion)
@@ -1236,6 +1242,7 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
     private async Task<List<VisualizationSceneState>> LoadVisualizationScenesAsync(
         Guid exerciseId,
         JsonElement config,
+        Guid? profileAgeGroupId,
         CancellationToken cancellationToken)
     {
         var configuredScenes = ReadVisualizationScenes(config);
@@ -1243,7 +1250,11 @@ internal sealed class LegacySpeedReadingExerciseSessions(SpeedReadingDbContext d
             return configuredScenes;
 
         var scenes = await db.VisualizationScenes.AsNoTracking()
-            .Where(item => item.ExerciseId == exerciseId && !item.IsDeleted)
+            .Where(item => item.ExerciseId == exerciseId
+                && !item.IsDeleted
+                && (!profileAgeGroupId.HasValue
+                    || item.TargetAgeGroupConfigurationId == null
+                    || item.TargetAgeGroupConfigurationId == profileAgeGroupId.Value))
             .OrderBy(item => item.DisplayOrder)
             .ToListAsync(cancellationToken);
         if (scenes.Count == 0)

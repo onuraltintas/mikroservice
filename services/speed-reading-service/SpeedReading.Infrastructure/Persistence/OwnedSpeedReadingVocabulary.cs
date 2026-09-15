@@ -7,6 +7,10 @@ namespace SpeedReading.Infrastructure.Persistence;
 
 internal sealed class OwnedSpeedReadingVocabulary(OwnedSpeedReadingDbContext db) : ISpeedReadingVocabulary
 {
+    private const string CreateScope = "speed-reading.vocabulary.create";
+    private const string UpdateScope = "speed-reading.vocabulary.update";
+    private const string DeleteScope = "speed-reading.vocabulary.delete";
+
     public async Task<VocabularyPage> GetItemsAsync(string? search, string? category, int? difficultyLevel, Guid? ageGroupId, int pageNumber, int pageSize, CancellationToken cancellationToken)
     {
         pageNumber = Math.Max(1, pageNumber); pageSize = Math.Clamp(pageSize, 1, 100);
@@ -31,29 +35,94 @@ internal sealed class OwnedSpeedReadingVocabulary(OwnedSpeedReadingDbContext db)
     public Task<IReadOnlyList<string>> GetCategoriesAsync(CancellationToken cancellationToken) =>
         db.VocabularyItems.AsNoTracking().Where(item => !item.IsDeleted).Select(item => item.Category).Distinct().OrderBy(item => item).ToListAsync(cancellationToken).ContinueWith(task => (IReadOnlyList<string>)task.Result, cancellationToken);
 
-    public async Task<VocabularyItemSummary> CreateItemAsync(VocabularyItemRequest request, Guid actorId, CancellationToken cancellationToken)
+    public async Task<VocabularyItemSummary> CreateItemAsync(
+        VocabularyItemRequest request,
+        Guid actorId,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
     {
+        OwnedContentMutationIdempotency.Validate(actorId, idempotencyKey);
+        var key = idempotencyKey.Trim();
+        var requestHash = OwnedContentMutationIdempotency.CreateRequestHash(actorId, CreateScope, Guid.Empty, request);
+        var existing = await OwnedContentMutationIdempotency.GetAsync(db, CreateScope, key, cancellationToken);
+        if (existing is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(existing, requestHash);
+            return await GetItemAsync(existing.ResourceId, cancellationToken)
+                ?? throw new InvalidOperationException("Idempotency kaydına ait kelime bulunamadı; yeni bir anahtar kullanın.");
+        }
+
         Validate(request); await EnsureAgeGroupExistsAsync(request.TargetAgeGroupId, cancellationToken);
+        var now = DateTime.UtcNow;
         var item = VocabularyItem.Create(Guid.NewGuid(), request.Word, request.Definition, request.ExampleSentence, request.Synonyms, request.Antonyms,
-            request.Category, request.DifficultyLevel, request.TargetAgeGroupId, actorId, DateTime.UtcNow);
-        db.VocabularyItems.Add(item); await db.SaveChangesAsync(cancellationToken);
+            request.Category, request.DifficultyLevel, request.TargetAgeGroupId, actorId, now);
+        db.VocabularyItems.Add(item);
+        OwnedContentMutationIdempotency.Add(db, CreateScope, key, requestHash, item.Id, now);
+        var concurrent = await OwnedContentMutationIdempotency.SaveAsync(db, CreateScope, key, cancellationToken);
+        if (concurrent is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(concurrent, requestHash);
+            return await GetItemAsync(concurrent.ResourceId, cancellationToken)
+                ?? throw new InvalidOperationException("Idempotency kaydına ait kelime bulunamadı; yeni bir anahtar kullanın.");
+        }
         return await GetItemAsync(item.Id, cancellationToken) ?? throw new InvalidOperationException("Vocabulary item could not be read after creation.");
     }
 
-    public async Task<VocabularyItemSummary?> UpdateItemAsync(Guid id, VocabularyItemRequest request, Guid actorId, CancellationToken cancellationToken)
+    public async Task<VocabularyItemSummary?> UpdateItemAsync(
+        Guid id,
+        VocabularyItemRequest request,
+        Guid actorId,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
     {
+        OwnedContentMutationIdempotency.Validate(actorId, idempotencyKey);
+        var key = idempotencyKey.Trim();
+        var requestHash = OwnedContentMutationIdempotency.CreateRequestHash(actorId, UpdateScope, id, request);
+        var existing = await OwnedContentMutationIdempotency.GetAsync(db, UpdateScope, key, cancellationToken);
+        if (existing is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(existing, requestHash);
+            return await GetItemAsync(id, cancellationToken);
+        }
+
         Validate(request); await EnsureAgeGroupExistsAsync(request.TargetAgeGroupId, cancellationToken);
         var item = await db.VocabularyItems.SingleOrDefaultAsync(value => value.Id == id && !value.IsDeleted, cancellationToken);
         if (item is null) return null;
+        var now = DateTime.UtcNow;
         item.Update(request.Word, request.Definition, request.ExampleSentence, request.Synonyms, request.Antonyms, request.Category,
-            request.DifficultyLevel, request.TargetAgeGroupId, actorId, DateTime.UtcNow);
-        await db.SaveChangesAsync(cancellationToken); return await GetItemAsync(id, cancellationToken);
+            request.DifficultyLevel, request.TargetAgeGroupId, actorId, now);
+        OwnedContentMutationIdempotency.Add(db, UpdateScope, key, requestHash, item.Id, now);
+        var concurrent = await OwnedContentMutationIdempotency.SaveAsync(db, UpdateScope, key, cancellationToken);
+        if (concurrent is not null)
+            OwnedContentMutationIdempotency.EnsureReplayMatches(concurrent, requestHash);
+        return await GetItemAsync(id, cancellationToken);
     }
 
-    public async Task<bool> DeleteItemAsync(Guid id, Guid actorId, CancellationToken cancellationToken)
+    public async Task<bool> DeleteItemAsync(
+        Guid id,
+        Guid actorId,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
     {
+        OwnedContentMutationIdempotency.Validate(actorId, idempotencyKey);
+        var key = idempotencyKey.Trim();
+        var requestHash = OwnedContentMutationIdempotency.CreateRequestHash(actorId, DeleteScope, id);
+        var existing = await OwnedContentMutationIdempotency.GetAsync(db, DeleteScope, key, cancellationToken);
+        if (existing is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(existing, requestHash);
+            return true;
+        }
+
         var item = await db.VocabularyItems.SingleOrDefaultAsync(value => value.Id == id && !value.IsDeleted, cancellationToken);
-        if (item is null) return false; item.Delete(actorId, DateTime.UtcNow); await db.SaveChangesAsync(cancellationToken); return true;
+        if (item is null) return false;
+        var now = DateTime.UtcNow;
+        item.Delete(actorId, now);
+        OwnedContentMutationIdempotency.Add(db, DeleteScope, key, requestHash, item.Id, now);
+        var concurrent = await OwnedContentMutationIdempotency.SaveAsync(db, DeleteScope, key, cancellationToken);
+        if (concurrent is not null)
+            OwnedContentMutationIdempotency.EnsureReplayMatches(concurrent, requestHash);
+        return true;
     }
 
     public async Task<IReadOnlyList<UserVocabularySummary>> GetUserVocabularyAsync(Guid userId, int? status, CancellationToken cancellationToken)
@@ -82,9 +151,23 @@ internal sealed class OwnedSpeedReadingVocabulary(OwnedSpeedReadingDbContext db)
 
     public async Task<bool> UpdateUserVocabularyAsync(Guid userId, Guid progressId, bool isCorrect, CancellationToken cancellationToken)
     {
-        var progress = await db.UserVocabularyProgresses.SingleOrDefaultAsync(value => value.Id == progressId && value.UserId == userId && !value.IsDeleted, cancellationToken);
-        if (progress is null) return false;
-        progress.Review(isCorrect, userId, DateTime.UtcNow); await db.SaveChangesAsync(cancellationToken); return true;
+        var progress = await db.UserVocabularyProgresses.AsNoTracking()
+            .SingleOrDefaultAsync(value => value.Id == progressId && value.UserId == userId && !value.IsDeleted, cancellationToken);
+        if (progress is null)
+            return false;
+
+        var review = await OwnedVocabularyProgressRecorder.RecordAsync(
+            db,
+            userId,
+            progress.VocabularyItemId,
+            isCorrect,
+            DateTime.UtcNow,
+            cancellationToken);
+        if (!review.Found)
+            return false;
+
+        await db.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     public async Task<IReadOnlyList<UserVocabularySummary>> GetDueForReviewAsync(Guid userId, CancellationToken cancellationToken)
@@ -110,7 +193,11 @@ internal sealed class OwnedSpeedReadingVocabulary(OwnedSpeedReadingDbContext db)
                 var request = new VocabularyItemRequest(word, definition, GetValue(headers, values, "ExampleSentence"), GetValue(headers, values, "Synonyms"), GetValue(headers, values, "Antonyms"), category, difficulty, ageGroupId);
                 Validate(request); var item = VocabularyItem.Create(Guid.NewGuid(), request.Word, request.Definition, request.ExampleSentence, request.Synonyms, request.Antonyms, request.Category, request.DifficultyLevel, request.TargetAgeGroupId, actorId, DateTime.UtcNow); db.VocabularyItems.Add(item); success++;
             }
-            catch (FormatException exception) { failure++; errors.Add($"Row {row}: {exception.Message}"); }
+            catch (Exception exception) when (exception is FormatException or ArgumentException)
+            {
+                failure++;
+                errors.Add($"Row {row}: {exception.Message}");
+            }
         }
         if (success > 0) await db.SaveChangesAsync(cancellationToken); return new VocabularyImportResult(success, failure, errors);
     }

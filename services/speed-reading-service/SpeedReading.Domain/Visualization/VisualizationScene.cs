@@ -15,12 +15,14 @@ public sealed class VisualizationScene : AggregateRoot
     public int DisplayOrder { get; private set; }
     public int DifficultyLevel { get; private set; }
     public Guid? TargetAgeGroupId { get; private set; }
+    public string Mode { get; private set; } = "assessment";
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
     public string? DeletedBy { get; private set; }
 
     public static VisualizationScene Create(Guid id, Guid exerciseId, string description, string? imageUrl,
-        int duration, int displayOrder, int difficultyLevel, Guid? targetAgeGroupId, Guid actorId, DateTime createdAt)
+        int duration, int displayOrder, int difficultyLevel, Guid? targetAgeGroupId, Guid actorId, DateTime createdAt,
+        string mode = "assessment")
     {
         Validate(id, exerciseId, description, duration, displayOrder, difficultyLevel);
         return new VisualizationScene
@@ -31,8 +33,9 @@ public sealed class VisualizationScene : AggregateRoot
             ImageUrl = Normalize(imageUrl),
             Duration = duration,
             DisplayOrder = displayOrder,
-            DifficultyLevel = difficultyLevel,
-            TargetAgeGroupId = targetAgeGroupId,
+        DifficultyLevel = difficultyLevel,
+        TargetAgeGroupId = targetAgeGroupId,
+        Mode = NormalizeMode(mode),
             CreatedAt = EnsureUtc(createdAt),
             CreatedBy = actorId == Guid.Empty ? null : actorId.ToString()
         };
@@ -40,10 +43,11 @@ public sealed class VisualizationScene : AggregateRoot
 
     public static VisualizationScene Import(Guid id, Guid exerciseId, string description, string? imageUrl,
         int duration, int displayOrder, int difficultyLevel, Guid? targetAgeGroupId, Guid createdBy,
-        DateTime createdAt, DateTime? updatedAt, Guid? updatedBy, bool isDeleted, DateTime? deletedAt, Guid? deletedBy)
+        DateTime createdAt, DateTime? updatedAt, Guid? updatedBy, bool isDeleted, DateTime? deletedAt, Guid? deletedBy,
+        string mode = "assessment")
     {
         var item = Create(id, exerciseId, description, imageUrl, duration, displayOrder, difficultyLevel,
-            targetAgeGroupId, createdBy, createdAt);
+            targetAgeGroupId, createdBy, createdAt, mode);
         item.UpdatedAt = updatedAt.HasValue ? EnsureUtc(updatedAt.Value) : null;
         item.UpdatedBy = updatedBy?.ToString();
         item.IsDeleted = isDeleted;
@@ -53,7 +57,7 @@ public sealed class VisualizationScene : AggregateRoot
     }
 
     public void Update(Guid exerciseId, string description, string? imageUrl, int duration, int displayOrder,
-        int difficultyLevel, Guid? targetAgeGroupId, Guid actorId, DateTime updatedAt)
+        int difficultyLevel, Guid? targetAgeGroupId, Guid actorId, DateTime updatedAt, string mode = "assessment")
     {
         if (actorId == Guid.Empty) throw new ArgumentException("Scene actor is required.", nameof(actorId));
         Validate(Id, exerciseId, description, duration, displayOrder, difficultyLevel);
@@ -64,6 +68,7 @@ public sealed class VisualizationScene : AggregateRoot
         DisplayOrder = displayOrder;
         DifficultyLevel = difficultyLevel;
         TargetAgeGroupId = targetAgeGroupId;
+        Mode = NormalizeMode(mode);
         UpdatedAt = EnsureUtc(updatedAt);
         UpdatedBy = actorId.ToString();
     }
@@ -88,5 +93,12 @@ public sealed class VisualizationScene : AggregateRoot
     }
 
     private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    public static string NormalizeMode(string? value)
+    {
+        var mode = value?.Trim().ToLowerInvariant();
+        return mode is "practice" or "assessment"
+            ? mode
+            : throw new ArgumentException("Scene mode must be practice or assessment.", nameof(value));
+    }
     private static DateTime EnsureUtc(DateTime value) => value.Kind == DateTimeKind.Utc ? value : value.ToUniversalTime();
 }

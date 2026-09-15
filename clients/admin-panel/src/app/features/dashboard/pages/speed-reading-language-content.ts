@@ -6,9 +6,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { Observable, finalize } from 'rxjs';
 import {
   SpeedReadingAdminService,
+  SpeedReadingAgeGroup,
   SpeedReadingExamQuestion,
   SpeedReadingExamQuestionPage,
   SpeedReadingExamQuestionRequest,
+  SpeedReadingQuestionQualityReview,
+  SpeedReadingQuestionQualitySummary,
   SpeedReadingVocabularyImportResult,
   SpeedReadingVocabularyItem,
   SpeedReadingVocabularyItemRequest,
@@ -30,18 +33,19 @@ type LanguageContentTab = 'questions' | 'vocabulary';
 
       @if (selectedTab() === 'questions') {
         <section class="space-y-4" aria-labelledby="question-bank-title"><div class="flex flex-wrap items-end justify-between gap-3"><div><h2 id="question-bank-title" class="text-lg font-semibold text-gray-900 dark:text-white">Sınav soru bankası</h2><p class="muted">Soru, seçenek, doğru cevap ve sınav sınıflandırmasını yönetin.</p></div><button type="button" (click)="startQuestionCreate()" class="primary">Yeni soru</button></div>
-          @if (questionEditing()) {<div class="dialog-backdrop" role="presentation" (click)="cancelQuestionEdit()"><form (ngSubmit)="saveQuestion()" class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="question-dialog-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (click)="$event.stopPropagation()"><div class="dialog-header"><div><p class="dialog-eyebrow">Sınav soru bankası</p><h3 id="question-dialog-title">{{ questionEditingId ? 'Soruyu düzenle' : 'Yeni soru' }}</h3></div><button type="button" (click)="cancelQuestionEdit()" class="icon-button" aria-label="Dialogu kapat"><mat-icon>close</mat-icon></button></div><div class="dialog-body"><div class="form-grid"><label class="wide">Metin/content<textarea [(ngModel)]="questionDraft.content" name="questionContent" required maxlength="20000"></textarea></label><label class="wide">Soru<input [(ngModel)]="questionDraft.question" name="questionText" required maxlength="2000" /></label><label>Şık A<input [(ngModel)]="questionDraft.optionA" name="questionOptionA" required /></label><label>Şık B<input [(ngModel)]="questionDraft.optionB" name="questionOptionB" required /></label><label>Şık C<input [(ngModel)]="questionDraft.optionC" name="questionOptionC" required /></label><label>Şık D<input [(ngModel)]="questionDraft.optionD" name="questionOptionD" required /></label><label>Şık E (opsiyonel)<input [(ngModel)]="questionDraft.optionE" name="questionOptionE" /></label><label>Doğru şık<select [(ngModel)]="questionDraft.correctOption" name="questionCorrect" required><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option></select></label><label>Sınav türü<input type="number" [(ngModel)]="questionDraft.examType" name="questionExamType" min="0" max="20" required /></label><label>Zorluk<input type="number" [(ngModel)]="questionDraft.difficulty" name="questionDifficulty" min="1" max="5" required /></label><label>Kelime sayısı<input type="number" [(ngModel)]="questionDraft.wordCount" name="questionWordCount" min="0" max="100000" required /></label><label>Kategori<input type="number" [(ngModel)]="questionDraft.category" name="questionCategory" min="0" max="100" required /></label><label>Konu<input [(ngModel)]="questionDraft.topic" name="questionTopic" maxlength="200" /></label><label>Hedef yaş grubu ID<input [(ngModel)]="questionDraft.targetAgeGroupId" name="questionAgeGroup" /></label></div></div><div class="dialog-footer"><button type="button" (click)="cancelQuestionEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form></div>}
-          <form (ngSubmit)="loadQuestions()" class="data-card inline-filter"><input [(ngModel)]="questionSearch" name="questionSearch" placeholder="Metin veya soruda ara" maxlength="100" /><select [(ngModel)]="questionDifficulty" name="questionDifficultyFilter"><option [ngValue]="undefined">Tüm zorluklar</option><option [ngValue]="1">Seviye 1</option><option [ngValue]="2">Seviye 2</option><option [ngValue]="3">Seviye 3</option><option [ngValue]="4">Seviye 4</option><option [ngValue]="5">Seviye 5</option></select><button type="submit" class="secondary">Filtrele</button></form>
-          <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Metin</th><th>Soru</th><th>Sınav</th><th>Zorluk</th><th>Kategori</th><th></th></tr></thead><tbody>@for (question of questions().items; track question.id) {<tr><td>{{ question.content | slice:0:90 }}{{ question.content.length > 90 ? '…' : '' }}</td><td>{{ question.question | slice:0:90 }}{{ question.question.length > 90 ? '…' : '' }}</td><td>{{ question.examType }}</td><td>{{ question.difficulty }}</td><td>{{ question.category }}</td><td class="actions"><button type="button" (click)="startQuestionEdit(question)">Düzenle</button><button type="button" (click)="deleteQuestion(question)" class="danger">Sil</button></td></tr>} @empty {<tr><td colspan="6" class="empty">Soru bulunamadı.</td></tr>}</tbody></table></div><div class="pager"><span>Toplam {{ questions().totalCount }}</span><button type="button" (click)="changeQuestionPage(questionPage - 1)" [disabled]="questionPage <= 1 || loading()">Önceki</button><button type="button" (click)="changeQuestionPage(questionPage + 1)" [disabled]="questionPage >= questionTotalPages() || loading()">Sonraki</button></div></div>
+          @if (questionQualitySummary(); as summary) {<div class="data-card text-sm"><strong>Doğru cevap dağılımı:</strong> A {{ summary.correctOptionCounts['A'] ?? 0 }} · B {{ summary.correctOptionCounts['B'] ?? 0 }} · C {{ summary.correctOptionCounts['C'] ?? 0 }} · D {{ summary.correctOptionCounts['D'] ?? 0 }} · E {{ summary.correctOptionCounts['E'] ?? 0 }}@for (warning of summary.warnings; track warning.code) {<p class="mt-2 text-amber-700">{{ warning.message }}</p>}</div>}
+          @if (questionEditing()) {<div class="dialog-backdrop" role="presentation" (click)="cancelQuestionEdit()"><form (ngSubmit)="saveQuestion()" class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="question-dialog-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (click)="$event.stopPropagation()"><div class="dialog-header"><div><p class="dialog-eyebrow">Sınav soru bankası</p><h3 id="question-dialog-title">{{ questionEditingId ? 'Soruyu düzenle' : 'Yeni soru' }}</h3></div><button type="button" (click)="cancelQuestionEdit()" class="icon-button" aria-label="Dialogu kapat"><mat-icon>close</mat-icon></button></div><div class="dialog-body"><div class="form-grid"><label class="wide">Metin/content<textarea [(ngModel)]="questionDraft.content" name="questionContent" required maxlength="20000"></textarea></label><label class="wide">Soru<input [(ngModel)]="questionDraft.question" name="questionText" required maxlength="2000" /></label><label>Şık A<input [(ngModel)]="questionDraft.optionA" name="questionOptionA" required /></label><label>Şık B<input [(ngModel)]="questionDraft.optionB" name="questionOptionB" required /></label><label>Şık C<input [(ngModel)]="questionDraft.optionC" name="questionOptionC" required /></label><label>Şık D<input [(ngModel)]="questionDraft.optionD" name="questionOptionD" required /></label><label>Şık E (opsiyonel)<input [(ngModel)]="questionDraft.optionE" name="questionOptionE" /></label><label>Doğru şık<select [(ngModel)]="questionDraft.correctOption" name="questionCorrect" required><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option></select></label><label>Sınav türü<select [(ngModel)]="questionDraft.examType" name="questionExamType" required>@for (type of examTypes; track type.value) {<option [ngValue]="type.value">{{ type.label }}</option>}</select></label><label>Zorluk<input type="number" [(ngModel)]="questionDraft.difficulty" name="questionDifficulty" min="1" max="5" required /></label><label>Kelime sayısı<input [value]="calculateWordCount(questionDraft.content)" name="questionWordCount" readonly aria-describedby="questionWordCountHelp" /><span id="questionWordCountHelp" class="hint">Metinden otomatik hesaplanır.</span></label><label>Kategori<select [(ngModel)]="questionDraft.category" name="questionCategory" required>@for (category of questionCategories; track category.value) {<option [ngValue]="category.value">{{ category.label }}</option>}</select></label><label>Konu<input [(ngModel)]="questionDraft.topic" name="questionTopic" maxlength="200" /></label><label>Hedef yaş grubu<select [(ngModel)]="questionDraft.targetAgeGroupId" name="questionAgeGroup"><option [ngValue]="null">Tüm yaş grupları</option>@for (group of ageGroups(); track group.id) {<option [ngValue]="group.id">{{ group.displayName }} ({{ group.minAge }}–{{ group.maxAge }} yaş)</option>}</select></label></div>@if (questionQualityReview(); as review) {<div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">@if (review.warnings.length) {<strong>Kalite kontrolü uyarıları</strong><ul class="mt-2 list-disc pl-5">@for (warning of review.warnings; track warning.code) {<li>{{ warning.message }}</li>}</ul>} @else {<span>Otomatik kalite kontrolünde belirgin bir uyarı bulunmadı.</span>}</div>}</div><div class="dialog-footer"><button type="button" (click)="runQuestionQualityCheck()" class="secondary" [disabled]="saving()">Kalite kontrolü</button><button type="button" (click)="cancelQuestionEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form></div>}
+          <form (ngSubmit)="loadQuestions()" class="data-card inline-filter"><input [(ngModel)]="questionSearch" name="questionSearch" placeholder="Metin veya soruda ara" maxlength="100" /><select [(ngModel)]="questionExamType" name="questionExamTypeFilter"><option [ngValue]="undefined">Tüm sınav türleri</option>@for (type of examTypes; track type.value) {<option [ngValue]="type.value">{{ type.label }}</option>}</select><select [(ngModel)]="questionDifficulty" name="questionDifficultyFilter"><option [ngValue]="undefined">Tüm zorluklar</option><option [ngValue]="1">Seviye 1</option><option [ngValue]="2">Seviye 2</option><option [ngValue]="3">Seviye 3</option><option [ngValue]="4">Seviye 4</option><option [ngValue]="5">Seviye 5</option></select><select [(ngModel)]="questionCategory" name="questionCategoryFilter"><option [ngValue]="undefined">Tüm soru türleri</option>@for (category of questionCategories; track category.value) {<option [ngValue]="category.value">{{ category.label }}</option>}</select><select [(ngModel)]="questionAgeGroupId" name="questionAgeGroupFilter"><option value="">Tüm yaş grupları</option>@for (group of ageGroups(); track group.id) {<option [value]="group.id">{{ group.displayName }}</option>}</select><button type="submit" class="secondary">Filtrele</button></form>
+          <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Metin</th><th>Soru</th><th>Sınav</th><th>Zorluk</th><th>Kategori</th><th></th></tr></thead><tbody>@for (question of questions().items; track question.id) {<tr><td>{{ question.content | slice:0:90 }}{{ question.content.length > 90 ? '…' : '' }}</td><td>{{ question.question | slice:0:90 }}{{ question.question.length > 90 ? '…' : '' }}</td><td>{{ examTypeLabel(question.examType) }}</td><td>{{ question.difficulty }}</td><td>{{ questionCategoryLabel(question.category) }}</td><td class="actions"><button type="button" (click)="startQuestionEdit(question)">Düzenle</button><button type="button" (click)="deleteQuestion(question)" class="danger">Sil</button></td></tr>} @empty {<tr><td colspan="6" class="empty">Soru bulunamadı.</td></tr>}</tbody></table></div><div class="pager"><span>Toplam {{ questions().totalCount }}</span><button type="button" (click)="changeQuestionPage(questionPage - 1)" [disabled]="questionPage <= 1 || loading()">Önceki</button><button type="button" (click)="changeQuestionPage(questionPage + 1)" [disabled]="questionPage >= questionTotalPages() || loading()">Sonraki</button></div></div>
         </section>
       }
 
       @if (selectedTab() === 'vocabulary') {
         <section class="space-y-4" aria-labelledby="vocabulary-title"><div class="flex flex-wrap items-end justify-between gap-3"><div><h2 id="vocabulary-title" class="text-lg font-semibold text-gray-900 dark:text-white">Kelime havuzu</h2><p class="muted">Kelime, tanım, örnek kullanım ve zorluk bilgisini yönetin.</p></div><div class="actions"><label class="secondary upload">CSV içe aktar<input type="file" accept=".csv,text/csv" (change)="onVocabularyFileSelected($event)" /></label><button type="button" (click)="exportVocabulary()" class="secondary">CSV dışa aktar</button><button type="button" (click)="downloadVocabularyTemplate()" class="secondary">Şablon</button><button type="button" (click)="startVocabularyCreate()" class="primary">Yeni kelime</button></div></div>
-          @if (vocabularyEditing()) {<div class="dialog-backdrop" role="presentation" (click)="cancelVocabularyEdit()"><form (ngSubmit)="saveVocabulary()" class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="vocabulary-dialog-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (click)="$event.stopPropagation()"><div class="dialog-header"><div><p class="dialog-eyebrow">Kelime havuzu</p><h3 id="vocabulary-dialog-title">{{ vocabularyEditingId ? 'Kelimeyi düzenle' : 'Yeni kelime' }}</h3></div><button type="button" (click)="cancelVocabularyEdit()" class="icon-button" aria-label="Dialogu kapat"><mat-icon>close</mat-icon></button></div><div class="dialog-body"><div class="form-grid"><label>Kelime<input [(ngModel)]="vocabularyDraft.word" name="vocabularyWord" required maxlength="200" /></label><label>Kategori<input [(ngModel)]="vocabularyDraft.category" name="vocabularyCategory" required maxlength="100" /></label><label>Zorluk<input type="number" [(ngModel)]="vocabularyDraft.difficultyLevel" name="vocabularyDifficulty" min="1" max="5" required /></label><label>Hedef yaş grubu ID<input [(ngModel)]="vocabularyDraft.targetAgeGroupId" name="vocabularyAgeGroup" /></label><label class="wide">Tanım<textarea [(ngModel)]="vocabularyDraft.definition" name="vocabularyDefinition" required maxlength="3000"></textarea></label><label class="wide">Örnek cümle<textarea [(ngModel)]="vocabularyDraft.exampleSentence" name="vocabularyExample" maxlength="2000"></textarea></label><label>Eş anlamlılar<input [(ngModel)]="vocabularyDraft.synonyms" name="vocabularySynonyms" /></label><label>Zıt anlamlılar<input [(ngModel)]="vocabularyDraft.antonyms" name="vocabularyAntonyms" /></label></div></div><div class="dialog-footer"><button type="button" (click)="cancelVocabularyEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form></div>}
-          <form (ngSubmit)="loadVocabulary()" class="data-card inline-filter"><input [(ngModel)]="vocabularySearch" name="vocabularySearch" placeholder="Kelime veya tanım ara" maxlength="100" /><input [(ngModel)]="vocabularyCategory" name="vocabularyCategoryFilter" placeholder="Kategori" maxlength="100" /><select [(ngModel)]="vocabularyDifficulty" name="vocabularyDifficultyFilter"><option [ngValue]="undefined">Tüm zorluklar</option><option [ngValue]="1">Seviye 1</option><option [ngValue]="2">Seviye 2</option><option [ngValue]="3">Seviye 3</option><option [ngValue]="4">Seviye 4</option><option [ngValue]="5">Seviye 5</option></select><button type="submit" class="secondary">Filtrele</button></form>
+          @if (vocabularyEditing()) {<div class="dialog-backdrop" role="presentation" (click)="cancelVocabularyEdit()"><form (ngSubmit)="saveVocabulary()" class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="vocabulary-dialog-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (click)="$event.stopPropagation()"><div class="dialog-header"><div><p class="dialog-eyebrow">Kelime havuzu</p><h3 id="vocabulary-dialog-title">{{ vocabularyEditingId ? 'Kelimeyi düzenle' : 'Yeni kelime' }}</h3></div><button type="button" (click)="cancelVocabularyEdit()" class="icon-button" aria-label="Dialogu kapat"><mat-icon>close</mat-icon></button></div><div class="dialog-body"><div class="form-grid"><label>Kelime<input [(ngModel)]="vocabularyDraft.word" name="vocabularyWord" required maxlength="200" /></label><label>Kategori<input [(ngModel)]="vocabularyDraft.category" name="vocabularyCategory" required maxlength="100" /></label><label>Zorluk<input type="number" [(ngModel)]="vocabularyDraft.difficultyLevel" name="vocabularyDifficulty" min="1" max="5" required /></label><label>Hedef yaş grubu<select [(ngModel)]="vocabularyDraft.targetAgeGroupId" name="vocabularyAgeGroup"><option [ngValue]="null">Tüm yaş grupları</option>@for (group of ageGroups(); track group.id) {<option [ngValue]="group.id">{{ group.displayName }} ({{ group.minAge }}–{{ group.maxAge }} yaş)</option>}</select></label><label class="wide">Tanım<textarea [(ngModel)]="vocabularyDraft.definition" name="vocabularyDefinition" required maxlength="3000"></textarea></label><label class="wide">Örnek cümle<textarea [(ngModel)]="vocabularyDraft.exampleSentence" name="vocabularyExample" maxlength="2000"></textarea></label><label>Eş anlamlılar<input [(ngModel)]="vocabularyDraft.synonyms" name="vocabularySynonyms" /></label><label>Zıt anlamlılar<input [(ngModel)]="vocabularyDraft.antonyms" name="vocabularyAntonyms" /></label></div></div><div class="dialog-footer"><button type="button" (click)="cancelVocabularyEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form></div>}
+          <form (ngSubmit)="loadVocabulary()" class="data-card inline-filter"><input [(ngModel)]="vocabularySearch" name="vocabularySearch" placeholder="Kelime veya tanım ara" maxlength="100" /><input [(ngModel)]="vocabularyCategory" name="vocabularyCategoryFilter" placeholder="Kategori" maxlength="100" /><select [(ngModel)]="vocabularyDifficulty" name="vocabularyDifficultyFilter"><option [ngValue]="undefined">Tüm zorluklar</option><option [ngValue]="1">Seviye 1</option><option [ngValue]="2">Seviye 2</option><option [ngValue]="3">Seviye 3</option><option [ngValue]="4">Seviye 4</option><option [ngValue]="5">Seviye 5</option></select><select [(ngModel)]="vocabularyAgeGroupId" name="vocabularyAgeGroupFilter"><option value="">Tüm yaş grupları</option>@for (group of ageGroups(); track group.id) {<option [value]="group.id">{{ group.displayName }}</option>}</select><button type="submit" class="secondary">Filtrele</button></form>
           <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Kelime</th><th>Tanım</th><th>Kategori</th><th>Zorluk</th><th>Yaş grubu</th><th></th></tr></thead><tbody>@for (item of vocabulary().items; track item.id) {<tr><td><strong>{{ item.word }}</strong></td><td>{{ item.definition | slice:0:100 }}{{ item.definition.length > 100 ? '…' : '' }}</td><td>{{ item.category }}</td><td>{{ item.difficultyLevel }}</td><td>{{ item.targetAgeGroup || '—' }}</td><td class="actions"><button type="button" (click)="startVocabularyEdit(item)">Düzenle</button><button type="button" (click)="deleteVocabulary(item)" class="danger">Sil</button></td></tr>} @empty {<tr><td colspan="6" class="empty">Kelime bulunamadı.</td></tr>}</tbody></table></div><div class="pager"><span>Toplam {{ vocabulary().totalCount }}</span><button type="button" (click)="changeVocabularyPage(vocabularyPage - 1)" [disabled]="vocabularyPage <= 1 || loading()">Önceki</button><button type="button" (click)="changeVocabularyPage(vocabularyPage + 1)" [disabled]="vocabularyPage >= vocabularyTotalPages() || loading()">Sonraki</button></div></div>
-          @if (importResult()) {<div role="status" class="muted">İçe aktarma: {{ importResult()!.successCount }} başarılı, {{ importResult()!.failureCount }} başarısız.</div>}
+          @if (importResult()) {<div role="status" class="import-result"><p>İçe aktarma: {{ importResult()!.successCount }} başarılı, {{ importResult()!.failureCount }} başarısız.</p>@if (importResult()!.errors.length) {<ul><li *ngFor="let item of importResult()!.errors">{{ item }}</li></ul>}</div>}
         </section>
       }
     </main>
@@ -66,6 +70,9 @@ type LanguageContentTab = 'questions' | 'vocabulary';
     .pager { justify-content: flex-end; }
     .empty { color: var(--ui-text-muted); padding: 1.25rem; text-align: center; }
     .upload { cursor: pointer; } .upload input { display: none; }
+    .hint { color: var(--ui-text-muted); font-size: .75rem; font-weight: 400; }
+    .import-result { color: var(--ui-text-muted); font-size: .85rem; }
+    .import-result ul { max-height: 10rem; overflow: auto; margin-top: .5rem; padding-left: 1.25rem; }
     .dialog-backdrop { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .68); backdrop-filter: blur(4px); }
     .dialog-panel { display: flex; width: min(68rem, 100%); max-height: calc(100vh - 2rem); flex-direction: column; overflow: hidden; border: 1px solid var(--ui-border); border-radius: 1rem; background: var(--ui-surface); color: var(--ui-text); box-shadow: 0 24px 70px rgb(15 23 42 / .28); }
     .dialog-header, .dialog-footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; border-color: var(--ui-border); }
@@ -84,32 +91,52 @@ export class SpeedReadingLanguageContentComponent implements OnInit {
     { value: 'questions', label: 'Soru bankası' },
     { value: 'vocabulary', label: 'Kelime havuzu' }
   ];
+  readonly examTypes = [
+    { value: 0, label: 'Genel / belirtilmemiş' }, { value: 1, label: 'LGS' }, { value: 2, label: 'YKS' },
+    { value: 3, label: 'KPSS' }, { value: 4, label: 'ALES' }, { value: 5, label: 'DGS' }, { value: 6, label: 'Genel' }
+  ];
+  readonly questionCategories = [
+    { value: 0, label: 'Belirtilmemiş' }, { value: 1, label: 'Ana fikir' }, { value: 2, label: 'Çıkarım' },
+    { value: 3, label: 'Sözcük anlamı' }, { value: 4, label: 'Detay' }, { value: 5, label: 'Anlam bütünlüğü' },
+    { value: 6, label: 'Başlık' }, { value: 7, label: 'Yazarın amacı' }, { value: 8, label: 'Anlatım teknikleri' },
+    { value: 9, label: 'Yazarın tutumu' }, { value: 10, label: 'Akışı bozan' }, { value: 11, label: 'Cümle tamamlama' },
+    { value: 12, label: 'Felsefe' }, { value: 13, label: 'Yargı' }, { value: 14, label: 'Mantık' },
+    { value: 15, label: 'Sıralama' }, { value: 16, label: 'Neden-sonuç' }, { value: 17, label: 'Düşünceyi geliştirme' }
+  ];
   readonly selectedTab = signal<LanguageContentTab>('questions');
   readonly questions = signal<SpeedReadingExamQuestionPage>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25, totalPages: 1 });
   readonly vocabulary = signal<SpeedReadingVocabularyPage>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25, totalPages: 1 });
+  readonly ageGroups = signal<SpeedReadingAgeGroup[]>([]);
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly error = signal('');
   readonly questionEditing = signal(false);
   readonly vocabularyEditing = signal(false);
   readonly importResult = signal<SpeedReadingVocabularyImportResult | null>(null);
+  readonly questionQualityReview = signal<SpeedReadingQuestionQualityReview | null>(null);
+  readonly questionQualitySummary = signal<SpeedReadingQuestionQualitySummary | null>(null);
 
   questionPage = 1;
   vocabularyPage = 1;
   readonly pageSize = 25;
   questionSearch = '';
+  questionExamType: number | undefined;
   questionDifficulty: number | undefined;
+  questionCategory: number | undefined;
+  questionAgeGroupId = '';
   questionEditingId: string | null = null;
   questionDraft: SpeedReadingExamQuestionRequest = this.emptyQuestion();
   vocabularySearch = '';
   vocabularyCategory = '';
   vocabularyDifficulty: number | undefined;
+  vocabularyAgeGroupId = '';
   vocabularyEditingId: string | null = null;
   vocabularyDraft: SpeedReadingVocabularyItemRequest = this.emptyVocabulary();
 
   ngOnInit(): void {
     this.loadQuestions();
     this.loadVocabulary();
+    this.loadAgeGroups();
   }
 
   @HostListener('document:keydown.escape')
@@ -125,16 +152,21 @@ export class SpeedReadingLanguageContentComponent implements OnInit {
 
   loadQuestions(): void {
     this.loading.set(true);
-    this.service.getExamQuestions(this.questionPage, this.pageSize, undefined, this.questionDifficulty, undefined, this.questionSearch)
+    this.service.getExamQuestions(this.questionPage, this.pageSize, this.questionExamType, this.questionDifficulty, this.questionCategory, this.questionSearch, this.questionAgeGroupId || undefined)
       .pipe(finalize(() => this.loading.set(false))).subscribe({
         next: value => this.questions.set(value),
-        error: () => this.error.set('Soru bankası yüklenemedi.')
-      });
+      error: () => this.error.set('Soru bankası yüklenemedi.')
+    });
+    this.service.getExamQuestionQualitySummary().subscribe({
+      next: value => this.questionQualitySummary.set(value),
+      error: () => this.questionQualitySummary.set(null)
+    });
   }
 
   startQuestionCreate(): void {
     this.questionEditingId = null;
     this.questionDraft = this.emptyQuestion();
+    this.questionQualityReview.set(null);
     this.questionEditing.set(true);
   }
 
@@ -143,18 +175,26 @@ export class SpeedReadingLanguageContentComponent implements OnInit {
     this.questionDraft = {
       content: question.content, question: question.question, optionA: question.optionA, optionB: question.optionB,
       optionC: question.optionC, optionD: question.optionD, optionE: question.optionE, correctOption: question.correctOption,
-      examType: question.examType, difficulty: question.difficulty, wordCount: question.wordCount, topic: question.topic,
+      examType: question.examType, difficulty: question.difficulty, wordCount: 0, topic: question.topic,
       category: question.category, targetAgeGroupId: question.targetAgeGroupId
     };
+    this.questionQualityReview.set(null);
     this.questionEditing.set(true);
   }
 
-  cancelQuestionEdit(): void { this.questionEditing.set(false); this.questionEditingId = null; }
+  cancelQuestionEdit(): void { this.questionEditing.set(false); this.questionEditingId = null; this.questionQualityReview.set(null); }
+
+  runQuestionQualityCheck(): void {
+    this.service.previewExamQuestionQuality({ ...this.questionDraft, wordCount: 0 }).subscribe({
+      next: value => this.questionQualityReview.set(value),
+      error: () => this.error.set('Soru kalite kontrolü tamamlanamadı.')
+    });
+  }
 
   saveQuestion(): void {
     const request: Observable<unknown> = this.questionEditingId
-      ? this.service.updateExamQuestion(this.questionEditingId, this.questionDraft)
-      : this.service.createExamQuestion(this.questionDraft);
+      ? this.service.updateExamQuestion(this.questionEditingId, { ...this.questionDraft, wordCount: 0 })
+      : this.service.createExamQuestion({ ...this.questionDraft, wordCount: 0 });
     this.saving.set(true);
     request.pipe(finalize(() => this.saving.set(false))).subscribe({
       next: () => { this.cancelQuestionEdit(); this.loadQuestions(); },
@@ -169,10 +209,12 @@ export class SpeedReadingLanguageContentComponent implements OnInit {
 
   changeQuestionPage(page: number): void { if (page < 1 || page > this.questionTotalPages()) return; this.questionPage = page; this.loadQuestions(); }
   questionTotalPages(): number { return Math.max(1, this.questions().totalPages || Math.ceil(this.questions().totalCount / this.pageSize)); }
+  examTypeLabel(value: number): string { return this.examTypes.find(item => item.value === value)?.label ?? `Tür ${value}`; }
+  questionCategoryLabel(value: number): string { return this.questionCategories.find(item => item.value === value)?.label ?? `Kategori ${value}`; }
 
   loadVocabulary(): void {
     this.loading.set(true);
-    this.service.getVocabulary(this.vocabularySearch, this.vocabularyCategory, this.vocabularyDifficulty, undefined, this.vocabularyPage, this.pageSize)
+    this.service.getVocabulary(this.vocabularySearch, this.vocabularyCategory, this.vocabularyDifficulty, this.vocabularyAgeGroupId || undefined, this.vocabularyPage, this.pageSize)
       .pipe(finalize(() => this.loading.set(false))).subscribe({
         next: value => this.vocabulary.set(value),
         error: () => this.error.set('Kelime havuzu yüklenemedi.')
@@ -227,6 +269,17 @@ export class SpeedReadingLanguageContentComponent implements OnInit {
 
   downloadVocabularyTemplate(): void {
     this.service.downloadVocabularyTemplate().subscribe({ next: blob => this.download(blob, 'vocabulary-import-template.csv'), error: () => this.error.set('CSV şablonu indirilemedi.') });
+  }
+
+  calculateWordCount(value: string): number {
+    return value.trim() ? value.trim().split(/\s+/).length : 0;
+  }
+
+  private loadAgeGroups(): void {
+    this.service.getActiveAgeGroups().subscribe({
+      next: value => this.ageGroups.set(value),
+      error: () => this.error.set('Yaş grupları yüklenemedi.')
+    });
   }
 
   private download(blob: Blob, fileName: string): void {

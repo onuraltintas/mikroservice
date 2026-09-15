@@ -131,10 +131,12 @@ internal sealed class LegacySpeedReadingVisualization(SpeedReadingDbContext db) 
     public async Task<Guid> CreateSceneAsync(
         VisualizationSceneRequest request,
         Guid actorId,
+        string idempotencyKey,
         CancellationToken cancellationToken)
     {
         ValidateSceneRequest(request);
         await EnsureExerciseExistsAsync(request.ExerciseId, cancellationToken);
+        await EnsureAgeGroupExistsAsync(request.TargetAgeGroupConfigurationId, cancellationToken);
 
         var now = DateTime.UtcNow;
         var scene = new LegacyVisualizationScene
@@ -161,10 +163,12 @@ internal sealed class LegacySpeedReadingVisualization(SpeedReadingDbContext db) 
         Guid sceneId,
         VisualizationSceneRequest request,
         Guid actorId,
+        string idempotencyKey,
         CancellationToken cancellationToken)
     {
         ValidateSceneRequest(request);
         await EnsureExerciseExistsAsync(request.ExerciseId, cancellationToken);
+        await EnsureAgeGroupExistsAsync(request.TargetAgeGroupConfigurationId, cancellationToken);
 
         var scene = await db.VisualizationScenes
             .SingleOrDefaultAsync(item => item.Id == sceneId && !item.IsDeleted, cancellationToken);
@@ -204,6 +208,7 @@ internal sealed class LegacySpeedReadingVisualization(SpeedReadingDbContext db) 
     public async Task<bool> DeleteSceneAsync(
         Guid sceneId,
         Guid actorId,
+        string idempotencyKey,
         CancellationToken cancellationToken)
     {
         var scene = await db.VisualizationScenes
@@ -269,7 +274,7 @@ internal sealed class LegacySpeedReadingVisualization(SpeedReadingDbContext db) 
             {
                 var values = ParseCsvLine(line);
                 var request = ParseImportRequest(headerMap, values, rowNumber);
-                await CreateSceneAsync(request, actorId, cancellationToken);
+                await CreateSceneAsync(request, actorId, Guid.NewGuid().ToString("N"), cancellationToken);
                 successCount++;
             }
             catch (Exception exception) when (exception is FormatException or ArgumentException or KeyNotFoundException)
@@ -291,6 +296,14 @@ internal sealed class LegacySpeedReadingVisualization(SpeedReadingDbContext db) 
         if (!await db.Exercises.AnyAsync(item => item.Id == exerciseId && !item.IsDeleted, cancellationToken))
         {
             throw new KeyNotFoundException("Exercise not found");
+        }
+    }
+
+    private async Task EnsureAgeGroupExistsAsync(Guid? ageGroupId, CancellationToken cancellationToken)
+    {
+        if (ageGroupId.HasValue && !await db.AgeGroupConfigurations.AnyAsync(item => item.Id == ageGroupId.Value, cancellationToken))
+        {
+            throw new KeyNotFoundException("Target age group not found");
         }
     }
 
@@ -329,7 +342,8 @@ internal sealed class LegacySpeedReadingVisualization(SpeedReadingDbContext db) 
                 scene.DisplayOrder,
                 scene.DifficultyLevel,
                 questionsByScene.GetValueOrDefault(scene.Id, []),
-                scene.CreatedAt))
+                scene.CreatedAt,
+                scene.TargetAgeGroupConfigurationId))
             .ToList();
     }
 

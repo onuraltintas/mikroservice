@@ -18,15 +18,21 @@ public interface ISpeedReadingVocabulary
     Task<VocabularyItemSummary> CreateItemAsync(
         VocabularyItemRequest request,
         Guid actorId,
+        string idempotencyKey,
         CancellationToken cancellationToken);
 
     Task<VocabularyItemSummary?> UpdateItemAsync(
         Guid id,
         VocabularyItemRequest request,
         Guid actorId,
+        string idempotencyKey,
         CancellationToken cancellationToken);
 
-    Task<bool> DeleteItemAsync(Guid id, Guid actorId, CancellationToken cancellationToken);
+    Task<bool> DeleteItemAsync(
+        Guid id,
+        Guid actorId,
+        string idempotencyKey,
+        CancellationToken cancellationToken);
 
     Task<IReadOnlyList<UserVocabularySummary>> GetUserVocabularyAsync(
         Guid userId,

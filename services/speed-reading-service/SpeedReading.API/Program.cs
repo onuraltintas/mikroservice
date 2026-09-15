@@ -59,6 +59,10 @@ var backfillOwnedAdminAudit = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-admin-audit", StringComparison.OrdinalIgnoreCase));
 var backfillOwnedGamification = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-gamification", StringComparison.OrdinalIgnoreCase));
+var recalculateOwnedGamification = args.Any(argument =>
+    string.Equals(argument, "--recalculate-owned-gamification", StringComparison.OrdinalIgnoreCase));
+var bootstrapOwnedExerciseTaxonomy = args.Any(argument =>
+    string.Equals(argument, "--bootstrap-owned-exercise-taxonomy", StringComparison.OrdinalIgnoreCase));
 var backfillOwnedQuestions = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-questions", StringComparison.OrdinalIgnoreCase));
 var backfillOwnedVisualization = args.Any(argument =>
@@ -87,6 +91,8 @@ var backfillOwnedReadingTextWordCounts = args.Any(argument =>
     string.Equals(argument, "--backfill-owned-reading-text-word-counts", StringComparison.OrdinalIgnoreCase));
 var verifyOwnedParity = args.Any(argument =>
     string.Equals(argument, "--verify-owned-parity", StringComparison.OrdinalIgnoreCase));
+var auditOwnedContent = args.Any(argument =>
+    string.Equals(argument, "--audit-owned-content", StringComparison.OrdinalIgnoreCase));
 
 // The legacy speed-reading schema is not managed by EF migrations. This
 // one-shot mode applies only idempotent additive compatibility objects before
@@ -252,6 +258,47 @@ if (backfillOwnedGamification)
             "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --backfill-owned-gamification.");
     var backfillResult = await backfill.RunAsync();
     Console.WriteLine(JsonSerializer.Serialize(backfillResult));
+    return;
+}
+
+if (recalculateOwnedGamification)
+{
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration, includeLegacyData: false);
+
+    await using var recalculationApp = builder.Build();
+    await using var recalculationScope = recalculationApp.Services.CreateAsyncScope();
+    var recalculation = recalculationScope.ServiceProvider.GetService<OwnedSpeedReadingGamificationRecalculation>()
+        ?? throw new InvalidOperationException(
+            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --recalculate-owned-gamification.");
+    var recalculationResult = await recalculation.RunAsync();
+    Console.WriteLine(JsonSerializer.Serialize(recalculationResult));
+    return;
+}
+
+if (bootstrapOwnedExerciseTaxonomy)
+{
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration, includeLegacyData: false);
+
+    await using var taxonomyApp = builder.Build();
+    await using var taxonomyScope = taxonomyApp.Services.CreateAsyncScope();
+    var taxonomy = taxonomyScope.ServiceProvider.GetService<OwnedExerciseTaxonomyBootstrap>()
+        ?? throw new InvalidOperationException(
+            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --bootstrap-owned-exercise-taxonomy.");
+    var taxonomyResult = await taxonomy.RunAsync();
+    Console.WriteLine(JsonSerializer.Serialize(taxonomyResult));
+    return;
+}
+
+if (auditOwnedContent)
+{
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration, includeLegacyData: false);
+
+    await using var auditApp = builder.Build();
+    await using var auditScope = auditApp.Services.CreateAsyncScope();
+    var audit = auditScope.ServiceProvider.GetService<OwnedSpeedReadingContentAudit>()
+        ?? throw new InvalidOperationException(
+            "SPEED_READING_OWNED_CONNECTION_STRING must be configured for --audit-owned-content.");
+    Console.WriteLine(JsonSerializer.Serialize(await audit.RunAsync()));
     return;
 }
 

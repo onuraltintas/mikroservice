@@ -602,6 +602,8 @@ export interface SpeedReadingVisualizationScene {
   difficultyLevel: number;
   questions: SpeedReadingVisualizationQuestion[];
   createdAt: string | null;
+  targetAgeGroupConfigurationId: string | null;
+  mode: 'practice' | 'assessment';
 }
 
 export interface SpeedReadingVisualizationPage {
@@ -636,6 +638,7 @@ export interface SpeedReadingVisualizationSceneRequest {
   difficultyLevel: number;
   questions: SpeedReadingVisualizationQuestionRequest[];
   targetAgeGroupConfigurationId?: string | null;
+  mode: 'practice' | 'assessment';
 }
 
 export interface SpeedReadingVisualizationImportResult {
@@ -688,6 +691,22 @@ export interface SpeedReadingExamQuestionPage {
   pageNumber: number;
   pageSize: number;
   totalPages: number;
+}
+
+export interface SpeedReadingQuestionQualityWarning {
+  code: string;
+  message: string;
+}
+
+export interface SpeedReadingQuestionQualityReview {
+  warnings: SpeedReadingQuestionQualityWarning[];
+  hasWarnings: boolean;
+}
+
+export interface SpeedReadingQuestionQualitySummary {
+  totalQuestions: number;
+  correctOptionCounts: Record<string, number>;
+  warnings: SpeedReadingQuestionQualityWarning[];
 }
 
 export interface SpeedReadingVocabularyItem {
@@ -1634,6 +1653,21 @@ export class SpeedReadingAdminService {
     );
   }
 
+  getActiveAgeGroups() {
+    return this.http.get<Array<SpeedReadingAgeGroup & {
+      minWPM?: number;
+      recommendedWPM?: number;
+      maxWPM?: number;
+    }>>(`${this.url}/age-group-configurations/active`).pipe(
+      map(groups => groups.map(group => ({
+        ...group,
+        minWpm: group.minWpm ?? group.minWPM ?? 0,
+        recommendedWpm: group.recommendedWpm ?? group.recommendedWPM ?? 0,
+        maxWpm: group.maxWpm ?? group.maxWPM ?? 0
+      })))
+    );
+  }
+
   createAgeGroup(request: SpeedReadingAgeGroupRequest) {
     return this.http.post<SpeedReadingAgeGroup>(`${this.url}/age-group-configurations`, request);
   }
@@ -1763,16 +1797,22 @@ export class SpeedReadingAdminService {
     );
   }
 
-  createVisualizationScene(request: SpeedReadingVisualizationSceneRequest) {
-    return this.http.post<string>(`${this.url}/admin/visualization-scenes`, request);
+  createVisualizationScene(request: SpeedReadingVisualizationSceneRequest, idempotencyKey?: string) {
+    return this.http.post<string>(`${this.url}/admin/visualization-scenes`, request, {
+      headers: this.idempotencyHeaders(idempotencyKey)
+    });
   }
 
-  updateVisualizationScene(id: string, request: SpeedReadingVisualizationSceneRequest) {
-    return this.http.put<void>(`${this.url}/admin/visualization-scenes/${id}`, request);
+  updateVisualizationScene(id: string, request: SpeedReadingVisualizationSceneRequest, idempotencyKey?: string) {
+    return this.http.put<void>(`${this.url}/admin/visualization-scenes/${id}`, request, {
+      headers: this.idempotencyHeaders(idempotencyKey)
+    });
   }
 
-  deleteVisualizationScene(id: string) {
-    return this.http.delete<void>(`${this.url}/admin/visualization-scenes/${id}`);
+  deleteVisualizationScene(id: string, idempotencyKey?: string) {
+    return this.http.delete<void>(`${this.url}/admin/visualization-scenes/${id}`, {
+      headers: this.idempotencyHeaders(idempotencyKey)
+    });
   }
 
   importVisualizationCsv(file: File) {
@@ -1798,16 +1838,30 @@ export class SpeedReadingAdminService {
     return this.http.get<SpeedReadingExamQuestion>(`${this.url}/exam-questions/${id}`);
   }
 
-  createExamQuestion(request: SpeedReadingExamQuestionRequest) {
-    return this.http.post<string>(`${this.url}/exam-questions`, request);
+  createExamQuestion(request: SpeedReadingExamQuestionRequest, idempotencyKey?: string) {
+    return this.http.post<string>(`${this.url}/exam-questions`, request, {
+      headers: this.idempotencyHeaders(idempotencyKey)
+    });
   }
 
-  updateExamQuestion(id: string, request: SpeedReadingExamQuestionRequest) {
-    return this.http.put<void>(`${this.url}/exam-questions/${id}`, request);
+  updateExamQuestion(id: string, request: SpeedReadingExamQuestionRequest, idempotencyKey?: string) {
+    return this.http.put<void>(`${this.url}/exam-questions/${id}`, request, {
+      headers: this.idempotencyHeaders(idempotencyKey)
+    });
   }
 
-  deleteExamQuestion(id: string) {
-    return this.http.delete<void>(`${this.url}/exam-questions/${id}`);
+  deleteExamQuestion(id: string, idempotencyKey?: string) {
+    return this.http.delete<void>(`${this.url}/exam-questions/${id}`, {
+      headers: this.idempotencyHeaders(idempotencyKey)
+    });
+  }
+
+  previewExamQuestionQuality(request: SpeedReadingExamQuestionRequest) {
+    return this.http.post<SpeedReadingQuestionQualityReview>(`${this.url}/exam-questions/quality-preview`, request);
+  }
+
+  getExamQuestionQualitySummary() {
+    return this.http.get<SpeedReadingQuestionQualitySummary>(`${this.url}/exam-questions/quality-summary`);
   }
 
   getVocabulary(search = '', category = '', difficultyLevel?: number, ageGroupId?: string, pageNumber = 1, pageSize = 25) {
@@ -1827,16 +1881,22 @@ export class SpeedReadingAdminService {
     return this.http.get<SpeedReadingVocabularyItem>(`${this.url}/vocabulary/${id}`);
   }
 
-  createVocabularyItem(request: SpeedReadingVocabularyItemRequest) {
-    return this.http.post<SpeedReadingVocabularyItem>(`${this.url}/vocabulary`, request);
+  createVocabularyItem(request: SpeedReadingVocabularyItemRequest, idempotencyKey?: string) {
+    return this.http.post<SpeedReadingVocabularyItem>(`${this.url}/vocabulary`, request, {
+      headers: this.idempotencyHeaders(idempotencyKey)
+    });
   }
 
-  updateVocabularyItem(id: string, request: SpeedReadingVocabularyItemRequest) {
-    return this.http.put<SpeedReadingVocabularyItem>(`${this.url}/vocabulary/${id}`, request);
+  updateVocabularyItem(id: string, request: SpeedReadingVocabularyItemRequest, idempotencyKey?: string) {
+    return this.http.put<SpeedReadingVocabularyItem>(`${this.url}/vocabulary/${id}`, request, {
+      headers: this.idempotencyHeaders(idempotencyKey)
+    });
   }
 
-  deleteVocabularyItem(id: string) {
-    return this.http.delete<void>(`${this.url}/vocabulary/${id}`);
+  deleteVocabularyItem(id: string, idempotencyKey?: string) {
+    return this.http.delete<void>(`${this.url}/vocabulary/${id}`, {
+      headers: this.idempotencyHeaders(idempotencyKey)
+    });
   }
 
   importVocabulary(file: File) {

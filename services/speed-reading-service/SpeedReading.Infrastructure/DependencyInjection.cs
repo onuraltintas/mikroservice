@@ -90,6 +90,8 @@ public static class DependencyInjection
             services.AddScoped<OwnedSpeedReadingLearningPathBackfill>();
             services.AddScoped<OwnedSpeedReadingAdminAuditBackfill>();
             services.AddScoped<OwnedSpeedReadingGamificationBackfill>();
+            services.AddScoped<OwnedSpeedReadingGamificationRecalculation>();
+            services.AddScoped<OwnedExerciseTaxonomyBootstrap>();
             services.AddScoped<OwnedSpeedReadingQuestionBackfill>();
             services.AddScoped<OwnedSpeedReadingVisualizationBackfill>();
             services.AddScoped<OwnedSpeedReadingVocabularyBackfill>();
@@ -103,6 +105,7 @@ public static class DependencyInjection
             services.AddScoped<OwnedSpeedReadingAdaptiveTextBackfill>();
             services.AddScoped<OwnedSpeedReadingReportsBackfill>();
             services.AddScoped<OwnedSpeedReadingReadingTextWordCountBackfill>();
+            services.AddScoped<OwnedSpeedReadingContentAudit>();
             services.AddScoped<OwnedSpeedReadingParityChecker>();
         }
 

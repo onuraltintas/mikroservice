@@ -30,7 +30,7 @@ type ReportTab = 'templates' | 'schedules' | 'snapshots';
       <nav class="ui-tab-list flex flex-wrap gap-2" aria-label="Rapor sekmeleri">@for (tab of tabs; track tab.value) {<button type="button" (click)="selectTab(tab.value)" [attr.aria-pressed]="selectedTab() === tab.value" [class.bg-indigo-600]="selectedTab() === tab.value" [class.text-white]="selectedTab() === tab.value" class="ui-tab rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 dark:border-gray-600 dark:text-gray-200">{{ tab.label }}</button>}</nav>
       @if (error()) {<div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">{{ error() }}</div>}
 
-      @if (selectedTab() === 'templates') {<section class="space-y-4"><div class="flex items-end justify-between gap-3"><div><h2 class="text-lg font-semibold text-gray-900 dark:text-white">Rapor şablonları</h2><p class="muted">Sistem şablonları salt okunur; özel şablonlar yönetilebilir.</p></div>@if (canManageReports()) {<button type="button" (click)="startTemplateCreate()" class="primary">Yeni şablon</button>}</div>@if (templateEditing()) {<form (ngSubmit)="saveTemplate()" class="form-card"><h3>{{ templateEditingId ? 'Şablonu düzenle' : 'Yeni şablon' }}</h3><div class="form-grid"><label>Ad<input [(ngModel)]="templateDraft.name" name="reportName" required maxlength="150" /></label><label>Tür<input type="number" [(ngModel)]="templateDraft.type" name="reportType" min="0" max="100" required /></label><label>Kategori<input type="number" [(ngModel)]="templateDraft.category" name="reportCategory" min="0" max="100" required /></label><label class="wide">Açıklama<textarea [(ngModel)]="templateDraft.description" name="reportDescription" required maxlength="1000"></textarea></label><label class="wide">Yapılandırma JSON<textarea [(ngModel)]="templateDraft.configurationJson" name="reportConfig" required maxlength="50000"></textarea></label>@if (templateEditingId) {<label class="check"><input type="checkbox" [(ngModel)]="templateUpdateDraft.isActive" name="reportActive" /> Aktif</label>}</div><div class="form-actions"><button type="button" (click)="cancelTemplateEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form>}<div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Ad</th><th>Tür</th><th>Kategori</th><th>Kaynak</th><th>Durum</th><th></th></tr></thead><tbody>@for (template of templates(); track template.id) {<tr><td><strong>{{ template.name }}</strong><div class="muted">{{ template.description }}</div></td><td>{{ template.type }}</td><td>{{ template.category }}</td><td>{{ template.isSystemTemplate ? 'Sistem' : 'Özel' }}</td><td>{{ template.isActive ? 'Aktif' : 'Pasif' }}</td><td class="actions">@if (canManageReports()) {<button type="button" (click)="startTemplateEdit(template)" [disabled]="template.isSystemTemplate">Düzenle</button><button type="button" (click)="deleteTemplate(template)" class="danger" [disabled]="template.isSystemTemplate">Sil</button>}</td></tr>} @empty {<tr><td colspan="6" class="empty">Şablon bulunamadı.</td></tr>}</tbody></table></div></div></section>}
+      @if (selectedTab() === 'templates') {<section class="space-y-4"><div class="flex items-end justify-between gap-3"><div><h2 class="text-lg font-semibold text-gray-900 dark:text-white">Rapor şablonları</h2><p class="muted">Sistem şablonları salt okunur; özel şablonlar yönetilebilir.</p></div>@if (canManageReports()) {<button type="button" (click)="startTemplateCreate()" class="primary">Yeni şablon</button>}</div>@if (templateEditing()) {<form (ngSubmit)="saveTemplate()" class="form-card"><h3>{{ templateEditingId ? 'Şablonu düzenle' : 'Yeni şablon' }}</h3><div class="form-grid"><label>Ad<input [(ngModel)]="templateDraft.name" name="reportName" required maxlength="150" /></label><label>Rapor türü<select [(ngModel)]="templateDraft.type" name="reportType" required [disabled]="!!templateEditingId">@for (type of reportTypes; track type.value) {<option [ngValue]="type.value">{{ type.label }}</option>}</select></label><label>Rapor kategorisi<select [(ngModel)]="templateDraft.category" name="reportCategory" required [disabled]="!!templateEditingId">@for (category of reportCategories; track category.value) {<option [ngValue]="category.value">{{ category.label }}</option>}</select></label><label class="wide">Açıklama<textarea [(ngModel)]="templateDraft.description" name="reportDescription" required maxlength="1000"></textarea></label><p class="wide muted">Rapor türü ve kategorisi, oluşturulacak raporun kapsamını belirler. Mevcut şablonlarda bu iki alan korunur; yeni değer için yeni şablon oluşturun.</p>@if (templateEditingId) {<label class="check"><input type="checkbox" [(ngModel)]="templateUpdateDraft.isActive" name="reportActive" /> Aktif</label>}</div><div class="form-actions"><button type="button" (click)="cancelTemplateEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form>}<div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Ad</th><th>Tür</th><th>Kategori</th><th>Kaynak</th><th>Durum</th><th></th></tr></thead><tbody>@for (template of templates(); track template.id) {<tr><td><strong>{{ template.name }}</strong><div class="muted">{{ template.description }}</div></td><td>{{ reportTypeLabel(template.type) }}</td><td>{{ reportCategoryLabel(template.category) }}</td><td>{{ template.isSystemTemplate ? 'Sistem' : 'Özel' }}</td><td>{{ template.isActive ? 'Aktif' : 'Pasif' }}</td><td class="actions">@if (canManageReports()) {<button type="button" (click)="startTemplateEdit(template)" [disabled]="template.isSystemTemplate">Düzenle</button><button type="button" (click)="deleteTemplate(template)" class="danger" [disabled]="template.isSystemTemplate">Sil</button>}</td></tr>} @empty {<tr><td colspan="6" class="empty">Şablon bulunamadı.</td></tr>}</tbody></table></div></div></section>}
 
       @if (selectedTab() === 'schedules') {<section class="space-y-4"><div class="flex items-end justify-between gap-3"><div><h2 class="text-lg font-semibold text-gray-900 dark:text-white">Zamanlanmış raporlar</h2><p class="muted">Rapor üretimi ve e-posta teslimat tercihlerini yönetin.</p></div>@if (canManageReports()) {<button type="button" (click)="startScheduleCreate()" class="primary">Yeni zamanlama</button>}</div>@if (scheduleEditing()) {<form (ngSubmit)="saveSchedule()" class="form-card"><h3>{{ scheduleEditingId ? 'Zamanlamayı düzenle' : 'Yeni zamanlama' }}</h3><div class="form-grid"><label>Şablon<select [(ngModel)]="scheduleDraft.reportTemplateId" name="scheduleTemplate" required [disabled]="!!scheduleEditingId"><option value="">Seçin</option>@for (template of templates(); track template.id) {<option [value]="template.id">{{ template.name }}</option>}</select></label><label>Sıklık<select [(ngModel)]="scheduleDraft.frequency" name="scheduleFrequency"><option [ngValue]="1">Günlük</option><option [ngValue]="2">Haftalık</option><option [ngValue]="3">Aylık</option></select></label><label>Haftanın günü<input type="number" [(ngModel)]="scheduleDraft.dayOfWeek" name="scheduleDayOfWeek" min="0" max="6" /></label><label>Ayın günü<input type="number" [(ngModel)]="scheduleDraft.dayOfMonth" name="scheduleDayOfMonth" min="1" max="31" /></label><label>Çalışma saati<input type="time" [(ngModel)]="scheduleDraft.deliveryTime" name="scheduleDeliveryTime" required /></label><label class="wide">E-posta alıcıları<input [(ngModel)]="scheduleDraft.emailRecipients" name="scheduleRecipients" placeholder="ornek@site.com, ikinci@site.com" maxlength="2000" /></label><label class="check"><input type="checkbox" [(ngModel)]="scheduleDraft.sendEmail" name="scheduleSendEmail" /> E-posta gönder</label><label class="check"><input type="checkbox" [(ngModel)]="scheduleDraft.saveToDashboard" name="scheduleSaveDashboard" /> Dashboard'a kaydet</label>@if (scheduleEditingId) {<label class="check"><input type="checkbox" [(ngModel)]="scheduleUpdateDraft.isActive" name="scheduleActive" /> Aktif</label>}</div><div class="form-actions"><button type="button" (click)="cancelScheduleEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form>}<div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Şablon</th><th>Sıklık</th><th>Sonraki çalışma</th><th>Başarı/başarısız</th><th>Durum</th><th></th></tr></thead><tbody>@for (schedule of schedules(); track schedule.id) {<tr><td>{{ schedule.reportTemplateName }}</td><td>{{ schedule.frequency }}</td><td>{{ schedule.nextRunAt ? (schedule.nextRunAt | date:'dd.MM.yyyy HH:mm') : '—' }}</td><td>{{ schedule.successCount }}/{{ schedule.failureCount }}</td><td>{{ schedule.isActive ? 'Aktif' : 'Pasif' }}</td><td class="actions">@if (canManageReports()) {<button type="button" (click)="startScheduleEdit(schedule)">Düzenle</button><button type="button" (click)="toggleSchedule(schedule)">{{ schedule.isActive ? 'Durdur' : 'Aktifleştir' }}</button><button type="button" (click)="deleteSchedule(schedule)" class="danger">Sil</button>}</td></tr>} @empty {<tr><td colspan="6" class="empty">Zamanlanmış rapor bulunamadı.</td></tr>}</tbody></table></div></div></section>}
 
@@ -67,6 +67,27 @@ export class SpeedReadingReportsComponent implements OnInit {
     { value: 'schedules', label: 'Zamanlamalar' },
     { value: 'snapshots', label: 'Snapshot’lar' }
   ];
+  readonly reportTypes = [
+    { value: 0, label: 'Öğrenci' },
+    { value: 1, label: 'Öğretmen' },
+    { value: 2, label: 'Yönetici' }
+  ];
+  readonly reportCategories = [
+    { value: 0, label: 'Gösterge paneli' },
+    { value: 1, label: 'Okuma hızı' },
+    { value: 2, label: 'Anlama' },
+    { value: 3, label: 'Seriler' },
+    { value: 4, label: 'Etkinlik' },
+    { value: 5, label: 'Sınıf özeti' },
+    { value: 6, label: 'Öğrenci detayı' },
+    { value: 7, label: 'Atama' },
+    { value: 8, label: 'Kategori analizi' },
+    { value: 9, label: 'Zaman içindeki ilerleme' },
+    { value: 10, label: 'Kurum' },
+    { value: 11, label: 'Platform kullanımı' },
+    { value: 12, label: 'İçerik analizi' },
+    { value: 13, label: 'Sistem sağlığı' }
+  ];
   readonly selectedTab = signal<ReportTab>('templates');
   readonly templates = signal<SpeedReadingReportTemplate[]>([]);
   readonly schedules = signal<SpeedReadingScheduledReport[]>([]);
@@ -99,7 +120,13 @@ export class SpeedReadingReportsComponent implements OnInit {
   startTemplateEdit(template: SpeedReadingReportTemplate): void {
     if (template.isSystemTemplate) return;
     this.templateEditingId = template.id;
-    this.templateDraft = { name: template.name, description: template.description, type: Number(template.type) || 0, category: Number(template.category) || 0, configurationJson: template.configurationJson };
+    this.templateDraft = {
+      name: template.name,
+      description: template.description,
+      type: this.reportTypeValue(template.type),
+      category: this.reportCategoryValue(template.category),
+      configurationJson: template.configurationJson
+    };
     this.templateUpdateDraft = { name: template.name, description: template.description, configurationJson: template.configurationJson, isActive: template.isActive };
     this.templateEditing.set(true);
   }
@@ -167,6 +194,43 @@ export class SpeedReadingReportsComponent implements OnInit {
     } catch {
       return { rawData: detail.dataJson };
     }
+  }
+
+  private reportTypeValue(type: string): number {
+    const aliases: Record<string, number> = { student: 0, teacher: 1, admin: 2 };
+    return aliases[type.toLowerCase()]
+      ?? this.reportTypes.find(item => item.value === Number(type))?.value
+      ?? 0;
+  }
+
+  reportTypeLabel(type: string): string {
+    return this.reportTypes.find(item => item.value === this.reportTypeValue(type))?.label ?? type;
+  }
+
+  private reportCategoryValue(category: string): number {
+    const aliases: Record<string, number> = {
+      dashboard: 0,
+      readingspeed: 1,
+      comprehension: 2,
+      series: 3,
+      activity: 4,
+      classoverview: 5,
+      studentdetail: 6,
+      assignment: 7,
+      categoryanalysis: 8,
+      timebasedprogress: 9,
+      institution: 10,
+      platformusage: 11,
+      contentanalysis: 12,
+      systemhealth: 13
+    };
+    return aliases[category.replace(/[^a-z]/gi, '').toLowerCase()]
+      ?? this.reportCategories.find(item => item.value === Number(category))?.value
+      ?? 0;
+  }
+
+  reportCategoryLabel(category: string): string {
+    return this.reportCategories.find(item => item.value === this.reportCategoryValue(category))?.label ?? category;
   }
 
   private saveRequest(request: Observable<unknown>, onSuccess: () => void): void { this.saving.set(true); this.error.set(''); request.pipe(finalize(() => this.saving.set(false))).subscribe({ next: onSuccess, error: () => this.error.set('Rapor işlemi tamamlanamadı.') }); }

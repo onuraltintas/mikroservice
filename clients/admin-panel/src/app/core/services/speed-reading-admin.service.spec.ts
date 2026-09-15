@@ -221,6 +221,31 @@ describe('SpeedReadingAdminService', () => {
     expect(ageGroup.maxWpm).toBe(180);
   });
 
+  it('loads active age groups for content editors without the settings-management route', () => {
+    service.getActiveAgeGroups().subscribe(value => expect(value[0].displayName).toBe('Çocuk'));
+
+    const request = http.expectOne('/api/speed-reading/age-group-configurations/active');
+    expect(request.request.method).toBe('GET');
+    request.flush([{
+      id: 'age-1',
+      name: 'child',
+      displayName: 'Çocuk',
+      minAge: 7,
+      maxAge: 12,
+      minWPM: 80,
+      recommendedWPM: 120,
+      maxWPM: 180,
+      recommendedComprehension: 70,
+      recommendedDailyMinutes: 15,
+      defaultDifficultyLevel: 1,
+      orderIndex: 1,
+      isActive: true,
+      description: 'Çocuk grubu',
+      createdAt: '2026-09-07T00:00:00Z',
+      updatedAt: null
+    }]);
+  });
+
   it('loads and manages assessment templates by age group', () => {
     service.getAssessmentTemplates().subscribe(value => expect(value).toEqual([]));
     const listRequest = http.expectOne('/api/speed-reading/admin/assessment-templates');
@@ -272,21 +297,24 @@ describe('SpeedReadingAdminService', () => {
     const request = {
       exerciseId: 'exercise-1', description: 'Bir orman sahnesi', imageUrl: null,
       duration: 30, displayOrder: 1, difficultyLevel: 2, questions: [],
-      targetAgeGroupConfigurationId: null
+      targetAgeGroupConfigurationId: null, mode: 'practice' as const
     };
     service.createVisualizationScene(request).subscribe();
     const createRequest = http.expectOne('/api/speed-reading/admin/visualization-scenes');
     expect(createRequest.request.method).toBe('POST');
+    expect(createRequest.request.headers.has('Idempotency-Key')).toBe(true);
     createRequest.flush('scene-1');
 
     service.updateVisualizationScene('scene-1', request).subscribe();
     const updateRequest = http.expectOne('/api/speed-reading/admin/visualization-scenes/scene-1');
     expect(updateRequest.request.method).toBe('PUT');
+    expect(updateRequest.request.headers.has('Idempotency-Key')).toBe(true);
     updateRequest.flush(null);
 
     service.deleteVisualizationScene('scene-1').subscribe();
     const deleteRequest = http.expectOne('/api/speed-reading/admin/visualization-scenes/scene-1');
     expect(deleteRequest.request.method).toBe('DELETE');
+    expect(deleteRequest.request.headers.has('Idempotency-Key')).toBe(true);
     deleteRequest.flush(null);
 
     service.importVisualizationCsv(new File(['ExerciseId,Description'], 'scenes.csv', { type: 'text/csv' })).subscribe();
@@ -310,16 +338,19 @@ describe('SpeedReadingAdminService', () => {
     service.createExamQuestion(request).subscribe();
     const createRequest = http.expectOne('/api/speed-reading/exam-questions');
     expect(createRequest.request.method).toBe('POST');
+    expect(createRequest.request.headers.has('Idempotency-Key')).toBe(true);
     createRequest.flush('question-1');
 
     service.updateExamQuestion('question-1', request).subscribe();
     const updateRequest = http.expectOne('/api/speed-reading/exam-questions/question-1');
     expect(updateRequest.request.method).toBe('PUT');
+    expect(updateRequest.request.headers.has('Idempotency-Key')).toBe(true);
     updateRequest.flush(null);
 
     service.deleteExamQuestion('question-1').subscribe();
     const deleteRequest = http.expectOne('/api/speed-reading/exam-questions/question-1');
     expect(deleteRequest.request.method).toBe('DELETE');
+    expect(deleteRequest.request.headers.has('Idempotency-Key')).toBe(true);
     deleteRequest.flush(null);
   });
 
@@ -341,16 +372,19 @@ describe('SpeedReadingAdminService', () => {
     service.createVocabularyItem(request).subscribe();
     const createRequest = http.expectOne('/api/speed-reading/vocabulary');
     expect(createRequest.request.method).toBe('POST');
+    expect(createRequest.request.headers.has('Idempotency-Key')).toBe(true);
     createRequest.flush({ id: 'word-1' });
 
     service.updateVocabularyItem('word-1', request).subscribe();
     const updateRequest = http.expectOne('/api/speed-reading/vocabulary/word-1');
     expect(updateRequest.request.method).toBe('PUT');
+    expect(updateRequest.request.headers.has('Idempotency-Key')).toBe(true);
     updateRequest.flush({ id: 'word-1' });
 
     service.deleteVocabularyItem('word-1').subscribe();
     const deleteRequest = http.expectOne('/api/speed-reading/vocabulary/word-1');
     expect(deleteRequest.request.method).toBe('DELETE');
+    expect(deleteRequest.request.headers.has('Idempotency-Key')).toBe(true);
     deleteRequest.flush(null);
 
     service.importVocabulary(new File(['Word,Definition'], 'vocabulary.csv', { type: 'text/csv' })).subscribe();

@@ -19,6 +19,7 @@ describe('large admin lists', () => {
     });
     const component = TestBed.runInInjectionContext(() => new InstitutionListComponent());
     const http = TestBed.inject(HttpTestingController);
+    http.expectOne('/api/locations/provinces').flush([]);
     expectPage(http, '/institutions', '1').flush({ items: [], totalCount: 60, pageNumber: 1, pageSize: 25 });
 
     component.changePage(2);

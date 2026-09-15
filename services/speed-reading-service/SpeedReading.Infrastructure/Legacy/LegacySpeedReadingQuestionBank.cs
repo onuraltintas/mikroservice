@@ -73,6 +73,7 @@ internal sealed class LegacySpeedReadingQuestionBank(SpeedReadingDbContext db) :
     public async Task<Guid> CreateQuestionAsync(
         ExamQuestionRequest request,
         Guid actorId,
+        string idempotencyKey,
         CancellationToken cancellationToken)
     {
         ValidateRequest(request);
@@ -107,6 +108,7 @@ internal sealed class LegacySpeedReadingQuestionBank(SpeedReadingDbContext db) :
         Guid id,
         ExamQuestionRequest request,
         Guid actorId,
+        string idempotencyKey,
         CancellationToken cancellationToken)
     {
         ValidateRequest(request);
@@ -138,7 +140,11 @@ internal sealed class LegacySpeedReadingQuestionBank(SpeedReadingDbContext db) :
         return true;
     }
 
-    public async Task<bool> DeleteQuestionAsync(Guid id, Guid actorId, CancellationToken cancellationToken)
+    public async Task<bool> DeleteQuestionAsync(
+        Guid id,
+        Guid actorId,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
     {
         var question = await db.ExamQuestions
             .SingleOrDefaultAsync(item => item.Id == id && !item.IsDeleted, cancellationToken);
@@ -150,19 +156,6 @@ internal sealed class LegacySpeedReadingQuestionBank(SpeedReadingDbContext db) :
         question.IsDeleted = true;
         question.DeletedAt = DateTime.UtcNow;
         question.DeletedBy = actorId;
-        await db.SaveChangesAsync(cancellationToken);
-        return true;
-    }
-
-    public async Task<bool> HardDeleteQuestionAsync(Guid id, CancellationToken cancellationToken)
-    {
-        var question = await db.ExamQuestions.SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
-        if (question is null)
-        {
-            return false;
-        }
-
-        db.ExamQuestions.Remove(question);
         await db.SaveChangesAsync(cancellationToken);
         return true;
     }

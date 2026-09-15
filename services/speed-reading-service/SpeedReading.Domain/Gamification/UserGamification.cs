@@ -1,3 +1,4 @@
+using System.Text.Json;
 using EduPlatform.Shared.Kernel.Primitives;
 
 namespace SpeedReading.Domain.Gamification;
@@ -25,6 +26,7 @@ public sealed class UserGamification : Entity
     public decimal MaxComprehensionScore { get; private set; }
     public int TotalExercisesCompleted { get; private set; }
     public int TotalReadingSessionsCompleted { get; private set; }
+    public int TotalRsvpSessionsCompleted { get; private set; }
     public string CompletedExerciseTypesJson { get; private set; } = "[]";
     public int MaxRSVPWPM { get; private set; }
     public decimal MaxRSVPComprehension { get; private set; }
@@ -158,6 +160,150 @@ public sealed class UserGamification : Entity
         Touch(actorId, at);
     }
 
+    public void RecordVerifiedExerciseCompletion(
+        string exerciseType,
+        DateTime completedAt,
+        int durationSeconds,
+        int? rawWpm,
+        decimal? comprehensionScore,
+        bool isReadingSession,
+        int xpAwarded,
+        Guid actorId,
+        DateTime updatedAt)
+    {
+        if (string.IsNullOrWhiteSpace(exerciseType)
+            || durationSeconds < 0
+            || xpAwarded < 0
+            || actorId == Guid.Empty)
+        {
+            throw new ArgumentException("Verified exercise completion is invalid.");
+        }
+
+        TotalActivitiesCompleted = checked(TotalActivitiesCompleted + 1);
+        TotalExercisesCompleted = checked(TotalExercisesCompleted + 1);
+        if (isReadingSession)
+            TotalReadingSessionsCompleted = checked(TotalReadingSessionsCompleted + 1);
+        if (exerciseType.Equals("RSVP", StringComparison.OrdinalIgnoreCase) && isReadingSession)
+            TotalRsvpSessionsCompleted = checked(TotalRsvpSessionsCompleted + 1);
+
+        var durationMinutes = (int)Math.Round(
+            durationSeconds / 60m,
+            MidpointRounding.AwayFromZero);
+        UpdateStreak(completedAt, durationMinutes, actorId, updatedAt);
+
+        if (rawWpm.HasValue)
+            MaxWPM = Math.Max(MaxWPM, Math.Max(rawWpm.Value, 0));
+        if (comprehensionScore.HasValue)
+            MaxComprehensionScore = Math.Max(
+                MaxComprehensionScore,
+                Math.Clamp(comprehensionScore.Value, 0, 100));
+        if (exerciseType.Equals("RSVP", StringComparison.OrdinalIgnoreCase))
+        {
+            if (rawWpm.HasValue)
+                MaxRSVPWPM = Math.Max(MaxRSVPWPM, Math.Max(rawWpm.Value, 0));
+            if (comprehensionScore.HasValue)
+                MaxRSVPComprehension = Math.Max(
+                    MaxRSVPComprehension,
+                    Math.Clamp(comprehensionScore.Value, 0, 100));
+        }
+
+        var completedTypes = DeserializeCompletedExerciseTypes();
+        if (!completedTypes.Contains(exerciseType.Trim(), StringComparer.OrdinalIgnoreCase))
+            completedTypes.Add(exerciseType.Trim());
+        CompletedExerciseTypesJson = JsonSerializer.Serialize(completedTypes);
+
+        AwardXp(xpAwarded, actorId, updatedAt);
+    }
+
+    public void RecordVerifiedVocabularyReview(
+        string category,
+        int difficultyLevel,
+        int currentBox,
+        int consecutiveCorrectCount,
+        bool isCorrect,
+        bool isNewMastery,
+        Guid actorId,
+        DateTime updatedAt)
+    {
+        if (string.IsNullOrWhiteSpace(category)
+            || difficultyLevel is < 1 or > 5
+            || currentBox is < 1 or > 5
+            || consecutiveCorrectCount < 0
+            || actorId == Guid.Empty)
+        {
+            throw new ArgumentException("Verified vocabulary review is invalid.");
+        }
+
+        TotalVocabularyQuestionsAnswered = checked(TotalVocabularyQuestionsAnswered + 1);
+        MaxVocabularyBoxReached = Math.Max(MaxVocabularyBoxReached, currentBox);
+        if (isCorrect)
+            MaxVocabularyStreak = Math.Max(MaxVocabularyStreak, consecutiveCorrectCount);
+
+        if (isNewMastery)
+        {
+            TotalVocabularyWordsLearned = checked(TotalVocabularyWordsLearned + 1);
+            var categories = DeserializeStringSet(LearnedVocabularyCategoriesJson);
+            categories.Add(category.Trim());
+            LearnedVocabularyCategoriesJson = JsonSerializer.Serialize(categories);
+
+            var categoryCounts = DeserializeIntMap(LearnedVocabularyCategoriesMapJson);
+            categoryCounts[category.Trim()] = categoryCounts.GetValueOrDefault(category.Trim()) + 1;
+            LearnedVocabularyCategoriesMapJson = JsonSerializer.Serialize(categoryCounts);
+
+            var difficultyCounts = DeserializeIntMap(LearnedVocabularyDifficultiesJson);
+            var difficultyKey = difficultyLevel.ToString();
+            difficultyCounts[difficultyKey] = difficultyCounts.GetValueOrDefault(difficultyKey) + 1;
+            LearnedVocabularyDifficultiesJson = JsonSerializer.Serialize(difficultyCounts);
+        }
+
+        Touch(actorId, updatedAt);
+    }
+
+    public void RebuildVerifiedExerciseHistory(
+        IEnumerable<VerifiedExerciseCompletion> completions,
+        int achievementXp,
+        Guid actorId,
+        DateTime updatedAt)
+    {
+        ArgumentNullException.ThrowIfNull(completions);
+        if (achievementXp < 0 || actorId == Guid.Empty)
+            throw new ArgumentException("Verified exercise history rebuild is invalid.");
+
+        TotalXP = 0;
+        CurrentStreak = 0;
+        LongestStreak = 0;
+        LastActivityDate = null;
+        TotalActivitiesCompleted = 0;
+        TotalReadingMinutes = 0;
+        MaxWPM = 0;
+        MaxComprehensionScore = 0;
+        TotalExercisesCompleted = 0;
+        TotalReadingSessionsCompleted = 0;
+        TotalRsvpSessionsCompleted = 0;
+        CompletedExerciseTypesJson = "[]";
+        MaxRSVPWPM = 0;
+        MaxRSVPComprehension = 0;
+        RecalculateLevel();
+
+        foreach (var completion in completions.OrderBy(item => item.CompletedAt))
+        {
+            RecordVerifiedExerciseCompletion(
+                completion.ExerciseType,
+                completion.CompletedAt,
+                completion.DurationSeconds,
+                completion.RawWpm,
+                completion.ComprehensionScore,
+                completion.IsReadingSession,
+                completion.XpAwarded,
+                actorId,
+                updatedAt);
+        }
+
+        if (achievementXp > 0)
+            AwardXp(achievementXp, actorId, updatedAt);
+        Touch(actorId, updatedAt);
+    }
+
     public void UseStreakFreeze(Guid actorId, DateTime at)
     {
         if (actorId == Guid.Empty || StreakFreezeCount <= 0)
@@ -178,6 +324,55 @@ public sealed class UserGamification : Entity
 
     public void MarkUpdated(Guid actorId, DateTime at) => Touch(actorId, at);
 
+    private List<string> DeserializeCompletedExerciseTypes()
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(CompletedExerciseTypesJson)
+                ?.Where(item => !string.IsNullOrWhiteSpace(item))
+                .Select(item => item.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList()
+                ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private static List<string> DeserializeStringSet(string json)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(json)
+                ?.Where(item => !string.IsNullOrWhiteSpace(item))
+                .Select(item => item.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList()
+                ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private static Dictionary<string, int> DeserializeIntMap(string json)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, int>>(json)
+                ?.Where(item => !string.IsNullOrWhiteSpace(item.Key) && item.Value >= 0)
+                .ToDictionary(item => item.Key.Trim(), item => item.Value, StringComparer.OrdinalIgnoreCase)
+                ?? new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        }
+        catch (JsonException)
+        {
+            return new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        }
+    }
+
     private void Touch(Guid actorId, DateTime at)
     {
         UpdatedAt = EnsureUtc(at);
@@ -191,3 +386,12 @@ public sealed class UserGamification : Entity
                 ? value.ToUniversalTime()
                 : DateTime.SpecifyKind(value, DateTimeKind.Utc);
 }
+
+public sealed record VerifiedExerciseCompletion(
+    string ExerciseType,
+    DateTime CompletedAt,
+    int DurationSeconds,
+    int? RawWpm,
+    decimal? ComprehensionScore,
+    bool IsReadingSession,
+    int XpAwarded);

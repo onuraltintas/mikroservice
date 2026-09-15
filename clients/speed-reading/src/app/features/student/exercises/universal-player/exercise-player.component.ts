@@ -779,6 +779,25 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           const engineType = this.parsedConfig?.engineType || this.engine?.engineType;
           const engineMode = this.parsedConfig?.engineConfig?.['mode'];
 
+          if (engineType === 'vocabulary_builder') {
+            const vocabularyItemId = (action as any).wordId;
+            if (typeof vocabularyItemId === 'string'
+              && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(vocabularyItemId)) {
+              const expectedAnswer = action.customData?.['correctAnswer'];
+              const isCorrect = action.action === 'mark_known'
+                || (action.action === 'answer_question' && action.answer === expectedAnswer);
+              void this.enqueueAction({
+                ...action,
+                action: 'vocabulary_review',
+                customData: {
+                  vocabularyItemId,
+                  isCorrect
+                }
+              }).catch(() => undefined);
+            }
+            return;
+          }
+
           // Validation GEREKEN egzersizler (kullanıcı aktif input yapıyor)
           const requiresValidation = [
             'grid_interaction',    // Schulte/grid tıklamaları server layout ile doğrulanır
@@ -877,6 +896,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           || this.backendSessionConfig?.visualizationScenes
           || this.parsedConfig?.['scenes']
           || this.parsedConfig?.['Scenes'],
+        words: this.backendSessionConfig?.vocabularyWords
+          || this.backendSessionConfig?.VocabularyWords
+          || this.backendSessionConfig?.words
+          || this.backendSessionConfig?.Words
+          || this.parsedConfig?.engineConfig?.['words'],
         serverAuthoritative: !!this.sessionId && this.sessionId !== 'preview-mode',
         // Metadata ve yaş grubu/zorluk bilgisini ekle
         metadata: this.parsedConfig?.['metadata'],

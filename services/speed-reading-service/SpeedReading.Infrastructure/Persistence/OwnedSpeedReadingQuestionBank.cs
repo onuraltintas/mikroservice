@@ -6,6 +6,10 @@ namespace SpeedReading.Infrastructure.Persistence;
 
 internal sealed class OwnedSpeedReadingQuestionBank(OwnedSpeedReadingDbContext db) : ISpeedReadingQuestionBank
 {
+    private const string CreateScope = "speed-reading.question-bank.create";
+    private const string UpdateScope = "speed-reading.question-bank.update";
+    private const string DeleteScope = "speed-reading.question-bank.delete";
+
     public async Task<QuestionBankPage> GetQuestionsAsync(
         int pageNumber,
         int pageSize,
@@ -43,21 +47,57 @@ internal sealed class OwnedSpeedReadingQuestionBank(OwnedSpeedReadingDbContext d
         return item is null ? null : ToSummary(item);
     }
 
-    public async Task<Guid> CreateQuestionAsync(ExamQuestionRequest request, Guid actorId, CancellationToken cancellationToken)
+    public async Task<Guid> CreateQuestionAsync(
+        ExamQuestionRequest request,
+        Guid actorId,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
     {
+        OwnedContentMutationIdempotency.Validate(actorId, idempotencyKey);
+        var key = idempotencyKey.Trim();
+        var requestHash = OwnedContentMutationIdempotency.CreateRequestHash(actorId, CreateScope, Guid.Empty, request);
+        var existing = await OwnedContentMutationIdempotency.GetAsync(db, CreateScope, key, cancellationToken);
+        if (existing is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(existing, requestHash);
+            return existing.ResourceId;
+        }
+
         ValidateWordCount(request);
         await EnsureAgeGroupExistsAsync(request.TargetAgeGroupId, cancellationToken);
+        var now = DateTime.UtcNow;
         var item = ExamQuestion.Create(Guid.NewGuid(), request.Content, request.Question, request.OptionA,
             request.OptionB, request.OptionC, request.OptionD, request.OptionE, request.CorrectOption,
             request.ExamType, request.Difficulty, request.WordCount, request.Topic, request.Category,
-            request.TargetAgeGroupId, DateTime.UtcNow, actorId);
+            request.TargetAgeGroupId, now, actorId);
         db.ExamQuestions.Add(item);
-        await db.SaveChangesAsync(cancellationToken);
+        OwnedContentMutationIdempotency.Add(db, CreateScope, key, requestHash, item.Id, now);
+        var concurrent = await OwnedContentMutationIdempotency.SaveAsync(db, CreateScope, key, cancellationToken);
+        if (concurrent is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(concurrent, requestHash);
+            return concurrent.ResourceId;
+        }
         return item.Id;
     }
 
-    public async Task<bool> UpdateQuestionAsync(Guid id, ExamQuestionRequest request, Guid actorId, CancellationToken cancellationToken)
+    public async Task<bool> UpdateQuestionAsync(
+        Guid id,
+        ExamQuestionRequest request,
+        Guid actorId,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
     {
+        OwnedContentMutationIdempotency.Validate(actorId, idempotencyKey);
+        var key = idempotencyKey.Trim();
+        var requestHash = OwnedContentMutationIdempotency.CreateRequestHash(actorId, UpdateScope, id, request);
+        var existing = await OwnedContentMutationIdempotency.GetAsync(db, UpdateScope, key, cancellationToken);
+        if (existing is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(existing, requestHash);
+            return true;
+        }
+
         ValidateWordCount(request);
         await EnsureAgeGroupExistsAsync(request.TargetAgeGroupId, cancellationToken);
         var item = await db.ExamQuestions.SingleOrDefaultAsync(value => value.Id == id && !value.IsDeleted, cancellationToken);
@@ -65,26 +105,48 @@ internal sealed class OwnedSpeedReadingQuestionBank(OwnedSpeedReadingDbContext d
         item.Update(request.Content, request.Question, request.OptionA, request.OptionB, request.OptionC,
             request.OptionD, request.OptionE, request.CorrectOption, request.ExamType, request.Difficulty,
             request.WordCount, request.Topic, request.Category, request.TargetAgeGroupId, actorId, DateTime.UtcNow);
-        await db.SaveChangesAsync(cancellationToken);
+        OwnedContentMutationIdempotency.Add(db, UpdateScope, key, requestHash, item.Id, DateTime.UtcNow);
+        var concurrent = await OwnedContentMutationIdempotency.SaveAsync(db, UpdateScope, key, cancellationToken);
+        if (concurrent is not null)
+            OwnedContentMutationIdempotency.EnsureReplayMatches(concurrent, requestHash);
         return true;
     }
 
-    public async Task<bool> DeleteQuestionAsync(Guid id, Guid actorId, CancellationToken cancellationToken)
+    public async Task<bool> DeleteQuestionAsync(
+        Guid id,
+        Guid actorId,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
     {
+        OwnedContentMutationIdempotency.Validate(actorId, idempotencyKey);
+        var key = idempotencyKey.Trim();
+        var requestHash = OwnedContentMutationIdempotency.CreateRequestHash(actorId, DeleteScope, id);
+        var existing = await OwnedContentMutationIdempotency.GetAsync(db, DeleteScope, key, cancellationToken);
+        if (existing is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(existing, requestHash);
+            return true;
+        }
+
         var item = await db.ExamQuestions.SingleOrDefaultAsync(value => value.Id == id && !value.IsDeleted, cancellationToken);
         if (item is null) return false;
-        item.Delete(actorId, DateTime.UtcNow);
-        await db.SaveChangesAsync(cancellationToken);
+        var now = DateTime.UtcNow;
+        item.Delete(actorId, now);
+        OwnedContentMutationIdempotency.Add(db, DeleteScope, key, requestHash, item.Id, now);
+        var concurrent = await OwnedContentMutationIdempotency.SaveAsync(db, DeleteScope, key, cancellationToken);
+        if (concurrent is not null)
+            OwnedContentMutationIdempotency.EnsureReplayMatches(concurrent, requestHash);
         return true;
     }
 
-    public async Task<bool> HardDeleteQuestionAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<QuestionQualitySummary> GetQuestionQualitySummaryAsync(
+        CancellationToken cancellationToken)
     {
-        var item = await db.ExamQuestions.SingleOrDefaultAsync(value => value.Id == id, cancellationToken);
-        if (item is null) return false;
-        db.ExamQuestions.Remove(item);
-        await db.SaveChangesAsync(cancellationToken);
-        return true;
+        var correctOptions = await db.ExamQuestions.AsNoTracking()
+            .Where(item => !item.IsDeleted)
+            .Select(item => item.CorrectOption)
+            .ToListAsync(cancellationToken);
+        return ExamQuestionQualityAnalyzer.SummarizeCorrectOptions(correctOptions);
     }
 
     private async Task EnsureAgeGroupExistsAsync(Guid? ageGroupId, CancellationToken cancellationToken)

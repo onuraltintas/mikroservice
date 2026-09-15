@@ -5,14 +5,16 @@ using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Application.Content;
 using SpeedReading.Domain.Assessment;
 using SpeedReading.Domain.Catalog;
+using SpeedReading.Domain.Gamification;
 using SpeedReading.Domain.Sessions;
+using SpeedReading.Domain.Vocabulary;
 using OwnedExerciseSessionStatus = SpeedReading.Domain.Sessions.ExerciseSessionStatus;
 
 namespace SpeedReading.Infrastructure.Persistence;
 
 /// <summary>
 /// Core exercise/session use case backed only by the owned Speed Reading
-/// database. Gamification side effects remain a separate slice.
+/// database. Verified completion also updates gamification in the same unit of work.
 /// </summary>
 internal sealed class OwnedSpeedReadingExerciseSessions(
     OwnedSpeedReadingDbContext db) : ISpeedReadingExerciseSessions
@@ -249,26 +251,28 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             throw new InvalidOperationException("Actions can only be submitted to an active session.");
 
         var actionName = request.Action?.Trim().ToLowerInvariant();
-        var response = actionName switch
-        {
-            "start_reading" => StartReading(session, state, now),
-            "finish_reading" => FinishReading(session, state, now),
-            "adaptive_next_stage" => AdvanceAdaptiveStage(session, state),
-            "focus_start" => StartFocus(session, state, now),
-            "focus_step" => AdvanceFocus(session, state, request, now),
-            "visual_expansion_present" => PresentVisualExpansion(session, state, now),
-            "visual_expansion_answer" => AnswerVisualExpansion(session, state, request, now),
-            "answer_question" => AnswerQuestion(session, state, request),
-            "position_match" => ValidateFocusMatch(session, state, request, "position", now),
-            "word_match" => ValidateFocusMatch(session, state, request, "word", now),
-            "match_attempt" => ValidateFocusMatch(session, state, request, "position", now),
-            "complete" when IsFocusExercise(state) => CompleteFocus(session, state),
-            "advance" => Advance(session, state),
-            "grid_click" when state.CurrentNumber.HasValue => ClickGrid(session, state, request),
-            "grid_click" => Invalid("Grid cell action is not valid for this exercise."),
-            _ when state.CurrentNumber.HasValue => Invalid("Grid cell action is required."),
-            _ => AdvanceGeneric(session)
-        };
+        var response = actionName == "vocabulary_review"
+            ? await ReviewVocabularyAsync(session, state, request, studentId, now, cancellationToken)
+            : actionName switch
+            {
+                "start_reading" => StartReading(session, state, now),
+                "finish_reading" => FinishReading(session, state, now),
+                "adaptive_next_stage" => AdvanceAdaptiveStage(session, state),
+                "focus_start" => StartFocus(session, state, now),
+                "focus_step" => AdvanceFocus(session, state, request, now),
+                "visual_expansion_present" => PresentVisualExpansion(session, state, now),
+                "visual_expansion_answer" => AnswerVisualExpansion(session, state, request, now),
+                "answer_question" => AnswerQuestion(session, state, request),
+                "position_match" => ValidateFocusMatch(session, state, request, "position", now),
+                "word_match" => ValidateFocusMatch(session, state, request, "word", now),
+                "match_attempt" => ValidateFocusMatch(session, state, request, "position", now),
+                "complete" when IsFocusExercise(state) => CompleteFocus(session, state),
+                "advance" => Advance(session, state),
+                "grid_click" when state.CurrentNumber.HasValue => ClickGrid(session, state, request),
+                "grid_click" => Invalid("Grid cell action is not valid for this exercise."),
+                _ when state.CurrentNumber.HasValue => Invalid("Grid cell action is required."),
+                _ => AdvanceGeneric(session)
+            };
 
         // Start the server clock only after an action was understood. A wrong
         // grid attempt still counts as a real attempt and therefore starts it.
@@ -372,6 +376,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             ? SpeedReadingExerciseSessionRules.CalculateCompositeScore(comprehension, rawWpm)
             : accuracy;
         var weightedKdp = rawWpm.HasValue ? Math.Round(rawWpm.Value * comprehension / 100, 2) : (decimal?)null;
+        var xpAwarded = measurementStatus == SpeedReadingMeasurementStatus.Measured
+            ? SpeedReadingExerciseSessionRules.CalculateXp(score ?? 0, accuracy, timeSpent)
+            : 0;
         state.FinalWpm = rawWpm;
         state.ComprehensionScore = comprehension;
         state.WeightedKdp = weightedKdp;
@@ -406,6 +413,30 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 cancellationToken);
             studentAssignment?.Complete(result.Id, score ?? 0, weightedKdp ?? 0, now);
         }
+
+        if (!isAssessmentSession)
+        {
+            var stats = await GetOrCreateGamificationAsync(studentId, now, cancellationToken);
+            var gamificationWpm = rawWpm.HasValue
+                ? (int?)Math.Round(rawWpm.Value, MidpointRounding.AwayFromZero)
+                : null;
+            stats.RecordVerifiedExerciseCompletion(
+                state.ExerciseTypeName,
+                now,
+                timeSpent,
+                gamificationWpm,
+                measurementStatus == SpeedReadingMeasurementStatus.Measured ? comprehension : null,
+                gamificationWpm.HasValue,
+                xpAwarded,
+                studentId,
+                now);
+            await OwnedGamificationAchievementEvaluator.UnlockEligibleAsync(
+                db,
+                stats,
+                studentId,
+                now,
+                cancellationToken);
+        }
         await db.SaveChangesAsync(cancellationToken);
 
         return ToResult(
@@ -413,10 +444,23 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             session,
             state,
             score,
-            measurementStatus == SpeedReadingMeasurementStatus.Measured
-                ? SpeedReadingExerciseSessionRules.CalculateXp(score ?? 0, accuracy, timeSpent)
-                : 0,
+            xpAwarded,
             feedback: "Egzersiz tamamlandı.");
+    }
+
+    private async Task<UserGamification> GetOrCreateGamificationAsync(
+        Guid userId,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        var stats = await db.UserGamifications
+            .SingleOrDefaultAsync(item => item.UserId == userId && !item.IsDeleted, cancellationToken);
+        if (stats is not null)
+            return stats;
+
+        stats = UserGamification.CreateDefault(Guid.NewGuid(), userId, now, userId.ToString());
+        db.UserGamifications.Add(stats);
+        return stats;
     }
 
     public async Task PauseAsync(Guid studentId, Guid sessionId, CancellationToken cancellationToken = default)
@@ -599,6 +643,14 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         };
         var engineConfig = ReadObject(config, "engineConfig");
         var effectiveConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
+        if (IsVocabularyExercise(exerciseTypeName, effectiveConfig))
+        {
+            state.VocabularyWords = await LoadVocabularyWordsAsync(
+                effectiveConfig,
+                profileAgeGroupId,
+                difficultyLevel,
+                cancellationToken);
+        }
         if (IsAdaptiveFluency(exerciseTypeName, config))
         {
             state.AdaptiveEnabled = true;
@@ -753,7 +805,11 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
 
         if (IsVisualizationExercise(exerciseTypeName) && state.Questions.Count == 0)
         {
-            state.VisualizationScenes = await LoadVisualizationScenesAsync(exerciseId, config, cancellationToken);
+            state.VisualizationScenes = await LoadVisualizationScenesAsync(
+                exerciseId,
+                config,
+                profileAgeGroupId,
+                cancellationToken);
             state.Questions = state.VisualizationScenes
                 .SelectMany(scene => scene.Questions)
                 .Select(ToSessionQuestion)
@@ -781,6 +837,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             state.TotalSteps = ReadPositiveInt(config, "totalSteps")
                 ?? ReadPositiveInt(config, "itemCount")
                 ?? ReadPositiveInt(config, "rounds")
+                ?? (state.VocabularyWords.Count > 0 ? state.VocabularyWords.Count : (int?)null)
                 ?? (IsVisualizationExercise(exerciseTypeName)
                     ? state.Questions.Count
                     : state.Questions.Count > 0 ? 1 + state.Questions.Count : state.Words.Length);
@@ -1193,6 +1250,62 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             isCorrect: null);
     }
 
+    private async Task<ExerciseActionValidationResponse> ReviewVocabularyAsync(
+        ExerciseSession session,
+        SessionState state,
+        ExerciseActionRequest request,
+        Guid studentId,
+        DateTime reviewedAt,
+        CancellationToken cancellationToken)
+    {
+        var vocabularyItemId = ReadGuid(request.CustomData, "vocabularyItemId");
+        var isCorrect = ReadBoolean(request.CustomData, "isCorrect");
+        if (!vocabularyItemId.HasValue || !isCorrect.HasValue
+            || state.VocabularyWords.All(item => item.Id != vocabularyItemId.Value))
+        {
+            return Invalid("Kelime yanıtı bu oturumdaki merkezi kelime havuzuyla eşleşmiyor.");
+        }
+
+        if (state.Answers.Any(item => item.QuestionId == vocabularyItemId.Value))
+            return Invalid("Bu kelime yanıtı daha önce kaydedildi.");
+
+        var review = await OwnedVocabularyProgressRecorder.RecordAsync(
+            db,
+            studentId,
+            vocabularyItemId.Value,
+            isCorrect.Value,
+            reviewedAt,
+            cancellationToken);
+        if (!review.Found)
+            return Invalid("Kelime artık merkezi havuzda bulunmuyor.");
+
+        session.RecordAnswer(
+            vocabularyItemId.Value,
+            isCorrect.Value ? "known" : "unknown",
+            isCorrect.Value,
+            Math.Max(request.ResponseTime ?? 0, 0) / 1_000,
+            bloomLevel: 0);
+        state.Answers.Add(new SessionAnswer
+        {
+            QuestionId = vocabularyItemId.Value,
+            Answer = isCorrect.Value ? "known" : "unknown",
+            IsCorrect = isCorrect.Value,
+            TimeSpentSeconds = Math.Max(request.ResponseTime ?? 0, 0) / 1_000,
+            BloomLevel = 0
+        });
+
+        return Valid(
+            isCorrect.Value ? "Kelime bilindi olarak kaydedildi." : "Kelime tekrar havuzuna alındı.",
+            session.CurrentStep,
+            isCompleted: session.CurrentStep >= session.TotalSteps,
+            isCorrect: isCorrect.Value,
+            feedbackData: JsonSerializer.SerializeToElement(new
+            {
+                box = review.CurrentBox,
+                masteredNow = review.IsNewMastery
+            }, JsonOptions));
+    }
+
     private static ExerciseActionValidationResponse ValidateFocusMatch(
         ExerciseSession session,
         SessionState state,
@@ -1448,6 +1561,11 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         exerciseTypeName.Contains("visualization", StringComparison.OrdinalIgnoreCase)
         || exerciseTypeName.Contains("visualisation", StringComparison.OrdinalIgnoreCase);
 
+    private static bool IsVocabularyExercise(string exerciseTypeName, JsonElement config) =>
+        exerciseTypeName.Contains("vocabulary", StringComparison.OrdinalIgnoreCase)
+        || exerciseTypeName.Contains("kelime", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(ReadString(config, "engineType"), "vocabulary_builder", StringComparison.OrdinalIgnoreCase);
+
     private static bool IsGridExercise(string exerciseTypeName, JsonElement config)
     {
         if (exerciseTypeName.Contains("schulte", StringComparison.OrdinalIgnoreCase)
@@ -1458,9 +1576,65 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         return string.Equals(ReadString(nestedConfig, "engineType"), "grid_interaction", StringComparison.OrdinalIgnoreCase);
     }
 
+    private async Task<List<VocabularyWordState>> LoadVocabularyWordsAsync(
+        JsonElement config,
+        Guid? profileAgeGroupId,
+        int exerciseDifficultyLevel,
+        CancellationToken cancellationToken)
+    {
+        var vocabulary = ReadObject(config, "vocabulary");
+        var configuredIds = ReadGuidArray(config, "vocabularyItemIds")
+            .Concat(ReadGuidArray(vocabulary, "itemIds"))
+            .Distinct()
+            .ToArray();
+        if (configuredIds.Length == 0 && vocabulary.ValueKind != JsonValueKind.Object)
+            return [];
+
+        var query = db.VocabularyItems.AsNoTracking()
+            .Where(item => !item.IsDeleted
+                && (!profileAgeGroupId.HasValue
+                    || item.TargetAgeGroupId == null
+                    || item.TargetAgeGroupId == profileAgeGroupId.Value));
+        if (configuredIds.Length > 0)
+        {
+            var items = await query.Where(item => configuredIds.Contains(item.Id))
+                .ToListAsync(cancellationToken);
+            var byId = items.ToDictionary(item => item.Id);
+            return configuredIds
+                .Where(byId.ContainsKey)
+                .Select(id => ToVocabularyWordState(byId[id]))
+                .ToList();
+        }
+
+        var category = ReadString(vocabulary, "category");
+        var difficulty = ReadPositiveInt(vocabulary, "difficultyLevel") ?? exerciseDifficultyLevel;
+        var count = Math.Clamp(ReadPositiveInt(vocabulary, "count") ?? 10, 1, 50);
+        if (!string.IsNullOrWhiteSpace(category))
+            query = query.Where(item => item.Category == category.Trim());
+        if (difficulty is >= 1 and <= 5)
+            query = query.Where(item => item.DifficultyLevel == difficulty);
+
+        return (await query.OrderBy(item => item.Word).Take(count).ToListAsync(cancellationToken))
+            .Select(ToVocabularyWordState)
+            .ToList();
+    }
+
+    private static VocabularyWordState ToVocabularyWordState(VocabularyItem item) => new()
+    {
+        Id = item.Id,
+        Word = item.Word,
+        Definition = item.Definition,
+        ExampleSentence = item.ExampleSentence,
+        Synonyms = item.Synonyms,
+        Antonyms = item.Antonyms,
+        Category = item.Category,
+        DifficultyLevel = item.DifficultyLevel
+    };
+
     private async Task<List<VisualizationSceneState>> LoadVisualizationScenesAsync(
         Guid exerciseId,
         JsonElement config,
+        Guid? profileAgeGroupId,
         CancellationToken cancellationToken)
     {
         var configuredScenes = ReadVisualizationScenes(config);
@@ -1468,7 +1642,11 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             return configuredScenes;
 
         var scenes = await db.VisualizationScenes.AsNoTracking()
-            .Where(item => item.ExerciseId == exerciseId && !item.IsDeleted)
+            .Where(item => item.ExerciseId == exerciseId
+                && !item.IsDeleted
+                && (!profileAgeGroupId.HasValue
+                    || item.TargetAgeGroupId == null
+                    || item.TargetAgeGroupId == profileAgeGroupId.Value))
             .OrderBy(item => item.DisplayOrder)
             .ToListAsync(cancellationToken);
         if (scenes.Count == 0)
@@ -1851,6 +2029,52 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         return Guid.TryParse(value, out var id) && id != Guid.Empty ? id : null;
     }
 
+    private static Guid[] ReadGuidArray(JsonElement element, string propertyName)
+    {
+        if (element.ValueKind != JsonValueKind.Object)
+            return [];
+        foreach (var property in element.EnumerateObject())
+        {
+            if (property.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase)
+                && property.Value.ValueKind == JsonValueKind.Array)
+            {
+                return property.Value.EnumerateArray()
+                    .Where(item => item.ValueKind == JsonValueKind.String
+                        && Guid.TryParse(item.GetString(), out _))
+                    .Select(item => Guid.Parse(item.GetString()!))
+                    .Where(item => item != Guid.Empty)
+                    .ToArray();
+            }
+        }
+        return [];
+    }
+
+    private static Guid? ReadGuid(
+        IReadOnlyDictionary<string, JsonElement>? values,
+        string propertyName)
+    {
+        if (values is null)
+            return null;
+        var pair = values.FirstOrDefault(item => item.Key.Equals(propertyName, StringComparison.OrdinalIgnoreCase));
+        return pair.Value.ValueKind == JsonValueKind.String
+            && Guid.TryParse(pair.Value.GetString(), out var id)
+            && id != Guid.Empty
+            ? id
+            : null;
+    }
+
+    private static bool? ReadBoolean(
+        IReadOnlyDictionary<string, JsonElement>? values,
+        string propertyName)
+    {
+        if (values is null)
+            return null;
+        var pair = values.FirstOrDefault(item => item.Key.Equals(propertyName, StringComparison.OrdinalIgnoreCase));
+        return pair.Value.ValueKind is JsonValueKind.True or JsonValueKind.False
+            ? pair.Value.GetBoolean()
+            : null;
+    }
+
     private static int[] ReadIntArray(JsonElement element, string propertyName)
     {
         if (element.ValueKind != JsonValueKind.Object)
@@ -1982,6 +2206,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public List<SessionQuestion> Questions { get; set; } = [];
         public List<SessionAnswer> Answers { get; set; } = [];
         public List<VisualizationSceneState> VisualizationScenes { get; set; } = [];
+        public List<VocabularyWordState> VocabularyWords { get; set; } = [];
         public Dictionary<string, JsonElement>? CustomData { get; set; }
     }
 
@@ -2013,6 +2238,18 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public string QuestionType { get; set; } = "detail";
         public int DisplayOrder { get; set; }
         public string? HintText { get; set; }
+    }
+
+    private sealed class VocabularyWordState
+    {
+        public Guid Id { get; set; }
+        public string Word { get; set; } = string.Empty;
+        public string Definition { get; set; } = string.Empty;
+        public string? ExampleSentence { get; set; }
+        public string? Synonyms { get; set; }
+        public string? Antonyms { get; set; }
+        public string Category { get; set; } = string.Empty;
+        public int DifficultyLevel { get; set; }
     }
 
     private sealed class SessionQuestion

@@ -60,6 +60,7 @@ public sealed class VisualizationController(ISpeedReadingVisualization visualiza
         scene.Duration,
         scene.DisplayOrder,
         scene.DifficultyLevel,
+        scene.Mode,
         Questions = scene.Questions.Select(question => new
         {
             question.Id,

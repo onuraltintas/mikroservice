@@ -47,6 +47,7 @@ public sealed class VisualizationAdminController(ISpeedReadingVisualization visu
     [HttpPost]
     public async Task<IActionResult> CreateScene(
         [FromBody] VisualizationSceneRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
         CancellationToken cancellationToken = default)
     {
         if (!TryGetCurrentUserId(out var actorId))
@@ -56,7 +57,7 @@ public sealed class VisualizationAdminController(ISpeedReadingVisualization visu
 
         try
         {
-            var id = await visualization.CreateSceneAsync(request, actorId, cancellationToken);
+            var id = await visualization.CreateSceneAsync(request, actorId, idempotencyKey ?? string.Empty, cancellationToken);
             return CreatedAtAction(nameof(GetScene), new { id }, id);
         }
         catch (KeyNotFoundException exception)
@@ -73,6 +74,7 @@ public sealed class VisualizationAdminController(ISpeedReadingVisualization visu
     public async Task<IActionResult> UpdateScene(
         Guid id,
         [FromBody] VisualizationSceneRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
         CancellationToken cancellationToken = default)
     {
         if (!TryGetCurrentUserId(out var actorId))
@@ -82,7 +84,7 @@ public sealed class VisualizationAdminController(ISpeedReadingVisualization visu
 
         try
         {
-            return await visualization.UpdateSceneAsync(id, request, actorId, cancellationToken)
+            return await visualization.UpdateSceneAsync(id, request, actorId, idempotencyKey ?? string.Empty, cancellationToken)
                 ? NoContent()
                 : NotFound(new { success = false, message = "Scene not found" });
         }
@@ -97,14 +99,17 @@ public sealed class VisualizationAdminController(ISpeedReadingVisualization visu
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> DeleteScene(Guid id, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> DeleteScene(
+        Guid id,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
     {
         if (!TryGetCurrentUserId(out var actorId))
         {
             return Unauthorized();
         }
 
-        return await visualization.DeleteSceneAsync(id, actorId, cancellationToken)
+        return await visualization.DeleteSceneAsync(id, actorId, idempotencyKey ?? string.Empty, cancellationToken)
             ? NoContent()
             : NotFound(new { success = false, message = "Scene not found" });
     }

@@ -236,6 +236,8 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.LevelIcon).HasMaxLength(50).IsRequired();
             entity.Property(item => item.MaxComprehensionScore).HasPrecision(18, 2);
             entity.Property(item => item.MaxRSVPComprehension).HasPrecision(18, 2);
+            entity.Property(item => item.TotalRsvpSessionsCompleted)
+                .HasColumnName("total_rsvp_sessions_completed");
             entity.Property(item => item.CompletedExerciseTypesJson).HasColumnType("jsonb").IsRequired();
             entity.Property(item => item.LearnedVocabularyCategoriesJson).HasColumnType("jsonb").IsRequired();
             entity.Property(item => item.LearnedVocabularyCategoriesMapJson).HasColumnType("jsonb").IsRequired();
@@ -280,6 +282,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.DisplayOrder).HasColumnName("display_order");
             entity.Property(item => item.DifficultyLevel).HasColumnName("difficulty_level");
             entity.Property(item => item.TargetAgeGroupId).HasColumnName("target_age_group_id");
+            entity.Property(item => item.Mode).HasColumnName("mode").HasMaxLength(20).IsRequired();
             entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");
             entity.Property(item => item.DeletedAt).HasColumnName("deleted_at");
             entity.Property(item => item.DeletedBy).HasColumnName("deleted_by").HasMaxLength(100);
@@ -327,6 +330,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.VocabularyItemId).HasColumnName("vocabulary_item_id");
             entity.Property(item => item.Box).HasColumnName("box");
             entity.Property(item => item.ConsecutiveCorrectCount).HasColumnName("consecutive_correct_count");
+            entity.Property(item => item.HasBeenMastered).HasColumnName("has_been_mastered");
             entity.Property(item => item.NextReviewDate).HasColumnName("next_review_date");
             entity.Property(item => item.LastReviewedAt).HasColumnName("last_reviewed_at");
             entity.Property(item => item.IsDeleted).HasColumnName("is_deleted");

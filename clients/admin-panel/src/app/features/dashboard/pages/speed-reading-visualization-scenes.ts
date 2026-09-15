@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Observable, finalize } from 'rxjs';
 import {
   SpeedReadingAdminService,
+  SpeedReadingAgeGroup,
   SpeedReadingVisualizationExerciseOption,
   SpeedReadingVisualizationImportResult,
   SpeedReadingVisualizationPage,
@@ -27,20 +28,20 @@ import { ToasterService } from '../../../core/services/toaster.service';
       </header>
 
       @if (error()) { <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">{{ error() }}</div> }
-      @if (importResult()) { <div role="status" class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">{{ importResult()!.message }} <span class="muted">Başarılı: {{ importResult()!.successCount }}, başarısız: {{ importResult()!.failedCount }}</span></div> }
+      @if (importResult()) { <div role="status" class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"><p>{{ importResult()!.message }} <span class="muted">Başarılı: {{ importResult()!.successCount }}, başarısız: {{ importResult()!.failedCount }}</span></p>@if (importResult()!.errors.length) {<ul class="import-errors"><li *ngFor="let item of importResult()!.errors">{{ item }}</li></ul>}</div> }
 
       @if (sceneEditing()) {
         <div class="dialog-backdrop" role="presentation" (click)="cancelSceneEdit()">
         <form (ngSubmit)="saveScene()" class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="scene-dialog-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (click)="$event.stopPropagation()">
           <div class="dialog-header"><div><p class="dialog-eyebrow">Görselleştirme sahnesi</p><h2 id="scene-dialog-title">{{ sceneEditingId ? 'Sahneyi ve soruları düzenle' : 'Yeni sahne ve sorular' }}</h2></div><button type="button" (click)="cancelSceneEdit()" class="icon-button" aria-label="Dialogu kapat"><mat-icon>close</mat-icon></button></div>
           <div class="dialog-body">
-          <div class="form-grid"><label class="wide">Sahne açıklaması<textarea [(ngModel)]="sceneDraft.description" name="sceneDescription" required minlength="10" maxlength="10000"></textarea></label><label>Egzersiz<select [(ngModel)]="sceneDraft.exerciseId" name="sceneExercise" required><option value="">Seçin</option>@for (exercise of exercises(); track exercise.id) {<option [value]="exercise.id">{{ exercise.title }} — Seviye {{ exercise.difficultyLevel }}</option>}</select></label><label>Görsel URL<input [(ngModel)]="sceneDraft.imageUrl" name="sceneImageUrl" maxlength="2000" /></label><label>Süre (saniye)<input type="number" [(ngModel)]="sceneDraft.duration" name="sceneDuration" min="5" max="120" required /></label><label>Zorluk<input type="number" [(ngModel)]="sceneDraft.difficultyLevel" name="sceneDifficulty" min="1" max="5" required /></label><label>Görüntüleme sırası<input type="number" [(ngModel)]="sceneDraft.displayOrder" name="sceneOrder" min="1" max="10000" required /></label><label>Hedef yaş grubu ID (opsiyonel)<input [(ngModel)]="sceneDraft.targetAgeGroupConfigurationId" name="sceneAgeGroup" /></label></div>
+          <div class="form-grid"><label class="wide">Sahne açıklaması<textarea [(ngModel)]="sceneDraft.description" name="sceneDescription" required minlength="10" maxlength="10000"></textarea></label><label>Egzersiz<select [(ngModel)]="sceneDraft.exerciseId" name="sceneExercise" required><option value="">Seçin</option>@for (exercise of exercises(); track exercise.id) {<option [value]="exercise.id">{{ exercise.title }} — Seviye {{ exercise.difficultyLevel }}</option>}</select></label><label>Görsel URL<input [(ngModel)]="sceneDraft.imageUrl" name="sceneImageUrl" maxlength="2000" /></label><label>Süre (saniye)<input type="number" [(ngModel)]="sceneDraft.duration" name="sceneDuration" min="5" max="120" required /></label><label>Zorluk<input type="number" [(ngModel)]="sceneDraft.difficultyLevel" name="sceneDifficulty" min="1" max="5" required /></label><label>Görüntüleme sırası<input type="number" [(ngModel)]="sceneDraft.displayOrder" name="sceneOrder" min="1" max="10000" required /></label><label>Çalışma modu<select [(ngModel)]="sceneDraft.mode" name="sceneMode"><option value="practice">Alıştırma</option><option value="assessment">Ölçme</option></select><span class="hint">Ölçme modunda en az bir soru gerekir; alıştırma modunda soru isteğe bağlıdır.</span></label><label>Hedef yaş grubu<select [(ngModel)]="sceneDraft.targetAgeGroupConfigurationId" name="sceneAgeGroup"><option [ngValue]="null">Tüm yaş grupları</option>@for (group of ageGroups(); track group.id) {<option [ngValue]="group.id">{{ group.displayName }} ({{ group.minAge }}–{{ group.maxAge }} yaş)</option>}</select></label></div>
           <section class="question-section"><div class="flex items-center justify-between gap-3"><div><h3 class="font-semibold text-gray-900 dark:text-white">Sorular</h3><p class="muted">Sahne sonunda kullanıcıya sorulacak hatırlama soruları.</p></div><button type="button" (click)="addQuestion()" class="secondary">Soru ekle</button></div>@for (question of sceneDraft.questions; track $index; let index = $index) {<article class="question-card"><div class="flex items-center justify-between gap-3"><strong>{{ index + 1 }}. soru</strong><button type="button" (click)="removeQuestion(index)" class="danger">Sil</button></div><label>Soru metni<input [(ngModel)]="question.questionText" [name]="'questionText' + index" required maxlength="1000" /></label><div class="form-grid">@for (option of question.options; track $index; let optionIndex = $index) {<label>Şık {{ optionIndex + 1 }}<input [(ngModel)]="question.options[optionIndex]" [name]="'questionOption' + index + '-' + optionIndex" required maxlength="500" /></label>}<label>Doğru cevap<select [(ngModel)]="question.correctAnswer" [name]="'questionCorrect' + index" required><option value="">Seçin</option>@for (option of question.options; track $index; let optionIndex = $index) {<option [value]="option">{{ option || 'Şık ' + (optionIndex + 1) }}</option>}</select></label><label>Soru tipi<input [(ngModel)]="question.questionType" [name]="'questionType' + index" required maxlength="80" /></label><label class="wide">İpucu<textarea [(ngModel)]="question.hintText" [name]="'questionHint' + index" maxlength="500"></textarea></label></div></article>} @empty {<p class="empty">Bu sahne için henüz soru eklenmedi.</p>}</section>
           </div><div class="dialog-footer"><button type="button" (click)="cancelSceneEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div>
         </form></div>
       }
 
-      <section class="data-card space-y-4"><form (ngSubmit)="loadScenes()" class="inline-filter"><input [(ngModel)]="searchTerm" name="sceneSearch" placeholder="Açıklamada ara" maxlength="100" /><select [(ngModel)]="difficultyLevel" name="sceneDifficultyFilter"><option [ngValue]="undefined">Tüm seviyeler</option><option [ngValue]="1">Seviye 1</option><option [ngValue]="2">Seviye 2</option><option [ngValue]="3">Seviye 3</option><option [ngValue]="4">Seviye 4</option><option [ngValue]="5">Seviye 5</option></select><button type="submit" class="secondary">Filtrele</button></form><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Açıklama</th><th>Egzersiz</th><th>Seviye</th><th>Süre</th><th>Soru</th><th></th></tr></thead><tbody>@for (scene of scenes().items; track scene.id) {<tr><td>{{ scene.description | slice:0:100 }}{{ scene.description.length > 100 ? '…' : '' }}</td><td>{{ exerciseTitle(scene.exerciseId) }}</td><td>{{ scene.difficultyLevel }}</td><td>{{ scene.duration }} sn</td><td>{{ scene.questions.length }}</td><td class="actions"><button type="button" (click)="startSceneEdit(scene)">Düzenle</button><button type="button" (click)="deleteScene(scene)" class="danger">Sil</button></td></tr>} @empty {<tr><td colspan="6" class="empty">Sahne bulunamadı.</td></tr>}</tbody></table></div><div class="pager"><span>Toplam {{ scenes().totalCount }}</span><button type="button" (click)="changePage(pageNumber - 1)" [disabled]="pageNumber <= 1 || loading()">Önceki</button><button type="button" (click)="changePage(pageNumber + 1)" [disabled]="pageNumber >= totalPages() || loading()">Sonraki</button></div></section>
+      <section class="data-card space-y-4"><form (ngSubmit)="loadScenes()" class="inline-filter"><input [(ngModel)]="searchTerm" name="sceneSearch" placeholder="Açıklamada ara" maxlength="100" /><select [(ngModel)]="difficultyLevel" name="sceneDifficultyFilter"><option [ngValue]="undefined">Tüm seviyeler</option><option [ngValue]="1">Seviye 1</option><option [ngValue]="2">Seviye 2</option><option [ngValue]="3">Seviye 3</option><option [ngValue]="4">Seviye 4</option><option [ngValue]="5">Seviye 5</option></select><button type="submit" class="secondary">Filtrele</button></form><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Açıklama</th><th>Egzersiz</th><th>Seviye</th><th>Süre</th><th>Mod</th><th>Soru</th><th></th></tr></thead><tbody>@for (scene of scenes().items; track scene.id) {<tr><td>{{ scene.description | slice:0:100 }}{{ scene.description.length > 100 ? '…' : '' }}</td><td>{{ exerciseTitle(scene.exerciseId) }}</td><td>{{ scene.difficultyLevel }}</td><td>{{ scene.duration }} sn</td><td>{{ scene.mode === 'practice' ? 'Alıştırma' : 'Ölçme' }}</td><td>{{ scene.questions.length }}</td><td class="actions"><button type="button" (click)="startSceneEdit(scene)">Düzenle</button><button type="button" (click)="deleteScene(scene)" class="danger">Sil</button></td></tr>} @empty {<tr><td colspan="7" class="empty">Sahne bulunamadı.</td></tr>}</tbody></table></div><div class="pager"><span>Toplam {{ scenes().totalCount }}</span><button type="button" (click)="changePage(pageNumber - 1)" [disabled]="pageNumber <= 1 || loading()">Önceki</button><button type="button" (click)="changePage(pageNumber + 1)" [disabled]="pageNumber >= totalPages() || loading()">Sonraki</button></div></section>
     </main>
   `,
   styles: [`
@@ -65,6 +66,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
     .question-card { display: grid; gap: .75rem; border: 1px solid var(--ui-border); border-radius: .6rem; padding: .8rem; }
     .empty { color: var(--ui-text-muted); padding: 1.25rem; text-align: center; }
     .upload { cursor: pointer; } .upload input { display: none; }
+    .import-errors { max-height: 10rem; overflow: auto; margin-top: .5rem; padding-left: 1.25rem; }
     .dialog-backdrop { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .68); backdrop-filter: blur(4px); }
     .dialog-panel { display: flex; width: min(76rem, 100%); height: min(52rem, calc(100vh - 2rem)); flex-direction: column; overflow: hidden; border: 1px solid var(--ui-border); border-radius: 1rem; background: var(--ui-surface); color: var(--ui-text); box-shadow: 0 24px 70px rgb(15 23 42 / .28); }
     .dialog-header, .dialog-footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; border-color: var(--ui-border); }
@@ -81,6 +83,7 @@ export class SpeedReadingVisualizationScenesComponent implements OnInit {
 
   readonly scenes = signal<SpeedReadingVisualizationPage>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
   readonly exercises = signal<SpeedReadingVisualizationExerciseOption[]>([]);
+  readonly ageGroups = signal<SpeedReadingAgeGroup[]>([]);
   readonly sceneEditing = signal(false);
   readonly loading = signal(false);
   readonly saving = signal(false);
@@ -98,6 +101,7 @@ export class SpeedReadingVisualizationScenesComponent implements OnInit {
   ngOnInit(): void {
     this.loadExercises();
     this.loadScenes();
+    this.loadAgeGroups();
   }
 
   @HostListener('document:keydown.escape')
@@ -117,6 +121,13 @@ export class SpeedReadingVisualizationScenesComponent implements OnInit {
     this.service.getVisualizationExercises().subscribe({
       next: value => this.exercises.set(value),
       error: () => this.error.set('Görselleştirme egzersizleri yüklenemedi.')
+    });
+  }
+
+  loadAgeGroups(): void {
+    this.service.getActiveAgeGroups().subscribe({
+      next: value => this.ageGroups.set(value),
+      error: () => this.error.set('Yaş grupları yüklenemedi.')
     });
   }
 
@@ -199,7 +210,7 @@ export class SpeedReadingVisualizationScenesComponent implements OnInit {
   }
 
   private emptyScene(): SpeedReadingVisualizationSceneRequest {
-    return { exerciseId: '', description: '', imageUrl: '', duration: 30, displayOrder: 1, difficultyLevel: 1, questions: [], targetAgeGroupConfigurationId: null };
+    return { exerciseId: '', description: '', imageUrl: '', duration: 30, displayOrder: 1, difficultyLevel: 1, questions: [], targetAgeGroupConfigurationId: null, mode: 'practice' };
   }
 
   private emptyQuestion(displayOrder: number): SpeedReadingVisualizationQuestionRequest {
@@ -214,7 +225,9 @@ export class SpeedReadingVisualizationScenesComponent implements OnInit {
       duration: scene.duration,
       displayOrder: scene.displayOrder,
       difficultyLevel: scene.difficultyLevel,
-      questions: scene.questions.map(question => ({ ...question }))
+      questions: scene.questions.map(question => ({ ...question })),
+      targetAgeGroupConfigurationId: scene.targetAgeGroupConfigurationId,
+      mode: scene.mode ?? 'assessment'
     };
   }
 }

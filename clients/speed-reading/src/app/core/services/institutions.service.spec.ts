@@ -78,8 +78,8 @@ describe('InstitutionsService', () => {
     service.updateInstitution('institution-1', {
       name: 'Güncel Kolej',
       address: 'Yeni adres',
-      city: 'Ankara',
-      district: 'Çankaya',
+      provinceId: 'province-ankara',
+      districtId: 'district-cankaya',
       phone: '555',
       email: 'okul@example.com'
     }).subscribe();
@@ -89,8 +89,8 @@ describe('InstitutionsService', () => {
     expect(request.request.body).toEqual({
       name: 'Güncel Kolej',
       address: 'Yeni adres',
-      city: 'Ankara',
-      district: 'Çankaya',
+      provinceId: 'province-ankara',
+      districtId: 'district-cankaya',
       phone: '555',
       email: 'okul@example.com'
     });

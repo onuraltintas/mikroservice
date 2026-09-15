@@ -100,6 +100,190 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Fact]
+    public void Verified_exercise_completion_updates_gamification_from_server_metrics()
+    {
+        var userId = Guid.NewGuid();
+        var completedAt = new DateTime(2026, 9, 15, 9, 30, 0, DateTimeKind.Utc);
+        var stats = UserGamification.CreateDefault(Guid.NewGuid(), userId, completedAt, userId.ToString());
+
+        stats.RecordVerifiedExerciseCompletion(
+            "RSVP",
+            completedAt,
+            durationSeconds: 90,
+            rawWpm: 280,
+            comprehensionScore: 86,
+            isReadingSession: true,
+            xpAwarded: 25,
+            actorId: userId,
+            updatedAt: completedAt);
+
+        stats.TotalActivitiesCompleted.Should().Be(1);
+        stats.TotalExercisesCompleted.Should().Be(1);
+        stats.TotalReadingSessionsCompleted.Should().Be(1);
+        stats.TotalRsvpSessionsCompleted.Should().Be(1);
+        stats.TotalReadingMinutes.Should().Be(2);
+        stats.MaxWPM.Should().Be(280);
+        stats.MaxComprehensionScore.Should().Be(86);
+        stats.MaxRSVPWPM.Should().Be(280);
+        stats.MaxRSVPComprehension.Should().Be(86);
+        stats.CurrentStreak.Should().Be(1);
+        stats.TotalXP.Should().Be(25);
+        stats.CompletedExerciseTypesJson.Should().Contain("RSVP");
+    }
+
+    [Fact]
+    public void Verified_vocabulary_review_tracks_mastery_and_learning_dimensions()
+    {
+        var userId = Guid.NewGuid();
+        var reviewedAt = new DateTime(2026, 9, 15, 10, 0, 0, DateTimeKind.Utc);
+        var stats = UserGamification.CreateDefault(Guid.NewGuid(), userId, reviewedAt, userId.ToString());
+
+        stats.RecordVerifiedVocabularyReview(
+            category: "Akademik",
+            difficultyLevel: 3,
+            currentBox: 5,
+            consecutiveCorrectCount: 5,
+            isCorrect: true,
+            isNewMastery: true,
+            actorId: userId,
+            updatedAt: reviewedAt);
+
+        stats.TotalVocabularyQuestionsAnswered.Should().Be(1);
+        stats.TotalVocabularyWordsLearned.Should().Be(1);
+        stats.MaxVocabularyBoxReached.Should().Be(5);
+        stats.MaxVocabularyStreak.Should().Be(5);
+        stats.LearnedVocabularyCategoriesJson.Should().Contain("Akademik");
+        stats.LearnedVocabularyDifficultiesJson.Should().Contain("3");
+    }
+
+    [Fact]
+    public void Vocabulary_progress_marks_first_mastery_only_once()
+    {
+        var userId = Guid.NewGuid();
+        var reviewedAt = new DateTime(2026, 9, 15, 10, 0, 0, DateTimeKind.Utc);
+        var progress = UserVocabularyProgress.Create(Guid.NewGuid(), userId, Guid.NewGuid(), reviewedAt);
+
+        progress.Review(true, userId, reviewedAt).IsNewMastery.Should().BeFalse();
+        progress.Review(true, userId, reviewedAt).IsNewMastery.Should().BeFalse();
+        progress.Review(true, userId, reviewedAt).IsNewMastery.Should().BeFalse();
+        progress.Review(true, userId, reviewedAt).IsNewMastery.Should().BeTrue();
+        progress.Review(false, userId, reviewedAt).IsNewMastery.Should().BeFalse();
+        progress.Review(true, userId, reviewedAt).IsNewMastery.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Verified_exercise_history_can_be_rebuilt_without_changing_vocabulary_progress()
+    {
+        var userId = Guid.NewGuid();
+        var first = new DateTime(2026, 9, 14, 10, 0, 0, DateTimeKind.Utc);
+        var stats = UserGamification.CreateDefault(Guid.NewGuid(), userId, first, userId.ToString());
+        stats.RecordVerifiedVocabularyReview("Akademik", 2, 5, 4, true, true, userId, first);
+
+        stats.RebuildVerifiedExerciseHistory(
+        [
+            new VerifiedExerciseCompletion("RSVP", first, 60, 240, 82, true, 20),
+            new VerifiedExerciseCompletion("SchulteTable", first.AddDays(1), 45, null, null, false, 10)
+        ],
+        achievementXp: 15,
+        actorId: userId,
+        updatedAt: first.AddDays(1));
+
+        stats.TotalActivitiesCompleted.Should().Be(2);
+        stats.TotalExercisesCompleted.Should().Be(2);
+        stats.TotalReadingSessionsCompleted.Should().Be(1);
+        stats.TotalRsvpSessionsCompleted.Should().Be(1);
+        stats.TotalXP.Should().Be(45);
+        stats.TotalVocabularyWordsLearned.Should().Be(1);
+        stats.MaxVocabularyBoxReached.Should().Be(5);
+        stats.CompletedExerciseTypesJson.Should().Contain("RSVP");
+        stats.CompletedExerciseTypesJson.Should().Contain("SchulteTable");
+    }
+
+    [Fact]
+    public void Active_exercise_configuration_requires_a_supported_matching_engine()
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            "{\"engineType\":\"text_stream\",\"engineConfig\":{\"engineType\":\"text_stream\"}}",
+            "grid_interaction");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Active_program_requires_a_usable_weekly_plan()
+    {
+        var action = () => ProgramWeeklyPatternRules.Validate("{}", isAssessment: false, isActive: true);
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Achievement_criteria_require_the_metric_supported_by_the_evaluator()
+    {
+        var action = () => AchievementCriteriaRules.Validate(
+            "not_a_metric",
+            "{\"count\":1}",
+            isRepeatable: false);
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Theory]
+    [InlineData("SchulteTable", "attention-and-eye-movement")]
+    [InlineData("RSVP", "reading-fluency")]
+    [InlineData("Visualization", "comprehension-and-strategy")]
+    [InlineData("Vocabulary", "vocabulary-and-language")]
+    public void Exercise_taxonomy_classifies_supported_engines(string engine, string categoryKey)
+    {
+        ExerciseTaxonomy.ResolveCategoryKey(engine).Should().Be(categoryKey);
+    }
+
+    [Fact]
+    public void Question_quality_review_flags_a_correct_answer_that_is_uniquely_longest()
+    {
+        var review = ExamQuestionQualityAnalyzer.Analyze(new ExamQuestionRequest(
+            "Kısa metin.", "Soru?", "Kısa", "Orta", "Açıklaması gereksiz biçimde çok uzun ve belirgin doğru cevap", "Kısa seçenek", null,
+            "C", 6, 1, 0, null, 1));
+
+        review.Warnings.Should().Contain(item => item.Code == "correct-option-length-cue");
+    }
+
+    [Fact]
+    public void Visualization_scene_keeps_an_explicit_practice_mode()
+    {
+        var scene = VisualizationScene.Create(
+            Guid.NewGuid(), Guid.NewGuid(), "Bir sahne açıklaması", null, 30, 1, 1, null,
+            Guid.NewGuid(), DateTime.UtcNow, "practice");
+
+        scene.Mode.Should().Be("practice");
+    }
+
+    [Fact]
+    public void Exam_question_rejects_duplicate_answer_options()
+    {
+        var action = () => ExamQuestion.Create(
+            Guid.NewGuid(),
+            "Kısa bir metin.",
+            "Soru nedir?",
+            "Aynı seçenek",
+            "Aynı seçenek",
+            "Üçüncü seçenek",
+            "Dördüncü seçenek",
+            null,
+            "A",
+            examType: 1,
+            difficulty: 2,
+            wordCount: 0,
+            topic: null,
+            category: 1,
+            targetAgeGroupId: null,
+            createdAt: DateTime.UtcNow,
+            createdBy: Guid.NewGuid());
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
     public void Owned_runtime_does_not_require_legacy_connection()
     {
         var configuration = new ConfigurationManager
@@ -1101,7 +1285,7 @@ public sealed class SpeedReadingOwnedDomainTests
             targetAgeGroupConfigurationId: Guid.NewGuid(),
             minAssessmentScore: 0,
             maxAssessmentScore: 100,
-            weeklyPatternJson: "{}",
+            weeklyPatternJson: "{\"week1\":[{\"type\":\"RSVP\",\"count\":1,\"difficulty\":1}]}",
             initialDifficultyLevel: 1,
             weeksPerDifficultyIncrease: 2,
             maxDifficultyLevel: 5,

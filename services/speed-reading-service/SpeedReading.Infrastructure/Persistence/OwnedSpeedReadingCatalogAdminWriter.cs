@@ -40,7 +40,7 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
                 ?? throw MissingResource(existing.ResourceId, "ExerciseType");
         }
 
-        ValidateExerciseType(request.Name, request.DisplayName, request.Description,
+        var engineType = ValidateExerciseType(request.Name, request.DisplayName, request.Description,
             request.IconName, request.ColorCode, request.SortOrder, request.EngineType);
         await EnsureCategoryExistsAsync(request.CategoryId, cancellationToken);
         var now = DateTime.UtcNow;
@@ -48,7 +48,7 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
             Guid.NewGuid(),
             request.Name,
             request.DisplayName,
-            request.EngineType,
+            engineType,
             request.CategoryId,
             request.Description,
             request.IconName,
@@ -88,7 +88,7 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
                 ?? throw MissingResource(existing.ResourceId, "ExerciseType");
         }
 
-        ValidateExerciseType(request.Name, request.DisplayName, request.Description,
+        var engineType = ValidateExerciseType(request.Name, request.DisplayName, request.Description,
             request.IconName, request.ColorCode, request.SortOrder, request.EngineType);
         await EnsureCategoryExistsAsync(request.CategoryId, cancellationToken);
         var type = await db.ExerciseTypes
@@ -97,7 +97,7 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
         type.Update(
             request.Name,
             request.DisplayName,
-            request.EngineType,
+            engineType,
             request.CategoryId,
             request.Description,
             request.IconName,
@@ -165,6 +165,8 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
         }
 
         var type = await GetExerciseTypeAsync(request.ExerciseTypeId, cancellationToken);
+        if (request.IsActive)
+            ExerciseConfigurationRules.ValidateActiveConfiguration(request.ConfigurationJson, type.EngineType);
         await EnsureAgeGroupExistsAsync(request.TargetAgeGroupConfigurationId, cancellationToken);
         var now = DateTime.UtcNow;
         var exercise = Exercise.Import(
@@ -217,6 +219,8 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
             .SingleOrDefaultAsync(item => item.Id == exerciseId && !item.IsDeleted, cancellationToken)
             ?? throw new NotFoundException("Exercise", exerciseId);
         var type = await GetExerciseTypeAsync(request.ExerciseTypeId, cancellationToken);
+        if (request.IsActive)
+            ExerciseConfigurationRules.ValidateActiveConfiguration(request.ConfigurationJson, type.EngineType);
         await EnsureAgeGroupExistsAsync(request.TargetAgeGroupConfigurationId, cancellationToken);
         exercise.Update(
             request.Title,
@@ -713,7 +717,7 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
             throw new ArgumentException("Idempotency-Key 16-128 güvenli karakterden oluşmalıdır.", nameof(idempotencyKey));
     }
 
-    private static void ValidateExerciseType(
+    private static string ValidateExerciseType(
         string name,
         string displayName,
         string? description,
@@ -730,6 +734,8 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
             || (!string.IsNullOrWhiteSpace(colorCode)
                 && !Regex.IsMatch(colorCode.Trim(), "^#[0-9a-fA-F]{6}$")))
             throw new ArgumentException("Egzersiz türü alanları geçersiz.", nameof(name));
+
+        return ExerciseConfigurationRules.NormalizeEngineType(engineType);
     }
 
     private static void ValidateExercise(

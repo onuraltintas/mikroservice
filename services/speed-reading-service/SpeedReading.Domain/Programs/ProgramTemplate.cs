@@ -64,6 +64,8 @@ public sealed class ProgramTemplate : AggregateRoot
             displayOrder,
             programType,
             examType,
+            isActive,
+            isAssessment,
             actorId);
 
         return Import(
@@ -125,6 +127,8 @@ public sealed class ProgramTemplate : AggregateRoot
             displayOrder,
             programType,
             examType,
+            isActive,
+            isAssessment,
             actorId);
 
         Name = name.Trim();
@@ -203,6 +207,7 @@ public sealed class ProgramTemplate : AggregateRoot
             throw new ArgumentException("Assessment template name is invalid.", nameof(name));
         if (string.IsNullOrWhiteSpace(weeklyPatternJson))
             throw new ArgumentException("Assessment template pattern is required.", nameof(weeklyPatternJson));
+        ProgramWeeklyPatternRules.Validate(weeklyPatternJson, isAssessment: true, isActive: true);
 
         Name = name.Trim();
         WeeklyPatternJson = weeklyPatternJson;
@@ -290,6 +295,8 @@ public sealed class ProgramTemplate : AggregateRoot
         int displayOrder,
         int programType,
         string? examType,
+        bool isActive,
+        bool isAssessment,
         Guid actorId)
     {
         if (actorId == Guid.Empty
@@ -317,9 +324,7 @@ public sealed class ProgramTemplate : AggregateRoot
 
         try
         {
-            using var document = JsonDocument.Parse(weeklyPatternJson);
-            if (document.RootElement.ValueKind is not (JsonValueKind.Object or JsonValueKind.Array))
-                throw new ArgumentException("WeeklyPatternJson must be an object or array.", nameof(weeklyPatternJson));
+            ProgramWeeklyPatternRules.Validate(weeklyPatternJson, isAssessment, isActive);
         }
         catch (JsonException exception)
         {

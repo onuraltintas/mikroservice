@@ -12,6 +12,7 @@ public sealed class UserVocabularyProgress : AggregateRoot
     public Guid VocabularyItemId { get; private set; }
     public int Box { get; private set; }
     public int ConsecutiveCorrectCount { get; private set; }
+    public bool HasBeenMastered { get; private set; }
     public DateTime NextReviewDate { get; private set; }
     public DateTime LastReviewedAt { get; private set; }
     public bool IsDeleted { get; private set; }
@@ -38,11 +39,13 @@ public sealed class UserVocabularyProgress : AggregateRoot
 
     public static UserVocabularyProgress Import(Guid id, Guid userId, Guid vocabularyItemId, int box,
         int consecutiveCorrectCount, DateTime nextReviewDate, DateTime lastReviewedAt, Guid createdBy, DateTime createdAt,
-        DateTime? updatedAt, Guid? updatedBy, bool isDeleted, DateTime? deletedAt, Guid? deletedBy)
+        DateTime? updatedAt, Guid? updatedBy, bool isDeleted, DateTime? deletedAt, Guid? deletedBy,
+        bool hasBeenMastered = false)
     {
         var item = Create(id, userId, vocabularyItemId, createdAt);
         item.Box = Math.Clamp(box, 1, 5);
         item.ConsecutiveCorrectCount = Math.Max(0, consecutiveCorrectCount);
+        item.HasBeenMastered = hasBeenMastered || item.Box >= 5;
         item.NextReviewDate = EnsureUtc(nextReviewDate);
         item.LastReviewedAt = EnsureUtc(lastReviewedAt);
         item.CreatedBy = createdBy == Guid.Empty ? userId.ToString() : createdBy.ToString();
@@ -64,16 +67,22 @@ public sealed class UserVocabularyProgress : AggregateRoot
         UpdatedBy = actorId.ToString();
     }
 
-    public void Review(bool isCorrect, Guid actorId, DateTime at)
+    public VocabularyReviewOutcome Review(bool isCorrect, Guid actorId, DateTime at)
     {
         if (actorId == Guid.Empty) throw new ArgumentException("Vocabulary actor is required.", nameof(actorId));
         var now = EnsureUtc(at);
         LastReviewedAt = now;
         Box = Math.Clamp(Box, 1, 5);
+        var isNewMastery = false;
         if (isCorrect)
         {
             ConsecutiveCorrectCount++;
             Box = Math.Min(5, Box + 1);
+            if (Box == 5 && !HasBeenMastered)
+            {
+                HasBeenMastered = true;
+                isNewMastery = true;
+            }
             NextReviewDate = now.AddDays(Box switch { 2 => 3, 3 => 7, 4 => 14, 5 => 30, _ => 1 });
         }
         else
@@ -84,7 +93,13 @@ public sealed class UserVocabularyProgress : AggregateRoot
         }
         UpdatedAt = now;
         UpdatedBy = actorId.ToString();
+        return new VocabularyReviewOutcome(Box, ConsecutiveCorrectCount, isNewMastery);
     }
 
     private static DateTime EnsureUtc(DateTime value) => value.Kind == DateTimeKind.Utc ? value : value.ToUniversalTime();
 }
+
+public sealed record VocabularyReviewOutcome(
+    int CurrentBox,
+    int ConsecutiveCorrectCount,
+    bool IsNewMastery);

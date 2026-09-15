@@ -12,6 +12,7 @@ namespace SpeedReading.API.Controllers;
 [Authorize]
 public sealed class QuestionBankController(ISpeedReadingQuestionBank questionBank) : ControllerBase
 {
+    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
     [HttpGet]
     public Task<QuestionBankPage> GetQuestions(
         [FromQuery] int pageNumber = 1,
@@ -33,6 +34,7 @@ public sealed class QuestionBankController(ISpeedReadingQuestionBank questionBan
             cancellationToken);
 
     [HttpGet("{id:guid}")]
+    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
     public async Task<IActionResult> GetQuestion(Guid id, CancellationToken cancellationToken = default)
     {
         var question = await questionBank.GetQuestionAsync(id, cancellationToken);
@@ -43,6 +45,7 @@ public sealed class QuestionBankController(ISpeedReadingQuestionBank questionBan
     [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
     public async Task<IActionResult> CreateQuestion(
         [FromBody] ExamQuestionRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
         CancellationToken cancellationToken = default)
     {
         if (!TryGetCurrentUserId(out var actorId))
@@ -52,7 +55,7 @@ public sealed class QuestionBankController(ISpeedReadingQuestionBank questionBan
 
         try
         {
-            return Ok(await questionBank.CreateQuestionAsync(request, actorId, cancellationToken));
+            return Ok(await questionBank.CreateQuestionAsync(request, actorId, idempotencyKey ?? string.Empty, cancellationToken));
         }
         catch (KeyNotFoundException exception)
         {
@@ -64,11 +67,25 @@ public sealed class QuestionBankController(ISpeedReadingQuestionBank questionBan
         }
     }
 
+    [HttpPost("quality-preview")]
+    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    public Task<QuestionQualityReview> PreviewQuality(
+        [FromBody] ExamQuestionRequest request,
+        CancellationToken cancellationToken = default) =>
+        questionBank.PreviewQuestionQualityAsync(request, cancellationToken);
+
+    [HttpGet("quality-summary")]
+    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    public Task<QuestionQualitySummary> GetQualitySummary(
+        CancellationToken cancellationToken = default) =>
+        questionBank.GetQuestionQualitySummaryAsync(cancellationToken);
+
     [HttpPut("{id:guid}")]
     [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
     public async Task<IActionResult> UpdateQuestion(
         Guid id,
         [FromBody] ExamQuestionRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
         CancellationToken cancellationToken = default)
     {
         if (!TryGetCurrentUserId(out var actorId))
@@ -78,7 +95,7 @@ public sealed class QuestionBankController(ISpeedReadingQuestionBank questionBan
 
         try
         {
-            return await questionBank.UpdateQuestionAsync(id, request, actorId, cancellationToken)
+            return await questionBank.UpdateQuestionAsync(id, request, actorId, idempotencyKey ?? string.Empty, cancellationToken)
                 ? NoContent()
                 : NotFound();
         }
@@ -94,24 +111,20 @@ public sealed class QuestionBankController(ISpeedReadingQuestionBank questionBan
 
     [HttpDelete("{id:guid}")]
     [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
-    public async Task<IActionResult> DeleteQuestion(Guid id, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> DeleteQuestion(
+        Guid id,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
     {
         if (!TryGetCurrentUserId(out var actorId))
         {
             return Unauthorized();
         }
 
-        return await questionBank.DeleteQuestionAsync(id, actorId, cancellationToken)
+        return await questionBank.DeleteQuestionAsync(id, actorId, idempotencyKey ?? string.Empty, cancellationToken)
             ? NoContent()
             : NotFound();
     }
-
-    [HttpDelete("{id:guid}/hard")]
-    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
-    public async Task<IActionResult> HardDeleteQuestion(Guid id, CancellationToken cancellationToken = default) =>
-        await questionBank.HardDeleteQuestionAsync(id, cancellationToken)
-            ? NoContent()
-            : NotFound();
 
     private bool TryGetCurrentUserId(out Guid userId)
     {

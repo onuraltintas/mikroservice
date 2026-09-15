@@ -95,6 +95,7 @@ internal sealed class LegacySpeedReadingVocabulary(SpeedReadingDbContext db) : I
     public async Task<VocabularyItemSummary> CreateItemAsync(
         VocabularyItemRequest request,
         Guid actorId,
+        string idempotencyKey,
         CancellationToken cancellationToken)
     {
         ValidateItemRequest(request);
@@ -124,6 +125,7 @@ internal sealed class LegacySpeedReadingVocabulary(SpeedReadingDbContext db) : I
         Guid id,
         VocabularyItemRequest request,
         Guid actorId,
+        string idempotencyKey,
         CancellationToken cancellationToken)
     {
         ValidateItemRequest(request);
@@ -151,7 +153,11 @@ internal sealed class LegacySpeedReadingVocabulary(SpeedReadingDbContext db) : I
         return await GetItemAsync(id, cancellationToken);
     }
 
-    public async Task<bool> DeleteItemAsync(Guid id, Guid actorId, CancellationToken cancellationToken)
+    public async Task<bool> DeleteItemAsync(
+        Guid id,
+        Guid actorId,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
     {
         var item = await db.VocabularyItems
             .SingleOrDefaultAsync(value => value.Id == id && !value.IsDeleted, cancellationToken);
@@ -376,7 +382,7 @@ internal sealed class LegacySpeedReadingVocabulary(SpeedReadingDbContext db) : I
                 });
                 successCount++;
             }
-            catch (FormatException exception)
+            catch (Exception exception) when (exception is FormatException or ArgumentException)
             {
                 failureCount++;
                 errors.Add($"Row {rowNumber}: {exception.Message}");

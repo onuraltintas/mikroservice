@@ -25,15 +25,21 @@ public interface ISpeedReadingVisualization
     Task<Guid> CreateSceneAsync(
         VisualizationSceneRequest request,
         Guid actorId,
+        string idempotencyKey,
         CancellationToken cancellationToken);
 
     Task<bool> UpdateSceneAsync(
         Guid sceneId,
         VisualizationSceneRequest request,
         Guid actorId,
+        string idempotencyKey,
         CancellationToken cancellationToken);
 
-    Task<bool> DeleteSceneAsync(Guid sceneId, Guid actorId, CancellationToken cancellationToken);
+    Task<bool> DeleteSceneAsync(
+        Guid sceneId,
+        Guid actorId,
+        string idempotencyKey,
+        CancellationToken cancellationToken);
 
     Task<VisualizationImportResult> ImportCsvAsync(
         Stream csv,
@@ -59,7 +65,9 @@ public sealed record VisualizationSceneSummary(
     int DisplayOrder,
     int DifficultyLevel,
     IReadOnlyList<VisualizationQuestionSummary> Questions,
-    DateTime? CreatedAt = null)
+    DateTime? CreatedAt = null,
+    Guid? TargetAgeGroupConfigurationId = null,
+    string Mode = "assessment")
 {
     public int QuestionCount => Questions.Count;
 }
@@ -92,7 +100,8 @@ public sealed record VisualizationSceneRequest(
     int DisplayOrder,
     int DifficultyLevel,
     IReadOnlyList<VisualizationQuestionRequest> Questions,
-    Guid? TargetAgeGroupConfigurationId = null);
+    Guid? TargetAgeGroupConfigurationId = null,
+    string Mode = "assessment");
 
 public sealed record VisualizationImportResult(
     int SuccessCount,

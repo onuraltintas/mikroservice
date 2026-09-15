@@ -173,9 +173,13 @@ public sealed class ExamQuestion : AggregateRoot
         int difficulty,
         int category)
     {
-        if (string.IsNullOrWhiteSpace(content) || string.IsNullOrWhiteSpace(question) ||
-            string.IsNullOrWhiteSpace(optionA) || string.IsNullOrWhiteSpace(optionB) ||
-            string.IsNullOrWhiteSpace(optionC) || string.IsNullOrWhiteSpace(optionD))
+        if (string.IsNullOrWhiteSpace(content) || content.Trim().Length > 20_000
+            || string.IsNullOrWhiteSpace(question) || question.Trim().Length > 2_000
+            || string.IsNullOrWhiteSpace(optionA) || optionA.Trim().Length > 1_000
+            || string.IsNullOrWhiteSpace(optionB) || optionB.Trim().Length > 1_000
+            || string.IsNullOrWhiteSpace(optionC) || optionC.Trim().Length > 1_000
+            || string.IsNullOrWhiteSpace(optionD) || optionD.Trim().Length > 1_000
+            || (optionE?.Trim().Length ?? 0) > 1_000)
             throw new ArgumentException("Content, Question and options A-D are required.");
         if (examType is < 0 or > 6)
             throw new ArgumentOutOfRangeException(nameof(examType));
@@ -190,6 +194,12 @@ public sealed class ExamQuestion : AggregateRoot
         };
         if (!options.TryGetValue(correctOption.Trim(), out var answer) || string.IsNullOrWhiteSpace(answer))
             throw new ArgumentException("CorrectOption must reference a non-empty option.");
+        var normalizedOptions = options.Values
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value!.Trim())
+            .ToArray();
+        if (normalizedOptions.Distinct(StringComparer.OrdinalIgnoreCase).Count() != normalizedOptions.Length)
+            throw new ArgumentException("Answer options must be distinct.");
     }
 
     private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

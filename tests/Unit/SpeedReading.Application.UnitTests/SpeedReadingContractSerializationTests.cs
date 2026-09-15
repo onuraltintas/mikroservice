@@ -6,6 +6,7 @@ using SpeedReading.Application.StudentReading;
 using SpeedReading.Application.Content;
 using SpeedReading.Application.Subscription;
 using SpeedReading.Application.Analytics;
+using SpeedReading.Application.Visualization;
 
 namespace SpeedReading.Application.UnitTests;
 
@@ -110,6 +111,27 @@ public sealed class SpeedReadingContractSerializationTests
         json.Should().Contain("\"totalXP\":900");
         json.Should().Contain("\"currentLevelXP\":0");
         json.Should().Contain("\"nextLevelXP\":100");
+    }
+
+    [Fact]
+    public void Visualization_scene_summary_keeps_the_target_age_group()
+    {
+        var ageGroupId = Guid.NewGuid();
+        var summary = new VisualizationSceneSummary(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Sahne açıklaması",
+            null,
+            30,
+            1,
+            2,
+            [],
+            DateTime.UtcNow,
+            ageGroupId);
+
+        var json = JsonSerializer.Serialize(summary, JsonOptions);
+
+        json.Should().Contain($"\"targetAgeGroupConfigurationId\":\"{ageGroupId}\"");
     }
 
     [Fact]

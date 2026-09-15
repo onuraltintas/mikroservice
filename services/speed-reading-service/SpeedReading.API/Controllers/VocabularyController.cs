@@ -38,6 +38,7 @@ public sealed class VocabularyController(ISpeedReadingVocabulary vocabulary) : C
     [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
     public async Task<IActionResult> CreateItem(
         [FromBody] VocabularyItemRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
         CancellationToken cancellationToken = default)
     {
         if (!TryGetCurrentUserId(out var actorId))
@@ -47,7 +48,7 @@ public sealed class VocabularyController(ISpeedReadingVocabulary vocabulary) : C
 
         try
         {
-            return Ok(await vocabulary.CreateItemAsync(request, actorId, cancellationToken));
+            return Ok(await vocabulary.CreateItemAsync(request, actorId, idempotencyKey ?? string.Empty, cancellationToken));
         }
         catch (KeyNotFoundException exception)
         {
@@ -64,6 +65,7 @@ public sealed class VocabularyController(ISpeedReadingVocabulary vocabulary) : C
     public async Task<IActionResult> UpdateItem(
         Guid id,
         [FromBody] VocabularyItemRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
         CancellationToken cancellationToken = default)
     {
         if (!TryGetCurrentUserId(out var actorId))
@@ -73,7 +75,7 @@ public sealed class VocabularyController(ISpeedReadingVocabulary vocabulary) : C
 
         try
         {
-            var item = await vocabulary.UpdateItemAsync(id, request, actorId, cancellationToken);
+            var item = await vocabulary.UpdateItemAsync(id, request, actorId, idempotencyKey ?? string.Empty, cancellationToken);
             return item is null ? NotFound() : Ok(item);
         }
         catch (KeyNotFoundException exception)
@@ -88,14 +90,17 @@ public sealed class VocabularyController(ISpeedReadingVocabulary vocabulary) : C
 
     [HttpDelete("{id:guid}")]
     [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
-    public async Task<IActionResult> DeleteItem(Guid id, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> DeleteItem(
+        Guid id,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+        CancellationToken cancellationToken = default)
     {
         if (!TryGetCurrentUserId(out var actorId))
         {
             return Unauthorized();
         }
 
-        return await vocabulary.DeleteItemAsync(id, actorId, cancellationToken)
+        return await vocabulary.DeleteItemAsync(id, actorId, idempotencyKey ?? string.Empty, cancellationToken)
             ? NoContent()
             : NotFound();
     }

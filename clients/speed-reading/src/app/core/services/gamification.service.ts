@@ -6,7 +6,6 @@ import {
   UserGameification,
   Achievement,
   UserAchievement,
-  LevelUpResult,
   AchievementProgress,
   LeaderboardType,
   LeaderboardEntry
@@ -32,30 +31,6 @@ export class GamificationService {
     );
   }
 
-  awardXP(amount: number, source: string, sourceId?: string): Observable<LevelUpResult> {
-    return this.http.post<LevelUpResult>(`${this.apiUrl}/award-xp`, {
-      amount,
-      source,
-      sourceId
-    }).pipe(
-      tap(result => {
-        // Update local state
-        const current = this.userGamificationSubject.value;
-        if (current) {
-          current.totalXP = result.totalXP;
-          current.currentLevel = result.newLevel || current.currentLevel;
-          current.currentLevelXP = result.currentLevelXP;
-          current.nextLevelXP = result.nextLevelXP;
-          if (result.leveledUp) {
-            current.levelTitle = result.levelTitle;
-            current.levelIcon = result.levelIcon;
-          }
-          this.userGamificationSubject.next(current);
-        }
-      })
-    );
-  }
-
   getAllAchievements(): Observable<Achievement[]> {
     return this.http.get<Achievement[]>(`${this.apiUrl}/achievements`).pipe(
       tap(achievements => this.achievementsSubject.next(achievements))
@@ -73,13 +48,6 @@ export class GamificationService {
   updateShowcase(achievementIds: string[]): Observable<{ success: boolean }> {
     return this.http.put<{ success: boolean }>(`${this.apiUrl}/achievements/showcase`, {
       achievementIds
-    });
-  }
-
-  updateStreak(activityDate: Date, durationMinutes: number): Observable<{ success: boolean }> {
-    return this.http.post<{ success: boolean }>(`${this.apiUrl}/streak/update`, {
-      activityDate,
-      durationMinutes
     });
   }
 
