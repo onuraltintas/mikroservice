@@ -1,0 +1,110 @@
+{
+  "catalogTextCount": 300,
+  "packCount": 8,
+  "packedQuestionCount": 76,
+  "packs": [
+    {
+      "file": "content-packs\\reading-question-repair\\v1\\biyomimetik-dogadan-ilham.json",
+      "title": "Biyomimetik: Doğadan İlham",
+      "readingTextId": "0b323669-e098-4447-bae4-1ed7f3eb4641",
+      "questionCount": 10,
+      "answerDistribution": {
+        "B": 2,
+        "D": 2,
+        "A": 3,
+        "C": 3
+      },
+      "uniqueLongestCorrectCount": 0
+    },
+    {
+      "file": "content-packs\\reading-question-repair\\v1\\buyuk-firtina-ve-cesur-kopek.json",
+      "title": "Büyük Fırtına ve Cesur Köpek",
+      "readingTextId": "f3dc2494-80bb-4d13-a5d0-5a7e2455d319",
+      "questionCount": 10,
+      "answerDistribution": {
+        "B": 3,
+        "C": 2,
+        "A": 3,
+        "D": 2
+      },
+      "uniqueLongestCorrectCount": 0
+    },
+    {
+      "file": "content-packs\\reading-question-repair\\v1\\farkli-bir-ses.json",
+      "title": "Farklı Bir Ses",
+      "readingTextId": "256d1966-24e7-4a96-aeb2-7b9f7f6e47e3",
+      "questionCount": 10,
+      "answerDistribution": {
+        "B": 2,
+        "C": 3,
+        "A": 3,
+        "D": 2
+      },
+      "uniqueLongestCorrectCount": 0
+    },
+    {
+      "file": "content-packs\\reading-question-repair\\v1\\fenerin-sonmeyen-isigi.json",
+      "title": "Fenerin Sönmeyen Işığı",
+      "readingTextId": "91cbc4da-a87f-41cd-85ad-d454148b9fd5",
+      "questionCount": 10,
+      "answerDistribution": {
+        "A": 3,
+        "B": 3,
+        "C": 3,
+        "D": 1
+      },
+      "uniqueLongestCorrectCount": 3
+    },
+    {
+      "file": "content-packs\\reading-question-repair\\v1\\gercek-sihir-parmak-uclarinda.json",
+      "title": "Gerçek Sihir Parmak Uçlarında",
+      "readingTextId": "3cc50491-5bc1-434e-99ea-a0882c293b1b",
+      "questionCount": 10,
+      "answerDistribution": {
+        "B": 3,
+        "C": 4,
+        "A": 3
+      },
+      "uniqueLongestCorrectCount": 4
+    },
+    {
+      "file": "content-packs\\reading-question-repair\\v1\\kod-adi-gelecegim.json",
+      "title": "Kod Adı: Geleceğim",
+      "readingTextId": "132765ef-9444-4868-8bab-3167d6d2c879",
+      "questionCount": 10,
+      "answerDistribution": {
+        "A": 3,
+        "C": 3,
+        "B": 2,
+        "D": 2
+      },
+      "uniqueLongestCorrectCount": 0
+    },
+    {
+      "file": "content-packs\\reading-question-repair\\v1\\ortam-mekanigi-sivi-dinamiginin-temelleri.json",
+      "title": "Ortam Mekaniği: Sıvı Dinamiğinin Temelleri",
+      "readingTextId": "1057a06c-299f-48e8-bbad-3ff02e2153d7",
+      "questionCount": 8,
+      "answerDistribution": {
+        "A": 2,
+        "D": 2,
+        "B": 2,
+        "C": 2
+      },
+      "uniqueLongestCorrectCount": 0
+    },
+    {
+      "file": "content-packs\\reading-question-repair\\v1\\surdurulebilir-enerji-gelecegin-yakiti.json",
+      "title": "Sürdürülebilir Enerji: Geleceğin Yakıtı",
+      "readingTextId": "0b1c2d3e-4f5a-6666-7777-555566667777",
+      "questionCount": 8,
+      "answerDistribution": {
+        "B": 2,
+        "A": 2,
+        "C": 2,
+        "D": 2
+      },
+      "uniqueLongestCorrectCount": 0
+    }
+  ]
+}
