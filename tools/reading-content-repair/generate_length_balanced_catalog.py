@@ -10,7 +10,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import re
 from pathlib import Path
 from typing import Any
 
@@ -57,23 +56,6 @@ def load_excluded_question_ids(directory: Path | None) -> set[str]:
     return excluded
 
 
-def clean_context(text: str) -> str:
-    text = re.sub(r"[#*_`|]", "", text or "")
-    text = " ".join(text.split())
-    return text.strip(" .;:!?—–-")
-
-
-def context_sentence(content: str, fallback: str) -> str:
-    cleaned = clean_context(content)
-    # Prefer a complete, medium-length sentence instead of a heading or formula.
-    candidates = [part.strip() for part in re.split(r"(?<=[.!?])\s+", cleaned)]
-    candidates = [part for part in candidates if 45 <= len(part) <= 150]
-    if candidates:
-        return candidates[0].rstrip(".!?") + "."
-    compact = cleaned[:140].rsplit(" ", 1)[0] if cleaned else fallback
-    return compact.rstrip(".!?") + "."
-
-
 def suffix_text(base: str, suffix: str) -> str:
     base = " ".join((base or "").strip().split())
     if suffix.startswith("("):
@@ -81,9 +63,9 @@ def suffix_text(base: str, suffix: str) -> str:
     return f"{base.rstrip(' .;:')}. {suffix}"
 
 
-def choose_suffixes(gap: int, context: str) -> list[str]:
+def choose_suffixes(gap: int) -> list[str]:
     # Keep the appended text close to the required gap where possible.  The
-    # extra contextual sentence is used only for large gaps, so short answers
+    # Longer explanatory clauses are used only for large gaps, so short answers
     # do not acquire a repetitive paragraph.
     options = list(SHORT_SUFFIXES) + list(MEDIUM_SUFFIXES)
     if gap > 110:
@@ -124,7 +106,7 @@ def choose_suffixes(gap: int, context: str) -> list[str]:
     return min(feasible, key=lambda item: (item[0] - gap, len(item[1])))[1]
 
 
-def normalize_question(question: dict[str, Any], context: str) -> dict[str, Any] | None:
+def normalize_question(question: dict[str, Any]) -> dict[str, Any] | None:
     answer = (question.get("correctAnswer") or "").strip().upper()
     if answer not in ANSWER_KEYS:
         return None
@@ -134,14 +116,14 @@ def normalize_question(question: dict[str, Any], context: str) -> dict[str, Any]
     if lengths[answer_index] != max(lengths) or lengths.count(lengths[answer_index]) != 1:
         return None
 
-    # Deterministically vary which distractor receives the contextual detail;
+    # Deterministically vary which distractor receives the clarification;
     # this avoids creating a new fixed position cue.
     distractors = [index for index in range(4) if index != answer_index]
     digest = hashlib.sha256(question["questionId"].encode("utf-8")).digest()
     distractors.sort(key=lambda index: digest[index])
     target_index = max(distractors, key=lambda index: lengths[index])
     gap = lengths[answer_index] - lengths[target_index]
-    for suffix in choose_suffixes(gap, context):
+    for suffix in choose_suffixes(gap):
         options[target_index] = suffix_text(options[target_index], suffix)
         if len(options[target_index]) >= lengths[answer_index]:
             break
@@ -192,11 +174,10 @@ def main() -> None:
     records: list[dict[str, Any]] = []
     by_text: dict[str, int] = {}
     for row in rows:
-        context = context_sentence(row.get("content", ""), row.get("title", ""))
         for question in row.get("questions", []):
             if question.get("questionId") in excluded_question_ids:
                 continue
-            record = normalize_question(question, context)
+            record = normalize_question(question)
             if record is None:
                 continue
             record = {
