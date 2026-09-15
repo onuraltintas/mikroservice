@@ -1,0 +1,16 @@
+{
+  "sourceTextCount": 300,
+  "sourceQuestionCount": 2624,
+  "updates": 2576,
+  "explanationsAdded": 2576,
+  "optionsCompacted": 0,
+  "uniqueLongestBefore": 2180,
+  "uniqueLongestAfter": 2180,
+  "unrepairableLengthFlags": 0,
+  "answerDistribution": {
+    "C": 697,
+    "D": 590,
+    "B": 637,
+    "A": 700
+  }
+}
