@@ -880,6 +880,18 @@ export interface SpeedReadingReadingText {
   language: string;
   isActive: boolean;
   exerciseId: string | null;
+  targetAgeGroupConfigurationId?: string | null;
+  questionCount?: number;
+}
+
+export interface SpeedReadingReadingTextFilters {
+  exerciseId?: string;
+  category?: string;
+  difficultyLevel?: number;
+  searchTerm?: string;
+  targetAgeGroupId?: string;
+  isActive?: boolean;
+  onlyWithQuestions?: boolean;
 }
 
 export interface SpeedReadingReadingTextRequest {
@@ -940,7 +952,37 @@ export interface SpeedReadingReadingTextQualityMetrics {
   readabilityBand: string | null;
   bloomDistribution: SpeedReadingReadingTextQualityDistribution[];
   difficultyDistribution: SpeedReadingReadingTextQualityDistribution[];
+  correctAnswerDistribution: SpeedReadingReadingTextQualityDistribution[];
+  correctAnswerUniqueLongestCount: number;
+  correctAnswerUniqueShortestCount: number;
   warnings: string[];
+  publicationBlockers: string[];
+}
+
+export interface SpeedReadingReadingTextQualityPreviewQuestion {
+  questionText: string;
+  type: number;
+  bloomLevel: number;
+  difficultyLevel: number;
+  explanation?: string | null;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correctAnswer?: string | null;
+  orderIndex: number;
+}
+
+export interface SpeedReadingReadingTextQualityPreviewRequest {
+  content: string;
+  language: string;
+  questions: SpeedReadingReadingTextQualityPreviewQuestion[];
+}
+
+export interface SpeedReadingReadingTextImportResult {
+  successCount: number;
+  errorCount: number;
+  errors: Array<string | null>;
 }
 
 export interface SpeedReadingReadingQuestion {
@@ -2097,14 +2139,36 @@ export class SpeedReadingAdminService {
     );
   }
 
-  getReadingTexts(exerciseId?: string) {
+  getReadingTexts(filters: string | SpeedReadingReadingTextFilters = {}) {
+    const options: SpeedReadingReadingTextFilters = typeof filters === 'string'
+      ? { exerciseId: filters }
+      : filters;
     let params = new HttpParams();
-    if (exerciseId) {
-      params = params.set('exerciseId', exerciseId);
-    }
+    if (options.exerciseId) params = params.set('exerciseId', options.exerciseId);
+    if (options.category) params = params.set('category', options.category);
+    if (options.difficultyLevel !== undefined) params = params.set('difficultyLevel', options.difficultyLevel);
+    if (options.searchTerm) params = params.set('searchTerm', options.searchTerm);
+    if (options.targetAgeGroupId) params = params.set('targetAgeGroupId', options.targetAgeGroupId);
+    if (options.isActive !== undefined) params = params.set('isActive', options.isActive);
+    if (options.onlyWithQuestions !== undefined) params = params.set('onlyWithQuestions', options.onlyWithQuestions);
     return this.http.get<SpeedReadingReadingText[]>(
       `${this.url}/reading-texts`,
       { params }
+    );
+  }
+
+  getReadingTextCategories() {
+    return this.http.get<string[]>(`${this.url}/reading-texts/categories`);
+  }
+
+  getReadingTextDifficultyLevels() {
+    return this.http.get<number[]>(`${this.url}/reading-texts/levels`);
+  }
+
+  previewReadingTextQuality(request: SpeedReadingReadingTextQualityPreviewRequest) {
+    return this.http.post<SpeedReadingReadingTextQualityMetrics>(
+      `${this.url}/reading-texts/quality-preview`,
+      request
     );
   }
 
@@ -2152,7 +2216,7 @@ export class SpeedReadingAdminService {
   importReadingTexts(file: File, format: 'csv' | 'excel', idempotencyKey?: string) {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<unknown>(
+    return this.http.post<SpeedReadingReadingTextImportResult>(
       `${this.url}/reading-texts/import/${format}`,
       formData,
       { headers: this.idempotencyHeaders(idempotencyKey) }
@@ -2160,7 +2224,7 @@ export class SpeedReadingAdminService {
   }
 
   importReadingTextsBulk(requests: SpeedReadingReadingTextImportRequest[], idempotencyKey?: string) {
-    return this.http.post<unknown>(
+    return this.http.post<SpeedReadingReadingTextImportResult>(
       `${this.url}/reading-texts/import/bulk`,
       requests,
       { headers: this.idempotencyHeaders(idempotencyKey) }

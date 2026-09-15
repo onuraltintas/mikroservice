@@ -293,6 +293,8 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
             return await ReplayReadingTextAsync(existing, requestHash, cancellationToken);
         }
 
+        EnsureReadingTextCanBePublished(
+            request.IsActive, request.Content, request.Language, []);
         await EnsureExerciseExistsAsync(request.ExerciseId, cancellationToken);
         var now = DateTime.UtcNow;
         var readingText = new LegacyReadingText
@@ -341,6 +343,9 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
             .SingleOrDefaultAsync(item => item.Id == readingTextId && !item.IsDeleted, cancellationToken)
             ?? throw new NotFoundException("ReadingText", readingTextId);
         await EnsureExerciseExistsAsync(request.ExerciseId, cancellationToken);
+        var questions = await GetReadingQuestionsAsync(readingTextId, cancellationToken);
+        EnsureReadingTextCanBePublished(
+            request.IsActive, request.Content, request.Language, questions);
         readingText.Title = request.Title.Trim();
         readingText.Content = request.Content;
         readingText.WordCount = ReadingText.CalculateWordCount(request.Content);
@@ -514,6 +519,17 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
         var question = await db.ReadingQuestions
             .SingleOrDefaultAsync(item => item.Id == questionId && !item.IsDeleted, cancellationToken)
             ?? throw new NotFoundException("ReadingQuestion", questionId);
+        var text = await db.ReadingTexts
+            .SingleOrDefaultAsync(item => item.Id == question.ReadingTextId && !item.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException("ReadingText", question.ReadingTextId);
+        if (text.IsActive)
+        {
+            var remainingQuestions = (await GetReadingQuestionsAsync(question.ReadingTextId, cancellationToken))
+                .Where(item => item.Id != questionId)
+                .ToArray();
+            EnsureReadingTextCanBePublished(
+                true, text.Content, text.Language, remainingQuestions);
+        }
         var now = DateTime.UtcNow;
         question.IsDeleted = true;
         question.DeletedAt = now;
@@ -1403,6 +1419,36 @@ internal sealed class LegacySpeedReadingContentAdminWriter(SpeedReadingDbContext
             throw new NotFoundException("ReadingText", readingTextId);
         }
     }
+
+    private static void EnsureReadingTextCanBePublished(
+        bool isActive,
+        string content,
+        string language,
+        IReadOnlyList<ReadingQuestionSummary> questions)
+    {
+        if (!isActive)
+        {
+            return;
+        }
+
+        var quality = TurkishReadingTextQualityAnalyzer.Analyze(content, language, questions);
+        if (quality.PublicationBlockers.Count > 0)
+        {
+            throw new BusinessRuleException("ReadingText.Quality", string.Join(" ", quality.PublicationBlockers));
+        }
+    }
+
+    private async Task<IReadOnlyList<ReadingQuestionSummary>> GetReadingQuestionsAsync(
+        Guid readingTextId,
+        CancellationToken cancellationToken) =>
+        await db.ReadingQuestions.AsNoTracking()
+            .Where(item => item.ReadingTextId == readingTextId && !item.IsDeleted)
+            .OrderBy(item => item.OrderIndex)
+            .Select(item => new ReadingQuestionSummary(
+                item.Id, item.QuestionText, item.Type, item.BloomLevel, item.DifficultyLevel,
+                item.Explanation, item.OptionA, item.OptionB, item.OptionC, item.OptionD,
+                item.CorrectAnswer, item.OrderIndex))
+            .ToListAsync(cancellationToken);
 
     private async Task<ExerciseSummary?> GetExerciseSummaryAsync(
         Guid exerciseId,

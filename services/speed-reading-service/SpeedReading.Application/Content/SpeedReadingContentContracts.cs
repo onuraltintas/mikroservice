@@ -80,6 +80,24 @@ public sealed record ReadingQuestionSummary(
     string? CorrectAnswer,
     int OrderIndex);
 
+public sealed record ReadingTextQualityPreviewQuestion(
+    string QuestionText,
+    int Type,
+    int BloomLevel,
+    int DifficultyLevel,
+    string? Explanation,
+    string OptionA,
+    string OptionB,
+    string OptionC,
+    string OptionD,
+    string? CorrectAnswer,
+    int OrderIndex);
+
+public sealed record ReadingTextQualityPreviewRequest(
+    string Content,
+    string Language,
+    IReadOnlyList<ReadingTextQualityPreviewQuestion>? Questions);
+
 public sealed record ReadingTextDetails(
     Guid Id,
     string Title,

@@ -64,6 +64,35 @@ public sealed class ReadingTextsController(
         CancellationToken cancellationToken = default) =>
         Ok(await catalog.GetShortReadingTextsAsync(limit, cancellationToken));
 
+    [HttpPost("quality-preview")]
+    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    public ActionResult<ReadingTextQualityMetrics> PreviewQuality(
+        [FromBody] ReadingTextQualityPreviewRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Content) || string.IsNullOrWhiteSpace(request.Language))
+        {
+            return BadRequest(new { message = "Content and language are required." });
+        }
+
+        var questions = (request.Questions ?? [])
+            .Select((question, index) => new ReadingQuestionSummary(
+                Guid.Empty,
+                question.QuestionText,
+                question.Type,
+                question.BloomLevel,
+                question.DifficultyLevel,
+                question.Explanation,
+                question.OptionA ?? string.Empty,
+                question.OptionB ?? string.Empty,
+                question.OptionC ?? string.Empty,
+                question.OptionD ?? string.Empty,
+                question.CorrectAnswer,
+                question.OrderIndex == 0 ? index + 1 : question.OrderIndex))
+            .ToArray();
+
+        return Ok(TurkishReadingTextQualityAnalyzer.Analyze(request.Content, request.Language, questions));
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ReadingTextDetails>> GetReadingText(
         Guid id,
@@ -384,6 +413,12 @@ public sealed class ReadingTextsController(
         for (var index = 0; index < rows.Count; index++)
         {
             var row = rows[index];
+            var validationError = ValidateImportRow(row);
+            if (validationError is not null)
+            {
+                errors[index] = $"Satır {index + 1}: {validationError}";
+                continue;
+            }
             try
             {
                 var text = await adminWriter.CreateReadingTextAsync(
@@ -396,7 +431,7 @@ public sealed class ReadingTextsController(
                         row.DifficultyLevel,
                         null,
                         row.Language,
-                        true,
+                        false,
                         null,
                         1,
                         10,
@@ -426,11 +461,30 @@ public sealed class ReadingTextsController(
                         cancellationToken);
                 }
 
+                await adminWriter.UpdateReadingTextAsync(
+                    actorId,
+                    text.Id,
+                    new UpdateReadingTextRequest(
+                        row.Title,
+                        row.Content,
+                        row.Content.Trim().Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length,
+                        row.Category,
+                        row.DifficultyLevel,
+                        null,
+                        row.Language,
+                        true,
+                        null,
+                        1,
+                        10,
+                        null),
+                    $"{importKey}-{index + 1}-publish",
+                    cancellationToken);
+
                 successCount++;
             }
             catch (ArgumentException)
             {
-                errors[index] = $"Row {index + 1} contains invalid fields.";
+                errors[index] = $"Satır {index + 1}: alanlar geçersiz.";
             }
             catch (Exception) when (cancellationToken.IsCancellationRequested)
             {
@@ -438,7 +492,7 @@ public sealed class ReadingTextsController(
             }
             catch (Exception)
             {
-                errors[index] = $"Row {index + 1} could not be imported.";
+                errors[index] = $"Satır {index + 1}: içe aktarma tamamlanamadı; metin pasif taslak olarak incelenmelidir.";
             }
         }
 
@@ -448,6 +502,52 @@ public sealed class ReadingTextsController(
             errorCount = rows.Count - successCount,
             errors
         });
+    }
+
+    private static string? ValidateImportRow(ParsedImportRow row)
+    {
+        if (string.IsNullOrWhiteSpace(row.Title) || row.Title.Trim().Length > 250
+            || string.IsNullOrWhiteSpace(row.Content) || row.Content.Length > 2_097_152
+            || string.IsNullOrWhiteSpace(row.Category) || row.Category.Trim().Length > 100
+            || row.DifficultyLevel is < 0 or > 10
+            || string.IsNullOrWhiteSpace(row.Language) || row.Language.Trim().Length > 10)
+        {
+            return "metin alanları geçersiz.";
+        }
+
+        var questions = new List<ReadingQuestionSummary>(row.Questions.Count);
+        for (var index = 0; index < row.Questions.Count; index++)
+        {
+            var question = row.Questions[index];
+            var options = new[] { question.OptionA?.Trim(), question.OptionB?.Trim(), question.OptionC?.Trim(), question.OptionD?.Trim() };
+            if (string.IsNullOrWhiteSpace(question.QuestionText) || question.QuestionText.Trim().Length > 2_000
+                || question.Type is < 1 or > 3 || options.Any(string.IsNullOrWhiteSpace)
+                || options.Any(option => option!.Length > 500)
+                || options.Distinct(StringComparer.OrdinalIgnoreCase).Count() != options.Length
+                || !ReadingQuestionQualityRules.HasScorableAnswerKey(question.CorrectAnswer))
+            {
+                return $"{index + 1}. soru geçersiz.";
+            }
+
+            questions.Add(new ReadingQuestionSummary(
+                Guid.Empty,
+                question.QuestionText,
+                question.Type,
+                1,
+                1,
+                null,
+                question.OptionA!,
+                question.OptionB!,
+                question.OptionC!,
+                question.OptionD!,
+                question.CorrectAnswer,
+                index + 1));
+        }
+
+        var quality = TurkishReadingTextQualityAnalyzer.Analyze(row.Content, row.Language, questions);
+        return quality.PublicationBlockers.Count == 0
+            ? null
+            : string.Join(" ", quality.PublicationBlockers);
     }
 
     private static List<ParsedImportRow> ParseCsv(string content)

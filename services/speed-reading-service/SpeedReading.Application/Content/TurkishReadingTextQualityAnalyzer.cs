@@ -16,7 +16,8 @@ public sealed record ReadingTextQualityMetrics(
     IReadOnlyList<ReadingTextQualityDistribution> CorrectAnswerDistribution,
     int CorrectAnswerUniqueLongestCount,
     int CorrectAnswerUniqueShortestCount,
-    IReadOnlyList<string> Warnings);
+    IReadOnlyList<string> Warnings,
+    IReadOnlyList<string> PublicationBlockers);
 
 public static class TurkishReadingTextQualityAnalyzer
 {
@@ -54,6 +55,7 @@ public static class TurkishReadingTextQualityAnalyzer
         var warnings = BuildWarnings(
             wordCount, averageWordsPerSentence, questions, readability,
             validAnswerQuestions, uniqueLongestCount, uniqueShortestCount).ToArray();
+        var publicationBlockers = BuildPublicationBlockers(wordCount, questions, validAnswerQuestions).ToArray();
 
         return new ReadingTextQualityMetrics(
             wordCount,
@@ -67,7 +69,8 @@ public static class TurkishReadingTextQualityAnalyzer
             Distribution(validAnswerQuestions, question => AnswerKeyLevel(question.CorrectAnswer)),
             uniqueLongestCount,
             uniqueShortestCount,
-            warnings);
+            warnings,
+            publicationBlockers);
     }
 
     private static decimal CalculateAtesmanReadability(
@@ -109,6 +112,19 @@ public static class TurkishReadingTextQualityAnalyzer
             yield return "Sorular tek bir Bloom seviyesinde; bilişsel kapsamı çeşitlendirmeyi değerlendirin.";
         if (readability is < 30)
             yield return "Okunabilirlik tahmini düşük; hedef yaş ve seviye ile uzman incelemesini doğrulayın.";
+    }
+
+    private static IEnumerable<string> BuildPublicationBlockers(
+        int wordCount,
+        IReadOnlyList<ReadingQuestionSummary> questions,
+        IReadOnlyList<ReadingQuestionSummary> validAnswerQuestions)
+    {
+        if (wordCount < 80)
+            yield return "Metin 80 kelimenin altında; öğrenci kullanımına açmadan önce genişletin.";
+        if (questions.Count < 3)
+            yield return "Öğrenci kullanımına açmak için en az üç soru ekleyin.";
+        if (validAnswerQuestions.Count != questions.Count)
+            yield return "Cevap anahtarı eksik veya geçersiz sorular öğrenci kullanımına açılamaz.";
     }
 
     private static IReadOnlyList<ReadingTextQualityDistribution> Distribution(
