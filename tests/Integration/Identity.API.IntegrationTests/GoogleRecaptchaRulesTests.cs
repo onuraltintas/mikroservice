@@ -61,4 +61,12 @@ public sealed class GoogleRecaptchaRulesTests
 
         verification!.ErrorCodes.Should().ContainSingle().Which.Should().Be("invalid-input-secret");
     }
+
+    [Theory]
+    [InlineData(4096, true)]
+    [InlineData(16_385, false)]
+    public void UserResponseToken_ShouldAllowExpectedTokenSizes(int length, bool expected)
+    {
+        GoogleRecaptchaRules.HasAcceptableToken(new string('t', length)).Should().Be(expected);
+    }
 }
