@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http.Timeouts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Notification.Application.Interfaces;
 
@@ -6,6 +7,7 @@ namespace Notification.API.Controllers;
 
 [ApiController]
 [Route("api/internal/notifications")]
+[AllowAnonymous]
 [Notification.API.InternalServiceKey]
 public sealed class InternalEmailController(IEmailDeliveryQueue emailDeliveryQueue) : ControllerBase
 {
