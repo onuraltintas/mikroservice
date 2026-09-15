@@ -32,6 +32,21 @@ describe('SpeedReadingAdminService', () => {
     request.flush(response);
   });
 
+  it('previews reading-text quality before content is saved', () => {
+    const preview = {
+      content: 'Bu metin taslak kalite kontrolü için yazılmıştır.',
+      language: 'tr',
+      questions: []
+    };
+
+    service.previewReadingTextQuality(preview).subscribe(value => expect(value.publicationBlockers).toEqual([]));
+
+    const request = http.expectOne('/api/speed-reading/reading-texts/quality-preview');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(preview);
+    request.flush({ publicationBlockers: [] });
+  });
+
   it('loads platform analytics with an explicit date range', () => {
     service.getPlatformUsage('2026-08-01', '2026-08-31').subscribe();
 
