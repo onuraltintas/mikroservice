@@ -1,5 +1,6 @@
 using FluentAssertions;
 using SpeedReading.API.Security;
+using System.Text.Json;
 using Xunit;
 
 namespace Identity.API.IntegrationTests;
@@ -49,5 +50,15 @@ public sealed class GoogleRecaptchaRulesTests
 
         wrongAction.Should().BeFalse();
         wrongHostname.Should().BeFalse();
+    }
+
+    [Fact]
+    public void RejectedGoogleVerification_ShouldRetainErrorCodesForSafeServerDiagnostics()
+    {
+        var verification = JsonSerializer.Deserialize<GoogleRecaptchaVerification>(
+            """{\"success\":false,\"error-codes\":[\"invalid-input-secret\"]}""",
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+        verification!.ErrorCodes.Should().ContainSingle().Which.Should().Be("invalid-input-secret");
     }
 }
