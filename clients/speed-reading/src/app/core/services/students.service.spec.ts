@@ -45,6 +45,42 @@ describe('StudentsService', () => {
     });
   });
 
+  it('loads the institution roster with each student\'s assigned teacher', () => {
+    service.getInstitutionStudents('Ada', 8, true).subscribe(students => {
+      expect(students).toEqual([jasmine.objectContaining({
+        id: 'student-1',
+        currentLevel: 8,
+        teacherId: 'teacher-1',
+        teacherName: 'Ayşe Öğretmen'
+      })]);
+    });
+
+    const request = http.expectOne(candidate => candidate.url === '/api/institution/students');
+    expect(request.request.params.get('search')).toBe('Ada');
+    expect(request.request.params.get('gradeLevel')).toBe('8');
+    expect(request.request.params.get('isActive')).toBe('true');
+    request.flush({
+      items: [{
+        userId: 'student-1',
+        firstName: 'Ada',
+        lastName: 'Yılmaz',
+        email: 'ada@example.test',
+        gradeLevel: 8,
+        isActive: true,
+        teacherUserId: 'teacher-1',
+        teacherName: 'Ayşe Öğretmen'
+      }]
+    });
+  });
+
+  it('filters the institution roster by the selected teacher when requested', () => {
+    service.getInstitutionStudents(undefined, undefined, undefined, 'teacher-1').subscribe();
+
+    const request = http.expectOne(candidate => candidate.url === '/api/institution/students');
+    expect(request.request.params.get('teacherUserId')).toBe('teacher-1');
+    request.flush({ items: [] });
+  });
+
   it('creates a student through the institution endpoint with the selected teacher', () => {
     service.createStudent({
       firstName: 'Ada',
