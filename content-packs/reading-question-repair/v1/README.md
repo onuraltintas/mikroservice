@@ -9,3 +9,5 @@ python tools/reading-content-repair/validate_catalog_overlay.py .tmp-current-rea
 ```
 
 Apply the generated SQL only after taking a database snapshot. The statement is idempotent and updates active matching question ids in either supported reading-question table.
+
+`catalog-question-repair.rollback.sql` restores the original options for the automatically normalized records. It does not replace the database snapshot required for the manually reviewed packs.
