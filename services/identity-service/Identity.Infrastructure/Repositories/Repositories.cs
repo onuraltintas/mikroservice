@@ -102,8 +102,8 @@ public class UserRepository : IUserRepository
         var ids = userIds
             .Where(id => id != Guid.Empty)
             .Distinct()
-            .ToArray();
-        if (ids.Length == 0)
+            .ToList();
+        if (ids.Count == 0)
             return [];
 
         return await _context.Users

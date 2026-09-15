@@ -151,6 +151,23 @@ public class DatabaseCrudTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetSpeedReadingDirectory_ShouldLoadRequestedUsers()
+    {
+        var userId = Guid.NewGuid();
+        var requestedUser = User.Create(userId, "directory-requested@query.edu", "Directory", "Requested");
+        var otherUser = User.Create(Guid.NewGuid(), "directory-other@query.edu", "Directory", "Other");
+        _dbContext!.Users.AddRange(requestedUser, otherUser);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var repository = new Identity.Infrastructure.Repositories.UserRepository(_dbContext);
+
+        var users = await repository.GetSpeedReadingDirectoryAsync([userId], CancellationToken.None);
+
+        users.Should().ContainSingle(user => user.UserId == userId);
+    }
+
+    [Fact]
     public async Task UpdateUser_ShouldPersistChanges()
     {
         // Arrange
