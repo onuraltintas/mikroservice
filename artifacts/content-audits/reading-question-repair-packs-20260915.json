@@ -1,7 +1,7 @@
 {
   "catalogTextCount": 300,
-  "packCount": 8,
-  "packedQuestionCount": 76,
+  "packCount": 10,
+  "packedQuestionCount": 92,
   "packs": [
     {
       "file": "content-packs\\reading-question-repair\\v1\\biyomimetik-dogadan-ilham.json",
@@ -25,6 +25,19 @@
         "B": 3,
         "C": 2,
         "A": 3,
+        "D": 2
+      },
+      "uniqueLongestCorrectCount": 0
+    },
+    {
+      "file": "content-packs\\reading-question-repair\\v1\\dijital-dunyada-vatandas-olmak.json",
+      "title": "Dijital Dünyada Vatandaş Olmak: Haklar, Sorumluluklar ve Siber Zorbalık",
+      "readingTextId": "1ddf173f-6f95-4eb1-ac94-5e64f0bae60f",
+      "questionCount": 8,
+      "answerDistribution": {
+        "B": 2,
+        "C": 2,
+        "A": 2,
         "D": 2
       },
       "uniqueLongestCorrectCount": 0
@@ -90,6 +103,19 @@
         "D": 2,
         "B": 2,
         "C": 2
+      },
+      "uniqueLongestCorrectCount": 0
+    },
+    {
+      "file": "content-packs\\reading-question-repair\\v1\\start-up-kulturu-garajdan-milyar-dolara.json",
+      "title": "Start-up Kültürü: Garajdan Milyar Dolara",
+      "readingTextId": "11223344-5566-7788-9900-aabbccddeeff",
+      "questionCount": 8,
+      "answerDistribution": {
+        "A": 2,
+        "C": 2,
+        "D": 2,
+        "B": 2
       },
       "uniqueLongestCorrectCount": 0
     },
