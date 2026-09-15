@@ -189,6 +189,106 @@ mat-card {
     }
 }
 
+.detail-grid {
+    display: grid;
+    grid-template-columns: minmax(16rem, 0.8fr) minmax(24rem, 1.2fr);
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+
+    mat-card-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    mat-list-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .metric-label {
+        color: #475569;
+    }
+
+    .metric-value {
+        font-weight: 600;
+        color: #334155;
+    }
+}
+
+.data-unavailable {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem 0;
+    color: #64748b;
+
+    mat-icon {
+        color: #64748b;
+        flex: 0 0 auto;
+    }
+
+    p {
+        margin: 0;
+        line-height: 1.5;
+    }
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.activity-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.875rem 0;
+    border-bottom: 1px solid #e2e8f0;
+
+    &:last-child {
+        border-bottom: 0;
+    }
+}
+
+.activity-main,
+.activity-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.activity-main {
+    min-width: 0;
+
+    strong {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    span,
+    small {
+        color: #64748b;
+    }
+}
+
+.activity-metrics {
+    align-items: flex-end;
+    flex: 0 0 auto;
+
+    span {
+        color: #334155;
+        font-size: 0.875rem;
+    }
+
+    small {
+        color: #94a3b8;
+    }
+}
+
 @media (max-width: 60.5rem) {
     .controls-row {
         flex-direction: column;
@@ -212,5 +312,19 @@ mat-card {
 
     .insights-grid {
         grid-template-columns: 1fr;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 40rem) {
+    .activity-row {
+        flex-direction: column;
+    }
+
+    .activity-metrics {
+        align-items: flex-start;
     }
 }

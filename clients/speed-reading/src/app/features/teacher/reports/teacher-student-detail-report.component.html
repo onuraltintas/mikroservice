@@ -130,5 +130,61 @@
             </mat-card-content>
         </mat-card>
     </div>
+
+    <div class="detail-grid">
+        <mat-card>
+            <mat-card-header>
+                <mat-card-title><mat-icon>quiz</mat-icon> Soru türüne göre anlama</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                @if ((report()?.studentReports?.comprehension?.questionTypeChart?.data?.length ?? 0) > 0) {
+                <mat-list>
+                    @for (item of report()!.studentReports.comprehension.questionTypeChart.data; track item.name) {
+                    <mat-list-item>
+                        <span class="metric-label">{{ item.name }}</span>
+                        <span class="metric-value">{{ item.value | number:'1.0-0' }}%</span>
+                    </mat-list-item>
+                    }
+                </mat-list>
+                } @else {
+                <div class="data-unavailable">
+                    <mat-icon>info</mat-icon>
+                    <p>Soru türü bazlı sonuç bu kayıtta tutulmuyor. Genel anlama ve kategori sonuçları kullanılabilir.</p>
+                </div>
+                }
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card class="activity-card">
+            <mat-card-header>
+                <mat-card-title><mat-icon>history</mat-icon> Son aktiviteler</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                @if ((report()?.studentReports?.activity?.recentActivities?.length ?? 0) > 0) {
+                <div class="activity-list">
+                    @for (activity of report()!.studentReports.activity.recentActivities | slice:0:10; track $index) {
+                    <div class="activity-row">
+                        <div class="activity-main">
+                            <strong>{{ activity.contentTitle }}</strong>
+                            <span>{{ activity.activityType === 'reading' ? 'Okuma metni' : (activity.exerciseTypeName || 'Egzersiz') }}</span>
+                        </div>
+                        <div class="activity-metrics">
+                            @if (activity.wpm != null) { <span>{{ activity.wpm | number:'1.0-0' }} WPM</span> }
+                            @if (activity.comprehension != null) { <span>{{ activity.comprehension | number:'1.0-0' }}% anlama</span> }
+                            @if (activity.successRate != null) { <span>{{ activity.successRate | number:'1.0-0' }}% başarı</span> }
+                            <small>{{ activity.completedAt | date:'dd.MM.yyyy HH:mm' }}</small>
+                        </div>
+                    </div>
+                    }
+                </div>
+                } @else {
+                <div class="data-unavailable">
+                    <mat-icon>event_busy</mat-icon>
+                    <p>Seçilen tarih aralığında kayıtlı aktivite bulunmuyor.</p>
+                </div>
+                }
+            </mat-card-content>
+        </mat-card>
+    </div>
     }
 </div>

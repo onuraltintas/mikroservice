@@ -13,6 +13,7 @@ import { MatTableModule } from '@angular/material/table';
 import { ReportsService } from '../../../core/services/reports.service';
 import { TeacherClassOverviewReport, TeacherTimeBasedProgressReport } from '../../../core/models/report.model';
 import { TeachersService } from '../../../core/services/teachers.service';
+import { StudentsService } from '../../../core/services/students.service';
 import { InstitutionsService } from '../../../core/services/institutions.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Student } from '../../../core/models/student.model';
@@ -37,6 +38,7 @@ import { Student } from '../../../core/models/student.model';
 export class DashboardComponent implements OnInit, OnDestroy {
   private reportsService   = inject(ReportsService);
   private teachersService  = inject(TeachersService);
+  private studentsService  = inject(StudentsService);
   private institutionsService = inject(InstitutionsService);
   private authService      = inject(AuthService);
   private router           = inject(Router);
@@ -87,7 +89,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     forkJoin({
       overview: this.reportsService.getTeacherClassOverviewReport(tid, startDate, endDate),
       progress: this.reportsService.getTeacherTimeBasedProgressReport(tid, startDate, endDate),
-      students: this.teachersService.getMyStudents(),
+      students: this.isInstitutionViewer()
+        ? this.studentsService.getInstitutionStudents()
+        : this.teachersService.getMyStudents(),
     }).pipe(takeUntil(this.destroy$), finalize(() => this.loading = false))
       .subscribe(({ overview, progress, students }) => {
         this.overview = overview;
@@ -96,6 +100,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }, () => {
         this.errorMessage = 'Panel verileri yüklenemedi. Lütfen tekrar deneyin.';
       });
+  }
+
+  private isInstitutionViewer(): boolean {
+    return this.authService.hasRole('InstitutionAdmin') || this.authService.hasRole('InstitutionOwner');
   }
 
   viewStudentDetails(studentId: string): void {
