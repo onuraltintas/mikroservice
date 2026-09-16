@@ -69,6 +69,7 @@
         <!-- Standard Link (No Children) -->
         @if (!item.children) {
         <a [routerLink]="item.route" routerLinkActive="active-menu-item"
+            [routerLinkActiveOptions]="{ exact: true }"
             class="group flex items-center px-3 py-2.5 text-sm font-medium text-gray-600 dark:text-slate-400 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 hover:text-indigo-600 dark:hover:text-white transition-all duration-200 relative mb-1"
             [class.justify-center]="layoutService.isSidebarCollapsed()">
 
