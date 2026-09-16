@@ -10,37 +10,40 @@
         </mat-form-field>
     </div>
 
-    <nav mat-tab-nav-bar [tabPanel]="tabPanel">
-        <a mat-tab-link routerLink="class-overview" queryParamsHandling="merge" routerLinkActive
-            #rla1="routerLinkActive" [active]="rla1.isActive">
-            <mat-icon class="tab-icon">groups</mat-icon>
-            Sınıf Özeti
-        </a>
-        <a mat-tab-link routerLink="content-analysis" queryParamsHandling="merge" routerLinkActive
-            #rla2="routerLinkActive" [active]="rla2.isActive">
-            <mat-icon class="tab-icon">analytics</mat-icon>
-            İçerik Analizi
-        </a>
-        <a mat-tab-link routerLink="progress" queryParamsHandling="merge" routerLinkActive #rla3="routerLinkActive"
-            [active]="rla3.isActive">
-            <mat-icon class="tab-icon">timeline</mat-icon>
-            Zaman Bazlı İlerleme
-        </a>
-        <a mat-tab-link routerLink="student-detail" queryParamsHandling="merge" routerLinkActive #rla4="routerLinkActive"
-            [active]="rla4.isActive">
-            <mat-icon class="tab-icon">person_search</mat-icon>
-            Öğrenci Detayı
-        </a>
-    </nav>
-
     <div class="report-selection-empty" *ngIf="!reportsReady()">
         <mat-icon>person_search</mat-icon>
         <h2>Öğretmen seçin</h2>
         <p>Öğretmen bazlı raporu görüntülemek için yukarıdaki listeden bir öğretmen seçin.</p>
     </div>
 
-    <div class="tab-content" *ngIf="reportsReady()">
-        <mat-tab-nav-panel #tabPanel></mat-tab-nav-panel>
-        <router-outlet></router-outlet>
-    </div>
+    <ng-container *ngIf="reportsReady()">
+        <nav mat-tab-nav-bar [tabPanel]="tabPanel">
+            <a mat-tab-link routerLink="class-overview" queryParamsHandling="merge" routerLinkActive
+                #rla1="routerLinkActive" [active]="rla1.isActive">
+                <mat-icon class="tab-icon">groups</mat-icon>
+                Sınıf Özeti
+            </a>
+            <a mat-tab-link routerLink="content-analysis" queryParamsHandling="merge" routerLinkActive
+                #rla2="routerLinkActive" [active]="rla2.isActive">
+                <mat-icon class="tab-icon">analytics</mat-icon>
+                İçerik Analizi
+            </a>
+            <a mat-tab-link routerLink="progress" queryParamsHandling="merge" routerLinkActive #rla3="routerLinkActive"
+                [active]="rla3.isActive">
+                <mat-icon class="tab-icon">timeline</mat-icon>
+                Zaman Bazlı İlerleme
+            </a>
+            <a mat-tab-link routerLink="student-detail" queryParamsHandling="merge" routerLinkActive #rla4="routerLinkActive"
+                [active]="rla4.isActive">
+                <mat-icon class="tab-icon">person_search</mat-icon>
+                Öğrenci Detayı
+            </a>
+        </nav>
+
+        <mat-tab-nav-panel #tabPanel>
+            <div class="tab-content">
+                <router-outlet></router-outlet>
+            </div>
+        </mat-tab-nav-panel>
+    </ng-container>
 </div>
