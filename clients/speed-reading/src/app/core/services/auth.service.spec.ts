@@ -74,7 +74,7 @@ describe('AuthService', () => {
   });
 
   it('uses the canonical auth endpoint for login and sends the session cookie', () => {
-    service.login({ email: 'admin@example.com', password: 'Password1!' }).subscribe();
+    service.login({ email: 'admin@example.com', password: 'Password1!', rememberMe: true }).subscribe();
 
     const request = http.expectOne('/api/auth/login');
     expect(request.request.withCredentials).toBeTrue();
@@ -110,7 +110,7 @@ describe('AuthService', () => {
 
   it('keeps an MFA login challenge outside the authenticated session state', () => {
     let response: AuthResponse | undefined;
-    service.login({ email: 'admin@example.com', password: 'Password1!' }).subscribe(value => response = value);
+    service.login({ email: 'admin@example.com', password: 'Password1!', rememberMe: true }).subscribe(value => response = value);
 
     const request = http.expectOne('/api/auth/login');
     request.flush({
@@ -194,7 +194,7 @@ describe('AuthService', () => {
 
   it('does not persist the access token in browser storage after login', () => {
     const accessToken = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyIiwicm9sZSI6IlN5c3RlbUFkbWluIiwiZXhwIjo0MTAyNDQ0ODAwfQ.';
-    service.login({ email: 'admin@example.com', password: 'Password1!' }).subscribe();
+    service.login({ email: 'admin@example.com', password: 'Password1!', rememberMe: true }).subscribe();
 
     const request = http.expectOne('/api/auth/login');
     request.flush({

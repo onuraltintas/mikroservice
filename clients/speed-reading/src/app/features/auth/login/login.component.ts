@@ -173,7 +173,7 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
       localStorage.removeItem('rememberedEmail');
     }
 
-    this.authService.login({ email, password })
+    this.authService.login({ email, password, rememberMe })
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (response: any) => {
