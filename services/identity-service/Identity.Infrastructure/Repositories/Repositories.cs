@@ -109,7 +109,7 @@ public class UserRepository : IUserRepository
 
         return await _context.Users
             .AsNoTracking()
-            .Where(user => ids.Contains(user.Id))
+            .Where(user => Enumerable.Contains(ids, user.Id))
             .Select(user => new SpeedReadingUserDirectoryItem(
                 user.Id,
                 user.FirstName,
@@ -429,12 +429,12 @@ public class UserRepository : IUserRepository
         var userIds = users.Select(user => user.Id).ToArray();
         var teacherProfiles = await _context.TeacherProfiles
             .AsNoTracking()
-            .Where(profile => userIds.Contains(profile.UserId) && profile.IsActive)
+            .Where(profile => Enumerable.Contains(userIds, profile.UserId) && profile.IsActive)
             .Include(profile => profile.Institution)
             .ToDictionaryAsync(profile => profile.UserId, cancellationToken);
         var studentProfiles = await _context.StudentProfiles
             .AsNoTracking()
-            .Where(profile => userIds.Contains(profile.UserId) && profile.IsActive)
+            .Where(profile => Enumerable.Contains(userIds, profile.UserId) && profile.IsActive)
             .Include(profile => profile.Institution)
             .ToDictionaryAsync(profile => profile.UserId, cancellationToken);
         var teacherUserIds = teacherProfiles.Keys.ToArray();
@@ -442,7 +442,7 @@ public class UserRepository : IUserRepository
             from assignment in _context.TeacherStudentAssignments.AsNoTracking()
             join teacher in _context.TeacherProfiles.AsNoTracking()
                 on assignment.TeacherId equals teacher.Id
-            where teacherUserIds.Contains(teacher.UserId)
+            where Enumerable.Contains(teacherUserIds, teacher.UserId)
                 && assignment.IsActive
                 && assignment.InstitutionId == teacher.InstitutionId
                 && assignment.Student.IsActive
@@ -523,7 +523,7 @@ public class UserRepository : IUserRepository
     public async Task<List<User>> GetUsersByRolesAsync(List<string> roleNames, CancellationToken cancellationToken)
     {
         return await _context.Users
-            .Where(u => u.Roles.Any(r => roleNames.Contains(r.Role.Name)))
+            .Where(u => u.Roles.Any(r => Enumerable.Contains(roleNames, r.Role.Name)))
             .ToListAsync(cancellationToken);
     }
 }
@@ -1075,7 +1075,7 @@ public class InstitutionRepository : IInstitutionRepository
             .Include(profile => profile.User)
             .Include(profile => profile.Institution)
             .Where(profile =>
-                distinctStudentUserIds.Contains(profile.UserId)
+                Enumerable.Contains(distinctStudentUserIds, profile.UserId)
                 && profile.IsActive
                 && profile.User.IsActive
                 && profile.InstitutionId == institutionId
@@ -1097,7 +1097,7 @@ public class InstitutionRepository : IInstitutionRepository
                 .Where(assignment =>
                     assignment.TeacherId == teacher!.Id
                     && assignment.IsActive
-                    && studentProfileIds.Contains(assignment.StudentId)
+                    && Enumerable.Contains(studentProfileIds, assignment.StudentId)
                     && assignment.InstitutionId == institutionId)
                 .Select(assignment => assignment.StudentId)
                 .Distinct()
@@ -1227,7 +1227,7 @@ public class InstitutionRepository : IInstitutionRepository
             if (!isSystemAdministrator
                 && isInstitutionAdministrator
                 && (!targetTeacherProfile.InstitutionId.HasValue
-                    || !institutionAdminIds.Contains(targetTeacherProfile.InstitutionId.Value)))
+                    || !Enumerable.Contains(institutionAdminIds, targetTeacherProfile.InstitutionId.Value)))
             {
                 return null;
             }
@@ -1239,7 +1239,7 @@ public class InstitutionRepository : IInstitutionRepository
 
         var studentProfiles = await _context.StudentProfiles
             .AsNoTracking()
-            .Where(profile => distinctStudentUserIds.Contains(profile.UserId)
+            .Where(profile => Enumerable.Contains(distinctStudentUserIds, profile.UserId)
                 && profile.IsActive
                 && profile.User.IsActive
                 && (!profile.InstitutionId.HasValue
@@ -1263,8 +1263,8 @@ public class InstitutionRepository : IInstitutionRepository
             : await _context.TeacherStudentAssignments
                 .AsNoTracking()
                 .Where(assignment => assignment.IsActive
-                    && teacherProfileIds.Contains(assignment.TeacherId)
-                    && studentProfileIds.Contains(assignment.StudentId))
+                    && Enumerable.Contains(teacherProfileIds, assignment.TeacherId)
+                    && Enumerable.Contains(studentProfileIds, assignment.StudentId))
                 .Select(assignment => new TeacherStudentReadAssignment(
                     assignment.TeacherId,
                     assignment.StudentId,
@@ -1278,7 +1278,7 @@ public class InstitutionRepository : IInstitutionRepository
                 || (activeParentProfile && profile.ParentId == viewerUserId)
                 || (profile.ShareProgressWithTeachers && (
                     (!targetTeacherUserId.HasValue
-                        && institutionAdminIds.Contains(profile.InstitutionId ?? Guid.Empty)
+                        && Enumerable.Contains(institutionAdminIds, profile.InstitutionId ?? Guid.Empty)
                         && profile.InstitutionId.HasValue)
                     || authorizationTeacherProfiles.Any(teacher =>
                         teacher.CanViewAllInstitutionStudents
@@ -1528,7 +1528,7 @@ public class TeacherRepository : ITeacherRepository
                 .Where(student => student.IsActive
                     && student.User.IsActive
                     && student.InstitutionId.HasValue
-                    && institutionScopeIds.Contains(student.InstitutionId.Value)
+                    && Enumerable.Contains(institutionScopeIds, student.InstitutionId.Value)
                     && student.User.Roles.Any(userRole =>
                         !userRole.Role.IsDeleted
                         && userRole.Role.Name == "Student")
@@ -1617,7 +1617,7 @@ public class TeacherRepository : ITeacherRepository
             join student in _context.StudentProfiles.AsNoTracking()
                 on assignment.StudentId equals student.Id
             where assignment.IsActive
-                && teacherIds.Contains(assignment.TeacherId)
+                && Enumerable.Contains(teacherIds, assignment.TeacherId)
                 && student.IsActive
                 && student.User.IsActive
                 && (!teacher.InstitutionId.HasValue
@@ -1656,7 +1656,7 @@ public class TeacherRepository : ITeacherRepository
                 .Where(student => student.IsActive
                     && student.User.IsActive
                     && student.InstitutionId.HasValue
-                    && institutionIds.Contains(student.InstitutionId.Value)
+                    && Enumerable.Contains(institutionIds, student.InstitutionId.Value)
                     && !student.ShareProgressWithTeachers
                     && (student.Institution == null || student.Institution.IsActive)
                     && student.User.Roles.Any(userRole =>
@@ -1682,8 +1682,8 @@ public class TeacherRepository : ITeacherRepository
                 && (!student.InstitutionId.HasValue
                     || (student.Institution != null && student.Institution.IsActive))
                 && ((student.InstitutionId.HasValue
-                        && institutionIds.Contains(student.InstitutionId.Value))
-                    || assignedStudentUserIds.Contains(student.UserId))
+                        && Enumerable.Contains(institutionIds, student.InstitutionId.Value))
+                    || Enumerable.Contains(assignedStudentUserIds, student.UserId))
                 && student.ShareProgressWithTeachers);
         var totalStudents = await studentQuery.CountAsync(cancellationToken);
 

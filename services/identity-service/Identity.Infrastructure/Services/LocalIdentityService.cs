@@ -421,7 +421,7 @@ public class LocalIdentityService : IIdentityService
 
         var activeAdministrators = await _context.Users
             .Where(candidate => candidate.IsActive
-                && candidate.Roles.Any(userRole => systemAdminRoleIds.Contains(userRole.RoleId)))
+                && candidate.Roles.Any(userRole => Enumerable.Contains(systemAdminRoleIds, userRole.RoleId)))
             .CountAsync(cancellationToken);
 
         return activeAdministrators <= 1;
