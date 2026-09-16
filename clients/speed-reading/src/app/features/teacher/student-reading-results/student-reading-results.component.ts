@@ -139,11 +139,19 @@ export class StudentReadingResultsComponent implements OnInit {
       return;
     }
 
+    const measuredSessions = this.sessions.filter(session => session.isMeasured !== false);
+    const comprehensionSessions = this.sessions.filter(session => session.totalQuestions > 0);
     this.aggregateStats = {
       totalSessions: this.sessions.length,
-      averageWPM: this.sessions.reduce((sum, s) => sum + s.calculatedWPM, 0) / this.sessions.length,
-      averageComprehension: this.sessions.reduce((sum, s) => sum + s.comprehensionRate, 0) / this.sessions.length,
-      averageEfficiency: this.sessions.reduce((sum, s) => sum + s.efficiencyScore, 0) / this.sessions.length
+      averageWPM: measuredSessions.length === 0
+        ? 0
+        : measuredSessions.reduce((sum, s) => sum + s.calculatedWPM, 0) / measuredSessions.length,
+      averageComprehension: comprehensionSessions.length === 0
+        ? 0
+        : comprehensionSessions.reduce((sum, s) => sum + s.comprehensionRate, 0) / comprehensionSessions.length,
+      averageEfficiency: measuredSessions.length === 0
+        ? 0
+        : measuredSessions.reduce((sum, s) => sum + s.efficiencyScore, 0) / measuredSessions.length
     };
   }
 

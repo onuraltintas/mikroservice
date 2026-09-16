@@ -15,7 +15,8 @@ public sealed class ExerciseSessionAnswer : Entity
         string answer,
         bool isCorrect,
         int timeSpentSeconds,
-        int bloomLevel)
+        int bloomLevel,
+        int questionType)
     {
         Id = id;
         SessionId = sessionId;
@@ -24,6 +25,7 @@ public sealed class ExerciseSessionAnswer : Entity
         IsCorrect = isCorrect;
         TimeSpentSeconds = timeSpentSeconds;
         BloomLevel = bloomLevel;
+        QuestionType = questionType;
     }
 
     public static ExerciseSessionAnswer Import(
@@ -33,13 +35,14 @@ public sealed class ExerciseSessionAnswer : Entity
         string answer,
         bool isCorrect,
         int timeSpentSeconds,
-        int bloomLevel)
+        int bloomLevel,
+        int questionType = 0)
     {
         if (id == Guid.Empty || sessionId == Guid.Empty || questionId == Guid.Empty)
             throw new ArgumentException("Answer identifiers are required.");
         if (string.IsNullOrWhiteSpace(answer))
             throw new ArgumentException("Answer is required.", nameof(answer));
-        if (timeSpentSeconds < 0 || bloomLevel < 0)
+        if (timeSpentSeconds < 0 || bloomLevel is < 0 or > 6 || questionType is < 0 or > 3)
             throw new ArgumentOutOfRangeException(nameof(timeSpentSeconds));
 
         return new ExerciseSessionAnswer(
@@ -49,7 +52,8 @@ public sealed class ExerciseSessionAnswer : Entity
             answer.Trim(),
             isCorrect,
             timeSpentSeconds,
-            bloomLevel);
+            bloomLevel,
+            questionType);
     }
 
     public Guid SessionId { get; private set; }
@@ -58,4 +62,5 @@ public sealed class ExerciseSessionAnswer : Entity
     public bool IsCorrect { get; private set; }
     public int TimeSpentSeconds { get; private set; }
     public int BloomLevel { get; private set; }
+    public int QuestionType { get; private set; }
 }

@@ -25,12 +25,16 @@ internal sealed class OwnedSpeedReadingAnalytics(
             .Select(group => new
             {
                 Count = group.Count(),
-                AverageWpm = group.Average(item => (decimal)item.CalculatedWpm),
+                AverageWpm = group.Where(item => item.IsMeasured && item.CalculatedWpm > 0)
+                    .Select(item => (decimal?)item.CalculatedWpm)
+                    .Average() ?? 0,
                 AverageComprehension = group.Where(item => item.TotalQuestions > 0)
                     .Select(item => (decimal?)item.ComprehensionRate)
                     .Average() ?? 0,
                 TotalSeconds = group.Sum(item => (long)item.ReadingTimeSeconds),
-                BestWpm = group.Max(item => item.CalculatedWpm)
+                BestWpm = group.Where(item => item.IsMeasured && item.CalculatedWpm > 0)
+                    .Select(item => (int?)item.CalculatedWpm)
+                    .Max() ?? 0
             })
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -41,13 +45,16 @@ internal sealed class OwnedSpeedReadingAnalytics(
                 Date = group.Key,
                 ReadingSessions = group.Count(),
                 ReadingSeconds = group.Sum(item => (long)item.ReadingTimeSeconds),
-                AverageWpm = group.Average(item => (decimal)item.CalculatedWpm),
+                AverageWpm = group.Where(item => item.IsMeasured && item.CalculatedWpm > 0)
+                    .Select(item => (decimal?)item.CalculatedWpm)
+                    .Average() ?? 0,
                 AverageComprehension = group.Where(item => item.TotalQuestions > 0)
                     .Select(item => (decimal?)item.ComprehensionRate)
                     .Average() ?? 0
             })
             .ToListAsync(cancellationToken);
         var latestReading = await readingQuery
+            .Where(item => item.IsMeasured && item.CalculatedWpm > 0)
             .OrderByDescending(item => item.CompletedAt)
             .Select(item => (decimal?)item.CalculatedWpm)
             .FirstOrDefaultAsync(cancellationToken);
@@ -228,7 +235,8 @@ internal sealed class OwnedSpeedReadingAnalytics(
         CancellationToken cancellationToken = default)
     {
         var (start, end) = NormalizeRange(dateFrom, dateTo);
-        var query = ReadingSessionsFor(userId, start, end);
+        var query = ReadingSessionsFor(userId, start, end)
+            .Where(item => item.IsMeasured && item.CalculatedWpm > 0);
         var aggregate = await query.GroupBy(_ => 1).Select(group => new
         {
             Count = group.Count(),
@@ -326,6 +334,38 @@ internal sealed class OwnedSpeedReadingAnalytics(
                 item.CorrectAnswers,
                 item.Average >= 80 ? "Strong" : item.Average >= 60 ? "Average" : "Needs Improvement"))
             .ToList();
+        var questionTypeRows = await (
+            from answer in db.ReadingSessionAnswers.AsNoTracking()
+            join session in query on answer.SessionId equals session.Id
+            group answer by answer.QuestionType into grouped
+            select new
+            {
+                QuestionType = grouped.Key,
+                QuestionsAttempted = grouped.Count(),
+                CorrectAnswers = grouped.Count(item => item.IsCorrect)
+            })
+            .ToListAsync(cancellationToken);
+        var questionTypes = ReadingQuestionAnalyticsRules.SummarizeQuestionTypes(
+            questionTypeRows.Select(item => new ReadingQuestionTypeAggregate(
+                item.QuestionType,
+                item.QuestionsAttempted,
+                item.CorrectAnswers)));
+        var bloomLevelRows = await (
+            from answer in db.ReadingSessionAnswers.AsNoTracking()
+            join session in query on answer.SessionId equals session.Id
+            group answer by answer.BloomLevel into grouped
+            select new
+            {
+                BloomLevel = grouped.Key,
+                QuestionsAttempted = grouped.Count(),
+                CorrectAnswers = grouped.Count(item => item.IsCorrect)
+            })
+            .ToListAsync(cancellationToken);
+        var bloomLevels = ReadingQuestionAnalyticsRules.SummarizeBloomLevels(
+            bloomLevelRows.Select(item => new ReadingQuestionBloomAggregate(
+                item.BloomLevel,
+                item.QuestionsAttempted,
+                item.CorrectAnswers)));
         var latest = await query.OrderByDescending(item => item.CompletedAt)
             .Select(item => (decimal?)item.ComprehensionRate).FirstOrDefaultAsync(cancellationToken);
         var successRate = aggregate?.TotalQuestions > 0
@@ -335,7 +375,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
 
         return new StudentComprehensionAnalytics(
             userId, start, end, latest ?? average, average, aggregate?.Maximum ?? 0,
-            aggregate?.Minimum ?? 0, improvementRate, trend, categories, [],
+            aggregate?.Minimum ?? 0, improvementRate, trend, categories, questionTypes, bloomLevels,
             aggregate?.TotalQuestions ?? 0, aggregate?.CorrectAnswers ?? 0, successRate,
             benchmark,
             categories.Where(item => item.Value < 60).Select(item => item.CategoryName).ToList(),
@@ -504,9 +544,10 @@ internal sealed class OwnedSpeedReadingAnalytics(
                 item.CompletedAt,
                 item.ReadingTextId,
                 item.ReadingTimeSeconds,
-                item.CalculatedWpm,
-                item.ComprehensionRate,
-                item.TotalQuestions))
+                item.IsMeasured && item.CalculatedWpm > 0 ? (int?)item.CalculatedWpm : null,
+                item.TotalQuestions > 0 ? (decimal?)item.ComprehensionRate : null,
+                item.TotalQuestions,
+                item.IsMeasured && item.CalculatedWpm > 0))
             .ToListAsync(cancellationToken);
         var recentExerciseRows = await exerciseQuery
             .OrderByDescending(item => item.CompletedDate)
@@ -555,8 +596,8 @@ internal sealed class OwnedSpeedReadingAnalytics(
                 item.Wpm,
                 item.Comprehension,
                 null,
-                item.TotalQuestions > 0,
-                true))
+                item.IsMeasured,
+                item.TotalQuestions > 0))
             .Concat(recentExerciseRows.Select(item => new StudentActivityDetail(
                 NormalizeUtc(item.CompletedAt),
                 "exercise",
@@ -617,7 +658,8 @@ internal sealed class OwnedSpeedReadingAnalytics(
                 ? await db.ReadingSessions.AsNoTracking().Where(item => item.TotalQuestions > 0
                         && item.CompletedAt >= start && item.CompletedAt <= end)
                     .Select(item => (decimal?)item.ComprehensionRate).AverageAsync(cancellationToken) ?? 0
-                : await db.ReadingSessions.AsNoTracking().Where(item => item.CompletedAt >= start && item.CompletedAt <= end)
+                : await db.ReadingSessions.AsNoTracking().Where(item => item.IsMeasured && item.CalculatedWpm > 0
+                        && item.CompletedAt >= start && item.CompletedAt <= end)
                     .Select(item => (decimal?)item.CalculatedWpm).AverageAsync(cancellationToken) ?? 0;
             cache.Set(platformKey, platformAverage, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5), Size = 1 });
         }
@@ -636,7 +678,8 @@ internal sealed class OwnedSpeedReadingAnalytics(
                         && institutionUsers.Contains(item.UserId)
                         && item.CompletedAt >= start && item.CompletedAt <= end)
                         .Select(item => (decimal?)item.ComprehensionRate).AverageAsync(cancellationToken) ?? 0
-                    : await db.ReadingSessions.AsNoTracking().Where(item => institutionUsers.Contains(item.UserId)
+                    : await db.ReadingSessions.AsNoTracking().Where(item => item.IsMeasured && item.CalculatedWpm > 0
+                        && institutionUsers.Contains(item.UserId)
                         && item.CompletedAt >= start && item.CompletedAt <= end)
                         .Select(item => (decimal?)item.CalculatedWpm).AverageAsync(cancellationToken) ?? 0;
                 cache.Set(institutionKey, institutionAverage, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5), Size = 1 });
@@ -648,7 +691,9 @@ internal sealed class OwnedSpeedReadingAnalytics(
     }
 
     private static async Task<decimal> AverageWpmAsync(IQueryable<ReadingSession> query, CancellationToken cancellationToken) =>
-        await query.Select(item => (decimal?)item.CalculatedWpm).AverageAsync(cancellationToken) ?? 0;
+        await query.Where(item => item.IsMeasured && item.CalculatedWpm > 0)
+            .Select(item => (decimal?)item.CalculatedWpm)
+            .AverageAsync(cancellationToken) ?? 0;
 
     private static async Task<decimal> AverageComprehensionAsync(IQueryable<ReadingSession> query, CancellationToken cancellationToken) =>
         await query.Where(item => item.TotalQuestions > 0)
@@ -658,7 +703,8 @@ internal sealed class OwnedSpeedReadingAnalytics(
     private static async Task<decimal> MedianWpmAsync(IQueryable<ReadingSession> query, int count, CancellationToken cancellationToken)
     {
         if (count == 0) return 0;
-        var middle = await query.OrderBy(item => item.CalculatedWpm).Skip((count - 1) / 2)
+        var middle = await query.Where(item => item.IsMeasured && item.CalculatedWpm > 0)
+            .OrderBy(item => item.CalculatedWpm).Skip((count - 1) / 2)
             .Take(count % 2 == 0 ? 2 : 1).Select(item => (decimal)item.CalculatedWpm).ToListAsync(cancellationToken);
         return middle.Count == 0 ? 0 : middle.Average();
     }
@@ -808,9 +854,10 @@ internal sealed class OwnedSpeedReadingAnalytics(
         DateTime CompletedAt,
         Guid ReadingTextId,
         int DurationSeconds,
-        int Wpm,
-        decimal Comprehension,
-        int TotalQuestions);
+        int? Wpm,
+        decimal? Comprehension,
+        int TotalQuestions,
+        bool IsMeasured);
 
     private sealed record ExerciseActivityRow(
         DateTime CompletedAt,

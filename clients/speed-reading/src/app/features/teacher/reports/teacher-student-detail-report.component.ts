@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatSelectModule } from '@angular/material/select';
@@ -21,8 +21,8 @@ import { RadarChartComponent } from '../../../shared/components/charts/radar-cha
 import { AuthService } from '../../../core/services/auth.service';
 import { TeachersService } from '../../../core/services/teachers.service';
 import { StudentsService } from '../../../core/services/students.service';
-import { map, startWith } from 'rxjs/operators';
-import { Observable } from 'rxjs';
+import { map, startWith, takeUntil } from 'rxjs/operators';
+import { Observable, Subject } from 'rxjs';
 
 type DateRangePreset = '7days' | '30days' | '90days' | 'thisMonth' | 'thisSemester' | 'custom';
 
@@ -55,12 +55,15 @@ interface StudentOption {
   templateUrl: './teacher-student-detail-report.component.html',
   styleUrls: ['./teacher-student-detail-report.component.scss']
 })
-export class TeacherStudentDetailReportComponent implements OnInit {
+export class TeacherStudentDetailReportComponent implements OnInit, OnDestroy {
   private reportsService = inject(ReportsService);
   private authService = inject(AuthService);
   private teachersService = inject(TeachersService);
   private studentsService = inject(StudentsService);
   private route = inject(ActivatedRoute);
+  private readonly destroy$ = new Subject<void>();
+  private activeTeacherId: string | null = null;
+  private routeInitialized = false;
 
   report = signal<TeacherStudentDetailReport | null>(null);
   loading = signal(false);
@@ -90,21 +93,41 @@ export class TeacherStudentDetailReportComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.loadStudents();
-
     // Setup autocomplete filter
     this.filteredStudents$ = this.studentSearchControl.valueChanges.pipe(
       startWith(''),
       map(value => this.filterStudents(value || ''))
     );
 
-    // Check for route param
-    const studentId = this.route.snapshot.paramMap.get('studentId')
+    const initialStudentId = this.route.snapshot.paramMap.get('studentId')
       ?? this.route.snapshot.queryParamMap.get('studentId');
-    if (studentId) {
-      this.selectedStudentId.set(studentId);
-      this.loadReport();
-    }
+    if (initialStudentId) this.selectedStudentId.set(initialStudentId);
+
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(params => {
+        const teacherId = params['teacherId'] ?? null;
+        const studentId = params['studentId'] ?? initialStudentId;
+        const teacherChanged = !this.routeInitialized || this.activeTeacherId !== teacherId;
+        this.activeTeacherId = teacherId;
+        this.routeInitialized = true;
+
+        if (studentId && this.selectedStudentId() !== studentId) {
+          this.selectedStudentId.set(studentId);
+        }
+
+        if (teacherChanged) {
+          this.loadStudents();
+          if (this.selectedStudentId()) this.loadReport();
+        } else if (studentId && this.report() === null) {
+          this.loadReport();
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private filterStudents(value: string | StudentOption): StudentOption[] {
@@ -136,10 +159,12 @@ export class TeacherStudentDetailReportComponent implements OnInit {
   loadStudents(): void {
     this.loadingStudents.set(true);
 
+    const selectedTeacherId = this.activeTeacherId ?? undefined;
+
     const roster$ = this.isInstitutionViewer()
-      ? this.studentsService.getInstitutionStudents()
+      ? this.studentsService.getInstitutionStudents(undefined, undefined, undefined, selectedTeacherId)
       : this.teachersService.getMyStudents();
-    roster$.subscribe({
+    roster$.pipe(takeUntil(this.destroy$)).subscribe({
       next: (data) => {
         this.students = data.map(s => ({
           id: s.id,
@@ -235,34 +260,33 @@ export class TeacherStudentDetailReportComponent implements OnInit {
     const studentId = this.selectedStudentId();
     if (!studentId) return;
 
-    const effectiveId = this.route.snapshot.queryParamMap.get('teacherId') || this.authService.currentUserValue?.id;
+    const selectedTeacherId = this.activeTeacherId;
+    const teacherId = selectedTeacherId
+      || (this.isInstitutionViewer() ? '' : this.authService.currentUserValue?.id ?? '');
 
-    if (!effectiveId) {
+    if (!teacherId && !this.isInstitutionViewer()) {
       console.error('User ID not found in auth service');
       return;
     }
-    const teacherId = effectiveId;
 
     this.loading.set(true);
+    this.privacyRestricted.set(false);
     const { startDate, endDate } = this.getDateRange();
 
-    this.reportsService.getTeacherStudentDetailReport(teacherId, studentId, startDate, endDate).subscribe({
-      next: (data) => {
-        const dashboard = data.studentReports?.dashboard;
-        const isRestricted = dashboard &&
-          dashboard.currentLevel === 0 &&
-          dashboard.totalActivities === 0 &&
-          dashboard.currentWPM === 0;
-
-        this.privacyRestricted.set(!!isRestricted);
-        this.report.set(data);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        console.error('Error loading report:', err);
-        this.loading.set(false);
-      }
-    });
+    this.reportsService.getTeacherStudentDetailReport(teacherId, studentId, startDate, endDate)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.report.set(data);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          console.error('Error loading report:', err);
+          this.report.set(null);
+          this.privacyRestricted.set(err?.status === 403);
+          this.loading.set(false);
+        }
+      });
   }
 
   exportReport(): void {

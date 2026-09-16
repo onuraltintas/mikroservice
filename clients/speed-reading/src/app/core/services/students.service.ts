@@ -13,6 +13,7 @@ import {
   Exercise,
   LevelUpResult
 } from '../models/student.model';
+import { PagedResult } from '../models/user.model';
 
 /**
  * Students Service - Refactored for ApiResponse<T> compatibility
@@ -62,14 +63,42 @@ export class StudentsService {
     isActive?: boolean,
     teacherUserId?: string
   ): Observable<Student[]> {
-    let params = new HttpParams().set('pageSize', '100');
+    return this.getInstitutionStudentsPage(1, 100, searchTerm, gradeLevel, isActive, teacherUserId)
+      .pipe(map(page => page.items));
+  }
+
+  getInstitutionStudentsPage(
+    page = 1,
+    pageSize = 25,
+    searchTerm?: string,
+    gradeLevel?: number,
+    isActive?: boolean,
+    teacherUserId?: string
+  ): Observable<PagedResult<Student>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('pageSize', pageSize.toString());
     if (searchTerm) params = params.set('search', searchTerm);
     if (gradeLevel !== undefined) params = params.set('gradeLevel', gradeLevel.toString());
     if (isActive !== undefined) params = params.set('isActive', isActive.toString());
     if (teacherUserId) params = params.set('teacherUserId', teacherUserId);
 
     return this.http.get<any>(`${this.identityApiUrl}/institution/students`, { params }).pipe(
-      map(result => (Array.isArray(result) ? result : (result?.items ?? [])).map((student: any) => this.toStudent(student)))
+      map(result => {
+        const rows = Array.isArray(result) ? result : (result?.items ?? []);
+        const resultPage = result?.pageNumber ?? page;
+        const resultSize = result?.pageSize ?? pageSize;
+        const totalCount = result?.totalCount ?? rows.length;
+        return {
+          items: rows.map((student: any) => this.toStudent(student)),
+          totalCount,
+          pageNumber: resultPage,
+          pageSize: resultSize,
+          totalPages: Math.max(1, Math.ceil(totalCount / resultSize)),
+          hasPreviousPage: resultPage > 1,
+          hasNextPage: resultPage < Math.ceil(totalCount / resultSize)
+        };
+      })
     );
   }
 

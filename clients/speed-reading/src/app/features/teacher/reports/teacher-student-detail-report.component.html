@@ -84,8 +84,8 @@
             <mat-icon class="privacy-icon">lock</mat-icon>
         </div>
         <h2>Veri Paylaşımı Kapalı</h2>
-        <p>Bu öğrenci, gelişim verilerini öğretmenleriyle paylaşmayı tercih etmemiştir.</p>
-        <p class="privacy-hint">Öğrenci, ayarlar menüsünden "Gelişimimi Öğretmenimle Paylaş" seçeneğini açarak
+        <p>Bu öğrenci, gelişim verilerini öğretmeni ve kurum yöneticileriyle paylaşmayı tercih etmemiştir.</p>
+        <p class="privacy-hint">Öğrenci, ayarlar menüsünden "Öğretmen ve kurumla paylaş" seçeneğini açarak
             verilerini görünür yapabilir.</p>
     </div>
     } @else if (report() && report()?.comparisonChart) {
@@ -149,7 +149,30 @@
                 } @else {
                 <div class="data-unavailable">
                     <mat-icon>info</mat-icon>
-                    <p>Soru türü bazlı sonuç bu kayıtta tutulmuyor. Genel anlama ve kategori sonuçları kullanılabilir.</p>
+                    <p>Seçilen tarih aralığında soru türü cevabı bulunan okuma oturumu yok. Genel anlama ve kategori sonuçları kullanılabilir.</p>
+                </div>
+                }
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card>
+            <mat-card-header>
+                <mat-card-title><mat-icon>psychology</mat-icon> Bloom seviyesine göre anlama</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                @if ((report()?.studentReports?.comprehension?.bloomLevelChart?.data?.length ?? 0) > 0) {
+                <mat-list>
+                    @for (item of report()!.studentReports.comprehension.bloomLevelChart.data; track item.name) {
+                    <mat-list-item>
+                        <span class="metric-label">{{ item.name }}</span>
+                        <span class="metric-value">{{ item.value | number:'1.0-0' }}%</span>
+                    </mat-list-item>
+                    }
+                </mat-list>
+                } @else {
+                <div class="data-unavailable">
+                    <mat-icon>info</mat-icon>
+                    <p>Seçilen tarih aralığında Bloom seviyesi cevabı bulunan okuma oturumu yok.</p>
                 </div>
                 }
             </mat-card-content>

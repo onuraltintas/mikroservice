@@ -11,6 +11,7 @@ import { ReactiveFormsModule, FormBuilder, FormControl, FormGroup, Validators } 
 import { finalize } from 'rxjs/operators';
 import { InstitutionsService } from '../../core/services/institutions.service';
 import { AuthService } from '../../core/services/auth.service';
+import { UsersService } from '../../core/services/users.service';
 import { ToasterService } from '../../core/services/toaster.service';
 import { Institution } from '../../core/models/institution.model';
 import { InstitutionAccessLicense, SubscriptionService } from '../../core/services/subscription.service';
@@ -168,6 +169,7 @@ export class InstitutionSettingsComponent implements OnInit {
     private fb = inject(FormBuilder);
     private institutionsService = inject(InstitutionsService);
     private authService = inject(AuthService);
+    private usersService = inject(UsersService);
     private subscriptionService = inject(SubscriptionService);
     private toaster = inject(ToasterService);
     private locations = inject(LocationsService);
@@ -218,15 +220,41 @@ export class InstitutionSettingsComponent implements OnInit {
         this.loadLocations();
         const user = this.authService.currentUserValue;
 
-        // Check if user has institutionId claim/property
-        if (user && (user as any).institutionId) {
-            this.institutionId = (user as any).institutionId;
-            this.loadInstitution();
-            this.loadAccessLicense();
-        } else {
-            this.toaster.error('Kurum bilgisine ulaşılamadı. Lütfen yönetici ile iletişime geçin.');
-            console.error('Institution ID not found in user object:', user);
+        // Login tokens intentionally contain only identity claims. Resolve the
+        // institution from the authenticated profile when the cached user does
+        // not already include it.
+        const cachedInstitutionId = user?.institutionId;
+        if (cachedInstitutionId) {
+            this.initializeInstitution(cachedInstitutionId);
+            return;
         }
+
+        this.usersService.getMyProfile().subscribe({
+            next: profile => {
+                const institutionId = profile.institutionId;
+                if (institutionId) {
+                    this.initializeInstitution(institutionId);
+                    return;
+                }
+
+                this.showMissingInstitutionError(profile);
+            },
+            error: error => {
+                console.error('Institution profile could not be resolved:', error);
+                this.showMissingInstitutionError(user);
+            }
+        });
+    }
+
+    private initializeInstitution(institutionId: string): void {
+        this.institutionId = institutionId;
+        this.loadInstitution();
+        this.loadAccessLicense();
+    }
+
+    private showMissingInstitutionError(user: unknown): void {
+        this.toaster.error('Kurum bilgisine ulaşılamadı. Lütfen yönetici ile iletişime geçin.');
+        console.error('Institution ID not found in user profile:', user);
     }
 
     loadAccessLicense() {

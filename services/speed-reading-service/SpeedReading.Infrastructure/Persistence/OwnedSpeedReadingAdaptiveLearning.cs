@@ -228,27 +228,45 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
             .ToListAsync(cancellationToken);
         var readingSessions = await db.ReadingSessions
             .AsNoTracking()
-            .Where(item => item.UserId == userId)
+            .Where(item => item.UserId == userId
+                && (item.IsMeasured || item.TotalQuestions > 0))
             .OrderByDescending(item => item.CompletedAt)
             .ToListAsync(cancellationToken);
-        var readingTextIds = exerciseResults
+        var readingSessionIds = readingSessions
+            .Select(item => item.Id)
+            .ToHashSet();
+        var canonicalExerciseResults = exerciseResults
+            .Where(item => item.SessionId is not { } sessionId || !readingSessionIds.Contains(sessionId))
+            .ToList();
+        var readingTextIds = canonicalExerciseResults
             .Where(item => item.ReadingTextId.HasValue)
             .Select(item => item.ReadingTextId!.Value)
             .Concat(readingSessions.Select(item => item.ReadingTextId))
             .Distinct()
-            .ToArray();
-        var categories = await db.ReadingTexts
-            .AsNoTracking()
-            .Where(item => readingTextIds.Contains(item.Id))
-            .ToDictionaryAsync(item => item.Id, item => item.Category, cancellationToken);
-        var activities = exerciseResults
+            .ToList();
+        var categories = readingTextIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : await db.ReadingTexts
+                .AsNoTracking()
+                .Where(item => readingTextIds.Contains(item.Id))
+                .ToDictionaryAsync(item => item.Id, item => item.Category, cancellationToken);
+        var readingSessionIdList = readingSessions.Select(item => item.Id).ToList();
+        var readingSessionAnswers = readingSessionIdList.Count == 0
+            ? []
+            : await db.ReadingSessionAnswers
+                .AsNoTracking()
+                .Where(item => readingSessionIdList.Contains(item.SessionId))
+                .ToListAsync(cancellationToken);
+        var activities = canonicalExerciseResults
             .Select(item => new AdaptiveActivity(
                 item.CompletedAt,
                 item.RawWpm,
                 item.ComprehensionScore,
                 item.TimeSpentSeconds,
                 item.ReadingTextId,
+                item.IsMeasured,
                 false,
+                item.ReadingTextId.HasValue && HasAnswerPayload(item.QuestionAnswersJson),
                 item.ReadingTextId.HasValue && categories.TryGetValue(item.ReadingTextId.Value, out var exerciseCategory)
                     ? exerciseCategory
                     : null))
@@ -258,12 +276,14 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
                 item.ComprehensionRate,
                 item.ReadingTimeSeconds,
                 item.ReadingTextId,
+                item.IsMeasured,
                 true,
+                item.TotalQuestions > 0,
                 categories.TryGetValue(item.ReadingTextId, out var readingCategory) ? readingCategory : null)))
             .OrderByDescending(item => item.CompletedAt)
             .ToList();
 
-        return new AdaptiveSnapshot(profile, userProfile, exerciseResults, readingSessions, activities);
+        return new AdaptiveSnapshot(profile, userProfile, canonicalExerciseResults, readingSessions, readingSessionAnswers, activities);
     }
 
     private async Task<LegacyDailyGoal> GetOrCreateDailyGoalAsync(
@@ -325,11 +345,16 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
     private static AdaptiveProfileSummary BuildProfile(AdaptiveSnapshot snapshot)
     {
         var activities = snapshot.Activities;
+        var measuredSpeedActivities = activities
+            .Where(item => item.IsMeasured && item.Wpm > 0)
+            .ToList();
+        var comprehensionActivities = activities.Where(item => item.HasComprehensionMeasurement).ToList();
         var averages = activities.Count == 0
             ? (Wpm: 0m, Comprehension: 0m)
-            : (Wpm: activities.Average(item => item.Wpm), Comprehension: activities.Average(item => item.ComprehensionScore));
+            : (Wpm: measuredSpeedActivities.Count == 0 ? 0 : measuredSpeedActivities.Average(item => item.Wpm),
+                Comprehension: comprehensionActivities.Count == 0 ? 0 : comprehensionActivities.Average(item => item.ComprehensionScore));
         var activeDates = activities.Select(item => item.CompletedAt.Date).Distinct().OrderByDescending(item => item).ToList();
-        var bloomPerformance = CalculateBloomPerformance(snapshot.ExerciseResults);
+        var bloomPerformance = CalculateBloomPerformance(snapshot.ExerciseResults, snapshot.ReadingSessionAnswers);
         return new AdaptiveProfileSummary(
             snapshot.Profile?.Id ?? Guid.Empty,
             snapshot.UserProfile?.UserId ?? snapshot.Profile?.StudentId ?? Guid.Empty,
@@ -353,7 +378,9 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
             snapshot.Profile?.UpdatedAt);
     }
 
-    private static Dictionary<int, decimal> CalculateBloomPerformance(IReadOnlyList<ExerciseSessionResult> results)
+    private static Dictionary<int, decimal> CalculateBloomPerformance(
+        IReadOnlyList<ExerciseSessionResult> results,
+        IReadOnlyList<ReadingSessionAnswer> readingSessionAnswers)
     {
         var metrics = new Dictionary<int, (int Correct, int Total)>();
         foreach (var result in results)
@@ -380,7 +407,30 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
                 // Ignore malformed historical answer payloads.
             }
         }
+        foreach (var answer in readingSessionAnswers)
+        {
+            if (answer.BloomLevel is < 1 or > 6)
+                continue;
+            metrics.TryGetValue(answer.BloomLevel, out var current);
+            metrics[answer.BloomLevel] = (current.Correct + (answer.IsCorrect ? 1 : 0), current.Total + 1);
+        }
         return metrics.ToDictionary(item => item.Key, item => Math.Round((decimal)item.Value.Correct / item.Value.Total * 100, 1));
+    }
+
+    private static bool HasAnswerPayload(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return false;
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            return document.RootElement.ValueKind == JsonValueKind.Array
+                && document.RootElement.GetArrayLength() > 0;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     private static List<int> ParseLevels(string? value)
@@ -477,6 +527,7 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
         SpeedReadingUserProfile? UserProfile,
         List<ExerciseSessionResult> ExerciseResults,
         List<ReadingSession> ReadingSessions,
+        List<ReadingSessionAnswer> ReadingSessionAnswers,
         List<AdaptiveActivity> Activities);
 
     private sealed record AdaptiveActivity(
@@ -485,6 +536,8 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
         decimal ComprehensionScore,
         int TimeSpentSeconds,
         Guid? ReadingTextId,
+        bool IsMeasured,
         bool IsReadingSession,
+        bool HasComprehensionMeasurement,
         string? Category);
 }

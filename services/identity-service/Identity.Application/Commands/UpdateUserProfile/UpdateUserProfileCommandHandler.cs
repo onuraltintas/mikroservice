@@ -91,10 +91,15 @@ public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfile
                     birthDate: request.BirthDate
                 );
                 
-                if (request.LearningStyle.HasValue)
-                {
-                    student.SetLearningPreferences(style: request.LearningStyle);
-                }
+                 if (request.LearningStyle.HasValue)
+                 {
+                     student.SetLearningPreferences(style: request.LearningStyle);
+                 }
+
+                 if (request.ShareProgressWithTeachers.HasValue)
+                 {
+                     student.SetProgressSharing(request.ShareProgressWithTeachers.Value);
+                 }
 
                  if (request.GradeLevel.HasValue)
                  {

@@ -125,10 +125,12 @@ export class ReportsService {
   }
 
   getTeacherStudentDetailReport(teacherId: string, studentId: string, startDate: Date, endDate: Date): Observable<TeacherStudentDetailReport> {
-    const params = new HttpParams()
+    let params = new HttpParams()
       .set('dateFrom', this.normalizeAnalyticsStart(startDate, endDate).toISOString())
       .set('dateTo', endDate.toISOString());
-    void teacherId;
+    if (teacherId) {
+      params = params.set('teacherId', teacherId);
+    }
 
     const baseUrl = `${this.speedReadingApiUrl}/teacher/students/${studentId}`;
     return forkJoin({
@@ -292,6 +294,7 @@ export class ReportsService {
   private toStudentComprehensionReport(value: StudentComprehensionAnalytics): StudentComprehensionReport {
     const categories = value.categories ?? [];
     const questionTypes = value.questionTypes ?? [];
+    const bloomLevels = value.bloomLevels ?? [];
     return {
       metadata: this.toReportMetadata('student-comprehension', value.dateFrom, value.dateTo),
       overallComprehension: value.averageComprehension,
@@ -303,6 +306,10 @@ export class ReportsService {
       questionTypeChart: {
         data: questionTypes.map(item => ({ name: item.type, value: item.value })),
         labels: questionTypes.map(item => item.type)
+      },
+      bloomLevelChart: {
+        data: bloomLevels.map(item => ({ name: item.label, value: item.value })),
+        labels: bloomLevels.map(item => item.label)
       },
       categoryComprehensionChart: {
         data: categories.map(category => ({
@@ -1102,6 +1109,14 @@ interface StudentAnalyticsQuestionTypePoint {
   correctAnswers: number;
 }
 
+interface StudentAnalyticsBloomLevelPoint {
+  level: number;
+  label: string;
+  value: number;
+  questionsAttempted: number;
+  correctAnswers: number;
+}
+
 interface StudentReadingSpeedAnalytics {
   dateFrom: string;
   dateTo: string;
@@ -1132,6 +1147,7 @@ interface StudentComprehensionAnalytics {
   trend: StudentAnalyticsTrendPoint[];
   categories: StudentAnalyticsCategoryPoint[];
   questionTypes: StudentAnalyticsQuestionTypePoint[];
+  bloomLevels: StudentAnalyticsBloomLevelPoint[];
   totalQuestionsAttempted: number;
   correctAnswers: number;
   successRate: number;

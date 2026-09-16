@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -33,6 +33,7 @@ export class TeacherReportsComponent implements OnInit {
   teachers = signal<any[]>([]);
   selectedTeacherId = signal<string | null>(null);
   showDropdown = signal(false);
+  reportsReady = computed(() => !this.showDropdown() || !!this.selectedTeacherId());
 
   ngOnInit() {
     // Check role and query params
@@ -51,6 +52,8 @@ export class TeacherReportsComponent implements OnInit {
         // But user wants "Teacher Based", so we should ideally force a selection or show "Select Teacher".
         if (params['teacherId']) {
           this.selectedTeacherId.set(params['teacherId']);
+        } else {
+          this.selectedTeacherId.set(null);
         }
       } else {
         this.showDropdown.set(false);

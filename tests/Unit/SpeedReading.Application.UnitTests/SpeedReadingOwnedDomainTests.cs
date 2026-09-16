@@ -1444,6 +1444,31 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Fact]
+    public void Exercise_session_answer_keeps_reading_question_type()
+    {
+        var session = ExerciseSession.Start(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            totalSteps: 2,
+            DateTime.UtcNow,
+            timeLimitSeconds: null);
+        var questionId = Guid.NewGuid();
+
+        session.RecordAnswer(
+            questionId,
+            "B",
+            isCorrect: true,
+            timeSpentSeconds: 4,
+            bloomLevel: 4,
+            questionType: 2);
+
+        session.Answers.Should().ContainSingle()
+            .Which.QuestionType.Should().Be(2);
+        session.Answers.Single().BloomLevel.Should().Be(4);
+    }
+
+    [Fact]
     public void Passive_session_step_does_not_invent_a_correct_answer()
     {
         var session = ExerciseSession.Start(

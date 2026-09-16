@@ -30,6 +30,7 @@ public class StudentProfile : AggregateRoot
     public string? Bio { get; private set; }
     public LearningStyle? LearningStyle { get; private set; }
     public int DailyGoalMinutes { get; private set; } = 30;
+    public bool ShareProgressWithTeachers { get; private set; } = true;
 
     public string Preferences { get; private set; } = "{}"; // JSON
 
@@ -96,6 +97,12 @@ public class StudentProfile : AggregateRoot
                 throw new ArgumentOutOfRangeException(nameof(dailyGoalMinutes), "Daily goal must be between 5 and 480 minutes");
             DailyGoalMinutes = dailyGoalMinutes.Value;
         }
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetProgressSharing(bool enabled)
+    {
+        ShareProgressWithTeachers = enabled;
         UpdatedAt = DateTime.UtcNow;
     }
 

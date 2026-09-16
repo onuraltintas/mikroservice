@@ -31,7 +31,10 @@ describe('UsersService', () => {
   });
 
   it('loads the authenticated user profile including MFA status', () => {
-    service.getMyProfile().subscribe(profile => expect(profile.mfaEnabled).toBeFalse());
+    service.getMyProfile().subscribe(profile => {
+      expect(profile.mfaEnabled).toBeFalse();
+      expect(profile.shareProgressWithTeachers).toBeFalse();
+    });
 
     const request = http.expectOne('/api/v1/users/me');
     expect(request.request.method).toBe('GET');
@@ -43,8 +46,18 @@ describe('UsersService', () => {
       roles: ['SystemAdmin'],
       isActive: true,
       emailConfirmed: true,
-      mfaEnabled: false
+      mfaEnabled: false,
+      studentDetails: { shareProgressWithTeachers: false }
     });
+  });
+
+  it('persists the student progress-sharing preference in Identity', () => {
+    service.updateMyProgressSharing(false).subscribe();
+
+    const request = http.expectOne('/api/v1/users/me');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ shareProgressWithTeachers: false });
+    request.flush(null);
   });
 
   it('sends admin user creation using the identity provisioning contract', () => {

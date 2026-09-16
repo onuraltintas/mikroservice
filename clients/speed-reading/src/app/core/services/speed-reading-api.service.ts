@@ -28,6 +28,7 @@ export interface SpeedReadingReadingSession {
   correctAnswers: number;
   totalQuestions: number;
   completedAt: string;
+  isMeasured: boolean;
 }
 
 export interface SpeedReadingExerciseResult {

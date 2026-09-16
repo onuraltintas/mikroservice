@@ -1,4 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using EduPlatform.Shared.Kernel.Exceptions;
+using SpeedReading.Application.Content;
 using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Application.StudentReading;
 using SpeedReading.Domain.Catalog;
@@ -93,31 +96,45 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
         if (text is null)
             return null;
 
+        var questionRows = await db.ReadingQuestions
+            .AsNoTracking()
+            .Where(item => item.ReadingTextId == textId && !item.IsDeleted)
+            .OrderBy(item => item.OrderIndex)
+            .Select(item => new
+            {
+                Question = new StudentReadingQuestion(
+                    item.Id,
+                    item.ReadingTextId,
+                    item.QuestionText,
+                    item.Type,
+                    item.BloomLevel,
+                    item.DifficultyLevel,
+                    null,
+                    item.OptionA,
+                    item.OptionB,
+                    item.OptionC,
+                    item.OptionD,
+                    item.OrderIndex),
+                Snapshot = new ReadingQuestionScoringSnapshot(
+                    item.Id,
+                    item.Type,
+                    item.BloomLevel,
+                    item.OrderIndex,
+                    item.CorrectAnswer)
+            })
+            .ToListAsync(cancellationToken);
+
+        var now = DateTime.UtcNow;
         var attempt = StudentReadingAttempt.Start(
             Guid.NewGuid(),
             userId,
             textId,
-            DateTime.UtcNow);
+            now);
+        attempt.SetQuestionSnapshot(
+            JsonSerializer.Serialize(questionRows.Select(item => item.Snapshot)),
+            now);
+        attempt.SetWordCountSnapshot(text.WordCount, now);
         db.StudentReadingAttempts.Add(attempt);
-
-        var questions = await db.ReadingQuestions
-            .AsNoTracking()
-            .Where(item => item.ReadingTextId == textId && !item.IsDeleted)
-            .OrderBy(item => item.OrderIndex)
-            .Select(item => new StudentReadingQuestion(
-                item.Id,
-                item.ReadingTextId,
-                item.QuestionText,
-                item.Type,
-                item.BloomLevel,
-                item.DifficultyLevel,
-                null,
-                item.OptionA,
-                item.OptionB,
-                item.OptionC,
-                item.OptionD,
-                item.OrderIndex))
-            .ToListAsync(cancellationToken);
 
         await db.SaveChangesAsync(cancellationToken);
 
@@ -129,7 +146,7 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
             text.Category,
             text.DifficultyLevel,
             text.WordCount,
-            questions);
+            questionRows.Select(item => item.Question).ToList());
     }
 
     public async Task<StudentReadingCompletion?> CompleteAsync(
@@ -138,12 +155,6 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
         CompleteStudentReadingRequest request,
         CancellationToken cancellationToken)
     {
-        var text = await db.ReadingTexts
-            .AsNoTracking()
-            .SingleOrDefaultAsync(item => item.Id == textId && item.IsActive && !item.IsDeleted, cancellationToken);
-        if (text is null)
-            return null;
-
         if (request.SessionId == Guid.Empty)
             throw new ArgumentException("A valid reading session is required.", nameof(request));
 
@@ -155,26 +166,43 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
         if (attempt is null)
             return null;
 
+        var text = await db.ReadingTexts
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == textId, cancellationToken);
+        if (text is null)
+            return null;
+
         var existingSession = await db.ReadingSessions
             .AsNoTracking()
             .SingleOrDefaultAsync(item => item.Id == attempt.Id && item.UserId == userId, cancellationToken);
         if (existingSession is not null)
             return ToCompletion(existingSession);
 
-        var questions = await db.ReadingQuestions
-            .AsNoTracking()
-            .Where(item => item.ReadingTextId == textId && !item.IsDeleted)
-            .Select(item => new { item.Id, item.CorrectAnswer })
-            .ToListAsync(cancellationToken);
+        var questions = ReadQuestionSnapshot(attempt.QuestionSnapshotJson)
+            ?? throw new BusinessRuleException(
+                "SpeedReading.ReadingSession.SnapshotMissing",
+                "Bu okuma oturumu içerik kopyası olmadan başlatılmış. Lütfen metni yeniden başlatın.");
+        var wordCount = attempt.WordCountSnapshot
+            ?? throw new BusinessRuleException(
+                "SpeedReading.ReadingSession.SnapshotMissing",
+                "Bu okuma oturumunda metin ölçüm kopyası bulunamadı. Lütfen metni yeniden başlatın.");
         var answers = request.Answers ?? [];
         ValidateAnswers(questions.Select(item => item.Id).ToHashSet(), answers);
-        var correctAnswers = answers
-            .Join(questions, answer => answer.QuestionId, question => question.Id, (answer, question) =>
-                string.Equals(answer.SelectedAnswer?.Trim(), question.CorrectAnswer?.Trim(), StringComparison.OrdinalIgnoreCase))
-            .Count(isCorrect => isCorrect);
+        var answerRows = answers
+            .Join(questions, answer => answer.QuestionId, question => question.Id, (answer, question) => new
+            {
+                SelectedAnswer = NormalizeAnswer(answer.SelectedAnswer),
+                Question = question,
+                IsCorrect = string.Equals(
+                    NormalizeAnswer(answer.SelectedAnswer),
+                    question.CorrectAnswer?.Trim(),
+                    StringComparison.OrdinalIgnoreCase)
+            })
+            .ToList();
+        var correctAnswers = answerRows.Count(item => item.IsCorrect);
         var timeSpentSeconds = CalculateServerDuration(attempt.StartedAt, DateTime.UtcNow);
-        var calculatedWpm = text.WordCount > 0
-            ? SpeedReadingExerciseSessionRules.CalculateValidatedRawWpm(text.WordCount, timeSpentSeconds) is { } rawWpm
+        var calculatedWpm = wordCount > 0
+            ? SpeedReadingExerciseSessionRules.CalculateValidatedRawWpm(wordCount, timeSpentSeconds) is { } rawWpm
                 ? (int)Math.Round(rawWpm)
                 : 0
             : 0;
@@ -197,9 +225,21 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
             now,
             userId.ToString(),
             null,
-            null);
+            null,
+            isMeasured: calculatedWpm > 0);
         attempt.Complete(now);
         db.ReadingSessions.Add(session);
+        db.ReadingSessionAnswers.AddRange(answerRows.Select(item => ReadingSessionAnswer.Import(
+            Guid.NewGuid(),
+            session.Id,
+            item.Question.Id,
+            item.Question.Type,
+            item.Question.BloomLevel,
+            item.Question.OrderIndex,
+            item.SelectedAnswer,
+            item.IsCorrect,
+            now,
+            userId.ToString())));
         try
         {
             await db.SaveChangesAsync(cancellationToken);
@@ -261,18 +301,38 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
     public async Task<StudentReadingSessionDetails?> GetSessionDetailsAsync(
         Guid userId,
         Guid sessionId,
-        CancellationToken cancellationToken) =>
-        await db.ReadingSessions
+        CancellationToken cancellationToken)
+    {
+        var session = await db.ReadingSessions
             .AsNoTracking()
             .Where(item => item.Id == sessionId && item.UserId == userId)
-            .Select(item => new StudentReadingSessionDetails(
-                item.Id,
-                item.ReadingTextId,
-                item.CalculatedWpm,
-                item.ComprehensionRate,
-                item.ReadingTimeSeconds,
-                item.CompletedAt))
             .SingleOrDefaultAsync(cancellationToken);
+        if (session is null)
+            return null;
+
+        var answers = await db.ReadingSessionAnswers
+            .AsNoTracking()
+            .Where(item => item.SessionId == sessionId)
+            .OrderBy(item => item.OrderIndex)
+            .Select(item => new StudentReadingAnswerDetails(
+                item.QuestionId,
+                item.QuestionType,
+                item.BloomLevel,
+                item.OrderIndex,
+                item.SelectedAnswer,
+                item.IsCorrect))
+            .ToListAsync(cancellationToken);
+
+        return new StudentReadingSessionDetails(
+            session.Id,
+            session.ReadingTextId,
+            session.CalculatedWpm,
+            session.ComprehensionRate,
+            session.ReadingTimeSeconds,
+            session.CompletedAt,
+            answers,
+            session.IsMeasured);
+    }
 
     public async Task<StudentReadingStatistics> GetStatisticsAsync(
         Guid userId,
@@ -282,11 +342,22 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
         if (sessions.Count == 0)
             return new StudentReadingStatistics(0, 0, 0, 0, 0, 0, [], []);
 
+        var measuredSessions = sessions
+            .Where(item => item.IsMeasured && item.CalculatedWPM > 0)
+            .ToList();
+        var comprehensionSessions = sessions.Where(item => item.TotalQuestions > 0).ToList();
+
         return new StudentReadingStatistics(
             sessions.Count,
-            Math.Round(sessions.Average(item => (decimal)item.CalculatedWPM), 1),
-            Math.Round(sessions.Average(item => item.ComprehensionRate), 1),
-            Math.Round(sessions.Average(item => item.EfficiencyScore), 1),
+            measuredSessions.Count == 0
+                ? 0
+                : Math.Round(measuredSessions.Average(item => (decimal)item.CalculatedWPM), 1),
+            comprehensionSessions.Count == 0
+                ? 0
+                : Math.Round(comprehensionSessions.Average(item => item.ComprehensionRate), 1),
+            measuredSessions.Count == 0
+                ? 0
+                : Math.Round(measuredSessions.Average(item => item.EfficiencyScore), 1),
             sessions.Select(item => item.ReadingTextId).Distinct().Count(),
             sessions.Sum(item => item.ReadingTimeSeconds) / 60,
             sessions.Select(item => item.Category).Where(item => !string.IsNullOrWhiteSpace(item)).Distinct().OrderBy(item => item).ToList(),
@@ -298,7 +369,7 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
         CancellationToken cancellationToken) =>
         await db.ReadingSessions
             .AsNoTracking()
-            .Where(item => item.UserId == userId)
+            .Where(item => item.UserId == userId && item.IsMeasured && item.CalculatedWpm > 0)
             .OrderBy(item => item.CompletedAt)
             .Select(item => new StudentReadingWpmPoint(item.CompletedAt, item.CalculatedWpm))
             .ToListAsync(cancellationToken);
@@ -308,7 +379,7 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
         CancellationToken cancellationToken) =>
         await db.ReadingSessions
             .AsNoTracking()
-            .Where(item => item.UserId == userId)
+            .Where(item => item.UserId == userId && item.TotalQuestions > 0)
             .OrderBy(item => item.CompletedAt)
             .Select(item => new StudentReadingComprehensionPoint(item.CompletedAt, item.ComprehensionRate))
             .ToListAsync(cancellationToken);
@@ -340,7 +411,8 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
             session.ComprehensionRate,
             session.EfficiencyScore,
             session.CompletedAt,
-            PerformanceLevel(session.CalculatedWpm));
+            PerformanceLevel(session.CalculatedWpm),
+            session.IsMeasured);
 
     private static StudentReadingCompletion ToCompletion(ReadingSession session) =>
         new(
@@ -351,7 +423,8 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
             session.TotalQuestions,
             session.ComprehensionRate,
             session.EfficiencyScore,
-            PerformanceLevel(session.CalculatedWpm));
+            PerformanceLevel(session.CalculatedWpm),
+            session.IsMeasured);
 
     private static void ValidateAnswers(
         IReadOnlySet<Guid> questionIds,
@@ -359,13 +432,60 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
     {
         if (answers.Count != questionIds.Count)
             throw new ArgumentException("Every reading question must be answered.", nameof(answers));
-        if (answers.Any(item => item.QuestionId == Guid.Empty || string.IsNullOrWhiteSpace(item.SelectedAnswer)))
-            throw new ArgumentException("Every reading answer must contain a question and a selected option.", nameof(answers));
+        if (answers.Any(item => item.QuestionId == Guid.Empty || !IsSupportedAnswer(item.SelectedAnswer)))
+            throw new ArgumentException("Every reading answer must contain a question and an A, B, C or D option (or be empty after timeout).", nameof(answers));
         if (answers.Select(item => item.QuestionId).Distinct().Count() != answers.Count)
             throw new ArgumentException("A reading question cannot be answered more than once.", nameof(answers));
         if (answers.Any(item => !questionIds.Contains(item.QuestionId)))
             throw new ArgumentException("An answer does not belong to the reading session.", nameof(answers));
     }
+
+    private static bool IsSupportedAnswer(string? selectedAnswer) =>
+        string.IsNullOrWhiteSpace(selectedAnswer)
+        || selectedAnswer.Trim().ToUpperInvariant() is "A" or "B" or "C" or "D";
+
+    private static string NormalizeAnswer(string selectedAnswer) =>
+        string.IsNullOrWhiteSpace(selectedAnswer)
+            ? ReadingSessionAnswer.TimeoutAnswer.ToUpperInvariant()
+            : selectedAnswer.Trim().ToUpperInvariant();
+
+    private static IReadOnlyList<ReadingQuestionScoringSnapshot>? ReadQuestionSnapshot(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return null;
+
+        try
+        {
+            var snapshots = JsonSerializer.Deserialize<List<ReadingQuestionScoringSnapshot>>(json);
+            if (snapshots is null
+                || snapshots.Select(item => item.Id).Distinct().Count() != snapshots.Count
+                || snapshots.Any(item => item.Id == Guid.Empty
+                    || item.Type is < 1 or > 3
+                    || item.BloomLevel is < 1 or > 6
+                    || item.OrderIndex < 0
+                    || !ReadingQuestionQualityRules.HasScorableAnswerKey(item.CorrectAnswer)))
+            {
+                throw new BusinessRuleException(
+                    "SpeedReading.ReadingSession.SnapshotInvalid",
+                    "Okuma oturumu içerik kopyası geçersiz. Lütfen metni yeniden başlatın.");
+            }
+
+            return snapshots;
+        }
+        catch (JsonException)
+        {
+            throw new BusinessRuleException(
+                "SpeedReading.ReadingSession.SnapshotInvalid",
+                "Okuma oturumu içerik kopyası geçersiz. Lütfen metni yeniden başlatın.");
+        }
+    }
+
+    private sealed record ReadingQuestionScoringSnapshot(
+        Guid Id,
+        int Type,
+        int BloomLevel,
+        int OrderIndex,
+        string CorrectAnswer);
 
     private static int CalculateServerDuration(DateTime startedAt, DateTime completedAt)
     {

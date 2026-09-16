@@ -65,6 +65,28 @@ public sealed class TeacherStudentsQueryTests
         result.Error.Code.Should().Be("Error.Forbidden");
     }
 
+    [Fact]
+    public async Task Handle_ShouldPassRosterFiltersToRepository()
+    {
+        var teacherId = Guid.NewGuid();
+        var repository = new CapturingTeacherRepository();
+        var handler = new GetTeacherStudentsQueryHandler(
+            repository,
+            new StubCurrentUserService(teacherId, ["Teacher"]));
+
+        var result = await handler.Handle(
+            new GetTeacherStudentsQuery(2, 10, "ada@example.test", 8, false),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        repository.CapturedTeacherUserId.Should().Be(teacherId);
+        repository.CapturedPageNumber.Should().Be(2);
+        repository.CapturedPageSize.Should().Be(10);
+        repository.CapturedSearchTerm.Should().Be("ada@example.test");
+        repository.CapturedGradeLevel.Should().Be(8);
+        repository.CapturedIsActive.Should().BeFalse();
+    }
+
     private sealed class StubTeacherRepository(PagedList<TeacherStudentDto> result) : ITeacherRepository
     {
         public Task<PagedList<TeacherStudentDto>> GetStudentsByTeacherUserIdAsync(
@@ -72,6 +94,8 @@ public sealed class TeacherStudentsQueryTests
             int pageNumber,
             int pageSize,
             string? searchTerm,
+            int? gradeLevel,
+            bool? isActive,
             CancellationToken cancellationToken) => Task.FromResult(result);
 
         public Task AddAsync(TeacherProfile teacher, CancellationToken cancellationToken) => throw new NotSupportedException();
@@ -82,6 +106,44 @@ public sealed class TeacherStudentsQueryTests
             Guid viewerUserId,
             Guid? targetTeacherUserId,
             CancellationToken cancellationToken) => Task.FromResult<SpeedReadingTeacherStudentScopeResponse?>(null);
+        public Task AddStudentAssignmentAsync(TeacherStudentAssignment assignment, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<TeacherStudentAssignment?> GetAssignmentAsync(Guid teacherId, Guid studentId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<IReadOnlyList<TeacherStudentAssignment>> GetActiveAssignmentsForStudentAsync(Guid studentId, Guid institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<IReadOnlyList<TeacherStudentAssignment>> GetActiveAssignmentsForTeacherAsync(Guid teacherId, Guid institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
+    }
+
+    private sealed class CapturingTeacherRepository : ITeacherRepository
+    {
+        public Guid CapturedTeacherUserId { get; private set; }
+        public int CapturedPageNumber { get; private set; }
+        public int CapturedPageSize { get; private set; }
+        public string? CapturedSearchTerm { get; private set; }
+        public int? CapturedGradeLevel { get; private set; }
+        public bool? CapturedIsActive { get; private set; }
+
+        public Task<PagedList<TeacherStudentDto>> GetStudentsByTeacherUserIdAsync(
+            Guid teacherUserId,
+            int pageNumber,
+            int pageSize,
+            string? searchTerm,
+            int? gradeLevel,
+            bool? isActive,
+            CancellationToken cancellationToken)
+        {
+            CapturedTeacherUserId = teacherUserId;
+            CapturedPageNumber = pageNumber;
+            CapturedPageSize = pageSize;
+            CapturedSearchTerm = searchTerm;
+            CapturedGradeLevel = gradeLevel;
+            CapturedIsActive = isActive;
+            return Task.FromResult(new PagedList<TeacherStudentDto>([], 0, pageNumber, pageSize));
+        }
+
+        public Task AddAsync(TeacherProfile teacher, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<TeacherProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<TeacherProfile?> GetByUserIdAsync(Guid userId, Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<TeacherProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<SpeedReadingTeacherStudentScopeResponse?> GetSpeedReadingTeacherStudentScopeAsync(Guid viewerUserId, Guid? targetTeacherUserId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task AddStudentAssignmentAsync(TeacherStudentAssignment assignment, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<TeacherStudentAssignment?> GetAssignmentAsync(Guid teacherId, Guid studentId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<IReadOnlyList<TeacherStudentAssignment>> GetActiveAssignmentsForStudentAsync(Guid studentId, Guid institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();

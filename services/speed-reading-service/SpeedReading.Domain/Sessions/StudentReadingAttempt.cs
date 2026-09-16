@@ -17,6 +17,8 @@ public sealed class StudentReadingAttempt : Entity
     public Guid ReadingTextId { get; private set; }
     public DateTime StartedAt { get; private set; }
     public DateTime? CompletedAt { get; private set; }
+    public string? QuestionSnapshotJson { get; private set; }
+    public int? WordCountSnapshot { get; private set; }
 
     public static StudentReadingAttempt Start(
         Guid id,
@@ -50,6 +52,28 @@ public sealed class StudentReadingAttempt : Entity
 
         CompletedAt = utcCompletedAt;
         UpdatedAt = utcCompletedAt;
+        UpdatedBy = UserId.ToString();
+    }
+
+    public void SetQuestionSnapshot(string questionSnapshotJson, DateTime updatedAt)
+    {
+        if (string.IsNullOrWhiteSpace(questionSnapshotJson))
+            throw new ArgumentException("A reading question snapshot is required.", nameof(questionSnapshotJson));
+
+        var utcUpdatedAt = EnsureUtc(updatedAt);
+        QuestionSnapshotJson = questionSnapshotJson.Trim();
+        UpdatedAt = utcUpdatedAt;
+        UpdatedBy = UserId.ToString();
+    }
+
+    public void SetWordCountSnapshot(int wordCount, DateTime updatedAt)
+    {
+        if (wordCount < 0)
+            throw new ArgumentOutOfRangeException(nameof(wordCount));
+
+        var utcUpdatedAt = EnsureUtc(updatedAt);
+        WordCountSnapshot = wordCount;
+        UpdatedAt = utcUpdatedAt;
         UpdatedBy = UserId.ToString();
     }
 

@@ -20,6 +20,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
     OwnedSpeedReadingDbContext db) : ISpeedReadingExerciseSessions
 {
     private const string TimeoutAnswer = "__timeout__";
+    private const int MaxCompletionConflictRetries = 2;
+    private const int MaxActionConflictRetries = 2;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private static readonly HashSet<string> ReadingExerciseTypes = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -103,11 +105,13 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         }
 
         string exerciseTypeName;
+        string exerciseEngineType;
         string configurationJson;
         int difficultyLevel;
         if (assessmentSnapshot is not null)
         {
             exerciseTypeName = assessmentSnapshot.Exercise.TypeName;
+            exerciseEngineType = assessmentSnapshot.Exercise.EngineType;
             configurationJson = assessmentSnapshot.Exercise.ConfigurationJson;
             difficultyLevel = assessmentSnapshot.Exercise.DifficultyLevel;
         }
@@ -127,8 +131,17 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                     cancellationToken)
                 ?? throw new KeyNotFoundException("Exercise type not found.");
             exerciseTypeName = exerciseType.Name;
+            exerciseEngineType = exerciseType.EngineType;
             configurationJson = exercise.ConfigurationJson;
             difficultyLevel = exercise.DifficultyLevel;
+        }
+
+        if (string.IsNullOrWhiteSpace(exerciseEngineType))
+        {
+            var snapshotConfig = ParseJsonOrEmpty(configurationJson);
+            exerciseEngineType = ReadString(snapshotConfig, "engineType")
+                ?? ReadString(ReadObject(snapshotConfig, "engineConfig"), "engineType")
+                ?? exerciseTypeName;
         }
 
         if (request.ReadingTextId.HasValue && assessmentSnapshot is null)
@@ -160,8 +173,11 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         var readingTextId = assessmentSnapshot is not null
             ? assessmentSnapshot.ReadingText?.Id
             : pinnedReadingTextId ?? request.ReadingTextId;
-        var requiresReadingText = ReadingExerciseTypes.Contains(exerciseTypeName)
-            || IsAdaptiveFluency(exerciseTypeName, ParseJsonOrEmpty(configurationJson));
+        var parsedConfiguration = ParseJsonOrEmpty(configurationJson);
+        var requiresReadingText = IsReadingExerciseFlow(
+            exerciseTypeName,
+            exerciseEngineType,
+            parsedConfiguration);
         if (assessmentSnapshot is null
             && !readingTextId.HasValue
             && requiresReadingText)
@@ -183,6 +199,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         var state = await CreateSessionStateAsync(
             request.ExerciseId,
             exerciseTypeName,
+            exerciseEngineType,
             difficultyLevel,
             configurationJson,
             readingTextId,
@@ -228,11 +245,19 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 : RemoveAssessmentKeys(ParseJsonOrEmpty(configurationJson)));
     }
 
-    public async Task<ExerciseActionValidationResponse> ValidateActionAsync(
+    public Task<ExerciseActionValidationResponse> ValidateActionAsync(
         Guid studentId,
         Guid sessionId,
         ExerciseActionRequest request,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        ValidateActionAsync(studentId, sessionId, request, cancellationToken, actionRetryCount: 0);
+
+    private async Task<ExerciseActionValidationResponse> ValidateActionAsync(
+        Guid studentId,
+        Guid sessionId,
+        ExerciseActionRequest request,
+        CancellationToken cancellationToken,
+        int actionRetryCount)
     {
         var session = await GetOwnedSessionAsync(studentId, sessionId, cancellationToken);
         if (TryGetCachedAction(session.ProcessedActionsJson, request.ActionId, out var cached))
@@ -274,6 +299,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 _ => AdvanceGeneric(session)
             };
 
+        PersistSessionAnswers(session);
+
         // Start the server clock only after an action was understood. A wrong
         // grid attempt still counts as a real attempt and therefore starts it.
         if (response.IsValid || actionName == "grid_click" && state.CurrentNumber.HasValue)
@@ -283,15 +310,47 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         if (request.ActionId is { } actionId && actionId != Guid.Empty)
             session.SetProcessedActions(RecordCachedAction(session.ProcessedActionsJson, actionId, response));
 
-        await db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException) when (actionRetryCount < MaxActionConflictRetries)
+        {
+            db.ChangeTracker.Clear();
+            return await ValidateActionAsync(
+                studentId,
+                sessionId,
+                request,
+                cancellationToken,
+                actionRetryCount + 1);
+        }
+        catch (DbUpdateException exception)
+            when (actionRetryCount < MaxActionConflictRetries && IsActionConflict(exception))
+        {
+            db.ChangeTracker.Clear();
+            return await ValidateActionAsync(
+                studentId,
+                sessionId,
+                request,
+                cancellationToken,
+                actionRetryCount + 1);
+        }
         return response;
     }
 
-    public async Task<SpeedReading.Application.ExerciseSessions.ExerciseSessionResult> CompleteAsync(
+    public Task<SpeedReading.Application.ExerciseSessions.ExerciseSessionResult> CompleteAsync(
         Guid studentId,
         Guid sessionId,
         CompleteExerciseSessionRequest request,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        CompleteAsync(studentId, sessionId, request, cancellationToken, completionRetryCount: 0);
+
+    private async Task<SpeedReading.Application.ExerciseSessions.ExerciseSessionResult> CompleteAsync(
+        Guid studentId,
+        Guid sessionId,
+        CompleteExerciseSessionRequest request,
+        CancellationToken cancellationToken,
+        int completionRetryCount)
     {
         var session = await GetOwnedSessionAsync(studentId, sessionId, cancellationToken);
         var isAssessmentSession = session.AssessmentAttemptId.HasValue;
@@ -323,6 +382,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             throw new InvalidOperationException("The adaptive fluency flow must be completed before the session can be completed.");
 
         var answers = ResolveAnswers(session, state, request.QuestionAnswers);
+        PersistSessionAnswers(session);
         if (state.Questions.Count > 0 && answers.Count != state.Questions.Count)
             throw new InvalidOperationException("All questions in the session must be answered.");
 
@@ -404,6 +464,18 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             measurementStatus == SpeedReadingMeasurementStatus.Measured,
             assessmentAttemptId: session.AssessmentAttemptId);
         db.ExerciseSessionResults.Add(result);
+        if (!isAssessmentSession
+            && session.ReadingTextId is not null
+            && IsReadingExerciseFlow(state))
+        {
+            AddReadingSessionRecord(
+                session,
+                state,
+                timeSpent,
+                rawWpm,
+                comprehension,
+                now);
+        }
         if (session.StudentAssignmentId.HasValue)
         {
             var studentAssignment = await db.StudentAssignments.SingleOrDefaultAsync(
@@ -437,7 +509,47 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 now,
                 cancellationToken);
         }
-        await db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException) when (completionRetryCount < MaxCompletionConflictRetries)
+        {
+            db.ChangeTracker.Clear();
+            return await CompleteAsync(
+                studentId,
+                sessionId,
+                request,
+                cancellationToken,
+                completionRetryCount + 1);
+        }
+        catch (DbUpdateException exception) when (IsExerciseSessionCompletionConflict(exception))
+        {
+            db.ChangeTracker.Clear();
+            var concurrentResult = await db.ExerciseSessionResults
+                .AsNoTracking()
+                .SingleOrDefaultAsync(item => item.SessionId == session.Id, cancellationToken);
+            if (concurrentResult is null)
+            {
+                if (completionRetryCount >= MaxCompletionConflictRetries)
+                    throw;
+
+                return await CompleteAsync(
+                    studentId,
+                    sessionId,
+                    request,
+                    cancellationToken,
+                    completionRetryCount + 1);
+            }
+
+            var persistedSession = await db.ExerciseSessions
+                .AsNoTracking()
+                .SingleOrDefaultAsync(item => item.Id == session.Id && item.StudentId == studentId, cancellationToken);
+            return ToResult(
+                concurrentResult,
+                persistedSession ?? session,
+                persistedSession is null ? state : DeserializeState(persistedSession.SessionDataJson));
+        }
 
         return ToResult(
             result,
@@ -446,6 +558,172 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             score,
             xpAwarded,
             feedback: "Egzersiz tamamlandı.");
+    }
+
+    private void AddReadingSessionRecord(
+        ExerciseSession session,
+        SessionState state,
+        int timeSpentSeconds,
+        decimal? rawWpm,
+        decimal comprehension,
+        DateTime completedAt)
+    {
+        if (session.ReadingTextId is not { } readingTextId)
+            return;
+
+        if (IsAdaptiveFluency(state))
+        {
+            var baseline = state.AdaptiveStageResults.SingleOrDefault(item => item.Stage == 0);
+            if (baseline is not null)
+            {
+                AddReadingSessionRecord(
+                    session,
+                    session.Id,
+                    readingTextId,
+                    state.AdaptiveBaselineAnswers,
+                    baseline.ReadingSeconds,
+                    baseline.Wpm,
+                    state.AdaptiveBaselineComprehension ?? 0,
+                    completedAt);
+            }
+
+            var transfer = state.AdaptiveStageResults.SingleOrDefault(item => item.Stage == 3);
+            if (transfer is not null && state.AdaptiveTransferTextId is { } transferTextId)
+            {
+                AddReadingSessionRecord(
+                    session,
+                    Guid.NewGuid(),
+                    transferTextId,
+                    state.Answers,
+                    transfer.ReadingSeconds,
+                    transfer.Wpm,
+                    state.AdaptiveTransferComprehension ?? comprehension,
+                    completedAt);
+            }
+
+            return;
+        }
+
+        // The universal player is the primary reading flow. Keep its completed
+        // result visible to the reading-history and comprehension-report APIs
+        // while retaining the exercise result as the authoritative score.
+        AddReadingSessionRecord(
+            session,
+            session.Id,
+            readingTextId,
+            state.Answers,
+            timeSpentSeconds,
+            rawWpm,
+            comprehension,
+            completedAt);
+    }
+
+    private void AddReadingSessionRecord(
+        ExerciseSession session,
+        Guid readingSessionId,
+        Guid readingTextId,
+        IEnumerable<SessionAnswer> sourceAnswers,
+        int timeSpentSeconds,
+        decimal? rawWpm,
+        decimal comprehension,
+        DateTime completedAt)
+    {
+        var source = sourceAnswers.ToList();
+        if (source.Any(answer => !IsPersistableReadingAnswer(answer)))
+            throw new InvalidOperationException("Okuma oturumu cevapları geçerli soru türü, Bloom seviyesi ve A-D seçeneği içermelidir.");
+
+        var answers = source
+            .GroupBy(item => item.QuestionId)
+            .Select(group => group
+                .OrderBy(item => item.OrderIndex)
+                .ThenBy(item => item.QuestionId)
+                .First())
+            .OrderBy(item => item.OrderIndex)
+            .ThenBy(item => item.QuestionId)
+            .ToList();
+        var correctAnswers = answers.Count(item => item.IsCorrect);
+        var totalQuestions = answers.Count;
+        var readingComprehension = totalQuestions > 0
+            ? Math.Round((decimal)correctAnswers / totalQuestions * 100, 2)
+            : Math.Clamp(comprehension, 0, 100);
+        var calculatedWpm = rawWpm is > 0
+            ? (int)Math.Round(rawWpm.Value, MidpointRounding.AwayFromZero)
+            : 0;
+        var efficiencyScore = calculatedWpm * (readingComprehension / 100m);
+        var readingSession = ReadingSession.Import(
+            readingSessionId,
+            session.StudentId,
+            readingTextId,
+            timeSpentSeconds,
+            calculatedWpm,
+            correctAnswers,
+            totalQuestions,
+            readingComprehension,
+            efficiencyScore,
+            completedAt,
+            completedAt,
+            session.StudentId.ToString(),
+            null,
+            null,
+            isMeasured: rawWpm is > 0);
+        db.ReadingSessions.Add(readingSession);
+        db.ReadingSessionAnswers.AddRange(answers.Select(item => ReadingSessionAnswer.Import(
+            Guid.NewGuid(),
+            readingSessionId,
+            item.QuestionId,
+            item.QuestionType,
+            item.BloomLevel,
+            item.OrderIndex,
+            item.Answer,
+            item.IsCorrect,
+            completedAt,
+            session.StudentId.ToString())));
+    }
+
+    private static bool IsPersistableReadingAnswer(SessionAnswer answer) =>
+        answer.QuestionType is >= 1 and <= 3
+        && answer.BloomLevel is >= 1 and <= 6
+        && (answer.Answer.Trim().ToUpperInvariant() is "A" or "B" or "C" or "D"
+            || answer.Answer.Trim().Equals(TimeoutAnswer, StringComparison.OrdinalIgnoreCase));
+
+    private static bool IsReadingExerciseFlow(SessionState state) =>
+        IsReadingExerciseFlow(state.ExerciseTypeName, state.EngineType, default)
+        || IsAdaptiveFluency(state);
+
+    private static bool IsReadingExerciseFlow(
+        string exerciseTypeName,
+        string exerciseEngineType,
+        JsonElement configuration)
+    {
+        if (ReadingExerciseTypes.Contains(exerciseTypeName)
+            || ReadingExerciseTypes.Contains(exerciseEngineType))
+            return true;
+
+        var engineType = ReadString(configuration, "engineType")
+            ?? ReadString(ReadObject(configuration, "engineConfig"), "engineType")
+            ?? exerciseEngineType;
+        return engineType is
+            "text_stream"
+            or "text_fade"
+            or "word_highlight"
+            or "reading_comprehension"
+            or "exam_simulation"
+            or "free_reading"
+            or "regression_reduction"
+            or "subvocalization_reduction"
+            or "scan_find"
+            or "scanning"
+            or "skimming"
+            or "adaptive_fluency";
+    }
+
+    private void PersistSessionAnswers(ExerciseSession session)
+    {
+        foreach (var answer in session.Answers)
+        {
+            if (db.Entry(answer).State == EntityState.Detached)
+                db.ExerciseSessionAnswers.Add(answer);
+        }
     }
 
     private async Task<UserGamification> GetOrCreateGamificationAsync(
@@ -621,6 +899,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
     private async Task<SessionState> CreateSessionStateAsync(
         Guid exerciseId,
         string exerciseTypeName,
+        string exerciseEngineType,
         int difficultyLevel,
         string configurationJson,
         Guid? readingTextId,
@@ -635,6 +914,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         {
             ExerciseId = exerciseId,
             ExerciseTypeName = exerciseTypeName,
+            EngineType = exerciseEngineType,
             IsAssessmentMode = isAssessmentMode,
             TimingStartsOnAction = true,
             DifficultyLevel = difficultyLevel,
@@ -651,7 +931,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 difficultyLevel,
                 cancellationToken);
         }
-        if (IsAdaptiveFluency(exerciseTypeName, config))
+        if (IsAdaptiveFluency(exerciseTypeName, exerciseEngineType, config))
         {
             state.AdaptiveEnabled = true;
             state.AdaptiveIncreaseThreshold = ReadDecimal(effectiveConfig, "increaseThreshold") ?? 85;
@@ -716,7 +996,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                     CorrectAnswer = item.CorrectAnswer,
                     Explanation = item.Explanation,
                     BloomLevel = item.BloomLevel,
-                    DifficultyLevel = item.DifficultyLevel
+                    DifficultyLevel = item.DifficultyLevel,
+                    OrderIndex = item.OrderIndex,
+                    QuestionType = item.QuestionType
                 })
                 .ToList();
         }
@@ -747,7 +1029,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                     CorrectAnswer = item.CorrectAnswer,
                     Explanation = item.Explanation,
                     BloomLevel = item.BloomLevel,
-                    DifficultyLevel = item.DifficultyLevel
+                    DifficultyLevel = item.DifficultyLevel,
+                    OrderIndex = item.OrderIndex,
+                    QuestionType = item.Type
                 })
                 .ToListAsync(cancellationToken);
             state.Questions = state.Questions
@@ -793,7 +1077,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                     CorrectAnswer = item.CorrectAnswer,
                     Explanation = item.Explanation,
                     BloomLevel = item.BloomLevel,
-                    DifficultyLevel = item.DifficultyLevel
+                    DifficultyLevel = item.DifficultyLevel,
+                    OrderIndex = item.OrderIndex,
+                    QuestionType = item.Type
                 }).ToListAsync(cancellationToken);
             state.AdaptiveTransferQuestions = state.AdaptiveTransferQuestions
                 .Where(item => ReadingQuestionQualityRules.HasScorableAnswerKey(item.CorrectAnswer))
@@ -966,7 +1252,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 Answer = item.Answer,
                 IsCorrect = item.IsCorrect,
                 TimeSpentSeconds = item.TimeSpentSeconds,
-                BloomLevel = item.BloomLevel
+                BloomLevel = item.BloomLevel,
+                OrderIndex = item.OrderIndex,
+                QuestionType = item.QuestionType
             }).ToList();
             state.Answers.Clear();
             state.Questions.Clear();
@@ -1148,7 +1436,12 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         if (state.Answers.Any(item => item.QuestionId == question.QuestionId))
             return Invalid("Bu soru zaten yanıtlandı.");
 
-        var answer = request.IsTimeout ? TimeoutAnswer : request.Answer!.Trim();
+        var answer = request.IsTimeout
+            ? TimeoutAnswer
+            : NormalizeOptionAnswer(request.Answer);
+        if (answer is null)
+            return Invalid("Cevap A, B, C veya D olmalıdır.");
+
         var isCorrect = !request.IsTimeout
             && string.Equals(answer, question.CorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase);
         session.RecordAnswer(
@@ -1156,14 +1449,17 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             answer,
             isCorrect,
             Math.Max(0, (request.ResponseTime ?? 0) / 1000),
-            question.BloomLevel);
+            question.BloomLevel,
+            question.QuestionType);
         state.Answers.Add(new SessionAnswer
         {
             QuestionId = question.QuestionId,
             Answer = answer,
             IsCorrect = isCorrect,
             TimeSpentSeconds = Math.Max(0, (request.ResponseTime ?? 0) / 1000),
-            BloomLevel = question.BloomLevel
+            BloomLevel = question.BloomLevel,
+            OrderIndex = question.OrderIndex,
+            QuestionType = question.QuestionType
         });
         var isAssessment = session.AssessmentAttemptId.HasValue;
         return new ExerciseActionValidationResponse(
@@ -1495,7 +1791,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         ?? (state.TimingStartsOnAction ? now : session.StartTime);
 
     private static bool SupportsServerReadingMeasurement(SessionState state) =>
-        ReadingExerciseTypes.Contains(state.ExerciseTypeName)
+        IsReadingExerciseFlow(state)
         && state.ReadingStartTime.HasValue
         && state.ReadingEndTime.HasValue;
 
@@ -1524,6 +1820,13 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         return string.Equals(ReadString(nestedConfig, "engineType"), "adaptive_fluency", StringComparison.OrdinalIgnoreCase);
     }
 
+    private static bool IsAdaptiveFluency(
+        string exerciseTypeName,
+        string exerciseEngineType,
+        JsonElement config) =>
+        string.Equals(exerciseEngineType, "adaptive_fluency", StringComparison.OrdinalIgnoreCase)
+        || IsAdaptiveFluency(exerciseTypeName, config);
+
     private static SessionQuestion CloneQuestion(SessionQuestion question) => new()
     {
         QuestionId = question.QuestionId,
@@ -1535,7 +1838,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         CorrectAnswer = question.CorrectAnswer,
         Explanation = question.Explanation,
         BloomLevel = question.BloomLevel,
-        DifficultyLevel = question.DifficultyLevel
+        DifficultyLevel = question.DifficultyLevel,
+        OrderIndex = question.OrderIndex,
+        QuestionType = question.QuestionType
     };
 
     private static JsonElement AdaptiveFeedback(SessionState state) => JsonSerializer.SerializeToElement(new
@@ -1747,7 +2052,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         OptionD = question.Options.ElementAtOrDefault(3) ?? string.Empty,
         CorrectAnswer = question.CorrectAnswer,
         BloomLevel = 1,
-        DifficultyLevel = 1
+        DifficultyLevel = 1,
+        OrderIndex = question.DisplayOrder
     };
 
     private static JsonElement ReadProperty(JsonElement element, string propertyName)
@@ -1798,6 +2104,25 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             "ux_exercise_sessions_assessment_exercise",
             StringComparison.Ordinal);
 
+    private static bool IsExerciseSessionCompletionConflict(DbUpdateException exception) =>
+        exception.InnerException is PostgresException postgres
+        && postgres.SqlState == PostgresErrorCodes.UniqueViolation
+        && postgres.ConstraintName is
+            "ix_exercise_session_results_session_id"
+            or "pk_reading_sessions"
+            or "ix_reading_session_answers_session_id_question_id"
+            or "ix_exercise_session_answers_session_id_question_id"
+            or "ix_user_gamification_user_id"
+            or "ix_user_achievements_user_id_achievement_id_is_deleted";
+
+    private static bool IsActionConflict(DbUpdateException exception) =>
+        exception.InnerException is PostgresException postgres
+        && postgres.SqlState == PostgresErrorCodes.UniqueViolation
+        && postgres.ConstraintName is
+            "ix_exercise_session_answers_session_id_question_id"
+            or "ix_user_gamification_user_id"
+            or "ix_user_achievements_user_id_achievement_id_is_deleted";
+
     private static List<SessionAnswer> ResolveAnswers(
         ExerciseSession session,
         SessionState state,
@@ -1815,25 +2140,26 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         {
             if (!questionMap.TryGetValue(answer.QuestionId, out var question))
                 throw new InvalidOperationException("Submitted question does not belong to this session.");
-            var normalizedAnswer = string.IsNullOrWhiteSpace(answer.Answer)
-                ? TimeoutAnswer
-                : answer.Answer.Trim();
+            var normalizedAnswer = NormalizeCompletedAnswer(answer.Answer);
             return new SessionAnswer
             {
                 QuestionId = question.QuestionId,
                 Answer = normalizedAnswer,
                 IsCorrect = string.Equals(normalizedAnswer, question.CorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase),
                 TimeSpentSeconds = Math.Max(answer.TimeSpentSeconds, 0),
-                BloomLevel = question.BloomLevel
+                BloomLevel = question.BloomLevel,
+                OrderIndex = question.OrderIndex,
+                QuestionType = question.QuestionType
             };
         }).ToList();
 
+        var merged = state.Answers.ToList();
         foreach (var answer in resolved)
         {
             var existing = state.Answers.SingleOrDefault(item => item.QuestionId == answer.QuestionId);
             if (existing is not null)
             {
-                if (!string.Equals(existing.Answer, answer.Answer, StringComparison.Ordinal))
+                if (!string.Equals(existing.Answer.Trim(), answer.Answer, StringComparison.OrdinalIgnoreCase))
                     throw new InvalidOperationException("A submitted answer cannot change after it is recorded.");
                 continue;
             }
@@ -1843,10 +2169,28 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 answer.Answer,
                 answer.IsCorrect,
                 answer.TimeSpentSeconds,
-                answer.BloomLevel);
+                answer.BloomLevel,
+                answer.QuestionType);
+            merged.Add(answer);
         }
 
-        return resolved;
+        return merged;
+    }
+
+    private static string? NormalizeOptionAnswer(string? answer)
+    {
+        var normalized = answer?.Trim().ToUpperInvariant();
+        return normalized is "A" or "B" or "C" or "D" ? normalized : null;
+    }
+
+    private static string NormalizeCompletedAnswer(string? answer)
+    {
+        if (string.IsNullOrWhiteSpace(answer)
+            || answer.Trim().Equals(TimeoutAnswer, StringComparison.OrdinalIgnoreCase))
+            return TimeoutAnswer;
+
+        return NormalizeOptionAnswer(answer)
+            ?? throw new ArgumentException("Cevap A, B, C veya D olmalıdır.", nameof(answer));
     }
 
     private static SpeedReading.Application.ExerciseSessions.ExerciseSessionResult ToResult(
@@ -1932,19 +2276,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             ? new SessionState()
             : JsonSerializer.Deserialize<SessionState>(json, JsonOptions) ?? new SessionState();
 
-    private static AssessmentContentSnapshot? DeserializeAssessmentSnapshot(string? json)
-    {
-        if (string.IsNullOrWhiteSpace(json) || json == "{}")
-            return null;
-        try
-        {
-            return JsonSerializer.Deserialize<AssessmentContentSnapshot>(json, JsonOptions);
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
-    }
+    private static AssessmentContentSnapshot DeserializeAssessmentSnapshot(string? json)
+        => AssessmentContentSnapshotRules.DeserializeRequired(json);
 
     private static JsonElement ParseJsonOrEmpty(string? json)
     {
@@ -2132,6 +2465,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
     {
         public Guid ExerciseId { get; set; }
         public string ExerciseTypeName { get; set; } = string.Empty;
+        public string EngineType { get; set; } = string.Empty;
         public bool IsAssessmentMode { get; set; }
         public Guid? ReadingTextId { get; set; }
         public string ReadingTextTitle { get; set; } = string.Empty;
@@ -2264,6 +2598,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public string? Explanation { get; set; }
         public int BloomLevel { get; set; }
         public int DifficultyLevel { get; set; }
+        public int OrderIndex { get; set; }
+        public int QuestionType { get; set; }
     }
 
     private sealed class SessionAnswer
@@ -2273,6 +2609,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public bool IsCorrect { get; set; }
         public int TimeSpentSeconds { get; set; }
         public int BloomLevel { get; set; }
+        public int OrderIndex { get; set; }
+        public int QuestionType { get; set; }
     }
 
     private sealed class FocusResponse

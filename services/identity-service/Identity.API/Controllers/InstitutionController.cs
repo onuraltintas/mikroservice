@@ -8,7 +8,7 @@ namespace Identity.API.Controllers;
 [ApiController]
 [ApiVersion(1.0)]
 [Route("api/institution")]
-[Authorize] // Requires valid JWT
+[Authorize(Roles = "InstitutionAdmin,InstitutionOwner")]
 public class InstitutionController : ControllerBase
 {
     private readonly IMediator _mediator;

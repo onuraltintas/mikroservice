@@ -16,12 +16,17 @@ public sealed record TeacherStudentDto(
     string? InstitutionName,
     string? AvatarUrl,
     string? Subject,
-    DateTime AssignmentStartDate);
+    DateTime AssignmentStartDate,
+    string Email = "",
+    bool IsActive = true,
+    DateTime? LastLoginAt = null);
 
 public sealed record GetTeacherStudentsQuery(
     int PageNumber = 1,
     int PageSize = 25,
-    string? SearchTerm = null) : IRequest<Result<PagedList<TeacherStudentDto>>>;
+    string? SearchTerm = null,
+    int? GradeLevel = null,
+    bool? IsActive = null) : IRequest<Result<PagedList<TeacherStudentDto>>>;
 
 public sealed class GetTeacherStudentsQueryHandler(
     ITeacherRepository teacherRepository,
@@ -50,12 +55,17 @@ public sealed class GetTeacherStudentsQueryHandler(
         var searchTerm = string.IsNullOrWhiteSpace(request.SearchTerm)
             ? null
             : request.SearchTerm.Trim();
+        var gradeLevel = request.GradeLevel is >= 1 and <= 12
+            ? request.GradeLevel
+            : null;
 
         var students = await teacherRepository.GetStudentsByTeacherUserIdAsync(
             teacherUserId,
             pageNumber,
             pageSize,
             searchTerm,
+            gradeLevel,
+            request.IsActive,
             cancellationToken);
 
         return Result.Success(students);

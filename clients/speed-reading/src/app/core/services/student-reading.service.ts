@@ -8,9 +8,14 @@ import {
   ReadingQuestion,
   ReadingSession,
   ReadingSessionResult,
+  ReadingSessionDetails,
   StartReadingSessionDto,
   CompleteReadingSessionDto,
-  ReadingStatistics
+  ReadingStatistics,
+  QuestionType,
+  BloomLevel,
+  QUESTION_TYPE_LABELS,
+  BLOOM_LEVEL_LABELS
 } from '../models/reading-text.model';
 
 @Injectable({
@@ -44,10 +49,15 @@ export class StudentReadingService {
     return this.http.get<any>(`${this.API_URL}/${textId}/start`).pipe(
       map((response: any) => {
         const text = response?.data ?? response;
+        const questions = (text?.readingQuestions ?? text?.questions ?? []).map((question: ReadingQuestion) => ({
+          ...question,
+          typeDisplay: QUESTION_TYPE_LABELS[question.type as QuestionType] ?? 'Bilinmeyen',
+          bloomLevelDisplay: BLOOM_LEVEL_LABELS[question.bloomLevel as BloomLevel] ?? 'Tanımsız'
+        }));
         return {
           ...text,
           sessionId: text?.sessionId,
-          readingQuestions: text?.readingQuestions ?? text?.questions ?? []
+          readingQuestions: questions
         } as ReadingText;
       })
     );
@@ -91,11 +101,16 @@ export class StudentReadingService {
   }
 
   // Get session details
-  getSessionDetails(sessionId: string): Observable<ReadingSessionResult> {
+  getSessionDetails(sessionId: string): Observable<ReadingSessionDetails> {
     return this.http.get<any>(`${this.API_URL}/sessions/${sessionId}`).pipe(
       map((response: any) => {
         const session = response?.data ?? response;
-        return { ...session, sessionId: session?.sessionId ?? session?.id } as ReadingSessionResult;
+        return {
+          ...session,
+          id: session?.id ?? session?.sessionId,
+          completedAt: session?.completedAt ? new Date(session.completedAt) : session?.completedAt,
+          answers: session?.answers ?? []
+        } as ReadingSessionDetails;
       })
     );
   }

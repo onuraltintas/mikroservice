@@ -1,5 +1,7 @@
 namespace SpeedReading.Application.Content;
 
+using SpeedReading.Application.Analytics;
+
 public static class SpeedReadingAdminProgressSearch
 {
     public static Guid? TryParseId(string? searchTerm) =>
@@ -196,7 +198,8 @@ public sealed record ReadingSessionSummary(
     int ReadingTimeSeconds,
     int CorrectAnswers,
     int TotalQuestions,
-    DateTime CompletedAt);
+    DateTime CompletedAt,
+    bool IsMeasured = true);
 
 public sealed record ReadingStatistics(
     int TotalSessions,
@@ -342,7 +345,8 @@ public sealed record AdminStudentProgressSummary(
 
 public sealed record AdminStudentProgressDetails(
     StudentProgramProgressSummary Progress,
-    IReadOnlyList<DailyExerciseLogSummary> RecentLogs);
+    IReadOnlyList<DailyExerciseLogSummary> RecentLogs,
+    AdminStudentReadingQuestionAnalytics ReadingQuestionAnalytics);
 
 public sealed record DailyExerciseLogSummary(
     Guid Id,

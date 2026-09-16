@@ -84,7 +84,8 @@ describe('TeacherReportService', () => {
       improvementRate: 4,
       trend: [{ date: '2026-01-15', value: 78 }],
       categories: [],
-      questionTypes: [],
+      questionTypes: [{ type: 'Çıkarım', value: 80, questionsAttempted: 5, correctAnswers: 4 }],
+      bloomLevels: [{ level: 4, label: 'Analiz', value: 70, questionsAttempted: 10, correctAnswers: 7 }],
       totalQuestionsAttempted: 10,
       correctAnswers: 8,
       successRate: 80,
@@ -101,6 +102,8 @@ describe('TeacherReportService', () => {
     expect(report.averageComprehension).toBe(78);
     expect(report.currentComprehension).toBe(82);
     expect(report.comprehensionOverTime[0].series[0].value).toBe(78);
+    expect(report.questionTypeChart).toEqual([{ name: 'Çıkarım', value: 80 }]);
+    expect(report.bloomLevelChart).toEqual([{ name: 'Analiz', value: 70 }]);
     expect(report.weakAreas).toEqual(['Paragraf']);
   });
 

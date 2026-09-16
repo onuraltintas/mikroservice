@@ -16,6 +16,7 @@ public sealed class ReadingSession : Entity
     public int TotalQuestions { get; private set; }
     public decimal ComprehensionRate { get; private set; }
     public decimal EfficiencyScore { get; private set; }
+    public bool IsMeasured { get; private set; }
     public DateTime CompletedAt { get; private set; }
 
     public static ReadingSession Import(
@@ -32,7 +33,8 @@ public sealed class ReadingSession : Entity
         DateTime createdAt,
         string? createdBy,
         DateTime? updatedAt,
-        string? updatedBy)
+        string? updatedBy,
+        bool isMeasured = true)
     {
         if (id == Guid.Empty || userId == Guid.Empty || readingTextId == Guid.Empty)
             throw new ArgumentException("Reading session identifiers are required.");
@@ -54,6 +56,7 @@ public sealed class ReadingSession : Entity
             TotalQuestions = totalQuestions,
             ComprehensionRate = comprehensionRate,
             EfficiencyScore = efficiencyScore,
+            IsMeasured = isMeasured,
             CompletedAt = EnsureUtc(completedAt),
             CreatedAt = EnsureUtc(createdAt),
             CreatedBy = createdBy,

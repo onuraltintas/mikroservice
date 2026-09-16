@@ -57,6 +57,14 @@ export interface TeacherStudentComprehensionReport {
         name: string;
         series: Array<{ name: string; value: number }>;
     }>;
+    questionTypeChart: Array<{
+        name: string;
+        value: number;
+    }>;
+    bloomLevelChart: Array<{
+        name: string;
+        value: number;
+    }>;
     weakAreas: string[];
     strongAreas: string[];
 }
@@ -229,6 +237,14 @@ export class TeacherReportService {
                 name: point.date,
                 series: [{ name: 'Anlama', value: point.value }]
             })),
+            questionTypeChart: (value.questionTypes ?? []).map(item => ({
+                name: item.type,
+                value: item.value
+            })),
+            bloomLevelChart: (value.bloomLevels ?? []).map(item => ({
+                name: item.label,
+                value: item.value
+            })),
             weakAreas: value.weakAreas ?? [],
             strongAreas: value.strongAreas ?? []
         };
@@ -378,8 +394,25 @@ interface StudentComprehensionAnalytics {
     minComprehension: number;
     improvementRate: number;
     trend: StudentAnalyticsTrendPoint[];
+    questionTypes: StudentAnalyticsQuestionTypePoint[];
+    bloomLevels: StudentAnalyticsBloomLevelPoint[];
     weakAreas: string[];
     strongAreas: string[];
+}
+
+interface StudentAnalyticsQuestionTypePoint {
+    type: string;
+    value: number;
+    questionsAttempted: number;
+    correctAnswers: number;
+}
+
+interface StudentAnalyticsBloomLevelPoint {
+    level: number;
+    label: string;
+    value: number;
+    questionsAttempted: number;
+    correctAnswers: number;
 }
 
 interface StudentActivityAnalytics {

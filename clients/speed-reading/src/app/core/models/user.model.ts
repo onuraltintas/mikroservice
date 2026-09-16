@@ -14,6 +14,7 @@ export interface AuthResponse {
   targetComprehension?: number;
   dailyGoalMinutes?: number;
   learningStyle?: string;
+  shareProgressWithTeachers?: boolean;
   institutionId?: string;
   institutionName?: string;
   requiresMfa?: boolean;
@@ -85,6 +86,7 @@ export interface UserDto {
   dateOfBirth?: Date;
   ageGroupId?: string;
   learningStyle?: 'visual' | 'auditory' | 'kinesthetic' | string;
+  shareProgressWithTeachers?: boolean;
   roles: string[];
   isActive: boolean;
   emailConfirmed: boolean;

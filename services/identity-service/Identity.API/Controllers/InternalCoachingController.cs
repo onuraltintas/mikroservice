@@ -88,6 +88,7 @@ public sealed class InternalCoachingController : ControllerBase
         var authorization = await _institutionRepository.AuthorizeCoachingStudentReadAsync(
             request.ViewerUserId,
             request.StudentIds,
+            request.TargetTeacherUserId,
             cancellationToken);
 
         return authorization is null
@@ -193,7 +194,8 @@ public sealed record CoachingAdminAuthorizationResponse(bool IsGlobal, Guid? Ins
 
 public sealed record CoachingStudentReadRequest(
     Guid ViewerUserId,
-    IReadOnlyCollection<Guid> StudentIds);
+    IReadOnlyCollection<Guid> StudentIds,
+    Guid? TargetTeacherUserId = null);
 
 public sealed record CoachingStudentReadResponse(
     IReadOnlyCollection<Guid> AllowedStudentUserIds);

@@ -40,7 +40,8 @@ internal sealed class OwnedSpeedReadingProgress(OwnedSpeedReadingDbContext db)
                 item.ReadingTimeSeconds,
                 item.CorrectAnswers,
                 item.TotalQuestions,
-                item.CompletedAt))
+                item.CompletedAt,
+                item.IsMeasured))
             .ToListAsync(cancellationToken);
     }
 
@@ -55,10 +56,16 @@ internal sealed class OwnedSpeedReadingProgress(OwnedSpeedReadingDbContext db)
             .Select(group => new
             {
                 TotalSessions = group.Count(),
-                AverageWpm = group.Average(item => (decimal)item.CalculatedWpm),
-                AverageComprehension = group.Average(item => item.ComprehensionRate),
+                AverageWpm = group.Where(item => item.IsMeasured && item.CalculatedWpm > 0)
+                    .Select(item => (decimal?)item.CalculatedWpm)
+                    .Average() ?? 0,
+                AverageComprehension = group.Where(item => item.TotalQuestions > 0)
+                    .Select(item => (decimal?)item.ComprehensionRate)
+                    .Average() ?? 0,
                 TotalSeconds = group.Sum(item => item.ReadingTimeSeconds),
-                BestWpm = group.Max(item => item.CalculatedWpm)
+                BestWpm = group.Where(item => item.IsMeasured && item.CalculatedWpm > 0)
+                    .Select(item => (int?)item.CalculatedWpm)
+                    .Max() ?? 0
             })
             .SingleOrDefaultAsync(cancellationToken);
 

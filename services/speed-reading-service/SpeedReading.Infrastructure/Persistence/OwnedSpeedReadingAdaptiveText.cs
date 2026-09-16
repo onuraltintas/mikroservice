@@ -93,7 +93,11 @@ internal sealed class OwnedSpeedReadingAdaptiveText(OwnedSpeedReadingDbContext d
             .AsNoTracking()
             .Where(item => item.UserId == studentId)
             .ToListAsync(cancellationToken);
-        var textIds = sessions.Select(item => item.ReadingTextId).Distinct().ToArray();
+        var measuredSessions = sessions
+            .Where(item => item.IsMeasured && item.CalculatedWpm > 0)
+            .ToList();
+        var comprehensionSessions = sessions.Where(item => item.TotalQuestions > 0).ToList();
+        var textIds = sessions.Select(item => item.ReadingTextId).Distinct().ToList();
         var texts = await db.ReadingTexts
             .AsNoTracking()
             .Where(item => textIds.Contains(item.Id))
@@ -116,21 +120,21 @@ internal sealed class OwnedSpeedReadingAdaptiveText(OwnedSpeedReadingDbContext d
         }
 
         profile.CurrentReadingLevel = Math.Clamp(userProfile?.CurrentLevel ?? profile.CurrentReadingLevel, 1, 10);
-        profile.AverageComprehensionScore = sessions.Count > 0
-            ? Math.Round(sessions.Average(item => item.ComprehensionRate), 2)
+        profile.AverageComprehensionScore = comprehensionSessions.Count > 0
+            ? Math.Round(comprehensionSessions.Average(item => item.ComprehensionRate), 2)
             : Math.Clamp(request.ComprehensionScore, 0, 100);
-        profile.AverageReadingSpeed = sessions.Count > 0
-            ? Math.Round(sessions.Average(item => (decimal)item.CalculatedWpm), 2)
+        profile.AverageReadingSpeed = measuredSessions.Count > 0
+            ? Math.Round(measuredSessions.Average(item => (decimal)item.CalculatedWpm), 2)
             : Math.Max(request.ReadingSpeedWpm, 0);
         profile.TotalTextsRead = sessions.Select(item => item.ReadingTextId).Distinct().Count();
         profile.TotalReadingTimeSeconds = sessions.Sum(item => item.ReadingTimeSeconds);
-        profile.PreferredCategories = GetCategoryScores(sessions, texts)
+        profile.PreferredCategories = GetCategoryScores(comprehensionSessions, texts)
             .Where(item => item.Score >= 70)
             .OrderByDescending(item => item.Score)
             .Take(3)
             .Select(item => item.Category)
             .ToList();
-        profile.DifficultCategories = GetCategoryScores(sessions, texts)
+        profile.DifficultCategories = GetCategoryScores(comprehensionSessions, texts)
             .Where(item => item.Score > 0 && item.Score < 70)
             .OrderBy(item => item.Score)
             .Take(3)

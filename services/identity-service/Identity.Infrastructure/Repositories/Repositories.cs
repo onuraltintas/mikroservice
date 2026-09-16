@@ -533,7 +533,12 @@ public class InstitutionRepository : IInstitutionRepository
     private readonly IdentityDbContext _context;
 
     private sealed record TeacherReadProfile(Guid Id, Guid? InstitutionId, bool CanViewAllInstitutionStudents);
-    private sealed record StudentReadProfile(Guid Id, Guid UserId, Guid? ParentId, Guid? InstitutionId);
+    private sealed record StudentReadProfile(
+        Guid Id,
+        Guid UserId,
+        Guid? ParentId,
+        Guid? InstitutionId,
+        bool ShareProgressWithTeachers);
     private sealed record TeacherStudentReadAssignment(Guid TeacherId, Guid StudentId, Guid? InstitutionId);
 
     public InstitutionRepository(IdentityDbContext context)
@@ -1110,6 +1115,7 @@ public class InstitutionRepository : IInstitutionRepository
     public async Task<CoachingStudentReadAuthorization?> AuthorizeCoachingStudentReadAsync(
         Guid viewerUserId,
         IReadOnlyCollection<Guid> studentUserIds,
+        Guid? targetTeacherUserId,
         CancellationToken cancellationToken)
     {
         var distinctStudentUserIds = studentUserIds.Distinct().ToArray();
@@ -1186,6 +1192,51 @@ public class InstitutionRepository : IInstitutionRepository
                 .ToListAsync(cancellationToken)
             : new List<TeacherReadProfile>();
 
+        if (targetTeacherUserId.HasValue
+            && targetTeacherUserId.Value != viewerUserId
+            && !isSystemAdministrator
+            && !isInstitutionAdministrator)
+        {
+            return null;
+        }
+
+        TeacherReadProfile? targetTeacherProfile = null;
+        if (targetTeacherUserId.HasValue)
+        {
+            targetTeacherProfile = await _context.TeacherProfiles
+                .AsNoTracking()
+                .Where(profile => profile.UserId == targetTeacherUserId.Value
+                    && profile.IsActive
+                    && profile.User.IsActive
+                    && profile.User.Roles.Any(userRole =>
+                        !userRole.Role.IsDeleted
+                        && userRole.Role.Name == "Teacher")
+                    && (!profile.InstitutionId.HasValue
+                        || (profile.Institution != null && profile.Institution.IsActive)))
+                .Select(profile => new TeacherReadProfile(
+                    profile.Id,
+                    profile.InstitutionId,
+                    profile.CanViewAllInstitutionStudents))
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (targetTeacherProfile is null)
+            {
+                return null;
+            }
+
+            if (!isSystemAdministrator
+                && isInstitutionAdministrator
+                && (!targetTeacherProfile.InstitutionId.HasValue
+                    || !institutionAdminIds.Contains(targetTeacherProfile.InstitutionId.Value)))
+            {
+                return null;
+            }
+        }
+
+        var authorizationTeacherProfiles = targetTeacherProfile is null
+            ? teacherProfiles
+            : new List<TeacherReadProfile> { targetTeacherProfile };
+
         var studentProfiles = await _context.StudentProfiles
             .AsNoTracking()
             .Where(profile => distinctStudentUserIds.Contains(profile.UserId)
@@ -1197,10 +1248,11 @@ public class InstitutionRepository : IInstitutionRepository
                 profile.Id,
                 profile.UserId,
                 profile.ParentId,
-                profile.InstitutionId))
+                profile.InstitutionId,
+                profile.ShareProgressWithTeachers))
             .ToListAsync(cancellationToken);
 
-        var teacherProfileIds = teacherProfiles
+        var teacherProfileIds = authorizationTeacherProfiles
             .Select(profile => (Guid)profile.Id)
             .ToArray();
         var studentProfileIds = studentProfiles
@@ -1224,18 +1276,20 @@ public class InstitutionRepository : IInstitutionRepository
                 isSystemAdministrator
                 || (isStudent && profile.UserId == viewerUserId)
                 || (activeParentProfile && profile.ParentId == viewerUserId)
-                || (institutionAdminIds.Contains(profile.InstitutionId ?? Guid.Empty)
-                    && profile.InstitutionId.HasValue)
-                || (teacherProfiles.Any(teacher =>
-                    teacher.CanViewAllInstitutionStudents
-                        && teacher.InstitutionId == profile.InstitutionId
+                || (profile.ShareProgressWithTeachers && (
+                    (!targetTeacherUserId.HasValue
+                        && institutionAdminIds.Contains(profile.InstitutionId ?? Guid.Empty)
                         && profile.InstitutionId.HasValue)
+                    || authorizationTeacherProfiles.Any(teacher =>
+                        teacher.CanViewAllInstitutionStudents
+                            && teacher.InstitutionId == profile.InstitutionId
+                            && profile.InstitutionId.HasValue)
                     || teacherAssignments.Any(assignment =>
                         assignment.StudentId == profile.Id
-                        && teacherProfiles.Any(teacher =>
+                        && authorizationTeacherProfiles.Any(teacher =>
                             teacher.Id == assignment.TeacherId
                             && teacher.InstitutionId == profile.InstitutionId)
-                        && assignment.InstitutionId == profile.InstitutionId)))
+                        && assignment.InstitutionId == profile.InstitutionId))))
             .Select(profile => profile.UserId)
             .Distinct()
             .ToArray();
@@ -1298,6 +1352,11 @@ public class InstitutionRepository : IInstitutionRepository
         if (gradeLevel.HasValue)
         {
             query = query.Where(profile => profile.GradeLevel == gradeLevel.Value);
+        }
+
+        if (!isSystemAdministrator)
+        {
+            query = query.Where(profile => profile.ShareProgressWithTeachers);
         }
 
         return await query
@@ -1368,6 +1427,11 @@ public class InstitutionRepository : IInstitutionRepository
         if (gradeLevel.HasValue)
         {
             query = query.Where(profile => profile.GradeLevel == gradeLevel.Value);
+        }
+
+        if (!isSystemAdministrator)
+        {
+            query = query.Where(profile => profile.ShareProgressWithTeachers);
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
@@ -1469,14 +1533,30 @@ public class TeacherRepository : ITeacherRepository
                         !userRole.Role.IsDeleted
                         && userRole.Role.Name == "Student")
                     && (student.Institution == null || student.Institution.IsActive))
-                .Select(student => student.UserId)
+                .Select(student => new
+                {
+                    student.UserId,
+                    student.ShareProgressWithTeachers
+                })
                 .Distinct()
                 .ToListAsync(cancellationToken);
 
+            var visibleStudentUserIds = institutionStudents
+                .Where(student => student.ShareProgressWithTeachers)
+                .Select(student => student.UserId)
+                .Distinct()
+                .ToList();
+            var institutionRestrictedStudentUserIds = institutionStudents
+                .Where(student => !student.ShareProgressWithTeachers)
+                .Select(student => student.UserId)
+                .Distinct()
+                .ToList();
+
             return new SpeedReadingTeacherStudentScopeResponse(
                 institutionScopeIds,
-                institutionStudents,
-                institutionStudents.Count);
+                visibleStudentUserIds,
+                visibleStudentUserIds.Count,
+                institutionRestrictedStudentUserIds);
         }
 
         var teacherUserId = targetTeacherUserId ?? viewerUserId;
@@ -1532,7 +1612,7 @@ public class TeacherRepository : ITeacherRepository
             ? new[] { teacher.InstitutionId.Value }
             : Array.Empty<Guid>();
         var teacherIds = new[] { teacher.Id };
-        var assignedStudentUserIds = await (
+        var assignedStudents = await (
             from assignment in _context.TeacherStudentAssignments.AsNoTracking()
             join student in _context.StudentProfiles.AsNoTracking()
                 on assignment.StudentId equals student.Id
@@ -1550,9 +1630,47 @@ public class TeacherRepository : ITeacherRepository
                 && student.User.Roles.Any(userRole =>
                     !userRole.Role.IsDeleted
                     && userRole.Role.Name == "Student")
-            select student.UserId)
+            select new
+            {
+                student.UserId,
+                student.ShareProgressWithTeachers
+            })
             .Distinct()
             .ToListAsync(cancellationToken);
+
+        var assignedStudentUserIds = assignedStudents
+            .Where(student => student.ShareProgressWithTeachers)
+            .Select(student => student.UserId)
+            .Distinct()
+            .ToList();
+        var restrictedStudentUserIds = assignedStudents
+            .Where(student => !student.ShareProgressWithTeachers)
+            .Select(student => student.UserId)
+            .Distinct()
+            .ToList();
+
+        if (institutionIds.Length > 0)
+        {
+            var restrictedInstitutionStudentUserIds = await _context.StudentProfiles
+                .AsNoTracking()
+                .Where(student => student.IsActive
+                    && student.User.IsActive
+                    && student.InstitutionId.HasValue
+                    && institutionIds.Contains(student.InstitutionId.Value)
+                    && !student.ShareProgressWithTeachers
+                    && (student.Institution == null || student.Institution.IsActive)
+                    && student.User.Roles.Any(userRole =>
+                        !userRole.Role.IsDeleted
+                        && userRole.Role.Name == "Student"))
+                .Select(student => student.UserId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            restrictedStudentUserIds = restrictedStudentUserIds
+                .Concat(restrictedInstitutionStudentUserIds)
+                .Distinct()
+                .ToList();
+        }
 
         var studentQuery = _context.StudentProfiles
             .AsNoTracking()
@@ -1565,13 +1683,15 @@ public class TeacherRepository : ITeacherRepository
                     || (student.Institution != null && student.Institution.IsActive))
                 && ((student.InstitutionId.HasValue
                         && institutionIds.Contains(student.InstitutionId.Value))
-                    || assignedStudentUserIds.Contains(student.UserId)));
+                    || assignedStudentUserIds.Contains(student.UserId))
+                && student.ShareProgressWithTeachers);
         var totalStudents = await studentQuery.CountAsync(cancellationToken);
 
         return new SpeedReadingTeacherStudentScopeResponse(
             institutionIds,
             assignedStudentUserIds,
-            totalStudents);
+            totalStudents,
+            restrictedStudentUserIds);
     }
 
     public async Task<TeacherProfile?> GetByUserIdAsync(Guid userId, Guid? institutionId, CancellationToken cancellationToken)
@@ -1609,6 +1729,8 @@ public class TeacherRepository : ITeacherRepository
         int pageNumber,
         int pageSize,
         string? searchTerm,
+        int? gradeLevel,
+        bool? isActive,
         CancellationToken cancellationToken)
     {
         var query =
@@ -1629,15 +1751,21 @@ public class TeacherRepository : ITeacherRepository
                 && student.InstitutionId == assignment.InstitutionId
                 && (!student.InstitutionId.HasValue
                     || (student.Institution != null && student.Institution.IsActive))
+                && (!gradeLevel.HasValue || student.GradeLevel == gradeLevel.Value)
+                && (!isActive.HasValue
+                    || (student.IsActive == isActive.Value && student.User.IsActive == isActive.Value))
             select new
             {
                 student.UserId,
                 student.FirstName,
                 student.LastName,
+                Email = student.User.Email,
                 student.GradeLevel,
                 student.InstitutionId,
                 InstitutionName = student.Institution != null ? student.Institution.Name : null,
                 student.AvatarUrl,
+                IsActive = student.IsActive && student.User.IsActive,
+                student.User.LastLoginAt,
                 assignment.Subject,
                 assignment.StartDate
             };
@@ -1647,7 +1775,8 @@ public class TeacherRepository : ITeacherRepository
             var term = searchTerm.Trim();
             query = query.Where(student =>
                 EF.Functions.ILike(student.FirstName, $"%{term}%")
-                || EF.Functions.ILike(student.LastName, $"%{term}%"));
+                || EF.Functions.ILike(student.LastName, $"%{term}%")
+                || EF.Functions.ILike(student.Email, $"%{term}%"));
         }
 
         var grouped = query
@@ -1656,10 +1785,13 @@ public class TeacherRepository : ITeacherRepository
                 student.UserId,
                 student.FirstName,
                 student.LastName,
+                student.Email,
                 student.GradeLevel,
                 student.InstitutionId,
                 student.InstitutionName,
-                student.AvatarUrl
+                student.AvatarUrl,
+                student.IsActive,
+                student.LastLoginAt
             });
 
         var totalCount = await grouped.CountAsync(cancellationToken);
@@ -1674,10 +1806,13 @@ public class TeacherRepository : ITeacherRepository
                 group.Key.UserId,
                 group.Key.FirstName,
                 group.Key.LastName,
+                group.Key.Email,
                 group.Key.GradeLevel,
                 group.Key.InstitutionId,
                 group.Key.InstitutionName,
                 group.Key.AvatarUrl,
+                group.Key.IsActive,
+                group.Key.LastLoginAt,
                 Subject = group
                     .Where(student => student.Subject != null)
                     .OrderBy(student => student.Subject)
@@ -1698,7 +1833,10 @@ public class TeacherRepository : ITeacherRepository
                 student.InstitutionName,
                 student.AvatarUrl,
                 student.Subject,
-                student.AssignmentStartDate))
+                student.AssignmentStartDate,
+                student.Email,
+                student.IsActive,
+                student.LastLoginAt))
             .ToList();
 
         return new PagedList<TeacherStudentDto>(items, totalCount, pageNumber, pageSize);

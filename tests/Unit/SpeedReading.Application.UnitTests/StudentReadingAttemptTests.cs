@@ -33,4 +33,37 @@ public sealed class StudentReadingAttemptTests
 
         attempt.CompletedAt.Should().Be(completedAt);
     }
+
+    [Fact]
+    public void SetQuestionSnapshot_stores_a_trimmed_snapshot_and_audit_timestamp()
+    {
+        var userId = Guid.NewGuid();
+        var startedAt = DateTime.UtcNow.AddMinutes(-1);
+        var updatedAt = DateTime.UtcNow;
+        var attempt = StudentReadingAttempt.Start(
+            Guid.NewGuid(),
+            userId,
+            Guid.NewGuid(),
+            startedAt);
+
+        attempt.SetQuestionSnapshot("  []  ", updatedAt);
+
+        attempt.QuestionSnapshotJson.Should().Be("[]");
+        attempt.UpdatedAt.Should().Be(updatedAt);
+        attempt.UpdatedBy.Should().Be(userId.ToString());
+    }
+
+    [Fact]
+    public void SetQuestionSnapshot_requires_json_content()
+    {
+        var attempt = StudentReadingAttempt.Start(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            DateTime.UtcNow);
+
+        var act = () => attempt.SetQuestionSnapshot(" ", DateTime.UtcNow);
+
+        act.Should().Throw<ArgumentException>();
+    }
 }

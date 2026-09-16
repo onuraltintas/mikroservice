@@ -146,7 +146,13 @@ describe('ReportsService', () => {
         correctAnswers: 5,
         performanceLevel: 'Needs Improvement'
       }],
-      questionTypes: [],
+      questionTypes: [
+        { type: 'Gerçek Anlam', value: 75, questionsAttempted: 4, correctAnswers: 3 },
+        { type: 'Çıkarım', value: 100, questionsAttempted: 2, correctAnswers: 2 }
+      ],
+      bloomLevels: [
+        { level: 2, label: 'Anlama', value: 90, questionsAttempted: 10, correctAnswers: 9 }
+      ],
       totalQuestionsAttempted: 10,
       correctAnswers: 5,
       successRate: 50,
@@ -162,7 +168,11 @@ describe('ReportsService', () => {
 
     expect(report.overallComprehension).toBe(78);
     expect(report.categoryBreakdown[0].questionsAnswered).toBe(10);
-    expect(report.questionTypeChart.data).toEqual([]);
+    expect(report.questionTypeChart.data).toEqual([
+      { name: 'Gerçek Anlam', value: 75 },
+      { name: 'Çıkarım', value: 100 }
+    ]);
+    expect(report.bloomLevelChart.data).toEqual([{ name: 'Anlama', value: 90 }]);
     expect(report.improvementAreas[0].priority).toBe('high');
   });
 

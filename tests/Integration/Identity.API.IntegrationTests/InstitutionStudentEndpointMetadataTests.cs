@@ -18,7 +18,8 @@ public sealed class InstitutionStudentEndpointMetadataTests
         controller.GetMethod(nameof(InstitutionController.RemoveStudent)).Should().NotBeNull();
 
         controller.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
-            .Should().ContainSingle();
+            .Cast<AuthorizeAttribute>()
+            .Should().ContainSingle(attribute => attribute.Roles == "InstitutionAdmin,InstitutionOwner");
         controller.GetCustomAttributes(typeof(RouteAttribute), inherit: true)
             .Cast<RouteAttribute>()
             .Should().ContainSingle(attribute => attribute.Template == "api/institution");

@@ -15,5 +15,6 @@ public record UpdateUserProfileCommand(
     // Student specific
     int? GradeLevel,
     DateTime? BirthDate,
-    Identity.Domain.Enums.LearningStyle? LearningStyle
+    Identity.Domain.Enums.LearningStyle? LearningStyle,
+    bool? ShareProgressWithTeachers = null
 ) : IRequest<Result>;

@@ -191,7 +191,7 @@ public sealed class AssignmentsController(
         var readableStudentIds = await teacherAccess.GetReadableStudentIdsAsync(
             teacherId,
             requestedStudentIds,
-            cancellationToken);
+            cancellationToken: cancellationToken);
         return TeacherStudentAccessRules.ContainsAll(requestedStudentIds, readableStudentIds);
     }
 }

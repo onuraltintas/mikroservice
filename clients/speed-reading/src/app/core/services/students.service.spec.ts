@@ -81,6 +81,29 @@ describe('StudentsService', () => {
     request.flush({ items: [] });
   });
 
+  it('loads an institution roster page without dropping pagination metadata', () => {
+    service.getInstitutionStudentsPage(3, 25, 'Ada', 8, true, 'teacher-1').subscribe(page => {
+      expect(page.items).toEqual([jasmine.objectContaining({ id: 'student-3', currentLevel: 8 })]);
+      expect(page.totalCount).toBe(61);
+      expect(page.pageNumber).toBe(3);
+      expect(page.pageSize).toBe(25);
+    });
+
+    const request = http.expectOne(candidate => candidate.url === '/api/institution/students');
+    expect(request.request.params.get('page')).toBe('3');
+    expect(request.request.params.get('pageSize')).toBe('25');
+    expect(request.request.params.get('search')).toBe('Ada');
+    expect(request.request.params.get('gradeLevel')).toBe('8');
+    expect(request.request.params.get('isActive')).toBe('true');
+    expect(request.request.params.get('teacherUserId')).toBe('teacher-1');
+    request.flush({
+      items: [{ userId: 'student-3', firstName: 'Ada', lastName: 'Yılmaz', gradeLevel: 8, isActive: true }],
+      totalCount: 61,
+      pageNumber: 3,
+      pageSize: 25
+    });
+  });
+
   it('creates a student through the institution endpoint with the selected teacher', () => {
     service.createStudent({
       firstName: 'Ada',

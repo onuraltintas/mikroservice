@@ -202,7 +202,8 @@ internal sealed class OwnedSpeedReadingAssessment(
             .Where(item => item.AssessmentAttemptId.HasValue
                 && attemptIds.Contains(item.AssessmentAttemptId.Value)
                 && item.IsAssessmentMode
-                && item.IsMeasured)
+                && item.IsMeasured
+                && item.RawWpm > 0)
             .Select(item => new AssessmentComparisonResultRow(
                 item.AssessmentAttemptId!.Value,
                 item.ExerciseId,
@@ -406,7 +407,7 @@ internal sealed class OwnedSpeedReadingAssessment(
             .OrderByDescending(item => item.CreatedAt);
         var allResults = await resultsQuery.ToListAsync(cancellationToken);
         var measuredResults = allResults
-            .Where(item => item.IsMeasured)
+            .Where(item => item.IsMeasured && item.RawWpm > 0)
             .GroupBy(item => item.ExerciseId)
             .Select(group => group.OrderByDescending(item => item.CreatedAt).First())
             .ToList();
@@ -904,7 +905,8 @@ internal sealed class OwnedSpeedReadingAssessment(
                 item.Explanation,
                 item.BloomLevel,
                 item.DifficultyLevel,
-                item.OrderIndex))
+                item.OrderIndex,
+                item.Type))
             .ToListAsync(cancellationToken);
 
         var usedReadingTextIds = new HashSet<Guid>();
@@ -947,7 +949,8 @@ internal sealed class OwnedSpeedReadingAssessment(
                     candidate.Description,
                     candidate.TypeName,
                     candidate.DifficultyLevel,
-                    candidate.ConfigurationJson),
+                    candidate.ConfigurationJson,
+                    candidate.EngineType),
                 readingTextSnapshot,
                 questionSnapshots);
             result.Add(AssessmentAttemptExercise.Pin(
@@ -1180,21 +1183,7 @@ internal sealed class OwnedSpeedReadingAssessment(
         parts.Any(part => value.Contains(part, StringComparison.OrdinalIgnoreCase));
 
     private static AssessmentContentSnapshot? GetSnapshot(AssessmentExerciseRow item)
-    {
-        if (string.IsNullOrWhiteSpace(item.ContentSnapshotJson)
-            || item.ContentSnapshotJson == "{}")
-            return null;
-        try
-        {
-            return JsonSerializer.Deserialize<AssessmentContentSnapshot>(
-                item.ContentSnapshotJson,
-                SnapshotJsonOptions);
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
-    }
+        => AssessmentContentSnapshotRules.DeserializeOptional(item.ContentSnapshotJson);
 
     private static int CountWords(string content) =>
         content.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;

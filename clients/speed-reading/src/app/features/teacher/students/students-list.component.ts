@@ -4,7 +4,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSortModule, MatSort } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -64,11 +64,6 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
   private dialog = inject(MatDialog);
   protected override toaster = inject(ToasterService);
 
-  @ViewChild(MatPaginator) set paginator(value: MatPaginator) {
-    if (value) {
-      this.dataSource.paginator = value;
-    }
-  }
   @ViewChild(MatSort) set sort(value: MatSort) {
     if (value) {
       this.dataSource.sort = value;
@@ -85,6 +80,9 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
   activeAccessStudentIds = new Set<string>();
   suspendedAccessStudentIds = new Set<string>();
   selectedTeacherUserId?: string;
+  pageIndex = 0;
+  pageSize = 10;
+  totalStudents = 0;
 
   ngOnInit() {
     this.selectedTeacherUserId = this.route.snapshot.queryParamMap.get('teacherId') ?? undefined;
@@ -174,22 +172,23 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
         distinctUntilChanged(),
         takeUntil(this.destroy$)
       )
-      .subscribe(() => this.refreshData());
+      .subscribe(() => this.refreshData(true));
 
     this.levelControl.valueChanges
       .pipe(takeUntil(this.destroy$))
-      .subscribe(() => this.refreshData());
+      .subscribe(() => this.refreshData(true));
 
     this.statusControl.valueChanges
       .pipe(takeUntil(this.destroy$))
-      .subscribe(() => this.refreshData());
+      .subscribe(() => this.refreshData(true));
   }
 
   /**
    * Unified method to load data based on role and filters.
    * Replaces both initializeTeacherData and applyFilters.
    */
-  refreshData() {
+  refreshData(resetPage = false) {
+    if (resetPage) this.pageIndex = 0;
     const user = this.authService.currentUserValue;
     if (user && this.isInstitutionAdmin()) {
       // Institution admins can filter the full institution roster.
@@ -199,26 +198,26 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
 
       this.loadStudentsAdmin(searchTerm, level ?? undefined, status ?? undefined);
     } else {
-      // Teacher: Use teacher endpoint (backend handles filtering by teacher's institution/assignments)
-      // Note: Client-side filtering is applied via dataSource.filter in loadStudents callback
       this.loadStudents();
     }
   }
 
   loadStudents() {
     this.loading.set(true);
-    this.teachersService.getMyStudents()
+    this.teachersService.getMyStudentsPage(
+      this.pageIndex + 1,
+      this.pageSize,
+      this.searchControl.value || undefined,
+      this.levelControl.value ?? undefined,
+      this.statusControl.value ?? undefined)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => this.loading.set(false))
       )
       .subscribe({
-        next: (students) => {
-          this.dataSource.data = students;
-          const searchTerm = this.searchControl.value || '';
-          if (searchTerm) {
-            this.dataSource.filter = searchTerm.trim().toLowerCase();
-          }
+        next: (page) => {
+          this.dataSource.data = page.items;
+          this.totalStudents = page.totalCount;
         },
         error: (error) => {
           this.handleError(error, 'Öğrenciler yüklenirken hata oluştu');
@@ -228,14 +227,21 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
 
   loadStudentsAdmin(searchTerm: string = '', level?: number, isActive?: boolean) {
     this.loading.set(true);
-    this.studentsService.getInstitutionStudents(searchTerm, level, isActive, this.selectedTeacherUserId)
+    this.studentsService.getInstitutionStudentsPage(
+      this.pageIndex + 1,
+      this.pageSize,
+      searchTerm,
+      level,
+      isActive,
+      this.selectedTeacherUserId)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => this.loading.set(false))
       )
       .subscribe({
-        next: (students) => {
-          this.dataSource.data = students;
+        next: (page) => {
+          this.dataSource.data = page.items;
+          this.totalStudents = page.totalCount;
         },
         error: (error) => {
           this.handleError(error, 'Öğrenciler yüklenirken hata oluştu');
@@ -247,6 +253,12 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
     this.searchControl.setValue('');
     this.levelControl.setValue(null);
     this.statusControl.setValue(null);
+  }
+
+  onPageChange(event: PageEvent): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.refreshData();
   }
 
   getInitials(firstName: string, lastName: string): string {

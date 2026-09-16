@@ -132,6 +132,7 @@ export interface StudentComprehensionReport {
   overallComprehension: number;
   comprehensionBenchmarks: ComprehensionBenchmark[];
   questionTypeChart: QuestionTypeChart;
+  bloomLevelChart: BloomLevelChart;
   categoryComprehensionChart: CategoryComprehensionChart;
   categoryBreakdown: CategoryComprehensionBreakdown[];
   improvementAreas: ImprovementArea[];
@@ -145,6 +146,11 @@ export interface ComprehensionBenchmark {
 }
 
 export interface QuestionTypeChart {
+  data: ChartSeries[];
+  labels: string[];
+}
+
+export interface BloomLevelChart {
   data: ChartSeries[];
   labels: string[];
 }

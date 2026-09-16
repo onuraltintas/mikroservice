@@ -3,7 +3,7 @@
         <mat-spinner></mat-spinner>
     </div>
 
-    <div *ngIf="!loading() && student">
+    <div *ngIf="!loading() && student && !privacyRestricted()">
         <div class="header">
             <button mat-icon-button routerLink="/teacher/students" aria-label="Öğrenci listesine dön" type="button">
                 <mat-icon>arrow_back</mat-icon>
@@ -43,7 +43,7 @@
                     <div class="stat-card">
                         <mat-icon class="stat-icon">speed</mat-icon>
                         <div class="stat-content">
-                            <div class="stat-value">{{ stats?.averageKDP || 0 }}</div>
+                            <div class="stat-value">{{ stats?.averageKDP ?? '—' }}</div>
                             <div class="stat-label">Ortalama KDP</div>
                             <div class="stat-target">Hedef: {{ student.targetWPM ?? 'Tanımlı değil' }} KDP</div>
                         </div>
@@ -56,7 +56,7 @@
                     <div class="stat-card">
                         <mat-icon class="stat-icon">psychology</mat-icon>
                         <div class="stat-content">
-                            <div class="stat-value">{{ stats?.averageComprehension || 0 }}%</div>
+                            <div class="stat-value">{{ stats?.averageComprehension ?? '—' }}<span *ngIf="stats?.averageComprehension != null">%</span></div>
                             <div class="stat-label">Ortalama Anlama</div>
                             <div class="stat-target">Hedef: {{ student.targetComprehension ?? 'Tanımlı değil' }}<span *ngIf="student.targetComprehension != null">%</span></div>
                         </div>
@@ -140,8 +140,8 @@
                                 <ng-container matColumnDef="kdp">
                                     <th mat-header-cell *matHeaderCellDef>KDP</th>
                                     <td mat-cell *matCellDef="let activity">
-                                        <span [class.above-target]="student.targetWPM != null && student.targetWPM > 0 && activity.kdp >= student.targetWPM">
-                                            {{ activity.kdp }}
+                                        <span [class.above-target]="activity.kdp != null && student.targetWPM != null && student.targetWPM > 0 && activity.kdp >= student.targetWPM">
+                                            {{ activity.kdp == null ? '—' : activity.kdp }}
                                         </span>
                                     </td>
                                 </ng-container>
@@ -150,8 +150,8 @@
                                     <th mat-header-cell *matHeaderCellDef>Anlama</th>
                                     <td mat-cell *matCellDef="let activity">
                                         <span
-                                            [class.above-target]="student.targetComprehension != null && student.targetComprehension > 0 && activity.comprehension >= student.targetComprehension">
-                                            {{ activity.comprehension }}%
+                                            [class.above-target]="activity.comprehension != null && student.targetComprehension != null && student.targetComprehension > 0 && activity.comprehension >= student.targetComprehension">
+                                            {{ activity.comprehension == null ? '—' : activity.comprehension + '%' }}
                                         </span>
                                     </td>
                                 </ng-container>
@@ -185,8 +185,8 @@
                                     </div>
                                     <div class="series-stats">
                                         <span class="progress-text">{{ series.progress }}% Tamamlandı</span>
-                                        <span class="steps-text">{{ series.exercisesCompleted }} / {{
-                                            series.totalExercises }} Adım</span>
+                                        <span class="steps-text">{{ series.daysCompleted }} / {{
+                                            series.totalDays }} Gün</span>
                                     </div>
                                 </div>
                                 <mat-progress-bar mode="determinate" [value]="series.progress"></mat-progress-bar>
@@ -307,7 +307,15 @@
         </mat-card>
     </div>
 
-    <div *ngIf="!loading() && !student" class="error-state">
+    <div *ngIf="!loading() && privacyRestricted()" class="error-state">
+        <mat-icon>visibility_off</mat-icon>
+        <p>Bu öğrencinin öğretmen ve kurumla ilerleme paylaşımı kapalı olduğu için ayrıntılı istatistikler görüntülenemiyor.</p>
+        <button mat-raised-button color="primary" routerLink="/teacher/students">
+            Öğrenci Listesine Dön
+        </button>
+    </div>
+
+    <div *ngIf="!loading() && !student && !privacyRestricted()" class="error-state">
         <mat-icon>error_outline</mat-icon>
         <p>Öğrenci bulunamadı</p>
         <button mat-raised-button color="primary" routerLink="/teacher/students">

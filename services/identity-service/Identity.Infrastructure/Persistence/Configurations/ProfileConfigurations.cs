@@ -43,6 +43,9 @@ public class StudentProfileConfiguration : IEntityTypeConfiguration<StudentProfi
         builder.Property(s => s.Preferences)
             .HasColumnType("jsonb");
 
+        builder.Property(s => s.ShareProgressWithTeachers)
+            .HasDefaultValue(true);
+
         builder.Property(s => s.CreatedAt)
             .HasDefaultValueSql("NOW()");
 

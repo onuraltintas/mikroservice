@@ -168,7 +168,8 @@ public sealed class ExerciseSession : AggregateRoot
         string answer,
         bool isCorrect,
         int timeSpentSeconds,
-        int bloomLevel)
+        int bloomLevel,
+        int questionType = 0)
     {
         EnsureStatus(ExerciseSessionStatus.Active, "Answers can only be recorded for an active session.");
         if (questionId == Guid.Empty)
@@ -187,7 +188,8 @@ public sealed class ExerciseSession : AggregateRoot
             answer.Trim(),
             isCorrect,
             timeSpentSeconds,
-            bloomLevel));
+            bloomLevel,
+            questionType));
 
         if (isCorrect) CorrectCount++;
         else IncorrectCount++;

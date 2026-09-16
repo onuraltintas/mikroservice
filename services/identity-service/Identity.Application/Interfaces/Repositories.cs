@@ -103,6 +103,7 @@ public interface IInstitutionRepository
     Task<CoachingStudentReadAuthorization?> AuthorizeCoachingStudentReadAsync(
         Guid viewerUserId,
         IReadOnlyCollection<Guid> studentUserIds,
+        Guid? targetTeacherUserId,
         CancellationToken cancellationToken);
     Task<IReadOnlyCollection<Guid>?> GetCoachingReportStudentUserIdsAsync(
         Guid viewerUserId,
@@ -172,6 +173,8 @@ public interface ITeacherRepository
         int pageNumber,
         int pageSize,
         string? searchTerm,
+        int? gradeLevel,
+        bool? isActive,
         CancellationToken cancellationToken);
     Task<SpeedReadingTeacherStudentScopeResponse?> GetSpeedReadingTeacherStudentScopeAsync(
         Guid viewerUserId,

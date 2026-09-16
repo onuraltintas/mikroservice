@@ -21,9 +21,10 @@ public sealed class TeacherAnalyticsController(
         Guid studentId,
         [FromQuery] DateTime? dateFrom,
         [FromQuery] DateTime? dateTo,
+        [FromQuery] Guid? teacherId,
         CancellationToken cancellationToken = default)
     {
-        var access = await CanReadStudentAsync(studentId, cancellationToken);
+        var access = await CanReadStudentAsync(studentId, teacherId, cancellationToken);
         if (!access.HasIdentity)
         {
             return Unauthorized();
@@ -46,9 +47,10 @@ public sealed class TeacherAnalyticsController(
         Guid studentId,
         [FromQuery] DateTime? dateFrom,
         [FromQuery] DateTime? dateTo,
+        [FromQuery] Guid? teacherId,
         CancellationToken cancellationToken = default)
     {
-        var access = await CanReadStudentAsync(studentId, cancellationToken);
+        var access = await CanReadStudentAsync(studentId, teacherId, cancellationToken);
         if (!access.HasIdentity)
         {
             return Unauthorized();
@@ -131,9 +133,10 @@ public sealed class TeacherAnalyticsController(
         Guid studentId,
         [FromQuery] DateTime? dateFrom,
         [FromQuery] DateTime? dateTo,
+        [FromQuery] Guid? teacherId,
         CancellationToken cancellationToken = default)
     {
-        var access = await CanReadStudentAsync(studentId, cancellationToken);
+        var access = await CanReadStudentAsync(studentId, teacherId, cancellationToken);
         if (!access.HasIdentity)
         {
             return Unauthorized();
@@ -156,9 +159,10 @@ public sealed class TeacherAnalyticsController(
         Guid studentId,
         [FromQuery] DateTime? dateFrom,
         [FromQuery] DateTime? dateTo,
+        [FromQuery] Guid? teacherId,
         CancellationToken cancellationToken = default)
     {
-        var access = await CanReadStudentAsync(studentId, cancellationToken);
+        var access = await CanReadStudentAsync(studentId, teacherId, cancellationToken);
         if (!access.HasIdentity)
         {
             return Unauthorized();
@@ -181,9 +185,10 @@ public sealed class TeacherAnalyticsController(
         Guid studentId,
         [FromQuery] DateTime? dateFrom,
         [FromQuery] DateTime? dateTo,
+        [FromQuery] Guid? teacherId,
         CancellationToken cancellationToken = default)
     {
-        var access = await CanReadStudentAsync(studentId, cancellationToken);
+        var access = await CanReadStudentAsync(studentId, teacherId, cancellationToken);
         if (!access.HasIdentity)
         {
             return Unauthorized();
@@ -210,6 +215,7 @@ public sealed class TeacherAnalyticsController(
 
     private async Task<(bool HasIdentity, bool Allowed)> CanReadStudentAsync(
         Guid studentId,
+        Guid? targetTeacherUserId,
         CancellationToken cancellationToken)
     {
         var viewerUserId = GetCurrentUserId();
@@ -218,6 +224,7 @@ public sealed class TeacherAnalyticsController(
             : (true, await teacherAccess.CanReadStudentAsync(
                 viewerUserId.Value,
                 studentId,
+                targetTeacherUserId,
                 cancellationToken));
     }
 

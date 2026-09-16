@@ -62,16 +62,17 @@ public sealed class TeacherAnalyticsRulesTests
     }
 
     [Fact]
-    public void Class_summary_excludes_unmeasured_readings_from_comprehension_average()
+    public void Class_summary_excludes_unmeasured_readings_from_speed_and_comprehension_averages()
     {
         var measuredStudent = Guid.NewGuid();
         var unmeasuredStudent = Guid.NewGuid();
         var result = TeacherAnalyticsRules.Summarize([
             new TeacherMetricSample(measuredStudent, 1, 300, 80, 60, true, ComprehensionActivityCount: 1),
-            new TeacherMetricSample(unmeasuredStudent, 1, 240, 0, 45, true, ComprehensionActivityCount: 0)
+            new TeacherMetricSample(unmeasuredStudent, 1, 240, 0, 45, true,
+                ComprehensionActivityCount: 0, MeasuredActivityCount: 0)
         ]);
 
-        result.ClassAverageWpm.Should().Be(270);
+        result.ClassAverageWpm.Should().Be(300);
         result.ClassAverageComprehension.Should().Be(80);
         result.ReadingStudents.Should().HaveCount(2);
     }

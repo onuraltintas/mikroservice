@@ -29,7 +29,6 @@ export const DEFAULT_SETTINGS: UserSettings = {
     emailNotifications: false,
     achievementNotifications: true,
     progressReports: true,
-    shareProgress: false,
+    shareProgress: true,
     allowAnalytics: true
 };
-

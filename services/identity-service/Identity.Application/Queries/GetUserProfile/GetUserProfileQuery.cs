@@ -48,6 +48,7 @@ public class StudentDetailsDto
     public string? InstitutionName { get; set; }
     public DateTime? BirthDate { get; set; }
     public string? LearningStyle { get; set; }
+    public bool ShareProgressWithTeachers { get; set; } = true;
 }
 
 public record GetUserProfileQuery(Guid UserId) : IRequest<Result<UserProfileDto>>;

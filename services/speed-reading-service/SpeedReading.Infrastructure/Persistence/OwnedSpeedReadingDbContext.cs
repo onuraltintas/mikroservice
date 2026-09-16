@@ -34,6 +34,7 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<ExerciseSessionAnswer> ExerciseSessionAnswers => Set<ExerciseSessionAnswer>();
     public DbSet<ExerciseSessionResult> ExerciseSessionResults => Set<ExerciseSessionResult>();
     public DbSet<ReadingSession> ReadingSessions => Set<ReadingSession>();
+    public DbSet<ReadingSessionAnswer> ReadingSessionAnswers => Set<ReadingSessionAnswer>();
     public DbSet<StudentReadingAttempt> StudentReadingAttempts => Set<StudentReadingAttempt>();
     public DbSet<Assignment> Assignments => Set<Assignment>();
     public DbSet<StudentAssignment> StudentAssignments => Set<StudentAssignment>();
@@ -115,6 +116,7 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<ExerciseSessionAnswer>());
         ConfigureEntity(modelBuilder.Entity<ExerciseSessionResult>());
         ConfigureEntity(modelBuilder.Entity<ReadingSession>());
+        ConfigureEntity(modelBuilder.Entity<ReadingSessionAnswer>());
         ConfigureEntity(modelBuilder.Entity<StudentReadingAttempt>());
         modelBuilder.Entity<ReadingSession>(entity =>
         {
@@ -127,12 +129,35 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.TotalQuestions).HasColumnName("total_questions");
             entity.Property(item => item.ComprehensionRate).HasColumnName("comprehension_rate");
             entity.Property(item => item.EfficiencyScore).HasColumnName("efficiency_score");
+            entity.Property(item => item.IsMeasured).HasColumnName("is_measured").IsRequired();
             entity.Property(item => item.CompletedAt).HasColumnName("completed_at");
             entity.HasIndex(item => item.ReadingTextId);
             entity.HasIndex(item => new { item.UserId, item.CompletedAt });
             entity.HasOne<ReadingText>()
                 .WithMany()
                 .HasForeignKey(item => item.ReadingTextId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<ReadingSessionAnswer>(entity =>
+        {
+            entity.ToTable("reading_session_answers");
+            entity.Property(item => item.SessionId).HasColumnName("session_id").IsRequired();
+            entity.Property(item => item.QuestionId).HasColumnName("question_id").IsRequired();
+            entity.Property(item => item.QuestionType).HasColumnName("question_type").IsRequired();
+            entity.Property(item => item.BloomLevel).HasColumnName("bloom_level").IsRequired();
+            entity.Property(item => item.OrderIndex).HasColumnName("order_index").IsRequired();
+            entity.Property(item => item.SelectedAnswer).HasColumnName("selected_answer").HasMaxLength(500).IsRequired();
+            entity.Property(item => item.IsCorrect).HasColumnName("is_correct").IsRequired();
+            entity.HasIndex(item => new { item.SessionId, item.QuestionId }).IsUnique();
+            entity.HasIndex(item => new { item.SessionId, item.QuestionType });
+            entity.HasIndex(item => item.QuestionId);
+            entity.HasOne<ReadingSession>()
+                .WithMany()
+                .HasForeignKey(item => item.SessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<ReadingQuestion>()
+                .WithMany()
+                .HasForeignKey(item => item.QuestionId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<StudentReadingAttempt>(entity =>
@@ -142,6 +167,8 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.ReadingTextId).HasColumnName("reading_text_id").IsRequired();
             entity.Property(item => item.StartedAt).HasColumnName("started_at").IsRequired();
             entity.Property(item => item.CompletedAt).HasColumnName("completed_at");
+            entity.Property(item => item.QuestionSnapshotJson).HasColumnName("question_snapshot_json").HasColumnType("jsonb");
+            entity.Property(item => item.WordCountSnapshot).HasColumnName("word_count_snapshot");
             entity.HasIndex(item => new { item.UserId, item.ReadingTextId, item.StartedAt });
             entity.HasOne<ReadingText>()
                 .WithMany()
@@ -234,6 +261,9 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<UserGamification>(entity =>
         {
             entity.ToTable("user_gamification");
+            entity.Property(item => item.UpdatedAt)
+                .HasColumnName("updated_at")
+                .IsConcurrencyToken();
             entity.Property(item => item.LevelTitle).HasMaxLength(200).IsRequired();
             entity.Property(item => item.LevelIcon).HasMaxLength(50).IsRequired();
             entity.Property(item => item.MaxComprehensionScore).HasPrecision(18, 2);
@@ -1134,6 +1164,9 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<ExerciseSession>(entity =>
         {
             entity.ToTable("exercise_sessions");
+            entity.Property(item => item.UpdatedAt)
+                .HasColumnName("updated_at")
+                .IsConcurrencyToken();
             entity.Property(item => item.StudentId).HasColumnName("student_id");
             entity.Property(item => item.ExerciseId).HasColumnName("exercise_id");
             entity.Property(item => item.ReadingTextId).HasColumnName("reading_text_id");
@@ -1190,7 +1223,9 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.IsCorrect).HasColumnName("is_correct");
             entity.Property(item => item.TimeSpentSeconds).HasColumnName("time_spent_seconds");
             entity.Property(item => item.BloomLevel).HasColumnName("bloom_level");
+            entity.Property(item => item.QuestionType).HasColumnName("question_type");
             entity.HasIndex(item => new { item.SessionId, item.QuestionId }).IsUnique();
+            entity.HasIndex(item => new { item.SessionId, item.QuestionType });
         });
 
         modelBuilder.Entity<ExerciseSessionResult>(entity =>

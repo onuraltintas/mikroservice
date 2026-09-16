@@ -115,6 +115,7 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         var result = await Repository().AuthorizeCoachingStudentReadAsync(
             parent.Id,
             new[] { child.Id, unrelated.Id, inactiveChild.Id },
+            null,
             CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -153,6 +154,7 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         var result = await Repository().AuthorizeCoachingStudentReadAsync(
             administrator.Id,
             new[] { studentA.Id, studentB.Id, inactiveStudentA.Id },
+            null,
             CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -192,6 +194,7 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         var result = await Repository().AuthorizeCoachingStudentReadAsync(
             teacher.Id,
             new[] { assignedStudent.Id, unassignedStudent.Id, otherInstitutionStudent.Id },
+            null,
             CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -203,11 +206,46 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         var readAllResult = await Repository().AuthorizeCoachingStudentReadAsync(
             teacher.Id,
             new[] { assignedStudent.Id, unassignedStudent.Id, otherInstitutionStudent.Id },
+            null,
             CancellationToken.None);
 
         readAllResult.Should().NotBeNull();
         readAllResult!.AllowedStudentUserIds.Should().BeEquivalentTo(
             new[] { assignedStudent.Id, unassignedStudent.Id });
+    }
+
+    [Fact]
+    public async Task Teacher_ShouldNotReadStudentWhoDisabledProgressSharing()
+    {
+        var institution = Institution.Create("Private Progress School", InstitutionType.School);
+        var teacher = User.Create(Guid.NewGuid(), "private-teacher@example.test");
+        var student = User.Create(Guid.NewGuid(), "private-student@example.test");
+
+        AddRole(teacher, "Teacher");
+        AddRole(student, "Student");
+
+        var teacherProfile = TeacherProfile.Create(teacher.Id, "Private", "Teacher", institution.Id);
+        var studentProfile = StudentProfile.Create(student.Id, "Private", "Student", institution.Id);
+        studentProfile.SetProgressSharing(false);
+
+        _dbContext!.Institutions.Add(institution);
+        _dbContext.Users.AddRange(teacher, student);
+        _dbContext.TeacherProfiles.Add(teacherProfile);
+        _dbContext.StudentProfiles.Add(studentProfile);
+        _dbContext.TeacherStudentAssignments.Add(TeacherStudentAssignment.Create(
+            teacherProfile.Id,
+            studentProfile.Id,
+            institution.Id));
+        await _dbContext.SaveChangesAsync();
+
+        var result = await Repository().AuthorizeCoachingStudentReadAsync(
+            teacher.Id,
+            new[] { student.Id },
+            null,
+            CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result!.AllowedStudentUserIds.Should().BeEmpty();
     }
 
     [Fact]
@@ -245,6 +283,8 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
             pageNumber: 1,
             pageSize: 25,
             searchTerm: null,
+            gradeLevel: null,
+            isActive: null,
             CancellationToken.None);
 
         result.TotalCount.Should().Be(1);
@@ -291,7 +331,7 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         await _dbContext.SaveChangesAsync();
 
         var activeResult = await TeacherRepository().GetStudentsByTeacherUserIdAsync(
-            teacher.Id, 1, 25, null, CancellationToken.None);
+            teacher.Id, 1, 25, null, null, null, CancellationToken.None);
 
         activeResult.Items.Should().ContainSingle(student => student.UserId == sameInstitutionStudent.Id);
 
@@ -299,7 +339,7 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         await _dbContext.SaveChangesAsync();
 
         var inactiveInstitutionResult = await TeacherRepository().GetStudentsByTeacherUserIdAsync(
-            teacher.Id, 1, 25, null, CancellationToken.None);
+            teacher.Id, 1, 25, null, null, null, CancellationToken.None);
 
         inactiveInstitutionResult.TotalCount.Should().Be(0);
     }
@@ -331,7 +371,7 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         await _dbContext.SaveChangesAsync();
 
         var result = await TeacherRepository().GetStudentsByTeacherUserIdAsync(
-            teacher.Id, 1, 25, null, CancellationToken.None);
+            teacher.Id, 1, 25, null, null, null, CancellationToken.None);
 
         result.Items.Select(student => student.UserId)
             .Should().Equal(new[] { firstStudent.Id, secondStudent.Id }.OrderBy(id => id));
@@ -361,6 +401,7 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         var result = await Repository().AuthorizeCoachingStudentReadAsync(
             administrator.Id,
             new[] { studentA.Id, studentB.Id },
+            null,
             CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -394,6 +435,7 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         var result = await Repository().AuthorizeCoachingStudentReadAsync(
             teacher.Id,
             new[] { student.Id },
+            null,
             CancellationToken.None);
 
         result.Should().BeNull();

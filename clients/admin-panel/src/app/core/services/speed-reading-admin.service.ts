@@ -247,6 +247,26 @@ export interface AdminStudentProgressDetails {
     exerciseTitle: string | null;
     exerciseTypeDisplayName: string | null;
   }[];
+  readingQuestionAnalytics: {
+    dataAvailable: boolean;
+    unavailableReason: string | null;
+    totalQuestionsAttempted: number;
+    correctAnswers: number;
+    successRate: number;
+    questionTypes: {
+      type: string;
+      questionsAttempted: number;
+      correctAnswers: number;
+      successRate: number;
+    }[];
+    bloomLevels: {
+      level: number;
+      label: string;
+      questionsAttempted: number;
+      correctAnswers: number;
+      successRate: number;
+    }[];
+  };
 }
 
 export interface SpeedReadingProduct {

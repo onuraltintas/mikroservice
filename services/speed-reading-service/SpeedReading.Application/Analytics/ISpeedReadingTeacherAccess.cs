@@ -11,11 +11,13 @@ public interface ISpeedReadingTeacherAccess
     Task<IReadOnlySet<Guid>> GetReadableStudentIdsAsync(
         Guid viewerUserId,
         IReadOnlyCollection<Guid> studentUserIds,
+        Guid? targetTeacherUserId = null,
         CancellationToken cancellationToken = default);
 
     Task<bool> CanReadStudentAsync(
         Guid viewerUserId,
         Guid studentUserId,
+        Guid? targetTeacherUserId = null,
         CancellationToken cancellationToken = default);
 
     Task<SpeedReadingTeacherStudentScopeResponse?> GetStudentScopeAsync(

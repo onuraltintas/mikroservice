@@ -7,6 +7,8 @@ import { UserSettings } from '../../../core/models/settings.model';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { ThemeService, Theme } from '../../../core/services/theme.service';
 import { BaseComponent } from '../../../core/components/base.component';
+import { AuthService } from '../../../core/services/auth.service';
+import { UsersService } from '../../../core/services/users.service';
 
 @Component({
   selector: 'app-settings',
@@ -20,6 +22,8 @@ import { BaseComponent } from '../../../core/components/base.component';
 })
 export class SettingsComponent extends BaseComponent implements OnInit, OnDestroy {
   private settingsService = inject(SettingsService);
+  private authService = inject(AuthService);
+  private usersService = inject(UsersService);
   readonly themeService   = inject(ThemeService);
   // toaster inherited from BaseComponent
 
@@ -36,7 +40,7 @@ export class SettingsComponent extends BaseComponent implements OnInit, OnDestro
     emailNotifications: false,
     achievementNotifications: true,
     progressReports: true,
-    shareProgress: false,
+    shareProgress: true,
     allowAnalytics: true
   };
 
@@ -62,6 +66,23 @@ export class SettingsComponent extends BaseComponent implements OnInit, OnDestro
         this.settings = data;
         // Kaydedilmiş tema varsa hemen uygula
         if (data.theme) this.themeService.setTheme(data.theme as Theme);
+
+        // Progress sharing is account data, so hydrate it from Identity rather
+        // than trusting a stale browser preference. Other settings remain local.
+        if (this.authService.hasRole('Student')) {
+          this.usersService.getMyProfile().subscribe({
+            next: (profile) => {
+              if (profile.shareProgressWithTeachers !== undefined) {
+                this.settings = {
+                  ...this.settings,
+                  shareProgress: profile.shareProgressWithTeachers
+                };
+                this.previewSettings();
+              }
+            },
+            error: (error) => console.error('Progress sharing preference could not be loaded:', error)
+          });
+        }
       },
       error: (error) => {
         console.error('Error loading settings:', error);
@@ -75,7 +96,18 @@ export class SettingsComponent extends BaseComponent implements OnInit, OnDestro
   saveSettings(): void {
     this.settingsService.updateSettings(this.settings).subscribe({
       next: () => {
-        this.toaster.success('Ayarlar kaydedildi', 3000);
+        if (!this.authService.hasRole('Student')) {
+          this.toaster.success('Ayarlar kaydedildi', 3000);
+          return;
+        }
+
+        this.usersService.updateMyProgressSharing(this.settings.shareProgress).subscribe({
+          next: () => this.toaster.success('Ayarlar kaydedildi', 3000),
+          error: (error) => {
+            console.error('Progress sharing preference could not be saved:', error);
+            this.toaster.error('İlerleme paylaşımı kaydedilemedi', 3000);
+          }
+        });
       },
       error: (error) => {
         console.error('Error saving settings:', error);

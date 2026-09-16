@@ -698,6 +698,11 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.Property<int>("DailyGoalMinutes")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("ShareProgressWithTeachers")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(100)

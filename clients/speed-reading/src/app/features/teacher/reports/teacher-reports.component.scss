@@ -110,6 +110,28 @@
     animation: fadeIn 0.3s ease-out;
 }
 
+.report-selection-empty {
+    min-height: 20rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 3rem 1.5rem;
+    color: #64748b;
+    text-align: center;
+
+    mat-icon {
+        width: 3rem;
+        height: 3rem;
+        font-size: 3rem;
+        color: #6366f1;
+    }
+
+    h2, p { margin: 0; }
+    h2 { color: #1e293b; }
+}
+
 mat-form-field {
     min-width: 9.375rem;
 }

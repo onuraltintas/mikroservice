@@ -79,6 +79,7 @@ export interface ReadingSession {
   efficiencyScore: number;
   completedAt: Date;
   performanceLevel: string;
+  isMeasured: boolean;
 }
 
 export interface ReadingSessionResult {
@@ -92,7 +93,28 @@ export interface ReadingSessionResult {
   performanceLevel: string;
   performanceFeedback: string;
   shouldRetry: boolean;
+  isMeasured: boolean;
   questionResults: QuestionResult[];
+}
+
+export interface ReadingSessionAnswerDetails {
+  questionId: string;
+  questionType: QuestionType;
+  bloomLevel: BloomLevel;
+  orderIndex: number;
+  selectedAnswer: string;
+  isCorrect: boolean;
+}
+
+export interface ReadingSessionDetails {
+  id: string;
+  readingTextId: string;
+  calculatedWPM: number;
+  comprehensionRate: number;
+  readingTimeSeconds: number;
+  completedAt: Date;
+  answers: ReadingSessionAnswerDetails[];
+  isMeasured: boolean;
 }
 
 export interface QuestionResult {

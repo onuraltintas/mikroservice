@@ -33,7 +33,13 @@
         </a>
     </nav>
 
-    <div class="tab-content">
+    <div class="report-selection-empty" *ngIf="!reportsReady()">
+        <mat-icon>person_search</mat-icon>
+        <h2>Öğretmen seçin</h2>
+        <p>Öğretmen bazlı raporu görüntülemek için yukarıdaki listeden bir öğretmen seçin.</p>
+    </div>
+
+    <div class="tab-content" *ngIf="reportsReady()">
         <mat-tab-nav-panel #tabPanel></mat-tab-nav-panel>
         <router-outlet></router-outlet>
     </div>

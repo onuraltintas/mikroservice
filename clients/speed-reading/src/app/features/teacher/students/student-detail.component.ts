@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
@@ -24,8 +24,8 @@ import { StudentCoachingTabComponent } from './coaching-tab/student-coaching-tab
 interface StudentStats {
   totalExercises: number;
   completedExercises: number;
-  averageKDP: number;
-  averageComprehension: number;
+  averageKDP: number | null;
+  averageComprehension: number | null;
   totalTimeMinutes: number;
   currentStreak: number;
   goalCompletionRate: number;
@@ -45,8 +45,8 @@ interface RecentActivity {
   date: string;
   exerciseName: string;
   activityType: string;
-  kdp: number;
-  comprehension: number;
+  kdp: number | null;
+  comprehension: number | null;
   duration: number;
 }
 
@@ -83,6 +83,7 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
   stats: StudentStats | null = null;
   recentActivities: RecentActivity[] = [];
   seriesData: any[] = []; // For Series Progress tab
+  privacyRestricted = signal(false);
 
   activityColumns: string[] = ['date', 'exercise', 'kdp', 'comprehension', 'duration'];
 
@@ -111,11 +112,18 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
     this.loading.set(true);
     const endDate = new Date();
     const startDate = new Date(endDate.getTime() - 90 * 24 * 60 * 60 * 1000); // Last 90 days
-    const teacherId = this.authService.currentUserValue?.id;
-    if (!teacherId) {
+    const viewerId = this.authService.currentUserValue?.id;
+    if (!viewerId) {
       this.loading.set(false);
       return;
     }
+    const institutionViewer = this.isInstitutionViewer();
+    const selectedTeacherId = this.route.snapshot.queryParamMap?.get('teacherId');
+    // Institution managers use the institution scope unless they explicitly
+    // opened the student from a selected teacher's roster. A manager's own
+    // user id is not a teacher id and must never be sent as one.
+    const reportTeacherId = selectedTeacherId || (institutionViewer ? '' : viewerId);
+    this.privacyRestricted.set(false);
 
     const roster$ = this.isInstitutionViewer()
       ? this.studentsService.getInstitutionStudents()
@@ -130,7 +138,7 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
         }
 
         this.student = student;
-        return this.reportsService.getTeacherStudentDetailReport(teacherId, studentId, startDate, endDate);
+        return this.reportsService.getTeacherStudentDetailReport(reportTeacherId, studentId, startDate, endDate);
       }),
       takeUntil(this.destroy$),
       finalize(() => this.loading.set(false))
@@ -143,7 +151,10 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
         },
         error: (err) => {
           console.error('Error loading student data:', err);
-          this.student = null;
+          this.privacyRestricted.set(err?.status === 403);
+          if (!this.privacyRestricted()) {
+            this.student = null;
+          }
         }
       });
   }
@@ -161,8 +172,12 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
     this.stats = {
       totalExercises: dashboard.totalActivities,
       completedExercises: dashboard.exercisesCompleted ?? 0,
-      averageKDP: Math.round(readingSpeed.statistics.averageWPM),
-      averageComprehension: Math.round(comprehension.overallComprehension),
+      averageKDP: readingSpeed.statistics.totalReadings > 0
+        ? Math.round(readingSpeed.statistics.averageWPM)
+        : null,
+      averageComprehension: (comprehension.categoryBreakdown ?? []).some((category: { questionsAnswered?: number }) => (category.questionsAnswered ?? 0) > 0)
+        ? Math.round(comprehension.overallComprehension)
+        : null,
       totalTimeMinutes: activity.studyTime.totalMinutes,
       currentStreak: activity.currentStreak.days,
       goalCompletionRate: dashboard.goalCompletionRate,
@@ -177,8 +192,8 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
         ? `Metin: ${item.contentTitle}`
         : `Egzersiz: ${item.contentTitle}`,
       activityType: item.activityType,
-      kdp: item.wpm ?? 0,
-      comprehension: item.comprehension ?? item.successRate ?? 0,
+      kdp: item.wpm ?? null,
+      comprehension: item.comprehension ?? item.successRate ?? null,
       duration: Math.round((item.durationSeconds ?? 0) / 60)
     }));
     this.kdpChartData = [{ name: 'KDP', series: progress }];

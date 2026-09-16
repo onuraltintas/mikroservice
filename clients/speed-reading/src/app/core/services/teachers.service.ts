@@ -5,6 +5,7 @@ import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Teacher } from '../models/teacher.model';
 import { Student } from '../models/student.model';
+import { PagedResult } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
@@ -33,12 +34,25 @@ export class TeachersService {
   }
 
   getMyStudents(): Observable<Student[]> {
-    const params = new HttpParams().set('pageSize', '100');
+    return this.getMyStudentsPage(1, 100).pipe(map(page => page.items));
+  }
+
+  getMyStudentsPage(
+    pageNumber = 1,
+    pageSize = 25,
+    searchTerm?: string,
+    gradeLevel?: number,
+    isActive?: boolean
+  ): Observable<PagedResult<Student>> {
+    let params = new HttpParams()
+      .set('pageNumber', pageNumber.toString())
+      .set('pageSize', pageSize.toString());
+    if (searchTerm?.trim()) params = params.set('searchTerm', searchTerm.trim());
+    if (gradeLevel !== undefined) params = params.set('gradeLevel', gradeLevel.toString());
+    if (isActive !== undefined) params = params.set('isActive', isActive.toString());
+
     return this.http.get<any>(`${this.teachersApiUrl}/me/students`, { params }).pipe(
-      map(result => {
-        const rows = Array.isArray(result) ? result : (result?.items ?? []);
-        return rows.map((student: any) => this.toStudent(student));
-      })
+      map(result => this.toStudentPage(result, pageNumber, pageSize))
     );
   }
 
@@ -70,6 +84,19 @@ export class TeachersService {
       createdAt: student.createdAt ? new Date(student.createdAt) : new Date(student.assignmentStartDate ?? 0),
       teacherId: student.teacherId ?? undefined,
       teacherName: student.teacherName ?? undefined
+    };
+  }
+
+  private toStudentPage(result: any, pageNumber: number, pageSize: number): PagedResult<Student> {
+    const rows = Array.isArray(result) ? result : (result?.items ?? []);
+    return {
+      items: rows.map((student: any) => this.toStudent(student)),
+      totalCount: result?.totalCount ?? rows.length,
+      pageNumber: result?.pageNumber ?? pageNumber,
+      pageSize: result?.pageSize ?? pageSize,
+      totalPages: Math.max(1, Math.ceil((result?.totalCount ?? rows.length) / (result?.pageSize ?? pageSize))),
+      hasPreviousPage: (result?.pageNumber ?? pageNumber) > 1,
+      hasNextPage: (result?.pageNumber ?? pageNumber) < Math.ceil((result?.totalCount ?? rows.length) / (result?.pageSize ?? pageSize))
     };
   }
 

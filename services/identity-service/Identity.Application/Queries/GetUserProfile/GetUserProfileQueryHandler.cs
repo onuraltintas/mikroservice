@@ -135,7 +135,8 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
                     InstitutionId = student.InstitutionId,
                     InstitutionName = student.Institution?.Name,
                     BirthDate = student.BirthDate,
-                    LearningStyle = student.LearningStyle.ToString()
+                    LearningStyle = student.LearningStyle.ToString(),
+                    ShareProgressWithTeachers = student.ShareProgressWithTeachers
                 };
             }
         }

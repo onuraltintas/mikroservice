@@ -137,7 +137,7 @@ export class StudentDashboardReportComponent implements OnInit {
     return [{
       name: 'WPM',
       series: recentSessions
-        .filter(s => s.completedAt && !isNaN(new Date(s.completedAt).getTime()))
+        .filter(s => s.isMeasured !== false && s.completedAt && !isNaN(new Date(s.completedAt).getTime()))
         .map(session => ({
           name: format(new Date(session.completedAt), 'MMM d'),
           value: session.calculatedWPM
@@ -153,7 +153,7 @@ export class StudentDashboardReportComponent implements OnInit {
     return [{
       name: 'Anlama Oranı',
       series: recentSessions
-        .filter(s => s.completedAt && !isNaN(new Date(s.completedAt).getTime()))
+        .filter(s => s.totalQuestions > 0 && s.completedAt && !isNaN(new Date(s.completedAt).getTime()))
         .map(session => ({
           name: format(new Date(session.completedAt), 'MMM d'),
           value: Math.round(session.comprehensionRate)

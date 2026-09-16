@@ -38,6 +38,90 @@ public sealed record StudentAnalyticsQuestionTypePoint(
     int QuestionsAttempted,
     int CorrectAnswers);
 
+public sealed record StudentAnalyticsBloomLevelPoint(
+    int Level,
+    string Label,
+    decimal Value,
+    int QuestionsAttempted,
+    int CorrectAnswers);
+
+public sealed record ReadingQuestionTypeAggregate(
+    int QuestionType,
+    int QuestionsAttempted,
+    int CorrectAnswers);
+
+public sealed record ReadingQuestionBloomAggregate(
+    int BloomLevel,
+    int QuestionsAttempted,
+    int CorrectAnswers);
+
+public static class ReadingQuestionAnalyticsRules
+{
+    public static IReadOnlyList<StudentAnalyticsQuestionTypePoint> SummarizeQuestionTypes(
+        IEnumerable<ReadingQuestionTypeAggregate> aggregates)
+    {
+        ArgumentNullException.ThrowIfNull(aggregates);
+
+        return aggregates
+            .Where(item => item.QuestionType is >= 1 and <= 3 && item.QuestionsAttempted > 0)
+            .GroupBy(item => item.QuestionType)
+            .OrderBy(group => group.Key)
+            .Select(group =>
+            {
+                var attempted = group.Sum(item => item.QuestionsAttempted);
+                var correct = Math.Clamp(group.Sum(item => item.CorrectAnswers), 0, attempted);
+                return new StudentAnalyticsQuestionTypePoint(
+                    QuestionTypeLabel(group.Key),
+                    Math.Round(correct * 100m / attempted, 2),
+                    attempted,
+                    correct);
+            })
+            .ToList();
+    }
+
+    public static string QuestionTypeLabel(int questionType) => questionType switch
+    {
+        1 => "Gerçek Anlam",
+        2 => "Çıkarım",
+        3 => "Değerlendirme",
+        _ => "Bilinmeyen"
+    };
+
+    public static IReadOnlyList<StudentAnalyticsBloomLevelPoint> SummarizeBloomLevels(
+        IEnumerable<ReadingQuestionBloomAggregate> aggregates)
+    {
+        ArgumentNullException.ThrowIfNull(aggregates);
+
+        return aggregates
+            .Where(item => item.BloomLevel is >= 1 and <= 6 && item.QuestionsAttempted > 0)
+            .GroupBy(item => item.BloomLevel)
+            .OrderBy(group => group.Key)
+            .Select(group =>
+            {
+                var attempted = group.Sum(item => item.QuestionsAttempted);
+                var correct = Math.Clamp(group.Sum(item => item.CorrectAnswers), 0, attempted);
+                return new StudentAnalyticsBloomLevelPoint(
+                    group.Key,
+                    BloomLevelLabel(group.Key),
+                    Math.Round(correct * 100m / attempted, 2),
+                    attempted,
+                    correct);
+            })
+            .ToList();
+    }
+
+    public static string BloomLevelLabel(int bloomLevel) => bloomLevel switch
+    {
+        1 => "Hatırlama",
+        2 => "Anlama",
+        3 => "Uygulama",
+        4 => "Analiz",
+        5 => "Değerlendirme",
+        6 => "Yaratma",
+        _ => "Bilinmeyen"
+    };
+}
+
 public sealed record StudentReadingSpeedAnalytics(
     Guid UserId,
     DateTime DateFrom,
@@ -69,6 +153,7 @@ public sealed record StudentComprehensionAnalytics(
     IReadOnlyList<StudentAnalyticsTrendPoint> Trend,
     IReadOnlyList<StudentAnalyticsCategoryPoint> Categories,
     IReadOnlyList<StudentAnalyticsQuestionTypePoint> QuestionTypes,
+    IReadOnlyList<StudentAnalyticsBloomLevelPoint> BloomLevels,
     int TotalQuestionsAttempted,
     int CorrectAnswers,
     decimal SuccessRate,

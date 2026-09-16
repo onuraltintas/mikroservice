@@ -29,11 +29,13 @@ public sealed class IdentityTeacherAccessClient : ISpeedReadingTeacherAccess
     public async Task<bool> CanReadStudentAsync(
         Guid viewerUserId,
         Guid studentUserId,
+        Guid? targetTeacherUserId = null,
         CancellationToken cancellationToken = default)
     {
         var readableStudentIds = await GetReadableStudentIdsAsync(
             viewerUserId,
             [studentUserId],
+            targetTeacherUserId,
             cancellationToken);
         return readableStudentIds.Contains(studentUserId);
     }
@@ -41,6 +43,7 @@ public sealed class IdentityTeacherAccessClient : ISpeedReadingTeacherAccess
     public async Task<IReadOnlySet<Guid>> GetReadableStudentIdsAsync(
         Guid viewerUserId,
         IReadOnlyCollection<Guid> studentUserIds,
+        Guid? targetTeacherUserId = null,
         CancellationToken cancellationToken = default)
     {
         var requestedStudentIds = studentUserIds
@@ -64,7 +67,8 @@ public sealed class IdentityTeacherAccessClient : ISpeedReadingTeacherAccess
             Content = JsonContent.Create(new
             {
                 ViewerUserId = viewerUserId,
-                StudentIds = requestedStudentIds
+                StudentIds = requestedStudentIds,
+                TargetTeacherUserId = targetTeacherUserId
             })
         };
         request.Headers.Add(InternalServiceAuthentication.HeaderName, serviceApiKey);

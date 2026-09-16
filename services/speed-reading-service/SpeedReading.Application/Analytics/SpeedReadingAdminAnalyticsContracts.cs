@@ -183,6 +183,99 @@ public sealed record SpeedReadingProgramAnalytics(
     IReadOnlyList<SpeedReadingWeeklyProgress> WeeklyProgress,
     IReadOnlyList<SpeedReadingRecentStudentProgress> RecentStudentProgress);
 
+public sealed record AdminReadingQuestionAnswerSample(
+    int QuestionType,
+    int BloomLevel,
+    bool IsCorrect);
+
+public sealed record AdminReadingQuestionTypePerformance(
+    string Type,
+    int QuestionsAttempted,
+    int CorrectAnswers,
+    decimal SuccessRate);
+
+public sealed record AdminReadingBloomLevelPerformance(
+    int Level,
+    string Label,
+    int QuestionsAttempted,
+    int CorrectAnswers,
+    decimal SuccessRate);
+
+public sealed record AdminStudentReadingQuestionAnalytics(
+    bool DataAvailable,
+    string? UnavailableReason,
+    int TotalQuestionsAttempted,
+    int CorrectAnswers,
+    decimal SuccessRate,
+    IReadOnlyList<AdminReadingQuestionTypePerformance> QuestionTypes,
+    IReadOnlyList<AdminReadingBloomLevelPerformance> BloomLevels);
+
+public static class AdminStudentReadingQuestionAnalyticsCalculator
+{
+    public static AdminStudentReadingQuestionAnalytics Calculate(
+        IEnumerable<AdminReadingQuestionAnswerSample> samples)
+    {
+        ArgumentNullException.ThrowIfNull(samples);
+
+        var rows = samples
+            .Where(item => item.QuestionType is >= 1 and <= 3
+                && item.BloomLevel is >= 1 and <= 6)
+            .ToArray();
+        if (rows.Length == 0)
+        {
+            return new AdminStudentReadingQuestionAnalytics(
+                false,
+                "Bu öğrenci için henüz kayıtlı okuma sorusu yanıtı bulunmuyor.",
+                0,
+                0,
+                0,
+                [],
+                []);
+        }
+
+        var correctAnswers = rows.Count(item => item.IsCorrect);
+        var successRate = Math.Round((decimal)correctAnswers / rows.Length * 100, 2);
+        var questionTypes = rows
+            .GroupBy(item => item.QuestionType)
+            .OrderBy(group => group.Key)
+            .Select(group =>
+            {
+                var attempted = group.Count();
+                var correct = group.Count(item => item.IsCorrect);
+                return new AdminReadingQuestionTypePerformance(
+                    ReadingQuestionAnalyticsRules.QuestionTypeLabel(group.Key),
+                    attempted,
+                    correct,
+                    Math.Round((decimal)correct / attempted * 100, 2));
+            })
+            .ToArray();
+        var bloomLevels = rows
+            .GroupBy(item => item.BloomLevel)
+            .OrderBy(group => group.Key)
+            .Select(group =>
+            {
+                var attempted = group.Count();
+                var correct = group.Count(item => item.IsCorrect);
+                return new AdminReadingBloomLevelPerformance(
+                    group.Key,
+                    ReadingQuestionAnalyticsRules.BloomLevelLabel(group.Key),
+                    attempted,
+                    correct,
+                    Math.Round((decimal)correct / attempted * 100, 2));
+            })
+            .ToArray();
+
+        return new AdminStudentReadingQuestionAnalytics(
+            true,
+            null,
+            rows.Length,
+            correctAnswers,
+            successRate,
+            questionTypes,
+            bloomLevels);
+    }
+}
+
 public sealed record SpeedReadingProgramAnalyticsRow(
     Guid UserId,
     string FirstName,

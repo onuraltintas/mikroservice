@@ -111,6 +111,13 @@ export class UsersService {
     );
   }
 
+  /** Persist the student's choice to share progress with teachers and institution staff. */
+  updateMyProgressSharing(enabled: boolean): Observable<void> {
+    return this.http.put<void>(`${this.API_URL}/me`, {
+      shareProgressWithTeachers: enabled
+    });
+  }
+
   /**
    * Create new user
    * Backend returns: ApiResponse<CreateUserResponse>
@@ -297,6 +304,8 @@ export class UsersService {
       institutionId: user.institutionId ?? user.studentDetails?.institutionId ?? user.teacherDetails?.institutionId,
       institutionName: user.institutionName ?? user.studentDetails?.institutionName ?? user.teacherDetails?.institutionName,
       learningStyle: user.learningStyle ?? user.studentDetails?.learningStyle,
+      shareProgressWithTeachers: user.shareProgressWithTeachers
+        ?? user.studentDetails?.shareProgressWithTeachers,
       ageGroupId: user.ageGroupId,
       dateOfBirth: user.dateOfBirth ?? user.studentDetails?.birthDate
     };

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.Assignments;
+using SpeedReading.Application.Analytics;
 using SpeedReading.Application.Content;
 using SpeedReading.Domain.Programs;
 
@@ -199,7 +200,25 @@ internal sealed class OwnedSpeedReadingPrograms(
             .Take(30)
             .ToListAsync(cancellationToken);
 
-        return new AdminStudentProgressDetails(ToProgressSummary(progress), recentLogs);
+        var readingAnswerRows = await (
+                from answer in db.ReadingSessionAnswers.AsNoTracking()
+                join session in db.ReadingSessions.AsNoTracking()
+                    on answer.SessionId equals session.Id
+                where session.UserId == progress.UserId && session.TotalQuestions > 0
+                select new
+                {
+                    answer.QuestionType,
+                    answer.BloomLevel,
+                    answer.IsCorrect
+                })
+            .ToListAsync(cancellationToken);
+        var readingQuestionAnalytics = AdminStudentReadingQuestionAnalyticsCalculator.Calculate(
+            readingAnswerRows.Select(item => new AdminReadingQuestionAnswerSample(
+                item.QuestionType,
+                item.BloomLevel,
+                item.IsCorrect)));
+
+        return new AdminStudentProgressDetails(ToProgressSummary(progress), recentLogs, readingQuestionAnalytics);
     }
 
     public async Task<bool> ResetStudentProgressAsync(

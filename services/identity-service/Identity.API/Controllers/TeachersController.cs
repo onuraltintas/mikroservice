@@ -32,10 +32,12 @@ public class TeachersController : ControllerBase
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 25,
         [FromQuery] string? searchTerm = null,
+        [FromQuery] int? gradeLevel = null,
+        [FromQuery] bool? isActive = null,
         CancellationToken cancellationToken = default)
     {
         var result = await _mediator.Send(
-            new GetTeacherStudentsQuery(pageNumber, pageSize, searchTerm),
+            new GetTeacherStudentsQuery(pageNumber, pageSize, searchTerm, gradeLevel, isActive),
             cancellationToken);
 
         if (result.IsSuccess)

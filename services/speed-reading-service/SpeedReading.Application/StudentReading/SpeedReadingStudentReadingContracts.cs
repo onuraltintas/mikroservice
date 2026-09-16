@@ -48,7 +48,8 @@ public sealed record StudentReadingCompletion(
     int TotalQuestions,
     decimal ComprehensionRate,
     decimal EfficiencyScore,
-    string PerformanceLevel);
+    string PerformanceLevel,
+    bool IsMeasured = true);
 
 public sealed record StudentReadingHistoryItem(
     Guid Id,
@@ -62,7 +63,16 @@ public sealed record StudentReadingHistoryItem(
     decimal ComprehensionRate,
     decimal EfficiencyScore,
     DateTime CompletedAt,
-    string PerformanceLevel);
+    string PerformanceLevel,
+    bool IsMeasured = true);
+
+public sealed record StudentReadingAnswerDetails(
+    Guid QuestionId,
+    int QuestionType,
+    int BloomLevel,
+    int OrderIndex,
+    string SelectedAnswer,
+    bool IsCorrect);
 
 public sealed record StudentReadingSessionDetails(
     Guid Id,
@@ -70,7 +80,9 @@ public sealed record StudentReadingSessionDetails(
     int CalculatedWPM,
     decimal ComprehensionRate,
     int ReadingTimeSeconds,
-    DateTime CompletedAt);
+    DateTime CompletedAt,
+    IReadOnlyList<StudentReadingAnswerDetails> Answers,
+    bool IsMeasured = true);
 
 public sealed record StudentReadingStatistics(
     int TotalSessions,
