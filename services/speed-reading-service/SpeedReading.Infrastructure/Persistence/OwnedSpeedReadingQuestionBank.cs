@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using EduPlatform.Shared.Kernel.Exceptions;
 using SpeedReading.Application.QuestionBank;
 using SpeedReading.Domain.QuestionBank;
 
@@ -64,6 +65,7 @@ internal sealed class OwnedSpeedReadingQuestionBank(OwnedSpeedReadingDbContext d
         }
 
         ValidateWordCount(request);
+        EnsureQuestionQuality(request);
         await EnsureAgeGroupExistsAsync(request.TargetAgeGroupId, cancellationToken);
         var now = DateTime.UtcNow;
         var item = ExamQuestion.Create(Guid.NewGuid(), request.Content, request.Question, request.OptionA,
@@ -99,6 +101,7 @@ internal sealed class OwnedSpeedReadingQuestionBank(OwnedSpeedReadingDbContext d
         }
 
         ValidateWordCount(request);
+        EnsureQuestionQuality(request);
         await EnsureAgeGroupExistsAsync(request.TargetAgeGroupId, cancellationToken);
         var item = await db.ExamQuestions.SingleOrDefaultAsync(value => value.Id == id && !value.IsDeleted, cancellationToken);
         if (item is null) return false;
@@ -158,6 +161,16 @@ internal sealed class OwnedSpeedReadingQuestionBank(OwnedSpeedReadingDbContext d
     private static void ValidateWordCount(ExamQuestionRequest request)
     {
         if (request.WordCount < 0) throw new ArgumentException("WordCount cannot be negative.", nameof(request));
+    }
+
+    private static void EnsureQuestionQuality(ExamQuestionRequest request)
+    {
+        var blockingWarnings = ExamQuestionQualityAnalyzer.Analyze(request).Warnings
+            .Where(item => item.Code == "correct-option-length-cue")
+            .Select(item => item.Message)
+            .ToArray();
+        if (blockingWarnings.Length > 0)
+            throw new BusinessRuleException("Question.Quality", string.Join(" ", blockingWarnings));
     }
 
     private static ExamQuestionSummary ToSummary(ExamQuestion item) => new(

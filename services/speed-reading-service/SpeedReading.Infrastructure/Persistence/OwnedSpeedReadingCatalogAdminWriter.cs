@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
 using SpeedReading.Application.Content;
 using SpeedReading.Application.Progress;
@@ -165,6 +166,11 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
         }
 
         var type = await GetExerciseTypeAsync(request.ExerciseTypeId, cancellationToken);
+        await using var titleLock = request.IsActive
+            ? await BeginExerciseTitleLockAsync(request.Title, cancellationToken)
+            : null;
+        if (request.IsActive)
+            await EnsureUniqueExerciseTitleAsync(request.Title, null, cancellationToken);
         if (request.IsActive)
             ExerciseConfigurationRules.ValidateActiveConfiguration(request.ConfigurationJson, type.EngineType);
         await EnsureAgeGroupExistsAsync(request.TargetAgeGroupConfigurationId, cancellationToken);
@@ -187,6 +193,8 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
         db.Exercises.Add(exercise);
         AddLedger(scope, key, hash, exercise.Id, now);
         await SaveAsync(scope, key, hash, cancellationToken);
+        if (titleLock is not null)
+            await titleLock.CommitAsync(cancellationToken);
         return await GetExerciseSummaryAsync(exercise.Id, cancellationToken)
             ?? throw MissingResource(exercise.Id, "Exercise");
     }
@@ -218,6 +226,11 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
         var exercise = await db.Exercises
             .SingleOrDefaultAsync(item => item.Id == exerciseId && !item.IsDeleted, cancellationToken)
             ?? throw new NotFoundException("Exercise", exerciseId);
+        await using var titleLock = request.IsActive
+            ? await BeginExerciseTitleLockAsync(request.Title, cancellationToken)
+            : null;
+        if (request.IsActive)
+            await EnsureUniqueExerciseTitleAsync(request.Title, exerciseId, cancellationToken);
         var type = await GetExerciseTypeAsync(request.ExerciseTypeId, cancellationToken);
         if (request.IsActive)
             ExerciseConfigurationRules.ValidateActiveConfiguration(request.ConfigurationJson, type.EngineType);
@@ -238,6 +251,8 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
             exercise.Deactivate();
         AddLedger(scope, key, hash, exercise.Id, DateTime.UtcNow);
         await SaveAsync(scope, key, hash, cancellationToken);
+        if (titleLock is not null)
+            await titleLock.CommitAsync(cancellationToken);
         return await GetExerciseSummaryAsync(exercise.Id, cancellationToken)
             ?? throw MissingResource(exercise.Id, "Exercise");
     }
@@ -622,6 +637,45 @@ internal sealed class OwnedSpeedReadingCatalogAdminWriter(OwnedSpeedReadingDbCon
                 item => item.Id == ageGroupId.Value && item.IsActive && !item.IsDeleted,
                 cancellationToken))
             throw new NotFoundException("AgeGroupConfiguration", ageGroupId.Value);
+    }
+
+    private async Task EnsureUniqueExerciseTitleAsync(
+        string title,
+        Guid? currentExerciseId,
+        CancellationToken cancellationToken)
+    {
+        var normalizedTitle = title.Trim().ToUpper();
+        var duplicateExists = await db.Exercises.AsNoTracking().AnyAsync(item =>
+            item.IsActive
+            && !item.IsDeleted
+            && (!currentExerciseId.HasValue || item.Id != currentExerciseId.Value)
+            && item.Title.ToUpper() == normalizedTitle,
+            cancellationToken);
+        if (duplicateExists)
+            throw new BusinessRuleException("Exercise.DuplicateTitle", "Aynı başlığa sahip aktif bir egzersiz zaten mevcut.");
+    }
+
+    private async Task<IDbContextTransaction?> BeginExerciseTitleLockAsync(
+        string title,
+        CancellationToken cancellationToken)
+    {
+        if (!db.Database.IsNpgsql())
+            return null;
+
+        var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            var normalizedTitle = title.Trim().ToUpperInvariant();
+            await db.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT pg_advisory_xact_lock(hashtextextended({normalizedTitle}, 0::bigint))",
+                cancellationToken);
+            return transaction;
+        }
+        catch
+        {
+            await transaction.DisposeAsync();
+            throw;
+        }
     }
 
     private static void EnsureReadingTextCanBePublished(

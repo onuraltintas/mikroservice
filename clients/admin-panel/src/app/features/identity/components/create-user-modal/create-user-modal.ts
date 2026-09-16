@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IdentityService } from '../../../../core/services/identity.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
+import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message';
 
 @Component({
   selector: 'app-create-user-modal',
@@ -271,25 +272,30 @@ export class CreateUserModalComponent implements OnInit {
         console.error('API Error:', err);
         this.loading.set(false);
 
-        let msg = 'Kayıt sırasında bir hata oluştu.';
+        const fallback = 'Kayıt sırasında bir hata oluştu.';
+        let msg = getAdminErrorMessage(err, fallback, true);
 
-        // 1. Result Pattern Support: { error: { code: '...', description: '...' } }
-        const resultError = err.error?.error || err.error?.Error;
+        // MFA responses must keep their actionable message even when the API
+        // also returns a generic problem-details payload.
+        if (err?.status !== 403) {
+          // 1. Result Pattern Support: { error: { code: '...', description: '...' } }
+          const resultError = err.error?.error || err.error?.Error;
 
-        if (resultError) {
-          if (resultError.code === 'User.Exists') {
-            msg = 'Bu e-posta adresi zaten sisteme kayıtlı.';
-          } else {
-            msg = resultError.description || resultError.message || msg;
+          if (resultError) {
+            if (resultError.code === 'User.Exists') {
+              msg = 'Bu e-posta adresi zaten sisteme kayıtlı.';
+            } else {
+              msg = resultError.description || resultError.message || msg;
+            }
           }
-        }
-        // 2. ProblemDetails Support
-        else if (err.error?.detail) {
-          msg = err.error.detail;
-        }
-        // 3. Simple String
-        else if (typeof err.error === 'string') {
-          msg = err.error;
+          // 2. ProblemDetails Support
+          else if (err.error?.detail) {
+            msg = err.error.detail;
+          }
+          // 3. Simple String
+          else if (typeof err.error === 'string') {
+            msg = err.error;
+          }
         }
 
         this.error.set(msg);

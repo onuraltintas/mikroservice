@@ -191,7 +191,7 @@ internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext 
     private async Task<IReadOnlyList<VisualizationSceneSummary>> BuildSummariesAsync(IReadOnlyList<VisualizationScene> scenes, CancellationToken cancellationToken)
     {
         if (scenes.Count == 0) return [];
-        var ids = scenes.Select(item => item.Id).ToArray();
+        var ids = scenes.Select(item => item.Id).ToList();
         var questions = await db.VisualizationQuestions.AsNoTracking()
             .Where(item => ids.Contains(item.SceneId) && !item.IsDeleted).OrderBy(item => item.DisplayOrder).ToListAsync(cancellationToken);
         var byScene = questions.GroupBy(item => item.SceneId).ToDictionary(group => group.Key,
@@ -253,7 +253,25 @@ internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext 
 
     private static int ParseInt(string value, int fallback, string field, int row) => string.IsNullOrWhiteSpace(value) ? fallback : int.TryParse(value, out var result) ? result : throw new FormatException($"{field} must be an integer (row {row}).");
     private static string GetValue(IReadOnlyDictionary<string, int> headers, IReadOnlyList<string> values, string field) => headers.TryGetValue(field, out var index) && index < values.Count ? values[index].Trim() : string.Empty;
-    private static List<string> ParseOptions(string value) { try { return JsonSerializer.Deserialize<List<string>>(value, JsonOptions) ?? []; } catch (JsonException) { return []; } }
+    private static List<string> ParseOptions(string value)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(value, JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+        catch (InvalidOperationException)
+        {
+            return [];
+        }
+        catch (NotSupportedException)
+        {
+            return [];
+        }
+    }
     private static List<string> ParseCsvLine(string line)
     {
         var values = new List<string>(); var builder = new StringBuilder(); var quoted = false;

@@ -20,6 +20,7 @@ interface PublishedEvidenceMetric {
   period: string;
   sampleSize: number;
   icon?: string;
+  verified?: boolean;
 }
 
 @Component({
@@ -133,7 +134,12 @@ export class StatsSectionComponent implements OnInit, AfterViewInit {
     try {
       const value = JSON.parse(rawValue) as Partial<PublishedEvidenceMetric>;
       const sampleSize = value.sampleSize;
-      if (!value.title || !value.value || !value.source || !value.period || typeof sampleSize !== 'number' || !Number.isInteger(sampleSize) || sampleSize < 1) return null;
+      if (typeof value.title !== 'string' || !value.title.trim()
+        || typeof value.value !== 'string' || !value.value.trim()
+        || typeof value.source !== 'string' || !value.source.trim()
+        || typeof value.period !== 'string' || !value.period.trim()
+        || typeof sampleSize !== 'number' || !Number.isInteger(sampleSize) || sampleSize < 1) return null;
+      if (/\d/.test(value.value) && value.verified !== true) return null;
       return value as PublishedEvidenceMetric;
     } catch {
       return null;

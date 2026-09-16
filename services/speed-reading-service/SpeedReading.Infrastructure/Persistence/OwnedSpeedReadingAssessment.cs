@@ -1133,6 +1133,7 @@ internal sealed class OwnedSpeedReadingAssessment(
             foreach (var item in week.EnumerateArray())
             {
                 if (!TryGetProperty(item, "exerciseId", out var idProperty)
+                    || idProperty.ValueKind != JsonValueKind.String
                     || !Guid.TryParse(idProperty.GetString(), out var exerciseId))
                     continue;
                 result.Add(new TemplateExerciseEntry(
@@ -1147,6 +1148,10 @@ internal sealed class OwnedSpeedReadingAssessment(
             return result;
         }
         catch (JsonException)
+        {
+            return [];
+        }
+        catch (InvalidOperationException)
         {
             return [];
         }
@@ -1218,6 +1223,12 @@ internal sealed class OwnedSpeedReadingAssessment(
 
     private static bool TryGetProperty(JsonElement element, string name, out JsonElement value)
     {
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            value = default;
+            return false;
+        }
+
         if (element.TryGetProperty(name, out value))
             return true;
         foreach (var property in element.EnumerateObject())
@@ -1240,6 +1251,7 @@ internal sealed class OwnedSpeedReadingAssessment(
 
     private static int? GetInt(JsonElement element, string name) =>
         TryGetProperty(element, name, out var property)
+        && property.ValueKind == JsonValueKind.Number
         && property.TryGetInt32(out var value)
             ? value
             : null;

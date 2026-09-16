@@ -1,4 +1,4 @@
-import { parseHomePageContent } from './home-page-content';
+import { DEFAULT_HOME_PAGE_CONTENT, parseHomePageContent } from './home-page-content';
 
 describe('parseHomePageContent', () => {
   it('uses the published CMS configuration for the home page', () => {
@@ -29,5 +29,43 @@ describe('parseHomePageContent', () => {
 
     expect(content.hero.title).toContain('Hız');
     expect(content.visibility.cta).toBeTrue();
+  });
+
+  it('does not publish unverified outcome claims from legacy CMS content', () => {
+    const content = parseHomePageContent({
+      home_page_config: JSON.stringify({
+        hero: {
+          title: 'Okuma hızınızı 3 katına çıkarın',
+          subtitle: 'Düzenli çalışmayla kesin sonuç garanti.'
+        },
+        features: {
+          items: [{ title: '900+ WPM', description: 'Hızınızı garanti eder.' }]
+        }
+      })
+    });
+
+    expect(content.hero.title).toBe(DEFAULT_HOME_PAGE_CONTENT.hero.title);
+    expect(content.hero.subtitle).toBe(DEFAULT_HOME_PAGE_CONTENT.hero.subtitle);
+    expect(content.features.items).toEqual(DEFAULT_HOME_PAGE_CONTENT.features.items);
+  });
+
+  it('does not publish percentage outcome claims from legacy CMS content', () => {
+    const content = parseHomePageContent({
+      home_page_config: JSON.stringify({
+        hero: { title: 'Başarı oranınızı 90% artırın' }
+      })
+    });
+
+    expect(content.hero.title).toBe(DEFAULT_HOME_PAGE_CONTENT.hero.title);
+  });
+
+  it('also filters Turkish worded percentage claims', () => {
+    const content = parseHomePageContent({
+      home_page_config: JSON.stringify({
+        hero: { title: 'Başarı oranınızı yüzde 90 artırın' }
+      })
+    });
+
+    expect(content.hero.title).toBe(DEFAULT_HOME_PAGE_CONTENT.hero.title);
   });
 });

@@ -4,6 +4,7 @@ import { IdentityService, UserProfileDto, UserSessionDto } from '../../../../cor
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { AuthService, hasRequiredAccess } from '../../../../core/auth/auth.service';
 import { ADMIN_PERMISSIONS } from '../../../../core/auth/permissions';
+import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message';
 
 @Component({
   selector: 'app-user-details-modal',
@@ -202,7 +203,13 @@ import { ADMIN_PERMISSIONS } from '../../../../core/auth/permissions';
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase">Sınıf Seviyesi</p>
-                        <p class="text-gray-700 dark:text-gray-200">{{ user()?.studentDetails?.gradeLevel }}. Sınıf</p>
+                        <p class="text-gray-700 dark:text-gray-200">
+                          @if (user()?.studentDetails?.gradeLevel; as gradeLevel) {
+                            {{ gradeLevel }}. Sınıf
+                          } @else {
+                            Belirtilmemiş
+                          }
+                        </p>
                       </div>
                       <div>
                         <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase">Öğrenme Stili</p>
@@ -306,7 +313,7 @@ export class UserDetailsModalComponent implements OnInit {
         this.sessions.update(current => current.filter(item => item.id !== session.id));
         this.toaster.success('Oturum sonlandırıldı.');
       },
-      error: () => this.toaster.error('Oturum sonlandırılamadı.')
+      error: err => this.toaster.error(getAdminErrorMessage(err, 'Oturum sonlandırılamadı.', true))
     });
   }
 
@@ -322,7 +329,7 @@ export class UserDetailsModalComponent implements OnInit {
         this.sessions.set([]);
         this.toaster.success('Tüm oturumlar sonlandırıldı.');
       },
-      error: () => this.toaster.error('Oturumlar sonlandırılamadı.')
+      error: err => this.toaster.error(getAdminErrorMessage(err, 'Oturumlar sonlandırılamadı.', true))
     });
   }
 
@@ -338,7 +345,7 @@ export class UserDetailsModalComponent implements OnInit {
         this.sessions.set([]);
         this.toaster.success('MFA sıfırlandı; kullanıcı yeniden kurulum yapmalıdır.');
       },
-      error: () => this.toaster.error('MFA sıfırlanamadı.')
+      error: err => this.toaster.error(getAdminErrorMessage(err, 'MFA sıfırlanamadı.', true))
     });
   }
 

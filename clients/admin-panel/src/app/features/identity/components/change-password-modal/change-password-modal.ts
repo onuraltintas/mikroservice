@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IdentityService, UserDto } from '../../../../core/services/identity.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
+import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message';
 
 @Component({
     selector: 'app-change-password-modal',
@@ -153,9 +154,11 @@ export class ChangePasswordModalComponent {
                 console.error('Password Change API Error:', err);
                 this.loading.set(false);
 
-                let msg = 'Şifre güncellenirken bir hata oluştu.';
-                const errObj = err.error?.error || err.error?.Error;
-                if (errObj) msg = errObj.message || errObj.description || msg;
+                let msg = getAdminErrorMessage(err, 'Şifre güncellenirken bir hata oluştu.', true);
+                if (err?.status !== 403) {
+                    const errObj = err.error?.error || err.error?.Error;
+                    if (errObj) msg = errObj.message || errObj.description || msg;
+                }
 
                 this.error.set(msg);
                 this.toaster.error(msg);

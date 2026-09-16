@@ -10,6 +10,7 @@ import { UserDetailsModalComponent } from '../../components/user-details-modal/u
 import { RoleManagementModalComponent } from '../../components/role-management-modal/role-management-modal';
 import { AuthService, hasRequiredAccess } from '../../../../core/auth/auth.service';
 import { ADMIN_PERMISSIONS } from '../../../../core/auth/permissions';
+import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message';
 
 @Component({
   selector: 'app-user-list',
@@ -243,7 +244,7 @@ export class UserListComponent {
         },
         error: (err) => {
           console.error('Delete failed', err);
-          this.toaster.error('İşlem başarısız oldu');
+          this.toaster.error(getAdminErrorMessage(err, 'İşlem başarısız oldu', true));
         }
       });
     }
@@ -266,7 +267,7 @@ export class UserListComponent {
         },
         error: (err) => {
           console.error('Activate failed', err);
-          this.toaster.error('İşlem başarısız oldu');
+          this.toaster.error(getAdminErrorMessage(err, 'İşlem başarısız oldu', true));
         }
       });
     }
@@ -289,7 +290,7 @@ export class UserListComponent {
         },
         error: (err) => {
           console.error('Email confirmation failed', err);
-          this.toaster.error('İşlem başarısız oldu');
+          this.toaster.error(getAdminErrorMessage(err, 'İşlem başarısız oldu', true));
         }
       });
     }
@@ -310,7 +311,7 @@ export class UserListComponent {
         },
         error: (err) => {
           console.error('Permanent delete failed', err);
-          this.toaster.error('Silme işlemi başarısız oldu');
+          this.toaster.error(getAdminErrorMessage(err, 'Silme işlemi başarısız oldu', true));
         }
       });
     }

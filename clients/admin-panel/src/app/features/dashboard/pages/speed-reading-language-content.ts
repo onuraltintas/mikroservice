@@ -18,6 +18,7 @@ import {
   SpeedReadingVocabularyPage
 } from '../../../core/services/speed-reading-admin.service';
 import { ToasterService } from '../../../core/services/toaster.service';
+import { getAdminErrorMessage } from '../../../core/auth/admin-error-message';
 
 type LanguageContentTab = 'questions' | 'vocabulary';
 
@@ -33,7 +34,7 @@ type LanguageContentTab = 'questions' | 'vocabulary';
 
       @if (selectedTab() === 'questions') {
         <section class="space-y-4" aria-labelledby="question-bank-title"><div class="flex flex-wrap items-end justify-between gap-3"><div><h2 id="question-bank-title" class="text-lg font-semibold text-gray-900 dark:text-white">Sınav soru bankası</h2><p class="muted">Soru, seçenek, doğru cevap ve sınav sınıflandırmasını yönetin.</p></div><button type="button" (click)="startQuestionCreate()" class="primary">Yeni soru</button></div>
-          @if (questionQualitySummary(); as summary) {<div class="data-card text-sm"><strong>Doğru cevap dağılımı:</strong> A {{ summary.correctOptionCounts['A'] ?? 0 }} · B {{ summary.correctOptionCounts['B'] ?? 0 }} · C {{ summary.correctOptionCounts['C'] ?? 0 }} · D {{ summary.correctOptionCounts['D'] ?? 0 }} · E {{ summary.correctOptionCounts['E'] ?? 0 }}@for (warning of summary.warnings; track warning.code) {<p class="mt-2 text-amber-700">{{ warning.message }}</p>}</div>}
+          @if (questionQualitySummary(); as summary) {<div class="data-card text-sm"><strong>Doğru cevap dağılımı:</strong> A {{ summary.correctOptionCounts['A'] }} · B {{ summary.correctOptionCounts['B'] }} · C {{ summary.correctOptionCounts['C'] }} · D {{ summary.correctOptionCounts['D'] }} · E {{ summary.correctOptionCounts['E'] }}@for (warning of summary.warnings; track warning.code) {<p class="mt-2 text-amber-700">{{ warning.message }}</p>}</div>}
           @if (questionEditing()) {<div class="dialog-backdrop" role="presentation" (click)="cancelQuestionEdit()"><form (ngSubmit)="saveQuestion()" class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="question-dialog-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (click)="$event.stopPropagation()"><div class="dialog-header"><div><p class="dialog-eyebrow">Sınav soru bankası</p><h3 id="question-dialog-title">{{ questionEditingId ? 'Soruyu düzenle' : 'Yeni soru' }}</h3></div><button type="button" (click)="cancelQuestionEdit()" class="icon-button" aria-label="Dialogu kapat"><mat-icon>close</mat-icon></button></div><div class="dialog-body"><div class="form-grid"><label class="wide">Metin/content<textarea [(ngModel)]="questionDraft.content" name="questionContent" required maxlength="20000"></textarea></label><label class="wide">Soru<input [(ngModel)]="questionDraft.question" name="questionText" required maxlength="2000" /></label><label>Şık A<input [(ngModel)]="questionDraft.optionA" name="questionOptionA" required /></label><label>Şık B<input [(ngModel)]="questionDraft.optionB" name="questionOptionB" required /></label><label>Şık C<input [(ngModel)]="questionDraft.optionC" name="questionOptionC" required /></label><label>Şık D<input [(ngModel)]="questionDraft.optionD" name="questionOptionD" required /></label><label>Şık E (opsiyonel)<input [(ngModel)]="questionDraft.optionE" name="questionOptionE" /></label><label>Doğru şık<select [(ngModel)]="questionDraft.correctOption" name="questionCorrect" required><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option></select></label><label>Sınav türü<select [(ngModel)]="questionDraft.examType" name="questionExamType" required>@for (type of examTypes; track type.value) {<option [ngValue]="type.value">{{ type.label }}</option>}</select></label><label>Zorluk<input type="number" [(ngModel)]="questionDraft.difficulty" name="questionDifficulty" min="1" max="5" required /></label><label>Kelime sayısı<input [value]="calculateWordCount(questionDraft.content)" name="questionWordCount" readonly aria-describedby="questionWordCountHelp" /><span id="questionWordCountHelp" class="hint">Metinden otomatik hesaplanır.</span></label><label>Kategori<select [(ngModel)]="questionDraft.category" name="questionCategory" required>@for (category of questionCategories; track category.value) {<option [ngValue]="category.value">{{ category.label }}</option>}</select></label><label>Konu<input [(ngModel)]="questionDraft.topic" name="questionTopic" maxlength="200" /></label><label>Hedef yaş grubu<select [(ngModel)]="questionDraft.targetAgeGroupId" name="questionAgeGroup"><option [ngValue]="null">Tüm yaş grupları</option>@for (group of ageGroups(); track group.id) {<option [ngValue]="group.id">{{ group.displayName }} ({{ group.minAge }}–{{ group.maxAge }} yaş)</option>}</select></label></div>@if (questionQualityReview(); as review) {<div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">@if (review.warnings.length) {<strong>Kalite kontrolü uyarıları</strong><ul class="mt-2 list-disc pl-5">@for (warning of review.warnings; track warning.code) {<li>{{ warning.message }}</li>}</ul>} @else {<span>Otomatik kalite kontrolünde belirgin bir uyarı bulunmadı.</span>}</div>}</div><div class="dialog-footer"><button type="button" (click)="runQuestionQualityCheck()" class="secondary" [disabled]="saving()">Kalite kontrolü</button><button type="button" (click)="cancelQuestionEdit()" class="secondary">İptal</button><button type="submit" class="primary" [disabled]="saving()">Kaydet</button></div></form></div>}
           <form (ngSubmit)="loadQuestions()" class="data-card inline-filter"><input [(ngModel)]="questionSearch" name="questionSearch" placeholder="Metin veya soruda ara" maxlength="100" /><select [(ngModel)]="questionExamType" name="questionExamTypeFilter"><option [ngValue]="undefined">Tüm sınav türleri</option>@for (type of examTypes; track type.value) {<option [ngValue]="type.value">{{ type.label }}</option>}</select><select [(ngModel)]="questionDifficulty" name="questionDifficultyFilter"><option [ngValue]="undefined">Tüm zorluklar</option><option [ngValue]="1">Seviye 1</option><option [ngValue]="2">Seviye 2</option><option [ngValue]="3">Seviye 3</option><option [ngValue]="4">Seviye 4</option><option [ngValue]="5">Seviye 5</option></select><select [(ngModel)]="questionCategory" name="questionCategoryFilter"><option [ngValue]="undefined">Tüm soru türleri</option>@for (category of questionCategories; track category.value) {<option [ngValue]="category.value">{{ category.label }}</option>}</select><select [(ngModel)]="questionAgeGroupId" name="questionAgeGroupFilter"><option value="">Tüm yaş grupları</option>@for (group of ageGroups(); track group.id) {<option [value]="group.id">{{ group.displayName }}</option>}</select><button type="submit" class="secondary">Filtrele</button></form>
           <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Metin</th><th>Soru</th><th>Sınav</th><th>Zorluk</th><th>Kategori</th><th></th></tr></thead><tbody>@for (question of questions().items; track question.id) {<tr><td>{{ question.content | slice:0:90 }}{{ question.content.length > 90 ? '…' : '' }}</td><td>{{ question.question | slice:0:90 }}{{ question.question.length > 90 ? '…' : '' }}</td><td>{{ examTypeLabel(question.examType) }}</td><td>{{ question.difficulty }}</td><td>{{ questionCategoryLabel(question.category) }}</td><td class="actions"><button type="button" (click)="startQuestionEdit(question)">Düzenle</button><button type="button" (click)="deleteQuestion(question)" class="danger">Sil</button></td></tr>} @empty {<tr><td colspan="6" class="empty">Soru bulunamadı.</td></tr>}</tbody></table></div><div class="pager"><span>Toplam {{ questions().totalCount }}</span><button type="button" (click)="changeQuestionPage(questionPage - 1)" [disabled]="questionPage <= 1 || loading()">Önceki</button><button type="button" (click)="changeQuestionPage(questionPage + 1)" [disabled]="questionPage >= questionTotalPages() || loading()">Sonraki</button></div></div>
@@ -185,26 +186,44 @@ export class SpeedReadingLanguageContentComponent implements OnInit {
   cancelQuestionEdit(): void { this.questionEditing.set(false); this.questionEditingId = null; this.questionQualityReview.set(null); }
 
   runQuestionQualityCheck(): void {
-    this.service.previewExamQuestionQuality({ ...this.questionDraft, wordCount: 0 }).subscribe({
+    this.error.set('');
+    this.service.previewExamQuestionQuality({ ...this.questionDraft, wordCount: this.calculateWordCount(this.questionDraft.content) }).subscribe({
       next: value => this.questionQualityReview.set(value),
-      error: () => this.error.set('Soru kalite kontrolü tamamlanamadı.')
+      error: err => this.error.set(getAdminErrorMessage(err, 'Soru kalite kontrolü tamamlanamadı.'))
     });
   }
 
   saveQuestion(): void {
-    const request: Observable<unknown> = this.questionEditingId
-      ? this.service.updateExamQuestion(this.questionEditingId, { ...this.questionDraft, wordCount: 0 })
-      : this.service.createExamQuestion({ ...this.questionDraft, wordCount: 0 });
+    const payload = { ...this.questionDraft, wordCount: this.calculateWordCount(this.questionDraft.content) };
     this.saving.set(true);
-    request.pipe(finalize(() => this.saving.set(false))).subscribe({
-      next: () => { this.cancelQuestionEdit(); this.loadQuestions(); },
-      error: () => this.error.set('Soru kaydedilemedi.')
+    this.error.set('');
+    this.service.previewExamQuestionQuality(payload).subscribe({
+      next: review => {
+        this.questionQualityReview.set(review);
+        if (review.warnings.some(warning => warning.code === 'correct-option-length-cue')) {
+          this.saving.set(false);
+          this.error.set('Soru kaydedilemedi. Doğru seçenek uzunluk ipucu oluşturuyor; seçenekleri dengeli biçimde yeniden yazın.');
+          return;
+        }
+
+        const request: Observable<unknown> = this.questionEditingId
+          ? this.service.updateExamQuestion(this.questionEditingId, payload)
+          : this.service.createExamQuestion(payload);
+        request.pipe(finalize(() => this.saving.set(false))).subscribe({
+          next: () => { this.cancelQuestionEdit(); this.loadQuestions(); },
+          error: err => this.error.set(getAdminErrorMessage(err, 'Soru kaydedilemedi.'))
+        });
+      },
+      error: err => {
+        this.saving.set(false);
+        this.error.set(getAdminErrorMessage(err, 'Soru kalite kontrolü tamamlanamadı; soru kaydedilmedi.'));
+      }
     });
   }
 
   async deleteQuestion(question: SpeedReadingExamQuestion): Promise<void> {
     if (!await this.toaster.confirm(`“${question.question}” sorusu silinsin mi?`, { title: 'Sınav sorusunu sil' })) return;
-    this.service.deleteExamQuestion(question.id).subscribe({ next: () => this.loadQuestions(), error: () => this.error.set('Soru silinemedi.') });
+    this.service.deleteExamQuestion(question.id).subscribe({ next: () => this.loadQuestions(), error: err => this.error.set(getAdminErrorMessage(err, 'Soru silinemedi.')) });
   }
 
   changeQuestionPage(page: number): void { if (page < 1 || page > this.questionTotalPages()) return; this.questionPage = page; this.loadQuestions(); }

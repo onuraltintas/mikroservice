@@ -10,6 +10,7 @@ import {
   UserDto
 } from '../../../core/services/identity.service';
 import { ToasterService } from '../../../core/services/toaster.service';
+import { getAdminErrorMessage } from '../../../core/auth/admin-error-message';
 
 const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
 
@@ -186,7 +187,7 @@ export class BulkUserOperationsComponent {
         this.selectedFile.set(null);
         this.toaster.success(`İçe aktarma tamamlandı: ${result.succeeded} başarılı, ${result.failed} başarısız.`);
       },
-      error: () => this.error.set('Kullanıcılar içe aktarılamadı; CSV biçimini ve yetkinizi kontrol edin.')
+      error: err => this.error.set(getAdminErrorMessage(err, 'Kullanıcılar içe aktarılamadı; CSV biçimini ve yetkinizi kontrol edin.', true))
     });
   }
 
@@ -198,7 +199,7 @@ export class BulkUserOperationsComponent {
       finalize(() => this.exporting.set(false))
     ).subscribe({
       next: blob => this.download(blob, `users-${new Date().toISOString().slice(0, 10)}.csv`),
-      error: () => this.error.set('Kullanıcılar dışa aktarılamadı; yetkinizi kontrol edin.')
+      error: err => this.error.set(getAdminErrorMessage(err, 'Kullanıcılar dışa aktarılamadı; yetkinizi kontrol edin.'))
     });
   }
 
@@ -229,7 +230,7 @@ export class BulkUserOperationsComponent {
         this.assignmentResult.set(result);
         this.toaster.success(`Rol ataması tamamlandı: ${result.succeeded} başarılı, ${result.failed} başarısız.`);
       },
-      error: () => this.error.set('Toplu rol ataması yapılamadı; yetkinizi ve seçilen rolü kontrol edin.')
+      error: err => this.error.set(getAdminErrorMessage(err, 'Toplu rol ataması yapılamadı; yetkinizi ve seçilen rolü kontrol edin.', true))
     });
   }
 

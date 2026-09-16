@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output, inject, signal, OnInit } from '
 import { CommonModule } from '@angular/common';
 import { IdentityService, UserDto } from '../../../../core/services/identity.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
+import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message';
 
 @Component({
     selector: 'app-role-management-modal',
@@ -119,7 +120,7 @@ export class RoleManagementModalComponent implements OnInit {
     loadRoles() {
         this.identityService.getRoles().subscribe({
             next: (roles) => this.availableRoles.set(roles),
-            error: (err) => this.toaster.error('Roller yüklenemedi.')
+            error: (err) => this.toaster.error(getAdminErrorMessage(err, 'Roller yüklenemedi.'))
         });
     }
 
@@ -153,7 +154,7 @@ export class RoleManagementModalComponent implements OnInit {
             },
             error: (err) => {
                 this.actionLoading.set(null);
-                this.toaster.error('Rol eklenirken bir hata oluştu.');
+                this.toaster.error(getAdminErrorMessage(err, 'Rol eklenirken bir hata oluştu.', true));
             }
         });
     }
@@ -172,7 +173,7 @@ export class RoleManagementModalComponent implements OnInit {
             },
             error: (err) => {
                 this.actionLoading.set(null);
-                this.toaster.error('Rol kaldırılırken bir hata oluştu.');
+                this.toaster.error(getAdminErrorMessage(err, 'Rol kaldırılırken bir hata oluştu.', true));
             }
         });
     }

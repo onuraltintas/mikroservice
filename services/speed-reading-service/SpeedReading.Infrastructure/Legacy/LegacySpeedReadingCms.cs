@@ -54,6 +54,8 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
             .Select(ToSummary)
             .Where(block => !string.Equals(normalizedGroup, EvidenceMetricRules.Group, StringComparison.Ordinal)
                 || EvidenceMetricRules.IsPubliclyVisible(block.Value))
+            .Where(block => !IsHomePageConfig(normalizedGroup, block.Key)
+                || PublicMarketingCopyRules.IsSafe(block.Value))
             .ToList();
 
         cache.Set(cacheKey, blocks, new MemoryCacheEntryOptions
@@ -238,6 +240,13 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         CancellationToken cancellationToken = default)
     {
         var normalizedGroup = group.Trim();
+        var homePageConfig = blocks
+            .FirstOrDefault(item => string.Equals(item.Key?.Trim(), "home_page_config", StringComparison.OrdinalIgnoreCase));
+        if (string.Equals(normalizedGroup, "HomePage", StringComparison.OrdinalIgnoreCase)
+            && homePageConfig.Key is not null)
+        {
+            PublicMarketingCopyRules.EnsureSafe(homePageConfig.Value);
+        }
         var keys = blocks.Keys.ToArray();
         var existing = await db.ContentBlocks
             .Where(item => !item.IsDeleted && item.Group == normalizedGroup && keys.Contains(item.Key))
@@ -276,6 +285,10 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         Guid actorId,
         CancellationToken cancellationToken = default)
     {
+        if (IsHomePageConfig(request.Group, request.Key))
+        {
+            PublicMarketingCopyRules.EnsureSafe(request.Value);
+        }
         var block = new LegacyContentBlock
         {
             Id = Guid.NewGuid(),
@@ -299,6 +312,10 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         Guid actorId,
         CancellationToken cancellationToken = default)
     {
+        if (IsHomePageConfig(request.Group, request.Key))
+        {
+            PublicMarketingCopyRules.EnsureSafe(request.Value);
+        }
         var block = await FindActiveAsync(db.ContentBlocks, id, cancellationToken);
         if (block is null)
         {
@@ -1042,6 +1059,10 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         item.IsVisible = request.IsVisible;
         item.OpenInNewTab = request.OpenInNewTab;
     }
+
+    private static bool IsHomePageConfig(string? group, string? key) =>
+        string.Equals(group?.Trim(), "HomePage", StringComparison.OrdinalIgnoreCase)
+        && string.Equals(key?.Trim(), "home_page_config", StringComparison.OrdinalIgnoreCase);
 
     private static CmsPageSummary ToSummary(LegacyPage item) =>
         new(

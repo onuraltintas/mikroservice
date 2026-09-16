@@ -6,6 +6,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Observable, finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
+import { getAdminErrorMessage } from '../../../core/auth/admin-error-message';
 import { ToasterService } from '../../../core/services/toaster.service';
 import {
   SpeedReadingAdminService,
@@ -68,6 +69,7 @@ interface EvidenceMetricDraft {
   sampleSize: number | null;
   icon: string;
   isVisible: boolean;
+  verified: boolean;
 }
 
 interface EvidenceMetric extends EvidenceMetricDraft {
@@ -117,19 +119,20 @@ const evidenceMetricIcons = ['insights', 'groups', 'quiz', 'speed', 'trending_up
                   <label>Değer<input [(ngModel)]="evidenceDraft.value" name="evidenceValue" required maxlength="60" placeholder="%82 veya 120" /></label>
                   <label>Kaynak<input [(ngModel)]="evidenceDraft.source" name="evidenceSource" required maxlength="500" placeholder="Pilot çalışması veya rapor bağlantısı" /></label>
                   <label>Dönem<input [(ngModel)]="evidenceDraft.period" name="evidencePeriod" required maxlength="150" placeholder="Ocak–Mart 2026" /></label>
-                  <label>Örneklem<input type="number" [(ngModel)]="evidenceDraft.sampleSize" name="evidenceSampleSize" required min="1" max="10000000" /></label>
+                  <label>Örneklem<input type="number" [(ngModel)]="evidenceDraft.sampleSize" name="evidenceSampleSize" required min="1" max="10000000" step="1" /></label>
                   <label>İkon<select [(ngModel)]="evidenceDraft.icon" name="evidenceIcon">@for (icon of evidenceIcons; track icon) {<option [value]="icon">{{ icon }}</option>}</select></label>
                   <label class="wide">Açıklama<textarea [(ngModel)]="evidenceDraft.description" name="evidenceDescription" maxlength="500" placeholder="Ölçütün nasıl hesaplandığını kısaca açıklayın."></textarea></label>
-                  <label class="check wide"><input type="checkbox" [(ngModel)]="evidenceDraft.isVisible" name="evidenceVisible" /> Son kullanıcıya göster</label>
+                  <label class="check"><input type="checkbox" [(ngModel)]="evidenceDraft.verified" name="evidenceVerified" /> Kaynak doğrulandı</label>
+                  <label class="check"><input type="checkbox" [(ngModel)]="evidenceDraft.isVisible" name="evidenceVisible" /> Son kullanıcıya göster</label>
                 </div>
                 <div class="form-actions"><button type="button" class="secondary" (click)="cancelEvidenceEdit()">İptal</button><button class="primary" type="submit" [disabled]="saving()">Kaydet</button></div>
               </form>
             }
             <div class="data-card">
               <div class="mb-4"><h3 class="font-semibold">Kanıtlı istatistikler</h3><p class="muted">Public görünürlük varsayılan olarak kapalıdır. Yalnız açık ve geçerli kayıtlar ana sayfaya ulaşır.</p></div>
-              <table class="data-table"><thead><tr><th>Başlık</th><th>Değer</th><th>Kanıt</th><th>Görünürlük</th><th></th></tr></thead><tbody>
-                @for (metric of evidenceMetrics(); track metric.id) {<tr><td><strong>{{ metric.title }}</strong><div class="muted">{{ metric.description || '—' }}</div></td><td>{{ metric.value }}</td><td>{{ metric.source }}<div class="muted">{{ metric.period }} · n={{ metric.sampleSize }}</div></td><td>{{ metric.isVisible ? 'Son kullanıcıya açık' : 'Gizli' }}</td><td class="actions"><button type="button" (click)="editEvidenceMetric(metric)">Düzenle</button><button type="button" class="danger" (click)="deleteEvidenceMetric(metric)">Sil</button></td></tr>}
-                @empty {<tr><td colspan="5" class="empty">Henüz kanıtlı istatistik eklenmedi.</td></tr>}
+              <table class="data-table"><thead><tr><th>Başlık</th><th>Değer</th><th>Kanıt</th><th>Doğrulama</th><th>Görünürlük</th><th></th></tr></thead><tbody>
+                @for (metric of evidenceMetrics(); track metric.id) {<tr><td><strong>{{ metric.title }}</strong><div class="muted">{{ metric.description || '—' }}</div></td><td>{{ metric.value }}</td><td>{{ metric.source }}<div class="muted">{{ metric.period }} · n={{ metric.sampleSize }}</div></td><td>{{ metric.verified ? 'Kaynak doğrulandı' : 'Doğrulama bekliyor' }}</td><td>{{ metric.isVisible ? 'Son kullanıcıya açık' : 'Gizli' }}</td><td class="actions"><button type="button" (click)="editEvidenceMetric(metric)">Düzenle</button><button type="button" class="danger" (click)="deleteEvidenceMetric(metric)">Sil</button></td></tr>}
+                @empty {<tr><td colspan="6" class="empty">Henüz kanıtlı istatistik eklenmedi.</td></tr>}
               </tbody></table>
             </div>
           }
@@ -317,7 +320,7 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
 
   editEvidenceMetric(metric: EvidenceMetric): void {
     this.evidenceEditingId = metric.id;
-    this.evidenceDraft = { title: metric.title, value: metric.value, description: metric.description, source: metric.source, period: metric.period, sampleSize: metric.sampleSize, icon: metric.icon, isVisible: metric.isVisible };
+    this.evidenceDraft = { title: metric.title, value: metric.value, description: metric.description, source: metric.source, period: metric.period, sampleSize: metric.sampleSize, icon: metric.icon, isVisible: metric.isVisible, verified: metric.verified };
     this.evidenceEditing.set(true);
   }
 
@@ -329,8 +332,12 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
 
   saveEvidenceMetric(): void {
     const draft = this.evidenceDraft;
-    if (!draft.title.trim() || !draft.value.trim() || !draft.source.trim() || !draft.period.trim() || !draft.sampleSize || draft.sampleSize < 1) {
+    if (!draft.title.trim() || !draft.value.trim() || !draft.source.trim() || !draft.period.trim() || !draft.sampleSize || !Number.isInteger(draft.sampleSize) || draft.sampleSize < 1) {
       this.error.set('Başlık, değer, kaynak, dönem ve en az 1 kişilik örneklem zorunludur.');
+      return;
+    }
+    if (draft.isVisible && /\d/.test(draft.value) && !draft.verified) {
+      this.error.set('Rakam içeren istatistikleri yayımlamak için önce kaynak doğrulamasını işaretleyin.');
       return;
     }
 
@@ -340,7 +347,7 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
       group: evidenceMetricsGroup,
       label: draft.title.trim(),
       type: 0,
-      value: JSON.stringify({ title: draft.title.trim(), value: draft.value.trim(), description: draft.description.trim(), source: draft.source.trim(), period: draft.period.trim(), sampleSize: draft.sampleSize, icon: draft.icon, isVisible: draft.isVisible })
+      value: JSON.stringify({ title: draft.title.trim(), value: draft.value.trim(), description: draft.description.trim(), source: draft.source.trim(), period: draft.period.trim(), sampleSize: draft.sampleSize, icon: draft.icon, isVisible: draft.isVisible, verified: draft.verified })
     };
     const action = this.evidenceEditingId
       ? this.service.updateCmsBlock(this.evidenceEditingId, request)
@@ -418,17 +425,17 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
 
   cancelCmsEdit(): void { this.blockEditingId = null; this.cmsPageEditingId = null; this.cmsBlogEditingId = null; this.navigationEditingId = null; this.blockEditing.set(false); this.cmsPageEditing.set(false); this.cmsBlogEditing.set(false); this.mediaEditing.set(false); this.navigationEditing.set(false); this.homePageEditing.set(false); }
   private closeAllDialogs(): void { this.cancelCmsEdit(); this.cancelEvidenceEdit(); this.announcementEditing.set(false); this.emailTemplateEditing.set(false); this.campaignEditing.set(false); this.bulkEditing.set(false); this.selectedContact.set(null); this.cmsPreview.set(null); this.cmsRevisions.set([]); this.announcementStats.set(null); this.emailPreview.set(null); this.campaignStats.set(null); }
-  private run(request: Observable<unknown>, onSuccess: () => void, errorMessage: string): void { this.saving.set(true); this.error.set(''); request.pipe(finalize(() => this.saving.set(false))).subscribe({ next: onSuccess, error: () => this.error.set(errorMessage) }); }
+  private run(request: Observable<unknown>, onSuccess: () => void, errorMessage: string): void { this.saving.set(true); this.error.set(''); request.pipe(finalize(() => this.saving.set(false))).subscribe({ next: onSuccess, error: err => this.error.set(getAdminErrorMessage(err, errorMessage)) }); }
   private emptySeo(): SpeedReadingCmsSeoSettings { return { metaTitle: null, metaDescription: null, metaKeywords: null, canonicalUrl: null, ogTitle: null, ogDescription: null, ogImage: null, noIndex: false }; }
   private emptyHomePage(): HomePageDraft { return { seoTitle: 'Master Hızlı Okuma | Hız ve Anlamayı Birlikte Geliştirin', seoDescription: 'Başlangıç düzeyinizi ölçün, size uygun çalışmaları takip edin ve gelişiminizi hız ile anlama verileriyle görün.', seoKeywords: 'hızlı okuma, okuduğunu anlama, okuma egzersizleri, kişisel öğrenme planı', seoOgImage: '', heroTitle: 'Hız ve anlamayı birlikte geliştirin', heroSubtitle: 'Başlangıç ölçümünüzden sonra size uygun çalışmalarla ilerleyin; gelişiminizi düzenli verilerle görün.', primaryActionLabel: 'Seviyeni belirle', secondaryActionLabel: 'Nasıl çalışır?', featuresTitle: 'Çalışma akışında neler var?', featuresSubtitle: 'Odak, akıcılık ve anlama çalışmalarını aynı öğrenme yolunda birleştirin.', approachTitle: 'Ölçerek ilerleyen bir çalışma düzeni', approachSubtitle: 'Program, tek bir hız hedefine değil, sürdürülebilir gelişime odaklanır.', pricingTitle: 'Size uygun erişimi seçin', pricingSubtitle: 'Bireysel veya kurumsal erişim seçeneklerini inceleyin.', blogTitle: 'Kaynaklar ve çalışma ipuçları', blogSubtitle: 'Okuma, öğrenme ve düzenli çalışma üzerine içerikleri keşfedin.', newsletterTitle: 'Çalışma ipuçları e-postanıza gelsin', newsletterSubtitle: 'Yeni içeriklerden ve yararlı çalışma önerilerinden haberdar olun.', faqTitle: 'Sık sorulan sorular', faqSubtitle: 'Platform ve çalışma düzeni hakkında kısa yanıtlar.', ctaTitle: 'Çalışma yolunuzu görmek ister misiniz?', ctaSubtitle: 'Seviyenizi belirleyip size uygun ilk adımı görün.', ctaActionLabel: 'Başla', ctaSmallText: 'Sonuçlar başlangıç düzeyine ve düzenli çalışmaya göre değişir.', featuresVisible: true, approachVisible: true, statsVisible: true, pricingVisible: true, blogVisible: true, newsletterVisible: true, faqVisible: true, ctaVisible: true }; }
   private emptyHomeCards(): HomeCardsDraft { return { trustPoints: ['Başlangıç ölçümü', 'Hız ve anlama birlikte', 'Kişisel çalışma akışı'], features: [{ icon: 'speed', title: 'Akıcılık çalışmaları', description: 'Metin takibi ve kelime gruplama ile daha akıcı okuyun.' }, { icon: 'quiz', title: 'Anlama kontrolü', description: 'Her çalışmada anlama sonucunu ayrı olarak görün.' }, { icon: 'route', title: 'Kişisel sıradaki adım', description: 'Ölçüm geçmişinize göre uygun içerikle devam edin.' }, { icon: 'insights', title: 'İlerleme görünümü', description: 'Hız, anlama ve düzenli çalışma eğilimini izleyin.' }], approach: [{ title: 'Başlangıcı görün', role: 'Ölçüm', description: 'Çalışma yolunuz başlangıç ölçümünüzle netleşir.' }, { title: 'Dengeli ilerleyin', role: 'Hız + anlama', description: 'Zorluk, sonuçlarınıza göre dengelenir.' }, { title: 'Geri bildirimi kullanın', role: 'İzleme', description: 'Güçlü yönlerinizi ve destek ihtiyacını görün.' }], benefits: ['Yeni çalışma önerileri', 'Güncel içerikler', 'İstediğiniz zaman abonelikten çıkma özgürlüğü'] }; }
   private loadHomePageDraft(raw?: string): void { const defaults = this.emptyHomePage(); const defaultCards = this.emptyHomeCards(); if (!raw) { this.homePageDraft = defaults; this.homePageCards = defaultCards; return; } try { const config = JSON.parse(raw) as Record<string, any>; const section = (name: string) => config[name] && typeof config[name] === 'object' ? config[name] : {}; const seo = section('seo'); const hero = section('hero'); const features = section('features'); const approach = section('approach'); const pricing = section('pricing'); const blog = section('blog'); const newsletter = section('newsletter'); const faq = section('faq'); const cta = section('cta'); const visibility = section('visibility'); this.homePageDraft = { ...defaults, seoTitle: seo.title || defaults.seoTitle, seoDescription: seo.description || defaults.seoDescription, seoKeywords: seo.keywords || defaults.seoKeywords, seoOgImage: seo.ogImage || '', heroTitle: hero.title || defaults.heroTitle, heroSubtitle: hero.subtitle || defaults.heroSubtitle, primaryActionLabel: hero.primaryActionLabel || defaults.primaryActionLabel, secondaryActionLabel: hero.secondaryActionLabel || defaults.secondaryActionLabel, featuresTitle: features.title || defaults.featuresTitle, featuresSubtitle: features.subtitle || defaults.featuresSubtitle, approachTitle: approach.title || defaults.approachTitle, approachSubtitle: approach.subtitle || defaults.approachSubtitle, pricingTitle: pricing.title || defaults.pricingTitle, pricingSubtitle: pricing.subtitle || defaults.pricingSubtitle, blogTitle: blog.title || defaults.blogTitle, blogSubtitle: blog.subtitle || defaults.blogSubtitle, newsletterTitle: newsletter.title || defaults.newsletterTitle, newsletterSubtitle: newsletter.subtitle || defaults.newsletterSubtitle, faqTitle: faq.title || defaults.faqTitle, faqSubtitle: faq.subtitle || defaults.faqSubtitle, ctaTitle: cta.title || defaults.ctaTitle, ctaSubtitle: cta.subtitle || defaults.ctaSubtitle, ctaActionLabel: cta.actionLabel || defaults.ctaActionLabel, ctaSmallText: cta.smallText || defaults.ctaSmallText, featuresVisible: typeof visibility.features === 'boolean' ? visibility.features : defaults.featuresVisible, approachVisible: typeof visibility.approach === 'boolean' ? visibility.approach : defaults.approachVisible, statsVisible: typeof visibility.stats === 'boolean' ? visibility.stats : defaults.statsVisible, pricingVisible: typeof visibility.pricing === 'boolean' ? visibility.pricing : defaults.pricingVisible, blogVisible: typeof visibility.blog === 'boolean' ? visibility.blog : defaults.blogVisible, newsletterVisible: typeof visibility.newsletter === 'boolean' ? visibility.newsletter : defaults.newsletterVisible, faqVisible: typeof visibility.faq === 'boolean' ? visibility.faq : defaults.faqVisible, ctaVisible: typeof visibility.cta === 'boolean' ? visibility.cta : defaults.ctaVisible }; this.homePageCards = { trustPoints: Array.isArray(hero.trustPoints) ? hero.trustPoints.filter((item: unknown): item is string => typeof item === 'string') : defaultCards.trustPoints, features: Array.isArray(features.items) ? features.items.filter((item: unknown) => item && typeof item === 'object').map((item: any) => ({ icon: typeof item.icon === 'string' ? item.icon : 'insights', title: typeof item.title === 'string' ? item.title : '', description: typeof item.description === 'string' ? item.description : '' })) : defaultCards.features, approach: Array.isArray(approach.items) ? approach.items.filter((item: unknown) => item && typeof item === 'object').map((item: any) => ({ title: typeof item.title === 'string' ? item.title : '', role: typeof item.role === 'string' ? item.role : '', description: typeof item.description === 'string' ? item.description : '' })) : defaultCards.approach, benefits: Array.isArray(newsletter.benefits) ? newsletter.benefits.filter((item: unknown): item is string => typeof item === 'string') : defaultCards.benefits }; } catch { this.homePageDraft = defaults; this.homePageCards = defaultCards; this.error.set('Ana sayfa kaydı okunamadı; güvenli varsayılanlar yüklendi.'); } }
   private emptyBlock(): SpeedReadingCmsContentBlockRequest { return { key: '', group: 'HomePage', label: null, type: 0, value: '' }; }
-  private emptyEvidenceMetric(): EvidenceMetricDraft { return { title: '', value: '', description: '', source: '', period: '', sampleSize: null, icon: 'insights', isVisible: false }; }
+  private emptyEvidenceMetric(): EvidenceMetricDraft { return { title: '', value: '', description: '', source: '', period: '', sampleSize: null, icon: 'insights', isVisible: false, verified: false }; }
   private toEvidenceMetric(block: SpeedReadingCmsContentBlock): EvidenceMetric | null {
     try {
       const value = JSON.parse(block.value) as Partial<EvidenceMetricDraft>;
-      if (!block.label?.trim() || typeof value.value !== 'string' || typeof value.source !== 'string' || typeof value.period !== 'string' || typeof value.sampleSize !== 'number' || value.sampleSize < 1) return null;
+      if (!block.label?.trim() || typeof value.value !== 'string' || typeof value.source !== 'string' || typeof value.period !== 'string' || typeof value.sampleSize !== 'number' || !Number.isInteger(value.sampleSize) || value.sampleSize < 1) return null;
       return {
         id: block.id,
         key: block.key,
@@ -439,7 +446,8 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
         period: value.period,
         sampleSize: value.sampleSize,
         icon: evidenceMetricIcons.includes(value.icon ?? '') ? value.icon! : 'insights',
-        isVisible: value.isVisible === true
+        isVisible: value.isVisible === true,
+        verified: value.verified === true
       };
     } catch {
       return null;

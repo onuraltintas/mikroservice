@@ -128,12 +128,19 @@ function objectValue(value: unknown): CmsValue | null {
 function mergeObject<T extends object>(defaults: T, value: unknown): T {
   const source = objectValue(value);
   if (!source) return { ...defaults };
-  return Object.fromEntries(Object.entries(defaults).map(([key, fallback]) => [key, typeof source[key] === 'string' ? source[key].trim() || fallback : fallback])) as T;
+  return Object.fromEntries(Object.entries(defaults).map(([key, fallback]) => {
+    const candidate = typeof source[key] === 'string' ? source[key].trim() : '';
+    return [key, isSafePublicCopy(candidate) ? candidate || fallback : fallback];
+  })) as T;
 }
 
 function mergeStrings(defaults: string[], value: unknown): string[] {
   if (!Array.isArray(value)) return [...defaults];
-  const items = value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).map(item => item.trim()).slice(0, 8);
+  const items = value
+    .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    .map(item => item.trim())
+    .filter(isSafePublicCopy)
+    .slice(0, 8);
   return items.length ? items : [...defaults];
 }
 
@@ -141,7 +148,7 @@ function mergeFeatures(value: unknown): HomeFeatureContent[] {
   if (!Array.isArray(value)) return DEFAULT_HOME_PAGE_CONTENT.features.items.map(item => ({ ...item }));
   const items = value.map(objectValue).filter((item): item is CmsValue => item !== null).map(item => ({
     icon: stringValue(item['icon'], 'auto_awesome'), title: stringValue(item['title']), description: stringValue(item['description'])
-  })).filter(item => item.title && item.description).slice(0, 8);
+  })).filter(item => item.title && item.description && isSafePublicCopy(item.title) && isSafePublicCopy(item.description)).slice(0, 8);
   return items.length ? items : DEFAULT_HOME_PAGE_CONTENT.features.items.map(item => ({ ...item }));
 }
 
@@ -149,7 +156,7 @@ function mergeApproach(value: unknown): HomeApproachContent[] {
   if (!Array.isArray(value)) return DEFAULT_HOME_PAGE_CONTENT.approach.items.map(item => ({ ...item }));
   const items = value.map(objectValue).filter((item): item is CmsValue => item !== null).map(item => ({
     title: stringValue(item['title']), role: stringValue(item['role']), description: stringValue(item['description'])
-  })).filter(item => item.title && item.description).slice(0, 6);
+  })).filter(item => item.title && item.description && isSafePublicCopy(item.title) && isSafePublicCopy(item.description)).slice(0, 6);
   return items.length ? items : DEFAULT_HOME_PAGE_CONTENT.approach.items.map(item => ({ ...item }));
 }
 
@@ -159,5 +166,20 @@ function mergeVisibility(value: unknown): HomePageContent['visibility'] {
 }
 
 function stringValue(value: unknown, fallback = ''): string {
-  return typeof value === 'string' && value.trim() ? value.trim() : fallback;
+  const candidate = typeof value === 'string' ? value.trim() : '';
+  return isSafePublicCopy(candidate) ? candidate || fallback : fallback;
+}
+
+/** Public marketing copy must not publish unverified outcome guarantees or speed claims. */
+function isSafePublicCopy(value: string): boolean {
+  if (!value) return true;
+  return ![
+    /\b\d+\s*kat(?:la\w*|lan\w*|ına|ını|ı|a)?\b/i,
+    /\bikiye\s+kat(?:la\w*|lan\w*)?\b/i,
+    /\b\d{2,4}\s*\+?\s*wpm\b/i,
+    /(?:\b\d{1,3}\s*%|%\s*\d{1,3}\b)/i,
+    /(?:\byüzde\s+\d{1,3}\b|\b\d{1,3}\s+yüzde\b)/i,
+    /\bkesin\w*\b/i,
+    /\bgaranti\w*\b/i
+  ].some(pattern => pattern.test(value));
 }

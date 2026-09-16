@@ -99,17 +99,17 @@ public static class ExamQuestionQualityAnalyzer
             .ToList();
         var correctLength = VisibleLength(correctAnswer);
         // Short labels such as numbers or Roman numerals naturally vary by a character or two;
-        // flag only a gap large enough to serve as a plausible answer shortcut.
-        const int materialLengthDifference = 8;
-        const decimal maximumRelativeLengthRatio = 1.5m;
+        // flag a distinctly longer/shorter correct option before it becomes a reliable shortcut.
+        const int materialLengthDifference = 6;
+        const decimal minimumRelativeLengthRatio = 1.2m;
         if (otherLengths.Count >= 3)
         {
             var longestOtherLength = otherLengths.Max();
             var shortestOtherLength = otherLengths.Min();
             var correctAnswerIsMateriallyLonger = correctLength - longestOtherLength >= materialLengthDifference
-                && correctLength > longestOtherLength * maximumRelativeLengthRatio;
+                && correctLength >= longestOtherLength * minimumRelativeLengthRatio;
             var correctAnswerIsMateriallyShorter = shortestOtherLength - correctLength >= materialLengthDifference
-                && correctLength < shortestOtherLength / maximumRelativeLengthRatio;
+                && correctLength <= shortestOtherLength / minimumRelativeLengthRatio;
             if (correctAnswerIsMateriallyLonger || correctAnswerIsMateriallyShorter)
             {
                 warnings.Add(new(

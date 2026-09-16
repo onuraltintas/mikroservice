@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IdentityService, UserProfileDto, UpdateUserProfileRequest } from '../../../../core/services/identity.service';
 import { InstitutionDto, InstitutionService } from '../../../../core/services/institution.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
+import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message';
 
 @Component({
   selector: 'app-edit-user-modal',
@@ -302,13 +303,15 @@ export class EditUserModalComponent implements OnInit {
         console.error('Update API Error:', err);
         this.loading.set(false);
 
-        let msg = 'Güncelleme sırasında bir hata oluştu.';
-        const errObj = err.error?.error || err.error?.Error;
+        let msg = getAdminErrorMessage(err, 'Güncelleme sırasında bir hata oluştu.', true);
+        if (err?.status !== 403) {
+          const errObj = err.error?.error || err.error?.Error;
 
-        if (errObj) {
-          msg = errObj.message || errObj.description || msg;
-        } else if (err.error?.detail) {
-          msg = err.error.detail;
+          if (errObj) {
+            msg = errObj.message || errObj.description || msg;
+          } else if (err.error?.detail) {
+            msg = err.error.detail;
+          }
         }
 
         this.error.set(msg);
