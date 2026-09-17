@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AssignmentService, AssignmentDto } from '../../../../core/services/assignment.service';
@@ -15,6 +15,7 @@ import { AssignmentService, AssignmentDto } from '../../../../core/services/assi
 export class AssignmentsWidgetComponent implements OnInit {
     private assignmentService = inject(AssignmentService);
     private router = inject(Router);
+    private cdr = inject(ChangeDetectorRef);
 
     assignments: AssignmentDto[] = [];
     loading = true;
@@ -28,17 +29,20 @@ export class AssignmentsWidgetComponent implements OnInit {
             next: (res) => {
                 // Show all assigned (both complete and incomplete) but sort incomplete first
                 // Or user requested specifically: if any incomplete -> red border
-                this.assignments = res.sort((a, b) => {
+                const assignments = Array.isArray(res) ? res : [];
+                this.assignments = assignments.sort((a, b) => {
                     if (a.isCompleted === b.isCompleted) {
                         return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
                     }
                     return a.isCompleted ? 1 : -1;
                 });
                 this.loading = false;
+                this.cdr.detectChanges();
             },
             error: (err) => {
                 console.error('Error loading assignments', err);
                 this.loading = false;
+                this.cdr.detectChanges();
             }
         });
     }
