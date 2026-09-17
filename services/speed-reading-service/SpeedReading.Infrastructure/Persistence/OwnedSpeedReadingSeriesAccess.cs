@@ -100,24 +100,47 @@ internal sealed class OwnedSpeedReadingSeriesAccess(OwnedSpeedReadingDbContext d
         if (existing is not null)
             return new UnlockSeriesResult(true, "Seri zaten açık.", seriesId);
 
-        var activePrograms = await db.StudentProgramProgresses
-            .Where(item => item.UserId == userId && item.IsActive)
-            .ToListAsync(cancellationToken);
-        var previous = activePrograms.FirstOrDefault();
-        var now = DateTime.UtcNow;
-        foreach (var activeProgram in activePrograms)
-            activeProgram.Deactivate(userId, now);
+        return await OwnedSpeedReadingProgramAssignmentLock.ExecuteAsync(
+            db,
+            async () =>
+            {
+                await using var transaction = await OwnedSpeedReadingProgramAssignmentLock.AcquireAsync(
+                    db,
+                    userId,
+                    cancellationToken);
 
-        db.StudentProgramProgresses.Add(StudentProgramProgress.Start(
-            Guid.NewGuid(),
-            userId,
-            template,
-            previous?.CurrentStreak ?? 0,
-            previous?.LongestStreak ?? 0,
-            userId,
-            now));
-        await db.SaveChangesAsync(cancellationToken);
-        return new UnlockSeriesResult(true, "Seri başarıyla açıldı.", seriesId);
+                // Re-check after acquiring the per-student lock so two tabs cannot
+                // unlock the same series or leave two active programs behind.
+                existing = await db.StudentProgramProgresses
+                    .FirstOrDefaultAsync(item => item.ProgramTemplateId == seriesId
+                        && item.UserId == userId,
+                        cancellationToken);
+                if (existing is not null)
+                    return new UnlockSeriesResult(true, "Seri zaten açık.", seriesId);
+
+                var activePrograms = await db.StudentProgramProgresses
+                    .Where(item => item.UserId == userId
+                        && item.IsActive
+                        && item.CompletedDate == null)
+                    .ToListAsync(cancellationToken);
+                var previous = activePrograms.FirstOrDefault();
+                var now = DateTime.UtcNow;
+                foreach (var activeProgram in activePrograms)
+                    activeProgram.Deactivate(userId, now);
+
+                db.StudentProgramProgresses.Add(StudentProgramProgress.Start(
+                    Guid.NewGuid(),
+                    userId,
+                    template,
+                    previous?.CurrentStreak ?? 0,
+                    previous?.LongestStreak ?? 0,
+                    userId,
+                    now));
+                await db.SaveChangesAsync(cancellationToken);
+                if (transaction is not null)
+                    await transaction.CommitAsync(cancellationToken);
+                return new UnlockSeriesResult(true, "Seri başarıyla açıldı.", seriesId);
+            });
     }
 
     private static SeriesAccessSummary ToSummary(

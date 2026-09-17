@@ -53,11 +53,11 @@ internal sealed class OwnedSpeedReadingDailyProgress(
         int dayNumber,
         CancellationToken cancellationToken = default)
     {
-        var (week, day) = SpeedReadingDailyProgressRules.GetWeekAndDay(dayNumber);
         var program = await GetActiveProgramAsync(userId, cancellationToken);
         if (program is null)
             return [];
 
+        var (week, day) = SpeedReadingDailyProgressRules.GetWeekAndDay(dayNumber);
         return await BuildExercisesAsync(
             userId,
             program.Value.Progress,

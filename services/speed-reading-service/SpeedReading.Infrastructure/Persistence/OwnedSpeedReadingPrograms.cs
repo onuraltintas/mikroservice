@@ -227,15 +227,47 @@ internal sealed class OwnedSpeedReadingPrograms(
         Guid actorId,
         CancellationToken cancellationToken = default)
     {
-        var progress = await db.StudentProgramProgresses
-            .SingleOrDefaultAsync(item => item.Id == progressId
-                && (accessScope.IsGlobal || accessScope.StudentUserIds.Contains(item.UserId)), cancellationToken);
-        if (progress is null)
+        var targetUserId = await db.StudentProgramProgresses
+            .AsNoTracking()
+            .Where(item => item.Id == progressId
+                && (accessScope.IsGlobal || accessScope.StudentUserIds.Contains(item.UserId)))
+            .Select(item => (Guid?)item.UserId)
+            .SingleOrDefaultAsync(cancellationToken);
+        if (!targetUserId.HasValue)
             return false;
 
-        progress.Reset(actorId, DateTime.UtcNow);
-        await db.SaveChangesAsync(cancellationToken);
-        return true;
+        return await OwnedSpeedReadingProgramAssignmentLock.ExecuteAsync(
+            db,
+            async () =>
+            {
+                await using var transaction = await OwnedSpeedReadingProgramAssignmentLock.AcquireAsync(
+                    db,
+                    targetUserId.Value,
+                    cancellationToken);
+
+                var progress = await db.StudentProgramProgresses
+                    .SingleOrDefaultAsync(item => item.Id == progressId
+                        && (accessScope.IsGlobal || accessScope.StudentUserIds.Contains(item.UserId)),
+                        cancellationToken);
+                if (progress is null)
+                    return false;
+
+                var now = DateTime.UtcNow;
+                var activePrograms = await db.StudentProgramProgresses
+                    .Where(item => item.UserId == progress.UserId
+                        && item.Id != progress.Id
+                        && item.IsActive
+                        && item.CompletedDate == null)
+                    .ToListAsync(cancellationToken);
+                foreach (var activeProgram in activePrograms)
+                    activeProgram.Deactivate(actorId, now);
+
+                progress.Reset(actorId, now);
+                await db.SaveChangesAsync(cancellationToken);
+                if (transaction is not null)
+                    await transaction.CommitAsync(cancellationToken);
+                return true;
+            });
     }
 
     public async Task<IReadOnlyList<DailyExerciseLogSummary>> GetDailyExerciseLogsAsync(

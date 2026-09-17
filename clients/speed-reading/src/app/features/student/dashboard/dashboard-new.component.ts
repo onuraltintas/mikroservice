@@ -145,7 +145,25 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
       )
       .subscribe({
         next: ({ progress, allAchievements, userAchievements }) => {
-          this.hasProgram.set(true); // Program loaded successfully
+          if (!progress) {
+            // An authenticated student can have a valid subscription before a
+            // training program is assigned. Keep that state explicit instead
+            // of rendering zero-valued program stats as if a program existed.
+            this.hasProgram.set(false);
+            this.currentStreak.set(0);
+            this.successRate.set(0);
+            this.currentLevel.set(1);
+            this.currentXP.set(0);
+            this.programName.set('Program Bekleniyor');
+            this.currentWeek.set(1);
+            this.currentDay.set(1);
+            this.totalWeeks.set(0);
+            this.totalDays.set(0);
+            this.completedExercises.set(0);
+            return;
+          }
+
+          this.hasProgram.set(true);
 
           // Program info
           this.programName.set(progress.templateName || 'Hızlı Okuma Programı');

@@ -68,9 +68,15 @@ export class DailyPlanWidgetComponent implements OnInit {
       next: (progressData: any) => {
         // New students do not have a program yet; the API intentionally
         // returns 204 in that case, which Angular exposes as a null body.
-        // Keep the dashboard in its empty-plan state instead of throwing
-        // while reading currentDay.
-        const currentDay = progressData?.currentDay || 1;
+        // Keep the dashboard in its empty-plan state instead of requesting a
+        // made-up day for a program that does not exist.
+        if (!progressData) {
+          this.todaysPlan.set(null);
+          this.loading.set(false);
+          return;
+        }
+
+        const currentDay = progressData.currentDay || 1;
 
         // Now fetch exercises for the current program day
         this.http.get<any>(`${this.apiUrl}/day/${currentDay}`, {

@@ -31,6 +31,7 @@ public sealed class AssessmentAttempt : AggregateRoot
     public Guid StudentId { get; private set; }
     public AssessmentAttemptPhase Phase { get; private set; }
     public AssessmentAttemptStatus Status { get; private set; }
+    public bool IsSkipped { get; private set; }
     public string FormVersion { get; private set; } = string.Empty;
     public string LevelCatalogVersion { get; private set; } = string.Empty;
     public string? StudyCode { get; private set; }
@@ -82,6 +83,7 @@ public sealed class AssessmentAttempt : AggregateRoot
             StudentId = studentId,
             Phase = phase,
             Status = AssessmentAttemptStatus.InProgress,
+            IsSkipped = false,
             FormVersion = formVersion.Trim(),
             LevelCatalogVersion = levelCatalogVersion.Trim(),
             StudyCode = Normalize(studyCode),
@@ -107,6 +109,19 @@ public sealed class AssessmentAttempt : AggregateRoot
 
         CompletedAt = EnsureUtc(completedAt);
         Status = AssessmentAttemptStatus.Completed;
+        UpdatedAt = CompletedAt;
+    }
+
+    public void CompleteAsSkipped(DateTime completedAt)
+    {
+        if (Status == AssessmentAttemptStatus.Completed)
+            return;
+        if (Status != AssessmentAttemptStatus.InProgress)
+            throw new InvalidOperationException("Only an in-progress assessment attempt can be skipped.");
+
+        CompletedAt = EnsureUtc(completedAt);
+        Status = AssessmentAttemptStatus.Completed;
+        IsSkipped = true;
         UpdatedAt = CompletedAt;
     }
 

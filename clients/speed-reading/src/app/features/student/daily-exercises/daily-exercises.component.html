@@ -180,9 +180,14 @@
         } @else {
           <!-- Empty state -->
           <div class="de-empty">
-            <span class="material-icons de-empty__icon">event_busy</span>
-            <h3 class="de-empty__title">Bugün Hiç Egzersiz Yok</h3>
-            <p class="de-empty__desc">Bugün için planlanmış program görünmüyor. Kendine biraz zaman ayır!</p>
+            <span class="material-icons de-empty__icon">{{ progress() ? 'event_busy' : 'pending_actions' }}</span>
+            @if (progress()) {
+              <h3 class="de-empty__title">Bugün Hiç Egzersiz Yok</h3>
+              <p class="de-empty__desc">Bugün için planlanmış program görünmüyor. Kendine biraz zaman ayır!</p>
+            } @else {
+              <h3 class="de-empty__title">Henüz Aktif Program Yok</h3>
+              <p class="de-empty__desc">Seviye değerlendirmesini tamamladığınızda profilinize uygun program otomatik olarak burada görünecek.</p>
+            }
             <a routerLink="/student/dashboard" class="de-card__btn de-card__btn--primary">
               <span class="material-icons">dashboard</span>
               Dashboard'a Dön

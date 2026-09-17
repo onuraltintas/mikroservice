@@ -40,32 +40,46 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
             .SingleOrDefaultAsync(item => item.Id == templateId && item.IsActive && !item.IsDeleted, cancellationToken)
             ?? throw new KeyNotFoundException("Program not found.");
 
-        var activePrograms = await db.StudentProgramProgresses
-            .Where(item => item.UserId == userId && item.IsActive)
-            .OrderByDescending(item => item.CreatedAt)
-            .ToListAsync(cancellationToken);
-        var previous = activePrograms.FirstOrDefault();
-        var now = DateTime.UtcNow;
+        return await OwnedSpeedReadingProgramAssignmentLock.ExecuteAsync(
+            db,
+            async () =>
+            {
+                await using var transaction = await OwnedSpeedReadingProgramAssignmentLock.AcquireAsync(
+                    db,
+                    userId,
+                    cancellationToken);
 
-        foreach (var activeProgram in activePrograms)
-            activeProgram.Deactivate(userId, now);
+                var activePrograms = await db.StudentProgramProgresses
+                    .Where(item => item.UserId == userId
+                        && item.IsActive
+                        && item.CompletedDate == null)
+                    .OrderByDescending(item => item.CreatedAt)
+                    .ToListAsync(cancellationToken);
+                var previous = activePrograms.FirstOrDefault();
+                var now = DateTime.UtcNow;
 
-        var progress = StudentProgramProgress.Start(
-            Guid.NewGuid(),
-            userId,
-            template,
-            previous?.CurrentStreak ?? 0,
-            previous?.LongestStreak ?? 0,
-            userId,
-            now);
-        db.StudentProgramProgresses.Add(progress);
-        await db.SaveChangesAsync(cancellationToken);
+                foreach (var activeProgram in activePrograms)
+                    activeProgram.Deactivate(userId, now);
 
-        return new StartStudentProgramResult(
-            true,
-            progress.Id,
-            template.Name,
-            $"'{template.Name}' programına başladınız!");
+                var progress = StudentProgramProgress.Start(
+                    Guid.NewGuid(),
+                    userId,
+                    template,
+                    previous?.CurrentStreak ?? 0,
+                    previous?.LongestStreak ?? 0,
+                    userId,
+                    now);
+                db.StudentProgramProgresses.Add(progress);
+                await db.SaveChangesAsync(cancellationToken);
+                if (transaction is not null)
+                    await transaction.CommitAsync(cancellationToken);
+
+                return new StartStudentProgramResult(
+                    true,
+                    progress.Id,
+                    template.Name,
+                    $"'{template.Name}' programına başladınız!");
+            });
     }
 
     private IQueryable<StudentProgramRow> GetRows(Guid userId) =>

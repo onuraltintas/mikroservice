@@ -62,7 +62,7 @@
       <p>{{ result()?.message }}</p>
     </div>
 
-    @if (result()?.recommendedSeriesName) {
+    @if (result()?.recommendedSeriesId && result()?.recommendedProgressId) {
     <div class="auto-assign-box">
       <div class="icon-side">
         <span class="material-icons">auto_awesome</span>
@@ -70,6 +70,16 @@
       <div class="text-side">
         <strong>{{ result()?.recommendedSeriesName }}</strong>
         <span>Programınız otomatik olarak atandı. Hemen başlayabilirsiniz!</span>
+      </div>
+    </div>
+    } @else {
+    <div class="auto-assign-box">
+      <div class="icon-side">
+        <span class="material-icons">pending_actions</span>
+      </div>
+      <div class="text-side">
+        <strong>Program hazırlanıyor</strong>
+        <span>Uygun bir program şablonu bulunduğunda günlük planınız otomatik olarak açılacaktır.</span>
       </div>
     </div>
     }

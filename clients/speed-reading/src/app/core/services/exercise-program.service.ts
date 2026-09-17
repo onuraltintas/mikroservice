@@ -153,10 +153,14 @@ export class ExerciseProgramService {
   /**
    * Öğrencinin mevcut ilerleme durumunu getir
    */
-  getMyProgress(options?: { headers?: any }): Observable<StudentProgressSummary> {
+  getMyProgress(options?: { headers?: any }): Observable<StudentProgressSummary | null> {
     return this.http.get<LegacyProgramProgress[]>(`${this.speedReadingApiUrl}/progress/programs`, options).pipe(
       map(programs => {
-        const program = programs[0];
+        const program = programs?.[0];
+        if (!program) {
+          return null;
+        }
+
         return {
           currentWeek: program?.currentWeek ?? 0,
           currentDay: program?.currentDay ?? 0,

@@ -1347,6 +1347,10 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.ToTable("student_program_progress");
             entity.Property(item => item.AverageSuccessRate).HasPrecision(5, 2);
             entity.HasIndex(item => new { item.UserId, item.IsActive, item.AssignedDate });
+            entity.HasIndex(item => item.UserId)
+                .IsUnique()
+                .HasDatabaseName("ux_student_program_progress_active_user")
+                .HasFilter("\"IsActive\" = TRUE AND \"CompletedDate\" IS NULL");
             entity.HasIndex(item => item.ProgramTemplateId);
             entity.HasOne<ProgramTemplate>()
                 .WithMany()
@@ -1410,6 +1414,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.StudentId).HasColumnName("student_id");
             entity.Property(item => item.Phase).HasColumnName("phase");
             entity.Property(item => item.Status).HasColumnName("status");
+            entity.Property(item => item.IsSkipped).HasColumnName("is_skipped");
             entity.Property(item => item.FormVersion).HasMaxLength(100).IsRequired();
             entity.Property(item => item.FormVersion).HasColumnName("form_version");
             entity.Property(item => item.LevelCatalogVersion).HasMaxLength(100).IsRequired();

@@ -375,9 +375,101 @@ internal sealed class OwnedSpeedReadingAssessment(
         Guid userId,
         CancellationToken cancellationToken)
     {
-        var hasCompleted = await db.ExerciseSessionResults
+        var baselineAttempts = await db.AssessmentAttempts
             .AsNoTracking()
-            .AnyAsync(item => item.StudentId == userId && item.IsAssessmentMode && item.IsMeasured, cancellationToken);
+            .Where(item => item.StudentId == userId
+                && item.Phase == AssessmentAttemptPhase.Baseline
+                && item.Status == AssessmentAttemptStatus.Completed)
+            .Select(item => new { item.Id, item.IsSkipped })
+            .ToListAsync(cancellationToken);
+
+        var completedBaselineAttemptIds = baselineAttempts
+            .Where(item => item.IsSkipped)
+            .Select(item => item.Id)
+            .ToHashSet();
+        var baselineAttemptIds = baselineAttempts.Select(item => item.Id).ToArray();
+        var measuredRows = await (
+            from result in db.ExerciseSessionResults.AsNoTracking()
+            join formItem in db.AssessmentAttemptExercises.AsNoTracking()
+                on result.ExerciseId equals formItem.ExerciseId
+            where result.StudentId == userId
+                && result.IsAssessmentMode
+                && result.IsMeasured
+                && result.AssessmentAttemptId.HasValue
+                && baselineAttemptIds.Contains(result.AssessmentAttemptId.Value)
+                && formItem.AssessmentAttemptId == result.AssessmentAttemptId.Value
+            select new
+            {
+                AttemptId = result.AssessmentAttemptId!.Value,
+                result.ExerciseId,
+                result.RawWpm,
+                result.Score,
+                formItem.Role
+            })
+            .ToListAsync(cancellationToken);
+        var measuredCounts = measuredRows
+            .Where(item => IsValidAssessmentMeasurement(item.RawWpm, item.Score, item.Role))
+            .GroupBy(item => item.AttemptId)
+            .Select(group => new
+            {
+                AttemptId = group.Key,
+                ExerciseCount = group.Select(item => item.ExerciseId).Distinct().Count()
+            })
+            .ToList();
+
+        foreach (var measuredCount in measuredCounts)
+        {
+            if (measuredCount.ExerciseCount >= ServerAssessmentExerciseCount)
+                completedBaselineAttemptIds.Add(measuredCount.AttemptId);
+        }
+
+        // Keep compatibility with the pre-attempt assessment flow. A single
+        // measured result is not enough to hide the assessment onboarding.
+        var hasCompleted = completedBaselineAttemptIds.Count > 0;
+        if (!hasCompleted)
+        {
+            var legacyExerciseCount = await db.ExerciseSessionResults
+                .AsNoTracking()
+                .Where(item => item.StudentId == userId
+                    && item.IsAssessmentMode
+                    && item.IsMeasured
+                    && item.RawWpm > 0
+                    && item.AssessmentAttemptId == null)
+                .Select(item => item.ExerciseId)
+                .Distinct()
+                .CountAsync(cancellationToken);
+            hasCompleted = legacyExerciseCount >= ServerAssessmentExerciseCount;
+        }
+
+        // Repair students who completed the assessment before automatic
+        // assignment was introduced. Only students without any program row
+        // are backfilled; completed or intentionally inactive programs are
+        // left untouched.
+        if (hasCompleted
+            && !await db.StudentProgramProgresses
+                .AsNoTracking()
+                .AnyAsync(item => item.UserId == userId, cancellationToken))
+        {
+            var profile = await db.UserProfiles
+                .AsNoTracking()
+                .SingleOrDefaultAsync(item => item.UserId == userId && item.IsActive, cancellationToken);
+            var template = profile is null
+                ? null
+                : await FindBaselineTemplateAsync(
+                    profile.AgeGroupConfigurationId,
+                    profile.TargetComprehension,
+                    cancellationToken);
+            if (template is not null)
+            {
+                await EnsureBaselineProgramAsync(
+                    userId,
+                    attempt: null,
+                    template,
+                    DateTime.UtcNow,
+                    cancellationToken);
+            }
+        }
+
         return new AssessmentStatusSummary(hasCompleted, null);
     }
 
@@ -407,7 +499,7 @@ internal sealed class OwnedSpeedReadingAssessment(
             .OrderByDescending(item => item.CreatedAt);
         var allResults = await resultsQuery.ToListAsync(cancellationToken);
         var measuredResults = allResults
-            .Where(item => item.IsMeasured && item.RawWpm > 0)
+            .Where(item => item.IsMeasured)
             .GroupBy(item => item.ExerciseId)
             .Select(group => group.OrderByDescending(item => item.CreatedAt).First())
             .ToList();
@@ -419,9 +511,11 @@ internal sealed class OwnedSpeedReadingAssessment(
                 .Select(item => item.ExerciseId)
                 .Distinct()
                 .ToListAsync(cancellationToken);
+        var expectedTypeNames = new Dictionary<Guid, string>();
+        var attemptRoles = new Dictionary<Guid, string>();
         if (attempt is not null)
         {
-            var expectedTypeNames = await (
+            expectedTypeNames = await (
                 from exercise in db.Exercises.AsNoTracking()
                 join exerciseType in db.ExerciseTypes.AsNoTracking()
                     on exercise.ExerciseTypeId equals exerciseType.Id into exerciseTypes
@@ -429,24 +523,40 @@ internal sealed class OwnedSpeedReadingAssessment(
                 where expectedExerciseIds.Contains(exercise.Id)
                 select new { exercise.Id, TypeName = exerciseType == null ? string.Empty : exerciseType.Name })
                 .ToDictionaryAsync(item => item.Id, item => item.TypeName, cancellationToken);
+            attemptRoles = await db.AssessmentAttemptExercises
+                .AsNoTracking()
+                .Where(item => item.AssessmentAttemptId == attempt.Id)
+                .ToDictionaryAsync(item => item.ExerciseId, item => item.Role, cancellationToken);
             var serverMeasuredExerciseIds = expectedExerciseIds
                 .Where(item => expectedTypeNames.TryGetValue(item, out var typeName)
                     && IsServerMeasuredExerciseType(typeName))
                 .ToHashSet();
             if (expectedExerciseIds.Count != ServerAssessmentExerciseCount
                 || serverMeasuredExerciseIds.Count == 0
-                || serverMeasuredExerciseIds.Any(item => !measuredResults.Any(result => result.ExerciseId == item)))
+                || serverMeasuredExerciseIds.Any(item =>
+                    !measuredResults.Any(result => result.ExerciseId == item
+                        && IsValidAssessmentMeasurement(
+                            result.RawWpm,
+                            result.Score,
+                            attemptRoles.GetValueOrDefault(item),
+                            expectedTypeNames.GetValueOrDefault(item)))))
             {
                 throw new BusinessRuleException(
                     "SpeedReading.Assessment.Incomplete",
                     "All server-measurable assessment exercises must be completed before placement.");
             }
         }
-        else if (measuredResults.Select(item => item.ExerciseId).Distinct().Count() < ServerAssessmentExerciseCount)
+        else
         {
-            throw new BusinessRuleException(
-                "SpeedReading.Assessment.Incomplete",
-                "All assessment exercises must be completed with a server-measured result before placement.");
+            measuredResults = measuredResults
+                .Where(item => item.RawWpm > 0)
+                .ToList();
+            if (measuredResults.Select(item => item.ExerciseId).Distinct().Count() < ServerAssessmentExerciseCount)
+            {
+                throw new BusinessRuleException(
+                    "SpeedReading.Assessment.Incomplete",
+                    "All assessment exercises must be completed with a server-measured result before placement.");
+            }
         }
 
         var results = attempt is null
@@ -466,12 +576,6 @@ internal sealed class OwnedSpeedReadingAssessment(
             where exerciseIds.Contains(exercise.Id)
             select new { exercise.Id, TypeName = exerciseType == null ? string.Empty : exerciseType.Name })
             .ToDictionaryAsync(item => item.Id, item => item.TypeName, cancellationToken);
-        var attemptRoles = attempt is null
-            ? new Dictionary<Guid, string>()
-            : await db.AssessmentAttemptExercises
-                .AsNoTracking()
-                .Where(item => item.AssessmentAttemptId == attempt.Id)
-                .ToDictionaryAsync(item => item.ExerciseId, item => item.Role, cancellationToken);
         var resultRoles = results.Select(item =>
         {
             var typeName = typeNames.TryGetValue(item.ExerciseId, out var value) ? value : string.Empty;
@@ -529,39 +633,31 @@ internal sealed class OwnedSpeedReadingAssessment(
         var profile = await GetOrCreateProfileAsync(userId, cancellationToken);
         var targetWpm = (int)(averageWpm * 1.2m);
         var targetComprehension = Math.Max(70m, averageComprehension);
-        profile.ApplyAssessment(level, targetWpm, targetComprehension, userId, DateTime.UtcNow);
+        var now = DateTime.UtcNow;
+        profile.ApplyAssessment(level, targetWpm, targetComprehension, userId, now);
         var recommendationAgeGroupId = attempt?.AgeGroupConfigurationId ?? profile.AgeGroupConfigurationId;
+        var template = await FindBaselineTemplateAsync(
+            recommendationAgeGroupId,
+            averageComprehension,
+            cancellationToken);
 
-        var template = await db.ProgramTemplates
-            .AsNoTracking()
-            .Where(item => item.IsActive && !item.IsDeleted
-                && !item.IsAssessment
-                && (!recommendationAgeGroupId.HasValue
-                    || item.TargetAgeGroupConfigurationId == recommendationAgeGroupId.Value)
-                && item.MinAssessmentScore <= (int)averageComprehension
-                && item.MaxAssessmentScore >= (int)averageComprehension)
-            .OrderBy(item => recommendationAgeGroupId.HasValue
-                && item.TargetAgeGroupConfigurationId == recommendationAgeGroupId.Value
-                    ? 0
-                    : 1)
-            .ThenBy(item => item.MinAssessmentScore)
-            .FirstOrDefaultAsync(cancellationToken)
-            ?? await db.ProgramTemplates
-                .AsNoTracking()
-                .Where(item => item.IsActive
-                    && !item.IsDeleted
-                    && !item.IsAssessment
-                    && (!recommendationAgeGroupId.HasValue
-                        || item.TargetAgeGroupConfigurationId == recommendationAgeGroupId.Value))
-                .OrderBy(item => item.TargetAgeGroupConfigurationId == recommendationAgeGroupId)
-                .ThenBy(item => item.MinAssessmentScore)
-                .FirstOrDefaultAsync(cancellationToken);
+        // A baseline assessment produces the recommendation and starts that
+        // program for the student when no active program exists yet. Without
+        // this link the dashboard has a valid assessment result but no daily
+        // plan to load. Profile, attempt completion and assignment are saved
+        // in one transaction so a retry cannot leave a half-completed state.
+        var assignment = await SaveAssessmentPlacementAsync(
+            userId,
+            attempt,
+            template,
+            now,
+            cancellationToken);
 
-        await db.SaveChangesAsync(cancellationToken);
-
-        attempt?.Complete(DateTime.UtcNow);
-        if (attempt is not null)
-            await db.SaveChangesAsync(cancellationToken);
+        var recommendedSeriesId = assignment?.TemplateId ?? template?.Id;
+        var recommendedProgressId = assignment?.ProgressId;
+        var recommendedSeriesName = assignment?.TemplateName
+            ?? template?.Name
+            ?? "Başlangıç Programı";
 
         return new AssessmentResultSummary(
             level,
@@ -576,9 +672,9 @@ internal sealed class OwnedSpeedReadingAssessment(
             (int)Math.Round(focusScore),
             profile.TargetWPM,
             profile.TargetComprehension,
-            template?.Id,
-            null,
-            template?.Name ?? "Başlangıç Programı",
+            recommendedSeriesId,
+            recommendedProgressId,
+            recommendedSeriesName,
             $"{levelName} okuyucu olarak tespit edildiniz. Ortalama {(int)averageWpm} kelime/dk hızınız ve %{(int)averageComprehension} kavrama oranınız var.");
     }
 
@@ -586,38 +682,235 @@ internal sealed class OwnedSpeedReadingAssessment(
         Guid userId,
         CancellationToken cancellationToken)
     {
-        var profile = await GetOrCreateProfileAsync(userId, cancellationToken);
-        var now = DateTime.UtcNow;
-        var activeBaselineAttempt = await db.AssessmentAttempts
-            .SingleOrDefaultAsync(item => item.StudentId == userId
-                && item.Phase == AssessmentAttemptPhase.Baseline
-                && item.Status == AssessmentAttemptStatus.InProgress,
-                cancellationToken);
-        activeBaselineAttempt?.Abandon(now);
-        var targetWpm = 150;
-        var targetComprehension = 70m;
-        if (profile.AgeGroupConfigurationId.HasValue)
-        {
-            var ageGroup = await db.AgeGroupConfigurations
-                .AsNoTracking()
-                .SingleOrDefaultAsync(item => item.Id == profile.AgeGroupConfigurationId.Value
-                    && item.IsActive
-                    && !item.IsDeleted, cancellationToken);
-            if (ageGroup is not null)
+        return await OwnedSpeedReadingProgramAssignmentLock.ExecuteAsync(
+            db,
+            async () =>
             {
-                targetWpm = ageGroup.RecommendedWPM;
-                targetComprehension = ageGroup.RecommendedComprehension;
-            }
+                await using var transaction = await OwnedSpeedReadingProgramAssignmentLock.AcquireAsync(
+                    db,
+                    userId,
+                    cancellationToken);
+
+                var profile = await GetOrCreateProfileAsync(userId, cancellationToken);
+                var now = DateTime.UtcNow;
+                var beginnerTemplate = await FindBaselineTemplateAsync(
+                    profile.AgeGroupConfigurationId,
+                    profile.TargetComprehension,
+                    cancellationToken);
+                if (beginnerTemplate is null)
+                {
+                    throw new BusinessRuleException(
+                        "SpeedReading.ProgramTemplateUnavailable",
+                        "Profilinize uygun aktif bir eğitim programı bulunamadı. Lütfen yönetici programı etkinleştirdikten sonra tekrar deneyin.");
+                }
+
+                var completedSkip = await db.AssessmentAttempts
+                    .Where(item => item.StudentId == userId
+                        && item.Phase == AssessmentAttemptPhase.Baseline
+                        && item.Status == AssessmentAttemptStatus.Completed
+                        && item.IsSkipped)
+                    .OrderByDescending(item => item.CompletedAt)
+                    .FirstOrDefaultAsync(cancellationToken);
+                var activeBaselineAttempt = await db.AssessmentAttempts
+                    .Where(item => item.StudentId == userId
+                        && item.Phase == AssessmentAttemptPhase.Baseline
+                        && item.Status == AssessmentAttemptStatus.InProgress)
+                    .OrderByDescending(item => item.StartedAt)
+                    .FirstOrDefaultAsync(cancellationToken);
+                activeBaselineAttempt?.Abandon(now);
+                var targetWpm = 150;
+                var targetComprehension = 70m;
+                if (profile.AgeGroupConfigurationId.HasValue)
+                {
+                    var ageGroup = await db.AgeGroupConfigurations
+                        .AsNoTracking()
+                        .SingleOrDefaultAsync(item => item.Id == profile.AgeGroupConfigurationId.Value
+                            && item.IsActive
+                            && !item.IsDeleted, cancellationToken);
+                    if (ageGroup is not null)
+                    {
+                        targetWpm = ageGroup.RecommendedWPM;
+                        targetComprehension = ageGroup.RecommendedComprehension;
+                    }
+                }
+
+                profile.SkipAssessment(targetWpm, targetComprehension, userId, now);
+                if (completedSkip is null)
+                {
+                    var activeLevelCatalog = await levelCatalog.GetActiveAsync(cancellationToken);
+                    var skipAttempt = AssessmentAttempt.Start(
+                        Guid.NewGuid(),
+                        userId,
+                        AssessmentAttemptPhase.Baseline,
+                        "tr-baseline-skip-v1",
+                        "tr-TR",
+                        profile.AgeGroupConfigurationId,
+                        ServerAssessmentExerciseCount,
+                        now,
+                        userId.ToString(),
+                        activeLevelCatalog.Version);
+                    skipAttempt.CompleteAsSkipped(now);
+                    db.AssessmentAttempts.Add(skipAttempt);
+                }
+
+                await EnsureBaselineProgramCoreAsync(
+                    userId,
+                    beginnerTemplate,
+                    now,
+                    cancellationToken);
+                await db.SaveChangesAsync(cancellationToken);
+                if (transaction is not null)
+                    await transaction.CommitAsync(cancellationToken);
+                return new AssessmentSkipResult(
+                    1,
+                    profile.TargetWPM,
+                    profile.TargetComprehension,
+                    "Değerlendirme atlandı. Başlangıç seviyesi atandı; ilk üç ölçülmüş egzersizden sonra planınız performansınıza göre güncellenecek.");
+            });
+    }
+
+    private async Task<BaselineProgramAssignment?> SaveAssessmentPlacementAsync(
+        Guid userId,
+        AssessmentAttempt? attempt,
+        ProgramTemplate? template,
+        DateTime completedAt,
+        CancellationToken cancellationToken)
+    {
+        return await OwnedSpeedReadingProgramAssignmentLock.ExecuteAsync(
+            db,
+            async () =>
+            {
+                await using var transaction = await OwnedSpeedReadingProgramAssignmentLock.AcquireAsync(
+                    db,
+                    userId,
+                    cancellationToken);
+                BaselineProgramAssignment? assignment = null;
+                if (template is not null
+                    && (attempt is null || attempt.Phase == AssessmentAttemptPhase.Baseline))
+                {
+                    assignment = await EnsureBaselineProgramCoreAsync(
+                        userId,
+                        template,
+                        completedAt,
+                        cancellationToken);
+                }
+
+                attempt?.Complete(completedAt);
+                await db.SaveChangesAsync(cancellationToken);
+                if (transaction is not null)
+                    await transaction.CommitAsync(cancellationToken);
+                return assignment;
+            });
+    }
+
+    private async Task<BaselineProgramAssignment?> EnsureBaselineProgramAsync(
+        Guid userId,
+        AssessmentAttempt? attempt,
+        ProgramTemplate? template,
+        DateTime assignedAt,
+        CancellationToken cancellationToken)
+    {
+        if (template is null
+            || (attempt is not null && attempt.Phase != AssessmentAttemptPhase.Baseline))
+        {
+            return null;
         }
 
-        profile.SkipAssessment(targetWpm, targetComprehension, userId, now);
-        await db.SaveChangesAsync(cancellationToken);
-        return new AssessmentSkipResult(
-            1,
-            profile.TargetWPM,
-            profile.TargetComprehension,
-            "Değerlendirme atlandı. Başlangıç seviyesi atandı; ilk üç ölçülmüş egzersizden sonra planınız performansınıza göre güncellenecek.");
+        return await OwnedSpeedReadingProgramAssignmentLock.ExecuteAsync(
+            db,
+            async () =>
+            {
+                await using var transaction = await OwnedSpeedReadingProgramAssignmentLock.AcquireAsync(
+                    db,
+                    userId,
+                    cancellationToken);
+                var assignment = await EnsureBaselineProgramCoreAsync(
+                    userId,
+                    template,
+                    assignedAt,
+                    cancellationToken);
+                await db.SaveChangesAsync(cancellationToken);
+                if (transaction is not null)
+                    await transaction.CommitAsync(cancellationToken);
+                return assignment;
+            });
     }
+
+    private async Task<BaselineProgramAssignment> EnsureBaselineProgramCoreAsync(
+        Guid userId,
+        ProgramTemplate template,
+        DateTime assignedAt,
+        CancellationToken cancellationToken)
+    {
+        var activeProgress = await db.StudentProgramProgresses
+            .Where(item => item.UserId == userId
+                && item.IsActive
+                && item.CompletedDate == null)
+            .OrderByDescending(item => item.AssignedDate)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (activeProgress is not null)
+        {
+            var activeTemplateName = await db.ProgramTemplates
+                .AsNoTracking()
+                .Where(item => item.Id == activeProgress.ProgramTemplateId)
+                .Select(item => item.Name)
+                .SingleOrDefaultAsync(cancellationToken);
+            return new BaselineProgramAssignment(
+                activeProgress.Id,
+                activeProgress.ProgramTemplateId,
+                activeTemplateName ?? template.Name);
+        }
+
+        var previousProgress = await db.StudentProgramProgresses
+            .AsNoTracking()
+            .Where(item => item.UserId == userId)
+            .OrderByDescending(item => item.AssignedDate)
+            .FirstOrDefaultAsync(cancellationToken);
+        var progress = StudentProgramProgress.Start(
+            Guid.NewGuid(),
+            userId,
+            template,
+            previousProgress?.CurrentStreak ?? 0,
+            previousProgress?.LongestStreak ?? 0,
+            userId,
+            assignedAt);
+        db.StudentProgramProgresses.Add(progress);
+        return new BaselineProgramAssignment(progress.Id, template.Id, template.Name);
+    }
+
+    private async Task<ProgramTemplate?> FindBaselineTemplateAsync(
+        Guid? ageGroupConfigurationId,
+        decimal assessmentScore,
+        CancellationToken cancellationToken)
+    {
+        // Program templates are age-targeted. Do not silently assign another
+        // age group's content when the student's profile has no age group.
+        if (!ageGroupConfigurationId.HasValue)
+            return null;
+
+        var templates = db.ProgramTemplates
+            .AsNoTracking()
+            .Where(item => item.IsActive
+                && !item.IsDeleted
+                && !item.IsAssessment
+                && item.TargetAgeGroupConfigurationId == ageGroupConfigurationId.Value);
+
+        return await templates
+            .Where(item => item.MinAssessmentScore <= (int)assessmentScore
+                && item.MaxAssessmentScore >= (int)assessmentScore)
+            .OrderBy(item => item.MinAssessmentScore)
+            .ThenBy(item => item.DisplayOrder)
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? await templates
+                .OrderBy(item => item.DisplayOrder)
+                .ThenBy(item => item.MinAssessmentScore)
+                .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    private sealed record BaselineProgramAssignment(
+        Guid ProgressId,
+        Guid TemplateId,
+        string TemplateName);
 
     public async Task<IReadOnlyList<AssessmentTemplateSummary>> GetTemplatesAsync(
         CancellationToken cancellationToken)
@@ -1207,6 +1500,41 @@ internal sealed class OwnedSpeedReadingAssessment(
 
     private static bool IsServerMeasuredExerciseType(string typeName) =>
         SpeedReadingMeasurementCapabilities.IsAssessmentEligible(typeName);
+
+    private static bool IsValidAssessmentMeasurement(
+        decimal rawWpm,
+        decimal score,
+        string? role,
+        string? typeName = null)
+    {
+        if (RequiresReadingSpeed(role, typeName))
+            return rawWpm > 0;
+
+        // Interaction exercises are measured by their validated stimulus and
+        // response flow. Their RawWpm is intentionally zero because no reading
+        // interval exists; IsMeasured has already been set only after that
+        // server-side validation succeeds.
+        return score is >= 0 and <= 100;
+    }
+
+    private static bool RequiresReadingSpeed(string? role, string? typeName)
+    {
+        if (IsType(role ?? string.Empty, "comprehension", "reading"))
+            return true;
+
+        return IsType(typeName ?? string.Empty,
+            "speedreading",
+            "rsvp",
+            "comprehension",
+            "freereading",
+            "chunking",
+            "textfading",
+            "skimming",
+            "scanning",
+            "regressionreduction",
+            "subvocalizationreduction",
+            "adaptivefluency");
+    }
 
     private static string LevelName(int level) => SpeedReadingLevelRules.GetDisplayName(level);
 

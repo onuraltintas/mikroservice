@@ -48,8 +48,31 @@ public sealed class SpeedReadingAssessmentAttemptTests
         attempt.Language.Should().Be("tr-TR");
         attempt.ExpectedExerciseCount.Should().Be(3);
         attempt.Status.Should().Be(AssessmentAttemptStatus.InProgress);
+        attempt.IsSkipped.Should().BeFalse();
         attempt.StartedAt.Should().Be(startedAt);
         attempt.CompletedAt.Should().BeNull();
+    }
+
+    [Fact]
+    public void Complete_as_skipped_persists_a_completed_skipped_attempt()
+    {
+        var attempt = AssessmentAttempt.Start(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            AssessmentAttemptPhase.Baseline,
+            "tr-baseline-skip-v1",
+            "tr-TR",
+            ageGroupConfigurationId: Guid.NewGuid(),
+            expectedExerciseCount: 3,
+            DateTime.UtcNow.AddMinutes(-1),
+            null);
+        var completedAt = DateTime.UtcNow;
+
+        attempt.CompleteAsSkipped(completedAt);
+
+        attempt.Status.Should().Be(AssessmentAttemptStatus.Completed);
+        attempt.IsSkipped.Should().BeTrue();
+        attempt.CompletedAt.Should().Be(completedAt);
     }
 
     [Theory]
@@ -150,7 +173,15 @@ public sealed class SpeedReadingAssessmentAttemptTests
         context.Database.GetMigrations()
             .Should().Contain("20260911100000_AddVersionedAssessmentLevelCatalogs");
         context.Database.GetMigrations()
-            .Should().Contain("20260911110000_AddAssessmentStudyEnrollments");
+            .Should().Contain("20260911110000_AddAssessmentStudyEnrollments")
+            .And.Contain("20260917100000_AddAssessmentSkipAndActiveProgramGuard");
+
+        var progressEntity = context.Model.FindEntityType(typeof(StudentProgramProgress));
+        progressEntity.Should().NotBeNull();
+        progressEntity!.GetIndexes()
+            .Should().Contain(index => index.IsUnique
+                && index.GetDatabaseName() == "ux_student_program_progress_active_user"
+                && index.GetFilter() == "\"IsActive\" = TRUE AND \"CompletedDate\" IS NULL");
     }
 
     [Fact]
