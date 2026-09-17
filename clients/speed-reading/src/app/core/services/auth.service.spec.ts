@@ -84,6 +84,38 @@ describe('AuthService', () => {
     });
   });
 
+  it('hydrates a student profile before the login observable completes', () => {
+    const accessToken = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJzdHVkZW50Iiwicm9sZSI6IlN0dWRlbnQiLCJleHAiOjQxMDI0NDQ4MDB9.';
+    let response: AuthResponse | undefined;
+
+    service.login({ email: 'student@example.com', password: 'Password1!', rememberMe: true })
+      .subscribe(value => response = value);
+
+    const loginRequest = http.expectOne('/api/auth/login');
+    loginRequest.flush({ accessToken, roles: [] });
+
+    const profileRequest = http.expectOne('/api/v1/users/me');
+    expect(profileRequest.request.method).toBe('GET');
+    expect(profileRequest.request.headers.get('X-Skip-Error-Toast')).toBe('true');
+    profileRequest.flush({
+      userId: 'student',
+      email: 'student@example.com',
+      firstName: 'Test',
+      lastName: 'Student',
+      roles: ['Student'],
+      isActive: true,
+      emailConfirmed: true,
+      studentDetails: {
+        birthDate: '2000-01-01T00:00:00.000Z',
+        learningStyle: 'Visual'
+      }
+    });
+
+    expect(response?.dateOfBirth).toBe('2000-01-01T00:00:00.000Z');
+    expect(response?.learningStyle).toBe('Visual');
+    expect(service.hasCompletedProfile()).toBeTrue();
+  });
+
   it('registers a student through the supported endpoint without creating a session', () => {
     service.register({
       firstName: 'Ada',

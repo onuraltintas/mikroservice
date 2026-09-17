@@ -60,6 +60,25 @@ describe('UsersService', () => {
     request.flush(null);
   });
 
+  it('updates the authenticated user profile through the self-service endpoint', () => {
+    service.updateMyProfile({
+      firstName: 'Updated',
+      lastName: 'Student',
+      phoneNumber: '+905551112233',
+      birthDate: '2000-01-01T00:00:00.000Z'
+    }).subscribe();
+
+    const request = http.expectOne('/api/v1/users/me');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({
+      firstName: 'Updated',
+      lastName: 'Student',
+      phoneNumber: '+905551112233',
+      birthDate: '2000-01-01T00:00:00.000Z'
+    });
+    request.flush(null);
+  });
+
   it('sends admin user creation using the identity provisioning contract', () => {
     service.createUser({
       email: 'new-student@example.com',

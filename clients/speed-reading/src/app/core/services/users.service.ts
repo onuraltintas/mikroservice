@@ -14,6 +14,7 @@ import {
   PagedResult,
   RoleDto,
   UpdateUserProfileRequest,
+  UpdateCurrentUserProfileRequest,
   UserSessionDto
 } from '../models/user.model';
 
@@ -116,6 +117,10 @@ export class UsersService {
     return this.http.put<void>(`${this.API_URL}/me`, {
       shareProgressWithTeachers: enabled
     });
+  }
+
+  updateMyProfile(request: UpdateCurrentUserProfileRequest): Observable<void> {
+    return this.http.put<void>(`${this.API_URL}/me`, request);
   }
 
   /**

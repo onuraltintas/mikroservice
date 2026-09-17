@@ -883,7 +883,10 @@ internal sealed class OwnedSpeedReadingAssessment(
                         || question.CorrectAnswer == "D"))))
             .ToListAsync(cancellationToken);
 
-        var readingTextIds = readingTexts.Select(item => item.Id).ToArray();
+        // Keep the local collection as a List so EF Core translates Contains to
+        // an SQL IN predicate instead of trying to evaluate a ReadOnlySpan<Guid>
+        // expression at runtime (which causes a 500 on .NET 9).
+        var readingTextIds = readingTexts.Select(item => item.Id).ToList();
         var questions = await db.ReadingQuestions
             .AsNoTracking()
             .Where(item => readingTextIds.Contains(item.ReadingTextId)

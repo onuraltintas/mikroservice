@@ -146,6 +146,18 @@ export interface UpdateUserProfileRequest {
   studentLearningStyle?: string | null;
 }
 
+export interface UpdateCurrentUserProfileRequest {
+  firstName?: string | null;
+  lastName?: string | null;
+  phoneNumber?: string | null;
+  birthDate?: string | null;
+  learningStyle?: string | null;
+  gradeLevel?: number | null;
+  bio?: string | null;
+  avatarUrl?: string | null;
+  shareProgressWithTeachers?: boolean | null;
+}
+
 export interface UserSessionDto {
   id: string;
   createdAt: string;

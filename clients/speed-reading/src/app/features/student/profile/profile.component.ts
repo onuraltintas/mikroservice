@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { AuthService } from '../../../core/services/auth.service';
 import { UsersService } from '../../../core/services/users.service';
 import { ToasterService } from '../../../core/services/toaster.service';
-import { UserDetailDto, UpdateUserRequest } from '../../../core/models/user.model';
+import { UserDto, UpdateCurrentUserProfileRequest } from '../../../core/models/user.model';
 
 // Register Turkish locale data
 import localeTr from '@angular/common/locales/tr';
@@ -30,7 +30,7 @@ export class ProfileComponent implements OnInit {
     profileForm: FormGroup;
     loading = signal(true);
     saving = signal(false);
-    currentUser = signal<UserDetailDto | null>(null);
+    currentUser = signal<UserDto | null>(null);
 
     constructor() {
         this.profileForm = this.fb.group({
@@ -54,7 +54,7 @@ export class ProfileComponent implements OnInit {
             return;
         }
 
-        this.usersService.getUserById(userId).subscribe({
+        this.usersService.getMyProfile().subscribe({
             next: (user) => {
                 this.currentUser.set(user);
                 this.profileForm.patchValue({
@@ -83,24 +83,22 @@ export class ProfileComponent implements OnInit {
         this.saving.set(true);
 
         const formValue = this.profileForm.getRawValue();
-        const updateRequest: UpdateUserRequest = {
+        const updateRequest: UpdateCurrentUserProfileRequest = {
             firstName: formValue.firstName,
             lastName: formValue.lastName,
             phoneNumber: formValue.phoneNumber,
-            dateOfBirth: formValue.dateOfBirth ? new Date(formValue.dateOfBirth).toISOString() : undefined,
-            email: formValue.email, // Email is usually not editable directly or requires special handling
-            isActive: true, // Maintain active status
-            roles: this.currentUser()?.roles || [] // Maintain roles
+            birthDate: formValue.dateOfBirth ? new Date(formValue.dateOfBirth).toISOString() : null
         };
 
-        this.usersService.updateUser(userId, updateRequest).subscribe({
-            next: (updatedUser) => {
+        this.usersService.updateMyProfile(updateRequest).subscribe({
+            next: () => {
                 this.toaster.success('Profil başarıyla güncellendi');
                 this.saving.set(false);
                 // Update local auth state if needed
                 this.authService.updateUser({
-                    firstName: updatedUser.firstName,
-                    lastName: updatedUser.lastName
+                    firstName: formValue.firstName,
+                    lastName: formValue.lastName,
+                    dateOfBirth: formValue.dateOfBirth
                 });
             },
             error: (err) => {

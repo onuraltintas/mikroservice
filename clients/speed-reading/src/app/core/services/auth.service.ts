@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, finalize, firstValueFrom, map, of, shareReplay, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, finalize, firstValueFrom, map, of, shareReplay, switchMap, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import {
   AuthResponse,
@@ -111,11 +111,7 @@ export class AuthService {
   login(credentials: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.AUTH_URL}/login`, credentials, { withCredentials: true }).pipe(
       map(response => this.normalizeAuthResponse(response)),
-      tap(response => {
-        if (!response.requiresMfa) {
-          this.setUser(response);
-        }
-      })
+      switchMap(response => this.persistAndHydrateProfile(response))
     );
   }
 
@@ -193,8 +189,9 @@ export class AuthService {
       headers: { 'X-Skip-Error-Toast': 'true' }
     }).pipe(
       map(response => this.normalizeAuthResponse(response)),
-      tap(response => {
+      switchMap(response => {
         this.setUser(response);
+        return this.hydrateUserProfile(response);
       }),
       finalize(() => {
         this.refreshInFlight$ = null;
@@ -217,11 +214,7 @@ export class AuthService {
     }
     return this.http.post<AuthResponse>(`${this.AUTH_URL}/google-login`, payload, { withCredentials: true }).pipe(
       map(response => this.normalizeAuthResponse(response)),
-      tap(response => {
-        if (!response.requiresMfa) {
-          this.setUser(response);
-        }
-      })
+      switchMap(response => this.persistAndHydrateProfile(response))
     );
   }
 
@@ -304,6 +297,93 @@ export class AuthService {
     this.currentUserSubject.next(response);
     // Load user settings after successful authentication
     this.settingsService.loadSettings().subscribe();
+  }
+
+  /**
+   * Auth endpoints intentionally return tokens only. Persist the token first so
+   * the authenticated profile request can run, then merge the student's stored
+   * profile into the in-memory session before routing decisions are made.
+   */
+  private persistAndHydrateProfile(response: AuthResponse): Observable<AuthResponse> {
+    if (response.requiresMfa || !response.token) {
+      return of(response);
+    }
+
+    this.setUser(response);
+    return this.hydrateUserProfile(response);
+  }
+
+  private hydrateUserProfile(response: AuthResponse): Observable<AuthResponse> {
+    if (!response.token || !response.id || !this.shouldHydrateProfile(response)) {
+      return of(response);
+    }
+
+    return this.http.get<any>(`${this.API_URL}/v1/users/me`, {
+      headers: { 'X-Skip-Error-Toast': 'true' }
+    }).pipe(
+      map(profileResponse => this.mergeProfileIntoAuthResponse(
+        response,
+        profileResponse?.data ?? profileResponse)),
+      tap(enrichedResponse => this.setUser(enrichedResponse)),
+      catchError(error => {
+        // Authentication must remain usable if the optional profile read is
+        // temporarily unavailable; the next refresh will retry it.
+        console.warn('Authenticated profile could not be hydrated:', error);
+        return of(response);
+      })
+    );
+  }
+
+  private shouldHydrateProfile(response: AuthResponse): boolean {
+    const roles = response.roles ?? [];
+    return roles.some(role => [
+      'Student',
+      'Teacher',
+      'InstitutionAdmin',
+      'InstitutionOwner',
+      'Coach'
+    ].includes(role));
+  }
+
+  private mergeProfileIntoAuthResponse(response: AuthResponse, profile: any): AuthResponse {
+    if (!profile || typeof profile !== 'object') {
+      return response;
+    }
+
+    const studentDetails = profile.studentDetails ?? profile.StudentDetails;
+    const teacherDetails = profile.teacherDetails ?? profile.TeacherDetails;
+    const birthDate = studentDetails?.birthDate
+      ?? studentDetails?.BirthDate
+      ?? profile.birthDate
+      ?? profile.BirthDate
+      ?? profile.dateOfBirth
+      ?? profile.DateOfBirth;
+    const learningStyle = studentDetails?.learningStyle
+      ?? studentDetails?.LearningStyle
+      ?? profile.learningStyle
+      ?? profile.LearningStyle;
+    const institutionId = studentDetails?.institutionId
+      ?? studentDetails?.InstitutionId
+      ?? teacherDetails?.institutionId
+      ?? teacherDetails?.InstitutionId
+      ?? profile.institutionId
+      ?? profile.InstitutionId;
+    const institutionName = studentDetails?.institutionName
+      ?? studentDetails?.InstitutionName
+      ?? teacherDetails?.institutionName
+      ?? teacherDetails?.InstitutionName
+      ?? profile.institutionName
+      ?? profile.InstitutionName;
+
+    return {
+      ...response,
+      firstName: response.firstName || profile.firstName || profile.FirstName || '',
+      lastName: response.lastName || profile.lastName || profile.LastName || '',
+      dateOfBirth: response.dateOfBirth ?? birthDate ?? null,
+      learningStyle: response.learningStyle ?? learningStyle,
+      institutionId: response.institutionId ?? institutionId,
+      institutionName: response.institutionName ?? institutionName
+    };
   }
 
   private normalizeAuthResponse(response: AuthResponse): AuthResponse {
