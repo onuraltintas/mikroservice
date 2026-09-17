@@ -11,7 +11,6 @@ namespace Identity.API.Controllers;
 [ApiVersion(1.0)]
 [Route("api/[controller]")]
 [HasPermission(Permissions.Operations.View)]
-[MfaCategory(MfaOperationCategories.System)]
 public class ConfigurationsController : ControllerBase
 {
     private readonly IConfigurationService _configurationService;
@@ -48,6 +47,7 @@ public class ConfigurationsController : ControllerBase
     [HttpPost]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.System)]
     public async Task<ActionResult<ConfigurationDto>> Create(CreateConfigurationRequest request, CancellationToken cancellationToken)
     {
         var config = await _configurationService.CreateConfigurationAsync(request, cancellationToken);
@@ -57,6 +57,7 @@ public class ConfigurationsController : ControllerBase
     [HttpPut("{key}")]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.System)]
     public async Task<IActionResult> Update(string key, UpdateConfigurationRequest request, CancellationToken cancellationToken)
     {
         await _configurationService.UpdateConfigurationAsync(key, request, cancellationToken);
@@ -66,6 +67,7 @@ public class ConfigurationsController : ControllerBase
     [HttpDelete("{key}")]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.System)]
     public async Task<IActionResult> Delete(string key, CancellationToken cancellationToken)
     {
         await _configurationService.DeleteConfigurationAsync(key, cancellationToken);
@@ -75,6 +77,7 @@ public class ConfigurationsController : ControllerBase
     [HttpPost("refresh-cache")]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.System)]
     public async Task<IActionResult> RefreshCache(CancellationToken cancellationToken)
     {
         await _configurationService.RefreshCacheAsync(cancellationToken);
