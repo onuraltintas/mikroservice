@@ -66,10 +66,16 @@ export class DailyPlanWidgetComponent implements OnInit {
       headers: { 'X-Skip-Error-Toast': 'true' }
     }).subscribe({
       next: (progressData: any) => {
-        const currentDay = progressData.currentDay || 1;
+        // New students do not have a program yet; the API intentionally
+        // returns 204 in that case, which Angular exposes as a null body.
+        // Keep the dashboard in its empty-plan state instead of throwing
+        // while reading currentDay.
+        const currentDay = progressData?.currentDay || 1;
 
         // Now fetch exercises for the current program day
-        this.http.get<any>(`${this.apiUrl}/day/${currentDay}`).subscribe({
+        this.http.get<any>(`${this.apiUrl}/day/${currentDay}`, {
+          headers: { 'X-Skip-Error-Toast': 'true' }
+        }).subscribe({
           next: (res: any) => {
             const exercises: any[] = Array.isArray(res) ? res : (res?.exercises ?? []);
 
