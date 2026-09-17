@@ -452,11 +452,13 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             return await GetBankTransferPaymentRequestAsync(replay.ResourceId, null, cancellationToken);
         }
 
-        var row = await (from paymentRequest in db.BankTransferPaymentRequests.AsTracking()
+        var row = await (from paymentRequest in db.BankTransferPaymentRequests
                          join plan in db.SubscriptionPlans.AsNoTracking() on paymentRequest.PlanId equals plan.Id
                          join product in db.Products.AsNoTracking() on plan.ProductId equals product.Id
                          where paymentRequest.Id == id
-                         select new { paymentRequest, plan, product }).SingleOrDefaultAsync(cancellationToken);
+                         select new { paymentRequest, plan, product })
+            .AsTracking()
+            .SingleOrDefaultAsync(cancellationToken);
         if (row is null) return null;
 
         var targetStatus = request.Status?.Trim();
