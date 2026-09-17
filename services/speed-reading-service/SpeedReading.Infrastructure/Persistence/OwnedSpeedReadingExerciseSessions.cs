@@ -161,14 +161,39 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             }
         }
 
-        var hasActiveSession = await db.ExerciseSessions
+        // Starting a session is retried when a player is refreshed or the
+        // browser restores its previous route. Reuse the same session when
+        // the request carries the identical assignment/assessment context;
+        // an unrelated active session must still be rejected.
+        var activeSession = await db.ExerciseSessions
             .AsNoTracking()
-            .AnyAsync(item => item.StudentId == studentId
+            .Where(item => item.StudentId == studentId
                 && item.ExerciseId == request.ExerciseId
                 && (item.Status == OwnedExerciseSessionStatus.Active
-                    || item.Status == OwnedExerciseSessionStatus.Paused), cancellationToken);
-        if (hasActiveSession)
-            throw new InvalidOperationException("An active session already exists for this exercise.");
+                    || item.Status == OwnedExerciseSessionStatus.Paused))
+            .OrderByDescending(item => item.StartTime)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (activeSession is not null)
+        {
+            var sameContext = activeSession.AssessmentAttemptId == request.AssessmentAttemptId
+                && activeSession.StudentAssignmentId == request.StudentAssignmentId;
+            if (!sameContext)
+                throw new InvalidOperationException("An active session already exists for this exercise.");
+
+            var existingState = DeserializeState(activeSession.SessionDataJson);
+            var existingConfiguration = ParseJsonOrEmpty(configurationJson);
+            return new StartExerciseSessionResponse(
+                activeSession.Id,
+                activeSession.ExerciseId,
+                exerciseTypeName,
+                (Application.ExerciseSessions.ExerciseSessionStatus)activeSession.Status,
+                activeSession.StartTime,
+                activeSession.TotalSteps,
+                ToPublicJson(existingState),
+                existingState.IsAssessmentMode
+                    ? SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(existingConfiguration)
+                    : RemoveAssessmentKeys(existingConfiguration));
+        }
 
         var readingTextId = assessmentSnapshot is not null
             ? assessmentSnapshot.ReadingText?.Id
