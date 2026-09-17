@@ -387,16 +387,19 @@ internal sealed class OwnedSpeedReadingAssessment(
             .Where(item => item.IsSkipped)
             .Select(item => item.Id)
             .ToHashSet();
-        var baselineAttemptIds = baselineAttempts.Select(item => item.Id).ToArray();
         var measuredRows = await (
             from result in db.ExerciseSessionResults.AsNoTracking()
             join formItem in db.AssessmentAttemptExercises.AsNoTracking()
                 on result.ExerciseId equals formItem.ExerciseId
+            join attempt in db.AssessmentAttempts.AsNoTracking()
+                on result.AssessmentAttemptId equals attempt.Id
             where result.StudentId == userId
                 && result.IsAssessmentMode
                 && result.IsMeasured
                 && result.AssessmentAttemptId.HasValue
-                && baselineAttemptIds.Contains(result.AssessmentAttemptId.Value)
+                && attempt.StudentId == userId
+                && attempt.Phase == AssessmentAttemptPhase.Baseline
+                && attempt.Status == AssessmentAttemptStatus.Completed
                 && formItem.AssessmentAttemptId == result.AssessmentAttemptId.Value
             select new
             {
