@@ -162,146 +162,163 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         var isPostgres = db.Database.ProviderName?.Contains(
             "Npgsql",
             StringComparison.OrdinalIgnoreCase) == true;
-        await using var startTransaction = isPostgres
-            ? await db.Database.BeginTransactionAsync(cancellationToken)
-            : null;
-        if (startTransaction is not null)
+
+        // Npgsql uses a retrying execution strategy in production. EF Core
+        // requires the transaction and all of its reads/writes to run inside
+        // that strategy so a transient failure can be retried safely.
+        if (isPostgres)
         {
-            var startLockKey = $"speed-reading-session:{studentId:N}:{request.ExerciseId:N}";
-            await db.Database.ExecuteSqlInterpolatedAsync(
-                $"SELECT pg_advisory_xact_lock(hashtext({startLockKey}))",
-                cancellationToken);
+            var executionStrategy = db.Database.CreateExecutionStrategy();
+            return await executionStrategy.ExecuteAsync(
+                () => StartSessionWithConcurrencyGuardAsync(cancellationToken));
         }
 
-        // Re-check completion after taking the same lock as the active-session
-        // query. A completion can commit between the initial validation above
-        // and this start attempt; without this check a fresh session could be
-        // created for an already completed assessment exercise.
-        if (request.AssessmentAttemptId.HasValue)
+        return await StartSessionWithConcurrencyGuardAsync(cancellationToken);
+
+        async Task<StartExerciseSessionResponse> StartSessionWithConcurrencyGuardAsync(
+            CancellationToken token)
         {
-            var alreadyCompleted = await db.ExerciseSessionResults
+            await using var startTransaction = isPostgres
+                ? await db.Database.BeginTransactionAsync(token)
+                : null;
+            if (startTransaction is not null)
+            {
+                var startLockKey = $"speed-reading-session:{studentId:N}:{request.ExerciseId:N}";
+                await db.Database.ExecuteSqlInterpolatedAsync(
+                    $"SELECT pg_advisory_xact_lock(hashtext({startLockKey}))",
+                    token);
+            }
+
+            // Re-check completion after taking the same lock as the active-session
+            // query. A completion can commit between the initial validation above
+            // and this start attempt; without this check a fresh session could be
+            // created for an already completed assessment exercise.
+            if (request.AssessmentAttemptId.HasValue)
+            {
+                var alreadyCompleted = await db.ExerciseSessionResults
+                    .AsNoTracking()
+                    .AnyAsync(item => item.StudentId == studentId
+                        && item.ExerciseId == request.ExerciseId
+                        && item.AssessmentAttemptId == request.AssessmentAttemptId.Value
+                        && item.IsAssessmentMode,
+                        token);
+                if (alreadyCompleted)
+                    throw new InvalidOperationException("Assessment exercise has already been completed.");
+            }
+
+            // Reuse the same session when the request carries the identical
+            // assignment/assessment context; an unrelated active session must
+            // still be rejected. Check all active sessions so a stale duplicate
+            // cannot hide an older session with the matching context.
+            var activeSessions = await db.ExerciseSessions
                 .AsNoTracking()
-                .AnyAsync(item => item.StudentId == studentId
+                .Where(item => item.StudentId == studentId
                     && item.ExerciseId == request.ExerciseId
-                    && item.AssessmentAttemptId == request.AssessmentAttemptId.Value
-                    && item.IsAssessmentMode,
-                    cancellationToken);
-            if (alreadyCompleted)
-                throw new InvalidOperationException("Assessment exercise has already been completed.");
-        }
+                    && (item.Status == OwnedExerciseSessionStatus.Active
+                        || item.Status == OwnedExerciseSessionStatus.Paused))
+                .OrderByDescending(item => item.StartTime)
+                .ToListAsync(token);
+            var activeSession = activeSessions.FirstOrDefault();
+            var matchingSession = activeSessions.FirstOrDefault(item =>
+                item.AssessmentAttemptId == request.AssessmentAttemptId
+                && item.StudentAssignmentId == request.StudentAssignmentId);
+            if (matchingSession is not null)
+            {
+                var existingState = DeserializeState(matchingSession.SessionDataJson);
+                var existingConfiguration = ParseJsonOrEmpty(configurationJson);
+                return new StartExerciseSessionResponse(
+                    matchingSession.Id,
+                    matchingSession.ExerciseId,
+                    exerciseTypeName,
+                    (Application.ExerciseSessions.ExerciseSessionStatus)matchingSession.Status,
+                    matchingSession.StartTime,
+                    matchingSession.TotalSteps,
+                    ToPublicJson(existingState),
+                    existingState.IsAssessmentMode
+                        ? SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(existingConfiguration)
+                        : RemoveAssessmentKeys(existingConfiguration));
+            }
+            if (activeSession is not null)
+                throw new InvalidOperationException("An active session already exists for this exercise.");
 
-        // Reuse the same session when the request carries the identical
-        // assignment/assessment context; an unrelated active session must
-        // still be rejected. Check all active sessions so a stale duplicate
-        // cannot hide an older session with the matching context.
-        var activeSessions = await db.ExerciseSessions
-            .AsNoTracking()
-            .Where(item => item.StudentId == studentId
-                && item.ExerciseId == request.ExerciseId
-                && (item.Status == OwnedExerciseSessionStatus.Active
-                    || item.Status == OwnedExerciseSessionStatus.Paused))
-            .OrderByDescending(item => item.StartTime)
-            .ToListAsync(cancellationToken);
-        var activeSession = activeSessions.FirstOrDefault();
-        var matchingSession = activeSessions.FirstOrDefault(item =>
-            item.AssessmentAttemptId == request.AssessmentAttemptId
-            && item.StudentAssignmentId == request.StudentAssignmentId);
-        if (matchingSession is not null)
-        {
-            var existingState = DeserializeState(matchingSession.SessionDataJson);
-            var existingConfiguration = ParseJsonOrEmpty(configurationJson);
-            return new StartExerciseSessionResponse(
-                matchingSession.Id,
-                matchingSession.ExerciseId,
+            var readingTextId = assessmentSnapshot is not null
+                ? assessmentSnapshot.ReadingText?.Id
+                : pinnedReadingTextId ?? request.ReadingTextId;
+            var parsedConfiguration = ParseJsonOrEmpty(configurationJson);
+            var requiresReadingText = IsReadingExerciseFlow(
                 exerciseTypeName,
-                (Application.ExerciseSessions.ExerciseSessionStatus)matchingSession.Status,
-                matchingSession.StartTime,
-                matchingSession.TotalSteps,
-                ToPublicJson(existingState),
-                existingState.IsAssessmentMode
-                    ? SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(existingConfiguration)
-                    : RemoveAssessmentKeys(existingConfiguration));
-        }
-        if (activeSession is not null)
-            throw new InvalidOperationException("An active session already exists for this exercise.");
+                exerciseEngineType,
+                parsedConfiguration);
+            if (assessmentSnapshot is null
+                && !readingTextId.HasValue
+                && requiresReadingText)
+            {
+                readingTextId = await db.ReadingTexts
+                    .AsNoTracking()
+                    .Where(item => item.IsActive
+                        && !item.IsDeleted
+                        && item.Content != string.Empty
+                        && (!profileAgeGroupId.HasValue
+                            || item.TargetAgeGroupId == null
+                            || item.TargetAgeGroupId == profileAgeGroupId.Value)
+                        && (item.ExerciseId == null || item.ExerciseId == request.ExerciseId))
+                    .OrderBy(item => item.Id)
+                    .Select(item => (Guid?)item.Id)
+                    .FirstOrDefaultAsync(token);
+            }
 
-        var readingTextId = assessmentSnapshot is not null
-            ? assessmentSnapshot.ReadingText?.Id
-            : pinnedReadingTextId ?? request.ReadingTextId;
-        var parsedConfiguration = ParseJsonOrEmpty(configurationJson);
-        var requiresReadingText = IsReadingExerciseFlow(
-            exerciseTypeName,
-            exerciseEngineType,
-            parsedConfiguration);
-        if (assessmentSnapshot is null
-            && !readingTextId.HasValue
-            && requiresReadingText)
-        {
-            readingTextId = await db.ReadingTexts
-                .AsNoTracking()
-                .Where(item => item.IsActive
-                    && !item.IsDeleted
-                    && item.Content != string.Empty
-                    && (!profileAgeGroupId.HasValue
-                        || item.TargetAgeGroupId == null
-                        || item.TargetAgeGroupId == profileAgeGroupId.Value)
-                    && (item.ExerciseId == null || item.ExerciseId == request.ExerciseId))
-                .OrderBy(item => item.Id)
-                .Select(item => (Guid?)item.Id)
-                .FirstOrDefaultAsync(cancellationToken);
-        }
+            var state = await CreateSessionStateAsync(
+                request.ExerciseId,
+                exerciseTypeName,
+                exerciseEngineType,
+                difficultyLevel,
+                configurationJson,
+                readingTextId,
+                assessmentSnapshot,
+                request.AssessmentAttemptId.HasValue,
+                request.CustomData,
+                profileAgeGroupId,
+                token);
+            var now = DateTime.UtcNow;
+            var session = ExerciseSession.Start(
+                studentId,
+                request.ExerciseId,
+                readingTextId,
+                state.TotalSteps,
+                now,
+                state.TimeLimitSeconds,
+                studentAssignmentId: request.StudentAssignmentId,
+                assessmentAttemptId: request.AssessmentAttemptId);
+            session.SetState(
+                JsonSerializer.Serialize(state, JsonOptions),
+                SerializeOptional(request.CustomData));
+            session.SetProcessedActions("{}");
+            db.ExerciseSessions.Add(session);
+            try
+            {
+                await db.SaveChangesAsync(token);
+            }
+            catch (DbUpdateException exception) when (IsAssessmentSessionConflict(exception))
+            {
+                db.ChangeTracker.Clear();
+                throw new InvalidOperationException("Assessment exercise has already been started.");
+            }
 
-        var state = await CreateSessionStateAsync(
-            request.ExerciseId,
-            exerciseTypeName,
-            exerciseEngineType,
-            difficultyLevel,
-            configurationJson,
-            readingTextId,
-            assessmentSnapshot,
-            request.AssessmentAttemptId.HasValue,
-            request.CustomData,
-            profileAgeGroupId,
-            cancellationToken);
-        var now = DateTime.UtcNow;
-        var session = ExerciseSession.Start(
-            studentId,
-            request.ExerciseId,
-            readingTextId,
-            state.TotalSteps,
-            now,
-            state.TimeLimitSeconds,
-            studentAssignmentId: request.StudentAssignmentId,
-            assessmentAttemptId: request.AssessmentAttemptId);
-        session.SetState(
-            JsonSerializer.Serialize(state, JsonOptions),
-            SerializeOptional(request.CustomData));
-        session.SetProcessedActions("{}");
-        db.ExerciseSessions.Add(session);
-        try
-        {
-            await db.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException exception) when (IsAssessmentSessionConflict(exception))
-        {
-            db.ChangeTracker.Clear();
-            throw new InvalidOperationException("Assessment exercise has already been started.");
-        }
+            if (startTransaction is not null)
+                await startTransaction.CommitAsync(token);
 
-        if (startTransaction is not null)
-            await startTransaction.CommitAsync(cancellationToken);
-
-        return new StartExerciseSessionResponse(
-            session.Id,
-            session.ExerciseId,
-            exerciseTypeName,
-            Application.ExerciseSessions.ExerciseSessionStatus.Active,
-            session.StartTime,
-            session.TotalSteps,
-            ToPublicJson(state),
-            state.IsAssessmentMode
-                ? SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(ParseJsonOrEmpty(configurationJson))
-                : RemoveAssessmentKeys(ParseJsonOrEmpty(configurationJson)));
+            return new StartExerciseSessionResponse(
+                session.Id,
+                session.ExerciseId,
+                exerciseTypeName,
+                Application.ExerciseSessions.ExerciseSessionStatus.Active,
+                session.StartTime,
+                session.TotalSteps,
+                ToPublicJson(state),
+                state.IsAssessmentMode
+                    ? SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(ParseJsonOrEmpty(configurationJson))
+                    : RemoveAssessmentKeys(ParseJsonOrEmpty(configurationJson)));
+        }
     }
 
     public Task<ExerciseActionValidationResponse> ValidateActionAsync(
