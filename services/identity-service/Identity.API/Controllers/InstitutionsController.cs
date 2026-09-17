@@ -14,6 +14,7 @@ namespace Identity.API.Controllers;
 [ApiVersion(1.0)]
 [Route("api/institutions")]
 [HasPermission(Permissions.Institutions.View)]
+[MfaCategory(MfaOperationCategories.Institutions)]
 public sealed class InstitutionsController : ControllerBase
 {
     private readonly IMediator _mediator;

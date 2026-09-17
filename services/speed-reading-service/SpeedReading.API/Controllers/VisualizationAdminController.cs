@@ -11,6 +11,7 @@ namespace SpeedReading.API.Controllers;
 [Route("api/speed-reading/admin/visualization-scenes")]
 [Authorize]
 [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+[MfaCategory(MfaOperationCategories.SpeedReading)]
 public sealed class VisualizationAdminController(ISpeedReadingVisualization visualization) : ControllerBase
 {
     [HttpGet]

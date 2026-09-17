@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Kernel.Results;
+using EduPlatform.Shared.Security.Authorization;
 using Identity.Application.Commands.Login;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
@@ -311,7 +312,8 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         var isAdmin = user.Roles.Any(r => 
             r.Role.Name == "SystemAdmin" || 
             r.Role.Name == "InstitutionAdmin" || 
-            r.Role.Name == "InstitutionOwner");
+            r.Role.Name == "InstitutionOwner" ||
+            r.Role.Name == "Editor");
 
         if (!isAdmin)
         {
@@ -325,9 +327,9 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             }
         }
 
-        var isSystemAdministrator = user.Roles.Any(role =>
-            string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
-        if (isSystemAdministrator && user.MfaEnabled)
+        if (isAdmin
+            && user.MfaEnabled
+            && await IsPrivilegedMfaRequiredAsync(cancellationToken))
         {
             return Result.Success(LoginResponse.RequireMfa(
                 _multiFactorService.CreateChallenge(user.Id, rememberMe: true),
@@ -366,6 +368,24 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             refreshToken.ExpiresAt,
             refreshToken.IsPersistent,
             ExpiresInMinutes: await _tokenService.GetAccessTokenLifetimeMinutesAsync()));
+    }
+
+    private async Task<bool> IsPrivilegedMfaRequiredAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var mode = await _configurationService.GetConfigurationValueAsync(
+                MfaOperationCategories.ConfigurationKey(MfaOperationCategories.System),
+                cancellationToken);
+            return !string.Equals(mode, MfaPolicyModes.Disabled, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(
+                exception,
+                "Privileged Google login MFA policy could not be read; keeping MFA required.");
+            return true;
+        }
     }
 
     private async Task CompensateProvisionedUserAsync(Guid userId)

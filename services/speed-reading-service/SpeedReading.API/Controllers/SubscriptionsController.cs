@@ -59,6 +59,7 @@ public sealed class SubscriptionsController(ISpeedReadingSubscription subscripti
 
     [HttpGet("institution-access/my")]
     [Authorize(Roles = "InstitutionAdmin,InstitutionOwner")]
+    [MfaCategory(MfaOperationCategories.SpeedReading)]
     public async Task<IActionResult> GetMyInstitutionAccess(CancellationToken cancellationToken = default)
     {
         var institutionValue = User.FindFirstValue("institutionId") ?? User.FindFirstValue("InstitutionId");
@@ -69,6 +70,7 @@ public sealed class SubscriptionsController(ISpeedReadingSubscription subscripti
 
     [HttpPost("institution-access/my/students/{studentId:guid}/suspension")]
     [Authorize(Roles = "InstitutionAdmin,InstitutionOwner")]
+    [MfaCategory(MfaOperationCategories.SpeedReading)]
     public async Task<IActionResult> ChangeMyInstitutionStudentAccess(
         Guid studentId,
         [FromBody] InstitutionStudentAccessChangeRequest request,

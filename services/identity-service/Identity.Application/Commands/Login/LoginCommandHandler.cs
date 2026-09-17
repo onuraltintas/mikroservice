@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Kernel.Results;
+using EduPlatform.Shared.Security.Authorization;
 using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
@@ -70,7 +71,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         var isAdmin = user.Roles.Any(r => 
             r.Role.Name == "SystemAdmin" || 
             r.Role.Name == "InstitutionAdmin" || 
-            r.Role.Name == "InstitutionOwner");
+            r.Role.Name == "InstitutionOwner" ||
+            r.Role.Name == "Editor");
 
         var isSystemAdministrator = user.Roles.Any(role =>
             string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
@@ -82,7 +84,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         
         // 5. MAINTENANCE MODE CHECK
         // Check if System is in Maintenance Mode (Global or Identity Service)
-        // Admin users (SystemAdmin, InstitutionOwner) are exempt.
+        // Privileged administrators are exempt.
         if (!isAdmin)
         {
             var globalMaintenance = await _configurationService.GetConfigurationValueAsync("system.maintenancemode", cancellationToken);
@@ -95,7 +97,13 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             }
         }
 
-        if (isSystemAdministrator && user.MfaEnabled)
+        // Any privileged administrator may operate on a category protected by
+        // the central MFA policy. When MFA is enabled for the account, issue a
+        // challenge before minting an administrative session so Institution
+        // admins and owners receive the same step-up flow as SystemAdmin.
+        if (isAdmin
+            && user.MfaEnabled
+            && await IsPrivilegedMfaRequiredAsync(cancellationToken))
         {
             if (passwordRehashed)
             {
@@ -138,5 +146,23 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             refreshToken.ExpiresAt,
             refreshToken.IsPersistent,
             ExpiresInMinutes: await _tokenService.GetAccessTokenLifetimeMinutesAsync()));
+    }
+
+    private async Task<bool> IsPrivilegedMfaRequiredAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var mode = await _configurationService.GetConfigurationValueAsync(
+                MfaOperationCategories.ConfigurationKey(MfaOperationCategories.System),
+                cancellationToken);
+            return !string.Equals(mode, MfaPolicyModes.Disabled, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(
+                exception,
+                "Privileged login MFA policy could not be read; keeping MFA required.");
+            return true;
+        }
     }
 }

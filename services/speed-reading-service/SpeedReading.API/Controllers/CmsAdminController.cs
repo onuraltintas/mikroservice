@@ -14,6 +14,7 @@ namespace SpeedReading.API.Controllers;
 [Route("api/speed-reading/admin/cms")]
 [Authorize]
 [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+[MfaCategory(MfaOperationCategories.Cms)]
 public sealed class CmsAdminController(ISpeedReadingCms cms) : ControllerBase
 {
     [HttpGet("blocks")]

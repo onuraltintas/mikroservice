@@ -13,6 +13,7 @@ namespace SpeedReading.API.Controllers;
 [Route("api/admin-audit/speed-reading")]
 [Authorize(Roles = "SystemAdmin")]
 [HasPermission(PlatformPermissions.Operations.View)]
+[MfaCategory(MfaOperationCategories.System)]
 public sealed class AdminAuditController(OwnedSpeedReadingDbContext db) : ControllerBase
 {
     [HttpGet]

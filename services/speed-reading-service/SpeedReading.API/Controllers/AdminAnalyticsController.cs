@@ -10,6 +10,7 @@ namespace SpeedReading.API.Controllers;
 [Route("api/speed-reading/analytics/admin")]
 [Authorize]
 [HasPermission(PlatformPermissions.SpeedReading.PlatformAnalyticsView)]
+[MfaCategory(MfaOperationCategories.SpeedReading)]
 public sealed class AdminAnalyticsController(ILegacySpeedReadingAdminAnalytics analytics) : ControllerBase
 {
     [HttpGet("platform-usage")]

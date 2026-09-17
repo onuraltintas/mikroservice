@@ -86,6 +86,7 @@ public class UserController : ControllerBase
     /// </summary>
     [HttpGet]
     [HasPermission(Permissions.Users.View)]
+    [MfaCategory(MfaOperationCategories.Users)]
     public async Task<IActionResult> GetAllUsers(
         [FromQuery] int page = 1, 
         [FromQuery] int pageSize = 10, 
@@ -113,6 +114,7 @@ public class UserController : ControllerBase
     /// </summary>
     [HttpGet("roles")]
     [HasPermission(Permissions.Users.View)]
+    [MfaCategory(MfaOperationCategories.Users)]
     public async Task<IActionResult> GetRoles(CancellationToken cancellationToken)
     {
         var identityService = HttpContext.RequestServices.GetRequiredService<IIdentityService>();
@@ -126,6 +128,7 @@ public class UserController : ControllerBase
     /// </summary>
     [HttpGet("{id:guid}")]
     [HasPermission(Permissions.Users.View)]
+    [MfaCategory(MfaOperationCategories.Users)]
     public async Task<IActionResult> GetUserById(Guid id)
     {
         var query = new GetUserProfileQuery(id);
@@ -145,6 +148,7 @@ public class UserController : ControllerBase
 
     [HttpGet("speed-reading-teachers")]
     [HasPermission(Permissions.SpeedReading.ReportView)]
+    [MfaCategory(MfaOperationCategories.SpeedReading)]
     public async Task<IActionResult> GetSpeedReadingTeachers(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 100,
@@ -201,6 +205,7 @@ public class UserController : ControllerBase
 
     [HttpGet("summary")]
     [HasPermission(Permissions.Users.View)]
+    [MfaCategory(MfaOperationCategories.Users)]
     public async Task<IActionResult> GetSummary(CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new GetUserSummaryQuery(), cancellationToken);
@@ -224,6 +229,7 @@ public class UserController : ControllerBase
     [HttpPost]
     [HasPermission(Permissions.Users.Create)]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.Users)]
     [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> CreateUser([FromBody] Identity.Application.Commands.CreateUser.CreateUserCommand command)
     {
@@ -241,6 +247,7 @@ public class UserController : ControllerBase
     [HttpDelete("{id:guid}")]
     [HasPermission(Permissions.Users.Delete)]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.Users)]
     [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> DeleteUser(Guid id, [FromQuery] bool permanent = false)
     {
@@ -256,6 +263,7 @@ public class UserController : ControllerBase
     [HasPermission(Permissions.Users.Activate)]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.Users)]
     public async Task<IActionResult> ActivateUser(Guid id)
     {
         var result = await _mediator.Send(new ActivateUserCommand(id));
@@ -270,6 +278,7 @@ public class UserController : ControllerBase
     [HasPermission(Permissions.Users.ConfirmEmail)]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.Users)]
     public async Task<IActionResult> ConfirmEmail(Guid id)
     {
         var result = await _mediator.Send(new ConfirmEmailCommand(id));
@@ -284,6 +293,7 @@ public class UserController : ControllerBase
     [HasPermission(Permissions.Users.ConfirmEmail)]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.Users)]
     public async Task<IActionResult> RevokeEmailConfirmation(Guid id)
     {
         var result = await _mediator.Send(new RevokeEmailConfirmationCommand(id));
@@ -334,6 +344,7 @@ public class UserController : ControllerBase
     [HttpPost("{id:guid}/change-password")]
     [HasPermission(Permissions.Users.ChangePassword)]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.Users)]
     [Authorize(Roles = "SystemAdmin")]
     public async Task<IActionResult> ChangePassword(Guid id, [FromBody] ChangePasswordRequest request)
     {
@@ -355,6 +366,7 @@ public class UserController : ControllerBase
     [HasPermission(Permissions.Users.Edit)]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.Users)]
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest request)
     {
         var command = new Identity.Application.Commands.UpdateUser.UpdateUserCommand(
@@ -378,6 +390,7 @@ public class UserController : ControllerBase
     [HasPermission(Permissions.Users.Edit)]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.Users)]
     public async Task<IActionResult> AssignRole(Guid id, [FromBody] RoleRequest request, CancellationToken cancellationToken)
     {
         var identityService = HttpContext.RequestServices.GetRequiredService<IIdentityService>();
@@ -393,6 +406,7 @@ public class UserController : ControllerBase
     [HasPermission(Permissions.Users.Edit)]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.Users)]
     public async Task<IActionResult> UpdateUserProfile(Guid id, [FromBody] UpdateUserRequest request)
     {
         var command = new Identity.Application.Commands.UpdateUser.UpdateUserCommand(
@@ -426,6 +440,7 @@ public class UserController : ControllerBase
     [HasPermission(Permissions.Users.Edit)]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.Users)]
     public async Task<IActionResult> RemoveRole(Guid id, string roleName, CancellationToken cancellationToken)
     {
         var identityService = HttpContext.RequestServices.GetRequiredService<IIdentityService>();
@@ -454,6 +469,7 @@ public class UserController : ControllerBase
     [HasPermission(Permissions.Users.Edit)]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.Users)]
     public async Task<IActionResult> GetSessions(Guid id, CancellationToken cancellationToken)
     {
         var result = await _accessManagement.GetActiveSessionsAsync(id, cancellationToken);
@@ -464,6 +480,7 @@ public class UserController : ControllerBase
     [HasPermission(Permissions.Users.Edit)]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.Users)]
     public async Task<IActionResult> RevokeSession(
         Guid id,
         Guid sessionId,
@@ -478,6 +495,7 @@ public class UserController : ControllerBase
     [HasPermission(Permissions.Users.Edit)]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.Users)]
     public async Task<IActionResult> RevokeAllSessions(Guid id, CancellationToken cancellationToken)
     {
         var result = await _accessManagement.RevokeAllSessionsAsync(
@@ -492,6 +510,7 @@ public class UserController : ControllerBase
     [HasPermission(Permissions.Users.Edit)]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.Users)]
     public async Task<IActionResult> ResetMfa(Guid id, CancellationToken cancellationToken)
     {
         var result = await _accessManagement.ResetMfaAsync(

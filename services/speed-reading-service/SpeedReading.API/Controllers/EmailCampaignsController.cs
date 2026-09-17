@@ -11,6 +11,7 @@ namespace SpeedReading.API.Controllers;
 [Route("api/speed-reading/email-campaigns")]
 [Authorize(Roles = "Admin,SystemAdmin")]
 [HasPermission(PlatformPermissions.SpeedReading.CommunicationsManage)]
+[MfaCategory(MfaOperationCategories.Cms)]
 public sealed class EmailCampaignsController(ISpeedReadingEmailCampaigns campaigns) : ControllerBase
 {
     [HttpGet]

@@ -24,6 +24,10 @@ public class PermissionPolicyProvider : IAuthorizationPolicyProvider
             var policy = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser();
             policy.AddRequirements(new PermissionRequirement(policyName));
+            if (MfaOperationCategories.TryGetManagementCategory(policyName, out var category))
+            {
+                policy.AddRequirements(new MfaPolicyRequirement(category));
+            }
             return Task.FromResult<AuthorizationPolicy?>(policy.Build());
         }
 

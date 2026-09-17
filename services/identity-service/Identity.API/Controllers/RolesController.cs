@@ -17,6 +17,7 @@ namespace Identity.API.Controllers;
 [ApiController]
 [ApiVersion(1.0)]
 [Route("api/roles")]
+[MfaCategory(MfaOperationCategories.RolesPermissions)]
 public class RolesController : ControllerBase
 {
     private readonly IMediator _mediator;

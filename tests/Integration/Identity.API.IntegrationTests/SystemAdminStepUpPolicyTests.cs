@@ -2,8 +2,8 @@ using FluentAssertions;
 using Identity.API.Controllers;
 using Identity.API.Controllers.Settings;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authorization.Infrastructure;
 using EduPlatform.Shared.Security.Extensions;
+using EduPlatform.Shared.Security.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
@@ -67,10 +67,8 @@ public sealed class SystemAdminStepUpPolicyTests
         var policy = await policyProvider.GetPolicyAsync("MfaRequired");
 
         policy.Should().NotBeNull();
-        policy!.Requirements.OfType<ClaimsAuthorizationRequirement>()
-            .Should().ContainSingle(claims =>
-                claims.ClaimType == "amr"
-                && claims.AllowedValues!.Contains("mfa"));
+        policy!.Requirements.OfType<MfaPolicyRequirement>()
+            .Should().ContainSingle();
     }
 
     [Fact]

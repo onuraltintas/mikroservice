@@ -12,6 +12,7 @@ namespace Notification.API.Controllers;
 [ApiVersion(1.0)]
 [Route("api/support/requests")]
 [HasPermission(PlatformPermissions.Support.View)]
+[MfaCategory(MfaOperationCategories.Cms)]
 public sealed class SupportAdminController : ControllerBase
 {
     private readonly IMediator _mediator;

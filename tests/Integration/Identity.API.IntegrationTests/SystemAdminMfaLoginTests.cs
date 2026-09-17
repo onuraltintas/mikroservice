@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Contracts.Reporting;
+using EduPlatform.Shared.Security.Authorization;
 using EduPlatform.Shared.Security.Interfaces;
 using FluentAssertions;
 using Identity.Application.Commands.Login;
@@ -94,6 +95,65 @@ public sealed class SystemAdminMfaLoginTests
     }
 
     [Fact]
+    public async Task PasswordLogin_WhenSystemMfaPolicyIsDisabled_ShouldIssueNormalSession()
+    {
+        var user = CreateSystemAdministrator(mfaEnabled: true);
+        var tokenService = new IssuingTokenService();
+        var mfaService = new StubMfaService(user.Id);
+        var handler = new LoginCommandHandler(
+            new StubUserRepository(user),
+            new AcceptingPasswordHasher(),
+            tokenService,
+            new StubUnitOfWork(),
+            new RejectingIdentityService(allowRefreshToken: true),
+            new StubConfigurationService(systemMfaMode: MfaPolicyModes.Disabled),
+            mfaService,
+            NullLogger<LoginCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new LoginCommand(user.Email, "correct-password", RememberMe: false),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.RequiresMfa.Should().BeFalse();
+        result.Value.AccessToken.Should().Be("access-token");
+        mfaService.RememberMe.Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData("InstitutionAdmin")]
+    [InlineData("InstitutionOwner")]
+    [InlineData("Editor")]
+    public async Task PrivilegedAdminPasswordLogin_WhenMfaIsEnabled_ShouldReturnMfaChallenge(string roleName)
+    {
+        var user = CreateUserWithRole(roleName);
+        user.ConfirmEmail();
+        user.EnableMfa("protected-secret", ["recovery-hash"], DateTimeOffset.UtcNow);
+        var tokenService = new RejectingTokenService();
+        var mfaService = new StubMfaService(user.Id);
+        var handler = new LoginCommandHandler(
+            new StubUserRepository(user),
+            new AcceptingPasswordHasher(),
+            tokenService,
+            new StubUnitOfWork(),
+            new RejectingIdentityService(),
+            new StubConfigurationService(),
+            mfaService,
+            NullLogger<LoginCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new LoginCommand(user.Email, "correct-password", RememberMe: true),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.RequiresMfa.Should().BeTrue();
+        result.Value.MfaChallengeToken.Should().Be("mfa-challenge");
+        tokenService.AccessTokenRequested.Should().BeFalse();
+        tokenService.RefreshTokenRequested.Should().BeFalse();
+        mfaService.RememberMe.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task GoogleLogin_WhenMfaIsDisabled_ShouldIssueNormalSession()
     {
         var user = CreateSystemAdministrator();
@@ -150,6 +210,34 @@ public sealed class SystemAdminMfaLoginTests
         result.Value.MfaChallengeToken.Should().Be("mfa-challenge");
         tokenService.AccessTokenRequested.Should().BeFalse();
         tokenService.RefreshTokenRequested.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GoogleLogin_WhenSystemMfaPolicyIsDisabled_ShouldIssueNormalSession()
+    {
+        var user = CreateSystemAdministrator(mfaEnabled: true);
+        user.AddLogin(UserLogin.Create(user.Id, "Google", "google-id", "Google"));
+        var tokenService = new IssuingTokenService();
+        var mfaService = new StubMfaService(user.Id);
+        var handler = new GoogleLoginCommandHandler(
+            new StubGoogleAuthService(user.Email),
+            new StubUserRepository(user),
+            tokenService,
+            new StubUnitOfWork(),
+            new RejectingIdentityService(allowRefreshToken: true),
+            new RejectingStudentRepository(),
+            new StubConfigurationService(systemMfaMode: MfaPolicyModes.Disabled),
+            mfaService,
+            NullLogger<GoogleLoginCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new GoogleLoginCommand("google-token", "127.0.0.1"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.RequiresMfa.Should().BeFalse();
+        result.Value.AccessToken.Should().Be("access-token");
+        mfaService.RememberMe.Should().BeNull();
     }
 
     [Fact]
@@ -314,7 +402,10 @@ public sealed class SystemAdminMfaLoginTests
         user.AddRefreshToken(refreshToken);
         var tokenService = new RejectingTokenService();
         var handler = new RefreshTokenCommandHandler(
-            new StubUserRepository(user), tokenService);
+            new StubUserRepository(user),
+            tokenService,
+            new StubConfigurationService(),
+            NullLogger<RefreshTokenCommandHandler>.Instance);
 
         var result = await handler.Handle(
             new RefreshTokenCommand(refreshToken.Token), CancellationToken.None);
@@ -323,6 +414,29 @@ public sealed class SystemAdminMfaLoginTests
         result.Error.Code.Should().Be("Auth.MfaRequired");
         refreshToken.IsActive.Should().BeFalse();
         tokenService.AccessTokenRequested.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task RefreshToken_WhenSystemMfaPolicyIsDisabled_ShouldIssueNormalSession()
+    {
+        var user = CreateSystemAdministrator(mfaEnabled: true);
+        var refreshToken = RefreshToken.Create(
+            user.Id, "refresh-with-disabled-mfa", DateTime.UtcNow.AddDays(1), "127.0.0.1",
+            isPersistent: true, mfaVerifiedAt: null);
+        user.AddRefreshToken(refreshToken);
+
+        var handler = new RefreshTokenCommandHandler(
+            new StubUserRepository(user),
+            new IssuingTokenService(),
+            new StubConfigurationService(systemMfaMode: MfaPolicyModes.Disabled),
+            NullLogger<RefreshTokenCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new RefreshTokenCommand(refreshToken.Token), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.AccessToken.Should().Be("access-token");
+        refreshToken.IsActive.Should().BeFalse();
     }
 
     [Fact]
@@ -335,7 +449,10 @@ public sealed class SystemAdminMfaLoginTests
         user.AddRefreshToken(refreshToken);
 
         var handler = new RefreshTokenCommandHandler(
-            new StubUserRepository(user), new IssuingTokenService());
+            new StubUserRepository(user),
+            new IssuingTokenService(),
+            new StubConfigurationService(),
+            NullLogger<RefreshTokenCommandHandler>.Instance);
 
         var result = await handler.Handle(
             new RefreshTokenCommand(refreshToken.Token), CancellationToken.None);
@@ -359,7 +476,10 @@ public sealed class SystemAdminMfaLoginTests
         var repository = new StubUserRepository(firstUser);
         repository.SetRefreshUsers(firstUser, reloadedUser);
         var handler = new RefreshTokenCommandHandler(
-            repository, new IssuingTokenService());
+            repository,
+            new IssuingTokenService(),
+            new StubConfigurationService(),
+            NullLogger<RefreshTokenCommandHandler>.Instance);
 
         var result = await handler.Handle(
             new RefreshTokenCommand("retry-refresh-token"), CancellationToken.None);
@@ -378,7 +498,11 @@ public sealed class SystemAdminMfaLoginTests
         user.AddRefreshToken(refreshToken);
 
         var repository = new StubUserRepository(user) { RotationSucceeds = false };
-        var handler = new RefreshTokenCommandHandler(repository, new IssuingTokenService());
+        var handler = new RefreshTokenCommandHandler(
+            repository,
+            new IssuingTokenService(),
+            new StubConfigurationService(),
+            NullLogger<RefreshTokenCommandHandler>.Instance);
 
         var result = await handler.Handle(
             new RefreshTokenCommand(refreshToken.Token), CancellationToken.None);
@@ -603,10 +727,14 @@ public sealed class SystemAdminMfaLoginTests
         public System.Security.Claims.ClaimsPrincipal? User => null;
     }
 
-    private sealed class StubConfigurationService(string? allowRegistration = null) : IConfigurationService
+    private sealed class StubConfigurationService(
+        string? allowRegistration = null,
+        string? systemMfaMode = null) : IConfigurationService
     {
         public Task<string?> GetConfigurationValueAsync(string key, CancellationToken cancellationToken) =>
-            Task.FromResult<string?>(key == "auth.allowregistration" ? allowRegistration : null);
+            Task.FromResult<string?>(key == "auth.allowregistration"
+                ? allowRegistration
+                : key == "security.mfa.system" ? systemMfaMode : null);
         public Task<List<ConfigurationDto>> GetAllConfigurationsAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<string?> GetManageableConfigurationValueAsync(string key, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<string?> GetPublicConfigurationValueAsync(string key, CancellationToken cancellationToken) => throw new NotSupportedException();

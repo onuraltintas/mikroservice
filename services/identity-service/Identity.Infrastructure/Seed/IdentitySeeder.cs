@@ -1,6 +1,7 @@
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using Identity.Infrastructure.Persistence;
+using EduPlatform.Shared.Security.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -181,6 +182,28 @@ public static class IdentitySeeder
                 SystemConfiguration.Create("notification.emailenabled", "true", "E-posta bildirimlerini aktif/pasif yapar.", Identity.Domain.Enums.ConfigurationDataType.Boolean, "Notification", true)
             };
 
+            var mfaCategoryDescriptions = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [MfaOperationCategories.Users] = "Kullanıcı yönetimi işlemlerinde MFA kapsamı.",
+                [MfaOperationCategories.RolesPermissions] = "Rol ve izin yönetimi işlemlerinde MFA kapsamı.",
+                [MfaOperationCategories.Institutions] = "Kurum ve kurum yöneticisi işlemlerinde MFA kapsamı.",
+                [MfaOperationCategories.System] = "Sistem ayarları ve operasyon kayıtlarında MFA kapsamı.",
+                [MfaOperationCategories.SpeedReading] = "Hızlı okuma yönetim işlemlerinde MFA kapsamı.",
+                [MfaOperationCategories.Coaching] = "Koçluk yönetim işlemlerinde MFA kapsamı.",
+                [MfaOperationCategories.Cms] = "CMS ve iletişim yönetim işlemlerinde MFA kapsamı."
+            };
+
+            foreach (var (category, description) in mfaCategoryDescriptions)
+            {
+                defaultConfigs.Add(SystemConfiguration.Create(
+                    MfaOperationCategories.ConfigurationKey(category),
+                    MfaPolicyModes.MutationsOnly,
+                    description,
+                    Identity.Domain.Enums.ConfigurationDataType.String,
+                    "Security",
+                    false));
+            }
+
             // Per-Service Maintenance Modes (Automated for core services)
             var serviceNames = new[] { "identity", "blog", "exam", "coaching", "content", "search", "student", "notification" };
             foreach (var service in serviceNames)
@@ -218,6 +241,19 @@ public static class IdentitySeeder
             }
             await context.SaveChangesAsync();
             logger.LogInformation("✅ System and Service-specific configurations seeded & synced.");
+
+            // Warm the shared Redis cache so every API can enforce the same MFA
+            // category mode immediately after a deployment or a cache restart.
+            try
+            {
+                await scope.ServiceProvider
+                    .GetRequiredService<IConfigurationService>()
+                    .RefreshCacheAsync(CancellationToken.None);
+            }
+            catch (Exception exception)
+            {
+                logger.LogWarning(exception, "MFA and system configuration cache could not be warmed; APIs will use fail-closed defaults.");
+            }
 
 
             // 2. Optional bootstrap SystemAdmin. This is intentionally controlled by

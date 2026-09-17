@@ -1,4 +1,5 @@
 using Identity.Application.Commands.CreateTeacher;
+using EduPlatform.Shared.Security.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +10,7 @@ namespace Identity.API.Controllers;
 [ApiVersion(1.0)]
 [Route("api/institution")]
 [Authorize(Roles = "InstitutionAdmin,InstitutionOwner")]
+[MfaCategory(MfaOperationCategories.Institutions)]
 public class InstitutionController : ControllerBase
 {
     private readonly IMediator _mediator;

@@ -13,6 +13,7 @@ namespace Coaching.API.Controllers;
 [ApiVersion(1.0)]
 [Authorize]
 [HasPermission(PlatformPermissions.Coaching.View)]
+[MfaCategory(MfaOperationCategories.Coaching)]
 [Route("api/reports")]
 [Produces("application/json")]
 public sealed class ComparativeReportsController(IMediator mediator) : ControllerBase

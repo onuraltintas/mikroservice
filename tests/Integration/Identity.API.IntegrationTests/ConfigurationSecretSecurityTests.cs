@@ -5,6 +5,7 @@ using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using Identity.Infrastructure.Persistence;
 using Identity.Infrastructure.Services;
+using EduPlatform.Shared.Security.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
@@ -99,6 +100,62 @@ public sealed class ConfigurationSecretSecurityTests
 
         await update.Should().ThrowAsync<BusinessRuleException>();
         await delete.Should().ThrowAsync<BusinessRuleException>();
+    }
+
+    [Fact]
+    public async Task MfaConfiguration_ShouldAcceptOnlyPrivateKnownModes()
+    {
+        await using var context = CreateContext();
+        var service = CreateService(context);
+
+        var invalidMode = () => service.CreateConfigurationAsync(
+            new CreateConfigurationRequest
+            {
+                Key = MfaOperationCategories.ConfigurationKey(MfaOperationCategories.Users),
+                Value = "sometimes",
+                Description = "MFA",
+                DataType = ConfigurationDataType.String,
+                Group = "Security",
+                IsPublic = false
+            },
+            CancellationToken.None);
+        var publicMode = () => service.CreateConfigurationAsync(
+            new CreateConfigurationRequest
+            {
+                Key = MfaOperationCategories.ConfigurationKey(MfaOperationCategories.Users),
+                Value = MfaPolicyModes.Disabled,
+                Description = "MFA",
+                DataType = ConfigurationDataType.String,
+                Group = "Security",
+                IsPublic = true
+            },
+            CancellationToken.None);
+
+        await invalidMode.Should().ThrowAsync<BusinessRuleException>()
+            .WithMessage("*required, mutations veya disabled*");
+        await publicMode.Should().ThrowAsync<BusinessRuleException>()
+            .WithMessage("*herkese açık olamaz*");
+    }
+
+    [Fact]
+    public async Task MfaConfiguration_ShouldNotBeDeleted()
+    {
+        await using var context = CreateContext();
+        context.Configurations.Add(SystemConfiguration.Create(
+            MfaOperationCategories.ConfigurationKey(MfaOperationCategories.Users),
+            MfaPolicyModes.MutationsOnly,
+            "MFA",
+            ConfigurationDataType.String,
+            "Security"));
+        await context.SaveChangesAsync();
+        var service = CreateService(context);
+
+        var delete = () => service.DeleteConfigurationAsync(
+            MfaOperationCategories.ConfigurationKey(MfaOperationCategories.Users),
+            CancellationToken.None);
+
+        await delete.Should().ThrowAsync<BusinessRuleException>()
+            .WithMessage("*silinemez*");
     }
 
     private static IdentityDbContext CreateContext()

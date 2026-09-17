@@ -13,6 +13,7 @@ namespace Identity.API.Controllers;
 [Route("api/admin-audit/identity")]
 [Authorize(Roles = "SystemAdmin")]
 [HasPermission(PlatformPermissions.Operations.View)]
+[MfaCategory(MfaOperationCategories.System)]
 public sealed class AdminAuditController(IdentityDbContext dbContext) : ControllerBase
 {
     [HttpGet]

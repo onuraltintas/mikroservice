@@ -11,6 +11,7 @@ namespace Identity.API.Controllers.Settings;
 [ApiVersion(1.0)]
 [Route("api/system-logs")]
 [HasPermission(Permissions.Operations.View)]
+[MfaCategory(MfaOperationCategories.System)]
 public class SystemLogsController : ControllerBase
 {
     private readonly ISystemLogService _systemLogService;

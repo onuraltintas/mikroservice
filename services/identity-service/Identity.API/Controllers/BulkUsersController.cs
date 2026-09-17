@@ -42,6 +42,7 @@ public sealed class BulkUsersController : ControllerBase
 
     [HttpGet("template")]
     [HasPermission(Permissions.Users.View)]
+    [MfaCategory(MfaOperationCategories.Users)]
     [Authorize(Roles = "SystemAdmin")]
     [Produces("text/csv")]
     public IActionResult DownloadTemplate()
@@ -59,6 +60,7 @@ public sealed class BulkUsersController : ControllerBase
     [HasPermission(Permissions.Users.Create)]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.Users)]
     [ProducesResponseType(typeof(BulkUserOperationResult), StatusCodes.Status200OK)]
     public async Task<IActionResult> Import(
         IFormFile? file,
@@ -128,6 +130,7 @@ public sealed class BulkUsersController : ControllerBase
 
     [HttpGet("export")]
     [HasPermission(Permissions.Users.View)]
+    [MfaCategory(MfaOperationCategories.Users)]
     [Authorize(Roles = "SystemAdmin")]
     [Produces("text/csv")]
     public async Task<IActionResult> Export(
@@ -174,6 +177,7 @@ public sealed class BulkUsersController : ControllerBase
     [HasPermission(Permissions.Users.Edit)]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.Users)]
     [ProducesResponseType(typeof(BulkUserOperationResult), StatusCodes.Status200OK)]
     public async Task<IActionResult> AssignRole(
         [FromBody] BulkRoleAssignmentRequest request,

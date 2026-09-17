@@ -15,6 +15,7 @@ using System.Security.Claims;
 using DotNetEnv;
 using EduPlatform.Shared.Infrastructure.Resiliency;
 using EduPlatform.Shared.Infrastructure.Extensions;
+using EduPlatform.Shared.Infrastructure.Caching;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using EduPlatform.Shared.Security.Extensions;
 using EduPlatform.Shared.Security.Services;
@@ -66,6 +67,9 @@ builder.Host.UseCustomSerilog();
 builder.Services.AddPersistentDataProtection(builder.Configuration, "EduPlatform.Notification", builder.Environment.IsProduction());
 builder.Services.AddEduPlatformOpenTelemetry(builder.Configuration, builder.Environment, "EduPlatform.Notification");
 builder.Services.AddGlobalExceptionHandler();
+// Keep notification/admin authorization in sync with the identity MFA policy
+// categories.
+builder.Services.AddRedisCache(builder.Configuration);
 builder.Services.AddOptions<PublicAppUrlOptions>()
     .Bind(builder.Configuration.GetSection(PublicAppUrlOptions.SectionName))
     .Validate(

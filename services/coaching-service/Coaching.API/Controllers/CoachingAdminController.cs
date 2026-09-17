@@ -42,6 +42,7 @@ namespace Coaching.API.Controllers;
 [Route("api/coaching-admin")]
 [Authorize]
 [HasPermission(PlatformPermissions.Coaching.View)]
+[MfaCategory(MfaOperationCategories.Coaching)]
 [Produces("application/json")]
 public sealed class CoachingAdminController : ControllerBase
 {

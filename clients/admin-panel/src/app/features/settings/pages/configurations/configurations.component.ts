@@ -5,6 +5,28 @@ import { ConfigurationService, Configuration, ConfigurationDataType } from '../.
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { AuthService, hasRequiredRole } from '../../../../core/auth/auth.service';
 
+const MFA_POLICY_MODES = new Set(['required', 'mutations', 'disabled']);
+
+interface MfaCategoryPolicyDefinition {
+    category: string;
+    label: string;
+    description: string;
+}
+
+interface MfaCategoryPolicyView extends MfaCategoryPolicyDefinition {
+    config: Configuration;
+}
+
+const MFA_CATEGORY_POLICIES: MfaCategoryPolicyDefinition[] = [
+    { category: 'users', label: 'Kullanıcılar', description: 'Kullanıcı, oturum ve MFA yönetimi' },
+    { category: 'roles-permissions', label: 'Roller ve izinler', description: 'Rol ve yetki değişiklikleri' },
+    { category: 'institutions', label: 'Kurumlar', description: 'Kurum ve kurum yöneticisi işlemleri' },
+    { category: 'system', label: 'Sistem', description: 'Sistem ayarları, operasyon kayıtları ve yönetici oturum MFA\'sı' },
+    { category: 'speed-reading', label: 'Hızlı okuma', description: 'Katalog, program ve ilerleme yönetimi' },
+    { category: 'coaching', label: 'Koçluk', description: 'Atama, oturum, sınav ve hedef yönetimi' },
+    { category: 'cms', label: 'CMS ve iletişim', description: 'Sayfa, medya, e-posta ve destek yönetimi' }
+];
+
 @Component({
     selector: 'app-configurations',
     standalone: true,
@@ -134,6 +156,48 @@ import { AuthService, hasRequiredRole } from '../../../../core/auth/auth.service
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MFA Policy Center -->
+        <div *ngIf="mfaPolicies().length > 0" class="mb-10 rounded-3xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/20 p-6 md:p-8 shadow-sm">
+            <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3 mb-6">
+                <div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20">
+                            <span class="material-icons">verified_user</span>
+                        </div>
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Yönetici MFA politikaları</h2>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-indigo-200/70 max-w-3xl">
+                        Yönetim işlemlerini kategori bazında koruyun. Varsayılan seçim yalnızca ekleme, güncelleme ve silme gibi değişikliklerde MFA ister.
+                    </p>
+                </div>
+                <span class="text-xs text-indigo-700 dark:text-indigo-300 bg-white/70 dark:bg-white/5 border border-indigo-100 dark:border-indigo-500/20 rounded-full px-3 py-1.5">
+                    Değişiklikler merkezi olarak tüm API'lere uygulanır
+                </span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div *ngFor="let policy of mfaPolicies()" class="bg-white dark:bg-gray-800 rounded-2xl border border-indigo-100 dark:border-indigo-500/20 p-4">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div>
+                            <h3 class="font-semibold text-gray-900 dark:text-white text-sm">{{ policy.label }}</h3>
+                            <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">{{ policy.description }}</p>
+                        </div>
+                        <span class="material-icons text-indigo-500 text-lg">admin_panel_settings</span>
+                    </div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">MFA kapsamı</label>
+                    <select
+                        [value]="policy.config.value"
+                        (change)="updateMfaPolicy(policy.config, $event)"
+                        [disabled]="!canManage()"
+                        class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="required">Tüm işlemler</option>
+                        <option value="mutations">Sadece değişiklikler</option>
+                        <option value="disabled">MFA kapalı</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -330,12 +394,12 @@ export class ConfigurationsComponent implements OnInit {
     });
 
     // Don't show Maintenance configs in the main grid as they are in the Operation Center
-    displayConfigs = computed(() => {
-        return this.filteredConfigs(); // ARTIK maintenance ayarları da gösteriliyor!
-    });
+    displayConfigs = computed(() =>
+        this.filteredConfigs().filter(config => !config.key.toLowerCase().startsWith('security.mfa.'))
+    );
 
     filteredConfigs = computed(() => {
-        let items = this.configs();
+        let items = this.configs().filter(config => !config.key.toLowerCase().startsWith('security.mfa.'));
 
         if (this.selectedGroup() !== 'All') {
             items = items.filter(c => c.group === this.selectedGroup());
@@ -350,6 +414,16 @@ export class ConfigurationsComponent implements OnInit {
         }
 
         return items;
+    });
+
+    mfaPolicies = computed(() => {
+        return MFA_CATEGORY_POLICIES
+            .map(definition => {
+                const config = this.configs().find(item =>
+                    item.key.toLowerCase() === `security.mfa.${definition.category}`);
+                return config ? { ...definition, config } : null;
+            })
+            .filter((policy): policy is MfaCategoryPolicyView => policy !== null);
     });
 
     ngOnInit() {
@@ -411,6 +485,22 @@ export class ConfigurationsComponent implements OnInit {
                 this.loadConfigs();
             },
             error: () => this.toaster.error('Güncelleme başarısız.')
+        });
+    }
+
+    updateMfaPolicy(config: Configuration, event: Event) {
+        const value = (event.target as HTMLSelectElement | null)?.value?.toLowerCase();
+        if (!value || !MFA_POLICY_MODES.has(value)) {
+            this.toaster.error('Geçersiz MFA kapsamı seçildi.');
+            return;
+        }
+
+        this.configService.updateConfiguration(config.key, { value }).subscribe({
+            next: () => {
+                this.toaster.success(`${config.key.replace('security.mfa.', '')} MFA politikası güncellendi.`);
+                this.loadConfigs();
+            },
+            error: () => this.toaster.error('MFA politikası güncellenemedi.')
         });
     }
 

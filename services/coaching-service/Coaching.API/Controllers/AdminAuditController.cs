@@ -13,6 +13,7 @@ namespace Coaching.API.Controllers;
 [Route("api/admin-audit/coaching")]
 [Authorize(Roles = "SystemAdmin")]
 [HasPermission(PlatformPermissions.Operations.View)]
+[MfaCategory(MfaOperationCategories.System)]
 public sealed class AdminAuditController(CoachingDbContext dbContext) : ControllerBase
 {
     [HttpGet]

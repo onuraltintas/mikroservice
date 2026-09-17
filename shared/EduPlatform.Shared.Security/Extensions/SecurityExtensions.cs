@@ -1,6 +1,7 @@
 using EduPlatform.Shared.Security.Configuration;
 using EduPlatform.Shared.Security.Interfaces;
 using EduPlatform.Shared.Security.Services;
+using EduPlatform.Shared.Security.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
@@ -80,10 +81,12 @@ public static class SecurityExtensions
         {
             options.AddPolicy("MfaRequired", policy => policy
                 .RequireAuthenticatedUser()
-                .RequireClaim("amr", "mfa"));
+                .AddRequirements(new MfaPolicyRequirement()));
         });
         services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationPolicyProvider, Authorization.PermissionPolicyProvider>();
         services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, Authorization.PermissionAuthorizationHandler>();
+        services.AddScoped<IMfaPolicyStore, MfaPolicyStore>();
+        services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, MfaAuthorizationHandler>();
         return services;
     }
 }

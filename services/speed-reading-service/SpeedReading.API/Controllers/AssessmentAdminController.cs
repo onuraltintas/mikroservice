@@ -12,6 +12,7 @@ namespace SpeedReading.API.Controllers;
 [Route("api/speed-reading/admin/assessment-templates")]
 [Authorize]
 [HasPermission(PlatformPermissions.SpeedReading.SettingsManage)]
+[MfaCategory(MfaOperationCategories.SpeedReading)]
 public sealed class AssessmentAdminController(
     ISpeedReadingAssessment assessment,
     ISpeedReadingLevelCatalog levelCatalog,

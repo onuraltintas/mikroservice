@@ -3,6 +3,7 @@ using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using Identity.Infrastructure.Persistence;
+using EduPlatform.Shared.Security.Authorization;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
@@ -109,6 +110,7 @@ public class ConfigurationService : IConfigurationService
     {
         EnsureManageableDataType(request.DataType);
         var normalizedKey = request.Key.ToLower().Trim();
+        EnsureValidMfaConfiguration(normalizedKey, request.Value, request.IsPublic);
         
         var existing = await _context.Configurations
             .FirstOrDefaultAsync(c => c.Key.ToLower() == normalizedKey, cancellationToken);
@@ -150,6 +152,7 @@ public class ConfigurationService : IConfigurationService
         if (config == null) throw new Exception($"Configuration '{normalizedKey}' not found.");
 
         EnsureManageableDataType(config.DataType);
+        EnsureValidMfaConfiguration(normalizedKey, request.Value, config.IsPublic);
 
         config.UpdateValue(request.Value);
         await _context.SaveChangesAsync(cancellationToken);
@@ -163,6 +166,13 @@ public class ConfigurationService : IConfigurationService
             .FirstOrDefaultAsync(c => c.Key.ToLower() == normalizedKey, cancellationToken);
 
         if (config == null) return;
+
+        if (normalizedKey.StartsWith("security.mfa.", StringComparison.Ordinal))
+        {
+            throw new BusinessRuleException(
+                "Configuration.MfaDeletionForbidden",
+                "MFA kategori ayarı silinemez; kapsamı MFA yönetim panelinden değiştirin.");
+        }
 
         EnsureManageableDataType(config.DataType);
 
@@ -203,6 +213,37 @@ public class ConfigurationService : IConfigurationService
             throw new BusinessRuleException(
                 "Configuration.SecretManagementForbidden",
                 "Secret değerler yönetim API'sinde saklanamaz; bir secret manager kullanılmalıdır.");
+        }
+    }
+
+    private static void EnsureValidMfaConfiguration(string key, string value, bool isPublic)
+    {
+        const string prefix = "security.mfa.";
+        if (!key.StartsWith(prefix, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var category = key[prefix.Length..];
+        if (!MfaOperationCategories.IsKnown(category))
+        {
+            throw new BusinessRuleException(
+                "Configuration.MfaCategoryInvalid",
+                "MFA ayarı geçerli bir yönetim kategorisi kullanmalıdır.");
+        }
+
+        if (!MfaPolicyModes.IsKnown(value))
+        {
+            throw new BusinessRuleException(
+                "Configuration.MfaModeInvalid",
+                "MFA ayarı required, mutations veya disabled değerlerinden biri olmalıdır.");
+        }
+
+        if (isPublic)
+        {
+            throw new BusinessRuleException(
+                "Configuration.MfaPublicForbidden",
+                "MFA yönetim ayarları herkese açık olamaz.");
         }
     }
 

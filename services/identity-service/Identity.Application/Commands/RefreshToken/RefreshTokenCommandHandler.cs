@@ -1,7 +1,9 @@
 using EduPlatform.Shared.Kernel.Results;
+using EduPlatform.Shared.Security.Authorization;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Identity.Application.Commands.RefreshToken;
 
@@ -9,13 +11,19 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
 {
     private readonly IUserRepository _userRepository;
     private readonly ITokenService _tokenService;
+    private readonly IConfigurationService _configurationService;
+    private readonly ILogger<RefreshTokenCommandHandler> _logger;
 
     public RefreshTokenCommandHandler(
         IUserRepository userRepository,
-        ITokenService tokenService)
+        ITokenService tokenService,
+        IConfigurationService configurationService,
+        ILogger<RefreshTokenCommandHandler> logger)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
+        _configurationService = configurationService;
+        _logger = logger;
     }
 
     public Task<Result<RefreshTokenResponse>> Handle(
@@ -36,10 +44,16 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         if (existingRefreshToken == null || !existingRefreshToken.IsActive)
              return Result.Failure<RefreshTokenResponse>(new Error("Auth.InvalidToken", "Oturum süresi dolmuş veya geçersiz."));
 
-        var isSystemAdministrator = user.Roles.Any(role =>
+        var isPrivilegedAdministrator = user.Roles.Any(role =>
             role.Role is not null
-            && string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
-        if (isSystemAdministrator && user.MfaEnabled && existingRefreshToken.MfaVerifiedAt is null)
+            && (string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(role.Role.Name, "InstitutionAdmin", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(role.Role.Name, "InstitutionOwner", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(role.Role.Name, "Editor", StringComparison.OrdinalIgnoreCase)));
+        if (isPrivilegedAdministrator
+            && user.MfaEnabled
+            && existingRefreshToken.MfaVerifiedAt is null
+            && await IsPrivilegedMfaRequiredAsync(cancellationToken))
         {
             var revoked = await _userRepository.RevokeRefreshTokenAsync(
                 request.RefreshToken,
@@ -85,4 +99,22 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         Result.Failure<RefreshTokenResponse>(new Error(
             "Auth.InvalidToken",
             "Oturum anahtarı artık geçerli değil; lütfen tekrar giriş yapın."));
+
+    private async Task<bool> IsPrivilegedMfaRequiredAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var mode = await _configurationService.GetConfigurationValueAsync(
+                MfaOperationCategories.ConfigurationKey(MfaOperationCategories.System),
+                cancellationToken);
+            return !string.Equals(mode, MfaPolicyModes.Disabled, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(
+                exception,
+                "Privileged refresh MFA policy could not be read; keeping MFA required.");
+            return true;
+        }
+    }
 }

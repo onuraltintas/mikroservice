@@ -24,5 +24,6 @@ internal static class GoogleAuthenticationRules
         userRole.Role.Name.Equals("SystemAdmin", StringComparison.OrdinalIgnoreCase)
         || userRole.Role.Name.Equals("InstitutionAdmin", StringComparison.OrdinalIgnoreCase)
         || userRole.Role.Name.Equals("InstitutionOwner", StringComparison.OrdinalIgnoreCase)
-        || userRole.Role.Name.Equals("Teacher", StringComparison.OrdinalIgnoreCase));
+        || userRole.Role.Name.Equals("Teacher", StringComparison.OrdinalIgnoreCase)
+        || userRole.Role.Name.Equals("Editor", StringComparison.OrdinalIgnoreCase));
 }

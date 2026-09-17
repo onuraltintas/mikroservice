@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.RateLimiting;
 using EduPlatform.Shared.Infrastructure.Extensions;
+using EduPlatform.Shared.Infrastructure.Caching;
 using EduPlatform.Shared.Infrastructure.Logging;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using EduPlatform.Shared.Infrastructure.Observability;
@@ -155,6 +156,9 @@ builder.Services.AddEduPlatformOpenTelemetry(
     builder.Environment,
     "EduPlatform.SpeedReading");
 builder.Services.AddGlobalExceptionHandler();
+// MFA category policies are distributed through the same Redis cache used by
+// the identity configuration service.
+builder.Services.AddRedisCache(builder.Configuration);
 builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
 builder.Services.AddHostedService<SpeedReadingIdempotencyCleanupWorker>();
 builder.Services.AddCustomAuthentication(builder.Configuration);

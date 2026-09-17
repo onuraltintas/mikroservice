@@ -11,6 +11,7 @@ namespace Notification.API.Controllers;
 [ApiVersion(1.0)]
 [Route("api/email-templates")]
 [HasPermission(PlatformPermissions.Notifications.Templates)]
+[MfaCategory(MfaOperationCategories.Cms)]
 public sealed class EmailTemplatesController : ControllerBase
 {
     private readonly IMediator _mediator;

@@ -11,6 +11,7 @@ namespace Identity.API.Controllers;
 [ApiVersion(1.0)]
 [Route("api/[controller]")]
 [HasPermission(Permissions.Operations.View)]
+[MfaCategory(MfaOperationCategories.System)]
 public class ConfigurationsController : ControllerBase
 {
     private readonly IConfigurationService _configurationService;
