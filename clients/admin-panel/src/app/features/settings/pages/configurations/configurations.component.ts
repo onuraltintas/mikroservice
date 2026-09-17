@@ -495,7 +495,8 @@ export class ConfigurationsComponent implements OnInit {
             return;
         }
 
-        this.configService.updateConfiguration(config.key, { value }).subscribe({
+        const category = config.key.replace(/^security\.mfa\./i, '').trim();
+        this.configService.updateMfaPolicy(category, { value }).subscribe({
             next: () => {
                 this.toaster.success(`${config.key.replace('security.mfa.', '')} MFA politikası güncellendi.`);
                 this.loadConfigs();

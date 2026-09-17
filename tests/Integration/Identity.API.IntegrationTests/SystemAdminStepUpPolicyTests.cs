@@ -72,6 +72,19 @@ public sealed class SystemAdminStepUpPolicyTests
     }
 
     [Fact]
+    public void MfaPolicyManagement_ShouldRequireSystemAdminWithoutStepUp()
+    {
+        var action = typeof(ConfigurationsController).GetMethod(nameof(ConfigurationsController.UpdateMfaPolicy));
+
+        action.Should().NotBeNull();
+        action!.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
+            .Cast<AuthorizeAttribute>()
+            .Should()
+            .Contain(attribute => attribute.Roles == "SystemAdmin")
+            .And.NotContain(attribute => attribute.Policy == "MfaRequired");
+    }
+
+    [Fact]
     public async Task MfaPolicy_ShouldRequireAuthenticatedMfaClaim()
     {
         var services = new ServiceCollection();

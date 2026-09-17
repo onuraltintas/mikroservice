@@ -65,6 +65,10 @@ export class ConfigurationService {
         return this.http.put<void>(`${this.apiUrl}/${key}`, request);
     }
 
+    updateMfaPolicy(category: string, request: UpdateConfigurationRequest): Observable<void> {
+        return this.http.put<void>(`${this.apiUrl}/mfa/${encodeURIComponent(category)}`, request);
+    }
+
     deleteConfiguration(key: string): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/${key}`);
     }

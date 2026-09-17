@@ -35,6 +35,31 @@ public class ConfigurationsController : ControllerBase
         return Ok(value);
     }
 
+    /// <summary>
+    /// Changes the MFA policy control plane itself. This route deliberately
+    /// remains available to a SystemAdmin without the policy it is changing,
+    /// so an admin cannot be locked out before MFA has been enrolled.
+    /// </summary>
+    [HttpPut("mfa/{category}")]
+    [Authorize(Roles = "SystemAdmin")]
+    public async Task<IActionResult> UpdateMfaPolicy(
+        string category,
+        UpdateConfigurationRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!MfaOperationCategories.IsKnown(category))
+        {
+            return BadRequest(new { message = "Geçersiz MFA kategorisi." });
+        }
+
+        await _configurationService.UpdateConfigurationAsync(
+            MfaOperationCategories.ConfigurationKey(category),
+            request,
+            cancellationToken);
+
+        return NoContent();
+    }
+
     [HttpGet("public/{key}")]
     [AllowAnonymous]
     public async Task<ActionResult<string>> GetPublicValue(string key, CancellationToken cancellationToken)
