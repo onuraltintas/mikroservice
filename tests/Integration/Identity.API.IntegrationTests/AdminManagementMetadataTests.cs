@@ -114,6 +114,45 @@ public class AdminManagementMetadataTests
     }
 
     [Fact]
+    public void NotificationReadEndpoints_ShouldNotRequireMfaStepUp()
+    {
+        foreach (var (controller, methodName) in new[]
+                 {
+                     (typeof(SupportAdminController), nameof(SupportAdminController.GetAll)),
+                     (typeof(SupportAdminController), nameof(SupportAdminController.GetById)),
+                     (typeof(EmailTemplatesController), nameof(EmailTemplatesController.GetAll))
+                 })
+        {
+            var method = controller.GetMethod(methodName);
+            method.Should().NotBeNull();
+            method!.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
+                .Cast<AuthorizeAttribute>()
+                .Should().NotContain(attribute => attribute.Policy == "MfaRequired");
+            method.GetCustomAttributes(typeof(MfaCategoryAttribute), inherit: true)
+                .Should().BeEmpty();
+        }
+    }
+
+    [Fact]
+    public void NotificationMutationEndpoints_ShouldRequireCmsMfaStepUp()
+    {
+        foreach (var (controller, methodName) in new[]
+                 {
+                     (typeof(SupportAdminController), nameof(SupportAdminController.Process)),
+                     (typeof(SupportAdminController), nameof(SupportAdminController.Reply)),
+                     (typeof(EmailTemplatesController), nameof(EmailTemplatesController.Create)),
+                     (typeof(EmailTemplatesController), nameof(EmailTemplatesController.Update))
+                 })
+        {
+            var method = controller.GetMethod(methodName);
+            method.Should().NotBeNull();
+            method!.GetCustomAttributes(typeof(MfaCategoryAttribute), inherit: true)
+                .Cast<MfaCategoryAttribute>()
+                .Should().ContainSingle(attribute => attribute.Category == MfaOperationCategories.Cms);
+        }
+    }
+
+    [Fact]
     public void OperationalReadControllers_MustRequireOperationsPermission()
     {
         typeof(ConfigurationsController)

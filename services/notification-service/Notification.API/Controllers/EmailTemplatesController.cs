@@ -11,7 +11,6 @@ namespace Notification.API.Controllers;
 [ApiVersion(1.0)]
 [Route("api/email-templates")]
 [HasPermission(PlatformPermissions.Notifications.Templates)]
-[MfaCategory(MfaOperationCategories.Cms)]
 public sealed class EmailTemplatesController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -29,6 +28,7 @@ public sealed class EmailTemplatesController : ControllerBase
     }
 
     [HttpPost]
+    [MfaCategory(MfaOperationCategories.Cms)]
     public async Task<IActionResult> Create(
         [FromBody] CreateEmailTemplateCommand command,
         CancellationToken cancellationToken)
@@ -40,6 +40,7 @@ public sealed class EmailTemplatesController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [MfaCategory(MfaOperationCategories.Cms)]
     public async Task<IActionResult> Update(
         Guid id,
         [FromBody] UpdateEmailTemplateRequest request,

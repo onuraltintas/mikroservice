@@ -12,7 +12,6 @@ namespace Notification.API.Controllers;
 [ApiVersion(1.0)]
 [Route("api/support/requests")]
 [HasPermission(PlatformPermissions.Support.View)]
-[MfaCategory(MfaOperationCategories.Cms)]
 public sealed class SupportAdminController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -45,6 +44,7 @@ public sealed class SupportAdminController : ControllerBase
 
     [HttpPost("{id:guid}/process")]
     [HasPermission(PlatformPermissions.Support.Reply)]
+    [MfaCategory(MfaOperationCategories.Cms)]
     public async Task<IActionResult> Process(
         Guid id,
         [FromBody] ProcessRequest request,
@@ -56,6 +56,7 @@ public sealed class SupportAdminController : ControllerBase
 
     [HttpPost("{id:guid}/reply")]
     [HasPermission(PlatformPermissions.Support.Reply)]
+    [MfaCategory(MfaOperationCategories.Cms)]
     public async Task<IActionResult> Reply(
         Guid id,
         [FromBody] ReplyRequest request,
