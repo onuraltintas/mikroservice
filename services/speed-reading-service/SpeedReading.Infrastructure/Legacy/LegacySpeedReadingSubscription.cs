@@ -1,4 +1,5 @@
 using System.Text.Json;
+using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using EduPlatform.Shared.Contracts.Reporting;
 using SpeedReading.Application.Assignments;
@@ -451,7 +452,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             return await GetBankTransferPaymentRequestAsync(replay.ResourceId, null, cancellationToken);
         }
 
-        var row = await (from paymentRequest in db.BankTransferPaymentRequests
+        var row = await (from paymentRequest in db.BankTransferPaymentRequests.AsTracking()
                          join plan in db.SubscriptionPlans.AsNoTracking() on paymentRequest.PlanId equals plan.Id
                          join product in db.Products.AsNoTracking() on plan.ProductId equals product.Id
                          where paymentRequest.Id == id
@@ -480,31 +481,51 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         row.paymentRequest.UpdatedAt = now;
         if (string.Equals(targetStatus, BankTransferPaymentRules.ApprovedStatus, StringComparison.OrdinalIgnoreCase))
         {
-            var subscription = new LegacyUserSubscription
+            var subscriptionNote = $"Bank transfer payment {row.paymentRequest.Id:N}";
+            var subscription = await db.UserSubscriptions
+                .Where(item => item.UserId == row.paymentRequest.UserId
+                    && item.PlanId == row.plan.Id
+                    && item.Status == "Active"
+                    && !item.IsDeleted
+                    && item.Notes == subscriptionNote
+                    && (!item.EndDate.HasValue || item.EndDate > now))
+                .OrderBy(item => item.CreatedAt)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (subscription is null)
             {
-                Id = Guid.NewGuid(),
-                UserId = row.paymentRequest.UserId,
-                UserName = row.paymentRequest.UserName,
-                UserEmail = row.paymentRequest.UserEmail,
-                PlanId = row.plan.Id,
-                ProductId = row.plan.ProductId,
-                Status = "Active",
-                StartDate = now,
-                EndDate = SpeedReadingAccessRules.ResolveEndDate(now, null, row.plan.DurationDays),
-                Notes = $"Bank transfer payment {row.paymentRequest.Id:N}",
-                CreatedBy = actorId,
-                CreatedAt = now
-            };
-            db.UserSubscriptions.Add(subscription);
+                subscription = new LegacyUserSubscription
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = row.paymentRequest.UserId,
+                    UserName = row.paymentRequest.UserName,
+                    UserEmail = row.paymentRequest.UserEmail,
+                    PlanId = row.plan.Id,
+                    ProductId = row.plan.ProductId,
+                    Status = "Active",
+                    StartDate = now,
+                    EndDate = SpeedReadingAccessRules.ResolveEndDate(now, null, row.plan.DurationDays),
+                    Notes = subscriptionNote,
+                    CreatedBy = actorId,
+                    CreatedAt = now
+                };
+                db.UserSubscriptions.Add(subscription);
+            }
             row.paymentRequest.SubscriptionId = subscription.Id;
         }
 
         OwnedContentMutationIdempotency.Add(ownedDb, BankTransferReviewScope, key, requestHash, id, now);
-        var concurrent = await OwnedContentMutationIdempotency.SaveAsync(ownedDb, BankTransferReviewScope, key, cancellationToken);
-        if (concurrent is not null)
+        try
         {
-            OwnedContentMutationIdempotency.EnsureReplayMatches(concurrent, requestHash);
-            return await GetBankTransferPaymentRequestAsync(concurrent.ResourceId, null, cancellationToken);
+            var concurrent = await OwnedContentMutationIdempotency.SaveAsync(ownedDb, BankTransferReviewScope, key, cancellationToken);
+            if (concurrent is not null)
+            {
+                OwnedContentMutationIdempotency.EnsureReplayMatches(concurrent, requestHash);
+                return await GetBankTransferPaymentRequestAsync(concurrent.ResourceId, null, cancellationToken);
+            }
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new ConcurrencyException("BankTransferPaymentRequest", id);
         }
 
         return ToBankTransferPaymentRequestSummary(row.paymentRequest, row.plan);

@@ -346,7 +346,8 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
       { title: 'EFT talebini onayla', confirmText: 'Onayla' }
     );
     if (!accepted) return;
-    this.saveRequest(this.service.reviewBankTransferRequest(request.id, 'Approved', null), () => {
+    this.saveRequest(this.service.reviewBankTransferRequest(request.id, 'Approved', null), result => {
+      this.replaceBankTransferRequest(result);
       this.toaster.success('EFT talebi onaylandı ve erişim açıldı.');
       this.loadBankTransferRequests();
       this.loadSubscriptions();
@@ -360,10 +361,18 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
       { title: 'EFT talebini reddet', confirmText: 'Reddet' }
     );
     if (!reviewNote?.trim()) return;
-    this.saveRequest(this.service.reviewBankTransferRequest(request.id, 'Rejected', reviewNote.trim()), () => {
+    this.saveRequest(this.service.reviewBankTransferRequest(request.id, 'Rejected', reviewNote.trim()), result => {
+      this.replaceBankTransferRequest(result);
       this.toaster.success('EFT talebi reddedildi.');
       this.loadBankTransferRequests();
     });
+  }
+
+  private replaceBankTransferRequest(updated: SpeedReadingBankTransferRequest): void {
+    this.bankTransferRequests.update(page => ({
+      ...page,
+      items: page.items.map(item => item.id === updated.id ? updated : item)
+    }));
   }
 
   bankTransferStatusLabel(status: SpeedReadingBankTransferRequest['status']): string {
