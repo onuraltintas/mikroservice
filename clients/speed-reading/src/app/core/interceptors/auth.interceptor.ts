@@ -2,6 +2,7 @@ import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpEvent } from '@angul
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { SKIP_AUTH_REFRESH } from './http-context.tokens';
 import { catchError, switchMap, throwError, Observable, BehaviorSubject, filter, take } from 'rxjs';
 
 let isRefreshing = false;
@@ -36,6 +37,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = authService.token;
   const isAuthRequest = req.url.includes('/auth/');
   const isAnonymousAuthRequest = anonymousAuthEndpoints.some(endpoint => req.url.endsWith(endpoint));
+  const skipAuthRefresh = req.context.get(SKIP_AUTH_REFRESH);
 
   // Anonymous auth endpoints use only the HttpOnly refresh cookie. Protected auth endpoints
   // (for example MFA setup and Google account linking) still require the access token.
@@ -45,7 +47,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError(error => {
-      if (error.status === 401 && authService.currentUserValue && !isAuthRequest) {
+      if (error.status === 401 && authService.currentUserValue && !isAuthRequest && !skipAuthRefresh) {
         return handle401Error(req, next, authService, router);
       }
       return throwError(() => error);

@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, finalize, firstValueFrom, map, of, shareReplay, switchMap, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import {
@@ -12,6 +12,7 @@ import {
 } from '../models/user.model';
 import { environment } from '../../../environments/environment';
 import { SettingsService } from './settings.service';
+import { SKIP_AUTH_REFRESH } from '../interceptors/http-context.tokens';
 
 export interface MfaSetupResponse {
   secret: string;
@@ -254,9 +255,9 @@ export class AuthService {
     return this.http.post(`${this.AUTH_URL}/resend-verification-email`, { email }, { withCredentials: true });
   }
 
-  /** Called by GoogleCallbackComponent after server-side OAuth redirect */
-  loginFromCallback(response: AuthResponse): void {
-    this.setUser(this.normalizeAuthResponse(response));
+  /** Called by GoogleCallbackComponent after server-side OAuth redirect. */
+  loginFromCallback(response: AuthResponse): Observable<AuthResponse> {
+    return this.persistAndHydrateProfile(this.normalizeAuthResponse(response));
   }
 
   private setUser(response: AuthResponse): void {
@@ -319,7 +320,8 @@ export class AuthService {
     }
 
     return this.http.get<any>(`${this.API_URL}/v1/users/me`, {
-      headers: { 'X-Skip-Error-Toast': 'true' }
+      headers: { 'X-Skip-Error-Toast': 'true' },
+      context: new HttpContext().set(SKIP_AUTH_REFRESH, true)
     }).pipe(
       map(profileResponse => this.mergeProfileIntoAuthResponse(
         response,

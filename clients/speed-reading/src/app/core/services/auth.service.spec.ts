@@ -116,6 +116,34 @@ describe('AuthService', () => {
     expect(service.hasCompletedProfile()).toBeTrue();
   });
 
+  it('hydrates a student profile for the server-side Google callback', () => {
+    const accessToken = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJjYWxsYmFjay1zdHVkZW50Iiwicm9sZSI6IlN0dWRlbnQiLCJleHAiOjQxMDI0NDQ4MDB9.';
+    let response: AuthResponse | undefined;
+
+    service.loginFromCallback({
+      id: '',
+      token: accessToken,
+      refreshToken: '',
+      email: 'callback@example.com',
+      firstName: 'Callback',
+      lastName: 'Student',
+      roles: ['Student']
+    }).subscribe(value => response = value);
+
+    const profileRequest = http.expectOne('/api/v1/users/me');
+    profileRequest.flush({
+      userId: 'callback-student',
+      email: 'callback@example.com',
+      firstName: 'Callback',
+      lastName: 'Student',
+      roles: ['Student'],
+      studentDetails: { birthDate: '2000-01-01T00:00:00.000Z' }
+    });
+
+    expect(response?.id).toBe('callback-student');
+    expect(service.hasCompletedProfile()).toBeTrue();
+  });
+
   it('registers a student through the supported endpoint without creating a session', () => {
     service.register({
       firstName: 'Ada',

@@ -67,8 +67,12 @@ export class GoogleCallbackComponent implements OnInit {
         roles
       };
 
-      this.authService.loginFromCallback(authResponse);
-      this.navigateByRole(roles);
+      this.authService.loginFromCallback(authResponse).subscribe({
+        next: hydratedResponse => this.navigateByRole(hydratedResponse.roles),
+        error: () => {
+          this.error = 'Giriş tamamlanamadı. Lütfen tekrar deneyin.';
+        }
+      });
     });
   }
 
