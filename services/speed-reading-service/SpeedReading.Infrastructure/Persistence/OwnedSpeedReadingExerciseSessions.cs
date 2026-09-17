@@ -73,17 +73,6 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 throw new InvalidOperationException("Assessment content snapshot does not match the requested exercise.");
             }
 
-            var alreadyCompleted = await db.ExerciseSessionResults
-                .AsNoTracking()
-                .AnyAsync(item => item.StudentId == studentId
-                    && item.ExerciseId == request.ExerciseId
-                    && item.AssessmentAttemptId == request.AssessmentAttemptId.Value
-                    && item.IsAssessmentMode,
-                    cancellationToken);
-            if (alreadyCompleted)
-            {
-                throw new InvalidOperationException("Assessment exercise has already been completed.");
-            }
         }
         if (request.StudentAssignmentId.HasValue)
         {
@@ -162,38 +151,79 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         }
 
         // Starting a session is retried when a player is refreshed or the
-        // browser restores its previous route. Reuse the same session when
-        // the request carries the identical assignment/assessment context;
-        // an unrelated active session must still be rejected.
-        var activeSession = await db.ExerciseSessions
+        // browser restores its previous route. Serialize starts for the same
+        // student/exercise pair so two tabs cannot both pass the active check
+        // before either insert is committed.
+        // PostgreSQL is the production provider and gives us a transaction
+        // scoped advisory lock for the active-session check. The in-memory
+        // provider used by application tests does not implement transactions
+        // or SQL commands, so keep the same behavior there without trying to
+        // execute provider-specific SQL.
+        var isPostgres = db.Database.ProviderName?.Contains(
+            "Npgsql",
+            StringComparison.OrdinalIgnoreCase) == true;
+        await using var startTransaction = isPostgres
+            ? await db.Database.BeginTransactionAsync(cancellationToken)
+            : null;
+        if (startTransaction is not null)
+        {
+            var startLockKey = $"speed-reading-session:{studentId:N}:{request.ExerciseId:N}";
+            await db.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT pg_advisory_xact_lock(hashtext({startLockKey}))",
+                cancellationToken);
+        }
+
+        // Re-check completion after taking the same lock as the active-session
+        // query. A completion can commit between the initial validation above
+        // and this start attempt; without this check a fresh session could be
+        // created for an already completed assessment exercise.
+        if (request.AssessmentAttemptId.HasValue)
+        {
+            var alreadyCompleted = await db.ExerciseSessionResults
+                .AsNoTracking()
+                .AnyAsync(item => item.StudentId == studentId
+                    && item.ExerciseId == request.ExerciseId
+                    && item.AssessmentAttemptId == request.AssessmentAttemptId.Value
+                    && item.IsAssessmentMode,
+                    cancellationToken);
+            if (alreadyCompleted)
+                throw new InvalidOperationException("Assessment exercise has already been completed.");
+        }
+
+        // Reuse the same session when the request carries the identical
+        // assignment/assessment context; an unrelated active session must
+        // still be rejected. Check all active sessions so a stale duplicate
+        // cannot hide an older session with the matching context.
+        var activeSessions = await db.ExerciseSessions
             .AsNoTracking()
             .Where(item => item.StudentId == studentId
                 && item.ExerciseId == request.ExerciseId
                 && (item.Status == OwnedExerciseSessionStatus.Active
                     || item.Status == OwnedExerciseSessionStatus.Paused))
             .OrderByDescending(item => item.StartTime)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (activeSession is not null)
+            .ToListAsync(cancellationToken);
+        var activeSession = activeSessions.FirstOrDefault();
+        var matchingSession = activeSessions.FirstOrDefault(item =>
+            item.AssessmentAttemptId == request.AssessmentAttemptId
+            && item.StudentAssignmentId == request.StudentAssignmentId);
+        if (matchingSession is not null)
         {
-            var sameContext = activeSession.AssessmentAttemptId == request.AssessmentAttemptId
-                && activeSession.StudentAssignmentId == request.StudentAssignmentId;
-            if (!sameContext)
-                throw new InvalidOperationException("An active session already exists for this exercise.");
-
-            var existingState = DeserializeState(activeSession.SessionDataJson);
+            var existingState = DeserializeState(matchingSession.SessionDataJson);
             var existingConfiguration = ParseJsonOrEmpty(configurationJson);
             return new StartExerciseSessionResponse(
-                activeSession.Id,
-                activeSession.ExerciseId,
+                matchingSession.Id,
+                matchingSession.ExerciseId,
                 exerciseTypeName,
-                (Application.ExerciseSessions.ExerciseSessionStatus)activeSession.Status,
-                activeSession.StartTime,
-                activeSession.TotalSteps,
+                (Application.ExerciseSessions.ExerciseSessionStatus)matchingSession.Status,
+                matchingSession.StartTime,
+                matchingSession.TotalSteps,
                 ToPublicJson(existingState),
                 existingState.IsAssessmentMode
                     ? SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(existingConfiguration)
                     : RemoveAssessmentKeys(existingConfiguration));
         }
+        if (activeSession is not null)
+            throw new InvalidOperationException("An active session already exists for this exercise.");
 
         var readingTextId = assessmentSnapshot is not null
             ? assessmentSnapshot.ReadingText?.Id
@@ -241,6 +271,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             state.TotalSteps,
             now,
             state.TimeLimitSeconds,
+            studentAssignmentId: request.StudentAssignmentId,
             assessmentAttemptId: request.AssessmentAttemptId);
         session.SetState(
             JsonSerializer.Serialize(state, JsonOptions),
@@ -256,6 +287,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             db.ChangeTracker.Clear();
             throw new InvalidOperationException("Assessment exercise has already been started.");
         }
+
+        if (startTransaction is not null)
+            await startTransaction.CommitAsync(cancellationToken);
 
         return new StartExerciseSessionResponse(
             session.Id,

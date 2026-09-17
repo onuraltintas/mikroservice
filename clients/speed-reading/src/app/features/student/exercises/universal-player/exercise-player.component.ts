@@ -370,7 +370,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.loadExercise(exerciseId);
     } else {
       this.error = 'Egzersiz ID bulunamadı';
-      this.isLoading = false;
+      this.finishLoading();
     }
   }
 
@@ -530,22 +530,31 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         },
         error: (err) => {
           this.error = 'Egzersiz yüklenirken hata oluştu';
-          this.isLoading = false;
+          this.finishLoading();
           console.error('[ExercisePlayer] Load error:', err);
         }
       });
   }
 
   private startSession(): void {
-    if (!this.exercise) return;
+    if (!this.exercise) {
+      this.error = 'Egzersiz bilgisi bulunamadı';
+      this.finishLoading();
+      return;
+    }
 
     // For Teachers in preview mode, skip session creation entirely
     if (this.authService.hasRole('Teacher')) {
       console.log('Teacher preview mode - skipping session creation');
       this.sessionId = 'preview-mode'; // Placeholder ID
       this.backendSessionConfig = {};
-      this.initializeEngine();
-      this.isLoading = false;
+      try {
+        this.initializeEngine();
+      } catch (error) {
+        this.handleInitializationError(error);
+      } finally {
+        this.finishLoading();
+      }
       return;
     }
 
@@ -583,15 +592,37 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             this.comprehensionQuestions = questions;
           }
 
-          this.initializeEngine();
-          this.isLoading = false;
+          try {
+            this.initializeEngine();
+          } catch (error) {
+            this.handleInitializationError(error);
+          } finally {
+            this.finishLoading();
+          }
         },
         error: (err) => {
           console.error('Session start failed:', err);
           this.error = 'Oturum başlatılamadı. Lütfen internet bağlantınızı kontrol edin.';
-          this.isLoading = false;
+          this.finishLoading();
         }
       });
+  }
+
+  /**
+   * HTTP callbacks can complete outside the component's normal change
+   * detection turn when the Fetch backend is used. Always publish the final
+   * loading state explicitly so a successful session cannot leave the player
+   * on the indefinite spinner.
+   */
+  private finishLoading(): void {
+    this.isLoading = false;
+    this.cdr.detectChanges();
+  }
+
+  private handleInitializationError(error: unknown): void {
+    console.error('[ExercisePlayer] Engine initialization failed:', error);
+    this.engine = null;
+    this.error = 'Egzersiz hazırlanırken bir hata oluştu. Lütfen tekrar deneyin.';
   }
 
   private parseConfiguration(): void {

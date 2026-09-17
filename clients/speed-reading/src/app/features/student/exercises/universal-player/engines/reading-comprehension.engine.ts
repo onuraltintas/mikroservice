@@ -21,7 +21,7 @@ interface ReadingComprehensionConfig extends EngineConfig {
     wordCount?: number;
 
     // Alternative content source
-    content?: {
+    content?: string | {
         text?: string;
         wordCount?: number;
         title?: string;
@@ -108,22 +108,36 @@ export class ReadingComprehensionEngine implements BaseEngine {
         // - Content.WordCount
         // - Questions[]
         const cfg = config as any;
+        // The session endpoint serializes the reading body as `content` when
+        // it returns a public session snapshot. Older preview/configuration
+        // payloads use an object (`content.text`) or `Content.Text`; accept
+        // both shapes so a real snapshot is always shown to the student.
+        const rawContent = cfg.content;
+        const contentText = typeof rawContent === 'string'
+            ? rawContent
+            : rawContent?.text;
+        const contentTitle = typeof rawContent === 'object'
+            ? rawContent?.title
+            : undefined;
+        const contentWordCount = typeof rawContent === 'object'
+            ? rawContent?.wordCount
+            : undefined;
         this.text = config.readingTextContent ||
             cfg.Content?.Text ||      // PascalCase from C#
-            cfg.content?.text ||      // camelCase (if converted)
+            contentText ||            // camelCase or session snapshot string
             config.text ||
             this.getRandomText();
 
         this.title = cfg.ReadingTextTitle ||   // PascalCase from C#
             config.readingTextTitle ||
             cfg.Content?.Title ||
-            cfg.content?.title ||
+            contentTitle ||
             '';
         this.words = this.text.split(/\s+/).filter(w => w.length > 0);
 
         // Use wordCount from backend if available
         const wordCount = cfg.Content?.WordCount ||  // PascalCase
-            cfg.content?.wordCount ||                // camelCase
+            contentWordCount ||                      // camelCase
             config.wordCount ||
             this.words.length;
 
@@ -150,7 +164,7 @@ export class ReadingComprehensionEngine implements BaseEngine {
         // Log text source for debugging
         if (config.readingTextContent) {
         } else if (cfg.Content?.Text) {
-        } else if (cfg.content?.text) {
+        } else if (contentText) {
         } else if (config.text) {
         } else {
         }
