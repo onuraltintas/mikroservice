@@ -57,6 +57,8 @@ if (migrationOnly)
     await using var migrationScope = migrationApp.Services.CreateAsyncScope();
     var migrationDb = migrationScope.ServiceProvider.GetRequiredService<NotificationDbContext>();
     await migrationDb.Database.MigrateAsync();
+    var migrationLogger = migrationScope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    await NotificationDbContextSeeder.SeedAsync(migrationDb, migrationLogger, throwOnError: true);
     return;
 }
 

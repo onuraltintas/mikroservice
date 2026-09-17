@@ -7,7 +7,10 @@ namespace Notification.Infrastructure.Persistence;
 
 public static class NotificationDbContextSeeder
 {
-    public static async Task SeedAsync(NotificationDbContext context, ILogger logger)
+    public static async Task SeedAsync(
+        NotificationDbContext context,
+        ILogger logger,
+        bool throwOnError = false)
     {
         try
         {
@@ -43,13 +46,26 @@ public static class NotificationDbContextSeeder
             if (!File.Exists(seedFilePath))
             {
                 logger.LogWarning($"⚠️ Seed file not found at: {seedFilePath}. Skipping seeding.");
+                if (throwOnError)
+                {
+                    throw new FileNotFoundException("Notification template seed file was not found.", seedFilePath);
+                }
+
                 return;
             }
 
             var jsonContent = await File.ReadAllTextAsync(seedFilePath);
             var seedData = JsonSerializer.Deserialize<List<SeedItem>>(jsonContent);
 
-            if (seedData == null) return;
+            if (seedData == null)
+            {
+                if (throwOnError)
+                {
+                    throw new InvalidOperationException("Notification template seed file is empty or invalid.");
+                }
+
+                return;
+            }
 
             foreach (var item in seedData)
             {
@@ -64,10 +80,15 @@ public static class NotificationDbContextSeeder
                 else
                 {
                     logger.LogWarning($"⚠️ HTML template not found: {htmlPath}");
+                    if (throwOnError)
+                    {
+                        throw new FileNotFoundException("Notification template HTML file was not found.", htmlPath);
+                    }
+
                     continue;
                 }
 
-                // Upsert logic
+                // Insert only missing bootstrap templates.
                 var existingTemplate = await context.EmailTemplates
                     .OrderBy(t => t.Id)
                     .FirstOrDefaultAsync(t => t.Id == item.Id || t.TemplateName == item.TemplateName);
@@ -88,11 +109,12 @@ public static class NotificationDbContextSeeder
                 }
                 else
                 {
-                    // Update content if changed (Optional)
-                    existingTemplate.Subject = item.Subject;
-                    existingTemplate.Body = htmlContent;
-                    existingTemplate.UpdatedAt = DateTime.UtcNow;
-                    // existingTemplate.Id = item.Id; // Don't change ID
+                    // Seed files provide bootstrap defaults. Preserve templates that
+                    // already exist so administrators can safely edit them from the
+                    // admin panel without the next deployment overwriting their work.
+                    logger.LogDebug(
+                        "Notification template {TemplateName} already exists; preserving the stored version.",
+                        existingTemplate.TemplateName);
                 }
             }
 
@@ -103,6 +125,10 @@ public static class NotificationDbContextSeeder
         catch (Exception ex)
         {
             logger.LogError(ex, "❌ Error seeding notification templates.");
+            if (throwOnError)
+            {
+                throw;
+            }
         }
     }
 
