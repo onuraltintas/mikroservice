@@ -1,6 +1,6 @@
 import { fakeAsync, tick } from '@angular/core/testing';
 import { VisualExpansionEngine } from './visual-expansion.engine';
-import { visualAngleToOffsetPercent } from './visual-expansion-position';
+import { visualAngleToAxisOffsetPercent, visualAngleToOffsetPercent } from './visual-expansion-position';
 
 describe('VisualExpansionEngine server protocol', () => {
   it('requests a server stimulus and submits answers without scoring locally', fakeAsync(() => {
@@ -107,5 +107,14 @@ describe('VisualExpansionEngine server protocol', () => {
     expect(startOffset).toBeGreaterThan(0);
     expect(middleOffset).toBeGreaterThan(startOffset);
     expect(maximumOffset).toBe(45);
+  });
+
+  it('uses the exercise container dimensions and preserves radial distance', () => {
+    const horizontal = visualAngleToAxisOffsetPercent(12, 950, false);
+    const radial = visualAngleToAxisOffsetPercent(12, 950, true);
+
+    expect(radial).toBeCloseTo(horizontal / Math.SQRT2, 8);
+    expect(visualAngleToOffsetPercent(12, 950))
+      .toBeGreaterThan(visualAngleToOffsetPercent(12, 1440));
   });
 });
