@@ -59,6 +59,8 @@ export class VisualExpansionEngine implements BaseEngine {
     private maxDegreesReached = 5;
     private correctAnswers = 0;
     private totalAnswers = 0;
+    private startDegrees = 5;
+    private targetDegrees = 30;
 
     // Detaylı tur sonuçları
     private roundResults: Array<{
@@ -92,20 +94,70 @@ export class VisualExpansionEngine implements BaseEngine {
         const backendConfig = config as any;
         this.serverAuthoritative = backendConfig.serverAuthoritative === true;
 
+        // Catalog configurations exist in both the newer nested shape and
+        // the legacy mode/content shape. Normalize them before rendering so
+        // the server stimulus and the client position use the same settings.
+        const expansionConfig = backendConfig.expansion || {};
+        const contentConfig = backendConfig.content || {};
+        const timingConfig = backendConfig.timing || {};
+        const configuredPattern = backendConfig.VisualExpansionPattern
+            || backendConfig.visualExpansionPattern
+            || expansionConfig.pattern
+            || backendConfig.pattern
+            || backendConfig.mode
+            || this.config.expansion?.pattern
+            || 'horizontal';
+        const configuredStimulusType = backendConfig.VisualExpansionStimulusType
+            || backendConfig.visualExpansionStimulusType
+            || expansionConfig.stimulusType
+            || contentConfig.stimulusType
+            || this.config.expansion?.stimulusType
+            || 'letter';
+        this.config.expansion = {
+            ...(this.config.expansion || {}),
+            level: this.config.expansion?.level || backendConfig.difficultyLevel || 1,
+            pattern: configuredPattern,
+            stimulusType: configuredStimulusType,
+            symmetry: this.config.expansion?.symmetry ?? true
+        } as VisualExpansionConfig['expansion'];
+        this.config.timing = {
+            ...(this.config.timing || {}),
+            durationMs: this.config.timing?.durationMs
+                || Number(backendConfig.VisualExpansionDisplayDurationMs || backendConfig.visualExpansionDisplayDurationMs || timingConfig.durationMs)
+                || 250,
+            intervalMs: this.config.timing?.intervalMs
+                || Number(timingConfig.intervalMs)
+                || 1500
+        };
+
         // Başlangıç açısı (backend'den veya varsayılan)
-        this.currentDegrees = backendConfig.StartDegrees
+        this.startDegrees = Number(backendConfig.VisualExpansionStartDegrees
+            || backendConfig.visualExpansionStartDegrees
+            || backendConfig.StartDegrees
             || backendConfig.startDegrees
             || this.config.expansion?.startDegrees
-            || (2 + (this.config.expansion?.level || 1) * 2);
+            || (2 + (this.config.expansion?.level || 1) * 2));
 
         // Hedef açı (kullanım için sakla)
-        const targetDegrees = backendConfig.TargetDegrees || backendConfig.targetDegrees || 30;
+        this.targetDegrees = Number(backendConfig.VisualExpansionTargetDegrees
+            || backendConfig.visualExpansionTargetDegrees
+            || backendConfig.TargetDegrees
+            || backendConfig.targetDegrees
+            || 30);
+        this.startDegrees = Math.max(2, Math.min(60, this.startDegrees));
+        this.targetDegrees = Math.max(this.startDegrees, Math.min(60, this.targetDegrees));
+        this.currentDegrees = Number(backendConfig.VisualExpansionCurrentDegrees
+            || backendConfig.visualExpansionCurrentDegrees
+            || this.startDegrees);
 
         // Tur sayısı
         this.state.totalSteps = backendConfig.Rounds || backendConfig.rounds || 20;
 
         // Gösterim süresi (backend'den zorluk bazlı)
-        const displayDurationMs = backendConfig.DisplayDurationMs || backendConfig.displayDurationMs;
+        const displayDurationMs = backendConfig.DisplayDurationMs
+            || backendConfig.displayDurationMs
+            || backendConfig.VisualExpansionDisplayDurationMs
+            || backendConfig.visualExpansionDisplayDurationMs;
         if (displayDurationMs) {
             this.config.timing = this.config.timing || {} as any;
             this.config.timing.durationMs = displayDurationMs;
@@ -288,6 +340,18 @@ export class VisualExpansionEngine implements BaseEngine {
         const actionName = String(action?.action || '').toLowerCase();
         this.awaitingServer = false;
         if (response?.isValid === false) {
+            const message = String(response?.message || '').toLowerCase();
+            if (actionName === 'visual_expansion_answer'
+                && message.includes('outside its response window')) {
+                // A delayed gateway response must not strand the assessment
+                // on an error page. The server has discarded this round, so
+                // request a fresh presentation for the same round.
+                this.pendingAnswers = [];
+                this.isWaitingForInput = false;
+                this.callbacks.onStateChange({ ...this.state });
+                this.scheduleNextStimulus();
+                return;
+            }
             if (actionName === 'visual_expansion_answer') {
                 this.isWaitingForInput = false;
                 this.scheduleNextStimulus();
@@ -301,6 +365,15 @@ export class VisualExpansionEngine implements BaseEngine {
             if (!Array.isArray(stimuli) || stimuli.length < 2) {
                 this.callbacks.onError('Görsel genişleme uyaranı sunucudan eksik döndü.');
                 return;
+            }
+            const degrees = Number(response?.feedbackData?.degrees);
+            if (Number.isFinite(degrees) && degrees > 0) {
+                this.currentDegrees = Math.max(2, Math.min(60, degrees));
+            } else {
+                const round = Number(response?.feedbackData?.round);
+                if (Number.isFinite(round)) {
+                    this.currentDegrees = this.getDegreesForRound(round);
+                }
             }
             this.currentStimuli = this.positionStimuli(stimuli.map(String));
             this.isStimulusVisible = true;
@@ -361,6 +434,12 @@ export class VisualExpansionEngine implements BaseEngine {
             return contents.map((content, index) => ({ content, x: positions[index][0], y: positions[index][1] }));
         }
         return contents.map((content, index) => ({ content, x: index === 0 ? 50 - x : 50 + x, y: 50 }));
+    }
+
+    private getDegreesForRound(round: number): number {
+        if (this.state.totalSteps <= 1) return this.startDegrees;
+        const progress = Math.max(0, Math.min(1, round / (this.state.totalSteps - 1)));
+        return Math.round(this.startDegrees + ((this.targetDegrees - this.startDegrees) * progress));
     }
 
     /**
@@ -491,7 +570,7 @@ export class VisualExpansionEngine implements BaseEngine {
             errors: 0,
             accuracy: 0
         };
-        this.currentDegrees = this.config.expansion?.startDegrees || 5;
+        this.currentDegrees = this.startDegrees;
         this.correctAnswers = 0;
         this.totalAnswers = 0;
         this.roundResults = [];

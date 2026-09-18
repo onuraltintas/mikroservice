@@ -1046,11 +1046,39 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         }
         if (IsVisualExpansionExercise(exerciseTypeName))
         {
-            var expansion = ReadObject(engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config, "expansion");
-            var timing = ReadObject(engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config, "timing");
-            state.VisualExpansionStimulusType = ReadString(expansion, "stimulusType") ?? "letter";
-            state.VisualExpansionPattern = ReadString(expansion, "pattern") ?? "horizontal";
-            state.VisualExpansionDisplayDurationMs = Math.Clamp(ReadPositiveInt(timing, "durationMs") ?? 250, 100, 5_000);
+            var visualConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
+            var expansion = ReadObject(visualConfig, "expansion");
+            var content = ReadObject(visualConfig, "content");
+            var timing = ReadObject(visualConfig, "timing");
+            state.VisualExpansionStimulusType = ReadString(expansion, "stimulusType")
+                ?? ReadString(content, "stimulusType")
+                ?? "letter";
+            state.VisualExpansionPattern = ReadString(expansion, "pattern")
+                ?? ReadString(visualConfig, "pattern")
+                ?? ReadString(visualConfig, "mode")
+                ?? "horizontal";
+            state.VisualExpansionDisplayDurationMs = Math.Clamp(
+                ReadPositiveInt(timing, "durationMs")
+                    ?? ReadPositiveInt(visualConfig, "displayDurationMs")
+                    ?? ReadPositiveInt(config, "displayDurationMs")
+                    ?? 250,
+                100,
+                5_000);
+            state.VisualExpansionStartDegrees = Math.Clamp(
+                ReadPositiveInt(expansion, "startDegrees")
+                    ?? ReadPositiveInt(visualConfig, "startDegrees")
+                    ?? ReadPositiveInt(config, "startDegrees")
+                    ?? Math.Max(2, 2 + difficultyLevel * 2),
+                2,
+                60);
+            state.VisualExpansionTargetDegrees = Math.Clamp(
+                ReadPositiveInt(expansion, "targetDegrees")
+                    ?? ReadPositiveInt(visualConfig, "targetDegrees")
+                    ?? ReadPositiveInt(config, "targetDegrees")
+                    ?? Math.Max(state.VisualExpansionStartDegrees, 30),
+                state.VisualExpansionStartDegrees,
+                60);
+            state.VisualExpansionCurrentDegrees = CalculateVisualExpansionDegrees(state, 0);
         }
         if (IsFocusExercise(exerciseTypeName))
         {
@@ -1420,7 +1448,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         {
             round = state.VisualExpansionRound,
             stimuli = state.VisualExpansionExpectedStimuli,
-            displayDurationMs = state.VisualExpansionDisplayDurationMs
+            displayDurationMs = state.VisualExpansionDisplayDurationMs,
+            degrees = state.VisualExpansionCurrentDegrees
         }, JsonOptions);
         return Valid("Görsel genişleme uyaranı hazır.", state.VisualExpansionRound, feedbackData: feedback);
     }
@@ -1444,7 +1473,10 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             request.Answers ?? [],
             elapsedMs,
             state.VisualExpansionDisplayDurationMs,
-            state.VisualExpansionDisplayDurationMs + 5_000);
+            // The answer is sent after the stimulus is hidden. Keep a
+            // generous network/jitter grace period so a gateway retry cannot
+            // turn a valid round into a fatal assessment error.
+            state.VisualExpansionDisplayDurationMs + 15_000);
         if (!result.IsAccepted)
         {
             state.VisualExpansionExpectedStimuli = [];
@@ -1454,6 +1486,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
 
         session.Advance(result.IsCorrect);
         state.VisualExpansionRound++;
+        state.VisualExpansionCurrentDegrees = CalculateVisualExpansionDegrees(
+            state,
+            state.VisualExpansionRound);
         state.VisualExpansionExpectedStimuli = [];
         state.VisualExpansionPresentedAt = null;
         return Valid(
@@ -1461,6 +1496,17 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             state.VisualExpansionRound,
             isCompleted: state.VisualExpansionRound >= state.TotalSteps,
             isCorrect: session.AssessmentAttemptId.HasValue ? null : result.IsCorrect);
+    }
+
+    private static int CalculateVisualExpansionDegrees(SessionState state, int round)
+    {
+        var start = Math.Clamp(state.VisualExpansionStartDegrees, 2, 60);
+        var target = Math.Clamp(state.VisualExpansionTargetDegrees, start, 60);
+        if (state.TotalSteps <= 1)
+            return start;
+
+        var progress = Math.Clamp((double)round / (state.TotalSteps - 1), 0d, 1d);
+        return (int)Math.Round(start + ((target - start) * progress), MidpointRounding.AwayFromZero);
     }
 
     private static ExerciseActionValidationResponse AdvanceFocus(
@@ -2643,6 +2689,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public string VisualExpansionStimulusType { get; set; } = "letter";
         public string VisualExpansionPattern { get; set; } = "horizontal";
         public int VisualExpansionDisplayDurationMs { get; set; } = 250;
+        public int VisualExpansionStartDegrees { get; set; } = 4;
+        public int VisualExpansionTargetDegrees { get; set; } = 30;
+        public int VisualExpansionCurrentDegrees { get; set; } = 4;
         public int VisualExpansionRound { get; set; }
         public string[] VisualExpansionExpectedStimuli { get; set; } = [];
         public DateTime? VisualExpansionPresentedAt { get; set; }

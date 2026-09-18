@@ -1188,6 +1188,24 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           ? undefined
           : (this.backendSessionConfig?.wordSequence
             || this.parsedConfig?.engineConfig?.['wordSequence']),
+        // Visual expansion keeps its progression values at the catalog root
+        // for backwards compatibility. Pass them through for preview mode as
+        // well as server-owned student sessions.
+        rounds: this.backendSessionConfig?.rounds
+          || this.backendSessionConfig?.Rounds
+          || this.parsedConfig?.['rounds'],
+        startDegrees: this.backendSessionConfig?.startDegrees
+          || this.backendSessionConfig?.StartDegrees
+          || this.backendSessionConfig?.visualExpansionStartDegrees
+          || this.parsedConfig?.['startDegrees'],
+        targetDegrees: this.backendSessionConfig?.targetDegrees
+          || this.backendSessionConfig?.TargetDegrees
+          || this.backendSessionConfig?.visualExpansionTargetDegrees
+          || this.parsedConfig?.['targetDegrees'],
+        displayDurationMs: this.backendSessionConfig?.displayDurationMs
+          || this.backendSessionConfig?.DisplayDurationMs
+          || this.backendSessionConfig?.visualExpansionDisplayDurationMs
+          || this.parsedConfig?.['displayDurationMs'],
         isAssessmentMode: this.isAssessmentMode,
         scenes: this.backendSessionConfig?.VisualizationScenes
           || this.backendSessionConfig?.visualizationScenes
@@ -1296,9 +1314,16 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       return Promise.resolve();
     }
 
+    // Keep one id across retries. If the gateway times out after the server
+    // has committed the action, the retry receives the cached idempotent
+    // response instead of submitting a second round.
+    const actionWithId: ActionData = {
+      ...action,
+      actionId: action.actionId ?? crypto.randomUUID()
+    };
     const validation = this.actionQueue
       .catch(() => undefined)
-      .then(() => firstValueFrom(this.sessionService.validateAction(this.sessionId!, action)));
+      .then(() => this.validateActionWithTransientRetry(actionWithId));
     const queued = validation.then(
       response => onResponse?.(response),
       error => {
@@ -1323,6 +1348,22 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       console.error('[ExercisePlayer] Action validation error:', error);
     });
     return queued;
+  }
+
+  private async validateActionWithTransientRetry(action: ActionData): Promise<ValidationResponse> {
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await firstValueFrom(this.sessionService.validateAction(this.sessionId!, action));
+      } catch (error) {
+        lastError = error;
+        const status = Number((error as any)?.status || (error as any)?.error?.status);
+        const isTransient = status === 0 || status === 502 || status === 503 || status === 504;
+        if (!isTransient || attempt === 1) break;
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    throw lastError;
   }
 
   private getActionValidationErrorMessage(error: unknown): string {
