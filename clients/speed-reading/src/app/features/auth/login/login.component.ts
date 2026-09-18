@@ -296,13 +296,25 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
 
   private handleAuthenticatedResponse(response: AuthResponse | null): void {
     this.loading = false;
+    const destination = resolveAuthDestination(response?.roles);
     const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+
+    // The legacy /admin route intentionally hands off to eduivme.com.  An
+    // admin/editor signing in to Master must stay in the local, non-persistent
+    // exercise preview even when the login page was opened with returnUrl=/admin.
+    if (destination === 'exercisePreview') {
+      if (returnUrl?.startsWith('/student/exercises') && !returnUrl.startsWith('//')) {
+        this.router.navigateByUrl(returnUrl);
+      } else {
+        this.router.navigate(['/student/exercises']);
+      }
+      return;
+    }
+
     if (returnUrl?.startsWith('/') && !returnUrl.startsWith('//')) {
       this.router.navigateByUrl(returnUrl);
       return;
     }
-
-    const destination = resolveAuthDestination(response?.roles);
 
     if (!destination) {
       this.toaster.error('Kullanıcı rolü bulunamadı.', 5000);
@@ -316,9 +328,6 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
       case 'teacher':
       case 'institution':
         this.router.navigate(['/teacher/dashboard']);
-        break;
-      case 'exercisePreview':
-        this.router.navigate(['/student/exercises']);
         break;
       case 'coach':
         this.router.navigate(['/coaching/dashboard']);

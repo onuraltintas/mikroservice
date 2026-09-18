@@ -10,9 +10,16 @@ import { ToasterService } from '../../../core/services/toaster.service';
 describe('LoginComponent', () => {
   let component: LoginComponent;
   let authService: jasmine.SpyObj<AuthService>;
+  let router: jasmine.SpyObj<Router>;
+  let route: any;
 
   beforeEach(() => {
     authService = jasmine.createSpyObj<AuthService>('AuthService', ['login']);
+    router = jasmine.createSpyObj<Router>('Router', ['navigate', 'navigateByUrl']);
+    route = {
+      queryParams: of({}),
+      snapshot: { queryParamMap: { get: jasmine.createSpy('get').and.returnValue(null) } }
+    };
     authService.login.and.returnValue(of({
       id: 'student-id',
       token: '',
@@ -27,14 +34,8 @@ describe('LoginComponent', () => {
       imports: [LoginComponent],
       providers: [
         { provide: AuthService, useValue: authService },
-        { provide: Router, useValue: { navigate: jasmine.createSpy('navigate') } },
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            queryParams: of({}),
-            snapshot: { queryParamMap: { get: () => null } }
-          }
-        },
+        { provide: Router, useValue: router },
+        { provide: ActivatedRoute, useValue: route },
         {
           provide: GoogleIdentityService,
           useValue: {
@@ -106,5 +107,15 @@ describe('LoginComponent', () => {
 
     expect(component.showEmailVerificationWarning).toBeTrue();
     expect(component.unverifiedEmail).toBe('student@example.com');
+  });
+
+  it('keeps admin preview users on Master when a legacy admin return URL is present', () => {
+    (component as any).handleAuthenticatedResponse.and.callThrough();
+    route.snapshot.queryParamMap.get.and.returnValue('/admin');
+
+    (component as any).handleAuthenticatedResponse({ roles: ['Admin'] });
+
+    expect(router.navigate).toHaveBeenCalledWith(['/student/exercises']);
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
   });
 });
