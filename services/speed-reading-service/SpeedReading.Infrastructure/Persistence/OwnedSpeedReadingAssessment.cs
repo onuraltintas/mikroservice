@@ -387,6 +387,30 @@ internal sealed class OwnedSpeedReadingAssessment(
             .Where(item => item.IsSkipped)
             .Select(item => item.Id)
             .ToHashSet();
+        var baselineAttemptIds = baselineAttempts.Select(item => item.Id).ToArray();
+        var expectedMeasuredCounts = await (
+            from formItem in db.AssessmentAttemptExercises.AsNoTracking()
+            join exercise in db.Exercises.AsNoTracking()
+                on formItem.ExerciseId equals exercise.Id
+            join exerciseType in db.ExerciseTypes.AsNoTracking()
+                on exercise.ExerciseTypeId equals exerciseType.Id
+            where baselineAttemptIds.Contains(formItem.AssessmentAttemptId)
+            select new
+            {
+                formItem.AssessmentAttemptId,
+                formItem.ExerciseId,
+                TypeName = exerciseType.Name
+            })
+            .ToListAsync(cancellationToken);
+        var requiredMeasuredCounts = expectedMeasuredCounts
+            .GroupBy(item => item.AssessmentAttemptId)
+            .ToDictionary(
+                group => group.Key,
+                group => group
+                    .Where(item => IsServerMeasuredExerciseType(item.TypeName))
+                    .Select(item => item.ExerciseId)
+                    .Distinct()
+                    .Count());
         var measuredRows = await (
             from result in db.ExerciseSessionResults.AsNoTracking()
             join formItem in db.AssessmentAttemptExercises.AsNoTracking()
@@ -422,7 +446,10 @@ internal sealed class OwnedSpeedReadingAssessment(
 
         foreach (var measuredCount in measuredCounts)
         {
-            if (measuredCount.ExerciseCount >= ServerAssessmentExerciseCount)
+            var requiredCount = requiredMeasuredCounts.GetValueOrDefault(
+                measuredCount.AttemptId,
+                ServerAssessmentExerciseCount);
+            if (requiredCount > 0 && measuredCount.ExerciseCount >= requiredCount)
                 completedBaselineAttemptIds.Add(measuredCount.AttemptId);
         }
 

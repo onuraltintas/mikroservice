@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../core/services/auth.service';
-import { SubscriptionService } from '../../../core/services/subscription.service';
 import { AuthResponse } from '../../../core/models/user.model';
 import { environment } from '../../../../environments/environment';
 import { resolveAuthDestination } from '../auth-role-routing';
@@ -33,7 +32,6 @@ export class GoogleCallbackComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
-  private readonly subscriptionService = inject(SubscriptionService);
 
   error = '';
 
@@ -79,12 +77,9 @@ export class GoogleCallbackComponent implements OnInit {
   private navigateByRole(roles: readonly string[]): void {
     const destination = resolveAuthDestination(roles);
     if (destination === 'student') {
-      this.subscriptionService.getMyModules().subscribe({
-        next: (m) => this.router.navigate(
-          m.hasSpeedReading ? ['/student/dashboard'] : ['/no-access']
-        ),
-        error: () => this.router.navigate(['/student/dashboard'])
-      });
+      // Let the dashboard guard route an unassessed student to the free
+      // assessment before checking paid module access.
+      this.router.navigate(['/student/dashboard']);
     } else if (destination === 'teacher' || destination === 'institution') {
       this.router.navigate(['/teacher/dashboard']);
     } else if (destination === 'admin') {

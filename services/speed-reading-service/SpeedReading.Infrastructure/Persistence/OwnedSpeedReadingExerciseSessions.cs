@@ -450,7 +450,20 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         if (state.CurrentNumber.HasValue && state.CurrentNumber.Value <= state.TotalSteps)
             throw new InvalidOperationException("All grid targets must be completed before the session can be completed.");
         if (IsFocusExercise(state) && !state.FocusCompleted)
-            throw new InvalidOperationException("The focus exercise must be completed through its validated action flow.");
+        {
+            if (IsObservationOnlyMotionPath(state))
+            {
+                // motion_path is a timed, observation-only exercise. It has
+                // no server stimulus/response sequence to validate, so its
+                // normal client completion is the authoritative completion
+                // signal and is intentionally stored as NotMeasured.
+                state.FocusCompleted = true;
+            }
+            else
+            {
+                throw new InvalidOperationException("The focus exercise must be completed through its validated action flow.");
+            }
+        }
         if (IsVisualExpansionExercise(state.ExerciseTypeName)
             && state.VisualExpansionRound < state.TotalSteps)
             throw new InvalidOperationException("All visual expansion rounds must be validated before completion.");
@@ -1883,6 +1896,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         exerciseTypeName.Contains("focus", StringComparison.OrdinalIgnoreCase)
         || exerciseTypeName.Contains("attention", StringComparison.OrdinalIgnoreCase)
         || exerciseTypeName.Contains("fixation", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsObservationOnlyMotionPath(SessionState state) =>
+        state.EngineType.Equals("motion_path", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsAdaptiveFluency(SessionState state) => state.AdaptiveEnabled;
 

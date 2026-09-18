@@ -2049,10 +2049,28 @@
     color: #e74c3c;
 }
 
-.center-icon {
-    font-size: 48px;
-    width: 48px;
-    height: 48px;
+.center-cross {
+    display: block;
+    position: relative;
+    width: 42px;
+    height: 42px;
+}
+
+.center-cross::before,
+.center-cross::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 34px;
+    height: 4px;
+    border-radius: 999px;
+    background: #e74c3c;
+    transform: translate(-50%, -50%);
+}
+
+.center-cross::after {
+    transform: translate(-50%, -50%) rotate(90deg);
 }
 
 .center-dot {
@@ -3102,9 +3120,12 @@ h1 {
     border-radius: 24px;
     padding: 32px;
     width: 100%;
+    min-width: 0;
     max-width: 800px;
     box-shadow: 0 25px 80px rgba(0, 0, 0, 0.12);
     margin: auto;
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
 }
 
 .success-badge {
@@ -3189,6 +3210,7 @@ h1 {
     grid-template-columns: repeat(4, 1fr);
     gap: 16px;
     margin-bottom: 24px;
+    min-width: 0;
 }
 
 .stat-card {
@@ -7852,3 +7874,107 @@ h1 {
 .status-icon--success { color: var(--sp-success, #10b981); }
 .status-icon--error { color: var(--sp-danger, #f43f5e); }
 .status-icon--warning { color: var(--sp-warning, #f59e0b); }
+
+// Result layouts are shared by all engines. Keep long answer text and stat
+// cards inside the viewport on narrow screens.
+.completed-state,
+.completed-state * {
+  box-sizing: border-box;
+}
+
+.completed-state {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.result-card-new,
+.result-card-new .speed-reading-results,
+.result-card-new .question-answers-detail,
+.result-card-new .answers-summary {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.result-card-new .answer-row,
+.result-card-new .answer-item {
+  min-width: 0;
+}
+
+.result-card-new .answer-info,
+.result-card-new .answer-content,
+.result-card-new .answer-text,
+.result-card-new .user-answer,
+.result-card-new .correct-answer {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+@media (max-width: 768px) {
+  .result-card-new {
+    padding: 20px;
+    margin: 0;
+    border-radius: 18px;
+  }
+
+  .result-card-new .stats-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .result-card-new .result-box,
+  .result-card-new .stat-card {
+    min-width: 0;
+    padding: 14px 10px;
+  }
+
+  .result-card-new .question-answers-detail .answers-list,
+  .result-card-new .answers-summary .answers-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .result-card-new .answer-row,
+  .result-card-new .answer-item {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .result-card-new .answer-info {
+    flex: 1 1 calc(100% - 34px);
+  }
+
+  .result-card-new .section-header,
+  .result-card-new .answers-header {
+    flex-wrap: wrap;
+  }
+
+  .result-card-new .section-header .section-hint {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .result-card-new {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .result-card-new .stats-row {
+    gap: 8px;
+  }
+
+  .result-card-new .stat-value {
+    font-size: 22px;
+  }
+
+  .result-card-new .result-box {
+    padding: 12px 8px;
+  }
+
+  .result-card-new .action-row > * {
+    width: 100%;
+    max-width: 100%;
+  }
+}

@@ -312,7 +312,18 @@ export class VisualExpansionEngine implements BaseEngine {
         }
 
         if (actionName === 'visual_expansion_answer') {
-            const isCorrect = response?.isCorrect === true;
+            // Assessment responses intentionally omit correctness so the
+            // answer key is not exposed to the browser. We can still show
+            // immediate feedback by comparing the submitted values with the
+            // stimuli that were already displayed; the server remains the
+            // source of truth for persistence and assessment scoring.
+            const serverCorrect = response?.isCorrect;
+            const submittedAnswers = this.pendingAnswers.map(value => value.trim().toUpperCase());
+            const expectedAnswers = this.lastShownStimuli.map(value => value.trim().toUpperCase());
+            const isCorrect = serverCorrect == null
+                ? submittedAnswers.length === expectedAnswers.length
+                    && submittedAnswers.every((value, index) => value === expectedAnswers[index])
+                : serverCorrect === true;
             const correctAnswers = this.lastShownStimuli.map(value => value.toUpperCase());
             const responseTimeMs = Date.now() - this.stimulusShownTime;
             this.totalAnswers++;
@@ -328,6 +339,7 @@ export class VisualExpansionEngine implements BaseEngine {
                 responseTimeMs,
                 timestamp: new Date().toISOString()
             });
+            this.pendingAnswers = [];
             this.state.currentStep++;
             this.state.accuracy = Math.round((this.correctAnswers / this.totalAnswers) * 100);
             this.callbacks.onStepComplete(this.state.currentStep, isCorrect);

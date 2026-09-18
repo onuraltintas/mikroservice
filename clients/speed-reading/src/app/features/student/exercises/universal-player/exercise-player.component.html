@@ -594,7 +594,7 @@
         <div class="visual-expansion-area">
             <!-- Merkez Fiksasyon Noktası -->
             <div class="center-fixation">
-                <span class="material-icons" *ngIf="getCenterPointType() === 'cross'" class="center-icon">add</span>
+                <span *ngIf="getCenterPointType() === 'cross'" class="center-cross" aria-hidden="true"></span>
                 <div *ngIf="getCenterPointType() === 'dot'" class="center-dot"></div>
             </div>
 

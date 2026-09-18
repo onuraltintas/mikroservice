@@ -575,8 +575,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           // Keep the public session state and engine configuration together;
           // the state is sanitized by the server and contains assessment text/questions.
           this.backendSessionConfig = {
-            ...(initialData || {}),
-            ...(response.configuration || {})
+            // Engine configuration supplies presentation/timing defaults. The
+            // server-owned initial state must be applied last so that its
+            // reading text, question bank and validated stimuli cannot be
+            // replaced by catalog defaults.
+            ...(response.configuration || {}),
+            ...(initialData || {})
           };
 
           // Assessment questions are part of the sanitized initial session

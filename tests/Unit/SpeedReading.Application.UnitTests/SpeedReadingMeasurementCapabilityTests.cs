@@ -18,6 +18,7 @@ public sealed class SpeedReadingMeasurementCapabilityTests
     [Theory]
     [InlineData("MotionPath")]
     [InlineData("EyeTracking")]
+    [InlineData("Fixation")]
     [InlineData("Unknown")]
     public void Observation_only_engines_are_not_eligible_for_assessment(string typeName)
     {

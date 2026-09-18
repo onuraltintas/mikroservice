@@ -38,5 +38,16 @@ describe('VisualExpansionEngine server protocol', () => {
       answers: ['A', '7']
     }));
     expect(engine.state.currentStep).toBe(0);
+
+    // Assessment mode deliberately returns a null correctness flag so the
+    // answer key is not exposed. The client should still show the submitted
+    // answer as correct using the already displayed stimuli.
+    engine.reconcileServerResponse(actions.at(-1), {
+      isValid: true,
+      isCorrect: null
+    });
+    expect(engine.state.currentStep).toBe(1);
+    expect(engine.state.accuracy).toBe(100);
+    expect(engine.state.errors).toBe(0);
   }));
 });

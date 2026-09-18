@@ -13,7 +13,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToasterService } from '../../../core/services/toaster.service';
-import { SubscriptionService } from '../../../core/services/subscription.service';
 import { AuthResponse } from '../../../core/models/user.model';
 import { environment } from '../../../../environments/environment';
 import {
@@ -50,7 +49,6 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly toaster = inject(ToasterService);
-  private readonly subscriptionService = inject(SubscriptionService);
   private readonly googleIdentity = inject(GoogleIdentityService);
   private readonly googleCallback: GoogleIdentityCallback = (response: GoogleIdentityResponse) =>
     this.handleGoogleResponse(response);
@@ -360,18 +358,10 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
       this.router.navigate(['/student/profile-setup']);
       return;
     }
-    // Abonelik kontrolü — SpeedReading modülü yoksa no-access sayfasına yönlendir
-    this.subscriptionService.getMyModules().subscribe({
-      next: (modules) => {
-        if (modules.hasSpeedReading) {
-          this.router.navigate(['/student/dashboard']);
-        } else {
-          this.router.navigate(['/no-access']);
-        }
-      },
-      // Abonelik servisi erişilemezse doğrudan dashboard'a git
-      error: () => this.router.navigate(['/student/dashboard']),
-    });
+    // The dashboard guard decides between the free assessment and the paid
+    // module. Do not perform a second, pre-guard subscription check here;
+    // otherwise a new student is sent to no-access before the assessment.
+    this.router.navigate(['/student/dashboard']);
   }
 
   resendVerificationEmail(): void {

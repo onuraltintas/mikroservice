@@ -22,9 +22,16 @@ public static class SpeedReadingMeasurementCapabilities
     public static bool IsAssessmentEligible(string? typeName)
     {
         if (string.IsNullOrWhiteSpace(typeName)) return false;
+
+        // Fixation / eye-tracking exercises are observation-only in the
+        // browser. They must not be counted as a validated assessment score
+        // merely because their catalog name contains "focus" or "attention".
+        if (Contains(typeName, "motionpath", "motion path", "eyetracking", "eye tracking", "fixation", "saccade"))
+            return false;
+
         return Contains(typeName, "speedreading", "rsvp", "tachistoscope", "comprehension", "reading", "free",
             "chunking", "textfading", "skimming", "scanning", "visualexpansion", "visual expansion",
-            "görsel genişleme", "visualization", "visualisation", "schulte", "grid", "focus", "attention", "fixation");
+            "görsel genişleme", "visualization", "visualisation", "schulte", "grid", "focus", "attention");
     }
 
     private static bool Contains(string value, params string[] parts) =>
