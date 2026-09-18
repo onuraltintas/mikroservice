@@ -13,6 +13,7 @@ import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 
 import { EngineFactory, EngineType } from './engines/engine-factory';
+import { shouldForwardExerciseAction } from './exercise-action-policy';
 import { FocusEngine } from './engines/focus.engine';
 import { AdaptiveFluencyEngine, AdaptiveFluencyStageFeedback } from './engines/adaptive-fluency.engine';
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './engines/base-engine.interface';
@@ -1102,18 +1103,6 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             'memory_grid',       // Hafıza testi, seçimler doğrulanmalı
           ];
 
-          // Validation GEREKMİYEN egzersizler (pasif gözlem/okuma)
-          const skipValidation = [
-            'motion_path',             // Saccade/Fixation - gözlem bazlı
-            'text_fade',               // Metin solma - pasif okuma
-            'regression_reduction',    // Regresyon - pasif okuma
-            'subvocalization_reduction', // Alt ses - pasif okuma
-            'chunking',                // Gruplama - pasif okuma
-            'rsvp',                    // RSVP - pasif okuma
-            'speed_reading',           // Hızlı okuma - pasif okuma
-            'free_reading',            // Serbest okuma - pasif okuma
-          ];
-
           // Focus engine için özel mantık: sadece match aksiyonlarını backend'e gönder
           if (engineType === 'focus' || engineType === 'attention_training') {
             const validFocusActions = ['focus_start', 'focus_step', 'position_match', 'word_match', 'match_attempt', 'complete'];
@@ -1123,14 +1112,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             }
           }
 
-          if (engineType === 'visualization' && action.action !== 'answer_question') {
-            // Scene timing is a presentation concern. Only answer events are
-            // persisted and checked against the server-owned question bank.
-            return;
-          }
-
-          if (skipValidation.includes(engineType || '') || skipValidation.includes(engineMode || '')) {
-            // Skip individual validation for passive exercises
+          if (!shouldForwardExerciseAction(engineType, engineMode, action.action)) {
             return;
           }
 
