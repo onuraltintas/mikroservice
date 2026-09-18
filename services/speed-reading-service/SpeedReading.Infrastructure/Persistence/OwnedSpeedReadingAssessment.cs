@@ -88,7 +88,28 @@ internal sealed class OwnedSpeedReadingAssessment(
                 cancellationToken);
         if (existing is not null)
         {
-            if (existing.ExpectedExerciseCount != ServerAssessmentExerciseCount)
+            var existingFormTypes = await (
+                from formItem in db.AssessmentAttemptExercises.AsNoTracking()
+                join exercise in db.Exercises.AsNoTracking()
+                    on formItem.ExerciseId equals exercise.Id
+                join exerciseType in db.ExerciseTypes.AsNoTracking()
+                    on exercise.ExerciseTypeId equals exerciseType.Id into exerciseTypes
+                from exerciseType in exerciseTypes.DefaultIfEmpty()
+                where formItem.AssessmentAttemptId == existing.Id
+                select new
+                {
+                    TypeName = exerciseType == null ? string.Empty : exerciseType.Name,
+                    EngineType = exerciseType == null ? string.Empty : exerciseType.EngineType
+                })
+                .ToListAsync(cancellationToken);
+
+            // An old pinned form can contain an observation-only eye exercise.
+            // It cannot produce a validated placement result, so replace that
+            // in-progress attempt with a fresh server-measurable form.
+            if (existing.ExpectedExerciseCount != ServerAssessmentExerciseCount
+                || existingFormTypes.Count != ServerAssessmentExerciseCount
+                || existingFormTypes.Any(item =>
+                    !IsServerMeasuredExerciseType(item.TypeName, item.EngineType)))
             {
                 existing.Abandon(now);
                 await db.SaveChangesAsync(cancellationToken);
@@ -402,7 +423,8 @@ internal sealed class OwnedSpeedReadingAssessment(
             {
                 formItem.AssessmentAttemptId,
                 formItem.ExerciseId,
-                TypeName = exerciseType.Name
+                TypeName = exerciseType.Name,
+                EngineType = exerciseType.EngineType
             })
             .ToListAsync(cancellationToken);
         var requiredMeasuredCounts = expectedMeasuredCounts
@@ -410,7 +432,7 @@ internal sealed class OwnedSpeedReadingAssessment(
             .ToDictionary(
                 group => group.Key,
                 group => group
-                    .Where(item => IsServerMeasuredExerciseType(item.TypeName))
+                    .Where(item => IsServerMeasuredExerciseType(item.TypeName, item.EngineType))
                     .Select(item => item.ExerciseId)
                     .Distinct()
                     .Count());
@@ -545,24 +567,34 @@ internal sealed class OwnedSpeedReadingAssessment(
                 .Distinct()
                 .ToListAsync(cancellationToken);
         var expectedTypeNames = new Dictionary<Guid, string>();
+        var expectedEngineTypes = new Dictionary<Guid, string>();
         var attemptRoles = new Dictionary<Guid, string>();
         if (attempt is not null)
         {
-            expectedTypeNames = await (
+            var expectedTypeRows = await (
                 from exercise in db.Exercises.AsNoTracking()
                 join exerciseType in db.ExerciseTypes.AsNoTracking()
                     on exercise.ExerciseTypeId equals exerciseType.Id into exerciseTypes
                 from exerciseType in exerciseTypes.DefaultIfEmpty()
                 where expectedExerciseIds.Contains(exercise.Id)
-                select new { exercise.Id, TypeName = exerciseType == null ? string.Empty : exerciseType.Name })
-                .ToDictionaryAsync(item => item.Id, item => item.TypeName, cancellationToken);
+                select new
+                {
+                    exercise.Id,
+                    TypeName = exerciseType == null ? string.Empty : exerciseType.Name,
+                    EngineType = exerciseType == null ? string.Empty : exerciseType.EngineType
+                })
+                .ToListAsync(cancellationToken);
+            expectedTypeNames = expectedTypeRows.ToDictionary(item => item.Id, item => item.TypeName);
+            expectedEngineTypes = expectedTypeRows.ToDictionary(item => item.Id, item => item.EngineType);
             attemptRoles = await db.AssessmentAttemptExercises
                 .AsNoTracking()
                 .Where(item => item.AssessmentAttemptId == attempt.Id)
                 .ToDictionaryAsync(item => item.ExerciseId, item => item.Role, cancellationToken);
             var serverMeasuredExerciseIds = expectedExerciseIds
                 .Where(item => expectedTypeNames.TryGetValue(item, out var typeName)
-                    && IsServerMeasuredExerciseType(typeName))
+                    && IsServerMeasuredExerciseType(
+                        typeName,
+                        expectedEngineTypes.GetValueOrDefault(item)))
                 .ToHashSet();
             if (expectedExerciseIds.Count != ServerAssessmentExerciseCount
                 || serverMeasuredExerciseIds.Count == 0
@@ -1186,7 +1218,26 @@ internal sealed class OwnedSpeedReadingAssessment(
             }
         }
 
-        var selected = SelectFormCandidates(candidatePool, expectedExerciseCount, phase, formVersion);
+        var measurableCandidatePool = candidatePool
+            .Where(IsServerMeasuredCandidate)
+            .ToList();
+        if (measurableCandidatePool.Count < expectedExerciseCount)
+        {
+            // Keep older/incorrect templates from pinning an observation-only
+            // motion_path exercise. Use the active age-filtered catalog as a
+            // safe fallback before refusing to create an unscorable form.
+            measurableCandidatePool = candidates
+                .Where(IsServerMeasuredCandidate)
+                .ToList();
+        }
+
+        if (measurableCandidatePool.Count < expectedExerciseCount)
+        {
+            throw new InvalidOperationException(
+                "The assessment form must contain at least three server-measurable exercises.");
+        }
+
+        var selected = SelectFormCandidates(measurableCandidatePool, expectedExerciseCount, phase, formVersion);
         var readingTexts = await (
             from readingText in db.ReadingTexts.AsNoTracking()
             where readingText.IsActive
@@ -1531,8 +1582,20 @@ internal sealed class OwnedSpeedReadingAssessment(
         return "supplementary";
     }
 
-    private static bool IsServerMeasuredExerciseType(string typeName) =>
-        SpeedReadingMeasurementCapabilities.IsAssessmentEligible(typeName);
+    private static bool IsServerMeasuredExerciseType(string? typeName, string? engineType = null)
+    {
+        if (!SpeedReadingMeasurementCapabilities.IsAssessmentEligible(typeName))
+            return false;
+
+        // A display/type name such as "Attention" can still be backed by the
+        // observation-only motion_path engine. Both layers must therefore be
+        // assessment-eligible before the form may use the exercise.
+        return string.IsNullOrWhiteSpace(engineType)
+            || SpeedReadingMeasurementCapabilities.IsAssessmentEligible(engineType);
+    }
+
+    private static bool IsServerMeasuredCandidate(AssessmentFormCandidate candidate) =>
+        IsServerMeasuredExerciseType(candidate.TypeName, candidate.EngineType);
 
     private static bool IsValidAssessmentMeasurement(
         decimal rawWpm,
