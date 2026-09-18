@@ -592,11 +592,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             this.comprehensionQuestions = questions;
           }
 
-          this.restoreAssessmentQuestionProgress(initialData);
+          this.restoreAssessmentQuestionProgress(this.backendSessionConfig);
 
           try {
             this.initializeEngine();
-            this.resumeAssessmentSession(initialData);
+            this.resumeAssessmentSession(this.backendSessionConfig);
           } catch (error) {
             this.handleInitializationError(error);
           } finally {
@@ -842,7 +842,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private resumeAssessmentSession(initialData: any): void {
     if (!this.isAssessmentMode || !this.engine || !this.comprehensionQuestions.length) return;
     const state = this.isRecord(initialData) ? initialData : {};
-    const hasFinishedReading = Boolean(state['readingEndTime'] || state['ReadingEndTime']);
+    const answers = state['answers'] ?? state['Answers'];
+    const hasFinishedReading = Boolean(
+      state['readingEndTime']
+      || state['ReadingEndTime']
+      || (Array.isArray(answers) && answers.length > 0));
     if (!hasFinishedReading) return;
 
     this.exercisePhase = 'questions';
