@@ -1474,9 +1474,10 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             elapsedMs,
             state.VisualExpansionDisplayDurationMs,
             // The answer is sent after the stimulus is hidden. Keep a
-            // generous network/jitter grace period so a gateway retry cannot
-            // turn a valid round into a fatal assessment error.
-            state.VisualExpansionDisplayDurationMs + 15_000);
+            // generous response grace period so a learner who needs a few
+            // seconds to type, or a gateway retry, cannot turn a valid round
+            // into a fatal assessment error.
+            state.VisualExpansionDisplayDurationMs + 60_000);
         if (!result.IsAccepted)
         {
             state.VisualExpansionExpectedStimuli = [];
