@@ -111,6 +111,9 @@ services:
       SpeedReading__CoachingIntegrationEnabled: ${SPEED_READING_COACHING_INTEGRATION_ENABLED:-false}
       SpeedReading__NotificationIntegrationEnabled: ${SPEED_READING_NOTIFICATION_INTEGRATION_ENABLED:-false}
       SpeedReading__SubscriptionIntegrationEnabled: ${SPEED_READING_SUBSCRIPTION_INTEGRATION_ENABLED:-false}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
       INTERNAL_SERVICE_API_KEY: ${INTERNAL_SERVICE_API_KEY:?INTERNAL_SERVICE_API_KEY must be set for speed-reading}
       Services__IdentityService: http://identity-service:8080
       Services__NotificationService: http://notification-service:8080
