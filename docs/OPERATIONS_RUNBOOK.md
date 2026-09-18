@@ -221,10 +221,9 @@ artifact store, RPO/RTO ölçümü ve erişim onayıyla tekrarlanmalıdır.
   payı geçince eski secret halkadan çıkarılır.
 - `INTERNAL_SERVICE_API_KEY`, PostgreSQL, Redis, RabbitMQ, SMTP ve Data Protection
   certificate secret'ları aynı anda değil, bağımlılık sırasıyla döndürülür.
-- `PUBLIC_APP_BASE_URL` merkezi Eduİvme panelinin, `SPEED_READING_PUBLIC_BASE_URL`
-  ise hızlı okuma uygulamasının doğrulanmış public HTTPS frontend origin'ine
-  ayarlanır; ilgili kayıt ve parola e-postelerindeki bağlantılar bu değerleri
-  kullanır.
+- `PUBLIC_APP_BASE_URL` merkezi Eduİvme rollerinin, `SPEED_READING_PUBLIC_BASE_URL`
+  ise hızlı okuma rollerinin doğrulanmış public HTTPS frontend origin'idir;
+  kayıt, parola ve davet e-postelerindeki bağlantılar alıcı rolüne göre seçilir.
 - Eski değerler revoke edilmeden önce iki replica'da health/readiness ve
   service-to-service çağrı smoke testi alınır. Değişkenler loglanmaz.
 

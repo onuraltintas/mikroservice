@@ -113,6 +113,7 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID must be set}
       - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY:?INTERNAL_SERVICE_API_KEY must be set}
       - PublicApp__BaseUrl=${PUBLIC_APP_BASE_URL:?PUBLIC_APP_BASE_URL must be set}
+      - SpeedReadingPublicApp__BaseUrl=${SPEED_READING_PUBLIC_BASE_URL:-http://localhost:4200}
       # One-time production bootstrap. Clear BOOTSTRAP_ADMIN_PASSWORD after
       # the first successful identity-service start.
       - BOOTSTRAP_ADMIN_EMAIL=${BOOTSTRAP_ADMIN_EMAIL:-admin@eduivme.com}
@@ -342,6 +343,7 @@ services:
       - Email__Password=${SMTP_PASSWORD}
       - Email__FromName=${SMTP_FROM_NAME}
       - PublicApp__BaseUrl=${PUBLIC_APP_BASE_URL:?PUBLIC_APP_BASE_URL must be set}
+      - PublicApp__SpeedReadingBaseUrl=${SPEED_READING_PUBLIC_BASE_URL:-http://localhost:4200}
       - DataProtection__KeysPath=/var/lib/eduplatform/data-protection-keys
       - DataProtection__CertificatePath=${DATAPROTECTION_CERTIFICATE_PATH:-}
       - DataProtection__CertificatePassword=${DATAPROTECTION_CERTIFICATE_PASSWORD:-}

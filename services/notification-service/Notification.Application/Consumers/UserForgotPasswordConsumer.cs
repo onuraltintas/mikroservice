@@ -29,14 +29,15 @@ public class UserForgotPasswordConsumer : IConsumer<UserForgotPasswordEvent>
         
         var template = await _dbContext.EmailTemplates
             .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.TemplateName == "Auth_ForgotPassword" && t.IsActive);
+            .FirstOrDefaultAsync(t => t.TemplateName == PublicAppUrlOptions.GetTemplateName("Auth_ForgotPassword", message.Role) && t.IsActive);
 
         string subject;
         string body;
 
         var resetLink = _publicAppUrlOptions.BuildPasswordResetLink(
             message.ResetToken,
-            message.Email);
+            message.Email,
+            message.Role);
 
         if (template != null)
         {
@@ -48,10 +49,13 @@ public class UserForgotPasswordConsumer : IConsumer<UserForgotPasswordEvent>
                 .Replace("{{FirstName}}", message.FirstName ?? "")
                 .Replace("{{LastName}}", message.LastName ?? "")
                 .Replace("{{ResetLink}}", resetLink);
+            subject = PublicAppUrlOptions.ApplySpeedReadingBranding(subject, message.Role);
+            body = PublicAppUrlOptions.ApplySpeedReadingBranding(body, message.Role);
         }
         else
         {
-            subject = "Şifre Sıfırlama Talebi - EduPlatform";
+            var appName = PublicAppUrlOptions.GetApplicationName(message.Role);
+            subject = $"Şifre Sıfırlama Talebi - {appName}";
             body = $@"
                 <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
                     <h2 style='color: #4f46e5;'>Şifre Sıfırlama Talebi</h2>
@@ -62,7 +66,7 @@ public class UserForgotPasswordConsumer : IConsumer<UserForgotPasswordEvent>
                     </div>
                     <p style='color: #6b7280; font-size: 0.9em;'>Bu link 2 saat süreyle geçerlidir. Eğer bu talebi siz yapmadıysanız, lütfen bu e-postayı dikkate almayınız.</p>
                     <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>
-                    <p style='font-size: 0.8em; color: #9ca3af;'>EduPlatform Güvenlik Ekibi</p>
+                    <p style='font-size: 0.8em; color: #9ca3af;'>{appName} Güvenlik Ekibi</p>
                 </div>";
         }
 

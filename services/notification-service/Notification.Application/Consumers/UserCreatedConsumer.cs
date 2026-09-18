@@ -34,13 +34,14 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
         // 1. Retrieve Template dynamically from Database
         var template = await _dbContext.EmailTemplates
             .AsNoTracking() // Performans için
-            .FirstOrDefaultAsync(t => t.TemplateName == "Auth_DirectCreate" && t.IsActive);
+            .FirstOrDefaultAsync(t => t.TemplateName == PublicAppUrlOptions.GetTemplateName("Auth_DirectCreate", message.Role) && t.IsActive);
 
         string subject;
         string body;
         var passwordSetupUrl = _publicAppUrlOptions.BuildPasswordResetLink(
             message.PasswordSetupToken,
-            email);
+            email,
+            message.Role);
 
         if (template != null)
         {
@@ -56,12 +57,15 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
                 .Replace("{{PasswordSetupUrl}}", passwordSetupUrl)
                 .Replace("{{PasswordSetupTokenExpiresAt}}", message.PasswordSetupTokenExpiresAt.ToString("O"))
                 .Replace("{{Email}}", message.Email ?? "");
+            subject = PublicAppUrlOptions.ApplySpeedReadingBranding(subject, message.Role);
+            body = PublicAppUrlOptions.ApplySpeedReadingBranding(body, message.Role);
         }
         else
         {
             // Fallback (Safe Mode)
-            subject = $"Welcome to EduPlatform, {message.FirstName}!";
-            body = $"<h1>Welcome {message.FirstName}!</h1><p>Your account is ready.</p><p><a href=\"{passwordSetupUrl}\">Set your password</a></p><p>This link expires at {message.PasswordSetupTokenExpiresAt:O}.</p>";
+            var appName = PublicAppUrlOptions.GetApplicationName(message.Role);
+            subject = $"{appName} hesabınız hazır, {message.FirstName}!";
+            body = $"<h1>{appName}</h1><p>Merhaba {message.FirstName}, hesabınız hazır.</p><p><a href=\"{passwordSetupUrl}\">Şifrenizi belirleyin</a></p><p>Bu bağlantının son geçerlilik zamanı: {message.PasswordSetupTokenExpiresAt:O}.</p>";
         }
 
         var messageId = context.MessageId ?? throw new InvalidOperationException("UserCreatedEvent.MessageId is required.");
@@ -74,8 +78,8 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
             context.CancellationToken);
         await _notificationService.SendNotificationAsync(
             message.UserId, 
-            "Welcome to EduPlatform!", 
-            "Your account has been created successfully.", 
+            $"{PublicAppUrlOptions.GetApplicationName(message.Role)} hesabınız oluşturuldu",
+            "Hesabınız başarıyla oluşturuldu.",
             "Account",
             sourceMessageId: messageId);
     }

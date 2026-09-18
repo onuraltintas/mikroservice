@@ -29,14 +29,15 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
         
         var template = await _dbContext.EmailTemplates
             .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.TemplateName == "Auth_VerifyEmail" && t.IsActive);
+            .FirstOrDefaultAsync(t => t.TemplateName == PublicAppUrlOptions.GetTemplateName("Auth_VerifyEmail", message.Role) && t.IsActive);
 
         string subject;
         string body;
 
         var verificationLink = _publicAppUrlOptions.BuildEmailVerificationLink(
             message.UserId,
-            message.VerificationToken);
+            message.VerificationToken,
+            message.Role);
 
         if (template != null)
         {
@@ -48,11 +49,14 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
                 .Replace("{{FirstName}}", message.FirstName ?? "")
                 .Replace("{{LastName}}", message.LastName ?? "")
                 .Replace("{{VerificationLink}}", verificationLink);
+            subject = PublicAppUrlOptions.ApplySpeedReadingBranding(subject, message.Role);
+            body = PublicAppUrlOptions.ApplySpeedReadingBranding(body, message.Role);
         }
         else
         {
-            subject = "E-posta Adrezi Doğrulama - EduPlatform";
-            body = $"<h1>Merhaba {message.FirstName}!</h1><p>Lütfen e-posta adresinizi doğrulamak için tıklayın: <a href='{verificationLink}'>Doğrula</a></p>";
+            var appName = PublicAppUrlOptions.GetApplicationName(message.Role);
+            subject = $"E-posta Adresinizi Doğrulayın - {appName}";
+            body = $"<h1>{appName}</h1><p>Merhaba {message.FirstName}!</p><p>Lütfen e-posta adresinizi doğrulamak için tıklayın: <a href='{verificationLink}'>Doğrula</a></p>";
         }
 
         var messageId = context.MessageId ?? throw new InvalidOperationException("UserRegisteredEvent.MessageId is required.");

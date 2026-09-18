@@ -109,7 +109,8 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
                 request.Email,
                 request.FirstName,
                 request.LastName,
-                user?.EmailVerificationToken ?? ""
+                user?.EmailVerificationToken ?? "",
+                Identity.Domain.Enums.UserRole.InstitutionOwner.ToString()
             ), cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 

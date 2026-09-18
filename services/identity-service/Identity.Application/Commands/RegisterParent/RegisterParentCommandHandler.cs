@@ -83,7 +83,8 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
                 request.Email,
                 request.FirstName,
                 request.LastName,
-                user?.EmailVerificationToken ?? ""
+                user?.EmailVerificationToken ?? "",
+                Identity.Domain.Enums.UserRole.Parent.ToString()
             ), cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 

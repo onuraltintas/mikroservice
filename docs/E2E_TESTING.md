@@ -27,9 +27,9 @@ Testler varsayılan olarak yalnızca Docker'da çalışan Gateway'e bağlanır v
 yetkili akış login ve refresh-token metadata kayıtları oluşturabilir. Kayıt/e-posta
 ve tenant write senaryoları disposable staging tenant ve MailCatcher/SMTP erişimi
 olan ayrı bir profile bağlanmalıdır; ortak production verisiyle
-çalıştırılmamalıdır. Merkezi Eduİvme bağlantıları `PUBLIC_APP_BASE_URL`, hızlı
-okuma uygulamasına gönderilen kayıt ve parola bağlantıları ise
-`SPEED_READING_PUBLIC_BASE_URL` ile üretilir; staging/production ortamında
+çalıştırılmamalıdır. Merkezi roller için `PUBLIC_APP_BASE_URL`, hızlı okuma
+rolleri için `SPEED_READING_PUBLIC_BASE_URL` kullanılır; kayıt, parola ve davet
+bağlantıları alıcı rolüne göre üretilir. Staging/production ortamında
 `localhost` değeri kullanılmamalıdır.
 
 Gateway üzerinden disposable tenant akışı Docker ortamında doğrulanmalıdır:

@@ -33,6 +33,10 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
         }
 
         user.GeneratePasswordResetToken();
+        var primaryRole = user.Roles
+            .OrderBy(role => role.Role.Name)
+            .Select(role => role.Role.Name)
+            .FirstOrDefault() ?? "User";
 
         // Publish event to send email
         await _publishEndpoint.Publish(new UserForgotPasswordEvent(
@@ -40,7 +44,8 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
             user.Email,
             user.FirstName,
             user.LastName,
-            user.PasswordResetToken!), cancellationToken);
+            user.PasswordResetToken!,
+            primaryRole), cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

@@ -5,5 +5,6 @@ public record UserRegisteredEvent(
     string Email,
     string FirstName,
     string LastName,
-    string VerificationToken
+    string VerificationToken,
+    string Role = "Student"
 );

@@ -40,5 +40,33 @@
         "Category": "Auth",
         "Subject": "Şifre Sıfırlama Talebi 🔐",
         "HtmlFile": "Templates/Auth/Auth_ForgotPassword.html"
+    },
+    {
+        "Id": "77777777-7777-7777-7777-777777777777",
+        "TemplateName": "SpeedReading_Auth_VerifyEmail",
+        "Category": "Auth",
+        "Subject": "Master Hızlı Okuma e-posta doğrulaması",
+        "HtmlFile": "Templates/Auth/SpeedReading_Auth_VerifyEmail.html"
+    },
+    {
+        "Id": "88888888-8888-8888-8888-888888888888",
+        "TemplateName": "SpeedReading_Auth_ForgotPassword",
+        "Category": "Auth",
+        "Subject": "Master Hızlı Okuma şifre yenileme",
+        "HtmlFile": "Templates/Auth/SpeedReading_Auth_ForgotPassword.html"
+    },
+    {
+        "Id": "99999999-9999-9999-9999-999999999999",
+        "TemplateName": "SpeedReading_Auth_Welcome",
+        "Category": "Auth",
+        "Subject": "Master Hızlı Okuma'ya hoş geldiniz",
+        "HtmlFile": "Templates/Auth/SpeedReading_Auth_Welcome.html"
+    },
+    {
+        "Id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        "TemplateName": "SpeedReading_Auth_DirectCreate",
+        "Category": "Auth",
+        "Subject": "Master Hızlı Okuma hesabınız oluşturuldu",
+        "HtmlFile": "Templates/Auth/SpeedReading_Auth_DirectCreate.html"
     }
 ]

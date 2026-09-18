@@ -60,6 +60,39 @@ public sealed class NotificationContractTests
             "https://staging.example.test/auth/reset-password?token=reset%20token&email=ada%2Btest%40example.test");
     }
 
+    [Fact]
+    public void PublicAppUrlOptions_UsesSpeedReadingOriginForSpeedReadingRoles()
+    {
+        var options = new PublicAppUrlOptions
+        {
+            BaseUrl = "https://eduivme.example.test",
+            SpeedReadingBaseUrl = "https://masterhizliokuma.example.test/"
+        };
+
+        options.BuildEmailVerificationLink(
+                Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                "verification-token",
+                "Student")
+            .Should().StartWith("https://masterhizliokuma.example.test/auth/verify-email");
+
+        options.BuildPasswordResetLink("reset-token", "student@example.test", "Teacher")
+            .Should().StartWith("https://masterhizliokuma.example.test/auth/reset-password");
+    }
+
+    [Fact]
+    public void PublicAppUrlOptions_UsesCentralOriginForCentralRoles()
+    {
+        var options = new PublicAppUrlOptions
+        {
+            BaseUrl = "https://eduivme.example.test",
+            SpeedReadingBaseUrl = "https://masterhizliokuma.example.test"
+        };
+
+        options.BuildLoginLink("SystemAdmin")
+            .Should().Be("https://eduivme.example.test/auth/login");
+        PublicAppUrlOptions.IsSpeedReadingRole("Editor").Should().BeFalse();
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("localhost:4200")]

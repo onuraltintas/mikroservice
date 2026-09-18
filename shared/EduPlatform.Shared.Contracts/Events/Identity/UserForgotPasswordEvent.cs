@@ -5,4 +5,5 @@ public record UserForgotPasswordEvent(
     string Email,
     string FirstName,
     string LastName,
-    string ResetToken);
+    string ResetToken,
+    string Role = "User");

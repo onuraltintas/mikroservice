@@ -81,7 +81,8 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
                 request.Email,
                 request.FirstName,
                 request.LastName,
-                user?.EmailVerificationToken ?? ""
+                user?.EmailVerificationToken ?? "",
+                Identity.Domain.Enums.UserRole.Teacher.ToString()
             ), cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 

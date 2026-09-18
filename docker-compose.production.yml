@@ -210,9 +210,10 @@ services:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/notification-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      # Registration and password links belong to the standalone Hızlı Okuma
-      # application, while PUBLIC_APP_BASE_URL points to the central panel.
-      PublicApp__BaseUrl: ${SPEED_READING_PUBLIC_BASE_URL:-https://masterhizliokuma.com}
+      # Notification links are selected by recipient role: speed-reading
+      # roles use SPEED_READING_PUBLIC_BASE_URL; central roles use PUBLIC_APP_BASE_URL.
+      PublicApp__BaseUrl: ${PUBLIC_APP_BASE_URL:-https://eduivme.com}
+      PublicApp__SpeedReadingBaseUrl: ${SPEED_READING_PUBLIC_BASE_URL:-https://masterhizliokuma.com}
       Email__Host: ${SMTP_HOST:?SMTP_HOST must be set to a production SMTP host}
       Email__Port: ${SMTP_PORT:?SMTP_PORT must be set to a production SMTP port}
       Email__From: ${SMTP_FROM_EMAIL:?SMTP_FROM_EMAIL must be set}

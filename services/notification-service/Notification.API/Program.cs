@@ -79,6 +79,11 @@ builder.Services.AddOptions<PublicAppUrlOptions>()
             options.BaseUrl,
             builder.Environment.IsProduction()),
         "PublicApp:BaseUrl must be an absolute HTTP(S) URL without credentials, query, or fragment; production cannot use loopback.")
+    .Validate(
+        options => PublicAppUrlOptions.IsValidForEnvironment(
+            options.SpeedReadingBaseUrl,
+            builder.Environment.IsProduction()),
+        "PublicApp:SpeedReadingBaseUrl must be an absolute HTTP(S) URL without credentials, query, or fragment; production cannot use loopback.")
     .ValidateOnStart();
 
 // Add services
