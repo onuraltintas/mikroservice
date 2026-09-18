@@ -46,7 +46,7 @@ public sealed class NotificationContractTests
         var link = options.BuildEmailVerificationLink(userId, "token with & unsafe");
 
         link.Should().Be(
-            "https://staging.example.test/auth/confirm-email?token=token%20with%20%26%20unsafe&userId=11111111-1111-1111-1111-111111111111");
+            "https://staging.example.test/auth/verify-email?token=token%20with%20%26%20unsafe&userId=11111111-1111-1111-1111-111111111111");
     }
 
     [Fact]

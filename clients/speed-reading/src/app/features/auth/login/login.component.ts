@@ -187,7 +187,7 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
         },
         error: (err) => {
           // Check if error is about email verification
-          const errorMessage = (err.error?.Message || err.error?.message || '').toLowerCase(); // Normalize case
+          const errorMessage = this.readErrorMessage(err, '').toLocaleLowerCase('tr-TR');
 
           if (errorMessage && (errorMessage.includes('verify your email') || errorMessage.includes('doğrulanma') || errorMessage.includes('doğrula'))) {
             this.showEmailVerificationWarning = true;

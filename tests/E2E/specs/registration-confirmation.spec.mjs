@@ -4,7 +4,7 @@ const mailApiBaseUrl = process.env.E2E_MAILCATCHER_API_BASE_URL?.replace(/\/$/, 
 
 function verificationParamsFromMessage(text) {
   const match = text.match(
-    /\/auth\/confirm-email\?token=([^&"'<>\s]+)(?:&amp;|&)userId=([^"'<>\s]+)/i
+    /\/auth\/verify-email\?token=([^&"'<>\s]+)(?:&amp;|&)userId=([^"'<>\s]+)/i
   );
   if (!match) return null;
 

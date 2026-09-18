@@ -202,9 +202,11 @@ politikaları uygular.
   `SMTP_PASSWORD=<mailbox-parolası>`, `SMTP_FROM_NAME=Eduİvme`. Kullanılan
   mailbox adının `eduivme` yazımını taşıdığı doğrulanmalıdır.
 - Doğrulama ve parola akışlarının tarayıcı bağlantıları Notification servisinde
-  `PublicApp__BaseUrl` / `PUBLIC_APP_BASE_URL` üzerinden üretilir. Bu değer
-  public HTTPS frontend origin'i olmalı; credentials, query veya fragment
-  içermemeli ve production'da `localhost` olmamalıdır.
+  `PublicApp__BaseUrl` üzerinden üretilir. Merkezi Eduİvme bağlantıları için
+  `PUBLIC_APP_BASE_URL`, hızlı okuma uygulaması bağlantıları için
+  `SPEED_READING_PUBLIC_BASE_URL` kullanılır. Her değer ilgili public HTTPS
+  frontend origin'i olmalı; credentials, query veya fragment içermemeli ve
+  production'da `localhost` olmamalıdır.
 - RabbitMQ tek node için sabit `rabbit@rabbitmq` node adı kullanır. Mevcut
   `rabbitmq_data` volume'u eski container-id tabanlı node adıyla oluşturulduysa
   bu geçiş queue/message metadata'sını otomatik taşımaz. Production geçişinden

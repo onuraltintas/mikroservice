@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { LoginComponent } from './login.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { GoogleIdentityService } from '../../../core/services/google-identity.service';
@@ -90,5 +90,21 @@ describe('LoginComponent', () => {
       password: 'Password1!',
       rememberMe: false
     });
+  });
+
+  it('shows the verification warning when the API error is exposed at the top level', () => {
+    authService.login.and.returnValue(throwError(() => ({
+      message: 'Please verify your email before signing in.'
+    })));
+    component.loginForm.setValue({
+      email: 'student@example.com',
+      password: 'Password1!',
+      rememberMe: false
+    });
+
+    component.onSubmit();
+
+    expect(component.showEmailVerificationWarning).toBeTrue();
+    expect(component.unverifiedEmail).toBe('student@example.com');
   });
 });
