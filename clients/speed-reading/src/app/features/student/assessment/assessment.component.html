@@ -149,8 +149,10 @@
         </div>
 
         <button type="button" class="sp-btn action-btn"
-          (click)="startExercise(i)" [disabled]="i > 0 && !exercises()[i-1].completed">
-          {{ exercise.completed ? 'Tekrar' : 'Başla' }}
+          (click)="startExercise(i)"
+          [disabled]="exercise.completed || (i > 0 && !exercises()[i-1].completed)"
+          [attr.aria-label]="exercise.completed ? 'Bu egzersiz tamamlandı' : exercise.name">
+          {{ exercise.completed ? 'Tamamlandı' : 'Başla' }}
         </button>
       </div>
       }

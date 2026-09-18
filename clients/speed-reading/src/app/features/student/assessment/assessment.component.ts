@@ -132,6 +132,14 @@ export class AssessmentComponent implements OnInit, OnDestroy {
   startExercise(index: number): void {
     const exercise = this.exercises()[index];
 
+    // Assessment exercises are single-attempt within the current assessment.
+    // Do not send a second start request for an already completed exercise;
+    // the API correctly rejects that request because it would create a
+    // duplicate result for the same attempt.
+    if (!exercise || exercise.completed) {
+      return;
+    }
+
     // Navigate to universal player for ALL exercises including Comprehension
     this.router.navigate(['/student/exercises/universal-player', exercise.id], {
       queryParams: {

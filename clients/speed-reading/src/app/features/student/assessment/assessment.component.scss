@@ -298,6 +298,12 @@ $bg-color: var(--sp-surface-2);
     border-radius: 20px;
     padding: 0 24px;
     font-weight: 600;
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.7;
+      box-shadow: none;
+    }
   }
 }
 
