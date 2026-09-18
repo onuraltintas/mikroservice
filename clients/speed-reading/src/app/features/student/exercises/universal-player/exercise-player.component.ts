@@ -14,7 +14,13 @@ import { AuthService } from '../../../../core/services/auth.service';
 
 import { EngineFactory, EngineType } from './engines/engine-factory';
 import { shouldForwardExerciseAction } from './exercise-action-policy';
-import { finishAfterPendingActions } from './exercise-action-queue';
+import {
+  createActionFailureState,
+  finishAfterPendingActions,
+  recordActionFailure,
+  resetActionFailureState,
+  runForActionGeneration
+} from './exercise-action-queue';
 import { FocusEngine } from './engines/focus.engine';
 import { AdaptiveFluencyEngine, AdaptiveFluencyStageFeedback } from './engines/adaptive-fluency.engine';
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './engines/base-engine.interface';
@@ -309,6 +315,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private readingTrackingStartCompleted = false;
   private pendingReadingCompletion?: () => void;
   private actionQueue: Promise<void> = Promise.resolve();
+  private readonly actionFailureState = createActionFailureState();
   questionSubmissionPending = false;
 
   // Timer for Duration-based exercises
@@ -545,6 +552,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.finishLoading();
       return;
     }
+
+    this.resetActionTracking();
 
     // Preview users must never create a server-owned session. Besides keeping
     // results out of progress tables, this also prevents gamification and
@@ -1311,16 +1320,27 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       ...action,
       actionId: action.actionId ?? crypto.randomUUID()
     };
+    const actionGeneration = this.actionFailureState.generation;
+    const actionSessionId = this.sessionId;
     const validation = this.actionQueue
       .catch(() => undefined)
-      .then(() => this.validateActionWithTransientRetry(actionWithId));
+      .then(() => actionGeneration === this.actionFailureState.generation
+        ? this.validateActionWithTransientRetry(actionSessionId, actionWithId)
+        : undefined);
     const queued = validation.then(
-      response => onResponse?.(response),
+      response => {
+        if (response) {
+          runForActionGeneration(
+            this.actionFailureState,
+            actionGeneration,
+            () => onResponse?.(response));
+        }
+      },
       error => {
         // A failed focus/visualization action must release the engine's
         // pending state; otherwise a transient network error can leave an
         // assessment waiting forever for a response that will never arrive.
-        if (onResponse) {
+        if (onResponse && actionGeneration === this.actionFailureState.generation) {
           try {
             onResponse({
               isValid: false,
@@ -1336,16 +1356,20 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
     this.actionQueue = queued;
     void queued.catch(error => {
+      recordActionFailure(this.actionFailureState, actionGeneration, error);
       console.error('[ExercisePlayer] Action validation error:', error);
     });
     return queued;
   }
 
-  private async validateActionWithTransientRetry(action: ActionData): Promise<ValidationResponse> {
+  private async validateActionWithTransientRetry(
+    sessionId: string,
+    action: ActionData
+  ): Promise<ValidationResponse> {
     let lastError: unknown;
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        return await firstValueFrom(this.sessionService.validateAction(this.sessionId!, action));
+        return await firstValueFrom(this.sessionService.validateAction(sessionId, action));
       } catch (error) {
         lastError = error;
         const status = Number((error as any)?.status || (error as any)?.error?.status);
@@ -1366,14 +1390,27 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private waitForPendingActions(onFinished: () => void): void {
+    const actionGeneration = this.actionFailureState.generation;
     void finishAfterPendingActions(
       this.actionQueue,
-      onFinished,
+      () => runForActionGeneration(this.actionFailureState, actionGeneration, onFinished),
       error => {
+        if (actionGeneration !== this.actionFailureState.generation) return;
+        this.engineState = {
+          ...this.engineState,
+          isRunning: false,
+          isCompleted: false
+        };
         this.error = this.getActionValidationErrorMessage(error);
         this.showToast('Cevap kaydedilemedi; egzersiz tamamlanmadı.', 'error', 5000);
         this.cdr.detectChanges();
-      });
+      },
+      () => this.actionFailureState);
+  }
+
+  private resetActionTracking(): void {
+    this.actionQueue = Promise.resolve();
+    resetActionFailureState(this.actionFailureState);
   }
 
   startExercise(): void {
