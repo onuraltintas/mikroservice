@@ -151,7 +151,7 @@ internal sealed class OwnedSpeedReadingAssessment(
         if (attempts.Count == 0)
             return [];
 
-        var attemptIds = attempts.Select(item => item.Id).ToArray();
+        var attemptIds = attempts.Select(item => item.Id).ToList();
         var completedItems = await db.ExerciseSessionResults
             .AsNoTracking()
             .Where(item => item.AssessmentAttemptId.HasValue
@@ -196,7 +196,7 @@ internal sealed class OwnedSpeedReadingAssessment(
         if (attempts.Count == 0)
             return new AssessmentComparisonSummary([], null);
 
-        var attemptIds = attempts.Select(item => item.Id).ToArray();
+        var attemptIds = attempts.Select(item => item.Id).ToList();
         var resultRows = await db.ExerciseSessionResults
             .AsNoTracking()
             .Where(item => item.AssessmentAttemptId.HasValue
@@ -387,7 +387,10 @@ internal sealed class OwnedSpeedReadingAssessment(
             .Where(item => item.IsSkipped)
             .Select(item => item.Id)
             .ToHashSet();
-        var baselineAttemptIds = baselineAttempts.Select(item => item.Id).ToArray();
+        // Keep this as a List so EF Core binds the collection as a relational
+        // array parameter instead of trying to evaluate Array.Contains through
+        // the ReadOnlySpan overload on .NET 10.
+        var baselineAttemptIds = baselineAttempts.Select(item => item.Id).ToList();
         var expectedMeasuredCounts = await (
             from formItem in db.AssessmentAttemptExercises.AsNoTracking()
             join exercise in db.Exercises.AsNoTracking()
@@ -597,7 +600,7 @@ internal sealed class OwnedSpeedReadingAssessment(
 
         // Placement is calculated only from server-measured session results.
         // Client supplied scores remain a compatibility field and are ignored.
-        var exerciseIds = results.Select(item => item.ExerciseId).Distinct().ToArray();
+        var exerciseIds = results.Select(item => item.ExerciseId).Distinct().ToList();
         var typeNames = await (
             from exercise in db.Exercises.AsNoTracking()
             join exerciseType in db.ExerciseTypes.AsNoTracking()
@@ -1382,10 +1385,10 @@ internal sealed class OwnedSpeedReadingAssessment(
         IReadOnlyList<AssessmentTemplateExerciseInput> exercises,
         CancellationToken cancellationToken)
     {
-        var ids = exercises.Select(item => item.ExerciseId).Distinct().ToArray();
+        var ids = exercises.Select(item => item.ExerciseId).Distinct().ToList();
         var count = await db.Exercises.AsNoTracking()
             .CountAsync(item => ids.Contains(item.Id) && item.IsActive && !item.IsDeleted, cancellationToken);
-        if (count != ids.Length)
+        if (count != ids.Count)
             throw new ArgumentException("Every assessment exercise must exist and be active.", nameof(exercises));
     }
 
@@ -1393,14 +1396,14 @@ internal sealed class OwnedSpeedReadingAssessment(
         IReadOnlyList<ProgramTemplate> templates,
         CancellationToken cancellationToken)
     {
-        var ageGroupIds = templates.Select(item => item.TargetAgeGroupConfigurationId).Distinct().ToArray();
+        var ageGroupIds = templates.Select(item => item.TargetAgeGroupConfigurationId).Distinct().ToList();
         var ageGroups = await db.AgeGroupConfigurations
             .AsNoTracking()
             .Where(item => ageGroupIds.Contains(item.Id))
             .ToDictionaryAsync(item => item.Id, cancellationToken);
 
         var parsed = templates.SelectMany(item => ParseExerciseEntries(item.WeeklyPatternJson)).ToList();
-        var exerciseIds = parsed.Select(item => item.ExerciseId).Distinct().ToArray();
+        var exerciseIds = parsed.Select(item => item.ExerciseId).Distinct().ToList();
         var exercises = await (
             from exercise in db.Exercises.AsNoTracking()
             join exerciseType in db.ExerciseTypes.AsNoTracking()
