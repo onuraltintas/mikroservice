@@ -17,3 +17,12 @@ export function visualAngleToOffsetPercent(degrees: number, dimensionPx: number)
   const oneSidedOffset = fullSpacingPx / dimensionPx * 50;
   return Math.max(MIN_OFFSET_PERCENT, Math.min(MAX_OFFSET_PERCENT, oneSidedOffset));
 }
+
+export function visualAngleToAxisOffsetPercent(
+  degrees: number,
+  dimensionPx: number,
+  radial: boolean
+): number {
+  const offset = visualAngleToOffsetPercent(degrees, dimensionPx);
+  return radial ? offset / Math.SQRT2 : offset;
+}

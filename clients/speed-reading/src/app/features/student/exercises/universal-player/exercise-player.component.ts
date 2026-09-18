@@ -14,6 +14,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 
 import { EngineFactory, EngineType } from './engines/engine-factory';
 import { shouldForwardExerciseAction } from './exercise-action-policy';
+import { finishAfterPendingActions } from './exercise-action-queue';
 import { FocusEngine } from './engines/focus.engine';
 import { AdaptiveFluencyEngine, AdaptiveFluencyStageFeedback } from './engines/adaptive-fluency.engine';
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './engines/base-engine.interface';
@@ -298,6 +299,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   currentHintIndex: number | null = null; // For Error Analysis Hint Highlight
   @ViewChild('expansionLeftInput') expansionLeftInput?: ElementRef<HTMLInputElement>;
   @ViewChild('expansionRightInput') expansionRightInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('visualExpansionArea') visualExpansionArea?: ElementRef<HTMLDivElement>;
 
   // Peripheral Vision Input
   @ViewChild('peripheralInput') peripheralInput?: ElementRef<HTMLInputElement>;
@@ -1199,6 +1201,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           || this.backendSessionConfig?.Words
           || this.parsedConfig?.engineConfig?.['words'],
         serverAuthoritative: !!this.sessionId && this.sessionId !== 'preview-mode',
+        getRenderBounds: () => {
+          const element = this.visualExpansionArea?.nativeElement;
+          return element
+            ? { width: element.clientWidth, height: element.clientHeight }
+            : { width: window.innerWidth, height: window.innerHeight };
+        },
         // Metadata ve yaş grubu/zorluk bilgisini ekle
         metadata: this.parsedConfig?.['metadata'],
         difficultyLevel: this.parsedConfig?.['difficultyLevel'] || this.backendSessionConfig?.DifficultyLevel
@@ -1326,7 +1334,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         throw error;
       });
 
-    this.actionQueue = queued.catch(error => {
+    this.actionQueue = queued;
+    void queued.catch(error => {
       console.error('[ExercisePlayer] Action validation error:', error);
     });
     return queued;
@@ -1357,9 +1366,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private waitForPendingActions(onFinished: () => void): void {
-    this.actionQueue
-      .then(onFinished)
-      .catch(() => onFinished());
+    void finishAfterPendingActions(
+      this.actionQueue,
+      onFinished,
+      error => {
+        this.error = this.getActionValidationErrorMessage(error);
+        this.showToast('Cevap kaydedilemedi; egzersiz tamamlanmadı.', 'error', 5000);
+        this.cdr.detectChanges();
+      });
   }
 
   startExercise(): void {

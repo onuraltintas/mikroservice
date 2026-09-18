@@ -8,7 +8,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
-import { visualAngleToOffsetPercent } from './visual-expansion-position';
+import { visualAngleToAxisOffsetPercent } from './visual-expansion-position';
 
 export interface VisualExpansionConfig extends EngineConfig {
     expansion: {
@@ -422,9 +422,11 @@ export class VisualExpansionEngine implements BaseEngine {
     }
 
     private positionStimuli(contents: string[]): Array<{ content: string; x: number; y: number }> {
-        const x = visualAngleToOffsetPercent(this.currentDegrees, window.innerWidth);
-        const y = visualAngleToOffsetPercent(this.currentDegrees, window.innerHeight);
+        const bounds = this.getRenderBounds();
         const pattern = this.config.expansion?.pattern || 'horizontal';
+        const radial = pattern === 'radial';
+        const x = visualAngleToAxisOffsetPercent(this.currentDegrees, bounds.width, radial);
+        const y = visualAngleToAxisOffsetPercent(this.currentDegrees, bounds.height, radial);
         if (pattern === 'vertical') {
             return contents.map((content, index) => ({ content, x: 50, y: index === 0 ? 50 - y : 50 + y }));
         }
@@ -453,8 +455,10 @@ export class VisualExpansionEngine implements BaseEngine {
         const pattern = this.config.expansion?.pattern || 'horizontal';
         const type = this.config.expansion?.stimulusType || 'letter';
 
-        const xOffset = visualAngleToOffsetPercent(this.currentDegrees, window.innerWidth);
-        const yOffset = visualAngleToOffsetPercent(this.currentDegrees, window.innerHeight);
+        const bounds = this.getRenderBounds();
+        const radial = pattern === 'radial';
+        const xOffset = visualAngleToAxisOffsetPercent(this.currentDegrees, bounds.width, radial);
+        const yOffset = visualAngleToAxisOffsetPercent(this.currentDegrees, bounds.height, radial);
 
         const chars = "ABCDEFGHKLMNPRSTUVYZ"; // Karışıklık yaratabilecek I,O,Q çıkarıldı
         const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -519,6 +523,16 @@ export class VisualExpansionEngine implements BaseEngine {
                 { content: getUniqueContent(), x: clamp(50 + diagX), y: clamp(50 + diagY) }
             );
         }
+    }
+
+    private getRenderBounds(): { width: number; height: number } {
+        const configured = (this.config as any)?.getRenderBounds?.();
+        const width = Number(configured?.width);
+        const height = Number(configured?.height);
+        return {
+            width: Number.isFinite(width) && width > 0 ? width : window.innerWidth,
+            height: Number.isFinite(height) && height > 0 ? height : window.innerHeight
+        };
     }
 
     pause(): void {
