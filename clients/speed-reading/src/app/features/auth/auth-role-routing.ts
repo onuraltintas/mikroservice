@@ -1,7 +1,10 @@
-export type AuthDestination = 'admin' | 'institution' | 'teacher' | 'coach' | 'student';
+export type AuthDestination = 'exercisePreview' | 'institution' | 'teacher' | 'coach' | 'student';
 
 const destinationByPriority: ReadonlyArray<[AuthDestination, readonly string[]]> = [
-  ['admin', ['admin', 'systemadmin', 'editor']],
+  // The central admin application remains available through eduivme.com. On
+  // the Master application, these roles get a read-only exercise catalogue
+  // preview so they can try every exercise without creating student data.
+  ['exercisePreview', ['admin', 'systemadmin', 'editor']],
   ['institution', ['institutionadmin', 'institutionowner']],
   ['teacher', ['teacher']],
   ['coach', ['coach']],

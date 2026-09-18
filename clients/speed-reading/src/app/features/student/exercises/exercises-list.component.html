@@ -1,14 +1,14 @@
 <div class="exercises-container">
-    <!-- Teacher Preview Mode Banner -->
-    @if (isTeacher) {
+    <!-- Non-persistent preview mode banner -->
+    @if (isPreviewMode) {
     <div class="preview-banner">
         <span class="material-icons">preview</span>
-        <span><strong>Öğretmen Önizleme Modu</strong> - Egzersizleri deneyebilirsiniz. Sonuçlar kaydedilmez.</span>
+        <span><strong>Egzersiz Önizleme Modu</strong> - Tüm egzersizleri deneyebilirsiniz. Oturum ve sonuçlar kaydedilmez.</span>
     </div>
     }
 
     <div class="page-header">
-        <button *ngIf="!isTeacher" class="sp-btn back-button" (click)="goBack()">
+        <button *ngIf="!isPreviewMode" class="sp-btn back-button" (click)="goBack()">
             <span class="material-icons">arrow_back</span>
             <span>Dashboard'a Dön</span>
         </button>

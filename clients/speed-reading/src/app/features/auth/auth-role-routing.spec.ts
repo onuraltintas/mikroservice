@@ -6,12 +6,13 @@ describe('resolveAuthDestination', () => {
     expect(resolveAuthDestination(['Teacher'])).toBe('teacher');
     expect(resolveAuthDestination(['InstitutionAdmin'])).toBe('institution');
     expect(resolveAuthDestination(['InstitutionOwner'])).toBe('institution');
-    expect(resolveAuthDestination(['Admin'])).toBe('admin');
+    expect(resolveAuthDestination(['Admin'])).toBe('exercisePreview');
+    expect(resolveAuthDestination(['Editor'])).toBe('exercisePreview');
   });
 
   it('uses the most privileged supported role regardless of API role order', () => {
     expect(resolveAuthDestination(['Student', 'InstitutionAdmin'])).toBe('institution');
-    expect(resolveAuthDestination(['Teacher', 'SystemAdmin'])).toBe('admin');
+    expect(resolveAuthDestination(['Teacher', 'SystemAdmin'])).toBe('exercisePreview');
     expect(resolveAuthDestination(['Student', 'Teacher'])).toBe('teacher');
   });
 

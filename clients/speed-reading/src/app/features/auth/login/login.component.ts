@@ -317,8 +317,8 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
       case 'institution':
         this.router.navigate(['/teacher/dashboard']);
         break;
-      case 'admin':
-        void this.redirectToCentralAdmin();
+      case 'exercisePreview':
+        this.router.navigate(['/student/exercises']);
         break;
       case 'coach':
         this.router.navigate(['/coaching/dashboard']);

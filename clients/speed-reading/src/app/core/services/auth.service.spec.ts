@@ -73,6 +73,13 @@ describe('AuthService', () => {
     expect(service.hasAdminAccess()).toBeFalse();
   });
 
+  it('allows platform administrators and editors to use the non-persistent exercise preview', () => {
+    for (const role of ['Admin', 'SystemAdmin', 'Editor']) {
+      (service as any).currentUserSubject.next({ roles: [role] });
+      expect(service.canPreviewExercises()).withContext(role).toBeTrue();
+    }
+  });
+
   it('uses the canonical auth endpoint for login and sends the session cookie', () => {
     service.login({ email: 'admin@example.com', password: 'Password1!', rememberMe: true }).subscribe();
 

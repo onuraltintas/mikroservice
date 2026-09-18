@@ -53,10 +53,19 @@ export class StudentShellComponent implements OnInit, OnDestroy {
     const isTeacher        = this.authService.hasRole('Teacher');
     const isInstitutionAdmin = this.authService.hasRole('InstitutionAdmin')
       || this.authService.hasRole('InstitutionOwner');
-    const preview          = isTeacher || isInstitutionAdmin;
+    const isPlatformPreview = this.authService.hasRole('Admin')
+      || this.authService.hasRole('SystemAdmin')
+      || this.authService.hasRole('Editor');
+    const preview          = this.authService.canPreviewExercises();
     this.isTeacherPreview.set(preview);
 
-    if (preview) {
+    if (isPlatformPreview) {
+      this.menuItems.set([{
+        label: 'Egzersiz Kataloğu',
+        icon: 'fitness_center',
+        route: '/student/exercises'
+      }]);
+    } else if (preview) {
       const label = isInstitutionAdmin ? 'Kurum Paneli' : 'Öğretmen Paneli';
       this.menuItems.set([{ label, icon: 'arrow_back', route: '/teacher/dashboard' }]);
     } else {

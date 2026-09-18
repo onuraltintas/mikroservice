@@ -31,13 +31,18 @@ describe('App', () => {
     expect(adminRoute?.children?.some(route => route.path === '**')).toBeTrue();
   });
 
-  it('does not expose platform-admin roles through Master application routes', () => {
-    for (const path of ['student', 'teacher', 'coaching']) {
-      const route = routes.find(candidate => candidate.path === path);
-      const roles = route?.data?.['role'] as string[] | undefined;
+  it('allows platform administrators to open the Master exercise preview', () => {
+    const studentRoute = routes.find(route => route.path === 'student');
+    const roles = studentRoute?.data?.['role'] as string[] | undefined;
 
-      expect(roles ?? []).not.toContain('Admin');
-      expect(roles ?? []).not.toContain('SystemAdmin');
+    expect(roles ?? []).toContain('Admin');
+    expect(roles ?? []).toContain('SystemAdmin');
+
+    for (const path of ['teacher', 'coaching']) {
+      const route = routes.find(candidate => candidate.path === path);
+      const routeRoles = route?.data?.['role'] as string[] | undefined;
+      expect(routeRoles ?? []).not.toContain('Admin');
+      expect(routeRoles ?? []).not.toContain('SystemAdmin');
     }
   });
 });

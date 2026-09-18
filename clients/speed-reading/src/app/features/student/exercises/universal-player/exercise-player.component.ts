@@ -543,18 +543,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       return;
     }
 
-    // For Teachers in preview mode, skip session creation entirely
-    if (this.authService.hasRole('Teacher')) {
-      console.log('Teacher preview mode - skipping session creation');
-      this.sessionId = 'preview-mode'; // Placeholder ID
-      this.backendSessionConfig = {};
-      try {
-        this.initializeEngine();
-      } catch (error) {
-        this.handleInitializationError(error);
-      } finally {
-        this.finishLoading();
-      }
+    // Preview users must never create a server-owned session. Besides keeping
+    // results out of progress tables, this also prevents gamification and
+    // adaptive-learning side effects. Reading text content is still loaded
+    // from the catalogue so a preview uses the same material as a student.
+    if (this.authService.canPreviewExercises()) {
+      this.startPreviewSession();
       return;
     }
 
@@ -610,6 +604,92 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           this.finishLoading();
         }
       });
+  }
+
+  private startPreviewSession(): void {
+    this.sessionId = 'preview-mode';
+    this.backendSessionConfig = {};
+
+    const readingTextId = this.getConfiguredReadingTextId();
+    if (!readingTextId) {
+      this.initializePreviewEngine();
+      return;
+    }
+
+    this.exerciseService.getReadingText(readingTextId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: readingText => {
+          const questions = readingText.questions ?? [];
+          this.comprehensionQuestions = questions;
+          this.backendSessionConfig = this.createPreviewReadingConfig(readingText);
+          this.initializePreviewEngine();
+        },
+        error: error => {
+          // A preview remains usable with the exercise's own configuration if
+          // an optional reading-text lookup is unavailable.
+          console.warn('[ExercisePlayer] Preview reading text could not be loaded:', error);
+          this.initializePreviewEngine();
+        }
+      });
+  }
+
+  private initializePreviewEngine(): void {
+    try {
+      this.initializeEngine();
+    } catch (error) {
+      this.handleInitializationError(error);
+    } finally {
+      this.finishLoading();
+    }
+  }
+
+  private getConfiguredReadingTextId(): string | undefined {
+    const metadata = this.parsedConfig?.['metadata'] ?? this.parsedConfig?.['Metadata'] ?? {};
+    const value = metadata.targetReadingTextId
+      ?? metadata.TargetReadingTextId
+      ?? this.parsedConfig?.['readingTextId']
+      ?? this.parsedConfig?.['ReadingTextId'];
+    return typeof value === 'string' && value.trim() ? value : undefined;
+  }
+
+  private createPreviewReadingConfig(readingText: any): Record<string, unknown> {
+    const content = typeof readingText?.content === 'string' ? readingText.content : '';
+    const title = typeof readingText?.title === 'string' ? readingText.title : '';
+    const wordCount = Number(readingText?.wordCount) || content.split(/\s+/).filter(Boolean).length;
+    const questions = Array.isArray(readingText?.questions) ? readingText.questions : [];
+    const existingContent = this.parsedConfig?.['content'];
+    const contentConfig = existingContent && typeof existingContent === 'object'
+      ? existingContent
+      : {};
+    const words = content.split(/\s+/).filter(Boolean);
+
+    return {
+      readingTextContent: content,
+      readingTextTitle: title,
+      wordCount,
+      ReadingTextContent: content,
+      ReadingTextTitle: title,
+      Content: {
+        ...contentConfig,
+        Text: content,
+        text: content,
+        Title: title,
+        title,
+        WordCount: wordCount,
+        wordCount
+      },
+      content: {
+        ...contentConfig,
+        text: content,
+        title,
+        wordCount,
+        source: 'custom',
+        items: words
+      },
+      Questions: questions,
+      questions
+    };
   }
 
   /**
@@ -960,7 +1040,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private shouldTrackReading(): boolean {
     return !!this.sessionId
       && this.sessionId !== 'preview-mode'
-      && !this.authService.hasRole('Teacher')
+      && !this.authService.canPreviewExercises()
       && [
         'word_highlight',
         'reading_comprehension',
@@ -2635,8 +2715,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private saveResult(result: EngineResult): void {
-    // Skip saving for Teachers in preview mode
-    if (this.authService.hasRole('Teacher')) {
+    // Preview mode is intentionally local-only for every preview role.
+    if (this.authService.canPreviewExercises() || this.sessionId === 'preview-mode') {
       this.showToast('Önizleme modu - Sonuçlar kaydedilmedi.', 'info', 3000);
       return;
     }

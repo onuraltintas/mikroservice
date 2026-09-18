@@ -96,6 +96,22 @@ export class AuthService {
   }
 
   /**
+   * Roles that may open the exercise catalogue as a non-persistent preview.
+   * The preview deliberately avoids creating an ExerciseSession, progress,
+   * gamification or adaptive-learning records.
+   */
+  canPreviewExercises(): boolean {
+    return (this.currentUserValue?.roles ?? []).some(role => [
+      'Admin',
+      'SystemAdmin',
+      'Editor',
+      'Teacher',
+      'InstitutionAdmin',
+      'InstitutionOwner'
+    ].includes(role));
+  }
+
+  /**
    * Check if user has completed their profile setup
    * Profile is complete if dateOfBirth is set
    */

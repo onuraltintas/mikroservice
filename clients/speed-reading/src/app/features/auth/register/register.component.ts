@@ -115,8 +115,8 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
           this.router.navigate(['/student/dashboard']);
         } else if (destination === 'teacher' || destination === 'institution') {
           this.router.navigate(['/teacher/dashboard']);
-        } else if (destination === 'admin') {
-          void this.redirectToCentralAdmin();
+        } else if (destination === 'exercisePreview') {
+          this.router.navigate(['/student/exercises']);
         } else if (destination === 'coach') {
           this.router.navigate(['/coaching/dashboard']);
         } else {

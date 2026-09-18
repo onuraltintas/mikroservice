@@ -42,8 +42,9 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
   private dialog = inject(MatDialog);
   private authService = inject(AuthService);
 
-  // Teacher preview mode
-  isTeacher = false;
+  // Preview mode is shared by teachers, institution managers, editors and
+  // platform administrators. The player uses the same flag to avoid writes.
+  isPreviewMode = false;
 
   // loading inherited from BaseComponent
   selectedCategory = 'all';
@@ -77,9 +78,7 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
   };
 
   ngOnInit(): void {
-    this.isTeacher = this.authService.hasRole('Teacher')
-      || this.authService.hasRole('InstitutionAdmin')
-      || this.authService.hasRole('InstitutionOwner');
+    this.isPreviewMode = this.authService.canPreviewExercises();
     this.loadData();
   }
 
@@ -91,7 +90,11 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
     this.loading.set(true);
 
     forkJoin({
-      types: this.exerciseTypeService.getActiveExerciseTypes(),
+      // Content managers can inspect inactive/draft catalogue entries as well;
+      // regular students continue to see only the published catalogue.
+      types: this.isPreviewMode
+        ? this.exerciseTypeService.getExerciseTypes(undefined, undefined, 1, 100)
+        : this.exerciseTypeService.getActiveExerciseTypes(),
       exercises: this.exerciseService.getExercises(undefined, undefined, undefined, 1, 1000)
     }).subscribe({
       next: (data) => {
@@ -209,7 +212,9 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
   }
 
   goBack(): void {
-    if (this.isTeacher) {
+    if (this.authService.hasRole('Teacher')
+      || this.authService.hasRole('InstitutionAdmin')
+      || this.authService.hasRole('InstitutionOwner')) {
       this.router.navigate(['/teacher/dashboard']);
     } else {
       this.router.navigate(['/student/dashboard']);
