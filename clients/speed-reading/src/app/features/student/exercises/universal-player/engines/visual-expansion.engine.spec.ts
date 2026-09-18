@@ -1,5 +1,6 @@
 import { fakeAsync, tick } from '@angular/core/testing';
 import { VisualExpansionEngine } from './visual-expansion.engine';
+import { visualAngleToOffsetPercent } from './visual-expansion-position';
 
 describe('VisualExpansionEngine server protocol', () => {
   it('requests a server stimulus and submits answers without scoring locally', fakeAsync(() => {
@@ -81,8 +82,9 @@ describe('VisualExpansionEngine server protocol', () => {
       feedbackData: { round: 0, degrees: 4, stimuli: ['A', 'B'], displayDurationMs: 10 }
     });
     const startPositions = engine.getCurrentStimuli().map(item => item.x);
-    expect(Math.abs(startPositions[0] - 50)).toBeLessThan(10);
-    expect(Math.abs(startPositions[1] - 50)).toBeLessThan(10);
+    const expectedStartOffset = visualAngleToOffsetPercent(4, window.innerWidth);
+    expect(Math.abs(startPositions[0] - 50)).toBeCloseTo(expectedStartOffset, 5);
+    expect(Math.abs(startPositions[1] - 50)).toBeCloseTo(expectedStartOffset, 5);
 
     tick(10);
     engine.handleInput({ answers: ['A', 'B'] });
@@ -96,4 +98,14 @@ describe('VisualExpansionEngine server protocol', () => {
     expect(Math.abs(middlePositions[0] - 50)).toBeGreaterThan(Math.abs(startPositions[0] - 50));
     expect(Math.abs(middlePositions[1] - 50)).toBeGreaterThan(Math.abs(startPositions[1] - 50));
   }));
+
+  it('keeps angle offsets symmetric, monotonic and inside the safe viewport area', () => {
+    const startOffset = visualAngleToOffsetPercent(4, 1280);
+    const middleOffset = visualAngleToOffsetPercent(22, 1280);
+    const maximumOffset = visualAngleToOffsetPercent(60, 1280);
+
+    expect(startOffset).toBeGreaterThan(0);
+    expect(middleOffset).toBeGreaterThan(startOffset);
+    expect(maximumOffset).toBe(45);
+  });
 });
