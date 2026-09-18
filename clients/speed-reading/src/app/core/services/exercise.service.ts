@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { EMPTY, Observable } from 'rxjs';
+import { expand, map, reduce, switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Exercise, ReadingText, ExerciseResult } from '../models/exercise.model';
 import { PagedResult } from '../models/paged-result.model';
@@ -51,6 +51,45 @@ export class ExerciseService {
     if (searchTerm?.trim()) params.push(`searchTerm=${encodeURIComponent(searchTerm.trim())}`);
     if (params.length > 0) url += `?${params.join('&')}`;
     return this.http.get<PagedResult<Exercise>>(url);
+  }
+
+  /**
+   * Loads the complete published catalogue without bypassing the API's
+   * bounded page size. The exercise picker needs every level for every type;
+   * requesting pageSize=1000 used to silently return only the first 100 rows
+   * because the service clamps page sizes to 100.
+   */
+  getAllExercises(
+    exerciseTypeId?: string,
+    difficultyLevel?: number,
+    targetAgeGroupId?: string,
+    searchTerm?: string
+  ): Observable<Exercise[]> {
+    const pageSize = 100;
+
+    return this.getExercises(
+      exerciseTypeId,
+      difficultyLevel,
+      targetAgeGroupId,
+      1,
+      pageSize,
+      searchTerm
+    ).pipe(
+      // The speed-reading API currently returns pageNumber/pageSize/totalCount
+      // (without the optional UI convenience flags), so calculate continuation
+      // from the authoritative count instead of relying on hasNextPage.
+      expand(page => page.pageNumber * page.pageSize < page.totalCount
+        ? this.getExercises(
+          exerciseTypeId,
+          difficultyLevel,
+          targetAgeGroupId,
+          page.pageNumber + 1,
+          pageSize,
+          searchTerm
+        )
+        : EMPTY),
+      reduce((all, page) => all.concat(page.items), [] as Exercise[])
+    );
   }
 
   /**

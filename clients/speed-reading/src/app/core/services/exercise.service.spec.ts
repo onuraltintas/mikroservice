@@ -59,6 +59,38 @@ describe('ExerciseService', () => {
     request.flush({ items: [], pageNumber: 1, pageSize: 10, totalCount: 0 });
   });
 
+  it('loads every catalogue page for the exercise level picker', () => {
+    const firstPage = {
+      items: [{ id: 'exercise-1', difficultyLevel: 1 }],
+      pageNumber: 1,
+      pageSize: 100,
+      totalCount: 101,
+      totalPages: 2
+    };
+    const secondPage = {
+      items: [{ id: 'exercise-2', difficultyLevel: 5 }],
+      pageNumber: 2,
+      pageSize: 100,
+      totalCount: 101,
+      totalPages: 2
+    };
+
+    service.getAllExercises().subscribe(exercises => {
+      expect(exercises.map(exercise => exercise.id)).toEqual(['exercise-1', 'exercise-2']);
+    });
+
+    const requests = http.match(candidate => candidate.urlWithParams.startsWith('/api/speed-reading/exercises?'));
+    expect(requests.length).toBe(1);
+    expect(requests[0].request.urlWithParams).toContain('pageNumber=1');
+    expect(requests[0].request.urlWithParams).toContain('pageSize=100');
+    requests[0].flush(firstPage);
+
+    const secondRequest = http.expectOne(candidate => candidate.urlWithParams.startsWith('/api/speed-reading/exercises?'));
+    expect(secondRequest.request.urlWithParams).toContain('pageNumber=2');
+    expect(secondRequest.request.urlWithParams).toContain('pageSize=100');
+    secondRequest.flush(secondPage);
+  });
+
   it('writes exercise commands through the dedicated service with the bounded-context contract', () => {
     service.createExercise({
       title: 'Göz Takibi',

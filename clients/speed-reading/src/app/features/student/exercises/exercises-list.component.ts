@@ -95,10 +95,10 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
       types: this.isPreviewMode
         ? this.exerciseTypeService.getExerciseTypes(undefined, undefined, 1, 100)
         : this.exerciseTypeService.getActiveExerciseTypes(),
-      exercises: this.exerciseService.getExercises(undefined, undefined, undefined, 1, 1000)
+      exercises: this.exerciseService.getAllExercises()
     }).subscribe({
       next: (data) => {
-        this.processData(data.types.items, data.exercises.items);
+        this.processData(data.types.items, data.exercises);
         this.loading.set(false);
       },
       error: (err) => {
