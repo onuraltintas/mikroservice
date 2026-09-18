@@ -1433,7 +1433,19 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         if (!IsVisualExpansionExercise(state.ExerciseTypeName))
             return Invalid("Visual expansion presentation is not valid for this exercise.");
         if (state.VisualExpansionExpectedStimuli.Length > 0)
-            return Invalid("The current visual expansion round is still awaiting an answer.");
+        {
+            // A refresh or a retried request can ask for the same round again.
+            // Replaying the server-owned stimulus is idempotent and lets the
+            // learner continue without creating a second round.
+            var existingFeedback = JsonSerializer.SerializeToElement(new
+            {
+                round = state.VisualExpansionRound,
+                stimuli = state.VisualExpansionExpectedStimuli,
+                displayDurationMs = state.VisualExpansionDisplayDurationMs,
+                degrees = state.VisualExpansionCurrentDegrees
+            }, JsonOptions);
+            return Valid("Görsel genişleme uyaranı hazır.", state.VisualExpansionRound, feedbackData: existingFeedback);
+        }
         if (state.VisualExpansionRound >= state.TotalSteps)
             return Invalid("All visual expansion rounds are complete.");
 
