@@ -1522,8 +1522,26 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         var question = state.Questions.SingleOrDefault(item => item.QuestionId == request.QuestionId.Value);
         if (question is null)
             return Invalid("Soru bu oturuma ait değil.");
-        if (state.Answers.Any(item => item.QuestionId == question.QuestionId))
-            return Invalid("Bu soru zaten yanıtlandı.");
+        var existingAnswer = state.Answers.SingleOrDefault(item => item.QuestionId == question.QuestionId);
+        if (existingAnswer is not null)
+        {
+            // A refresh, timeout race, or retry can repeat the same question
+            // action after the answer has already been persisted. Treat that
+            // request as idempotent so the student can continue the session.
+            var isAssessment = session.AssessmentAttemptId.HasValue;
+            return new ExerciseActionValidationResponse(
+                true,
+                "Bu soru daha önce yanıtlandı; kayıt mevcut.",
+                null,
+                session.CurrentStep,
+                null,
+                state.Answers.Count == state.Questions.Count,
+                isAssessment ? null : existingAnswer.IsCorrect,
+                isAssessment ? null : question.CorrectAnswer,
+                isAssessment ? null : question.Explanation,
+                null,
+                null);
+        }
 
         var answer = request.IsTimeout
             ? TimeoutAnswer

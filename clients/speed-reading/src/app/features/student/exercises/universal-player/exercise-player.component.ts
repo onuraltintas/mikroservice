@@ -592,8 +592,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             this.comprehensionQuestions = questions;
           }
 
+          this.restoreAssessmentQuestionProgress(initialData);
+
           try {
             this.initializeEngine();
+            this.resumeAssessmentSession(initialData);
           } catch (error) {
             this.handleInitializationError(error);
           } finally {
@@ -782,6 +785,76 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       'skimming',
       'scanning'
     ].includes(engineType);
+  }
+
+  /**
+   * Assessment sessions can be resumed after a refresh or an interrupted
+   * request. The server snapshot contains answers already accepted for the
+   * session; keep those questions out of the client question loop so the UI
+   * does not submit an already-recorded answer again.
+   */
+  private restoreAssessmentQuestionProgress(initialData: any): void {
+    if (!this.isAssessmentMode || !this.comprehensionQuestions.length) return;
+
+    const state = this.isRecord(initialData) ? initialData : {};
+    const answers = state['answers'] ?? state['Answers'];
+    if (!Array.isArray(answers) || answers.length === 0) return;
+
+    const questionsById = new Map<string, any>();
+    this.comprehensionQuestions.forEach(question => {
+      const id = question.QuestionId || question.questionId;
+      if (typeof id === 'string' && id) questionsById.set(id, question);
+    });
+
+    this.questionAnswers = answers
+      .map(answer => {
+        const questionId = answer?.questionId || answer?.QuestionId;
+        const question = questionsById.get(questionId);
+        if (!questionId || !question) return null;
+
+        const rawAnswer = answer?.answer ?? answer?.Answer;
+        const selectedAnswer = typeof rawAnswer === 'string' && rawAnswer !== '__timeout__'
+          ? rawAnswer.toUpperCase()
+          : '';
+        const targetTime = question.TargetTimeSeconds || question.targetTimeSeconds || 60;
+        return {
+          questionId,
+          selectedAnswer,
+          isCorrect: answer?.isCorrect === true || answer?.IsCorrect === true,
+          timeSpent: Number(answer?.timeSpentSeconds ?? answer?.TimeSpentSeconds) || 0,
+          targetTime,
+          questionText: question.QuestionText || question.questionText || question.Text || question.text
+        };
+      })
+      .filter((answer): answer is NonNullable<typeof answer> => answer !== null);
+
+    const answeredIds = new Set(this.questionAnswers.map(answer => answer.questionId));
+    const firstUnanswered = this.comprehensionQuestions.findIndex(question => {
+      const id = question.QuestionId || question.questionId;
+      return typeof id !== 'string' || !answeredIds.has(id);
+    });
+    this.currentQuestionIndex = firstUnanswered >= 0
+      ? firstUnanswered
+      : this.comprehensionQuestions.length - 1;
+  }
+
+  /** Resume a reading assessment that had already moved past its text phase. */
+  private resumeAssessmentSession(initialData: any): void {
+    if (!this.isAssessmentMode || !this.engine || !this.comprehensionQuestions.length) return;
+    const state = this.isRecord(initialData) ? initialData : {};
+    const hasFinishedReading = Boolean(state['readingEndTime'] || state['ReadingEndTime']);
+    if (!hasFinishedReading) return;
+
+    this.exercisePhase = 'questions';
+    this.engineState.isRunning = true;
+    this.selectedAnswer = null;
+    this.questionFeedback = null;
+    if (this.questionAnswers.length >= this.comprehensionQuestions.length) {
+      this.finishQuestionPhase();
+      return;
+    }
+    this.startQuestionTimer();
+    this.cdr.detectChanges();
   }
 
   private isRecord(value: unknown): value is Record<string, any> {
@@ -1594,15 +1667,17 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           ? (isTimeout ? 'Süre doldu; cevap kaydedildi.' : 'Cevabınız kaydedildi.')
           : (response.explanation || response.message)
       };
-      this.questionAnswers.push({
-        questionId,
-        selectedAnswer: isTimeout ? '' : answer,
-        isCorrect,
-        timeSpent,
-        targetTime,
-        questionText: question.QuestionText || question.questionText || question.Text || question.text,
-        correctAnswer: this.isAssessmentMode ? undefined : response.correctAnswer
-      });
+      if (!this.questionAnswers.some(item => item.questionId === questionId)) {
+        this.questionAnswers.push({
+          questionId,
+          selectedAnswer: isTimeout ? '' : answer,
+          isCorrect,
+          timeSpent,
+          targetTime,
+          questionText: question.QuestionText || question.questionText || question.Text || question.text,
+          correctAnswer: this.isAssessmentMode ? undefined : response.correctAnswer
+        });
+      }
       this.questionSubmissionPending = false;
       this.cdr.detectChanges();
     };

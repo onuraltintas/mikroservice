@@ -52,11 +52,6 @@ export class NavigationService {
         route: '/student/daily-exercises'
       },
       {
-        label: 'Koçluk Panelim',
-        icon: 'sports',
-        route: '/student/coaching'
-      },
-      {
         label: 'Başarımlar',
         icon: 'emoji_events',
         route: '/student/achievements'

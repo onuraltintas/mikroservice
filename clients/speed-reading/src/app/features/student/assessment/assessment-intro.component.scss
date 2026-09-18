@@ -193,11 +193,13 @@
 
 .exercise-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); // Changed from 3 to 4
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+  max-width: 760px;
+  margin-inline: auto;
 
   @media (max-width: 900px) {
-    grid-template-columns: repeat(2, 1fr); // 2x2 for tablets
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   @media (max-width: 600px) {
