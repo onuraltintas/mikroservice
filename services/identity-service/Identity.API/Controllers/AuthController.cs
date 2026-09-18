@@ -63,7 +63,7 @@ public class AuthController : ControllerBase
         var result = await _mediator.Send(command);
         if (result.IsFailure)
         {
-            return BadRequest(result.Error);
+            return RegistrationFailure(result);
         }
         return Ok(new { UserId = result.Value });
     }
@@ -76,7 +76,7 @@ public class AuthController : ControllerBase
         var result = await _mediator.Send(command);
         if (result.IsFailure)
         {
-            return BadRequest(result.Error);
+            return RegistrationFailure(result);
         }
         return Ok(new { UserId = result.Value });
     }
@@ -89,7 +89,7 @@ public class AuthController : ControllerBase
         var result = await _mediator.Send(command);
         if (result.IsFailure)
         {
-            return BadRequest(result.Error);
+            return RegistrationFailure(result);
         }
         return Ok(new { UserId = result.Value });
     }
@@ -102,7 +102,7 @@ public class AuthController : ControllerBase
         var result = await _mediator.Send(command);
         if (result.IsFailure)
         {
-            return BadRequest(result.Error);
+            return RegistrationFailure(result);
         }
         return Ok(new { UserId = result.Value });
     }
@@ -349,6 +349,11 @@ public class AuthController : ControllerBase
 
     private string GetClientIpAddress() =>
         HttpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
+
+    private static IActionResult RegistrationFailure<T>(Result<T> result) =>
+        result.Error.Code == "Identity.UserExists"
+            ? new ConflictObjectResult(result.Error)
+            : new BadRequestObjectResult(result.Error);
 
     private static bool IsSixDigitCode(string code) =>
         code.Length == 6 && code.All(char.IsAsciiDigit);

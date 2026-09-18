@@ -19,6 +19,7 @@ import {
 } from '../../../core/services/google-identity.service';
 import { strongPasswordValidator, PASSWORD_ERROR_MESSAGES } from '../../../shared/validators/password.validator';
 import { resolveAuthDestination } from '../auth-role-routing';
+import { getErrorMessage } from '../../../core/utils/error-message';
 
 @Component({
   selector: 'app-register',
@@ -124,18 +125,7 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
         }
       },
       error: (err) => {
-        // Backend'den gelen hata mesajını göster (Message veya message)
-        if (err.error?.Message) {
-          this.error = err.error.Message;  // C# backend büyük M kullanıyor
-        } else if (err.error?.message) {
-          this.error = err.error.message;
-        } else if (err.error?.title) {
-          this.error = err.error.title;
-        } else if (typeof err.error === 'string') {
-          this.error = err.error;
-        } else {
-          this.error = 'Google kaydı başarısız oldu.';
-        }
+        this.error = getErrorMessage(err, 'Google kaydı başarısız oldu.');
         this.loading = false;
       }
     });
@@ -167,18 +157,7 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
         });
       },
       error: (err) => {
-        // Backend'den gelen hata mesajını göster (Message veya message)
-        if (err.error?.Message) {
-          this.error = err.error.Message;  // C# backend büyük M kullanıyor
-        } else if (err.error?.message) {
-          this.error = err.error.message;
-        } else if (err.error?.title) {
-          this.error = err.error.title;
-        } else if (typeof err.error === 'string') {
-          this.error = err.error;
-        } else {
-          this.error = 'Kayıt başarısız. Lütfen bilgilerinizi kontrol edin.';
-        }
+        this.error = getErrorMessage(err, 'Kayıt başarısız. Lütfen bilgilerinizi kontrol edin.');
         this.loading = false;
       }
     });

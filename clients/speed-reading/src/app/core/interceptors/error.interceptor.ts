@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { ToasterService } from '../services/toaster.service';
+import { getErrorMessage } from '../utils/error-message';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
@@ -21,14 +22,13 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         // Server-side error
         switch (error.status) {
           case 400:
-            // C# backend Message (büyük M) veya message (küçük m) kullanabilir
-            errorMessage = error.error?.Message || error.error?.message || 'Geçersiz istek';
+            errorMessage = getErrorMessage(error, 'Geçersiz istek');
             break;
 
           case 401:
             // Don't auto-logout here! Auth interceptor handles 401 by trying refresh token first.
             // If refresh fails, auth interceptor will call logout.
-            errorMessage = error.error?.Message || error.error?.message || 'Oturum süreniz doldu.';
+            errorMessage = getErrorMessage(error, 'Oturum süreniz doldu.');
             // Skip showing toast for 401 (handled by auth interceptor)
             return throwError(() => error);
 
@@ -41,11 +41,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             break;
 
           case 404:
-            errorMessage = error.error?.Message || error.error?.message || 'Kaynak bulunamadı';
+            errorMessage = getErrorMessage(error, 'Kaynak bulunamadı');
             break;
 
           case 409:
-            errorMessage = error.error?.Message || error.error?.message || 'Çakışma hatası';
+            errorMessage = getErrorMessage(error, 'Çakışma hatası');
             break;
 
           case 422:
@@ -65,11 +65,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             break;
 
           case 503:
-            errorMessage = error.error?.Message || error.error?.message || 'Servis geçici olarak kullanılamıyor';
+            errorMessage = getErrorMessage(error, 'Servis geçici olarak kullanılamıyor');
             break;
 
           default:
-            errorMessage = error.error?.Message || error.error?.message || `Hata kodu: ${error.status}`;
+            errorMessage = getErrorMessage(error, `Hata kodu: ${error.status}`);
         }
       }
 

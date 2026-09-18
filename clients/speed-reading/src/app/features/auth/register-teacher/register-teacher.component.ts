@@ -19,6 +19,7 @@ import {
   GoogleIdentityResponse
 } from '../../../core/services/google-identity.service';
 import { strongPasswordValidator } from '../../../shared/validators/password.validator';
+import { getErrorMessage } from '../../../core/utils/error-message';
 
 @Component({
   selector: 'app-register-teacher',
@@ -101,8 +102,7 @@ export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
         }, 1500);
       },
       error: (err) => {
-        // Show clear error message from backend (e.g., "User already exists")
-        this.error = err.error?.message || err.error?.Message || 'Google girişi başarısız oldu.';
+        this.error = getErrorMessage(err, 'Google girişi başarısız oldu.');
         this.isLoading = false;
         this.toaster.error(this.error, 5000);
       }
@@ -155,7 +155,7 @@ export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
         }, 2000);
       },
       error: (err) => {
-        this.error = err.error?.message || 'Kayıt sırasında bir hata oluştu. Lütfen bilgilerinizi kontrol edin.';
+        this.error = getErrorMessage(err, 'Kayıt sırasında bir hata oluştu. Lütfen bilgilerinizi kontrol edin.');
         this.isLoading = false;
       }
     });

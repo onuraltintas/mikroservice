@@ -50,7 +50,9 @@ public class LocalIdentityService : IIdentityService
         var existingUser = await _userRepository.GetByEmailAsync(email, cancellationToken);
         if (existingUser != null)
         {
-            return Result.Failure<Guid>(new Error("Identity.UserExists", "User with this email already exists."));
+            return Result.Failure<Guid>(new Error(
+                "Identity.UserExists",
+                "Bu e-posta adresiyle zaten kayıtlı bir hesap var. Lütfen giriş yapın veya şifrenizi sıfırlayın."));
         }
 
         // 2. Create User
@@ -97,7 +99,9 @@ public class LocalIdentityService : IIdentityService
         if (existingUser != null)
         {
             return Result.Failure<ProvisionedUser>(
-                new Error("Identity.UserExists", "User with this email already exists."));
+                new Error(
+                    "Identity.UserExists",
+                    "Bu e-posta adresiyle zaten kayıtlı bir hesap var. Lütfen giriş yapın veya şifrenizi sıfırlayın."));
         }
 
         var userId = Guid.NewGuid();

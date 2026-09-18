@@ -16,6 +16,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { RegisterInstitutionRequest } from '../../../core/models/user.model';
 import { strongPasswordValidator } from '../../../shared/validators/password.validator';
 import { DistrictOption, LocationsService, ProvinceOption } from '../../../core/services/locations.service';
+import { getErrorMessage } from '../../../core/utils/error-message';
 
 @Component({
   selector: 'app-register-school',
@@ -158,7 +159,7 @@ export class RegisterSchoolComponent implements OnInit {
         }, 3000);
       },
       error: (err) => {
-        this.error = err.error?.message || err.error?.Message || 'Kayıt sırasında bir hata oluştu. Lütfen bilgilerinizi kontrol edin.';
+        this.error = getErrorMessage(err, 'Kayıt sırasında bir hata oluştu. Lütfen bilgilerinizi kontrol edin.');
         this.isLoading = false;
       }
     });
