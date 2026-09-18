@@ -566,16 +566,18 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           this.sessionId = response.sessionId;
 
           const initialData = response.initialData || (response as any).InitialData || {};
-          // Keep the public session state and engine configuration together;
-          // the state is sanitized by the server and contains assessment text/questions.
-          this.backendSessionConfig = {
-            // Engine configuration supplies presentation/timing defaults. The
-            // server-owned initial state must be applied last so that its
-            // reading text, question bank and validated stimuli cannot be
-            // replaced by catalog defaults.
-            ...(response.configuration || {}),
-            ...(initialData || {})
-          };
+          const configuration = response.configuration || (response as any).Configuration || {};
+          // Assessment content is pinned by the server when the attempt is
+          // created. Normalize the public session snapshot into the fields
+          // every reading engine understands, so the catalogue's generic
+          // configuration can never replace the attempt's text.
+          this.backendSessionConfig = this.normalizeSessionConfiguration(configuration, initialData);
+
+          if (this.isAssessmentMode
+            && this.isReadingAssessmentEngine(this.backendSessionConfig)
+            && !this.backendSessionConfig.readingTextContent) {
+            throw new Error('Seviye tespit metni sunucudan alınamadı. Lütfen değerlendirmeyi yeniden başlatın.');
+          }
 
           // Assessment questions are part of the sanitized initial session
           // state; configuration is reserved for engine settings.
@@ -690,6 +692,109 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       Questions: questions,
       questions
     };
+  }
+
+  private normalizeSessionConfiguration(configuration: any, initialData: any): any {
+    const config = this.isRecord(configuration) ? configuration : {};
+    const state: any = this.isRecord(initialData) ? initialData : {};
+    const merged = { ...config, ...state };
+
+    if (!this.isAssessmentMode) {
+      return merged;
+    }
+
+    const content = this.readFirstString(
+      state.content,
+      state.Content?.Text,
+      state.Content?.text,
+      state.readingTextContent,
+      state.ReadingTextContent,
+      state.text,
+      state.Text);
+    const title = this.readFirstString(
+      state.readingTextTitle,
+      state.ReadingTextTitle,
+      state.Content?.Title,
+      state.Content?.title) ?? '';
+    const questions = Array.isArray(state.questions)
+      ? state.questions
+      : Array.isArray(state.Questions)
+        ? state.Questions
+        : Array.isArray(state.Content?.questions)
+          ? state.Content.questions
+          : Array.isArray(state.Content?.Questions)
+            ? state.Content.Questions
+            : undefined;
+
+    if (!content) {
+      return { ...merged, isAssessmentMode: true };
+    }
+
+    const wordCount = this.readPositiveNumber(
+      state.wordCount,
+      state.WordCount,
+      state.Content?.wordCount,
+      state.Content?.WordCount) || content.split(/\s+/).filter(Boolean).length;
+    const contentObject = {
+      ...(this.isRecord(state.Content) ? state.Content : {}),
+      Text: content,
+      text: content,
+      Title: title,
+      title,
+      WordCount: wordCount,
+      wordCount
+    };
+
+    return {
+      ...merged,
+      isAssessmentMode: true,
+      readingTextContent: content,
+      ReadingTextContent: content,
+      readingTextTitle: title,
+      ReadingTextTitle: title,
+      wordCount,
+      WordCount: wordCount,
+      // The generic exercise configuration may contain an object named
+      // `content`; replace it with the server-owned assessment text.
+      content,
+      Content: contentObject,
+      ...(questions ? { Questions: questions, questions } : {})
+    };
+  }
+
+  private isReadingAssessmentEngine(config: any): boolean {
+    const engineType = String(
+      config?.engineType
+      ?? config?.EngineType
+      ?? this.parsedConfig?.engineType
+      ?? '').toLowerCase();
+    return [
+      'reading_comprehension',
+      'word_highlight',
+      'exam_simulation',
+      'text_fade',
+      'text_stream',
+      'free_reading',
+      'rsvp',
+      'regression_reduction',
+      'subvocalization_reduction',
+      'chunking',
+      'skimming',
+      'scanning'
+    ].includes(engineType);
+  }
+
+  private isRecord(value: unknown): value is Record<string, any> {
+    return !!value && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  private readFirstString(...values: unknown[]): string | undefined {
+    return values.find(value => typeof value === 'string' && value.trim().length > 0) as string | undefined;
+  }
+
+  private readPositiveNumber(...values: unknown[]): number | undefined {
+    const value = values.find(item => typeof item === 'number' && Number.isFinite(item) && item > 0);
+    return typeof value === 'number' ? value : undefined;
   }
 
   /**

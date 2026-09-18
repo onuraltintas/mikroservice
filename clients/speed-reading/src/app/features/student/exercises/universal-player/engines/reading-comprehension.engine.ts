@@ -122,11 +122,15 @@ export class ReadingComprehensionEngine implements BaseEngine {
         const contentWordCount = typeof rawContent === 'object'
             ? rawContent?.wordCount
             : undefined;
-        this.text = config.readingTextContent ||
+        const assessmentMode = cfg.isAssessmentMode === true || cfg.IsAssessmentMode === true;
+        const resolvedText = config.readingTextContent ||
             cfg.Content?.Text ||      // PascalCase from C#
             contentText ||            // camelCase or session snapshot string
-            config.text ||
-            this.getRandomText();
+            config.text;
+        if (!resolvedText && assessmentMode) {
+            throw new Error('Assessment reading text was not provided by the server.');
+        }
+        this.text = resolvedText || this.getRandomText();
 
         this.title = cfg.ReadingTextTitle ||   // PascalCase from C#
             config.readingTextTitle ||

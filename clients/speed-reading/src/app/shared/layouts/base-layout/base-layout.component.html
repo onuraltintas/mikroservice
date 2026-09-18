@@ -101,12 +101,6 @@
             </div>
           </div>
           <mat-divider></mat-divider>
-          <!-- Coach Panel Link -->
-          <button mat-menu-item *ngIf="isCoach() && role !== 'teacher'" routerLink="/coaching/dashboard">
-            <mat-icon class="coach-icon">sports</mat-icon>
-            <span>Koç Paneli</span>
-          </button>
-
           <button mat-menu-item [routerLink]="'/' + role + '/profile'" *ngIf="!isInstitutionAdmin()">
             <mat-icon>person</mat-icon>
             <span>Profilim</span>

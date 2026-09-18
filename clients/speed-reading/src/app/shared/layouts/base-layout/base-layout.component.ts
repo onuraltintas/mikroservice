@@ -147,7 +147,4 @@ export class BaseLayoutComponent implements OnInit {
     return this.authService.hasRole('Editor') && !this.authService.hasAdminAccess();
   }
 
-  isCoach(): boolean {
-    return this.authService.hasRole('Coach');
-  }
 }
