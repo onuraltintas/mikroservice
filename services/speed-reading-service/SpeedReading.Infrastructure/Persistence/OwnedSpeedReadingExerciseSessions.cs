@@ -253,6 +253,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 && !readingTextId.HasValue
                 && requiresReadingText)
             {
+                var normalizedEngineType = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType);
+                var requiresScorableQuestions = normalizedEngineType is "reading_comprehension" or "exam_simulation";
                 readingTextId = await db.ReadingTexts
                     .AsNoTracking()
                     .Where(item => item.IsActive
@@ -261,8 +263,17 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                         && (!profileAgeGroupId.HasValue
                             || item.TargetAgeGroupId == null
                             || item.TargetAgeGroupId == profileAgeGroupId.Value)
-                        && (item.ExerciseId == null || item.ExerciseId == request.ExerciseId))
-                    .OrderBy(item => item.Id)
+                        && (item.ExerciseId == null || item.ExerciseId == request.ExerciseId)
+                        && (!requiresScorableQuestions || db.ReadingQuestions.Any(question =>
+                            question.ReadingTextId == item.Id
+                            && !question.IsDeleted
+                            && (question.CorrectAnswer.Trim().ToUpper() == "A"
+                                || question.CorrectAnswer.Trim().ToUpper() == "B"
+                                || question.CorrectAnswer.Trim().ToUpper() == "C"
+                                || question.CorrectAnswer.Trim().ToUpper() == "D"))))
+                    .OrderByDescending(item => item.ExerciseId == request.ExerciseId)
+                    .ThenByDescending(item => item.DifficultyLevel == difficultyLevel)
+                    .ThenBy(item => item.Id)
                     .Select(item => (Guid?)item.Id)
                     .FirstOrDefaultAsync(token);
             }

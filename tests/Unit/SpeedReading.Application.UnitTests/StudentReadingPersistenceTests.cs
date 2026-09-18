@@ -17,6 +17,47 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class StudentReadingPersistenceTests
 {
     [Fact]
+    public async Task Automatic_text_selection_prefers_exercise_and_difficulty_match_with_scorable_questions()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        var unsuitableTextId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        var suitableTextId = Guid.Parse("ffffffff-ffff-ffff-ffff-ffffffffffff");
+        context.ExerciseTypes.Add(ExerciseType.Create(
+            typeId, "Okuma", "Okuma", "Comprehension"));
+        context.Exercises.Add(Exercise.Create(
+            "Seviyeye uygun okuma", "reading", "{}", 3, studentId, typeId, id: exerciseId));
+        context.ReadingTexts.AddRange(
+            ReadingText.Create(
+                unsuitableTextId, "Uygun olmayan", "Bu metin yanlış seviyededir.",
+                difficultyLevel: 1),
+            ReadingText.Create(
+                suitableTextId, "Uygun metin", "Bu metin egzersize ve seviyeye uygundur.",
+                exerciseId: exerciseId, difficultyLevel: 3));
+        context.ReadingQuestions.AddRange(
+            ReadingQuestion.Create(
+                Guid.NewGuid(), unsuitableTextId, "Bu metin hangi seviyededir?", " a ",
+                orderIndex: 0, type: 1, bloomLevel: 1,
+                optionA: "Bir", optionB: "İki", optionC: "Üç", optionD: "Dört"),
+            ReadingQuestion.Create(
+                Guid.NewGuid(), suitableTextId, "Hangi metin uygundur?", "A",
+                orderIndex: 0, type: 1, bloomLevel: 1,
+                optionA: "Seviyeye uygun", optionB: "Uygun değil", optionC: "Hiçbiri", optionD: "Bilinmiyor"));
+        await context.SaveChangesAsync();
+
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(
+            studentId,
+            new StartExerciseSessionRequest { ExerciseId = exerciseId },
+            CancellationToken.None);
+
+        var session = await context.ExerciseSessions.SingleAsync(item => item.Id == started.SessionId);
+        session.ReadingTextId.Should().Be(suitableTextId);
+    }
+
+    [Fact]
     public async Task Universal_reading_completion_projects_answer_details_to_reading_history()
     {
         await using var context = CreateContext();
