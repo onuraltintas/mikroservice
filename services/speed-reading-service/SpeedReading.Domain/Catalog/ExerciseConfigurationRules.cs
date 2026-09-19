@@ -105,6 +105,20 @@ public static class ExerciseConfigurationRules
                     ValidateMatchingGridConfiguration(root, nested.Value);
                 }
             }
+            if (configured == "visual_expansion")
+            {
+                ValidateVisualExpansionConfiguration(root);
+                if (nested.HasValue)
+                    ValidateVisualExpansionConfiguration(nested.Value);
+                ValidateEffectiveVisualExpansionConfiguration(root, nested);
+            }
+            if (configured is "focus" or "attention_training")
+            {
+                ValidateFocusConfiguration(root);
+                if (nested.HasValue)
+                    ValidateFocusConfiguration(nested.Value);
+                ValidateEffectiveFocusConfiguration(root, nested);
+            }
         }
         catch (JsonException exception)
         {
@@ -166,6 +180,122 @@ public static class ExerciseConfigurationRules
             throw new ArgumentException("Kök ve engineConfig grid sıra türleri uyuşmalıdır.");
         }
     }
+
+    private static void ValidateVisualExpansionConfiguration(JsonElement config)
+    {
+        ValidateOptionalIntRange(config, "rounds", 1, 100, "Görsel genişleme tur sayısı");
+        ValidateOptionalIntRange(config, "totalSteps", 1, 100, "Görsel genişleme tur sayısı");
+        ValidateOptionalIntRange(config, "itemCount", 1, 100, "Görsel genişleme tur sayısı");
+        ValidateOptionalIntRange(config, "displayDurationMs", 100, 5_000, "Görsel genişleme gösterim süresi");
+
+        var timing = TryGetObject(config, "timing");
+        if (timing.HasValue)
+            ValidateOptionalIntRange(timing.Value, "durationMs", 100, 5_000, "Görsel genişleme gösterim süresi");
+
+        var expansion = TryGetObject(config, "expansion");
+        ValidateOptionalIntRange(config, "startDegrees", 2, 60, "Görsel genişleme başlangıç açısı");
+        ValidateOptionalIntRange(config, "targetDegrees", 2, 60, "Görsel genişleme hedef açısı");
+        if (expansion.HasValue)
+        {
+            ValidateOptionalIntRange(expansion.Value, "startDegrees", 2, 60, "Görsel genişleme başlangıç açısı");
+            ValidateOptionalIntRange(expansion.Value, "targetDegrees", 2, 60, "Görsel genişleme hedef açısı");
+        }
+        var startDegrees = ReadOptionalInt(expansion ?? config, "startDegrees")
+            ?? ReadOptionalInt(config, "startDegrees");
+        var targetDegrees = ReadOptionalInt(expansion ?? config, "targetDegrees")
+            ?? ReadOptionalInt(config, "targetDegrees");
+        if (startDegrees.HasValue && targetDegrees.HasValue && targetDegrees < startDegrees)
+            throw new ArgumentException("Görsel genişleme hedef açısı başlangıç açısından küçük olamaz.");
+    }
+
+    private static void ValidateFocusConfiguration(JsonElement config)
+    {
+        var mode = GetString(config, "mode");
+        if (mode is not null && mode.ToLowerInvariant() is not ("position" or "word" or "dual"))
+            throw new ArgumentException("Focus modu position, word veya dual olmalıdır.");
+
+        ValidateOptionalIntRange(config, "nLevel", 1, 5, "Focus N-back seviyesi");
+        ValidateOptionalIntRange(config, "speedMs", 100, 10_000, "Focus uyaran süresi");
+        ValidateOptionalIntRange(config, "gridSize", 3, 7, "Focus grid boyutu");
+        ValidateOptionalIntRange(config, "totalSteps", 1, 500, "Focus adım sayısı");
+        ValidateOptionalIntRange(config, "itemCount", 1, 500, "Focus adım sayısı");
+        ValidateOptionalIntRange(config, "rounds", 1, 500, "Focus adım sayısı");
+        ValidateOptionalArray(config, "positionSequence", 500, "Focus konum dizisi");
+        ValidateOptionalArray(config, "wordSequence", 500, "Focus kelime dizisi");
+        ValidateOptionalArray(config, "positionTargetIndices", 500, "Focus konum hedefleri");
+        ValidateOptionalArray(config, "wordTargetIndices", 500, "Focus kelime hedefleri");
+    }
+
+    private static void ValidateEffectiveVisualExpansionConfiguration(JsonElement root, JsonElement? nested)
+    {
+        ValidateConsistentStepAliases(root, nested, 100, "Görsel genişleme tur sayısı");
+        var effective = nested ?? root;
+        var effectiveExpansion = TryGetObject(effective, "expansion");
+        var start = ReadOptionalInt(effectiveExpansion ?? effective, "startDegrees")
+            ?? ReadOptionalInt(effective, "startDegrees")
+            ?? ReadOptionalInt(root, "startDegrees");
+        var target = ReadOptionalInt(effectiveExpansion ?? effective, "targetDegrees")
+            ?? ReadOptionalInt(effective, "targetDegrees")
+            ?? ReadOptionalInt(root, "targetDegrees");
+        if (start.HasValue && target.HasValue && target < start)
+            throw new ArgumentException("Görsel genişleme hedef açısı başlangıç açısından küçük olamaz.");
+    }
+
+    private static void ValidateEffectiveFocusConfiguration(JsonElement root, JsonElement? nested) =>
+        ValidateConsistentStepAliases(root, nested, 500, "Focus adım sayısı");
+
+    private static void ValidateConsistentStepAliases(
+        JsonElement root,
+        JsonElement? nested,
+        int maximum,
+        string displayName)
+    {
+        var values = new List<int>();
+        foreach (var config in nested.HasValue ? new[] { root, nested.Value } : new[] { root })
+        {
+            foreach (var name in new[] { "totalSteps", "itemCount", "rounds" })
+            {
+                if (TryGetProperty(config, name) is not { } property)
+                    continue;
+                if (!property.TryGetInt32(out var value) || value is < 1 || value > maximum)
+                    throw new ArgumentException($"{displayName} 1 ile {maximum} arasında olmalıdır.");
+                values.Add(value);
+            }
+        }
+
+        if (values.Distinct().Skip(1).Any())
+            throw new ArgumentException($"{displayName} için tanımlanan değerler uyuşmalıdır.");
+    }
+
+    private static void ValidateOptionalArray(
+        JsonElement config,
+        string propertyName,
+        int maximumLength,
+        string displayName)
+    {
+        if (TryGetProperty(config, propertyName) is not { } property)
+            return;
+        if (property.ValueKind != JsonValueKind.Array || property.GetArrayLength() > maximumLength)
+            throw new ArgumentException($"{displayName} en fazla {maximumLength} öğe içermelidir.");
+    }
+
+    private static void ValidateOptionalIntRange(
+        JsonElement config,
+        string propertyName,
+        int minimum,
+        int maximum,
+        string displayName)
+    {
+        if (TryGetProperty(config, propertyName) is not { } property)
+            return;
+        if (!property.TryGetInt32(out var value) || value < minimum || value > maximum)
+            throw new ArgumentException($"{displayName} {minimum} ile {maximum} arasında olmalıdır.");
+    }
+
+    private static int? ReadOptionalInt(JsonElement config, string propertyName) =>
+        TryGetProperty(config, propertyName) is { } property && property.TryGetInt32(out var value)
+            ? value
+            : null;
 
     private static JsonElement? TryGetObject(JsonElement element, string name) =>
         TryGetProperty(element, name) is { ValueKind: JsonValueKind.Object } value

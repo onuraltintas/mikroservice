@@ -475,7 +475,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 throw new InvalidOperationException("The focus exercise must be completed through its validated action flow.");
             }
         }
-        if (IsVisualExpansionExercise(state.ExerciseTypeName)
+        if (IsVisualExpansionExercise(state)
             && state.VisualExpansionRound < state.TotalSteps)
             throw new InvalidOperationException("All visual expansion rounds must be validated before completion.");
         if (state.VocabularyWords.Count > 0
@@ -1078,7 +1078,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 ? purposes
                 : ["Ana fikri belirleyin.", "Neden-sonuç ilişkilerine ve önemli ayrıntılara odaklanın."];
         }
-        if (IsVisualExpansionExercise(exerciseTypeName))
+        if (IsVisualExpansionExercise(exerciseTypeName)
+            || IsEngineType(exerciseEngineType, "visual_expansion"))
         {
             var visualConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
             var expansion = ReadObject(visualConfig, "expansion");
@@ -1114,16 +1115,34 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 60);
             state.VisualExpansionCurrentDegrees = CalculateVisualExpansionDegrees(state, 0);
         }
-        if (IsFocusExercise(exerciseTypeName))
+        if (IsFocusExercise(exerciseTypeName) || IsFocusEngineType(exerciseEngineType))
         {
             var focusConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
-            state.FocusMode = ReadString(focusConfig, "mode") ?? "position";
-            state.FocusNLevel = ReadPositiveInt(focusConfig, "nLevel") ?? 1;
-            state.FocusSpeedMs = ReadPositiveInt(focusConfig, "speedMs") ?? 1500;
-            state.PositionSequence = ReadIntArray(focusConfig, "positionSequence");
-            state.WordSequence = ReadStringArray(focusConfig, "wordSequence");
-            state.PositionTargetIndices = ReadIntArray(focusConfig, "positionTargetIndices");
-            state.WordTargetIndices = ReadIntArray(focusConfig, "wordTargetIndices");
+            state.FocusMode = ReadString(focusConfig, "mode") ?? ReadString(config, "mode") ?? "position";
+            state.FocusNLevel = Math.Clamp(
+                ReadPositiveInt(focusConfig, "nLevel") ?? ReadPositiveInt(config, "nLevel") ?? 1,
+                1,
+                5);
+            state.FocusSpeedMs = Math.Clamp(
+                ReadPositiveInt(focusConfig, "speedMs") ?? ReadPositiveInt(config, "speedMs") ?? 1500,
+                100,
+                10_000);
+            state.GridSize = Math.Clamp(
+                ReadPositiveInt(focusConfig, "gridSize") ?? ReadPositiveInt(config, "gridSize") ?? 3,
+                3,
+                7);
+            state.PositionSequence = ReadProperty(focusConfig, "positionSequence").ValueKind == JsonValueKind.Array
+                ? ReadIntArray(focusConfig, "positionSequence")
+                : ReadIntArray(config, "positionSequence");
+            state.WordSequence = ReadProperty(focusConfig, "wordSequence").ValueKind == JsonValueKind.Array
+                ? ReadStringArray(focusConfig, "wordSequence")
+                : ReadStringArray(config, "wordSequence");
+            state.PositionTargetIndices = ReadProperty(focusConfig, "positionTargetIndices").ValueKind == JsonValueKind.Array
+                ? ReadIntArray(focusConfig, "positionTargetIndices")
+                : ReadIntArray(config, "positionTargetIndices");
+            state.WordTargetIndices = ReadProperty(focusConfig, "wordTargetIndices").ValueKind == JsonValueKind.Array
+                ? ReadIntArray(focusConfig, "wordTargetIndices")
+                : ReadIntArray(config, "wordTargetIndices");
         }
 
         if (assessmentSnapshot?.ReadingText is { } snapshotText)
@@ -1276,7 +1295,10 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         }
         else
         {
-            state.TotalSteps = ReadPositiveInt(config, "totalSteps")
+            state.TotalSteps = ReadPositiveInt(effectiveConfig, "totalSteps")
+                ?? ReadPositiveInt(effectiveConfig, "itemCount")
+                ?? ReadPositiveInt(effectiveConfig, "rounds")
+                ?? ReadPositiveInt(config, "totalSteps")
                 ?? ReadPositiveInt(config, "itemCount")
                 ?? ReadPositiveInt(config, "rounds")
                 ?? (state.VocabularyWords.Count > 0 ? state.VocabularyWords.Count : (int?)null)
@@ -1289,12 +1311,17 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         if (state.VocabularyWords.Count > 0)
             state.TotalSteps = state.VocabularyWords.Count;
 
-        if (IsFocusExercise(exerciseTypeName))
+        if (IsFocusExercise(exerciseTypeName) || IsFocusEngineType(exerciseEngineType))
         {
             state.TotalSteps = Math.Max(
                 state.TotalSteps,
                 Math.Max(state.PositionSequence.Length, state.WordSequence.Length));
+            state.TotalSteps = Math.Clamp(state.TotalSteps, 1, 500);
         }
+
+        if (IsVisualExpansionExercise(exerciseTypeName)
+            || IsEngineType(exerciseEngineType, "visual_expansion"))
+            state.TotalSteps = Math.Clamp(state.TotalSteps, 1, 100);
 
         if (exerciseTypeName.Equals("RSVP", StringComparison.OrdinalIgnoreCase) && state.Words.Length > 0)
             state.TotalSteps = state.Words.Length;
@@ -1472,7 +1499,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         SessionState state,
         DateTime now)
     {
-        if (!IsVisualExpansionExercise(state.ExerciseTypeName))
+        if (!IsVisualExpansionExercise(state))
             return Invalid("Visual expansion presentation is not valid for this exercise.");
         if (state.VisualExpansionExpectedStimuli.Length > 0)
         {
@@ -1514,7 +1541,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         ExerciseActionRequest request,
         DateTime now)
     {
-        if (!IsVisualExpansionExercise(state.ExerciseTypeName)
+        if (!IsVisualExpansionExercise(state)
             || state.VisualExpansionExpectedStimuli.Length == 0
             || !state.VisualExpansionPresentedAt.HasValue)
             return Invalid("No visual expansion round is awaiting an answer.");
@@ -2000,7 +2027,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 : ["position"];
 
     private static bool IsFocusExercise(SessionState state) =>
-        IsFocusExercise(state.ExerciseTypeName);
+        IsFocusExercise(state.ExerciseTypeName) || IsFocusEngineType(state.EngineType);
 
     private static bool IsTimedOut(ExerciseSession session, SessionState state, DateTime now) =>
         !(state.TimingStartsOnAction && !state.TimingStartedAt.HasValue)
@@ -2048,8 +2075,34 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         || exerciseTypeName.Contains("attention", StringComparison.OrdinalIgnoreCase)
         || exerciseTypeName.Contains("fixation", StringComparison.OrdinalIgnoreCase);
 
+    private static bool IsFocusEngineType(string engineType)
+    {
+        try
+        {
+            return ExerciseConfigurationRules.NormalizeEngineType(engineType) is
+                "focus" or "attention_training" or "motion_path";
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+    }
+
     private static bool IsObservationOnlyMotionPath(SessionState state) =>
-        state.EngineType.Equals("motion_path", StringComparison.OrdinalIgnoreCase);
+        IsEngineType(state.EngineType, "motion_path");
+
+    private static bool IsEngineType(string engineType, string expectedEngineType)
+    {
+        try
+        {
+            return ExerciseConfigurationRules.NormalizeEngineType(engineType)
+                .Equals(expectedEngineType, StringComparison.Ordinal);
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+    }
 
     private static bool IsAdaptiveFluency(SessionState state) => state.AdaptiveEnabled;
 
@@ -2104,6 +2157,10 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         exerciseTypeName.Contains("visualexpansion", StringComparison.OrdinalIgnoreCase)
         || exerciseTypeName.Contains("visual expansion", StringComparison.OrdinalIgnoreCase)
         || exerciseTypeName.Contains("görsel genişleme", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsVisualExpansionExercise(SessionState state) =>
+        IsVisualExpansionExercise(state.ExerciseTypeName)
+        || IsEngineType(state.EngineType, "visual_expansion");
 
     private static bool IsVisualizationExercise(string exerciseTypeName) =>
         exerciseTypeName.Contains("visualization", StringComparison.OrdinalIgnoreCase)
