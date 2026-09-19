@@ -84,4 +84,15 @@ describe('reading pacer runtime safety', () => {
 
     expect((engine as any).config.timing.intervalMs).toBe(10000);
   });
+
+  it('uses camel-case root reading text aliases', () => {
+    const fade = new TextFadeEngine();
+    const highlight = new WordHighlightEngine();
+
+    fade.initialize({ readingTextContent: 'custom fade text' } as any, callbacks);
+    highlight.initialize({ readingTextContent: 'custom highlight text' } as any, callbacks);
+
+    expect(fade.getWords()).toEqual(['custom', 'fade', 'text']);
+    expect(highlight.getWords()).toEqual(['custom', 'highlight', 'text']);
+  });
 });

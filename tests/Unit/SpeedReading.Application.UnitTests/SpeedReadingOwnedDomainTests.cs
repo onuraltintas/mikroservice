@@ -472,6 +472,16 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Fact]
+    public void Active_text_stream_configuration_rejects_content_sources_across_scopes()
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"text_stream","Stimuli":["one"],"engineConfig":{"engineType":"text_stream","Words":["two"]}}""",
+            "text_stream");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
     public void Active_program_requires_a_usable_weekly_plan()
     {
         var action = () => ProgramWeeklyPatternRules.Validate("{}", isAssessment: false, isActive: true);
