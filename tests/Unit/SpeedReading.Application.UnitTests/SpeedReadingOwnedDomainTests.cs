@@ -265,6 +265,49 @@ public sealed class SpeedReadingOwnedDomainTests
             .WithMessage("*uyuşmalıdır*");
     }
 
+    [Theory]
+    [InlineData("{\"engineType\":\"visual_expansion\",\"rounds\":0}")]
+    [InlineData("{\"engineType\":\"visual_expansion\",\"rounds\":101}")]
+    [InlineData("{\"engineType\":\"visual_expansion\",\"timing\":{\"durationMs\":50}}")]
+    [InlineData("{\"engineType\":\"visual_expansion\",\"startDegrees\":40,\"targetDegrees\":20}")]
+    public void Active_visual_expansion_configuration_rejects_unsupported_values(string configuration)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            configuration,
+            "visual_expansion");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Theory]
+    [InlineData("{\"engineType\":\"focus\",\"mode\":\"unknown\"}")]
+    [InlineData("{\"engineType\":\"focus\",\"nLevel\":0}")]
+    [InlineData("{\"engineType\":\"focus\",\"nLevel\":6}")]
+    [InlineData("{\"engineType\":\"focus\",\"speedMs\":50}")]
+    [InlineData("{\"engineType\":\"focus\",\"gridSize\":8}")]
+    public void Active_focus_configuration_rejects_unsupported_values(string configuration)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            configuration,
+            "focus");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Active_visual_expansion_and_focus_configurations_accept_supported_bounds()
+    {
+        var visual = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"visual_expansion","rounds":100,"startDegrees":2,"targetDegrees":60,"timing":{"durationMs":100}}""",
+            "visual_expansion");
+        var focus = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"focus","mode":"dual","nLevel":5,"speedMs":100,"gridSize":7}""",
+            "focus");
+
+        visual.Should().NotThrow();
+        focus.Should().NotThrow();
+    }
+
     [Fact]
     public void Active_program_requires_a_usable_weekly_plan()
     {
