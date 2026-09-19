@@ -237,10 +237,21 @@ public sealed class SpeedReadingOwnedDomainTests
     public void Active_grid_configuration_accepts_supported_bounds()
     {
         var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
-            """{"engineType":"grid_interaction","gridSize":7,"sequenceType":"mixed"}""",
+            """{"engineType":"grid_interaction","gridSize":7,"sequenceType":"numeric"}""",
             "grid_interaction");
 
         action.Should().NotThrow();
+    }
+
+    [Fact]
+    public void Active_grid_configuration_rejects_conflicting_root_and_nested_sizes()
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"grid_interaction","gridSize":10000,"engineConfig":{"engineType":"grid_interaction","gridSize":7,"sequenceType":"numeric"}}""",
+            "grid_interaction");
+
+        action.Should().Throw<ArgumentException>()
+            .WithMessage("*gridSize*");
     }
 
     [Fact]

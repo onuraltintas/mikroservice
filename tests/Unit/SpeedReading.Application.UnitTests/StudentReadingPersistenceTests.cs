@@ -209,6 +209,36 @@ public sealed class StudentReadingPersistenceTests
     }
 
     [Fact]
+    public async Task Grid_session_uses_the_validated_nested_grid_configuration()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(
+            typeId, "Schulte", "Grid", "grid_interaction"));
+        context.Exercises.Add(Exercise.Create(
+            "İç ayarlı grid",
+            "grid_interaction",
+            """{"engineType":"grid_interaction","engineConfig":{"engineType":"grid_interaction","gridSize":7,"sequenceType":"numeric"}}""",
+            1,
+            studentId,
+            typeId,
+            id: exerciseId));
+        await context.SaveChangesAsync();
+
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(
+            studentId,
+            new StartExerciseSessionRequest { ExerciseId = exerciseId },
+            CancellationToken.None);
+
+        started.TotalSteps.Should().Be(49);
+        started.InitialData.GetProperty("gridSize").GetInt32().Should().Be(7);
+        started.InitialData.GetProperty("grid").GetArrayLength().Should().Be(7);
+    }
+
+    [Fact]
     public async Task Observation_only_motion_path_completion_does_not_increment_verified_gamification()
     {
         await using var context = CreateContext();
