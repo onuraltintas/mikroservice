@@ -17,6 +17,7 @@ internal static class OwnedVocabularyProgressRecorder
         Guid vocabularyItemId,
         bool isCorrect,
         DateTime reviewedAt,
+        bool awardVerifiedGamification,
         CancellationToken cancellationToken)
     {
         var item = await db.VocabularyItems.AsNoTracking()
@@ -40,6 +41,9 @@ internal static class OwnedVocabularyProgressRecorder
         }
 
         var outcome = progress.Review(isCorrect, userId, reviewedAt);
+        if (!awardVerifiedGamification)
+            return new OwnedVocabularyReviewResult(true, outcome.CurrentBox, outcome.IsNewMastery);
+
         var stats = await db.UserGamifications
             .SingleOrDefaultAsync(value => value.UserId == userId && !value.IsDeleted, cancellationToken);
         if (stats is null)

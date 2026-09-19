@@ -22,6 +22,7 @@ interface VocabularyWord {
     antonyms?: string;
     category: string;
     difficultyLevel: number;
+    questionType?: 'word' | 'definition';
 }
 
 interface VocabularyConfig extends EngineConfig {
@@ -106,7 +107,8 @@ export class VocabularyBuilderEngine implements BaseEngine {
             synonyms: w.synonyms || w.Synonyms,
             antonyms: w.antonyms || w.Antonyms,
             category: w.category || w.Category,
-            difficultyLevel: w.difficultyLevel || w.DifficultyLevel
+            difficultyLevel: w.difficultyLevel || w.DifficultyLevel,
+            questionType: w.questionType || w.QuestionType
         }));
 
         this.mode = config.mode || config['Mode'] || 'learning';
@@ -210,7 +212,6 @@ export class VocabularyBuilderEngine implements BaseEngine {
             responseTime: responseTime,
             timestamp: new Date(),
             customData: {
-                correctAnswer: this.correctAnswer,
                 box: this.userProgress[word.id]?.box,
                 isTimeout: true
             }
@@ -397,7 +398,9 @@ export class VocabularyBuilderEngine implements BaseEngine {
         if (!currentWord) return;
 
         // Determine quiz direction
-        if (this.quizType === 'word_to_definition') {
+        if (currentWord.questionType) {
+            this.currentQuizQuestionType = currentWord.questionType;
+        } else if (this.quizType === 'word_to_definition') {
             this.currentQuizQuestionType = 'word';
         } else if (this.quizType === 'definition_to_word') {
             this.currentQuizQuestionType = 'definition';
@@ -460,6 +463,11 @@ export class VocabularyBuilderEngine implements BaseEngine {
 
     submitQuizAnswer(letter: string): void {
         if (this.showingFeedback) return;
+        const selectedOption = this.currentQuizOptions.find(option => option.letter === letter);
+        if (!selectedOption?.text) {
+            this.callbacks.onError('Geçerli bir seçenek seçilmelidir.');
+            return;
+        }
         this.clearWordTimer();
 
         const isCorrect = letter === this.correctAnswer;
@@ -492,9 +500,9 @@ export class VocabularyBuilderEngine implements BaseEngine {
             action: 'answer_question',
             answer: letter,
             customData: {
-                correctAnswer: this.correctAnswer,
                 quizType: this.quizType,
                 questionType: this.currentQuizQuestionType,
+                selectedAnswer: selectedOption.text,
                 box: this.userProgress[word.id]?.box
             },
             wordId: word.id,

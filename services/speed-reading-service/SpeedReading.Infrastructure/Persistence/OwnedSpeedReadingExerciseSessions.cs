@@ -478,6 +478,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         if (IsVisualExpansionExercise(state.ExerciseTypeName)
             && state.VisualExpansionRound < state.TotalSteps)
             throw new InvalidOperationException("All visual expansion rounds must be validated before completion.");
+        if (state.VocabularyWords.Count > 0
+            && state.VocabularyWords.Any(word => state.Answers.All(answer => answer.QuestionId != word.Id)))
+            throw new InvalidOperationException("All vocabulary rounds must be reviewed before completion.");
         if (IsAdaptiveFluency(state) && !state.AdaptiveCompleted)
             throw new InvalidOperationException("The adaptive fluency flow must be completed before the session can be completed.");
 
@@ -586,7 +589,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             studentAssignment?.Complete(result.Id, score ?? 0, weightedKdp ?? 0, now);
         }
 
-        if (!isAssessmentSession)
+        var isVerifiedCompletion = state.VocabularyWords.Count == 0 || state.VocabularyMode == "quiz";
+        if (!isAssessmentSession && isVerifiedCompletion)
         {
             var stats = await GetOrCreateGamificationAsync(studentId, now, cancellationToken);
             var gamificationWpm = rawWpm.HasValue
@@ -1025,11 +1029,29 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         var effectiveConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
         if (IsVocabularyExercise(exerciseTypeName, effectiveConfig))
         {
+            state.VocabularyMode = (ReadString(effectiveConfig, "mode") ?? "learning").Trim().ToLowerInvariant();
+            state.VocabularyQuizType = (ReadString(effectiveConfig, "quizType") ?? "mixed")
+                .Trim()
+                .ToLowerInvariant() switch
+                {
+                    "word_to_definition" => "word_to_definition",
+                    "definition_to_word" => "definition_to_word",
+                    _ => "mixed"
+                };
             state.VocabularyWords = await LoadVocabularyWordsAsync(
                 effectiveConfig,
                 profileAgeGroupId,
                 difficultyLevel,
                 cancellationToken);
+            for (var index = 0; index < state.VocabularyWords.Count; index++)
+            {
+                state.VocabularyWords[index].QuestionType = state.VocabularyQuizType switch
+                {
+                    "word_to_definition" => "word",
+                    "definition_to_word" => "definition",
+                    _ => index % 2 == 0 ? "word" : "definition"
+                };
+            }
         }
         if (IsAdaptiveFluency(exerciseTypeName, exerciseEngineType, config))
         {
@@ -1257,6 +1279,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                     : state.Questions.Count > 0 ? 1 + state.Questions.Count : state.Words.Length);
             if (state.TotalSteps <= 0) state.TotalSteps = 1;
         }
+
+        if (state.VocabularyWords.Count > 0)
+            state.TotalSteps = state.VocabularyWords.Count;
 
         if (IsFocusExercise(exerciseTypeName))
         {
@@ -1732,46 +1757,78 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         CancellationToken cancellationToken)
     {
         var vocabularyItemId = ReadGuid(request.CustomData, "vocabularyItemId");
-        var isCorrect = ReadBoolean(request.CustomData, "isCorrect");
-        if (!vocabularyItemId.HasValue || !isCorrect.HasValue
-            || state.VocabularyWords.All(item => item.Id != vocabularyItemId.Value))
+        if (!vocabularyItemId.HasValue)
+            return Invalid("Kelime yanıtı bu oturumdaki merkezi kelime havuzuyla eşleşmiyor.");
+        var itemId = vocabularyItemId.Value;
+        var vocabularyWord = state.VocabularyWords.SingleOrDefault(item => item.Id == itemId);
+        var reviewKind = ReadString(request.CustomData, "reviewKind")?.Trim().ToLowerInvariant();
+        if (vocabularyWord is null || string.IsNullOrWhiteSpace(reviewKind))
         {
             return Invalid("Kelime yanıtı bu oturumdaki merkezi kelime havuzuyla eşleşmiyor.");
         }
 
-        if (state.Answers.Any(item => item.QuestionId == vocabularyItemId.Value))
+        bool isCorrect;
+        if (state.VocabularyMode == "quiz" && reviewKind == "quiz")
+        {
+            var submittedQuestionType = ReadString(request.CustomData, "questionType")?.Trim().ToLowerInvariant();
+            var selectedAnswer = ReadString(request.CustomData, "selectedAnswer")?.Trim();
+            if (submittedQuestionType is not ("word" or "definition") || string.IsNullOrWhiteSpace(selectedAnswer))
+                return Invalid("Kelime quiz yanıtı doğrulanabilir bir seçenek içermiyor.");
+            if (submittedQuestionType != vocabularyWord.QuestionType)
+                return Invalid("Kelime quiz yönü bu oturumdaki soruyla eşleşmiyor.");
+            var expectedAnswer = vocabularyWord.QuestionType == "word"
+                ? vocabularyWord.Definition
+                : vocabularyWord.Word;
+            isCorrect = string.Equals(selectedAnswer, expectedAnswer, StringComparison.OrdinalIgnoreCase);
+        }
+        else if (state.VocabularyMode != "quiz" && reviewKind == "known")
+        {
+            isCorrect = true;
+        }
+        else if ((state.VocabularyMode != "quiz" && reviewKind is "unknown" or "timeout")
+            || (state.VocabularyMode == "quiz" && reviewKind == "timeout"))
+        {
+            isCorrect = false;
+        }
+        else
+        {
+            return Invalid("Kelime yanıt türü desteklenmiyor.");
+        }
+
+        if (state.Answers.Any(item => item.QuestionId == itemId))
             return Invalid("Bu kelime yanıtı daha önce kaydedildi.");
 
         var review = await OwnedVocabularyProgressRecorder.RecordAsync(
             db,
             studentId,
-            vocabularyItemId.Value,
-            isCorrect.Value,
+            itemId,
+            isCorrect,
             reviewedAt,
+            awardVerifiedGamification: state.VocabularyMode == "quiz",
             cancellationToken);
         if (!review.Found)
             return Invalid("Kelime artık merkezi havuzda bulunmuyor.");
 
         session.RecordAnswer(
-            vocabularyItemId.Value,
-            isCorrect.Value ? "known" : "unknown",
-            isCorrect.Value,
+            itemId,
+            reviewKind == "quiz" ? ReadString(request.CustomData, "selectedAnswer")! : reviewKind,
+            isCorrect,
             Math.Max(request.ResponseTime ?? 0, 0) / 1_000,
             bloomLevel: 0);
         state.Answers.Add(new SessionAnswer
         {
-            QuestionId = vocabularyItemId.Value,
-            Answer = isCorrect.Value ? "known" : "unknown",
-            IsCorrect = isCorrect.Value,
+            QuestionId = itemId,
+            Answer = reviewKind == "quiz" ? ReadString(request.CustomData, "selectedAnswer")! : reviewKind,
+            IsCorrect = isCorrect,
             TimeSpentSeconds = Math.Max(request.ResponseTime ?? 0, 0) / 1_000,
             BloomLevel = 0
         });
 
         return Valid(
-            isCorrect.Value ? "Kelime bilindi olarak kaydedildi." : "Kelime tekrar havuzuna alındı.",
+            isCorrect ? "Kelime bilindi olarak kaydedildi." : "Kelime tekrar havuzuna alındı.",
             session.CurrentStep,
             isCompleted: session.CurrentStep >= session.TotalSteps,
-            isCorrect: isCorrect.Value,
+            isCorrect: isCorrect,
             feedbackData: JsonSerializer.SerializeToElement(new
             {
                 box = review.CurrentBox,
@@ -2077,9 +2134,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
 
         var query = db.VocabularyItems.AsNoTracking()
             .Where(item => !item.IsDeleted
-                && (!profileAgeGroupId.HasValue
-                    || item.TargetAgeGroupId == null
-                    || item.TargetAgeGroupId == profileAgeGroupId.Value));
+                && (item.TargetAgeGroupId == null
+                    || (profileAgeGroupId.HasValue && item.TargetAgeGroupId == profileAgeGroupId.Value)));
         if (configuredIds.Length > 0)
         {
             var items = await query.Where(item => configuredIds.Contains(item.Id))
@@ -2588,6 +2644,16 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             : null;
     }
 
+    private static string? ReadString(
+        IReadOnlyDictionary<string, JsonElement>? values,
+        string propertyName)
+    {
+        if (values is null)
+            return null;
+        var pair = values.FirstOrDefault(item => item.Key.Equals(propertyName, StringComparison.OrdinalIgnoreCase));
+        return pair.Value.ValueKind == JsonValueKind.String ? pair.Value.GetString() : null;
+    }
+
     private static int[] ReadIntArray(JsonElement element, string propertyName)
     {
         if (element.ValueKind != JsonValueKind.Object)
@@ -2723,6 +2789,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public List<SessionQuestion> Questions { get; set; } = [];
         public List<SessionAnswer> Answers { get; set; } = [];
         public List<VisualizationSceneState> VisualizationScenes { get; set; } = [];
+        public string VocabularyMode { get; set; } = "learning";
+        public string VocabularyQuizType { get; set; } = "mixed";
         public List<VocabularyWordState> VocabularyWords { get; set; } = [];
         public Dictionary<string, JsonElement>? CustomData { get; set; }
     }
@@ -2767,6 +2835,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public string? Antonyms { get; set; }
         public string Category { get; set; } = string.Empty;
         public int DifficultyLevel { get; set; }
+        public string QuestionType { get; set; } = "word";
     }
 
     private sealed class SessionQuestion

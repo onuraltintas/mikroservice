@@ -1092,15 +1092,23 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             const vocabularyItemId = (action as any).wordId;
             if (typeof vocabularyItemId === 'string'
               && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(vocabularyItemId)) {
-              const expectedAnswer = action.customData?.['correctAnswer'];
-              const isCorrect = action.action === 'mark_known'
-                || (action.action === 'answer_question' && action.answer === expectedAnswer);
+              const reviewKind = action.action === 'mark_known'
+                ? 'known'
+                : action.action === 'mark_unknown'
+                  ? 'unknown'
+                  : action.action === 'timeout'
+                    ? 'timeout'
+                    : action.action === 'answer_question'
+                      ? 'quiz'
+                      : null;
+              if (!reviewKind) return;
               void this.enqueueAction({
                 ...action,
                 action: 'vocabulary_review',
                 customData: {
+                  ...action.customData,
                   vocabularyItemId,
-                  isCorrect
+                  reviewKind
                 }
               }).catch(() => undefined);
             }

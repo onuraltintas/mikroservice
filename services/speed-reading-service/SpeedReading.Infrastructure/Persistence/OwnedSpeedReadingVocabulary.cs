@@ -162,6 +162,7 @@ internal sealed class OwnedSpeedReadingVocabulary(OwnedSpeedReadingDbContext db)
             progress.VocabularyItemId,
             isCorrect,
             DateTime.UtcNow,
+            awardVerifiedGamification: true,
             cancellationToken);
         if (!review.Found)
             return false;

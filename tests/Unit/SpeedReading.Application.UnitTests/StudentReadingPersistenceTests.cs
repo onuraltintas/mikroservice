@@ -53,6 +53,8 @@ public sealed class StudentReadingPersistenceTests
             new StartExerciseSessionRequest { ExerciseId = exerciseId },
             CancellationToken.None);
         started.TotalSteps.Should().Be(2);
+        started.InitialData.GetProperty("vocabularyQuizType").GetString()
+            .Should().Be("word_to_definition");
         var response = await service.ValidateActionAsync(
             studentId,
             started.SessionId,
@@ -76,6 +78,14 @@ public sealed class StudentReadingPersistenceTests
         session.CorrectCount.Should().Be(0);
         session.IncorrectCount.Should().Be(1);
 
+        var incomplete = () => service.CompleteAsync(
+            studentId,
+            started.SessionId,
+            new CompleteExerciseSessionRequest(),
+            CancellationToken.None);
+        await incomplete.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*vocabulary rounds*");
+
         var forgedDirection = await service.ValidateActionAsync(
             studentId,
             started.SessionId,
@@ -91,18 +101,27 @@ public sealed class StudentReadingPersistenceTests
                 }
             },
             CancellationToken.None);
+        forgedDirection.IsValid.Should().BeFalse();
         forgedDirection.IsCorrect.Should().BeFalse();
+        forgedDirection.Message.Should().Contain("yönü");
 
         var sessionAfterForgery = await context.ExerciseSessions.SingleAsync(item => item.Id == started.SessionId);
         sessionAfterForgery.CorrectCount.Should().Be(0);
-        sessionAfterForgery.IncorrectCount.Should().Be(2);
+        sessionAfterForgery.IncorrectCount.Should().Be(1);
+        using (var sessionState = JsonDocument.Parse(sessionAfterForgery.SessionDataJson))
+        {
+            sessionState.RootElement.GetProperty("answers").GetArrayLength().Should().Be(1);
+            sessionState.RootElement.GetProperty("answers")[0].GetProperty("questionId").GetGuid()
+                .Should().Be(vocabularyItemId);
+        }
 
-        var complete = await service.CompleteAsync(
+        var stillIncomplete = () => service.CompleteAsync(
             studentId,
             started.SessionId,
             new CompleteExerciseSessionRequest(),
             CancellationToken.None);
-        complete.Should().NotBeNull();
+        await stillIncomplete.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*vocabulary rounds*");
     }
 
     [Fact]
