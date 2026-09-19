@@ -1152,6 +1152,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
       // Engine config'i hazırla - backend session data ile birleştir
       const engineConfig = {
+        ...(this.parsedConfig || {}),
         ...(this.parsedConfig?.engineConfig || {}),
         ...(this.backendSessionConfig || {}),
         ...(this.backendSessionConfig?.EngineConfig || {}),

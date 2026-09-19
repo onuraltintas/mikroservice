@@ -11,6 +11,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
+import { boundedInteger, recordOrEmpty } from './reading-pacer-safety';
 
 export interface TextStreamConfig extends EngineConfig {
     mode: string;           // 'tachistoscope', 'rsvp', 'sequence'
@@ -109,18 +110,41 @@ export class TextStreamEngine implements BaseEngine {
     initialize(config: EngineConfig, callbacks: EngineCallbacks): void {
         this.config = config as TextStreamConfig;
         this.callbacks = callbacks;
+        this.config.timing = recordOrEmpty(this.config.timing) as TextStreamConfig['timing'];
+        this.config.content = recordOrEmpty(this.config.content) as TextStreamConfig['content'];
+        this.config.visuals = recordOrEmpty(this.config.visuals) as TextStreamConfig['visuals'];
+        const adaptive = recordOrEmpty(this.config.adaptive);
+        this.config.adaptive = {
+            enabled: adaptive['enabled'] !== false,
+            minDurationMs: boundedInteger(adaptive['minDurationMs'], 50, 50, 5000),
+            maxDurationMs: boundedInteger(adaptive['maxDurationMs'], 1000, 50, 5000)
+        };
+        this.config.adaptive.maxDurationMs = Math.max(
+            this.config.adaptive.minDurationMs,
+            this.config.adaptive.maxDurationMs);
+        this.config.timing.intervalMs = boundedInteger(this.config.timing.intervalMs, 0, 0, 10000);
+        this.config.content.items = Array.isArray(this.config.content.items)
+            ? this.config.content.items.filter(item => typeof item === 'string').slice(0, 500)
+            : undefined;
 
         // Backend property normalization (handle PascalCase vs camelCase)
-        const stimuli = this.config.Stimuli || this.config['stimuli'] || this.config['Words'] || this.config['words'] || this.config['Chunks'] || this.config['chunks'];
-        const displayDuration = this.config.DisplayDurationMs || this.config['displayDurationMs'] ||
-            this.config['IntervalMs'] || this.config['intervalMs'] ||
-            this.config.timing?.durationMs || 500;
-        const totalStimuli = this.config.TotalStimuli || this.config['totalStimuli'] || this.config['TotalWords'] || this.config['totalWords'];
+        const rawStimuli = this.config.Stimuli || this.config['stimuli'] || this.config['Words'] || this.config['words'] || this.config['Chunks'] || this.config['chunks'];
+        const stimuli = Array.isArray(rawStimuli)
+            ? rawStimuli.filter(item => typeof item === 'string' || (item && typeof item === 'object')).slice(0, 500)
+            : undefined;
+        const displayDuration = boundedInteger(
+            this.config.DisplayDurationMs ?? this.config['displayDurationMs'] ??
+            this.config['IntervalMs'] ?? this.config['intervalMs'] ?? this.config.timing?.durationMs,
+            500, 50, 5000);
+        const totalStimuli = boundedInteger(
+            this.config.TotalStimuli ?? this.config['totalStimuli'] ?? this.config['TotalWords'] ?? this.config['totalWords'] ?? this.config.content?.count,
+            20, 1, 500);
 
         // Store normalized values in config for easier access
         this.config.Stimuli = stimuli;
         this.config.DisplayDurationMs = displayDuration;
-        if (totalStimuli) this.config.TotalStimuli = totalStimuli;
+        this.config.TotalStimuli = totalStimuli;
+        if (this.config.content) this.config.content.count = totalStimuli;
 
         this.generateStimuli();
         this.state.totalSteps = this.stimuli.length;
@@ -137,9 +161,9 @@ export class TextStreamEngine implements BaseEngine {
         if (this.config.Stimuli && this.config.Stimuli.length > 0) {
             // Handle both PascalCase (Text) and camelCase (text) properties, OR just strings (for RSVP Words)
             this.stimuli = this.config.Stimuli.map((s: any) => {
-                if (typeof s === 'string') return s;
-                return s.Text || s.text || '';
-            });
+                const text = typeof s === 'string' ? s : (s.Text || s.text || '');
+                return typeof text === 'string' ? text.slice(0, 1000) : '';
+            }).filter(Boolean);
             return;
         }
 
@@ -149,7 +173,10 @@ export class TextStreamEngine implements BaseEngine {
         const source = this.config.content?.source || 'random_pool';
 
         if (source === 'custom' && this.config.content?.items) {
-            this.stimuli = this.config.content.items.slice(0, count);
+            this.stimuli = this.config.content.items
+                .filter(item => typeof item === 'string')
+                .slice(0, count)
+                .map(item => item.slice(0, 1000));
             return;
         }
 

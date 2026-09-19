@@ -5,6 +5,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
+import { boundedInteger, boundedStringArray, boundedText, recordOrEmpty } from './reading-pacer-safety';
 
 export interface WordHighlightConfig extends EngineConfig {
     content: {
@@ -78,13 +79,20 @@ export class WordHighlightEngine implements BaseEngine {
         this.callbacks = callbacks;
 
         const backend = config as any;
+        this.config.content = recordOrEmpty(this.config.content) as WordHighlightConfig['content'];
+        this.config.visuals = recordOrEmpty(this.config.visuals) as WordHighlightConfig['visuals'];
+        this.config.timing = recordOrEmpty(this.config.timing) as WordHighlightConfig['timing'];
+        const pacer = recordOrEmpty(this.config.pacer);
         this.chunks = [];
         this.allWords = [];
         let wordPointer = 0;
 
         // Populate chunks from backend primary source
-        if (backend.Chunks && Array.isArray(backend.Chunks) && backend.Chunks.length > 0) {
-            backend.Chunks.forEach((chunkStr: string) => {
+        const backendChunks = boundedStringArray(backend.Chunks ?? backend.chunks);
+        const chunkSize = boundedInteger(backend.ChunkSize ?? backend.chunkSize ?? pacer['chunkSize'], 1, 1, 10);
+        const targetWpm = boundedInteger(backend.TargetWpm ?? backend.targetWpm ?? pacer['speedWpm'], 200, 20, 1500);
+        if (backendChunks.length > 0) {
+            backendChunks.forEach((chunkStr: string) => {
                 const words = chunkStr.split(' ').filter(w => w.length > 0);
                 if (words.length > 0) {
                     const cleanWords = words.map(w => w.trim());
@@ -99,9 +107,11 @@ export class WordHighlightEngine implements BaseEngine {
             });
         } else {
             // Fallback to text splitting logic
-            const text = this.config.content?.text || WordHighlightEngine.TEXT_POOL.join(' ');
+            const text = boundedText(
+                backend.ReadingTextContent ?? backend.readingTextContent ?? this.config.content?.text,
+                WordHighlightEngine.TEXT_POOL.join(' '));
             const rawWords = text.split(/\s+/).filter(w => w.length > 0);
-            const cs = backend.ChunkSize || this.config.pacer?.chunkSize || 1;
+            const cs = chunkSize;
 
             for (let i = 0; i < rawWords.length; i += cs) {
                 const words = rawWords.slice(i, i + cs);
@@ -120,14 +130,12 @@ export class WordHighlightEngine implements BaseEngine {
         this.currentChunkIdx = 0;
 
         // Setup pacer defaults
-        if (!this.config.pacer) {
-            this.config.pacer = {
-                speedWpm: backend.TargetWpm || 200,
-                chunkSize: backend.ChunkSize || 1,
-                autoScroll: true,
-                fixationType: 'highlight'
-            };
-        }
+        this.config.pacer = {
+            speedWpm: targetWpm,
+            chunkSize,
+            autoScroll: pacer['autoScroll'] !== false,
+            fixationType: typeof pacer['fixationType'] === 'string' ? pacer['fixationType'] : 'highlight'
+        };
 
 
     }

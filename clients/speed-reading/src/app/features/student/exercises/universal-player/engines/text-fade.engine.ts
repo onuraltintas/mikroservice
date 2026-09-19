@@ -5,6 +5,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
+import { boundedInteger, boundedText, recordOrEmpty } from './reading-pacer-safety';
 
 export interface TextFadeConfig extends EngineConfig {
     content: {
@@ -42,6 +43,8 @@ export class TextFadeEngine implements BaseEngine {
     private pauseStartTime = 0;
     private timerInterval: any;
     private fadeInterval: any;
+    private countdownInterval: any;
+    private countdownTimeout: any;
 
     private words: string[] = [];
     private fadedWordIndex = -1;
@@ -60,21 +63,21 @@ export class TextFadeEngine implements BaseEngine {
         this.callbacks = callbacks;
 
         const backend = config as any;
+        this.config.content = recordOrEmpty(this.config.content) as TextFadeConfig['content'];
+        this.config.visuals = recordOrEmpty(this.config.visuals) as TextFadeConfig['visuals'];
+        const fading = recordOrEmpty(this.config.fading);
 
         // Prepare words
-        const text = backend.ReadingTextContent || this.config.content?.text || TextFadeEngine.TEXT_POOL.join(' ');
+        const text = boundedText(
+            backend.ReadingTextContent ?? backend.readingTextContent ?? this.config.content?.text,
+            TextFadeEngine.TEXT_POOL.join(' '));
         this.words = text.split(/\s+/).filter((w: string) => w.length > 0);
 
         // Determine Speed (WPM)
-        if (!this.config.fading) {
-            this.config.fading = {
-                speedWpm: backend.TargetWpm || 200,
-                lagMs: backend.LagMs || 3000
-            };
-        } else {
-            this.config.fading.speedWpm = backend.TargetWpm || this.config.fading.speedWpm || 200;
-            this.config.fading.lagMs = backend.LagMs || this.config.fading.lagMs || 3000;
-        }
+        this.config.fading = {
+            speedWpm: boundedInteger(backend.TargetWpm ?? backend.targetWpm ?? fading['speedWpm'], 200, 20, 1500),
+            lagMs: boundedInteger(backend.LagMs ?? backend.lagMs ?? fading['lagMs'], 3000, 0, 10000)
+        };
 
         this.state.totalSteps = this.words.length;
         this.state.currentStep = 0;
@@ -109,25 +112,25 @@ export class TextFadeEngine implements BaseEngine {
 
         this.callbacks.onStart();
 
-        // Initialize countdown
-        this.config.fading.lagMs = 3000; // Force 3 seconds
-        this.state.countdown = 3;
+        const lagMs = this.config.fading.lagMs;
+        this.state.countdown = Math.ceil(lagMs / 1000);
         this.callbacks.onStateChange({ ...this.state });
-
-        // Countdown interval
-        const countdownInterval = setInterval(() => {
+        if (lagMs === 0) {
+            this.startFading();
+            return;
+        }
+        const countdownEndsAt = Date.now() + lagMs;
+        this.countdownInterval = setInterval(() => {
             if (this.state.isPaused) return;
-
-            if (this.state.countdown !== undefined && this.state.countdown > 1) {
-                this.state.countdown--;
-                this.callbacks.onStateChange({ ...this.state });
-            } else {
-                this.state.countdown = 0;
-                this.callbacks.onStateChange({ ...this.state });
-                clearInterval(countdownInterval);
-                this.startFading();
-            }
-        }, 1000);
+            this.state.countdown = Math.max(0, Math.ceil((countdownEndsAt - Date.now()) / 1000));
+            this.callbacks.onStateChange({ ...this.state });
+        }, 250);
+        this.countdownTimeout = setTimeout(() => {
+            clearInterval(this.countdownInterval);
+            this.state.countdown = 0;
+            this.callbacks.onStateChange({ ...this.state });
+            this.startFading();
+        }, lagMs);
     }
 
     private expectedTime = 0;
@@ -205,6 +208,8 @@ export class TextFadeEngine implements BaseEngine {
         this.state.isRunning = false;
         clearInterval(this.timerInterval);
         clearInterval(this.fadeInterval);
+        clearInterval(this.countdownInterval);
+        clearTimeout(this.countdownTimeout);
     }
 
     reset(): void {
