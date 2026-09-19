@@ -383,7 +383,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 "grid_click" when state.CurrentNumber.HasValue => ClickGrid(session, state, request),
                 "grid_click" => Invalid("Grid cell action is not valid for this exercise."),
                 _ when state.CurrentNumber.HasValue => Invalid("Grid cell action is required."),
-                _ => AdvanceGeneric(session)
+                _ => Invalid("Unsupported exercise action.")
             };
 
         PersistSessionAnswers(session);
