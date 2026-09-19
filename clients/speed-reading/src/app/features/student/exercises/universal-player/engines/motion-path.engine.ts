@@ -4,6 +4,12 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
+import { boundedInteger, boundedText, recordOrEmpty } from './reading-pacer-safety';
+
+function field(record: Record<string, any>, name: string): any {
+    const key = Object.keys(record).reverse().find(candidate => candidate.toLowerCase() === name.toLowerCase());
+    return key === undefined ? undefined : record[key];
+}
 
 export interface MotionPathConfig extends EngineConfig {
     path: {
@@ -60,7 +66,9 @@ export class MotionPathEngine implements BaseEngine {
     private timerInterval: any;
     private animationFrame: any;
     private jumpInterval: any;
-    private inputPauseStartTime = 0;
+    private transitionTimeout: any;
+    private feedbackTimeout: any;
+    private saccadeUnlockTimeout: any;
 
     private targetX = 50;
     private targetY = 50;
@@ -96,6 +104,7 @@ export class MotionPathEngine implements BaseEngine {
     // Saccade State
     private saccadeTargets: any[] = [];
     private currentTargetIndex = 0;
+    private saccadeInputLocked = false;
 
     // Current mode (fixation, saccade, tracking, etc.)
     private currentMode = 'fixation';
@@ -107,98 +116,109 @@ export class MotionPathEngine implements BaseEngine {
     // Feedback State
     private lastFeedback: { isCorrect: boolean; userInput: string; correctChars: string } | null = null;
     private showingFeedback = false;
+    private fixationPhase: 'idle' | 'transition' | 'holding' | 'awaitingInput' | 'feedback' = 'idle';
+    private phaseStartedAt = 0;
+    private phaseDuration = 0;
+    private phaseRemaining = 0;
+    private pendingTargetX = 50;
+    private pendingTargetY = 50;
 
     // Track last used chars to avoid repetition
     private lastUsedChars: string[] = [];
+    private configuredTotalSteps = 0;
 
     initialize(config: EngineConfig, callbacks: EngineCallbacks): void {
-        this.config = config as MotionPathConfig;
         this.callbacks = callbacks;
-
         const backendConfig = config as any;
-        const engineConfig = backendConfig.engineConfig || backendConfig;
-        const timing = engineConfig.timing || {};
-        const content = engineConfig.content || {};
+        const nestedConfig = recordOrEmpty(field(backendConfig, 'engineConfig'));
+        const engineConfig = { ...backendConfig, ...nestedConfig };
+        const mergedContainer = (name: string) => ({
+            ...recordOrEmpty(field(backendConfig, name)),
+            ...recordOrEmpty(field(nestedConfig, name))
+        });
+        const timing = mergedContainer('timing');
+        const content = mergedContainer('content');
+        const fixation = mergedContainer('fixation');
+        const movement = mergedContainer('movement');
+        const path = mergedContainer('path');
+        const target = mergedContainer('target');
+        const pathType = typeof field(path, 'type') === 'string' ? String(field(path, 'type')).toLowerCase() : '';
+        const targetType = typeof field(target, 'type') === 'string' ? String(field(target, 'type')).toLowerCase() : '';
+        const targetSize = typeof field(target, 'size') === 'string' ? String(field(target, 'size')).toLowerCase() : '';
+        const configuredMode = field(nestedConfig, 'mode') ?? field(backendConfig, 'mode');
+        const rawMode = typeof configuredMode === 'string' ? configuredMode.toLowerCase() : '';
+        const mode = ['fixation', 'saccade', 'tracking'].includes(rawMode)
+            ? rawMode : 'fixation';
+        const durationMsValue = field(timing, 'durationMs');
+        const durationMs = typeof durationMsValue === 'number' && durationMsValue > 0
+            ? boundedInteger(durationMsValue, 60_000, 5_000, 3_600_000) : 0;
+        const durationSecondsValue = field(timing, 'totalDurationSeconds') ?? field(timing, 'durationSeconds');
+        const durationSeconds = durationMs > 0
+            ? Math.round(durationMs / 1000)
+            : (typeof durationSecondsValue === 'number' && durationSecondsValue > 0
+                ? boundedInteger(durationSecondsValue, 60, 5, 3600) : 0);
+        const holdMs = boundedInteger(
+            field(timing, 'holdMs') ?? field(movement, 'fixationTimeMs'),
+            mode === 'fixation' ? 2000 : 1000, 50, 10000);
 
-        const mode = engineConfig.mode || 'fixation';
-        this.currentMode = mode; // Store mode for later use
-
-        // Check for time-based mode - SUPPORT durationMs (backend sends this!)
-        // Check for time-based mode - SUPPORT durationMs (backend sends this!)
-        const durationMs = timing.durationMs || timing.DurationMs || 0;
-
-
-        let rawDurationSeconds = 0;
-        if (timing.totalDurationSeconds) {
-            rawDurationSeconds = timing.totalDurationSeconds;
-        } else if (durationMs > 2000) {
-            rawDurationSeconds = durationMs / 1000;
-        } else {
-            rawDurationSeconds = timing.durationSeconds || timing.DurationSeconds || 0;
-        }
-
-        if (rawDurationSeconds > 0) {
-            this.isTimeBased = true;
-
-            // Safety Clamp for Configuration Errors (e.g. 700ms being used as total duration)
-            if (rawDurationSeconds < 5) {
-                console.warn(`[MotionPath] Invalid short duration detected (${rawDurationSeconds}s). Forcing to 60s.`);
-                this.durationSeconds = 60;
-            } else {
-                this.durationSeconds = rawDurationSeconds;
+        this.currentMode = mode;
+        this.isTimeBased = durationSeconds > 0;
+        this.durationSeconds = durationSeconds;
+        this.config = {
+            ...engineConfig,
+            path: {
+                ...path,
+                type: ['horizontal', 'vertical', 'circle', 'infinity8', 'random_point', 'two_point_jump'].includes(pathType)
+                    ? pathType : 'horizontal'
+            },
+            target: {
+                ...target,
+                type: ['dot', 'circle', 'arrow'].includes(targetType) ? targetType : 'dot',
+                size: ['small', 'medium', 'large'].includes(targetSize) ? targetSize : 'medium',
+                color: field(target, 'color')
+            },
+            movement: {
+                ...movement,
+                speedLevel: boundedInteger(field(movement, 'speedLevel'), 1, 1, 5),
+                jumpIntervalMs: boundedInteger(field(movement, 'jumpIntervalMs'), 1000, 50, 10000),
+                fixationTimeMs: holdMs
             }
-        }
-
-
-
-
+        } as MotionPathConfig;
 
         if (mode === 'saccade') {
-            this.saccadeTargets = backendConfig.Targets || backendConfig.targets || [];
-
-            // Generate targets if missing (Dynamic Saccade Mode)
-            if (this.saccadeTargets.length === 0) {
+            const configuredTargets = field(nestedConfig, 'targets') ?? field(backendConfig, 'targets');
+            const rawTargets = Array.isArray(configuredTargets) ? configuredTargets.slice(0, 500) : [];
+            this.saccadeTargets = rawTargets
+                .filter((item: unknown) => item !== null && typeof item === 'object' && !Array.isArray(item))
+                .map((item: any) => ({
+                    x: boundedInteger(field(item, 'x'), 50, 0, 100),
+                    y: boundedInteger(field(item, 'y'), 50, 0, 100),
+                    size: boundedInteger(field(item, 'size'), 30, 8, 200),
+                    value: boundedText(field(item, 'value'), '', 100),
+                    number: this.normalizeTargetNumber(field(item, 'number'))
+                }));
+            if (this.saccadeTargets.length === 0)
                 this.generateSaccadeTargets(content);
-
-            }
-
-            const holdMs = timing.holdMs || timing.holdms || 1000;
-            this.config.movement = { ...this.config.movement, fixationTimeMs: holdMs };
-
-            // For time-based saccade, don't limit by target count
-            if (!this.isTimeBased) {
-                this.state.totalSteps = this.saccadeTargets.length || 9999;
-            }
-
+            this.state.totalSteps = this.isTimeBased ? 0 : this.saccadeTargets.length;
         } else {
-            const peripheralCount = content.PeripheralCount || content.peripheralCount || 0;
-            const pointSize = content.PointSize || content.pointSize || 36;
-            const holdMs = timing.HoldMs || timing.holdMs || 2000;
-
-            // DYNAMIC POINT CALCULATION - Backend no longer sends 'points'!
-            let points = content.Points || content.points || 0;
-
-            if (this.isTimeBased) {
-                // Calculate points from duration and hold time
-                points = Math.floor(durationMs / holdMs);
-            } else if (points === 0) {
-                // Fallback if no points and no duration
-                points = 10;
-                console.warn('⚠️ [MotionPath] No points or duration specified, defaulting to 10 points');
-            }
-
+            const peripheralCount = boundedInteger(field(content, 'peripheralCount') ?? field(fixation, 'peripheralCount'), 0, 0, 4);
+            const pointSize = boundedInteger(field(content, 'pointSize') ?? field(fixation, 'pointSize'), 36, 8, 200);
+            const configuredPoints = boundedInteger(field(content, 'points') ?? field(fixation, 'points'), 10, 1, 500);
+            const points = this.isTimeBased
+                ? Math.min(500, Math.max(1, Math.floor((durationSeconds * 1000) / holdMs)))
+                : configuredPoints;
             this.config.fixation = { points, peripheralCount, pointSize };
-            this.config.movement = { ...this.config.movement, fixationTimeMs: holdMs };
             this.currentPointSize = pointSize;
             this.state.totalSteps = points;
         }
+        this.configuredTotalSteps = this.state.totalSteps;
     }
 
     private generateSaccadeTargets(content: any): void {
-        const pattern = content.pattern || content.Pattern || 'horizontal';
+        const pattern = typeof field(content, 'pattern') === 'string' ? field(content, 'pattern').toLowerCase() : 'horizontal';
         // 'type' conflicts with JS keyword, so we access it carefully. content.type is 'dot'|'letter' etc
-        const contentType = content.type || content.Type || 'dot';
-        const pointSize = content.pointSize || content.PointSize || 36;
+        const contentType = typeof field(content, 'type') === 'string' ? field(content, 'type').toLowerCase() : 'dot';
+        const pointSize = boundedInteger(field(content, 'pointSize'), 36, 8, 200);
 
         const targets = [];
         const count = 40; // Generate a batch to loop through
@@ -277,6 +297,7 @@ export class MotionPathEngine implements BaseEngine {
     }
 
     start(): void {
+        if (this.state.isRunning || this.state.isCompleted) return;
         this.state.isRunning = true;
         this.state.isPaused = false;
         this.startTime = Date.now();
@@ -287,12 +308,14 @@ export class MotionPathEngine implements BaseEngine {
         this.resetPosition();
 
         this.timerInterval = setInterval(() => {
-            if (!this.state.isPaused && !this.awaitingPeripheralInput) {
+            if (!this.state.isPaused) {
                 this.state.timeElapsed = Date.now() - this.startTime;
 
-                const holdMs = this.config.movement?.fixationTimeMs || 1000;
-                const elapsed = Date.now() - this.fixationStartTime;
-                this.fixationProgress = Math.min(100, (elapsed / holdMs) * 100);
+                if (!this.awaitingPeripheralInput) {
+                    const holdMs = this.config.movement?.fixationTimeMs || 1000;
+                    const elapsed = Date.now() - this.fixationStartTime;
+                    this.fixationProgress = Math.min(100, (elapsed / holdMs) * 100);
+                }
 
                 // Time-based mode: calculate remaining seconds and check completion
                 if (this.isTimeBased) {
@@ -364,16 +387,19 @@ export class MotionPathEngine implements BaseEngine {
         this.peripheralChars = [];
 
         // Calculate new position
-        const newX = 15 + Math.random() * 70;
-        const newY = 20 + Math.random() * 60;
+        this.pendingTargetX = 15 + Math.random() * 70;
+        this.pendingTargetY = 20 + Math.random() * 60;
+        this.scheduleFixationTransition(150);
+    }
 
-        // Short delay before showing new point (for transition effect)
-        setTimeout(() => {
+    private scheduleFixationTransition(delayMs: number): void {
+        this.setFixationPhase('transition', delayMs);
+        this.transitionTimeout = setTimeout(() => {
             if (!this.state.isRunning || this.state.isPaused) return;
 
             // Set new target position
-            this.targetX = newX;
-            this.targetY = newY;
+            this.targetX = this.pendingTargetX;
+            this.targetY = this.pendingTargetY;
 
             // Generate peripheral chars at new position
             this.generatePeripheralChars();
@@ -384,12 +410,16 @@ export class MotionPathEngine implements BaseEngine {
             this.callbacks.onStateChange({ ...this.state });
 
             const holdMs = this.config.movement?.fixationTimeMs || 2000;
+            this.scheduleFixationHold(holdMs);
+        }, delayMs);
+    }
 
-            this.jumpInterval = setTimeout(() => {
-                if (!this.state.isRunning || this.state.isPaused) return;
-                this.completeFixationStep();
-            }, holdMs);
-        }, 150); // Reduced from 300ms for snappier transitions
+    private scheduleFixationHold(delayMs: number): void {
+        this.setFixationPhase('holding', delayMs);
+        this.jumpInterval = setTimeout(() => {
+            if (!this.state.isRunning || this.state.isPaused) return;
+            this.completeFixationStep();
+        }, delayMs);
     }
 
     private completeFixationStep(): void {
@@ -400,8 +430,8 @@ export class MotionPathEngine implements BaseEngine {
 
         // If there are peripheral chars to test, wait for user input
         if (this.peripheralChars.length > 0) {
+            this.fixationPhase = 'awaitingInput';
             this.awaitingPeripheralInput = true;
-            this.inputPauseStartTime = Date.now(); // Start timing the pause
             this.currentCorrectChars = this.peripheralChars.map(p => p.char).join('');
             this.peripheralInputBuffer = '';
             this.totalPeripheralTests++;
@@ -411,6 +441,7 @@ export class MotionPathEngine implements BaseEngine {
             this.callbacks.onStateChange({ ...this.state });
             // User input will be handled in handleInput()
         } else {
+            this.fixationPhase = 'idle';
             // No peripheral chars - just record and move on
             this.recordFixationResult('', '', 100);
             this.state.currentStep++;
@@ -532,6 +563,7 @@ export class MotionPathEngine implements BaseEngine {
         });
 
         this.currentTargetIndex++;
+        this.saccadeInputLocked = true;
 
         // Track completed targets count for display
         this.state.targetCount = (this.state.targetCount || 0) + 1;
@@ -543,6 +575,7 @@ export class MotionPathEngine implements BaseEngine {
         this.callbacks.onStepComplete(this.currentTargetIndex, true);
 
         this.showNextSaccadeTarget();
+        this.saccadeUnlockTimeout = setTimeout(() => this.saccadeInputLocked = false, 50);
     }
 
     // --- SMOOTH ANIMATION ---
@@ -562,6 +595,7 @@ export class MotionPathEngine implements BaseEngine {
             if (this.targetX >= 95 || this.targetX <= 5) {
                 this.direction *= -1;
                 this.state.currentStep++;
+                if (this.completeTrackingIfNeeded()) return;
             }
         }
         else if (pathType === 'vertical') {
@@ -570,23 +604,34 @@ export class MotionPathEngine implements BaseEngine {
             if (this.targetY >= 90 || this.targetY <= 10) {
                 this.direction *= -1;
                 this.state.currentStep++;
+                if (this.completeTrackingIfNeeded()) return;
             }
         }
         else if (pathType === 'circle') {
             const speed = 0.02 + (speedLevel * 0.01);
+            const previousCycle = Math.floor(this.angle / (Math.PI * 2));
             this.angle += speed;
             const radius = 35;
             this.targetX = 50 + radius * Math.cos(this.angle);
             this.targetY = 50 + radius * Math.sin(this.angle);
+            if (Math.floor(this.angle / (Math.PI * 2)) > previousCycle) {
+                this.state.currentStep++;
+                if (this.completeTrackingIfNeeded()) return;
+            }
         }
         else if (pathType === 'infinity8') {
             const speed = 0.03 + (speedLevel * 0.01);
+            const previousCycle = Math.floor(this.angle / (Math.PI * 2));
             this.angle += speed;
             const scale = 2 / (3 - Math.cos(2 * this.angle));
             const x = scale * Math.cos(this.angle);
             const y = scale * Math.sin(2 * this.angle) / 2;
             this.targetX = 50 + (x * 40);
             this.targetY = 50 + (y * 40);
+            if (Math.floor(this.angle / (Math.PI * 2)) > previousCycle) {
+                this.state.currentStep++;
+                if (this.completeTrackingIfNeeded()) return;
+            }
         }
 
         this.callbacks.onStateChange({ ...this.state });
@@ -594,9 +639,10 @@ export class MotionPathEngine implements BaseEngine {
     }
 
     // --- JUMPING ---
-    private startJumping(): void {
+    private startJumping(jumpImmediately = true): void {
         const interval = this.config.movement?.jumpIntervalMs || 1000;
-        this.jump();
+        if (jumpImmediately) this.jump();
+        if (!this.state.isRunning) return;
         this.jumpInterval = setInterval(() => {
             if (!this.state.isPaused) this.jump();
         }, interval);
@@ -613,6 +659,7 @@ export class MotionPathEngine implements BaseEngine {
         }
         this.state.currentStep++;
         this.callbacks.onStateChange({ ...this.state });
+        this.completeTrackingIfNeeded();
     }
 
     pause(): void {
@@ -620,7 +667,15 @@ export class MotionPathEngine implements BaseEngine {
         this.state.isPaused = true;
         this.pauseStartTime = Date.now();
         if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
-        if (this.jumpInterval) clearTimeout(this.jumpInterval); // Fixation/Saccade timed jumps
+        if (this.jumpInterval) {
+            clearTimeout(this.jumpInterval);
+            clearInterval(this.jumpInterval);
+        }
+        if (this.transitionTimeout) clearTimeout(this.transitionTimeout);
+        if (this.feedbackTimeout) clearTimeout(this.feedbackTimeout);
+        if (this.currentMode === 'fixation' && ['transition', 'holding', 'feedback'].includes(this.fixationPhase)) {
+            this.phaseRemaining = Math.max(0, this.phaseDuration - (Date.now() - this.phaseStartedAt));
+        }
         this.callbacks.onPause();
         this.callbacks.onStateChange({ ...this.state });
     }
@@ -637,14 +692,9 @@ export class MotionPathEngine implements BaseEngine {
 
         // Resume mode-specific logic
         if (this.currentMode === 'fixation') {
-            const holdMs = this.config.movement?.fixationTimeMs || 2000;
-            const remaining = Math.max(0, holdMs - (Date.now() - this.fixationStartTime));
-
-            // Re-schedule the jump
-            this.jumpInterval = setTimeout(() => {
-                if (!this.state.isRunning || this.state.isPaused) return;
-                this.completeFixationStep();
-            }, remaining);
+            if (this.fixationPhase === 'transition') this.scheduleFixationTransition(this.phaseRemaining);
+            else if (this.fixationPhase === 'holding') this.scheduleFixationHold(this.phaseRemaining);
+            else if (this.fixationPhase === 'feedback') this.scheduleFeedback(this.phaseRemaining);
 
         } else if (this.currentMode === 'saccade') {
             const holdMs = this.config.movement?.fixationTimeMs || 1000;
@@ -656,9 +706,9 @@ export class MotionPathEngine implements BaseEngine {
             }, remaining);
 
         } else {
-            if (this.currentMode !== 'saccade' && this.currentMode !== 'fixation') {
-                this.animate();
-            }
+            const pathType = this.config.path?.type;
+            if (pathType === 'random_point' || pathType === 'two_point_jump') this.startJumping(false);
+            else this.startSmoothAnimation();
         }
 
         this.callbacks.onResume();
@@ -669,6 +719,9 @@ export class MotionPathEngine implements BaseEngine {
         this.state.isRunning = false;
         clearInterval(this.timerInterval);
         clearInterval(this.jumpInterval);
+        clearTimeout(this.transitionTimeout);
+        clearTimeout(this.feedbackTimeout);
+        clearTimeout(this.saccadeUnlockTimeout);
         if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
         this.callbacks.onStateChange({ ...this.state });
     }
@@ -680,7 +733,7 @@ export class MotionPathEngine implements BaseEngine {
             isPaused: false,
             isCompleted: false,
             currentStep: 0,
-            totalSteps: 0,
+            totalSteps: this.configuredTotalSteps,
             score: 0,
             accuracy: 100,
             timeElapsed: 0,
@@ -690,6 +743,16 @@ export class MotionPathEngine implements BaseEngine {
         this.fixationProgress = 0;
         this.peripheralChars = [];
         this.fixationResults = [];
+        this.awaitingPeripheralInput = false;
+        this.currentCorrectChars = '';
+        this.peripheralInputBuffer = '';
+        this.totalPeripheralTests = 0;
+        this.correctPeripheralTests = 0;
+        this.currentTargetIndex = 0;
+        this.saccadeInputLocked = false;
+        this.lastFeedback = null;
+        this.showingFeedback = false;
+        this.fixationPhase = 'idle';
         this.resetPosition();
         this.callbacks.onStateChange({ ...this.state });
     }
@@ -699,7 +762,7 @@ export class MotionPathEngine implements BaseEngine {
     }
 
     handleInput(input: any): void {
-        const mode = (this.config as any).engineConfig?.mode;
+        const mode = this.currentMode;
 
         // Handle peripheral vision input
         if (this.awaitingPeripheralInput && input.type === 'keypress') {
@@ -723,7 +786,7 @@ export class MotionPathEngine implements BaseEngine {
 
         // Handle saccade clicks
         if (input.type === 'click' || input.type === 'space') {
-            if (mode === 'saccade' && this.state.isRunning && !this.state.isPaused) {
+            if (mode === 'saccade' && this.state.isRunning && !this.state.isPaused && !this.saccadeInputLocked) {
                 this.onTargetAction();
             }
         }
@@ -735,15 +798,18 @@ export class MotionPathEngine implements BaseEngine {
 
         // Calculate accuracy (character-by-character match)
         let matchCount = 0;
+        const remainingChars = correctChars.split('');
         const minLen = Math.min(userInput.length, correctChars.length);
         for (let i = 0; i < minLen; i++) {
             // Check if character exists in correct chars (order doesn't matter for peripheral vision)
-            if (correctChars.includes(userInput[i])) {
+            const matchIndex = remainingChars.indexOf(userInput[i]);
+            if (matchIndex >= 0) {
                 matchCount++;
+                remainingChars.splice(matchIndex, 1);
             }
         }
         const accuracy = correctChars.length > 0 ? (matchCount / correctChars.length) * 100 : 100;
-        const isCorrect = accuracy >= 50;
+        const isCorrect = accuracy === 100;
 
         if (isCorrect) {
             this.correctPeripheralTests++;
@@ -752,16 +818,11 @@ export class MotionPathEngine implements BaseEngine {
         this.recordFixationResult(userInput, correctChars, accuracy);
 
         // Update score based on peripheral accuracy
-        this.state.accuracy = this.totalPeripheralTests > 0
-            ? (this.correctPeripheralTests / this.totalPeripheralTests) * 100
+        this.state.accuracy = this.fixationResults.length > 0
+            ? this.fixationResults.reduce((sum, item) => sum + item.accuracy, 0) / this.fixationResults.length
             : 100;
 
         this.awaitingPeripheralInput = false;
-
-        // Adjust timers for the time spent waiting
-        const freezeDuration = Date.now() - this.inputPauseStartTime;
-        this.startTime += freezeDuration;
-        this.fixationStartTime += freezeDuration;
 
         // Show feedback
         this.lastFeedback = { isCorrect, userInput, correctChars };
@@ -769,16 +830,24 @@ export class MotionPathEngine implements BaseEngine {
         this.callbacks.onStateChange({ ...this.state });
 
         // Wait 1.2 seconds to show feedback, then continue
-        setTimeout(() => {
+        this.scheduleFeedback(1200);
+    }
+
+    private scheduleFeedback(delayMs: number): void {
+        this.setFixationPhase('feedback', delayMs);
+        this.feedbackTimeout = setTimeout(() => {
+            if (!this.state.isRunning || this.state.isCompleted) return;
+            const isCorrect = this.lastFeedback?.isCorrect ?? false;
             this.showingFeedback = false;
             this.lastFeedback = null;
+            this.fixationPhase = 'idle';
 
             this.state.currentStep++;
             this.callbacks.onStepComplete(this.state.currentStep, isCorrect);
             this.callbacks.onStateChange({ ...this.state });
 
             this.showNextFixationPoint();
-        }, 1200);
+        }, delayMs);
     }
 
     private recordFixationResult(userInput: string, correctChars: string, accuracy: number): void {
@@ -846,18 +915,26 @@ export class MotionPathEngine implements BaseEngine {
     }
 
     private complete(reason: string = 'unknown'): void {
-
+        if (this.state.isCompleted) return;
+        const completedAccuracy = this.fixationResults.reduce((sum, item) => sum + item.accuracy, 0);
+        const accuracy = this.totalPeripheralTests > 0
+            ? Math.round(completedAccuracy / this.totalPeripheralTests)
+            : 100;
+        const errors = this.getIncorrectCount();
+        this.state.score = accuracy;
+        this.state.accuracy = accuracy;
+        this.state.errors = errors;
         this.state.isCompleted = true;
         this.state.isRunning = false;
         this.stop();
 
         const result: EngineResult = {
-            score: 100,
-            accuracy: 100,
+            score: accuracy,
+            accuracy,
             totalTime: this.state.timeElapsed,
             totalSteps: this.state.totalSteps,
             completedSteps: this.state.currentStep,
-            errors: 0,
+            errors,
             details: {
                 fixationResults: this.fixationResults
             }
@@ -865,6 +942,27 @@ export class MotionPathEngine implements BaseEngine {
 
         this.callbacks.onStateChange({ ...this.state });
         this.callbacks.onComplete(result);
+    }
+
+    private completeTrackingIfNeeded(): boolean {
+        if (!this.isTimeBased && this.state.currentStep >= this.state.totalSteps) {
+            this.complete('Tracking steps completed');
+            return true;
+        }
+        return false;
+    }
+
+    private normalizeTargetNumber(value: unknown): string | number | undefined {
+        if (typeof value === 'number' && Number.isSafeInteger(value)) return value;
+        if (typeof value === 'string') return boundedText(value, '', 100) || undefined;
+        return undefined;
+    }
+
+    private setFixationPhase(phase: 'transition' | 'holding' | 'feedback', durationMs: number): void {
+        this.fixationPhase = phase;
+        this.phaseStartedAt = Date.now();
+        this.phaseDuration = durationMs;
+        this.phaseRemaining = durationMs;
     }
 
     // Public API

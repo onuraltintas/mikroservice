@@ -148,6 +148,13 @@ public static class ExerciseConfigurationRules
                     ValidateScanConfiguration(nested.Value);
                 ValidateEffectiveScanConfiguration(root, nested);
             }
+            if (configured == "motion_path")
+            {
+                ValidateMotionPathConfiguration(root);
+                if (nested.HasValue)
+                    ValidateMotionPathConfiguration(nested.Value);
+                ValidateEffectiveMotionPathConfiguration(root, nested);
+            }
         }
         catch (JsonException exception)
         {
@@ -434,6 +441,108 @@ public static class ExerciseConfigurationRules
         }
     }
 
+    private static void ValidateMotionPathConfiguration(JsonElement config)
+    {
+        foreach (var name in new[] { "timing", "content", "movement", "path", "target", "fixation" })
+            ValidateOptionalObject(config, name, "Göz hareketi egzersizi");
+
+        ValidateOptionalEnum(config, "mode", ["fixation", "saccade", "tracking"], "Göz hareketi modu");
+
+        if (TryGetObject(config, "timing") is { } timing)
+        {
+            ValidateOptionalIntRange(timing, "durationMs", 5_000, 3_600_000, "Göz hareketi toplam süresi");
+            ValidateOptionalIntRange(timing, "durationSeconds", 5, 3_600, "Göz hareketi toplam süresi");
+            ValidateOptionalIntRange(timing, "totalDurationSeconds", 5, 3_600, "Göz hareketi toplam süresi");
+            ValidateOptionalIntRange(timing, "holdMs", 50, 10_000, "Göz hareketi bekleme süresi");
+        }
+        if (TryGetObject(config, "content") is { } content)
+        {
+            ValidateOptionalIntRange(content, "points", 1, 500, "Sabitleme nokta sayısı");
+            ValidateOptionalIntRange(content, "peripheralCount", 0, 4, "Periferik karakter sayısı");
+            ValidateOptionalIntRange(content, "pointSize", 8, 200, "Göz hareketi nokta boyutu");
+            ValidateOptionalEnum(content, "pattern", ["horizontal", "vertical", "random", "z-pattern", "z-flow"], "Sakkad deseni");
+            ValidateOptionalEnum(content, "type", ["dot", "letter", "number", "word"], "Sakkad içerik türü");
+        }
+        if (TryGetObject(config, "fixation") is { } fixation)
+        {
+            ValidateOptionalIntRange(fixation, "points", 1, 500, "Sabitleme nokta sayısı");
+            ValidateOptionalIntRange(fixation, "peripheralCount", 0, 4, "Periferik karakter sayısı");
+            ValidateOptionalIntRange(fixation, "pointSize", 8, 200, "Göz hareketi nokta boyutu");
+        }
+        if (TryGetObject(config, "movement") is { } movement)
+        {
+            ValidateOptionalIntRange(movement, "speedLevel", 1, 5, "Göz hareketi hız seviyesi");
+            ValidateOptionalIntRange(movement, "jumpIntervalMs", 50, 10_000, "Göz hareketi sıçrama aralığı");
+            ValidateOptionalIntRange(movement, "fixationTimeMs", 50, 10_000, "Göz hareketi sabitleme süresi");
+        }
+        if (TryGetObject(config, "path") is { } path)
+            ValidateOptionalEnum(path, "type", ["horizontal", "vertical", "circle", "infinity8", "random_point", "two_point_jump"], "Göz hareketi yol türü");
+        if (TryGetObject(config, "target") is { } target)
+        {
+            ValidateOptionalEnum(target, "type", ["dot", "circle", "arrow"], "Göz hareketi hedef türü");
+            ValidateOptionalEnum(target, "size", ["small", "medium", "large"], "Göz hareketi hedef boyutu");
+        }
+
+        ValidateOptionalMotionTargets(config, "targets");
+    }
+
+    private static void ValidateOptionalMotionTargets(JsonElement config, string propertyName)
+    {
+        if (TryGetProperty(config, propertyName) is not { } targets)
+            return;
+        if (targets.ValueKind != JsonValueKind.Array || targets.GetArrayLength() > 500)
+            throw new ArgumentException("Sakkad hedefleri en fazla 500 öğe içermelidir.");
+        foreach (var target in targets.EnumerateArray())
+        {
+            if (target.ValueKind != JsonValueKind.Object)
+                throw new ArgumentException("Sakkad hedefleri nesne olmalıdır.");
+            if (TryGetProperty(target, "x") is null || TryGetProperty(target, "y") is null)
+                throw new ArgumentException("Sakkad hedefleri X ve Y koordinatlarını içermelidir.");
+            ValidateOptionalIntRange(target, "x", 0, 100, "Sakkad hedef X koordinatı");
+            ValidateOptionalIntRange(target, "y", 0, 100, "Sakkad hedef Y koordinatı");
+            ValidateOptionalIntRange(target, "size", 8, 200, "Sakkad hedef boyutu");
+            ValidateOptionalBoundedString(target, "value", 100, "Sakkad hedef değeri");
+            if (TryGetProperty(target, "number") is { } number
+                && number.ValueKind is not JsonValueKind.String and not JsonValueKind.Number)
+                throw new ArgumentException("Sakkad hedef numarası metin veya sayı olmalıdır.");
+            ValidateOptionalBoundedStringOrInteger(target, "number", 100, "Sakkad hedef numarası");
+        }
+    }
+
+    private static void ValidateEffectiveMotionPathConfiguration(JsonElement root, JsonElement? nested)
+    {
+        var scopes = nested.HasValue ? new[] { root, nested.Value } : new[] { root };
+        ValidateConsistentStrings(scopes.SelectMany(scope => ReadStrings(scope, "mode")), "Göz hareketi modu");
+        ValidateConsistentValues(scopes.SelectMany(scope => ReadNestedInts(scope, "timing", "holdMs")
+            .Concat(ReadNestedInts(scope, "movement", "fixationTimeMs"))), "Göz hareketi bekleme süresi");
+        ValidateConsistentValues(scopes.SelectMany(scope => ReadNestedInts(scope, "content", "points")
+            .Concat(ReadNestedInts(scope, "fixation", "points"))), "Sabitleme nokta sayısı");
+        ValidateConsistentValues(scopes.SelectMany(scope => ReadNestedInts(scope, "content", "peripheralCount")
+            .Concat(ReadNestedInts(scope, "fixation", "peripheralCount"))), "Periferik karakter sayısı");
+        ValidateConsistentValues(scopes.SelectMany(scope => ReadNestedInts(scope, "content", "pointSize")
+            .Concat(ReadNestedInts(scope, "fixation", "pointSize"))), "Göz hareketi nokta boyutu");
+        ValidateConsistentValues(scopes.SelectMany(scope => ReadNestedInts(scope, "movement", "speedLevel")), "Göz hareketi hız seviyesi");
+        ValidateConsistentValues(scopes.SelectMany(scope => ReadNestedInts(scope, "movement", "jumpIntervalMs")), "Göz hareketi sıçrama aralığı");
+        ValidateConsistentStrings(scopes.SelectMany(scope => ReadNestedStrings(scope, "content", "pattern")), "Sakkad deseni");
+        ValidateConsistentStrings(scopes.SelectMany(scope => ReadNestedStrings(scope, "content", "type")), "Sakkad içerik türü");
+        ValidateConsistentStrings(scopes.SelectMany(scope => ReadNestedStrings(scope, "path", "type")), "Göz hareketi yol türü");
+        ValidateConsistentStrings(scopes.SelectMany(scope => ReadNestedStrings(scope, "target", "type")), "Göz hareketi hedef türü");
+        ValidateConsistentStrings(scopes.SelectMany(scope => ReadNestedStrings(scope, "target", "size")), "Göz hareketi hedef boyutu");
+
+        var durations = new List<int>();
+        foreach (var scope in scopes)
+        {
+            if (TryGetObject(scope, "timing") is not { } timing)
+                continue;
+            durations.AddRange(ReadInts(timing, "durationMs"));
+            durations.AddRange(ReadInts(timing, "durationSeconds", "totalDurationSeconds").Select(seconds => seconds * 1000));
+        }
+        ValidateConsistentValues(durations, "Göz hareketi toplam süresi");
+
+        if (nested.HasValue && TryGetProperty(root, "targets").HasValue && TryGetProperty(nested.Value, "targets").HasValue)
+            throw new ArgumentException("Sakkad hedefleri yalnızca tek bir yapılandırma düzeyinde tanımlanmalıdır.");
+    }
+
     private static void ValidateEffectiveScanConfiguration(JsonElement root, JsonElement? nested)
     {
         var limits = ReadInts(root, "timeLimitSeconds", "timeLimit");
@@ -520,10 +629,36 @@ public static class ExerciseConfigurationRules
     private static List<int> ReadNestedInts(JsonElement config, string objectName, params string[] names) =>
         TryGetObject(config, objectName) is { } nested ? ReadInts(nested, names) : [];
 
+    private static IEnumerable<string> ReadStrings(JsonElement config, params string[] names) =>
+        names.Select(name => GetString(config, name)).Where(value => value is not null).Select(value => value!);
+
+    private static IEnumerable<string> ReadNestedStrings(JsonElement config, string objectName, params string[] names) =>
+        TryGetObject(config, objectName) is { } nested ? ReadStrings(nested, names) : [];
+
     private static void ValidateConsistentValues(IEnumerable<int> values, string displayName)
     {
         if (values.Distinct().Skip(1).Any())
             throw new ArgumentException($"{displayName} için tanımlanan değerler uyuşmalıdır.");
+    }
+
+    private static void ValidateConsistentStrings(IEnumerable<string> values, string displayName)
+    {
+        if (values.Distinct(StringComparer.OrdinalIgnoreCase).Skip(1).Any())
+            throw new ArgumentException($"{displayName} için tanımlanan değerler uyuşmalıdır.");
+    }
+
+    private static void ValidateOptionalEnum(
+        JsonElement config,
+        string propertyName,
+        IReadOnlyCollection<string> supportedValues,
+        string displayName)
+    {
+        if (TryGetProperty(config, propertyName) is not { } property)
+            return;
+        if (property.ValueKind != JsonValueKind.String
+            || property.GetString() is not { } value
+            || !supportedValues.Contains(value, StringComparer.OrdinalIgnoreCase))
+            throw new ArgumentException($"{displayName} desteklenen değerlerden biri olmalıdır.");
     }
 
     private static void ValidateOptionalStringArray(
@@ -599,6 +734,21 @@ public static class ExerciseConfigurationRules
             return;
         if (property.ValueKind != JsonValueKind.String || (property.GetString()?.Length ?? 0) > maximumLength)
             throw new ArgumentException($"{displayName} en fazla {maximumLength} karakter olmalıdır.");
+    }
+
+    private static void ValidateOptionalBoundedStringOrInteger(
+        JsonElement config,
+        string propertyName,
+        int maximumLength,
+        string displayName)
+    {
+        if (TryGetProperty(config, propertyName) is not { } property)
+            return;
+        if (property.ValueKind == JsonValueKind.String && (property.GetString()?.Length ?? 0) <= maximumLength)
+            return;
+        if (property.ValueKind == JsonValueKind.Number && property.TryGetInt32(out _))
+            return;
+        throw new ArgumentException($"{displayName} geçerli ve en fazla {maximumLength} karakter olmalıdır.");
     }
 
     private static void ValidateNoCaseInsensitiveDuplicateProperties(JsonElement element)
