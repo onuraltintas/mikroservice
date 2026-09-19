@@ -239,6 +239,36 @@ public sealed class StudentReadingPersistenceTests
     }
 
     [Fact]
+    public async Task Focus_session_uses_nested_then_root_configuration_fallbacks()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "Odak", "N-back", "focus"));
+        context.Exercises.Add(Exercise.Create(
+            "Odak",
+            "focus",
+            """{"engineType":"focus","nLevel":5,"gridSize":7,"engineConfig":{"engineType":"focus","mode":"position","speedMs":500,"positionSequence":[1,2,1,2,1,2]}}""",
+            1,
+            studentId,
+            typeId,
+            id: exerciseId));
+        await context.SaveChangesAsync();
+
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(
+            studentId,
+            new StartExerciseSessionRequest { ExerciseId = exerciseId },
+            CancellationToken.None);
+
+        started.InitialData.GetProperty("focusNLevel").GetInt32().Should().Be(5);
+        started.InitialData.GetProperty("focusSpeedMs").GetInt32().Should().Be(500);
+        started.InitialData.GetProperty("gridSize").GetInt32().Should().Be(7);
+        started.TotalSteps.Should().Be(6);
+    }
+
+    [Fact]
     public async Task Observation_only_motion_path_completion_does_not_increment_verified_gamification()
     {
         await using var context = CreateContext();

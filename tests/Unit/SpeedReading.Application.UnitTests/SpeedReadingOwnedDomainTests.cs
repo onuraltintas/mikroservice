@@ -308,6 +308,38 @@ public sealed class SpeedReadingOwnedDomainTests
         focus.Should().NotThrow();
     }
 
+    [Theory]
+    [InlineData("{\"engineType\":\"visual_expansion\",\"rounds\":10,\"totalSteps\":2000000000}", "visual_expansion")]
+    [InlineData("{\"engineType\":\"focus\",\"itemCount\":2000000000}", "focus")]
+    public void Active_interaction_configuration_rejects_oversized_step_aliases(
+        string configuration,
+        string engineType)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, engineType);
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Active_visual_expansion_configuration_rejects_invalid_split_scope_angles()
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"visual_expansion","startDegrees":50,"engineConfig":{"engineType":"visual_expansion","targetDegrees":20}}""",
+            "visual_expansion");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Active_focus_configuration_rejects_oversized_sequences()
+    {
+        var sequence = string.Join(',', Enumerable.Range(0, 501));
+        var configuration = $$"""{"engineType":"focus","mode":"position","positionSequence":[{{sequence}}]}""";
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, "focus");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
     [Fact]
     public void Active_program_requires_a_usable_weekly_plan()
     {
