@@ -155,6 +155,13 @@ public static class ExerciseConfigurationRules
                     ValidateMotionPathConfiguration(nested.Value);
                 ValidateEffectiveMotionPathConfiguration(root, nested);
             }
+            if (configured is "reading_comprehension" or "exam_simulation" or "free_reading")
+            {
+                ValidateReadingConfiguration(root);
+                if (nested.HasValue)
+                    ValidateReadingConfiguration(nested.Value);
+                ValidateEffectiveReadingConfiguration(root, nested);
+            }
         }
         catch (JsonException exception)
         {
@@ -541,6 +548,70 @@ public static class ExerciseConfigurationRules
 
         if (nested.HasValue && TryGetProperty(root, "targets").HasValue && TryGetProperty(nested.Value, "targets").HasValue)
             throw new ArgumentException("Sakkad hedefleri yalnızca tek bir yapılandırma düzeyinde tanımlanmalıdır.");
+    }
+
+    private static void ValidateReadingConfiguration(JsonElement config)
+    {
+        ValidateOptionalObject(config, "timing", "Okuma egzersizi");
+        ValidateOptionalObject(config, "display", "Okuma egzersizi");
+        if (TryGetProperty(config, "content") is { } content
+            && content.ValueKind is not JsonValueKind.Object and not JsonValueKind.String)
+            throw new ArgumentException("Okuma egzersizi content alanı metin veya nesne olmalıdır.");
+        if (TryGetProperty(config, "content") is { ValueKind: JsonValueKind.String } stringContent
+            && (stringContent.GetString()?.Length ?? 0) > 100_000)
+            throw new ArgumentException("Egzersiz metni en fazla 100000 karakter olmalıdır.");
+
+        ValidateOptionalInlineText(config);
+        ValidateOptionalBoundedString(config, "text", 100_000, "Egzersiz metni");
+        ValidateOptionalIntRange(config, "wordCount", 1, 100_000, "Okuma kelime sayısı");
+        if (TryGetObject(config, "content") is { } contentObject)
+            ValidateOptionalIntRange(contentObject, "wordCount", 1, 100_000, "Okuma kelime sayısı");
+
+        if (TryGetObject(config, "timing") is { } timing)
+        {
+            ValidateOptionalIntRange(timing, "minReadingTimeMs", 0, 3_600_000, "Minimum okuma süresi");
+            ValidateOptionalIntRange(timing, "maxReadingTimeMs", 0, 3_600_000, "Maksimum okuma süresi");
+            var minimum = ReadOptionalInt(timing, "minReadingTimeMs");
+            var maximum = ReadOptionalInt(timing, "maxReadingTimeMs");
+            if (minimum.HasValue && maximum is > 0 && minimum.Value > maximum.Value)
+                throw new ArgumentException("Minimum okuma süresi maksimum süreden büyük olamaz.");
+        }
+        if (TryGetObject(config, "display") is { } display)
+            ValidateOptionalEnum(display, "fontSize", ["small", "medium", "large"], "Okuma yazı boyutu");
+    }
+
+    private static void ValidateEffectiveReadingConfiguration(JsonElement root, JsonElement? nested)
+    {
+        var scopes = nested.HasValue ? new[] { root, nested.Value } : new[] { root };
+        ValidateConsistentValues(scopes.SelectMany(scope => ReadInts(scope, "wordCount")
+            .Concat(ReadNestedInts(scope, "content", "wordCount"))), "Okuma kelime sayısı");
+        var minimums = scopes.SelectMany(scope => ReadNestedInts(scope, "timing", "minReadingTimeMs")).ToList();
+        var maximums = scopes.SelectMany(scope => ReadNestedInts(scope, "timing", "maxReadingTimeMs")).ToList();
+        ValidateConsistentValues(minimums, "Minimum okuma süresi");
+        ValidateConsistentValues(maximums, "Maksimum okuma süresi");
+        if (minimums.FirstOrDefault() > 0 && maximums.FirstOrDefault() > 0
+            && minimums[0] > maximums[0])
+            throw new ArgumentException("Minimum okuma süresi maksimum süreden büyük olamaz.");
+        ValidateConsistentStrings(scopes.SelectMany(scope => ReadNestedStrings(scope, "display", "fontSize")), "Okuma yazı boyutu");
+        ValidateConsistentStrings(scopes.SelectMany(ReadReadingTexts), "Okuma metni");
+    }
+
+    private static IEnumerable<string> ReadReadingTexts(JsonElement config)
+    {
+        foreach (var name in new[] { "readingTextContent", "text" })
+        {
+            if (GetString(config, name) is { } value)
+                yield return value;
+        }
+        if (TryGetProperty(config, "content") is { ValueKind: JsonValueKind.String } stringContent)
+        {
+            if (stringContent.GetString() is { } value)
+                yield return value;
+        }
+        else if (TryGetObject(config, "content") is { } content && GetString(content, "text") is { } value)
+        {
+            yield return value;
+        }
     }
 
     private static void ValidateEffectiveScanConfiguration(JsonElement root, JsonElement? nested)

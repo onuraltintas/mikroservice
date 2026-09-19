@@ -20,3 +20,21 @@ export function recordOrEmpty(value: unknown): Record<string, any> {
     ? value as Record<string, any>
     : {};
 }
+
+export function caseInsensitiveField(record: Record<string, any>, name: string): any {
+  const key = Object.keys(record).reverse()
+    .find(candidate => candidate.toLowerCase() === name.toLowerCase());
+  return key === undefined ? undefined : record[key];
+}
+
+export function mergeCaseInsensitiveRecords(
+  root: Record<string, any>,
+  nested: Record<string, any>,
+  name: string
+): Record<string, any> {
+  const merged: Record<string, any> = {};
+  for (const source of [recordOrEmpty(caseInsensitiveField(root, name)), recordOrEmpty(caseInsensitiveField(nested, name))]) {
+    for (const [key, value] of Object.entries(source)) merged[key.toLowerCase()] = value;
+  }
+  return merged;
+}

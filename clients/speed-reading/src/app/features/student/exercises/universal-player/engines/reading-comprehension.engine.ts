@@ -13,6 +13,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
+import { boundedInteger, boundedText, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './reading-pacer-safety';
 
 interface ReadingComprehensionConfig extends EngineConfig {
     // Backend session data (from ComprehensionEngine)
@@ -51,7 +52,7 @@ interface ReadingState {
 }
 
 export class ReadingComprehensionEngine implements BaseEngine {
-    engineType = 'reading_comprehension' as const;
+    engineType: 'reading_comprehension' | 'free_reading';
     displayName = 'Anlama Testi';
 
     private config!: ReadingComprehensionConfig;
@@ -64,11 +65,16 @@ export class ReadingComprehensionEngine implements BaseEngine {
     private text: string = '';
     private title: string = '';
     private words: string[] = [];
+    private configuredTotalSteps = 0;
     private readingState: ReadingState = {
         phase: 'reading',
         scrollProgress: 0,
         hasScrolledToEnd: false
     };
+
+    constructor(engineType: 'reading_comprehension' | 'free_reading' = 'reading_comprehension') {
+        this.engineType = engineType;
+    }
 
     // Default text pool for testing (fallback only)
     private defaultTexts = [
@@ -92,7 +98,6 @@ export class ReadingComprehensionEngine implements BaseEngine {
     ];
 
     initialize(config: ReadingComprehensionConfig, callbacks: EngineCallbacks): void {
-        this.config = config;
         this.callbacks = callbacks;
 
         // Debug full config to see available keys
@@ -108,26 +113,54 @@ export class ReadingComprehensionEngine implements BaseEngine {
         // - Content.WordCount
         // - Questions[]
         const cfg = config as any;
+        const nested = recordOrEmpty(caseInsensitiveField(cfg, 'engineConfig'));
+        const timing = mergeCaseInsensitiveRecords(cfg, nested, 'timing');
+        const display = mergeCaseInsensitiveRecords(cfg, nested, 'display');
+        const configuredFontSize = typeof display['fontsize'] === 'string'
+            ? display['fontsize'].toLowerCase() : '';
+        const fontSize = ['small', 'medium', 'large'].includes(configuredFontSize)
+            ? configuredFontSize as 'small' | 'medium' | 'large' : 'medium';
+        const lineHeight = typeof display['lineheight'] === 'number' && Number.isFinite(display['lineheight'])
+            ? Math.min(3, Math.max(1, display['lineheight'])) : 1.8;
+        const minReadingTimeMs = boundedInteger(timing['minreadingtimems'], 0, 0, 3_600_000);
+        const configuredMaximum = boundedInteger(timing['maxreadingtimems'], 0, 0, 3_600_000);
+        const maxReadingTimeMs = configuredMaximum > 0
+            ? Math.max(minReadingTimeMs, configuredMaximum) : 0;
+        this.config = {
+            ...config,
+            timing: { minReadingTimeMs, maxReadingTimeMs },
+            display: { ...display, fontSize, lineHeight }
+        };
         // The session endpoint serializes the reading body as `content` when
         // it returns a public session snapshot. Older preview/configuration
         // payloads use an object (`content.text`) or `Content.Text`; accept
         // both shapes so a real snapshot is always shown to the student.
-        const rawContent = cfg.content;
-        const contentText = typeof rawContent === 'string'
-            ? rawContent
-            : rawContent?.text;
-        const contentTitle = typeof rawContent === 'object'
-            ? rawContent?.title
-            : undefined;
-        const contentWordCount = typeof rawContent === 'object'
-            ? rawContent?.wordCount
-            : undefined;
+        const nestedContent = caseInsensitiveField(nested, 'content');
+        const rootContent = caseInsensitiveField(cfg, 'content');
+        const nestedContentRecord = recordOrEmpty(nestedContent);
+        const rootContentRecord = recordOrEmpty(rootContent);
+        const contentText = (typeof nestedContent === 'string'
+            ? nestedContent
+            : caseInsensitiveField(nestedContentRecord, 'text'))
+            ?? (typeof rootContent === 'string'
+                ? rootContent
+                : caseInsensitiveField(rootContentRecord, 'text'));
+        const contentTitle = caseInsensitiveField(nestedContentRecord, 'title')
+            ?? caseInsensitiveField(rootContentRecord, 'title');
+        const contentWordCount = caseInsensitiveField(nestedContentRecord, 'wordCount')
+            ?? caseInsensitiveField(rootContentRecord, 'wordCount');
         const assessmentMode = cfg.isAssessmentMode === true || cfg.IsAssessmentMode === true;
-        const resolvedText = config.readingTextContent ||
-            cfg.Content?.Text ||      // PascalCase from C#
-            contentText ||            // camelCase or session snapshot string
-            config.text;
-        if (!resolvedText && assessmentMode) {
+        const rawText = caseInsensitiveField(nested, 'readingTextContent')
+            ?? caseInsensitiveField(cfg, 'readingTextContent')
+            ?? contentText
+            ?? caseInsensitiveField(nested, 'text')
+            ?? caseInsensitiveField(cfg, 'text');
+        const resolvedText = typeof rawText === 'string'
+            ? boundedText(rawText, '', 100_000)
+            : '';
+        const invalidAssessmentText = rawText !== undefined
+            && (typeof rawText !== 'string' || rawText.length > 100_000);
+        if ((!resolvedText || invalidAssessmentText) && assessmentMode) {
             throw new Error('Assessment reading text was not provided by the server.');
         }
         this.text = resolvedText || this.getRandomText();
@@ -140,10 +173,11 @@ export class ReadingComprehensionEngine implements BaseEngine {
         this.words = this.text.split(/\s+/).filter(w => w.length > 0);
 
         // Use wordCount from backend if available
-        const wordCount = cfg.Content?.WordCount ||  // PascalCase
-            contentWordCount ||                      // camelCase
-            config.wordCount ||
-            this.words.length;
+        const wordCount = boundedInteger(
+            caseInsensitiveField(nested, 'wordCount')
+                ?? contentWordCount
+                ?? caseInsensitiveField(cfg, 'wordCount'),
+            this.words.length, 1, 100_000);
 
         this.state = {
             isRunning: false,
@@ -156,6 +190,7 @@ export class ReadingComprehensionEngine implements BaseEngine {
             timeElapsed: 0,
             errors: 0
         };
+        this.configuredTotalSteps = wordCount;
 
         this.readingState = {
             phase: 'reading',
@@ -184,6 +219,7 @@ export class ReadingComprehensionEngine implements BaseEngine {
     }
 
     start(): void {
+        if (this.state.isRunning || this.state.isCompleted) return;
         this.state.isRunning = true;
         this.state.isPaused = false;
         this.state.isCompleted = false;
@@ -200,7 +236,7 @@ export class ReadingComprehensionEngine implements BaseEngine {
                 // Check max time limit (crucial for Skimming/Speed Reading tests)
                 const maxTime = this.config.timing?.maxReadingTimeMs;
                 if (maxTime && this.state.timeElapsed >= maxTime) {
-                    this.completeReading();
+                    this.completeReading(true);
                 }
 
                 this.callbacks.onStateChange({ ...this.state });
@@ -244,7 +280,7 @@ export class ReadingComprehensionEngine implements BaseEngine {
             isPaused: false,
             isCompleted: false,
             currentStep: 0,
-            totalSteps: this.words.length,
+            totalSteps: this.configuredTotalSteps,
             score: 0,
             accuracy: 100,
             timeElapsed: 0,
@@ -280,24 +316,25 @@ export class ReadingComprehensionEngine implements BaseEngine {
     /**
      * Called when user clicks "Okudum" button
      */
-    completeReading(): void {
+    completeReading(force = false): void {
+        if (this.state.isCompleted || !this.state.isRunning) return;
         // Check minimum reading time (optional)
         const minTime = this.config.timing?.minReadingTimeMs || 0;
-        if (this.state.timeElapsed < minTime) {
-            // Could show a warning to user here
-        }
+        if (!force && this.state.timeElapsed < minTime) return;
 
         this.readingState.phase = 'completed';
         this.complete();
     }
 
     private complete(): void {
+        if (this.state.isCompleted) return;
         clearInterval(this.timerInterval);
 
         this.state.isCompleted = true;
         this.state.isRunning = false;
-        this.state.currentStep = this.words.length;
-        this.state.score = 100; // Initial score, will be updated after questions
+        this.state.currentStep = this.configuredTotalSteps;
+        this.state.score = 0;
+        this.state.accuracy = 0;
 
         // Notify component that reading is done
         this.callbacks.onStateChange({ ...this.state });
@@ -307,11 +344,11 @@ export class ReadingComprehensionEngine implements BaseEngine {
         const wpm = readingTimeMinutes > 0 ? Math.round(this.words.length / readingTimeMinutes) : 0;
 
         const result: EngineResult = {
-            score: 100, // Will be updated after questions
-            accuracy: 100,
+            score: 0,
+            accuracy: 0,
             totalTime: this.state.timeElapsed,
-            totalSteps: this.words.length,
-            completedSteps: this.words.length,
+            totalSteps: this.configuredTotalSteps,
+            completedSteps: this.configuredTotalSteps,
             errors: 0,
             details: {
                 wpm: wpm,
@@ -363,7 +400,7 @@ export class ReadingComprehensionEngine implements BaseEngine {
 
     canComplete(): boolean {
         // Can complete if either scrolled to end or spent enough time
-        const minTime = this.config.timing?.minReadingTimeMs || 5000; // Default 5 seconds minimum
+        const minTime = this.config.timing?.minReadingTimeMs ?? 5000;
         return this.state.timeElapsed >= minTime || this.readingState.hasScrolledToEnd;
     }
 }

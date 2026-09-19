@@ -59,7 +59,6 @@ const engineRegistry: Partial<Record<EngineType, EngineConstructor>> = {
     'scan_find': ScanFindEngine,
     'reading_comprehension': ReadingComprehensionEngine,
     'exam_simulation': ExamSimulationEngine,
-    'free_reading': ReadingComprehensionEngine,  // Uses same engine as comprehension (self-paced reading + questions)
     'regression_reduction': RegressionReductionEngine,
     'subvocalization_reduction': SubvocalizationReductionEngine,
     'visualization': VisualizationEngine,
@@ -74,6 +73,7 @@ const engineRegistry: Partial<Record<EngineType, EngineConstructor>> = {
 
 export class EngineFactory {
     static create(engineType: EngineType): BaseEngine | null {
+        if (engineType === 'free_reading') return new ReadingComprehensionEngine('free_reading');
         const EngineClass = engineRegistry[engineType];
 
         if (!EngineClass) {
@@ -85,10 +85,10 @@ export class EngineFactory {
     }
 
     static isSupported(engineType: string): boolean {
-        return engineType in engineRegistry;
+        return engineType === 'free_reading' || engineType in engineRegistry;
     }
 
     static getSupportedEngines(): EngineType[] {
-        return Object.keys(engineRegistry) as EngineType[];
+        return [...Object.keys(engineRegistry), 'free_reading'] as EngineType[];
     }
 }

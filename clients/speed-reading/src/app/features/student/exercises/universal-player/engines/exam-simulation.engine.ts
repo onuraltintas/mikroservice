@@ -10,6 +10,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
+import { boundedInteger, boundedText, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './reading-pacer-safety';
 
 interface ExamSimulationConfig extends EngineConfig {
     // Backend session data
@@ -63,6 +64,7 @@ export class ExamSimulationEngine implements BaseEngine {
     private text: string = '';
     private title: string = '';
     private words: string[] = [];
+    private configuredTotalSteps = 0;
     private readingState: ReadingState = {
         phase: 'reading',
         scrollProgress: 0,
@@ -77,26 +79,69 @@ export class ExamSimulationEngine implements BaseEngine {
     ];
 
     initialize(config: ExamSimulationConfig, callbacks: EngineCallbacks): void {
-        this.config = config;
         this.callbacks = callbacks;
         const cfg = config as any;
+        const nested = recordOrEmpty(caseInsensitiveField(cfg, 'engineConfig'));
+        const timing = mergeCaseInsensitiveRecords(cfg, nested, 'timing');
+        const display = mergeCaseInsensitiveRecords(cfg, nested, 'display');
+        const configuredFontSize = typeof display['fontsize'] === 'string'
+            ? display['fontsize'].toLowerCase() : '';
+        const fontSize = ['small', 'medium', 'large'].includes(configuredFontSize)
+            ? configuredFontSize as 'small' | 'medium' | 'large' : 'medium';
+        const lineHeight = typeof display['lineheight'] === 'number' && Number.isFinite(display['lineheight'])
+            ? Math.min(3, Math.max(1, display['lineheight'])) : 1.8;
+        const minReadingTimeMs = boundedInteger(timing['minreadingtimems'], 0, 0, 3_600_000);
+        const configuredMaximum = boundedInteger(timing['maxreadingtimems'], 0, 0, 3_600_000);
+        const maxReadingTimeMs = configuredMaximum > 0
+            ? Math.max(minReadingTimeMs, configuredMaximum) : 0;
+        this.config = {
+            ...config,
+            timing: { minReadingTimeMs, maxReadingTimeMs },
+            display: { ...display, fontSize, lineHeight }
+        };
 
         // Metin belirleme mantığı
         // ExamSimulation'da metin genellikle 'questions' dizisinin içindeki ilk sorudan veya genel 'content'ten gelir.
         // Şimdilik genel content'e bakıyoruz.
 
-        let extractedText = config.readingTextContent ||
-            cfg.Content?.Text ||
-            cfg.content?.text ||
-            config.text;
+        const nestedContent = caseInsensitiveField(nested, 'content');
+        const rootContent = caseInsensitiveField(cfg, 'content');
+        const nestedContentRecord = recordOrEmpty(nestedContent);
+        const rootContentRecord = recordOrEmpty(rootContent);
+        const contentText = (typeof nestedContent === 'string'
+            ? nestedContent
+            : caseInsensitiveField(nestedContentRecord, 'text'))
+            ?? (typeof rootContent === 'string'
+                ? rootContent
+                : caseInsensitiveField(rootContentRecord, 'text'));
+        const contentWordCount = caseInsensitiveField(nestedContentRecord, 'wordCount')
+            ?? caseInsensitiveField(rootContentRecord, 'wordCount');
+        const dedicatedRawText = caseInsensitiveField(nested, 'readingTextContent')
+            ?? caseInsensitiveField(cfg, 'readingTextContent')
+            ?? contentText
+            ?? caseInsensitiveField(nested, 'text')
+            ?? caseInsensitiveField(cfg, 'text');
+        const assessmentMode = cfg.isAssessmentMode === true || cfg.IsAssessmentMode === true;
+        const invalidAssessmentText = dedicatedRawText !== undefined
+            && (typeof dedicatedRawText !== 'string' || dedicatedRawText.length > 100_000);
+        let extractedText = typeof dedicatedRawText === 'string'
+            ? boundedText(dedicatedRawText, '', 100_000)
+            : '';
+        if ((!extractedText || invalidAssessmentText) && assessmentMode) {
+            throw new Error('Assessment reading text was not provided by the server.');
+        }
 
         // Check if text is in questions array (First question's text)
         // Backend sends PascalCase (Questions), also check camelCase
-        const questionsArray = cfg.Questions || cfg.questions;
-        if (!extractedText && questionsArray && Array.isArray(questionsArray) && questionsArray.length > 0) {
+        const questionsArray = caseInsensitiveField(nested, 'questions') ?? caseInsensitiveField(cfg, 'questions');
+        if (!assessmentMode && !extractedText && questionsArray && Array.isArray(questionsArray) && questionsArray.length > 0) {
             // Try various casing and property names
             const q = questionsArray[0];
-            extractedText = q.Content || q.content || q.QuestionText || q.questionText || q.Text || q.text;
+            const rawQuestionText = caseInsensitiveField(recordOrEmpty(q), 'content')
+                ?? caseInsensitiveField(recordOrEmpty(q), 'questionText')
+                ?? caseInsensitiveField(recordOrEmpty(q), 'text');
+            extractedText = typeof rawQuestionText === 'string'
+                ? boundedText(rawQuestionText, '', 100_000) : '';
             if (extractedText) {
             }
         }
@@ -111,10 +156,11 @@ export class ExamSimulationEngine implements BaseEngine {
 
         this.words = this.text.split(/\s+/).filter(w => w.length > 0);
 
-        const wordCount = cfg.Content?.WordCount ||
-            cfg.content?.wordCount ||
-            config.wordCount ||
-            this.words.length;
+        const wordCount = boundedInteger(
+            caseInsensitiveField(nested, 'wordCount')
+                ?? contentWordCount
+                ?? caseInsensitiveField(cfg, 'wordCount'),
+            this.words.length, 1, 100_000);
 
         this.state = {
             isRunning: false,
@@ -127,6 +173,7 @@ export class ExamSimulationEngine implements BaseEngine {
             timeElapsed: 0,
             errors: 0
         };
+        this.configuredTotalSteps = wordCount;
 
         this.readingState = {
             phase: 'reading',
@@ -149,6 +196,7 @@ export class ExamSimulationEngine implements BaseEngine {
     private pauseStartTime = 0;
 
     start(): void {
+        if (this.state.isRunning || this.state.isCompleted) return;
         this.state.isRunning = true;
         this.state.isPaused = false;
         this.state.isCompleted = false;
@@ -162,7 +210,7 @@ export class ExamSimulationEngine implements BaseEngine {
 
                 const maxTime = this.config.timing?.maxReadingTimeMs;
                 if (maxTime && this.state.timeElapsed >= maxTime) {
-                    this.completeReading();
+                    this.completeReading(true);
                 }
 
                 this.callbacks.onStateChange({ ...this.state });
@@ -230,22 +278,29 @@ export class ExamSimulationEngine implements BaseEngine {
         }
     }
 
-    completeReading(): void {
+    completeReading(force = false): void {
+        if (this.state.isCompleted || !this.state.isRunning) return;
+        const minTime = this.config.timing?.minReadingTimeMs || 0;
+        if (!force && this.state.timeElapsed < minTime) return;
         this.readingState.phase = 'completed';
         this.complete();
     }
 
     private complete(): void {
+        if (this.state.isCompleted) return;
         clearInterval(this.timerInterval);
         this.state.isCompleted = true;
         this.state.isRunning = false;
+        this.state.currentStep = this.configuredTotalSteps;
+        this.state.score = 0;
+        this.state.accuracy = 0;
 
         const result: EngineResult = {
-            score: 100,
-            accuracy: 100,
+            score: 0,
+            accuracy: 0,
             totalTime: this.state.timeElapsed,
-            totalSteps: this.words.length,
-            completedSteps: this.words.length,
+            totalSteps: this.configuredTotalSteps,
+            completedSteps: this.configuredTotalSteps,
             errors: 0,
             details: {
                 readingTimeMs: this.state.timeElapsed
