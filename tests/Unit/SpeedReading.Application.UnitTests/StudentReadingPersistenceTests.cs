@@ -18,6 +18,37 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class StudentReadingPersistenceTests
 {
     [Fact]
+    public async Task Unsupported_action_does_not_advance_a_generic_exercise_session()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(
+            typeId, "Göz hareketi", "Hareketli hedef", "motion_path"));
+        context.Exercises.Add(Exercise.Create(
+            "Hareketli hedef", "motion_path", "{\"totalSteps\":5}", 1,
+            studentId, typeId, id: exerciseId));
+        await context.SaveChangesAsync();
+
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(
+            studentId,
+            new StartExerciseSessionRequest { ExerciseId = exerciseId },
+            CancellationToken.None);
+
+        var response = await service.ValidateActionAsync(
+            studentId,
+            started.SessionId,
+            new ExerciseActionRequest { Action = "invented_client_success" },
+            CancellationToken.None);
+
+        response.IsValid.Should().BeFalse();
+        var session = await context.ExerciseSessions.SingleAsync(item => item.Id == started.SessionId);
+        session.CurrentStep.Should().Be(0);
+    }
+
+    [Fact]
     public async Task Reading_text_details_hide_content_for_a_different_age_group()
     {
         await using var context = CreateContext();
