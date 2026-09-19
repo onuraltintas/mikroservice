@@ -597,6 +597,33 @@ public sealed class SpeedReadingOwnedDomainTests
         action.Should().NotThrow();
     }
 
+    [Theory]
+    [InlineData("{\"engineType\":\"motion_path\",\"mode\":7}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"path\":{\"type\":7}}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"target\":{\"type\":\"square\"}}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"target\":{\"size\":\"huge\"}}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"Targets\":[{}]}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"Targets\":[{\"x\":50}]}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"Targets\":[{\"x\":50,\"y\":50,\"number\":{}}]}")]
+    public void Active_motion_path_configuration_rejects_malformed_semantic_fields(string configuration)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, "motion_path");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Theory]
+    [InlineData("{\"engineType\":\"motion_path\",\"timing\":{\"durationMs\":5000,\"durationSeconds\":6}}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"timing\":{\"durationSeconds\":5,\"totalDurationSeconds\":6}}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"mode\":\"fixation\",\"engineConfig\":{\"mode\":\"saccade\"}}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"timing\":{\"holdMs\":50},\"engineConfig\":{\"timing\":{\"holdMs\":51}}}")]
+    public void Active_motion_path_configuration_rejects_conflicting_effective_values(string configuration)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, "motion_path");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
     [Fact]
     public void Active_program_requires_a_usable_weekly_plan()
     {
