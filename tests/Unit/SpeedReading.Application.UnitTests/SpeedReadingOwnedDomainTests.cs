@@ -209,6 +209,40 @@ public sealed class SpeedReadingOwnedDomainTests
         action.Should().Throw<ArgumentException>();
     }
 
+    [Theory]
+    [InlineData(2)]
+    [InlineData(8)]
+    public void Active_grid_configuration_rejects_unsupported_grid_sizes(int gridSize)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            $$"""{"engineType":"grid_interaction","gridSize":{{gridSize}},"sequenceType":"numeric"}""",
+            "grid_interaction");
+
+        action.Should().Throw<ArgumentException>()
+            .WithMessage("*3 ile 7*");
+    }
+
+    [Fact]
+    public void Active_grid_configuration_rejects_unknown_sequence_types()
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"grid_interaction","gridSize":5,"sequenceType":"random_words"}""",
+            "grid_interaction");
+
+        action.Should().Throw<ArgumentException>()
+            .WithMessage("*sıra türü*");
+    }
+
+    [Fact]
+    public void Active_grid_configuration_accepts_supported_bounds()
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"grid_interaction","gridSize":7,"sequenceType":"mixed"}""",
+            "grid_interaction");
+
+        action.Should().NotThrow();
+    }
+
     [Fact]
     public void Active_program_requires_a_usable_weekly_plan()
     {
