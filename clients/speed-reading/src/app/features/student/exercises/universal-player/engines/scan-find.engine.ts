@@ -5,6 +5,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
+import { boundedInteger, boundedStringArray, boundedText, recordOrEmpty } from './reading-pacer-safety';
 
 export interface ScanFindConfig extends EngineConfig {
     // Backend session data format
@@ -70,6 +71,7 @@ export class ScanFindEngine implements BaseEngine {
     private targetWords: string[] = [];
     private currentRoundIndex = 0;
     private totalFoundUniqueAcrossRounds = 0;
+    private totalTargetCountAcrossRounds = 0;
     private foundUniqueWordsInRound = new Set<string>();
 
     // Dummy text generator
@@ -89,10 +91,61 @@ export class ScanFindEngine implements BaseEngine {
     initialize(config: EngineConfig, callbacks: EngineCallbacks): void {
         this.config = config as ScanFindConfig;
         this.callbacks = callbacks;
-        this.currentRoundIndex = this.config.currentRound || 0;
-        this.totalFoundUniqueAcrossRounds = 0;
+        this.normalizeConfig();
+        this.currentRoundIndex = boundedInteger(this.config.currentRound, 0, 0,
+            Math.max(0, (this.config.scanningRounds?.length || 1) - 1));
+        this.totalFoundUniqueAcrossRounds = this.config.scanningRounds
+            ?.slice(0, this.currentRoundIndex)
+            .reduce((sum, round) => sum + this.requiredTargetCount(round.targets), 0) ?? 0;
+        this.totalTargetCountAcrossRounds = this.config.scanningRounds?.length
+            ? this.config.scanningRounds.reduce((sum, round) => sum + this.requiredTargetCount(round.targets), 0)
+            : this.requiredTargetCount(this.config.targets?.words || []);
 
         this.generateContent();
+        this.state.totalSteps = this.totalTargetCountAcrossRounds;
+    }
+
+    private normalizeConfig(): void {
+        const content = recordOrEmpty(this.config.content);
+        const targets = recordOrEmpty(this.config.targets);
+        const timing = recordOrEmpty(this.config.timing);
+        const backend = this.config as any;
+        const caseSensitive = targets['caseSensitive'] === true;
+        const normalizeTarget = (word: string) => caseSensitive ? word : word.toLowerCase();
+        this.config.content = {
+            source: typeof content['source'] === 'string' ? content['source'] : 'random_text',
+            text: typeof content['text'] === 'string' || typeof backend.ReadingTextContent === 'string' || typeof backend.readingTextContent === 'string'
+                ? boundedText(content['text'] ?? backend.ReadingTextContent ?? backend.readingTextContent, '')
+                : undefined,
+            wordCount: boundedInteger(content['wordCount'], 100, 1, 10000)
+        };
+        this.config.targets = {
+            words: [...new Set(boundedStringArray(targets['words'], 100, 100).map(normalizeTarget))],
+            caseSensitive,
+            mode: targets['mode'] === 'find_any' ? 'find_any' : 'find_all'
+        };
+        this.config.timing = { timeLimitSec: boundedInteger(timing['timeLimitSec'], 3600, 1, 3600) };
+        this.config.timeLimitSeconds = boundedInteger(
+            this.config.timeLimitSeconds ?? this.config.timeLimit ?? this.config.timing.timeLimitSec,
+            3600, 1, 3600);
+        this.config.timeLimit = this.config.timeLimitSeconds;
+        this.config.scanningRounds = Array.isArray(this.config.scanningRounds)
+            ? this.config.scanningRounds
+                .filter(round => round !== null && typeof round === 'object' && !Array.isArray(round))
+                .slice(0, 50)
+                .map(round => ({
+                    ...round,
+                    textContent: boundedText(round.textContent, ''),
+                    targets: [...new Set(boundedStringArray(round.targets, 100, 100).map(normalizeTarget))],
+                    foundTargets: [...new Set(boundedStringArray(round.foundTargets, 100, 100).map(normalizeTarget))]
+                }))
+            : undefined;
+    }
+
+    private requiredTargetCount(targets: string[]): number {
+        return this.config.targets?.mode === 'find_any'
+            ? Math.min(1, targets.length)
+            : targets.length;
     }
 
     private generateContent(): void {
@@ -120,7 +173,11 @@ export class ScanFindEngine implements BaseEngine {
         }
 
         const caseSensitive = this.config.targets?.caseSensitive || false;
-        this.targetWords = targetWordsList.map(w => caseSensitive ? w : w.toLowerCase());
+        this.targetWords = [...new Set(targetWordsList.map(w => caseSensitive ? w : w.toLowerCase()))];
+        const restoredTargets = (currentRound?.foundTargets || [])
+            .filter(word => this.targetWords.includes(word));
+        this.foundUniqueWordsInRound = new Set(
+            this.config.targets?.mode === 'find_any' ? restoredTargets.slice(0, 1) : restoredTargets);
 
         const splitWords = rawText.split(/\s+/).filter(w => w.length > 0);
 
@@ -133,17 +190,15 @@ export class ScanFindEngine implements BaseEngine {
                 text: w,
                 id: index,
                 isTarget: isTarget,
-                found: false
+                found: isTarget && this.foundUniqueWordsInRound.has(checkWord)
             };
         });
 
         // Use unique word count for targetCount to match UI chips
-        this.targetCount = this.targetWords.length;
-        this.foundCount = 0;
-        this.foundUniqueWordsInRound.clear();
+        this.targetCount = this.requiredTargetCount(this.targetWords);
+        this.foundCount = Math.min(this.targetCount, this.foundUniqueWordsInRound.size);
 
-        this.state.currentStep = 0;
-        this.state.totalSteps = this.targetCount;
+        this.state.currentStep = this.totalFoundUniqueAcrossRounds + this.foundCount;
     }
 
     getTargetWords(): string[] {
@@ -160,7 +215,7 @@ export class ScanFindEngine implements BaseEngine {
                 this.state.timeElapsed = Date.now() - this.startTime;
 
                 const timeLimitSec = this.config.timeLimit || this.config.timeLimitSeconds || this.config.timing?.timeLimitSec;
-                if (timeLimitSec && this.state.timeElapsed > timeLimitSec * 1000) {
+                if (timeLimitSec && this.state.timeElapsed >= timeLimitSec * 1000) {
                     this.complete();
                 }
 
@@ -170,6 +225,12 @@ export class ScanFindEngine implements BaseEngine {
 
         this.callbacks.onStart();
         this.callbacks.onStateChange({ ...this.state });
+        if (this.targetCount === 0) {
+            if (!this.advanceToNextPlayableRound())
+                this.complete();
+        } else if (this.foundCount >= this.targetCount) {
+            this.nextRound();
+        }
     }
 
     handleWordClick(index: number): void {
@@ -189,7 +250,7 @@ export class ScanFindEngine implements BaseEngine {
             if (!this.foundUniqueWordsInRound.has(checkWord)) {
                 this.foundUniqueWordsInRound.add(checkWord);
                 this.foundCount = this.foundUniqueWordsInRound.size;
-                this.state.currentStep = this.foundCount;
+                this.state.currentStep = this.totalFoundUniqueAcrossRounds + this.foundCount;
                 this.callbacks.onStepComplete(this.foundCount, true);
             }
 
@@ -204,17 +265,32 @@ export class ScanFindEngine implements BaseEngine {
     }
 
     private nextRound(): void {
-        this.totalFoundUniqueAcrossRounds += this.foundUniqueWordsInRound.size;
+        this.totalFoundUniqueAcrossRounds += this.foundCount;
+        this.foundUniqueWordsInRound.clear();
         this.currentRoundIndex++;
 
         if (this.config.scanningRounds && this.currentRoundIndex < this.config.scanningRounds.length) {
             this.foundCount = 0;
-            this.foundUniqueWordsInRound.clear();
             this.generateContent();
+            if (this.targetCount === 0 && !this.advanceToNextPlayableRound()) {
+                this.complete();
+                return;
+            }
             this.callbacks.onStateChange({ ...this.state });
         } else {
             this.complete();
         }
+    }
+
+    private advanceToNextPlayableRound(): boolean {
+        const rounds = this.config.scanningRounds;
+        if (!rounds)
+            return false;
+        while (this.targetCount === 0 && this.currentRoundIndex < rounds.length - 1) {
+            this.currentRoundIndex++;
+            this.generateContent();
+        }
+        return this.targetCount > 0;
     }
 
     pause(): void {
@@ -244,7 +320,7 @@ export class ScanFindEngine implements BaseEngine {
             isPaused: false,
             isCompleted: false,
             currentStep: 0,
-            totalSteps: this.config.scanningRounds?.length || 1,
+            totalSteps: this.totalTargetCountAcrossRounds,
             score: 0,
             accuracy: 0,
             timeElapsed: 0,
@@ -269,19 +345,17 @@ export class ScanFindEngine implements BaseEngine {
     }
 
     private complete(): void {
-        this.totalFoundUniqueAcrossRounds += this.foundUniqueWordsInRound.size;
         this.state.isCompleted = true;
         this.state.isRunning = false;
 
-        const totalRounds = this.config.scanningRounds?.length || 1;
-        if (this.currentRoundIndex >= totalRounds) {
-            this.state.accuracy = 100;
-        } else {
-            this.state.accuracy = Math.round((this.currentRoundIndex / totalRounds) * 100);
-        }
-
-        this.state.score = (this.totalFoundUniqueAcrossRounds * 100) - (this.state.errors * 10);
-        this.state.currentStep = this.state.totalSteps;
+        const foundTargets = Math.min(
+            this.totalTargetCountAcrossRounds,
+            this.totalFoundUniqueAcrossRounds + this.foundCount);
+        this.state.accuracy = this.totalTargetCountAcrossRounds > 0
+            ? Math.round(foundTargets / this.totalTargetCountAcrossRounds * 100)
+            : 0;
+        this.state.score = Math.max(0, this.state.accuracy - (this.state.errors * 10));
+        this.state.currentStep = foundTargets;
 
         clearInterval(this.timerInterval);
 
@@ -290,10 +364,10 @@ export class ScanFindEngine implements BaseEngine {
             accuracy: this.state.accuracy,
             totalTime: this.state.timeElapsed,
             totalSteps: this.state.totalSteps,
-            completedSteps: this.state.currentStep,
+            completedSteps: foundTargets,
             errors: this.state.errors,
             details: {
-                foundCount: this.totalFoundUniqueAcrossRounds,
+                foundCount: foundTargets,
                 roundsCompleted: this.currentRoundIndex
             }
         };

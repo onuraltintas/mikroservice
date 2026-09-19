@@ -141,6 +141,13 @@ public static class ExerciseConfigurationRules
                     ValidateWordHighlightConfiguration(nested.Value);
                 ValidateEffectiveWordHighlightConfiguration(root, nested);
             }
+            if (configured is "scan_find" or "scanning" or "skimming")
+            {
+                ValidateScanConfiguration(root);
+                if (nested.HasValue)
+                    ValidateScanConfiguration(nested.Value);
+                ValidateEffectiveScanConfiguration(root, nested);
+            }
         }
         catch (JsonException exception)
         {
@@ -380,6 +387,65 @@ public static class ExerciseConfigurationRules
         ValidateOptionalInlineText(config);
     }
 
+    private static void ValidateScanConfiguration(JsonElement config)
+    {
+        foreach (var name in new[] { "content", "targets", "timing", "visuals" })
+            ValidateOptionalObject(config, name, "Tarama egzersizi");
+        ValidateOptionalIntRange(config, "timeLimitSeconds", 1, 3_600, "Tarama süre sınırı");
+        ValidateOptionalIntRange(config, "timeLimit", 1, 3_600, "Tarama süre sınırı");
+
+        if (TryGetObject(config, "timing") is { } timing)
+            ValidateOptionalIntRange(timing, "timeLimitSec", 1, 3_600, "Tarama süre sınırı");
+        if (TryGetObject(config, "content") is { } content)
+        {
+            ValidateOptionalIntRange(content, "wordCount", 1, 10_000, "Tarama metni kelime sayısı");
+            ValidateOptionalBoundedString(content, "text", 100_000, "Tarama metni");
+            if (TryGetProperty(content, "source") is { } source
+                && (source.ValueKind != JsonValueKind.String
+                    || source.GetString()?.ToLowerInvariant() is not ("text_id" or "random_text")))
+            {
+                throw new ArgumentException("Tarama içerik kaynağı text_id veya random_text olmalıdır.");
+            }
+        }
+        if (TryGetObject(config, "targets") is { } targets)
+        {
+            ValidateOptionalStringArray(targets, "words", 100, 100, "Tarama hedefleri");
+            if (TryGetProperty(targets, "caseSensitive") is { ValueKind: not JsonValueKind.True and not JsonValueKind.False })
+                throw new ArgumentException("Tarama caseSensitive alanı boolean olmalıdır.");
+            if (TryGetProperty(targets, "mode") is { } mode
+                && (mode.ValueKind != JsonValueKind.String
+                    || mode.GetString()?.ToLowerInvariant() is not ("find_all" or "find_any")))
+            {
+                throw new ArgumentException("Tarama hedef modu find_all veya find_any olmalıdır.");
+            }
+        }
+
+        if (TryGetProperty(config, "scanningRounds") is not { } rounds)
+            return;
+        if (rounds.ValueKind != JsonValueKind.Array || rounds.GetArrayLength() > 50)
+            throw new ArgumentException("Tarama turları en fazla 50 öğe içermelidir.");
+        foreach (var round in rounds.EnumerateArray())
+        {
+            if (round.ValueKind != JsonValueKind.Object)
+                throw new ArgumentException("Tarama turları nesne olmalıdır.");
+            ValidateOptionalBoundedString(round, "textContent", 100_000, "Tarama turu metni");
+            ValidateOptionalStringArray(round, "targets", 100, 100, "Tarama turu hedefleri");
+            ValidateOptionalStringArray(round, "foundTargets", 100, 100, "Bulunan tarama hedefleri");
+        }
+    }
+
+    private static void ValidateEffectiveScanConfiguration(JsonElement root, JsonElement? nested)
+    {
+        var limits = ReadInts(root, "timeLimitSeconds", "timeLimit");
+        limits.AddRange(ReadNestedInts(root, "timing", "timeLimitSec"));
+        if (nested.HasValue)
+        {
+            limits.AddRange(ReadInts(nested.Value, "timeLimitSeconds", "timeLimit"));
+            limits.AddRange(ReadNestedInts(nested.Value, "timing", "timeLimitSec"));
+        }
+        ValidateConsistentValues(limits, "Tarama süre sınırı");
+    }
+
     private static void ValidateEffectiveTextStreamConfiguration(JsonElement root, JsonElement? nested)
     {
         var contentSourceCount = CountTextStreamContentSources(root)
@@ -521,6 +587,18 @@ public static class ExerciseConfigurationRules
             return;
         if (text.ValueKind != JsonValueKind.String || (text.GetString()?.Length ?? 0) > 100_000)
             throw new ArgumentException("Egzersiz metni en fazla 100000 karakter olmalıdır.");
+    }
+
+    private static void ValidateOptionalBoundedString(
+        JsonElement config,
+        string propertyName,
+        int maximumLength,
+        string displayName)
+    {
+        if (TryGetProperty(config, propertyName) is not { } property)
+            return;
+        if (property.ValueKind != JsonValueKind.String || (property.GetString()?.Length ?? 0) > maximumLength)
+            throw new ArgumentException($"{displayName} en fazla {maximumLength} karakter olmalıdır.");
     }
 
     private static void ValidateNoCaseInsensitiveDuplicateProperties(JsonElement element)
