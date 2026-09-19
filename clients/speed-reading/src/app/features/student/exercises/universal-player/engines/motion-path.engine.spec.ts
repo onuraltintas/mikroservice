@@ -287,4 +287,19 @@ describe('MotionPathEngine', () => {
     expect(engine.getTargetPosition().x).toBe(20);
     expect(engine.getFixationDuration()).toBe(600);
   });
+
+  it('merges complementary root and nested containers regardless of casing', () => {
+    const engine = new MotionPathEngine();
+    engine.initialize({
+      TIMING: { durationSeconds: 5 },
+      TARGET: { COLOR: 'red' },
+      ENGINECONFIG: {
+        timing: { HOLDMS: 750 },
+        target: { TYPE: 'arrow' }
+      }
+    } as any, callbacks(() => undefined));
+
+    expect(engine.getFixationDuration()).toBe(750);
+    expect(engine.getTargetConfig()).toEqual(jasmine.objectContaining({ type: 'arrow', color: 'red' }));
+  });
 });
