@@ -61,6 +61,44 @@ describe('reading pacer runtime safety', () => {
     expect(engine.state.totalSteps).toBe(2);
   });
 
+  it('starts stream and highlight engines only once', fakeAsync(() => {
+    let starts = 0;
+    const trackedCallbacks = { ...callbacks, onStart: () => starts++ };
+    const stream = new TextStreamEngine();
+    const highlight = new WordHighlightEngine();
+    stream.initialize({ Words: ['bir'] } as any, trackedCallbacks);
+    highlight.initialize({ content: { text: 'bir iki' } } as any, trackedCallbacks);
+
+    stream.start();
+    stream.start();
+    highlight.start();
+    highlight.start();
+
+    expect(starts).toBe(2);
+    stream.destroy();
+    highlight.destroy();
+  }));
+
+  it('completes each reading pacer engine only once', () => {
+    let completions = 0;
+    const trackedCallbacks = { ...callbacks, onComplete: () => completions++ };
+    const stream = new TextStreamEngine();
+    const fade = new TextFadeEngine();
+    const highlight = new WordHighlightEngine();
+    stream.initialize({ Words: ['bir'] } as any, trackedCallbacks);
+    fade.initialize({ content: { text: 'bir' } } as any, trackedCallbacks);
+    highlight.initialize({ content: { text: 'bir' } } as any, trackedCallbacks);
+
+    stream.finish();
+    stream.finish();
+    (fade as any).complete();
+    (fade as any).complete();
+    (highlight as any).complete();
+    (highlight as any).complete();
+
+    expect(completions).toBe(3);
+  });
+
   it('clamps text stream duration and content count from legacy configuration', () => {
     const engine = new TextStreamEngine();
 
