@@ -340,6 +340,42 @@ public sealed class SpeedReadingOwnedDomainTests
         action.Should().Throw<ArgumentException>();
     }
 
+    [Theory]
+    [InlineData("{\"engineType\":\"text_stream\",\"timing\":{\"durationMs\":20}}", "text_stream")]
+    [InlineData("{\"engineType\":\"text_stream\",\"content\":{\"count\":501}}", "text_stream")]
+    [InlineData("{\"engineType\":\"text_stream\",\"adaptive\":{\"minDurationMs\":400,\"maxDurationMs\":200}}", "text_stream")]
+    [InlineData("{\"engineType\":\"text_fade\",\"fading\":{\"speedWpm\":10,\"lagMs\":3000}}", "text_fade")]
+    [InlineData("{\"engineType\":\"text_fade\",\"fading\":{\"speedWpm\":200,\"lagMs\":20000}}", "text_fade")]
+    [InlineData("{\"engineType\":\"word_highlight\",\"pacer\":{\"speedWpm\":1600,\"chunkSize\":1}}", "word_highlight")]
+    [InlineData("{\"engineType\":\"word_highlight\",\"pacer\":{\"speedWpm\":200,\"chunkSize\":0}}", "word_highlight")]
+    [InlineData("{\"engineType\":\"word_highlight\",\"timing\":{\"timeLimitSec\":7200}}", "word_highlight")]
+    public void Active_reading_pacer_configuration_rejects_unsupported_values(
+        string configuration,
+        string engineType)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, engineType);
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Active_reading_pacer_configurations_accept_supported_bounds()
+    {
+        var stream = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"text_stream","timing":{"durationMs":50,"intervalMs":0},"content":{"count":500},"adaptive":{"minDurationMs":50,"maxDurationMs":500}}""",
+            "text_stream");
+        var fade = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"text_fade","fading":{"speedWpm":1500,"lagMs":10000}}""",
+            "text_fade");
+        var highlight = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"word_highlight","pacer":{"speedWpm":1500,"chunkSize":10},"timing":{"timeLimitSec":3600}}""",
+            "word_highlight");
+
+        stream.Should().NotThrow();
+        fade.Should().NotThrow();
+        highlight.Should().NotThrow();
+    }
+
     [Fact]
     public void Active_program_requires_a_usable_weekly_plan()
     {
