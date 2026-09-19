@@ -209,6 +209,37 @@ public sealed class StudentReadingPersistenceTests
     }
 
     [Fact]
+    public async Task Observation_only_motion_path_completion_does_not_increment_verified_gamification()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(
+            typeId, "Göz hareketi", "Hareketli hedef", "motion_path"));
+        context.Exercises.Add(Exercise.Create(
+            "Hareketli hedef", "motion_path", "{\"totalSteps\":5}", 1,
+            studentId, typeId, id: exerciseId));
+        await context.SaveChangesAsync();
+
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(
+            studentId,
+            new StartExerciseSessionRequest { ExerciseId = exerciseId },
+            CancellationToken.None);
+
+        var result = await service.CompleteAsync(
+            studentId,
+            started.SessionId,
+            new CompleteExerciseSessionRequest(),
+            CancellationToken.None);
+
+        result.MeasurementStatus.Should().Be(nameof(SpeedReadingMeasurementStatus.NotMeasured));
+        var stats = await context.UserGamifications.SingleOrDefaultAsync(item => item.UserId == studentId);
+        stats.Should().BeNull();
+    }
+
+    [Fact]
     public async Task Reading_text_details_hide_content_for_a_different_age_group()
     {
         await using var context = CreateContext();
