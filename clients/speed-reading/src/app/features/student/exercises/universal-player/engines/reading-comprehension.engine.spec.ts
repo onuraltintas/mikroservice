@@ -158,4 +158,15 @@ describe('ReadingComprehensionEngine', () => {
 
     expect(result).toEqual(jasmine.objectContaining({ score: 0, accuracy: 0 }));
   }));
+
+  it('merges root text with nested content metadata', () => {
+    const engine = new ReadingComprehensionEngine();
+    engine.initialize({
+      content: 'Bir iki üç.',
+      engineConfig: { content: { wordCount: 3 } }
+    } as any, callbacks(() => undefined));
+
+    expect(engine.getText()).toBe('Bir iki üç.');
+    expect(engine.state.totalSteps).toBe(3);
+  });
 });
