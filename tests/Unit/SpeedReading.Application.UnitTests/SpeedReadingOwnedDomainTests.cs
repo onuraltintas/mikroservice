@@ -678,6 +678,29 @@ public sealed class SpeedReadingOwnedDomainTests
         action.Should().NotThrow();
     }
 
+    [Theory]
+    [InlineData("{\"engineType\":\"reading_comprehension\",\"timing\":{\"minReadingTimeMs\":2000},\"engineConfig\":{\"timing\":{\"maxReadingTimeMs\":1000}}}")]
+    [InlineData("{\"engineType\":\"reading_comprehension\",\"readingTextContent\":\"bir\",\"engineConfig\":{\"readingTextContent\":\"iki\"}}")]
+    public void Active_reading_configuration_rejects_conflicting_effective_sources(string configuration)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, "reading_comprehension");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Active_reading_configuration_rejects_oversized_string_content()
+    {
+        var configuration = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            engineType = "exam_simulation",
+            content = new string('a', 100_001)
+        });
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, "exam_simulation");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
     [Fact]
     public void Active_program_requires_a_usable_weekly_plan()
     {

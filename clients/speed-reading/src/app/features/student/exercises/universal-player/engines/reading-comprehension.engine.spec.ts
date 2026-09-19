@@ -1,6 +1,7 @@
 import { ReadingComprehensionEngine } from './reading-comprehension.engine';
 import { fakeAsync, tick } from '@angular/core/testing';
 import { EngineCallbacks, EngineResult } from './base-engine.interface';
+import { EngineFactory } from './engine-factory';
 
 function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks {
   return {
@@ -96,4 +97,65 @@ describe('ReadingComprehensionEngine', () => {
     expect(engine.getFontSize()).toBe('medium');
     expect(engine.getLineHeight()).toBeGreaterThan(0);
   });
+
+  it('uses nested and case-insensitive timing and display configuration', () => {
+    const engine = new ReadingComprehensionEngine();
+    engine.initialize({
+      content: 'Bir iki.',
+      engineConfig: {
+        TIMING: { MINREADINGTIMEMS: 750 },
+        DISPLAY: { FONTSIZE: 'large', LINEHEIGHT: 2.2 }
+      }
+    } as any, callbacks(() => undefined));
+
+    expect(engine.getMinReadingTime()).toBe(750);
+    expect(engine.getFontSize()).toBe('large');
+    expect(engine.getLineHeight()).toBe(2.2);
+  });
+
+  it('uses one consistent bounded step count in state and result', fakeAsync(() => {
+    let result: EngineResult | undefined;
+    const engine = new ReadingComprehensionEngine();
+    engine.initialize({ content: 'Bir iki.', wordCount: 4 }, callbacks(value => result = value));
+
+    engine.start();
+    tick(100);
+    engine.handleInput({ action: 'complete_reading' });
+
+    expect(engine.state.currentStep).toBe(4);
+    expect(result).toEqual(jasmine.objectContaining({ totalSteps: 4, completedSteps: 4 }));
+  }));
+
+  it('treats zero minimum reading time consistently', () => {
+    const engine = new ReadingComprehensionEngine();
+    engine.initialize({ content: 'Bir iki.', timing: { minReadingTimeMs: 0 } }, callbacks(() => undefined));
+
+    expect(engine.canComplete()).toBeTrue();
+  });
+
+  it('normalizes malformed text and word count without throwing', () => {
+    const engine = new ReadingComprehensionEngine();
+
+    expect(() => engine.initialize({
+      readingTextContent: {} as any,
+      content: { text: {} as any },
+      wordCount: Number.MAX_SAFE_INTEGER
+    }, callbacks(() => undefined))).not.toThrow();
+    expect(engine.state.totalSteps).toBeLessThanOrEqual(100000);
+  });
+
+  it('keeps the free reading runtime identity', () => {
+    expect(EngineFactory.create('free_reading')?.engineType).toBe('free_reading');
+  });
+
+  it('reports the reading phase as unscored', fakeAsync(() => {
+    let result: EngineResult | undefined;
+    const engine = new ReadingComprehensionEngine();
+    engine.initialize({ content: 'Bir iki.' }, callbacks(value => result = value));
+    engine.start();
+    tick(100);
+    engine.handleInput({ action: 'complete_reading' });
+
+    expect(result).toEqual(jasmine.objectContaining({ score: 0, accuracy: 0 }));
+  }));
 });

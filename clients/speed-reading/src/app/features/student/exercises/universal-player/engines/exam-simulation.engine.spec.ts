@@ -40,4 +40,38 @@ describe('ExamSimulationEngine', () => {
     engine.handleInput({ action: 'complete_reading' });
     expect(completions).toBe(1);
   }));
+
+  it('does not use a question prompt as the assessment reading body', () => {
+    const engine = new ExamSimulationEngine();
+
+    expect(() => engine.initialize({
+      isAssessmentMode: true,
+      questions: [{ questionText: 'Soru metni okuma parçası değildir.' }]
+    } as any, callbacks(() => undefined))).toThrowError(/text/i);
+  });
+
+  it('accepts string content and nested timing from the server contract', () => {
+    const engine = new ExamSimulationEngine();
+    engine.initialize({
+      content: 'Sunucunun sınav okuma metni.',
+      engineConfig: { timing: { minReadingTimeMs: 700 } }
+    } as any, callbacks(() => undefined));
+
+    expect(engine.getText()).toBe('Sunucunun sınav okuma metni.');
+  });
+
+  it('normalizes malformed text and reports reading as unscored', fakeAsync(() => {
+    let result: EngineResult | undefined;
+    const engine = new ExamSimulationEngine();
+    expect(() => engine.initialize({
+      readingTextContent: {} as any,
+      wordCount: -3
+    }, callbacks(value => result = value))).not.toThrow();
+
+    engine.start();
+    tick(100);
+    engine.handleInput({ action: 'complete_reading' });
+    expect(engine.state.totalSteps).toBeGreaterThan(0);
+    expect(result).toEqual(jasmine.objectContaining({ score: 0, accuracy: 0 }));
+  }));
 });
