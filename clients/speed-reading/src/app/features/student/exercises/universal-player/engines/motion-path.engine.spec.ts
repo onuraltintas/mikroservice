@@ -189,6 +189,67 @@ describe('MotionPathEngine', () => {
     engine.start();
     tick(5100);
 
-    expect(result).toBeDefined();
+    expect(result).toEqual(jasmine.objectContaining({ accuracy: 0, score: 0, errors: 1 }));
+  }));
+
+  it('resumes a paused fixation transition before starting its hold timer', fakeAsync(() => {
+    let result: EngineResult | undefined;
+    const engine = new MotionPathEngine();
+    engine.initialize({
+      mode: 'fixation',
+      content: { points: 1, peripheralCount: 0 },
+      timing: { holdMs: 50 }
+    }, callbacks(value => result = value));
+
+    engine.start();
+    engine.pause();
+    engine.resume();
+    tick(60);
+    expect(result).toBeUndefined();
+    tick(140);
+    expect(result?.completedSteps).toBe(1);
+  }));
+
+  it('does not count a jumping step merely by resuming', fakeAsync(() => {
+    const engine = new MotionPathEngine();
+    engine.initialize({
+      mode: 'tracking',
+      path: { type: 'random_point' },
+      content: { points: 5 },
+      movement: { jumpIntervalMs: 50 }
+    }, callbacks(() => undefined));
+
+    engine.start();
+    expect(engine.state.currentStep).toBe(1);
+    engine.pause();
+    engine.resume();
+    expect(engine.state.currentStep).toBe(1);
+    tick(49);
+    expect(engine.state.currentStep).toBe(1);
+    tick(1);
+    expect(engine.state.currentStep).toBe(2);
+  }));
+
+  it('suspends peripheral feedback progression while paused', fakeAsync(() => {
+    let result: EngineResult | undefined;
+    const engine = new MotionPathEngine();
+    engine.initialize({
+      mode: 'fixation',
+      content: { points: 1, peripheralCount: 1 },
+      timing: { holdMs: 50 }
+    }, callbacks(value => result = value));
+
+    engine.start();
+    tick(199);
+    const answer = engine.getPeripheralChars()[0].char;
+    tick(1);
+    engine.handleInput({ type: 'keypress', key: answer });
+    engine.pause();
+    tick(1200);
+    expect(engine.state.currentStep).toBe(0);
+    expect(result).toBeUndefined();
+    engine.resume();
+    tick(1200);
+    expect(result?.completedSteps).toBe(1);
   }));
 });

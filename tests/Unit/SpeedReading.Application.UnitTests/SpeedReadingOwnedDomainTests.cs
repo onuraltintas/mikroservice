@@ -605,6 +605,7 @@ public sealed class SpeedReadingOwnedDomainTests
     [InlineData("{\"engineType\":\"motion_path\",\"Targets\":[{}]}")]
     [InlineData("{\"engineType\":\"motion_path\",\"Targets\":[{\"x\":50}]}")]
     [InlineData("{\"engineType\":\"motion_path\",\"Targets\":[{\"x\":50,\"y\":50,\"number\":{}}]}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"fixation\":{\"points\":501}}")]
     public void Active_motion_path_configuration_rejects_malformed_semantic_fields(string configuration)
     {
         var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, "motion_path");
@@ -617,6 +618,11 @@ public sealed class SpeedReadingOwnedDomainTests
     [InlineData("{\"engineType\":\"motion_path\",\"timing\":{\"durationSeconds\":5,\"totalDurationSeconds\":6}}")]
     [InlineData("{\"engineType\":\"motion_path\",\"mode\":\"fixation\",\"engineConfig\":{\"mode\":\"saccade\"}}")]
     [InlineData("{\"engineType\":\"motion_path\",\"timing\":{\"holdMs\":50},\"engineConfig\":{\"timing\":{\"holdMs\":51}}}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"timing\":{\"holdMs\":50},\"movement\":{\"fixationTimeMs\":51}}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"content\":{\"points\":2},\"engineConfig\":{\"fixation\":{\"points\":3}}}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"path\":{\"type\":\"horizontal\"},\"engineConfig\":{\"path\":{\"type\":\"vertical\"}}}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"target\":{\"type\":\"dot\"},\"engineConfig\":{\"target\":{\"type\":\"arrow\"}}}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"content\":{\"pattern\":\"horizontal\"},\"engineConfig\":{\"content\":{\"pattern\":\"vertical\"}}}")]
     public void Active_motion_path_configuration_rejects_conflicting_effective_values(string configuration)
     {
         var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, "motion_path");
