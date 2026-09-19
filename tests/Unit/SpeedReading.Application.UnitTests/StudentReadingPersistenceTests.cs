@@ -20,35 +20,31 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class StudentReadingPersistenceTests
 {
     [Fact]
-    public async Task Vocabulary_quiz_ignores_spoofed_client_correctness()
+    public async Task Vocabulary_quiz_uses_server_owned_direction_and_word_count()
     {
         await using var context = CreateContext();
         var studentId = Guid.NewGuid();
         var typeId = Guid.NewGuid();
         var exerciseId = Guid.NewGuid();
         var vocabularyItemId = Guid.NewGuid();
+        var secondVocabularyItemId = Guid.NewGuid();
         context.ExerciseTypes.Add(ExerciseType.Create(
             typeId, "Kelime", "Kelime testi", "vocabulary_builder"));
         context.Exercises.Add(Exercise.Create(
             "Kelime testi",
             "vocabulary_builder",
-            """{"engineType":"vocabulary_builder","vocabulary":{"category":"Genel","count":1,"difficultyLevel":1},"mode":"quiz"}""",
+            """{"engineType":"vocabulary_builder","vocabulary":{"category":"Genel","count":2,"difficultyLevel":1},"mode":"quiz","quizType":"word_to_definition","totalSteps":1}""",
             1,
             studentId,
             typeId,
             id: exerciseId));
-        context.VocabularyItems.Add(VocabularyItem.Create(
-            vocabularyItemId,
-            "merak",
-            "Bir şeyi anlama ve öğrenme isteği",
-            null,
-            null,
-            null,
-            "Genel",
-            1,
-            null,
-            studentId,
-            DateTime.UtcNow));
+        context.VocabularyItems.AddRange(
+            VocabularyItem.Create(
+                vocabularyItemId, "merak", "Bir şeyi anlama ve öğrenme isteği",
+                null, null, null, "Genel", 1, null, studentId, DateTime.UtcNow),
+            VocabularyItem.Create(
+                secondVocabularyItemId, "özen", "Dikkatli ve titiz çalışma",
+                null, null, null, "Genel", 1, null, studentId, DateTime.UtcNow));
         await context.SaveChangesAsync();
 
         var service = CreateExerciseSessionService(context);
@@ -56,6 +52,7 @@ public sealed class StudentReadingPersistenceTests
             studentId,
             new StartExerciseSessionRequest { ExerciseId = exerciseId },
             CancellationToken.None);
+        started.TotalSteps.Should().Be(2);
         var response = await service.ValidateActionAsync(
             studentId,
             started.SessionId,
@@ -78,6 +75,87 @@ public sealed class StudentReadingPersistenceTests
         var session = await context.ExerciseSessions.SingleAsync(item => item.Id == started.SessionId);
         session.CorrectCount.Should().Be(0);
         session.IncorrectCount.Should().Be(1);
+
+        var forgedDirection = await service.ValidateActionAsync(
+            studentId,
+            started.SessionId,
+            new ExerciseActionRequest
+            {
+                Action = "vocabulary_review",
+                CustomData = new Dictionary<string, JsonElement>
+                {
+                    ["vocabularyItemId"] = JsonSerializer.SerializeToElement(secondVocabularyItemId),
+                    ["reviewKind"] = JsonSerializer.SerializeToElement("quiz"),
+                    ["questionType"] = JsonSerializer.SerializeToElement("definition"),
+                    ["selectedAnswer"] = JsonSerializer.SerializeToElement("özen")
+                }
+            },
+            CancellationToken.None);
+        forgedDirection.IsCorrect.Should().BeFalse();
+
+        var sessionAfterForgery = await context.ExerciseSessions.SingleAsync(item => item.Id == started.SessionId);
+        sessionAfterForgery.CorrectCount.Should().Be(0);
+        sessionAfterForgery.IncorrectCount.Should().Be(2);
+
+        var complete = await service.CompleteAsync(
+            studentId,
+            started.SessionId,
+            new CompleteExerciseSessionRequest(),
+            CancellationToken.None);
+        complete.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task Vocabulary_learning_completion_does_not_increment_verified_gamification()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        var vocabularyItemId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(
+            typeId, "Kelime", "Kelime öğrenme", "vocabulary_builder"));
+        context.Exercises.Add(Exercise.Create(
+            "Kelime öğrenme",
+            "vocabulary_builder",
+            """{"engineType":"vocabulary_builder","vocabulary":{"category":"Genel","count":1,"difficultyLevel":1},"mode":"learning"}""",
+            1,
+            studentId,
+            typeId,
+            id: exerciseId));
+        context.VocabularyItems.Add(VocabularyItem.Create(
+            vocabularyItemId, "merak", "Bir şeyi anlama ve öğrenme isteği",
+            null, null, null, "Genel", 1, null, studentId, DateTime.UtcNow));
+        await context.SaveChangesAsync();
+
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(
+            studentId,
+            new StartExerciseSessionRequest { ExerciseId = exerciseId },
+            CancellationToken.None);
+        var review = await service.ValidateActionAsync(
+            studentId,
+            started.SessionId,
+            new ExerciseActionRequest
+            {
+                Action = "vocabulary_review",
+                CustomData = new Dictionary<string, JsonElement>
+                {
+                    ["vocabularyItemId"] = JsonSerializer.SerializeToElement(vocabularyItemId),
+                    ["reviewKind"] = JsonSerializer.SerializeToElement("known")
+                }
+            },
+            CancellationToken.None);
+        review.IsValid.Should().BeTrue();
+
+        await service.CompleteAsync(
+            studentId,
+            started.SessionId,
+            new CompleteExerciseSessionRequest(),
+            CancellationToken.None);
+
+        var stats = await context.UserGamifications.SingleOrDefaultAsync(item => item.UserId == studentId);
+        stats.Should().BeNull();
     }
 
     [Fact]
