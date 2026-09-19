@@ -640,6 +640,44 @@ public sealed class SpeedReadingOwnedDomainTests
         action.Should().Throw<ArgumentException>();
     }
 
+    [Theory]
+    [InlineData("reading_comprehension", "{\"engineType\":\"reading_comprehension\",\"timing\":\"invalid\"}")]
+    [InlineData("exam_simulation", "{\"engineType\":\"exam_simulation\",\"display\":\"invalid\"}")]
+    [InlineData("free_reading", "{\"engineType\":\"free_reading\",\"timing\":{\"minReadingTimeMs\":-1}}")]
+    [InlineData("reading_comprehension", "{\"engineType\":\"reading_comprehension\",\"timing\":{\"maxReadingTimeMs\":3600001}}")]
+    [InlineData("reading_comprehension", "{\"engineType\":\"reading_comprehension\",\"timing\":{\"minReadingTimeMs\":2000,\"maxReadingTimeMs\":1000}}")]
+    [InlineData("exam_simulation", "{\"engineType\":\"exam_simulation\",\"display\":{\"fontSize\":\"huge\"}}")]
+    [InlineData("free_reading", "{\"engineType\":\"free_reading\",\"wordCount\":100001}")]
+    public void Active_reading_configuration_rejects_unsupported_values(string engineType, string configuration)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, engineType);
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Active_reading_configuration_rejects_conflicting_timing_across_scopes()
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"reading_comprehension","timing":{"minReadingTimeMs":1000},"engineConfig":{"timing":{"minReadingTimeMs":2000}}}""",
+            "reading_comprehension");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Theory]
+    [InlineData("reading_comprehension")]
+    [InlineData("exam_simulation")]
+    [InlineData("free_reading")]
+    public void Active_reading_configuration_accepts_supported_bounds(string engineType)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            $$"""{"engineType":"{{engineType}}","timing":{"minReadingTimeMs":0,"maxReadingTimeMs":3600000},"display":{"fontSize":"large"},"wordCount":100000}""",
+            engineType);
+
+        action.Should().NotThrow();
+    }
+
     [Fact]
     public void Active_program_requires_a_usable_weekly_plan()
     {
