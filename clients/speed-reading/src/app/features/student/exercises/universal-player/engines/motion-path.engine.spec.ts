@@ -295,11 +295,11 @@ describe('MotionPathEngine', () => {
       TARGET: { COLOR: 'red' },
       ENGINECONFIG: {
         timing: { HOLDMS: 750 },
-        target: { TYPE: 'arrow' }
+        target: { TYPE: 'arrow', color: 'blue' }
       }
     } as any, callbacks(() => undefined));
 
     expect(engine.getFixationDuration()).toBe(750);
-    expect(engine.getTargetConfig()).toEqual(jasmine.objectContaining({ type: 'arrow', color: 'red' }));
+    expect(engine.getTargetConfig()).toEqual(jasmine.objectContaining({ type: 'arrow', color: 'blue' }));
   });
 });
