@@ -597,6 +597,16 @@ public sealed class SpeedReadingOwnedDomainTests
         action.Should().NotThrow();
     }
 
+    [Fact]
+    public void Active_motion_path_configuration_accepts_supported_pascal_case_legacy_fields()
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"motion_path","Mode":"tracking","Path":{"Type":"two_point_jump"},"Target":{"Type":"arrow","Size":"large"},"Movement":{"SpeedLevel":3,"JumpIntervalMs":250,"FixationTimeMs":750},"Fixation":{"Points":2,"PeripheralCount":0,"PointSize":48}}""",
+            "motion_path");
+
+        action.Should().NotThrow();
+    }
+
     [Theory]
     [InlineData("{\"engineType\":\"motion_path\",\"mode\":7}")]
     [InlineData("{\"engineType\":\"motion_path\",\"path\":{\"type\":7}}")]

@@ -252,4 +252,21 @@ describe('MotionPathEngine', () => {
     tick(1200);
     expect(result?.completedSteps).toBe(1);
   }));
+
+  it('normalizes PascalCase legacy motion configuration', () => {
+    const engine = new MotionPathEngine();
+    engine.initialize({
+      Mode: 'tracking',
+      Path: { Type: 'two_point_jump' },
+      Target: { Type: 'arrow', Size: 'large' },
+      Movement: { SpeedLevel: 3, JumpIntervalMs: 250, FixationTimeMs: 750 },
+      Fixation: { Points: 2, PeripheralCount: 0, PointSize: 48 }
+    } as any, callbacks(() => undefined));
+
+    expect(engine.state.totalSteps).toBe(2);
+    expect(engine.getTargetPosition().x).toBe(20);
+    expect(engine.getTargetConfig()).toEqual(jasmine.objectContaining({ type: 'arrow', size: 'large' }));
+    expect(engine.getFixationDuration()).toBe(750);
+    expect(engine.getPointSize()).toBe(48);
+  });
 });
