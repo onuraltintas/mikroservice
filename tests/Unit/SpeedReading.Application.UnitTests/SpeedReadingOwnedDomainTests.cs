@@ -376,6 +376,67 @@ public sealed class SpeedReadingOwnedDomainTests
         highlight.Should().NotThrow();
     }
 
+    [Theory]
+    [InlineData("{\"engineType\":\"word_highlight\",\"chunkSize\":1,\"ChunkSize\":-1}", "word_highlight")]
+    [InlineData("{\"engineType\":\"text_stream\",\"displayDurationMs\":100,\"DisplayDurationMs\":1}", "text_stream")]
+    [InlineData("{\"engineType\":\"text_fade\",\"targetWpm\":200,\"TargetWpm\":0}", "text_fade")]
+    public void Active_reading_pacer_configuration_rejects_case_insensitive_duplicate_fields(
+        string configuration,
+        string engineType)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, engineType);
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Active_text_stream_configuration_rejects_oversized_legacy_content()
+    {
+        var words = string.Join(',', Enumerable.Repeat("\"word\"", 501));
+        var configuration = $$"""{"engineType":"text_stream","Words":[{{words}}]}""";
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, "text_stream");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Theory]
+    [InlineData("{\"engineType\":\"text_stream\",\"Words\":[1]}", "text_stream")]
+    [InlineData("{\"engineType\":\"word_highlight\",\"Chunks\":[1]}", "word_highlight")]
+    public void Active_reading_pacer_configuration_rejects_non_string_content(
+        string configuration,
+        string engineType)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, engineType);
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Active_reading_pacer_configuration_rejects_oversized_inline_text()
+    {
+        var configuration = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            engineType = "word_highlight",
+            content = new { text = new string('a', 100_001) }
+        });
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, "word_highlight");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Theory]
+    [InlineData("{\"engineType\":\"text_stream\",\"displayDurationMs\":100,\"engineConfig\":{\"engineType\":\"text_stream\",\"timing\":{\"durationMs\":200}}}", "text_stream")]
+    [InlineData("{\"engineType\":\"text_fade\",\"targetWpm\":200,\"engineConfig\":{\"engineType\":\"text_fade\",\"fading\":{\"speedWpm\":300}}}", "text_fade")]
+    [InlineData("{\"engineType\":\"word_highlight\",\"chunkSize\":1,\"engineConfig\":{\"engineType\":\"word_highlight\",\"pacer\":{\"chunkSize\":2}}}", "word_highlight")]
+    public void Active_reading_pacer_configuration_rejects_conflicting_aliases(
+        string configuration,
+        string engineType)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, engineType);
+
+        action.Should().Throw<ArgumentException>();
+    }
+
     [Fact]
     public void Active_program_requires_a_usable_weekly_plan()
     {
