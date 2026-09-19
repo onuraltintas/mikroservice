@@ -481,6 +481,59 @@ public sealed class SpeedReadingOwnedDomainTests
         action.Should().Throw<ArgumentException>();
     }
 
+    [Theory]
+    [InlineData("{\"engineType\":\"scan_find\",\"timeLimitSeconds\":0}", "scan_find")]
+    [InlineData("{\"engineType\":\"scan_find\",\"timeLimit\":3601}", "scan_find")]
+    [InlineData("{\"engineType\":\"scan_find\",\"timing\":{\"timeLimitSec\":0}}", "scan_find")]
+    [InlineData("{\"engineType\":\"scan_find\",\"content\":{\"wordCount\":10001}}", "scan_find")]
+    [InlineData("{\"engineType\":\"scan_find\",\"targets\":\"invalid\"}", "scan_find")]
+    [InlineData("{\"engineType\":\"scanning\",\"content\":\"invalid\"}", "scanning")]
+    [InlineData("{\"engineType\":\"skimming\",\"timing\":\"invalid\"}", "skimming")]
+    public void Active_scan_configuration_rejects_unsupported_values(
+        string configuration,
+        string engineType)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, engineType);
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Active_scan_configuration_rejects_oversized_targets_and_rounds()
+    {
+        var targets = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            engineType = "scan_find",
+            targets = new { words = Enumerable.Repeat("target", 101).ToArray() }
+        });
+        var rounds = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            engineType = "scan_find",
+            scanningRounds = Enumerable.Range(0, 51)
+                .Select(_ => new { textContent = "text", targets = new[] { "target" } })
+                .ToArray()
+        });
+        var targetsAction = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            targets,
+            "scan_find");
+        var roundsAction = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            rounds,
+            "scan_find");
+
+        targetsAction.Should().Throw<ArgumentException>();
+        roundsAction.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Active_scan_configuration_accepts_supported_bounds()
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"scan_find","timeLimitSeconds":3600,"content":{"text":"one target","wordCount":10000},"targets":{"words":["target"],"caseSensitive":false,"mode":"find_all"},"timing":{"timeLimitSec":3600}}""",
+            "scan_find");
+
+        action.Should().NotThrow();
+    }
+
     [Fact]
     public void Active_program_requires_a_usable_weekly_plan()
     {
