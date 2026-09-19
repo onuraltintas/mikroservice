@@ -679,6 +679,17 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Theory]
+    [InlineData("{\"engineType\":\"reading_comprehension\",\"timing\":{\"minReadingTimeMs\":1000,\"maxReadingTimeMs\":0}}")]
+    [InlineData("{\"engineType\":\"reading_comprehension\",\"engineConfig\":{\"timing\":{\"minReadingTimeMs\":1000,\"maxReadingTimeMs\":0}}}")]
+    [InlineData("{\"engineType\":\"reading_comprehension\",\"timing\":{\"minReadingTimeMs\":1000},\"engineConfig\":{\"timing\":{\"maxReadingTimeMs\":0}}}")]
+    public void Active_reading_configuration_accepts_zero_maximum_as_unlimited(string configuration)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, "reading_comprehension");
+
+        action.Should().NotThrow();
+    }
+
+    [Theory]
     [InlineData("{\"engineType\":\"reading_comprehension\",\"timing\":{\"minReadingTimeMs\":2000},\"engineConfig\":{\"timing\":{\"maxReadingTimeMs\":1000}}}")]
     [InlineData("{\"engineType\":\"reading_comprehension\",\"readingTextContent\":\"bir\",\"engineConfig\":{\"readingTextContent\":\"iki\"}}")]
     public void Active_reading_configuration_rejects_conflicting_effective_sources(string configuration)

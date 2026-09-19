@@ -169,4 +169,11 @@ describe('ReadingComprehensionEngine', () => {
     expect(engine.getText()).toBe('Bir iki üç.');
     expect(engine.state.totalSteps).toBe(3);
   });
+
+  it('normalizes a case-insensitive font size accepted by the server', () => {
+    const engine = new ReadingComprehensionEngine();
+    engine.initialize({ display: { fontSize: 'LARGE' }, content: 'Metin.' } as any, callbacks(() => undefined));
+
+    expect(engine.getFontSize()).toBe('large');
+  });
 });
