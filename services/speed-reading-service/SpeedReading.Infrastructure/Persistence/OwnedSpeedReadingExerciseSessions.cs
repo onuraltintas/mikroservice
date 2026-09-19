@@ -589,7 +589,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             studentAssignment?.Complete(result.Id, score ?? 0, weightedKdp ?? 0, now);
         }
 
-        var isVerifiedCompletion = state.VocabularyWords.Count == 0 || state.VocabularyMode == "quiz";
+        var isVerifiedCompletion = measurementStatus == SpeedReadingMeasurementStatus.Measured
+            && (state.VocabularyWords.Count == 0 || state.VocabularyMode == "quiz");
         if (!isAssessmentSession && isVerifiedCompletion)
         {
             var stats = await GetOrCreateGamificationAsync(studentId, now, cancellationToken);

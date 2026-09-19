@@ -729,12 +729,26 @@ public sealed class StudentReadingPersistenceTests
         var secondTypeId = Guid.NewGuid();
         var firstExerciseId = Guid.NewGuid();
         var secondExerciseId = Guid.NewGuid();
+        var firstTextId = Guid.NewGuid();
+        var secondTextId = Guid.NewGuid();
+        var firstQuestionId = Guid.NewGuid();
+        var secondQuestionId = Guid.NewGuid();
         setupContext.ExerciseTypes.AddRange(
-            ExerciseType.Create(firstTypeId, "Odak", "Odak", "focus"),
-            ExerciseType.Create(secondTypeId, "Tarama", "Tarama", "scanning"));
+            ExerciseType.Create(firstTypeId, "Anlama 1", "Anlama", "reading_comprehension"),
+            ExerciseType.Create(secondTypeId, "Anlama 2", "Anlama", "reading_comprehension"));
         setupContext.Exercises.AddRange(
-            Exercise.Create("Birinci egzersiz", "focus", "{}", 1, studentId, firstTypeId, id: firstExerciseId),
-            Exercise.Create("İkinci egzersiz", "scanning", "{}", 1, studentId, secondTypeId, id: secondExerciseId));
+            Exercise.Create("Birinci egzersiz", "reading_comprehension", "{}", 1, studentId, firstTypeId, id: firstExerciseId),
+            Exercise.Create("İkinci egzersiz", "reading_comprehension", "{}", 1, studentId, secondTypeId, id: secondExerciseId));
+        setupContext.ReadingTexts.AddRange(
+            ReadingText.Create(firstTextId, "Birinci metin", "Birinci ölçülmüş eşzamanlı oturum metni.",
+                category: "Test", difficultyLevel: 1, exerciseId: firstExerciseId),
+            ReadingText.Create(secondTextId, "İkinci metin", "İkinci ölçülmüş eşzamanlı oturum metni.",
+                category: "Test", difficultyLevel: 1, exerciseId: secondExerciseId));
+        setupContext.ReadingQuestions.AddRange(
+            ReadingQuestion.Create(firstQuestionId, firstTextId, "Birinci soru", "A", 0, 1, 1,
+                optionA: "Doğru", optionB: "Yanlış", optionC: "Diğer", optionD: "Son"),
+            ReadingQuestion.Create(secondQuestionId, secondTextId, "İkinci soru", "A", 0, 1, 1,
+                optionA: "Doğru", optionB: "Yanlış", optionC: "Diğer", optionD: "Son"));
         setupContext.UserGamifications.Add(UserGamification.CreateDefault(
             Guid.NewGuid(), studentId, DateTime.UtcNow, studentId.ToString()));
         await setupContext.SaveChangesAsync();
@@ -745,11 +759,21 @@ public sealed class StudentReadingPersistenceTests
         var secondService = CreateExerciseSessionService(secondContext);
         var firstStarted = await firstService.StartAsync(
             studentId,
-            new StartExerciseSessionRequest { ExerciseId = firstExerciseId },
+            new StartExerciseSessionRequest { ExerciseId = firstExerciseId, ReadingTextId = firstTextId },
             CancellationToken.None);
         var secondStarted = await secondService.StartAsync(
             studentId,
-            new StartExerciseSessionRequest { ExerciseId = secondExerciseId },
+            new StartExerciseSessionRequest { ExerciseId = secondExerciseId, ReadingTextId = secondTextId },
+            CancellationToken.None);
+        await firstService.ValidateActionAsync(
+            studentId,
+            firstStarted.SessionId,
+            new ExerciseActionRequest { Action = "answer_question", QuestionId = firstQuestionId, Answer = "A" },
+            CancellationToken.None);
+        await secondService.ValidateActionAsync(
+            studentId,
+            secondStarted.SessionId,
+            new ExerciseActionRequest { Action = "answer_question", QuestionId = secondQuestionId, Answer = "A" },
             CancellationToken.None);
 
         await Task.WhenAll(
