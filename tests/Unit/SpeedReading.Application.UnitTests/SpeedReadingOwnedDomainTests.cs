@@ -534,6 +534,27 @@ public sealed class SpeedReadingOwnedDomainTests
         action.Should().NotThrow();
     }
 
+    [Theory]
+    [InlineData("{\"engineType\":\"scan_find\",\"targets\":{\"caseSensitive\":\"yes\"}}")]
+    [InlineData("{\"engineType\":\"scan_find\",\"targets\":{\"mode\":\"unknown\"}}")]
+    [InlineData("{\"engineType\":\"scan_find\",\"content\":{\"source\":\"unknown\"}}")]
+    public void Active_scan_configuration_rejects_invalid_semantic_fields(string configuration)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, "scan_find");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Active_scan_configuration_rejects_conflicting_time_limits_across_scopes()
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"scan_find","timeLimitSeconds":3600,"engineConfig":{"engineType":"scan_find","timing":{"timeLimitSec":1}}}""",
+            "scan_find");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
     [Fact]
     public void Active_program_requires_a_usable_weekly_plan()
     {

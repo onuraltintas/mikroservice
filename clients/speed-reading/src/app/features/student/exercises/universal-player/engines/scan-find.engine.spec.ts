@@ -70,4 +70,54 @@ describe('ScanFindEngine', () => {
     expect(engine.getWords().length).toBeLessThanOrEqual(10000);
     expect(engine.getTargetWords()).toEqual([]);
   });
+
+  it('counts mixed-case duplicate targets once in case-insensitive mode', () => {
+    let result: EngineResult | undefined;
+    const engine = new ScanFindEngine();
+    engine.initialize({
+      content: { text: 'Target', wordCount: 1 },
+      targets: { words: ['Target', 'target'], caseSensitive: false }
+    }, callbacks(value => result = value));
+
+    engine.start();
+    engine.handleWordClick(0);
+
+    expect(result).toEqual(jasmine.objectContaining({ accuracy: 100, totalSteps: 1, completedSteps: 1 }));
+  });
+
+  it('keeps cumulative progress while advancing across rounds', () => {
+    let result: EngineResult | undefined;
+    const engine = new ScanFindEngine();
+    engine.initialize({
+      scanningRounds: [
+        { textContent: 'one', targets: ['one'] },
+        { textContent: 'two', targets: ['two'] }
+      ]
+    } as any, callbacks(value => result = value));
+
+    engine.start();
+    engine.handleWordClick(0);
+    expect(engine.state.currentStep).toBe(1);
+    engine.handleWordClick(0);
+
+    expect(result).toEqual(jasmine.objectContaining({ accuracy: 100, totalSteps: 2, completedSteps: 2 }));
+  });
+
+  it('skips empty rounds and continues with the next playable round', () => {
+    let result: EngineResult | undefined;
+    const engine = new ScanFindEngine();
+    engine.initialize({
+      scanningRounds: [
+        { textContent: '', targets: [] },
+        { textContent: 'target', targets: ['target'] }
+      ]
+    } as any, callbacks(value => result = value));
+
+    engine.start();
+
+    expect(result).toBeUndefined();
+    expect(engine.getTargetWords()).toEqual(['target']);
+    engine.handleWordClick(0);
+    expect(result?.accuracy).toBe(100);
+  });
 });
