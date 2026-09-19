@@ -120,4 +120,60 @@ describe('ScanFindEngine', () => {
     engine.handleWordClick(0);
     expect(result?.accuracy).toBe(100);
   });
+
+  it('completes find-any mode after the first valid target', () => {
+    let result: EngineResult | undefined;
+    const engine = new ScanFindEngine();
+    engine.initialize({
+      content: { text: 'one two', wordCount: 2 },
+      targets: { words: ['one', 'two'], mode: 'find_any' }
+    }, callbacks(value => result = value));
+
+    engine.start();
+    engine.handleWordClick(0);
+
+    expect(result).toEqual(jasmine.objectContaining({ accuracy: 100, totalSteps: 1, completedSteps: 1 }));
+  });
+
+  it('uses server reading text aliases for text-id content', () => {
+    const engine = new ScanFindEngine();
+    engine.initialize({
+      ReadingTextContent: 'server target text',
+      content: { source: 'text_id' },
+      targets: { words: ['target'] }
+    } as any, callbacks(() => undefined));
+
+    expect(engine.getWords().map(word => word.text)).toEqual(['server', 'target', 'text']);
+  });
+
+  it('restores completed prior rounds when resuming', () => {
+    let result: EngineResult | undefined;
+    const engine = new ScanFindEngine();
+    engine.initialize({
+      currentRound: 1,
+      scanningRounds: [
+        { textContent: 'one', targets: ['one'], foundTargets: ['one'] },
+        { textContent: 'two', targets: ['two'], foundTargets: [] }
+      ]
+    } as any, callbacks(value => result = value));
+
+    engine.start();
+    expect(engine.state.currentStep).toBe(1);
+    engine.handleWordClick(0);
+
+    expect(result).toEqual(jasmine.objectContaining({ accuracy: 100, totalSteps: 2, completedSteps: 2 }));
+  });
+
+  it('restores found targets in the current resumed round', () => {
+    const engine = new ScanFindEngine();
+    engine.initialize({
+      currentRound: 0,
+      scanningRounds: [
+        { textContent: 'one two', targets: ['one', 'two'], foundTargets: ['one'] }
+      ]
+    } as any, callbacks(() => undefined));
+
+    expect(engine.state.currentStep).toBe(1);
+    expect(engine.getWords()[0].found).toBeTrue();
+  });
 });
