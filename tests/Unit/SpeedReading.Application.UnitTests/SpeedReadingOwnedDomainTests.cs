@@ -555,6 +555,48 @@ public sealed class SpeedReadingOwnedDomainTests
         action.Should().Throw<ArgumentException>();
     }
 
+    [Theory]
+    [InlineData("{\"engineType\":\"motion_path\",\"mode\":\"unknown\"}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"timing\":\"invalid\"}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"content\":\"invalid\"}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"movement\":\"invalid\"}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"timing\":{\"holdMs\":0}}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"timing\":{\"durationMs\":3600001}}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"content\":{\"points\":501}}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"content\":{\"peripheralCount\":5}}")]
+    public void Active_motion_path_configuration_rejects_unsupported_values(string configuration)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, "motion_path");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Active_motion_path_configuration_rejects_oversized_targets()
+    {
+        var configuration = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            engineType = "motion_path",
+            mode = "saccade",
+            Targets = Enumerable.Range(0, 501)
+                .Select(index => new { X = 50, Y = 50, Size = 30, Value = index.ToString() })
+                .ToArray()
+        });
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, "motion_path");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Active_motion_path_configuration_accepts_supported_bounds()
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"motion_path","mode":"fixation","timing":{"durationMs":5000,"holdMs":50},"content":{"points":500,"peripheralCount":4,"pointSize":200},"movement":{"speedLevel":5,"jumpIntervalMs":10000},"path":{"type":"horizontal"}}""",
+            "motion_path");
+
+        action.Should().NotThrow();
+    }
+
     [Fact]
     public void Active_program_requires_a_usable_weekly_plan()
     {
