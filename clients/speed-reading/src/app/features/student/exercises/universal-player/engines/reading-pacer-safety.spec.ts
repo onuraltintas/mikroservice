@@ -1,4 +1,4 @@
-import { fakeAsync } from '@angular/core/testing';
+import { fakeAsync, tick } from '@angular/core/testing';
 import { EngineCallbacks } from './base-engine.interface';
 import { TextFadeEngine } from './text-fade.engine';
 import { TextStreamEngine } from './text-stream.engine';
@@ -98,6 +98,54 @@ describe('reading pacer runtime safety', () => {
 
     expect(completions).toBe(3);
   });
+
+  it('preserves nested visual options after case-insensitive merging', () => {
+    const stream = new TextStreamEngine();
+    const fade = new TextFadeEngine();
+    const highlight = new WordHighlightEngine();
+
+    stream.initialize({ engineConfig: { visuals: { fontSize: 'xlarge', showFixation: false } } } as any, callbacks);
+    fade.initialize({ engineConfig: { visuals: { fontSize: 'large' } } } as any, callbacks);
+    highlight.initialize({ engineConfig: { visuals: { fontSize: 'small' } } } as any, callbacks);
+
+    expect(stream.getFontSize()).toBe('xlarge');
+    expect((stream as any).config.visuals.showFixation).toBeFalse();
+    expect(fade.getFontSize()).toBe('large');
+    expect(highlight.getHighlightFontSize()).toBe('small');
+  });
+
+  it('pauses the text fade startup lag', fakeAsync(() => {
+    const engine = new TextFadeEngine();
+    engine.initialize({ content: { text: 'bir iki' }, fading: { speedWpm: 60, lagMs: 1000 } } as any, callbacks);
+
+    engine.start();
+    tick(400);
+    engine.pause();
+    tick(1000);
+
+    expect(engine.state.countdown).toBeGreaterThan(0);
+    expect(engine.getFadedIndex()).toBe(-1);
+    engine.destroy();
+  }));
+
+  it('records partial progress instead of full success when word highlight times out', fakeAsync(() => {
+    let result: any;
+    const trackedCallbacks = { ...callbacks, onComplete: (value: any) => result = value };
+    const engine = new WordHighlightEngine();
+    engine.initialize({
+      content: { text: 'bir iki üç dört' },
+      pacer: { speedWpm: 20, chunkSize: 1 },
+      timing: { timeLimitSec: 1 }
+    } as any, trackedCallbacks);
+
+    engine.start();
+    tick(1100);
+
+    expect(result.completedSteps).toBe(0);
+    expect(result.totalSteps).toBe(4);
+    expect(result.score).toBe(0);
+    engine.destroy();
+  }));
 
   it('clamps text stream duration and content count from legacy configuration', () => {
     const engine = new TextStreamEngine();
