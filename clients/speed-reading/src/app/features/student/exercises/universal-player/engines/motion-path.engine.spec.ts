@@ -262,11 +262,29 @@ describe('MotionPathEngine', () => {
       Movement: { SpeedLevel: 3, JumpIntervalMs: 250, FixationTimeMs: 750 },
       Fixation: { Points: 2, PeripheralCount: 0, PointSize: 48 }
     } as any, callbacks(() => undefined));
+    engine.reset();
 
     expect(engine.state.totalSteps).toBe(2);
     expect(engine.getTargetPosition().x).toBe(20);
     expect(engine.getTargetConfig()).toEqual(jasmine.objectContaining({ type: 'arrow', size: 'large' }));
     expect(engine.getFixationDuration()).toBe(750);
     expect(engine.getPointSize()).toBe(48);
+  });
+
+  it('normalizes arbitrary casing accepted by backend validation', () => {
+    const engine = new MotionPathEngine();
+    engine.initialize({
+      ENGINECONFIG: {
+        MODE: 'tracking',
+        PATH: { TYPE: 'two_point_jump' },
+        MOVEMENT: { FIXATIONTIMEMS: 600 },
+        FIXATION: { POINTS: 4 }
+      }
+    } as any, callbacks(() => undefined));
+    engine.reset();
+
+    expect(engine.state.totalSteps).toBe(4);
+    expect(engine.getTargetPosition().x).toBe(20);
+    expect(engine.getFixationDuration()).toBe(600);
   });
 });
