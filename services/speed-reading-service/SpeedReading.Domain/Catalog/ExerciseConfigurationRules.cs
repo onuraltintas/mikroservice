@@ -96,6 +96,15 @@ public static class ExerciseConfigurationRules
 
             if (configured == "vocabulary_builder")
                 ValidateVocabularyConfiguration(root, nested);
+            if (configured == "grid_interaction")
+            {
+                ValidateGridConfiguration(root);
+                if (nested.HasValue)
+                {
+                    ValidateGridConfiguration(nested.Value);
+                    ValidateMatchingGridConfiguration(root, nested.Value);
+                }
+            }
         }
         catch (JsonException exception)
         {
@@ -121,13 +130,61 @@ public static class ExerciseConfigurationRules
         }
     }
 
+    private static void ValidateGridConfiguration(JsonElement config)
+    {
+        if (TryGetProperty(config, "gridSize") is { } gridSize
+            && (!gridSize.TryGetInt32(out var size) || size is < 3 or > 7))
+        {
+            throw new ArgumentException("Grid gridSize değeri 3 ile 7 arasında olmalıdır.");
+        }
+
+        if (TryGetProperty(config, "sequenceType") is { } sequenceType
+            && (sequenceType.ValueKind != JsonValueKind.String
+                || !string.Equals(sequenceType.GetString(), "numeric", StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new ArgumentException("Grid sıra türü numeric olmalıdır.");
+        }
+    }
+
+    private static void ValidateMatchingGridConfiguration(JsonElement root, JsonElement nested)
+    {
+        var rootSize = TryGetProperty(root, "gridSize");
+        var nestedSize = TryGetProperty(nested, "gridSize");
+        if (rootSize.HasValue && nestedSize.HasValue
+            && (!rootSize.Value.TryGetInt32(out var rootSizeValue)
+                || !nestedSize.Value.TryGetInt32(out var nestedSizeValue)
+                || rootSizeValue != nestedSizeValue))
+        {
+            throw new ArgumentException("Kök ve engineConfig gridSize değerleri uyuşmalıdır.");
+        }
+
+        var rootSequence = GetString(root, "sequenceType");
+        var nestedSequence = GetString(nested, "sequenceType");
+        if (rootSequence is not null && nestedSequence is not null
+            && !rootSequence.Equals(nestedSequence, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("Kök ve engineConfig grid sıra türleri uyuşmalıdır.");
+        }
+    }
+
     private static JsonElement? TryGetObject(JsonElement element, string name) =>
-        element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Object
+        TryGetProperty(element, name) is { ValueKind: JsonValueKind.Object } value
             ? value
             : null;
 
     private static string? GetString(JsonElement element, string name) =>
-        element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String
+        TryGetProperty(element, name) is { ValueKind: JsonValueKind.String } value
             ? value.GetString()?.Trim()
             : null;
+
+    private static JsonElement? TryGetProperty(JsonElement element, string name)
+    {
+        foreach (var property in element.EnumerateObject())
+        {
+            if (property.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                return property.Value;
+        }
+
+        return null;
+    }
 }

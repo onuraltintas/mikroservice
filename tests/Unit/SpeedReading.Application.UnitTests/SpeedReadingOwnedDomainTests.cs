@@ -255,6 +255,17 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Fact]
+    public void Active_grid_configuration_rejects_different_valid_root_and_nested_sizes()
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"grid_interaction","gridSize":6,"engineConfig":{"engineType":"grid_interaction","gridSize":7,"sequenceType":"numeric"}}""",
+            "grid_interaction");
+
+        action.Should().Throw<ArgumentException>()
+            .WithMessage("*uyuşmalıdır*");
+    }
+
+    [Fact]
     public void Active_program_requires_a_usable_weekly_plan()
     {
         var action = () => ProgramWeeklyPatternRules.Validate("{}", isAssessment: false, isActive: true);

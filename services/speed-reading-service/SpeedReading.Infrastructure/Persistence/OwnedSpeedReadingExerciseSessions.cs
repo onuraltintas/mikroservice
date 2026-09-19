@@ -1254,7 +1254,12 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         }
 
         var gridSize = !state.AdaptiveEnabled && IsGridExercise(exerciseTypeName, config)
-            ? ReadPositiveInt(config, "gridSize") ?? Math.Clamp(difficultyLevel + 2, 3, 7)
+            ? Math.Clamp(
+                ReadPositiveInt(effectiveConfig, "gridSize")
+                    ?? ReadPositiveInt(config, "gridSize")
+                    ?? difficultyLevel + 2,
+                3,
+                7)
             : (int?)null;
         if (state.AdaptiveEnabled)
         {
