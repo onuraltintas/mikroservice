@@ -16,6 +16,51 @@ const callbacks: EngineCallbacks = {
 };
 
 describe('reading pacer runtime safety', () => {
+  it('reads text stream data from nested engine configuration', () => {
+    const engine = new TextStreamEngine();
+
+    engine.initialize({
+      engineConfig: {
+        mode: 'rsvp',
+        timing: { durationMs: 120, intervalMs: 25 },
+        content: { count: 2, source: 'custom', items: ['bir', 'iki'] }
+      }
+    } as any, callbacks);
+
+    expect(engine.getMode()).toBe('rsvp');
+    expect(engine.getCurrentDuration()).toBe(120);
+    expect(engine.state.totalSteps).toBe(2);
+  });
+
+  it('reads text fade data from nested engine configuration', () => {
+    const engine = new TextFadeEngine();
+
+    engine.initialize({
+      engineConfig: {
+        content: { text: 'bir iki üç' },
+        fading: { speedWpm: 360, lagMs: 500 }
+      }
+    } as any, callbacks);
+
+    expect(engine.getWords()).toEqual(['bir', 'iki', 'üç']);
+    expect(engine.getWpm()).toBe(360);
+  });
+
+  it('reads word highlight data from nested engine configuration', () => {
+    const engine = new WordHighlightEngine();
+
+    engine.initialize({
+      engineConfig: {
+        content: { text: 'bir iki üç dört' },
+        pacer: { speedWpm: 480, chunkSize: 2 }
+      }
+    } as any, callbacks);
+
+    expect(engine.getWords()).toEqual(['bir', 'iki', 'üç', 'dört']);
+    expect(engine.getWpm()).toBe(480);
+    expect(engine.state.totalSteps).toBe(2);
+  });
+
   it('clamps text stream duration and content count from legacy configuration', () => {
     const engine = new TextStreamEngine();
 
