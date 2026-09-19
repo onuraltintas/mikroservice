@@ -1,3 +1,4 @@
+import { fakeAsync } from '@angular/core/testing';
 import { EngineCallbacks } from './base-engine.interface';
 import { TextFadeEngine } from './text-fade.engine';
 import { TextStreamEngine } from './text-stream.engine';
@@ -55,5 +56,32 @@ describe('reading pacer runtime safety', () => {
     expect(() => engine.initialize({ Chunks: [1, null, 'valid words'] } as any, callbacks))
       .not.toThrow();
     expect(engine.state.totalSteps).toBe(1);
+  });
+
+  it('normalizes malformed nested containers', () => {
+    const fade = new TextFadeEngine();
+    const highlight = new WordHighlightEngine();
+    const stream = new TextStreamEngine();
+
+    expect(() => fade.initialize({ fading: 'invalid' } as any, callbacks)).not.toThrow();
+    expect(() => highlight.initialize({ pacer: 'invalid', content: 'invalid' } as any, callbacks)).not.toThrow();
+    expect(() => stream.initialize({ timing: 'invalid', content: 'invalid' } as any, callbacks)).not.toThrow();
+  });
+
+  it('preserves the normalized text fade lag when starting', fakeAsync(() => {
+    const engine = new TextFadeEngine();
+    engine.initialize({ TargetWpm: 200, LagMs: 1000 } as any, callbacks);
+
+    engine.start();
+
+    expect((engine as any).config.fading.lagMs).toBe(1000);
+    engine.destroy();
+  }));
+
+  it('clamps the text stream gap timer', () => {
+    const engine = new TextStreamEngine();
+    engine.initialize({ timing: { durationMs: 100, intervalMs: Number.MAX_VALUE } } as any, callbacks);
+
+    expect((engine as any).config.timing.intervalMs).toBe(10000);
   });
 });

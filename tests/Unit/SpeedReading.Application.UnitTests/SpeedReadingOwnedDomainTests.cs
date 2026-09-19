@@ -437,6 +437,40 @@ public sealed class SpeedReadingOwnedDomainTests
         action.Should().Throw<ArgumentException>();
     }
 
+    [Theory]
+    [InlineData("{\"engineType\":\"text_stream\",\"timing\":\"invalid\"}", "text_stream")]
+    [InlineData("{\"engineType\":\"text_stream\",\"content\":\"invalid\"}", "text_stream")]
+    [InlineData("{\"engineType\":\"text_fade\",\"fading\":\"invalid\"}", "text_fade")]
+    [InlineData("{\"engineType\":\"word_highlight\",\"pacer\":\"invalid\"}", "word_highlight")]
+    public void Active_reading_pacer_configuration_rejects_invalid_nested_containers(
+        string configuration,
+        string engineType)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, engineType);
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Active_text_stream_configuration_accepts_bounded_legacy_stimulus_objects()
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"text_stream","Stimuli":[{"Text":"word","Type":"word","DifficultyLevel":1}]}""",
+            "text_stream");
+
+        action.Should().NotThrow();
+    }
+
+    [Fact]
+    public void Active_text_stream_configuration_rejects_multiple_content_sources()
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"text_stream","Words":["one"],"content":{"items":["two"]}}""",
+            "text_stream");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
     [Fact]
     public void Active_program_requires_a_usable_weekly_plan()
     {
