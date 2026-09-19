@@ -300,6 +300,67 @@ public sealed class StudentReadingPersistenceTests
     }
 
     [Fact]
+    public async Task Legacy_motion_path_alias_completes_as_observation_only()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "Göz rotası", "Takip", "eye_tracking"));
+        context.Exercises.Add(Exercise.Create(
+            "Göz rotası", "eye_tracking", "{\"totalSteps\":5}", 1,
+            studentId, typeId, id: exerciseId));
+        await context.SaveChangesAsync();
+
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(
+            studentId,
+            new StartExerciseSessionRequest { ExerciseId = exerciseId },
+            CancellationToken.None);
+        var result = await service.CompleteAsync(
+            studentId,
+            started.SessionId,
+            new CompleteExerciseSessionRequest(),
+            CancellationToken.None);
+
+        result.MeasurementStatus.Should().Be(nameof(SpeedReadingMeasurementStatus.NotMeasured));
+    }
+
+    [Fact]
+    public async Task Visual_expansion_session_is_classified_by_engine_type_not_display_name()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(
+            typeId, "Çevresel görüş", "Görüş alanı", "visual_expansion"));
+        context.Exercises.Add(Exercise.Create(
+            "Çevresel görüş",
+            "visual_expansion",
+            """{"engineType":"visual_expansion","rounds":2,"startDegrees":10,"targetDegrees":20}""",
+            1,
+            studentId,
+            typeId,
+            id: exerciseId));
+        await context.SaveChangesAsync();
+
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(
+            studentId,
+            new StartExerciseSessionRequest { ExerciseId = exerciseId },
+            CancellationToken.None);
+        started.InitialData.GetProperty("visualExpansionStartDegrees").GetInt32().Should().Be(10);
+
+        var presented = await service.ValidateActionAsync(
+            studentId,
+            started.SessionId,
+            new ExerciseActionRequest { Action = "visual_expansion_present" },
+            CancellationToken.None);
+        presented.IsValid.Should().BeTrue(presented.Message);
+    }
+
+    [Fact]
     public async Task Reading_text_details_hide_content_for_a_different_age_group()
     {
         await using var context = CreateContext();
