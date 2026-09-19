@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.StudentReading;
 using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Application.AdaptiveText;
+using SpeedReading.Application.Content;
 using SpeedReading.Domain.Assessment;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.Gamification;
@@ -16,6 +17,79 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class StudentReadingPersistenceTests
 {
+    [Fact]
+    public async Task Reading_text_details_hide_content_for_a_different_age_group()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var userAgeGroupId = Guid.NewGuid();
+        var otherAgeGroupId = Guid.NewGuid();
+        var textId = Guid.NewGuid();
+        context.UserProfiles.Add(SpeedReadingUserProfile.Import(
+            Guid.NewGuid(), userId, 1, 150, 70, 15, userAgeGroupId, null, true,
+            DateTime.UtcNow, userId.ToString(), null, null));
+        context.ReadingTexts.Add(ReadingText.Create(
+            textId, "Başka yaş grubu", "Bu içerik farklı bir yaş grubuna aittir.",
+            difficultyLevel: 1, targetAgeGroupId: otherAgeGroupId));
+        await context.SaveChangesAsync();
+
+        var catalogType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
+            "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingCatalog",
+            throwOnError: true)!;
+        var catalog = (ILegacySpeedReadingCatalog)Activator.CreateInstance(
+            catalogType,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+            binder: null,
+            args: [context],
+            culture: null)!;
+        var result = await catalog.GetReadingTextAsync(
+            textId,
+            includeQuestions: true,
+            includeInactive: false,
+            includeAnswers: false,
+            viewerUserId: userId,
+            CancellationToken.None);
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Catalog_reads_hide_age_restricted_content_when_profile_is_missing()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var textId = Guid.NewGuid();
+        var globalTextId = Guid.NewGuid();
+        context.ReadingTexts.AddRange(
+            ReadingText.Create(
+                textId, "Yaşa özel kısa metin", "Bu içerik profil olmadan görünmemelidir.",
+                difficultyLevel: 1, targetAgeGroupId: Guid.NewGuid()),
+            ReadingText.Create(
+                globalTextId, "Genel kısa metin", "Bu genel içerik profil olmadan görülebilir.",
+                difficultyLevel: 1));
+        await context.SaveChangesAsync();
+        var catalogType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
+            "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingCatalog",
+            throwOnError: true)!;
+        var catalog = (ILegacySpeedReadingCatalog)Activator.CreateInstance(
+            catalogType,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+            binder: null,
+            args: [context],
+            culture: null)!;
+
+        var details = await catalog.GetReadingTextAsync(
+            textId, true, false, false, userId, CancellationToken.None);
+        var list = await catalog.GetReadingTextsAsync(
+            null, null, null, null, false, null, true, userId, CancellationToken.None);
+        var shortTexts = await catalog.GetShortReadingTextsAsync(
+            10, userId, CancellationToken.None);
+
+        details.Should().BeNull();
+        list.Select(item => item.Id).Should().Equal(globalTextId);
+        shortTexts.Select(item => item.Id).Should().Equal(globalTextId);
+    }
+
     [Fact]
     public async Task Automatic_text_selection_prefers_exercise_and_difficulty_match_with_scorable_questions()
     {

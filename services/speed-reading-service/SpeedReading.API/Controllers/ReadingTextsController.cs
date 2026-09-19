@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SpeedReading.Application.Content;
 using System.IO.Compression;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
@@ -22,7 +23,7 @@ public sealed class ReadingTextsController(
     ISpeedReadingReadingTextExporter exporter) : ControllerBase
 {
     [HttpGet]
-    public Task<IReadOnlyList<ReadingTextSummary>> GetReadingTexts(
+    public async Task<ActionResult<IReadOnlyList<ReadingTextSummary>>> GetReadingTexts(
         [FromQuery] Guid? exerciseId,
         [FromQuery] string? category,
         [FromQuery] int? difficultyLevel,
@@ -32,12 +33,12 @@ public sealed class ReadingTextsController(
         [FromQuery] bool onlyWithQuestions = false,
         CancellationToken cancellationToken = default)
     {
-        var canManageContent = User.Claims.Any(claim =>
-            claim.Type == "permission" &&
-            claim.Value == PlatformPermissions.SpeedReading.ContentManage);
+        var canManageContent = CanManageContent();
+        if (!TryGetViewerUserId(canManageContent, out var viewerUserId))
+            return Unauthorized();
         var effectiveIsActive = canManageContent ? isActive : true;
 
-        return catalog.GetReadingTextsAsync(
+        return Ok(await catalog.GetReadingTextsAsync(
             exerciseId,
             category,
             difficultyLevel,
@@ -45,24 +46,40 @@ public sealed class ReadingTextsController(
             onlyWithQuestions,
             targetAgeGroupId,
             effectiveIsActive,
-            cancellationToken);
+            viewerUserId,
+            cancellationToken));
     }
 
     [HttpGet("categories")]
     public async Task<ActionResult<IReadOnlyList<string>>> GetCategories(
-        CancellationToken cancellationToken = default) =>
-        Ok(await catalog.GetReadingTextCategoriesAsync(cancellationToken));
+        CancellationToken cancellationToken = default)
+    {
+        var canManageContent = CanManageContent();
+        if (!TryGetViewerUserId(canManageContent, out var viewerUserId))
+            return Unauthorized();
+        return Ok(await catalog.GetReadingTextCategoriesAsync(viewerUserId, cancellationToken));
+    }
 
     [HttpGet("levels")]
     public async Task<ActionResult<IReadOnlyList<int>>> GetLevels(
-        CancellationToken cancellationToken = default) =>
-        Ok(await catalog.GetReadingTextDifficultyLevelsAsync(cancellationToken));
+        CancellationToken cancellationToken = default)
+    {
+        var canManageContent = CanManageContent();
+        if (!TryGetViewerUserId(canManageContent, out var viewerUserId))
+            return Unauthorized();
+        return Ok(await catalog.GetReadingTextDifficultyLevelsAsync(viewerUserId, cancellationToken));
+    }
 
     [HttpGet("short")]
     public async Task<ActionResult<IReadOnlyList<ShortReadingTextSummary>>> GetShortReadingTexts(
         [FromQuery] int limit = 10,
-        CancellationToken cancellationToken = default) =>
-        Ok(await catalog.GetShortReadingTextsAsync(limit, cancellationToken));
+        CancellationToken cancellationToken = default)
+    {
+        var canManageContent = CanManageContent();
+        if (!TryGetViewerUserId(canManageContent, out var viewerUserId))
+            return Unauthorized();
+        return Ok(await catalog.GetShortReadingTextsAsync(limit, viewerUserId, cancellationToken));
+    }
 
     [HttpPost("quality-preview")]
     [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
@@ -99,14 +116,15 @@ public sealed class ReadingTextsController(
         [FromQuery] bool includeQuestions = true,
         CancellationToken cancellationToken = default)
     {
-        var canManageContent = User.Claims.Any(claim =>
-            claim.Type == "permission" &&
-            claim.Value == PlatformPermissions.SpeedReading.ContentManage);
+        var canManageContent = CanManageContent();
+        if (!TryGetViewerUserId(canManageContent, out var viewerUserId))
+            return Unauthorized();
         var result = await catalog.GetReadingTextAsync(
             id,
             includeQuestions,
             canManageContent,
             canManageContent,
+            viewerUserId,
             cancellationToken);
         if (result is not null && !canManageContent)
         {
@@ -191,6 +209,7 @@ public sealed class ReadingTextsController(
             includeQuestions: true,
             includeInactive: true,
             includeAnswers: true,
+            viewerUserId: null,
             cancellationToken);
         return text is null
             ? NotFound()
@@ -208,6 +227,7 @@ public sealed class ReadingTextsController(
             includeQuestions: true,
             includeInactive: true,
             includeAnswers: true,
+            viewerUserId: null,
             cancellationToken);
         return text is null
             ? NotFound()
@@ -334,6 +354,7 @@ public sealed class ReadingTextsController(
                 includeQuestions: true,
                 includeInactive: true,
                 includeAnswers: true,
+                viewerUserId: null,
                 cancellationToken);
             if (text is null)
             {
@@ -823,6 +844,21 @@ public sealed class ReadingTextsController(
         var value = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
             ?? User.FindFirst("sub")?.Value;
         return Guid.TryParse(value, out userId);
+    }
+
+    private bool CanManageContent() => User.Claims.Any(claim =>
+        claim.Type == "permission"
+        && claim.Value == PlatformPermissions.SpeedReading.ContentManage);
+
+    private bool TryGetViewerUserId(bool canManageContent, out Guid? viewerUserId)
+    {
+        viewerUserId = null;
+        if (canManageContent)
+            return true;
+        if (!TryGetCurrentUserId(out var userId))
+            return false;
+        viewerUserId = userId;
+        return true;
     }
 }
 

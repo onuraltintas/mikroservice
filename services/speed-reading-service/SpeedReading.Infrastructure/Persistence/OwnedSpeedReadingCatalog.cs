@@ -192,9 +192,14 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
         bool onlyWithQuestions,
         Guid? targetAgeGroupId,
         bool? isActive,
+        Guid? viewerUserId,
         CancellationToken cancellationToken = default)
     {
+        var viewerAgeGroupId = await GetViewerAgeGroupIdAsync(viewerUserId, cancellationToken);
         var query = db.ReadingTexts.AsNoTracking().Where(item => !item.IsDeleted);
+        if (viewerUserId.HasValue)
+            query = query.Where(item => item.TargetAgeGroupId == null
+                || (viewerAgeGroupId.HasValue && item.TargetAgeGroupId == viewerAgeGroupId.Value));
         if (isActive.HasValue)
             query = query.Where(item => item.IsActive == isActive.Value);
         if (exerciseId.HasValue)
@@ -240,33 +245,52 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
     }
 
     public async Task<IReadOnlyList<string>> GetReadingTextCategoriesAsync(
-        CancellationToken cancellationToken = default) =>
-        await db.ReadingTexts
+        Guid? viewerUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var viewerAgeGroupId = await GetViewerAgeGroupIdAsync(viewerUserId, cancellationToken);
+        return await db.ReadingTexts
             .AsNoTracking()
-            .Where(item => item.IsActive && !item.IsDeleted && item.Category != string.Empty)
+            .Where(item => item.IsActive && !item.IsDeleted && item.Category != string.Empty
+                && (!viewerUserId.HasValue
+                    || item.TargetAgeGroupId == null
+                    || (viewerAgeGroupId.HasValue && item.TargetAgeGroupId == viewerAgeGroupId.Value)))
             .Select(item => item.Category)
             .Distinct()
             .OrderBy(item => item)
             .ToListAsync(cancellationToken);
+    }
 
     public async Task<IReadOnlyList<int>> GetReadingTextDifficultyLevelsAsync(
-        CancellationToken cancellationToken = default) =>
-        await db.ReadingTexts
+        Guid? viewerUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var viewerAgeGroupId = await GetViewerAgeGroupIdAsync(viewerUserId, cancellationToken);
+        return await db.ReadingTexts
             .AsNoTracking()
-            .Where(item => item.IsActive && !item.IsDeleted)
+            .Where(item => item.IsActive && !item.IsDeleted
+                && (!viewerUserId.HasValue
+                    || item.TargetAgeGroupId == null
+                    || (viewerAgeGroupId.HasValue && item.TargetAgeGroupId == viewerAgeGroupId.Value)))
             .Select(item => item.DifficultyLevel)
             .Distinct()
             .OrderBy(item => item)
             .ToListAsync(cancellationToken);
+    }
 
     public async Task<IReadOnlyList<ShortReadingTextSummary>> GetShortReadingTextsAsync(
         int limit,
+        Guid? viewerUserId,
         CancellationToken cancellationToken = default)
     {
         var boundedLimit = Math.Clamp(limit, 1, 50);
+        var viewerAgeGroupId = await GetViewerAgeGroupIdAsync(viewerUserId, cancellationToken);
         return await db.ReadingTexts
             .AsNoTracking()
-            .Where(item => item.IsActive && !item.IsDeleted && item.WordCount > 0 && item.WordCount <= 200)
+            .Where(item => item.IsActive && !item.IsDeleted && item.WordCount > 0 && item.WordCount <= 200
+                && (!viewerUserId.HasValue
+                    || item.TargetAgeGroupId == null
+                    || (viewerAgeGroupId.HasValue && item.TargetAgeGroupId == viewerAgeGroupId.Value)))
             .OrderByDescending(item => item.CreatedAt)
             .Take(boundedLimit)
             .Select(item => new ShortReadingTextSummary(
@@ -283,11 +307,18 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
         bool includeQuestions,
         bool includeInactive,
         bool includeAnswers,
+        Guid? viewerUserId,
         CancellationToken cancellationToken = default)
     {
+        var viewerAgeGroupId = await GetViewerAgeGroupIdAsync(viewerUserId, cancellationToken);
         var text = await db.ReadingTexts
             .AsNoTracking()
-            .Where(item => item.Id == id && !item.IsDeleted && (includeInactive || item.IsActive))
+            .Where(item => item.Id == id
+                && !item.IsDeleted
+                && (includeInactive || item.IsActive)
+                && (!viewerUserId.HasValue
+                    || item.TargetAgeGroupId == null
+                    || (viewerAgeGroupId.HasValue && item.TargetAgeGroupId == viewerAgeGroupId.Value)))
             .Select(item => new
             {
                 item.Id,
@@ -355,6 +386,17 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
 
     private static (int Page, int Size) NormalizePage(int pageNumber, int pageSize) =>
         (Math.Max(pageNumber, 1), Math.Clamp(pageSize, 1, 100));
+
+    private async Task<Guid?> GetViewerAgeGroupIdAsync(
+        Guid? viewerUserId,
+        CancellationToken cancellationToken) =>
+        viewerUserId.HasValue
+            ? await db.UserProfiles
+                .AsNoTracking()
+                .Where(item => item.UserId == viewerUserId.Value && item.IsActive)
+                .Select(item => item.AgeGroupConfigurationId)
+                .SingleOrDefaultAsync(cancellationToken)
+            : null;
 
     private static IReadOnlyList<string> SplitTags(string tags) =>
         tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);

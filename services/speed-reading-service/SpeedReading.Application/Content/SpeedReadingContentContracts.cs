@@ -169,16 +169,20 @@ public interface ILegacySpeedReadingCatalog
         bool onlyWithQuestions,
         Guid? targetAgeGroupId,
         bool? isActive,
+        Guid? viewerUserId,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<string>> GetReadingTextCategoriesAsync(
+        Guid? viewerUserId,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<int>> GetReadingTextDifficultyLevelsAsync(
+        Guid? viewerUserId,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<ShortReadingTextSummary>> GetShortReadingTextsAsync(
         int limit,
+        Guid? viewerUserId,
         CancellationToken cancellationToken = default);
 
     Task<ReadingTextDetails?> GetReadingTextAsync(
@@ -186,6 +190,7 @@ public interface ILegacySpeedReadingCatalog
         bool includeQuestions,
         bool includeInactive,
         bool includeAnswers,
+        Guid? viewerUserId,
         CancellationToken cancellationToken = default);
 }
 
