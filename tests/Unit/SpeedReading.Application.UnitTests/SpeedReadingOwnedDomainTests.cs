@@ -679,6 +679,18 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Theory]
+    [InlineData("regression_reduction", "{\"engineType\":\"regression_reduction\",\"wpm\":0}")]
+    [InlineData("regression_reduction", "{\"engineType\":\"regression_reduction\",\"chunkSize\":0}")]
+    [InlineData("subvocalization_reduction", "{\"engineType\":\"subvocalization_reduction\",\"targetWpm\":5000}")]
+    [InlineData("subvocalization_reduction", "{\"engineType\":\"subvocalization_reduction\",\"metronomeBpm\":0}")]
+    public void Active_reading_behavior_configuration_rejects_unsafe_values(string engineType, string configuration)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, engineType);
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Theory]
     [InlineData("{\"engineType\":\"reading_comprehension\",\"timing\":{\"minReadingTimeMs\":1000,\"maxReadingTimeMs\":0}}")]
     [InlineData("{\"engineType\":\"reading_comprehension\",\"engineConfig\":{\"timing\":{\"minReadingTimeMs\":1000,\"maxReadingTimeMs\":0}}}")]
     [InlineData("{\"engineType\":\"reading_comprehension\",\"timing\":{\"minReadingTimeMs\":1000},\"engineConfig\":{\"timing\":{\"maxReadingTimeMs\":0}}}")]
