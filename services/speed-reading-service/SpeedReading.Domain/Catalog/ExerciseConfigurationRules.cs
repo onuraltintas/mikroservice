@@ -97,6 +97,12 @@ public static class ExerciseConfigurationRules
 
             if (configured == "vocabulary_builder")
                 ValidateVocabularyConfiguration(root, nested);
+            if (configured == "visualization")
+            {
+                ValidateVisualizationConfiguration(root);
+                if (nested.HasValue)
+                    ValidateVisualizationConfiguration(nested.Value);
+            }
             if (configured == "grid_interaction")
             {
                 ValidateGridConfiguration(root);
@@ -185,19 +191,54 @@ public static class ExerciseConfigurationRules
 
     private static void ValidateVocabularyConfiguration(JsonElement root, JsonElement? nested)
     {
-        var config = nested ?? root;
-        if (TryGetObject(config, "vocabulary") is not { } vocabulary)
+        foreach (var config in nested.HasValue ? new[] { root, nested.Value } : new[] { root })
+        {
+            ValidateOptionalEnum(config, "mode", ["learning", "quiz", "review"], "Kelime egzersizi modu");
+            ValidateOptionalEnum(config, "quizType", ["word_to_definition", "definition_to_word", "mixed"], "Kelime soru türü");
+            ValidateOptionalIntRange(config, "timeLimitPerWord", 0, 3_600, "Kelime başına süre");
+            ValidateOptionalIntRange(config, "currentWordIndex", 0, 499, "Başlangıç kelime indeksi");
+            ValidateOptionalArray(config, "words", 500, "Kelime listesi");
+            if (TryGetProperty(config, "words") is { ValueKind: JsonValueKind.Array } words)
+            {
+                foreach (var word in words.EnumerateArray())
+                {
+                    if (word.ValueKind != JsonValueKind.Object
+                        || !Guid.TryParse(GetString(word, "id"), out _)
+                        || string.IsNullOrWhiteSpace(GetString(word, "word"))
+                        || string.IsNullOrWhiteSpace(GetString(word, "definition")))
+                    {
+                        throw new ArgumentException("Kelime listesi geçerli id, kelime ve tanım alanları içermelidir.");
+                    }
+                    ValidateOptionalBoundedString(word, "word", 500, "Kelime");
+                    ValidateOptionalBoundedString(word, "definition", 5_000, "Kelime tanımı");
+                }
+            }
+
+            if (TryGetObject(config, "vocabulary") is not { } vocabulary)
+                continue;
+            if (vocabulary.TryGetProperty("count", out var count)
+                && (!count.TryGetInt32(out var countValue) || countValue is < 1 or > 50))
+                throw new ArgumentException("Kelime egzersizinde sayı 1 ile 50 arasında olmalıdır.");
+            if (vocabulary.TryGetProperty("difficultyLevel", out var difficulty)
+                && (!difficulty.TryGetInt32(out var difficultyValue) || difficultyValue is < 1 or > 5))
+                throw new ArgumentException("Kelime egzersizinde zorluk 1 ile 5 arasında olmalıdır.");
+        }
+    }
+
+    private static void ValidateVisualizationConfiguration(JsonElement config)
+    {
+        ValidateOptionalEnum(config, "mode", ["static", "guided", "flash"], "Görselleştirme modu");
+        ValidateOptionalArray(config, "scenes", 100, "Görselleştirme sahneleri");
+        if (TryGetProperty(config, "scenes") is not { ValueKind: JsonValueKind.Array } scenes)
             return;
 
-        if (vocabulary.TryGetProperty("count", out var count)
-            && (!count.TryGetInt32(out var countValue) || countValue is < 1 or > 50))
+        foreach (var scene in scenes.EnumerateArray())
         {
-            throw new ArgumentException("Kelime egzersizinde sayı 1 ile 50 arasında olmalıdır.");
-        }
-        if (vocabulary.TryGetProperty("difficultyLevel", out var difficulty)
-            && (!difficulty.TryGetInt32(out var difficultyValue) || difficultyValue is < 1 or > 5))
-        {
-            throw new ArgumentException("Kelime egzersizinde zorluk 1 ile 5 arasında olmalıdır.");
+            if (scene.ValueKind != JsonValueKind.Object)
+                throw new ArgumentException("Görselleştirme sahnesi bir nesne olmalıdır.");
+            ValidateOptionalIntRange(scene, "duration", 1, 3_600, "Sahne gösterim süresi");
+            ValidateOptionalIntRange(scene, "stepDurationMs", 100, 60_000, "Yönlendirme adımı süresi");
+            ValidateOptionalArray(scene, "questions", 100, "Sahne soruları");
         }
     }
 

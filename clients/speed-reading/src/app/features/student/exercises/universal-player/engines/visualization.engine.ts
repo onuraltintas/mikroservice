@@ -12,6 +12,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
+import { boundedInteger, boundedStringArray, boundedText, caseInsensitiveField, recordOrEmpty } from './reading-pacer-safety';
 
 interface VisualizationScene {
     sceneId: string;
@@ -77,24 +78,33 @@ export class VisualizationEngine implements BaseEngine {
     public correctAnswer = '';
 
     initialize(config: VisualizationConfig, callbacks: EngineCallbacks): void {
-        this.config = config;
         this.callbacks = callbacks;
-        this.mode = config.mode || 'static';
-        this.serverAuthoritative = config['serverAuthoritative'] === true;
+        const root = recordOrEmpty(config);
+        const nested = recordOrEmpty(caseInsensitiveField(root, 'engineConfig'));
+        const sessionData = recordOrEmpty(caseInsensitiveField(root, 'sessionData'));
+        const read = (name: string) => caseInsensitiveField(sessionData, name)
+            ?? caseInsensitiveField(nested, name)
+            ?? caseInsensitiveField(root, name);
+        this.config = { ...root, ...nested, ...sessionData } as VisualizationConfig;
+        const mode = read('mode');
+        this.mode = ['static', 'guided', 'flash'].includes(mode) ? mode : 'static';
+        this.serverAuthoritative = read('serverAuthoritative') === true;
 
         // Get scenes from config (try both cases)
-        const rawScenes = config.scenes || config.Scenes || [];
+        const configuredScenes = read('scenes');
+        const rawScenes = Array.isArray(configuredScenes) ? configuredScenes.slice(0, 100) : [];
 
         // Map PascalCase to camelCase
         this.scenes = rawScenes.map((s: any) => ({
-            sceneId: s.sceneId || s.SceneId,
-            description: s.description || s.Description,
-            imageUrl: s.imageUrl || s.ImageUrl,
-            duration: s.duration || s.Duration,
-            displayOrder: s.displayOrder || s.DisplayOrder,
-            steps: s.steps || s.Steps || [],
-            stepDurationMs: s.stepDurationMs || s.StepDurationMs || 3000,
-            questions: (s.questions || s.Questions || []).map((q: any) => ({
+            sceneId: boundedText(caseInsensitiveField(recordOrEmpty(s), 'sceneId'), '', 100),
+            description: boundedText(caseInsensitiveField(recordOrEmpty(s), 'description'), '', 10_000),
+            imageUrl: boundedText(caseInsensitiveField(recordOrEmpty(s), 'imageUrl'), '', 2_000),
+            duration: boundedInteger(caseInsensitiveField(recordOrEmpty(s), 'duration'), 5, 1, 3_600),
+            displayOrder: boundedInteger(caseInsensitiveField(recordOrEmpty(s), 'displayOrder'), 0, 0, 10_000),
+            steps: boundedStringArray(caseInsensitiveField(recordOrEmpty(s), 'steps'), 100, 2_000),
+            stepDurationMs: boundedInteger(caseInsensitiveField(recordOrEmpty(s), 'stepDurationMs'), 3000, 100, 60_000),
+            questions: (Array.isArray(caseInsensitiveField(recordOrEmpty(s), 'questions'))
+                ? caseInsensitiveField(recordOrEmpty(s), 'questions').slice(0, 100) : []).map((q: any) => ({
                 questionId: q.questionId || q.QuestionId,
                 questionText: q.questionText || q.QuestionText,
                 options: q.options || q.Options || [],
@@ -128,6 +138,7 @@ export class VisualizationEngine implements BaseEngine {
     }
 
     start(): void {
+        if (this.state.isRunning || this.state.isCompleted) return;
         if (this.scenes.length === 0) {
             console.error('[VisualizationEngine] No scenes to display');
             return;
@@ -275,6 +286,13 @@ export class VisualizationEngine implements BaseEngine {
             timestamp: new Date()
         });
 
+        if (scene.questions.length === 0) {
+            this.currentSceneIndex++;
+            if (this.currentSceneIndex >= this.scenes.length) this.complete();
+            else this.startScene();
+            return;
+        }
+
         this.callbacks.onStateChange({
             ...this.state,
             phase: 'questions',
@@ -345,6 +363,10 @@ export class VisualizationEngine implements BaseEngine {
         this.questionAnswers = [];
         this.pendingServerAnswer = null;
         this.answerEvaluated = false;
+        this.showingFeedback = false;
+        this.lastAnswer = '';
+        this.lastAnswerCorrect = false;
+        this.correctAnswer = '';
         this.state = {
             isRunning: false,
             isPaused: false,
@@ -373,6 +395,8 @@ export class VisualizationEngine implements BaseEngine {
     }
 
     handleInput(input: any): void {
+        if (!input || typeof input !== 'object' || this.state.isCompleted) return;
+
         // Skip scene display early
         if (input.action === 'skip_scene' && this.phase === 'scene') {
             this.endSceneDisplay();
@@ -547,6 +571,7 @@ export class VisualizationEngine implements BaseEngine {
     }
 
     private complete(): void {
+        if (this.state.isCompleted) return;
         this.cleanup();
         this.state.isRunning = false;
         this.state.isCompleted = true;

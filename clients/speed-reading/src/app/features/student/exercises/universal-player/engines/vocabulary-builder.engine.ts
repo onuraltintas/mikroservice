@@ -10,6 +10,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
+import { boundedInteger, boundedText, caseInsensitiveField, recordOrEmpty } from './reading-pacer-safety';
 
 // ==================== INTERFACES ====================
 
@@ -76,6 +77,8 @@ export class VocabularyBuilderEngine implements BaseEngine {
     private lastAnswerCorrect = false;
     private correctAnswer = '';
     private currentQuizQuestionType: 'word' | 'definition' = 'word'; // 'word' means question is word, options are definitions
+    private serverAuthoritative = false;
+    private pendingQuizAnswer: { word: VocabularyWord; responseTime: number } | null = null;
 
     // Persistence (Local Spaced Repetition)
     private userProgress: Record<string, WordProgress> = {};
@@ -90,15 +93,23 @@ export class VocabularyBuilderEngine implements BaseEngine {
     // ==================== LIFECYCLE ====================
 
     initialize(config: VocabularyConfig, callbacks: EngineCallbacks): void {
-        this.config = config;
         this.callbacks = callbacks;
+        const root = recordOrEmpty(config);
+        const nested = recordOrEmpty(caseInsensitiveField(root, 'engineConfig'));
+        const sessionData = recordOrEmpty(caseInsensitiveField(root, 'sessionData'));
+        const read = (name: string) => caseInsensitiveField(sessionData, name)
+            ?? caseInsensitiveField(nested, name)
+            ?? caseInsensitiveField(root, name);
+        this.config = { ...root, ...nested, ...sessionData } as VocabularyConfig;
+        this.serverAuthoritative = read('serverAuthoritative') === true;
 
         // userId mapping (fallback to guest)
-        this.userId = config['userId'] || config['UserId'] || 'guest';
+        this.userId = boundedText(read('userId'), 'guest', 100) || 'guest';
         this.loadProgress();
 
         // Parse words (handle PascalCase from backend)
-        const rawWords = config.words || config['Words'] || [];
+        const configuredWords = read('words');
+        const rawWords = Array.isArray(configuredWords) ? configuredWords.slice(0, 500) : [];
         this.words = rawWords.map((w: any) => ({
             id: w.id || w.Id,
             word: w.word || w.Word,
@@ -111,10 +122,13 @@ export class VocabularyBuilderEngine implements BaseEngine {
             questionType: w.questionType || w.QuestionType
         }));
 
-        this.mode = config.mode || config['Mode'] || 'learning';
-        this.quizType = config.quizType || config['QuizType'] || 'mixed';
-        this.currentWordIndex = config.currentWordIndex || config['CurrentWordIndex'] || 0;
-        this.timeLimitPerWord = config.timeLimitPerWord || config['TimeLimitPerWord'] || 0;
+        const mode = read('mode');
+        const quizType = read('quizType');
+        this.mode = ['learning', 'quiz', 'review'].includes(mode) ? mode : 'learning';
+        this.quizType = ['word_to_definition', 'definition_to_word', 'mixed'].includes(quizType)
+            ? quizType : 'mixed';
+        this.currentWordIndex = boundedInteger(read('currentWordIndex'), 0, 0, Math.max(0, this.words.length - 1));
+        this.timeLimitPerWord = boundedInteger(read('timeLimitPerWord'), 0, 0, 3_600);
 
         // Initialize state
         this.state = {
@@ -132,6 +146,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
     }
 
     start(): void {
+        if (this.state.isRunning || this.state.isCompleted) return;
         if (this.words.length === 0) {
             console.error('[VocabularyBuilderEngine] No words to display');
             return;
@@ -188,6 +203,24 @@ export class VocabularyBuilderEngine implements BaseEngine {
 
         const word = this.words[this.currentWordIndex];
         const responseTime = this.timeLimitPerWord * 1000;
+
+        if (this.serverAuthoritative) {
+            this.pendingQuizAnswer = { word, responseTime };
+            this.showingFeedback = true;
+            this.lastAnswerCorrect = false;
+            this.callbacks.onAction({
+                action: 'timeout',
+                wordId: word.id,
+                responseTime,
+                timestamp: new Date(),
+                customData: {
+                    box: this.userProgress[word.id]?.box,
+                    isTimeout: true
+                }
+            });
+            this.callbacks.onStateChange({ ...this.state });
+            return;
+        }
 
         // Mark as wrong in SRS
         this.updateLeitnerBox(word.id, false);
@@ -258,6 +291,10 @@ export class VocabularyBuilderEngine implements BaseEngine {
         this.responses = [];
         this.showingDefinition = false;
         this.showingFeedback = false;
+        this.lastAnswerCorrect = false;
+        this.correctAnswer = '';
+        this.currentQuizOptions = [];
+        this.pendingQuizAnswer = null;
 
         this.state = {
             isRunning: false,
@@ -474,6 +511,27 @@ export class VocabularyBuilderEngine implements BaseEngine {
         const word = this.words[this.currentWordIndex];
         const responseTime = Date.now() - this.wordStartTime;
 
+        if (this.serverAuthoritative) {
+            this.pendingQuizAnswer = { word, responseTime };
+            this.showingFeedback = true;
+            this.lastAnswerCorrect = false;
+            this.callbacks.onAction({
+                action: 'answer_question',
+                answer: letter,
+                customData: {
+                    quizType: this.quizType,
+                    questionType: this.currentQuizQuestionType,
+                    selectedAnswer: selectedOption.text,
+                    box: this.userProgress[word.id]?.box
+                },
+                wordId: word.id,
+                responseTime,
+                timestamp: new Date()
+            });
+            this.callbacks.onStateChange({ ...this.state });
+            return;
+        }
+
         // Update Leitner
         this.updateLeitnerBox(word.id, isCorrect);
 
@@ -513,6 +571,35 @@ export class VocabularyBuilderEngine implements BaseEngine {
         this.callbacks.onStateChange({ ...this.state });
     }
 
+    applyServerResponse(response: any): void {
+        const pending = this.pendingQuizAnswer;
+        if (!pending) return;
+        this.pendingQuizAnswer = null;
+
+        if (response?.isValid === false) {
+            this.showingFeedback = false;
+            this.lastAnswerCorrect = false;
+            this.startWordTimer();
+            this.callbacks.onStateChange({ ...this.state });
+            return;
+        }
+
+        const isCorrect = response?.isCorrect === true;
+        this.updateLeitnerBox(pending.word.id, isCorrect);
+        this.responses.push({
+            wordId: pending.word.id,
+            word: pending.word.word,
+            isCorrect,
+            responseTimeMs: pending.responseTime
+        });
+        if (isCorrect) this.state.score++;
+        else this.state.errors++;
+        this.state.currentStep++;
+        this.lastAnswerCorrect = isCorrect;
+        this.callbacks.onStepComplete(this.state.currentStep, isCorrect);
+        this.callbacks.onStateChange({ ...this.state });
+    }
+
     isShowingFeedback(): boolean {
         return this.showingFeedback;
     }
@@ -522,10 +609,11 @@ export class VocabularyBuilderEngine implements BaseEngine {
     }
 
     getCorrectAnswer(): string {
-        return this.correctAnswer;
+        return this.pendingQuizAnswer ? '' : this.correctAnswer;
     }
 
     nextQuizQuestion(): void {
+        if (!this.showingFeedback || this.pendingQuizAnswer || this.state.isCompleted) return;
         this.showingFeedback = false;
         this.nextWord();
     }
@@ -585,7 +673,11 @@ export class VocabularyBuilderEngine implements BaseEngine {
     // ==================== COMPLETION ====================
 
     private completeExercise(): void {
+        if (this.state.isCompleted) return;
         if (this.timerInterval) clearInterval(this.timerInterval);
+        this.clearWordTimer();
+        this.state.isRunning = false;
+        this.state.isPaused = false;
         this.state.isCompleted = true;
 
         const result = this.getResult();

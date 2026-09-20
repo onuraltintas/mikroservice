@@ -35,6 +35,7 @@ import { ReadingComprehensionEngine } from './engines/reading-comprehension.engi
 import { RegressionReductionEngine } from './engines/regression-reduction.engine';
 import { SubvocalizationReductionEngine } from './engines/subvocalization-reduction.engine';
 import { VisualizationEngine } from './engines/visualization.engine';
+import { VocabularyBuilderEngine } from './engines/vocabulary-builder.engine';
 import { ExerciseService } from '../../../../core/services/exercise.service';
 import { ExerciseSessionService } from '../../../../core/services/exercise-session.service';
 import { ExerciseProgramService, CompleteExerciseRequest } from '../../../../core/services/exercise-program.service';
@@ -1102,6 +1103,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
                       ? 'quiz'
                       : null;
               if (!reviewKind) return;
+              const vocabularyEngine = this.engine as VocabularyBuilderEngine;
               void this.enqueueAction({
                 ...action,
                 action: 'vocabulary_review',
@@ -1110,7 +1112,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
                   vocabularyItemId,
                   reviewKind
                 }
-              }).catch(() => undefined);
+              }, response => vocabularyEngine.applyServerResponse(response))
+                .catch(() => vocabularyEngine.applyServerResponse({ isValid: false }));
             }
             return;
           }
