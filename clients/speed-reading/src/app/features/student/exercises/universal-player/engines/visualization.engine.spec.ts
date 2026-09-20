@@ -64,4 +64,17 @@ describe('VisualizationEngine', () => {
     expect(engine.lastAnswer).toBe('');
     expect(() => engine.handleInput(null)).not.toThrow();
   });
+
+  it('advances past scenes without questions instead of getting stuck', () => {
+    let completions = 0;
+    const engine = new VisualizationEngine();
+    engine.initialize({ scenes: [{ ...scene, questions: [] }] } as any, callbacks(() => completions++));
+    engine.start();
+
+    (engine as any).endSceneDisplay();
+
+    expect(engine.state.isCompleted).toBeTrue();
+    expect(completions).toBe(1);
+    engine.destroy();
+  });
 });

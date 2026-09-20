@@ -747,6 +747,18 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Theory]
+    [InlineData("visualization", "{\"engineType\":\"visualization\",\"scenes\":[{\"duration\":0,\"questions\":[]}]}")]
+    [InlineData("visualization", "{\"engineType\":\"visualization\",\"scenes\":[{\"duration\":5,\"questions\":{}}]}")]
+    [InlineData("vocabulary_builder", "{\"engineType\":\"vocabulary_builder\",\"words\":[{\"id\":\"\",\"word\":\"a\",\"definition\":\"b\"}]}")]
+    [InlineData("vocabulary_builder", "{\"engineType\":\"vocabulary_builder\",\"words\":[{\"id\":\"e70e75a9-5bd8-46cf-8b62-b92173b8c7a0\",\"word\":\"\",\"definition\":\"b\"}]}")]
+    public void Active_content_engine_configuration_rejects_invalid_items(string engineType, string configuration)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, engineType);
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Theory]
     [InlineData("{\"engineType\":\"reading_comprehension\",\"timing\":{\"minReadingTimeMs\":1000,\"maxReadingTimeMs\":0}}")]
     [InlineData("{\"engineType\":\"reading_comprehension\",\"engineConfig\":{\"timing\":{\"minReadingTimeMs\":1000,\"maxReadingTimeMs\":0}}}")]
     [InlineData("{\"engineType\":\"reading_comprehension\",\"timing\":{\"minReadingTimeMs\":1000},\"engineConfig\":{\"timing\":{\"maxReadingTimeMs\":0}}}")]

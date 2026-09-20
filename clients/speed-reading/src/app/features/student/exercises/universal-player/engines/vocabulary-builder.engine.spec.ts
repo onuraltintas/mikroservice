@@ -41,6 +41,18 @@ describe('VocabularyBuilderEngine server validation contract', () => {
     expect(engine.state.isRunning).toBeFalse();
   });
 
+  it('does not skip a quiz word before feedback is shown', () => {
+    const engine = createQuizEngine([], []);
+    engine.start();
+    const firstWord = engine.getCurrentWord()?.id;
+
+    engine.nextQuizQuestion();
+
+    expect(engine.getCurrentWord()?.id).toBe(firstWord);
+    expect(engine.state.currentStep).toBe(0);
+    engine.destroy();
+  });
+
   it('sends the selected option text without exposing a client correctness key', () => {
     const actions: any[] = [];
     const engine = new VocabularyBuilderEngine();
