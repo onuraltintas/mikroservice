@@ -147,6 +147,73 @@ describe('reading pacer runtime safety', () => {
     engine.destroy();
   }));
 
+  it('excludes paused time from text stream response time', fakeAsync(() => {
+    const engine = new TextStreamEngine();
+    engine.initialize({
+      mode: 'tachistoscope',
+      Words: ['bir'],
+      DisplayDurationMs: 50,
+      visuals: { showFixation: false }
+    } as any, callbacks);
+
+    engine.start();
+    tick(50);
+    engine.pause();
+    tick(1000);
+    engine.resume();
+    engine.handleInput({ answer: 'bir' });
+
+    expect(engine.getLastTrialResult()?.responseTimeMs).toBe(0);
+    engine.destroy();
+  }));
+
+  it('cancels delayed text stream completion when destroyed', fakeAsync(() => {
+    let completions = 0;
+    const trackedCallbacks = { ...callbacks, onComplete: () => completions++ };
+    const engine = new TextStreamEngine();
+    engine.initialize({
+      mode: 'tachistoscope',
+      Words: ['bir'],
+      DisplayDurationMs: 50,
+      visuals: { showFixation: false }
+    } as any, trackedCallbacks);
+
+    engine.start();
+    tick(50);
+    engine.handleInput({ answer: 'bir' });
+    engine.destroy();
+    tick(500);
+
+    expect(completions).toBe(0);
+  }));
+
+  it('does not restart text fade after completion without reset', () => {
+    let starts = 0;
+    const trackedCallbacks = { ...callbacks, onStart: () => starts++ };
+    const engine = new TextFadeEngine();
+    engine.initialize({ content: { text: 'bir' } } as any, trackedCallbacks);
+
+    (engine as any).complete();
+    engine.start();
+
+    expect(starts).toBe(0);
+    engine.destroy();
+  });
+
+  it('records text stream timeout coverage instead of full success', () => {
+    let result: any;
+    const trackedCallbacks = { ...callbacks, onComplete: (value: any) => result = value };
+    const engine = new TextStreamEngine();
+    engine.initialize({ mode: 'rsvp', Words: ['bir', 'iki', 'üç', 'dört'] } as any, trackedCallbacks);
+
+    engine.finish();
+
+    expect(result.completedSteps).toBe(0);
+    expect(result.totalSteps).toBe(4);
+    expect(result.score).toBe(0);
+    expect(result.details.timedOut).toBeTrue();
+  });
+
   it('clamps text stream duration and content count from legacy configuration', () => {
     const engine = new TextStreamEngine();
 
