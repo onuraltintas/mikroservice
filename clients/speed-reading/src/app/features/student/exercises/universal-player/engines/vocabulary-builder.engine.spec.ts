@@ -98,6 +98,29 @@ describe('VocabularyBuilderEngine server validation contract', () => {
     engine.destroy();
   });
 
+  it('waits for the authoritative server result before recording a timeout', () => {
+    const engine = new VocabularyBuilderEngine();
+    engine.initialize({
+      serverAuthoritative: true,
+      mode: 'quiz',
+      timeLimitPerWord: 10,
+      words: [
+        { id: crypto.randomUUID(), word: 'merak', definition: 'Öğrenme isteği' },
+        { id: crypto.randomUUID(), word: 'özen', definition: 'Dikkatli çalışma' }
+      ]
+    } as any, createCallbacks([], []));
+    engine.start();
+
+    (engine as any).handleTimeout();
+    expect(engine.state.currentStep).toBe(0);
+    expect(engine.state.errors).toBe(0);
+
+    engine.applyServerResponse({ isValid: true, isCorrect: false });
+    expect(engine.state.currentStep).toBe(1);
+    expect(engine.state.errors).toBe(1);
+    engine.destroy();
+  });
+
   it('sends the selected option text without exposing a client correctness key', () => {
     const actions: any[] = [];
     const engine = new VocabularyBuilderEngine();
