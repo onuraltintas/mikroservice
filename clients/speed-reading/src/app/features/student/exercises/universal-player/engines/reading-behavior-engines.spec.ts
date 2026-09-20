@@ -156,4 +156,43 @@ describe('reading behavior engines', () => {
     expect((engine.state as any).metronomeStep).toBe(2);
     engine.destroy();
   }));
+
+  it('fully resets regression state and allows a new run', () => {
+    let starts = 0;
+    const engine = new RegressionReductionEngine();
+    engine.initialize({ readingTextContent: 'bir' } as any,
+      { ...callbacks(), onStart: () => starts++ });
+    (engine as any).complete();
+
+    engine.reset();
+    engine.start();
+
+    expect(engine.state.isCompleted).toBeFalse();
+    expect(engine.state.score).toBe(0);
+    expect(engine.state.errors).toBe(0);
+    expect(starts).toBe(1);
+    engine.destroy();
+  });
+
+  it('reports one-based subvocalization reading progress', fakeAsync(() => {
+    const engine = new SubvocalizationReductionEngine();
+    engine.initialize({ readingTextContent: 'bir iki', wpm: 1500, chunkSize: 1 } as any, callbacks());
+
+    engine.start();
+    tick(40);
+
+    expect(engine.state.currentStep).toBe(1);
+    engine.destroy();
+  }));
+
+  it('ignores late regression answers after completion', () => {
+    const engine = new RegressionReductionEngine();
+    engine.initialize({
+      readingTextContent: 'bir',
+      questions: [{ questionId: 'q1', correctAnswer: 'a' }]
+    } as any, callbacks());
+    (engine as any).complete();
+
+    expect(() => engine.handleInput({ type: 'answer', answer: 'a' })).not.toThrow();
+  });
 });

@@ -683,6 +683,7 @@ public sealed class SpeedReadingOwnedDomainTests
     [InlineData("regression_reduction", "{\"engineType\":\"regression_reduction\",\"chunkSize\":0}")]
     [InlineData("subvocalization_reduction", "{\"engineType\":\"subvocalization_reduction\",\"targetWpm\":5000}")]
     [InlineData("subvocalization_reduction", "{\"engineType\":\"subvocalization_reduction\",\"metronomeBpm\":0}")]
+    [InlineData("subvocalization_reduction", "{\"engineType\":\"subvocalization_reduction\",\"difficultySettings\":{\"targetWpm\":5000}}")]
     public void Active_reading_behavior_configuration_rejects_unsafe_values(string engineType, string configuration)
     {
         var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, engineType);
