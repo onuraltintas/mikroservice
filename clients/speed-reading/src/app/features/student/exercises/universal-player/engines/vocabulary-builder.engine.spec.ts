@@ -70,6 +70,9 @@ describe('VocabularyBuilderEngine server validation contract', () => {
     engine.submitQuizAnswer(engine.getQuizOptions()[0].letter);
     expect(engine.state.currentStep).toBe(0);
     expect(engine.state.score).toBe(0);
+    const pendingWord = engine.getCurrentWord()?.id;
+    engine.nextQuizQuestion();
+    expect(engine.getCurrentWord()?.id).toBe(pendingWord);
 
     engine.applyServerResponse({ isValid: true, isCorrect: true });
     expect(engine.state.currentStep).toBe(1);
