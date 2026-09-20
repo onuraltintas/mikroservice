@@ -195,4 +195,22 @@ describe('reading behavior engines', () => {
 
     expect(() => engine.handleInput({ type: 'answer', answer: 'a' })).not.toThrow();
   });
+
+  it('ignores invalid regression positions', () => {
+    const engine = new RegressionReductionEngine();
+    engine.initialize({ readingTextContent: 'bir' } as any, callbacks());
+
+    engine.handleInput({ type: 'regression', wordIndex: 99 });
+
+    expect(engine.state.errors).toBe(0);
+    expect(engine.state.accuracy).toBe(100);
+  });
+
+  it('ignores malformed subvocalization input events', () => {
+    const engine = new SubvocalizationReductionEngine();
+    engine.initialize({ readingTextContent: 'bir iki' } as any, callbacks());
+
+    expect(() => engine.handleInput(null)).not.toThrow();
+    expect(() => engine.handleInput({ type: 'line_breaks' })).not.toThrow();
+  });
 });
