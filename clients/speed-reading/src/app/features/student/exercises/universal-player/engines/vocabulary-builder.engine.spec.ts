@@ -53,6 +53,51 @@ describe('VocabularyBuilderEngine server validation contract', () => {
     engine.destroy();
   });
 
+  it('waits for the authoritative server result before scoring a quiz answer', () => {
+    const actions: any[] = [];
+    const engine = new VocabularyBuilderEngine();
+    engine.initialize({
+      serverAuthoritative: true,
+      mode: 'quiz',
+      quizType: 'word_to_definition',
+      words: [
+        { id: crypto.randomUUID(), word: 'merak', definition: 'Öğrenme isteği' },
+        { id: crypto.randomUUID(), word: 'özen', definition: 'Dikkatli çalışma' }
+      ]
+    } as any, createCallbacks(actions, []));
+    engine.start();
+
+    engine.submitQuizAnswer(engine.getQuizOptions()[0].letter);
+    expect(engine.state.currentStep).toBe(0);
+    expect(engine.state.score).toBe(0);
+
+    engine.applyServerResponse({ isValid: true, isCorrect: true });
+    expect(engine.state.currentStep).toBe(1);
+    expect(engine.state.score).toBe(1);
+    expect(engine.getLastAnswerCorrect()).toBeTrue();
+    engine.destroy();
+  });
+
+  it('releases a rejected authoritative quiz answer for retry', () => {
+    const engine = new VocabularyBuilderEngine();
+    engine.initialize({
+      serverAuthoritative: true,
+      mode: 'quiz',
+      words: [
+        { id: crypto.randomUUID(), word: 'merak', definition: 'Öğrenme isteği' },
+        { id: crypto.randomUUID(), word: 'özen', definition: 'Dikkatli çalışma' }
+      ]
+    } as any, createCallbacks([], []));
+    engine.start();
+    engine.submitQuizAnswer(engine.getQuizOptions()[0].letter);
+
+    engine.applyServerResponse({ isValid: false });
+
+    expect(engine.isShowingFeedback()).toBeFalse();
+    expect(engine.state.currentStep).toBe(0);
+    engine.destroy();
+  });
+
   it('sends the selected option text without exposing a client correctness key', () => {
     const actions: any[] = [];
     const engine = new VocabularyBuilderEngine();
