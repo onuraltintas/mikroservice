@@ -1,6 +1,46 @@
 import { VocabularyBuilderEngine } from './vocabulary-builder.engine';
 
 describe('VocabularyBuilderEngine server validation contract', () => {
+  it('reads words and settings from nested engine configuration', () => {
+    const engine = new VocabularyBuilderEngine();
+    engine.initialize({
+      engineConfig: {
+        mode: 'quiz',
+        quizType: 'definition_to_word',
+        timeLimitPerWord: 12,
+        words: [{ id: crypto.randomUUID(), word: 'merak', definition: 'Öğrenme isteği' }]
+      }
+    } as any, createCallbacks([], []));
+
+    expect(engine.getMode()).toBe('quiz');
+    expect(engine.getCurrentWord()?.word).toBe('merak');
+    expect(engine.timeLimitPerWord).toBe(12);
+    expect(engine.state.totalSteps).toBe(1);
+  });
+
+  it('starts and completes only once and stops running on completion', () => {
+    let starts = 0;
+    let completions = 0;
+    const engine = new VocabularyBuilderEngine();
+    engine.initialize({
+      mode: 'learning',
+      words: [{ id: crypto.randomUUID(), word: 'merak', definition: 'Öğrenme isteği' }]
+    } as any, {
+      ...createCallbacks([], []),
+      onStart: () => starts++,
+      onComplete: () => completions++
+    });
+
+    engine.start();
+    engine.start();
+    engine.markAsKnown();
+    (engine as any).completeExercise();
+
+    expect(starts).toBe(1);
+    expect(completions).toBe(1);
+    expect(engine.state.isRunning).toBeFalse();
+  });
+
   it('sends the selected option text without exposing a client correctness key', () => {
     const actions: any[] = [];
     const engine = new VocabularyBuilderEngine();

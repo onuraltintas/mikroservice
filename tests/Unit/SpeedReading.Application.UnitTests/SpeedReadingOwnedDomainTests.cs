@@ -733,6 +733,20 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Theory]
+    [InlineData("visualization", "{\"engineType\":\"visualization\",\"mode\":\"invalid\"}")]
+    [InlineData("visualization", "{\"engineType\":\"visualization\",\"scenes\":{}}")]
+    [InlineData("vocabulary_builder", "{\"engineType\":\"vocabulary_builder\",\"mode\":\"invalid\"}")]
+    [InlineData("vocabulary_builder", "{\"engineType\":\"vocabulary_builder\",\"quizType\":\"invalid\"}")]
+    [InlineData("vocabulary_builder", "{\"engineType\":\"vocabulary_builder\",\"timeLimitPerWord\":3601}")]
+    [InlineData("vocabulary_builder", "{\"engineType\":\"vocabulary_builder\",\"words\":{}}")]
+    public void Active_content_engine_configuration_rejects_unsafe_values(string engineType, string configuration)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, engineType);
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Theory]
     [InlineData("{\"engineType\":\"reading_comprehension\",\"timing\":{\"minReadingTimeMs\":1000,\"maxReadingTimeMs\":0}}")]
     [InlineData("{\"engineType\":\"reading_comprehension\",\"engineConfig\":{\"timing\":{\"minReadingTimeMs\":1000,\"maxReadingTimeMs\":0}}}")]
     [InlineData("{\"engineType\":\"reading_comprehension\",\"timing\":{\"minReadingTimeMs\":1000},\"engineConfig\":{\"timing\":{\"maxReadingTimeMs\":0}}}")]
