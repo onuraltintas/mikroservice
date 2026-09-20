@@ -77,4 +77,83 @@ describe('reading behavior engines', () => {
     engine.reset();
     expect(engine.state.totalSteps).toBe(3);
   });
+
+  it('starts each behavior engine only once', () => {
+    let regressionStarts = 0;
+    let subvocalizationStarts = 0;
+    const regression = new RegressionReductionEngine();
+    const subvocalization = new SubvocalizationReductionEngine();
+    regression.initialize({ readingTextContent: 'bir', wpm: 200 } as any,
+      { ...callbacks(), onStart: () => regressionStarts++ });
+    subvocalization.initialize({ readingTextContent: 'bir', wpm: 200 } as any,
+      { ...callbacks(), onStart: () => subvocalizationStarts++ });
+
+    regression.start();
+    regression.start();
+    subvocalization.start();
+    subvocalization.start();
+
+    expect(regressionStarts).toBe(1);
+    expect(subvocalizationStarts).toBe(1);
+    regression.destroy();
+    subvocalization.destroy();
+  });
+
+  it('emits pause and resume callbacks for both behavior engines', () => {
+    let pauses = 0;
+    let resumes = 0;
+    const trackedCallbacks = {
+      ...callbacks(),
+      onPause: () => pauses++,
+      onResume: () => resumes++
+    };
+    const regression = new RegressionReductionEngine();
+    const subvocalization = new SubvocalizationReductionEngine();
+    regression.initialize({ readingTextContent: 'bir' } as any, trackedCallbacks);
+    subvocalization.initialize({ readingTextContent: 'bir' } as any, trackedCallbacks);
+
+    regression.start();
+    subvocalization.start();
+    regression.pause();
+    subvocalization.pause();
+    regression.resume();
+    subvocalization.resume();
+
+    expect(pauses).toBe(2);
+    expect(resumes).toBe(2);
+    regression.destroy();
+    subvocalization.destroy();
+  });
+
+  it('completes each behavior engine only once', () => {
+    let completions = 0;
+    const trackedCallbacks = callbacks(() => completions++);
+    const regression = new RegressionReductionEngine();
+    const subvocalization = new SubvocalizationReductionEngine();
+    regression.initialize({ readingTextContent: 'bir' } as any, trackedCallbacks);
+    subvocalization.initialize({ readingTextContent: 'bir' } as any, trackedCallbacks);
+
+    (regression as any).complete();
+    (regression as any).complete();
+    (subvocalization as any).complete();
+    (subvocalization as any).complete();
+
+    expect(completions).toBe(2);
+  });
+
+  it('uses configured metronome BPM', fakeAsync(() => {
+    const engine = new SubvocalizationReductionEngine();
+    engine.initialize({
+      readingTextContent: 'bir iki üç',
+      metronomeEnabled: true,
+      metronomeBpm: 120,
+      wpm: 20
+    } as any, callbacks());
+
+    engine.start();
+    expect((engine.state as any).metronomeStep).toBe(1);
+    tick(500);
+    expect((engine.state as any).metronomeStep).toBe(2);
+    engine.destroy();
+  }));
 });
