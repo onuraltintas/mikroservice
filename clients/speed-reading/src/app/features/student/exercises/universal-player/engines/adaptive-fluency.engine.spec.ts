@@ -2,6 +2,17 @@ import { fakeAsync, tick } from '@angular/core/testing';
 import { AdaptiveFluencyEngine } from './adaptive-fluency.engine';
 
 describe('AdaptiveFluencyEngine', () => {
+  const callbacks = (onComplete: (result: any) => void = () => undefined) => ({
+    onStart: () => undefined,
+    onPause: () => undefined,
+    onResume: () => undefined,
+    onComplete,
+    onError: () => undefined,
+    onStateChange: () => undefined,
+    onStepComplete: () => undefined,
+    onAction: () => undefined
+  });
+
   it('keeps the primary passage for repetitions and switches only for transfer', fakeAsync(() => {
     const engine = new AdaptiveFluencyEngine();
     engine.initialize({
@@ -38,4 +49,44 @@ describe('AdaptiveFluencyEngine', () => {
     tick(250);
     engine.destroy();
   }));
+
+  it('reads adaptive content and settings from nested engine configuration', () => {
+    const engine = new AdaptiveFluencyEngine();
+    engine.initialize({
+      engineConfig: {
+        content: 'iç içe birincil metin',
+        wordCount: 3,
+        adaptiveStage: 3,
+        adaptiveTargetWpm: 280,
+        adaptiveTransferContent: 'iç içe transfer metni',
+        adaptiveTransferWordCount: 4,
+        adaptiveTransferQuestions: [{ questionId: 'transfer' }]
+      }
+    }, callbacks());
+
+    expect(engine.getStage()).toBe(3);
+    expect(engine.getTargetWpm()).toBe(280);
+    expect(engine.getText()).toBe('iç içe transfer metni');
+    expect(engine.getWordCount()).toBe(4);
+    expect(engine.getQuestions()[0].questionId).toBe('transfer');
+  });
+
+  it('starts and completes only once', () => {
+    let starts = 0;
+    let completions = 0;
+    const engine = new AdaptiveFluencyEngine();
+    engine.initialize({ content: 'bir iki' }, {
+      ...callbacks(() => completions++),
+      onStart: () => starts++
+    });
+
+    engine.start();
+    engine.start();
+    engine.completeReading();
+    engine.completeReading();
+
+    expect(starts).toBe(1);
+    expect(completions).toBe(1);
+    expect(engine.state.currentStep).toBe(1);
+  });
 });
