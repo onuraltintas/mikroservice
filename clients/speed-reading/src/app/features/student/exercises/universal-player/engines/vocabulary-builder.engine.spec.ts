@@ -70,6 +70,7 @@ describe('VocabularyBuilderEngine server validation contract', () => {
     engine.submitQuizAnswer(engine.getQuizOptions()[0].letter);
     expect(engine.state.currentStep).toBe(0);
     expect(engine.state.score).toBe(0);
+    expect(engine.getCorrectAnswer()).toBe('');
     const pendingWord = engine.getCurrentWord()?.id;
     engine.nextQuizQuestion();
     expect(engine.getCurrentWord()?.id).toBe(pendingWord);
@@ -78,6 +79,7 @@ describe('VocabularyBuilderEngine server validation contract', () => {
     expect(engine.state.currentStep).toBe(1);
     expect(engine.state.score).toBe(1);
     expect(engine.getLastAnswerCorrect()).toBeTrue();
+    expect(engine.getCorrectAnswer()).not.toBe('');
     engine.destroy();
   });
 
