@@ -5,7 +5,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
-import { boundedInteger, boundedText, recordOrEmpty } from './reading-pacer-safety';
+import { boundedInteger, boundedText, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './reading-pacer-safety';
 
 export interface TextFadeConfig extends EngineConfig {
     content: {
@@ -45,6 +45,9 @@ export class TextFadeEngine implements BaseEngine {
     private fadeInterval: any;
     private countdownInterval: any;
     private countdownTimeout: any;
+    private countdownEndsAt = 0;
+    private countdownRemainingMs = 0;
+    private countdownActive = false;
 
     private words: string[] = [];
     private fadedWordIndex = -1;
@@ -59,24 +62,36 @@ export class TextFadeEngine implements BaseEngine {
     ];
 
     initialize(config: EngineConfig, callbacks: EngineCallbacks): void {
-        this.config = config as TextFadeConfig;
         this.callbacks = callbacks;
-
-        const backend = config as any;
-        this.config.content = recordOrEmpty(this.config.content) as TextFadeConfig['content'];
-        this.config.visuals = recordOrEmpty(this.config.visuals) as TextFadeConfig['visuals'];
-        const fading = recordOrEmpty(this.config.fading);
+        const root = config as any;
+        const nested = recordOrEmpty(caseInsensitiveField(root, 'engineConfig'));
+        const content = mergeCaseInsensitiveRecords(root, nested, 'content');
+        const visuals = mergeCaseInsensitiveRecords(root, nested, 'visuals');
+        const fading = mergeCaseInsensitiveRecords(root, nested, 'fading');
+        this.config = {
+            ...root,
+            ...nested,
+            content,
+            visuals: {
+                ...visuals,
+                fontSize: typeof visuals['fontsize'] === 'string' ? visuals['fontsize'] : 'medium'
+            }
+        } as TextFadeConfig;
 
         // Prepare words
         const text = boundedText(
-            backend.ReadingTextContent ?? backend.readingTextContent ?? this.config.content?.text,
+            caseInsensitiveField(nested, 'readingTextContent')
+                ?? caseInsensitiveField(root, 'readingTextContent')
+                ?? content['text'],
             TextFadeEngine.TEXT_POOL.join(' '));
         this.words = text.split(/\s+/).filter((w: string) => w.length > 0);
 
         // Determine Speed (WPM)
         this.config.fading = {
-            speedWpm: boundedInteger(backend.TargetWpm ?? backend.targetWpm ?? fading['speedWpm'], 200, 20, 1500),
-            lagMs: boundedInteger(backend.LagMs ?? backend.lagMs ?? fading['lagMs'], 3000, 0, 10000)
+            speedWpm: boundedInteger(caseInsensitiveField(nested, 'targetWpm')
+                ?? caseInsensitiveField(root, 'targetWpm') ?? fading['speedwpm'], 200, 20, 1500),
+            lagMs: boundedInteger(caseInsensitiveField(nested, 'lagMs')
+                ?? caseInsensitiveField(root, 'lagMs') ?? fading['lagms'], 3000, 0, 10000)
         };
 
         this.state.totalSteps = this.words.length;
@@ -89,7 +104,7 @@ export class TextFadeEngine implements BaseEngine {
     }
 
     start(): void {
-        if (this.state.isRunning) return;
+        if (this.state.isRunning || this.state.isCompleted) return;
 
         this.state.isRunning = true;
         this.state.isPaused = false;
@@ -113,24 +128,33 @@ export class TextFadeEngine implements BaseEngine {
         this.callbacks.onStart();
 
         const lagMs = this.config.fading.lagMs;
-        this.state.countdown = Math.ceil(lagMs / 1000);
+        this.countdownRemainingMs = lagMs;
+        this.state.countdown = Math.ceil(this.countdownRemainingMs / 1000);
         this.callbacks.onStateChange({ ...this.state });
-        if (lagMs === 0) {
+        this.startCountdown();
+    }
+
+    private startCountdown(): void {
+        if (this.countdownRemainingMs <= 0) {
+            this.countdownActive = false;
             this.startFading();
             return;
         }
-        const countdownEndsAt = Date.now() + lagMs;
+        this.countdownActive = true;
+        this.countdownEndsAt = Date.now() + this.countdownRemainingMs;
         this.countdownInterval = setInterval(() => {
             if (this.state.isPaused) return;
-            this.state.countdown = Math.max(0, Math.ceil((countdownEndsAt - Date.now()) / 1000));
+            this.state.countdown = Math.max(0, Math.ceil((this.countdownEndsAt - Date.now()) / 1000));
             this.callbacks.onStateChange({ ...this.state });
         }, 250);
         this.countdownTimeout = setTimeout(() => {
             clearInterval(this.countdownInterval);
+            this.countdownActive = false;
+            this.countdownRemainingMs = 0;
             this.state.countdown = 0;
             this.callbacks.onStateChange({ ...this.state });
             this.startFading();
-        }, lagMs);
+        }, this.countdownRemainingMs);
     }
 
     private expectedTime = 0;
@@ -182,6 +206,11 @@ export class TextFadeEngine implements BaseEngine {
         if (this.state.isPaused) return;
         this.state.isPaused = true;
         this.pauseStartTime = Date.now();
+        if (this.countdownActive) {
+            this.countdownRemainingMs = Math.max(0, this.countdownEndsAt - this.pauseStartTime);
+            clearInterval(this.countdownInterval);
+            clearTimeout(this.countdownTimeout);
+        }
         this.callbacks.onPause();
         this.callbacks.onStateChange({ ...this.state });
     }
@@ -198,6 +227,10 @@ export class TextFadeEngine implements BaseEngine {
         this.nextFadeTime += pauseDuration;
 
         this.state.isPaused = false;
+        if (this.countdownActive) {
+            this.state.countdown = Math.ceil(this.countdownRemainingMs / 1000);
+            this.startCountdown();
+        }
         // calculateNextFadeTime call removed as nextFadeTime is shifted
 
         this.callbacks.onResume();
@@ -210,6 +243,7 @@ export class TextFadeEngine implements BaseEngine {
         clearInterval(this.fadeInterval);
         clearInterval(this.countdownInterval);
         clearTimeout(this.countdownTimeout);
+        this.countdownActive = false;
     }
 
     reset(): void {
@@ -233,6 +267,7 @@ export class TextFadeEngine implements BaseEngine {
     handleInput(input: any): void { }
 
     private complete(): void {
+        if (this.state.isCompleted) return;
         this.state.isCompleted = true;
         this.state.isRunning = false;
         this.stop();

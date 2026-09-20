@@ -5,7 +5,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
-import { boundedInteger, boundedStringArray, boundedText, recordOrEmpty } from './reading-pacer-safety';
+import { boundedInteger, boundedStringArray, boundedText, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './reading-pacer-safety';
 
 export interface WordHighlightConfig extends EngineConfig {
     content: {
@@ -75,22 +75,35 @@ export class WordHighlightEngine implements BaseEngine {
     ];
 
     initialize(config: EngineConfig, callbacks: EngineCallbacks): void {
-        this.config = config as WordHighlightConfig;
         this.callbacks = callbacks;
-
-        const backend = config as any;
-        this.config.content = recordOrEmpty(this.config.content) as WordHighlightConfig['content'];
-        this.config.visuals = recordOrEmpty(this.config.visuals) as WordHighlightConfig['visuals'];
-        this.config.timing = recordOrEmpty(this.config.timing) as WordHighlightConfig['timing'];
-        const pacer = recordOrEmpty(this.config.pacer);
+        const root = config as any;
+        const nested = recordOrEmpty(caseInsensitiveField(root, 'engineConfig'));
+        const content = mergeCaseInsensitiveRecords(root, nested, 'content');
+        const visuals = mergeCaseInsensitiveRecords(root, nested, 'visuals');
+        const timing = mergeCaseInsensitiveRecords(root, nested, 'timing');
+        const pacer = mergeCaseInsensitiveRecords(root, nested, 'pacer');
+        this.config = {
+            ...root,
+            ...nested,
+            content,
+            visuals: {
+                ...visuals,
+                fontSize: typeof visuals['fontsize'] === 'string' ? visuals['fontsize'] : 'medium'
+            },
+            timing: {
+                timeLimitSec: boundedInteger(timing['timelimitsec'], 0, 0, 3_600)
+            }
+        } as WordHighlightConfig;
         this.chunks = [];
         this.allWords = [];
         let wordPointer = 0;
 
         // Populate chunks from backend primary source
-        const backendChunks = boundedStringArray(backend.Chunks ?? backend.chunks);
-        const chunkSize = boundedInteger(backend.ChunkSize ?? backend.chunkSize ?? pacer['chunkSize'], 1, 1, 10);
-        const targetWpm = boundedInteger(backend.TargetWpm ?? backend.targetWpm ?? pacer['speedWpm'], 200, 20, 1500);
+        const backendChunks = boundedStringArray(caseInsensitiveField(nested, 'chunks') ?? caseInsensitiveField(root, 'chunks'));
+        const chunkSize = boundedInteger(caseInsensitiveField(nested, 'chunkSize')
+            ?? caseInsensitiveField(root, 'chunkSize') ?? pacer['chunksize'], 1, 1, 10);
+        const targetWpm = boundedInteger(caseInsensitiveField(nested, 'targetWpm')
+            ?? caseInsensitiveField(root, 'targetWpm') ?? pacer['speedwpm'], 200, 20, 1500);
         if (backendChunks.length > 0) {
             backendChunks.forEach((chunkStr: string) => {
                 const words = chunkStr.split(' ').filter(w => w.length > 0);
@@ -108,7 +121,9 @@ export class WordHighlightEngine implements BaseEngine {
         } else {
             // Fallback to text splitting logic
             const text = boundedText(
-                backend.ReadingTextContent ?? backend.readingTextContent ?? this.config.content?.text,
+                caseInsensitiveField(nested, 'readingTextContent')
+                    ?? caseInsensitiveField(root, 'readingTextContent')
+                    ?? content['text'],
                 WordHighlightEngine.TEXT_POOL.join(' '));
             const rawWords = text.split(/\s+/).filter(w => w.length > 0);
             const cs = chunkSize;
@@ -133,14 +148,15 @@ export class WordHighlightEngine implements BaseEngine {
         this.config.pacer = {
             speedWpm: targetWpm,
             chunkSize,
-            autoScroll: pacer['autoScroll'] !== false,
-            fixationType: typeof pacer['fixationType'] === 'string' ? pacer['fixationType'] : 'highlight'
+            autoScroll: pacer['autoscroll'] !== false,
+            fixationType: typeof pacer['fixationtype'] === 'string' ? pacer['fixationtype'] : 'highlight'
         };
 
 
     }
 
     start(): void {
+        if (this.state.isRunning || this.state.isCompleted) return;
         this.state.isRunning = true;
         this.state.isPaused = false;
         this.state.isCompleted = false;
@@ -151,7 +167,7 @@ export class WordHighlightEngine implements BaseEngine {
             if (!this.state.isPaused) {
                 this.state.timeElapsed = Date.now() - this.startTime;
                 if (this.config.timing?.timeLimitSec && this.state.timeElapsed >= this.config.timing.timeLimitSec * 1000) {
-                    this.complete();
+                    this.complete(false);
                 }
                 this.callbacks.onStateChange({ ...this.state });
             }
@@ -251,24 +267,32 @@ export class WordHighlightEngine implements BaseEngine {
     destroy(): void { this.stop(); }
     handleInput(input: any): void { }
 
-    private complete(): void {
+    private complete(completedNaturally = true): void {
+        if (this.state.isCompleted) return;
+        const completedSteps = completedNaturally ? this.state.totalSteps : this.state.currentStep;
+        const completionScore = this.state.totalSteps > 0
+            ? Math.round((completedSteps / this.state.totalSteps) * 100)
+            : 0;
         this.state.isCompleted = true;
         this.state.isRunning = false;
-        this.state.currentStep = this.state.totalSteps;
+        this.state.currentStep = completedSteps;
+        this.state.score = completionScore;
+        this.state.accuracy = completionScore;
         this.stop();
         this.callbacks.onStateChange({ ...this.state });
 
         const result: EngineResult = {
-            score: 100,
-            accuracy: 100,
+            score: completionScore,
+            accuracy: completionScore,
             totalTime: this.state.timeElapsed,
             totalSteps: this.state.totalSteps,
-            completedSteps: this.state.totalSteps,
+            completedSteps,
             errors: 0,
             details: {
                 wpm: this.config.pacer?.speedWpm,
                 chunkCount: this.totalChunks,
-                mode: this.config.mode || 'chunking'
+                mode: this.config.mode || 'chunking',
+                timedOut: !completedNaturally
             }
         };
         this.callbacks.onComplete(result);

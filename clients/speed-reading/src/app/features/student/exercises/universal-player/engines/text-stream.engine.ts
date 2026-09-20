@@ -11,7 +11,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
-import { boundedInteger, recordOrEmpty } from './reading-pacer-safety';
+import { boundedInteger, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './reading-pacer-safety';
 
 export interface TextStreamConfig extends EngineConfig {
     mode: string;           // 'tachistoscope', 'rsvp', 'sequence'
@@ -71,6 +71,10 @@ export class TextStreamEngine implements BaseEngine {
     private pauseStartTime = 0;
     private timerInterval: any;
     private stimulusTimeout: any;
+    private transitionTimeout: any;
+    private transitionCallback: (() => void) | null = null;
+    private transitionEndsAt = 0;
+    private transitionRemainingMs = 0;
 
     // Content
     private stimuli: string[] = [];
@@ -108,36 +112,62 @@ export class TextStreamEngine implements BaseEngine {
     ];
 
     initialize(config: EngineConfig, callbacks: EngineCallbacks): void {
-        this.config = config as TextStreamConfig;
         this.callbacks = callbacks;
-        this.config.timing = recordOrEmpty(this.config.timing) as TextStreamConfig['timing'];
-        this.config.content = recordOrEmpty(this.config.content) as TextStreamConfig['content'];
-        this.config.visuals = recordOrEmpty(this.config.visuals) as TextStreamConfig['visuals'];
-        const adaptive = recordOrEmpty(this.config.adaptive);
+        const root = config as any;
+        const nested = recordOrEmpty(caseInsensitiveField(root, 'engineConfig'));
+        const timing = mergeCaseInsensitiveRecords(root, nested, 'timing');
+        const content = mergeCaseInsensitiveRecords(root, nested, 'content');
+        const visuals = mergeCaseInsensitiveRecords(root, nested, 'visuals');
+        const adaptive = mergeCaseInsensitiveRecords(root, nested, 'adaptive');
+        this.config = {
+            ...root,
+            ...nested,
+            mode: caseInsensitiveField(nested, 'mode') ?? caseInsensitiveField(root, 'mode'),
+            timing,
+            content,
+            visuals: {
+                ...visuals,
+                fontSize: typeof visuals['fontsize'] === 'string' ? visuals['fontsize'] : 'large',
+                showFixation: visuals['showfixation'] !== false
+            }
+        } as TextStreamConfig;
         this.config.adaptive = {
             enabled: adaptive['enabled'] !== false,
-            minDurationMs: boundedInteger(adaptive['minDurationMs'], 50, 50, 5000),
-            maxDurationMs: boundedInteger(adaptive['maxDurationMs'], 1000, 50, 5000)
+            minDurationMs: boundedInteger(adaptive['mindurationms'], 50, 50, 5000),
+            maxDurationMs: boundedInteger(adaptive['maxdurationms'], 1000, 50, 5000)
         };
         this.config.adaptive.maxDurationMs = Math.max(
             this.config.adaptive.minDurationMs,
             this.config.adaptive.maxDurationMs);
-        this.config.timing.intervalMs = boundedInteger(this.config.timing.intervalMs, 0, 0, 10000);
-        this.config.content.items = Array.isArray(this.config.content.items)
-            ? this.config.content.items.filter(item => typeof item === 'string').slice(0, 500)
+        this.config.timing.intervalMs = boundedInteger(timing['intervalms'], 0, 0, 10000);
+        const contentItems = caseInsensitiveField(content, 'items');
+        this.config.content.items = Array.isArray(contentItems)
+            ? contentItems.filter(item => typeof item === 'string').slice(0, 500)
             : undefined;
 
         // Backend property normalization (handle PascalCase vs camelCase)
-        const rawStimuli = this.config.Stimuli || this.config['stimuli'] || this.config['Words'] || this.config['words'] || this.config['Chunks'] || this.config['chunks'];
+        const rawStimuli = caseInsensitiveField(nested, 'stimuli')
+            ?? caseInsensitiveField(nested, 'words')
+            ?? caseInsensitiveField(nested, 'chunks')
+            ?? caseInsensitiveField(root, 'stimuli')
+            ?? caseInsensitiveField(root, 'words')
+            ?? caseInsensitiveField(root, 'chunks');
         const stimuli = Array.isArray(rawStimuli)
             ? rawStimuli.filter(item => typeof item === 'string' || (item && typeof item === 'object')).slice(0, 500)
             : undefined;
         const displayDuration = boundedInteger(
-            this.config.DisplayDurationMs ?? this.config['displayDurationMs'] ??
-            this.config['IntervalMs'] ?? this.config['intervalMs'] ?? this.config.timing?.durationMs,
+            caseInsensitiveField(nested, 'displayDurationMs')
+            ?? caseInsensitiveField(nested, 'intervalMs')
+            ?? caseInsensitiveField(root, 'displayDurationMs')
+            ?? caseInsensitiveField(root, 'intervalMs')
+            ?? timing['durationms'],
             500, 50, 5000);
         const totalStimuli = boundedInteger(
-            this.config.TotalStimuli ?? this.config['totalStimuli'] ?? this.config['TotalWords'] ?? this.config['totalWords'] ?? this.config.content?.count,
+            caseInsensitiveField(nested, 'totalStimuli')
+            ?? caseInsensitiveField(nested, 'totalWords')
+            ?? caseInsensitiveField(root, 'totalStimuli')
+            ?? caseInsensitiveField(root, 'totalWords')
+            ?? content['count'],
             20, 1, 500);
 
         // Store normalized values in config for easier access
@@ -204,6 +234,7 @@ export class TextStreamEngine implements BaseEngine {
     }
 
     start(): void {
+        if (this.state.isRunning || this.state.isCompleted) return;
         this.state.isRunning = true;
         this.state.isPaused = false;
         this.startTime = Date.now();
@@ -305,11 +336,24 @@ export class TextStreamEngine implements BaseEngine {
             // Very brief gap between words (optional, helps separate words visually)
             const gapMs = this.config.timing?.intervalMs || 0;
             if (gapMs > 0) {
-                setTimeout(() => this.showNextStimulus(), gapMs);
+                this.scheduleTransition(() => this.showNextStimulus(), gapMs);
             } else {
                 this.showNextStimulus();
             }
         }
+    }
+
+    private scheduleTransition(callback: () => void, delayMs: number): void {
+        clearTimeout(this.transitionTimeout);
+        this.transitionCallback = callback;
+        this.transitionRemainingMs = delayMs;
+        this.transitionEndsAt = Date.now() + delayMs;
+        this.transitionTimeout = setTimeout(() => {
+            const pendingCallback = this.transitionCallback;
+            this.transitionCallback = null;
+            this.transitionRemainingMs = 0;
+            pendingCallback?.();
+        }, delayMs);
     }
 
     pause(): void {
@@ -317,6 +361,10 @@ export class TextStreamEngine implements BaseEngine {
         this.state.isPaused = true;
         this.pauseStartTime = Date.now();
         clearTimeout(this.stimulusTimeout);
+        if (this.transitionCallback) {
+            this.transitionRemainingMs = Math.max(0, this.transitionEndsAt - this.pauseStartTime);
+            clearTimeout(this.transitionTimeout);
+        }
         this.callbacks.onPause();
         this.callbacks.onStateChange({ ...this.state });
     }
@@ -327,11 +375,14 @@ export class TextStreamEngine implements BaseEngine {
         // Adjust startTime to account for pause duration
         const pauseDuration = Date.now() - this.pauseStartTime;
         this.startTime += pauseDuration;
+        if (this.isWaitingForAnswer) this.stimulusShowTime += pauseDuration;
 
         this.state.isPaused = false;
         if (this.isWaitingForAnswer) {
             // Continue waiting for answer
             this.callbacks.onStateChange({ ...this.state });
+        } else if (this.transitionCallback) {
+            this.scheduleTransition(this.transitionCallback, this.transitionRemainingMs);
         } else {
             this.showNextStimulus();
         }
@@ -343,6 +394,9 @@ export class TextStreamEngine implements BaseEngine {
         this.state.isRunning = false;
         clearInterval(this.timerInterval);
         clearTimeout(this.stimulusTimeout);
+        clearTimeout(this.transitionTimeout);
+        this.transitionCallback = null;
+        this.transitionRemainingMs = 0;
         this.callbacks.onStateChange({ ...this.state });
     }
 
@@ -350,7 +404,7 @@ export class TextStreamEngine implements BaseEngine {
      * Force finish the exercise (e.g. timeout)
      */
     finish(): void {
-        this.complete();
+        this.complete(false);
     }
 
     reset(): void {
@@ -440,10 +494,10 @@ export class TextStreamEngine implements BaseEngine {
 
         // Check completion or continue
         if (this.currentStimulusIndex >= this.stimuli.length) {
-            setTimeout(() => this.complete(), 500);
+            this.scheduleTransition(() => this.complete(), 500);
         } else {
             // Brief pause then show next (Wait for feedback to finish which is 1.2s)
-            setTimeout(() => this.showNextStimulus(), 1300);
+            this.scheduleTransition(() => this.showNextStimulus(), 1300);
         }
     }
 
@@ -490,11 +544,18 @@ export class TextStreamEngine implements BaseEngine {
 
 
 
-    private complete(): void {
+    private complete(completedNaturally = true): void {
+        if (this.state.isCompleted) return;
+        const completedSteps = Math.min(this.stimuli.length, this.currentStimulusIndex);
+        const coverage = this.stimuli.length > 0 ? completedSteps / this.stimuli.length : 0;
+        const score = completedNaturally ? this.state.accuracy : Math.round(this.state.accuracy * coverage);
         this.state.isCompleted = true;
         this.state.isRunning = false;
+        this.state.score = score;
         clearInterval(this.timerInterval);
         clearTimeout(this.stimulusTimeout);
+        clearTimeout(this.transitionTimeout);
+        this.transitionCallback = null;
 
         const avgResponseTime = this.trials.length > 0
             ? Math.round(this.trials.reduce((sum, t) => sum + t.responseTimeMs, 0) / this.trials.length)
@@ -505,11 +566,11 @@ export class TextStreamEngine implements BaseEngine {
             : 0;
 
         const result: EngineResult = {
-            score: this.state.accuracy,
+            score,
             accuracy: this.state.accuracy,
             totalTime: this.state.timeElapsed,
             totalSteps: this.stimuli.length,
-            completedSteps: this.currentStimulusIndex,
+            completedSteps,
             errors: this.state.errors,
             details: {
                 mode: this.config.mode,
@@ -527,7 +588,8 @@ export class TextStreamEngine implements BaseEngine {
                 wpm: Math.round(60000 / this.currentDurationMs),
                 readWordCount: this.currentStimulusIndex,
                 totalWordCount: this.stimuli.length,
-                durationSeconds: Math.round(this.state.timeElapsed / 1000)
+                durationSeconds: Math.round(this.state.timeElapsed / 1000),
+                timedOut: !completedNaturally
             }
         };
 
