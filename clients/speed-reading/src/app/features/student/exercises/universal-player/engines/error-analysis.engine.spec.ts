@@ -62,4 +62,20 @@ describe('ErrorAnalysisEngine', () => {
     expect(completions).toBe(1);
     expect(engine.getHintUsedCount()).toBe(0);
   });
+
+  it('reports zero accuracy when completed without any selections', () => {
+    let result: any;
+    const engine = new ErrorAnalysisEngine();
+    engine.initialize({
+      words: [{ index: 0, text: 'yanlız' }],
+      errors: [{ wordIndex: 0, originalWord: 'yalnız', errorWord: 'yanlız' }]
+    }, callbacks(value => result = value));
+    engine.start();
+
+    engine.forceComplete();
+
+    expect(result.score).toBe(0);
+    expect(result.accuracy).toBe(0);
+    expect(result.details.missedErrors).toBe(1);
+  });
 });
