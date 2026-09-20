@@ -706,6 +706,33 @@ public sealed class SpeedReadingOwnedDomainTests
     }
 
     [Theory]
+    [InlineData("{\"engineType\":\"adaptive_fluency\",\"adaptiveStage\":1,\"engineConfig\":{\"adaptiveStage\":2}}")]
+    [InlineData("{\"engineType\":\"adaptive_fluency\",\"adaptiveTargetWpm\":200,\"engineConfig\":{\"adaptiveTargetWpm\":300}}")]
+    public void Active_analysis_configuration_rejects_conflicting_scopes(string configuration)
+    {
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, "adaptive_fluency");
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Theory]
+    [InlineData("adaptive_fluency", "content")]
+    [InlineData("adaptive_fluency", "adaptiveTransferContent")]
+    [InlineData("error_analysis", "textWithErrors")]
+    [InlineData("error_analysis", "originalText")]
+    public void Active_analysis_configuration_rejects_oversized_text(string engineType, string propertyName)
+    {
+        var configuration = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object>
+        {
+            ["engineType"] = engineType,
+            [propertyName] = new string('a', 100_001)
+        });
+        var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, engineType);
+
+        action.Should().Throw<ArgumentException>();
+    }
+
+    [Theory]
     [InlineData("{\"engineType\":\"reading_comprehension\",\"timing\":{\"minReadingTimeMs\":1000,\"maxReadingTimeMs\":0}}")]
     [InlineData("{\"engineType\":\"reading_comprehension\",\"engineConfig\":{\"timing\":{\"minReadingTimeMs\":1000,\"maxReadingTimeMs\":0}}}")]
     [InlineData("{\"engineType\":\"reading_comprehension\",\"timing\":{\"minReadingTimeMs\":1000},\"engineConfig\":{\"timing\":{\"maxReadingTimeMs\":0}}}")]
