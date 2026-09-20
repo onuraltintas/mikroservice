@@ -14,6 +14,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
+import { boundedText, caseInsensitiveField, recordOrEmpty } from './reading-pacer-safety';
 
 export interface ErrorInfo {
     wordIndex: number;
@@ -88,23 +89,28 @@ export class ErrorAnalysisEngine implements BaseEngine {
 
     initialize(config: ErrorAnalysisConfig, callbacks: EngineCallbacks): void {
         this.callbacks = callbacks;
+        const root = recordOrEmpty(config);
+        const nested = recordOrEmpty(caseInsensitiveField(root, 'engineConfig'));
+        const sessionData = recordOrEmpty(caseInsensitiveField(root, 'sessionData'));
+        const read = (name: string) => caseInsensitiveField(sessionData, name)
+            ?? caseInsensitiveField(nested, name)
+            ?? caseInsensitiveField(root, name);
 
         // Parse config with PascalCase fallback
-        this.textWithErrors = config.TextWithErrors || config.textWithErrors || '';
-        this.originalText = config.OriginalText || config.originalText || '';
-        this.errorCount = config.ErrorCount || config.errorCount || 5;
+        this.textWithErrors = boundedText(read('textWithErrors'), '');
+        this.originalText = boundedText(read('originalText'), '');
 
         // Parse words
-        const rawWords = config.Words || config.words || [];
-        this.words = rawWords.map((w: any) => ({
+        const rawWords = read('words');
+        this.words = (Array.isArray(rawWords) ? rawWords : []).slice(0, 10_000).map((w: any) => ({
             index: w.Index ?? w.index ?? 0,
             text: w.Text || w.text || '',
             isSelected: false
         }));
 
         // Parse errors
-        const rawErrors = config.Errors || config.errors || [];
-        this.errors = rawErrors.map((e: any) => ({
+        const rawErrors = read('errors');
+        this.errors = (Array.isArray(rawErrors) ? rawErrors : []).slice(0, 1_000).map((e: any) => ({
             wordIndex: e.WordIndex ?? e.wordIndex ?? 0,
             originalWord: e.OriginalWord || e.originalWord || '',
             errorWord: e.ErrorWord || e.errorWord || '',
@@ -118,6 +124,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
         this.foundErrors = [];
         this.falseAlarms = [];
         this.selectedWords = new Set();
+        this.hintUsedCount = 0;
         this.phase = 'idle';
 
         this.state = {
@@ -175,6 +182,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
         this.foundErrors = [];
         this.falseAlarms = [];
         this.selectedWords = new Set();
+        this.hintUsedCount = 0;
         this.phase = 'idle';
         this.state = {
             ...this.getInitialState(),
@@ -197,6 +205,8 @@ export class ErrorAnalysisEngine implements BaseEngine {
     }
 
     private handleWordSelection(wordIndex: number): void {
+        if (!Number.isInteger(wordIndex) || !this.words.some(word => word.index === wordIndex)) return;
+
         // Already selected?
         if (this.selectedWords.has(wordIndex)) {
             return;
@@ -236,6 +246,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
     }
 
     private completeExercise(): void {
+        if (this.state.isCompleted) return;
         this.stopTimer();
         this.phase = 'completed';
         this.state.isRunning = false;
@@ -245,6 +256,10 @@ export class ErrorAnalysisEngine implements BaseEngine {
         const hits = this.foundErrors.length;
         const misses = this.errorCount - hits;
         const falseAlarmCount = this.falseAlarms.length;
+        const evaluatedTargets = this.errorCount + falseAlarmCount;
+        this.state.accuracy = evaluatedTargets > 0
+            ? Math.round((hits / evaluatedTargets) * 100)
+            : 0;
 
         // Hit rate (sensitivity)
         const hitRate = this.errorCount > 0 ? hits / this.errorCount : 0;
@@ -371,6 +386,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
 
     // For manual completion (timeout or give up)
     forceComplete(): void {
+        if (this.phase !== 'active') return;
         this.completeExercise();
     }
 

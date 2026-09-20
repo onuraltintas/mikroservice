@@ -3192,7 +3192,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       if (!response?.isValid) {
         this.showToast(response?.message || 'Okuma aşaması doğrulanamadı.', 'error');
         this.readingTrackingFinished = false;
-        (this.engine as AdaptiveFluencyEngine).start();
+        const engine = this.engine as AdaptiveFluencyEngine;
+        engine.reset();
+        engine.start();
         return;
       }
       const engine = this.engine as AdaptiveFluencyEngine;

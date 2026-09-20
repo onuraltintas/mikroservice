@@ -169,6 +169,13 @@ public static class ExerciseConfigurationRules
                     ValidateReadingBehaviorConfiguration(nested.Value, configured);
                 ValidateEffectiveReadingBehaviorConfiguration(root, nested, configured);
             }
+            if (configured is "adaptive_fluency" or "error_analysis")
+            {
+                ValidateAnalysisConfiguration(root, configured);
+                if (nested.HasValue)
+                    ValidateAnalysisConfiguration(nested.Value, configured);
+                ValidateEffectiveAnalysisConfiguration(root, nested, configured);
+            }
         }
         catch (JsonException exception)
         {
@@ -404,6 +411,47 @@ public static class ExerciseConfigurationRules
             ValidateOptionalIntRange(difficulty.Value, "metronomeBpm", 20, 300, "Metronom BPM");
             ValidateOptionalEnum(difficulty.Value, "displayMode", ["highlight", "rsvp", "chunk"], "Gösterim modu");
         }
+    }
+
+    private static void ValidateAnalysisConfiguration(JsonElement config, string engineType)
+    {
+        if (engineType == "adaptive_fluency")
+        {
+            ValidateOptionalInlineText(config);
+            ValidateOptionalBoundedString(config, "content", 100_000, "Birincil metin");
+            ValidateOptionalBoundedString(config, "adaptiveTransferContent", 100_000, "Transfer metni");
+            ValidateOptionalBoundedString(config, "readingTextTitle", 1_000, "Birincil metin başlığı");
+            ValidateOptionalBoundedString(config, "adaptiveTransferTitle", 1_000, "Transfer metni başlığı");
+            ValidateOptionalIntRange(config, "adaptiveStage", 0, 3, "Uyarlamalı akıcılık aşaması");
+            ValidateOptionalIntRange(config, "adaptiveTargetWpm", 20, 1_500, "Uyarlamalı hedef WPM");
+            ValidateOptionalIntRange(config, "wordCount", 0, 100_000, "Birincil metin kelime sayısı");
+            ValidateOptionalIntRange(config, "adaptiveTransferWordCount", 0, 100_000, "Transfer metni kelime sayısı");
+            ValidateOptionalArray(config, "adaptivePrimaryQuestions", 100, "Birincil metin soruları");
+            ValidateOptionalArray(config, "adaptiveTransferQuestions", 100, "Transfer metni soruları");
+            return;
+        }
+
+        ValidateOptionalInlineText(config);
+        ValidateOptionalBoundedString(config, "textWithErrors", 100_000, "Hatalı metin");
+        ValidateOptionalBoundedString(config, "originalText", 100_000, "Özgün metin");
+        ValidateOptionalArray(config, "words", 10_000, "Hata analizi kelimeleri");
+        ValidateOptionalArray(config, "errors", 1_000, "Hata analizi hedefleri");
+        ValidateOptionalIntRange(config, "errorCount", 0, 1_000, "Hata analizi hedef sayısı");
+    }
+
+    private static void ValidateEffectiveAnalysisConfiguration(
+        JsonElement root,
+        JsonElement? nested,
+        string engineType)
+    {
+        if (!nested.HasValue || engineType != "adaptive_fluency")
+            return;
+
+        var scopes = new[] { root, nested.Value };
+        ValidateConsistentValues(scopes.SelectMany(scope => ReadInts(scope, "adaptiveStage")), "Uyarlamalı akıcılık aşaması");
+        ValidateConsistentValues(scopes.SelectMany(scope => ReadInts(scope, "adaptiveTargetWpm")), "Uyarlamalı hedef WPM");
+        ValidateConsistentValues(scopes.SelectMany(scope => ReadInts(scope, "wordCount")), "Birincil metin kelime sayısı");
+        ValidateConsistentValues(scopes.SelectMany(scope => ReadInts(scope, "adaptiveTransferWordCount")), "Transfer metni kelime sayısı");
     }
 
     private static void ValidateEffectiveReadingBehaviorConfiguration(
