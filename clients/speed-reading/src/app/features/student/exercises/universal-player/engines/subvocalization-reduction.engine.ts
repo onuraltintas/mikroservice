@@ -4,6 +4,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
+import { boundedInteger, boundedText, caseInsensitiveField, recordOrEmpty } from './reading-pacer-safety';
 
 export interface SubvocalizationConfig extends EngineConfig {
     displayMode: 'highlight' | 'rsvp' | 'chunk';
@@ -59,39 +60,41 @@ export class SubvocalizationReductionEngine implements BaseEngine {
     private metronomeBeats = 0;
 
     initialize(config: EngineConfig, callbacks: EngineCallbacks): void {
-        this.config = config as SubvocalizationConfig;
         this.callbacks = callbacks;
+        const root = config as any;
+        const nested = recordOrEmpty(caseInsensitiveField(root, 'engineConfig'));
+        const sessionData = recordOrEmpty(caseInsensitiveField(root, 'sessionData'));
+        const difficulty = recordOrEmpty(caseInsensitiveField(sessionData, 'difficultySettings')
+            ?? caseInsensitiveField(nested, 'difficultySettings')
+            ?? caseInsensitiveField(root, 'difficultySettings'));
+        const read = (name: string) => caseInsensitiveField(sessionData, name)
+            ?? caseInsensitiveField(difficulty, name)
+            ?? caseInsensitiveField(nested, name)
+            ?? caseInsensitiveField(root, name);
 
-        const backend = config as any;
-        const sessionData = backend.SessionData || backend;
+        const targetWpm = boundedInteger(read('targetWpm') ?? read('wpm'), 200, 20, 1500);
+        const displayMode = read('displayMode');
+        this.config = {
+            ...root,
+            ...nested,
+            wpm: targetWpm,
+            msPerWord: boundedInteger(read('msPerWord'), Math.round(60000 / targetWpm), 40, 3000),
+            displayMode: ['highlight', 'rsvp', 'chunk'].includes(displayMode) ? displayMode : 'highlight',
+            chunkSize: boundedInteger(read('chunkSize'), 1, 1, 10),
+            metronomeEnabled: read('metronomeEnabled') === true,
+            metronomeBpm: boundedInteger(read('metronomeBpm'), 60, 20, 300),
+            visualMetronome: read('visualMetronome') === true,
+            description: typeof read('description') === 'string' ? read('description') : ''
+        } as SubvocalizationConfig;
 
-        const text = sessionData.ReadingTextContent || sessionData.readingTextContent || "";
+        const text = boundedText(read('readingTextContent'), '');
         this.words = text.split(/\s+/).filter((w: string) => w.length > 0);
-        this.questions = sessionData.Questions || sessionData.questions || [];
+        const questions = read('questions');
+        this.questions = Array.isArray(questions)
+            ? questions.filter(question => question && typeof question === 'object').slice(0, 100)
+            : [];
 
-        // Set parameters from DifficultySettings if provided (Backend mapping)
-        const diff = (sessionData.DifficultySettings || sessionData.difficultySettings) as any;
-
-        let targetWpm = 200;
-        if (diff) {
-            targetWpm = diff.TargetWPM || diff.targetWpm || 200;
-            this.config.wpm = targetWpm;
-            this.config.msPerWord = Math.round(60000 / targetWpm);
-            this.config.displayMode = diff.DisplayMode || diff.displayMode || 'highlight';
-            this.config.chunkSize = diff.ChunkSize || diff.chunkSize || 1;
-            this.config.metronomeEnabled = diff.MetronomeEnabled ?? diff.metronomeEnabled ?? false;
-            this.config.metronomeBpm = diff.MetronomeBPM || diff.metronomeBpm || 60;
-            this.config.description = diff.Description || diff.description || '';
-        } else {
-            const cfg = (this.config as any);
-            targetWpm = cfg.wpm || cfg.targetWpm || (cfg.timing?.targetWpm) || 200;
-            this.config.wpm = targetWpm;
-            this.config.msPerWord = Math.round(60000 / targetWpm);
-            this.config.displayMode = 'highlight';
-            this.config.chunkSize = this.config.chunkSize || 1;
-        }
-
-        this.state.totalSteps = this.words.length;
+        this.state.totalSteps = this.words.length + this.questions.length;
         this.state.currentStep = 0;
         this.phase = 'reading';
         this.currentWordIndex = -1;
@@ -102,12 +105,14 @@ export class SubvocalizationReductionEngine implements BaseEngine {
     }
 
     start(): void {
+        if (this.state.isRunning || this.state.isCompleted) return;
         this.cleanup();
         this.state.isRunning = true;
         this.state.isPaused = false;
         this.state.timeElapsed = 0;
         this.startTime = Date.now();
         this.readingStartTime = Date.now();
+        this.callbacks.onStart();
 
         this.timerInterval = setInterval(() => {
             if (this.state.isRunning && !this.state.isPaused) {
@@ -182,7 +187,7 @@ export class SubvocalizationReductionEngine implements BaseEngine {
                 return;
             }
 
-            this.state.currentStep = this.currentWordIndex;
+            this.state.currentStep = Math.min(this.currentWordIndex + 1, this.words.length);
             this.callbacks.onStateChange({
                 ...this.state,
                 currentWordIndex: this.currentWordIndex,
@@ -201,8 +206,7 @@ export class SubvocalizationReductionEngine implements BaseEngine {
     }
 
     private startMetronome(): void {
-        // Fixed 1 second per beat (user request: each number visible for 1 second)
-        const msPerBeat = 1000;
+        const msPerBeat = Math.round(60000 / this.config.metronomeBpm);
 
         // Start at 1
         this.metronomeBeats = 1;
@@ -258,6 +262,7 @@ export class SubvocalizationReductionEngine implements BaseEngine {
         if (this.state.isPaused) return;
         this.state.isPaused = true;
         this.pauseStartTime = Date.now();
+        this.callbacks.onPause();
         this.callbacks.onStateChange({ ...this.state });
     }
 
@@ -270,6 +275,7 @@ export class SubvocalizationReductionEngine implements BaseEngine {
         this.readingStartTime += pauseDuration;
 
         this.state.isPaused = false;
+        this.callbacks.onResume();
         this.callbacks.onStateChange({ ...this.state });
     }
 
@@ -286,8 +292,13 @@ export class SubvocalizationReductionEngine implements BaseEngine {
     public currentCorrectAnswer = '';
 
     handleInput(input: any): void {
+        if (!input || typeof input !== 'object' || this.state.isCompleted) return;
+
         if (input.type === 'line_breaks') {
-            this.lineBreakIndices = new Set(input.indices);
+            const indices = Array.isArray(input.indices) ? input.indices : [];
+            this.lineBreakIndices = new Set(indices
+                .filter((index: unknown) => Number.isInteger(index) && (index as number) >= 0 && (index as number) < this.words.length)
+                .slice(0, this.words.length) as number[]);
             return;
         }
 
@@ -295,6 +306,7 @@ export class SubvocalizationReductionEngine implements BaseEngine {
             if (this.showingFeedback) return; // Prevent double submit
 
             const question = this.questions[this.currentQuestionIndex];
+            if (!question) return;
             const correctAnswer = question.CorrectAnswer || question.correctAnswer;
             const isCorrect = input.answer === correctAnswer;
 
@@ -347,6 +359,7 @@ export class SubvocalizationReductionEngine implements BaseEngine {
     }
 
     private complete(): void {
+        if (this.state.isCompleted) return;
         this.cleanup();
 
         this.phase = 'completed';
@@ -426,6 +439,10 @@ export class SubvocalizationReductionEngine implements BaseEngine {
         this.phase = 'reading';
         this.metronomeBeat = false;
         this.metronomeBeats = 0;
+        this.showingFeedback = false;
+        this.lastAnswer = '';
+        this.lastAnswerCorrect = false;
+        this.currentCorrectAnswer = '';
         this.callbacks.onStateChange({ ...this.state });
     }
 

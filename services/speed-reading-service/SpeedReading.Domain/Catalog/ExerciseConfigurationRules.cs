@@ -162,6 +162,13 @@ public static class ExerciseConfigurationRules
                     ValidateReadingConfiguration(nested.Value);
                 ValidateEffectiveReadingConfiguration(root, nested);
             }
+            if (configured is "regression_reduction" or "subvocalization_reduction")
+            {
+                ValidateReadingBehaviorConfiguration(root, configured);
+                if (nested.HasValue)
+                    ValidateReadingBehaviorConfiguration(nested.Value, configured);
+                ValidateEffectiveReadingBehaviorConfiguration(root, nested, configured);
+            }
         }
         catch (JsonException exception)
         {
@@ -365,6 +372,57 @@ public static class ExerciseConfigurationRules
             contentSourceCount++;
         if (contentSourceCount > 1)
             throw new ArgumentException("Metin akışı için yalnızca bir içerik kaynağı tanımlanmalıdır.");
+    }
+
+    private static void ValidateReadingBehaviorConfiguration(JsonElement config, string engineType)
+    {
+        ValidateOptionalObject(config, "difficultySettings", "Okuma davranışı zorluk ayarları");
+        ValidateOptionalInlineText(config);
+        ValidateOptionalArray(config, "questions", 100, "Okuma davranışı soruları");
+        ValidateOptionalIntRange(config, "wpm", 20, 1_500, "Hedef WPM");
+        ValidateOptionalIntRange(config, "targetWpm", 20, 1_500, "Hedef WPM");
+        ValidateOptionalIntRange(config, "chunkSize", 1, 10, "Okuma öbek boyutu");
+
+        if (engineType == "regression_reduction")
+        {
+            ValidateOptionalIntRange(config, "wordDelayMs", 40, 10_000, "Kelime gecikmesi");
+            ValidateOptionalEnum(config, "maskingType", ["none", "fade", "trailing", "contingent", "ior"], "Maskeleme türü");
+            return;
+        }
+
+        ValidateOptionalIntRange(config, "msPerWord", 40, 3_000, "Kelime gösterim süresi");
+        ValidateOptionalIntRange(config, "metronomeBpm", 20, 300, "Metronom BPM");
+        ValidateOptionalEnum(config, "displayMode", ["highlight", "rsvp", "chunk"], "Gösterim modu");
+
+        var difficulty = TryGetObject(config, "difficultySettings");
+        if (difficulty.HasValue)
+        {
+            ValidateOptionalIntRange(difficulty.Value, "wpm", 20, 1_500, "Hedef WPM");
+            ValidateOptionalIntRange(difficulty.Value, "targetWpm", 20, 1_500, "Hedef WPM");
+            ValidateOptionalIntRange(difficulty.Value, "chunkSize", 1, 10, "Okuma öbek boyutu");
+            ValidateOptionalIntRange(difficulty.Value, "msPerWord", 40, 3_000, "Kelime gösterim süresi");
+            ValidateOptionalIntRange(difficulty.Value, "metronomeBpm", 20, 300, "Metronom BPM");
+            ValidateOptionalEnum(difficulty.Value, "displayMode", ["highlight", "rsvp", "chunk"], "Gösterim modu");
+        }
+    }
+
+    private static void ValidateEffectiveReadingBehaviorConfiguration(
+        JsonElement root,
+        JsonElement? nested,
+        string engineType)
+    {
+        var baseScopes = nested.HasValue ? new[] { root, nested.Value } : new[] { root };
+        var scopes = baseScopes
+            .SelectMany(scope => TryGetObject(scope, "difficultySettings") is { } difficulty
+                ? new[] { scope, difficulty }
+                : new[] { scope })
+            .ToArray();
+        ValidateConsistentValues(scopes.SelectMany(scope => ReadInts(scope, "wpm", "targetWpm")), "Hedef WPM");
+        ValidateConsistentValues(scopes.SelectMany(scope => ReadInts(scope, "chunkSize")), "Okuma öbek boyutu");
+        if (engineType == "regression_reduction")
+            ValidateConsistentValues(scopes.SelectMany(scope => ReadInts(scope, "wordDelayMs")), "Kelime gecikmesi");
+        else
+            ValidateConsistentValues(scopes.SelectMany(scope => ReadInts(scope, "metronomeBpm")), "Metronom BPM");
     }
 
     private static void ValidateTextFadeConfiguration(JsonElement config)

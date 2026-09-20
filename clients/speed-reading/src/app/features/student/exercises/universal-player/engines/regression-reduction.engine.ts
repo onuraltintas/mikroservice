@@ -5,6 +5,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
+import { boundedInteger, boundedText, caseInsensitiveField, recordOrEmpty } from './reading-pacer-safety';
 
 export interface RegressionConfig extends EngineConfig {
     mode: string;
@@ -42,7 +43,7 @@ export class RegressionReductionEngine implements BaseEngine {
 
     private words: string[] = [];
     private currentWordIndex = -1;
-    private phase: 'reading' | 'answering' = 'reading';
+    private phase: 'reading' | 'answering' | 'completed' = 'reading';
 
     // Questions Related
     private questions: any[] = [];
@@ -50,16 +51,30 @@ export class RegressionReductionEngine implements BaseEngine {
     private answers: any[] = [];
 
     initialize(config: EngineConfig, callbacks: EngineCallbacks): void {
-        this.config = config as RegressionConfig;
         this.callbacks = callbacks;
-
-        const backend = config as any;
-        const sessionData = backend.SessionData || backend;
+        const root = config as any;
+        const nested = recordOrEmpty(caseInsensitiveField(root, 'engineConfig'));
+        const sessionData = recordOrEmpty(caseInsensitiveField(root, 'sessionData'));
+        const read = (name: string) => caseInsensitiveField(sessionData, name)
+            ?? caseInsensitiveField(nested, name)
+            ?? caseInsensitiveField(root, name);
+        this.config = {
+            ...root,
+            ...nested,
+            wpm: boundedInteger(read('wpm') ?? read('targetWpm'), 200, 20, 1500),
+            wordDelayMs: boundedInteger(read('wordDelayMs'), 0, 0, 10000),
+            chunkSize: boundedInteger(read('chunkSize'), 1, 1, 10),
+            maskingType: ['none', 'fade', 'trailing', 'contingent', 'ior'].includes(read('maskingType'))
+                ? read('maskingType') : 'none'
+        } as RegressionConfig;
 
         // Load content
-        const text = sessionData.ReadingTextContent || sessionData.readingTextContent || "";
+        const text = boundedText(read('readingTextContent'), '');
         this.words = text.split(/\s+/).filter((w: string) => w.length > 0);
-        this.questions = sessionData.Questions || sessionData.questions || [];
+        const questions = read('questions');
+        this.questions = Array.isArray(questions)
+            ? questions.filter(question => question && typeof question === 'object').slice(0, 100)
+            : [];
 
         this.state.totalSteps = this.words.length + this.questions.length;
         this.state.currentStep = 0;
@@ -70,6 +85,7 @@ export class RegressionReductionEngine implements BaseEngine {
     }
 
     start(): void {
+        if (this.state.isRunning || this.state.isCompleted) return;
         this.state.isRunning = true;
         this.state.isPaused = false;
         this.startTime = Date.now();
@@ -140,6 +156,7 @@ export class RegressionReductionEngine implements BaseEngine {
         });
 
         this.callbacks.onStateChange({ ...this.state });
+        if (this.questions.length === 0) this.complete();
     }
 
     pause(): void {
@@ -171,11 +188,21 @@ export class RegressionReductionEngine implements BaseEngine {
 
     reset(): void {
         this.stop();
+        this.state = {
+            isRunning: false,
+            isPaused: false,
+            isCompleted: false,
+            currentStep: 0,
+            totalSteps: this.words.length + this.questions.length,
+            score: 0,
+            accuracy: 100,
+            timeElapsed: 0,
+            errors: 0
+        };
         this.currentWordIndex = -1;
         this.phase = 'reading';
         this.currentQuestionIndex = 0;
         this.answers = [];
-        this.state.currentStep = 0;
         this.callbacks.onStateChange({ ...this.state });
     }
 
@@ -184,8 +211,11 @@ export class RegressionReductionEngine implements BaseEngine {
     }
 
     handleInput(input: any): void {
+        if (!input || typeof input !== 'object' || this.state.isCompleted) return;
+
         if (this.phase === 'answering' && input.type === 'answer') {
             const question = this.questions[this.currentQuestionIndex];
+            if (!question) return;
             const correctAnswer = question.CorrectAnswer || question.correctAnswer;
             const isCorrect = input.answer === correctAnswer;
 
@@ -224,7 +254,10 @@ export class RegressionReductionEngine implements BaseEngine {
 
         // Detect Regression (if user clicks on previous words)
         // This would be called from the component when a word is clicked.
-        if (input.type === 'regression') {
+        if (input.type === 'regression'
+            && Number.isInteger(input.wordIndex)
+            && input.wordIndex >= 0
+            && input.wordIndex < this.words.length) {
             this.callbacks.onAction({
                 action: 'regression_detected',
                 number: input.wordIndex,
@@ -237,8 +270,10 @@ export class RegressionReductionEngine implements BaseEngine {
     }
 
     private complete(): void {
+        if (this.state.isCompleted) return;
         this.state.isCompleted = true;
         this.state.isRunning = false;
+        this.phase = 'completed';
         clearInterval(this.timerInterval);
 
         // Anlama skorunu hesapla
@@ -252,6 +287,9 @@ export class RegressionReductionEngine implements BaseEngine {
 
         // Genel skor: %40 regresyon + %60 anlama
         const finalScore = Math.round((regressionScore * 0.4) + (comprehensionScore * 0.6));
+        this.state.score = finalScore;
+        this.state.accuracy = comprehensionScore;
+        this.state.currentStep = this.state.totalSteps;
 
         // WPM hesapla
         const readingTimeMinutes = this.state.timeElapsed / 60000;
@@ -282,7 +320,7 @@ export class RegressionReductionEngine implements BaseEngine {
     // Public Getters for UI
     getWords(): string[] { return this.words; }
     getCurrentWordIndex(): number { return this.currentWordIndex; }
-    getPhase(): 'reading' | 'answering' { return this.phase; }
+    getPhase(): 'reading' | 'answering' | 'completed' { return this.phase; }
     getQuestions(): any[] { return this.questions; }
     getCurrentQuestion(): any { return this.questions[this.currentQuestionIndex]; }
     getCurrentQuestionIndex(): number { return this.currentQuestionIndex; }
