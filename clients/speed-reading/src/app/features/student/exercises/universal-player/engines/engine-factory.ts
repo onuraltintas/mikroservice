@@ -55,6 +55,7 @@ const engineRegistry: Partial<Record<EngineType, EngineConstructor>> = {
     'text_stream': TextStreamEngine,
     'text_fade': TextFadeEngine,
     'word_highlight': WordHighlightEngine,
+    'word_group': WordHighlightEngine,
     'visual_expansion': VisualExpansionEngine,
     'scan_find': ScanFindEngine,
     'reading_comprehension': ReadingComprehensionEngine,
