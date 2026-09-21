@@ -114,6 +114,17 @@ public sealed class BankTransferPaymentsController(ISpeedReadingSubscription sub
             : Ok(new { success = true, data = result, message = "Bank transfer request reviewed" });
     }
 
+    [HttpDelete("requests/{id:guid}")]
+    [Authorize]
+    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    public async Task<IActionResult> DeleteRequest(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var deleted = await subscriptions.DeleteBankTransferPaymentRequestAsync(id, cancellationToken);
+        return deleted ? NoContent() : NotFound();
+    }
+
     private bool TryGetCurrentUserId(out Guid userId) =>
         Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub"), out userId);
 }

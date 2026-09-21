@@ -19,6 +19,7 @@ describe('SpeedReadingSubscriptionsComponent', () => {
       getSubscriptionProducts: vi.fn(() => of([])),
       getSubscriptionPlans: vi.fn(() => of([])),
       getUserSubscriptions: vi.fn(() => of(emptyPage)),
+      getBankTransferRequests: vi.fn(() => of(emptyPage)),
       updateUserSubscription: vi.fn(() => of({})),
       createInstitutionAccess: vi.fn(() => of({ createdCount: 2, existingCount: 0 })),
       deleteBankTransferRequest: vi.fn(() => of(undefined))

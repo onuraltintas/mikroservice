@@ -533,6 +533,24 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         return ToBankTransferPaymentRequestSummary(row.paymentRequest, row.plan);
     }
 
+    public async Task<bool> DeleteBankTransferPaymentRequestAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var paymentRequest = await db.BankTransferPaymentRequests
+            .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (paymentRequest is null) return false;
+
+        var idempotencyRecords = await ownedDb.IdempotencyRecords
+            .Where(item => item.ResourceId == id
+                && (item.Scope == BankTransferRequestScope || item.Scope == BankTransferReviewScope))
+            .ToListAsync(cancellationToken);
+        ownedDb.IdempotencyRecords.RemoveRange(idempotencyRecords);
+        db.BankTransferPaymentRequests.Remove(paymentRequest);
+        await ownedDb.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
     public async Task<SpeedReadingPage<UserSubscriptionSummary>> GetSubscriptionsAsync(string? search, string? status, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         var (normalizedPage, normalizedSize) = NormalizePage(page, pageSize);

@@ -72,7 +72,7 @@ type SubscriptionTab = 'products' | 'plans' | 'bankSettings' | 'transferRequests
         <section class="space-y-4" aria-labelledby="transfer-requests-title">
           <div><h2 id="transfer-requests-title" class="text-lg font-semibold text-gray-900 dark:text-white">EFT talep kuyruğu</h2><p class="muted">Öğrencinin referansını banka hareketiyle doğrulayın. Onay işlemi, planın erişimini bir kez açar.</p></div>
           <form (ngSubmit)="loadBankTransferRequests()" class="inline-filter"><input [(ngModel)]="bankTransferSearch" name="bankTransferSearch" placeholder="Ad, e-posta veya referans ara" maxlength="100" /><select [(ngModel)]="bankTransferStatus" name="bankTransferStatus"><option value="">Tüm durumlar</option><option value="Pending">İnceleniyor</option><option value="Approved">Onaylandı</option><option value="Rejected">Reddedildi</option></select><button type="submit" class="secondary">Filtrele</button></form>
-          <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Talep</th><th>Plan / tutar</th><th>Referans</th><th>Durum</th><th>Tarih</th><th></th></tr></thead><tbody>@for (request of bankTransferRequests().items; track request.id) {<tr><td><strong>{{ request.userName }}</strong><div class="muted">{{ request.userEmail }}</div>@if (request.payerName) {<div class="muted">Gönderen: {{ request.payerName }}</div>}@if (request.note) {<div class="muted">{{ request.note }}</div>}</td><td>{{ request.planName }}<div class="muted">{{ request.amount | number:'1.2-2' }} {{ request.currency }}</div></td><td class="font-mono">{{ request.paymentReference }}</td><td>{{ bankTransferStatusLabel(request.status) }}@if (request.reviewNote) {<div class="muted">{{ request.reviewNote }}</div>}</td><td>{{ request.createdAt | date:'dd.MM.yyyy HH:mm' }}</td><td class="actions">@if (request.status === 'Pending') {<button type="button" (click)="approveBankTransferRequest(request)">Onayla</button><button type="button" (click)="rejectBankTransferRequest(request)">Reddet</button>}</td></tr>} @empty {<tr><td colspan="6" class="empty">EFT talebi bulunamadı.</td></tr>}</tbody></table></div><div class="pager"><span>Toplam {{ bankTransferRequests().totalCount }}</span><button type="button" (click)="changeBankTransferPage(bankTransferPage - 1)" [disabled]="bankTransferPage <= 1 || loading()">Önceki</button><button type="button" (click)="changeBankTransferPage(bankTransferPage + 1)" [disabled]="bankTransferPage >= bankTransferTotalPages() || loading()">Sonraki</button></div></div>
+          <div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Talep</th><th>Plan / tutar</th><th>Referans</th><th>Durum</th><th>Tarih</th><th></th></tr></thead><tbody>@for (request of bankTransferRequests().items; track request.id) {<tr><td><strong>{{ request.userName }}</strong><div class="muted">{{ request.userEmail }}</div>@if (request.payerName) {<div class="muted">Gönderen: {{ request.payerName }}</div>}@if (request.note) {<div class="muted">{{ request.note }}</div>}</td><td>{{ request.planName }}<div class="muted">{{ request.amount | number:'1.2-2' }} {{ request.currency }}</div></td><td class="font-mono">{{ request.paymentReference }}</td><td>{{ bankTransferStatusLabel(request.status) }}@if (request.reviewNote) {<div class="muted">{{ request.reviewNote }}</div>}</td><td>{{ request.createdAt | date:'dd.MM.yyyy HH:mm' }}</td><td class="actions">@if (request.status === 'Pending') {<button type="button" (click)="approveBankTransferRequest(request)">Onayla</button><button type="button" (click)="rejectBankTransferRequest(request)">Reddet</button>}<button type="button" class="danger" (click)="deleteBankTransferRequest(request)">Kalıcı sil</button></td></tr>} @empty {<tr><td colspan="6" class="empty">EFT talebi bulunamadı.</td></tr>}</tbody></table></div><div class="pager"><span>Toplam {{ bankTransferRequests().totalCount }}</span><button type="button" (click)="changeBankTransferPage(bankTransferPage - 1)" [disabled]="bankTransferPage <= 1 || loading()">Önceki</button><button type="button" (click)="changeBankTransferPage(bankTransferPage + 1)" [disabled]="bankTransferPage >= bankTransferTotalPages() || loading()">Sonraki</button></div></div>
         </section>
       }
 
@@ -119,6 +119,7 @@ type SubscriptionTab = 'products' | 'plans' | 'bankSettings' | 'transferRequests
     .data-table td { border-bottom: 1px solid var(--ui-border); padding: .625rem .75rem; color: var(--ui-text); vertical-align: top; }
     .actions { white-space: normal; }
     .actions button + button { margin-left: .35rem; }
+    .actions .danger { color: #b91c1c; }
     .muted { color: var(--ui-text-muted); font-size: .8rem; }
     .empty { padding: 2rem; text-align: center; color: var(--ui-text-muted); }
     .pager { justify-content: space-between; margin-top: .75rem; font-size: .8rem; color: var(--ui-text-muted); }
@@ -364,6 +365,21 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
     this.saveRequest(this.service.reviewBankTransferRequest(request.id, 'Rejected', reviewNote.trim()), result => {
       this.replaceBankTransferRequest(result);
       this.toaster.success('EFT talebi reddedildi.');
+      this.loadBankTransferRequests();
+    });
+  }
+
+  async deleteBankTransferRequest(request: SpeedReadingBankTransferRequest): Promise<void> {
+    const accessNote = request.subscriptionId
+      ? ' Bu işlem açılmış öğrenci erişimini kapatmaz.'
+      : '';
+    const accepted = await this.toaster.confirm(
+      `Bu EFT talebi kalıcı olarak silinsin mi? İşlem geri alınamaz.${accessNote}`,
+      { title: 'EFT talebini kalıcı sil', confirmText: 'Kalıcı sil' }
+    );
+    if (!accepted) return;
+    this.saveRequest(this.service.deleteBankTransferRequest(request.id), () => {
+      this.toaster.success('EFT talebi kalıcı olarak silindi.');
       this.loadBankTransferRequests();
     });
   }

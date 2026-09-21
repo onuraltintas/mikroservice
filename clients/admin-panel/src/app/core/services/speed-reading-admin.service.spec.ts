@@ -32,6 +32,14 @@ describe('SpeedReadingAdminService', () => {
     request.flush(response);
   });
 
+  it('permanently deletes a bank transfer request', () => {
+    service.deleteBankTransferRequest('request-1').subscribe();
+
+    const request = http.expectOne('/api/speed-reading/bank-transfer/requests/request-1');
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null);
+  });
+
   it('previews reading-text quality before content is saved', () => {
     const preview = {
       content: 'Bu metin taslak kalite kontrolü için yazılmıştır.',

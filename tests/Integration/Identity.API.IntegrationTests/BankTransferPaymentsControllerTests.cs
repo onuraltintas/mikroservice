@@ -31,7 +31,7 @@ public sealed class BankTransferPaymentsControllerTests
         action.Should().NotBeNull();
         action!.GetCustomAttribute<HttpDeleteAttribute>()!.Template
             .Should().Be("requests/{id:guid}");
-        action.GetCustomAttribute<AuthorizeAttribute>().Should().NotBeNull();
+        action.GetCustomAttributes<AuthorizeAttribute>().Should().NotBeEmpty();
         action.GetCustomAttribute<HasPermissionAttribute>()!.Permission
             .Should().Be(PlatformPermissions.SpeedReading.ContentManage);
     }

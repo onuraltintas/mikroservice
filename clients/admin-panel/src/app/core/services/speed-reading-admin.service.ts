@@ -1741,6 +1741,10 @@ export class SpeedReadingAdminService {
     ).pipe(map(response => response.data));
   }
 
+  deleteBankTransferRequest(id: string) {
+    return this.http.delete<void>(`${this.url}/bank-transfer/requests/${id}`);
+  }
+
   getAgeGroups(activeOnly = false) {
     const params = new HttpParams().set('activeOnly', activeOnly);
     return this.http.get<Array<SpeedReadingAgeGroup & {

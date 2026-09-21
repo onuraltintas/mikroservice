@@ -315,6 +315,7 @@ public interface ISpeedReadingSubscription
     Task<IReadOnlyList<BankTransferPaymentRequestSummary>> GetMyBankTransferPaymentRequestsAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<SpeedReadingPage<BankTransferPaymentRequestSummary>> GetBankTransferPaymentRequestsAsync(string? search, string? status, int page, int pageSize, CancellationToken cancellationToken = default);
     Task<BankTransferPaymentRequestSummary?> ReviewBankTransferPaymentRequestAsync(Guid id, ReviewBankTransferPaymentRequest request, Guid actorId, string idempotencyKey, CancellationToken cancellationToken = default);
+    Task<bool> DeleteBankTransferPaymentRequestAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<SpeedReadingPage<UserSubscriptionSummary>> GetSubscriptionsAsync(string? search, string? status, int page, int pageSize, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<UserSubscriptionSummary>> GetUserSubscriptionsAsync(Guid userId, CancellationToken cancellationToken = default);
