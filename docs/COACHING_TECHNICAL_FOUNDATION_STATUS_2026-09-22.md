@@ -6,7 +6,7 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
 ## Doğrulanmış
 
 - `dotnet test tests/Integration/Identity.API.IntegrationTests/Identity.API.IntegrationTests.csproj
-  --configuration Release`: 608 başarılı, 0 başarısız. Gateway'in çalışan
+  --configuration Release`: 611 başarılı, 0 başarısız. Gateway'in çalışan
   process gerektiren 2 testi bu koşuda atlandı; ayrı smoke kapısı CI'de var.
 - Disposable Docker veri gizliliği E2E: Identity, Coaching, Notification ve
   Speed Reading ayrı veritabanlarındaki hesap silme, tekrar teslim tekilliği
@@ -21,7 +21,7 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
 
 ## Kapsam ölçümü
 
-`--collect:"XPlat Code Coverage"` ile 608 testin başarılı olduğu koşudan
+`--collect:"XPlat Code Coverage"` ile 608 testin başarılı olduğu önceki koşudan
 alınan Cobertura raporu: toplam instrumented assembly satır kapsamı %11,34;
 Coaching.API %3,23, Coaching.Application %51,72, Coaching.Domain %73,02,
 Coaching.Infrastructure %8,48. Bu oranlar **yalnız bu entegrasyon test projesinin**
