@@ -561,11 +561,11 @@ public sealed class CoachingComparativeReportRepository(CoachingDbContext contex
         DateTime toDate,
         CancellationToken cancellationToken = default)
     {
-        var studentIdArray = studentIds.Distinct().ToArray();
+        var studentIdList = studentIds.Distinct().ToList();
 
         var assignmentRows = await context.AssignmentStudents
             .AsNoTracking()
-            .Where(item => studentIdArray.Contains(item.StudentId)
+            .Where(item => studentIdList.Contains(item.StudentId)
                 && item.Assignment.InstitutionId == institutionId
                 && item.Assignment.CreatedAt >= fromDate
                 && item.Assignment.CreatedAt <= toDate
@@ -588,7 +588,7 @@ public sealed class CoachingComparativeReportRepository(CoachingDbContext contex
 
         var examRows = await context.ExamResults
             .AsNoTracking()
-            .Where(item => studentIdArray.Contains(item.StudentId)
+            .Where(item => studentIdList.Contains(item.StudentId)
                 && item.Exam.InstitutionId == institutionId
                 && item.Exam.ExamDate >= fromDate
                 && item.Exam.ExamDate <= toDate
@@ -607,7 +607,7 @@ public sealed class CoachingComparativeReportRepository(CoachingDbContext contex
 
         var sessionRows = await context.SessionAttendances
             .AsNoTracking()
-            .Where(item => studentIdArray.Contains(item.StudentId)
+            .Where(item => studentIdList.Contains(item.StudentId)
                 && item.Session.InstitutionId == institutionId
                 && item.Session.ScheduledDate >= fromDate
                 && item.Session.ScheduledDate <= toDate
@@ -627,7 +627,7 @@ public sealed class CoachingComparativeReportRepository(CoachingDbContext contex
 
         var goals = await context.AcademicGoals
             .AsNoTracking()
-            .Where(item => studentIdArray.Contains(item.StudentId)
+            .Where(item => studentIdList.Contains(item.StudentId)
                 && item.CreatedAt >= fromDate
                 && item.CreatedAt <= toDate)
             .Select(item => new { item.CurrentProgress, item.IsCompleted })
@@ -638,7 +638,7 @@ public sealed class CoachingComparativeReportRepository(CoachingDbContext contex
             gradeLevel,
             fromDate,
             toDate,
-            studentIdArray.Length,
+            studentIdList.Count,
             assignmentRows.Select(item => item.AssignmentId).Distinct().Count(),
             assignmentRows.Count,
             assignmentRows.Count(item => item.SubmittedAt.HasValue),
@@ -673,19 +673,19 @@ public sealed class CoachingEarlyWarningRepository(CoachingDbContext context)
         DateTime toDate,
         CancellationToken cancellationToken = default)
     {
-        var studentIdArray = studentIds.Distinct().ToArray();
-        if (studentIdArray.Length == 0)
+        var studentIdList = studentIds.Distinct().ToList();
+        if (studentIdList.Count == 0)
         {
             return Array.Empty<CoachingStudentEarlyWarningMetrics>();
         }
 
-        var accumulators = studentIdArray.ToDictionary(
+        var accumulators = studentIdList.ToDictionary(
             studentId => studentId,
             _ => new EarlyWarningAccumulator());
 
         var assignmentRows = await context.AssignmentStudents
             .AsNoTracking()
-            .Where(item => studentIdArray.Contains(item.StudentId)
+            .Where(item => studentIdList.Contains(item.StudentId)
                 && item.Assignment.InstitutionId == institutionId
                 && item.Assignment.CreatedAt >= fromDate
                 && item.Assignment.CreatedAt <= toDate
@@ -723,7 +723,7 @@ public sealed class CoachingEarlyWarningRepository(CoachingDbContext context)
 
         var examRows = await context.ExamResults
             .AsNoTracking()
-            .Where(item => studentIdArray.Contains(item.StudentId)
+            .Where(item => studentIdList.Contains(item.StudentId)
                 && item.Exam.InstitutionId == institutionId
                 && item.Exam.ExamDate >= fromDate
                 && item.Exam.ExamDate <= toDate
@@ -749,7 +749,7 @@ public sealed class CoachingEarlyWarningRepository(CoachingDbContext context)
 
         var sessionRows = await context.SessionAttendances
             .AsNoTracking()
-            .Where(item => studentIdArray.Contains(item.StudentId)
+            .Where(item => studentIdList.Contains(item.StudentId)
                 && item.Session.InstitutionId == institutionId
                 && item.Session.ScheduledDate >= fromDate
                 && item.Session.ScheduledDate <= toDate
@@ -783,7 +783,7 @@ public sealed class CoachingEarlyWarningRepository(CoachingDbContext context)
 
         var goalRows = await context.AcademicGoals
             .AsNoTracking()
-            .Where(item => studentIdArray.Contains(item.StudentId)
+            .Where(item => studentIdList.Contains(item.StudentId)
                 && item.CreatedAt >= fromDate
                 && item.CreatedAt <= toDate)
             .Select(item => new
