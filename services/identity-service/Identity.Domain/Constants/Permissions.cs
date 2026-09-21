@@ -74,6 +74,12 @@ public static class Permissions
     {
         public const string View = PlatformPermissions.Operations.View;
     }
+
+    public static class Privacy
+    {
+        public const string View = PlatformPermissions.Privacy.View;
+        public const string Manage = PlatformPermissions.Privacy.Manage;
+    }
     
     // Helper to get all permissions
     public static List<string> GetAll()

@@ -77,6 +77,9 @@ public sealed class DataSubjectRequestApplicationTests
 
         public Task<IReadOnlyList<DataSubjectRequest>> GetByRequesterAsync(Guid userId, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<DataSubjectRequest>>([]);
+        public Task<DataSubjectRequest?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult<DataSubjectRequest?>(null);
+        public Task<(IReadOnlyList<DataSubjectRequest> Items, int TotalCount)> GetForReviewAsync(DataSubjectRequestStatus? status, int pageNumber, int pageSize, CancellationToken cancellationToken) => Task.FromResult<(IReadOnlyList<DataSubjectRequest>, int)>(([], 0));
+        public Task SaveChangesAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
     private sealed class StubCurrentUser(Guid userId) : ICurrentUserService

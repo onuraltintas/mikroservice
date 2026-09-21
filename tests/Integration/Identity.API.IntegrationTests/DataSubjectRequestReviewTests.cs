@@ -51,9 +51,12 @@ public sealed class DataSubjectRequestReviewTests
     }
 
     [Theory]
-    [InlineData(nameof(DataSubjectRequestsController.VerifyIdentity))]
-    [InlineData(nameof(DataSubjectRequestsController.Decide))]
-    public void ReviewEndpoints_ShouldRequireSystemAdminMfaAndPrivacyPermission(string actionName)
+    [InlineData(nameof(DataSubjectRequestsController.AdminList), PlatformPermissions.Privacy.View)]
+    [InlineData(nameof(DataSubjectRequestsController.VerifyIdentity), PlatformPermissions.Privacy.Manage)]
+    [InlineData(nameof(DataSubjectRequestsController.Decide), PlatformPermissions.Privacy.Manage)]
+    public void ReviewEndpoints_ShouldRequireSystemAdminMfaAndPrivacyPermission(
+        string actionName,
+        string expectedPermission)
     {
         var method = typeof(DataSubjectRequestsController).GetMethod(actionName);
 
@@ -66,7 +69,7 @@ public sealed class DataSubjectRequestReviewTests
         method.GetCustomAttributes(typeof(HasPermissionAttribute), true)
             .Cast<HasPermissionAttribute>()
             .Should()
-            .Contain(attribute => attribute.Policy == PlatformPermissions.Privacy.Manage);
+            .Contain(attribute => attribute.Policy == expectedPermission);
     }
 
     private static DateTime Utc(int hour) =>
@@ -85,6 +88,7 @@ public sealed class DataSubjectRequestReviewTests
         public Task<bool> HasActiveAsync(Guid userId, DataSubjectRequestType requestType, CancellationToken cancellationToken) => Task.FromResult(false);
         public Task AddAsync(DataSubjectRequest value, CancellationToken cancellationToken) => Task.CompletedTask;
         public Task<IReadOnlyList<DataSubjectRequest>> GetByRequesterAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<DataSubjectRequest>>([]);
+        public Task<(IReadOnlyList<DataSubjectRequest> Items, int TotalCount)> GetForReviewAsync(DataSubjectRequestStatus? status, int pageNumber, int pageSize, CancellationToken cancellationToken) => Task.FromResult<(IReadOnlyList<DataSubjectRequest>, int)>(([request], 1));
     }
 
     private sealed class StubCurrentUser(Guid userId, string[] roles) : ICurrentUserService

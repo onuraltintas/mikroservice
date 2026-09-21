@@ -49,6 +49,12 @@ public static class PlatformPermissions
         public const string View = "Permissions.Operations.View";
     }
 
+    public static class Privacy
+    {
+        public const string View = "Permissions.Privacy.View";
+        public const string Manage = "Permissions.Privacy.Manage";
+    }
+
     public static IReadOnlyList<string> GetAll() =>
     [
         Institutions.View,
@@ -69,6 +75,8 @@ public static class PlatformPermissions
         Support.View,
         Support.Reply,
         Notifications.Templates,
-        Operations.View
+        Operations.View,
+        Privacy.View,
+        Privacy.Manage
     ];
 }

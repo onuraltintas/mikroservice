@@ -56,4 +56,30 @@ public sealed class DataSubjectRequestRepository(IdentityDbContext context)
             .OrderByDescending(request => request.SubmittedAt)
             .ThenByDescending(request => request.Id)
             .ToListAsync(cancellationToken);
+
+    public Task<DataSubjectRequest?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
+        context.DataSubjectRequests.SingleOrDefaultAsync(request => request.Id == id, cancellationToken);
+
+    public async Task<(IReadOnlyList<DataSubjectRequest> Items, int TotalCount)> GetForReviewAsync(
+        DataSubjectRequestStatus? status,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var query = context.DataSubjectRequests.AsNoTracking();
+        if (status.HasValue)
+            query = query.Where(request => request.Status == status.Value);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderBy(request => request.SubmittedAt)
+            .ThenBy(request => request.Id)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+        return (items, totalCount);
+    }
+
+    public Task SaveChangesAsync(CancellationToken cancellationToken) =>
+        context.SaveChangesAsync(cancellationToken);
 }
