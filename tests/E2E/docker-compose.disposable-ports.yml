@@ -6,7 +6,8 @@ services:
     ports: !override []
   rabbitmq:
     container_name: !reset null
-    ports: !override []
+    ports: !override
+      - "${E2E_RABBITMQ_MANAGEMENT_PORT:-15673}:15672"
   redis:
     container_name: !reset null
     ports: !override []

@@ -61,6 +61,13 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
   döndürmeye devam etti. Bu, tüketici/olay toparlanmasının kanıtı değildir.
   Kesinti provası diğer gizlilik testleriyle çakışmaması için CI'da ayrı adımda.
   Geçici container ve hacimler testten sonra kaldırıldı; canlı VPS kullanılmadı.
+- Ayrı `privacy-e2e-local-broker` Docker projesinde Koçluk tüketicisi kapalıyken
+  kalıcı değerlendirme olayı RabbitMQ kuyruğuna yazıldı. Broker yeniden
+  başlatılınca mesaj kuyrukta kaldı; Koçluk açılınca hedef sayısı doğru
+  değerlendirildi, sonuç Identity gizlilik talebine ulaştı ve hedef silinmedi.
+  Test geçti; CI gizlilik işine diğer kesinti testinden sonraki ayrı adımda
+  eklendi. Bu, kısa süreli kesinti için teslim kanıtıdır; uzun süreli yük,
+  tekrar deneme alarmı veya gerçek staging toparlanma süresi kanıtı değildir.
 
 ## Kapsam ölçümü
 
@@ -76,8 +83,8 @@ genel %80 kapsam hedefini kanıtlamaz.
 ## Kapanması gereken kapılar
 
 1. Koçluk export için karmaşık ilişki/veri durumlarında daha kapsamlı HTTP E2E;
-   koç/yönetici kurum sınırları, broker tüketicilerinin kesinti sonrası olay
-   toparlanması ve gerçek operasyonel toparlanma ölçümleri.
+   koç/yönetici kurum sınırları, diğer olay tüketicileri ve gerçek operasyonel
+   toparlanma ölçümleri.
 2. Kullanıcının kendi VPS'inde çalışacak, güvenlik bakımından desteklenen S3
    uyumlu depoda gerçek yükle–oku–sil ve staging'deki broker + PostgreSQL +
    nesne depolama zinciri; erişim, TLS, bucket yetkileri, kimlik bilgisi

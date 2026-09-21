@@ -220,6 +220,9 @@ jobs:
       - name: Verify Coaching export and dependency outage recovery
         run: node --test tests/E2E/coaching-data-export.docker.test.mjs
 
+      - name: Verify durable Coaching event delivery after broker restart
+        run: node --test tests/E2E/coaching-broker-recovery.docker.test.mjs
+
       - name: Preserve service logs on failure
         if: failure()
         run: docker compose --env-file .env.example --profile speed-reading logs --no-color --tail 100 identity-service coaching-service notification-service speed-reading-service api-gateway
