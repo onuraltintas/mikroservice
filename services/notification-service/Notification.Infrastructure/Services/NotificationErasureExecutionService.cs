@@ -25,9 +25,23 @@ public sealed class NotificationErasureExecutionService(
             .Where(item => item.UserId == message.SubjectUserId)
             .ToListAsync(cancellationToken);
         context.Notifications.RemoveRange(notifications);
+        var emailDeliveries = await context.EmailDeliveries
+            .Where(item => item.SubjectUserId == message.SubjectUserId)
+            .ToListAsync(cancellationToken);
+        var supportRequests = await context.SupportRequests
+            .Where(item => item.SubjectUserId == message.SubjectUserId)
+            .ToListAsync(cancellationToken);
+        var supportRequestIds = supportRequests.Select(item => item.Id).ToList();
+        var supportForwardDeliveries = await context.SupportForwardDeliveries
+            .Where(item => supportRequestIds.Contains(item.SupportRequestId))
+            .ToListAsync(cancellationToken);
+        context.EmailDeliveries.RemoveRange(emailDeliveries);
+        context.SupportForwardDeliveries.RemoveRange(supportForwardDeliveries);
+        context.SupportRequests.RemoveRange(supportRequests);
         var receipt = NotificationErasureExecutionReceipt.Complete(
             message.RequestId,
-            notifications.Count,
+            notifications.Count + emailDeliveries.Count + supportRequests.Count
+                + supportForwardDeliveries.Count,
             timeProvider.GetUtcNow().UtcDateTime);
         context.ErasureExecutions.Add(receipt);
         await context.SaveChangesAsync(cancellationToken);

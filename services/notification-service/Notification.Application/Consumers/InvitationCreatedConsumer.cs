@@ -46,6 +46,7 @@ public class InvitationCreatedConsumer : IConsumer<InvitationCreatedEvent>
             message.InviteeEmail,
             subject,
             body,
+            message.InviteeId,
             context.CancellationToken);
 
         if (message.InviteeId.HasValue)

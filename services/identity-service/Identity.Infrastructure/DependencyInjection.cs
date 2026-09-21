@@ -92,6 +92,7 @@ public static class DependencyInjection
         services.AddScoped<IDataSubjectRequestErasureExecutionPublisher, DataSubjectRequestEventPublisher>();
         services.AddScoped<IDataSubjectRequestAssessmentRepository, Repositories.DataSubjectRequestAssessmentRepository>();
         services.AddScoped<IDataSubjectRequestExecutionRepository, Repositories.DataSubjectRequestExecutionRepository>();
+        services.AddScoped<IIdentityAccountErasureService, Services.IdentityAccountErasureService>();
         services.AddScoped<IUnitOfWork, Repositories.UnitOfWork>();
 
         return services;

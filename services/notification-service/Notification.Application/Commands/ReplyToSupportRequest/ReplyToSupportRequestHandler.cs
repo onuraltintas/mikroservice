@@ -66,6 +66,7 @@ public class ReplyToSupportRequestHandler : IRequestHandler<ReplyToSupportReques
             supportRequest.Email,
             subject,
             body,
+            supportRequest.SubjectUserId,
             cancellationToken);
 
         // 2. Mark as Processed

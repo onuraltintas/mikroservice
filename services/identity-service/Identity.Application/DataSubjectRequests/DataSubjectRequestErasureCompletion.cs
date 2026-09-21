@@ -15,9 +15,15 @@ public interface IDataSubjectRequestExecutionRepository
         CancellationToken cancellationToken);
 }
 
+public interface IIdentityAccountErasureService
+{
+    Task ExecuteAsync(Guid subjectUserId, CancellationToken cancellationToken);
+}
+
 public sealed class DataSubjectRequestErasureCompletionHandler(
     IDataSubjectRequestRepository requestRepository,
-    IDataSubjectRequestExecutionRepository executionRepository)
+    IDataSubjectRequestExecutionRepository executionRepository,
+    IIdentityAccountErasureService identityAccountErasureService)
 {
     public async Task HandleAsync(
         PersonalDataErasureExecutionCompletedV1 message,
@@ -46,7 +52,12 @@ public sealed class DataSubjectRequestErasureCompletionHandler(
             .Append(result.ServiceName)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
         if (requiredServices.All(completedServices.Contains))
+        {
+            if (request.Scope == PersonalDataScope.Account)
+                await identityAccountErasureService.ExecuteAsync(
+                    request.RequesterUserId, cancellationToken);
             request.Complete(message.CompletedAt);
+        }
 
         await requestRepository.SaveChangesAsync(cancellationToken);
     }

@@ -77,6 +77,7 @@ public class UserForgotPasswordConsumer : IConsumer<UserForgotPasswordEvent>
             message.Email,
             subject,
             body,
+            message.UserId,
             context.CancellationToken);
     }
 }

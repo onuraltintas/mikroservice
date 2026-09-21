@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Notification.Application.Commands.SubmitSupportRequest;
 using EduPlatform.Shared.Contracts.Authorization;
 using EduPlatform.Shared.Security.Authorization;
+using System.Security.Claims;
 
 namespace Notification.API.Controllers;
 
@@ -29,7 +30,13 @@ public class SupportController : ControllerBase
     {
         command = command with
         {
-            IdempotencyKey = Request.Headers["Idempotency-Key"].ToString()
+            IdempotencyKey = Request.Headers["Idempotency-Key"].ToString(),
+            SubjectUserId = Guid.TryParse(
+                User.FindFirstValue(ClaimTypes.NameIdentifier)
+                    ?? User.FindFirstValue("sub"),
+                out var subjectUserId)
+                ? subjectUserId
+                : null
         };
         var result = await _mediator.Send(command);
 

@@ -274,6 +274,25 @@ public class User : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void AnonymizeForErasure()
+    {
+        Email = $"erased-{Id:N}@deleted.invalid";
+        FirstName = string.Empty;
+        LastName = string.Empty;
+        PhoneNumber = null;
+        PhoneConfirmed = false;
+        PasswordHash = [];
+        PasswordSalt = [];
+        EmailConfirmed = false;
+        EmailVerificationToken = null;
+        EmailVerificationTokenExpiresAt = null;
+        PasswordResetToken = null;
+        PasswordResetTokenExpiresAt = null;
+        LastLoginAt = null;
+        ResetMfa();
+        Deactivate();
+    }
+
     public void Activate()
     {
         IsActive = true;

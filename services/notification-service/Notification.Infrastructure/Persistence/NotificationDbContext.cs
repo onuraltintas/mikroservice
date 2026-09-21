@@ -57,6 +57,7 @@ public class NotificationDbContext : DbContext, INotificationDbContext
         modelBuilder.Entity<EmailDelivery>()
             .HasIndex(x => new { x.Status, x.LeaseUntil, x.CreatedAt });
         modelBuilder.Entity<EmailDelivery>().Property(x => x.ConsumerType).HasMaxLength(200);
+        modelBuilder.Entity<EmailDelivery>().HasIndex(x => x.SubjectUserId);
         modelBuilder.Entity<EmailDelivery>().Property(x => x.Recipient).HasMaxLength(320);
         modelBuilder.Entity<EmailDelivery>().Property(x => x.Subject).HasMaxLength(998);
         modelBuilder.Entity<EmailDelivery>().Property(x => x.LeaseToken).IsConcurrencyToken();
@@ -64,6 +65,7 @@ public class NotificationDbContext : DbContext, INotificationDbContext
         // Support Request
         modelBuilder.Entity<SupportRequest>().HasKey(x => x.Id);
         modelBuilder.Entity<SupportRequest>().Property(x => x.IdempotencyKey).HasMaxLength(128);
+        modelBuilder.Entity<SupportRequest>().HasIndex(x => x.SubjectUserId);
         modelBuilder.Entity<SupportRequest>()
             .HasIndex(x => new { x.Email, x.IdempotencyKey })
             .IsUnique();

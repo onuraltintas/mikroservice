@@ -37,6 +37,7 @@ public sealed class InternalEmailController(IEmailDeliveryQueue emailDeliveryQue
             request.Recipient.Trim(),
             request.Subject.Trim(),
             request.Body,
+            request.SubjectUserId,
             cancellationToken);
 
         return Accepted(new { success = true, messageId = request.MessageId });
@@ -47,5 +48,6 @@ public sealed class InternalEmailController(IEmailDeliveryQueue emailDeliveryQue
         string ConsumerType,
         string Recipient,
         string Subject,
-        string Body);
+        string Body,
+        Guid? SubjectUserId = null);
 }

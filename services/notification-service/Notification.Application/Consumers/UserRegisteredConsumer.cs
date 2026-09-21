@@ -66,6 +66,7 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
             message.Email,
             subject,
             body,
+            message.UserId,
             context.CancellationToken);
     }
 }

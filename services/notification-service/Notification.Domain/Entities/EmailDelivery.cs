@@ -16,6 +16,7 @@ public class EmailDelivery
 {
     public Guid Id { get; private set; }
     public Guid MessageId { get; private set; }
+    public Guid? SubjectUserId { get; private set; }
     public string ConsumerType { get; private set; } = string.Empty;
     public string Recipient { get; private set; } = string.Empty;
     public string Subject { get; private set; } = string.Empty;
@@ -36,12 +37,14 @@ public class EmailDelivery
         string consumerType,
         string recipient,
         string subject,
-        string body)
+        string body,
+        Guid? subjectUserId = null)
     {
         return new EmailDelivery
         {
             Id = Guid.NewGuid(),
             MessageId = messageId,
+            SubjectUserId = subjectUserId,
             ConsumerType = consumerType,
             Recipient = recipient,
             Subject = subject,

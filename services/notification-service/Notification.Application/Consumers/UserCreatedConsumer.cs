@@ -75,6 +75,7 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
             email,
             subject,
             body,
+            message.UserId,
             context.CancellationToken);
         await _notificationService.SendNotificationAsync(
             message.UserId, 

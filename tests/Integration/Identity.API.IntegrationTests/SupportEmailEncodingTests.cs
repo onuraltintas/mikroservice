@@ -62,7 +62,7 @@ public sealed class SupportEmailEncodingTests
     {
         public string Body { get; private set; } = "";
         public string Subject { get; private set; } = "";
-        public Task QueueAsync(Guid messageId, string consumerType, string recipient, string subject, string body, CancellationToken cancellationToken = default)
+        public Task QueueAsync(Guid messageId, string consumerType, string recipient, string subject, string body, Guid? subjectUserId = null, CancellationToken cancellationToken = default)
         { Subject = subject; Body = body; return Task.CompletedTask; }
     }
 }

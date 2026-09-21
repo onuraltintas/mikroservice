@@ -96,6 +96,7 @@ public sealed class UserCreatedConsumerTests
             string recipient,
             string subject,
             string body,
+            Guid? subjectUserId = null,
             CancellationToken cancellationToken = default)
         {
             Messages.Add(new QueuedMessage(messageId, consumerType, recipient, subject, body));

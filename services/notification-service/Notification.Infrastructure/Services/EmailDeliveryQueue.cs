@@ -23,6 +23,7 @@ public sealed class EmailDeliveryQueue : IEmailDeliveryQueue
         string recipient,
         string subject,
         string body,
+        Guid? subjectUserId = null,
         CancellationToken cancellationToken = default)
     {
         var delivery = EmailDelivery.Create(
@@ -30,16 +31,17 @@ public sealed class EmailDeliveryQueue : IEmailDeliveryQueue
             consumerType,
             recipient,
             subject,
-            _bodyProtector.Protect(body));
+            _bodyProtector.Protect(body),
+            subjectUserId);
 
         // The unique key is enforced atomically in PostgreSQL. A check-then-insert
         // sequence would still allow two replicas to enqueue the same event.
         await _dbContext.Database.ExecuteSqlInterpolatedAsync($"""
             INSERT INTO "EmailDeliveries"
-                ("Id", "MessageId", "ConsumerType", "Recipient", "Subject", "Body",
+                ("Id", "MessageId", "SubjectUserId", "ConsumerType", "Recipient", "Subject", "Body",
                  "Status", "AttemptCount", "CreatedAt", "NextAttemptAt")
             VALUES
-                ({delivery.Id}, {delivery.MessageId}, {delivery.ConsumerType}, {delivery.Recipient},
+                ({delivery.Id}, {delivery.MessageId}, {delivery.SubjectUserId}, {delivery.ConsumerType}, {delivery.Recipient},
                  {delivery.Subject}, {delivery.Body}, {(int)delivery.Status}, {delivery.AttemptCount},
                  {delivery.CreatedAt}, {delivery.NextAttemptAt})
             ON CONFLICT ("MessageId", "ConsumerType") DO NOTHING

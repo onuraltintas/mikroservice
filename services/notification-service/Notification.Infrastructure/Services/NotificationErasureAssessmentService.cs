@@ -13,14 +13,25 @@ public sealed class NotificationErasureAssessmentService(
         PersonalDataErasureAssessmentRequestedV1 message,
         CancellationToken cancellationToken)
     {
-        var count = await context.Notifications.CountAsync(
+        var notificationCount = await context.Notifications.CountAsync(
             item => item.UserId == message.SubjectUserId,
+            cancellationToken);
+        var emailDeliveryCount = await context.EmailDeliveries.CountAsync(
+            item => item.SubjectUserId == message.SubjectUserId,
+            cancellationToken);
+        var supportRequestCount = await context.SupportRequests.CountAsync(
+            item => item.SubjectUserId == message.SubjectUserId,
             cancellationToken);
         return new NotificationErasureAssessment(
             message.RequestId,
             message.SubjectUserId,
             CanProceed: true,
-            new Dictionary<string, int> { ["notifications"] = count },
+            new Dictionary<string, int>
+            {
+                ["notifications"] = notificationCount,
+                ["emailDeliveries"] = emailDeliveryCount,
+                ["supportRequests"] = supportRequestCount
+            },
             timeProvider.GetUtcNow().UtcDateTime);
     }
 }

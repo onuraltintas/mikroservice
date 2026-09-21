@@ -14,6 +14,7 @@ public class SupportRequest : AggregateRoot
     public string? IdempotencyKey { get; private set; }
     public bool IsProcessed { get; private set; }
     public string? AdminNote { get; private set; }
+    public Guid? SubjectUserId { get; private set; }
 
     private SupportRequest() { }
 
@@ -24,7 +25,8 @@ public class SupportRequest : AggregateRoot
         string email,
         string subject,
         string message,
-        string? idempotencyKey = null) : base(id)
+        string? idempotencyKey = null,
+        Guid? subjectUserId = null) : base(id)
     {
         FirstName = firstName;
         LastName = lastName;
@@ -32,6 +34,7 @@ public class SupportRequest : AggregateRoot
         Subject = subject;
         Message = message;
         IdempotencyKey = idempotencyKey;
+        SubjectUserId = subjectUserId;
         IsProcessed = false;
         CreatedAt = DateTime.UtcNow;
     }

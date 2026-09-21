@@ -49,7 +49,8 @@ public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestC
             normalizedEmail,
             request.Subject,
             request.Message,
-            idempotencyKey
+            idempotencyKey,
+            request.SubjectUserId
         );
 
         _dbContext.SupportRequests.Add(supportRequest);
@@ -144,6 +145,7 @@ public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestC
             request.Email,
             subject,
             body,
+            request.SubjectUserId,
             cancellationToken);
     }
 }

@@ -8,5 +8,6 @@ public interface IEmailDeliveryQueue
         string recipient,
         string subject,
         string body,
+        Guid? subjectUserId = null,
         CancellationToken cancellationToken = default);
 }

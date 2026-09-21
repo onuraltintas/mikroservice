@@ -1,6 +1,7 @@
 using EduPlatform.Shared.Kernel.Results;
 using FluentValidation;
 using MediatR;
+using System.Text.Json.Serialization;
 
 namespace Notification.Application.Commands.SubmitSupportRequest;
 
@@ -10,7 +11,8 @@ public record SubmitSupportRequestCommand(
     string Email,
     string Subject,
     string Message,
-    string? IdempotencyKey = null) : IRequest<Result<Guid>>;
+    string? IdempotencyKey = null,
+    [property: JsonIgnore] Guid? SubjectUserId = null) : IRequest<Result<Guid>>;
 
 public sealed class SubmitSupportRequestCommandValidator : AbstractValidator<SubmitSupportRequestCommand>
 {
