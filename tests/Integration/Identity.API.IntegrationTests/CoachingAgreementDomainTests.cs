@@ -22,7 +22,7 @@ public sealed class CoachingAgreementDomainTests
             ContentSha256,
             effectiveAt);
 
-        document.Version.Should().Be("2026.1");
+        document.DocumentVersion.Should().Be("2026.1");
         document.Locale.Should().Be("tr-TR");
         document.ContentSha256.Should().Be(ContentSha256);
         document.EffectiveAt.Should().Be(effectiveAt);
