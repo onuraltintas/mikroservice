@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  requireDisposableContainer,
   createMassTransitEnvelope,
   requireDisposableEnvironment,
 } from './privacy-docker.mjs';
@@ -13,6 +14,12 @@ test('privacy Docker E2E refuses an unmarked environment', () => {
   assert.doesNotThrow(() => requireDisposableEnvironment({
     E2E_DISPOSABLE_ENV: 'true', ENVIRONMENT: 'Development',
   }));
+});
+
+test('privacy Docker E2E verifies the actual Identity container environment', () => {
+  assert.throws(() => requireDisposableContainer(['ASPNETCORE_ENVIRONMENT=Production']), /Production/);
+  assert.throws(() => requireDisposableContainer(['ASPNETCORE_ENVIRONMENT=Development'], 'Staging'), /mismatch/);
+  assert.doesNotThrow(() => requireDisposableContainer(['ASPNETCORE_ENVIRONMENT=Development'], 'Development'));
 });
 
 test('completion messages keep request correlation separate from message identity', () => {
