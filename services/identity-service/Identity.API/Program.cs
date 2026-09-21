@@ -76,11 +76,20 @@ builder.Services.AddMediatorWithBehaviors(typeof(Identity.Application.Dependency
 // Add MassTransit (for Publishing Events)
 builder.Services.AddMassTransit(x =>
 {
+    x.AddConsumers(typeof(Identity.Application.DependencyInjection).Assembly);
+
     // Outbox Pattern Configuration
     x.AddEntityFrameworkOutbox<IdentityDbContext>(o =>
     {
         o.UsePostgres();
         o.UseBusOutbox();
+    });
+
+    x.AddConfigureEndpointsCallback((context, _, endpointConfigurator) =>
+    {
+        endpointConfigurator.UseMessageRetry(retry =>
+            retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+        endpointConfigurator.UseEntityFrameworkOutbox<IdentityDbContext>(context);
     });
 
     x.UsingRabbitMq((context, cfg) =>
@@ -99,6 +108,8 @@ builder.Services.AddMassTransit(x =>
             h.Username(rabbitUser);
             h.Password(rabbitPass);
         });
+
+        cfg.ConfigureEndpoints(context);
     });
 });
 

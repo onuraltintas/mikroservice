@@ -89,6 +89,7 @@ public static class DependencyInjection
         services.AddScoped<IPermissionRepository, Repositories.PermissionRepository>();
         services.AddScoped<IDataSubjectRequestRepository, Repositories.DataSubjectRequestRepository>();
         services.AddScoped<IDataSubjectRequestEventPublisher, DataSubjectRequestEventPublisher>();
+        services.AddScoped<IDataSubjectRequestAssessmentRepository, Repositories.DataSubjectRequestAssessmentRepository>();
         services.AddScoped<IUnitOfWork, Repositories.UnitOfWork>();
 
         return services;

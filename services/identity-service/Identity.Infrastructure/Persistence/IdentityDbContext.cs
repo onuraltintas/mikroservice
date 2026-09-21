@@ -41,6 +41,7 @@ public class IdentityDbContext : DbContext
     public DbSet<AdminAuditRecord> AdminAuditRecords => Set<AdminAuditRecord>();
     public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
     public DbSet<DataSubjectRequest> DataSubjectRequests => Set<DataSubjectRequest>();
+    public DbSet<DataSubjectRequestAssessmentResult> DataSubjectRequestAssessmentResults => Set<DataSubjectRequestAssessmentResult>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
