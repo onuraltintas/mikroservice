@@ -4,6 +4,10 @@ import test from 'node:test';
 
 const program = await readFile(new URL('./Program.cs', import.meta.url), 'utf8');
 const compose = await readFile(new URL('../../../docker-compose.yml', import.meta.url), 'utf8');
+const ownedDbContext = await readFile(
+  new URL('../SpeedReading.Infrastructure/Persistence/OwnedSpeedReadingDbContext.cs', import.meta.url),
+  'utf8',
+);
 
 test('migration host registers the HTTP context dependency before building', () => {
   const registration = program.indexOf('builder.Services.AddHttpContextAccessor();');
@@ -26,4 +30,12 @@ test('speed reading API receives RabbitMQ credentials from compose', () => {
 test('speed reading API registers both privacy consumers', () => {
   assert.match(program, /AddConsumer<SpeedReadingErasureAssessmentRequestedConsumer>/);
   assert.match(program, /AddConsumer<SpeedReadingErasureExecutionRequestedConsumer>/);
+});
+
+test('review item soft-delete fields use the snake-case database columns', () => {
+  const reviewItem = ownedDbContext
+    .split('modelBuilder.Entity<ReviewItem>(entity =>')[1]
+    .split('modelBuilder.Entity<LegacyUserContentFeedback>')[0];
+
+  assert.match(reviewItem, /item\.DeletedBy\)\.HasColumnName\("deleted_by"\)/);
 });
