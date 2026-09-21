@@ -9,6 +9,7 @@ using EduPlatform.Shared.Security.Services;
 using Serilog;
 using MassTransit;
 using Coaching.Infrastructure.Data;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
 
@@ -174,18 +175,7 @@ builder.Services.AddSwaggerGen(options =>
 
 // Add Health Checks
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<CoachingDbContext>("database");
-
-// Add CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-        .AllowAnyMethod()
-        .AllowAnyHeader();
-    });
-});
+    .AddDbContextCheck<CoachingDbContext>("database", tags: ["ready"]);
 
 var app = builder.Build();
 
@@ -213,17 +203,20 @@ if (app.Environment.IsDevelopment())
 // Routing
 app.UseRouting();
 
-// CORS
-app.UseCors("AllowAll");
-
 app.UseAuthentication();
 app.UseMiddleware<AdminAuditMiddleware>();
 app.UseAuthorization();
 
 // Health Checks
 app.MapHealthChecks("/health").AllowAnonymous();
-app.MapHealthChecks("/health/ready").AllowAnonymous();
-app.MapHealthChecks("/health/live").AllowAnonymous();
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+}).AllowAnonymous();
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false
+}).AllowAnonymous();
 
 // Controllers
 app.MapControllers();

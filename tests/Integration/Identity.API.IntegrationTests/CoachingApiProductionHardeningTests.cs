@@ -18,7 +18,7 @@ public sealed class CoachingApiProductionHardeningTests
     {
         var source = ReadCoachingProgram();
 
-        source.Should().Contain("Tags = [\"ready\"]");
+        source.Should().Contain("tags: [\"ready\"]");
         source.Should().Contain("Predicate = _ => false");
         source.Should().Contain("Predicate = check => check.Tags.Contains(\"ready\")");
     }
