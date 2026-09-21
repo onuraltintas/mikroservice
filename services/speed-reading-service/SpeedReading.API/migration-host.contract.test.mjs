@@ -22,3 +22,8 @@ test('speed reading API receives RabbitMQ credentials from compose', () => {
   assert.match(service, /RabbitMQ__Username=\$\{RABBITMQ_DEFAULT_USER\}/);
   assert.match(service, /RabbitMQ__Password=\$\{RABBITMQ_DEFAULT_PASS\}/);
 });
+
+test('speed reading API registers both privacy consumers', () => {
+  assert.match(program, /AddConsumer<SpeedReadingErasureAssessmentRequestedConsumer>/);
+  assert.match(program, /AddConsumer<SpeedReadingErasureExecutionRequestedConsumer>/);
+});
