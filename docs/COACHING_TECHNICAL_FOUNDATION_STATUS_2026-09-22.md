@@ -10,7 +10,11 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
   process gerektiren 2 testi bu koşuda atlandı; ayrı smoke kapısı CI'de var.
 - Disposable Docker veri gizliliği E2E: Identity, Coaching, Notification ve
   Speed Reading ayrı veritabanlarındaki hesap silme, tekrar teslim tekilliği
-  ve aktif legal hold altında silmeme; 5 test başarılı.
+  ve aktif legal hold altında silmeme; 5 test başarılı. Hesap silme
+  senaryosunda artık Koçluk ödev eki PostgreSQL kaydı ve gerçek MinIO nesnesi
+  de siliniyor; aynı kovadaki ilgisiz nesne korunuyor. Güncel yerel dağıtık
+  gizlilik dosyasının iki testi yeniden geçti. Bu, gerçek VPS/staging nesne
+  depolama doğrulaması değildir.
 - İzole MinIO container'lı entegrasyon testi: dosya gerçekten yüklendi ve
   geri okundu; Coaching silme servisi DB ek kaydını ve gerçek nesneyi kaldırdı.
   Güncel çalışma ağacında ilgili 4 test tekrar geçti. Bu, staging'deki tam
@@ -117,7 +121,8 @@ genel %80 kapsam hedefini kanıtlamaz.
 
 ## Kapanması gereken kapılar
 
-1. Koçluk export için daha karmaşık ilişki/veri durumları; koç/yönetici
+1. Koçluk export için daha karmaşık ilişki/veri durumları ve ek dosya
+   içeriğinin dışa aktarım kapsamı; koç/yönetici
    yazma işlemleri ve diğer okuma yollarında kurum sınırları, diğer olay
    tüketicileri ve gerçek operasyonel toparlanma ölçümleri.
 2. Kullanıcının kendi VPS'inde çalışacak, güvenlik bakımından desteklenen S3

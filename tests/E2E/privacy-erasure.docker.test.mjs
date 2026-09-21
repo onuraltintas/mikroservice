@@ -65,6 +65,21 @@ function sql(config, database, statement) {
   return result.stdout.trim();
 }
 
+function minio(config, args, input) {
+  return spawnSync(docker, [
+    'compose', '--env-file', config.E2E_COMPOSE_ENV_FILE, 'exec', '-T', 'minio',
+    'mc', ...args,
+  ], { cwd: repoRoot, input, encoding: 'utf8', timeout: 20_000 });
+}
+
+function requireMinio(config, args, input) {
+  const result = minio(config, args, input);
+  if (result.error || result.status !== 0) {
+    throw new Error(`Disposable MinIO operation failed: ${result.stderr?.trim() || result.error?.message}`);
+  }
+  return result.stdout.trim();
+}
+
 async function publish(config, contract, message, requestId) {
   const envelope = createMassTransitEnvelope(contract, message, requestId);
   const credentials = Buffer.from(`${config.RABBITMQ_DEFAULT_USER}:${config.RABBITMQ_DEFAULT_PASS}`).toString('base64');
@@ -119,7 +134,8 @@ test('disposable Docker account erasure completes across three product databases
   { timeout: 120_000 }, async () => {
     const config = await settings();
     verifyContainers(config);
-    for (const key of ['POSTGRES_USER', 'RABBITMQ_DEFAULT_USER', 'RABBITMQ_DEFAULT_PASS']) {
+    for (const key of ['POSTGRES_USER', 'RABBITMQ_DEFAULT_USER', 'RABBITMQ_DEFAULT_PASS',
+      'MINIO_ROOT_USER', 'MINIO_ROOT_PASSWORD', 'ATTACHMENT_MINIO_BUCKET']) {
       assert.ok(config[key], `${key} is required`);
     }
     await eventually(() => consumersReady(config), 'true', 'privacy consumers');
@@ -129,6 +145,12 @@ test('disposable Docker account erasure completes across three product databases
     const speedDb = config.POSTGRES_DB_SPEED_READING_OWNED || 'speedreading_owned_db';
     const userId = randomUUID();
     const requestId = randomUUID();
+    const assignmentId = randomUUID();
+    const assignmentStudentId = randomUUID();
+    const attachmentId = randomUUID();
+    const storageKey = `privacy-e2e/${attachmentId}.jpg`;
+    const otherStorageKey = `privacy-e2e/${randomUUID()}.jpg`;
+    const bucket = config.ATTACHMENT_MINIO_BUCKET;
     const now = new Date().toISOString();
     const email = `privacy-e2e-${userId.replaceAll('-', '')}@example.test`;
 
@@ -144,9 +166,30 @@ test('disposable Docker account erasure completes across three product databases
       VALUES ('${requestId}', '${userId}', 'Erasure', 'Account', 'Processing', 'Disposable Docker E2E',
         '${now}', '${now}', '${userId}', 'E2E approval', '${now}', '${now}', '${now}', '${now}', 0);
     `);
-    sql(config, coachingDb, `INSERT INTO coaching.academic_goals
-      (id, student_id, title, category, current_progress, is_completed, created_at, "Version")
-      VALUES (gen_random_uuid(), '${userId}', 'Privacy E2E', 'Other', 0, false, '${now}', 0);`);
+    sql(config, coachingDb, `
+      INSERT INTO coaching.academic_goals
+        (id, student_id, title, category, current_progress, is_completed, created_at, "Version")
+      VALUES (gen_random_uuid(), '${userId}', 'Privacy E2E', 'Other', 0, false, '${now}', 0);
+      INSERT INTO coaching.assignments
+        (id, teacher_id, title, type, source, due_date, status, created_at, "Version")
+      VALUES ('${assignmentId}', gen_random_uuid(), 'Privacy attachment E2E', 'Individual', 'Digital',
+        '${now}', 'Active', '${now}', 0);
+      INSERT INTO coaching.assignment_students (id, assignment_id, student_id, status, created_at)
+      VALUES ('${assignmentStudentId}', '${assignmentId}', '${userId}', 'Assigned', '${now}');
+      INSERT INTO coaching.assignment_submission_attachments
+        (id, assignment_student_id, storage_key, original_file_name, content_type,
+          size_bytes, sha256, status, created_at)
+      VALUES ('${attachmentId}', '${assignmentStudentId}', '${storageKey}', 'privacy.jpg',
+        'image/jpeg', 4, '${'a'.repeat(64)}', 'Clean', '${now}');`);
+    await eventually(async () => {
+      const result = minio(config, ['alias', 'set', 'privacy-e2e', 'http://127.0.0.1:9000',
+        config.MINIO_ROOT_USER, config.MINIO_ROOT_PASSWORD]);
+      return String(result.status === 0);
+    }, 'true', 'disposable MinIO');
+    requireMinio(config, ['mb', '--ignore-existing', `privacy-e2e/${bucket}`]);
+    requireMinio(config, ['pipe', `privacy-e2e/${bucket}/${storageKey}`], 'jpeg');
+    requireMinio(config, ['pipe', `privacy-e2e/${bucket}/${otherStorageKey}`], 'keep');
+    assert.equal(minio(config, ['stat', `privacy-e2e/${bucket}/${storageKey}`]).status, 0);
     sql(config, notificationDb, `
       INSERT INTO "Notifications" ("Id", "UserId", "Title", "Message", "Type", "IsRead", "CreatedAt")
       VALUES (gen_random_uuid(), '${userId}', 'E2E', 'Delete', 'test', false, '${now}');
@@ -168,7 +211,8 @@ test('disposable Docker account erasure completes across three product databases
       dryRun: true, scope: 1, schemaVersion: '1.0',
     }, requestId);
     await eventually(() => sql(config, coachingDb, `SELECT count(*) FROM coaching."CoachingErasureAssessments"
-      WHERE "RequestId"='${requestId}' AND "CanProceed"=true AND "GoalCount"=1;`), '1', 'Coaching assessment');
+      WHERE "RequestId"='${requestId}' AND "CanProceed"=true AND "GoalCount"=1
+        AND "AssignmentCount"=1 AND "AttachmentCount"=1;`), '1', 'Coaching assessment');
 
     const execution = {
       eventId: randomUUID(), requestId, subjectUserId: userId,
@@ -180,12 +224,20 @@ test('disposable Docker account erasure completes across three product databases
 
     assert.equal(sql(config, identityDb, `SELECT string_agg("ServiceName" || ':' || "DeletedRecordCount", ','
       ORDER BY "ServiceName") FROM identity."DataSubjectRequestExecutionResults"
-      WHERE "RequestId"='${requestId}';`), 'Coaching:1,Notification:3,SpeedReading:1');
+      WHERE "RequestId"='${requestId}';`), 'Coaching:3,Notification:3,SpeedReading:1');
     assert.equal(sql(config, identityDb, `SELECT "Email" || '|' || "IsActive" || '|' ||
       octet_length("PasswordHash") FROM identity.users WHERE "Id"='${userId}';`),
     `erased-${userId.replaceAll('-', '')}@deleted.invalid|false|0`);
     assert.equal(sql(config, coachingDb, `SELECT count(*) FROM coaching.academic_goals
       WHERE student_id='${userId}';`), '0');
+    assert.equal(sql(config, coachingDb, `SELECT count(*) FROM coaching.assignment_students
+      WHERE student_id='${userId}';`), '0');
+    assert.equal(sql(config, coachingDb, `SELECT count(*) FROM coaching.assignment_submission_attachments
+      WHERE id='${attachmentId}';`), '0');
+    assert.notEqual(minio(config, ['stat', `privacy-e2e/${bucket}/${storageKey}`]).status, 0,
+      'Erased student object must no longer exist');
+    assert.equal(minio(config, ['stat', `privacy-e2e/${bucket}/${otherStorageKey}`]).status, 0,
+      'Unrelated object must survive');
     assert.equal(sql(config, notificationDb, `SELECT (SELECT count(*) FROM "Notifications" WHERE "UserId"='${userId}')
       + (SELECT count(*) FROM "EmailDeliveries" WHERE "SubjectUserId"='${userId}')
       + (SELECT count(*) FROM "SupportRequests" WHERE "SubjectUserId"='${userId}');`), '0');
