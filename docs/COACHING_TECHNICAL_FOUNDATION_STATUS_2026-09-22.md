@@ -32,6 +32,9 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
   test-önce yöntemiyle tespit edilip yalnız GET'e izin veren rota eklendi.
   Gateway rota sözleşme testi ve Release `--warnaserror` derlemesi geçti; rota
   sözleşmesi CI gizlilik işine eklendi. Çalışan ağ geçidinde HTTP testi henüz yok.
+- Koçluk export repository'si için izole EF veritabanında iki öğrencinin
+  hedefleriyle veri ayrımı regresyon testi geçti (ilgili test sınıfı 4/4).
+  Bu, gerçek PostgreSQL veya uçtan uca HTTP yetkilendirme kanıtı değildir.
 
 ## Kapsam ölçümü
 
