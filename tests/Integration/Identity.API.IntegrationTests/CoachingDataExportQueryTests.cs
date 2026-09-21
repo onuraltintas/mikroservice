@@ -2,9 +2,14 @@ using Coaching.Application.Authorization;
 using Coaching.Application.Interfaces;
 using Coaching.Application.Queries.ExportCoachingData;
 using Coaching.API.Controllers;
+using Coaching.Domain.Entities;
+using Coaching.Domain.Enums;
+using Coaching.Infrastructure.Data;
+using Coaching.Infrastructure.Repositories;
 using EduPlatform.Shared.Kernel.Exceptions;
 using FluentAssertions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace Identity.API.IntegrationTests;
 
@@ -49,6 +54,28 @@ public sealed class CoachingDataExportQueryTests
 
         await action.Should().ThrowAsync<BusinessRuleException>()
             .Where(exception => exception.Code == "Authorization.Forbidden");
+    }
+
+    [Fact]
+    public async Task ExportRepository_ShouldExcludeAnotherStudentsGoals()
+    {
+        await using var context = new CoachingDbContext(
+            new DbContextOptionsBuilder<CoachingDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options);
+        var studentId = Guid.NewGuid();
+        var otherStudentId = Guid.NewGuid();
+        context.AcademicGoals.AddRange(
+            AcademicGoal.Create(studentId, "My goal", GoalCategory.SubjectMastery),
+            AcademicGoal.Create(otherStudentId, "Other student's goal", GoalCategory.SubjectMastery));
+        await context.SaveChangesAsync();
+
+        var export = await new CoachingDataExportRepository(context)
+            .ExportStudentDataAsync(studentId, DateTimeOffset.UtcNow, CancellationToken.None);
+
+        export.StudentId.Should().Be(studentId);
+        export.Goals.Should().ContainSingle(goal => goal.Title == "My goal");
+        export.Goals.Should().NotContain(goal => goal.Title == "Other student's goal");
     }
 
     private sealed class StubRepository(CoachingDataExportDto? result) : ICoachingDataExportRepository
