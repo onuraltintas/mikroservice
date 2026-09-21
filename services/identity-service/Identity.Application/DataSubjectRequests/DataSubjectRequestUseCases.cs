@@ -54,6 +54,78 @@ public sealed record DataSubjectRequestPageDto(
     int PageNumber,
     int PageSize);
 
+public sealed record DataSubjectRequestAssessmentItemDto(
+    string ServiceName,
+    bool CanProceed,
+    bool HasActiveLegalHold,
+    int AssignmentCount,
+    int AttachmentCount,
+    int ExamResultCount,
+    int GoalCount,
+    int SessionCount,
+    int AgreementCount,
+    int TotalRecordCount,
+    DateTime AssessedAt)
+{
+    public static DataSubjectRequestAssessmentItemDto From(DataSubjectRequestAssessmentResult result) => new(
+        result.ServiceName,
+        result.CanProceed,
+        result.HasActiveLegalHold,
+        result.AssignmentCount,
+        result.AttachmentCount,
+        result.ExamResultCount,
+        result.GoalCount,
+        result.SessionCount,
+        result.AgreementCount,
+        result.TotalRecordCount,
+        result.AssessedAt);
+}
+
+public sealed record DataSubjectRequestAssessmentSummaryDto(
+    IReadOnlyList<DataSubjectRequestAssessmentItemDto> Services,
+    IReadOnlyList<string> MissingServices,
+    bool IsComplete,
+    bool HasBlockingLegalHold,
+    bool IsReadyForErasure,
+    int TotalRecordCount)
+{
+    public static DataSubjectRequestAssessmentSummaryDto Create(
+        IEnumerable<string> requiredServices,
+        IEnumerable<DataSubjectRequestAssessmentResult> results)
+    {
+        var required = requiredServices
+            .Where(service => !string.IsNullOrWhiteSpace(service))
+            .Select(service => service.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(service => service, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var items = results
+            .GroupBy(result => result.ServiceName, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.OrderByDescending(result => result.AssessedAt).First())
+            .Where(result => required.Contains(result.ServiceName, StringComparer.OrdinalIgnoreCase))
+            .OrderBy(result => result.ServiceName, StringComparer.OrdinalIgnoreCase)
+            .Select(DataSubjectRequestAssessmentItemDto.From)
+            .ToArray();
+        var missing = required
+            .Where(service => items.All(item =>
+                !string.Equals(item.ServiceName, service, StringComparison.OrdinalIgnoreCase)))
+            .ToArray();
+        var isComplete = required.Length > 0 && missing.Length == 0;
+        var hasBlockingLegalHold = items.Any(item => item.HasActiveLegalHold);
+        var isReadyForErasure = isComplete
+            && !hasBlockingLegalHold
+            && items.All(item => item.CanProceed);
+
+        return new DataSubjectRequestAssessmentSummaryDto(
+            items,
+            missing,
+            isComplete,
+            hasBlockingLegalHold,
+            isReadyForErasure,
+            items.Sum(item => item.TotalRecordCount));
+    }
+}
+
 public sealed record DataSubjectRequestDto(
     Guid Id,
     Guid RequesterUserId,
