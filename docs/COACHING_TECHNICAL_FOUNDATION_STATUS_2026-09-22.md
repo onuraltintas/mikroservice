@@ -57,6 +57,8 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
   veri döndürmeden kapandı; yeniden başlatma sonrası aynı istek 200 oldu.
   PostgreSQL durdurulduğunda da export 5xx ile kapandı; yeniden başlatma
   sonrası veritabanı bağlantısı ve HTTP yanıtı toparlandı.
+  RabbitMQ durdurulduğunda salt-okunur export 200 ile doğru öğrenci verisini
+  döndürmeye devam etti. Bu, tüketici/olay toparlanmasının kanıtı değildir.
   Kesinti provası diğer gizlilik testleriyle çakışmaması için CI'da ayrı adımda.
   Geçici container ve hacimler testten sonra kaldırıldı; canlı VPS kullanılmadı.
 
@@ -74,8 +76,8 @@ genel %80 kapsam hedefini kanıtlamaz.
 ## Kapanması gereken kapılar
 
 1. Koçluk export için karmaşık ilişki/veri durumlarında daha kapsamlı HTTP E2E;
-   koç/yönetici kurum sınırları, broker gibi diğer bağımlılıkların kesinti
-   senaryoları ve gerçek operasyonel toparlanma ölçümleri.
+   koç/yönetici kurum sınırları, broker tüketicilerinin kesinti sonrası olay
+   toparlanması ve gerçek operasyonel toparlanma ölçümleri.
 2. Kullanıcının kendi VPS'inde çalışacak, güvenlik bakımından desteklenen S3
    uyumlu depoda gerçek yükle–oku–sil ve staging'deki broker + PostgreSQL +
    nesne depolama zinciri; erişim, TLS, bucket yetkileri, kimlik bilgisi

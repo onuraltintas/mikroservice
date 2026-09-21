@@ -113,6 +113,7 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
     let seeded = false;
     let identityStopped = false;
     let postgresStopped = false;
+    let rabbitStopped = false;
 
     try {
       await eventually(async () => (await fetch(
@@ -269,6 +270,15 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
       await eventually(async () => (await request(config, token(config, studentId, 'Student'))).status === 200,
         'Coaching export recovery');
 
+      rabbitStopped = true;
+      command(['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE, 'stop', 'rabbitmq']);
+      const brokerUnavailable = await request(config, token(config, studentId, 'Student'));
+      assert.equal(brokerUnavailable.status, 200,
+        'Read-only Coaching export must remain available without RabbitMQ.');
+      assert.deepEqual((await brokerUnavailable.json()).goals.map(goal => goal.title), ['Own export goal']);
+      command(['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE, 'start', 'rabbitmq']);
+      rabbitStopped = false;
+
       sql(config, coachingDb, `BEGIN;
         INSERT INTO coaching.coaching_agreement_documents
           (id, document_version, locale, title, document_reference, content_sha256,
@@ -297,6 +307,9 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
       assert.deepEqual(otherAgreementExport.agreements.map(item => item.acknowledgementId.toLowerCase()),
         [otherAcknowledgementId]);
     } finally {
+      if (rabbitStopped) {
+        command(['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE, 'start', 'rabbitmq']);
+      }
       if (postgresStopped) {
         command(['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE, 'start', 'postgres']);
         await eventually(() => sql(config, coachingDb, 'SELECT 1;') === '1', 'PostgreSQL cleanup readiness');
