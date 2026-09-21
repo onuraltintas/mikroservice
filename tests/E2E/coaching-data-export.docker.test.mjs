@@ -92,6 +92,9 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
     }
     const studentId = randomUUID();
     const otherId = randomUUID();
+    const unrelatedId = randomUUID();
+    const ownInstitutionId = randomUUID();
+    const otherInstitutionId = randomUUID();
     const teacherId = randomUUID();
     const privateSessionId = randomUUID();
     const sharedSessionId = randomUUID();
@@ -121,17 +124,34 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
       'Coaching migration');
       assert.equal((await request(config)).status, 401);
       sql(config, identityDb, `BEGIN;
+        INSERT INTO identity.institutions
+          ("Id", "Name", "Type", "LicenseType", "MaxStudents", "MaxTeachers",
+            "IsActive", "CreatedAt", "Version")
+        VALUES
+          ('${ownInstitutionId}', 'Export E2E Institution A', 'School', 'Trial', 50, 5,
+            true, '${now}', 0),
+          ('${otherInstitutionId}', 'Export E2E Institution B', 'School', 'Trial', 50, 5,
+            true, '${now}', 0);
         INSERT INTO identity.users ("Id", "Email", "FirstName", "LastName", "PasswordHash", "PasswordSalt",
           "EmailConfirmed", "PhoneConfirmed", "IsActive", "CreatedAt", "Version", "MfaEnabled",
           "MfaFailedAttempts", "MfaRecoveryCodeHashesJson")
-        VALUES ('${studentId}', '${email}', 'Export', 'E2E', decode('01', 'hex'), decode('02', 'hex'),
-          true, false, true, '${now}', 0, false, 0, '[]');
+        VALUES
+          ('${studentId}', '${email}', 'Export', 'E2E', decode('01', 'hex'), decode('02', 'hex'),
+            true, false, true, '${now}', 0, false, 0, '[]'),
+          ('${otherId}', 'other-${email}', 'Other', 'E2E', decode('01', 'hex'), decode('02', 'hex'),
+            true, false, true, '${now}', 0, false, 0, '[]');
         INSERT INTO identity."UserRoles" ("Id", "UserId", "RoleId", "CreatedAt")
-        SELECT gen_random_uuid(), '${studentId}', "Id", '${now}'
-          FROM identity."Roles" WHERE "Name"='Student' AND "IsDeleted"=false;
-        INSERT INTO identity.student_profiles ("Id", "UserId", "FirstName", "LastName",
+        SELECT gen_random_uuid(), users.user_id, roles."Id", '${now}'
+          FROM (VALUES ('${studentId}'::uuid), ('${otherId}'::uuid)) AS users(user_id)
+          CROSS JOIN identity."Roles" AS roles
+          WHERE roles."Name"='Student' AND roles."IsDeleted"=false;
+        INSERT INTO identity.student_profiles ("Id", "UserId", "InstitutionId", "FirstName", "LastName",
           "DailyGoalMinutes", "Preferences", "IsActive", "CreatedAt", "Version")
-        VALUES (gen_random_uuid(), '${studentId}', 'Export', 'E2E', 30, '{}', true, '${now}', 0);
+        VALUES
+          (gen_random_uuid(), '${studentId}', '${ownInstitutionId}', 'Export', 'E2E',
+            30, '{}', true, '${now}', 0),
+          (gen_random_uuid(), '${otherId}', '${otherInstitutionId}', 'Other', 'E2E',
+            30, '{}', true, '${now}', 0);
         COMMIT;
       `);
       seeded = true;
@@ -141,14 +161,14 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
         VALUES (gen_random_uuid(), '${studentId}', 'Own export goal', 'Other', 0, false, '${now}', 0),
           (gen_random_uuid(), '${otherId}', 'Other student secret', 'Other', 0, false, '${now}', 0);
         INSERT INTO coaching.coaching_sessions
-          (id, teacher_id, title, session_type, scheduled_date, duration_minutes, status,
+          (id, teacher_id, institution_id, title, session_type, scheduled_date, duration_minutes, status,
             teacher_notes, teacher_notes_visibility, created_at, "Version")
         VALUES
-          ('${privateSessionId}', '${teacherId}', 'Private-note session', 'OneOnOne', '${now}', 60,
+          ('${privateSessionId}', '${teacherId}', '${ownInstitutionId}', 'Private-note session', 'OneOnOne', '${now}', 60,
             'Scheduled', 'Coach-only secret', 'CoachPrivate', '${now}', 0),
-          ('${sharedSessionId}', '${teacherId}', 'Shared-note session', 'OneOnOne', '${now}', 60,
+          ('${sharedSessionId}', '${teacherId}', '${ownInstitutionId}', 'Shared-note session', 'OneOnOne', '${now}', 60,
             'Scheduled', 'Shared guidance', 'StudentVisible', '${now}', 0),
-          ('${otherSessionId}', '${teacherId}', 'Other student session', 'OneOnOne', '${now}', 60,
+          ('${otherSessionId}', '${teacherId}', '${otherInstitutionId}', 'Other student session', 'OneOnOne', '${now}', 60,
             'Scheduled', 'Other student private note', 'CoachPrivate', '${now}', 0);
         INSERT INTO coaching.session_attendances
           (id, session_id, student_id, attendance_status, student_note, teacher_note, created_at)
@@ -160,11 +180,11 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
           (gen_random_uuid(), '${otherSessionId}', '${otherId}', 'NotRecorded',
             null, null, '${now}');
         INSERT INTO coaching.assignments
-          (id, teacher_id, title, type, source, due_date, status, created_at, "Version")
+          (id, teacher_id, institution_id, title, type, source, due_date, status, created_at, "Version")
         VALUES
-          ('${ownAssignmentId}', '${teacherId}', 'Own assignment', 'Individual', 'Digital',
+          ('${ownAssignmentId}', '${teacherId}', '${ownInstitutionId}', 'Own assignment', 'Individual', 'Digital',
             '${now}', 'Active', '${now}', 0),
-          ('${otherAssignmentId}', '${teacherId}', 'Other assignment', 'Individual', 'Digital',
+          ('${otherAssignmentId}', '${teacherId}', '${otherInstitutionId}', 'Other assignment', 'Individual', 'Digital',
             '${now}', 'Active', '${now}', 0);
         INSERT INTO coaching.assignment_students
           (id, assignment_id, student_id, status, student_note, teacher_feedback, created_at)
@@ -174,10 +194,10 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
           (gen_random_uuid(), '${otherAssignmentId}', '${otherId}', 'Assigned',
             'Other assignment secret', null, '${now}');
         INSERT INTO coaching.exams
-          (id, created_by_teacher_id, title, exam_type, exam_date, max_score, created_at, "Version")
+          (id, created_by_teacher_id, institution_id, title, exam_type, exam_date, max_score, created_at, "Version")
         VALUES
-          ('${ownExamId}', '${teacherId}', 'Own exam', 'Mock', '${now}', 100, '${now}', 0),
-          ('${otherExamId}', '${teacherId}', 'Other exam', 'Mock', '${now}', 100, '${now}', 0);
+          ('${ownExamId}', '${teacherId}', '${ownInstitutionId}', 'Own exam', 'Mock', '${now}', 100, '${now}', 0),
+          ('${otherExamId}', '${teacherId}', '${otherInstitutionId}', 'Other exam', 'Mock', '${now}', 100, '${now}', 0);
         INSERT INTO coaching.exam_results
           (id, exam_id, student_id, score, teacher_notes, created_at)
         VALUES
@@ -188,7 +208,7 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
         COMMIT;`);
 
       assert.equal((await request(config, token(config, studentId, 'Teacher'))).status, 403);
-      assert.equal((await request(config, token(config, otherId, 'Student'))).status, 403);
+      assert.equal((await request(config, token(config, unrelatedId, 'Student'))).status, 403);
       const response = await request(config, token(config, studentId, 'Student'));
       if (response.status !== 200) {
         assert.fail(`student export returned ${response.status}: ${await response.text()}`);
@@ -213,6 +233,16 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
         'Shared guidance');
       assert.doesNotMatch(JSON.stringify(exportData),
         /Coach-only secret|Attendance coach secret|Other student private note|Other assignment secret|Private exam teacher note|Other exam secret/);
+      const otherResponse = await request(config, token(config, otherId, 'Student'));
+      assert.equal(otherResponse.status, 200);
+      const otherExport = await otherResponse.json();
+      assert.equal(otherExport.studentId.toLowerCase(), otherId);
+      assert.deepEqual(otherExport.goals.map(goal => goal.title), ['Other student secret']);
+      assert.deepEqual(otherExport.assignments.map(assignment => assignment.title), ['Other assignment']);
+      assert.deepEqual(otherExport.exams.map(exam => exam.title), ['Other exam']);
+      assert.deepEqual(otherExport.sessions.map(session => session.title), ['Other student session']);
+      assert.doesNotMatch(JSON.stringify(otherExport),
+        /Own export goal|Own assignment|Own exam|Private-note session|Shared-note session/);
 
       sql(config, coachingDb, `BEGIN;
         INSERT INTO coaching.coaching_agreement_documents
@@ -236,6 +266,11 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
       assert.deepEqual(agreementExport.agreements.map(item => item.acknowledgementId.toLowerCase()),
         [ownAcknowledgementId]);
       assert.equal(agreementExport.agreements[0].documentVersion, `e2e-${agreementDocumentId}`);
+      const otherAgreementResponse = await request(config, token(config, otherId, 'Student'));
+      assert.equal(otherAgreementResponse.status, 200);
+      const otherAgreementExport = await otherAgreementResponse.json();
+      assert.deepEqual(otherAgreementExport.agreements.map(item => item.acknowledgementId.toLowerCase()),
+        [otherAcknowledgementId]);
     } finally {
       if (seeded) {
         sql(config, coachingDb, `DELETE FROM coaching.coaching_agreement_acknowledgements
@@ -247,7 +282,8 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
         sql(config, coachingDb, `DELETE FROM coaching.coaching_sessions
           WHERE id IN ('${privateSessionId}', '${sharedSessionId}', '${otherSessionId}');`);
         sql(config, coachingDb, `DELETE FROM coaching.academic_goals WHERE student_id IN ('${studentId}', '${otherId}');`);
-        sql(config, identityDb, `DELETE FROM identity.users WHERE "Id"='${studentId}';`);
+        sql(config, identityDb, `DELETE FROM identity.users WHERE "Id" IN ('${studentId}', '${otherId}');
+          DELETE FROM identity.institutions WHERE "Id" IN ('${ownInstitutionId}', '${otherInstitutionId}');`);
       }
     }
   });

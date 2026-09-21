@@ -49,6 +49,10 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
   Anlaşma yokken dışa aktarım çalıştı; anlaşma kanıtı eklendiğinde yalnız
   ilgili öğrencinin onayı çıktı. Böylece DTO'daki hedef, oturum, ödev, sınav
   ve anlaşma grupları sentetik kayıtlarla HTTP üzerinden doğrulandı.
+  İki aktif öğrenci ayrı Identity kurumlarına bağlandığında her biri kendi
+  kayıtlarını aldı; karşı kurum öğrencisinin kayıtları ve anlaşma onayı
+  görünmedi. Bu, öğrenci export sınırının kanıtıdır; koç/yönetici tenant
+  yetkilerinin tamamını kapsamaz.
   Test CI'nın disposable gizlilik işine eklendi.
   Geçici container ve hacimler testten sonra kaldırıldı; canlı VPS kullanılmadı.
 
@@ -65,8 +69,8 @@ genel %80 kapsam hedefini kanıtlamaz.
 
 ## Kapanması gereken kapılar
 
-1. Koçluk export için farklı kurum/tenant ve karmaşık ilişki/veri durumlarında
-   daha kapsamlı HTTP E2E; kısmi servis kesintisi ve retry senaryoları.
+1. Koçluk export için karmaşık ilişki/veri durumlarında daha kapsamlı HTTP E2E;
+   koç/yönetici kurum sınırları, kısmi servis kesintisi ve retry senaryoları.
 2. Kullanıcının kendi VPS'inde çalışacak, güvenlik bakımından desteklenen S3
    uyumlu depoda gerçek yükle–oku–sil ve staging'deki broker + PostgreSQL +
    nesne depolama zinciri; erişim, TLS, bucket yetkileri, kimlik bilgisi
