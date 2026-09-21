@@ -114,3 +114,34 @@ public sealed class CoachingErasureAssessment : AggregateRoot
         };
     }
 }
+
+public sealed class CoachingErasureExecution : AggregateRoot
+{
+    public Guid RequestId { get; private set; }
+    public int DeletedRecordCount { get; private set; }
+    public DateTime CompletedAt { get; private set; }
+
+    private CoachingErasureExecution() { }
+    private CoachingErasureExecution(Guid id) : base(id) { }
+
+    public static CoachingErasureExecution Complete(
+        Guid requestId,
+        int deletedRecordCount,
+        DateTime completedAt)
+    {
+        if (requestId == Guid.Empty)
+            throw new ArgumentException("Request is required.", nameof(requestId));
+        if (deletedRecordCount < 0)
+            throw new ArgumentOutOfRangeException(nameof(deletedRecordCount));
+        if (completedAt.Kind != DateTimeKind.Utc)
+            throw new ArgumentException("Completion timestamp must be UTC.", nameof(completedAt));
+
+        return new CoachingErasureExecution(requestId)
+        {
+            RequestId = requestId,
+            DeletedRecordCount = deletedRecordCount,
+            CompletedAt = completedAt,
+            CreatedAt = completedAt
+        };
+    }
+}

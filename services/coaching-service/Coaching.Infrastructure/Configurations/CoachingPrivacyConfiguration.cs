@@ -25,3 +25,14 @@ public sealed class CoachingErasureAssessmentConfiguration : IEntityTypeConfigur
         builder.HasIndex(assessment => new { assessment.SubjectUserId, assessment.AssessedAt });
     }
 }
+
+public sealed class CoachingErasureExecutionConfiguration : IEntityTypeConfiguration<CoachingErasureExecution>
+{
+    public void Configure(EntityTypeBuilder<CoachingErasureExecution> builder)
+    {
+        builder.ToTable("CoachingErasureExecutions");
+        builder.HasKey(execution => execution.Id);
+        builder.HasIndex(execution => execution.RequestId).IsUnique();
+        builder.HasIndex(execution => execution.CompletedAt);
+    }
+}

@@ -34,6 +34,7 @@ public class CoachingDbContext : DbContext
     public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
     public DbSet<CoachingLegalHold> CoachingLegalHolds => Set<CoachingLegalHold>();
     public DbSet<CoachingErasureAssessment> CoachingErasureAssessments => Set<CoachingErasureAssessment>();
+    public DbSet<CoachingErasureExecution> CoachingErasureExecutions => Set<CoachingErasureExecution>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

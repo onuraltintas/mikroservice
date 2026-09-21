@@ -32,3 +32,19 @@ public sealed record PersonalDataErasureAssessmentCompletedV1(
     DateTime AssessedAt,
     IReadOnlyDictionary<string, int>? RecordCounts = null,
     string SchemaVersion = "1.0");
+
+public sealed record PersonalDataErasureExecutionRequestedV1(
+    Guid EventId,
+    Guid RequestId,
+    Guid SubjectUserId,
+    DateTime AuthorizedAt,
+    PersonalDataScope Scope,
+    string SchemaVersion = "1.0");
+
+public sealed record PersonalDataErasureExecutionCompletedV1(
+    Guid EventId,
+    Guid RequestId,
+    string ServiceName,
+    int DeletedRecordCount,
+    DateTime CompletedAt,
+    string SchemaVersion = "1.0");

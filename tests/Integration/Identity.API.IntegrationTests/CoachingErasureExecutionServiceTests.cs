@@ -17,6 +17,12 @@ public sealed class CoachingErasureExecutionServiceTests
         await using var context = CreateContext();
         var subjectId = Guid.NewGuid();
         var otherStudentId = Guid.NewGuid();
+        var assignment = Assignment.Create(
+            Guid.NewGuid(), "Ödev", DateTime.UtcNow.AddDays(1));
+        assignment.AssignToStudent(subjectId);
+        assignment.AssignedStudents.Single().AddSubmissionAttachment(
+            "coaching/user-file.pdf", "ödev.pdf", "application/pdf", 128, new string('a', 64));
+        context.Assignments.Add(assignment);
         context.AcademicGoals.AddRange(
             AcademicGoal.Create(subjectId, "Silinecek hedef", GoalCategory.SubjectMastery),
             AcademicGoal.Create(otherStudentId, "Korunacak hedef", GoalCategory.SubjectMastery));
@@ -24,13 +30,17 @@ public sealed class CoachingErasureExecutionServiceTests
         var request = Request(subjectId);
         await new CoachingErasureAssessmentService(context, TimeProvider.System)
             .AssessAsync(AssessmentRequest(request), CancellationToken.None);
-        var service = new CoachingErasureExecutionService(context, new StubAttachmentStorage(), TimeProvider.System);
+        var storage = new StubAttachmentStorage();
+        var service = new CoachingErasureExecutionService(context, storage, TimeProvider.System);
 
         var first = await service.ExecuteAsync(request, CancellationToken.None);
         var replay = await service.ExecuteAsync(request, CancellationToken.None);
 
-        first.DeletedRecordCount.Should().Be(1);
+        first.DeletedRecordCount.Should().Be(3);
         replay.Id.Should().Be(first.Id);
+        storage.DeletedKeys.Should().Equal("coaching/user-file.pdf");
+        (await context.AssignmentStudents.CountAsync(row => row.StudentId == subjectId)).Should().Be(0);
+        (await context.AssignmentSubmissionAttachments.CountAsync()).Should().Be(0);
         (await context.AcademicGoals.CountAsync(goal => goal.StudentId == subjectId)).Should().Be(0);
         (await context.AcademicGoals.CountAsync(goal => goal.StudentId == otherStudentId)).Should().Be(1);
         (await context.CoachingErasureExecutions.CountAsync()).Should().Be(1);
@@ -93,6 +103,8 @@ public sealed class CoachingErasureExecutionServiceTests
 
     private sealed class StubAttachmentStorage : IAssignmentAttachmentStorage
     {
+        public List<string> DeletedKeys { get; } = [];
+
         public Task<AssignmentAttachmentUploadTicket> CreateUploadTicketAsync(
             Guid assignmentId, Guid studentId, Guid attachmentId, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
@@ -105,7 +117,10 @@ public sealed class CoachingErasureExecutionServiceTests
         public Task<Stream> OpenReadAsync(string storageKey, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
-        public Task DeleteAsync(string storageKey, CancellationToken cancellationToken = default) =>
-            Task.CompletedTask;
+        public Task DeleteAsync(string storageKey, CancellationToken cancellationToken = default)
+        {
+            DeletedKeys.Add(storageKey);
+            return Task.CompletedTask;
+        }
     }
 }
