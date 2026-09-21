@@ -3,6 +3,7 @@ using Coaching.Application.Authorization;
 using Coaching.Application.Commands.UpdateSessionStudentNote;
 using Coaching.Application.Interfaces;
 using Coaching.Application.Queries.GetSessions;
+using Coaching.Application.Queries.GetCoachingAdminSession;
 using Coaching.Domain.Entities;
 using Coaching.Domain.Enums;
 using EduPlatform.Shared.Kernel.Exceptions;
@@ -122,6 +123,24 @@ public sealed class CoachingStudentSessionsQueryTests
         reflections[0].StudentId.Should().Be(allowedStudentId);
         reflections[0].Note.Should().Be("Bu hafta deneme analizini tamamladım.");
         identityClient.RequestedStudentIds.Should().Contain(new[] { allowedStudentId, revokedStudentId });
+    }
+
+    [Theory]
+    [InlineData(CoachingNoteVisibility.CoachPrivate, false)]
+    [InlineData(CoachingNoteVisibility.InstitutionVisible, true)]
+    public async Task AdministrativeSessionDetail_ShouldRespectInstitutionNoteVisibility(
+        CoachingNoteVisibility visibility,
+        bool shouldBeVisible)
+    {
+        var session = CoachingSession.Create(
+            Guid.NewGuid(), "Kurum görünümü", DateTime.UtcNow.AddDays(1), SessionType.OneOnOne);
+        session.AddTeacherNotes("Kapsamlı koç notu", visibility);
+
+        var result = await new GetCoachingAdminSessionQueryHandler(new StubSessionRepository(session))
+            .Handle(new(session.Id, AdministrativeScope: true), CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result!.TeacherNotes.Should().Be(shouldBeVisible ? "Kapsamlı koç notu" : null);
     }
 
     [Fact]
