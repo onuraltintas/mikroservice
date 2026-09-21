@@ -100,6 +100,9 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
     const otherAssignmentId = randomUUID();
     const ownExamId = randomUUID();
     const otherExamId = randomUUID();
+    const agreementDocumentId = randomUUID();
+    const ownAcknowledgementId = randomUUID();
+    const otherAcknowledgementId = randomUUID();
     const identityDb = config.POSTGRES_DB_IDENTITY || 'identity_db';
     const coachingDb = config.POSTGRES_DB_COACHING || 'coaching_db';
     const email = `coaching-export-${studentId.replaceAll('-', '')}@example.test`;
@@ -199,6 +202,7 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
       assert.equal(exportData.assignments[0].teacherFeedback, 'Teacher feedback for me');
       assert.deepEqual(exportData.exams.map(exam => exam.title), ['Own exam']);
       assert.equal(exportData.exams[0].score, 81);
+      assert.deepEqual(exportData.agreements, []);
       assert.deepEqual(exportData.sessions.map(session => session.title).sort(),
         ['Private-note session', 'Shared-note session']);
       assert.equal(exportData.sessions.find(session => session.title === 'Private-note session').studentNote,
@@ -209,8 +213,34 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
         'Shared guidance');
       assert.doesNotMatch(JSON.stringify(exportData),
         /Coach-only secret|Attendance coach secret|Other student private note|Other assignment secret|Private exam teacher note|Other exam secret/);
+
+      sql(config, coachingDb, `BEGIN;
+        INSERT INTO coaching.coaching_agreement_documents
+          (id, document_version, locale, title, document_reference, content_sha256,
+            published_by_user_id, effective_at, published_at, created_at, row_version)
+        VALUES ('${agreementDocumentId}', 'e2e-${agreementDocumentId}', 'tr-TR', 'Export test agreement',
+          'https://example.test/coaching/e2e', '${'a'.repeat(64)}', '${teacherId}',
+          '${now}', '${now}', '${now}', 0);
+        INSERT INTO coaching.coaching_agreement_acknowledgements
+          (id, agreement_document_id, subject_student_id, acknowledged_by_user_id,
+            party_role, acknowledged_at, created_at)
+        VALUES
+          ('${ownAcknowledgementId}', '${agreementDocumentId}', '${studentId}', '${studentId}',
+            'Self', '${now}', '${now}'),
+          ('${otherAcknowledgementId}', '${agreementDocumentId}', '${otherId}', '${otherId}',
+            'Self', '${now}', '${now}');
+        COMMIT;`);
+      const withAgreement = await request(config, token(config, studentId, 'Student'));
+      assert.equal(withAgreement.status, 200);
+      const agreementExport = await withAgreement.json();
+      assert.deepEqual(agreementExport.agreements.map(item => item.acknowledgementId.toLowerCase()),
+        [ownAcknowledgementId]);
+      assert.equal(agreementExport.agreements[0].documentVersion, `e2e-${agreementDocumentId}`);
     } finally {
       if (seeded) {
+        sql(config, coachingDb, `DELETE FROM coaching.coaching_agreement_acknowledgements
+          WHERE id IN ('${ownAcknowledgementId}', '${otherAcknowledgementId}');
+          DELETE FROM coaching.coaching_agreement_documents WHERE id='${agreementDocumentId}';`);
         sql(config, coachingDb, `DELETE FROM coaching.assignments
           WHERE id IN ('${ownAssignmentId}', '${otherAssignmentId}');
           DELETE FROM coaching.exams WHERE id IN ('${ownExamId}', '${otherExamId}');`);
