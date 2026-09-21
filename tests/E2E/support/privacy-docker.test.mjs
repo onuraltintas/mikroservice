@@ -7,7 +7,12 @@ import {
 
 test('privacy Docker E2E refuses an unmarked environment', () => {
   assert.throws(() => requireDisposableEnvironment({}), /E2E_DISPOSABLE_ENV=true/);
-  assert.doesNotThrow(() => requireDisposableEnvironment({ E2E_DISPOSABLE_ENV: 'true' }));
+  assert.throws(() => requireDisposableEnvironment({
+    E2E_DISPOSABLE_ENV: 'true', ENVIRONMENT: 'Production',
+  }), /Production/);
+  assert.doesNotThrow(() => requireDisposableEnvironment({
+    E2E_DISPOSABLE_ENV: 'true', ENVIRONMENT: 'Development',
+  }));
 });
 
 test('completion messages keep request correlation separate from message identity', () => {
