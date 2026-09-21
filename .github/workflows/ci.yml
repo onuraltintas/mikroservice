@@ -215,7 +215,7 @@ jobs:
         run: docker compose --env-file .env.example --profile speed-reading up -d --build identity-service coaching-service notification-service speed-reading-service
 
       - name: Verify distributed erasure, replay idempotency and Coaching restore
-        run: node --test tests/E2E/support/privacy-docker.test.mjs tests/E2E/privacy-erasure.docker.test.mjs tests/E2E/coaching-backup-restore.docker.test.mjs
+        run: node --test tests/E2E/support/privacy-docker.test.mjs tests/E2E/privacy-erasure.docker.test.mjs tests/E2E/coaching-backup-restore.docker.test.mjs tests/E2E/coaching-data-export-route.contract.test.mjs
 
       - name: Preserve service logs on failure
         if: failure()
