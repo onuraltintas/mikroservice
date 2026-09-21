@@ -13,6 +13,7 @@ using SpeedReading.Domain.Gamification;
 using SpeedReading.Domain.Profiles;
 using SpeedReading.Domain.Sessions;
 using SpeedReading.Domain.Vocabulary;
+using SpeedReading.Domain.Visualization;
 using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Application.UnitTests;
@@ -83,7 +84,8 @@ public sealed class StudentReadingPersistenceTests
             started.SessionId,
             new CompleteExerciseSessionRequest(),
             CancellationToken.None);
-        await incomplete.Should().ThrowAsync<InvalidOperationException>()
+        await incomplete.Should().ThrowAsync<BusinessRuleException>()
+            .Where(exception => exception.Code == "ExerciseSession.Incomplete")
             .WithMessage("*vocabulary rounds*");
 
         var forgedDirection = await service.ValidateActionAsync(
@@ -120,8 +122,55 @@ public sealed class StudentReadingPersistenceTests
             started.SessionId,
             new CompleteExerciseSessionRequest(),
             CancellationToken.None);
-        await stillIncomplete.Should().ThrowAsync<InvalidOperationException>()
+        await stillIncomplete.Should().ThrowAsync<BusinessRuleException>()
+            .Where(exception => exception.Code == "ExerciseSession.Incomplete")
             .WithMessage("*vocabulary rounds*");
+    }
+
+    [Fact]
+    public async Task Visualization_session_loads_database_backed_scenes_and_questions()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        var sceneId = Guid.NewGuid();
+        var questionId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(
+            typeId, "Görselleştirme", "Görselleştirme", "visualization"));
+        context.Exercises.Add(Exercise.Create(
+            "Sahne çalışması",
+            "visualization",
+            "{}",
+            1,
+            studentId,
+            typeId,
+            id: exerciseId));
+        context.VisualizationScenes.Add(VisualizationScene.Create(
+            sceneId, exerciseId, "Orman sahnesi", null, 30, 0, 1, null, studentId, DateTime.UtcNow));
+        context.VisualizationQuestions.Add(VisualizationQuestion.Create(
+            questionId,
+            sceneId,
+            "Sahnede ne vardı?",
+            "[\"Ağaç\",\"Deniz\"]",
+            "Ağaç",
+            "detail",
+            0,
+            null,
+            studentId,
+            DateTime.UtcNow));
+        await context.SaveChangesAsync();
+
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(
+            studentId,
+            new StartExerciseSessionRequest { ExerciseId = exerciseId },
+            CancellationToken.None);
+
+        var scenes = started.InitialData.GetProperty("visualizationScenes");
+        scenes.GetArrayLength().Should().Be(1);
+        scenes[0].GetProperty("sceneId").GetString().Should().Be(sceneId.ToString("D"));
+        scenes[0].GetProperty("questions")[0].GetProperty("questionId").GetGuid().Should().Be(questionId);
     }
 
     [Fact]
