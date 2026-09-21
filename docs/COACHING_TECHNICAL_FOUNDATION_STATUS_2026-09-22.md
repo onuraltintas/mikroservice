@@ -94,6 +94,10 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
   yöneticiliği pasifleştirildiğinde mevcut JWT ile yeni istek 403 döndü.
   CI gizlilik işine ayrı adım eklendi; yerel prova `--no-build` imajlarıyla
   yapıldı ve gerçek staging kanıtı değildir.
+- Aynı iki kurumlu disposable HTTP testinde A kurumunun koçu B kurumunun
+  ödevini güncelleme, iptal etme ve silme denemelerinde 403 aldı; B ödevinin
+  başlığı ve durumu PostgreSQL'de değişmedi. Bu, üç öğretmen yazma yoluna
+  ilişkin yerel kanıttır; tüm Koçluk yazma yollarını kapsamaz.
 
 ## Kapsam ölçümü
 

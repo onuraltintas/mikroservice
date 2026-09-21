@@ -79,7 +79,7 @@ async function expectStatus(response, status) {
   }
 }
 
-test('disposable Coaching admin and teacher reads stay inside their Identity-backed scopes',
+test('disposable Coaching admin reads and teacher writes stay inside their Identity-backed scopes',
   { timeout: 180_000 }, async () => {
     const config = await settings();
     verifyContainers(config);
@@ -238,6 +238,26 @@ test('disposable Coaching admin and teacher reads stay inside their Identity-bac
     await expectStatus(await get(`/api/assignments/${id.assignmentA}`, teacherA), 200);
     await expectStatus(await get(`/api/assignments/${id.assignmentB}`, teacherA), 403);
     await expectStatus(await get(`/api/assignments/${id.assignmentB}`, teacherB), 200);
+
+    const updateOther = await fetch(`${base}/api/assignments/${id.assignmentB}`, {
+      method: 'PUT',
+      headers: { ...auth(teacherA), 'content-type': 'application/json' },
+      body: JSON.stringify({ assignmentId: id.assignmentB, title: 'Cross-tenant overwrite',
+        assignmentSource: 'Digital', dueDate: now, studentIds: [id.studentB] }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    await expectStatus(updateOther, 403);
+    const cancelOther = await fetch(`${base}/api/assignments/${id.assignmentB}/cancel`, {
+      method: 'POST', headers: auth(teacherA), signal: AbortSignal.timeout(10_000),
+    });
+    await expectStatus(cancelOther, 403);
+    const deleteOther = await fetch(`${base}/api/assignments/${id.assignmentB}`, {
+      method: 'DELETE', headers: auth(teacherA), signal: AbortSignal.timeout(10_000),
+    });
+    await expectStatus(deleteOther, 403);
+    assert.equal(sql(config, coachingDb,
+      `SELECT title || '|' || status FROM coaching.assignments WHERE id='${id.assignmentB}';`),
+    'Institution B only|Active');
 
     sql(config, identityDb, `UPDATE identity.institution_admins SET "IsActive"=false
       WHERE "UserId"='${id.adminA}';`);
