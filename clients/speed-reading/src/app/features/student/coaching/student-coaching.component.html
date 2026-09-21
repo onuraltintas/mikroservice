@@ -3,9 +3,14 @@
     <h2><span class="material-icons">sports</span> Koçluk Panelim</h2>
   </div>
 
-  <div *ngIf="loading()" class="loading-container" role="status" aria-live="polite"><div class="sp-spinner"></div><span class="sr-only">Koçluk verileri yükleniyor</span></div>
+  <app-coaching-agreement-gate
+    *ngIf="!agreementReady"
+    (ready)="unlockCoaching()">
+  </app-coaching-agreement-gate>
 
-  <ng-container *ngIf="!loading()">
+  <div *ngIf="agreementReady && loading()" class="loading-container" role="status" aria-live="polite"><div class="sp-spinner"></div><span class="sr-only">Koçluk verileri yükleniyor</span></div>
+
+  <ng-container *ngIf="agreementReady && !loading()">
 
     <!-- Koç Yok State -->
     <div *ngIf="!relationship" class="sp-card coaching-empty-state">

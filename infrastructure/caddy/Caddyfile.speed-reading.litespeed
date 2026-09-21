@@ -407,6 +407,15 @@
         }
     }
 
+    # A student must be able to read and acknowledge the exact agreement version
+    # before the coaching workspace loads. The API remains authenticated at Gateway.
+    @coachingAgreements path /api/coaching-agreements /api/coaching-agreements/*
+    handle @coachingAgreements {
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
     # Administrative audit records are owned by each service. Expose the
     # gateway's read-only aggregation sources on the admin client domain.
     @adminAudit {

@@ -76,6 +76,38 @@ public sealed class GatewayRouteConfigurationTests
         coachingHandlerIndex.Should().BeLessThan(blockedApiIndex);
     }
 
+    [Fact]
+    public void Coaching_agreement_route_forwards_to_the_coaching_cluster()
+    {
+        using var document = JsonDocument.Parse(File.ReadAllText(GetGatewaySettingsPath()));
+        var route = document.RootElement
+            .GetProperty("ReverseProxy")
+            .GetProperty("Routes")
+            .GetProperty("coaching-agreements-route");
+
+        route.GetProperty("ClusterId").GetString().Should().Be("coaching-cluster");
+        route.GetProperty("Match").GetProperty("Path").GetString()
+            .Should().Be("/api/coaching-agreements/{**catch-all}");
+    }
+
+    [Fact]
+    public void Speed_reading_caddy_forwards_coaching_agreements_before_api_fallback()
+    {
+        var caddy = File.ReadAllText(GetSpeedReadingCaddyPath());
+        var agreementPathIndex = caddy.IndexOf(
+            "@coachingAgreements path /api/coaching-agreements /api/coaching-agreements/*",
+            StringComparison.Ordinal);
+        var agreementHandlerIndex = caddy.IndexOf(
+            "handle @coachingAgreements",
+            agreementPathIndex,
+            StringComparison.Ordinal);
+        var blockedApiIndex = caddy.IndexOf("@blockedApi path /api/*", StringComparison.Ordinal);
+
+        agreementPathIndex.Should().BeGreaterThanOrEqualTo(0);
+        agreementHandlerIndex.Should().BeGreaterThan(agreementPathIndex);
+        agreementHandlerIndex.Should().BeLessThan(blockedApiIndex);
+    }
+
     [Theory]
     [InlineData("speed-reading-admin-audit-route", "/api/admin-audit/speed-reading")]
     [InlineData("speed-reading-admin-audit-facets-route", "/api/admin-audit/speed-reading/facets")]

@@ -1,0 +1,115 @@
+:host {
+  display: block;
+}
+
+.agreement-gate {
+  max-width: 760px;
+  margin: 32px auto;
+}
+
+.agreement-gate__status,
+.agreement-gate__error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 220px;
+  padding: 32px;
+  text-align: left;
+}
+
+.agreement-gate__error {
+  border: 1px solid var(--sp-danger, #dc2626);
+  border-radius: var(--sp-radius-md);
+  background: var(--sp-surface);
+
+  > .material-icons {
+    color: var(--sp-danger, #dc2626);
+    font-size: 40px;
+  }
+
+  h3 { margin: 0 0 8px; }
+  p { margin: 0 0 16px; color: var(--sp-text-2); }
+}
+
+.agreement-gate__card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 20px;
+  padding: 28px;
+}
+
+.agreement-gate__icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--sp-radius-full);
+  background: var(--sp-primary-ghost);
+  color: var(--sp-primary);
+
+  .material-icons { font-size: 30px; }
+}
+
+.agreement-gate__eyebrow {
+  margin: 0 0 6px;
+  color: var(--sp-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.agreement-gate__body {
+  h3 { margin: 0 0 12px; color: var(--sp-text-1); font-size: 1.35rem; }
+  > p { color: var(--sp-text-2); line-height: 1.6; }
+}
+
+.agreement-gate__metadata {
+  display: flex;
+  gap: 32px;
+  margin: 20px 0;
+
+  div { display: grid; gap: 3px; }
+  dt { color: var(--sp-text-3); font-size: 0.75rem; }
+  dd { margin: 0; color: var(--sp-text-1); font-weight: 700; }
+}
+
+.agreement-gate__document {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--sp-primary);
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+  &:focus-visible { outline: 3px solid var(--sp-primary-light); outline-offset: 3px; }
+  .material-icons { font-size: 18px; }
+}
+
+.agreement-gate__confirmation {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 24px 0 18px;
+  color: var(--sp-text-1);
+  line-height: 1.5;
+  cursor: pointer;
+
+  input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--sp-primary); }
+}
+
+.agreement-gate__submit-error {
+  color: var(--sp-danger, #dc2626) !important;
+  font-weight: 600;
+}
+
+.agreement-gate__accept { min-height: 44px; }
+
+@media (max-width: 600px) {
+  .agreement-gate { margin: 20px 0; }
+  .agreement-gate__card { grid-template-columns: 1fr; padding: 22px; }
+  .agreement-gate__metadata { gap: 20px; }
+  .agreement-gate__accept { width: 100%; }
+}

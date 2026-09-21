@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { finalize, forkJoin, takeUntil } from 'rxjs';
@@ -7,6 +7,7 @@ import { BaseComponent } from '../../../core/components/base.component';
 import {
   CoachingService, Goal, CoachingSession, Assignment, ExamResult, CoachingRelationship, Subject, StudySession
 } from '../../../core/services/coaching.service';
+import { CoachingAgreementGateComponent } from './coaching-agreement-gate.component';
 
 // ── Hedef Check-in Dialog ──────────────────────────────────────────────────────
 @Component({
@@ -364,12 +365,13 @@ export class LogStudySessionDialogComponent {
   selector: 'app-student-coaching',
   standalone: true,
   imports: [
-    CommonModule
+    CommonModule,
+    CoachingAgreementGateComponent
   ],
   templateUrl: './student-coaching.component.html',
   styleUrls: ['./student-coaching.component.scss']
 })
-export class StudentCoachingComponent extends BaseComponent implements OnInit {
+export class StudentCoachingComponent extends BaseComponent {
   private service = inject(CoachingService);
   private dialog = inject(MatDialog);
 
@@ -381,6 +383,7 @@ export class StudentCoachingComponent extends BaseComponent implements OnInit {
   studySessions: StudySession[] = [];
   subjects: Subject[] = [];
   reviewReminders: string[] = [];  // subject names due for review
+  agreementReady = false;
 
   activeTab = 0;
 
@@ -395,7 +398,9 @@ export class StudentCoachingComponent extends BaseComponent implements OnInit {
   assignmentStatusLabels: Record<string, string> = { Pending: 'Bekliyor', Completed: 'Tamamlandı', PartiallyCompleted: 'Kısmen', Overdue: 'Gecikti', Cancelled: 'İptal' };
   examTypeLabels: Record<string, string> = { YKS_TYT: 'TYT', YKS_AYT_Sayisal: 'AYT Say.', YKS_AYT_EsitAgirlik: 'AYT E.A.', YKS_AYT_Sozel: 'AYT Söz.', LGS: 'LGS', General: 'Genel' };
 
-  ngOnInit(): void {
+  unlockCoaching(): void {
+    if (this.agreementReady) return;
+    this.agreementReady = true;
     this.loadAll();
   }
 

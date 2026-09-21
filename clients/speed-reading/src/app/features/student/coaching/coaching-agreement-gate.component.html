@@ -1,0 +1,60 @@
+<section class="agreement-gate" aria-labelledby="agreement-title">
+  <div *ngIf="loading" class="agreement-gate__status" role="status" aria-live="polite">
+    <div class="sp-spinner" aria-hidden="true"></div>
+    <span>Koçluk anlaşması kontrol ediliyor…</span>
+  </div>
+
+  <div *ngIf="!loading && loadFailed" class="agreement-gate__error" role="alert">
+    <span class="material-icons" aria-hidden="true">cloud_off</span>
+    <div>
+      <h3 id="agreement-title">Koçluk anlaşması yüklenemedi</h3>
+      <p>Koçluk alanına devam etmek için bağlantınızı kontrol edip yeniden deneyin.</p>
+      <button type="button" class="sp-btn sp-btn--primary" (click)="load()">Yeniden dene</button>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && agreement" class="agreement-gate__card sp-card">
+    <div class="agreement-gate__icon" aria-hidden="true">
+      <span class="material-icons">handshake</span>
+    </div>
+    <div class="agreement-gate__body">
+      <p class="agreement-gate__eyebrow">Koçluk sürecine başlamadan önce</p>
+      <h3 id="agreement-title">{{ agreement.title }}</h3>
+      <p>
+        Koçluk sürecinin amacı, sorumlulukları ve çalışma sınırları güncel anlaşmada açıklanır.
+        Kabulünüz yalnızca aşağıdaki sürüm için kaydedilir.
+      </p>
+
+      <dl class="agreement-gate__metadata">
+        <div><dt>Sürüm</dt><dd>{{ agreement.documentVersion }}</dd></div>
+        <div><dt>Yürürlük</dt><dd>{{ agreement.effectiveAt | date:'dd.MM.yyyy' }}</dd></div>
+      </dl>
+
+      <a
+        class="agreement-gate__document"
+        [href]="agreement.documentReference"
+        target="_blank"
+        rel="noopener noreferrer">
+        <span class="material-icons" aria-hidden="true">open_in_new</span>
+        Anlaşma metnini güvenli sekmede aç
+      </a>
+
+      <label class="agreement-gate__confirmation">
+        <input type="checkbox" [(ngModel)]="reviewConfirmed">
+        <span>Bu sürümdeki anlaşma metnini okudum ve koçluk sürecine bu çerçevede katılmayı kabul ediyorum.</span>
+      </label>
+
+      <p *ngIf="submitFailed" class="agreement-gate__submit-error" role="alert">
+        Kabul kaydedilemedi. Lütfen tekrar deneyin.
+      </p>
+
+      <button
+        type="button"
+        class="sp-btn sp-btn--primary agreement-gate__accept"
+        [disabled]="!reviewConfirmed || submitting"
+        (click)="accept()">
+        {{ submitting ? 'Kaydediliyor…' : 'Kabul et ve koçluk alanına geç' }}
+      </button>
+    </div>
+  </div>
+</section>
