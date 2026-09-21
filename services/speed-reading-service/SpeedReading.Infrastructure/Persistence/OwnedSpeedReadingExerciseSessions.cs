@@ -1,4 +1,5 @@
 using System.Text.Json;
+using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using SpeedReading.Application.ExerciseSessions;
@@ -432,6 +433,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         CancellationToken cancellationToken = default) =>
         CompleteAsync(studentId, sessionId, request, cancellationToken, completionRetryCount: 0);
 
+    private static BusinessRuleException IncompleteSession(string message) =>
+        new("ExerciseSession.Incomplete", message);
+
     private async Task<SpeedReading.Application.ExerciseSessions.ExerciseSessionResult> CompleteAsync(
         Guid studentId,
         Guid sessionId,
@@ -459,7 +463,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             return ToResult(existingResult, session, state);
 
         if (state.CurrentNumber.HasValue && state.CurrentNumber.Value <= state.TotalSteps)
-            throw new InvalidOperationException("All grid targets must be completed before the session can be completed.");
+            throw IncompleteSession("All grid targets must be completed before the session can be completed.");
         if (IsFocusExercise(state) && !state.FocusCompleted)
         {
             if (IsObservationOnlyMotionPath(state))
@@ -472,22 +476,22 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             }
             else
             {
-                throw new InvalidOperationException("The focus exercise must be completed through its validated action flow.");
+                throw IncompleteSession("The focus exercise must be completed through its validated action flow.");
             }
         }
         if (IsVisualExpansionExercise(state)
             && state.VisualExpansionRound < state.TotalSteps)
-            throw new InvalidOperationException("All visual expansion rounds must be validated before completion.");
+            throw IncompleteSession("All visual expansion rounds must be validated before completion.");
         if (state.VocabularyWords.Count > 0
             && state.VocabularyWords.Any(word => state.Answers.All(answer => answer.QuestionId != word.Id)))
-            throw new InvalidOperationException("All vocabulary rounds must be reviewed before completion.");
+            throw IncompleteSession("All vocabulary rounds must be reviewed before completion.");
         if (IsAdaptiveFluency(state) && !state.AdaptiveCompleted)
-            throw new InvalidOperationException("The adaptive fluency flow must be completed before the session can be completed.");
+            throw IncompleteSession("The adaptive fluency flow must be completed before the session can be completed.");
 
         var answers = ResolveAnswers(session, state, request.QuestionAnswers);
         PersistSessionAnswers(session);
         if (state.Questions.Count > 0 && answers.Count != state.Questions.Count)
-            throw new InvalidOperationException("All questions in the session must be answered.");
+            throw IncompleteSession("All questions in the session must be answered.");
 
         if (request.CustomData is not null)
             session.SetState(session.SessionDataJson, SerializeOptional(request.CustomData));
@@ -1259,7 +1263,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             state.TotalSteps = 4;
         }
 
-        if (IsVisualizationExercise(exerciseTypeName) && state.Questions.Count == 0)
+        if ((IsVisualizationExercise(exerciseTypeName)
+                || IsEngineType(exerciseEngineType, "visualization"))
+            && state.Questions.Count == 0)
         {
             state.VisualizationScenes = await LoadVisualizationScenesAsync(
                 exerciseId,
@@ -1303,6 +1309,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 ?? ReadPositiveInt(config, "rounds")
                 ?? (state.VocabularyWords.Count > 0 ? state.VocabularyWords.Count : (int?)null)
                 ?? (IsVisualizationExercise(exerciseTypeName)
+                    || IsEngineType(exerciseEngineType, "visualization")
                     ? state.Questions.Count
                     : state.Questions.Count > 0 ? 1 + state.Questions.Count : state.Words.Length);
             if (state.TotalSteps <= 0) state.TotalSteps = 1;
@@ -2256,7 +2263,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         if (scenes.Count == 0)
             return [];
 
-        var sceneIds = scenes.Select(item => item.Id).ToArray();
+        var sceneIds = scenes.Select(item => item.Id).ToHashSet();
         var questions = await db.VisualizationQuestions.AsNoTracking()
             .Where(item => sceneIds.Contains(item.SceneId) && !item.IsDeleted)
             .OrderBy(item => item.DisplayOrder)
