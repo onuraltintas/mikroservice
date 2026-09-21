@@ -26,7 +26,6 @@ public class HealthCheckTests
     public void PostgresContainer_ShouldBeAccessible()
     {
         // Arrange
-        _output.WriteLine($"PostgreSQL Connection String: {_postgresFixture.ConnectionString}");
         _output.WriteLine($"PostgreSQL Host: {_postgresFixture.Host}");
         _output.WriteLine($"PostgreSQL Port: {_postgresFixture.Port}");
 

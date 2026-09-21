@@ -32,7 +32,6 @@ public class EventPublishingTests : IAsyncLifetime
     {
         _output.WriteLine($"RabbitMQ Host: {_rabbitMqFixture.Host}");
         _output.WriteLine($"RabbitMQ Port: {_rabbitMqFixture.AmqpPort}");
-        _output.WriteLine($"RabbitMQ Connection String: {_rabbitMqFixture.ConnectionString}");
 
         var services = new ServiceCollection();
 

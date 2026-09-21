@@ -25,7 +25,6 @@ public class RedisCacheTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        _output.WriteLine($"Redis Connection String: {_redisFixture.ConnectionString}");
         _output.WriteLine($"Redis Host: {_redisFixture.Host}");
         _output.WriteLine($"Redis Port: {_redisFixture.Port}");
 

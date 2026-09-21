@@ -30,7 +30,6 @@ public class DatabaseCrudTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        _output.WriteLine($"PostgreSQL Connection String: {_postgresFixture.ConnectionString}");
 
         // Create DbContext with test database
         _dataSource = new NpgsqlDataSourceBuilder(_postgresFixture.ConnectionString)
