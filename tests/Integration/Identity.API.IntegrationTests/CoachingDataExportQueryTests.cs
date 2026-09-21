@@ -1,13 +1,25 @@
 using Coaching.Application.Authorization;
 using Coaching.Application.Interfaces;
 using Coaching.Application.Queries.ExportCoachingData;
+using Coaching.API.Controllers;
 using EduPlatform.Shared.Kernel.Exceptions;
 using FluentAssertions;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Identity.API.IntegrationTests;
 
 public sealed class CoachingDataExportQueryTests
 {
+    [Fact]
+    public void ExportEndpoint_ShouldRequireStudentRole()
+    {
+        typeof(DataPrivacyController)
+            .GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
+            .Cast<AuthorizeAttribute>()
+            .Should()
+            .Contain(attribute => attribute.Roles == "Student");
+    }
+
     [Fact]
     public async Task Export_ShouldReturnOnlyTheAuthenticatedStudentsData()
     {
