@@ -1,6 +1,7 @@
 using Coaching.Application.Authorization;
 using Coaching.Application.CoachingAgreements;
 using Coaching.Application.Interfaces;
+using Coaching.Application.Queries.ExportCoachingData;
 using Coaching.Domain.Entities;
 using Coaching.Domain.Enums;
 using EduPlatform.Shared.Kernel.Exceptions;
@@ -130,6 +131,26 @@ public sealed class CoachingAgreementRequirementBehaviorTests
             default);
 
         result.Should().Be("handled");
+        repository.CurrentQueryCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task StudentDataExport_ShouldNotRequireCoachingAgreement()
+    {
+        var studentId = Guid.NewGuid();
+        var repository = new FakeAgreementRepository();
+        var behavior = new CoachingAgreementRequirementBehavior<ExportCoachingDataQuery, CoachingDataExportDto>(
+            repository,
+            new FakeAccessPolicy(studentId, isStudent: true),
+            new FixedTimeProvider(Now));
+        var expected = CoachingDataExportDto.Empty(studentId, new DateTimeOffset(Now));
+
+        var result = await behavior.Handle(
+            new ExportCoachingDataQuery(),
+            () => Task.FromResult(expected),
+            default);
+
+        result.Should().Be(expected);
         repository.CurrentQueryCount.Should().Be(0);
     }
 
