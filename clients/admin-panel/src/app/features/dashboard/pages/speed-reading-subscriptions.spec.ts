@@ -8,6 +8,7 @@ import {
 } from '../../../core/services/speed-reading-admin.service';
 import { IdentityService } from '../../../core/services/identity.service';
 import { InstitutionService } from '../../../core/services/institution.service';
+import { ToasterService } from '../../../core/services/toaster.service';
 import { SpeedReadingSubscriptionsComponent } from './speed-reading-subscriptions';
 
 describe('SpeedReadingSubscriptionsComponent', () => {
@@ -19,7 +20,14 @@ describe('SpeedReadingSubscriptionsComponent', () => {
       getSubscriptionPlans: vi.fn(() => of([])),
       getUserSubscriptions: vi.fn(() => of(emptyPage)),
       updateUserSubscription: vi.fn(() => of({})),
-      createInstitutionAccess: vi.fn(() => of({ createdCount: 2, existingCount: 0 }))
+      createInstitutionAccess: vi.fn(() => of({ createdCount: 2, existingCount: 0 })),
+      deleteBankTransferRequest: vi.fn(() => of(undefined))
+    };
+    const toaster = {
+      confirm: vi.fn(() => Promise.resolve(true)),
+      success: vi.fn(),
+      error: vi.fn(),
+      prompt: vi.fn()
     };
 
     TestBed.configureTestingModule({
@@ -27,13 +35,15 @@ describe('SpeedReadingSubscriptionsComponent', () => {
       providers: [
         { provide: SpeedReadingAdminService, useValue: service },
         { provide: IdentityService, useValue: { getAllUsers: vi.fn(() => of({ items: [] })) } },
-        { provide: InstitutionService, useValue: { getAll: vi.fn(() => of({ items: [] })) } }
+        { provide: InstitutionService, useValue: { getAll: vi.fn(() => of({ items: [] })) } },
+        { provide: ToasterService, useValue: toaster }
       ]
     });
 
     return {
       component: TestBed.createComponent(SpeedReadingSubscriptionsComponent).componentInstance,
-      service
+      service,
+      toaster
     };
   }
 
@@ -44,6 +54,36 @@ describe('SpeedReadingSubscriptionsComponent', () => {
 
     expect(service.getSubscriptionPlans).toHaveBeenCalledTimes(1);
     expect(service.getUserSubscriptions).toHaveBeenCalledTimes(1);
+  });
+
+  it('permanently deletes a bank transfer request after confirmation', async () => {
+    const { component, service, toaster } = createComponent();
+    const request = {
+      id: 'request-1',
+      userId: 'user-1',
+      userName: 'Ada',
+      userEmail: 'ada@example.test',
+      planId: 'plan-1',
+      planName: 'Bireysel',
+      amount: 1000,
+      currency: 'TRY',
+      paymentReference: 'EFT-1',
+      payerName: null,
+      note: null,
+      status: 'Approved',
+      subscriptionId: 'subscription-1',
+      reviewedBy: 'admin-1',
+      reviewedAt: '2026-09-21T00:00:00Z',
+      reviewNote: null,
+      createdAt: '2026-09-21T00:00:00Z',
+      updatedAt: '2026-09-21T00:00:00Z'
+    } as any;
+
+    await component.deleteBankTransferRequest(request);
+
+    expect(toaster.confirm).toHaveBeenCalled();
+    expect(service.deleteBankTransferRequest).toHaveBeenCalledWith('request-1');
+    expect(toaster.success).toHaveBeenCalledWith('EFT talebi kalıcı olarak silindi.');
   });
 
   it('updates an existing manual subscription with editable fields', () => {
