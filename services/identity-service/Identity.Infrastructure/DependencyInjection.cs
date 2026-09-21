@@ -80,6 +80,7 @@ public static class DependencyInjection
         services.AddScoped<ITeacherRepository, Repositories.TeacherRepository>();
         services.AddScoped<IStudentRepository, Repositories.StudentRepository>();
         services.AddScoped<IParentRepository, Repositories.ParentRepository>();
+        services.AddScoped<IParentStudentRelationshipRepository, Repositories.ParentStudentRelationshipRepository>();
         services.AddScoped<IInvitationRepository, Repositories.InvitationRepository>();
         services.AddScoped<IIdempotencyRepository, Repositories.IdempotencyRepository>();
         services.AddScoped<IRoleRepository, Repositories.RoleRepository>();

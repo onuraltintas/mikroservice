@@ -9,3 +9,10 @@ public interface IParentRepository
     Task<ParentProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<IReadOnlyList<StudentProfile>> GetActiveChildrenByUserIdAsync(Guid userId, CancellationToken cancellationToken);
 }
+
+public interface IParentStudentRelationshipRepository
+{
+    Task AddAsync(ParentStudentRelationship relationship, CancellationToken cancellationToken);
+    Task<ParentStudentRelationship?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<bool> HasActiveAsync(Guid parentUserId, Guid studentUserId, CancellationToken cancellationToken);
+}
