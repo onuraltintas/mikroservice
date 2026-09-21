@@ -76,6 +76,15 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
   CI gizlilik işine eklendi. Testte Development tarayıcı adaptörü kullanıldı;
   ClamAV'li production/staging taraması ve dağıtık silme zinciri bu HTTP
   testinin kapsamı değildir. MinIO yalnız disposable test ortamındaydı.
+- MinIO etkin tam `privacy-e2e-local-full` Docker yığınında CI gizlilik
+  adımlarının yerel provası yapıldı: ilk adım 7/7, export/kesinti 1/1,
+  broker toparlanması 1/1, attachment HTTP 1/1 geçti. İlk deneme, eski
+  silme testinin RabbitMQ yönetim portunu sabit `15672` alıp yanlış brokerı
+  sorguladığını açığa çıkardı. Test artık seçilen disposable Compose
+  projesinin RabbitMQ container/port eşleşmesini doğruluyor ve `.env.example`
+  kullanıyor. Yanlış port verildiğinde test veri oluşturmadan bu kapıda
+  beklenen şekilde reddedildi. Bu prova mevcut yerel imajlarla `--no-build`
+  çalıştı; GitHub Actions'ın gerçek `--build` koşusunun yerine geçmez.
 
 ## Kapsam ölçümü
 

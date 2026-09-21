@@ -13,42 +13,49 @@ const executionContract = 'EduPlatform.Shared.Contracts.Events.Privacy:PersonalD
 const docker = process.env.DOCKER_EXE || 'docker';
 const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 
-function verifyIdentityContainer(config) {
-  const compose = spawnSync(docker, ['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE || '.env', 'ps', '-q', 'identity-service'], {
-    cwd: repoRoot, encoding: 'utf8', timeout: 20_000,
-  });
-  if (compose.error || compose.status !== 0 || !compose.stdout.trim()) {
-    throw new Error('Privacy Docker E2E requires a running Compose Identity service.');
+function verifyContainers(config) {
+  requireDisposableEnvironment(config);
+  assert.match(config.COMPOSE_PROJECT_NAME || '', /^privacy-e2e-[a-z0-9-]+$/);
+  for (const service of ['identity-service', 'rabbitmq']) {
+    const compose = spawnSync(docker, ['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE,
+      'ps', '-q', service], { cwd: repoRoot, encoding: 'utf8', timeout: 20_000 });
+    if (compose.error || compose.status !== 0 || !compose.stdout.trim()) {
+      throw new Error(`Privacy Docker E2E requires a running Compose ${service} service.`);
+    }
+    const containerId = compose.stdout.trim().split(/\r?\n/)[0];
+    const inspect = spawnSync(docker, ['inspect', '--format', '{{json .}}', containerId], {
+      encoding: 'utf8', timeout: 20_000,
+    });
+    if (inspect.error || inspect.status !== 0) {
+      throw new Error(`Privacy Docker E2E could not inspect the ${service} container.`);
+    }
+    const container = JSON.parse(inspect.stdout);
+    assert.equal(container.Config.Labels['com.docker.compose.project'], config.COMPOSE_PROJECT_NAME);
+    if (service === 'identity-service') {
+      requireDisposableContainer(container.Config.Env, config.ENVIRONMENT);
+    } else {
+      const port = String(config.E2E_RABBITMQ_MANAGEMENT_PORT || 15672);
+      assert.ok(container.NetworkSettings.Ports['15672/tcp']?.some(binding => binding.HostPort === port),
+        'RabbitMQ management port must belong to the disposable Compose broker');
+    }
   }
-  const containerId = compose.stdout.trim().split(/\r?\n/)[0];
-  const inspect = spawnSync(docker, ['inspect', '--format', '{{json .Config.Env}}', containerId], {
-    encoding: 'utf8', timeout: 20_000,
-  });
-  if (inspect.error || inspect.status !== 0) {
-    throw new Error('Privacy Docker E2E could not inspect the Identity container.');
-  }
-  requireDisposableContainer(JSON.parse(inspect.stdout), config.ENVIRONMENT);
 }
 
 async function settings() {
-  let local = '';
-  try {
-    local = await readFile(new URL('../../.env', import.meta.url), 'utf8');
-  } catch (error) {
-    if (error.code !== 'ENOENT') throw error;
-  }
-  const values = Object.fromEntries(local.split(/\r?\n/)
+  const file = process.env.E2E_COMPOSE_ENV_FILE || '.env.example';
+  const lines = (await readFile(new URL(`../../${file}`, import.meta.url), 'utf8')).split(/\r?\n/);
+  const values = Object.fromEntries(lines
     .filter(line => line && !line.startsWith('#') && line.includes('='))
     .map(line => {
       const separator = line.indexOf('=');
       return [line.slice(0, separator).trim(), line.slice(separator + 1).trim()];
     }));
-  return { ...values, ...process.env };
+  return { ...values, ...process.env, E2E_COMPOSE_ENV_FILE: file };
 }
 
 function sql(config, database, statement) {
   const result = spawnSync(docker, [
-    'compose', '--env-file', config.E2E_COMPOSE_ENV_FILE || '.env', 'exec', '-T', 'postgres',
+    'compose', '--env-file', config.E2E_COMPOSE_ENV_FILE, 'exec', '-T', 'postgres',
     'psql', '-X', '-v', 'ON_ERROR_STOP=1',
     '-U', config.POSTGRES_USER, '-d', database, '-At',
   ], { cwd: repoRoot, input: `${statement}\n`, encoding: 'utf8', timeout: 20_000 });
@@ -61,7 +68,7 @@ function sql(config, database, statement) {
 async function publish(config, contract, message, requestId) {
   const envelope = createMassTransitEnvelope(contract, message, requestId);
   const credentials = Buffer.from(`${config.RABBITMQ_DEFAULT_USER}:${config.RABBITMQ_DEFAULT_PASS}`).toString('base64');
-  const response = await fetch(`http://127.0.0.1:15672/api/exchanges/%2F/${encodeURIComponent(contract)}/publish`, {
+  const response = await fetch(`http://127.0.0.1:${config.E2E_RABBITMQ_MANAGEMENT_PORT || 15672}/api/exchanges/%2F/${encodeURIComponent(contract)}/publish`, {
     method: 'POST',
     headers: { authorization: `Basic ${credentials}`, 'content-type': 'application/json' },
     body: JSON.stringify({
@@ -80,7 +87,7 @@ async function publish(config, contract, message, requestId) {
 
 async function consumersReady(config) {
   const credentials = Buffer.from(`${config.RABBITMQ_DEFAULT_USER}:${config.RABBITMQ_DEFAULT_PASS}`).toString('base64');
-  const response = await fetch('http://127.0.0.1:15672/api/queues/%2F', {
+  const response = await fetch(`http://127.0.0.1:${config.E2E_RABBITMQ_MANAGEMENT_PORT || 15672}/api/queues/%2F`, {
     headers: { authorization: `Basic ${credentials}` },
     signal: AbortSignal.timeout(10_000),
   });
@@ -111,8 +118,7 @@ async function eventually(read, expected, label) {
 test('disposable Docker account erasure completes across three product databases and Identity',
   { timeout: 120_000 }, async () => {
     const config = await settings();
-    requireDisposableEnvironment(config);
-    verifyIdentityContainer(config);
+    verifyContainers(config);
     for (const key of ['POSTGRES_USER', 'RABBITMQ_DEFAULT_USER', 'RABBITMQ_DEFAULT_PASS']) {
       assert.ok(config[key], `${key} is required`);
     }
@@ -203,8 +209,7 @@ test('disposable Docker account erasure completes across three product databases
 test('disposable Docker assessment retains Coaching data under an active legal hold',
   { timeout: 120_000 }, async () => {
     const config = await settings();
-    requireDisposableEnvironment(config);
-    verifyIdentityContainer(config);
+    verifyContainers(config);
     await eventually(() => consumersReady(config), 'true', 'privacy consumers');
     const identityDb = config.POSTGRES_DB_IDENTITY || 'identity_db';
     const coachingDb = config.POSTGRES_DB_COACHING || 'coaching_db';
