@@ -22,16 +22,42 @@ public sealed class DataSubjectRequestReviewTests
         var repository = new StubRepository(request);
         var currentUser = new StubCurrentUser(reviewerId, ["SystemAdmin"]);
         var clock = new FixedTimeProvider(new DateTimeOffset(Utc(13)));
+        var publisher = new StubPrivacyRequestPublisher();
 
         await new VerifyDataSubjectRequestIdentityCommandHandler(repository, currentUser, clock)
             .Handle(new VerifyDataSubjectRequestIdentityCommand(request.Id), CancellationToken.None);
         clock.UtcNow = new DateTimeOffset(Utc(14));
-        var result = await new DecideDataSubjectRequestCommandHandler(repository, currentUser, clock)
+        var result = await new DecideDataSubjectRequestCommandHandler(repository, currentUser, clock, publisher)
             .Handle(new DecideDataSubjectRequestCommand(request.Id, true, "Saklama yükümlülüğü yok."), CancellationToken.None);
 
         result.Status.Should().Be(DataSubjectRequestStatus.Approved);
         request.DecidedByUserId.Should().Be(reviewerId);
         repository.SaveCount.Should().Be(2);
+        publisher.Published.Should().ContainSingle(message =>
+            message.RequestId == request.Id
+            && message.SubjectUserId == request.RequesterUserId
+            && message.DryRun);
+    }
+
+    [Fact]
+    public async Task Reject_ShouldNotPublishErasureAssessment()
+    {
+        var request = DataSubjectRequest.Create(
+            Guid.NewGuid(), DataSubjectRequestType.Erasure, "Silme talebi", Utc(12));
+        request.VerifyIdentity(Utc(13));
+        var publisher = new StubPrivacyRequestPublisher();
+        var handler = new DecideDataSubjectRequestCommandHandler(
+            new StubRepository(request),
+            new StubCurrentUser(Guid.NewGuid(), ["SystemAdmin"]),
+            new FixedTimeProvider(new DateTimeOffset(Utc(14))),
+            publisher);
+
+        var result = await handler.Handle(
+            new DecideDataSubjectRequestCommand(request.Id, false, "Yasal saklama zorunluluğu."),
+            CancellationToken.None);
+
+        result.Status.Should().Be(DataSubjectRequestStatus.Rejected);
+        publisher.Published.Should().BeEmpty();
     }
 
     [Fact]
@@ -105,5 +131,18 @@ public sealed class DataSubjectRequestReviewTests
     {
         public DateTimeOffset UtcNow { get; set; } = utcNow;
         public override DateTimeOffset GetUtcNow() => UtcNow;
+    }
+
+    private sealed class StubPrivacyRequestPublisher : IDataSubjectRequestEventPublisher
+    {
+        public List<PersonalDataErasureAssessmentRequestedV1> Published { get; } = [];
+
+        public Task PublishAssessmentRequestedAsync(
+            PersonalDataErasureAssessmentRequestedV1 message,
+            CancellationToken cancellationToken)
+        {
+            Published.Add(message);
+            return Task.CompletedTask;
+        }
     }
 }
