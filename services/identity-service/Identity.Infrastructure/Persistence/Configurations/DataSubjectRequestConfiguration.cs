@@ -17,7 +17,7 @@ public sealed class DataSubjectRequestConfiguration : IEntityTypeConfiguration<D
         builder.Property(request => request.DecisionReason).HasMaxLength(2_000);
         builder.Property(request => request.FailureReason).HasMaxLength(2_000);
         builder.HasIndex(request => new { request.RequesterUserId, request.SubmittedAt });
-        builder.HasIndex(request => new { request.RequesterUserId, request.RequestType })
+        builder.HasIndex(request => new { request.RequesterUserId, request.RequestType, request.Scope })
             .IsUnique()
             .HasFilter("\"Status\" IN ('Submitted', 'IdentityVerified', 'Approved', 'Processing')");
     }

@@ -114,7 +114,7 @@ public sealed class DataSubjectRequestReviewTests
             SaveCount++;
             return Task.CompletedTask;
         }
-        public Task<bool> HasActiveAsync(Guid userId, DataSubjectRequestType requestType, CancellationToken cancellationToken) => Task.FromResult(false);
+        public Task<bool> HasActiveAsync(Guid userId, DataSubjectRequestType requestType, PersonalDataScope scope, CancellationToken cancellationToken) => Task.FromResult(false);
         public Task AddAsync(DataSubjectRequest value, CancellationToken cancellationToken) => Task.CompletedTask;
         public Task<IReadOnlyList<DataSubjectRequest>> GetByRequesterAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<DataSubjectRequest>>([]);
         public Task<(IReadOnlyList<DataSubjectRequest> Items, int TotalCount)> GetForReviewAsync(DataSubjectRequestStatus? status, int pageNumber, int pageSize, CancellationToken cancellationToken) => Task.FromResult<(IReadOnlyList<DataSubjectRequest>, int)>(([request], 1));

@@ -12,6 +12,7 @@ public interface IDataSubjectRequestRepository
     Task<bool> HasActiveAsync(
         Guid userId,
         DataSubjectRequestType requestType,
+        PersonalDataScope scope,
         CancellationToken cancellationToken);
     Task AddAsync(DataSubjectRequest request, CancellationToken cancellationToken);
     Task<IReadOnlyList<DataSubjectRequest>> GetByRequesterAsync(
@@ -35,6 +36,7 @@ public interface IDataSubjectRequestEventPublisher
 
 public sealed record SubmitDataSubjectRequestCommand(
     DataSubjectRequestType RequestType,
+    PersonalDataScope Scope,
     string Reason) : IRequest<DataSubjectRequestDto>;
 
 public sealed record GetMyDataSubjectRequestsQuery : IRequest<IReadOnlyList<DataSubjectRequestDto>>;
@@ -295,12 +297,14 @@ public sealed class SubmitDataSubjectRequestCommandHandler(
         CancellationToken cancellationToken)
     {
         var userId = RequireAuthenticatedUser(currentUser);
-        if (await repository.HasActiveAsync(userId, command.RequestType, cancellationToken))
+        if (await repository.HasActiveAsync(
+                userId, command.RequestType, command.Scope, cancellationToken))
             throw new InvalidOperationException("Aynı türde aktif bir ilgili kişi talebi zaten bulunuyor.");
 
         var request = DataSubjectRequest.Create(
             userId,
             command.RequestType,
+            command.Scope,
             command.Reason,
             timeProvider.GetUtcNow().UtcDateTime);
         await repository.AddAsync(request, cancellationToken);

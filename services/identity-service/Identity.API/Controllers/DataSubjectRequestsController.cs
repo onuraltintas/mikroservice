@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using EduPlatform.Shared.Contracts.Authorization;
+using EduPlatform.Shared.Contracts.Events.Privacy;
 using EduPlatform.Shared.Security.Authorization;
 
 namespace Identity.API.Controllers;
@@ -34,7 +35,8 @@ public sealed class DataSubjectRequestsController(IMediator mediator) : Controll
         try
         {
             var result = await mediator.Send(
-                new SubmitDataSubjectRequestCommand(DataSubjectRequestType.Erasure, request.Reason),
+                new SubmitDataSubjectRequestCommand(
+                    DataSubjectRequestType.Erasure, request.Scope, request.Reason),
                 cancellationToken);
             return CreatedAtAction(nameof(GetMine), result);
         }
@@ -113,6 +115,7 @@ public sealed class DataSubjectRequestsController(IMediator mediator) : Controll
 }
 
 public sealed record SubmitErasureRequest(
+    PersonalDataScope Scope,
     [property: Required, MaxLength(2_000)] string Reason);
 
 public sealed record DataSubjectRequestDecisionRequest(

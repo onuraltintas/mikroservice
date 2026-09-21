@@ -21,10 +21,12 @@ public sealed class DataSubjectRequestRepository(IdentityDbContext context)
     public Task<bool> HasActiveAsync(
         Guid userId,
         DataSubjectRequestType requestType,
+        EduPlatform.Shared.Contracts.Events.Privacy.PersonalDataScope scope,
         CancellationToken cancellationToken) =>
         context.DataSubjectRequests.AnyAsync(
             request => request.RequesterUserId == userId
                 && request.RequestType == requestType
+                && request.Scope == scope
                 && ActiveStatuses.Contains(request.Status),
             cancellationToken);
 
@@ -36,10 +38,10 @@ public sealed class DataSubjectRequestRepository(IdentityDbContext context)
             await context.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateException exception) when (
-            exception.InnerException is PostgresException
-            {
-                ConstraintName: "IX_DataSubjectRequests_RequesterUserId_RequestType"
-            })
+            exception.InnerException is PostgresException postgresException
+            && postgresException.ConstraintName is
+                "IX_DataSubjectRequests_RequesterUserId_RequestType" or
+                "IX_DataSubjectRequests_RequesterUserId_RequestType_Scope")
         {
             throw new InvalidOperationException(
                 "Aynı türde aktif bir ilgili kişi talebi zaten bulunuyor.",
