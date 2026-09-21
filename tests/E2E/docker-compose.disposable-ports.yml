@@ -1,0 +1,15 @@
+# Local E2E overlay: separate Compose project, volumes, and published ports.
+# Use only with a unique COMPOSE_PROJECT_NAME and E2E_DISPOSABLE_ENV=true.
+services:
+  postgres:
+    container_name: !reset null
+    ports: !override []
+  rabbitmq:
+    container_name: !reset null
+    ports: !override []
+  redis:
+    container_name: !reset null
+    ports: !override []
+  api-gateway:
+    ports: !override
+      - "${GATEWAY_PORT}:8080"

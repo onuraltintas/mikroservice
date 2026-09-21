@@ -38,7 +38,11 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
 - Veri dışa aktarma isteğinin, koçluk sözleşmesi yokken genel işlem kapısında
   engellendiği RED testle doğrulandı. Yalnız bu istek kapıdan muaf tutuldu;
   öğrencilik ve Identity erişim kontrolleri korundu. İlgili 11 test geçti.
-  Çalışan servis üzerinden HTTP doğrulaması hâlâ gerekli.
+- Ayrı `privacy-e2e-local-export` Docker projesinde Gateway → Coaching →
+  Identity → PostgreSQL HTTP testi geçti: oturumsuz 401, yanlış rol 403,
+  Identity'de olmayan öğrenci 403, kayıtlı öğrenci 200; yanıt `no-store` ve
+  yalnız kendi hedefini içerdi. Bu test CI'nın disposable gizlilik işine eklendi.
+  Geçici container ve hacimler testten sonra kaldırıldı; canlı VPS kullanılmadı.
 
 ## Kapsam ölçümü
 
@@ -53,8 +57,8 @@ genel %80 kapsam hedefini kanıtlamaz.
 
 ## Kapanması gereken kapılar
 
-1. Koçluk export, yetkilendirme ve tenant sınırı için HTTP seviyesinde
-   olumlu/olumsuz E2E; kısmi servis kesintisi ve retry senaryoları.
+1. Koçluk export için farklı kurum/tenant, özel koç notu ve diğer veri türleri
+   üzerinde daha kapsamlı HTTP E2E; kısmi servis kesintisi ve retry senaryoları.
 2. Kullanıcının kendi VPS'inde çalışacak, güvenlik bakımından desteklenen S3
    uyumlu depoda gerçek yükle–oku–sil ve staging'deki broker + PostgreSQL +
    nesne depolama zinciri; erişim, TLS, bucket yetkileri, kimlik bilgisi
