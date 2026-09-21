@@ -501,7 +501,7 @@
     </div>
 
     <!-- Exercise Running - Reading Comprehension (Serbest Okuma + Anlama) -->
-    <div *ngIf="engine && engineState.isRunning && (engine.engineType === 'reading_comprehension' || engine.engineType === 'exam_simulation' || engine.engineType === 'adaptive_fluency') && exercisePhase === 'reading'"
+    <div *ngIf="engine && engineState.isRunning && (engine.engineType === 'reading_comprehension' || engine.engineType === 'free_reading' || engine.engineType === 'exam_simulation' || engine.engineType === 'adaptive_fluency') && exercisePhase === 'reading'"
         class="game-container reading-comprehension-container">
         <div class="game-header">
             <div class="timer" [class.countdown]="hasTimeLimit()" [class.urgent]="isTimeUrgent()">
