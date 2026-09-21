@@ -21,6 +21,9 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
 - Disposable Koçluk backup/restore testi, mevcut veritabanından yalnız şemayı
   alıp sentetik bir hedefi yedekledi ve yeni veritabanına geri yükledi. Geçici
   veritabanları temizlendi; CI gizlilik işine aynı prova eklendi.
+- Yönetim paneli testleri: 181/181 başarılı; production browser/SSR build'i
+  tamamlandı. Build'de Hızlı Okuma katalog stil bütçesi uyarısı var; Koçluk
+  doğrulaması adına bu ayrı platformun değişikliklerine dokunulmadı.
 
 ## Kapsam ölçümü
 
