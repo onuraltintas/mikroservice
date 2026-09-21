@@ -69,3 +69,7 @@ başlar; çalışan Identity container'ının ortamını da kontrol eder. Test, 
 oluşturulan bir kullanıcı için üç servis verisini, Identity anonimleştirmesini
 ve aynı yürütme olayının tekrar tesliminde receipt tekilliğini doğrular. Bu
 testin yerelde geçmesi staging/production restore veya pentest kanıtı değildir.
+CI'deki `privacy-erasure-e2e` işi aynı testi kendine ait, disposable Compose
+projesinde çalıştırır; başarısızlıkta servis loglarını saklar ve test verisini
+içeren Docker volume'lerini iş sonunda temizler. CI işinin yeşil sonucu ayrıca
+GitHub Actions üzerinde doğrulanmalıdır.
