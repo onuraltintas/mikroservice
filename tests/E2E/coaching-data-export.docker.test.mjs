@@ -96,6 +96,10 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
     const privateSessionId = randomUUID();
     const sharedSessionId = randomUUID();
     const otherSessionId = randomUUID();
+    const ownAssignmentId = randomUUID();
+    const otherAssignmentId = randomUUID();
+    const ownExamId = randomUUID();
+    const otherExamId = randomUUID();
     const identityDb = config.POSTGRES_DB_IDENTITY || 'identity_db';
     const coachingDb = config.POSTGRES_DB_COACHING || 'coaching_db';
     const email = `coaching-export-${studentId.replaceAll('-', '')}@example.test`;
@@ -152,6 +156,32 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
             null, null, '${now}'),
           (gen_random_uuid(), '${otherSessionId}', '${otherId}', 'NotRecorded',
             null, null, '${now}');
+        INSERT INTO coaching.assignments
+          (id, teacher_id, title, type, source, due_date, status, created_at, "Version")
+        VALUES
+          ('${ownAssignmentId}', '${teacherId}', 'Own assignment', 'Individual', 'Digital',
+            '${now}', 'Active', '${now}', 0),
+          ('${otherAssignmentId}', '${teacherId}', 'Other assignment', 'Individual', 'Digital',
+            '${now}', 'Active', '${now}', 0);
+        INSERT INTO coaching.assignment_students
+          (id, assignment_id, student_id, status, student_note, teacher_feedback, created_at)
+        VALUES
+          (gen_random_uuid(), '${ownAssignmentId}', '${studentId}', 'Assigned',
+            'My assignment note', 'Teacher feedback for me', '${now}'),
+          (gen_random_uuid(), '${otherAssignmentId}', '${otherId}', 'Assigned',
+            'Other assignment secret', null, '${now}');
+        INSERT INTO coaching.exams
+          (id, created_by_teacher_id, title, exam_type, exam_date, max_score, created_at, "Version")
+        VALUES
+          ('${ownExamId}', '${teacherId}', 'Own exam', 'Mock', '${now}', 100, '${now}', 0),
+          ('${otherExamId}', '${teacherId}', 'Other exam', 'Mock', '${now}', 100, '${now}', 0);
+        INSERT INTO coaching.exam_results
+          (id, exam_id, student_id, score, teacher_notes, created_at)
+        VALUES
+          (gen_random_uuid(), '${ownExamId}', '${studentId}', 81,
+            'Private exam teacher note', '${now}'),
+          (gen_random_uuid(), '${otherExamId}', '${otherId}', 56,
+            'Other exam secret', '${now}');
         COMMIT;`);
 
       assert.equal((await request(config, token(config, studentId, 'Teacher'))).status, 403);
@@ -164,6 +194,11 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
       const exportData = await response.json();
       assert.equal(exportData.studentId.toLowerCase(), studentId);
       assert.deepEqual(exportData.goals.map(goal => goal.title), ['Own export goal']);
+      assert.deepEqual(exportData.assignments.map(assignment => assignment.title), ['Own assignment']);
+      assert.equal(exportData.assignments[0].studentNote, 'My assignment note');
+      assert.equal(exportData.assignments[0].teacherFeedback, 'Teacher feedback for me');
+      assert.deepEqual(exportData.exams.map(exam => exam.title), ['Own exam']);
+      assert.equal(exportData.exams[0].score, 81);
       assert.deepEqual(exportData.sessions.map(session => session.title).sort(),
         ['Private-note session', 'Shared-note session']);
       assert.equal(exportData.sessions.find(session => session.title === 'Private-note session').studentNote,
@@ -172,9 +207,13 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
         null);
       assert.equal(exportData.sessions.find(session => session.title === 'Shared-note session').sharedCoachNote,
         'Shared guidance');
-      assert.doesNotMatch(JSON.stringify(exportData), /Coach-only secret|Attendance coach secret|Other student private note/);
+      assert.doesNotMatch(JSON.stringify(exportData),
+        /Coach-only secret|Attendance coach secret|Other student private note|Other assignment secret|Private exam teacher note|Other exam secret/);
     } finally {
       if (seeded) {
+        sql(config, coachingDb, `DELETE FROM coaching.assignments
+          WHERE id IN ('${ownAssignmentId}', '${otherAssignmentId}');
+          DELETE FROM coaching.exams WHERE id IN ('${ownExamId}', '${otherExamId}');`);
         sql(config, coachingDb, `DELETE FROM coaching.coaching_sessions
           WHERE id IN ('${privateSessionId}', '${sharedSessionId}', '${otherSessionId}');`);
         sql(config, coachingDb, `DELETE FROM coaching.academic_goals WHERE student_id IN ('${studentId}', '${otherId}');`);

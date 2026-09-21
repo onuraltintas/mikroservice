@@ -43,8 +43,10 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
   Identity'de olmayan öğrenci 403, kayıtlı öğrenci 200; yanıt `no-store` ve
   yalnız kendi hedefini içerdi. Aynı test, öğrencinin kendi oturum notu ve ona
   açık koç notunun görünmesini; koça özel notun, katılım öğretmen notunun ve
-  başka öğrencinin oturumunun çıkmamasını da doğruladı. Test CI'nın disposable
-  gizlilik işine eklendi.
+  başka öğrencinin oturumunun çıkmamasını da doğruladı. Ödev ve sınav
+  sonuçları için öğrencinin kendi kayıtları, notu, geri bildirimi ve puanı
+  görünürken başka öğrencinin kayıtları ile özel sınav öğretmen notu çıkmadı.
+  Test CI'nın disposable gizlilik işine eklendi.
   Geçici container ve hacimler testten sonra kaldırıldı; canlı VPS kullanılmadı.
 
 ## Kapsam ölçümü
@@ -60,7 +62,7 @@ genel %80 kapsam hedefini kanıtlamaz.
 
 ## Kapanması gereken kapılar
 
-1. Koçluk export için farklı kurum/tenant ve kalan veri türleri
+1. Koçluk export için farklı kurum/tenant ve anlaşma kanıtı gibi kalan veri türleri
    üzerinde daha kapsamlı HTTP E2E; kısmi servis kesintisi ve retry senaryoları.
 2. Kullanıcının kendi VPS'inde çalışacak, güvenlik bakımından desteklenen S3
    uyumlu depoda gerçek yükle–oku–sil ve staging'deki broker + PostgreSQL +
