@@ -463,7 +463,7 @@ jobs:
   container-build:
     name: Container build (${{ matrix.name }})
     runs-on: ubuntu-latest
-    needs: [dotnet, tests, migration-drift, gateway-smoke, compose, vulnerabilities, frontend, speed-reading-frontend]
+    needs: [dotnet, tests, privacy-erasure-e2e, migration-drift, gateway-smoke, compose, vulnerabilities, frontend, speed-reading-frontend]
     strategy:
       fail-fast: false
       matrix:
