@@ -171,6 +171,18 @@ jobs:
           --configuration Release --no-restore --logger "trx;LogFileName=integration-tests.trx"
           --collect:"XPlat Code Coverage"
 
+      - name: Check Coaching integration coverage regression floor
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s tests/coverage -p 'test_*.py'
+          coverage_file=$(find tests/Integration/Identity.API.IntegrationTests/TestResults -name coverage.cobertura.xml -print -quit)
+          if [ -z "$coverage_file" ]; then
+            echo "Cobertura report not found" >&2
+            exit 1
+          fi
+          python tests/coverage/check_coaching_coverage.py "$coverage_file" | tee -a "$GITHUB_STEP_SUMMARY"
+
       - name: Run Speed Reading unit tests
         run: >-
           dotnet test tests/Unit/SpeedReading.Application.UnitTests/SpeedReading.Application.UnitTests.csproj

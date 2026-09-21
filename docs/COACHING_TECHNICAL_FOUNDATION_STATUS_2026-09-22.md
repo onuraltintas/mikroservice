@@ -97,10 +97,13 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
 
 ## Kapsam ölçümü
 
-`--collect:"XPlat Code Coverage"` ile 608 testin başarılı olduğu önceki koşudan
-alınan Cobertura raporu: toplam instrumented assembly satır kapsamı %11,34;
-Coaching.API %3,23, Coaching.Application %51,72, Coaching.Domain %73,02,
-Coaching.Infrastructure %8,48. Bu oranlar **yalnız bu entegrasyon test projesinin**
+`--collect:"XPlat Code Coverage"` ile 613 başarılı, 2 atlanan testin olduğu
+yerel koşudan alınan Cobertura raporu: toplam instrumented assembly satır
+kapsamı %11,40; Coaching.API %3,23, Coaching.Application %51,85,
+Coaching.Domain %73,02, Coaching.Infrastructure %8,87. CI artık bu dört
+paket için sırasıyla %3/%50/%70/%8 gerileme tabanını denetler. Bu eşikler
+hedef değil, yalnız mevcut düzeyin düşmesini engelleyen alt sınırdır.
+Bu oranlar **yalnız bu entegrasyon test projesinin**
 kapsamıdır; ayrı unit/UI/E2E koşularıyla birleştirilmiş ürün kapsamı değildir.
 Özellikle `DataPrivacyController` %0, MinIO adaptörü %64,86 görünürken
 Coaching erasure execution servisi bu raporda %100'dür. Yüksek test sayısı,
