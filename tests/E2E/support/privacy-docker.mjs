@@ -9,6 +9,17 @@ export function requireDisposableEnvironment(env) {
   }
 }
 
+export function requireDisposableContainer(containerEnv, expectedEnvironment) {
+  const actual = containerEnv.find(value => value.startsWith('ASPNETCORE_ENVIRONMENT='))
+    ?.slice('ASPNETCORE_ENVIRONMENT='.length);
+  if (!['Development', 'Staging'].includes(actual)) {
+    throw new Error('Privacy Docker E2E cannot use a Production or unknown Identity container.');
+  }
+  if (actual !== expectedEnvironment) {
+    throw new Error('Privacy Docker E2E environment mismatch between configuration and Identity container.');
+  }
+}
+
 export function createMassTransitEnvelope(contract, message, requestId) {
   return {
     messageId: randomUUID(),

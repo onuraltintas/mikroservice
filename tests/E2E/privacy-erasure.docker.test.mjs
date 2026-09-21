@@ -3,11 +3,32 @@ import { randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import { createMassTransitEnvelope, requireDisposableEnvironment } from './support/privacy-docker.mjs';
+import { fileURLToPath } from 'node:url';
+import {
+  createMassTransitEnvelope, requireDisposableContainer, requireDisposableEnvironment,
+} from './support/privacy-docker.mjs';
 
 const assessmentContract = 'EduPlatform.Shared.Contracts.Events.Privacy:PersonalDataErasureAssessmentRequestedV1';
 const executionContract = 'EduPlatform.Shared.Contracts.Events.Privacy:PersonalDataErasureExecutionRequestedV1';
 const docker = process.env.DOCKER_EXE || 'docker';
+const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
+
+function verifyIdentityContainer(config) {
+  const compose = spawnSync(docker, ['compose', 'ps', '-q', 'identity-service'], {
+    cwd: repoRoot, encoding: 'utf8', timeout: 20_000,
+  });
+  if (compose.error || compose.status !== 0 || !compose.stdout.trim()) {
+    throw new Error('Privacy Docker E2E requires a running Compose Identity service.');
+  }
+  const containerId = compose.stdout.trim().split(/\r?\n/)[0];
+  const inspect = spawnSync(docker, ['inspect', '--format', '{{json .Config.Env}}', containerId], {
+    encoding: 'utf8', timeout: 20_000,
+  });
+  if (inspect.error || inspect.status !== 0) {
+    throw new Error('Privacy Docker E2E could not inspect the Identity container.');
+  }
+  requireDisposableContainer(JSON.parse(inspect.stdout), config.ENVIRONMENT);
+}
 
 async function settings() {
   let local = '';
@@ -70,6 +91,7 @@ test('disposable Docker account erasure completes across three product databases
   { timeout: 120_000 }, async () => {
     const config = await settings();
     requireDisposableEnvironment(config);
+    verifyIdentityContainer(config);
     for (const key of ['POSTGRES_USER', 'RABBITMQ_DEFAULT_USER', 'RABBITMQ_DEFAULT_PASS']) {
       assert.ok(config[key], `${key} is required`);
     }
