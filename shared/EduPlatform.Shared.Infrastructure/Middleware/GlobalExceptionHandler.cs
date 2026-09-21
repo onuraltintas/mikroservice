@@ -52,21 +52,37 @@ public class GlobalExceptionHandler : IExceptionHandler
                     "Authorization.", StringComparison.OrdinalIgnoreCase);
                 var isIdempotencyConflict = businessRuleException.Code.Equals(
                     "Idempotency.Conflict", StringComparison.OrdinalIgnoreCase);
+                var isCoachingAgreementRequired = businessRuleException.Code.Equals(
+                    "CoachingAgreement.Required", StringComparison.OrdinalIgnoreCase);
+                var isCoachingAgreementUnavailable = businessRuleException.Code.Equals(
+                    "CoachingAgreement.Unavailable", StringComparison.OrdinalIgnoreCase);
                 problemDetails.Status = isAuthorizationFailure
                     ? StatusCodes.Status403Forbidden
                     : isIdempotencyConflict
                         ? StatusCodes.Status409Conflict
-                    : StatusCodes.Status400BadRequest;
+                        : isCoachingAgreementRequired
+                            ? StatusCodes.Status428PreconditionRequired
+                            : isCoachingAgreementUnavailable
+                                ? StatusCodes.Status503ServiceUnavailable
+                                : StatusCodes.Status400BadRequest;
                 problemDetails.Title = isAuthorizationFailure
                     ? "Forbidden"
                     : isIdempotencyConflict
                         ? "Idempotency Conflict"
-                    : "Business Rule Violation";
+                        : isCoachingAgreementRequired
+                            ? "Precondition Required"
+                            : isCoachingAgreementUnavailable
+                                ? "Service Unavailable"
+                                : "Business Rule Violation";
                 problemDetails.Type = isAuthorizationFailure
                     ? "https://eduplatform.dev/problems/forbidden"
                     : isIdempotencyConflict
                         ? "https://eduplatform.dev/problems/idempotency-conflict"
-                    : "https://eduplatform.dev/problems/business-rule";
+                        : isCoachingAgreementRequired
+                            ? "https://eduplatform.dev/problems/coaching-agreement-required"
+                            : isCoachingAgreementUnavailable
+                                ? "https://eduplatform.dev/problems/coaching-agreement-unavailable"
+                                : "https://eduplatform.dev/problems/business-rule";
                 problemDetails.Detail = businessRuleException.Message;
                 problemDetails.Extensions["code"] = businessRuleException.Code;
                 break;

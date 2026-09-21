@@ -10,6 +10,37 @@ namespace Identity.API.IntegrationTests;
 public sealed class GlobalExceptionHandlerTests
 {
     [Fact]
+    public async Task CoachingAgreementRequired_ShouldReturnPreconditionRequired()
+    {
+        var context = new DefaultHttpContext();
+        context.Response.Body = new MemoryStream();
+
+        var handled = await new GlobalExceptionHandler(NullLogger<GlobalExceptionHandler>.Instance)
+            .TryHandleAsync(
+                context,
+                new BusinessRuleException("CoachingAgreement.Required", "Agreement required."),
+                default);
+
+        handled.Should().BeTrue();
+        context.Response.StatusCode.Should().Be(StatusCodes.Status428PreconditionRequired);
+    }
+
+    [Fact]
+    public async Task CoachingAgreementUnavailable_ShouldReturnServiceUnavailable()
+    {
+        var context = new DefaultHttpContext();
+        context.Response.Body = new MemoryStream();
+
+        await new GlobalExceptionHandler(NullLogger<GlobalExceptionHandler>.Instance)
+            .TryHandleAsync(
+                context,
+                new BusinessRuleException("CoachingAgreement.Unavailable", "Agreement unavailable."),
+                default);
+
+        context.Response.StatusCode.Should().Be(StatusCodes.Status503ServiceUnavailable);
+    }
+
+    [Fact]
     public async Task ValidationException_ShouldReturnProblemDetailsWithCorrelationMetadata()
     {
         var context = new DefaultHttpContext();
