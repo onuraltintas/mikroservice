@@ -12,6 +12,37 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingErasureAssessmentConsumerTests
 {
     [Fact]
+    public async Task Consumer_ShouldIgnoreSpeedReadingOnlyRequest()
+    {
+        var service = new StubAssessmentService(Guid.NewGuid(), Guid.NewGuid());
+        var services = new ServiceCollection();
+        services.AddSingleton<ICoachingErasureAssessmentService>(service);
+        services.AddMassTransitTestHarness(configurator =>
+        {
+            configurator.AddConsumer<PersonalDataErasureAssessmentRequestedConsumer>();
+            configurator.UsingInMemory((context, bus) => bus.ConfigureEndpoints(context));
+        });
+
+        await using var provider = services.BuildServiceProvider();
+        var harness = provider.GetRequiredService<ITestHarness>();
+        await harness.Start();
+        try
+        {
+            await harness.Bus.Publish(new PersonalDataErasureAssessmentRequestedV1(
+                Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow,
+                DryRun: true, Scope: PersonalDataScope.SpeedReading));
+
+            (await harness.Consumed.Any<PersonalDataErasureAssessmentRequestedV1>()).Should().BeTrue();
+            service.CallCount.Should().Be(0);
+            (await harness.Published.Any<PersonalDataErasureAssessmentCompletedV1>()).Should().BeFalse();
+        }
+        finally
+        {
+            await harness.Stop();
+        }
+    }
+
+    [Fact]
     public async Task Consumer_ShouldPublishCoachingDryRunResult()
     {
         var requestId = Guid.NewGuid();
@@ -53,10 +84,14 @@ public sealed class CoachingErasureAssessmentConsumerTests
     private sealed class StubAssessmentService(Guid requestId, Guid studentId)
         : ICoachingErasureAssessmentService
     {
+        public int CallCount { get; private set; }
+
         public Task<CoachingErasureAssessment> AssessAsync(
             PersonalDataErasureAssessmentRequestedV1 message,
-            CancellationToken cancellationToken) =>
-            Task.FromResult(CoachingErasureAssessment.Create(
+            CancellationToken cancellationToken)
+        {
+            CallCount++;
+            return Task.FromResult(CoachingErasureAssessment.Create(
                 requestId, studentId, true, false,
                 assignmentCount: 1,
                 attachmentCount: 0,
@@ -65,5 +100,6 @@ public sealed class CoachingErasureAssessmentConsumerTests
                 sessionCount: 4,
                 agreementCount: 1,
                 DateTime.UtcNow));
+        }
     }
 }
