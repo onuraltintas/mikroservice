@@ -31,6 +31,12 @@ import {
           {{ selected.assessment.isReadyForErasure ? 'Silmeye hazır' : selected.assessment.hasBlockingLegalHold ? 'Hukuki saklama nedeniyle engelli' : 'Değerlendirme tamamlanmadı' }}
         </p>
         <p class="mt-1 text-sm">Etkilenen toplam kayıt: {{ selected.assessment.totalRecordCount }}</p>
+        @if (selected.request.status === 'Approved' && selected.assessment.isReadyForErasure) {
+          <button class="mt-3 rounded bg-red-700 px-3 py-2 text-white disabled:opacity-60"
+            [disabled]="executing()" (click)="executeErasure(selected)">
+            {{ executing() ? 'Silme başlatılıyor…' : 'Silmeyi başlat (geri alınamaz)' }}
+          </button>
+        }
         @if (selected.assessment.missingServices.length) { <p class="mt-2 text-amber-800">Yanıt beklenen servisler: {{ selected.assessment.missingServices.join(', ') }}</p> }
         <ul class="mt-4 space-y-2">@for (service of selected.assessment.services; track service.serviceName) { <li class="rounded bg-gray-50 p-3"><strong>{{ service.serviceName }}</strong> — {{ service.totalRecordCount }} kayıt — {{ service.hasActiveLegalHold ? 'Hukuki saklama var' : service.canProceed ? 'İşleme uygun' : 'Engelli' }}
           @if (recordCountEntries(service.recordCounts).length) { <ul class="mt-2 list-disc pl-5 text-xs text-gray-700">@for (entry of recordCountEntries(service.recordCounts); track entry[0]) { <li>{{ entry[0] }}: {{ entry[1] }}</li> }</ul> }
@@ -43,6 +49,7 @@ export class PrivacyRequestsComponent implements OnInit {
   readonly items = signal<DataSubjectRequestDto[]>([]);
   readonly detail = signal<DataSubjectRequestReviewDetailDto | null>(null);
   readonly loading = signal(false);
+  readonly executing = signal(false);
   readonly error = signal('');
 
   scopeLabel(scope: PersonalDataScope): string {
@@ -51,6 +58,16 @@ export class PrivacyRequestsComponent implements OnInit {
 
   recordCountEntries(recordCounts: Record<string, number>): [string, number][] {
     return Object.entries(recordCounts).sort(([left], [right]) => left.localeCompare(right));
+  }
+
+  executeErasure(selected: DataSubjectRequestReviewDetailDto): void {
+    this.executing.set(true); this.error.set('');
+    this.identity.executeDataSubjectRequestErasure(selected.request.id)
+      .pipe(finalize(() => this.executing.set(false)))
+      .subscribe({
+        next: request => this.detail.update(current => current ? { ...current, request } : current),
+        error: error => this.error.set(getAdminErrorMessage(error, 'Silme işlemi başlatılamadı.'))
+      });
   }
 
   ngOnInit(): void { this.load(); }

@@ -231,6 +231,12 @@ export class IdentityService {
             `${this.dataSubjectRequestsUrl}/admin/${encodeURIComponent(requestId)}`);
     }
 
+    executeDataSubjectRequestErasure(requestId: string) {
+        return this.http.post<DataSubjectRequestDto>(
+            `${this.dataSubjectRequestsUrl}/${encodeURIComponent(requestId)}/execute-erasure`,
+            {});
+    }
+
     getAllUsers(page: number, pageSize: number, search: string = '', role?: string, isActive?: boolean) {
         let params = new HttpParams()
             .set('page', page)
