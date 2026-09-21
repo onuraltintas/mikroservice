@@ -32,7 +32,7 @@ public sealed class DistributedRateLimitingMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        var rule = GetRule(context.Request.Path);
+        var rule = GetRule(context.Request);
         if (rule is null)
         {
             await _next(context);
@@ -70,8 +70,10 @@ public sealed class DistributedRateLimitingMiddleware
         await _next(context);
     }
 
-    private static RateLimitRule? GetRule(PathString path)
+    private static RateLimitRule? GetRule(HttpRequest request)
     {
+        var path = request.Path;
+
         if (path.StartsWithSegments("/api/auth"))
         {
             return new RateLimitRule("auth", PermitLimit: 30, TimeSpan.FromMinutes(1));
@@ -88,7 +90,8 @@ public sealed class DistributedRateLimitingMiddleware
             return new RateLimitRule("speed-reading-public-write", PermitLimit: 8, TimeSpan.FromMinutes(10));
         }
 
-        if (string.Equals(path.Value, "/api/speed-reading/bank-transfer/requests", StringComparison.OrdinalIgnoreCase))
+        if (HttpMethods.IsPost(request.Method)
+            && string.Equals(path.Value, "/api/speed-reading/bank-transfer/requests", StringComparison.OrdinalIgnoreCase))
         {
             return new RateLimitRule("bank-transfer-request", PermitLimit: 5, TimeSpan.FromMinutes(10));
         }

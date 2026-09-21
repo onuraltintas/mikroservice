@@ -36,6 +36,34 @@ public sealed class DistributedRateLimitingMiddlewareTests
         connectionResolved.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task BankTransferRequestList_ShouldNotUsePublicSubmissionRateLimit()
+    {
+        var connectionResolved = false;
+        var redis = new Lazy<IConnectionMultiplexer>(() =>
+        {
+            connectionResolved = true;
+            throw new RedisConnectionException(ConnectionFailureType.UnableToConnect, "Redis is unavailable");
+        });
+        var nextCalled = false;
+        var middleware = new DistributedRateLimitingMiddleware(
+            _ =>
+            {
+                nextCalled = true;
+                return Task.CompletedTask;
+            },
+            redis,
+            NullLogger<DistributedRateLimitingMiddleware>.Instance);
+        var context = new DefaultHttpContext();
+        context.Request.Method = HttpMethods.Get;
+        context.Request.Path = "/api/speed-reading/bank-transfer/requests";
+
+        await middleware.InvokeAsync(context);
+
+        nextCalled.Should().BeTrue();
+        connectionResolved.Should().BeFalse();
+    }
+
     [Theory]
     [InlineData("/api/auth/login")]
     [InlineData("/api/speed-reading/cms/contact")]
@@ -59,6 +87,7 @@ public sealed class DistributedRateLimitingMiddlewareTests
             redis,
             NullLogger<DistributedRateLimitingMiddleware>.Instance);
         var context = new DefaultHttpContext();
+        context.Request.Method = HttpMethods.Post;
         context.Request.Path = path;
 
         await middleware.InvokeAsync(context);
