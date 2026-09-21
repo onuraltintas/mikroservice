@@ -35,6 +35,10 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
 - Koçluk export repository'si için izole EF veritabanında iki öğrencinin
   hedefleriyle veri ayrımı regresyon testi geçti (ilgili test sınıfı 4/4).
   Bu, gerçek PostgreSQL veya uçtan uca HTTP yetkilendirme kanıtı değildir.
+- Veri dışa aktarma isteğinin, koçluk sözleşmesi yokken genel işlem kapısında
+  engellendiği RED testle doğrulandı. Yalnız bu istek kapıdan muaf tutuldu;
+  öğrencilik ve Identity erişim kontrolleri korundu. İlgili 11 test geçti.
+  Çalışan servis üzerinden HTTP doğrulaması hâlâ gerekli.
 
 ## Kapsam ölçümü
 
