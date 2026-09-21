@@ -24,6 +24,10 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
 - Yönetim paneli testleri: 181/181 başarılı; production browser/SSR build'i
   tamamlandı. Build'de Hızlı Okuma katalog stil bütçesi uyarısı var; Koçluk
   doğrulaması adına bu ayrı platformun değişikliklerine dokunulmadı.
+- Coaching.API Release `--warnaserror` derlemesi 0 uyarı/0 hata; EF
+  `has-pending-model-changes` sonucu değişiklik yok; `dotnet list package
+  --vulnerable --include-transitive` taramasında Koçluk API'si için raporlanan
+  NuGet güvenlik açığı yok. Bu, dış pentest veya container imaj taraması değildir.
 
 ## Kapsam ölçümü
 
