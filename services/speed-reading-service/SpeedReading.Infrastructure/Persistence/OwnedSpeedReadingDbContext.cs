@@ -66,6 +66,7 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<AssessmentLevelCatalog> AssessmentLevelCatalogs => Set<AssessmentLevelCatalog>();
     public DbSet<AssessmentStudyDefinition> AssessmentStudyDefinitions => Set<AssessmentStudyDefinition>();
     public DbSet<AssessmentStudyEnrollment> AssessmentStudyEnrollments => Set<AssessmentStudyEnrollment>();
+    public DbSet<SpeedReadingErasureExecutionReceipt> ErasureExecutions => Set<SpeedReadingErasureExecutionReceipt>();
     internal DbSet<LegacyUserContentFeedback> ContentFeedbacks => Set<LegacyUserContentFeedback>();
     internal DbSet<LegacyStudentLearningProfile> AdaptiveLearningProfiles => Set<LegacyStudentLearningProfile>();
     internal DbSet<LegacyContentRecommendation> AdaptiveContentRecommendations => Set<LegacyContentRecommendation>();
@@ -110,6 +111,14 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.AddInboxStateEntity();
         modelBuilder.AddOutboxMessageEntity();
         modelBuilder.AddOutboxStateEntity();
+
+        modelBuilder.Entity<SpeedReadingErasureExecutionReceipt>(entity =>
+        {
+            entity.ToTable("privacy_erasure_executions");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.RequestId).IsUnique();
+            entity.HasIndex(item => item.CompletedAt);
+        });
 
         ConfigureEntity(modelBuilder.Entity<Exercise>());
         ConfigureEntity(modelBuilder.Entity<ExerciseTypeCategory>());

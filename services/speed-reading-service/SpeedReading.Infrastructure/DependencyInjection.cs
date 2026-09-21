@@ -63,6 +63,7 @@ public static class DependencyInjection
         services.AddScoped<OwnedSpeedReadingContentAudit>();
         services.AddScoped<ISpeedReadingPrivacyInventoryRepository, SpeedReadingPrivacyInventoryRepository>();
         services.AddScoped<ISpeedReadingErasureAssessmentService, SpeedReadingErasureAssessmentService>();
+        services.AddScoped<ISpeedReadingErasureExecutionService, SpeedReadingErasureExecutionService>();
         services.AddSingleton(TimeProvider.System);
 
         services.AddMemoryCache(options => options.SizeLimit = 4_096);

@@ -31,7 +31,7 @@ public sealed class SpeedReadingErasureExecutionServiceTests
         replay.Id.Should().Be(first.Id);
         (await context.UserProfiles.CountAsync(profile => profile.UserId == subjectId)).Should().Be(0);
         (await context.UserProfiles.CountAsync(profile => profile.UserId == otherUserId)).Should().Be(1);
-        (await context.Set<SpeedReadingErasureExecution>().CountAsync()).Should().Be(1);
+        (await context.ErasureExecutions.CountAsync()).Should().Be(1);
     }
 
     [Fact]
