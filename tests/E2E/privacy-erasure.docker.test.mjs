@@ -16,7 +16,7 @@ const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 function verifyContainers(config) {
   requireDisposableEnvironment(config);
   assert.match(config.COMPOSE_PROJECT_NAME || '', /^privacy-e2e-[a-z0-9-]+$/);
-  for (const service of ['identity-service', 'rabbitmq']) {
+  for (const service of ['identity-service', 'rabbitmq', 'minio']) {
     const compose = spawnSync(docker, ['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE,
       'ps', '-q', service], { cwd: repoRoot, encoding: 'utf8', timeout: 20_000 });
     if (compose.error || compose.status !== 0 || !compose.stdout.trim()) {
@@ -33,11 +33,20 @@ function verifyContainers(config) {
     assert.equal(container.Config.Labels['com.docker.compose.project'], config.COMPOSE_PROJECT_NAME);
     if (service === 'identity-service') {
       requireDisposableContainer(container.Config.Env, config.ENVIRONMENT);
-    } else {
+    } else if (service === 'rabbitmq') {
       const port = String(config.E2E_RABBITMQ_MANAGEMENT_PORT || 15672);
       assert.ok(container.NetworkSettings.Ports['15672/tcp']?.some(binding => binding.HostPort === port),
         'RabbitMQ management port must belong to the disposable Compose broker');
     }
+  }
+}
+
+function compose(config, args) {
+  const result = spawnSync(docker, ['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE, ...args], {
+    cwd: repoRoot, encoding: 'utf8', timeout: 25_000,
+  });
+  if (result.error || result.status !== 0) {
+    throw new Error(`Disposable Compose operation failed: ${result.stderr?.trim() || result.error?.message}`);
   }
 }
 
@@ -83,41 +92,52 @@ function requireMinio(config, args, input) {
 async function publish(config, contract, message, requestId) {
   const envelope = createMassTransitEnvelope(contract, message, requestId);
   const credentials = Buffer.from(`${config.RABBITMQ_DEFAULT_USER}:${config.RABBITMQ_DEFAULT_PASS}`).toString('base64');
-  const response = await fetch(`http://127.0.0.1:${config.E2E_RABBITMQ_MANAGEMENT_PORT || 15672}/api/exchanges/%2F/${encodeURIComponent(contract)}/publish`, {
-    method: 'POST',
-    headers: { authorization: `Basic ${credentials}`, 'content-type': 'application/json' },
-    body: JSON.stringify({
-      properties: { delivery_mode: 2, content_type: 'application/vnd.masstransit+json', headers: {} },
-      routing_key: '',
-      payload: JSON.stringify(envelope),
-      payload_encoding: 'string',
-    }),
-    signal: AbortSignal.timeout(10_000),
-  });
-  if (!response.ok || !(await response.json()).routed) {
-    throw new Error(`RabbitMQ did not route ${contract}.`);
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const response = await fetch(`http://127.0.0.1:${config.E2E_RABBITMQ_MANAGEMENT_PORT || 15672}/api/exchanges/%2F/${encodeURIComponent(contract)}/publish`, {
+        method: 'POST',
+        headers: { authorization: `Basic ${credentials}`, 'content-type': 'application/json', connection: 'close' },
+        body: JSON.stringify({
+          properties: { delivery_mode: 2, content_type: 'application/vnd.masstransit+json', headers: {} },
+          routing_key: '',
+          payload: JSON.stringify(envelope),
+          payload_encoding: 'string',
+        }),
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!response.ok || !(await response.json()).routed) {
+        throw new Error(`RabbitMQ did not route ${contract}.`);
+      }
+      return envelope.messageId;
+    } catch (error) {
+      if (attempt === 2) throw error;
+      await new Promise(resolve => setTimeout(resolve, 250));
+    }
   }
-  return envelope.messageId;
 }
 
 async function consumersReady(config) {
   const credentials = Buffer.from(`${config.RABBITMQ_DEFAULT_USER}:${config.RABBITMQ_DEFAULT_PASS}`).toString('base64');
-  const response = await fetch(`http://127.0.0.1:${config.E2E_RABBITMQ_MANAGEMENT_PORT || 15672}/api/queues/%2F`, {
-    headers: { authorization: `Basic ${credentials}` },
-    signal: AbortSignal.timeout(10_000),
-  });
-  if (!response.ok) return 'false';
-  const queues = new Map((await response.json()).map(queue => [queue.name, queue.state]));
-  return [
-    'PersonalDataErasureAssessmentRequested',
-    'PersonalDataErasureAssessmentCompleted',
-    'PersonalDataErasureExecutionRequested',
-    'PersonalDataErasureExecutionCompleted',
-    'SpeedReadingErasureAssessmentRequested',
-    'SpeedReadingErasureExecutionRequested',
-    'notification-privacy-erasure-assessment',
-    'notification-privacy-erasure-execution',
-  ].every(name => queues.get(name) === 'running').toString();
+  try {
+    const response = await fetch(`http://127.0.0.1:${config.E2E_RABBITMQ_MANAGEMENT_PORT || 15672}/api/queues/%2F`, {
+      headers: { authorization: `Basic ${credentials}`, connection: 'close' },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) return 'false';
+    const queues = new Map((await response.json()).map(queue => [queue.name, queue.state]));
+    return [
+      'PersonalDataErasureAssessmentRequested',
+      'PersonalDataErasureAssessmentCompleted',
+      'PersonalDataErasureExecutionRequested',
+      'PersonalDataErasureExecutionCompleted',
+      'SpeedReadingErasureAssessmentRequested',
+      'SpeedReadingErasureExecutionRequested',
+      'notification-privacy-erasure-assessment',
+      'notification-privacy-erasure-execution',
+    ].every(name => queues.get(name) === 'running').toString();
+  } catch {
+    return 'false';
+  }
 }
 
 async function eventually(read, expected, label) {
@@ -218,7 +238,21 @@ test('disposable Docker account erasure completes across three product databases
       eventId: randomUUID(), requestId, subjectUserId: userId,
       authorizedAt: new Date().toISOString(), scope: 1, schemaVersion: '1.0',
     };
-    await publish(config, executionContract, execution, requestId);
+    compose(config, ['stop', 'minio']);
+    try {
+      await publish(config, executionContract, execution, requestId);
+      await new Promise(resolve => setTimeout(resolve, 2_000));
+      assert.equal(sql(config, identityDb, `SELECT "Status" FROM identity."DataSubjectRequests"
+        WHERE "Id"='${requestId}';`), 'Processing');
+      assert.equal(sql(config, coachingDb, `SELECT count(*) FROM coaching.assignment_submission_attachments
+        WHERE id='${attachmentId}';`), '1');
+      assert.equal(sql(config, coachingDb, `SELECT count(*) FROM coaching."CoachingErasureExecutions"
+        WHERE "RequestId"='${requestId}';`), '0');
+    } finally {
+      compose(config, ['start', 'minio']);
+    }
+    await eventually(async () => String(minio(config, ['stat',
+      `privacy-e2e/${bucket}/${otherStorageKey}`]).status === 0), 'true', 'MinIO recovery');
     await eventually(() => sql(config, identityDb, `SELECT "Status" FROM identity."DataSubjectRequests"
       WHERE "Id"='${requestId}';`), 'Completed', 'Identity erasure request');
 

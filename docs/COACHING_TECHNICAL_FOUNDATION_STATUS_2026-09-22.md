@@ -15,6 +15,13 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
   de siliniyor; aynı kovadaki ilgisiz nesne korunuyor. Güncel yerel dağıtık
   gizlilik dosyasının iki testi yeniden geçti. Bu, gerçek VPS/staging nesne
   depolama doğrulaması değildir.
+- Aynı disposable yığında MinIO, silme olayı yayımlanırken durduruldu.
+  Identity talebi `Processing` kaldı; Koçluk eki korunurken execution kaydı
+  oluşmadı. Koçluk logunda `R-RETRY` ve `minio:9000` bağlantı
+  hatası gözlendi. MinIO başlayınca talep `Completed` oldu, nesne ve DB
+  kaydı silindi, ilgisiz nesne korundu. Tam gizlilik dosyası 2/2 geçti.
+  Bu kısa yerel kesinti provası, staging toparlanma süresi veya uzun süreli
+  kesintiden sonra otomatik alarm kanıtı değildir.
 - Koçluk silme servisi hata enjeksiyon testinde nesne depolama silmesi
   başarısız olunca öğrenci verileri ve değerlendirme korundu, tamamlanma
   kaydı oluşmadı; aynı talep depolama düzeldikten sonra başarılı oldu.
