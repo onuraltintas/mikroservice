@@ -11,9 +11,10 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
 - Disposable Docker veri gizliliği E2E: Identity, Coaching, Notification ve
   Speed Reading ayrı veritabanlarındaki hesap silme, tekrar teslim tekilliği
   ve aktif legal hold altında silmeme; 5 test başarılı.
-- İzole MinIO container'lı entegrasyon testi: Coaching silme servisi DB ek
-  kaydını ve gerçek nesneyi kaldırdı. Bu, staging'deki tam dağıtık zincirin
-  yerine geçmez.
+- İzole MinIO container'lı entegrasyon testi: dosya gerçekten yüklendi ve
+  geri okundu; Coaching silme servisi DB ek kaydını ve gerçek nesneyi kaldırdı.
+  Güncel çalışma ağacında ilgili 4 test tekrar geçti. Bu, staging'deki tam
+  dağıtık zincirin yerine geçmez.
 - MinIO imajının mevcut Docker Hub adresi çekilemedi; aynı sabit sürümün resmi
   Quay adresi indirildi. Compose adresi düzeltildi ve config kontrolü geçti.
 - CI, .NET 10 SDK ile `net10.0` projelerini derleyecek şekilde eşitlendi.
@@ -68,6 +69,13 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
   Test geçti; CI gizlilik işine diğer kesinti testinden sonraki ayrı adımda
   eklendi. Bu, kısa süreli kesinti için teslim kanıtıdır; uzun süreli yük,
   tekrar deneme alarmı veya gerçek staging toparlanma süresi kanıtı değildir.
+- Ayrı `privacy-e2e-local-attachment` Docker projesinde Gateway → Koçluk →
+  Identity → PostgreSQL → MinIO üzerinden sentetik öğrenci dosyası oluşturma,
+  yükleme ve indirme geçti. Tarama öncesi okuma 409, başka öğrencinin okuması
+  403; taranıp temiz işaretlenen dosyanın baytları sahibine doğru döndü.
+  CI gizlilik işine eklendi. Testte Development tarayıcı adaptörü kullanıldı;
+  ClamAV'li production/staging taraması ve dağıtık silme zinciri bu HTTP
+  testinin kapsamı değildir. MinIO yalnız disposable test ortamındaydı.
 
 ## Kapsam ölçümü
 
@@ -86,8 +94,8 @@ genel %80 kapsam hedefini kanıtlamaz.
    koç/yönetici kurum sınırları, diğer olay tüketicileri ve gerçek operasyonel
    toparlanma ölçümleri.
 2. Kullanıcının kendi VPS'inde çalışacak, güvenlik bakımından desteklenen S3
-   uyumlu depoda gerçek yükle–oku–sil ve staging'deki broker + PostgreSQL +
-   nesne depolama zinciri; erişim, TLS, bucket yetkileri, kimlik bilgisi
+   uyumlu depoda ve staging'deki broker + PostgreSQL + nesne depolama zincirinde
+   gerçek yükle–oku–sil; erişim, TLS, bucket yetkileri, kimlik bilgisi
    rotasyonu, mevcut nesnelerin taşınması ve VPS dışı yedek onayı. Garage bir
    adaydır; canlı MinIO değişimi henüz onaylanıp yapılmadı.
 3. CI işinin GitHub Actions'ta yeşil çalıştığına dair kayıt. Yerel YAML ve
