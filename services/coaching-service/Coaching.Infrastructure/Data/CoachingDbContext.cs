@@ -28,6 +28,8 @@ public class CoachingDbContext : DbContext
     public DbSet<CoachingSession> CoachingSessions => Set<CoachingSession>();
     public DbSet<SessionAttendance> SessionAttendances => Set<SessionAttendance>();
     public DbSet<AcademicGoal> AcademicGoals => Set<AcademicGoal>();
+    public DbSet<CoachingAgreementDocument> CoachingAgreementDocuments => Set<CoachingAgreementDocument>();
+    public DbSet<CoachingAgreementAcknowledgement> CoachingAgreementAcknowledgements => Set<CoachingAgreementAcknowledgement>();
     public DbSet<AdminAuditRecord> AdminAuditRecords => Set<AdminAuditRecord>();
     public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
 

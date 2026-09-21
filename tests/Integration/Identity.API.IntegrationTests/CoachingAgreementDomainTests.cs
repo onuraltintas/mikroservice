@@ -20,7 +20,8 @@ public sealed class CoachingAgreementDomainTests
             "Öğrenci Koçluk Anlaşması",
             "https://legal.example.test/coaching/2026.1",
             ContentSha256,
-            effectiveAt);
+            effectiveAt,
+            Guid.NewGuid());
 
         document.DocumentVersion.Should().Be("2026.1");
         document.Locale.Should().Be("tr-TR");
@@ -41,7 +42,8 @@ public sealed class CoachingAgreementDomainTests
             "Öğrenci Koçluk Anlaşması",
             "https://legal.example.test/coaching/2026.1",
             contentSha256,
-            DateTime.UtcNow);
+            DateTime.UtcNow,
+            Guid.NewGuid());
 
         action.Should().Throw<ArgumentException>();
     }

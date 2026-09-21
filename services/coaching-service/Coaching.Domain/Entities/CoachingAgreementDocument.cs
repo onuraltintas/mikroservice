@@ -15,6 +15,7 @@ public sealed class CoachingAgreementDocument : AggregateRoot
     public string Title { get; private set; } = string.Empty;
     public string DocumentReference { get; private set; } = string.Empty;
     public string ContentSha256 { get; private set; } = string.Empty;
+    public Guid PublishedByUserId { get; private set; }
     public DateTime EffectiveAt { get; private set; }
     public DateTime PublishedAt { get; private set; }
     public DateTime? SupersededAt { get; private set; }
@@ -28,6 +29,7 @@ public sealed class CoachingAgreementDocument : AggregateRoot
         string documentReference,
         string contentSha256,
         DateTime effectiveAt,
+        Guid publishedByUserId,
         Guid? institutionId = null)
     {
         ValidateRequired(version, nameof(version), 100);
@@ -36,6 +38,8 @@ public sealed class CoachingAgreementDocument : AggregateRoot
         ValidateHttpsReference(documentReference);
         ValidateSha256(contentSha256);
         ValidateUtc(effectiveAt, nameof(effectiveAt));
+        if (publishedByUserId == Guid.Empty)
+            throw new ArgumentException("Publishing user is required.", nameof(publishedByUserId));
 
         return new CoachingAgreementDocument
         {
@@ -45,6 +49,7 @@ public sealed class CoachingAgreementDocument : AggregateRoot
             Title = title.Trim(),
             DocumentReference = documentReference.Trim(),
             ContentSha256 = contentSha256,
+            PublishedByUserId = publishedByUserId,
             EffectiveAt = effectiveAt,
             PublishedAt = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow

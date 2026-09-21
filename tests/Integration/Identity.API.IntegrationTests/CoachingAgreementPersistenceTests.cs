@@ -18,7 +18,8 @@ public sealed class CoachingAgreementPersistenceTests
             "Öğrenci Koçluk Anlaşması",
             "https://legal.example.test/coaching/2026.1",
             "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-            DateTime.UtcNow);
+            DateTime.UtcNow,
+            Guid.NewGuid());
         var acknowledgement = CoachingAgreementAcknowledgement.Create(
             document.Id,
             studentId,
