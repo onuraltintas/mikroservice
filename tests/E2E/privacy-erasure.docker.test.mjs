@@ -77,10 +77,30 @@ async function publish(config, contract, message, requestId) {
   return envelope.messageId;
 }
 
+async function consumersReady(config) {
+  const credentials = Buffer.from(`${config.RABBITMQ_DEFAULT_USER}:${config.RABBITMQ_DEFAULT_PASS}`).toString('base64');
+  const response = await fetch('http://127.0.0.1:15672/api/queues/%2F', {
+    headers: { authorization: `Basic ${credentials}` },
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!response.ok) return 'false';
+  const queues = new Map((await response.json()).map(queue => [queue.name, queue.state]));
+  return [
+    'PersonalDataErasureAssessmentRequested',
+    'PersonalDataErasureAssessmentCompleted',
+    'PersonalDataErasureExecutionRequested',
+    'PersonalDataErasureExecutionCompleted',
+    'SpeedReadingErasureAssessmentRequested',
+    'SpeedReadingErasureExecutionRequested',
+    'notification-privacy-erasure-assessment',
+    'notification-privacy-erasure-execution',
+  ].every(name => queues.get(name) === 'running').toString();
+}
+
 async function eventually(read, expected, label) {
   const deadline = Date.now() + 45_000;
   while (Date.now() < deadline) {
-    const actual = read();
+    const actual = await read();
     if (actual === expected) return;
     await new Promise(resolve => setTimeout(resolve, 300));
   }
@@ -95,6 +115,7 @@ test('disposable Docker account erasure completes across three product databases
     for (const key of ['POSTGRES_USER', 'RABBITMQ_DEFAULT_USER', 'RABBITMQ_DEFAULT_PASS']) {
       assert.ok(config[key], `${key} is required`);
     }
+    await eventually(() => consumersReady(config), 'true', 'privacy consumers');
     const identityDb = config.POSTGRES_DB_IDENTITY || 'identity_db';
     const coachingDb = config.POSTGRES_DB_COACHING || 'coaching_db';
     const notificationDb = config.POSTGRES_DB_NOTIFICATION || 'notification_db';
