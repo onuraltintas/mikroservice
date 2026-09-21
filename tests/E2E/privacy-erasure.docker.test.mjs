@@ -14,7 +14,7 @@ const docker = process.env.DOCKER_EXE || 'docker';
 const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 
 function verifyIdentityContainer(config) {
-  const compose = spawnSync(docker, ['compose', 'ps', '-q', 'identity-service'], {
+  const compose = spawnSync(docker, ['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE || '.env', 'ps', '-q', 'identity-service'], {
     cwd: repoRoot, encoding: 'utf8', timeout: 20_000,
   });
   if (compose.error || compose.status !== 0 || !compose.stdout.trim()) {
@@ -48,9 +48,10 @@ async function settings() {
 
 function sql(config, database, statement) {
   const result = spawnSync(docker, [
-    'exec', '-i', 'postgres', 'psql', '-X', '-v', 'ON_ERROR_STOP=1',
+    'compose', '--env-file', config.E2E_COMPOSE_ENV_FILE || '.env', 'exec', '-T', 'postgres',
+    'psql', '-X', '-v', 'ON_ERROR_STOP=1',
     '-U', config.POSTGRES_USER, '-d', database, '-At',
-  ], { input: `${statement}\n`, encoding: 'utf8', timeout: 20_000 });
+  ], { cwd: repoRoot, input: `${statement}\n`, encoding: 'utf8', timeout: 20_000 });
   if (result.error || result.status !== 0) {
     throw new Error(`PostgreSQL E2E query failed in ${database}: ${result.stderr?.trim() || result.error?.message}`);
   }

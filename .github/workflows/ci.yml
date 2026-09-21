@@ -186,6 +186,45 @@ jobs:
             tests/Unit/SpeedReading.Application.UnitTests/TestResults/
           if-no-files-found: warn
 
+  privacy-erasure-e2e:
+    name: Distributed privacy erasure E2E
+    runs-on: ubuntu-latest
+    needs: [source-safety]
+    timeout-minutes: 25
+    env:
+      COMPOSE_PROJECT_NAME: privacy-e2e-ci
+      E2E_COMPOSE_ENV_FILE: .env.example
+      E2E_DISPOSABLE_ENV: 'true'
+      ENVIRONMENT: Development
+      POSTGRES_USER: eduplatform
+      POSTGRES_PASSWORD: ci-disposable-postgres-012345678901234567890123
+      RABBITMQ_DEFAULT_USER: eduplatform
+      RABBITMQ_DEFAULT_PASS: ci-disposable-rabbit-012345678901234567890123
+      REDIS_PASSWORD: ci-disposable-redis-012345678901234567890123
+      SPEED_READING_OWNED_CONNECTION_STRING: Host=postgres;Port=5432;Database=speedreading_owned_db;Username=eduplatform;Password=ci-disposable-postgres-012345678901234567890123
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+
+      - name: Start disposable service stack
+        run: docker compose --env-file .env.example --profile speed-reading up -d --build identity-service coaching-service notification-service speed-reading-service
+
+      - name: Verify distributed erasure and replay idempotency
+        run: node --test tests/E2E/support/privacy-docker.test.mjs tests/E2E/privacy-erasure.docker.test.mjs
+
+      - name: Preserve service logs on failure
+        if: failure()
+        run: docker compose --env-file .env.example --profile speed-reading logs --no-color --tail 100 identity-service coaching-service notification-service speed-reading-service
+
+      - name: Remove disposable CI stack
+        if: always()
+        run: docker compose --env-file .env.example --profile speed-reading down -v --remove-orphans
+
   migration-drift:
     name: EF migration drift
     runs-on: ubuntu-latest
