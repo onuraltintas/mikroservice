@@ -83,6 +83,7 @@ public sealed record DataSubjectRequestAssessmentItemDto(
     int GoalCount,
     int SessionCount,
     int AgreementCount,
+    IReadOnlyDictionary<string, int> RecordCounts,
     int TotalRecordCount,
     DateTime AssessedAt)
 {
@@ -96,6 +97,7 @@ public sealed record DataSubjectRequestAssessmentItemDto(
         result.GoalCount,
         result.SessionCount,
         result.AgreementCount,
+        result.RecordCounts,
         result.TotalRecordCount,
         result.AssessedAt);
 }

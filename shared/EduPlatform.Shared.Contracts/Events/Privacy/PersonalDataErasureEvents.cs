@@ -30,4 +30,5 @@ public sealed record PersonalDataErasureAssessmentCompletedV1(
     int SessionCount,
     int AgreementCount,
     DateTime AssessedAt,
+    IReadOnlyDictionary<string, int>? RecordCounts = null,
     string SchemaVersion = "1.0");
