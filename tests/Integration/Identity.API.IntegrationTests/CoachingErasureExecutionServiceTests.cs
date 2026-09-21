@@ -59,6 +59,44 @@ public sealed class CoachingErasureExecutionServiceTests
     }
 
     [Fact]
+    public async Task Execute_ShouldPreserveRecordsAndAllowRetryWhenAttachmentStorageFails()
+    {
+        await using var context = CreateContext();
+        var subjectId = Guid.NewGuid();
+        var assignment = Assignment.Create(Guid.NewGuid(), "Korunacak ödev", DateTime.UtcNow.AddDays(1));
+        assignment.AssignToStudent(subjectId);
+        assignment.AssignedStudents.Single().AddSubmissionAttachment(
+            "coaching/retry-file.pdf", "ödev.pdf", "application/pdf", 128, new string('a', 64));
+        context.Assignments.Add(assignment);
+        context.AcademicGoals.Add(AcademicGoal.Create(subjectId, "Korunacak hedef", GoalCategory.SubjectMastery));
+        await context.SaveChangesAsync();
+        var request = Request(subjectId);
+        await new CoachingErasureAssessmentService(context, TimeProvider.System)
+            .AssessAsync(AssessmentRequest(request), CancellationToken.None);
+        var storage = new StubAttachmentStorage { FailDelete = true };
+        var service = new CoachingErasureExecutionService(context, storage, TimeProvider.System);
+
+        var action = () => service.ExecuteAsync(request, CancellationToken.None);
+
+        await action.Should().ThrowAsync<IOException>();
+        (await context.AssignmentStudents.CountAsync(row => row.StudentId == subjectId)).Should().Be(1);
+        (await context.AssignmentSubmissionAttachments.CountAsync()).Should().Be(1);
+        (await context.AcademicGoals.CountAsync(goal => goal.StudentId == subjectId)).Should().Be(1);
+        (await context.CoachingErasureExecutions.CountAsync()).Should().Be(0);
+        (await context.CoachingErasureAssessments.CountAsync()).Should().Be(1);
+
+        storage.FailDelete = false;
+        var completed = await service.ExecuteAsync(request, CancellationToken.None);
+
+        completed.DeletedRecordCount.Should().Be(3);
+        storage.DeletedKeys.Should().Equal("coaching/retry-file.pdf");
+        (await context.AssignmentStudents.CountAsync(row => row.StudentId == subjectId)).Should().Be(0);
+        (await context.AssignmentSubmissionAttachments.CountAsync()).Should().Be(0);
+        (await context.AcademicGoals.CountAsync(goal => goal.StudentId == subjectId)).Should().Be(0);
+        (await context.CoachingErasureExecutions.CountAsync()).Should().Be(1);
+    }
+
+    [Fact]
     public async Task Execute_ShouldRecheckLegalHoldImmediatelyBeforeDeletion()
     {
         await using var context = CreateContext();
@@ -104,6 +142,7 @@ public sealed class CoachingErasureExecutionServiceTests
     private sealed class StubAttachmentStorage : IAssignmentAttachmentStorage
     {
         public List<string> DeletedKeys { get; } = [];
+        public bool FailDelete { get; set; }
 
         public Task<AssignmentAttachmentUploadTicket> CreateUploadTicketAsync(
             Guid assignmentId, Guid studentId, Guid attachmentId, CancellationToken cancellationToken = default) =>
@@ -119,6 +158,8 @@ public sealed class CoachingErasureExecutionServiceTests
 
         public Task DeleteAsync(string storageKey, CancellationToken cancellationToken = default)
         {
+            if (FailDelete)
+                throw new IOException("Disposable object storage is unavailable.");
             DeletedKeys.Add(storageKey);
             return Task.CompletedTask;
         }

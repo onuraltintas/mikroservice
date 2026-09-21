@@ -6,7 +6,7 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
 ## Doğrulanmış
 
 - `dotnet test tests/Integration/Identity.API.IntegrationTests/Identity.API.IntegrationTests.csproj
-  --configuration Release`: 611 başarılı, 0 başarısız. Gateway'in çalışan
+  --configuration Release`: 614 başarılı, 0 başarısız. Gateway'in çalışan
   process gerektiren 2 testi bu koşuda atlandı; ayrı smoke kapısı CI'de var.
 - Disposable Docker veri gizliliği E2E: Identity, Coaching, Notification ve
   Speed Reading ayrı veritabanlarındaki hesap silme, tekrar teslim tekilliği
@@ -15,6 +15,11 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
   de siliniyor; aynı kovadaki ilgisiz nesne korunuyor. Güncel yerel dağıtık
   gizlilik dosyasının iki testi yeniden geçti. Bu, gerçek VPS/staging nesne
   depolama doğrulaması değildir.
+- Koçluk silme servisi hata enjeksiyon testinde nesne depolama silmesi
+  başarısız olunca öğrenci verileri ve değerlendirme korundu, tamamlanma
+  kaydı oluşmadı; aynı talep depolama düzeldikten sonra başarılı oldu.
+  İlgili servis testleri 4/4, tam entegrasyon grubu 614 başarılı/2 atlanan.
+  Bu, gerçek MinIO kesintisinde broker yeniden teslim ölçümü değildir.
 - İzole MinIO container'lı entegrasyon testi: dosya gerçekten yüklendi ve
   geri okundu; Coaching silme servisi DB ek kaydını ve gerçek nesneyi kaldırdı.
   Güncel çalışma ağacında ilgili 4 test tekrar geçti. Bu, staging'deki tam
