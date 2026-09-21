@@ -182,4 +182,28 @@ test('disposable student attachment uses object storage and enforces ownership o
     assert.equal((await fetch(contentUrl, { headers: headers(otherToken) })).status, 403);
     assert.equal(sql(config, coachingDb, `SELECT status FROM coaching.assignment_submission_attachments
       WHERE id='${attachment.attachmentId}';`), 'Clean');
+
+    const pendingCreate = await fetch(base, {
+      method: 'POST', headers: { ...headers(ownToken), 'content-type': 'application/json' },
+      body: JSON.stringify({ assignmentId, studentId, fileName: 'pending.jpg',
+        contentType: 'image/jpeg', sizeBytes: bytes.length, sha256 }),
+    });
+    await expectStatus(pendingCreate, 201);
+    const pending = await pendingCreate.json();
+    sql(config, identityDb, `UPDATE identity.users SET "IsActive"=false WHERE "Id"='${studentId}';`);
+
+    const revokedUpload = await fetch(`${base}/${pending.attachmentId}/content`, {
+      method: 'PUT', headers: { ...headers(ownToken), 'content-type': 'image/jpeg',
+        'X-Content-SHA256': sha256 }, body: bytes,
+    });
+    await expectStatus(revokedUpload, 403);
+    const revokedCreate = await fetch(base, {
+      method: 'POST', headers: { ...headers(ownToken), 'content-type': 'application/json' },
+      body: JSON.stringify({ assignmentId, studentId, fileName: 'revoked.jpg',
+        contentType: 'image/jpeg', sizeBytes: bytes.length, sha256 }),
+    });
+    await expectStatus(revokedCreate, 403);
+    assert.equal((await fetch(contentUrl, { headers: headers(ownToken) })).status, 403);
+    assert.equal(sql(config, coachingDb, `SELECT status FROM coaching.assignment_submission_attachments
+      WHERE id='${pending.attachmentId}';`), 'PendingUpload');
   });
