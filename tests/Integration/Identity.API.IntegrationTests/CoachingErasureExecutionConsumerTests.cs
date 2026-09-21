@@ -25,6 +25,7 @@ public sealed class CoachingErasureExecutionConsumerTests
         services.AddSingleton<ICoachingErasureExecutionService>(service);
         services.AddMassTransitTestHarness(configurator =>
         {
+            configurator.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
             configurator.AddConsumer<PersonalDataErasureExecutionRequestedConsumer>();
             configurator.UsingInMemory((context, bus) => bus.ConfigureEndpoints(context));
         });

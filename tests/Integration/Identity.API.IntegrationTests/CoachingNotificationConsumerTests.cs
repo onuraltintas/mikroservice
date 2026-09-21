@@ -22,6 +22,7 @@ public sealed class CoachingNotificationConsumerTests
         services.AddSingleton<ICoachingNotificationDispatcher>(recordingDispatcher);
         services.AddMassTransitTestHarness(configurator =>
         {
+            configurator.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
             configurator.AddConsumer<AssignmentCreatedConsumer>();
             configurator.AddConsumer<AssignmentUpdatedConsumer>();
             configurator.AddConsumer<AssignmentSubmittedConsumer>();

@@ -22,6 +22,7 @@ public sealed class SpeedReadingErasureAssessmentConsumerTests
         services.AddSingleton<ISpeedReadingErasureAssessmentService>(service);
         services.AddMassTransitTestHarness(configurator =>
         {
+            configurator.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
             configurator.AddConsumer<SpeedReadingErasureAssessmentRequestedConsumer>();
             configurator.UsingInMemory((context, bus) => bus.ConfigureEndpoints(context));
         });

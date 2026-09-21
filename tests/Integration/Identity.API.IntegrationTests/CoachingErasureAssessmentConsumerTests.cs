@@ -19,6 +19,7 @@ public sealed class CoachingErasureAssessmentConsumerTests
         services.AddSingleton<ICoachingErasureAssessmentService>(service);
         services.AddMassTransitTestHarness(configurator =>
         {
+            configurator.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
             configurator.AddConsumer<PersonalDataErasureAssessmentRequestedConsumer>();
             configurator.UsingInMemory((context, bus) => bus.ConfigureEndpoints(context));
         });
@@ -52,6 +53,7 @@ public sealed class CoachingErasureAssessmentConsumerTests
             new StubAssessmentService(requestId, studentId));
         services.AddMassTransitTestHarness(configurator =>
         {
+            configurator.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
             configurator.AddConsumer<PersonalDataErasureAssessmentRequestedConsumer>();
             configurator.UsingInMemory((context, bus) => bus.ConfigureEndpoints(context));
         });

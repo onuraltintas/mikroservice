@@ -20,6 +20,7 @@ public sealed class NotificationErasureExecutionConsumerTests
         services.AddSingleton<INotificationErasureExecutionService>(service);
         services.AddMassTransitTestHarness(configurator =>
         {
+            configurator.SetTestTimeouts(testInactivityTimeout: TimeSpan.FromSeconds(5));
             configurator.AddConsumer<NotificationErasureExecutionRequestedConsumer>();
             configurator.UsingInMemory((context, bus) => bus.ConfigureEndpoints(context));
         });
