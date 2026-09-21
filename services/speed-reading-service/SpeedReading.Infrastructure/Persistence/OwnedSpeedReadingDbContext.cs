@@ -15,6 +15,7 @@ using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Profiles;
 using SpeedReading.Domain.Review;
 using SpeedReading.Domain.Sessions;
+using MassTransit;
 
 namespace SpeedReading.Infrastructure.Persistence;
 
@@ -106,6 +107,9 @@ public sealed class OwnedSpeedReadingDbContext(
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema("speed_reading");
+        modelBuilder.AddInboxStateEntity();
+        modelBuilder.AddOutboxMessageEntity();
+        modelBuilder.AddOutboxStateEntity();
 
         ConfigureEntity(modelBuilder.Entity<Exercise>());
         ConfigureEntity(modelBuilder.Entity<ExerciseTypeCategory>());

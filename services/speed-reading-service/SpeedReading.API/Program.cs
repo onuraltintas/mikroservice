@@ -10,6 +10,8 @@ using EduPlatform.Shared.Infrastructure.Observability;
 using EduPlatform.Shared.Security.Extensions;
 using EduPlatform.Shared.Security.Services;
 using Microsoft.EntityFrameworkCore;
+using MassTransit;
+using SpeedReading.Application.Privacy;
 using SpeedReading.Application.Configuration;
 using SpeedReading.API.Security;
 using SpeedReading.Infrastructure;
@@ -160,6 +162,38 @@ builder.Services.AddGlobalExceptionHandler();
 // the identity configuration service.
 builder.Services.AddRedisCache(builder.Configuration);
 builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
+builder.Services.AddMassTransit(configurator =>
+{
+    configurator.AddConsumer<SpeedReadingErasureAssessmentRequestedConsumer>();
+    configurator.AddEntityFrameworkOutbox<OwnedSpeedReadingDbContext>(outbox =>
+    {
+        outbox.UsePostgres();
+        outbox.UseBusOutbox();
+    });
+    configurator.AddConfigureEndpointsCallback((context, _, endpoint) =>
+    {
+        endpoint.UseMessageRetry(retry => retry.Exponential(
+            5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+        endpoint.UseEntityFrameworkOutbox<OwnedSpeedReadingDbContext>(context);
+    });
+    configurator.UsingRabbitMq((context, rabbit) =>
+    {
+        var host = Environment.GetEnvironmentVariable("RABBITMQ_HOST")
+            ?? builder.Configuration["RabbitMQ:Host"] ?? "localhost";
+        var username = Environment.GetEnvironmentVariable("RABBITMQ_DEFAULT_USER")
+            ?? builder.Configuration["RabbitMQ:Username"]
+            ?? throw new InvalidOperationException("RabbitMQ username is not configured.");
+        var password = Environment.GetEnvironmentVariable("RABBITMQ_DEFAULT_PASS")
+            ?? builder.Configuration["RabbitMQ:Password"]
+            ?? throw new InvalidOperationException("RabbitMQ password is not configured.");
+        rabbit.Host(host, "/", settings =>
+        {
+            settings.Username(username);
+            settings.Password(password);
+        });
+        rabbit.ConfigureEndpoints(context);
+    });
+});
 builder.Services.AddHostedService<SpeedReadingIdempotencyCleanupWorker>();
 builder.Services.AddCustomAuthentication(builder.Configuration);
 builder.Services.AddCustomAuthorization();

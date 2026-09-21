@@ -33,7 +33,7 @@ public sealed class SpeedReadingErasureAssessmentServiceTests
     public async Task Assess_ShouldRejectNonDryRunRequests()
     {
         var service = new SpeedReadingErasureAssessmentService(
-            new StubInventoryRepository([]), TimeProvider.System);
+            new StubInventoryRepository(new Dictionary<string, int>()), TimeProvider.System);
         var message = new PersonalDataErasureAssessmentRequestedV1(
             Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow,
             DryRun: false, Scope: PersonalDataScope.SpeedReading);

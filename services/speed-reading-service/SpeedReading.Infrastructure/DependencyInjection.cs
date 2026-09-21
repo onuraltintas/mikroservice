@@ -26,11 +26,13 @@ using SpeedReading.Application.StudentReading;
 using SpeedReading.Application.Subscription;
 using SpeedReading.Application.Visualization;
 using SpeedReading.Application.Vocabulary;
+using SpeedReading.Application.Privacy;
 using SpeedReading.Infrastructure.ExternalServices;
 using SpeedReading.Infrastructure.Exports;
 using SpeedReading.Infrastructure.Legacy;
 using SpeedReading.Infrastructure.Payments;
 using SpeedReading.Infrastructure.Persistence;
+using SpeedReading.Infrastructure.Privacy;
 
 namespace SpeedReading.Infrastructure;
 
@@ -59,6 +61,9 @@ public static class DependencyInjection
         services.AddScoped<OwnedExerciseTaxonomyBootstrap>();
         services.AddScoped<OwnedSpeedReadingReadingTextWordCountBackfill>();
         services.AddScoped<OwnedSpeedReadingContentAudit>();
+        services.AddScoped<ISpeedReadingPrivacyInventoryRepository, SpeedReadingPrivacyInventoryRepository>();
+        services.AddScoped<ISpeedReadingErasureAssessmentService, SpeedReadingErasureAssessmentService>();
+        services.AddSingleton(TimeProvider.System);
 
         services.AddMemoryCache(options => options.SizeLimit = 4_096);
         services.AddSingleton<ISpeedReadingCmsMediaStorage, LocalCmsMediaStorage>();

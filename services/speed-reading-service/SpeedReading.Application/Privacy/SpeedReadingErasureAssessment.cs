@@ -18,6 +18,38 @@ public interface ISpeedReadingErasureAssessmentService
         CancellationToken cancellationToken);
 }
 
+public interface ISpeedReadingPrivacyInventoryRepository
+{
+    Task<IReadOnlyDictionary<string, int>> CountByUserAsync(
+        Guid userId,
+        CancellationToken cancellationToken);
+}
+
+public sealed class SpeedReadingErasureAssessmentService(
+    ISpeedReadingPrivacyInventoryRepository inventoryRepository,
+    TimeProvider timeProvider) : ISpeedReadingErasureAssessmentService
+{
+    public async Task<SpeedReadingErasureAssessment> AssessAsync(
+        PersonalDataErasureAssessmentRequestedV1 message,
+        CancellationToken cancellationToken)
+    {
+        if (!message.DryRun)
+            throw new InvalidOperationException("Only dry-run privacy assessments are supported.");
+
+        var counts = await inventoryRepository.CountByUserAsync(
+            message.SubjectUserId,
+            cancellationToken);
+        var hasFinancialRetention = counts.GetValueOrDefault("financialRecords") > 0;
+        return new SpeedReadingErasureAssessment(
+            message.RequestId,
+            message.SubjectUserId,
+            CanProceed: !hasFinancialRetention,
+            HasActiveLegalHold: hasFinancialRetention,
+            counts,
+            timeProvider.GetUtcNow().UtcDateTime);
+    }
+}
+
 public sealed class SpeedReadingErasureAssessmentRequestedConsumer(
     ISpeedReadingErasureAssessmentService assessmentService,
     IPublishEndpoint publishEndpoint)
