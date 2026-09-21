@@ -214,8 +214,11 @@ jobs:
       - name: Start disposable service stack
         run: docker compose --env-file .env.example --profile speed-reading up -d --build identity-service coaching-service notification-service speed-reading-service api-gateway
 
-      - name: Verify distributed erasure, Coaching export and restore
-        run: node --test tests/E2E/support/privacy-docker.test.mjs tests/E2E/privacy-erasure.docker.test.mjs tests/E2E/coaching-backup-restore.docker.test.mjs tests/E2E/coaching-data-export-route.contract.test.mjs tests/E2E/coaching-data-export.docker.test.mjs
+      - name: Verify distributed erasure and Coaching restore
+        run: node --test tests/E2E/support/privacy-docker.test.mjs tests/E2E/privacy-erasure.docker.test.mjs tests/E2E/coaching-backup-restore.docker.test.mjs tests/E2E/coaching-data-export-route.contract.test.mjs
+
+      - name: Verify Coaching export and Identity outage recovery
+        run: node --test tests/E2E/coaching-data-export.docker.test.mjs
 
       - name: Preserve service logs on failure
         if: failure()

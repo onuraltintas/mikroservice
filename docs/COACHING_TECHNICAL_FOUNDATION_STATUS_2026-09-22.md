@@ -53,7 +53,9 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
   kayıtlarını aldı; karşı kurum öğrencisinin kayıtları ve anlaşma onayı
   görünmedi. Bu, öğrenci export sınırının kanıtıdır; koç/yönetici tenant
   yetkilerinin tamamını kapsamaz.
-  Test CI'nın disposable gizlilik işine eklendi.
+  Identity container'ı yalnız bu izole projede durdurulduğunda export 5xx ile
+  veri döndürmeden kapandı; yeniden başlatma sonrası aynı istek 200 oldu.
+  Kesinti provası diğer gizlilik testleriyle çakışmaması için CI'da ayrı adımda.
   Geçici container ve hacimler testten sonra kaldırıldı; canlı VPS kullanılmadı.
 
 ## Kapsam ölçümü
@@ -70,7 +72,8 @@ genel %80 kapsam hedefini kanıtlamaz.
 ## Kapanması gereken kapılar
 
 1. Koçluk export için karmaşık ilişki/veri durumlarında daha kapsamlı HTTP E2E;
-   koç/yönetici kurum sınırları, kısmi servis kesintisi ve retry senaryoları.
+   koç/yönetici kurum sınırları ve PostgreSQL/broker gibi diğer bağımlılıkların
+   kesinti/geri dönüş senaryoları.
 2. Kullanıcının kendi VPS'inde çalışacak, güvenlik bakımından desteklenen S3
    uyumlu depoda gerçek yükle–oku–sil ve staging'deki broker + PostgreSQL +
    nesne depolama zinciri; erişim, TLS, bucket yetkileri, kimlik bilgisi

@@ -111,6 +111,7 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
     const email = `coaching-export-${studentId.replaceAll('-', '')}@example.test`;
     const now = new Date().toISOString();
     let seeded = false;
+    let identityStopped = false;
 
     try {
       await eventually(async () => (await fetch(
@@ -244,6 +245,17 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
       assert.doesNotMatch(JSON.stringify(otherExport),
         /Own export goal|Own assignment|Own exam|Private-note session|Shared-note session/);
 
+      identityStopped = true;
+      command(['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE, 'stop', 'identity-service']);
+      const unavailable = await request(config, token(config, studentId, 'Student'));
+      assert.ok(unavailable.status >= 500 && unavailable.status < 600,
+        `Identity outage must fail closed, received ${unavailable.status}`);
+      assert.doesNotMatch(await unavailable.text(), /Own export goal|Other student secret/);
+      command(['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE, 'start', 'identity-service']);
+      identityStopped = false;
+      await eventually(async () => (await request(config, token(config, studentId, 'Student'))).status === 200,
+        'Identity recovery');
+
       sql(config, coachingDb, `BEGIN;
         INSERT INTO coaching.coaching_agreement_documents
           (id, document_version, locale, title, document_reference, content_sha256,
@@ -272,6 +284,9 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
       assert.deepEqual(otherAgreementExport.agreements.map(item => item.acknowledgementId.toLowerCase()),
         [otherAcknowledgementId]);
     } finally {
+      if (identityStopped) {
+        command(['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE, 'start', 'identity-service']);
+      }
       if (seeded) {
         sql(config, coachingDb, `DELETE FROM coaching.coaching_agreement_acknowledgements
           WHERE id IN ('${ownAcknowledgementId}', '${otherAcknowledgementId}');
