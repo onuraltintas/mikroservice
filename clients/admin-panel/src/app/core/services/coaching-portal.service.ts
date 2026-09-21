@@ -325,6 +325,8 @@ export interface TeacherSessionMutationResponse {
 }
 
 export interface ChildSummary {
+  relationshipId: string;
+  relationship: 'Mother' | 'Father' | 'Guardian' | 'Other';
   userId: string;
   firstName: string;
   lastName: string;
@@ -333,6 +335,28 @@ export interface ChildSummary {
   institutionId?: string;
   institutionName?: string;
   avatarUrl?: string;
+}
+
+export interface RepresentativeCoachingAgreement {
+  documentId: string;
+  documentVersion: string;
+  locale: string;
+  title: string;
+  documentReference: string;
+  contentSha256: string;
+  effectiveAt: string;
+  partyRole: 'Parent' | 'LegalGuardian';
+  acknowledgedByCurrentRepresentative: boolean;
+  acknowledgementId: string | null;
+  acknowledgedAt: string | null;
+}
+
+export interface CoachingAgreementAcknowledgement {
+  acknowledgementId: string;
+  agreementDocumentId: string;
+  locale: string;
+  acknowledgedAt: string;
+  withdrawnAt: string | null;
 }
 
 export interface TeacherStudent {
@@ -858,6 +882,31 @@ export class CoachingPortalService {
 
   getMyChildren(): Observable<ChildSummary[]> {
     return this.http.get<ChildSummary[]>(`${environment.apiUrl}/users/me/children`);
+  }
+
+  getCurrentRepresentativeAgreement(studentId: string): Observable<RepresentativeCoachingAgreement> {
+    return this.http.get<RepresentativeCoachingAgreement>(
+      `${environment.apiUrl}/coaching-agreements/current/representative-status`,
+      { params: new HttpParams().set('studentId', this.id(studentId)).set('locale', 'tr-TR') }
+    );
+  }
+
+  acknowledgeAgreementAsRepresentative(
+    agreementDocumentId: string,
+    studentId: string
+  ): Observable<CoachingAgreementAcknowledgement> {
+    return this.http.post<CoachingAgreementAcknowledgement>(
+      `${environment.apiUrl}/coaching-agreements/current/representative-acknowledgements`,
+      { agreementDocumentId, studentId }
+    );
+  }
+
+  withdrawRepresentativeAcknowledgement(
+    acknowledgementId: string
+  ): Observable<CoachingAgreementAcknowledgement> {
+    return this.http.delete<CoachingAgreementAcknowledgement>(
+      `${environment.apiUrl}/coaching-agreements/representative-acknowledgements/${this.id(acknowledgementId)}`
+    );
   }
 
   async calculateSha256(file: File): Promise<string> {

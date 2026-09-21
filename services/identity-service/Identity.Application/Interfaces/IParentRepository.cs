@@ -1,4 +1,5 @@
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 
 namespace Identity.Application.Interfaces;
 
@@ -19,6 +20,13 @@ public interface IParentStudentRelationshipRepository
         Guid representativeUserId,
         Guid studentUserId,
         CancellationToken cancellationToken);
+    Task<IReadOnlyList<VerifiedParentStudentRelationship>> GetVerifiedChildrenAsync(
+        Guid parentUserId,
+        CancellationToken cancellationToken);
 }
 
 public sealed record CoachingAgreementRepresentativeAuthorization(Guid RelationshipId, string PartyRole);
+public sealed record VerifiedParentStudentRelationship(
+    Guid RelationshipId,
+    ParentRelationship Relationship,
+    StudentProfile Student);

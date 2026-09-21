@@ -7,6 +7,7 @@ import { AuthService, hasRole } from '../../../core/auth/auth.service';
 import {
   ChildSummary,
   CoachingPortalService,
+  RepresentativeCoachingAgreement,
   CoachingSession,
   ExamResult,
   Goal,
@@ -51,6 +52,11 @@ export class ParentChildrenComponent implements OnInit {
   readonly isLoading = signal(true);
   readonly isChildLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly agreement = signal<RepresentativeCoachingAgreement | null>(null);
+  readonly agreementLoading = signal(false);
+  readonly agreementError = signal<string | null>(null);
+  readonly agreementSubmitting = signal(false);
+  readonly agreementReviewConfirmed = signal(false);
 
   ngOnInit() {
     if (!hasRole(this.authService.userProfile(), 'Parent')) {
@@ -80,6 +86,7 @@ export class ParentChildrenComponent implements OnInit {
     this.examResults.set([]);
     this.sessions.set([]);
     this.selectedChild.set(child);
+    this.loadAgreement(child.userId);
     this.isChildLoading.set(true);
     this.errorMessage.set(null);
     this.progressSummary.set(null);
@@ -116,6 +123,73 @@ export class ParentChildrenComponent implements OnInit {
       },
       complete: () => this.isChildLoading.set(false)
     });
+  }
+
+  loadAgreement(studentId: string) {
+    this.agreement.set(null);
+    this.agreementError.set(null);
+    this.agreementReviewConfirmed.set(false);
+    this.agreementLoading.set(true);
+    this.coachingService.getCurrentRepresentativeAgreement(studentId).pipe(
+      takeUntil(this.childChanged),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.agreementLoading.set(false))
+    ).subscribe({
+      next: agreement => this.agreement.set(agreement),
+      error: () => this.agreementError.set(
+        'Koçluk anlaşması durumu alınamadı. Güvenliğiniz için onay işlemi kullanılamıyor.')
+    });
+  }
+
+  acceptAgreement() {
+    const child = this.selectedChild();
+    const agreement = this.agreement();
+    if (!child || !agreement || agreement.acknowledgedByCurrentRepresentative
+      || !this.agreementReviewConfirmed() || this.agreementSubmitting()) return;
+
+    this.agreementSubmitting.set(true);
+    this.agreementError.set(null);
+    this.coachingService.acknowledgeAgreementAsRepresentative(agreement.documentId, child.userId).pipe(
+      takeUntil(this.childChanged),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.agreementSubmitting.set(false))
+    ).subscribe({
+      next: acknowledgement => this.agreement.update(current => current ? {
+        ...current,
+        acknowledgedByCurrentRepresentative: true,
+        acknowledgementId: acknowledgement.acknowledgementId,
+        acknowledgedAt: acknowledgement.acknowledgedAt
+      } : current),
+      error: () => this.agreementError.set('Koçluk anlaşması onaylanamadı. Lütfen yeniden deneyin.')
+    });
+  }
+
+  withdrawAgreement() {
+    const acknowledgementId = this.agreement()?.acknowledgementId;
+    if (!acknowledgementId || this.agreementSubmitting()) return;
+
+    this.agreementSubmitting.set(true);
+    this.agreementError.set(null);
+    this.coachingService.withdrawRepresentativeAcknowledgement(acknowledgementId).pipe(
+      takeUntil(this.childChanged),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.agreementSubmitting.set(false))
+    ).subscribe({
+      next: () => {
+        this.agreementReviewConfirmed.set(false);
+        this.agreement.update(current => current ? {
+          ...current,
+          acknowledgedByCurrentRepresentative: false,
+          acknowledgementId: null,
+          acknowledgedAt: null
+        } : current);
+      },
+      error: () => this.agreementError.set('Koçluk anlaşması onayı geri çekilemedi. Lütfen yeniden deneyin.')
+    });
+  }
+
+  relationshipLabel(relationship: ChildSummary['relationship']) {
+    return ({ Mother: 'Anne', Father: 'Baba', Guardian: 'Yasal temsilci', Other: 'Diğer' } as const)[relationship];
   }
 
   completedGoals() {

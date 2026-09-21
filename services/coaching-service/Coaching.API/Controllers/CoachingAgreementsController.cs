@@ -40,6 +40,21 @@ public sealed class CoachingAgreementsController(IMediator mediator) : Controlle
         return result is null ? NotFound() : Ok(result);
     }
 
+    [HttpGet("current/representative-status")]
+    [Authorize(Roles = "Parent")]
+    [ProducesResponseType(typeof(CurrentRepresentativeCoachingAgreementResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<CurrentRepresentativeCoachingAgreementResponse>> GetCurrentRepresentativeStatus(
+        [FromQuery] Guid studentId,
+        [FromQuery] string locale = "tr-TR",
+        CancellationToken cancellationToken = default)
+    {
+        var result = await mediator.Send(
+            new GetCurrentRepresentativeCoachingAgreementQuery(studentId, locale),
+            cancellationToken);
+        return result is null ? NotFound() : Ok(result);
+    }
+
     [HttpPost("current/acknowledgements")]
     [Authorize(Roles = "Student")]
     [ProducesResponseType(typeof(CoachingAgreementAcknowledgementResponse), StatusCodes.Status201Created)]

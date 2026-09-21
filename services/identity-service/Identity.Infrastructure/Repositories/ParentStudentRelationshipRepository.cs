@@ -56,4 +56,45 @@ public sealed class ParentStudentRelationshipRepository(IdentityDbContext contex
             _ => null
         };
     }
+
+    public async Task<IReadOnlyList<VerifiedParentStudentRelationship>> GetVerifiedChildrenAsync(
+        Guid parentUserId,
+        CancellationToken cancellationToken)
+    {
+        if (parentUserId == Guid.Empty)
+            return [];
+
+        var rows = await context.ParentStudentRelationships
+            .AsNoTracking()
+            .Where(item => item.ParentUserId == parentUserId)
+            .Where(item => item.Status == ParentStudentRelationshipStatus.Verified)
+            .Where(item => item.Relationship == ParentRelationship.Mother
+                || item.Relationship == ParentRelationship.Father
+                || item.Relationship == ParentRelationship.Guardian)
+            .Where(item => item.ParentUser.IsActive && item.StudentUser.IsActive)
+            .Where(item => item.ParentUser.Roles.Any(userRole => userRole.Role.Name == "Parent"))
+            .Where(item => item.StudentUser.Roles.Any(userRole => userRole.Role.Name == "Student"))
+            .Join(
+                context.StudentProfiles.AsNoTracking()
+                    .Include(student => student.Institution)
+                    .Where(student => student.IsActive)
+                    .Where(student => !student.InstitutionId.HasValue
+                        || (student.Institution != null && student.Institution.IsActive)),
+                relationship => relationship.StudentUserId,
+                student => student.UserId,
+                (relationship, student) => new
+                {
+                    RelationshipId = relationship.Id,
+                    relationship.Relationship,
+                    Student = student
+                })
+            .OrderBy(item => item.Student.FirstName)
+            .ThenBy(item => item.Student.LastName)
+            .ToListAsync(cancellationToken);
+
+        return rows.Select(item => new VerifiedParentStudentRelationship(
+            item.RelationshipId,
+            item.Relationship,
+            item.Student)).ToList();
+    }
 }

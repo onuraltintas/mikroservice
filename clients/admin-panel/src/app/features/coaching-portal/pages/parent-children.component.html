@@ -19,7 +19,7 @@
         class="w-full rounded-2xl border p-4 text-left transition" [ngClass]="selectedChild()?.userId === child.userId ? 'border-indigo-500 bg-indigo-50 shadow-sm dark:border-indigo-500 dark:bg-indigo-950/30' : 'border-slate-200 bg-white hover:border-indigo-300 dark:border-slate-800 dark:bg-slate-900'">
         <span class="flex items-center gap-3">
           <span class="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-100 font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-200">{{ child.firstName.charAt(0) }}{{ child.lastName.charAt(0) }}</span>
-          <span><span class="block font-semibold">{{ child.fullName }}</span><span class="mt-1 block text-xs text-slate-500 dark:text-slate-400">{{ child.gradeLevel ? child.gradeLevel + '. sınıf' : 'Sınıf bilgisi yok' }}</span></span>
+          <span><span class="block font-semibold">{{ child.fullName }}</span><span class="mt-1 block text-xs text-slate-500 dark:text-slate-400">{{ relationshipLabel(child.relationship) }} · {{ child.gradeLevel ? child.gradeLevel + '. sınıf' : 'Sınıf bilgisi yok' }}</span></span>
         </span>
       </button>
     </div>
@@ -27,6 +27,45 @@
     <div *ngIf="selectedChild() as child" class="space-y-5">
       <div *ngIf="isChildLoading()" class="h-40 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" aria-label="İlerleme yükleniyor"></div>
       <ng-container *ngIf="!isChildLoading()">
+        <section class="rounded-2xl border border-indigo-200 bg-white p-5 shadow-sm dark:border-indigo-900/60 dark:bg-slate-900" aria-labelledby="representative-agreement-title">
+          <div *ngIf="agreementLoading()" role="status" aria-live="polite" class="text-sm text-slate-500">Koçluk anlaşması durumu yükleniyor…</div>
+          <div *ngIf="agreementError()" role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
+            {{ agreementError() }}
+            <button type="button" (click)="loadAgreement(child.userId)" [disabled]="agreementLoading()" class="ml-2 font-semibold underline disabled:opacity-50">Yeniden dene</button>
+          </div>
+          <div *ngIf="!agreementLoading() && agreement() as currentAgreement" class="space-y-4">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">{{ currentAgreement.partyRole === 'LegalGuardian' ? 'Yasal temsilci işlemi' : 'Veli işlemi' }}</p>
+                <h2 id="representative-agreement-title" class="mt-1 text-lg font-semibold">{{ currentAgreement.title }}</h2>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ child.fullName }} adına · Sürüm {{ currentAgreement.documentVersion }} · {{ currentAgreement.effectiveAt | date:'dd.MM.yyyy' }}</p>
+              </div>
+              <span class="rounded-full px-3 py-1 text-xs font-semibold" [ngClass]="currentAgreement.acknowledgedByCurrentRepresentative ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-200'">
+                {{ currentAgreement.acknowledgedByCurrentRepresentative ? 'Onaylandı' : 'Onay bekliyor' }}
+              </span>
+            </div>
+            <a [href]="currentAgreement.documentReference" target="_blank" rel="noopener noreferrer" class="inline-flex min-h-11 items-center font-semibold text-indigo-600 underline underline-offset-4 dark:text-indigo-300">Anlaşmayı yeni sekmede incele</a>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Belge özeti: {{ currentAgreement.contentSha256.slice(0, 12) }}…</p>
+
+            <div *ngIf="!currentAgreement.acknowledgedByCurrentRepresentative" class="space-y-3">
+              <label class="flex cursor-pointer items-start gap-3 rounded-xl bg-slate-50 p-4 text-sm dark:bg-slate-800/60">
+                <input type="checkbox" class="mt-1 h-4 w-4" [checked]="agreementReviewConfirmed()" (change)="agreementReviewConfirmed.set($any($event.target).checked)" />
+                <span>Belgenin tamamını inceledim ve {{ child.fullName }} adına bu sürümü kabul ediyorum.</span>
+              </label>
+              <button type="button" (click)="acceptAgreement()" [disabled]="!agreementReviewConfirmed() || agreementSubmitting()" class="min-h-11 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
+                {{ agreementSubmitting() ? 'Kaydediliyor…' : 'Çocuğum adına kabul et' }}
+              </button>
+            </div>
+
+            <div *ngIf="currentAgreement.acknowledgedByCurrentRepresentative" class="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-emerald-50 p-4 dark:bg-emerald-950/20">
+              <p class="text-sm text-emerald-800 dark:text-emerald-200">Kabul kaydı {{ currentAgreement.acknowledgedAt | date:'dd.MM.yyyy HH:mm' }} tarihinde oluşturuldu.</p>
+              <button type="button" (click)="withdrawAgreement()" [disabled]="agreementSubmitting()" class="min-h-11 rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 disabled:opacity-50 dark:border-red-900 dark:text-red-300">
+                {{ agreementSubmitting() ? 'İşleniyor…' : 'Onayı geri çek' }}
+              </button>
+            </div>
+          </div>
+        </section>
+
         <p *ngIf="!progressSummary()" role="status" class="text-sm text-slate-500 dark:text-slate-400">İlerleme özeti şu anda alınamadı. Listelenen kayıtlar toplam başarıyı göstermez.</p>
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500 dark:text-slate-400">Ödev teslimi</p><p class="mt-2 text-3xl font-bold">{{ submittedAssignments() ?? '—' }}<span class="text-base font-medium text-slate-400"> / {{ progressSummary()?.totalAssignments ?? '—' }}</span></p></div>

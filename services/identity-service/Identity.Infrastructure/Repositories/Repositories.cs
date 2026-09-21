@@ -1163,9 +1163,19 @@ public class InstitutionRepository : IInstitutionRepository
             return null;
         }
 
-        var activeParentProfile = isParent && await _context.ParentProfiles
-            .AsNoTracking()
-            .AnyAsync(profile => profile.UserId == viewerUserId && profile.IsActive, cancellationToken);
+        var verifiedParentStudentUserIds = isParent
+            ? await _context.ParentStudentRelationships
+                .AsNoTracking()
+                .Where(relationship => relationship.ParentUserId == viewerUserId
+                    && relationship.Status == ParentStudentRelationshipStatus.Verified
+                    && (relationship.Relationship == ParentRelationship.Mother
+                        || relationship.Relationship == ParentRelationship.Father
+                        || relationship.Relationship == ParentRelationship.Guardian)
+                    && relationship.ParentUser.IsActive
+                    && relationship.StudentUser.IsActive)
+                .Select(relationship => relationship.StudentUserId)
+                .ToListAsync(cancellationToken)
+            : new List<Guid>();
 
         var institutionAdminIds = isInstitutionAdministrator
             ? await _context.InstitutionAdmins
@@ -1275,7 +1285,7 @@ public class InstitutionRepository : IInstitutionRepository
             .Where(profile =>
                 isSystemAdministrator
                 || (isStudent && profile.UserId == viewerUserId)
-                || (activeParentProfile && profile.ParentId == viewerUserId)
+                || Enumerable.Contains(verifiedParentStudentUserIds, profile.UserId)
                 || (profile.ShareProgressWithTeachers && (
                     (!targetTeacherUserId.HasValue
                         && Enumerable.Contains(institutionAdminIds, profile.InstitutionId ?? Guid.Empty)

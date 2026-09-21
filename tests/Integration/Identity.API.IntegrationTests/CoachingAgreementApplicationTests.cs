@@ -132,6 +132,34 @@ public sealed class CoachingAgreementApplicationTests
         evidence.AuthorityReferenceId.Should().Be(FakeRepresentativeAuthorizationClient.RelationshipId);
     }
 
+    [Fact]
+    public async Task RepresentativeStatus_ShouldReturnOnlyCurrentActorsEvidence()
+    {
+        var parentId = Guid.NewGuid();
+        var studentId = Guid.NewGuid();
+        var current = PublishDocument("2026.1");
+        var evidence = CoachingAgreementAcknowledgement.Create(
+            current.Id,
+            studentId,
+            parentId,
+            CoachingAgreementPartyRole.Parent,
+            Now.AddMinutes(-1),
+            FakeRepresentativeAuthorizationClient.RelationshipId);
+        var repository = new FakeAgreementRepository { Current = current, RepresentativeActive = evidence };
+        var handler = new GetCurrentRepresentativeCoachingAgreementHandler(
+            repository,
+            new FakeAccessPolicy(parentId),
+            new FakeRepresentativeAuthorizationClient("Parent"),
+            new FixedTimeProvider(Now));
+
+        var result = await handler.Handle(new(studentId, "tr-TR"), CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result!.AcknowledgedByCurrentRepresentative.Should().BeTrue();
+        result.AcknowledgementId.Should().Be(evidence.Id);
+        result.PartyRole.Should().Be("Parent");
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("Self")]

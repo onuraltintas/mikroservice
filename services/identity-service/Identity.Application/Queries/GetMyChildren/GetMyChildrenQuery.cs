@@ -6,6 +6,8 @@ using MediatR;
 namespace Identity.Application.Queries.GetMyChildren;
 
 public sealed record ChildSummaryDto(
+    Guid RelationshipId,
+    string Relationship,
     Guid UserId,
     string FirstName,
     string LastName,
@@ -18,7 +20,7 @@ public sealed record ChildSummaryDto(
 public sealed record GetMyChildrenQuery : IRequest<Result<IReadOnlyList<ChildSummaryDto>>>;
 
 public sealed class GetMyChildrenQueryHandler(
-    IParentRepository parentRepository,
+    IParentStudentRelationshipRepository relationshipRepository,
     ICurrentUserService currentUserService)
     : IRequestHandler<GetMyChildrenQuery, Result<IReadOnlyList<ChildSummaryDto>>>
 {
@@ -39,20 +41,22 @@ public sealed class GetMyChildrenQueryHandler(
                 Error.Forbidden("Bu kaynak yalnızca veli rolü için kullanılabilir."));
         }
 
-        var children = await parentRepository.GetActiveChildrenByUserIdAsync(
+        var children = await relationshipRepository.GetVerifiedChildrenAsync(
             parentUserId,
             cancellationToken);
 
         var result = children
-            .Select(child => new ChildSummaryDto(
-                child.UserId,
-                child.FirstName,
-                child.LastName,
-                child.FullName,
-                child.GradeLevel,
-                child.InstitutionId,
-                child.Institution?.Name,
-                child.AvatarUrl))
+            .Select(item => new ChildSummaryDto(
+                item.RelationshipId,
+                item.Relationship.ToString(),
+                item.Student.UserId,
+                item.Student.FirstName,
+                item.Student.LastName,
+                item.Student.FullName,
+                item.Student.GradeLevel,
+                item.Student.InstitutionId,
+                item.Student.Institution?.Name,
+                item.Student.AvatarUrl))
             .ToList();
 
         return Result.Success<IReadOnlyList<ChildSummaryDto>>(result);

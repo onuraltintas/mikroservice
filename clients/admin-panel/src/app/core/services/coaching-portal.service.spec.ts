@@ -394,6 +394,29 @@ describe('CoachingPortalService', () => {
     http.verify();
   });
 
+  it('reads, accepts and withdraws representative agreement evidence through scoped endpoints', () => {
+    const { service, http } = setup();
+
+    service.getCurrentRepresentativeAgreement('student-1').subscribe();
+    const status = http.expectOne(candidate => candidate.url.endsWith('/coaching-agreements/current/representative-status'));
+    expect(status.request.method).toBe('GET');
+    expect(status.request.params.get('studentId')).toBe('student-1');
+    expect(status.request.params.get('locale')).toBe('tr-TR');
+    status.flush({});
+
+    service.acknowledgeAgreementAsRepresentative('document-1', 'student-1').subscribe();
+    const acknowledge = http.expectOne(candidate => candidate.url.endsWith('/coaching-agreements/current/representative-acknowledgements'));
+    expect(acknowledge.request.method).toBe('POST');
+    expect(acknowledge.request.body).toEqual({ agreementDocumentId: 'document-1', studentId: 'student-1' });
+    acknowledge.flush({});
+
+    service.withdrawRepresentativeAcknowledgement('ack/1').subscribe();
+    const withdraw = http.expectOne(candidate => candidate.url.endsWith('/coaching-agreements/representative-acknowledgements/ack%2F1'));
+    expect(withdraw.request.method).toBe('DELETE');
+    withdraw.flush({});
+    http.verify();
+  });
+
   it('creates attachment metadata before uploading bytes with its hash', () => {
     const { service, http } = setup();
     const file = new File(['photo'], 'ödev.png', { type: 'image/png' });
