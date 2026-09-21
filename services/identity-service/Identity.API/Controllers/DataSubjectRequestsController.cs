@@ -112,6 +112,26 @@ public sealed class DataSubjectRequestsController(IMediator mediator) : Controll
             return Conflict(new { error = exception.Message });
         }
     }
+
+    [HttpPost("{id:guid}/execute-erasure")]
+    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
+    [HasPermission(PlatformPermissions.Privacy.Manage)]
+    public async Task<ActionResult<DataSubjectRequestDto>> ExecuteErasure(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return Ok(await mediator.Send(
+                new StartDataSubjectRequestErasureCommand(id),
+                cancellationToken));
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(new { error = exception.Message });
+        }
+    }
 }
 
 public sealed record SubmitErasureRequest(

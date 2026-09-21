@@ -34,6 +34,13 @@ public interface IDataSubjectRequestEventPublisher
         CancellationToken cancellationToken);
 }
 
+public interface IDataSubjectRequestErasureExecutionPublisher
+{
+    Task PublishExecutionRequestedAsync(
+        PersonalDataErasureExecutionRequestedV1 message,
+        CancellationToken cancellationToken);
+}
+
 public sealed record SubmitDataSubjectRequestCommand(
     DataSubjectRequestType RequestType,
     PersonalDataScope Scope,
@@ -51,6 +58,8 @@ public sealed record DecideDataSubjectRequestCommand(
     Guid RequestId,
     bool Approve,
     string Reason) : IRequest<DataSubjectRequestDto>;
+public sealed record StartDataSubjectRequestErasureCommand(Guid RequestId)
+    : IRequest<DataSubjectRequestDto>;
 
 public sealed record DataSubjectRequestPageDto(
     IReadOnlyList<DataSubjectRequestDto> Items,
@@ -284,6 +293,47 @@ public sealed class DecideDataSubjectRequestCommandHandler(
         else
             request.Reject(reviewerId, command.Reason, decidedAt);
         await repository.SaveChangesAsync(cancellationToken);
+        return DataSubjectRequestDto.From(request);
+    }
+}
+
+public sealed class StartDataSubjectRequestErasureCommandHandler(
+    IDataSubjectRequestRepository requestRepository,
+    IDataSubjectRequestAssessmentRepository assessmentRepository,
+    ICurrentUserService currentUser,
+    TimeProvider timeProvider,
+    IDataSubjectRequestErasureExecutionPublisher executionPublisher)
+    : IRequestHandler<StartDataSubjectRequestErasureCommand, DataSubjectRequestDto>
+{
+    public async Task<DataSubjectRequestDto> Handle(
+        StartDataSubjectRequestErasureCommand command,
+        CancellationToken cancellationToken)
+    {
+        GetDataSubjectRequestsForReviewQueryHandler.RequireSystemAdministrator(currentUser);
+        var request = await requestRepository.GetByIdAsync(command.RequestId, cancellationToken)
+            ?? throw new NotFoundException(nameof(DataSubjectRequest), command.RequestId);
+        if (request.RequestType != DataSubjectRequestType.Erasure)
+            throw new InvalidOperationException("Only erasure requests can be executed.");
+
+        var assessments = await assessmentRepository.GetByRequestIdAsync(
+            command.RequestId, cancellationToken);
+        var summary = DataSubjectRequestAssessmentSummaryDto.Create(
+            DataErasureAssessmentScopePolicy.RequiredServices(request.Scope),
+            assessments);
+        if (!summary.IsReadyForErasure)
+            throw new InvalidOperationException("The erasure request is not ready for execution.");
+
+        var startedAt = timeProvider.GetUtcNow().UtcDateTime;
+        request.StartProcessing(startedAt);
+        await executionPublisher.PublishExecutionRequestedAsync(
+            new PersonalDataErasureExecutionRequestedV1(
+                request.Id,
+                request.Id,
+                request.RequesterUserId,
+                startedAt,
+                request.Scope),
+            cancellationToken);
+        await requestRepository.SaveChangesAsync(cancellationToken);
         return DataSubjectRequestDto.From(request);
     }
 }

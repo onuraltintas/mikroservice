@@ -5,10 +5,19 @@ using MassTransit;
 namespace Identity.Infrastructure.Messaging;
 
 public sealed class DataSubjectRequestEventPublisher(IPublishEndpoint publishEndpoint)
-    : IDataSubjectRequestEventPublisher
+    : IDataSubjectRequestEventPublisher, IDataSubjectRequestErasureExecutionPublisher
 {
     public Task PublishAssessmentRequestedAsync(
         PersonalDataErasureAssessmentRequestedV1 message,
+        CancellationToken cancellationToken) =>
+        publishEndpoint.Publish(message, context =>
+        {
+            context.MessageId = message.EventId;
+            context.CorrelationId = message.RequestId;
+        }, cancellationToken);
+
+    public Task PublishExecutionRequestedAsync(
+        PersonalDataErasureExecutionRequestedV1 message,
         CancellationToken cancellationToken) =>
         publishEndpoint.Publish(message, context =>
         {
