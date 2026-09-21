@@ -11,6 +11,7 @@ public static class DependencyInjection
         services.AddScoped<Authorization.InstitutionManagementAuthorization>();
         services.AddScoped<Services.IAuthenticationSessionIssuer, Services.AuthenticationSessionIssuer>();
         services.AddScoped<Services.MfaAuthenticationCoordinator>();
+        services.AddScoped<DataSubjectRequests.DataSubjectRequestErasureCompletionHandler>();
         
         return services;
     }

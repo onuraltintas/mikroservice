@@ -42,6 +42,7 @@ public class IdentityDbContext : DbContext
     public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
     public DbSet<DataSubjectRequest> DataSubjectRequests => Set<DataSubjectRequest>();
     public DbSet<DataSubjectRequestAssessmentResult> DataSubjectRequestAssessmentResults => Set<DataSubjectRequestAssessmentResult>();
+    public DbSet<DataSubjectRequestExecutionResult> DataSubjectRequestExecutionResults => Set<DataSubjectRequestExecutionResult>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
