@@ -44,3 +44,29 @@ describe('IdentityService parent-student relationships', () => {
     http.verify();
   });
 });
+
+describe('IdentityService privacy requests', () => {
+  function setup() {
+    TestBed.configureTestingModule({
+      providers: [IdentityService, provideHttpClient(), provideHttpClientTesting()]
+    });
+    return { service: TestBed.inject(IdentityService), http: TestBed.inject(HttpTestingController) };
+  }
+
+  it('loads bounded admin requests and an encoded assessment detail', () => {
+    const { service, http } = setup();
+
+    service.getDataSubjectRequests('Approved', 2, 25).subscribe();
+    let request = http.expectOne(candidate => candidate.url.endsWith('/data-subject-requests/admin'));
+    expect(request.request.params.get('status')).toBe('Approved');
+    expect(request.request.params.get('pageNumber')).toBe('2');
+    expect(request.request.params.get('pageSize')).toBe('25');
+    request.flush({ items: [], totalCount: 0, pageNumber: 2, pageSize: 25 });
+
+    service.getDataSubjectRequestDetail('request/1').subscribe();
+    request = http.expectOne(candidate => candidate.url.endsWith('/data-subject-requests/admin/request%2F1'));
+    expect(request.request.method).toBe('GET');
+    request.flush({});
+    http.verify();
+  });
+});
