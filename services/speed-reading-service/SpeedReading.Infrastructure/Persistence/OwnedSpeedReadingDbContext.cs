@@ -392,7 +392,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.NextReviewDate).HasColumnName("next_review_date");
             entity.Property(item => item.EasinessFactor).HasColumnName("easiness_factor").HasColumnType("double precision");
             entity.Property(item => item.LastScore).HasColumnName("last_score").HasColumnType("double precision");
-            entity.Property(item => item.DeletedBy).HasMaxLength(100);
+            entity.Property(item => item.DeletedBy).HasColumnName("deleted_by").HasMaxLength(100);
             entity.Property(item => item.UserId).HasColumnName("user_id");
             entity.Property(item => item.ExerciseId).HasColumnName("exercise_id");
             entity.Property(item => item.ProgramTemplateId).HasColumnName("program_template_id");
