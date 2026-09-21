@@ -199,3 +199,55 @@ test('disposable Docker account erasure completes across three product databases
         WHERE "RequestId"='${requestId}';`), '1');
     }
   });
+
+test('disposable Docker assessment retains Coaching data under an active legal hold',
+  { timeout: 120_000 }, async () => {
+    const config = await settings();
+    requireDisposableEnvironment(config);
+    verifyIdentityContainer(config);
+    await eventually(() => consumersReady(config), 'true', 'privacy consumers');
+    const identityDb = config.POSTGRES_DB_IDENTITY || 'identity_db';
+    const coachingDb = config.POSTGRES_DB_COACHING || 'coaching_db';
+    const userId = randomUUID();
+    const requestId = randomUUID();
+    const now = new Date().toISOString();
+
+    sql(config, identityDb, `
+      INSERT INTO identity.users ("Id", "Email", "FirstName", "LastName", "PasswordHash", "PasswordSalt",
+        "EmailConfirmed", "PhoneConfirmed", "IsActive", "CreatedAt", "Version", "MfaEnabled",
+        "MfaFailedAttempts", "MfaRecoveryCodeHashesJson")
+      VALUES ('${userId}', 'privacy-hold-${userId.replaceAll('-', '')}@example.test',
+        'Privacy', 'Hold', decode('01', 'hex'), decode('02', 'hex'),
+        true, false, true, '${now}', 0, false, 0, '[]');
+      INSERT INTO identity."DataSubjectRequests" ("Id", "RequesterUserId", "RequestType", "Scope",
+        "Status", "Reason", "SubmittedAt", "IdentityVerifiedAt", "DecidedByUserId",
+        "DecisionReason", "DecidedAt", "ProcessingStartedAt", "CreatedAt", "UpdatedAt", "Version")
+      VALUES ('${requestId}', '${userId}', 'Erasure', 'Coaching', 'Processing', 'Disposable hold E2E',
+        '${now}', '${now}', '${userId}', 'E2E approval', '${now}', '${now}', '${now}', '${now}', 0);
+    `);
+    sql(config, coachingDb, `
+      INSERT INTO coaching.academic_goals
+        (id, student_id, title, category, current_progress, is_completed, created_at, "Version")
+      VALUES (gen_random_uuid(), '${userId}', 'Held privacy E2E', 'Other', 0, false, '${now}', 0);
+      INSERT INTO coaching."CoachingLegalHolds"
+        ("Id", "SubjectUserId", "Reason", "PlacedByUserId", "PlacedAt", "CreatedAt", "Version")
+      VALUES (gen_random_uuid(), '${userId}', 'Disposable E2E hold', '${userId}', '${now}', '${now}', 0);
+    `);
+
+    await publish(config, assessmentContract, {
+      eventId: randomUUID(), requestId, subjectUserId: userId, approvedAt: now,
+      dryRun: true, scope: 2, schemaVersion: '1.0',
+    }, requestId);
+    await eventually(() => sql(config, coachingDb, `SELECT count(*) FROM coaching."CoachingErasureAssessments"
+      WHERE "RequestId"='${requestId}' AND "CanProceed"=false AND "HasActiveLegalHold"=true
+        AND "GoalCount"=1;`), '1', 'legal-hold assessment');
+    await eventually(() => sql(config, identityDb, `SELECT count(*) FROM identity."DataSubjectRequestAssessmentResults"
+      WHERE "RequestId"='${requestId}' AND "ServiceName"='Coaching' AND "CanProceed"=false
+        AND "HasActiveLegalHold"=true;`), '1', 'Identity legal-hold result');
+    assert.equal(sql(config, coachingDb, `SELECT count(*) FROM coaching.academic_goals
+      WHERE student_id='${userId}';`), '1');
+    assert.notEqual(sql(config, identityDb, `SELECT "Status" FROM identity."DataSubjectRequests"
+      WHERE "Id"='${requestId}';`), 'Completed');
+    assert.equal(sql(config, identityDb, `SELECT "IsActive" FROM identity.users
+      WHERE "Id"='${userId}';`), 't');
+  });

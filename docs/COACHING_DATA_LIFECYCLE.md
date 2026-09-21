@@ -67,7 +67,9 @@ Disposable Docker ortamında hesap silme akışı
 Koşu yalnız `E2E_DISPOSABLE_ENV=true` ve Development/Staging yapılandırmasında
 başlar; çalışan Identity container'ının ortamını da kontrol eder. Test, rastgele
 oluşturulan bir kullanıcı için üç servis verisini, Identity anonimleştirmesini
-ve aynı yürütme olayının tekrar tesliminde receipt tekilliğini doğrular. Bu
+ve aynı yürütme olayının tekrar tesliminde receipt tekilliğini doğrular. Ayrı
+bir senaryo, aktif legal hold altında Coaching ve Identity assessment sonucunun
+olumsuz olduğunu, koçluk verisiyle hesabın korunduğunu doğrular. Bu
 testin yerelde geçmesi staging/production restore veya pentest kanıtı değildir.
 CI'deki `privacy-erasure-e2e` işi aynı testi kendine ait, disposable Compose
 projesinde çalıştırır; başarısızlıkta servis loglarını saklar ve test verisini
