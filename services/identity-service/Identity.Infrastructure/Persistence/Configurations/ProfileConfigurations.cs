@@ -150,6 +150,67 @@ public class ParentProfileConfiguration : IEntityTypeConfiguration<ParentProfile
     }
 }
 
+public sealed class ParentStudentRelationshipConfiguration
+    : IEntityTypeConfiguration<ParentStudentRelationship>
+{
+    public void Configure(EntityTypeBuilder<ParentStudentRelationship> builder)
+    {
+        builder.ToTable("parent_student_relationships");
+        builder.HasKey(relationship => relationship.Id);
+
+        builder.Property(relationship => relationship.Id).HasColumnName("id");
+        builder.Property(relationship => relationship.ParentUserId).HasColumnName("parent_user_id");
+        builder.Property(relationship => relationship.StudentUserId).HasColumnName("student_user_id");
+        builder.Property(relationship => relationship.Relationship)
+            .HasColumnName("relationship")
+            .HasConversion<string>()
+            .HasMaxLength(20);
+        builder.Property(relationship => relationship.Status)
+            .HasColumnName("status")
+            .HasConversion<string>()
+            .HasMaxLength(20);
+        builder.Property(relationship => relationship.RequestedByUserId).HasColumnName("requested_by_user_id");
+        builder.Property(relationship => relationship.RequestedAt).HasColumnName("requested_at");
+        builder.Property(relationship => relationship.VerificationMethod)
+            .HasColumnName("verification_method")
+            .HasConversion<string>()
+            .HasMaxLength(40);
+        builder.Property(relationship => relationship.VerifiedByUserId).HasColumnName("verified_by_user_id");
+        builder.Property(relationship => relationship.VerifiedAt).HasColumnName("verified_at");
+        builder.Property(relationship => relationship.RevokedByUserId).HasColumnName("revoked_by_user_id");
+        builder.Property(relationship => relationship.RevokedAt).HasColumnName("revoked_at");
+        builder.Property(relationship => relationship.RevocationReason)
+            .HasColumnName("revocation_reason")
+            .HasMaxLength(500);
+        builder.Property(relationship => relationship.CreatedAt).HasColumnName("created_at");
+        builder.Property(relationship => relationship.UpdatedAt).HasColumnName("updated_at");
+        builder.Property(relationship => relationship.CreatedBy).HasColumnName("created_by").HasMaxLength(100);
+        builder.Property(relationship => relationship.UpdatedBy).HasColumnName("updated_by").HasMaxLength(100);
+        builder.Property(relationship => relationship.Version)
+            .HasColumnName("version")
+            .IsConcurrencyToken();
+
+        builder.HasOne(relationship => relationship.ParentUser)
+            .WithMany()
+            .HasForeignKey(relationship => relationship.ParentUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(relationship => relationship.StudentUser)
+            .WithMany()
+            .HasForeignKey(relationship => relationship.StudentUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(relationship => new
+            {
+                relationship.ParentUserId,
+                relationship.StudentUserId
+            })
+            .IsUnique()
+            .HasFilter("status <> 'Revoked'");
+        builder.HasIndex(relationship => new { relationship.ParentUserId, relationship.Status });
+        builder.HasIndex(relationship => new { relationship.StudentUserId, relationship.Status });
+    }
+}
+
 public class TeacherStudentAssignmentConfiguration : IEntityTypeConfiguration<TeacherStudentAssignment>
 {
     public void Configure(EntityTypeBuilder<TeacherStudentAssignment> builder)

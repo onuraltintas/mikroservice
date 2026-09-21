@@ -78,3 +78,17 @@ public enum ParentRelationship
     Guardian = 3,   // Vasi
     Other = 4       // Diğer
 }
+
+public enum ParentStudentRelationshipStatus
+{
+    Pending = 1,
+    Verified = 2,
+    Revoked = 3
+}
+
+public enum ParentStudentVerificationMethod
+{
+    InstitutionAdministrator = 1,
+    InvitationAcceptance = 2,
+    ManualReview = 3
+}
