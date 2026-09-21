@@ -1,11 +1,30 @@
 using EduPlatform.Shared.Contracts.Events.Privacy;
 using FluentAssertions;
 using Identity.Domain.Entities;
+using Identity.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace Identity.API.IntegrationTests;
 
 public sealed class DataSubjectRequestAssessmentResultTests
 {
+    [Fact]
+    public void PersistenceModel_ShouldMapServiceSpecificInventoryForNonPostgresProviders()
+    {
+        var options = new DbContextOptionsBuilder<IdentityDbContext>()
+            .UseInMemoryDatabase($"identity-assessment-{Guid.NewGuid()}")
+            .Options;
+
+        using var context = new IdentityDbContext(options);
+
+        var property = context.Model
+            .FindEntityType(typeof(DataSubjectRequestAssessmentResult))!
+            .FindProperty(nameof(DataSubjectRequestAssessmentResult.RecordCounts));
+
+        property.Should().NotBeNull();
+        property!.GetValueConverter().Should().NotBeNull();
+    }
+
     [Fact]
     public void Record_ShouldPreserveServiceSpecificInventory()
     {
