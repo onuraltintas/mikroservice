@@ -96,8 +96,10 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
   yapıldı ve gerçek staging kanıtı değildir.
 - Aynı iki kurumlu disposable HTTP testinde A kurumunun koçu B kurumunun
   ödevini güncelleme, iptal etme ve silme denemelerinde 403 aldı; B ödevinin
-  başlığı ve durumu PostgreSQL'de değişmedi. Bu, üç öğretmen yazma yoluna
-  ilişkin yerel kanıttır; tüm Koçluk yazma yollarını kapsamaz.
+  başlığı ve durumu PostgreSQL'de değişmedi. Aynı koç kendi ödevini bu üç
+  yolla sırasıyla güncelledi, iptal etti ve sildi; her aşama HTTP yanıtı ve
+  PostgreSQL durumu ile doğrulandı. Bu, üç öğretmen yazma yoluna ilişkin
+  yerel kanıttır; tüm Koçluk yazma yollarını kapsamaz.
 
 ## Kapsam ölçümü
 

@@ -259,6 +259,33 @@ test('disposable Coaching admin reads and teacher writes stay inside their Ident
       `SELECT title || '|' || status FROM coaching.assignments WHERE id='${id.assignmentB}';`),
     'Institution B only|Active');
 
+    const updateOwn = await fetch(`${base}/api/assignments/${id.assignmentA}`, {
+      method: 'PUT',
+      headers: { ...auth(teacherA), 'content-type': 'application/json' },
+      body: JSON.stringify({ assignmentId: id.assignmentA, title: 'Institution A updated',
+        assignmentSource: 'Digital', dueDate: now, studentIds: [id.studentA] }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    await expectStatus(updateOwn, 200);
+    assert.equal(sql(config, coachingDb,
+      `SELECT title FROM coaching.assignments WHERE id='${id.assignmentA}';`),
+    'Institution A updated');
+    const cancelOwn = await fetch(`${base}/api/assignments/${id.assignmentA}/cancel`, {
+      method: 'POST', headers: auth(teacherA), signal: AbortSignal.timeout(10_000),
+    });
+    await expectStatus(cancelOwn, 200);
+    assert.equal(sql(config, coachingDb,
+      `SELECT status FROM coaching.assignments WHERE id='${id.assignmentA}';`), 'Cancelled');
+    const deleteOwn = await fetch(`${base}/api/assignments/${id.assignmentA}`, {
+      method: 'DELETE', headers: auth(teacherA), signal: AbortSignal.timeout(10_000),
+    });
+    await expectStatus(deleteOwn, 204);
+    assert.equal(sql(config, coachingDb,
+      `SELECT count(*) FROM coaching.assignments WHERE id='${id.assignmentA}';`), '0');
+    assert.equal(sql(config, coachingDb,
+      `SELECT title || '|' || status FROM coaching.assignments WHERE id='${id.assignmentB}';`),
+    'Institution B only|Active');
+
     sql(config, identityDb, `UPDATE identity.institution_admins SET "IsActive"=false
       WHERE "UserId"='${id.adminA}';`);
     await expectStatus(await get('/api/coaching-admin/assignments', adminA), 403);
