@@ -110,6 +110,14 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
             StudentProfile.Create(child.Id, "Child", "One", institution.Id, parent.Id),
             StudentProfile.Create(unrelated.Id, "Other", "Student", institution.Id),
             inactiveChildProfile);
+        var requestedAt = DateTime.UtcNow.AddMinutes(-1);
+        var childRelationship = ParentStudentRelationship.Request(
+            parent.Id, child.Id, ParentRelationship.Mother, parent.Id, requestedAt);
+        childRelationship.Verify(ParentStudentVerificationMethod.ManualReview, parent.Id, DateTime.UtcNow);
+        var inactiveChildRelationship = ParentStudentRelationship.Request(
+            parent.Id, inactiveChild.Id, ParentRelationship.Guardian, parent.Id, requestedAt);
+        inactiveChildRelationship.Verify(ParentStudentVerificationMethod.ManualReview, parent.Id, DateTime.UtcNow);
+        _dbContext.ParentStudentRelationships.AddRange(childRelationship, inactiveChildRelationship);
         await _dbContext.SaveChangesAsync();
 
         var result = await Repository().AuthorizeCoachingStudentReadAsync(
