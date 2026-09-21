@@ -28,6 +28,10 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
   `has-pending-model-changes` sonucu değişiklik yok; `dotnet list package
   --vulnerable --include-transitive` taramasında Koçluk API'si için raporlanan
   NuGet güvenlik açığı yok. Bu, dış pentest veya container imaj taraması değildir.
+- Koçluk `GET /api/data-privacy/export` uç noktasının ağ geçidinde eksik rotası
+  test-önce yöntemiyle tespit edilip yalnız GET'e izin veren rota eklendi.
+  Gateway rota sözleşme testi ve Release `--warnaserror` derlemesi geçti; rota
+  sözleşmesi CI gizlilik işine eklendi. Çalışan ağ geçidinde HTTP testi henüz yok.
 
 ## Kapsam ölçümü
 
