@@ -155,6 +155,7 @@ builder.Services.AddSingleton<IAdminAuditWriter, NotificationAdminAuditWriter>()
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<INotificationErasureAssessmentService, NotificationErasureAssessmentService>();
+builder.Services.AddScoped<INotificationErasureExecutionService, NotificationErasureExecutionService>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IEmailDeliveryQueue, EmailDeliveryQueue>();
 builder.Services.AddScoped<INotificationService, Notification.API.Services.NotificationManager>();
@@ -219,6 +220,7 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<GoalCreatedConsumer>();
     x.AddConsumer<GoalUpdatedConsumer>();
     x.AddConsumer<NotificationErasureAssessmentRequestedConsumer>();
+    x.AddConsumer<NotificationErasureExecutionRequestedConsumer>();
     
     // Outbox Pattern Configuration
     x.AddEntityFrameworkOutbox<NotificationDbContext>(o =>
@@ -354,6 +356,14 @@ builder.Services.AddMassTransit(x =>
                 retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
             e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
             e.ConfigureConsumer<NotificationErasureAssessmentRequestedConsumer>(context);
+        });
+
+        cfg.ReceiveEndpoint("notification-privacy-erasure-execution", e =>
+        {
+            e.UseMessageRetry(retry =>
+                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<NotificationErasureExecutionRequestedConsumer>(context);
         });
     });
 });

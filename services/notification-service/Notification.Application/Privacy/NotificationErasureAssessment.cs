@@ -17,6 +17,19 @@ public interface INotificationErasureAssessmentService
         CancellationToken cancellationToken);
 }
 
+public sealed record NotificationErasureExecutionResult(
+    Guid Id,
+    Guid RequestId,
+    int DeletedRecordCount,
+    DateTime CompletedAt);
+
+public interface INotificationErasureExecutionService
+{
+    Task<NotificationErasureExecutionResult> ExecuteAsync(
+        PersonalDataErasureExecutionRequestedV1 message,
+        CancellationToken cancellationToken);
+}
+
 public sealed class NotificationErasureAssessmentRequestedConsumer(
     INotificationErasureAssessmentService assessmentService,
     IPublishEndpoint publishEndpoint)
@@ -35,6 +48,34 @@ public sealed class NotificationErasureAssessmentRequestedConsumer(
                 Guid.NewGuid(), assessment.RequestId, assessment.SubjectUserId,
                 "Notification", assessment.CanProceed, HasActiveLegalHold: false,
                 0, 0, 0, 0, 0, 0, assessment.AssessedAt, assessment.RecordCounts),
+            context.CancellationToken);
+    }
+}
+
+public sealed class NotificationErasureExecutionRequestedConsumer(
+    INotificationErasureExecutionService executionService,
+    IPublishEndpoint publishEndpoint)
+    : IConsumer<PersonalDataErasureExecutionRequestedV1>
+{
+    public async Task Consume(ConsumeContext<PersonalDataErasureExecutionRequestedV1> context)
+    {
+        if (context.Message.Scope != PersonalDataScope.Account)
+            return;
+
+        var execution = await executionService.ExecuteAsync(
+            context.Message, context.CancellationToken);
+        await publishEndpoint.Publish(
+            new PersonalDataErasureExecutionCompletedV1(
+                execution.Id,
+                execution.RequestId,
+                "Notification",
+                execution.DeletedRecordCount,
+                execution.CompletedAt),
+            publishContext =>
+            {
+                publishContext.MessageId = execution.Id;
+                publishContext.CorrelationId = execution.RequestId;
+            },
             context.CancellationToken);
     }
 }

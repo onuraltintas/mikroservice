@@ -19,6 +19,7 @@ public class NotificationDbContext : DbContext, INotificationDbContext
     public DbSet<SupportRequest> SupportRequests { get; set; }
     public DbSet<SupportForwardDelivery> SupportForwardDeliveries { get; set; }
     public DbSet<AdminAuditRecord> AdminAuditRecords => Set<AdminAuditRecord>();
+    public DbSet<NotificationErasureExecutionReceipt> ErasureExecutions => Set<NotificationErasureExecutionReceipt>();
 
     public Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync(
         CancellationToken cancellationToken)
@@ -29,6 +30,13 @@ public class NotificationDbContext : DbContext, INotificationDbContext
         base.OnModelCreating(modelBuilder);
 
         ConfigureAdminAudit(modelBuilder);
+        modelBuilder.Entity<NotificationErasureExecutionReceipt>(entity =>
+        {
+            entity.ToTable("PrivacyErasureExecutions");
+            entity.HasKey(item => item.Id);
+            entity.HasIndex(item => item.RequestId).IsUnique();
+            entity.HasIndex(item => item.CompletedAt);
+        });
 
         // Notification Item
         modelBuilder.Entity<NotificationItem>().HasKey(x => x.Id);
