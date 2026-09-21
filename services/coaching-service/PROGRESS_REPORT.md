@@ -1,5 +1,11 @@
 # COACHING SERVICE - İLERLEME RAPORU
 
+> [!WARNING]
+> **Tarihsel belge:** Bu rapor ilk MVP uygulama dönemini yansıtır ve güncel durum
+> kaynağı değildir. Özellikle aşağıdaki `%0 Testing` ve `%85 MVP` değerleri artık
+> geçersizdir. 21 Eylül 2026 tarihli kod, test, ürün ve bilimsel durum değerlendirmesi
+> için kökteki `COACHING_PLATFORM_AUDIT_2026-09-21.md` belgesini kullanın.
+
 ## ✅ TAMAMLANANLAR (Bugün)
 
 ### 1. Domain Layer - 100% ✅
