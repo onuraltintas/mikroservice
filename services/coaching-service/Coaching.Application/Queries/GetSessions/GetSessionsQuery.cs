@@ -65,6 +65,7 @@ public record SessionDto(
     string? StudentNote,
     IReadOnlyList<SessionStudentReflectionDto>? StudentReflections = null,
     string? TeacherNotes = null,
+    string? TeacherNotesVisibility = null,
     string? SharedNotes = null,
     string? SharedNotesVisibility = null
 );

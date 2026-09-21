@@ -144,6 +144,9 @@ public class GetSessionsQueryHandler :
                 StudentNote: studentNote,
                 StudentReflections: studentReflections,
                 TeacherNotes: includeStudentReflections ? s.TeacherNotes : null,
+                TeacherNotesVisibility: includeStudentReflections && s.TeacherNotes is not null
+                    ? s.TeacherNotesVisibility.ToString()
+                    : null,
                 SharedNotes: sharedNotesAudience == s.TeacherNotesVisibility ? s.TeacherNotes : null,
                 SharedNotesVisibility: sharedNotesAudience == s.TeacherNotesVisibility
                     ? s.TeacherNotesVisibility.ToString()

@@ -19,7 +19,9 @@ describe('CoachingSessionsComponent', () => {
       status: 'Scheduled',
       type: 'OneOnOne',
       studentIds: ['user-1'],
-      studentNote: ''
+      studentNote: '',
+      sharedNotes: 'Bu hafta çalışma planını ailene göster.',
+      sharedNotesVisibility: 'StudentVisible'
     };
     const service = {
       getStudentSessions: vi.fn(() => of({ items: [session], pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1 })),
@@ -34,8 +36,12 @@ describe('CoachingSessionsComponent', () => {
         { provide: ActivatedRoute, useValue: {} }
       ]
     });
-    const component = TestBed.createComponent(CoachingSessionsComponent).componentInstance;
+    const fixture = TestBed.createComponent(CoachingSessionsComponent);
+    const component = fixture.componentInstance;
     component.ngOnInit();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Seninle paylaşılan koç notu');
+    expect(fixture.nativeElement.textContent).toContain('Bu hafta çalışma planını ailene göster.');
     component.setNote('session-1', 'Bugün hedefimi netleştirdim.');
 
     component.saveNote(session);

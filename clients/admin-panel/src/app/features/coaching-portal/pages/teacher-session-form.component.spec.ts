@@ -60,8 +60,8 @@ describe('TeacherSessionFormComponent', () => {
       studentId: 'student-1',
       subject: 'Matematik',
       startTime: new Date('2030-01-04T10:00').toISOString(),
-      studentIds: ['student-1']
-      , teacherNotesVisibility: 'GuardianVisible'
+      studentIds: ['student-1'],
+      teacherNotesVisibility: 'GuardianVisible'
     });
     expect(idempotencyKey).toEqual(expect.any(String));
     expect(router.navigate).toHaveBeenCalledWith(['/coaching-portal/sessions']);

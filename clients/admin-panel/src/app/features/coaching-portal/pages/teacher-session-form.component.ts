@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
-import { CoachingPortalService, CoachingSession, TeacherSessionCreateRequest, TeacherSessionUpdateRequest, TeacherStudent } from '../../../core/services/coaching-portal.service';
+import { CoachingNoteVisibility, CoachingPortalService, CoachingSession, TeacherSessionCreateRequest, TeacherSessionUpdateRequest, TeacherStudent } from '../../../core/services/coaching-portal.service';
 
 @Component({
   selector: 'app-teacher-session-form',
@@ -36,7 +36,8 @@ export class TeacherSessionFormComponent implements OnInit {
     subject: '',
     notes: '',
     meetingLink: '',
-    type: 'OneOnOne'
+    type: 'OneOnOne',
+    notesVisibility: 'CoachPrivate' as CoachingNoteVisibility
   };
 
   ngOnInit() {
@@ -157,7 +158,8 @@ export class TeacherSessionFormComponent implements OnInit {
         scheduledDate: startTime.toISOString(),
         durationMinutes: this.form.durationMinutes,
         meetingLink: this.form.meetingLink.trim() || null,
-        teacherNotes: this.form.notes.trim() || null
+        teacherNotes: this.form.notes.trim() || null,
+        teacherNotesVisibility: this.form.notesVisibility
       };
       this.isSaving.set(true);
       this.errorMessage.set(null);
@@ -179,7 +181,8 @@ export class TeacherSessionFormComponent implements OnInit {
       subject: this.form.subject.trim() || null,
       notes: this.form.notes.trim() || null,
       meetingLink: this.form.meetingLink.trim() || null,
-      type: this.form.type
+      type: this.form.type,
+      teacherNotesVisibility: this.form.notesVisibility
     };
     const idempotencyKey = globalThis.crypto?.randomUUID?.()
       ?? `teacher-session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -200,7 +203,8 @@ export class TeacherSessionFormComponent implements OnInit {
       subject: session.subject ?? '',
       notes: session.teacherNotes ?? '',
       meetingLink: session.meetingLink ?? '',
-      type: session.type
+      type: session.type,
+      notesVisibility: session.teacherNotesVisibility ?? 'CoachPrivate'
     };
     session.studentIds.forEach(studentId => this.selectedStudentIds.add(studentId));
   }

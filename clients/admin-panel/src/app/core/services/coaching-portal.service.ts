@@ -289,7 +289,12 @@ export interface CoachingSession {
   studentNote?: string;
   studentReflections?: CoachingStudentReflection[];
   teacherNotes?: string;
+  teacherNotesVisibility?: CoachingNoteVisibility;
+  sharedNotes?: string;
+  sharedNotesVisibility?: CoachingNoteVisibility;
 }
+
+export type CoachingNoteVisibility = 'CoachPrivate' | 'StudentVisible' | 'GuardianVisible' | 'InstitutionVisible';
 
 export interface CoachingStudentReflection {
   studentId: string;
@@ -307,6 +312,7 @@ export interface TeacherSessionCreateRequest {
   type: string;
   studentIds?: string[] | null;
   meetingLink?: string | null;
+  teacherNotesVisibility?: CoachingNoteVisibility;
 }
 
 export interface TeacherSessionUpdateRequest {
@@ -317,6 +323,7 @@ export interface TeacherSessionUpdateRequest {
   durationMinutes: number;
   meetingLink?: string | null;
   teacherNotes?: string | null;
+  teacherNotesVisibility?: CoachingNoteVisibility;
 }
 
 export interface TeacherSessionMutationResponse {

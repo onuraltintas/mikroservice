@@ -142,22 +142,26 @@ describe('CoachingPortalService', () => {
       startTime: '2030-01-04T10:00:00.000Z',
       durationMinutes: 45,
       type: 'OneOnOne',
-      subject: 'Matematik'
+      subject: 'Matematik',
+      teacherNotesVisibility: 'GuardianVisible'
     }, 'session-key-123456').subscribe();
     const create = http.expectOne(candidate => candidate.url.endsWith('/sessions'));
     expect(create.request.method).toBe('POST');
     expect(create.request.headers.get('Idempotency-Key')).toBe('session-key-123456');
+    expect(create.request.body.teacherNotesVisibility).toBe('GuardianVisible');
     create.flush({ sessionId: 'session-1' });
 
     service.updateTeacherSession('session/1', {
       sessionId: 'session/1',
       title: '  Yeni seans  ',
       scheduledDate: '2030-01-05T10:00:00.000Z',
-      durationMinutes: 60
+      durationMinutes: 60,
+      teacherNotesVisibility: 'StudentVisible'
     }).subscribe();
     const update = http.expectOne(candidate => candidate.url.endsWith('/sessions/session%2F1'));
     expect(update.request.method).toBe('PUT');
     expect(update.request.body.title).toBe('Yeni seans');
+    expect(update.request.body.teacherNotesVisibility).toBe('StudentVisible');
     update.flush({ sessionId: 'session/1', scheduledDate: '2030-01-05T10:00:00Z' });
 
     service.updateSessionAttendance('session/1', 'student/1', true, '  Katıldı  ').subscribe();

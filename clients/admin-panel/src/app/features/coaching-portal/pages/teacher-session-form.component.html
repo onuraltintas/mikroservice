@@ -32,6 +32,15 @@
     <label class="block text-sm font-medium">Koç notu (opsiyonel)
       <textarea [(ngModel)]="form.notes" name="notes" maxlength="2000" rows="3" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950"></textarea>
     </label>
+    <label class="block text-sm font-medium">Notu kim görebilir?
+      <select [(ngModel)]="form.notesVisibility" name="notesVisibility" class="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950">
+        <option value="CoachPrivate">Yalnız koç</option>
+        <option value="StudentVisible">Öğrenci</option>
+        <option value="GuardianVisible">Doğrulanmış veli / vasi</option>
+        <option value="InstitutionVisible">Kurum yöneticisi</option>
+      </select>
+      <span class="mt-1 block text-xs text-slate-500">Bir not yalnız seçtiğiniz hedef kitleye açılır. Varsayılan “Yalnız koç”tur.</span>
+    </label>
     <fieldset>
       <legend class="mb-2 text-sm font-semibold">Katılımcı öğrenciler</legend>
       <div role="search" class="mb-3 flex gap-2">

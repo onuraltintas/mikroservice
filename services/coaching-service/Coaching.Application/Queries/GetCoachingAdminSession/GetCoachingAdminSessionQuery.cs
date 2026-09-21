@@ -65,10 +65,13 @@ public sealed class GetCoachingAdminSessionQueryHandler(
                 .Select(attendance => new CoachingAdminAttendanceDto(
                     attendance.StudentId,
                     attendance.AttendanceStatus,
-                    attendance.TeacherNote))
+                    request.AdministrativeScope ? null : attendance.TeacherNote))
                 .ToArray(),
             session.MeetingLink,
             session.Description,
-            session.TeacherNotes);
+            !request.AdministrativeScope
+                || session.TeacherNotesVisibility == CoachingNoteVisibility.InstitutionVisible
+                    ? session.TeacherNotes
+                    : null);
     }
 }
