@@ -29,6 +29,31 @@ public sealed class TokenLifetimeConsistencyTests
         (token.ValidTo - token.ValidFrom).Should().Be(TimeSpan.FromMinutes(42));
     }
 
+    [Fact]
+    public async Task SystemAdministratorToken_ShouldContainAllPlatformPermissions_WhenRoleNavigationHasNoPermissions()
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["JWT_SECRET"] = "a-secure-test-secret-that-is-at-least-32-characters",
+            ["JWT_ISSUER"] = "test-issuer",
+            ["JWT_AUDIENCE"] = "test-audience"
+        }).Build();
+        var service = new TokenService(configuration, new StubConfigurationService());
+        var user = User.Create(Guid.NewGuid(), "admin@example.test");
+        var role = Role.Create("SystemAdmin", "System administrator", isSystemRole: true);
+        var userRole = new UserRole(user.Id, role.Id);
+        typeof(UserRole).GetProperty(nameof(UserRole.Role))!.SetValue(userRole, role);
+        user.AddRole(userRole);
+
+        var token = new JwtSecurityTokenHandler().ReadJwtToken(
+            await service.GenerateAccessTokenAsync(user));
+
+        var permissions = token.Claims
+            .Where(claim => claim.Type == "permission")
+            .Select(claim => claim.Value);
+        permissions.Should().BeEquivalentTo(Identity.Domain.Constants.Permissions.GetAll());
+    }
+
     private sealed class StubConfigurationService : IConfigurationService
     {
         public Task<string?> GetConfigurationValueAsync(string key, CancellationToken cancellationToken) => Task.FromResult<string?>(null);

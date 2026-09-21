@@ -66,14 +66,19 @@ public class TokenService : ITokenService
                     {
                         claims.Add(new Claim(ClaimTypes.Role, userRole.Role.Name));
 
-                        if (userRole.Role.Permissions != null)
+                        var permissions = string.Equals(
+                            userRole.Role.Name,
+                            Identity.Domain.Enums.UserRole.SystemAdmin.ToString(),
+                            StringComparison.OrdinalIgnoreCase)
+                                ? Identity.Domain.Constants.Permissions.GetAll()
+                                : userRole.Role.Permissions?.Select(permission => permission.Permission)
+                                    ?? [];
+
+                        foreach (var permission in permissions)
                         {
-                            foreach (var perm in userRole.Role.Permissions)
+                            if (!claims.Any(c => c.Type == "permission" && c.Value == permission))
                             {
-                                if (!claims.Any(c => c.Type == "permission" && c.Value == perm.Permission))
-                                {
-                                    claims.Add(new Claim("permission", perm.Permission));
-                                }
+                                claims.Add(new Claim("permission", permission));
                             }
                         }
                     }
