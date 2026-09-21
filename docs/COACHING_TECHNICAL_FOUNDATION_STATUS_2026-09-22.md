@@ -85,6 +85,15 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
   kullanıyor. Yanlış port verildiğinde test veri oluşturmadan bu kapıda
   beklenen şekilde reddedildi. Bu prova mevcut yerel imajlarla `--no-build`
   çalıştı; GitHub Actions'ın gerçek `--build` koşusunun yerine geçmez.
+- Ayrı `privacy-e2e-local-admin` Docker projesinde iki kurumun yönetici,
+  koç ve öğrencileriyle gerçek Gateway → Koçluk → Identity → PostgreSQL HTTP
+  testi geçti. Yönetici ödev/oturum/sınav/hedef listeleri, ayrıntıları ve
+  özet sayaçları yalnız kendi kurumunu içerdi; diğer kurumun doğrudan ID
+  erişimleri 404 döndü. Koçun kendi atamasının listesi/ayrıntısı 200,
+  karşı koçun listesi ve karşı kurum ayrıntısı 403 oldu. Identity kurum
+  yöneticiliği pasifleştirildiğinde mevcut JWT ile yeni istek 403 döndü.
+  CI gizlilik işine ayrı adım eklendi; yerel prova `--no-build` imajlarıyla
+  yapıldı ve gerçek staging kanıtı değildir.
 
 ## Kapsam ölçümü
 
@@ -99,9 +108,9 @@ genel %80 kapsam hedefini kanıtlamaz.
 
 ## Kapanması gereken kapılar
 
-1. Koçluk export için karmaşık ilişki/veri durumlarında daha kapsamlı HTTP E2E;
-   koç/yönetici kurum sınırları, diğer olay tüketicileri ve gerçek operasyonel
-   toparlanma ölçümleri.
+1. Koçluk export için daha karmaşık ilişki/veri durumları; koç/yönetici
+   yazma işlemleri ve diğer okuma yollarında kurum sınırları, diğer olay
+   tüketicileri ve gerçek operasyonel toparlanma ölçümleri.
 2. Kullanıcının kendi VPS'inde çalışacak, güvenlik bakımından desteklenen S3
    uyumlu depoda ve staging'deki broker + PostgreSQL + nesne depolama zincirinde
    gerçek yükle–oku–sil; erişim, TLS, bucket yetkileri, kimlik bilgisi

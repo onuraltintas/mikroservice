@@ -231,6 +231,9 @@ jobs:
       - name: Verify Coaching attachment upload, read and student isolation
         run: node --test tests/E2E/coaching-attachment.docker.test.mjs
 
+      - name: Verify Coaching institution admin and teacher tenant isolation
+        run: node --test tests/E2E/coaching-admin-tenant.docker.test.mjs
+
       - name: Preserve service logs on failure
         if: failure()
         run: docker compose --env-file .env.example --profile speed-reading --profile object-storage logs --no-color --tail 100 identity-service coaching-service notification-service speed-reading-service api-gateway minio
