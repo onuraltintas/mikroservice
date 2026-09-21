@@ -145,11 +145,13 @@ export interface UpdatePermissionRequest {
 }
 
 export type DataSubjectRequestStatus = 'Submitted' | 'IdentityVerified' | 'Approved' | 'Rejected' | 'Processing' | 'Completed' | 'Failed';
+export type PersonalDataScope = 'Account' | 'Coaching' | 'SpeedReading';
 
 export interface DataSubjectRequestDto {
     id: string;
     requesterUserId: string;
     requestType: string;
+    scope: PersonalDataScope;
     status: DataSubjectRequestStatus;
     reason: string;
     submittedAt: string;
@@ -160,6 +162,7 @@ export interface DataSubjectRequestAssessmentItemDto {
     canProceed: boolean;
     hasActiveLegalHold: boolean;
     totalRecordCount: number;
+    recordCounts: Record<string, number>;
     assessedAt: string;
 }
 
