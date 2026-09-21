@@ -22,7 +22,7 @@ public sealed class SpeedReadingErasureExecutionReceipt
             throw new ArgumentException("Completion timestamp must be UTC.", nameof(completedAt));
         return new SpeedReadingErasureExecutionReceipt
         {
-            Id = requestId,
+            Id = Guid.NewGuid(),
             RequestId = requestId,
             DeletedRecordCount = deletedRecordCount,
             CompletedAt = completedAt

@@ -136,7 +136,7 @@ public sealed class CoachingErasureExecution : AggregateRoot
         if (completedAt.Kind != DateTimeKind.Utc)
             throw new ArgumentException("Completion timestamp must be UTC.", nameof(completedAt));
 
-        return new CoachingErasureExecution(requestId)
+        return new CoachingErasureExecution(Guid.NewGuid())
         {
             RequestId = requestId,
             DeletedRecordCount = deletedRecordCount,

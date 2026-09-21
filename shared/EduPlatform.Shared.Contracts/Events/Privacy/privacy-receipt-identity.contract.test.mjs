@@ -14,7 +14,7 @@ for (const relativePath of receiptFiles) {
     const completionFactory = source.split('Complete(').at(-1);
 
     assert.match(completionFactory, /Guid\.NewGuid\(\)/);
-    assert.doesNotMatch(completionFactory, /Id\s*=\s*requestId/);
+    assert.doesNotMatch(completionFactory, /\bId\s*=\s*requestId/);
     assert.doesNotMatch(completionFactory, /new\s+CoachingErasureExecution\(requestId\)/);
   });
 }
