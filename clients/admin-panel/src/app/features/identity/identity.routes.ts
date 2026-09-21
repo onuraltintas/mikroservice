@@ -3,6 +3,11 @@ import { ADMIN_PERMISSIONS } from '../../core/auth/permissions';
 
 export const IDENTITY_ROUTES: Routes = [
     {
+        path: 'privacy-requests',
+        data: { permission: ADMIN_PERMISSIONS.privacyView, role: 'SystemAdmin' },
+        loadComponent: () => import('./pages/privacy-requests').then(m => m.PrivacyRequestsComponent)
+    },
+    {
         path: 'users',
         data: { permission: ADMIN_PERMISSIONS.usersView },
         loadComponent: () => import('./pages/user-list/user-list').then(m => m.UserListComponent)

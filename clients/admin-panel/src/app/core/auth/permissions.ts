@@ -34,5 +34,6 @@ export const ADMIN_PERMISSIONS = {
   supportView: 'Permissions.Support.View',
   supportReply: 'Permissions.Support.Reply',
   notificationTemplates: 'Permissions.Notifications.Templates',
-  operationsView: 'Permissions.Operations.View'
+  operationsView: 'Permissions.Operations.View',
+  privacyView: 'Permissions.Privacy.View'
 } as const;

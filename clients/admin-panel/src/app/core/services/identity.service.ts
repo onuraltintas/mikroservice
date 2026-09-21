@@ -144,6 +144,37 @@ export interface UpdatePermissionRequest {
     group: string;
 }
 
+export type DataSubjectRequestStatus = 'Submitted' | 'IdentityVerified' | 'Approved' | 'Rejected' | 'Processing' | 'Completed' | 'Failed';
+
+export interface DataSubjectRequestDto {
+    id: string;
+    requesterUserId: string;
+    requestType: string;
+    status: DataSubjectRequestStatus;
+    reason: string;
+    submittedAt: string;
+}
+
+export interface DataSubjectRequestAssessmentItemDto {
+    serviceName: string;
+    canProceed: boolean;
+    hasActiveLegalHold: boolean;
+    totalRecordCount: number;
+    assessedAt: string;
+}
+
+export interface DataSubjectRequestReviewDetailDto {
+    request: DataSubjectRequestDto;
+    assessment: {
+        services: DataSubjectRequestAssessmentItemDto[];
+        missingServices: string[];
+        isComplete: boolean;
+        hasBlockingLegalHold: boolean;
+        isReadyForErasure: boolean;
+        totalRecordCount: number;
+    };
+}
+
 export interface BulkUserOperationResult {
     succeeded: number;
     failed: number;
@@ -184,6 +215,18 @@ export class IdentityService {
     private baseUrl = `${environment.apiUrl}/users`;
     private rolesUrl = `${environment.apiUrl}/roles`;
     private parentStudentRelationshipsUrl = `${environment.apiUrl}/parent-student-relationships`;
+    private dataSubjectRequestsUrl = `${environment.apiUrl}/data-subject-requests`;
+
+    getDataSubjectRequests(status?: DataSubjectRequestStatus, pageNumber = 1, pageSize = 50) {
+        let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
+        if (status) params = params.set('status', status);
+        return this.http.get<PagedResult<DataSubjectRequestDto>>(`${this.dataSubjectRequestsUrl}/admin`, { params });
+    }
+
+    getDataSubjectRequestDetail(requestId: string) {
+        return this.http.get<DataSubjectRequestReviewDetailDto>(
+            `${this.dataSubjectRequestsUrl}/admin/${encodeURIComponent(requestId)}`);
+    }
 
     getAllUsers(page: number, pageSize: number, search: string = '', role?: string, isActive?: boolean) {
         let params = new HttpParams()

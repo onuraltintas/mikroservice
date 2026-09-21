@@ -109,6 +109,13 @@ export class SidebarComponent {
             route: '/dashboard/identity/institutions',
             permission: ADMIN_PERMISSIONS.institutionsView,
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V5l7-3 7 3v16M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1" /></svg>'
+          },
+          {
+            label: 'KVKK Talepleri',
+            route: '/dashboard/identity/privacy-requests',
+            permission: ADMIN_PERMISSIONS.privacyView,
+            role: 'SystemAdmin',
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75 4.5 6.75v5.625c0 4.125 3 7.5 7.5 8.625 4.5-1.125 7.5-4.5 7.5-8.625V6.75L12 3.75Z" /></svg>'
           }
         ]
       });
@@ -307,6 +314,7 @@ export class SidebarComponent {
       '/dashboard/identity/roles': ADMIN_PERMISSIONS.rolesView,
       '/dashboard/identity/permissions': ADMIN_PERMISSIONS.permissionView,
       '/dashboard/identity/institutions': ADMIN_PERMISSIONS.institutionsView,
+      '/dashboard/identity/privacy-requests': ADMIN_PERMISSIONS.privacyView,
       '/dashboard/notifications/support': ADMIN_PERMISSIONS.supportView,
       '/dashboard/notifications/email-templates': ADMIN_PERMISSIONS.notificationTemplates,
       '/dashboard/coaching': ADMIN_PERMISSIONS.coachingView,
