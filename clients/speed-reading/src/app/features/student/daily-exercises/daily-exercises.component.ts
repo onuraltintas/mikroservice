@@ -2,9 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { ExerciseProgramService, DailyExercise, StudentProgressSummary } from '../../../core/services/exercise-program.service';
-import { ToasterService } from '../../../core/services/toaster.service';
 import { BaseComponent } from '../../../core/components/base.component';
-import { takeUntil } from 'rxjs/operators';
 import { ExerciseTypeService } from '../../../core/services/exercise-type.service';
 
 /**

@@ -16,7 +16,7 @@ import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { TeacherReportService } from '../../../core/services/teacher-report.service';
-import { TeacherContentAnalysisReport, ChartData } from '../../../core/models/report.model';
+import { TeacherContentAnalysisReport } from '../../../core/models/report.model';
 import { BarChartComponent } from '../../../shared/components/charts/bar-chart.component';
 
 type DateRangePreset = '7days' | '30days' | '90days' | 'thisMonth' | 'thisSemester' | 'custom';

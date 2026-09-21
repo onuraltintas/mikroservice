@@ -10,7 +10,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { BaseComponent } from '../../../core/components/base.component';
-import { CoachingService, CoachingRelationship, CoachingSession, Assignment, AtRiskStudent } from '../../../core/services/coaching.service';
+import { CoachingService, CoachingSession, Assignment, AtRiskStudent } from '../../../core/services/coaching.service';
 
 @Component({
   selector: 'app-coach-dashboard',

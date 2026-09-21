@@ -3,9 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
-  SeriesAccessDto,
-  PrerequisiteCheckResult,
-  UnlockSeriesResult
+  SeriesAccessDto
 } from '../models/student-panel.model';
 
 @Injectable({

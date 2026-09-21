@@ -1,7 +1,6 @@
-import { Component, OnInit, inject, SecurityContext } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
-import { DomSanitizer } from '@angular/platform-browser';
 import { PublicCmsService, PageDto } from '../../../../core/services/public-cms.service';
 import { SeoService } from '../../../../core/services/seo.service';
 import { MatButtonModule } from '@angular/material/button';
@@ -27,7 +26,6 @@ export class DynamicPageComponent implements OnInit {
     private cmsService = inject(PublicCmsService);
     private route = inject(ActivatedRoute);
     private router = inject(Router);
-    private sanitizer = inject(DomSanitizer);
     private seo = inject(SeoService);
 
     page: PageDto | null = null;

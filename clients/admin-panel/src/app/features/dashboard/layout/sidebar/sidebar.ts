@@ -1,7 +1,7 @@
 import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer } from '@angular/platform-browser';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { ADMIN_PERMISSIONS } from '../../../../core/auth/permissions';
 import { ToasterService } from '../../../../core/services/toaster.service';

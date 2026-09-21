@@ -15,7 +15,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Observable, combineLatest, BehaviorSubject } from 'rxjs';
 
-import { AssignmentService, AssignmentDetailDto, AssignmentStudentDto } from '../../../../core/services/assignment.service';
+import { AssignmentService, AssignmentDetailDto } from '../../../../core/services/assignment.service';
 import { TeachersService } from '../../../../core/services/teachers.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { Student } from '../../../../core/models/student.model';

@@ -6,7 +6,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { GamificationService } from '../../../../core/services/gamification.service';
-import { Achievement, UserAchievement, AchievementCategory, AchievementTier } from '../../../../core/models/gamification.model';
+import { Achievement, AchievementCategory, AchievementTier } from '../../../../core/models/gamification.model';
 import { AchievementBadgeComponent } from '../achievement-badge/achievement-badge.component';
 import { forkJoin } from 'rxjs';
 

@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, computed, PLATFORM_ID, HostListener } from '@angular/core';
+import { Component, inject, signal, computed, PLATFORM_ID, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { IdentityService, RoleDto } from '../../../../core/services/identity.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
@@ -168,7 +168,7 @@ export class RoleListComponent {
         this.openMenuId.set(null);
     }
 
-    onPermissionsModalClose(saved: boolean) {
+    onPermissionsModalClose(_saved: boolean) {
         this.showPermissionsModal.set(false);
         this.roleForPermissions.set(null);
     }

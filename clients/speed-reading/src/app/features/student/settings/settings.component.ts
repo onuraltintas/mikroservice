@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 
 import { SettingsService } from '../../../core/services/settings.service';
 import { UserSettings } from '../../../core/models/settings.model';
-import { ToasterService } from '../../../core/services/toaster.service';
 import { ThemeService, Theme } from '../../../core/services/theme.service';
 import { BaseComponent } from '../../../core/components/base.component';
 import { AuthService } from '../../../core/services/auth.service';

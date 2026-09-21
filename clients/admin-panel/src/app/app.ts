@@ -13,5 +13,7 @@ export class App {
   protected readonly title = signal('admin-panel');
   // Initialize the theme before any route (including auth) renders so the
   // OS preference and the user's saved choice use one document-level class.
-  private readonly darkModeService = inject(DarkModeService);
+  constructor() {
+    inject(DarkModeService);
+  }
 }

@@ -1,10 +1,9 @@
-import { Component, OnInit, inject, SecurityContext } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
 import { PublicCmsService, BlogPostDto } from '../../../../core/services/public-cms.service';
 import { SeoService } from '../../../../core/services/seo.service';
 import { calculateReadTime, getCategory, getCategoryColor } from '../../../../core/models/blog.model';
@@ -33,7 +32,6 @@ export class BlogDetailComponent implements OnInit {
     private route = inject(ActivatedRoute);
     private router = inject(Router);
     private cmsService = inject(PublicCmsService);
-    private sanitizer = inject(DomSanitizer);
     private seoService = inject(SeoService);
 
     post: BlogPostDto | null = null;

@@ -6,7 +6,6 @@ import { environment } from '../../../environments/environment';
 import {
     TeacherContentAnalysisReport,
     TeacherTimeBasedProgressReport,
-    TeacherClassOverviewReport,
     ChartData,
     StudentActivityItem
 } from '../models/report.model';

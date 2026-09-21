@@ -3,7 +3,6 @@ import { Component, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
-import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import {
   CoachingAdminAssignmentDetail,
   CoachingAdminAssignmentUpdateRequest,

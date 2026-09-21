@@ -86,7 +86,7 @@ export class ProfileSettingsComponent implements OnInit {
                 });
                 this.loading.set(false);
             },
-            error: (err) => {
+            error: () => {
                 this.toaster.error('Profil bilgileri yüklenemedi.');
                 this.loading.set(false);
             }
@@ -105,7 +105,7 @@ export class ProfileSettingsComponent implements OnInit {
                 // For now, let's just reload local data
                 this.loadProfile();
             },
-            error: (err) => {
+            error: () => {
                 this.toaster.error('Profil güncellenirken bir hata oluştu.');
                 this.savingProfile.set(false);
             }

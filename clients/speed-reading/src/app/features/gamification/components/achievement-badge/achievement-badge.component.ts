@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
-import { Achievement, AchievementTier } from '../../../../core/models/gamification.model';
+import { Achievement } from '../../../../core/models/gamification.model';
 
 @Component({
   selector: 'app-achievement-badge',

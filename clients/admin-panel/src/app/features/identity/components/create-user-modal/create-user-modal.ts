@@ -260,7 +260,7 @@ export class CreateUserModalComponent implements OnInit {
       phoneNumber: val.phoneNumber!,
       role: val.role!
     }).subscribe({
-      next: (res) => {
+      next: () => {
         this.loading.set(false);
         this.createdUser.set({
           email: val.email!,

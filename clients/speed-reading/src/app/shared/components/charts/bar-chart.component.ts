@@ -1,7 +1,7 @@
 import { Component, Input, ViewChild, AfterViewInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartData, ChartType, ChartOptions } from 'chart.js';
+import { ChartData, ChartOptions } from 'chart.js';
 import { ChartConfigService } from '../../../core/services/chart-config.service';
 
 export interface BarChartDataPoint {

@@ -16,7 +16,7 @@ export function hasRequiredCoachingRole(
     return !!user && requiredRoles.some(role => user.roles.includes(role));
 }
 
-export const authGuard: CanActivateFn = async (route, state) => {
+export const authGuard: CanActivateFn = async (_route, state) => {
     const authService = inject(AuthService);
     const router = inject(Router);
     const platformId = inject(PLATFORM_ID);
@@ -79,7 +79,7 @@ export const permissionGuard: CanActivateFn = async (route, state) => {
  * Keeps management-only identities out of the student/teacher/parent portal.
  * The server remains the source of truth; this guard only controls navigation.
  */
-export const coachingPortalGuard: CanActivateFn = async (route, state) => {
+export const coachingPortalGuard: CanActivateFn = async (_route, state) => {
     const authService = inject(AuthService);
     const router = inject(Router);
     const platformId = inject(PLATFORM_ID);

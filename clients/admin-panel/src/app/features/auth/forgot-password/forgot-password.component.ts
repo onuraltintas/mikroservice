@@ -6,7 +6,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { IdentityService } from '../../../core/services/identity.service';
-import { ToasterService } from '../../../core/services/toaster.service';
 
 @Component({
     selector: 'app-forgot-password',
@@ -24,7 +23,6 @@ import { ToasterService } from '../../../core/services/toaster.service';
 })
 export class ForgotPasswordComponent {
     private identityService = inject(IdentityService);
-    private toaster = inject(ToasterService);
 
     email = '';
     isLoading = signal(false);
@@ -41,7 +39,7 @@ export class ForgotPasswordComponent {
                 this.emailSent.set(true);
                 this.isLoading.set(false);
             },
-            error: (err) => {
+            error: () => {
                 // Security best practice: Don't reveal if email exists
                 // Always show success message
                 this.emailSent.set(true);

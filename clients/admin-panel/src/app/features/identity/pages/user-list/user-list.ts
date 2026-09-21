@@ -177,7 +177,7 @@ export class UserListComponent {
     }
   }
 
-  onPasswordModalClose(saved: boolean) {
+  onPasswordModalClose(_saved: boolean) {
     this.showPasswordModal.set(false);
     this.userForPasswordChange.set(null);
   }

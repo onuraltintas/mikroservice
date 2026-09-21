@@ -6,7 +6,6 @@ import {
   UserGameification,
   Achievement,
   UserAchievement,
-  AchievementProgress,
   LeaderboardType,
   LeaderboardEntry
 } from '../models/gamification.model';

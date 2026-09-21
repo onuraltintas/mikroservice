@@ -518,7 +518,7 @@ export class ConfigurationsComponent implements OnInit {
                 this.loadConfigs();
                 this.resetNewConfig();
             },
-            error: (err) => this.toaster.error('Ayar oluşturulamadı.')
+            error: () => this.toaster.error('Ayar oluşturulamadı.')
         });
     }
 

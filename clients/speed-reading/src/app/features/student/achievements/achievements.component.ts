@@ -2,7 +2,7 @@ import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
 import { GamificationService } from '../../../core/services/gamification.service';
-import { Achievement, UserAchievement, AchievementCategory } from '../../../core/models/gamification.model';
+import { Achievement, UserAchievement } from '../../../core/models/gamification.model';
 import { BadgeCardComponent } from '../../../shared/components/gamification/badge-card.component';
 
 interface AchievementWithStatus extends Achievement {

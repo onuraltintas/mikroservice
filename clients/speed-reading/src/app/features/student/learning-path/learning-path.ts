@@ -1,9 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
 import { Subject, takeUntil } from 'rxjs';
 import { LearningPathService, PathStatistics } from '../../../core/services/learning-path.service';
-import { PathProgress, NodeProgress, NodeHelper, PathTemplate } from '../../../core/models/learning-path.model';
+import { PathProgress, NodeProgress, NodeHelper } from '../../../core/models/learning-path.model';
 import { Router } from '@angular/router';
 
 @Component({
@@ -32,8 +32,7 @@ export class LearningPath implements OnInit, OnDestroy {
 
   constructor(
     public learningPathService: LearningPathService,
-    private router: Router,
-    private dialog: MatDialog
+    private router: Router
   ) {}
 
   ngOnInit(): void {

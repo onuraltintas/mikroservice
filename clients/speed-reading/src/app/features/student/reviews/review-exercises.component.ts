@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ReviewService } from '../../../services/review.service';
 import { ToasterService } from '../../../core/services/toaster.service';
-import { ReviewExerciseDto, ReviewStatisticsDto } from '../../../models/student-panel.model';
+import { ReviewExerciseDto } from '../../../models/student-panel.model';
 
 @Component({
   selector: 'app-review-exercises',

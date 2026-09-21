@@ -10,7 +10,6 @@ import { getAdminErrorMessage } from '../../../core/auth/admin-error-message';
 import { ToasterService } from '../../../core/services/toaster.service';
 import {
   SpeedReadingAdminService,
-  SpeedReadingAdminNotification,
   SpeedReadingAnnouncement,
   SpeedReadingAnnouncementRequest,
   SpeedReadingAnnouncementStats,

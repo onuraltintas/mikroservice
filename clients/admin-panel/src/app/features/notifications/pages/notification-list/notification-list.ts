@@ -50,7 +50,6 @@ export class NotificationListComponent implements OnInit {
     notificationService = inject(NotificationService);
     toaster = inject(ToasterService);
     dialog = inject(MatDialog);
-    private cdr = inject(ChangeDetectorRef);
     private platformId = inject(PLATFORM_ID);
 
     displayedColumns: string[] = ['select', 'status', 'content', 'date', 'actions'];
@@ -360,7 +359,7 @@ export class NotificationDetailDialog {
                     this.toaster.success('Cevabınız kullanıcıya e-posta olarak gönderildi.');
                     setTimeout(() => this.dialogRef.close());
                 },
-                error: (err) => {
+                error: () => {
                     this.toaster.error('Cevap gönderilirken bir hata oluştu.');
                     this.isSubmitting = false;
                     this.cdr.detectChanges();

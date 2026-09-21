@@ -9,7 +9,6 @@ import {
   ReadingSession,
   ReadingSessionResult,
   ReadingSessionDetails,
-  StartReadingSessionDto,
   CompleteReadingSessionDto,
   ReadingStatistics,
   QuestionType,
