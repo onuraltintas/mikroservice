@@ -1,11 +1,19 @@
 namespace EduPlatform.Shared.Contracts.Events.Privacy;
 
+public enum PersonalDataScope
+{
+    Account = 1,
+    Coaching = 2,
+    SpeedReading = 3
+}
+
 public sealed record PersonalDataErasureAssessmentRequestedV1(
     Guid EventId,
     Guid RequestId,
     Guid SubjectUserId,
     DateTime ApprovedAt,
     bool DryRun,
+    PersonalDataScope Scope = PersonalDataScope.Account,
     string SchemaVersion = "1.0");
 
 public sealed record PersonalDataErasureAssessmentCompletedV1(

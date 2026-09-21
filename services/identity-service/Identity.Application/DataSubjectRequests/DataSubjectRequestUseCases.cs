@@ -4,7 +4,6 @@ using Identity.Domain.Enums;
 using MediatR;
 using EduPlatform.Shared.Kernel.Exceptions;
 using EduPlatform.Shared.Contracts.Events.Privacy;
-using Microsoft.Extensions.Options;
 
 namespace Identity.Application.DataSubjectRequests;
 
@@ -57,10 +56,15 @@ public sealed record DataSubjectRequestPageDto(
     int PageNumber,
     int PageSize);
 
-public sealed class DataErasureAssessmentOptions
+public static class DataErasureAssessmentScopePolicy
 {
-    public const string SectionName = "Privacy:ErasureAssessment";
-    public string[] RequiredServices { get; set; } = ["Coaching"];
+    public static IReadOnlyList<string> RequiredServices(PersonalDataScope scope) => scope switch
+    {
+        PersonalDataScope.Account => ["Coaching", "Notification", "SpeedReading"],
+        PersonalDataScope.Coaching => ["Coaching"],
+        PersonalDataScope.SpeedReading => ["SpeedReading"],
+        _ => throw new ArgumentOutOfRangeException(nameof(scope))
+    };
 }
 
 public sealed record DataSubjectRequestReviewDetailDto(
@@ -143,6 +147,7 @@ public sealed record DataSubjectRequestDto(
     Guid Id,
     Guid RequesterUserId,
     DataSubjectRequestType RequestType,
+    PersonalDataScope Scope,
     DataSubjectRequestStatus Status,
     string Reason,
     DateTime SubmittedAt,
@@ -156,6 +161,7 @@ public sealed record DataSubjectRequestDto(
         request.Id,
         request.RequesterUserId,
         request.RequestType,
+        request.Scope,
         request.Status,
         request.Reason,
         request.SubmittedAt,
@@ -202,8 +208,7 @@ public sealed class GetDataSubjectRequestsForReviewQueryHandler(
 public sealed class GetDataSubjectRequestReviewDetailQueryHandler(
     IDataSubjectRequestRepository requestRepository,
     IDataSubjectRequestAssessmentRepository assessmentRepository,
-    ICurrentUserService currentUser,
-    IOptions<DataErasureAssessmentOptions> options)
+    ICurrentUserService currentUser)
     : IRequestHandler<GetDataSubjectRequestReviewDetailQuery, DataSubjectRequestReviewDetailDto>
 {
     public async Task<DataSubjectRequestReviewDetailDto> Handle(
@@ -219,7 +224,7 @@ public sealed class GetDataSubjectRequestReviewDetailQueryHandler(
         return new DataSubjectRequestReviewDetailDto(
             DataSubjectRequestDto.From(request),
             DataSubjectRequestAssessmentSummaryDto.Create(
-                options.Value.RequiredServices,
+                DataErasureAssessmentScopePolicy.RequiredServices(request.Scope),
                 assessments));
     }
 }
@@ -268,7 +273,8 @@ public sealed class DecideDataSubjectRequestCommandHandler(
                     request.Id,
                     request.RequesterUserId,
                     decidedAt,
-                    DryRun: true),
+                    DryRun: true,
+                    Scope: request.Scope),
                 cancellationToken);
         }
         else

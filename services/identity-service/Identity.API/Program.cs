@@ -119,8 +119,6 @@ builder.Services.AddGlobalExceptionHandler();
 
 // Add Application (MediatR)
 builder.Services.AddApplication();
-builder.Services.Configure<DataErasureAssessmentOptions>(
-    builder.Configuration.GetSection(DataErasureAssessmentOptions.SectionName));
 
 // Add Controllers
 // Add Controllers

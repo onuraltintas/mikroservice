@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Kernel.Primitives;
 using Identity.Domain.Enums;
+using EduPlatform.Shared.Contracts.Events.Privacy;
 
 namespace Identity.Domain.Entities;
 
@@ -7,6 +8,7 @@ public sealed class DataSubjectRequest : AggregateRoot
 {
     public Guid RequesterUserId { get; private set; }
     public DataSubjectRequestType RequestType { get; private set; }
+    public PersonalDataScope Scope { get; private set; }
     public DataSubjectRequestStatus Status { get; private set; }
     public string Reason { get; private set; } = string.Empty;
     public DateTime SubmittedAt { get; private set; }
@@ -23,6 +25,7 @@ public sealed class DataSubjectRequest : AggregateRoot
     public static DataSubjectRequest Create(
         Guid requesterUserId,
         DataSubjectRequestType requestType,
+        PersonalDataScope scope,
         string reason,
         DateTime submittedAt)
     {
@@ -30,6 +33,8 @@ public sealed class DataSubjectRequest : AggregateRoot
             throw new ArgumentException("Requester is required.", nameof(requesterUserId));
         if (!Enum.IsDefined(requestType))
             throw new ArgumentOutOfRangeException(nameof(requestType));
+        if (!Enum.IsDefined(scope))
+            throw new ArgumentOutOfRangeException(nameof(scope));
         if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length > 2_000)
             throw new ArgumentException("Reason is required and must not exceed 2000 characters.", nameof(reason));
         EnsureUtc(submittedAt, nameof(submittedAt));
@@ -38,12 +43,20 @@ public sealed class DataSubjectRequest : AggregateRoot
         {
             RequesterUserId = requesterUserId,
             RequestType = requestType,
+            Scope = scope,
             Reason = reason.Trim(),
             Status = DataSubjectRequestStatus.Submitted,
             SubmittedAt = submittedAt,
             CreatedAt = submittedAt
         };
     }
+
+    public static DataSubjectRequest Create(
+        Guid requesterUserId,
+        DataSubjectRequestType requestType,
+        string reason,
+        DateTime submittedAt) =>
+        Create(requesterUserId, requestType, PersonalDataScope.Account, reason, submittedAt);
 
     public void VerifyIdentity(DateTime verifiedAt)
     {

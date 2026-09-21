@@ -11,6 +11,7 @@ public sealed class DataSubjectRequestConfiguration : IEntityTypeConfiguration<D
         builder.ToTable("DataSubjectRequests");
         builder.HasKey(request => request.Id);
         builder.Property(request => request.RequestType).HasConversion<string>().HasMaxLength(32);
+        builder.Property(request => request.Scope).HasConversion<string>().HasMaxLength(32);
         builder.Property(request => request.Status).HasConversion<string>().HasMaxLength(32);
         builder.Property(request => request.Reason).HasMaxLength(2_000).IsRequired();
         builder.Property(request => request.DecisionReason).HasMaxLength(2_000);

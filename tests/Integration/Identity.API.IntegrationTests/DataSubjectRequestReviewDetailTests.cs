@@ -1,10 +1,10 @@
 using System.Security.Claims;
+using EduPlatform.Shared.Contracts.Events.Privacy;
 using EduPlatform.Shared.Security.Interfaces;
 using FluentAssertions;
 using Identity.Application.DataSubjectRequests;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
-using Microsoft.Extensions.Options;
 
 namespace Identity.API.IntegrationTests;
 
@@ -14,13 +14,13 @@ public sealed class DataSubjectRequestReviewDetailTests
     public async Task Handle_ShouldReturnRequestWithAggregatedAssessment()
     {
         var request = DataSubjectRequest.Create(
-            Guid.NewGuid(), DataSubjectRequestType.Erasure, "Silme talebi", Utc(12));
+            Guid.NewGuid(), DataSubjectRequestType.Erasure, PersonalDataScope.Coaching,
+            "Silme talebi", Utc(12));
         var result = Result(request, "Coaching", canProceed: true, hasHold: false);
         var handler = new GetDataSubjectRequestReviewDetailQueryHandler(
             new StubRequestRepository(request),
             new StubAssessmentRepository(result),
-            new StubCurrentUser(),
-            Options.Create(new DataErasureAssessmentOptions { RequiredServices = ["Coaching"] }));
+            new StubCurrentUser());
 
         var detail = await handler.Handle(
             new GetDataSubjectRequestReviewDetailQuery(request.Id), CancellationToken.None);
