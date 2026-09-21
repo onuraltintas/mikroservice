@@ -49,11 +49,23 @@ otomatik imha etkinleştirilmez.
 - Identity'de `DataSubjectRequest` durum makinesi, kullanıcının kendi taleplerini
   izlemesi, silme talebi için MFA kapısı ve SystemAdmin'in ayrı `Privacy.View` /
   `Privacy.Manage` izinleriyle kimlik doğrulama ve gerekçeli karar API'leri
-  tamamlandı. Yönetim paneli ekranı henüz eklenmedi.
+  tamamlandı. Yönetim panelinde değerlendirme ve yürütme kontrolleri vardır.
 - Versionlanmış assessment request/result olayları ve Coaching dry-run tüketicisi
-  tamamlandı. Identity'de çoklu servis sonuç agregasyonu henüz eklenmedi.
+  tamamlandı. Identity, kapsamın gerektirdiği servis sonuçlarını toplar ve Account
+  silmesinde ancak Coaching, Notification ve Speed Reading tamamlanınca hesabı
+  anonimleştirip talebi `Completed` yapar.
 - Coaching'de idempotent dry-run envanteri ve legal-hold bloklaması tamamlandı;
-  anonimleştirme worker'ı ve object-storage delete kanıtı henüz eklenmedi.
-- Kurum bazlı, hukukça onaylı retention konfigürasyonu ve legal hold.
+  onaylı yürütme öğrenciye bağlı kayıtları ve ekleri siler, legal hold'u yürütme
+  anında yeniden kontrol eder. Nesne depolama silme kanıtının ayrı E2E testi eksik.
+- Kurum bazlı, hukukça onaylı retention konfigürasyonu ve legal-hold kararlarının
+  operasyonel onay/prova süreci.
 - Backup'larda crypto-erasure/expiry ve restore sonrası yeniden-imha prosedürü.
-- Export, silme, kısmi başarısızlık, retry ve tenant izolasyonu E2E testleri.
+- Export, kısmi başarısızlık, servis kesintisi/retry ve tenant izolasyonu E2E testleri.
+
+Disposable Docker ortamında hesap silme akışı
+`node --test tests/E2E/privacy-erasure.docker.test.mjs` ile tekrar doğrulanır.
+Koşu yalnız `E2E_DISPOSABLE_ENV=true` ve Development/Staging yapılandırmasında
+başlar; çalışan Identity container'ının ortamını da kontrol eder. Test, rastgele
+oluşturulan bir kullanıcı için üç servis verisini, Identity anonimleştirmesini
+ve aynı yürütme olayının tekrar tesliminde receipt tekilliğini doğrular. Bu
+testin yerelde geçmesi staging/production restore veya pentest kanıtı değildir.
