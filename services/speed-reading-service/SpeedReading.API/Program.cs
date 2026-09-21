@@ -166,6 +166,7 @@ builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
 builder.Services.AddMassTransit(configurator =>
 {
     configurator.AddConsumer<SpeedReadingErasureAssessmentRequestedConsumer>();
+    configurator.AddConsumer<SpeedReadingErasureExecutionRequestedConsumer>();
     configurator.AddEntityFrameworkOutbox<OwnedSpeedReadingDbContext>(outbox =>
     {
         outbox.UsePostgres();
