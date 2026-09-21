@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using EduPlatform.Shared.Contracts.Events.Privacy;
 using EduPlatform.Shared.Security.Interfaces;
 using FluentAssertions;
 using Identity.API.Controllers;
@@ -24,10 +25,12 @@ public sealed class DataSubjectRequestApplicationTests
         var result = await handler.Handle(
             new SubmitDataSubjectRequestCommand(
                 DataSubjectRequestType.Erasure,
+                PersonalDataScope.Coaching,
                 "Koçluk verilerimi silmek istiyorum."),
             CancellationToken.None);
 
         result.RequesterUserId.Should().Be(userId);
+        result.Scope.Should().Be(PersonalDataScope.Coaching);
         repository.Added.Should().NotBeNull();
         repository.Added!.Id.Should().Be(result.Id);
     }
@@ -42,7 +45,10 @@ public sealed class DataSubjectRequestApplicationTests
             TimeProvider.System);
 
         var action = () => handler.Handle(
-            new SubmitDataSubjectRequestCommand(DataSubjectRequestType.Erasure, "Tekrar talep."),
+            new SubmitDataSubjectRequestCommand(
+                DataSubjectRequestType.Erasure,
+                PersonalDataScope.SpeedReading,
+                "Tekrar talep."),
             CancellationToken.None);
 
         await action.Should().ThrowAsync<InvalidOperationException>();
@@ -66,7 +72,11 @@ public sealed class DataSubjectRequestApplicationTests
         public bool HasActive { get; init; }
         public DataSubjectRequest? Added { get; private set; }
 
-        public Task<bool> HasActiveAsync(Guid userId, DataSubjectRequestType requestType, CancellationToken cancellationToken) =>
+        public Task<bool> HasActiveAsync(
+            Guid userId,
+            DataSubjectRequestType requestType,
+            PersonalDataScope scope,
+            CancellationToken cancellationToken) =>
             Task.FromResult(HasActive);
 
         public Task AddAsync(DataSubjectRequest request, CancellationToken cancellationToken)
