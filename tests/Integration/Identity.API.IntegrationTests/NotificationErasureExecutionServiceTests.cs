@@ -10,6 +10,33 @@ namespace Identity.API.IntegrationTests;
 public sealed class NotificationErasureExecutionServiceTests
 {
     [Fact]
+    public async Task Assessment_ShouldCountEveryUserLinkedNotificationRecord()
+    {
+        await using var context = CreateContext();
+        var subjectId = Guid.NewGuid();
+        context.Notifications.Add(NotificationItem.Create(subjectId, "Bildirim", "İçerik", "Info"));
+        context.EmailDeliveries.Add(
+            EmailDelivery.Create(Guid.NewGuid(), "test", "subject@example.com", "Konu", "Gövde", subjectId));
+        context.SupportRequests.Add(
+            new SupportRequest(Guid.NewGuid(), "Ad", "Soyad", "subject@example.com", "Konu", "Destek mesajı", "assessment-key-1", subjectId));
+        await context.SaveChangesAsync();
+        var service = new NotificationErasureAssessmentService(context, TimeProvider.System);
+
+        var result = await service.AssessAsync(
+            new PersonalDataErasureAssessmentRequestedV1(
+                Guid.NewGuid(), Guid.NewGuid(), subjectId, DateTime.UtcNow,
+                DryRun: true, PersonalDataScope.Account),
+            CancellationToken.None);
+
+        result.RecordCounts.Should().BeEquivalentTo(new Dictionary<string, int>
+        {
+            ["notifications"] = 1,
+            ["emailDeliveries"] = 1,
+            ["supportRequests"] = 1
+        });
+    }
+
+    [Fact]
     public async Task Execute_ShouldDeleteOnlySubjectNotificationsAndRemainIdempotent()
     {
         await using var context = CreateContext();
