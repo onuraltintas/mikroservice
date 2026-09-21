@@ -1,11 +1,12 @@
 using Coaching.Application.Authorization;
+using Coaching.Application.CoachingAgreements;
 using Coaching.Application.Interfaces;
 using EduPlatform.Shared.Kernel.Exceptions;
 using MediatR;
 
 namespace Coaching.Application.Queries.ExportCoachingData;
 
-public sealed record ExportCoachingDataQuery : IRequest<CoachingDataExportDto>;
+public sealed record ExportCoachingDataQuery : IRequest<CoachingDataExportDto>, IBypassesCoachingAgreementRequirement;
 
 public sealed record CoachingDataExportDto(
     string SchemaVersion,
