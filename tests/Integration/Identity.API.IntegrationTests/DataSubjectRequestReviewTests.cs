@@ -8,6 +8,7 @@ using Identity.Application.DataSubjectRequests;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
+using EduPlatform.Shared.Contracts.Events.Privacy;
 
 namespace Identity.API.IntegrationTests;
 

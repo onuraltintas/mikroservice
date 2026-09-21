@@ -7,6 +7,7 @@ using Identity.Application.Interfaces;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using Identity.Infrastructure.Security;
 using Identity.Application.DataSubjectRequests;
+using Identity.Infrastructure.Messaging;
 
 namespace Identity.Infrastructure;
 
@@ -87,6 +88,7 @@ public static class DependencyInjection
         services.AddScoped<IRoleRepository, Repositories.RoleRepository>();
         services.AddScoped<IPermissionRepository, Repositories.PermissionRepository>();
         services.AddScoped<IDataSubjectRequestRepository, Repositories.DataSubjectRequestRepository>();
+        services.AddScoped<IDataSubjectRequestEventPublisher, DataSubjectRequestEventPublisher>();
         services.AddScoped<IUnitOfWork, Repositories.UnitOfWork>();
 
         return services;

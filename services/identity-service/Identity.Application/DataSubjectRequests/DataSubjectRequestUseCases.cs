@@ -3,6 +3,7 @@ using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using MediatR;
 using EduPlatform.Shared.Kernel.Exceptions;
+using EduPlatform.Shared.Contracts.Events.Privacy;
 
 namespace Identity.Application.DataSubjectRequests;
 
@@ -23,6 +24,13 @@ public interface IDataSubjectRequestRepository
         int pageSize,
         CancellationToken cancellationToken);
     Task SaveChangesAsync(CancellationToken cancellationToken);
+}
+
+public interface IDataSubjectRequestEventPublisher
+{
+    Task PublishAssessmentRequestedAsync(
+        PersonalDataErasureAssessmentRequestedV1 message,
+        CancellationToken cancellationToken);
 }
 
 public sealed record SubmitDataSubjectRequestCommand(
@@ -128,7 +136,8 @@ public sealed class VerifyDataSubjectRequestIdentityCommandHandler(
 public sealed class DecideDataSubjectRequestCommandHandler(
     IDataSubjectRequestRepository repository,
     ICurrentUserService currentUser,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    IDataSubjectRequestEventPublisher eventPublisher)
     : IRequestHandler<DecideDataSubjectRequestCommand, DataSubjectRequestDto>
 {
     public async Task<DataSubjectRequestDto> Handle(
@@ -141,7 +150,17 @@ public sealed class DecideDataSubjectRequestCommandHandler(
             ?? throw new NotFoundException(nameof(DataSubjectRequest), command.RequestId);
         var decidedAt = timeProvider.GetUtcNow().UtcDateTime;
         if (command.Approve)
+        {
             request.Approve(reviewerId, command.Reason, decidedAt);
+            await eventPublisher.PublishAssessmentRequestedAsync(
+                new PersonalDataErasureAssessmentRequestedV1(
+                    request.Id,
+                    request.Id,
+                    request.RequesterUserId,
+                    decidedAt,
+                    DryRun: true),
+                cancellationToken);
+        }
         else
             request.Reject(reviewerId, command.Reason, decidedAt);
         await repository.SaveChangesAsync(cancellationToken);
