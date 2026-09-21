@@ -1,6 +1,7 @@
 using EduPlatform.Shared.Infrastructure.Logging;
 using EduPlatform.Shared.Infrastructure.Observability;
 using MassTransit;
+using Notification.Application.Privacy;
 using Notification.Application.Consumers;
 using Notification.Application.Configuration;
 using Notification.Application.Interfaces;
@@ -153,6 +154,8 @@ builder.Services.AddScoped<INotificationDbContext>(provider =>
 builder.Services.AddSingleton<IAdminAuditWriter, NotificationAdminAuditWriter>();
 
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<INotificationErasureAssessmentService, NotificationErasureAssessmentService>();
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IEmailDeliveryQueue, EmailDeliveryQueue>();
 builder.Services.AddScoped<INotificationService, Notification.API.Services.NotificationManager>();
 builder.Services.AddScoped<ICoachingNotificationDispatcher, CoachingNotificationDispatcher>();
@@ -215,6 +218,7 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<SessionCancelledConsumer>();
     x.AddConsumer<GoalCreatedConsumer>();
     x.AddConsumer<GoalUpdatedConsumer>();
+    x.AddConsumer<NotificationErasureAssessmentRequestedConsumer>();
     
     // Outbox Pattern Configuration
     x.AddEntityFrameworkOutbox<NotificationDbContext>(o =>
@@ -342,6 +346,14 @@ builder.Services.AddMassTransit(x =>
                 retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
             e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
             e.ConfigureConsumer<GoalCreatedConsumer>(context);
+        });
+
+        cfg.ReceiveEndpoint("notification-privacy-erasure-assessment", e =>
+        {
+            e.UseMessageRetry(retry =>
+                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<NotificationErasureAssessmentRequestedConsumer>(context);
         });
     });
 });
