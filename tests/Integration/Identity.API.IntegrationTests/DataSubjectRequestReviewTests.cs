@@ -37,6 +37,7 @@ public sealed class DataSubjectRequestReviewTests
         publisher.Published.Should().ContainSingle(message =>
             message.RequestId == request.Id
             && message.SubjectUserId == request.RequesterUserId
+            && message.Scope == PersonalDataScope.Account
             && message.DryRun);
     }
 
