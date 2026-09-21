@@ -18,6 +18,14 @@ public sealed class NotificationErasureExecutionServiceTests
         context.Notifications.AddRange(
             NotificationItem.Create(subjectId, "Sil", "Sil", "Info"),
             NotificationItem.Create(otherUserId, "Koru", "Koru", "Info"));
+        context.EmailDeliveries.AddRange(
+            EmailDelivery.Create(Guid.NewGuid(), "test", "subject@example.com", "Sil", "Sil", subjectId),
+            EmailDelivery.Create(Guid.NewGuid(), "test", "other@example.com", "Koru", "Koru", otherUserId),
+            EmailDelivery.Create(Guid.NewGuid(), "test", "subject@example.com", "Anonim", "Koru", null));
+        context.SupportRequests.AddRange(
+            new SupportRequest(Guid.NewGuid(), "Sil", "Kullanıcı", "subject@example.com", "Sil", "Silinecek mesaj", "subject-key-0001", subjectId),
+            new SupportRequest(Guid.NewGuid(), "Koru", "Kullanıcı", "other@example.com", "Koru", "Korunacak mesaj", "other-key-000001", otherUserId),
+            new SupportRequest(Guid.NewGuid(), "Anonim", "Kullanıcı", "subject@example.com", "Koru", "Anonim mesaj korunur", "anonymous-key-001", null));
         await context.SaveChangesAsync();
         var request = Request(subjectId);
         var service = new NotificationErasureExecutionService(context, TimeProvider.System);
@@ -25,10 +33,14 @@ public sealed class NotificationErasureExecutionServiceTests
         var first = await service.ExecuteAsync(request, CancellationToken.None);
         var replay = await service.ExecuteAsync(request, CancellationToken.None);
 
-        first.DeletedRecordCount.Should().Be(1);
+        first.DeletedRecordCount.Should().Be(3);
         replay.Id.Should().Be(first.Id);
         (await context.Notifications.CountAsync(item => item.UserId == subjectId)).Should().Be(0);
         (await context.Notifications.CountAsync(item => item.UserId == otherUserId)).Should().Be(1);
+        (await context.EmailDeliveries.CountAsync(item => item.SubjectUserId == subjectId)).Should().Be(0);
+        (await context.EmailDeliveries.CountAsync()).Should().Be(2);
+        (await context.SupportRequests.CountAsync(item => item.SubjectUserId == subjectId)).Should().Be(0);
+        (await context.SupportRequests.CountAsync()).Should().Be(2);
         (await context.ErasureExecutions.CountAsync()).Should().Be(1);
     }
 

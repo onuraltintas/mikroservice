@@ -15,7 +15,7 @@ public sealed class DataSubjectRequestErasureCompletionTests
         var requestRepository = new StubRequestRepository(request);
         var executionRepository = new StubExecutionRepository();
         var handler = new DataSubjectRequestErasureCompletionHandler(
-            requestRepository, executionRepository);
+            requestRepository, executionRepository, new StubIdentityAccountErasureService());
         var message = Completed(request.Id, "Coaching");
 
         await handler.HandleAsync(message, CancellationToken.None);
@@ -32,7 +32,8 @@ public sealed class DataSubjectRequestErasureCompletionTests
         var request = ProcessingRequest(PersonalDataScope.Account);
         var handler = new DataSubjectRequestErasureCompletionHandler(
             new StubRequestRepository(request),
-            new StubExecutionRepository());
+            new StubExecutionRepository(),
+            new StubIdentityAccountErasureService());
 
         await handler.HandleAsync(Completed(request.Id, "Coaching"), CancellationToken.None);
         request.Status.Should().Be(DataSubjectRequestStatus.Processing);
@@ -49,7 +50,8 @@ public sealed class DataSubjectRequestErasureCompletionTests
         var request = ProcessingRequest(PersonalDataScope.Coaching);
         var handler = new DataSubjectRequestErasureCompletionHandler(
             new StubRequestRepository(request),
-            new StubExecutionRepository());
+            new StubExecutionRepository(),
+            new StubIdentityAccountErasureService());
 
         var action = () => handler.HandleAsync(
             Completed(request.Id, "SpeedReading"), CancellationToken.None);
@@ -57,6 +59,24 @@ public sealed class DataSubjectRequestErasureCompletionTests
         await action.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*scope*");
         request.Status.Should().Be(DataSubjectRequestStatus.Processing);
+    }
+
+    [Fact]
+    public async Task Completion_ShouldEraseIdentityAccountBeforeCompletingAccountRequest()
+    {
+        var request = ProcessingRequest(PersonalDataScope.Account);
+        var erasureService = new StubIdentityAccountErasureService();
+        var handler = new DataSubjectRequestErasureCompletionHandler(
+            new StubRequestRepository(request),
+            new StubExecutionRepository(),
+            erasureService);
+
+        await handler.HandleAsync(Completed(request.Id, "Coaching"), CancellationToken.None);
+        await handler.HandleAsync(Completed(request.Id, "Notification"), CancellationToken.None);
+        await handler.HandleAsync(Completed(request.Id, "SpeedReading"), CancellationToken.None);
+
+        erasureService.Subjects.Should().ContainSingle().Which.Should().Be(request.RequesterUserId);
+        request.Status.Should().Be(DataSubjectRequestStatus.Completed);
     }
 
     private static DataSubjectRequest ProcessingRequest(PersonalDataScope scope)
@@ -108,5 +128,16 @@ public sealed class DataSubjectRequestErasureCompletionTests
             Guid requestId, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<DataSubjectRequestExecutionResult>>(
                 Results.Where(result => result.RequestId == requestId).ToArray());
+    }
+
+    private sealed class StubIdentityAccountErasureService : IIdentityAccountErasureService
+    {
+        public List<Guid> Subjects { get; } = [];
+
+        public Task ExecuteAsync(Guid subjectUserId, CancellationToken cancellationToken)
+        {
+            Subjects.Add(subjectUserId);
+            return Task.CompletedTask;
+        }
     }
 }
