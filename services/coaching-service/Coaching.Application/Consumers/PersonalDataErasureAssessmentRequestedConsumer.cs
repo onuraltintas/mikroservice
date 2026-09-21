@@ -11,6 +11,9 @@ public sealed class PersonalDataErasureAssessmentRequestedConsumer(
 {
     public async Task Consume(ConsumeContext<PersonalDataErasureAssessmentRequestedV1> context)
     {
+        if (context.Message.Scope is not (PersonalDataScope.Account or PersonalDataScope.Coaching))
+            return;
+
         var assessment = await assessmentService.AssessAsync(
             context.Message,
             context.CancellationToken);
