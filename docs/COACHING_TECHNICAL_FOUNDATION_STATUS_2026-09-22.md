@@ -34,15 +34,17 @@ genel %80 kapsam hedefini kanıtlamaz.
 
 1. Koçluk export, yetkilendirme ve tenant sınırı için HTTP seviyesinde
    olumlu/olumsuz E2E; kısmi servis kesintisi ve retry senaryoları.
-2. Seçilecek yönetilen S3 sağlayıcısında gerçek yükle–oku–sil ve staging'deki
-   broker + PostgreSQL + nesne depolama zinciri; erişim, TLS, bucket policy,
-   kimlik bilgisi rotasyonu ve veri konumu onayı.
+2. Kullanıcının kendi VPS'inde çalışacak, güvenlik bakımından desteklenen S3
+   uyumlu depoda gerçek yükle–oku–sil ve staging'deki broker + PostgreSQL +
+   nesne depolama zinciri; erişim, TLS, bucket yetkileri, kimlik bilgisi
+   rotasyonu, mevcut nesnelerin taşınması ve VPS dışı yedek onayı. Garage bir
+   adaydır; canlı MinIO değişimi henüz onaylanıp yapılmadı.
 3. CI işinin GitHub Actions'ta yeşil çalıştığına dair kayıt. Yerel YAML ve
    Compose doğrulaması bu kanıtın yerine geçmez.
 4. Staging migration-only/canary, yedek–geri yükleme ve yeniden-imha provası;
    hata oranı, gecikme ve alarm alıcılarının gözlenen sonucu.
 5. Dış güvenlik testi ve bulguların kapatılması. Eski MinIO OSS sürümünün
-   production güvenlik onayı verilmedi; yönetilen S3 yönü seçildi.
+   production güvenlik onayı verilmedi; depolamanın VPS'te kalması seçildi.
 
 Bu kapılar kapanmadan teknik temel “%100” veya production-ready olarak
 işaretlenmez.
