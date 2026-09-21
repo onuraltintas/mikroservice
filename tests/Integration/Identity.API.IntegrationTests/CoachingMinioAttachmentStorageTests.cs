@@ -14,6 +14,25 @@ namespace Identity.API.IntegrationTests;
 
 public sealed class CoachingMinioAttachmentStorageTests
 {
+    [Theory]
+    [InlineData("../other-user/file")]
+    [InlineData("/absolute/file")]
+    [InlineData("other\\user/file")]
+    public async Task MinioStorage_ShouldRejectUnsafeObjectKeys(string key)
+    {
+        using var storage = new MinioAssignmentAttachmentStorage(Options.Create(
+            new AssignmentAttachmentOptions
+            {
+                MinioEndpoint = "localhost:9000",
+                MinioAccessKey = "test-access",
+                MinioSecretKey = "test-secret"
+            }));
+
+        var action = () => storage.OpenReadAsync(key);
+
+        await action.Should().ThrowAsync<ArgumentException>();
+    }
+
     [Fact]
     public async Task CoachingErasure_ShouldDeleteTheAttachmentFromMinio()
     {
