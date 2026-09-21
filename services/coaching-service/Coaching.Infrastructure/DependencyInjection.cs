@@ -9,6 +9,8 @@ using Coaching.Infrastructure.Attachments;
 using Coaching.Infrastructure.ExternalServices;
 using Coaching.Infrastructure.Messaging;
 using EduPlatform.Shared.Infrastructure.Middleware;
+using Coaching.Application.Privacy;
+using Coaching.Infrastructure.Privacy;
 
 namespace Coaching.Infrastructure;
 
@@ -117,6 +119,7 @@ public static class DependencyInjection
         services.AddScoped<ICoachingAdminRepository, CoachingAdminRepository>();
         services.AddScoped<ICoachingAgreementRepository, CoachingAgreementRepository>();
         services.AddScoped<ICoachingDataExportRepository, CoachingDataExportRepository>();
+        services.AddScoped<ICoachingErasureAssessmentService, CoachingErasureAssessmentService>();
         if (storageOptions.Provider.Equals("Minio", StringComparison.OrdinalIgnoreCase))
             services.AddSingleton<IAssignmentAttachmentStorage, MinioAssignmentAttachmentStorage>();
         else

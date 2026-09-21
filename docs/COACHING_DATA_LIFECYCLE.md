@@ -50,8 +50,10 @@ otomatik imha etkinleştirilmez.
   izlemesi, silme talebi için MFA kapısı ve SystemAdmin'in ayrı `Privacy.View` /
   `Privacy.Manage` izinleriyle kimlik doğrulama ve gerekçeli karar API'leri
   tamamlandı. Yönetim paneli ekranı henüz eklenmedi.
-- Versionlanmış `PersonalDataErasureRequested/Completed/Failed` olayları.
-- Coaching'de idempotent anonymization worker ve object-storage delete kanıtı.
+- Versionlanmış assessment request/result olayları ve Coaching dry-run tüketicisi
+  tamamlandı. Identity'de çoklu servis sonuç agregasyonu henüz eklenmedi.
+- Coaching'de idempotent dry-run envanteri ve legal-hold bloklaması tamamlandı;
+  anonimleştirme worker'ı ve object-storage delete kanıtı henüz eklenmedi.
 - Kurum bazlı, hukukça onaylı retention konfigürasyonu ve legal hold.
 - Backup'larda crypto-erasure/expiry ve restore sonrası yeniden-imha prosedürü.
 - Export, silme, kısmi başarısızlık, retry ve tenant izolasyonu E2E testleri.
