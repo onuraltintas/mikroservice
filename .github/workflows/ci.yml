@@ -217,7 +217,7 @@ jobs:
       - name: Verify distributed erasure and Coaching restore
         run: node --test tests/E2E/support/privacy-docker.test.mjs tests/E2E/privacy-erasure.docker.test.mjs tests/E2E/coaching-backup-restore.docker.test.mjs tests/E2E/coaching-data-export-route.contract.test.mjs
 
-      - name: Verify Coaching export and Identity outage recovery
+      - name: Verify Coaching export and dependency outage recovery
         run: node --test tests/E2E/coaching-data-export.docker.test.mjs
 
       - name: Preserve service logs on failure

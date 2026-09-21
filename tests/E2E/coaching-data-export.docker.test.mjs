@@ -63,10 +63,10 @@ function token(config, userId, role) {
   return `${unsigned}.${createHmac('sha256', config.JWT_SECRET).update(unsigned).digest('base64url')}`;
 }
 
-async function request(config, bearer) {
+async function request(config, bearer, timeoutMs = 10_000) {
   return fetch(`http://127.0.0.1:${config.GATEWAY_PORT}/api/data-privacy/export`, {
     headers: bearer ? { authorization: `Bearer ${bearer}` } : {},
-    signal: AbortSignal.timeout(10_000),
+    signal: AbortSignal.timeout(timeoutMs),
   });
 }
 
@@ -84,7 +84,7 @@ async function eventually(check, label) {
 }
 
 test('disposable Gateway exports only the authenticated student’s Coaching records',
-  { timeout: 120_000 }, async () => {
+  { timeout: 180_000 }, async () => {
     const config = await settings();
     verifyContainers(config);
     for (const key of ['POSTGRES_USER', 'JWT_SECRET', 'JWT_ISSUER', 'JWT_AUDIENCE', 'GATEWAY_PORT']) {
@@ -112,6 +112,7 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
     const now = new Date().toISOString();
     let seeded = false;
     let identityStopped = false;
+    let postgresStopped = false;
 
     try {
       await eventually(async () => (await fetch(
@@ -256,6 +257,18 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
       await eventually(async () => (await request(config, token(config, studentId, 'Student'))).status === 200,
         'Identity recovery');
 
+      postgresStopped = true;
+      command(['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE, 'stop', 'postgres']);
+      const databaseUnavailable = await request(config, token(config, studentId, 'Student'), 35_000);
+      assert.ok(databaseUnavailable.status >= 500 && databaseUnavailable.status < 600,
+        `PostgreSQL outage must fail closed, received ${databaseUnavailable.status}`);
+      assert.doesNotMatch(await databaseUnavailable.text(), /Own export goal|Other student secret/);
+      command(['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE, 'start', 'postgres']);
+      postgresStopped = false;
+      await eventually(() => sql(config, coachingDb, 'SELECT 1;') === '1', 'PostgreSQL recovery');
+      await eventually(async () => (await request(config, token(config, studentId, 'Student'))).status === 200,
+        'Coaching export recovery');
+
       sql(config, coachingDb, `BEGIN;
         INSERT INTO coaching.coaching_agreement_documents
           (id, document_version, locale, title, document_reference, content_sha256,
@@ -284,6 +297,10 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
       assert.deepEqual(otherAgreementExport.agreements.map(item => item.acknowledgementId.toLowerCase()),
         [otherAcknowledgementId]);
     } finally {
+      if (postgresStopped) {
+        command(['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE, 'start', 'postgres']);
+        await eventually(() => sql(config, coachingDb, 'SELECT 1;') === '1', 'PostgreSQL cleanup readiness');
+      }
       if (identityStopped) {
         command(['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE, 'start', 'identity-service']);
       }
