@@ -79,6 +79,7 @@ public sealed class DataSubjectRequestReviewTests
 
     [Theory]
     [InlineData(nameof(DataSubjectRequestsController.AdminList), PlatformPermissions.Privacy.View)]
+    [InlineData(nameof(DataSubjectRequestsController.AdminDetail), PlatformPermissions.Privacy.View)]
     [InlineData(nameof(DataSubjectRequestsController.VerifyIdentity), PlatformPermissions.Privacy.Manage)]
     [InlineData(nameof(DataSubjectRequestsController.Decide), PlatformPermissions.Privacy.Manage)]
     public void ReviewEndpoints_ShouldRequireSystemAdminMfaAndPrivacyPermission(
