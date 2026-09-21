@@ -14,10 +14,38 @@ public sealed class InternalCoachingController : ControllerBase
     private const int MaxReportPageSize = 100;
     private const int MaxReportPageNumber = 1000;
     private readonly IInstitutionRepository _institutionRepository;
+    private readonly IParentStudentRelationshipRepository _parentStudentRelationshipRepository;
 
-    public InternalCoachingController(IInstitutionRepository institutionRepository)
+    public InternalCoachingController(
+        IInstitutionRepository institutionRepository,
+        IParentStudentRelationshipRepository parentStudentRelationshipRepository)
     {
         _institutionRepository = institutionRepository;
+        _parentStudentRelationshipRepository = parentStudentRelationshipRepository;
+    }
+
+    [HttpPost("authorize-agreement-representative")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    [RequestSizeLimit(4_096)]
+    public async Task<IActionResult> AuthorizeAgreementRepresentative(
+        [FromBody] CoachingAgreementRepresentativeAuthorizationRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.RepresentativeUserId == Guid.Empty || request.StudentUserId == Guid.Empty)
+            return BadRequest("Agreement representative scope is invalid.");
+
+        var authorization = await _parentStudentRelationshipRepository
+            .AuthorizeCoachingAgreementRepresentativeAsync(
+                request.RepresentativeUserId,
+                request.StudentUserId,
+                cancellationToken);
+
+        return authorization is null
+            ? Forbid()
+            : Ok(new CoachingAgreementRepresentativeAuthorizationResponse(
+                authorization.RelationshipId,
+                authorization.PartyRole));
     }
 
     [HttpPost("authorize")]
@@ -187,6 +215,14 @@ public sealed record CoachingAuthorizationRequest(
     bool IsSystemAdministrator);
 
 public sealed record CoachingAuthorizationResponse(Guid? InstitutionId);
+
+public sealed record CoachingAgreementRepresentativeAuthorizationRequest(
+    Guid RepresentativeUserId,
+    Guid StudentUserId);
+
+public sealed record CoachingAgreementRepresentativeAuthorizationResponse(
+    Guid RelationshipId,
+    string PartyRole);
 
 public sealed record CoachingAdminAuthorizationRequest(Guid ViewerUserId);
 

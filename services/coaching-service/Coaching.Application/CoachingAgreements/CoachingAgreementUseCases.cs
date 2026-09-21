@@ -200,6 +200,91 @@ public sealed class AcknowledgeCurrentCoachingAgreementHandler(
     }
 }
 
+public sealed record AcknowledgeCurrentCoachingAgreementAsRepresentativeCommand(
+    Guid AgreementDocumentId,
+    Guid StudentId) : IRequest<CoachingAgreementAcknowledgementResponse>, IBypassesCoachingAgreementRequirement;
+
+public sealed class AcknowledgeCurrentCoachingAgreementAsRepresentativeValidator
+    : AbstractValidator<AcknowledgeCurrentCoachingAgreementAsRepresentativeCommand>
+{
+    public AcknowledgeCurrentCoachingAgreementAsRepresentativeValidator()
+    {
+        RuleFor(command => command.AgreementDocumentId).NotEmpty();
+        RuleFor(command => command.StudentId).NotEmpty();
+    }
+}
+
+public sealed class AcknowledgeCurrentCoachingAgreementAsRepresentativeHandler(
+    ICoachingAgreementRepository repository,
+    IUnitOfWork unitOfWork,
+    ICoachingAccessPolicy accessPolicy,
+    ICoachingAgreementRepresentativeAuthorizationClient representativeAuthorizationClient,
+    TimeProvider timeProvider)
+    : IRequestHandler<AcknowledgeCurrentCoachingAgreementAsRepresentativeCommand, CoachingAgreementAcknowledgementResponse>
+{
+    public async Task<CoachingAgreementAcknowledgementResponse> Handle(
+        AcknowledgeCurrentCoachingAgreementAsRepresentativeCommand command,
+        CancellationToken cancellationToken)
+    {
+        var representativeId = accessPolicy.CurrentUserId
+            ?? throw new BusinessRuleException("Authorization.Forbidden", "Oturum açmış temsilci bulunamadı.");
+        var authorization = await representativeAuthorizationClient.AuthorizeAsync(
+            representativeId,
+            command.StudentId,
+            cancellationToken);
+        if (authorization is null
+            || authorization.RelationshipId == Guid.Empty
+            || !Enum.TryParse<CoachingAgreementPartyRole>(authorization.PartyRole, out var partyRole)
+            || partyRole == CoachingAgreementPartyRole.Self)
+        {
+            throw new BusinessRuleException(
+                "Authorization.Forbidden",
+                "Bu öğrenci adına koçluk anlaşmasını kabul etme yetkiniz yok.");
+        }
+
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        var requested = await repository.GetDocumentAsync(command.AgreementDocumentId, cancellationToken);
+        var current = requested is null
+            ? null
+            : await repository.GetCurrentAsync(requested.Locale, now, cancellationToken);
+        if (current is null || current.Id != command.AgreementDocumentId)
+        {
+            throw new BusinessRuleException(
+                "CoachingAgreement.NotCurrent",
+                "Yalnızca yürürlükteki koçluk anlaşması kabul edilebilir.");
+        }
+
+        var existing = await repository.GetActiveAcknowledgementAsync(
+            current.Id,
+            command.StudentId,
+            representativeId,
+            partyRole,
+            cancellationToken);
+        if (existing is not null)
+            return ToResponse(existing, current.Locale);
+
+        var acknowledgement = CoachingAgreementAcknowledgement.Create(
+            current.Id,
+            command.StudentId,
+            representativeId,
+            partyRole,
+            now,
+            authorization.RelationshipId);
+        await repository.AddAcknowledgementAsync(acknowledgement, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return ToResponse(acknowledgement, current.Locale);
+    }
+
+    private static CoachingAgreementAcknowledgementResponse ToResponse(
+        CoachingAgreementAcknowledgement acknowledgement,
+        string locale) => new(
+            acknowledgement.Id,
+            acknowledgement.AgreementDocumentId,
+            locale,
+            acknowledgement.AcknowledgedAt,
+            acknowledgement.WithdrawnAt);
+}
+
 public sealed record WithdrawCoachingAgreementAcknowledgementCommand(Guid AcknowledgementId)
     : IRequest<CoachingAgreementAcknowledgementResponse>, IBypassesCoachingAgreementRequirement;
 
@@ -243,6 +328,57 @@ public sealed class WithdrawCoachingAgreementAcknowledgementHandler(
                 "CoachingAgreementDocument",
                 acknowledgement.AgreementDocumentId);
         acknowledgement.Withdraw(studentId, timeProvider.GetUtcNow().UtcDateTime);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return new CoachingAgreementAcknowledgementResponse(
+            acknowledgement.Id,
+            acknowledgement.AgreementDocumentId,
+            document.Locale,
+            acknowledgement.AcknowledgedAt,
+            acknowledgement.WithdrawnAt);
+    }
+}
+
+public sealed record WithdrawRepresentativeCoachingAgreementAcknowledgementCommand(Guid AcknowledgementId)
+    : IRequest<CoachingAgreementAcknowledgementResponse>, IBypassesCoachingAgreementRequirement;
+
+public sealed class WithdrawRepresentativeCoachingAgreementAcknowledgementValidator
+    : AbstractValidator<WithdrawRepresentativeCoachingAgreementAcknowledgementCommand>
+{
+    public WithdrawRepresentativeCoachingAgreementAcknowledgementValidator() =>
+        RuleFor(command => command.AcknowledgementId).NotEmpty();
+}
+
+public sealed class WithdrawRepresentativeCoachingAgreementAcknowledgementHandler(
+    ICoachingAgreementRepository repository,
+    IUnitOfWork unitOfWork,
+    ICoachingAccessPolicy accessPolicy,
+    TimeProvider timeProvider)
+    : IRequestHandler<WithdrawRepresentativeCoachingAgreementAcknowledgementCommand, CoachingAgreementAcknowledgementResponse>
+{
+    public async Task<CoachingAgreementAcknowledgementResponse> Handle(
+        WithdrawRepresentativeCoachingAgreementAcknowledgementCommand command,
+        CancellationToken cancellationToken)
+    {
+        var representativeId = accessPolicy.CurrentUserId
+            ?? throw new BusinessRuleException("Authorization.Forbidden", "Oturum açmış temsilci bulunamadı.");
+        var acknowledgement = await repository.GetAcknowledgementAsync(
+            command.AcknowledgementId,
+            cancellationToken)
+            ?? throw new NotFoundException("CoachingAgreementAcknowledgement", command.AcknowledgementId);
+
+        if (acknowledgement.AcknowledgedByUserId != representativeId
+            || acknowledgement.PartyRole == CoachingAgreementPartyRole.Self)
+        {
+            throw new BusinessRuleException(
+                "Authorization.Forbidden",
+                "Yalnızca kendi temsilci kabul kaydınızı geri çekebilirsiniz.");
+        }
+
+        var document = await repository.GetDocumentAsync(
+            acknowledgement.AgreementDocumentId,
+            cancellationToken)
+            ?? throw new NotFoundException("CoachingAgreementDocument", acknowledgement.AgreementDocumentId);
+        acknowledgement.Withdraw(representativeId, timeProvider.GetUtcNow().UtcDateTime);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return new CoachingAgreementAcknowledgementResponse(
             acknowledgement.Id,

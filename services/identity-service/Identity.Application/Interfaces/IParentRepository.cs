@@ -15,4 +15,10 @@ public interface IParentStudentRelationshipRepository
     Task AddAsync(ParentStudentRelationship relationship, CancellationToken cancellationToken);
     Task<ParentStudentRelationship?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<bool> HasActiveAsync(Guid parentUserId, Guid studentUserId, CancellationToken cancellationToken);
+    Task<CoachingAgreementRepresentativeAuthorization?> AuthorizeCoachingAgreementRepresentativeAsync(
+        Guid representativeUserId,
+        Guid studentUserId,
+        CancellationToken cancellationToken);
 }
+
+public sealed record CoachingAgreementRepresentativeAuthorization(Guid RelationshipId, string PartyRole);

@@ -47,12 +47,40 @@ public sealed class CoachingAgreementRepository(CoachingDbContext context)
                     && acknowledgement.WithdrawnAt == null,
                 cancellationToken);
 
+    public Task<CoachingAgreementAcknowledgement?> GetActiveAcknowledgementForStudentAsync(
+        Guid documentId,
+        Guid studentId,
+        CancellationToken cancellationToken = default) =>
+        context.CoachingAgreementAcknowledgements
+            .AsNoTracking()
+            .Where(acknowledgement => acknowledgement.AgreementDocumentId == documentId)
+            .Where(acknowledgement => acknowledgement.SubjectStudentId == studentId)
+            .Where(acknowledgement => acknowledgement.WithdrawnAt == null)
+            .OrderByDescending(acknowledgement => acknowledgement.AcknowledgedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
     public Task<CoachingAgreementAcknowledgement?> GetAcknowledgementAsync(
         Guid acknowledgementId,
         CancellationToken cancellationToken = default) =>
         context.CoachingAgreementAcknowledgements
             .SingleOrDefaultAsync(
                 acknowledgement => acknowledgement.Id == acknowledgementId,
+                cancellationToken);
+
+    public Task<CoachingAgreementAcknowledgement?> GetActiveAcknowledgementAsync(
+        Guid documentId,
+        Guid studentId,
+        Guid acknowledgedByUserId,
+        CoachingAgreementPartyRole partyRole,
+        CancellationToken cancellationToken = default) =>
+        context.CoachingAgreementAcknowledgements
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                acknowledgement => acknowledgement.AgreementDocumentId == documentId
+                    && acknowledgement.SubjectStudentId == studentId
+                    && acknowledgement.AcknowledgedByUserId == acknowledgedByUserId
+                    && acknowledgement.PartyRole == partyRole
+                    && acknowledgement.WithdrawnAt == null,
                 cancellationToken);
 
     public Task AddDocumentAsync(

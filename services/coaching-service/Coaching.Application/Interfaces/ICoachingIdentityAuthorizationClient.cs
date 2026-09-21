@@ -25,3 +25,13 @@ public interface ICoachingIdentityAuthorizationClient
 /// an active institution id.
 /// </summary>
 public sealed record CoachingAdminAccessScope(bool IsGlobal, Guid? InstitutionId);
+
+public interface ICoachingAgreementRepresentativeAuthorizationClient
+{
+    Task<CoachingAgreementRepresentativeAuthorization?> AuthorizeAsync(
+        Guid representativeUserId,
+        Guid studentUserId,
+        CancellationToken cancellationToken);
+}
+
+public sealed record CoachingAgreementRepresentativeAuthorization(Guid RelationshipId, string PartyRole);

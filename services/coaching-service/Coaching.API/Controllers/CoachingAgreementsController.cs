@@ -51,6 +51,17 @@ public sealed class CoachingAgreementsController(IMediator mediator) : Controlle
         return CreatedAtAction(nameof(GetCurrent), new { locale = result.Locale }, result);
     }
 
+    [HttpPost("current/representative-acknowledgements")]
+    [Authorize(Roles = "Parent")]
+    [ProducesResponseType(typeof(CoachingAgreementAcknowledgementResponse), StatusCodes.Status201Created)]
+    public async Task<ActionResult<CoachingAgreementAcknowledgementResponse>> AcknowledgeCurrentAsRepresentative(
+        [FromBody] AcknowledgeCurrentCoachingAgreementAsRepresentativeCommand command,
+        CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(command, cancellationToken);
+        return CreatedAtAction(nameof(GetCurrent), new { locale = result.Locale }, result);
+    }
+
     [HttpDelete("acknowledgements/{acknowledgementId:guid}")]
     [Authorize(Roles = "Student")]
     [ProducesResponseType(typeof(CoachingAgreementAcknowledgementResponse), StatusCodes.Status200OK)]
@@ -59,5 +70,15 @@ public sealed class CoachingAgreementsController(IMediator mediator) : Controlle
         CancellationToken cancellationToken) =>
         Ok(await mediator.Send(
             new WithdrawCoachingAgreementAcknowledgementCommand(acknowledgementId),
+            cancellationToken));
+
+    [HttpDelete("representative-acknowledgements/{acknowledgementId:guid}")]
+    [Authorize(Roles = "Parent")]
+    [ProducesResponseType(typeof(CoachingAgreementAcknowledgementResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<CoachingAgreementAcknowledgementResponse>> WithdrawRepresentativeAcknowledgement(
+        Guid acknowledgementId,
+        CancellationToken cancellationToken) =>
+        Ok(await mediator.Send(
+            new WithdrawRepresentativeCoachingAgreementAcknowledgementCommand(acknowledgementId),
             cancellationToken));
 }

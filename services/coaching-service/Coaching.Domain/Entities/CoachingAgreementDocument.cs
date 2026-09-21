@@ -109,6 +109,7 @@ public sealed class CoachingAgreementAcknowledgement : Entity
     public Guid SubjectStudentId { get; private set; }
     public Guid AcknowledgedByUserId { get; private set; }
     public CoachingAgreementPartyRole PartyRole { get; private set; }
+    public Guid? AuthorityReferenceId { get; private set; }
     public DateTime AcknowledgedAt { get; private set; }
     public DateTime? WithdrawnAt { get; private set; }
     public Guid? WithdrawnByUserId { get; private set; }
@@ -120,7 +121,8 @@ public sealed class CoachingAgreementAcknowledgement : Entity
         Guid subjectStudentId,
         Guid acknowledgedByUserId,
         CoachingAgreementPartyRole partyRole,
-        DateTime acknowledgedAt)
+        DateTime acknowledgedAt,
+        Guid? authorityReferenceId = null)
     {
         if (agreementDocumentId == Guid.Empty)
             throw new ArgumentException("Agreement document is required.", nameof(agreementDocumentId));
@@ -132,6 +134,13 @@ public sealed class CoachingAgreementAcknowledgement : Entity
             throw new ArgumentOutOfRangeException(nameof(partyRole));
         if (partyRole == CoachingAgreementPartyRole.Self && subjectStudentId != acknowledgedByUserId)
             throw new ArgumentException("A self acknowledgement can only be recorded by the subject student.", nameof(acknowledgedByUserId));
+        if (partyRole == CoachingAgreementPartyRole.Self && authorityReferenceId.HasValue)
+            throw new ArgumentException("A self acknowledgement cannot carry representative authority.", nameof(authorityReferenceId));
+        if (partyRole != CoachingAgreementPartyRole.Self
+            && (!authorityReferenceId.HasValue || authorityReferenceId.Value == Guid.Empty))
+        {
+            throw new ArgumentException("Representative authority reference is required.", nameof(authorityReferenceId));
+        }
         if (acknowledgedAt.Kind != DateTimeKind.Utc)
             throw new ArgumentException("Acknowledgement timestamp must be UTC.", nameof(acknowledgedAt));
 
@@ -141,6 +150,7 @@ public sealed class CoachingAgreementAcknowledgement : Entity
             SubjectStudentId = subjectStudentId,
             AcknowledgedByUserId = acknowledgedByUserId,
             PartyRole = partyRole,
+            AuthorityReferenceId = authorityReferenceId,
             AcknowledgedAt = acknowledgedAt,
             CreatedAt = DateTime.UtcNow
         };

@@ -61,6 +61,32 @@ public sealed class CoachingAgreementRequirementBehaviorTests
     }
 
     [Fact]
+    public async Task StudentWithCurrentVerifiedRepresentativeAcknowledgement_ShouldReachHandler()
+    {
+        var studentId = Guid.NewGuid();
+        var document = CreateDocument();
+        var repository = new FakeAgreementRepository
+        {
+            Current = document,
+            Active = CoachingAgreementAcknowledgement.Create(
+                document.Id,
+                studentId,
+                Guid.NewGuid(),
+                CoachingAgreementPartyRole.LegalGuardian,
+                Now.AddMinutes(-1),
+                Guid.NewGuid())
+        };
+        var behavior = CreateBehavior<ProtectedRequest>(repository, new FakeAccessPolicy(studentId, isStudent: true));
+
+        var result = await behavior.Handle(
+            new ProtectedRequest(),
+            () => Task.FromResult("handled"),
+            default);
+
+        result.Should().Be("handled");
+    }
+
+    [Fact]
     public async Task MissingPublishedAgreement_ShouldFailClosed()
     {
         var repository = new FakeAgreementRepository();
@@ -146,6 +172,18 @@ public sealed class CoachingAgreementRequirementBehaviorTests
 
         public Task<CoachingAgreementAcknowledgement?> GetActiveSelfAcknowledgementAsync(Guid documentId, Guid studentId, CancellationToken cancellationToken = default) =>
             Task.FromResult(Active);
+
+        public Task<CoachingAgreementAcknowledgement?> GetActiveAcknowledgementForStudentAsync(
+            Guid documentId,
+            Guid studentId,
+            CancellationToken cancellationToken = default) => Task.FromResult(Active);
+
+        public Task<CoachingAgreementAcknowledgement?> GetActiveAcknowledgementAsync(
+            Guid documentId,
+            Guid studentId,
+            Guid acknowledgedByUserId,
+            CoachingAgreementPartyRole partyRole,
+            CancellationToken cancellationToken = default) => Task.FromResult<CoachingAgreementAcknowledgement?>(null);
 
         public Task<CoachingAgreementAcknowledgement?> GetAcknowledgementAsync(Guid acknowledgementId, CancellationToken cancellationToken = default) =>
             Task.FromResult<CoachingAgreementAcknowledgement?>(null);

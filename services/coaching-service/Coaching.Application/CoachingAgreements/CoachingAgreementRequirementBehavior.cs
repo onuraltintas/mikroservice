@@ -46,7 +46,7 @@ public sealed class CoachingAgreementRequirementBehavior<TRequest, TResponse>(
                 "Yürürlükte bir koçluk anlaşması bulunamadı. Lütfen daha sonra tekrar deneyin.");
         }
 
-        var acknowledgement = await repository.GetActiveSelfAcknowledgementAsync(
+        var acknowledgement = await repository.GetActiveAcknowledgementForStudentAsync(
             current.Id,
             userId,
             cancellationToken);

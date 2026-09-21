@@ -66,17 +66,20 @@ public sealed class CoachingAgreementDomainTests
     {
         var studentId = Guid.NewGuid();
         var guardianId = Guid.NewGuid();
+        var authorityReferenceId = Guid.NewGuid();
 
         var acknowledgement = CoachingAgreementAcknowledgement.Create(
             Guid.NewGuid(),
             studentId,
             guardianId,
             CoachingAgreementPartyRole.LegalGuardian,
-            DateTime.UtcNow);
+            DateTime.UtcNow,
+            authorityReferenceId);
 
         acknowledgement.SubjectStudentId.Should().Be(studentId);
         acknowledgement.AcknowledgedByUserId.Should().Be(guardianId);
         acknowledgement.PartyRole.Should().Be(CoachingAgreementPartyRole.LegalGuardian);
+        acknowledgement.AuthorityReferenceId.Should().Be(authorityReferenceId);
         acknowledgement.WithdrawnAt.Should().BeNull();
     }
 

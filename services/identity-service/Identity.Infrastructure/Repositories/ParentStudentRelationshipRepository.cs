@@ -30,4 +30,30 @@ public sealed class ParentStudentRelationshipRepository(IdentityDbContext contex
                 && relationship.StudentUserId == studentUserId
                 && relationship.Status != ParentStudentRelationshipStatus.Revoked,
             cancellationToken);
+
+    public async Task<CoachingAgreementRepresentativeAuthorization?> AuthorizeCoachingAgreementRepresentativeAsync(
+        Guid representativeUserId,
+        Guid studentUserId,
+        CancellationToken cancellationToken)
+    {
+        var relationship = await context.ParentStudentRelationships
+            .AsNoTracking()
+            .Where(item => item.ParentUserId == representativeUserId)
+            .Where(item => item.StudentUserId == studentUserId)
+            .Where(item => item.Status == ParentStudentRelationshipStatus.Verified)
+            .Where(item => item.ParentUser.IsActive && item.StudentUser.IsActive)
+            .Where(item => item.ParentUser.Roles.Any(userRole => userRole.Role.Name == "Parent"))
+            .Where(item => item.StudentUser.Roles.Any(userRole => userRole.Role.Name == "Student"))
+            .Select(item => new { item.Id, item.Relationship })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return relationship?.Relationship switch
+        {
+            ParentRelationship.Mother or ParentRelationship.Father =>
+                new CoachingAgreementRepresentativeAuthorization(relationship.Id, "Parent"),
+            ParentRelationship.Guardian =>
+                new CoachingAgreementRepresentativeAuthorization(relationship.Id, "LegalGuardian"),
+            _ => null
+        };
+    }
 }

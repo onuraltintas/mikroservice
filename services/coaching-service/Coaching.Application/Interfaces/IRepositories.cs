@@ -70,6 +70,18 @@ public interface ICoachingAgreementRepository
         Guid studentId,
         CancellationToken cancellationToken = default);
 
+    Task<CoachingAgreementAcknowledgement?> GetActiveAcknowledgementForStudentAsync(
+        Guid documentId,
+        Guid studentId,
+        CancellationToken cancellationToken = default);
+
+    Task<CoachingAgreementAcknowledgement?> GetActiveAcknowledgementAsync(
+        Guid documentId,
+        Guid studentId,
+        Guid acknowledgedByUserId,
+        Coaching.Domain.Enums.CoachingAgreementPartyRole partyRole,
+        CancellationToken cancellationToken = default);
+
     Task<CoachingAgreementAcknowledgement?> GetAcknowledgementAsync(
         Guid acknowledgementId,
         CancellationToken cancellationToken = default);

@@ -53,6 +53,7 @@ public sealed class CoachingAgreementAcknowledgementConfiguration
         builder.Property(item => item.SubjectStudentId).HasColumnName("subject_student_id").IsRequired();
         builder.Property(item => item.AcknowledgedByUserId).HasColumnName("acknowledged_by_user_id").IsRequired();
         builder.Property(item => item.PartyRole).HasColumnName("party_role").HasConversion<string>().HasMaxLength(30).IsRequired();
+        builder.Property(item => item.AuthorityReferenceId).HasColumnName("authority_reference_id");
         builder.Property(item => item.AcknowledgedAt).HasColumnName("acknowledged_at").IsRequired();
         builder.Property(item => item.WithdrawnAt).HasColumnName("withdrawn_at");
         builder.Property(item => item.WithdrawnByUserId).HasColumnName("withdrawn_by_user_id");

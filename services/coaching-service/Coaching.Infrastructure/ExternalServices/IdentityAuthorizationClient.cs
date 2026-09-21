@@ -7,7 +7,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Coaching.Infrastructure.ExternalServices;
 
-public sealed class IdentityAuthorizationClient : ICoachingIdentityAuthorizationClient, ICoachingIdentityReportClient
+public sealed class IdentityAuthorizationClient :
+    ICoachingIdentityAuthorizationClient,
+    ICoachingIdentityReportClient,
+    ICoachingAgreementRepresentativeAuthorizationClient
 {
     private readonly HttpClient _httpClient;
     private readonly string _baseUrl;
@@ -79,6 +82,49 @@ public sealed class IdentityAuthorizationClient : ICoachingIdentityAuthorization
                 ex,
                 "Identity coaching admin authorization failed for viewer {ViewerUserId}",
                 viewerUserId);
+            throw new InvalidOperationException("Identity authorization service is unavailable.", ex);
+        }
+    }
+
+    public async Task<CoachingAgreementRepresentativeAuthorization?> AuthorizeAsync(
+        Guid representativeUserId,
+        Guid studentUserId,
+        CancellationToken cancellationToken)
+    {
+        if (representativeUserId == Guid.Empty || studentUserId == Guid.Empty)
+            throw new BusinessRuleException("Authorization.Forbidden", "Temsilci yetkilendirme kapsamı geçersiz.");
+
+        EnsureServiceApiKey();
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"{_baseUrl}/api/internal/coaching/authorize-agreement-representative")
+        {
+            Content = JsonContent.Create(new { RepresentativeUserId = representativeUserId, StudentUserId = studentUserId })
+        };
+        request.Headers.Add(InternalServiceAuthentication.HeaderName, _serviceApiKey);
+
+        try
+        {
+            using var response = await _httpClient.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken);
+            if (response.StatusCode is System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.Unauthorized)
+                return null;
+
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<RepresentativeAuthorizationResponse>(
+                cancellationToken: cancellationToken);
+            return result is null
+                ? throw new InvalidOperationException("Identity representative authorization response was empty.")
+                : new CoachingAgreementRepresentativeAuthorization(result.RelationshipId, result.PartyRole);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            _logger.LogError(
+                ex,
+                "Identity agreement representative authorization failed for user {RepresentativeUserId}",
+                representativeUserId);
             throw new InvalidOperationException("Identity authorization service is unavailable.", ex);
         }
     }
@@ -388,6 +434,7 @@ public sealed class IdentityAuthorizationClient : ICoachingIdentityAuthorization
     private sealed record StudentReadAuthorizationResponse(Guid[]? AllowedStudentUserIds);
     private sealed record ReportStudentResponse(Guid[]? StudentUserIds);
     private sealed record ReportStudentPageResponse(Guid[]? StudentUserIds, int TotalCount);
+    private sealed record RepresentativeAuthorizationResponse(Guid RelationshipId, string PartyRole);
 
     private void EnsureServiceApiKey()
     {
