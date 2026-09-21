@@ -92,6 +92,10 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
     }
     const studentId = randomUUID();
     const otherId = randomUUID();
+    const teacherId = randomUUID();
+    const privateSessionId = randomUUID();
+    const sharedSessionId = randomUUID();
+    const otherSessionId = randomUUID();
     const identityDb = config.POSTGRES_DB_IDENTITY || 'identity_db';
     const coachingDb = config.POSTGRES_DB_COACHING || 'coaching_db';
     const email = `coaching-export-${studentId.replaceAll('-', '')}@example.test`;
@@ -124,10 +128,31 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
         COMMIT;
       `);
       seeded = true;
-      sql(config, coachingDb, `INSERT INTO coaching.academic_goals
+      sql(config, coachingDb, `BEGIN;
+        INSERT INTO coaching.academic_goals
         (id, student_id, title, category, current_progress, is_completed, created_at, "Version")
         VALUES (gen_random_uuid(), '${studentId}', 'Own export goal', 'Other', 0, false, '${now}', 0),
-          (gen_random_uuid(), '${otherId}', 'Other student secret', 'Other', 0, false, '${now}', 0);`);
+          (gen_random_uuid(), '${otherId}', 'Other student secret', 'Other', 0, false, '${now}', 0);
+        INSERT INTO coaching.coaching_sessions
+          (id, teacher_id, title, session_type, scheduled_date, duration_minutes, status,
+            teacher_notes, teacher_notes_visibility, created_at, "Version")
+        VALUES
+          ('${privateSessionId}', '${teacherId}', 'Private-note session', 'OneOnOne', '${now}', 60,
+            'Scheduled', 'Coach-only secret', 'CoachPrivate', '${now}', 0),
+          ('${sharedSessionId}', '${teacherId}', 'Shared-note session', 'OneOnOne', '${now}', 60,
+            'Scheduled', 'Shared guidance', 'StudentVisible', '${now}', 0),
+          ('${otherSessionId}', '${teacherId}', 'Other student session', 'OneOnOne', '${now}', 60,
+            'Scheduled', 'Other student private note', 'CoachPrivate', '${now}', 0);
+        INSERT INTO coaching.session_attendances
+          (id, session_id, student_id, attendance_status, student_note, teacher_note, created_at)
+        VALUES
+          (gen_random_uuid(), '${privateSessionId}', '${studentId}', 'NotRecorded',
+            'My reflection', 'Attendance coach secret', '${now}'),
+          (gen_random_uuid(), '${sharedSessionId}', '${studentId}', 'NotRecorded',
+            null, null, '${now}'),
+          (gen_random_uuid(), '${otherSessionId}', '${otherId}', 'NotRecorded',
+            null, null, '${now}');
+        COMMIT;`);
 
       assert.equal((await request(config, token(config, studentId, 'Teacher'))).status, 403);
       assert.equal((await request(config, token(config, otherId, 'Student'))).status, 403);
@@ -139,8 +164,19 @@ test('disposable Gateway exports only the authenticated student’s Coaching rec
       const exportData = await response.json();
       assert.equal(exportData.studentId.toLowerCase(), studentId);
       assert.deepEqual(exportData.goals.map(goal => goal.title), ['Own export goal']);
+      assert.deepEqual(exportData.sessions.map(session => session.title).sort(),
+        ['Private-note session', 'Shared-note session']);
+      assert.equal(exportData.sessions.find(session => session.title === 'Private-note session').studentNote,
+        'My reflection');
+      assert.equal(exportData.sessions.find(session => session.title === 'Private-note session').sharedCoachNote,
+        null);
+      assert.equal(exportData.sessions.find(session => session.title === 'Shared-note session').sharedCoachNote,
+        'Shared guidance');
+      assert.doesNotMatch(JSON.stringify(exportData), /Coach-only secret|Attendance coach secret|Other student private note/);
     } finally {
       if (seeded) {
+        sql(config, coachingDb, `DELETE FROM coaching.coaching_sessions
+          WHERE id IN ('${privateSessionId}', '${sharedSessionId}', '${otherSessionId}');`);
         sql(config, coachingDb, `DELETE FROM coaching.academic_goals WHERE student_id IN ('${studentId}', '${otherId}');`);
         sql(config, identityDb, `DELETE FROM identity.users WHERE "Id"='${studentId}';`);
       }
