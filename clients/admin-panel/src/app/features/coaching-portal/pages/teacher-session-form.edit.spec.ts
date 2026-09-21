@@ -21,6 +21,7 @@ describe('TeacherSessionFormComponent edit mode', () => {
       studentIds: ['student-1'],
       meetingLink: 'https://meet.example.test/old',
       teacherNotes: 'Koç notu korunmalı'
+      , teacherNotesVisibility: 'StudentVisible'
     };
     const service = {
       getTeacherStudents: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 0 })),
@@ -45,10 +46,14 @@ describe('TeacherSessionFormComponent edit mode', () => {
     expect(service.getTeacherSession).toHaveBeenCalledWith('session-1');
     expect(component.form.subject).toBe('Matematik');
     expect(component.form.notes).toBe('Koç notu korunmalı');
+    expect(component.form.notesVisibility).toBe('StudentVisible');
     component.form.startTime = '2030-01-05T10:00';
     component.submit();
 
     expect(service.updateTeacherSession).toHaveBeenCalledOnce();
+    expect(service.updateTeacherSession.mock.calls[0][1]).toMatchObject({
+      teacherNotesVisibility: 'StudentVisible'
+    });
     expect(router.navigate).toHaveBeenCalledWith(['/coaching-portal/sessions']);
   });
 });

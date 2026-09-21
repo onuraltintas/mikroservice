@@ -49,6 +49,7 @@ describe('TeacherSessionFormComponent', () => {
     component.form.subject = '  Matematik  ';
     component.form.startTime = '2030-01-04T10:00';
     component.toggleStudent(student.userId);
+    component.form.notesVisibility = 'GuardianVisible';
     component.submit();
 
     expect(service.getTeacherStudents).toHaveBeenCalledWith(1, 100);
@@ -60,6 +61,7 @@ describe('TeacherSessionFormComponent', () => {
       subject: 'Matematik',
       startTime: new Date('2030-01-04T10:00').toISOString(),
       studentIds: ['student-1']
+      , teacherNotesVisibility: 'GuardianVisible'
     });
     expect(idempotencyKey).toEqual(expect.any(String));
     expect(router.navigate).toHaveBeenCalledWith(['/coaching-portal/sessions']);
