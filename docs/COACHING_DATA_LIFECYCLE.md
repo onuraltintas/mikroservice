@@ -46,8 +46,9 @@ otomatik imha etkinleştirilmez.
 
 ## Kalan uygulama kapıları
 
-- Identity'de doğrulanmış `DataSubjectRequest` durumu ve MFA/yeniden kimlik
-  doğrulama.
+- Identity'de `DataSubjectRequest` durum makinesi, kullanıcının kendi taleplerini
+  izlemesi ve silme talebi için MFA kapısı tamamlandı. Operasyon görevlisinin
+  kimlik doğrulama/karar ekranı henüz eklenmedi.
 - Versionlanmış `PersonalDataErasureRequested/Completed/Failed` olayları.
 - Coaching'de idempotent anonymization worker ve object-storage delete kanıtı.
 - Kurum bazlı, hukukça onaylı retention konfigürasyonu ve legal hold.

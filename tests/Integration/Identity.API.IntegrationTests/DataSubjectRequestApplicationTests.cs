@@ -28,7 +28,8 @@ public sealed class DataSubjectRequestApplicationTests
             CancellationToken.None);
 
         result.RequesterUserId.Should().Be(userId);
-        repository.Added.Should().BeSameAs(result);
+        repository.Added.Should().NotBeNull();
+        repository.Added!.Id.Should().Be(result.Id);
     }
 
     [Fact]
