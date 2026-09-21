@@ -97,4 +97,49 @@ public sealed class ParentStudentRelationshipRepository(IdentityDbContext contex
             item.Relationship,
             item.Student)).ToList();
     }
+
+    public async Task<ParentStudentRelationshipPage> SearchAsync(
+        ParentStudentRelationshipStatus? status,
+        string? search,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var query = context.ParentStudentRelationships.AsNoTracking();
+        if (status.HasValue)
+            query = query.Where(item => item.Status == status.Value);
+
+        var normalizedSearch = search?.Trim().ToLower();
+        if (!string.IsNullOrEmpty(normalizedSearch))
+        {
+            query = query.Where(item =>
+                item.ParentUser.Email.ToLower().Contains(normalizedSearch)
+                || (item.ParentUser.FirstName + " " + item.ParentUser.LastName).ToLower().Contains(normalizedSearch)
+                || item.StudentUser.Email.ToLower().Contains(normalizedSearch)
+                || (item.StudentUser.FirstName + " " + item.StudentUser.LastName).ToLower().Contains(normalizedSearch));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderByDescending(item => item.RequestedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(item => new ParentStudentRelationshipListItem(
+                item.Id,
+                item.ParentUserId,
+                (item.ParentUser.FirstName + " " + item.ParentUser.LastName).Trim(),
+                item.ParentUser.Email,
+                item.StudentUserId,
+                (item.StudentUser.FirstName + " " + item.StudentUser.LastName).Trim(),
+                item.StudentUser.Email,
+                item.Relationship,
+                item.Status,
+                item.RequestedAt,
+                item.VerifiedAt,
+                item.RevokedAt,
+                item.RevocationReason))
+            .ToListAsync(cancellationToken);
+
+        return new ParentStudentRelationshipPage(items, totalCount);
+    }
 }

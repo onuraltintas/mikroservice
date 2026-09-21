@@ -156,6 +156,25 @@ export interface BulkRoleAssignmentRequest {
     removeExistingRoles: boolean;
 }
 
+export type ParentRelationship = 'Mother' | 'Father' | 'Guardian' | 'Other';
+export type ParentStudentRelationshipStatus = 'Pending' | 'Verified' | 'Revoked';
+
+export interface ParentStudentRelationshipDto {
+    id: string;
+    parentUserId: string;
+    parentName: string;
+    parentEmail: string;
+    studentUserId: string;
+    studentName: string;
+    studentEmail: string;
+    relationship: ParentRelationship;
+    status: ParentStudentRelationshipStatus;
+    requestedAt: string;
+    verifiedAt?: string;
+    revokedAt?: string;
+    revocationReason?: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -164,6 +183,7 @@ export class IdentityService {
     // environment.apiUrl is the same-origin '/api' path (the dev server proxies it locally).
     private baseUrl = `${environment.apiUrl}/users`;
     private rolesUrl = `${environment.apiUrl}/roles`;
+    private parentStudentRelationshipsUrl = `${environment.apiUrl}/parent-student-relationships`;
 
     getAllUsers(page: number, pageSize: number, search: string = '', role?: string, isActive?: boolean) {
         let params = new HttpParams()
@@ -181,6 +201,40 @@ export class IdentityService {
         let params = new HttpParams().set('page', page).set('pageSize', pageSize);
         if (search.trim()) params = params.set('search', search.trim());
         return this.http.get<PagedResult<SpeedReadingTeacherDirectoryItem>>(`${this.baseUrl}/speed-reading-teachers`, { params });
+    }
+
+    getParentStudentRelationships(
+        pageNumber = 1,
+        pageSize = 25,
+        search = '',
+        status?: ParentStudentRelationshipStatus
+    ) {
+        let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
+        if (search.trim()) params = params.set('search', search.trim());
+        if (status) params = params.set('status', status);
+        return this.http.get<PagedResult<ParentStudentRelationshipDto>>(
+            this.parentStudentRelationshipsUrl,
+            { params });
+    }
+
+    requestParentStudentRelationship(
+        parentUserId: string,
+        studentUserId: string,
+        relationship: ParentRelationship
+    ) {
+        return this.http.post<{ relationshipId: string }>(this.parentStudentRelationshipsUrl, {
+            parentUserId,
+            studentUserId,
+            relationship
+        });
+    }
+
+    verifyParentStudentRelationship(relationshipId: string) {
+        return this.http.post<void>(`${this.parentStudentRelationshipsUrl}/${relationshipId}/verify`, {});
+    }
+
+    revokeParentStudentRelationship(relationshipId: string, reason: string) {
+        return this.http.post<void>(`${this.parentStudentRelationshipsUrl}/${relationshipId}/revoke`, { reason });
     }
 
     getUserSummary() {

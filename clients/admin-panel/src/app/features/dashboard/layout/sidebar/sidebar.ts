@@ -86,6 +86,13 @@ export class SidebarComponent {
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5m-10.5-10.5v.008h.008V6.75h-.008Zm0 5.25v.008h.008V12h-.008Zm0 5.25v.008h.008v-.008h-.008Z" /></svg>'
           },
           {
+            label: 'Veli–öğrenci ilişkileri',
+            route: '/dashboard/identity/parent-student-relationships',
+            permission: ADMIN_PERMISSIONS.usersView,
+            role: 'SystemAdmin',
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM9 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 10.125a6.375 6.375 0 0 0-12 0v.003h12v-.003Zm0 0a6.375 6.375 0 0 1 12 0v.003H12v-.003Z" /></svg>'
+          },
+          {
             label: 'Roller',
             route: '/dashboard/identity/roles',
             permission: ADMIN_PERMISSIONS.rolesView,
@@ -296,6 +303,7 @@ export class SidebarComponent {
     const permissionByRoute: Record<string, string> = {
       '/dashboard/identity/users': ADMIN_PERMISSIONS.usersView,
       '/dashboard/identity/bulk-users': ADMIN_PERMISSIONS.usersView,
+      '/dashboard/identity/parent-student-relationships': ADMIN_PERMISSIONS.usersView,
       '/dashboard/identity/roles': ADMIN_PERMISSIONS.rolesView,
       '/dashboard/identity/permissions': ADMIN_PERMISSIONS.permissionView,
       '/dashboard/identity/institutions': ADMIN_PERMISSIONS.institutionsView,

@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Security.Authorization;
 using Identity.Application.Commands.ManageParentStudentRelationships;
+using Identity.Application.Queries.GetParentStudentRelationships;
 using Identity.Domain.Constants;
 using Identity.Domain.Enums;
 using MediatR;
@@ -14,6 +15,22 @@ namespace Identity.API.Controllers;
 [MfaCategory(MfaOperationCategories.Users)]
 public sealed class ParentStudentRelationshipsController(IMediator mediator) : ControllerBase
 {
+    [HttpGet]
+    [Authorize(Roles = "SystemAdmin")]
+    [HasPermission(Permissions.Users.View)]
+    public async Task<IActionResult> GetRelationships(
+        [FromQuery] ParentStudentRelationshipStatus? status,
+        [FromQuery] string? search,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 25,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await mediator.Send(
+            new GetParentStudentRelationshipsQuery(status, search, pageNumber, pageSize),
+            cancellationToken);
+        return result.IsSuccess ? Ok(result.Value) : Forbid();
+    }
+
     [HttpPost]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]

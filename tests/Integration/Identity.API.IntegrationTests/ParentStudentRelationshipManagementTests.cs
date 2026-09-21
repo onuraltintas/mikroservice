@@ -4,6 +4,7 @@ using EduPlatform.Shared.Security.Interfaces;
 using FluentAssertions;
 using Identity.API.Controllers;
 using Identity.Application.Commands.ManageParentStudentRelationships;
+using Identity.Application.Queries.GetParentStudentRelationships;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using Identity.Infrastructure.Persistence;
@@ -35,6 +36,46 @@ public sealed class ParentStudentRelationshipManagementTests
             .Cast<HasPermissionAttribute>()
             .Should()
             .Contain(attribute => attribute.Policy == "Permissions.Users.Edit");
+    }
+
+    [Fact]
+    public void ListAction_MustRequireSystemAdminAndUserViewPermission()
+    {
+        var method = typeof(ParentStudentRelationshipsController)
+            .GetMethod(nameof(ParentStudentRelationshipsController.GetRelationships));
+
+        method.Should().NotBeNull();
+        method!.GetCustomAttributes(typeof(AuthorizeAttribute), true)
+            .Cast<AuthorizeAttribute>()
+            .Should().Contain(attribute => attribute.Roles == "SystemAdmin");
+        method.GetCustomAttributes(typeof(HasPermissionAttribute), true)
+            .Cast<HasPermissionAttribute>()
+            .Should().Contain(attribute => attribute.Policy == "Permissions.Users.View");
+    }
+
+    [Fact]
+    public async Task List_ShouldFilterByStatusAndSearchWithoutExposingOtherRelationships()
+    {
+        await using var context = CreateContext();
+        var (parent, student) = AddEligibleUsers(context);
+        var (otherParent, otherStudent) = AddEligibleUsers(context);
+        var pending = ParentStudentRelationship.Request(
+            parent.Id, student.Id, ParentRelationship.Guardian, Guid.NewGuid(), DateTime.UtcNow.AddMinutes(-2));
+        var verified = ParentStudentRelationship.Request(
+            otherParent.Id, otherStudent.Id, ParentRelationship.Mother, Guid.NewGuid(), DateTime.UtcNow.AddMinutes(-1));
+        verified.Verify(ParentStudentVerificationMethod.ManualReview, Guid.NewGuid(), DateTime.UtcNow);
+        context.ParentStudentRelationships.AddRange(pending, verified);
+        await context.SaveChangesAsync();
+
+        var result = await new GetParentStudentRelationshipsQueryHandler(
+            new ParentStudentRelationshipRepository(context),
+            new StubCurrentUserService(Guid.NewGuid(), "SystemAdmin"))
+            .Handle(new(ParentStudentRelationshipStatus.Pending, parent.Email, 1, 10), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Items.Should().ContainSingle(item => item.Id == pending.Id);
+        result.Value.TotalCount.Should().Be(1);
+        result.Value.Items.Should().NotContain(item => item.Id == verified.Id);
     }
 
     [Fact]

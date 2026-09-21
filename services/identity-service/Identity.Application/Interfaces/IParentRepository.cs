@@ -23,6 +23,12 @@ public interface IParentStudentRelationshipRepository
     Task<IReadOnlyList<VerifiedParentStudentRelationship>> GetVerifiedChildrenAsync(
         Guid parentUserId,
         CancellationToken cancellationToken);
+    Task<ParentStudentRelationshipPage> SearchAsync(
+        ParentStudentRelationshipStatus? status,
+        string? search,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken);
 }
 
 public sealed record CoachingAgreementRepresentativeAuthorization(Guid RelationshipId, string PartyRole);
@@ -30,3 +36,14 @@ public sealed record VerifiedParentStudentRelationship(
     Guid RelationshipId,
     ParentRelationship Relationship,
     StudentProfile Student);
+
+public sealed record ParentStudentRelationshipListItem(
+    Guid Id, Guid ParentUserId, string ParentName, string ParentEmail,
+    Guid StudentUserId, string StudentName, string StudentEmail,
+    ParentRelationship Relationship, ParentStudentRelationshipStatus Status,
+    DateTime RequestedAt, DateTime? VerifiedAt, DateTime? RevokedAt,
+    string? RevocationReason);
+
+public sealed record ParentStudentRelationshipPage(
+    IReadOnlyList<ParentStudentRelationshipListItem> Items,
+    int TotalCount);
