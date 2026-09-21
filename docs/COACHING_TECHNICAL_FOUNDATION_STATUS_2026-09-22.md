@@ -18,6 +18,9 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
   Quay adresi indirildi. Compose adresi düzeltildi ve config kontrolü geçti.
 - CI, .NET 10 SDK ile `net10.0` projelerini derleyecek şekilde eşitlendi.
   Dağıtık gizlilik E2E işi container build için zorunlu bağımlılık yapıldı.
+- Disposable Koçluk backup/restore testi, mevcut veritabanından yalnız şemayı
+  alıp sentetik bir hedefi yedekledi ve yeni veritabanına geri yükledi. Geçici
+  veritabanları temizlendi; CI gizlilik işine aynı prova eklendi.
 
 ## Kapsam ölçümü
 
@@ -41,8 +44,9 @@ genel %80 kapsam hedefini kanıtlamaz.
    adaydır; canlı MinIO değişimi henüz onaylanıp yapılmadı.
 3. CI işinin GitHub Actions'ta yeşil çalıştığına dair kayıt. Yerel YAML ve
    Compose doğrulaması bu kanıtın yerine geçmez.
-4. Staging migration-only/canary, yedek–geri yükleme ve yeniden-imha provası;
-   hata oranı, gecikme ve alarm alıcılarının gözlenen sonucu.
+4. Staging migration-only/canary, gerçek veri kapsamlı yedek–geri yükleme ve
+   yeniden-imha provası; hata oranı, gecikme ve alarm alıcılarının gözlenen
+   sonucu. Yerel şema/sentetik kayıt provası bunun yerine geçmez.
 5. Dış güvenlik testi ve bulguların kapatılması. Eski MinIO OSS sürümünün
    production güvenlik onayı verilmedi; depolamanın VPS'te kalması seçildi.
 
