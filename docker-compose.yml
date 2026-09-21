@@ -266,6 +266,9 @@ services:
       - SpeedReading__CoachingIntegrationEnabled=${SPEED_READING_COACHING_INTEGRATION_ENABLED:-false}
       - SpeedReading__NotificationIntegrationEnabled=${SPEED_READING_NOTIFICATION_INTEGRATION_ENABLED:-false}
       - SpeedReading__SubscriptionIntegrationEnabled=${SPEED_READING_SUBSCRIPTION_INTEGRATION_ENABLED:-false}
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Username=${RABBITMQ_DEFAULT_USER}
+      - RabbitMQ__Password=${RABBITMQ_DEFAULT_PASS}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD}
@@ -297,6 +300,8 @@ services:
         condition: service_completed_successfully
       notification-service:
         condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
   # Standalone Speed Reading web client. Keep it behind the edge in staging and
   # production; the profile makes the base stack opt-in for local development.
