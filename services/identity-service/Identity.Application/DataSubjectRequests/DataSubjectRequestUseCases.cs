@@ -4,6 +4,7 @@ using Identity.Domain.Enums;
 using MediatR;
 using EduPlatform.Shared.Kernel.Exceptions;
 using EduPlatform.Shared.Contracts.Events.Privacy;
+using Microsoft.Extensions.Options;
 
 namespace Identity.Application.DataSubjectRequests;
 
@@ -38,6 +39,8 @@ public sealed record SubmitDataSubjectRequestCommand(
     string Reason) : IRequest<DataSubjectRequestDto>;
 
 public sealed record GetMyDataSubjectRequestsQuery : IRequest<IReadOnlyList<DataSubjectRequestDto>>;
+public sealed record GetDataSubjectRequestReviewDetailQuery(Guid RequestId)
+    : IRequest<DataSubjectRequestReviewDetailDto>;
 public sealed record GetDataSubjectRequestsForReviewQuery(
     DataSubjectRequestStatus? Status,
     int PageNumber = 1,
@@ -53,6 +56,16 @@ public sealed record DataSubjectRequestPageDto(
     int TotalCount,
     int PageNumber,
     int PageSize);
+
+public sealed class DataErasureAssessmentOptions
+{
+    public const string SectionName = "Privacy:ErasureAssessment";
+    public string[] RequiredServices { get; set; } = ["Coaching"];
+}
+
+public sealed record DataSubjectRequestReviewDetailDto(
+    DataSubjectRequestDto Request,
+    DataSubjectRequestAssessmentSummaryDto Assessment);
 
 public sealed record DataSubjectRequestAssessmentItemDto(
     string ServiceName,
@@ -183,6 +196,31 @@ public sealed class GetDataSubjectRequestsForReviewQueryHandler(
         }
 
         return userId;
+    }
+}
+
+public sealed class GetDataSubjectRequestReviewDetailQueryHandler(
+    IDataSubjectRequestRepository requestRepository,
+    IDataSubjectRequestAssessmentRepository assessmentRepository,
+    ICurrentUserService currentUser,
+    IOptions<DataErasureAssessmentOptions> options)
+    : IRequestHandler<GetDataSubjectRequestReviewDetailQuery, DataSubjectRequestReviewDetailDto>
+{
+    public async Task<DataSubjectRequestReviewDetailDto> Handle(
+        GetDataSubjectRequestReviewDetailQuery query,
+        CancellationToken cancellationToken)
+    {
+        GetDataSubjectRequestsForReviewQueryHandler.RequireSystemAdministrator(currentUser);
+        var request = await requestRepository.GetByIdAsync(query.RequestId, cancellationToken)
+            ?? throw new NotFoundException(nameof(DataSubjectRequest), query.RequestId);
+        var assessments = await assessmentRepository.GetByRequestIdAsync(
+            query.RequestId, cancellationToken);
+
+        return new DataSubjectRequestReviewDetailDto(
+            DataSubjectRequestDto.From(request),
+            DataSubjectRequestAssessmentSummaryDto.Create(
+                options.Value.RequiredServices,
+                assessments));
     }
 }
 

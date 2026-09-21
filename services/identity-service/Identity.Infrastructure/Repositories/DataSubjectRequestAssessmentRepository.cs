@@ -7,6 +7,15 @@ namespace Identity.Infrastructure.Repositories;
 
 public sealed class DataSubjectRequestAssessmentRepository(IdentityDbContext context) : IDataSubjectRequestAssessmentRepository
 {
+    public async Task<IReadOnlyList<DataSubjectRequestAssessmentResult>> GetByRequestIdAsync(
+        Guid requestId,
+        CancellationToken cancellationToken) =>
+        await context.DataSubjectRequestAssessmentResults
+            .AsNoTracking()
+            .Where(result => result.RequestId == requestId)
+            .OrderBy(result => result.ServiceName)
+            .ToListAsync(cancellationToken);
+
     public async Task RecordAsync(DataSubjectRequestAssessmentResult result, CancellationToken cancellationToken)
     {
         if (await context.DataSubjectRequestAssessmentResults.AnyAsync(

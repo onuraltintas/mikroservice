@@ -58,6 +58,18 @@ public sealed class DataSubjectRequestsController(IMediator mediator) : Controll
             new GetDataSubjectRequestsForReviewQuery(status, pageNumber, pageSize),
             cancellationToken));
 
+    [HttpGet("admin/{id:guid}")]
+    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
+    [HasPermission(PlatformPermissions.Privacy.View)]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<ActionResult<DataSubjectRequestReviewDetailDto>> AdminDetail(
+        Guid id,
+        CancellationToken cancellationToken) =>
+        Ok(await mediator.Send(
+            new GetDataSubjectRequestReviewDetailQuery(id),
+            cancellationToken));
+
     [HttpPost("{id:guid}/verify-identity")]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]

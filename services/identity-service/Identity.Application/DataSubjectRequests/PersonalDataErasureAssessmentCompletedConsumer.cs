@@ -7,6 +7,9 @@ namespace Identity.Application.DataSubjectRequests;
 public interface IDataSubjectRequestAssessmentRepository
 {
     Task RecordAsync(DataSubjectRequestAssessmentResult result, CancellationToken cancellationToken);
+    Task<IReadOnlyList<DataSubjectRequestAssessmentResult>> GetByRequestIdAsync(
+        Guid requestId,
+        CancellationToken cancellationToken);
 }
 
 public sealed class PersonalDataErasureAssessmentCompletedConsumer(IDataSubjectRequestAssessmentRepository repository)

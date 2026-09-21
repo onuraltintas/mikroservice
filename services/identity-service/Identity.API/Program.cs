@@ -5,6 +5,7 @@ using EduPlatform.Shared.Infrastructure.Observability;
 using EduPlatform.Shared.Security.Extensions;
 using Identity.Infrastructure;
 using Identity.Application;
+using Identity.Application.DataSubjectRequests;
 using Identity.Application.Interfaces;
 using Identity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -118,6 +119,8 @@ builder.Services.AddGlobalExceptionHandler();
 
 // Add Application (MediatR)
 builder.Services.AddApplication();
+builder.Services.Configure<DataErasureAssessmentOptions>(
+    builder.Configuration.GetSection(DataErasureAssessmentOptions.SectionName));
 
 // Add Controllers
 // Add Controllers
