@@ -1,5 +1,6 @@
 using Coaching.Domain.Entities;
 using Coaching.Infrastructure.Data;
+using Coaching.Infrastructure.Repositories;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 
@@ -58,6 +59,59 @@ public sealed class CoachingAgreementPersistenceTests
         activeEvidenceIndex.IsUnique.Should().BeTrue();
         activeEvidenceIndex.GetFilter().Should().Be("withdrawn_at IS NULL");
     }
+
+    [Fact]
+    public async Task Repository_ShouldSelectLatestEffectiveGlobalDocumentForLocale()
+    {
+        await using var context = CreateContext();
+        var now = new DateTime(2026, 9, 21, 12, 0, 0, DateTimeKind.Utc);
+        var older = CreateDocument("2026.1", "tr-TR", now.AddDays(-10));
+        var current = CreateDocument("2026.2", "tr-TR", now.AddDays(-1));
+        var future = CreateDocument("2026.3", "tr-TR", now.AddDays(1));
+        var otherLocale = CreateDocument("2026.2", "en-US", now.AddDays(-1));
+        context.AddRange(older, current, future, otherLocale);
+        await context.SaveChangesAsync();
+        var repository = new CoachingAgreementRepository(context);
+
+        var result = await repository.GetCurrentAsync("tr-TR", now);
+
+        result!.Id.Should().Be(current.Id);
+    }
+
+    [Fact]
+    public async Task Repository_ShouldIgnoreWithdrawnAcknowledgementWhenLookingForActiveEvidence()
+    {
+        await using var context = CreateContext();
+        var now = new DateTime(2026, 9, 21, 12, 0, 0, DateTimeKind.Utc);
+        var studentId = Guid.NewGuid();
+        var document = CreateDocument("2026.1", "tr-TR", now.AddDays(-1));
+        var evidence = CoachingAgreementAcknowledgement.Create(
+            document.Id,
+            studentId,
+            studentId,
+            Coaching.Domain.Enums.CoachingAgreementPartyRole.Self,
+            now.AddMinutes(-1));
+        evidence.Withdraw(studentId, now);
+        context.AddRange(document, evidence);
+        await context.SaveChangesAsync();
+        var repository = new CoachingAgreementRepository(context);
+
+        var result = await repository.GetActiveSelfAcknowledgementAsync(document.Id, studentId);
+
+        result.Should().BeNull();
+    }
+
+    private static CoachingAgreementDocument CreateDocument(
+        string version,
+        string locale,
+        DateTime effectiveAt) => CoachingAgreementDocument.Publish(
+            version,
+            locale,
+            "Koçluk Anlaşması",
+            $"https://legal.example.test/coaching/{locale}/{version}",
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            effectiveAt,
+            Guid.NewGuid());
 
     private static CoachingDbContext CreateContext()
     {

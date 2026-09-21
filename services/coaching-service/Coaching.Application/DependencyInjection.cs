@@ -14,6 +14,7 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
         services.AddScoped<ICoachingAccessPolicy, CoachingAccessPolicy>();
         services.AddScoped<ICoachingAdminScopeAuthorization, CoachingAdminScopeAuthorization>();
+        services.AddSingleton(TimeProvider.System);
 
 
         return services;

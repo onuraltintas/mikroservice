@@ -54,6 +54,35 @@ public interface IAcademicGoalRepository
     Task DeleteAsync(AcademicGoal goal, CancellationToken cancellationToken = default);
 }
 
+public interface ICoachingAgreementRepository
+{
+    Task<CoachingAgreementDocument?> GetDocumentAsync(
+        Guid documentId,
+        CancellationToken cancellationToken = default);
+
+    Task<CoachingAgreementDocument?> GetCurrentAsync(
+        string locale,
+        DateTime asOfUtc,
+        CancellationToken cancellationToken = default);
+
+    Task<CoachingAgreementAcknowledgement?> GetActiveSelfAcknowledgementAsync(
+        Guid documentId,
+        Guid studentId,
+        CancellationToken cancellationToken = default);
+
+    Task<CoachingAgreementAcknowledgement?> GetAcknowledgementAsync(
+        Guid acknowledgementId,
+        CancellationToken cancellationToken = default);
+
+    Task AddDocumentAsync(
+        CoachingAgreementDocument document,
+        CancellationToken cancellationToken = default);
+
+    Task AddAcknowledgementAsync(
+        CoachingAgreementAcknowledgement acknowledgement,
+        CancellationToken cancellationToken = default);
+}
+
 public interface ICoachingStudentProgressRepository
 {
     Task<StudentProgressSummaryDto> GetStudentSummaryAsync(
