@@ -1,5 +1,6 @@
 using Coaching.Application.Authorization;
 using Coaching.Application.Interfaces;
+using Coaching.Domain.Enums;
 using EduPlatform.Shared.Contracts.Events.Coaching;
 using FluentValidation;
 using MediatR;
@@ -13,7 +14,8 @@ public record UpdateSessionCommand(
     DateTime ScheduledDate,
     int DurationMinutes,
     string? MeetingLink,
-    string? TeacherNotes
+    string? TeacherNotes,
+    CoachingNoteVisibility TeacherNotesVisibility = CoachingNoteVisibility.CoachPrivate
 ) : IRequest<UpdateSessionResponse>;
 
 public record UpdateSessionResponse(Guid SessionId, DateTime ScheduledDate);
@@ -30,6 +32,7 @@ public sealed class UpdateSessionCommandValidator : AbstractValidator<UpdateSess
         RuleFor(command => command.DurationMinutes).InclusiveBetween(1, 240);
         RuleFor(command => command.Description).MaximumLength(2_000);
         RuleFor(command => command.TeacherNotes).MaximumLength(2_000);
+        RuleFor(command => command.TeacherNotesVisibility).IsInEnum();
         RuleFor(command => command.MeetingLink)
             .MaximumLength(500)
             .Must(link => Uri.TryCreate(link, UriKind.Absolute, out var uri)
@@ -73,7 +76,8 @@ public sealed class UpdateSessionCommandHandler
             command.ScheduledDate,
             command.DurationMinutes,
             command.MeetingLink,
-            command.TeacherNotes);
+            command.TeacherNotes,
+            command.TeacherNotesVisibility);
 
         await _eventPublisher.PublishAsync(
             new SessionUpdatedEvent(

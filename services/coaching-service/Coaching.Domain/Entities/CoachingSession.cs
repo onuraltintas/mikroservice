@@ -23,6 +23,7 @@ public class CoachingSession : AggregateRoot
     public SessionStatus Status { get; private set; }
 
     public string? TeacherNotes { get; private set; }
+    public CoachingNoteVisibility TeacherNotesVisibility { get; private set; } = CoachingNoteVisibility.CoachPrivate;
 
     // Navigation
     private readonly List<SessionAttendance> _attendances = new();
@@ -75,7 +76,8 @@ public class CoachingSession : AggregateRoot
         DateTime scheduledDate,
         int durationMinutes,
         string? meetingLink,
-        string? teacherNotes)
+        string? teacherNotes,
+        CoachingNoteVisibility teacherNotesVisibility = CoachingNoteVisibility.CoachPrivate)
     {
         if (Status != SessionStatus.Scheduled)
             throw new BusinessRuleException(
@@ -101,6 +103,11 @@ public class CoachingSession : AggregateRoot
         DurationMinutes = durationMinutes;
         MeetingLink = NormalizeOptional(meetingLink);
         TeacherNotes = NormalizeOptional(teacherNotes);
+        TeacherNotesVisibility = TeacherNotes is null
+            ? CoachingNoteVisibility.CoachPrivate
+            : Enum.IsDefined(teacherNotesVisibility)
+                ? teacherNotesVisibility
+                : throw new ArgumentOutOfRangeException(nameof(teacherNotesVisibility));
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -110,9 +117,17 @@ public class CoachingSession : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void AddTeacherNotes(string notes)
+    public void AddTeacherNotes(
+        string notes,
+        CoachingNoteVisibility visibility = CoachingNoteVisibility.CoachPrivate)
     {
-        TeacherNotes = notes;
+        if (string.IsNullOrWhiteSpace(notes))
+            throw new ArgumentException("Notes are required.", nameof(notes));
+        if (!Enum.IsDefined(visibility))
+            throw new ArgumentOutOfRangeException(nameof(visibility));
+
+        TeacherNotes = notes.Trim();
+        TeacherNotesVisibility = visibility;
         UpdatedAt = DateTime.UtcNow;
     }
 

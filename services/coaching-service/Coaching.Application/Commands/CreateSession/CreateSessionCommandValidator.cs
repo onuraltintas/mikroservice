@@ -23,6 +23,7 @@ public class CreateSessionCommandValidator : AbstractValidator<CreateSessionComm
         RuleFor(x => x.DurationMinutes).GreaterThan(0).LessThanOrEqualTo(240); // Max 4 hours
         RuleFor(x => x.Subject).MaximumLength(200);
         RuleFor(x => x.Notes).MaximumLength(2000);
+        RuleFor(x => x.TeacherNotesVisibility).IsInEnum();
         RuleFor(x => x.MeetingLink)
             .MaximumLength(500)
             .Must(link => Uri.TryCreate(link, UriKind.Absolute, out var uri)

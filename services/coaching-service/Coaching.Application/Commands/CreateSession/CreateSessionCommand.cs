@@ -13,7 +13,8 @@ public record CreateSessionCommand(
     SessionType Type,
     string? IdempotencyKey = null,
     IReadOnlyCollection<Guid>? StudentIds = null,
-    string? MeetingLink = null
+    string? MeetingLink = null,
+    CoachingNoteVisibility TeacherNotesVisibility = CoachingNoteVisibility.CoachPrivate
 ) : IRequest<CreateSessionResponse>;
 
 public record CreateSessionResponse(Guid SessionId);

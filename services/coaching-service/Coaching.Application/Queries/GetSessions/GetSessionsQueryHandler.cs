@@ -1,5 +1,6 @@
 using Coaching.Application.Interfaces;
 using Coaching.Application.Authorization;
+using Coaching.Domain.Enums;
 using MediatR;
 
 namespace Coaching.Application.Queries.GetSessions;
@@ -89,7 +90,14 @@ public class GetSessionsQueryHandler :
             query.PageNumber,
             query.PageSize,
             allowedStudentIds,
-            includeStudentNote: _accessPolicy.IsCurrentStudent(query.StudentId));
+            includeStudentNote: _accessPolicy.IsCurrentStudent(query.StudentId),
+            sharedNotesAudience: _accessPolicy.IsCurrentStudent(query.StudentId)
+                ? CoachingNoteVisibility.StudentVisible
+                : _accessPolicy.IsParent
+                    ? CoachingNoteVisibility.GuardianVisible
+                    : _accessPolicy.IsInstitutionAdministrator
+                        ? CoachingNoteVisibility.InstitutionVisible
+                        : null);
     }
 
     private static PagedResponse<SessionDto> MapToDto(
@@ -98,7 +106,8 @@ public class GetSessionsQueryHandler :
         int pageSize,
         IReadOnlySet<Guid>? visibleStudentIds = null,
         bool includeStudentNote = false,
-        bool includeStudentReflections = false)
+        bool includeStudentReflections = false,
+        CoachingNoteVisibility? sharedNotesAudience = null)
     {
         var sessions = page.Items.Select(s =>
         {
@@ -134,7 +143,11 @@ public class GetSessionsQueryHandler :
                 MeetingLink: s.MeetingLink,
                 StudentNote: studentNote,
                 StudentReflections: studentReflections,
-                TeacherNotes: includeStudentReflections ? s.TeacherNotes : null);
+                TeacherNotes: includeStudentReflections ? s.TeacherNotes : null,
+                SharedNotes: sharedNotesAudience == s.TeacherNotesVisibility ? s.TeacherNotes : null,
+                SharedNotesVisibility: sharedNotesAudience == s.TeacherNotesVisibility
+                    ? s.TeacherNotesVisibility.ToString()
+                    : null);
         }).ToList();
 
         return new PagedResponse<SessionDto>(sessions, pageNumber, pageSize, page.TotalCount);

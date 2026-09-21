@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Coaching.Domain.Entities;
+using Coaching.Domain.Enums;
 
 namespace Coaching.Infrastructure.Configurations;
 
@@ -62,6 +63,13 @@ public class CoachingSessionConfiguration : IEntityTypeConfiguration<CoachingSes
         builder.Property(x => x.TeacherNotes)
             .HasColumnName("teacher_notes")
             .HasColumnType("text");
+
+        builder.Property(x => x.TeacherNotesVisibility)
+            .HasColumnName("teacher_notes_visibility")
+            .HasConversion<string>()
+            .HasMaxLength(32)
+            .HasDefaultValue(CoachingNoteVisibility.CoachPrivate)
+            .IsRequired();
 
         builder.Property(x => x.CreatedAt)
             .HasColumnName("created_at")

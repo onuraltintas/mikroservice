@@ -58,6 +58,34 @@ public sealed class CoachingStudentSessionsQueryTests
             .Where(exception => exception.Code == "Authorization.Forbidden");
     }
 
+    [Theory]
+    [InlineData("Student", CoachingNoteVisibility.StudentVisible, true)]
+    [InlineData("Student", CoachingNoteVisibility.CoachPrivate, false)]
+    [InlineData("Parent", CoachingNoteVisibility.GuardianVisible, true)]
+    [InlineData("Parent", CoachingNoteVisibility.StudentVisible, false)]
+    public async Task StudentSessionQuery_ShouldExposeNotesOnlyToTheirDeclaredAudience(
+        string viewerRole,
+        CoachingNoteVisibility visibility,
+        bool shouldBeVisible)
+    {
+        var studentId = Guid.NewGuid();
+        var viewerId = viewerRole == "Student" ? studentId : Guid.NewGuid();
+        var session = CoachingSession.Create(
+            Guid.NewGuid(), "Paylaşım sınırı", DateTime.UtcNow.AddDays(1), SessionType.OneOnOne);
+        session.AddStudent(studentId);
+        session.AddTeacherNotes("Hedeflenen kitle notu", visibility);
+        var handler = new GetSessionsQueryHandler(
+            new StubSessionRepository(session),
+            CreatePolicy(viewerId, viewerRole),
+            new StubIdentityAuthorizationClient([studentId]));
+
+        var result = await handler.Handle(new GetStudentSessionsQuery(studentId), CancellationToken.None);
+
+        result.Items.Single().SharedNotes.Should().Be(
+            shouldBeVisible ? "Hedeflenen kitle notu" : null);
+        result.Items.Single().TeacherNotes.Should().BeNull();
+    }
+
     [Fact]
     public async Task TeacherSessionQuery_ShouldExposeOnlyIdentityAuthorizedStudentReflections()
     {
