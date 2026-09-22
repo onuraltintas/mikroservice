@@ -49,6 +49,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+    volumes: !override
+      - type: bind
+        source: ${ATTACHMENT_MINIO_DATA_HOST_PATH:?ATTACHMENT_MINIO_DATA_HOST_PATH must point to the encrypted VPS storage directory}
+        target: /data
+
+  minio-provision:
+    profiles: !reset []
+    restart: "no"
 
   identity-service:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/identity-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
@@ -103,6 +111,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      minio-provision:
+        condition: service_completed_successfully
     secrets:
       - source: dataprotection_certificate
         target: eduplatform-dataprotection.pfx

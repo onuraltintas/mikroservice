@@ -42,6 +42,10 @@ services:
       timeout: 5s
       retries: 12
 
+  minio-provision:
+    profiles: !reset []
+    restart: "no"
+
   identity-service:
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
@@ -86,6 +90,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      minio-provision:
+        condition: service_completed_successfully
 
   coaching-migrations:
     build:

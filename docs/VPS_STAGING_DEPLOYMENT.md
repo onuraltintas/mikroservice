@@ -87,6 +87,11 @@ FORWARDED_HEADERS_FORWARD_LIMIT=1
 FORWARDED_HEADERS_KNOWN_NETWORKS=172.30.0.0/16
 ```
 
+`MINIO_ROOT_USER`/`MINIO_ROOT_PASSWORD`,
+`ATTACHMENT_MINIO_ACCESS_KEY`/`ATTACHMENT_MINIO_SECRET_KEY` değerlerinden
+farklı olmalıdır. İkinci çift yalnız Koçluk bucket'ına erişen uygulama
+hesabıdır; root hesabını Coaching container'a vermeyin.
+
 `GOOGLE_CLIENT_ID`, `POSTGRES_*`, MinIO kullanıcı/şifreleri ve observability
 admin şifresi de staging'e özel olmalıdır. `TEST_ADMIN_PASSWORD` ve
 `TEST_DEFAULT_PASSWORD` boş bırakılmalıdır; gerektiğinde yalnızca disposable
@@ -134,6 +139,33 @@ Let's Encrypt sertifikası alınmalıdır. Mevcut vhost dosyalarını kopyalayı
 ile yapılandırmayı kontrol edin; mevcut sunucudaki eski, ilgisiz vhost
 uyarılarını staging vhost hatalarından ayırın ve yalnızca başarılı kontrolün
 ardından `/usr/local/lsws/bin/lswsctrl reload` ile graceful reload yapın.
+
+## Production Koçluk dosya deposu ön koşulu
+
+Production overlay, MinIO verisini named Docker volume yerine VPS'teki
+`ATTACHMENT_MINIO_DATA_HOST_PATH` dizinine bağlar. İlk deploy'dan önce şifreli
+filesystem üzerinde aşağıdaki dizini yalnız root'un okuyabildiği şekilde
+oluşturun; mevcut Hızlı Okuma dizinlerine veya volume'larına dokunmayın:
+
+```bash
+install -d -o root -g root -m 0700 /srv/eduivme/object-storage/attachments
+```
+
+`.env` içinde bu yolu ve root hesabından farklı Koçluk uygulama kimlik
+bilgilerini tanımlayın. İlk `up` sırasında `minio-provision` bucket ile sınırlı
+politikayı uygular; `coaching-service` bu iş başarılı olmadan başlamaz. Kontrol
+için yalnız private Docker ağından şu komutları kullanın:
+
+```bash
+docker compose --env-file .env \
+  -f docker-compose.yml -f docker-compose.production.yml ps minio minio-provision coaching-service
+docker compose --env-file .env \
+  -f docker-compose.yml -f docker-compose.production.yml logs --no-color minio-provision
+```
+
+9000/9001 host portlarını açmayın. Ayrıntılı karar, yetki sınırı ve production
+go/no-go koşulları için [ADR-001](ADR-001-coaching-vps-object-storage.md)'e
+bakın.
 
 Migration container'ları (`identity-migrations`, `coaching-migrations`,
 `notification-migrations`) tamamlanmadan web servisleri başlamaz. Kontrol:

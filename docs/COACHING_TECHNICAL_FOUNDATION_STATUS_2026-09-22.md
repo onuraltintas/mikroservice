@@ -121,6 +121,13 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
   yolla sırasıyla güncelledi, iptal etti ve sildi; her aşama HTTP yanıtı ve
   PostgreSQL durumu ile doğrulandı. Bu, üç öğretmen yazma yoluna ilişkin
   yerel kanıttır; tüm Koçluk yazma yollarını kapsamaz.
+- Production/staging Compose'a MinIO bucket'ını ve root hesabından ayrı,
+  yalnız Koçluk bucket'ı için yetkili uygulama hesabını hazırlayan idempotent
+  `minio-provision` işi eklendi. Production'da MinIO verisi, zorunlu
+  `ATTACHMENT_MINIO_DATA_HOST_PATH` ile VPS'in şifreli filesystem'ine bağlanır;
+  uygulama provisioning tamamlanmadan başlamaz. Sözleşme testi ve birleşik
+  production/staging Compose config doğrulaması geçti. Bu, canlı VPS deploy'u,
+  şifreli disk doğrulaması veya harici yedek/restore kanıtı değildir.
 
 ## Kapsam ölçümü
 
