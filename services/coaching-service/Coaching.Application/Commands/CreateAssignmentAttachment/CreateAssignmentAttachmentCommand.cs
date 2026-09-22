@@ -50,6 +50,7 @@ public sealed class CreateAssignmentAttachmentCommandHandler(
     IAssignmentRepository repository,
     IUnitOfWork unitOfWork,
     ICoachingAccessPolicy accessPolicy,
+    ICoachingIdentityAuthorizationClient identityAuthorizationClient,
     IAssignmentAttachmentStorage storage)
     : IRequestHandler<CreateAssignmentAttachmentCommand, CreateAssignmentAttachmentResponse>
 {
@@ -58,6 +59,8 @@ public sealed class CreateAssignmentAttachmentCommandHandler(
         CancellationToken cancellationToken)
     {
         accessPolicy.RequireStudent(command.StudentId);
+        await CoachingStudentReadAuthorization.RequireAsync(
+            accessPolicy, identityAuthorizationClient, [command.StudentId], cancellationToken);
         AssignmentAttachmentPolicy.ValidateMetadata(
             command.FileName,
             command.ContentType,

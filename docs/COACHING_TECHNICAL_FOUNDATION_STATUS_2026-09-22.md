@@ -89,6 +89,11 @@ kanıtlanmamış kapıları ayırır. “%100” veya production onayı anlamın
   Identity → PostgreSQL → MinIO üzerinden sentetik öğrenci dosyası oluşturma,
   yükleme ve indirme geçti. Tarama öncesi okuma 409, başka öğrencinin okuması
   403; taranıp temiz işaretlenen dosyanın baytları sahibine doğru döndü.
+  Öğrenci Identity'de pasifleştirildikten sonra eski JWT ile bekleyen dosyayı
+  yükleme, yeni dosya kaydı oluşturma ve mevcut dosyayı indirme girişimlerinin
+  üçü de 403 döndü; bekleyen kayıt `PendingUpload` kaldı. Aktif kullanıcı akışı
+  aynı testte başarılı oldu. Böylece dosya yazma yolları yalnız JWT'ye değil,
+  güncel Identity durumuna da kapatıldı.
   CI gizlilik işine eklendi. Testte Development tarayıcı adaptörü kullanıldı;
   ClamAV'li production/staging taraması ve dağıtık silme zinciri bu HTTP
   testinin kapsamı değildir. MinIO yalnız disposable test ortamındaydı.

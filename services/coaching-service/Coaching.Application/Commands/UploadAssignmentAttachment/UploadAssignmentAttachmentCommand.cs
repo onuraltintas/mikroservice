@@ -26,6 +26,7 @@ public sealed class UploadAssignmentAttachmentCommandHandler(
     IAssignmentRepository repository,
     IUnitOfWork unitOfWork,
     ICoachingAccessPolicy accessPolicy,
+    ICoachingIdentityAuthorizationClient identityAuthorizationClient,
     IAssignmentAttachmentStorage storage,
     IAssignmentAttachmentScanner scanner)
     : IRequestHandler<UploadAssignmentAttachmentCommand, UploadAssignmentAttachmentResponse>
@@ -35,6 +36,8 @@ public sealed class UploadAssignmentAttachmentCommandHandler(
         CancellationToken cancellationToken)
     {
         accessPolicy.RequireStudent(command.StudentId);
+        await CoachingStudentReadAuthorization.RequireAsync(
+            accessPolicy, identityAuthorizationClient, [command.StudentId], cancellationToken);
         AssignmentAttachmentPolicy.ValidateContentMetadata(command.ContentType, command.SizeBytes);
 
         var assignment = await repository.GetByIdAsync(command.AssignmentId, cancellationToken)
