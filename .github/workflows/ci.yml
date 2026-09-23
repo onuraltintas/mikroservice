@@ -424,6 +424,7 @@ jobs:
 
       - name: Validate production and observability overlays
         env:
+          ATTACHMENT_STORAGE_PROVIDER: Minio
           DATAPROTECTION_CERTIFICATE_HOST_PATH: ${{ runner.temp }}/dataprotection-ci.pfx
           DATAPROTECTION_CERTIFICATE_PASSWORD: ci-config-only
           GRAFANA_ADMIN_PASSWORD: ci-config-only
