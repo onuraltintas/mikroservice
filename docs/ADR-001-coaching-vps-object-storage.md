@@ -4,6 +4,11 @@
 
 **Tarih:** 22 Eylül 2026
 
+**Karar güncellemesi (24 Eylül 2026):** Kullanıcı dosyaların ve yedeklerin
+yalnız kendi VPS'inde kalmasını seçti. VPS dışı kopya oluşturulmayacak.
+Canlı geçiş sırası ve geri dönüş koşulları
+[Koçluk VPS depolama runbook'unda](COACHING_VPS_STORAGE_CUTOVER.md) tutulur.
+
 ## Bağlam
 
 Koçluk öğrencilerinin yüklediği ekler, Hızlı Okuma'dan bağımsız Koçluk
@@ -35,8 +40,10 @@ başarılı olmadan başlamaz.
   dışı secret store'da tutulur.
 - VPS'teki hedef dizin şifreli disk üzerinde, `root:root` sahipliğinde ve `0700`
   izinli olmalıdır; MinIO API/console portları public yayınlanmaz.
-- Yedek, aynı VPS'te ikinci kopya olamaz. Şifreli ve erişim kontrollü harici
-  hedef seçilmeden production onayı verilmez.
+- VPS içinde ayrı, erişimi sınırlandırılmış ve düzenli geri yükleme provası
+  yapılan yerel yedek tutulabilir. Bu kopya aynı fiziksel sunucu/disk arızasına
+  karşı koruma sağlamaz. VPS dışı yedek kullanıcı kararıyla kapsam dışıdır;
+  felaket kurtarma ve RPO/RTO kapısı bu nedenle tamamlandı sayılmaz.
 - Her credential rotasyonu önce staging'de yeni uygulama hesabı, yükle/oku/sil
   smoke testi ve eski hesabın kaldırılmasıyla doğrulanır.
 - Bu karar tek VPS için dayanıklılık sağlar; yüksek erişilebilirlik veya farklı

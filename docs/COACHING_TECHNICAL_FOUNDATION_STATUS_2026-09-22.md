@@ -162,5 +162,12 @@ genel %80 kapsam hedefini kanıtlamaz.
 5. Dış güvenlik testi ve bulguların kapatılması. Eski MinIO OSS sürümünün
    production güvenlik onayı verilmedi; depolamanın VPS'te kalması seçildi.
 
+24 Eylül karar notu: kullanıcı VPS dışı dosya/yedek kopyasını istemiyor.
+VPS içi yedek ve geri yükleme provası yapılabilir; aynı sunucunun veya diskin
+tam kaybına karşı kurtarma kanıtı sağlanamaz. Bu sınır teknik temel için açık
+risk olarak kalır, ``%100'' olarak yeniden adlandırılmaz. Canlı incelemede
+Koçluk'un MinIO root hesabını kullandığı ve `/data` yolunun Docker volume'a
+bağlı olduğu doğrulandı; bu iki üretim ayarı da henüz düzeltilmedi.
+
 Bu kapılar kapanmadan teknik temel “%100” veya production-ready olarak
 işaretlenmez.
