@@ -9,7 +9,26 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingAttachmentConfigurationTests
 {
     [Fact]
-    public void Production_RejectsLocalStorageProvider()
+    public void Production_RegistersLocalStorageWithExplicitPersistentPath()
+    {
+        var configuration = CreateConfiguration(new Dictionary<string, string?>
+        {
+            ["ASPNETCORE_ENVIRONMENT"] = "Production",
+            ["Coaching:Attachments:Provider"] = "Local",
+            ["Coaching:Attachments:RootPath"] = "/var/lib/eduplatform/attachments",
+            ["Coaching:Attachments:Scanner:Provider"] = "ClamAv"
+        });
+
+        var services = new ServiceCollection();
+        services.AddInfrastructure(configuration);
+
+        services.Any(descriptor =>
+            descriptor.ServiceType == typeof(IAssignmentAttachmentStorage)
+            && descriptor.ImplementationType?.Name == "LocalAssignmentAttachmentStorage").Should().BeTrue();
+    }
+
+    [Fact]
+    public void Production_RejectsLocalStorageWithoutExplicitPersistentPath()
     {
         var configuration = CreateConfiguration(new Dictionary<string, string?>
         {
@@ -22,7 +41,7 @@ public sealed class CoachingAttachmentConfigurationTests
         var act = () => services.AddInfrastructure(configuration);
 
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Provider=Minio*");
+            .WithMessage("*RootPath*");
     }
 
     [Fact]
@@ -31,11 +50,8 @@ public sealed class CoachingAttachmentConfigurationTests
         var configuration = CreateConfiguration(new Dictionary<string, string?>
         {
             ["ASPNETCORE_ENVIRONMENT"] = "Production",
-            ["Coaching:Attachments:Provider"] = "Minio",
-            ["Coaching:Attachments:MinioEndpoint"] = "minio:9000",
-            ["Coaching:Attachments:MinioAccessKey"] = "access",
-            ["Coaching:Attachments:MinioSecretKey"] = "secret",
-            ["Coaching:Attachments:MinioBucket"] = "attachments",
+            ["Coaching:Attachments:Provider"] = "Local",
+            ["Coaching:Attachments:RootPath"] = "/var/lib/eduplatform/attachments",
             ["Coaching:Attachments:Scanner:Provider"] = "Local"
         });
 
