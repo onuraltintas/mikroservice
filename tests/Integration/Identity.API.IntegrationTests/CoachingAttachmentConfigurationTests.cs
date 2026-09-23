@@ -45,6 +45,24 @@ public sealed class CoachingAttachmentConfigurationTests
     }
 
     [Fact]
+    public void Production_RejectsUnsupportedStorageProvider()
+    {
+        var configuration = CreateConfiguration(new Dictionary<string, string?>
+        {
+            ["ASPNETCORE_ENVIRONMENT"] = "Production",
+            ["Coaching:Attachments:Provider"] = "Minio",
+            ["Coaching:Attachments:RootPath"] = Path.Combine(Path.GetTempPath(), "coaching-attachments"),
+            ["Coaching:Attachments:Scanner:Provider"] = "ClamAv"
+        });
+
+        var services = new ServiceCollection();
+        var act = () => services.AddInfrastructure(configuration);
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*Provider*");
+    }
+
+    [Fact]
     public void Production_RejectsLocalScannerProvider()
     {
         var configuration = CreateConfiguration(new Dictionary<string, string?>
