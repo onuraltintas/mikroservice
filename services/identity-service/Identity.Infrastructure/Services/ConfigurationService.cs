@@ -70,10 +70,7 @@ public class ConfigurationService : IConfigurationService
 
         if (config == null) return null;
 
-        await _cache.SetStringAsync(cacheKey, config.Value, new DistributedCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24)
-        }, cancellationToken);
+        await _cache.SetStringAsync(cacheKey, config.Value, CacheOptionsFor(normalizedKey), cancellationToken);
 
         return config.Value;
     }
@@ -197,14 +194,19 @@ public class ConfigurationService : IConfigurationService
     {
         // We only update the main cache here. Public cache expires or is removed on delete.
         // It's safer to invalidate public cache on update.
-        await _cache.SetStringAsync($"{CacheKeyPrefix}{key}", value, new DistributedCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24)
-        }, ct);
+        await _cache.SetStringAsync($"{CacheKeyPrefix}{key}", value, CacheOptionsFor(key), ct);
         
         // Invalidate public cache for this key
          await _cache.RemoveAsync($"{CacheKeyPrefix}public:{key}", ct);
     }
+
+    private static DistributedCacheEntryOptions CacheOptionsFor(string key) =>
+        key.StartsWith("security.mfa.", StringComparison.Ordinal)
+            ? new DistributedCacheEntryOptions()
+            : new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24)
+            };
 
     private static void EnsureManageableDataType(ConfigurationDataType dataType)
     {
