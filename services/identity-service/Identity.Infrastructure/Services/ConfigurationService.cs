@@ -194,6 +194,11 @@ public class ConfigurationService : IConfigurationService
     {
         // We only update the main cache here. Public cache expires or is removed on delete.
         // It's safer to invalidate public cache on update.
+        if (key.StartsWith("security.mfa.", StringComparison.Ordinal))
+        {
+            // Redis preserves an existing key's TTL when rewritten without expiry.
+            await _cache.RemoveAsync($"{CacheKeyPrefix}{key}", ct);
+        }
         await _cache.SetStringAsync($"{CacheKeyPrefix}{key}", value, CacheOptionsFor(key), ct);
         
         // Invalidate public cache for this key
