@@ -159,7 +159,7 @@ public sealed class ConfigurationSecretSecurityTests
     }
 
     [Fact]
-    public async Task RefreshCache_ShouldKeepMfaPolicyWithoutExpiration()
+    public async Task RefreshCache_ShouldNotWriteMfaPolicyToRedis()
     {
         await using var context = CreateContext();
         context.Configurations.Add(SystemConfiguration.Create(
@@ -174,11 +174,34 @@ public sealed class ConfigurationSecretSecurityTests
 
         await service.RefreshCacheAsync(CancellationToken.None);
 
-        cache.MfaEntryOptions.Should().NotBeNull();
-        cache.MfaEntryOptions!.AbsoluteExpirationRelativeToNow.Should().BeNull();
-        cache.MfaEntryOptions.AbsoluteExpiration.Should().BeNull();
-        cache.MfaEntryOptions.SlidingExpiration.Should().BeNull();
-        cache.RemovedMfaKey.Should().BeTrue();
+        cache.MfaEntryOptions.Should().BeNull();
+        cache.RemovedMfaKey.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task UpdateMfaPolicy_ShouldSucceedWhenRedisWriteFails()
+    {
+        await using var context = CreateContext();
+        var key = MfaOperationCategories.ConfigurationKey(MfaOperationCategories.Users);
+        context.Configurations.Add(SystemConfiguration.Create(
+            key,
+            MfaPolicyModes.Disabled,
+            "MFA",
+            ConfigurationDataType.String,
+            "Security"));
+        await context.SaveChangesAsync();
+        var service = new ConfigurationService(
+            context,
+            new RecordingCache(throwOnMfaWrite: true),
+            NullLogger<ConfigurationService>.Instance);
+
+        await service.UpdateConfigurationAsync(
+            key,
+            new UpdateConfigurationRequest { Value = MfaPolicyModes.MutationsOnly },
+            CancellationToken.None);
+
+        (await service.GetManageableConfigurationValueAsync(key, CancellationToken.None))
+            .Should().Be(MfaPolicyModes.MutationsOnly);
     }
 
     [Fact]
@@ -243,7 +266,7 @@ public sealed class ConfigurationSecretSecurityTests
             NullLogger<ConfigurationService>.Instance);
     }
 
-    private sealed class RecordingCache : IDistributedCache
+    private sealed class RecordingCache(bool throwOnMfaWrite = false) : IDistributedCache
     {
         public DistributedCacheEntryOptions? MfaEntryOptions { get; private set; }
         public bool RemovedMfaKey { get; private set; }
@@ -269,6 +292,10 @@ public sealed class ConfigurationSecretSecurityTests
         {
             if (key.StartsWith("config:security.mfa.", StringComparison.Ordinal))
             {
+                if (throwOnMfaWrite)
+                {
+                    throw new InvalidOperationException("Redis unavailable");
+                }
                 MfaEntryOptions = options;
             }
         }
