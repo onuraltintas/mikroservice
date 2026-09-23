@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { checkCoachingStorage } from '../../../tools/coaching-storage-preflight.mjs';
 
@@ -40,4 +41,9 @@ test('rejects publicly published MinIO ports', () => {
   assert.deepEqual(checkCoachingStorage(configuration({ ports: ['9000:9000'] })), [
     'MinIO must not publish ports to the host.'
   ]);
+});
+
+test('CI validates the production storage configuration before release', async () => {
+  const workflow = await readFile(new URL('../../../.github/workflows/ci.yml', import.meta.url), 'utf8');
+  assert.match(workflow, /node tools\/coaching-storage-preflight\.mjs/);
 });
