@@ -45,5 +45,8 @@ test('rejects publicly published MinIO ports', () => {
 
 test('CI validates the production storage configuration before release', async () => {
   const workflow = await readFile(new URL('../../../.github/workflows/ci.yml', import.meta.url), 'utf8');
-  assert.match(workflow, /node tools\/coaching-storage-preflight\.mjs/);
+  const productionStep = workflow.split('      - name: Validate production and observability overlays')[1]
+    ?.split('      - name: Validate monitoring configuration files')[0];
+  assert.match(productionStep, /node tools\/coaching-storage-preflight\.mjs/);
+  assert.match(productionStep, /ATTACHMENT_STORAGE_PROVIDER: Minio/);
 });
