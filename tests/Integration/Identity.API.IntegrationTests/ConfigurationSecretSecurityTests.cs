@@ -178,6 +178,7 @@ public sealed class ConfigurationSecretSecurityTests
         cache.MfaEntryOptions!.AbsoluteExpirationRelativeToNow.Should().BeNull();
         cache.MfaEntryOptions.AbsoluteExpiration.Should().BeNull();
         cache.MfaEntryOptions.SlidingExpiration.Should().BeNull();
+        cache.RemovedMfaKey.Should().BeTrue();
     }
 
     [Fact]
@@ -223,13 +224,18 @@ public sealed class ConfigurationSecretSecurityTests
     private sealed class RecordingCache : IDistributedCache
     {
         public DistributedCacheEntryOptions? MfaEntryOptions { get; private set; }
+        public bool RemovedMfaKey { get; private set; }
 
         public byte[]? Get(string key) => null;
         public Task<byte[]?> GetAsync(string key, CancellationToken token = default) => Task.FromResult<byte[]?>(null);
         public void Refresh(string key) { }
         public Task RefreshAsync(string key, CancellationToken token = default) => Task.CompletedTask;
-        public void Remove(string key) { }
-        public Task RemoveAsync(string key, CancellationToken token = default) => Task.CompletedTask;
+        public void Remove(string key) => RecordRemoval(key);
+        public Task RemoveAsync(string key, CancellationToken token = default)
+        {
+            RecordRemoval(key);
+            return Task.CompletedTask;
+        }
         public void Set(string key, byte[] value, DistributedCacheEntryOptions options) => Record(key, options);
         public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default)
         {
@@ -242,6 +248,14 @@ public sealed class ConfigurationSecretSecurityTests
             if (key.StartsWith("config:security.mfa.", StringComparison.Ordinal))
             {
                 MfaEntryOptions = options;
+            }
+        }
+
+        private void RecordRemoval(string key)
+        {
+            if (key.StartsWith("config:security.mfa.", StringComparison.Ordinal))
+            {
+                RemovedMfaKey = true;
             }
         }
     }
