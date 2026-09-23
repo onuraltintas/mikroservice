@@ -402,6 +402,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node for storage preflight
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+
       - name: Validate development and scale configurations
         run: |
           docker compose --env-file .env.example config --quiet
@@ -425,10 +430,15 @@ jobs:
           RELEASE_TAG: ci
           SPEED_READING_CONNECTION_STRING: 'Host=ci-speed-reading;Port=5432;Database=speedreading;Username=ci;Password=ci-only'
         run: |
+          node --test tests/E2E/support/coaching-storage-preflight.test.mjs
           docker compose --env-file .env.example \
             -f docker-compose.yml \
             -f docker-compose.production.yml \
             -f docker-compose.observability.yml config --quiet
+          docker compose --env-file .env.example \
+            -f docker-compose.yml \
+            -f docker-compose.production.yml \
+            config --format json | node tools/coaching-storage-preflight.mjs
 
       - name: Validate monitoring configuration files
         run: |
