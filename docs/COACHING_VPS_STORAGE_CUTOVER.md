@@ -11,7 +11,9 @@ disk tamamen kaybolursa yalnız VPS içinde tutulan yedekler kurtarma sağlamaz.
 2. Mevcut Koçluk görüntüsünü ve Compose dosyasını geri dönüş için sakla.
 3. `docker compose config --quiet` ve
    `node tools/coaching-storage-preflight.mjs` ile yerel sağlayıcı ve kalıcı
-   volume bağını doğrula. Sır içeren Compose çıktısını dışarı aktarma.
+   volume bağını doğrula. Canlı Compose komutlarında proje adını açıkça
+   `-p eduivme-production` olarak belirt; varsayılan proje adı ikinci bir
+   konteyner oluşturabilir. Sır içeren Compose çıktısını dışarı aktarma.
 4. Yeni Koçluk görüntüsünü yalnız bu servise dağıt; `Provider=Local`,
    `RootPath=/var/lib/eduplatform/attachments` ve `Scanner=ClamAv` kullan.
 5. Sentetik bir dosyada yükle → oku → sil akışını, sahiplik kontrolünü,
