@@ -59,6 +59,11 @@ public class ConfigurationService : IConfigurationService
     public async Task<string?> GetConfigurationValueAsync(string key, CancellationToken cancellationToken)
     {
         var normalizedKey = key.ToLower().Trim();
+        if (normalizedKey.StartsWith("security.mfa.", StringComparison.Ordinal))
+        {
+            return await GetManageableConfigurationValueAsync(normalizedKey, cancellationToken);
+        }
+
         var cacheKey = $"{CacheKeyPrefix}{normalizedKey}";
 
         var cachedValue = await _cache.GetStringAsync(cacheKey, cancellationToken);

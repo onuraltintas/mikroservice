@@ -182,7 +182,7 @@ public sealed class ConfigurationSecretSecurityTests
     }
 
     [Fact]
-    public async Task CacheMiss_ShouldRestoreMfaPolicyWithoutExpiration()
+    public async Task MfaPolicyRead_ShouldNotPopulateCache()
     {
         await using var context = CreateContext();
         context.Configurations.Add(SystemConfiguration.Create(
@@ -200,7 +200,7 @@ public sealed class ConfigurationSecretSecurityTests
             CancellationToken.None);
 
         value.Should().Be(MfaPolicyModes.Disabled);
-        cache.MfaEntryOptions!.AbsoluteExpirationRelativeToNow.Should().BeNull();
+        cache.MfaEntryOptions.Should().BeNull();
     }
 
     [Fact]
