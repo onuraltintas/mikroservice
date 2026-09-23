@@ -203,6 +203,28 @@ public sealed class ConfigurationSecretSecurityTests
         cache.MfaEntryOptions!.AbsoluteExpirationRelativeToNow.Should().BeNull();
     }
 
+    [Fact]
+    public async Task MfaPolicyRead_ShouldPreferDatabaseOverStaleCache()
+    {
+        await using var context = CreateContext();
+        var key = MfaOperationCategories.ConfigurationKey(MfaOperationCategories.System);
+        context.Configurations.Add(SystemConfiguration.Create(
+            key,
+            MfaPolicyModes.Disabled,
+            "MFA",
+            ConfigurationDataType.String,
+            "Security"));
+        await context.SaveChangesAsync();
+        IDistributedCache cache = new MemoryDistributedCache(
+            Options.Create(new MemoryDistributedCacheOptions()));
+        await cache.SetStringAsync($"config:{key}", MfaPolicyModes.Required);
+        var service = new ConfigurationService(context, cache, NullLogger<ConfigurationService>.Instance);
+
+        var mode = await service.GetConfigurationValueAsync(key, CancellationToken.None);
+
+        mode.Should().Be(MfaPolicyModes.Disabled);
+    }
+
     private static IdentityDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<IdentityDbContext>()
