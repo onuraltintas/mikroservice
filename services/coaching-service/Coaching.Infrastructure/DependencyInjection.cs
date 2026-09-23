@@ -89,10 +89,12 @@ public static class DependencyInjection
         }
 
         if (environmentName.Equals("Production", StringComparison.OrdinalIgnoreCase)
-            && !storageOptions.Provider.Equals("Minio", StringComparison.OrdinalIgnoreCase))
+            && storageOptions.Provider.Equals("Local", StringComparison.OrdinalIgnoreCase)
+            && (string.IsNullOrWhiteSpace(configuration[$"{AssignmentAttachmentOptions.SectionName}:RootPath"])
+                || !Path.IsPathFullyQualified(storageOptions.RootPath)))
         {
             throw new InvalidOperationException(
-                "Production requires Coaching:Attachments:Provider=Minio.");
+                "Production local attachment storage requires an explicit absolute Coaching:Attachments:RootPath.");
         }
 
         services.AddOptions<AttachmentScanOptions>()

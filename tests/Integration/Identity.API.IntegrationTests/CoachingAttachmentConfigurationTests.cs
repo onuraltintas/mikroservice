@@ -15,7 +15,7 @@ public sealed class CoachingAttachmentConfigurationTests
         {
             ["ASPNETCORE_ENVIRONMENT"] = "Production",
             ["Coaching:Attachments:Provider"] = "Local",
-            ["Coaching:Attachments:RootPath"] = "/var/lib/eduplatform/attachments",
+            ["Coaching:Attachments:RootPath"] = Path.Combine(Path.GetTempPath(), "coaching-attachments"),
             ["Coaching:Attachments:Scanner:Provider"] = "ClamAv"
         });
 
@@ -51,7 +51,7 @@ public sealed class CoachingAttachmentConfigurationTests
         {
             ["ASPNETCORE_ENVIRONMENT"] = "Production",
             ["Coaching:Attachments:Provider"] = "Local",
-            ["Coaching:Attachments:RootPath"] = "/var/lib/eduplatform/attachments",
+            ["Coaching:Attachments:RootPath"] = Path.Combine(Path.GetTempPath(), "coaching-attachments"),
             ["Coaching:Attachments:Scanner:Provider"] = "Local"
         });
 
