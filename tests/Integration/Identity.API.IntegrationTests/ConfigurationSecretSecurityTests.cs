@@ -158,6 +158,50 @@ public sealed class ConfigurationSecretSecurityTests
             .WithMessage("*silinemez*");
     }
 
+    [Fact]
+    public async Task RefreshCache_ShouldKeepMfaPolicyWithoutExpiration()
+    {
+        await using var context = CreateContext();
+        context.Configurations.Add(SystemConfiguration.Create(
+            MfaOperationCategories.ConfigurationKey(MfaOperationCategories.Users),
+            MfaPolicyModes.Disabled,
+            "MFA",
+            ConfigurationDataType.String,
+            "Security"));
+        await context.SaveChangesAsync();
+        var cache = new RecordingCache();
+        var service = new ConfigurationService(context, cache, NullLogger<ConfigurationService>.Instance);
+
+        await service.RefreshCacheAsync(CancellationToken.None);
+
+        cache.MfaEntryOptions.Should().NotBeNull();
+        cache.MfaEntryOptions!.AbsoluteExpirationRelativeToNow.Should().BeNull();
+        cache.MfaEntryOptions.AbsoluteExpiration.Should().BeNull();
+        cache.MfaEntryOptions.SlidingExpiration.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task CacheMiss_ShouldRestoreMfaPolicyWithoutExpiration()
+    {
+        await using var context = CreateContext();
+        context.Configurations.Add(SystemConfiguration.Create(
+            MfaOperationCategories.ConfigurationKey(MfaOperationCategories.System),
+            MfaPolicyModes.Disabled,
+            "MFA",
+            ConfigurationDataType.String,
+            "Security"));
+        await context.SaveChangesAsync();
+        var cache = new RecordingCache();
+        var service = new ConfigurationService(context, cache, NullLogger<ConfigurationService>.Instance);
+
+        var value = await service.GetConfigurationValueAsync(
+            MfaOperationCategories.ConfigurationKey(MfaOperationCategories.System),
+            CancellationToken.None);
+
+        value.Should().Be(MfaPolicyModes.Disabled);
+        cache.MfaEntryOptions!.AbsoluteExpirationRelativeToNow.Should().BeNull();
+    }
+
     private static IdentityDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<IdentityDbContext>()
@@ -174,5 +218,31 @@ public sealed class ConfigurationSecretSecurityTests
             context,
             cache,
             NullLogger<ConfigurationService>.Instance);
+    }
+
+    private sealed class RecordingCache : IDistributedCache
+    {
+        public DistributedCacheEntryOptions? MfaEntryOptions { get; private set; }
+
+        public byte[]? Get(string key) => null;
+        public Task<byte[]?> GetAsync(string key, CancellationToken token = default) => Task.FromResult<byte[]?>(null);
+        public void Refresh(string key) { }
+        public Task RefreshAsync(string key, CancellationToken token = default) => Task.CompletedTask;
+        public void Remove(string key) { }
+        public Task RemoveAsync(string key, CancellationToken token = default) => Task.CompletedTask;
+        public void Set(string key, byte[] value, DistributedCacheEntryOptions options) => Record(key, options);
+        public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default)
+        {
+            Record(key, options);
+            return Task.CompletedTask;
+        }
+
+        private void Record(string key, DistributedCacheEntryOptions options)
+        {
+            if (key.StartsWith("config:security.mfa.", StringComparison.Ordinal))
+            {
+                MfaEntryOptions = options;
+            }
+        }
     }
 }

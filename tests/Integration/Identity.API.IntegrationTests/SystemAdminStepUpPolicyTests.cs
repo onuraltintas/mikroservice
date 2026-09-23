@@ -36,7 +36,6 @@ public sealed class SystemAdminStepUpPolicyTests
         { typeof(ConfigurationsController), nameof(ConfigurationsController.Create) },
         { typeof(ConfigurationsController), nameof(ConfigurationsController.Update) },
         { typeof(ConfigurationsController), nameof(ConfigurationsController.Delete) },
-        { typeof(ConfigurationsController), nameof(ConfigurationsController.RefreshCache) },
         { typeof(InstitutionsController), nameof(InstitutionsController.Create) },
         { typeof(InstitutionsController), nameof(InstitutionsController.SetActive) },
         { typeof(SystemLogsController), nameof(SystemLogsController.CreateRetentionPolicy) },
@@ -75,6 +74,19 @@ public sealed class SystemAdminStepUpPolicyTests
     public void MfaPolicyManagement_ShouldRequireSystemAdminWithoutStepUp()
     {
         var action = typeof(ConfigurationsController).GetMethod(nameof(ConfigurationsController.UpdateMfaPolicy));
+
+        action.Should().NotBeNull();
+        action!.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
+            .Cast<AuthorizeAttribute>()
+            .Should()
+            .Contain(attribute => attribute.Roles == "SystemAdmin")
+            .And.NotContain(attribute => attribute.Policy == "MfaRequired");
+    }
+
+    [Fact]
+    public void CacheRecovery_ShouldRequireSystemAdminWithoutMfaStepUp()
+    {
+        var action = typeof(ConfigurationsController).GetMethod(nameof(ConfigurationsController.RefreshCache));
 
         action.Should().NotBeNull();
         action!.GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
