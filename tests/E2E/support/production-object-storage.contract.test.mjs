@@ -43,3 +43,18 @@ test('production provisions a least-privilege Coaching object-storage account be
   assert.deepEqual(parsed.Statement[0].Resource, ['arn:aws:s3:::eduplatform-attachments']);
   assert.deepEqual(parsed.Statement[1].Resource, ['arn:aws:s3:::eduplatform-attachments/*']);
 });
+
+test('production Coaching uses its persistent local volume without starting MinIO', async () => {
+  const [base, production] = await Promise.all([
+    read('docker-compose.yml'),
+    read('docker-compose.production.yml')
+  ]);
+
+  const coaching = production.split('  coaching-service:')[1]?.split('  coaching-migrations:')[0];
+  const minio = production.split('  minio:')[1]?.split('  minio-provision:')[0];
+  assert.match(base, /coaching_attachments:\/var\/lib\/eduplatform\/attachments/);
+  assert.match(coaching, /Coaching__Attachments__Provider: Local/);
+  assert.doesNotMatch(coaching, /^      minio:/m);
+  assert.doesNotMatch(coaching, /^      minio-provision:/m);
+  assert.match(minio, /profiles: \["object-storage"\]/);
+});
