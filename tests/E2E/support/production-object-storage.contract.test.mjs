@@ -8,11 +8,9 @@ async function read(path) {
   return readFile(new URL(path, root), 'utf8');
 }
 
-test('production provisions a least-privilege Coaching object-storage account before Coaching starts', async () => {
-  const [base, ci, production, policy, provisioner] = await Promise.all([
+test('optional object storage provisions a least-privilege Coaching account', async () => {
+  const [base, policy, provisioner] = await Promise.all([
     read('docker-compose.yml'),
-    read('.github/workflows/ci.yml'),
-    read('docker-compose.production.yml'),
     read('infrastructure/minio/coaching-attachments-policy.json'),
     read('infrastructure/minio/provision-coaching-attachments.sh')
   ]);
@@ -23,11 +21,6 @@ test('production provisions a least-privilege Coaching object-storage account be
   assert.match(provisioner, /mc admin policy create local coaching-attachments/m);
   assert.match(provisioner, /mc admin user add local "\$ATTACHMENT_MINIO_ACCESS_KEY"/m);
   assert.match(provisioner, /mc admin policy attach local coaching-attachments --user="\$ATTACHMENT_MINIO_ACCESS_KEY"/m);
-
-  assert.match(production, /source: \$\{ATTACHMENT_MINIO_DATA_HOST_PATH:\?/);
-  assert.match(production, /minio-provision:\n[\s\S]*profiles: !reset \[\]/);
-  assert.match(production, /minio-provision:\n[\s\S]*condition: service_completed_successfully/);
-  assert.match(ci, /production-object-storage\.contract\.test\.mjs/);
 
   const parsed = JSON.parse(policy);
   assert.deepEqual(parsed.Statement[0].Action, [
@@ -51,10 +44,11 @@ test('production Coaching uses its persistent local volume without starting MinI
   ]);
 
   const coaching = production.split('  coaching-service:')[1]?.split('  coaching-migrations:')[0];
-  const minio = production.split('  minio:')[1]?.split('  minio-provision:')[0];
   assert.match(base, /coaching_attachments:\/var\/lib\/eduplatform\/attachments/);
+  assert.match(base, /  minio:\n[\s\S]*?profiles: \["object-storage"\]/);
   assert.match(coaching, /Coaching__Attachments__Provider: Local/);
   assert.doesNotMatch(coaching, /^      minio:/m);
   assert.doesNotMatch(coaching, /^      minio-provision:/m);
-  assert.match(minio, /profiles: \["object-storage"\]/);
+  assert.doesNotMatch(production, /^  minio:/m);
+  assert.doesNotMatch(production, /^  minio-provision:/m);
 });

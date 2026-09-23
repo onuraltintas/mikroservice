@@ -2,27 +2,21 @@ import { readFile } from 'node:fs/promises';
 
 export function checkCoachingStorage(config) {
   const issues = [];
-  const minio = config?.services?.minio;
   const coaching = config?.services?.['coaching-service'];
-  const minioEnvironment = minio?.environment ?? {};
   const coachingEnvironment = coaching?.environment ?? {};
+  const rootPath = coachingEnvironment.Coaching__Attachments__RootPath;
 
-  if (coachingEnvironment.Coaching__Attachments__Provider !== 'Minio') {
-    issues.push('Coaching must use the MinIO object-storage provider.');
+  if (coachingEnvironment.Coaching__Attachments__Provider !== 'Local') {
+    issues.push('Production Coaching must use local attachment storage.');
   }
 
-  if (!minioEnvironment.MINIO_ROOT_USER
-    || !coachingEnvironment.Coaching__Attachments__MinioAccessKey
-    || minioEnvironment.MINIO_ROOT_USER === coachingEnvironment.Coaching__Attachments__MinioAccessKey) {
-    issues.push('Coaching object-storage account must differ from MinIO root account.');
+  if (!rootPath || !coaching?.volumes?.some(volume =>
+    (volume.type === 'volume' || volume.type === 'bind') && volume.target === rootPath)) {
+    issues.push('Coaching attachment path must be backed by a persistent mount.');
   }
 
-  if (!minio?.volumes?.some(volume => volume.type === 'bind' && volume.target === '/data')) {
-    issues.push('MinIO /data must use a host bind mount.');
-  }
-
-  if (minio?.ports?.length) {
-    issues.push('MinIO must not publish ports to the host.');
+  if (coaching?.depends_on?.minio || coaching?.depends_on?.['minio-provision']) {
+    issues.push('Production Coaching must not depend on MinIO.');
   }
 
   return issues;

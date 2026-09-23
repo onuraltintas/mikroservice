@@ -38,26 +38,6 @@ services:
       timeout: 10s
       retries: 10
 
-  minio:
-    # Coaching attachments use the OSS S3-compatible object store in
-    # production; remove the optional development profile in this overlay.
-    profiles: !reset []
-    ports: !reset []
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-    volumes: !override
-      - type: bind
-        source: ${ATTACHMENT_MINIO_DATA_HOST_PATH:?ATTACHMENT_MINIO_DATA_HOST_PATH must point to the encrypted VPS storage directory}
-        target: /data
-
-  minio-provision:
-    profiles: !reset []
-    restart: "no"
-
   identity-service:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/identity-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     environment:
@@ -96,6 +76,10 @@ services:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/coaching-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     environment:
       ASPNETCORE_ENVIRONMENT: Production
+      Coaching__Attachments__Provider: Local
+      Coaching__Attachments__MinioAccessKey: ""
+      Coaching__Attachments__MinioSecretKey: ""
+      Coaching__Attachments__Scanner__Provider: ClamAv
       DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
       DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?DATAPROTECTION_CERTIFICATE_PASSWORD must be set}
     depends_on:
@@ -109,10 +93,6 @@ services:
         condition: service_healthy
       clamav:
         condition: service_healthy
-      minio:
-        condition: service_healthy
-      minio-provision:
-        condition: service_completed_successfully
     secrets:
       - source: dataprotection_certificate
         target: eduplatform-dataprotection.pfx
