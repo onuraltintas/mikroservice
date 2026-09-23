@@ -3,50 +3,48 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { checkCoachingStorage } from '../../../tools/coaching-storage-preflight.mjs';
 
-function configuration({ mountType = 'bind', ports = [], appKey = 'coaching-key', rootKey = 'root-key' } = {}) {
+function configuration({ provider = 'Local', volumes, dependsOn = {} } = {}) {
   return {
     services: {
-      minio: {
-        ports,
-        volumes: [{ type: mountType, source: '/srv/eduivme/storage', target: '/data' }],
-        environment: { MINIO_ROOT_USER: rootKey }
-      },
       'coaching-service': {
         environment: {
-          Coaching__Attachments__Provider: 'Minio',
-          Coaching__Attachments__MinioAccessKey: appKey
-        }
+          Coaching__Attachments__Provider: provider,
+          Coaching__Attachments__RootPath: '/var/lib/eduplatform/attachments',
+          Coaching__Attachments__Scanner__Provider: 'ClamAv'
+        },
+        volumes: volumes ?? [{ type: 'volume', source: 'coaching_attachments', target: '/var/lib/eduplatform/attachments' }],
+        depends_on: dependsOn
       }
     }
   };
 }
 
-test('accepts private bind-mounted storage with a distinct application account', () => {
+test('accepts local Coaching storage mounted on the VPS', () => {
   assert.deepEqual(checkCoachingStorage(configuration()), []);
 });
 
-test('rejects root credentials used by Coaching without printing credentials', () => {
-  assert.deepEqual(checkCoachingStorage(configuration({ appKey: 'shared-secret', rootKey: 'shared-secret' })), [
-    'Coaching object-storage account must differ from MinIO root account.'
+test('rejects unmounted attachment storage', () => {
+  assert.deepEqual(checkCoachingStorage(configuration({ volumes: [] })), [
+    'Coaching attachment path must be backed by a persistent mount.'
   ]);
 });
 
-test('rejects a Docker volume in place of a verified host bind mount', () => {
-  assert.deepEqual(checkCoachingStorage(configuration({ mountType: 'volume' })), [
-    'MinIO /data must use a host bind mount.'
+test('rejects a MinIO dependency in the production Coaching service', () => {
+  assert.deepEqual(checkCoachingStorage(configuration({ dependsOn: { minio: { condition: 'service_healthy' } } })), [
+    'Production Coaching must not depend on MinIO.'
   ]);
 });
 
-test('rejects publicly published MinIO ports', () => {
-  assert.deepEqual(checkCoachingStorage(configuration({ ports: ['9000:9000'] })), [
-    'MinIO must not publish ports to the host.'
+test('rejects an unexpected storage provider', () => {
+  assert.deepEqual(checkCoachingStorage(configuration({ provider: 'Minio' })), [
+    'Production Coaching must use local attachment storage.'
   ]);
 });
 
-test('CI validates the production storage configuration before release', async () => {
+test('CI validates the local production storage configuration', async () => {
   const workflow = await readFile(new URL('../../../.github/workflows/ci.yml', import.meta.url), 'utf8');
   const productionStep = workflow.split('      - name: Validate production and observability overlays')[1]
     ?.split('      - name: Validate monitoring configuration files')[0];
   assert.match(productionStep, /node tools\/coaching-storage-preflight\.mjs/);
-  assert.match(productionStep, /ATTACHMENT_STORAGE_PROVIDER: Minio/);
+  assert.doesNotMatch(productionStep, /ATTACHMENT_STORAGE_PROVIDER: Minio/);
 });
