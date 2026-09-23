@@ -85,7 +85,8 @@ public static class SecurityExtensions
         });
         services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationPolicyProvider, Authorization.PermissionPolicyProvider>();
         services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, Authorization.PermissionAuthorizationHandler>();
-        services.AddScoped<IMfaPolicyStore, MfaPolicyStore>();
+        services.AddHttpClient<IMfaPolicyStore, MfaPolicyStore>(client =>
+            client.Timeout = TimeSpan.FromSeconds(3));
         services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, MfaAuthorizationHandler>();
         return services;
     }

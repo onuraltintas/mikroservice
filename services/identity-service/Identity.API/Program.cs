@@ -13,6 +13,9 @@ using Serilog;
 using MassTransit;
 using DotNetEnv;
 using EduPlatform.Shared.Security.Services;
+using EduPlatform.Shared.Security.Authorization;
+using Identity.Infrastructure.Services;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // Load .env file from solution root
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", ".env");
@@ -171,6 +174,7 @@ builder.Services.AddSwaggerGen(options =>
 // Authentication & Authorization (Centralized)
 builder.Services.AddCustomAuthentication(builder.Configuration);
 builder.Services.AddCustomAuthorization();
+builder.Services.Replace(ServiceDescriptor.Scoped<IMfaPolicyStore, DatabaseMfaPolicyStore>());
 InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
 
 // Add Health Checks
