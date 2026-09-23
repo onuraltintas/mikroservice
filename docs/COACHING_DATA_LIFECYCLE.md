@@ -56,7 +56,7 @@ otomatik imha etkinleştirilmez.
   anonimleştirip talebi `Completed` yapar.
 - Coaching'de idempotent dry-run envanteri ve legal-hold bloklaması tamamlandı;
   onaylı yürütme öğrenciye bağlı kayıtları ve ekleri siler, legal hold'u yürütme
-  anında yeniden kontrol eder. İzole MinIO container'lı entegrasyon testi,
+  anında yeniden kontrol eder. Yerel depolama entegrasyon testi,
   yürütme servisinin gerçek nesneyi ve DB ek kaydını kaldırdığını doğrular;
   staging'deki tam broker + PostgreSQL + nesne depolama zinciri ayrıca kanıtlanmalıdır.
 - Kurum bazlı, hukukça onaylı retention konfigürasyonu ve legal-hold kararlarının

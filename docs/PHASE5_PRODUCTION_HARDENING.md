@@ -180,7 +180,7 @@ politikaları uygular.
   `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM_EMAIL`, `SMTP_USERNAME` ve
   `SMTP_PASSWORD` değerlerini gerçek sağlayıcıyla değiştirin. MailCatcher
   production profilinde başlatılmaz.
-- Production overlay'i attachment fotoğrafları için MinIO'yu ve malware taraması
+- Production overlay'i attachment fotoğrafları için kalıcı yerel volume'u ve malware taraması
   için ClamAV'ı otomatik olarak etkinleştirir; bunlar host portlarına açılmaz.
   Coaching servisi her iki container'ın healthcheck'i geçmeden başlamaz.
 - İlk SystemAdmin hesabı için `BOOTSTRAP_ADMIN_EMAIL` ve

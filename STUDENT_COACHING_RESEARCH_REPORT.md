@@ -771,7 +771,7 @@ Search:
   - Elasticsearch (gelecek için, koç arama)
   
 File Storage:
-  - MinIO / AWS S3 (kaynak dosyaları)
+  - VPS yerel dosya deposu (kaynak dosyaları)
   
 Video Conference:
   - Zoom SDK / Microsoft Teams

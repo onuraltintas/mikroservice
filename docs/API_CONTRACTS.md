@@ -245,20 +245,11 @@ Compose profile starts ClamAV:
 docker compose --env-file .env --profile security-scan up -d clamav
 ```
 
-Before Production, use `ATTACHMENT_SCANNER_PROVIDER=ClamAv` together with a
-MinIO/S3-compatible storage adapter. The repository includes a MinIO profile
-for local scale testing:
-
-```powershell
-docker compose --env-file .env --profile object-storage up -d minio
-```
-
-Set `ATTACHMENT_STORAGE_PROVIDER=Minio` and the `ATTACHMENT_MINIO_*` values
-before starting Coaching. Production configuration rejects both the `Local`
-storage provider and the `Local` scanner, and remains fail-closed if the
-configured dependencies cannot be reached. The application interface is
-storage-provider agnostic, so another S3-compatible service can be substituted
-without changing the API contract.
+Before Production, use `ATTACHMENT_SCANNER_PROVIDER=ClamAv` and mount the
+persistent `coaching_attachments` volume at
+`/var/lib/eduplatform/attachments`. Production accepts only the `Local`
+storage provider, rejects the development-only `Local` scanner, and remains
+fail-closed if the scanner cannot be reached.
 
 The same contract applies to Coaching `POST /api/exams`, `POST /api/sessions`,
 `POST /api/goals` and `POST /api/exams/{id}/results`, with scopes

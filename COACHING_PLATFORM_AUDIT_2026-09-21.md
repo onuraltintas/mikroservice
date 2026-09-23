@@ -39,7 +39,7 @@ Bugünkü kanıta dayalı değerlendirme:
 
 - Bireysel/grup seansı planlama, güncelleme, iptal, katılım ve notlar
 - Öğrenciye/gruba ödev, kitap ödevi ayrıntıları, teslim, puanlama ve öğretmen geri bildirimi
-- Dosya eki, boyut/tür politikası, yerel/MinIO depolama ve ClamAV tarama adaptörü
+- Dosya eki, boyut/tür politikası, yerel depolama ve ClamAV tarama adaptörü
 - Akademik hedef, hedef tarihi/puanı, ilerleme yüzdesi ve tamamlama
 - Sınav ve sonuç yönetimi; doğru/yanlış/boş, ders kırılımı, sıralama ve öğretmen notu
 - Öğrenci ilerleme özeti, kurum karşılaştırması ve kural tabanlı erken uyarı

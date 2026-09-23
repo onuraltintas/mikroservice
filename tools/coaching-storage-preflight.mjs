@@ -15,10 +15,6 @@ export function checkCoachingStorage(config) {
     issues.push('Coaching attachment path must be backed by a persistent mount.');
   }
 
-  if (coaching?.depends_on?.minio || coaching?.depends_on?.['minio-provision']) {
-    issues.push('Production Coaching must not depend on MinIO.');
-  }
-
   return issues;
 }
 

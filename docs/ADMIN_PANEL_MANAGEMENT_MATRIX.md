@@ -64,7 +64,7 @@ komutlarını kullanan açık aksiyonlar olarak sunulur. Böylece:
   assignment/seans/sınav ayrıntılarını görür. Öğrenci teslim durumu, katılım,
   not, geri bildirim ve attachment metadata'sı yalnızca korumalı admin ayrıntı
   endpoint'lerinden döner;
-  ham object-storage anahtarı, bekleyen/taranmamış dosya içeriği ve doğrudan bucket
+  ham dosya depolama anahtarı, bekleyen/taranmamış dosya içeriği ve doğrudan depo
   erişimi hiçbir API yanıtına eklenmez. Fotoğraf içeriği yalnızca `Clean` tarama
   durumundan sonra yetkili stream endpoint'i ile okunabilir.
 - Her create çağrısı `Idempotency-Key` ile korunur; tekrar gönderim aynı kaydı

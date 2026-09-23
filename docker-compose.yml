@@ -166,50 +166,6 @@ services:
       timeout: 10s
       retries: 10
 
-  # Optional OSS S3-compatible object storage for horizontally scaled Coaching.
-  # Enable with: docker compose --profile object-storage up -d minio
-  minio:
-    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
-    profiles: ["object-storage"]
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - minio_data:/data
-    networks:
-      - edu-network
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-
-  # Creates the bucket and the non-root account used by Coaching. This service
-  # is idempotent, so it also applies the policy after a credential rotation.
-  minio-provision:
-    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
-    profiles: ["object-storage"]
-    entrypoint: ["/bin/sh", "/bootstrap/provision-coaching-attachments.sh"]
-    environment:
-      MINIO_SERVER_URL: http://minio:9000
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      ATTACHMENT_MINIO_ACCESS_KEY: ${ATTACHMENT_MINIO_ACCESS_KEY}
-      ATTACHMENT_MINIO_SECRET_KEY: ${ATTACHMENT_MINIO_SECRET_KEY}
-      ATTACHMENT_MINIO_BUCKET: ${ATTACHMENT_MINIO_BUCKET:-eduplatform-attachments}
-    volumes:
-      - ./infrastructure/minio/provision-coaching-attachments.sh:/bootstrap/provision-coaching-attachments.sh:ro
-      - ./infrastructure/minio/coaching-attachments-policy.json:/bootstrap/coaching-attachments-policy.json:ro
-    depends_on:
-      minio:
-        condition: service_healthy
-    networks:
-      - edu-network
-
   # Coaching Service
   coaching-service:
     image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/coaching-service:${RELEASE_TAG:-dev}
@@ -235,12 +191,7 @@ services:
       - Services__IdentityService=http://identity-service:8080
       - Coaching__Attachments__RootPath=/var/lib/eduplatform/attachments
       - Coaching__Attachments__UploadUrlLifetimeMinutes=15
-      - Coaching__Attachments__Provider=${ATTACHMENT_STORAGE_PROVIDER:-Local}
-      - Coaching__Attachments__MinioEndpoint=${ATTACHMENT_MINIO_ENDPOINT:-minio:9000}
-      - Coaching__Attachments__MinioAccessKey=${ATTACHMENT_MINIO_ACCESS_KEY:-}
-      - Coaching__Attachments__MinioSecretKey=${ATTACHMENT_MINIO_SECRET_KEY:-}
-      - Coaching__Attachments__MinioBucket=${ATTACHMENT_MINIO_BUCKET:-eduplatform-attachments}
-      - Coaching__Attachments__MinioUseSsl=${ATTACHMENT_MINIO_USE_SSL:-false}
+      - Coaching__Attachments__Provider=Local
       - Coaching__Attachments__Scanner__Provider=${ATTACHMENT_SCANNER_PROVIDER:-Local}
       - Coaching__Attachments__Scanner__ClamAvHost=${ATTACHMENT_SCANNER_CLAMAV_HOST:-clamav}
       - Coaching__Attachments__Scanner__ClamAvPort=${ATTACHMENT_SCANNER_CLAMAV_PORT:-3310}
@@ -446,7 +397,6 @@ volumes:
   coaching_data_protection:
   coaching_attachments:
   clamav_data:
-  minio_data:
   notification_data_protection:
   gateway_data_protection:
   speed_reading_data_protection:

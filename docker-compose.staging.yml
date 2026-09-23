@@ -30,22 +30,6 @@ services:
       timeout: 10s
       retries: 10
 
-  minio:
-    # Coaching attachments are required in staging; remove the optional
-    # development profile from the base compose file.
-    profiles: !reset []
-    ports: !reset []
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-
-  minio-provision:
-    profiles: !reset []
-    restart: "no"
-
   identity-service:
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
@@ -76,6 +60,9 @@ services:
   coaching-service:
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
+      Coaching__Attachments__Provider: Local
+      Coaching__Attachments__RootPath: /var/lib/eduplatform/attachments
+      Coaching__Attachments__Scanner__Provider: ClamAv
     restart: unless-stopped
     depends_on:
       coaching-migrations:
@@ -88,10 +75,6 @@ services:
         condition: service_healthy
       clamav:
         condition: service_healthy
-      minio:
-        condition: service_healthy
-      minio-provision:
-        condition: service_completed_successfully
 
   coaching-migrations:
     build:

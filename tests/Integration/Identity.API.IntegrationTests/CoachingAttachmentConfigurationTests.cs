@@ -50,7 +50,7 @@ public sealed class CoachingAttachmentConfigurationTests
         var configuration = CreateConfiguration(new Dictionary<string, string?>
         {
             ["ASPNETCORE_ENVIRONMENT"] = "Production",
-            ["Coaching:Attachments:Provider"] = "Minio",
+            ["Coaching:Attachments:Provider"] = "External",
             ["Coaching:Attachments:RootPath"] = Path.Combine(Path.GetTempPath(), "coaching-attachments"),
             ["Coaching:Attachments:Scanner:Provider"] = "ClamAv"
         });

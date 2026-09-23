@@ -79,7 +79,6 @@ INTERNAL_SERVICE_API_KEY=<random-service-key>
 PUBLIC_APP_BASE_URL=https://staging.onuraltintas.net
 SMTP_HOST=mailcatcher
 SMTP_PORT=1025
-ATTACHMENT_STORAGE_PROVIDER=Minio
 ATTACHMENT_SCANNER_PROVIDER=ClamAv
 STAGING_DOMAIN=staging.onuraltintas.net
 TLS_ACME_EMAIL=onuraltintas@gmail.com
@@ -87,12 +86,7 @@ FORWARDED_HEADERS_FORWARD_LIMIT=1
 FORWARDED_HEADERS_KNOWN_NETWORKS=172.30.0.0/16
 ```
 
-`MINIO_ROOT_USER`/`MINIO_ROOT_PASSWORD`,
-`ATTACHMENT_MINIO_ACCESS_KEY`/`ATTACHMENT_MINIO_SECRET_KEY` değerlerinden
-farklı olmalıdır. İkinci çift yalnız Koçluk bucket'ına erişen uygulama
-hesabıdır; root hesabını Coaching container'a vermeyin.
-
-`GOOGLE_CLIENT_ID`, `POSTGRES_*`, MinIO kullanıcı/şifreleri ve observability
+`GOOGLE_CLIENT_ID`, `POSTGRES_*` ve observability
 admin şifresi de staging'e özel olmalıdır. `TEST_ADMIN_PASSWORD` ve
 `TEST_DEFAULT_PASSWORD` boş bırakılmalıdır; gerektiğinde yalnızca disposable
 E2E ortamında geçici olarak set edilir. Her altyapı bileşeni için farklı parola
@@ -109,7 +103,7 @@ doğrulayın:
 docker compose --env-file .env.staging \
   -f docker-compose.yml -f docker-compose.staging.yml \
   -f docker-compose.observability.yml \
-  --profile security-scan --profile object-storage config --quiet
+  --profile security-scan config --quiet
 ```
 
 İlk build ve çalıştırma:
@@ -118,7 +112,7 @@ docker compose --env-file .env.staging \
 docker compose --env-file .env.staging \
   -f docker-compose.yml -f docker-compose.staging.yml \
   -f docker-compose.observability.yml \
-  --profile security-scan --profile object-storage up -d --build
+  --profile security-scan up -d --build
 ```
 
 LiteSpeed'in 80/443 kullandığı mevcut sunucularda bunun yerine şu override'ı
@@ -129,7 +123,7 @@ docker compose --env-file .env.staging \
   -f docker-compose.yml -f docker-compose.staging.yml \
   -f docker-compose.staging.litespeed.yml \
   -f docker-compose.observability.yml \
-  --profile security-scan --profile object-storage up -d --build
+  --profile security-scan up -d --build
 ```
 
 Bu modda `staging.onuraltintas.net` için ayrı bir LiteSpeed vhost oluşturulmalı,
@@ -142,29 +136,17 @@ ardından `/usr/local/lsws/bin/lswsctrl reload` ile graceful reload yapın.
 
 ## Production Koçluk dosya deposu ön koşulu
 
-Production overlay, MinIO verisini named Docker volume yerine VPS'teki
-`ATTACHMENT_MINIO_DATA_HOST_PATH` dizinine bağlar. İlk deploy'dan önce şifreli
-filesystem üzerinde aşağıdaki dizini yalnız root'un okuyabildiği şekilde
-oluşturun; mevcut Hızlı Okuma dizinlerine veya volume'larına dokunmayın:
-
-```bash
-install -d -o root -g root -m 0700 /srv/eduivme/object-storage/attachments
-```
-
-`.env` içinde bu yolu ve root hesabından farklı Koçluk uygulama kimlik
-bilgilerini tanımlayın. İlk `up` sırasında `minio-provision` bucket ile sınırlı
-politikayı uygular; `coaching-service` bu iş başarılı olmadan başlamaz. Kontrol
-için yalnız private Docker ağından şu komutları kullanın:
+Production overlay, Koçluk eklerini kalıcı `coaching_attachments` Docker
+volume'una bağlar. Mevcut Hızlı Okuma dizinlerine ve volume'larına dokunmayın.
+Kontrol için:
 
 ```bash
 docker compose --env-file .env \
-  -f docker-compose.yml -f docker-compose.production.yml ps minio minio-provision coaching-service
-docker compose --env-file .env \
-  -f docker-compose.yml -f docker-compose.production.yml logs --no-color minio-provision
+  -f docker-compose.yml -f docker-compose.production.yml ps coaching-service
 ```
 
-9000/9001 host portlarını açmayın. Ayrıntılı karar, yetki sınırı ve production
-go/no-go koşulları için [ADR-001](ADR-001-coaching-vps-object-storage.md)'e
+Dosya yükle/oku/sil smoke testini çalıştırın. Ayrıntılı karar ve production
+go/no-go koşulları için [ADR-001](ADR-001-coaching-vps-local-storage.md)'e
 bakın.
 
 Migration container'ları (`identity-migrations`, `coaching-migrations`,
@@ -174,11 +156,11 @@ Migration container'ları (`identity-migrations`, `coaching-migrations`,
 docker compose --env-file .env.staging \
   -f docker-compose.yml -f docker-compose.staging.yml \
   -f docker-compose.observability.yml \
-  --profile security-scan --profile object-storage ps
+  --profile security-scan ps
 
 docker compose --env-file .env.staging \
   -f docker-compose.yml -f docker-compose.staging.yml \
-  --profile security-scan --profile object-storage logs \
+  --profile security-scan logs \
   identity-migrations coaching-migrations notification-migrations staging-edge
 ```
 
@@ -196,7 +178,7 @@ Tarayıcıda Angular SSR giriş sayfasını, Google girişini (etkinse), token
 yenileme akışını ve logout'u test edin. Coaching için en az şu senaryoları
 uygulayın: öğretmen ödev/sınav oluşturma ve düzeltme, öğrencinin kitap ödevi
 metin + fotoğraf yüklemesi, koç/öğrenci ilerleme görünümü, veli salt-okunur
-görünümü ve bildirim teslimi. Yüklenen dosyanın MinIO'da saklandığını ve
+görünümü ve bildirim teslimi. Yüklenen dosyanın Koçluk volume'unda saklandığını ve
 ClamAV taramasından geçmeyen dosyanın reddedildiğini doğrulayın.
 
 ## Gözlemleme ve geri alma
@@ -211,7 +193,7 @@ ssh -N \
   -L 127.0.0.1:9093:127.0.0.1:9093 user@<vps-ip>
 ```
 
-Deploy öncesi PostgreSQL ve MinIO yedeklerinin varlığını doğrulayın. Yeni
+Deploy öncesi PostgreSQL ve Koçluk dosya volume'u yedeklerinin varlığını doğrulayın. Yeni
 commit'te readiness, migration, error-rate veya kritik alert bozulursa son
 sağlıklı SHA'ya dönün, migration geri alma prosedürünü ayrıca değerlendirin ve
 olayı `docs/OPERATIONS_RUNBOOK.md` formatında kaydedin:
@@ -221,7 +203,7 @@ git checkout <last-known-good-sha>
 docker compose --env-file .env.staging \
   -f docker-compose.yml -f docker-compose.staging.yml \
   -f docker-compose.observability.yml \
-  --profile security-scan --profile object-storage up -d --build
+  --profile security-scan up -d --build
 ```
 
 Rollback, veri şemasını otomatik olarak geriye almaz. Geriye dönük uyumlu
@@ -232,7 +214,7 @@ migration ve restore planı olmadan production veritabanında `down` veya manuel
 
 Staging smoke ve E2E testleri geçmeden production deploy yapılmaz. Production'da
 `docker-compose.production.yml` kullanılmalı; gerçek SMTP, PFX ile Data
-Protection, MinIO/ClamAV, harici registry'den immutable image digest'leri,
+Protection, kalıcı Koçluk volume'u/ClamAV, harici registry'den immutable image digest'leri,
 backup/restore provası, canary ve en az 15 dakikalık monitoring gözlemi
 tamamlanmalıdır. 100.000+ kullanıcı hedefinde tek VPS yalnızca geçici staging
 olur; production için gateway/servis replica'ları, yönetilen veya HA PostgreSQL,

@@ -16,7 +16,7 @@ const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 function verifyContainers(config) {
   requireDisposableEnvironment(config);
   assert.match(config.COMPOSE_PROJECT_NAME || '', /^privacy-e2e-[a-z0-9-]+$/);
-  for (const service of ['identity-service', 'rabbitmq', 'minio']) {
+  for (const service of ['identity-service', 'rabbitmq', 'coaching-service']) {
     const compose = spawnSync(docker, ['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE,
       'ps', '-q', service], { cwd: repoRoot, encoding: 'utf8', timeout: 20_000 });
     if (compose.error || compose.status !== 0 || !compose.stdout.trim()) {
@@ -38,15 +38,6 @@ function verifyContainers(config) {
       assert.ok(container.NetworkSettings.Ports['15672/tcp']?.some(binding => binding.HostPort === port),
         'RabbitMQ management port must belong to the disposable Compose broker');
     }
-  }
-}
-
-function compose(config, args) {
-  const result = spawnSync(docker, ['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE, ...args], {
-    cwd: repoRoot, encoding: 'utf8', timeout: 25_000,
-  });
-  if (result.error || result.status !== 0) {
-    throw new Error(`Disposable Compose operation failed: ${result.stderr?.trim() || result.error?.message}`);
   }
 }
 
@@ -74,19 +65,15 @@ function sql(config, database, statement) {
   return result.stdout.trim();
 }
 
-function minio(config, args, input) {
+function localAttachment(config, operation, key) {
+  const path = `/var/lib/eduplatform/attachments/${key}`;
+  const script = operation === 'write'
+    ? 'mkdir -p "$(dirname "$1")" && printf jpeg > "$1"'
+    : 'test -f "$1"';
   return spawnSync(docker, [
-    'compose', '--env-file', config.E2E_COMPOSE_ENV_FILE, 'exec', '-T', 'minio',
-    'mc', ...args,
-  ], { cwd: repoRoot, input, encoding: 'utf8', timeout: 20_000 });
-}
-
-function requireMinio(config, args, input) {
-  const result = minio(config, args, input);
-  if (result.error || result.status !== 0) {
-    throw new Error(`Disposable MinIO operation failed: ${result.stderr?.trim() || result.error?.message}`);
-  }
-  return result.stdout.trim();
+    'compose', '--env-file', config.E2E_COMPOSE_ENV_FILE,
+    'exec', '-T', 'coaching-service', 'sh', '-c', script, 'sh', path,
+  ], { cwd: repoRoot, encoding: 'utf8', timeout: 20_000 });
 }
 
 async function publish(config, contract, message, requestId) {
@@ -154,8 +141,7 @@ test('disposable Docker account erasure completes across three product databases
   { timeout: 120_000 }, async () => {
     const config = await settings();
     verifyContainers(config);
-    for (const key of ['POSTGRES_USER', 'RABBITMQ_DEFAULT_USER', 'RABBITMQ_DEFAULT_PASS',
-      'MINIO_ROOT_USER', 'MINIO_ROOT_PASSWORD', 'ATTACHMENT_MINIO_BUCKET']) {
+    for (const key of ['POSTGRES_USER', 'RABBITMQ_DEFAULT_USER', 'RABBITMQ_DEFAULT_PASS']) {
       assert.ok(config[key], `${key} is required`);
     }
     await eventually(() => consumersReady(config), 'true', 'privacy consumers');
@@ -170,7 +156,6 @@ test('disposable Docker account erasure completes across three product databases
     const attachmentId = randomUUID();
     const storageKey = `privacy-e2e/${attachmentId}.jpg`;
     const otherStorageKey = `privacy-e2e/${randomUUID()}.jpg`;
-    const bucket = config.ATTACHMENT_MINIO_BUCKET;
     const now = new Date().toISOString();
     const email = `privacy-e2e-${userId.replaceAll('-', '')}@example.test`;
 
@@ -201,15 +186,9 @@ test('disposable Docker account erasure completes across three product databases
           size_bytes, sha256, status, created_at)
       VALUES ('${attachmentId}', '${assignmentStudentId}', '${storageKey}', 'privacy.jpg',
         'image/jpeg', 4, '${'a'.repeat(64)}', 'Clean', '${now}');`);
-    await eventually(async () => {
-      const result = minio(config, ['alias', 'set', 'privacy-e2e', 'http://127.0.0.1:9000',
-        config.MINIO_ROOT_USER, config.MINIO_ROOT_PASSWORD]);
-      return String(result.status === 0);
-    }, 'true', 'disposable MinIO');
-    requireMinio(config, ['mb', '--ignore-existing', `privacy-e2e/${bucket}`]);
-    requireMinio(config, ['pipe', `privacy-e2e/${bucket}/${storageKey}`], 'jpeg');
-    requireMinio(config, ['pipe', `privacy-e2e/${bucket}/${otherStorageKey}`], 'keep');
-    assert.equal(minio(config, ['stat', `privacy-e2e/${bucket}/${storageKey}`]).status, 0);
+    assert.equal(localAttachment(config, 'write', storageKey).status, 0);
+    assert.equal(localAttachment(config, 'write', otherStorageKey).status, 0);
+    assert.equal(localAttachment(config, 'exists', storageKey).status, 0);
     sql(config, notificationDb, `
       INSERT INTO "Notifications" ("Id", "UserId", "Title", "Message", "Type", "IsRead", "CreatedAt")
       VALUES (gen_random_uuid(), '${userId}', 'E2E', 'Delete', 'test', false, '${now}');
@@ -238,21 +217,7 @@ test('disposable Docker account erasure completes across three product databases
       eventId: randomUUID(), requestId, subjectUserId: userId,
       authorizedAt: new Date().toISOString(), scope: 1, schemaVersion: '1.0',
     };
-    compose(config, ['stop', 'minio']);
-    try {
-      await publish(config, executionContract, execution, requestId);
-      await new Promise(resolve => setTimeout(resolve, 2_000));
-      assert.equal(sql(config, identityDb, `SELECT "Status" FROM identity."DataSubjectRequests"
-        WHERE "Id"='${requestId}';`), 'Processing');
-      assert.equal(sql(config, coachingDb, `SELECT count(*) FROM coaching.assignment_submission_attachments
-        WHERE id='${attachmentId}';`), '1');
-      assert.equal(sql(config, coachingDb, `SELECT count(*) FROM coaching."CoachingErasureExecutions"
-        WHERE "RequestId"='${requestId}';`), '0');
-    } finally {
-      compose(config, ['start', 'minio']);
-    }
-    await eventually(async () => String(minio(config, ['stat',
-      `privacy-e2e/${bucket}/${otherStorageKey}`]).status === 0), 'true', 'MinIO recovery');
+    await publish(config, executionContract, execution, requestId);
     await eventually(() => sql(config, identityDb, `SELECT "Status" FROM identity."DataSubjectRequests"
       WHERE "Id"='${requestId}';`), 'Completed', 'Identity erasure request');
 
@@ -268,10 +233,10 @@ test('disposable Docker account erasure completes across three product databases
       WHERE student_id='${userId}';`), '0');
     assert.equal(sql(config, coachingDb, `SELECT count(*) FROM coaching.assignment_submission_attachments
       WHERE id='${attachmentId}';`), '0');
-    assert.notEqual(minio(config, ['stat', `privacy-e2e/${bucket}/${storageKey}`]).status, 0,
-      'Erased student object must no longer exist');
-    assert.equal(minio(config, ['stat', `privacy-e2e/${bucket}/${otherStorageKey}`]).status, 0,
-      'Unrelated object must survive');
+    assert.notEqual(localAttachment(config, 'exists', storageKey).status, 0,
+      'Erased student file must no longer exist');
+    assert.equal(localAttachment(config, 'exists', otherStorageKey).status, 0,
+      'Unrelated file must survive');
     assert.equal(sql(config, notificationDb, `SELECT (SELECT count(*) FROM "Notifications" WHERE "UserId"='${userId}')
       + (SELECT count(*) FROM "EmailDeliveries" WHERE "SubjectUserId"='${userId}')
       + (SELECT count(*) FROM "SupportRequests" WHERE "SubjectUserId"='${userId}');`), '0');

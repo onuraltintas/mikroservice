@@ -24,9 +24,8 @@ tanımlıdır. `CoachingContractTests` şu sınırları release sırasında sabi
 - Score, duration ve passing-score değerleri domain sınırları içindedir.
 - Book/Mixed assignment'larda kitap başlığı ve geçerli sayfa aralığı zorunludur;
   fotoğraf teslimleri 10 MiB, MIME, hash ve içerik imzası ile sınırlandırılır.
-- Fotoğraf bytes'ları PostgreSQL'e yazılmaz. `Local` yalnız Development/test
-  içindir; yatay ölçek için `Minio`/S3 uyumlu provider, tarama için `ClamAv`
-  seçilir ve Production bu iki seçimi fail-closed zorunlu kılar.
+- Fotoğraf bytes'ları PostgreSQL'e yazılmaz. Koçluk dosyaları kalıcı VPS
+  volume'unda tutulur; Production'da `ClamAv` taraması fail-closed zorunludur.
 - SystemAdmin ve yetkili kurum yöneticileri Coaching read model'i assignment,
   session, exam ve goal listelerini bounded pagination/filter ile sunar; admin
   DTO'larında Identity profile PII'si veya storage key bulunmaz.

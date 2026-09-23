@@ -55,17 +55,10 @@ public static class DependencyInjection
 
         services.AddOptions<AssignmentAttachmentOptions>()
             .Bind(configuration.GetSection(AssignmentAttachmentOptions.SectionName))
-            .Validate(options => options.Provider.Equals("Local", StringComparison.OrdinalIgnoreCase)
-                || options.Provider.Equals("Minio", StringComparison.OrdinalIgnoreCase),
-                "Attachment storage provider must be Local or Minio.")
+            .Validate(options => options.Provider.Equals("Local", StringComparison.OrdinalIgnoreCase),
+                "Attachment storage provider must be Local.")
             .Validate(options => options.UploadUrlLifetimeMinutes is >= 1 and <= 60,
                 "Attachment upload URL lifetime must be between 1 and 60 minutes.")
-            .Validate(options => options.Provider.Equals("Local", StringComparison.OrdinalIgnoreCase)
-                || (!string.IsNullOrWhiteSpace(options.MinioEndpoint)
-                    && !string.IsNullOrWhiteSpace(options.MinioAccessKey)
-                    && !string.IsNullOrWhiteSpace(options.MinioSecretKey)
-                    && !string.IsNullOrWhiteSpace(options.MinioBucket)),
-                "Minio storage requires endpoint, access key, secret key and bucket.")
             .ValidateOnStart();
 
         var storageOptions = configuration
@@ -123,10 +116,9 @@ public static class DependencyInjection
         services.AddScoped<ICoachingDataExportRepository, CoachingDataExportRepository>();
         services.AddScoped<ICoachingErasureAssessmentService, CoachingErasureAssessmentService>();
         services.AddScoped<ICoachingErasureExecutionService, CoachingErasureExecutionService>();
-        if (storageOptions.Provider.Equals("Minio", StringComparison.OrdinalIgnoreCase))
-            services.AddSingleton<IAssignmentAttachmentStorage, MinioAssignmentAttachmentStorage>();
-        else
-            services.AddSingleton<IAssignmentAttachmentStorage, LocalAssignmentAttachmentStorage>();
+        if (!storageOptions.Provider.Equals("Local", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Coaching:Attachments:Provider must be Local.");
+        services.AddSingleton<IAssignmentAttachmentStorage, LocalAssignmentAttachmentStorage>();
         if (scanOptions.Provider.Equals("ClamAv", StringComparison.OrdinalIgnoreCase))
             services.AddSingleton<IAssignmentAttachmentScanner, ClamAvAttachmentScanner>();
         else

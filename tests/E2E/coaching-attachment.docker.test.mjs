@@ -34,7 +34,7 @@ function verifyContainers(config) {
   requireDisposableEnvironment(config);
   assert.equal(config.ENVIRONMENT, 'Development');
   assert.match(config.COMPOSE_PROJECT_NAME || '', /^privacy-e2e-[a-z0-9-]+$/);
-  for (const service of ['identity-service', 'coaching-service', 'api-gateway', 'postgres', 'minio']) {
+  for (const service of ['identity-service', 'coaching-service', 'api-gateway', 'postgres']) {
     const id = command(['compose', '--env-file', config.E2E_COMPOSE_ENV_FILE, 'ps', '-q', service]);
     assert.ok(id, `${service} must run in the disposable Compose project`);
     const container = JSON.parse(command(['inspect', '--format', '{{json .}}', id]));
@@ -43,8 +43,8 @@ function verifyContainers(config) {
       requireDisposableContainer(container.Config.Env, 'Development');
     }
     if (service === 'coaching-service') {
-      assert.ok(container.Config.Env.includes('Coaching__Attachments__Provider=Minio'));
-      assert.ok(container.Config.Env.includes(`Coaching__Attachments__MinioAccessKey=${config.ATTACHMENT_MINIO_ACCESS_KEY}`));
+      assert.ok(container.Config.Env.includes('Coaching__Attachments__Provider=Local'));
+      assert.ok(container.Mounts.some(mount => mount.Destination === '/var/lib/eduplatform/attachments' && mount.Type === 'volume'));
     }
   }
 }
@@ -84,12 +84,12 @@ async function expectStatus(response, status) {
   }
 }
 
-test('disposable student attachment uses object storage and enforces ownership over HTTP',
+test('disposable student attachment uses persistent local storage and enforces ownership over HTTP',
   { timeout: 180_000 }, async () => {
     const config = await settings();
     verifyContainers(config);
     for (const key of ['POSTGRES_USER', 'JWT_SECRET', 'JWT_ISSUER', 'JWT_AUDIENCE',
-      'GATEWAY_PORT', 'ATTACHMENT_MINIO_ACCESS_KEY']) assert.ok(config[key], `${key} is required`);
+      'GATEWAY_PORT']) assert.ok(config[key], `${key} is required`);
     const studentId = randomUUID();
     const otherId = randomUUID();
     const teacherId = randomUUID();

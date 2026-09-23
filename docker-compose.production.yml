@@ -77,8 +77,6 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       Coaching__Attachments__Provider: Local
-      Coaching__Attachments__MinioAccessKey: ""
-      Coaching__Attachments__MinioSecretKey: ""
       Coaching__Attachments__Scanner__Provider: ClamAv
       DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
       DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?DATAPROTECTION_CERTIFICATE_PASSWORD must be set}

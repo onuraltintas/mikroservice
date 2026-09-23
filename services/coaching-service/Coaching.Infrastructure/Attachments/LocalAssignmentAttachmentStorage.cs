@@ -5,8 +5,7 @@ using Microsoft.Extensions.Options;
 namespace Coaching.Infrastructure.Attachments;
 
 /// <summary>
-/// Development-only storage adapter. Production must use an object-storage adapter
-/// (MinIO/S3-compatible) behind the same application interface.
+/// Stores Coaching attachments on the configured persistent filesystem.
 /// </summary>
 public sealed class LocalAssignmentAttachmentStorage(
     IOptions<AssignmentAttachmentOptions> options) : IAssignmentAttachmentStorage

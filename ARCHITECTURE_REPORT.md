@@ -65,7 +65,7 @@ Bu rapor, **1 milyon aktif kullanıcı** için tasarlanmış, **tamamen ücretsi
 | **Speed Reading** | Okuma egzersizleri, ilerleme | PostgreSQL + Redis | 5-20 replika |
 | **Coaching** | Koç-öğrenci eşleştirme, hedefler | PostgreSQL | 3-15 replika |
 | **Blog** | İçerik yönetimi, SEO | PostgreSQL + Elasticsearch | 3-10 replika |
-| **Interactive Content** | Etkileşimli dersler, medya | PostgreSQL + MinIO | 5-25 replika |
+| **Interactive Content** | Etkileşimli dersler, medya | PostgreSQL + VPS dosya volume'u | Tek yazıcı |
 | **Exam** | Soru bankası, sınavlar, puanlama | PostgreSQL + Redis | 5-30 replika |
 | **Analytics** | Öğrenme analitiği, raporlar | TimescaleDB/ClickHouse | 3-10 replika |
 | **Notification** | Push, Email, SMS | Redis + RabbitMQ | 3-10 replika |

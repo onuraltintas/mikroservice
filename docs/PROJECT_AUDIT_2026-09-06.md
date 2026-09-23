@@ -76,7 +76,7 @@ Fiziksel PostgreSQL sunucusunu paylaşmak tek başına yanlış değildir; mant�
 - Refresh rotation conditional update/transaction kullanıyor; eşzamanlı token yenilemede tek kazanan yaklaşımı var.
 - Internal key doğrulaması constant-time ve eksik config’te güvenli kapanıyor.
 - Kurum scope çözümü, profil erişiminde kurum üyelik kontrolü ve bildirimlerde UserId sahiplik filtresi mevcut. İncelenen bu yollarda basit IDOR iddiası desteklenmiyor.
-- Koçluk dosyalarında boyut/uzantı kuralları, üretimde MinIO ve ClamAV yapılandırması var.
+- Koçluk dosyalarında boyut/uzantı kuralları ve ClamAV tarama yapılandırması var.
 - Gateway Redis tabanlı atomik rate limit kullanıyor.
 
 ### Düzeltilecekler

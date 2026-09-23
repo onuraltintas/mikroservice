@@ -150,7 +150,7 @@ doğrulanmadan üç veritabanının yedeklenmesini tam platform yedeği saymayı
 Veritabanları dışında aşağıdaki verileri de aynı kurtarma planına dahil edin:
 
 - CMS: `speed_reading_media` volume içeriği (`/var/lib/eduplatform/media`).
-- Koçluk ekleri: MinIO bucket nesneleri, sürümleri ve gerekli metadata.
+- Koçluk ekleri: `coaching_attachments` volume'undaki dosyalar ve gerekli metadata.
 - Data Protection key ring'leri ve ayrı güvenli kasada korunan sertifikaları.
 
 DB ile nesne deposu arasında tutarlı bir kurtarma noktası için yazıları kısa

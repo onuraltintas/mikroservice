@@ -11,11 +11,6 @@ public sealed class AssignmentAttachmentOptions
         "eduplatform-coaching-attachments");
 
     public int UploadUrlLifetimeMinutes { get; init; } = 15;
-    public string MinioEndpoint { get; init; } = "minio:9000";
-    public string MinioAccessKey { get; init; } = string.Empty;
-    public string MinioSecretKey { get; init; } = string.Empty;
-    public string MinioBucket { get; init; } = "eduplatform-attachments";
-    public bool MinioUseSsl { get; init; }
 }
 
 public sealed class AttachmentScanOptions

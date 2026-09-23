@@ -60,8 +60,8 @@ jobs:
           PY
           docker compose --env-file .env.example config --quiet
 
-      - name: Verify Coaching production object-storage contract
-        run: node --test tests/E2E/support/minio-image.contract.test.mjs tests/E2E/support/production-object-storage.contract.test.mjs
+      - name: Verify Coaching VPS-local storage contract
+        run: node --test tests/E2E/support/production-local-storage.contract.test.mjs
 
   frontend:
     name: Frontend checks
@@ -221,11 +221,6 @@ jobs:
       RABBITMQ_DEFAULT_USER: eduplatform
       RABBITMQ_DEFAULT_PASS: ci-disposable-rabbit-012345678901234567890123
       REDIS_PASSWORD: ci-disposable-redis-012345678901234567890123
-      MINIO_ROOT_USER: ci-disposable-minio-root-access
-      MINIO_ROOT_PASSWORD: ci-disposable-minio-root-secret-012345678901234567890123
-      ATTACHMENT_STORAGE_PROVIDER: Minio
-      ATTACHMENT_MINIO_ACCESS_KEY: ci-disposable-coaching-access
-      ATTACHMENT_MINIO_SECRET_KEY: ci-disposable-coaching-secret-012345678901234567890123
       SPEED_READING_OWNED_CONNECTION_STRING: Host=postgres;Port=5432;Database=speedreading_owned_db;Username=eduplatform;Password=ci-disposable-postgres-012345678901234567890123
     steps:
       - name: Checkout
@@ -237,7 +232,7 @@ jobs:
           node-version: 24.x
 
       - name: Start disposable service stack
-        run: docker compose --env-file .env.example --profile speed-reading --profile object-storage up -d --build identity-service coaching-service notification-service speed-reading-service api-gateway minio minio-provision
+        run: docker compose --env-file .env.example --profile speed-reading up -d --build identity-service coaching-service notification-service speed-reading-service api-gateway
 
       - name: Verify distributed erasure and Coaching restore
         run: node --test tests/E2E/support/privacy-docker.test.mjs tests/E2E/privacy-erasure.docker.test.mjs tests/E2E/coaching-backup-restore.docker.test.mjs tests/E2E/coaching-data-export-route.contract.test.mjs
@@ -256,11 +251,11 @@ jobs:
 
       - name: Preserve service logs on failure
         if: failure()
-        run: docker compose --env-file .env.example --profile speed-reading --profile object-storage logs --no-color --tail 100 identity-service coaching-service notification-service speed-reading-service api-gateway minio
+        run: docker compose --env-file .env.example --profile speed-reading logs --no-color --tail 100 identity-service coaching-service notification-service speed-reading-service api-gateway
 
       - name: Remove disposable CI stack
         if: always()
-        run: docker compose --env-file .env.example --profile speed-reading --profile object-storage down -v --remove-orphans
+        run: docker compose --env-file .env.example --profile speed-reading down -v --remove-orphans
 
   migration-drift:
     name: EF migration drift
@@ -420,7 +415,7 @@ jobs:
           docker compose --env-file .env.example \
             -f docker-compose.yml \
             -f docker-compose.staging.yml \
-            --profile security-scan --profile object-storage config --quiet
+            --profile security-scan config --quiet
 
       - name: Validate production and observability overlays
         env:
