@@ -195,7 +195,11 @@ public sealed record CoachingAdminStudentDetailDto(
     int TotalSessions,
     int TotalGoals,
     IReadOnlyList<CoachingAdminStudentAssignmentDto> Assignments,
-    IReadOnlyList<CoachingAdminStudentExamDto> Exams);
+    IReadOnlyList<CoachingAdminStudentExamDto> Exams,
+    decimal? AverageAssignmentPercentage,
+    decimal? AverageExamPercentage,
+    int AttendanceRecordedCount,
+    int AttendedSessionCount);
 
 public sealed record CoachingAdminStudentAssignmentDto(
     Guid Id, string Title, string Status, DateTime DueDate, decimal? Score);

@@ -80,6 +80,10 @@ export interface CoachingAdminStudentDetail {
   totalGoals: number;
   assignments: { id: string; title: string; status: string; dueDate: string; score?: number | null }[];
   exams: { id: string; title: string; score: number; maxScore: number; examDate: string }[];
+  averageAssignmentPercentage?: number | null;
+  averageExamPercentage?: number | null;
+  attendanceRecordedCount: number;
+  attendedSessionCount: number;
 }
 
 export interface TeacherCoachingAnalytics {

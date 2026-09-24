@@ -891,6 +891,18 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
                 item.ExamId, item.Exam.Title, item.Score, item.Exam.MaxScore, item.Exam.ExamDate))
             .Take(10).ToListAsync(cancellationToken);
 
+        var gradedAssignments = await assignments
+            .Where(item => item.Score.HasValue && item.Assignment.MaxScore.HasValue
+                && item.Assignment.MaxScore > 0)
+            .Select(item => new { Score = item.Score!.Value, MaxScore = item.Assignment.MaxScore!.Value })
+            .ToListAsync(cancellationToken);
+        var examScores = await exams
+            .Where(item => item.Exam.MaxScore > 0)
+            .Select(item => new { item.Score, item.Exam.MaxScore })
+            .ToListAsync(cancellationToken);
+        var recordedAttendance = sessions.Where(item =>
+            item.AttendanceStatus != Domain.Enums.AttendanceStatus.NotRecorded);
+
         return new CoachingAdminStudentDetailDto(
             studentId,
             await assignments.CountAsync(cancellationToken),
@@ -900,7 +912,12 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
             institutionId.HasValue ? 0 : await _context.AcademicGoals.AsNoTracking()
                 .CountAsync(item => item.StudentId == studentId, cancellationToken),
             assignmentItems,
-            examItems);
+            examItems,
+            gradedAssignments.Count == 0 ? null : Math.Round(gradedAssignments.Average(item => item.Score / item.MaxScore) * 100m, 2),
+            examScores.Count == 0 ? null : Math.Round(examScores.Average(item => item.Score / item.MaxScore) * 100m, 2),
+            await recordedAttendance.CountAsync(cancellationToken),
+            await recordedAttendance.CountAsync(item => item.AttendanceStatus == Domain.Enums.AttendanceStatus.Present
+                || item.AttendanceStatus == Domain.Enums.AttendanceStatus.Late, cancellationToken));
     }
 
     public async Task<TeacherCoachingAnalyticsDto> GetTeacherAnalyticsAsync(
