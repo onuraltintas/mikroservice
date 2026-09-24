@@ -1898,10 +1898,17 @@ public class TeacherRepository : ITeacherRepository
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             var term = searchTerm.Trim();
-            query = query.Where(student =>
-                EF.Functions.ILike(student.FirstName, $"%{term}%")
-                || EF.Functions.ILike(student.LastName, $"%{term}%")
-                || EF.Functions.ILike(student.Email, $"%{term}%"));
+            if (Guid.TryParse(term, out var studentUserId))
+            {
+                query = query.Where(student => student.UserId == studentUserId);
+            }
+            else
+            {
+                query = query.Where(student =>
+                    EF.Functions.ILike(student.FirstName, $"%{term}%")
+                    || EF.Functions.ILike(student.LastName, $"%{term}%")
+                    || EF.Functions.ILike(student.Email, $"%{term}%"));
+            }
         }
 
         var grouped = query

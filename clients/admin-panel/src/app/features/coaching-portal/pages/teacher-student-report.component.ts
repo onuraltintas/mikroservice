@@ -15,7 +15,7 @@ import {
     <section class="space-y-5">
       <a routerLink="/coaching-portal/teacher/students" class="text-sm text-indigo-700 underline">← Öğrencilerim</a>
       <h1 class="text-2xl font-bold">Öğrenci raporu</h1>
-      @if (studentName) { <p class="text-sm text-slate-600">{{ studentName }}</p> }
+      @if (studentName()) { <p class="text-sm text-slate-600">{{ studentName() }}</p> }
       @if (loading()) { <p role="status">Rapor yükleniyor…</p> }
       @if (error()) { <p role="alert" class="text-red-700">Rapor yüklenemedi. Öğrenci atamanızı ve erişim yetkinizi kontrol edin.</p> }
       @if (moreError()) { <p role="alert" class="text-red-700">{{ moreError() }}</p> }
@@ -55,7 +55,7 @@ import {
 export class TeacherStudentReportComponent implements OnInit {
   private readonly service = inject(CoachingPortalService);
   private readonly route = inject(ActivatedRoute);
-  readonly studentName = this.route.snapshot.queryParamMap?.get('name') ?? '';
+  readonly studentName = signal('');
   readonly loading = signal(true);
   readonly error = signal(false);
   readonly moreError = signal<string | null>(null);
@@ -77,6 +77,7 @@ export class TeacherStudentReportComponent implements OnInit {
       return;
     }
     forkJoin({
+      roster: this.service.getTeacherStudents(1, 1, studentId),
       summary: this.service.getStudentProgress(studentId),
       assignments: this.service.getStudentAssignments(studentId),
       exams: this.service.getStudentExamResults(studentId),
@@ -84,6 +85,13 @@ export class TeacherStudentReportComponent implements OnInit {
       sessions: this.service.getStudentSessions(studentId)
     }).subscribe({
       next: result => {
+        const student = result.roster.items.find(item => item.userId === studentId);
+        if (!student) {
+          this.error.set(true);
+          this.loading.set(false);
+          return;
+        }
+        this.studentName.set(student.fullName);
         this.summary.set(result.summary);
         this.assignments.set(result.assignments.items);
         this.exams.set(result.exams.items);

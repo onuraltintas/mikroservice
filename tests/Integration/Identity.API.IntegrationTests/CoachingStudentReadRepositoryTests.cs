@@ -305,6 +305,36 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task TeacherStudentRoster_ShouldResolveAssignedStudentByExactUserId()
+    {
+        var institution = Institution.Create("Teacher Id Lookup School", InstitutionType.School);
+        var teacher = User.Create(Guid.NewGuid(), "id-teacher@example.test");
+        var assignedStudent = User.Create(Guid.NewGuid(), "id-assigned@example.test");
+        var otherStudent = User.Create(Guid.NewGuid(), "id-other@example.test");
+        AddRole(teacher, "Teacher");
+        AddRole(assignedStudent, "Student");
+        AddRole(otherStudent, "Student");
+        var teacherProfile = TeacherProfile.Create(teacher.Id, "Roster", "Teacher", institution.Id);
+        var assignedProfile = StudentProfile.Create(assignedStudent.Id, "Ada", "Assigned", institution.Id);
+        var otherProfile = StudentProfile.Create(otherStudent.Id, "Ece", "Other", institution.Id);
+        _dbContext!.Institutions.Add(institution);
+        _dbContext.Users.AddRange(teacher, assignedStudent, otherStudent);
+        _dbContext.TeacherProfiles.Add(teacherProfile);
+        _dbContext.StudentProfiles.AddRange(assignedProfile, otherProfile);
+        _dbContext.TeacherStudentAssignments.Add(TeacherStudentAssignment.Create(
+            teacherProfile.Id, assignedProfile.Id, institution.Id));
+        await _dbContext.SaveChangesAsync();
+
+        var found = await TeacherRepository().GetStudentsByTeacherUserIdAsync(
+            teacher.Id, 1, 1, assignedStudent.Id.ToString(), null, null, CancellationToken.None);
+        var hidden = await TeacherRepository().GetStudentsByTeacherUserIdAsync(
+            teacher.Id, 1, 1, otherStudent.Id.ToString(), null, null, CancellationToken.None);
+
+        found.Items.Should().ContainSingle(student => student.UserId == assignedStudent.Id && student.FullName == "Ada Assigned");
+        hidden.Items.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task TeacherStudentRoster_ShouldEnforceTenantAndActiveInstitution()
     {
         var institutionA = Institution.Create("Active Teacher School", InstitutionType.School);
