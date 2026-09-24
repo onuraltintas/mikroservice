@@ -3,7 +3,7 @@ import { PLATFORM_ID } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, Subject } from 'rxjs';
 import { vi } from 'vitest';
-import { CoachingAdminService } from '../../../core/services/coaching-admin.service';
+import { CoachingAdminGoalPage, CoachingAdminService } from '../../../core/services/coaching-admin.service';
 import { InstitutionService } from '../../../core/services/institution.service';
 import { CoachingPeopleComponent } from './coaching-people';
 
@@ -14,6 +14,7 @@ describe('CoachingPeopleComponent', () => {
       getStudentRoster: vi.fn(() => of({ students: [{ userId: 'student-1', firstName: 'Ayşe', lastName: 'Yılmaz', email: 'a@test' }], totalCount: 1 })),
       getTeacherRoster: vi.fn(() => of({ teachers: [{ userId: 'teacher-1', firstName: 'Ali', lastName: 'Öğretmen', email: 't@test' }], totalCount: 1 })),
       getStudentDetail: vi.fn(() => of({ studentId: 'student-1', totalAssignments: 1, assignments: [], exams: [] })),
+      getGoals: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 0 } as CoachingAdminGoalPage)),
       getTeacherAnalytics: vi.fn(() => of({ teacherId: 'teacher-1', studentIds: [], currentPeriod: { assignments: 1, exams: 0, sessions: 0 }, previousPeriod: { assignments: 0, exams: 0, sessions: 0 }, lowResults: 0, mediumResults: 0, highResults: 0 }))
     };
     TestBed.configureTestingModule({
@@ -111,6 +112,34 @@ describe('CoachingPeopleComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Katılım: 1 / 1');
     expect(fixture.nativeElement.textContent).toContain('Hedef: 0');
     expect(fixture.nativeElement.textContent).toContain('Yalnızca bu kuruma bağlanmış hedefler sayılır');
+  });
+
+  it('shows paged goals for only the selected institution student', () => {
+    const { component, fixture, service } = create('students', 'student-1', 'server', true);
+    service.getGoals.mockReturnValue(of({
+      items: [{ id: 'goal-1', studentId: 'student-1', title: 'Matematik', category: 'academic', createdAt: '2026-09-24T00:00:00Z', currentProgress: 60, isCompleted: false }],
+      pageNumber: 1, pageSize: 25, totalCount: 26, totalPages: 2
+    }));
+    component.institutionId = 'own-institution';
+
+    component.loadDetail('student-1');
+    fixture.detectChanges();
+
+    expect(service.getGoals).toHaveBeenCalledWith({ studentId: 'student-1', pageNumber: 1, pageSize: 25 });
+    expect(fixture.nativeElement.textContent).toContain('Matematik');
+    expect(fixture.nativeElement.textContent).toContain('60%');
+    expect(fixture.nativeElement.textContent).toContain('Toplam 26');
+  });
+
+  it('loads the next goal page without replacing the verified student', () => {
+    const { component, service } = create('students', 'student-1', 'server', true);
+    component.institutionId = 'own-institution';
+    component.loadDetail('student-1');
+
+    component.loadStudentGoals(2);
+
+    expect(service.getGoals).toHaveBeenLastCalledWith({ studentId: 'student-1', pageNumber: 2, pageSize: 25 });
+    expect(component.selectedStudent()?.userId).toBe('student-1');
   });
 
   it('ignores stale list responses after the selected institution changes', () => {

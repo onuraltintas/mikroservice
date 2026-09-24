@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, Observable } from 'rxjs';
 import {
-  CoachingAdminReadScope, CoachingAdminService, CoachingAdminStudentDetail, CoachingStudentRosterItem,
+  CoachingAdminGoalPage, CoachingAdminReadScope, CoachingAdminService, CoachingAdminStudentDetail, CoachingStudentRosterItem,
   CoachingStudentRosterPage, CoachingTeacherRosterItem, CoachingTeacherRosterPage,
   TeacherCoachingAnalytics
 } from '../../../core/services/coaching-admin.service';
@@ -48,6 +48,11 @@ import { InstitutionDto, InstitutionService } from '../../../core/services/insti
                 <div class="grid gap-4 lg:grid-cols-2 text-sm">
                   <div><h3 class="font-semibold">Son ödevler</h3>@for (item of detail.assignments; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.status }} · {{ item.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-gray-500">Ödev yok.</p> }</div>
                   <div><h3 class="font-semibold">Sınav sonuçları</h3>@for (item of detail.exams; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.score }}/{{ item.maxScore }}</p> } @empty { <p class="mt-2 text-gray-500">Sonuç yok.</p> }</div>
+                </div>
+                <div class="text-sm"><h3 class="font-semibold">Hedefler</h3>
+                  @for (goal of studentGoals()?.items; track goal.id) { <p class="mt-2">{{ goal.title }} · {{ goal.currentProgress }}% · {{ goal.isCompleted ? 'Tamamlandı' : 'Devam ediyor' }}</p> } @empty { <p class="mt-2 text-gray-500">Hedef yok.</p> }
+                  @if (studentGoals(); as goals) { <div class="mt-3 flex items-center gap-3"><span>Toplam {{ goals.totalCount }} · {{ goals.pageNumber }}. sayfa</span><button type="button" class="rounded border px-2 py-1" [disabled]="goals.pageNumber <= 1 || goalLoading()" (click)="loadStudentGoals(goals.pageNumber - 1)">Önceki</button><button type="button" class="rounded border px-2 py-1" [disabled]="goals.pageNumber >= goals.totalPages || goalLoading()" (click)="loadStudentGoals(goals.pageNumber + 1)">Sonraki</button></div> }
+                  @if (goalError()) { <p role="alert" class="mt-2 text-red-700">{{ goalError() }}</p> }
                 </div>
                 @if (portal) { <p class="text-xs text-gray-500">Yalnızca bu kuruma bağlanmış hedefler sayılır; kurumsuz hedefler gösterilmez.</p> }
               }
@@ -105,12 +110,16 @@ export class CoachingPeopleComponent implements OnInit {
   readonly selectedStudent = signal<CoachingStudentRosterItem | null>(null);
   readonly selectedTeacher = signal<CoachingTeacherRosterItem | null>(null);
   readonly studentDetail = signal<CoachingAdminStudentDetail | null>(null);
+  readonly studentGoals = signal<CoachingAdminGoalPage | null>(null);
+  readonly goalLoading = signal(false);
+  readonly goalError = signal<string | null>(null);
   readonly teacherAnalytics = signal<TeacherCoachingAnalytics | null>(null);
   readonly teacherStudents = signal<CoachingStudentRosterPage | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   private requestId = 0;
   private teacherStudentsRequestId = 0;
+  private goalsRequestId = 0;
   institutionId = this.route.snapshot.queryParamMap.get('institutionId') ?? '';
   institutionSearch = '';
   search = '';
@@ -151,11 +160,15 @@ export class CoachingPeopleComponent implements OnInit {
   onInstitutionChange(): void {
     ++this.requestId;
     ++this.teacherStudentsRequestId;
+    ++this.goalsRequestId;
     this.studentPage.set(null);
     this.teacherPage.set(null);
     this.selectedStudent.set(null);
     this.selectedTeacher.set(null);
     this.studentDetail.set(null);
+    this.studentGoals.set(null);
+    this.goalLoading.set(false);
+    this.goalError.set(null);
     this.teacherAnalytics.set(null);
     this.teacherStudents.set(null);
     this.loading.set(false);
@@ -193,15 +206,19 @@ export class CoachingPeopleComponent implements OnInit {
     const requestId = ++this.requestId;
     this.loading.set(true);
     this.error.set(null);
+    this.studentGoals.set(null);
+    this.goalError.set(null);
     if (this.kind === 'students') {
       forkJoin({
         roster: this.service.getStudentRoster(this.institutionId, 1, id),
-        detail: this.service.getStudentDetail(id)
+        detail: this.service.getStudentDetail(id),
+        goals: this.service.getGoals({ studentId: id, pageNumber: 1, pageSize: 25 })
       }).subscribe({
         next: result => {
           if (requestId !== this.requestId) return;
           this.selectedStudent.set(result.roster.students.find(item => item.userId === id) ?? null);
           this.studentDetail.set(this.selectedStudent() ? result.detail : null);
+          this.studentGoals.set(this.selectedStudent() ? result.goals : null);
           if (!this.selectedStudent()) this.error.set('Öğrenci bu kurumda bulunamadı.');
           this.loading.set(false);
         },
@@ -237,6 +254,26 @@ export class CoachingPeopleComponent implements OnInit {
 
   openDetail(id: string): void {
     void this.router.navigate([this.portal ? '/coaching-portal/institution' : '/dashboard/coaching', this.kind, id], { queryParams: { institutionId: this.institutionId } });
+  }
+
+  loadStudentGoals(page: number): void {
+    const studentId = this.detailId;
+    if (!studentId || !this.selectedStudent() || page < 1) return;
+    const requestId = ++this.goalsRequestId;
+    this.goalLoading.set(true);
+    this.goalError.set(null);
+    this.service.getGoals({ studentId, pageNumber: page, pageSize: 25 }).subscribe({
+      next: goals => {
+        if (requestId !== this.goalsRequestId) return;
+        this.studentGoals.set(goals);
+        this.goalLoading.set(false);
+      },
+      error: () => {
+        if (requestId !== this.goalsRequestId) return;
+        this.goalError.set('Hedefler yüklenemedi.');
+        this.goalLoading.set(false);
+      }
+    });
   }
 
   openStudentDetail(id: string): void {
