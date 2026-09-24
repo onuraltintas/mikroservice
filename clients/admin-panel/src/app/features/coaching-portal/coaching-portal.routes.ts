@@ -81,5 +81,25 @@ export const COACHING_PORTAL_ROUTES: Routes = [
     canActivate: [coachingRoleGuard],
     data: { coachingRoles: ['Parent'] },
     loadComponent: () => import('./pages/parent-children.component').then(m => m.ParentChildrenComponent)
-  }
+  },
+  {
+    path: 'institution/overview',
+    canActivate: [coachingRoleGuard],
+    data: { coachingRoles: ['InstitutionAdmin', 'InstitutionOwner'] },
+    loadComponent: () => import('./pages/institution-overview.component').then(m => m.InstitutionOverviewComponent)
+  },
+  ...(['students', 'teachers'] as const).flatMap(kind => [
+    {
+      path: `institution/${kind}/:id`,
+      canActivate: [coachingRoleGuard],
+      data: { coachingRoles: ['InstitutionAdmin', 'InstitutionOwner'], kind, portal: true },
+      loadComponent: () => import('../dashboard/pages/coaching-people').then(m => m.CoachingPeopleComponent)
+    },
+    {
+      path: `institution/${kind}`,
+      canActivate: [coachingRoleGuard],
+      data: { coachingRoles: ['InstitutionAdmin', 'InstitutionOwner'], kind, portal: true },
+      loadComponent: () => import('../dashboard/pages/coaching-people').then(m => m.CoachingPeopleComponent)
+    }
+  ])
 ];

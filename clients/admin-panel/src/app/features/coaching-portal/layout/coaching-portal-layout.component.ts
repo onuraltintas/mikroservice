@@ -16,8 +16,9 @@ export class CoachingPortalLayoutComponent {
 
   readonly user = this.authService.userProfile;
   readonly isTeacher = computed(() => hasRole(this.user(), 'Teacher'));
-  readonly isStudent = computed(() => !this.isTeacher() && hasRole(this.user(), 'Student'));
-  readonly isParent = computed(() => !this.isTeacher() && !this.isStudent() && hasRole(this.user(), 'Parent'));
+  readonly isInstitution = computed(() => hasRole(this.user(), 'InstitutionAdmin') || hasRole(this.user(), 'InstitutionOwner'));
+  readonly isStudent = computed(() => !this.isInstitution() && !this.isTeacher() && hasRole(this.user(), 'Student'));
+  readonly isParent = computed(() => !this.isInstitution() && !this.isTeacher() && !this.isStudent() && hasRole(this.user(), 'Parent'));
 
   async logout() {
     await this.authService.logout();

@@ -62,6 +62,15 @@ export function hasRole(user: UserProfile | null, role: string): boolean {
     return !!user && (user.role === role || user.roles.includes(role));
 }
 
+export function landingRouteForRole(role: string | undefined, hostname: string): string {
+    if (['Student', 'Teacher', 'Parent'].includes(role ?? '')) return '/coaching-portal';
+    if (['InstitutionAdmin', 'InstitutionOwner'].includes(role ?? '')
+        && ['onuraltintas.net', 'www.onuraltintas.net'].includes(hostname.toLowerCase())) {
+        return '/coaching-portal/institution/overview';
+    }
+    return '/dashboard';
+}
+
 export function hasRequiredAccess(
     user: UserProfile | null,
     permission: string,
@@ -352,10 +361,9 @@ export class AuthService implements OnDestroy {
     }
 
     getLandingRoute(): string {
-        const role = this.userProfile()?.role;
-        return ['Student', 'Teacher', 'Parent'].includes(role ?? '')
-            ? '/coaching-portal'
-            : '/dashboard';
+        return landingRouteForRole(
+            this.userProfile()?.role,
+            isPlatformBrowser(this.platformId) ? window.location.hostname : '');
     }
 
     private parseJwt(token: string): any {

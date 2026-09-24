@@ -17,7 +17,7 @@ import { InstitutionDto, InstitutionService } from '../../../core/services/insti
   template: `
     <section class="space-y-5">
       <div>
-        <h1 class="text-2xl font-bold dark:text-white">Koçluk {{ kind === 'students' ? 'Öğrencileri' : 'Öğretmenleri' }}</h1>
+        <h1 class="text-2xl font-bold dark:text-white">{{ portal ? 'Kurum' : 'Koçluk' }} {{ kind === 'students' ? 'Öğrencileri' : 'Öğretmenleri' }}</h1>
         <p class="text-sm text-gray-500">İsim ve hesap bilgileri Identity, sonuçlar yalnızca Koçluk servisinden gelir.</p>
       </div>
       @if (scope()?.isGlobal) {
@@ -93,6 +93,7 @@ export class CoachingPeopleComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
   readonly kind = this.route.snapshot.data['kind'] as 'students' | 'teachers';
+  readonly portal = this.route.snapshot.data['portal'] === true;
   readonly detailId = this.route.snapshot.paramMap.get('id');
   readonly institutions = signal<InstitutionDto[]>([]);
   readonly scope = signal<CoachingAdminReadScope | null>(null);
@@ -232,10 +233,10 @@ export class CoachingPeopleComponent implements OnInit {
   }
 
   openDetail(id: string): void {
-    void this.router.navigate(['/dashboard/coaching', this.kind, id], { queryParams: { institutionId: this.institutionId } });
+    void this.router.navigate([this.portal ? '/coaching-portal/institution' : '/dashboard/coaching', this.kind, id], { queryParams: { institutionId: this.institutionId } });
   }
 
   backToList(): void {
-    void this.router.navigate(['/dashboard/coaching', this.kind], { queryParams: { institutionId: this.institutionId } });
+    void this.router.navigate([this.portal ? '/coaching-portal/institution' : '/dashboard/coaching', this.kind], { queryParams: { institutionId: this.institutionId } });
   }
 }

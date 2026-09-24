@@ -3,7 +3,7 @@ import { isPlatformServer } from '@angular/common';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService, hasRequiredRole } from './auth.service';
 
-export const COACHING_PORTAL_ROLES = ['Student', 'Teacher', 'Parent'] as const;
+export const COACHING_PORTAL_ROLES = ['Student', 'Teacher', 'Parent', 'InstitutionAdmin', 'InstitutionOwner'] as const;
 
 export function hasCoachingPortalRole(user: { roles: string[] } | null): boolean {
     return !!user && COACHING_PORTAL_ROLES.some(role => user.roles.includes(role));
@@ -76,7 +76,7 @@ export const permissionGuard: CanActivateFn = async (route, state) => {
 };
 
 /**
- * Keeps management-only identities out of the student/teacher/parent portal.
+ * Keeps system-management-only identities out of the coaching workspace.
  * The server remains the source of truth; this guard only controls navigation.
  */
 export const coachingPortalGuard: CanActivateFn = async (_route, state) => {
