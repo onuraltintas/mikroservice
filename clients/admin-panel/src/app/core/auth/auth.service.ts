@@ -71,6 +71,10 @@ export function landingRouteForRole(role: string | undefined, hostname: string):
     return '/dashboard';
 }
 
+export function invitationReturnRoute(value: string | null): string | null {
+    return value && /^\/coaching-portal\/invitations(?:\?id=[a-zA-Z0-9-]+)?$/.test(value) ? value : null;
+}
+
 export function hasRequiredAccess(
     user: UserProfile | null,
     permission: string,
@@ -361,6 +365,13 @@ export class AuthService implements OnDestroy {
     }
 
     getLandingRoute(): string {
+        if (isPlatformBrowser(this.platformId)) {
+            const invitationRoute = invitationReturnRoute(new URLSearchParams(window.location.search).get('returnUrl'));
+            if (invitationRoute && this.userProfile()?.roles.some(role =>
+                ['Student', 'Teacher', 'Parent', 'InstitutionAdmin', 'InstitutionOwner'].includes(role))) {
+                return invitationRoute;
+            }
+        }
         return landingRouteForRole(
             this.userProfile()?.role,
             isPlatformBrowser(this.platformId) ? window.location.hostname : '');
