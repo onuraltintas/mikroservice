@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AuthService, hasRole } from '../../../core/auth/auth.service';
-import { CoachingInvitation, CoachingInvitationsService } from '../../../core/services/coaching-invitations.service';
+import { CoachingInvitation, CoachingInvitationsService, SentCoachingInvitation } from '../../../core/services/coaching-invitations.service';
 
 @Component({
   selector: 'app-coaching-invitations',
@@ -39,6 +39,20 @@ import { CoachingInvitation, CoachingInvitationsService } from '../../../core/se
         </div>
       }
 
+      @if (isInstitution()) {
+        <div class="rounded-xl border bg-white p-5 dark:bg-slate-900">
+          <h2 class="font-semibold">Gönderdiğim son 50 davet</h2>
+          <div class="mt-3 space-y-2">
+            @for (invitation of sentInvitations(); track invitation.id) {
+              <div class="flex flex-wrap justify-between gap-2 rounded-lg border p-3 text-sm">
+                <span>{{ invitation.inviteeEmail }} · {{ invitation.type === 'TeacherToInstitution' ? 'Öğretmen' : 'Öğrenci' }}</span>
+                <span>{{ statusLabel(invitation.status) }} · {{ invitation.createdAt | date:'dd.MM.yyyy' }}</span>
+              </div>
+            } @empty { <p class="text-sm text-slate-500">Gönderilmiş davet bulunamadı.</p> }
+          </div>
+        </div>
+      }
+
       <div class="rounded-xl border bg-white p-5 dark:bg-slate-900">
         <div class="flex items-center justify-between gap-3">
           <h2 class="font-semibold">Bana gelen bekleyen davetler</h2>
@@ -68,6 +82,7 @@ export class CoachingInvitationsComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
 
   readonly invitations = signal<CoachingInvitation[]>([]);
+  readonly sentInvitations = signal<SentCoachingInvitation[]>([]);
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
@@ -88,6 +103,9 @@ export class CoachingInvitationsComponent implements OnInit {
     this.error.set(null);
     try {
       this.invitations.set(await firstValueFrom(this.service.getMyInvitations()));
+      if (this.isInstitution()) {
+        this.sentInvitations.set(await firstValueFrom(this.service.getSentInvitations()));
+      }
     } catch {
       this.error.set('Davetler yüklenemedi. Lütfen yeniden deneyin.');
     } finally {
@@ -99,14 +117,14 @@ export class CoachingInvitationsComponent implements OnInit {
     const email = this.teacherEmail.trim();
     if (!this.isInstitution() || !this.validEmail(email)) return;
     await this.mutate(() => firstValueFrom(this.service.inviteTeacher(email)), 'Öğretmen daveti gönderildi.', 'Öğretmen daveti gönderilemedi.');
-    if (this.success()) this.teacherEmail = '';
+    if (this.success()) { this.teacherEmail = ''; await this.load(); }
   }
 
   async inviteStudent(): Promise<void> {
     const email = this.studentEmail.trim();
     if (!this.isInstitution() || !this.validEmail(email)) return;
     await this.mutate(() => firstValueFrom(this.service.inviteStudent(email)), 'Öğrenci daveti gönderildi.', 'Öğrenci daveti gönderilemedi.');
-    if (this.success()) this.studentEmail = '';
+    if (this.success()) { this.studentEmail = ''; await this.load(); }
   }
 
   async accept(id: string): Promise<void> {
@@ -130,6 +148,16 @@ export class CoachingInvitationsComponent implements OnInit {
       case 'StudentToInstitution': return 'Kuruma öğrenci olarak katılma daveti';
       case 'StudentToTeacher': return 'Öğretmenle çalışma daveti';
       default: return 'Koçluk daveti';
+    }
+  }
+
+  statusLabel(status: string): string {
+    switch (status) {
+      case 'Pending': return 'Bekliyor';
+      case 'Accepted': return 'Kabul edildi';
+      case 'Rejected': return 'Reddedildi';
+      case 'Expired': return 'Süresi doldu';
+      default: return status;
     }
   }
 
