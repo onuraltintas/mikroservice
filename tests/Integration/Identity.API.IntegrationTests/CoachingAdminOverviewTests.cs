@@ -10,6 +10,28 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingAdminOverviewTests
 {
     [Fact]
+    public async Task TeacherOverview_OnlyCountsSelectedTeacherInsideInstitution()
+    {
+        await using var context = CreateContext();
+        var institutionId = Guid.NewGuid();
+        var otherInstitutionId = Guid.NewGuid();
+        var teacherId = Guid.NewGuid();
+        var otherTeacherId = Guid.NewGuid();
+        var ownAssignment = Assignment.Create(teacherId, "Own", DateTime.UtcNow.AddDays(2), AssignmentType.Individual, institutionId);
+        ownAssignment.AssignToStudent(Guid.NewGuid());
+        var otherAssignment = Assignment.Create(otherTeacherId, "Other", DateTime.UtcNow.AddDays(2), AssignmentType.Individual, institutionId);
+        var otherTenantAssignment = Assignment.Create(teacherId, "Outside", DateTime.UtcNow.AddDays(2), AssignmentType.Individual, otherInstitutionId);
+        context.AddRange(ownAssignment, otherAssignment, otherTenantAssignment);
+        await context.SaveChangesAsync();
+
+        var result = await new CoachingAdminRepository(context)
+            .GetTeacherOverviewAsync(teacherId, institutionId, CancellationToken.None);
+
+        result.TotalAssignments.Should().Be(1);
+        result.TotalAssignmentStudents.Should().Be(1);
+    }
+
+    [Fact]
     public async Task Overview_ReturnsBoundedCountsAndRecentAssignments()
     {
         await using var context = CreateContext();
