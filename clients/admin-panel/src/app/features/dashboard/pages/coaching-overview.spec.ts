@@ -1,12 +1,37 @@
 import { TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { of, Subject } from 'rxjs';
 import { vi } from 'vitest';
 import { CoachingAdminService } from '../../../core/services/coaching-admin.service';
 import { CoachingPortalService } from '../../../core/services/coaching-portal.service';
+import { AuthService } from '../../../core/auth/auth.service';
 import { InstitutionService } from '../../../core/services/institution.service';
 import { CoachingOverviewComponent } from './coaching-overview';
 
 describe('CoachingOverviewComponent', () => {
+  it('does not open unscoped student detail for an institution administrator', () => {
+    const portal = {
+      getStudentProgress: vi.fn(() => of({})),
+      getStudentAssignments: () => of({ items: [] }),
+      getStudentExamResults: () => of({ items: [] }),
+      getStudentGoals: () => of({ items: [] })
+    };
+    TestBed.configureTestingModule({
+      imports: [CoachingOverviewComponent],
+      providers: [
+        { provide: CoachingAdminService, useValue: { getOverview: () => of(null) } },
+        { provide: InstitutionService, useValue: { getAll: () => of({ items: [] }) } },
+        { provide: CoachingPortalService, useValue: portal },
+        { provide: AuthService, useValue: { userProfile: signal({ roles: ['InstitutionAdmin'] }) } }
+      ]
+    });
+    const component = TestBed.createComponent(CoachingOverviewComponent).componentInstance;
+
+    component.openStudent({ studentId: 'student-1', studentName: 'Ayşe Yılmaz' } as never);
+
+    expect(portal.getStudentProgress).not.toHaveBeenCalled();
+  });
+
   it('ignores an old institution report after switching institution', () => {
     const pending = new Subject<never>();
     TestBed.configureTestingModule({
