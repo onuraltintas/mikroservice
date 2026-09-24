@@ -2164,8 +2164,10 @@ public class InvitationRepository : IInvitationRepository
     public async Task<List<Invitation>> GetByInviterIdAsync(Guid inviterId, CancellationToken cancellationToken)
     {
         return await _context.Invitations
+            .AsNoTracking()
             .Where(i => i.InviterId == inviterId)
             .OrderByDescending(i => i.CreatedAt)
+            .Take(50)
             .ToListAsync(cancellationToken);
     }
 }

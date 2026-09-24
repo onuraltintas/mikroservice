@@ -1,6 +1,7 @@
 using Identity.Application.Commands.AcceptInvitation;
 using Identity.Application.Commands.RejectInvitation;
 using Identity.Application.Queries.GetMyInvitations;
+using Identity.Application.Queries.GetSentInvitations;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -35,6 +36,14 @@ public class InvitationsController : ControllerBase
         }
 
         return BadRequest(new { Error = result.Error });
+    }
+
+    [HttpGet("sent")]
+    [ProducesResponseType(typeof(List<SentInvitationDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSentInvitations()
+    {
+        var result = await _mediator.Send(new GetSentInvitationsQuery());
+        return result.IsSuccess ? Ok(result.Value) : Unauthorized();
     }
 
     /// <summary>
