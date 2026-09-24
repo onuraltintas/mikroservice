@@ -7,6 +7,28 @@ import { InstitutionService } from '../../../core/services/institution.service';
 import { CoachingOverviewComponent } from './coaching-overview';
 
 describe('CoachingOverviewComponent', () => {
+  it('ignores an old institution report after switching institution', () => {
+    const pending = new Subject<never>();
+    TestBed.configureTestingModule({
+      imports: [CoachingOverviewComponent],
+      providers: [
+        { provide: CoachingAdminService, useValue: {
+          getOverview: () => of(null), getInstitutionEarlyWarnings: () => pending.asObservable()
+        } },
+        { provide: InstitutionService, useValue: { getAll: () => of({ items: [] }) } }
+      ]
+    });
+    const component = TestBed.createComponent(CoachingOverviewComponent).componentInstance;
+    component.selectedInstitutionId = 'old-institution';
+    component.loadEarlyWarnings();
+    component.selectedInstitutionId = 'new-institution';
+    component.onInstitutionChange();
+    pending.next({ items: [{ studentId: 'old-student' }] } as never);
+    pending.complete();
+
+    expect(component.earlyWarnings()).toBeNull();
+  });
+
   it('searches institution names on the server beyond the initial page', () => {
     const institutions = {
       getAll: vi.fn(() => of({ items: [{ id: 'institution-9', name: 'Örnek Okul' }] }))
