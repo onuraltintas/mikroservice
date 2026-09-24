@@ -30,12 +30,18 @@ public sealed class CoachingAssignmentAttachmentDeletionTests
             const string key = "assignments/test/photo.jpg";
             assignment.AssignedStudents.Single().AddSubmissionAttachment(
                 key, "photo.jpg", "image/jpeg", 3, new string('A', 64));
+            assignment.AssignedStudents.Single().AddSubmissionAttachment(
+                "assignments/test/second.jpg", "second.jpg", "image/jpeg", 3, new string('B', 64));
             context.Assignments.Add(assignment);
             await context.SaveChangesAsync();
 
             var path = Path.Combine(root, "assignments", "test", "photo.jpg");
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             await File.WriteAllBytesAsync(path, [1, 2, 3]);
+            var secondPath = Path.Combine(root, "assignments", "test", "second.jpg");
+            await File.WriteAllBytesAsync(secondPath, [4, 5, 6]);
+            var unrelatedPath = Path.Combine(root, "unrelated.jpg");
+            await File.WriteAllBytesAsync(unrelatedPath, [7, 8, 9]);
 
             var handler = new DeleteAssignmentCommandHandler(
                 new AssignmentRepository(context),
@@ -46,6 +52,8 @@ public sealed class CoachingAssignmentAttachmentDeletionTests
             await handler.Handle(new DeleteAssignmentCommand(assignment.Id), CancellationToken.None);
 
             File.Exists(path).Should().BeFalse();
+            File.Exists(secondPath).Should().BeFalse();
+            File.Exists(unrelatedPath).Should().BeTrue();
             (await context.Assignments.CountAsync()).Should().Be(0);
         }
         finally
