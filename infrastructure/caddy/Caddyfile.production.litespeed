@@ -9,6 +9,44 @@
 	}
 }
 
+# The Coaching portal has its own public origin while sharing the existing
+# Identity and Coaching APIs. Keep management pages on eduivme.com.
+onuraltintas.net:80, www.onuraltintas.net:80 {
+	encode gzip zstd
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+
+	route {
+		@root path /
+		redir @root /coaching-portal 302
+
+		@management path /dashboard /dashboard/*
+		respond @management 404
+
+		@api path /api/*
+		reverse_proxy @api api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+
+		@health path /health /health/*
+		reverse_proxy @health api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+
+		@signalr path /hubs/notifications /hubs/notifications/*
+		reverse_proxy @signalr api-gateway:8080 {
+			header_up X-Forwarded-Proto https
+		}
+
+		reverse_proxy admin-panel:4000
+	}
+}
+
 # LiteSpeed terminates public TLS. Caddy is an internal HTTP router only.
 :80 {
 	encode gzip zstd

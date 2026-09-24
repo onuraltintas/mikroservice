@@ -10,6 +10,8 @@ describe('admin SSR server configuration', () => {
         'www.eduivme.com',
         'eduivme.com.tr',
         'www.eduivme.com.tr',
+        'onuraltintas.net',
+        'www.onuraltintas.net',
         'localhost',
         '127.0.0.1',
       ]),
