@@ -39,6 +39,10 @@ export class InstitutionManageComponent implements OnInit {
   readonly teacherTotal = signal(0);
   readonly studentPage = signal(1);
   readonly studentTotal = signal(0);
+  readonly assignmentPage = signal(1);
+  readonly assignmentTotal = signal(0);
+  readonly sessionPage = signal(1);
+  readonly sessionTotal = signal(0);
 
   teacherSearch = '';
   studentSearch = '';
@@ -74,15 +78,17 @@ export class InstitutionManageComponent implements OnInit {
       const [teachers, students, assignments, sessions] = await Promise.all([
         firstValueFrom(this.coaching.getTeacherRoster(scope.institutionId, this.teacherPage(), this.teacherSearch)),
         firstValueFrom(this.institution.getStudents(this.studentPage(), this.studentSearch)),
-        firstValueFrom(this.coaching.getAssignments()),
-        firstValueFrom(this.coaching.getSessions())
+        firstValueFrom(this.coaching.getAssignments({ pageNumber: this.assignmentPage() })),
+        firstValueFrom(this.coaching.getSessions({ pageNumber: this.sessionPage() }))
       ]);
       this.teachers.set(teachers.teachers);
       this.teacherTotal.set(teachers.totalCount);
       this.students.set(students.items);
       this.studentTotal.set(students.totalCount);
       this.assignments.set(assignments.items);
+      this.assignmentTotal.set(assignments.totalCount);
       this.sessions.set(sessions.items);
+      this.sessionTotal.set(sessions.totalCount);
       return true;
     } catch {
       this.error.set('Kurum yönetim verileri yüklenemedi. Lütfen yeniden deneyin.');
@@ -105,6 +111,16 @@ export class InstitutionManageComponent implements OnInit {
 
   changeStudentPage(delta: number): void {
     this.studentPage.update(page => Math.max(1, page + delta));
+    void this.load();
+  }
+
+  changeAssignmentPage(delta: number): void {
+    this.assignmentPage.update(page => Math.max(1, page + delta));
+    void this.load();
+  }
+
+  changeSessionPage(delta: number): void {
+    this.sessionPage.update(page => Math.max(1, page + delta));
     void this.load();
   }
 
