@@ -37,6 +37,28 @@ describe('InstitutionRegisterComponent', () => {
     TestBed.inject(HttpTestingController).verify();
   });
 
+  it('does not expose server internals in a registration failure toaster', () => {
+    const toaster = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
+    TestBed.configureTestingModule({ providers: [
+      provideHttpClient(), provideHttpClientTesting(),
+      { provide: LocationService, useValue: { getProvinces: () => of([]), getDistricts: () => of([]) } },
+      { provide: ConfigurationService, useValue: { getPublicConfigurationValue: () => of('true') } },
+      { provide: Router, useValue: { navigate: vi.fn() } },
+      { provide: ToasterService, useValue: toaster }
+    ] });
+    const component = TestBed.runInInjectionContext(() => new InstitutionRegisterComponent());
+    component.form.patchValue({
+      institutionName: 'Örnek Okul', institutionType: 1, provinceId: '34', districtId: '3401',
+      firstName: 'Ayşe', lastName: 'Yılmaz', email: 'ayse@example.com',
+      password: 'StrongPass1!', confirmPassword: 'StrongPass1!'
+    });
+    void component.onSubmit();
+    TestBed.inject(HttpTestingController).expectOne(req => req.url.endsWith('/auth/register-institution'))
+      .flush({ message: 'SQL connection failed' }, { status: 500, statusText: 'Server Error' });
+    expect(toaster.error).toHaveBeenCalledWith('Kayıt şu anda tamamlanamıyor. Lütfen daha sonra yeniden deneyin.');
+    TestBed.inject(HttpTestingController).verify();
+  });
+
   it('submits the institution type and province/district required by the API', () => {
     const locations = {
       getProvinces: vi.fn().mockReturnValue(of([{ id: '34', name: 'İstanbul' }])),
