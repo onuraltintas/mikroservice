@@ -82,6 +82,29 @@ public sealed class InvitationInstitutionScopeTests
         invitation.Status.Should().Be(InvitationStatus.Pending);
     }
 
+    [Fact]
+    public async Task Accepting_another_teacher_invitation_does_not_duplicate_an_active_assignment()
+    {
+        var teacherUser = User.Create(Guid.NewGuid(), "teacher@example.com", "Teacher", "One");
+        var studentUser = User.Create(Guid.NewGuid(), "student@example.com", "Student", "One");
+        var teacher = TeacherProfile.Create(teacherUser.Id, "Teacher", "One", isIndependent: true);
+        var student = StudentProfile.Create(studentUser.Id, "Student", "One");
+        var existing = TeacherStudentAssignment.Create(teacher.Id, student.Id);
+        var invitation = Invitation.Create(teacherUser.Id, studentUser.Email,
+            InvitationType.StudentToTeacher, teacherId: teacher.Id);
+        await using var context = new IdentityDbContext(new DbContextOptionsBuilder<IdentityDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        context.AddRange(teacherUser, studentUser, teacher, student, existing, invitation);
+        await context.SaveChangesAsync();
+
+        var result = await CreateHandler(context, studentUser).Handle(
+            new AcceptInvitationCommand(invitation.Id), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        context.TeacherStudentAssignments.Should().ContainSingle();
+        invitation.Status.Should().Be(InvitationStatus.Pending);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
