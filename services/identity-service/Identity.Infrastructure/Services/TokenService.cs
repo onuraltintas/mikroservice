@@ -71,6 +71,7 @@ public class TokenService : ITokenService
                             Identity.Domain.Enums.UserRole.SystemAdmin.ToString(),
                             StringComparison.OrdinalIgnoreCase)
                                 ? Identity.Domain.Constants.Permissions.GetAll()
+                                    .Concat(userRole.Role.Permissions?.Select(permission => permission.Permission) ?? [])
                                 : userRole.Role.Permissions?.Select(permission => permission.Permission)
                                     ?? [];
 
