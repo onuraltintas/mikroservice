@@ -7,6 +7,26 @@ import { InstitutionService } from '../../../core/services/institution.service';
 import { CoachingOverviewComponent } from './coaching-overview';
 
 describe('CoachingOverviewComponent', () => {
+  it('opens tenant-scoped teacher coaching totals from a named roster row', () => {
+    const coaching = {
+      getOverview: () => of(null),
+      getTeacherOverview: vi.fn(() => of({ teacherId: 'teacher-1', totalAssignments: 3 }))
+    };
+    TestBed.configureTestingModule({
+      imports: [CoachingOverviewComponent],
+      providers: [
+        { provide: CoachingAdminService, useValue: coaching },
+        { provide: InstitutionService, useValue: { getAll: () => of({ items: [] }) } }
+      ]
+    });
+    const component = TestBed.createComponent(CoachingOverviewComponent).componentInstance;
+
+    component.openTeacher({ teacherUserId: 'teacher-1', teacherName: 'Öğretmen A' } as never);
+
+    expect(coaching.getTeacherOverview).toHaveBeenCalledWith('teacher-1');
+    expect(component.teacherOverview()?.totalAssignments).toBe(3);
+  });
+
   it('opens authorized coaching progress and results for a named student', () => {
     const portal = {
       getStudentProgress: vi.fn(() => of({ studentId: 'student-1', totalAssignments: 2 })),
