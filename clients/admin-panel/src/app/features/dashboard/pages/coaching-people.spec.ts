@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { PLATFORM_ID } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { of, Subject } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { CoachingAdminGoalPage, CoachingAdminService } from '../../../core/services/coaching-admin.service';
 import { InstitutionService } from '../../../core/services/institution.service';
@@ -140,6 +140,19 @@ describe('CoachingPeopleComponent', () => {
 
     expect(service.getGoals).toHaveBeenLastCalledWith({ studentId: 'student-1', pageNumber: 2, pageSize: 25 });
     expect(component.selectedStudent()?.userId).toBe('student-1');
+  });
+
+  it('keeps the student summary visible when the goal list fails', () => {
+    const { component, fixture, service } = create('students', 'student-1', 'server', true);
+    service.getGoals.mockReturnValue(throwError(() => new Error('unavailable')));
+    component.institutionId = 'own-institution';
+
+    component.loadDetail('student-1');
+    fixture.detectChanges();
+
+    expect(component.selectedStudent()?.firstName).toBe('Ayşe');
+    expect(fixture.nativeElement.textContent).toContain('Ödev:');
+    expect(fixture.nativeElement.textContent).toContain('Hedefler yüklenemedi');
   });
 
   it('ignores stale list responses after the selected institution changes', () => {

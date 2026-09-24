@@ -50,8 +50,11 @@ import { InstitutionDto, InstitutionService } from '../../../core/services/insti
                   <div><h3 class="font-semibold">Sınav sonuçları</h3>@for (item of detail.exams; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.score }}/{{ item.maxScore }}</p> } @empty { <p class="mt-2 text-gray-500">Sonuç yok.</p> }</div>
                 </div>
                 <div class="text-sm"><h3 class="font-semibold">Hedefler</h3>
-                  @for (goal of studentGoals()?.items; track goal.id) { <p class="mt-2">{{ goal.title }} · {{ goal.currentProgress }}% · {{ goal.isCompleted ? 'Tamamlandı' : 'Devam ediyor' }}</p> } @empty { <p class="mt-2 text-gray-500">Hedef yok.</p> }
-                  @if (studentGoals(); as goals) { <div class="mt-3 flex items-center gap-3"><span>Toplam {{ goals.totalCount }} · {{ goals.pageNumber }}. sayfa</span><button type="button" class="rounded border px-2 py-1" [disabled]="goals.pageNumber <= 1 || goalLoading()" (click)="loadStudentGoals(goals.pageNumber - 1)">Önceki</button><button type="button" class="rounded border px-2 py-1" [disabled]="goals.pageNumber >= goals.totalPages || goalLoading()" (click)="loadStudentGoals(goals.pageNumber + 1)">Sonraki</button></div> }
+                  @if (goalLoading()) { <p role="status" class="mt-2">Hedefler yükleniyor…</p> }
+                  @if (studentGoals(); as goals) {
+                    @for (goal of goals.items; track goal.id) { <p class="mt-2">{{ goal.title }} · {{ goal.currentProgress }}% · {{ goal.isCompleted ? 'Tamamlandı' : 'Devam ediyor' }}</p> } @empty { <p class="mt-2 text-gray-500">Hedef yok.</p> }
+                    <div class="mt-3 flex items-center gap-3"><span>Toplam {{ goals.totalCount }} · {{ goals.pageNumber }}. sayfa</span><button type="button" class="rounded border px-2 py-1" [disabled]="goals.pageNumber <= 1 || goalLoading()" (click)="loadStudentGoals(goals.pageNumber - 1)">Önceki</button><button type="button" class="rounded border px-2 py-1" [disabled]="goals.pageNumber >= goals.totalPages || goalLoading()" (click)="loadStudentGoals(goals.pageNumber + 1)">Sonraki</button></div>
+                  }
                   @if (goalError()) { <p role="alert" class="mt-2 text-red-700">{{ goalError() }}</p> }
                 </div>
                 @if (portal) { <p class="text-xs text-gray-500">Yalnızca bu kuruma bağlanmış hedefler sayılır; kurumsuz hedefler gösterilmez.</p> }
@@ -206,21 +209,21 @@ export class CoachingPeopleComponent implements OnInit {
     const requestId = ++this.requestId;
     this.loading.set(true);
     this.error.set(null);
+    ++this.goalsRequestId;
     this.studentGoals.set(null);
     this.goalError.set(null);
     if (this.kind === 'students') {
       forkJoin({
         roster: this.service.getStudentRoster(this.institutionId, 1, id),
-        detail: this.service.getStudentDetail(id),
-        goals: this.service.getGoals({ studentId: id, pageNumber: 1, pageSize: 25 })
+        detail: this.service.getStudentDetail(id)
       }).subscribe({
         next: result => {
           if (requestId !== this.requestId) return;
           this.selectedStudent.set(result.roster.students.find(item => item.userId === id) ?? null);
           this.studentDetail.set(this.selectedStudent() ? result.detail : null);
-          this.studentGoals.set(this.selectedStudent() ? result.goals : null);
           if (!this.selectedStudent()) this.error.set('Öğrenci bu kurumda bulunamadı.');
           this.loading.set(false);
+          if (this.selectedStudent()) this.loadStudentGoals(1);
         },
         error: () => { if (requestId === this.requestId) { this.error.set('Öğrenci ayrıntısı yüklenemedi.'); this.loading.set(false); } }
       });
