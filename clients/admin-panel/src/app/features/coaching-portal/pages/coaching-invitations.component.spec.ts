@@ -52,6 +52,7 @@ describe('CoachingInvitationsComponent', () => {
   it('lets a teacher invite a student without institution-admin privileges', async () => {
     const invitations = {
       getMyInvitations: vi.fn().mockReturnValue(of([])),
+      getSentInvitations: vi.fn().mockReturnValue(of([])),
       inviteTeacherStudent: vi.fn().mockReturnValue(of({ invitationId: 'invite-1' }))
     };
     const component = createComponent(invitations, ['Teacher']);

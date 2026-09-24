@@ -39,7 +39,18 @@ import { CoachingInvitation, CoachingInvitationsService, SentCoachingInvitation 
         </div>
       }
 
-      @if (isInstitution()) {
+      @if (isTeacher() && !isInstitution()) {
+        <form (ngSubmit)="inviteTeacherStudent()" class="space-y-3 rounded-xl border bg-white p-5 dark:bg-slate-900">
+          <h2 class="font-semibold">Öğrenci davet et</h2>
+          <p class="text-sm text-slate-500">Öğrenci sizinle aynı kuruma bağlıysa veya ikiniz de bağımsızsanız daveti kabul edebilir.</p>
+          <label class="block text-sm">Öğrenci e-postası
+            <input [(ngModel)]="teacherStudentEmail" name="teacherStudentEmail" type="email" required maxlength="255" class="mt-1 w-full rounded-lg border px-3 py-2 dark:bg-slate-950" />
+          </label>
+          <button type="submit" [disabled]="saving()" class="rounded-lg bg-indigo-600 px-4 py-2 text-white disabled:opacity-50">Davet gönder</button>
+        </form>
+      }
+
+      @if (isInstitution() || isTeacher()) {
         <div class="rounded-xl border bg-white p-5 dark:bg-slate-900">
           <h2 class="font-semibold">Gönderdiğim son 50 davet</h2>
           <div class="mt-3 space-y-2">
@@ -90,6 +101,9 @@ export class CoachingInvitationsComponent implements OnInit {
   readonly highlightedId = this.route.snapshot.queryParamMap.get('id');
   teacherEmail = '';
   studentEmail = '';
+  teacherStudentEmail = '';
+
+  isTeacher() { return hasRole(this.auth.userProfile(), 'Teacher'); }
 
   isInstitution() {
     const profile = this.auth.userProfile();
@@ -103,7 +117,7 @@ export class CoachingInvitationsComponent implements OnInit {
     this.error.set(null);
     try {
       this.invitations.set(await firstValueFrom(this.service.getMyInvitations()));
-      if (this.isInstitution()) {
+      if (this.isInstitution() || this.isTeacher()) {
         this.sentInvitations.set(await firstValueFrom(this.service.getSentInvitations()));
       }
     } catch {
@@ -125,6 +139,13 @@ export class CoachingInvitationsComponent implements OnInit {
     if (!this.isInstitution() || !this.validEmail(email)) return;
     await this.mutate(() => firstValueFrom(this.service.inviteStudent(email)), 'Öğrenci daveti gönderildi.', 'Öğrenci daveti gönderilemedi.');
     if (this.success()) { this.studentEmail = ''; await this.load(); }
+  }
+
+  async inviteTeacherStudent(): Promise<void> {
+    const email = this.teacherStudentEmail.trim();
+    if (!this.isTeacher() || !this.validEmail(email)) return;
+    await this.mutate(() => firstValueFrom(this.service.inviteTeacherStudent(email)), 'Öğrenci daveti gönderildi.', 'Öğrenci daveti gönderilemedi.');
+    if (this.success()) { this.teacherStudentEmail = ''; await this.load(); }
   }
 
   async accept(id: string): Promise<void> {
