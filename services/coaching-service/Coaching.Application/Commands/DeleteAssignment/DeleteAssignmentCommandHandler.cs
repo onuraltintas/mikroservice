@@ -1,5 +1,6 @@
 using Coaching.Application.Interfaces;
 using Coaching.Application.Authorization;
+using Coaching.Application.Attachments;
 
 using MediatR;
 
@@ -10,15 +11,18 @@ public class DeleteAssignmentCommandHandler : IRequestHandler<DeleteAssignmentCo
     private readonly IAssignmentRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly IAssignmentAttachmentStorage _attachmentStorage;
 
     public DeleteAssignmentCommandHandler(
         IAssignmentRepository repository,
         IUnitOfWork unitOfWork,
-        ICoachingAccessPolicy accessPolicy)
+        ICoachingAccessPolicy accessPolicy,
+        IAssignmentAttachmentStorage attachmentStorage)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
+        _attachmentStorage = attachmentStorage;
     }
 
     public async Task Handle(DeleteAssignmentCommand command, CancellationToken cancellationToken)
@@ -29,6 +33,9 @@ public class DeleteAssignmentCommandHandler : IRequestHandler<DeleteAssignmentCo
             throw new InvalidOperationException($"Assignment {command.AssignmentId} not found");
 
         _accessPolicy.RequireTeacher(assignment.TeacherId);
+
+        foreach (var attachment in assignment.AssignedStudents.SelectMany(student => student.SubmissionAttachments))
+            await _attachmentStorage.DeleteAsync(attachment.StorageKey, cancellationToken);
 
         // Hard Delete
         await _repository.DeleteAsync(assignment, cancellationToken);
