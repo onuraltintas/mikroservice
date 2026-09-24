@@ -19,7 +19,7 @@ namespace Coaching.API.Controllers;
 
 [ApiController]
 [ApiVersion(1.0)]
-[Route("api/institution-coaching")]
+[Route("api/coaching-admin/institution")]
 [Authorize(Roles = "InstitutionAdmin,InstitutionOwner")]
 [Authorize(Policy = "MfaRequired")]
 [HasPermission(PlatformPermissions.Coaching.View)]

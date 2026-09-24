@@ -23,7 +23,7 @@ export interface InstitutionStudentPage {
 export class InstitutionCoachingService {
   private readonly http = inject(HttpClient);
   private readonly identityUrl = `${environment.apiUrl}/institution`;
-  private readonly coachingUrl = `${environment.apiUrl}/institution-coaching`;
+  private readonly coachingUrl = `${environment.apiUrl}/coaching-admin/institution`;
 
   getStudents(page = 1, search = '') {
     let params = new HttpParams().set('page', page).set('pageSize', 100);

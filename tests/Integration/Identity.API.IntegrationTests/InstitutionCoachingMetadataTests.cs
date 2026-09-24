@@ -2,6 +2,7 @@ using Coaching.API.Controllers;
 using EduPlatform.Shared.Security.Authorization;
 using FluentAssertions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.API.IntegrationTests;
 
@@ -21,6 +22,9 @@ public sealed class InstitutionCoachingMetadataTests
             .Should().Contain(attribute => attribute.Policy == "Permissions.Coaching.View");
         type.GetCustomAttributes(typeof(MfaCategoryAttribute), true)
             .Should().NotBeEmpty();
+        type.GetCustomAttributes(typeof(RouteAttribute), true)
+            .Cast<RouteAttribute>()
+            .Should().ContainSingle(attribute => attribute.Template == "api/coaching-admin/institution");
     }
 
     [Theory]
