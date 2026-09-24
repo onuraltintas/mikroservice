@@ -44,4 +44,16 @@ describe('TeacherStudentReportComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Rapor yüklenemedi');
     expect(fixture.nativeElement.textContent).not.toContain('Matematik');
   });
+
+  it('loads older assignment records without losing the first page', () => {
+    service['getStudentAssignments']
+      .mockReturnValueOnce(of({ items: [{ id: 'assignment-1', title: 'İlk ödev' }], pageNumber: 1, pageSize: 25, totalCount: 26, totalPages: 2 }))
+      .mockReturnValueOnce(of({ items: [{ id: 'assignment-2', title: 'Eski ödev' }], pageNumber: 2, pageSize: 25, totalCount: 26, totalPages: 2 }));
+    fixture.detectChanges();
+    fixture.componentInstance.loadMoreAssignments();
+    fixture.detectChanges();
+    expect(service['getStudentAssignments']).toHaveBeenLastCalledWith('student-1', 2, 25);
+    expect(fixture.nativeElement.textContent).toContain('İlk ödev');
+    expect(fixture.nativeElement.textContent).toContain('Eski ödev');
+  });
 });
