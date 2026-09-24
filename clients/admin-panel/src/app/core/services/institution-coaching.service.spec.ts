@@ -19,6 +19,20 @@ describe('InstitutionCoachingService', () => {
     http.verify();
   });
 
+  it('detaches a teacher or student only through institution-scoped Identity routes', () => {
+    const service = TestBed.inject(InstitutionCoachingService);
+    const http = TestBed.inject(HttpTestingController);
+    service.removeTeacher('teacher-1').subscribe();
+    const teacher = http.expectOne(candidate => candidate.url.endsWith('/institution/teachers/teacher-1'));
+    expect(teacher.request.method).toBe('DELETE');
+    teacher.flush(null);
+    service.removeStudent('student-1').subscribe();
+    const student = http.expectOne(candidate => candidate.url.endsWith('/institution/students/student-1'));
+    expect(student.request.method).toBe('DELETE');
+    student.flush(null);
+    http.verify();
+  });
+
   it('creates assignments and sessions through institution-only write routes', () => {
     const service = TestBed.inject(InstitutionCoachingService);
     const http = TestBed.inject(HttpTestingController);
