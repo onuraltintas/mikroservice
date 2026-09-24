@@ -96,8 +96,6 @@ import {
               <div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-900/50"><p class="text-xs text-gray-500">Ödev ortalaması</p><p class="mt-1 text-2xl font-bold">{{ formatPercent(report.averageAssignmentPercentage) }}</p></div>
               <div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-900/50"><p class="text-xs text-gray-500">Sınav ortalaması</p><p class="mt-1 text-2xl font-bold">{{ formatPercent(report.averageExamPercentage) }}</p></div>
               <div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-900/50"><p class="text-xs text-gray-500">Katılım oranı</p><p class="mt-1 text-2xl font-bold">{{ formatPercent(report.attendancePercentage) }}</p></div>
-              <div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-900/50"><p class="text-xs text-gray-500">Hedef ilerlemesi</p><p class="mt-1 text-2xl font-bold">{{ report.averageGoalProgress }}%</p></div>
-              <div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-900/50"><p class="text-xs text-gray-500">Tamamlanan hedef</p><p class="mt-1 text-2xl font-bold">{{ report.completedGoalCount }}/{{ report.goalCount }}</p></div>
               <div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-900/50"><p class="text-xs text-gray-500">Seans</p><p class="mt-1 text-2xl font-bold">{{ report.sessionCount }}</p></div>
             </div>
           }
@@ -126,7 +124,7 @@ import {
             <div class="overflow-x-auto">
               <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700">
                 <thead class="bg-gray-50 text-left text-xs uppercase text-gray-500 dark:bg-gray-900/40 dark:text-gray-400">
-                  <tr><th class="px-4 py-3">Öğrenci</th><th class="px-4 py-3">Öğretmen</th><th class="px-4 py-3">Risk</th><th class="px-4 py-3">Puan</th><th class="px-4 py-3">Sinyaller</th><th class="px-4 py-3">Ödev</th><th class="px-4 py-3">Katılım</th><th class="px-4 py-3">Hedef</th><th class="px-4 py-3">İşlem</th></tr>
+                  <tr><th class="px-4 py-3">Öğrenci</th><th class="px-4 py-3">Öğretmen</th><th class="px-4 py-3">Risk</th><th class="px-4 py-3">Puan</th><th class="px-4 py-3">Sinyaller</th><th class="px-4 py-3">Ödev</th><th class="px-4 py-3">Katılım</th><th class="px-4 py-3">İşlem</th></tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                   @for (warning of warnings.items; track warning.studentId) {
@@ -138,11 +136,10 @@ import {
                       <td class="max-w-xs px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{{ reasonLabels(warning) }}</td>
                       <td class="px-4 py-3">{{ warning.submittedAssignmentCount }}/{{ warning.assignmentCount }}</td>
                       <td class="px-4 py-3">{{ formatPercent(warning.attendancePercentage) }}</td>
-                      <td class="px-4 py-3">{{ warning.averageGoalProgress }}%</td>
                       <td class="px-4 py-3">@if (canViewStudentDetails()) { <button type="button" class="text-indigo-700 underline dark:text-indigo-300" (click)="openStudent(warning)">Ayrıntı</button> }</td>
                     </tr>
                   } @empty {
-                    <tr><td colspan="9" class="px-4 py-8 text-center text-gray-500">Bu sayfada öğrenci bulunamadı.</td></tr>
+                    <tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">Bu sayfada öğrenci bulunamadı.</td></tr>
                   }
                 </tbody>
               </table>

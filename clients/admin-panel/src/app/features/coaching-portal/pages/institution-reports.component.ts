@@ -36,7 +36,6 @@ import {
             <p>Ortalama ödev başarısı: {{ percentage(report.averageAssignmentPercentage) }}</p>
             <p>Ortalama sınav başarısı: {{ percentage(report.averageExamPercentage) }}</p>
             <p>Seans katılımı: {{ percentage(report.attendancePercentage) }}</p>
-            <p>Hedef ilerlemesi: {{ percentage(report.averageGoalProgress) }}</p>
           </div>
         </section>
       }

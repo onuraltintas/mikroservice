@@ -625,14 +625,6 @@ public sealed class CoachingComparativeReportRepository(CoachingDbContext contex
             item.AttendanceStatus is Domain.Enums.AttendanceStatus.Present
                 or Domain.Enums.AttendanceStatus.Late);
 
-        var goals = await context.AcademicGoals
-            .AsNoTracking()
-            .Where(item => studentIdList.Contains(item.StudentId)
-                && item.CreatedAt >= fromDate
-                && item.CreatedAt <= toDate)
-            .Select(item => new { item.CurrentProgress, item.IsCompleted })
-            .ToListAsync(cancellationToken);
-
         return new InstitutionCoachingComparisonDto(
             institutionId,
             gradeLevel,
@@ -653,9 +645,9 @@ public sealed class CoachingComparativeReportRepository(CoachingDbContext contex
             recordedSessionRows.Length == 0
                 ? null
                 : Math.Round((decimal)attendedSessionRows / recordedSessionRows.Length * 100, 2),
-            goals.Count,
-            goals.Count(item => item.IsCompleted),
-            goals.Count == 0 ? 0 : (int)Math.Round(goals.Average(item => item.CurrentProgress)));
+            0, // Goals have no institution ID and cannot be attributed to this tenant.
+            0,
+            0);
     }
 
     private static decimal? AveragePercentage(IReadOnlyCollection<double> values) =>
@@ -781,33 +773,6 @@ public sealed class CoachingEarlyWarningRepository(CoachingDbContext context)
             accumulator.RecordActivity(row.ScheduledDate);
         }
 
-        var goalRows = await context.AcademicGoals
-            .AsNoTracking()
-            .Where(item => studentIdList.Contains(item.StudentId)
-                && item.CreatedAt >= fromDate
-                && item.CreatedAt <= toDate)
-            .Select(item => new
-            {
-                item.StudentId,
-                item.CurrentProgress,
-                item.IsCompleted,
-                item.CreatedAt
-            })
-            .ToListAsync(cancellationToken);
-
-        foreach (var row in goalRows)
-        {
-            if (!accumulators.TryGetValue(row.StudentId, out var accumulator))
-            {
-                continue;
-            }
-
-            accumulator.GoalCount++;
-            accumulator.CompletedGoalCount += row.IsCompleted ? 1 : 0;
-            accumulator.GoalProgressTotal += row.CurrentProgress;
-            accumulator.RecordActivity(row.CreatedAt);
-        }
-
         return accumulators.Select(item => item.Value.ToMetrics(item.Key)).ToArray();
     }
 
@@ -819,9 +784,6 @@ public sealed class CoachingEarlyWarningRepository(CoachingDbContext context)
         public List<decimal> AssignmentPercentages { get; } = [];
         public int RecordedAttendanceCount { get; set; }
         public int AttendedSessionCount { get; set; }
-        public int GoalCount { get; set; }
-        public int CompletedGoalCount { get; set; }
-        public int GoalProgressTotal { get; set; }
         public DateTime? LastActivityAt { get; private set; }
 
         public void RecordActivity(DateTime activityAt)
@@ -843,9 +805,9 @@ public sealed class CoachingEarlyWarningRepository(CoachingDbContext context)
                     : Math.Round(AssignmentPercentages.Average(), 2),
                 RecordedAttendanceCount,
                 AttendedSessionCount,
-                GoalCount,
-                CompletedGoalCount,
-                GoalCount == 0 ? 0 : (int)Math.Round((decimal)GoalProgressTotal / GoalCount),
+                0, // Legacy goals cannot be scoped to an institution.
+                0,
+                0,
                 LastActivityAt);
     }
 }
@@ -1024,9 +986,7 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
             sessions = sessions.Where(item => item.InstitutionId == institutionId.Value);
             exams = exams.Where(item => item.InstitutionId == institutionId.Value);
 
-            goals = scopedStudentIds is null
-                ? goals.Where(_ => false)
-                : goals.Where(item => scopedStudentIds.Contains(item.StudentId));
+            goals = goals.Where(_ => false); // Goals have no institution ID.
         }
 
         var assignmentIds = assignments.Select(item => item.Id);
