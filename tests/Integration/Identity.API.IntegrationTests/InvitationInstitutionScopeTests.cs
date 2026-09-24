@@ -14,6 +14,31 @@ namespace Identity.API.IntegrationTests;
 public sealed class InvitationInstitutionScopeTests
 {
     [Fact]
+    public async Task Teacher_with_role_but_no_profile_can_accept_institution_invitation_without_losing_student_profile()
+    {
+        var institution = Institution.Create("New", InstitutionType.School);
+        var user = User.Create(Guid.NewGuid(), "teacher@example.com", "Teacher", "One");
+        var student = StudentProfile.Create(user.Id, "Teacher", "One");
+        var teacherRole = Role.Create("Teacher", "Teacher");
+        user.AddRole(new Identity.Domain.Entities.UserRole(user.Id, teacherRole.Id));
+        var invitation = Invitation.Create(Guid.NewGuid(), user.Email,
+            InvitationType.TeacherToInstitution, institution.Id);
+        await using var context = new IdentityDbContext(new DbContextOptionsBuilder<IdentityDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        context.AddRange(institution, user, student, teacherRole, invitation);
+        await context.SaveChangesAsync();
+
+        var result = await CreateHandler(context, user).Handle(
+            new AcceptInvitationCommand(invitation.Id), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        context.TeacherProfiles.Should().ContainSingle(profile =>
+            profile.UserId == user.Id && profile.InstitutionId == institution.Id);
+        context.StudentProfiles.Should().ContainSingle(profile => profile.UserId == user.Id);
+        invitation.Status.Should().Be(InvitationStatus.Accepted);
+    }
+
+    [Fact]
     public async Task Independent_student_accepts_institution_invitation_with_teacher_assignment()
     {
         var institution = Institution.Create("New", InstitutionType.School);
