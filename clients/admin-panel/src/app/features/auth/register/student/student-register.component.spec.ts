@@ -1,4 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -11,6 +12,18 @@ import { ConfigurationService } from '../../../../core/services/settings/configu
 import { StudentRegisterComponent } from './student-register.component';
 
 describe('StudentRegisterComponent Google registration', () => {
+  it('shows the duplicate-account message in a toaster on student registration', () => {
+    const authState = new Subject<{ idToken?: string }>();
+    const toaster = { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() };
+    const component = createComponent(authState, {}, toaster);
+    component.form.patchValue({ firstName: 'Ayşe', lastName: 'Yılmaz', email: 'ayse@example.com', password: 'StrongPass1!', confirmPassword: 'StrongPass1!' });
+    void component.onSubmit();
+    TestBed.inject(HttpTestingController).expectOne(req => req.url.endsWith('/auth/register-student'))
+      .flush({ code: 'Identity.UserExists', message: 'Bu e-posta adresiyle zaten kayıtlı bir hesap var.' }, { status: 409, statusText: 'Conflict' });
+    expect(toaster.error).toHaveBeenCalledWith('Bu e-posta adresiyle zaten kayıtlı bir hesap var.');
+    TestBed.inject(HttpTestingController).verify();
+  });
+
   it('starts Google registration from the social auth state', async () => {
     const authState = new Subject<{ idToken?: string }>();
     const authService = {
@@ -81,6 +94,7 @@ describe('StudentRegisterComponent Google registration', () => {
       imports: [ReactiveFormsModule],
       providers: [
         provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: AuthService, useValue: authService },
         { provide: SocialAuthService, useValue: { authState } },
         { provide: Router, useValue: router },
