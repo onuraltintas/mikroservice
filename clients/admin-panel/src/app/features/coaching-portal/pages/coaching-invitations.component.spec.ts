@@ -34,6 +34,20 @@ describe('CoachingInvitationsComponent', () => {
     expect(component.success()).toBeNull();
   });
 
+  it('shows the institution sender only their sent invitation statuses', async () => {
+    const invitations = {
+      getMyInvitations: vi.fn().mockReturnValue(of([])),
+      getSentInvitations: vi.fn().mockReturnValue(of([{
+        id: 'invite-1', inviteeEmail: 'teacher@example.com', status: 'Pending', type: 'TeacherToInstitution'
+      }]))
+    };
+    const component = createComponent(invitations, ['InstitutionAdmin']);
+    await component.load();
+
+    expect(invitations.getSentInvitations).toHaveBeenCalled();
+    expect(component.sentInvitations()).toEqual([expect.objectContaining({ status: 'Pending' })]);
+  });
+
   function createComponent(invitations: Record<string, unknown>, roles: string[]) {
     TestBed.configureTestingModule({ providers: [
       { provide: CoachingInvitationsService, useValue: invitations },
