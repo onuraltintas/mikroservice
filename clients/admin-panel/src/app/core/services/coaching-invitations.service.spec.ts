@@ -38,4 +38,15 @@ describe('CoachingInvitationsService', () => {
     request.flush([]);
     TestBed.inject(HttpTestingController).verify();
   });
+
+  it('lets a teacher invite an independent student by email', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const service = TestBed.inject(CoachingInvitationsService);
+    service.inviteTeacherStudent('student@example.com').subscribe();
+    const request = TestBed.inject(HttpTestingController).expectOne(req => req.url.endsWith('/teachers/invite-student'));
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ studentEmail: 'student@example.com' });
+    request.flush({ invitationId: 'invite-1' });
+    TestBed.inject(HttpTestingController).verify();
+  });
 });
