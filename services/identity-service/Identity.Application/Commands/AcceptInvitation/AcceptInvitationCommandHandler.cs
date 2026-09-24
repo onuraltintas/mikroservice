@@ -79,17 +79,22 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
             }
         }
 
-        if (invitation.Type == InvitationType.StudentToTeacher)
+        if (invitation.TeacherId is { } targetTeacherId)
         {
-            var teacher = invitation.TeacherId is { } teacherId
-                ? await _teacherRepository.GetByIdAsync(teacherId, cancellationToken)
-                : null;
+            var teacher = await _teacherRepository.GetByIdAsync(targetTeacherId, cancellationToken);
             var student = await _studentRepository.GetByUserIdAsync(userId, cancellationToken);
-            if (teacher is null || student is null || teacher.InstitutionId != student.InstitutionId)
+            var expectedInstitutionId = invitation.InstitutionId ?? student?.InstitutionId;
+            if (teacher is null || student is null || teacher.InstitutionId != expectedInstitutionId)
             {
                 return Result.Failure(new Error(
                     "Invitation.InstitutionConflict",
                     "Öğretmen ve öğrenci aynı kurumda olmalı veya ikisi de bağımsız olmalıdır."));
+            }
+            if (await _teacherRepository.GetAssignmentAsync(teacher.Id, student.Id, cancellationToken) is not null)
+            {
+                return Result.Failure(new Error(
+                    "Invitation.AlreadyAssigned",
+                    "Öğrenci zaten bu öğretmene bağlıdır."));
             }
         }
 
