@@ -81,7 +81,7 @@ describe('StudentRegisterComponent Google registration', () => {
     authState.next({ idToken: 'google-disabled-token' });
 
     await vi.waitFor(() => expect(toaster.info).toHaveBeenCalledWith('Yeni kullanıcı kayıtları şu an kapalıdır.'));
-    expect(component.errorMessage()).toBe('Kayıt kapalı.');
+    expect(component.errorMessage()).toBe('Yeni kullanıcı kayıtları şu an kapalı. Lütfen daha sonra tekrar deneyin.');
   });
 
   it('does not show technical server errors during Google registration', async () => {

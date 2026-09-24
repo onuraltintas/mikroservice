@@ -14,6 +14,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { environment } from '../../../../../environments/environment.development';
 import { ConfigurationService } from '../../../../core/services/settings/configuration.service';
+import { getRegistrationErrorMessage } from '../registration-error-message';
 
 @Component({
     selector: 'app-parent-register',
@@ -83,7 +84,7 @@ export class ParentRegisterComponent implements OnInit {
             },
             error: (err) => {
                 this.isLoading.set(false);
-                const msg = err.error?.message || err.error?.Error || 'Kayıt başarısız oldu. Lütfen yeniden deneyin.';
+                const msg = getRegistrationErrorMessage(err);
                 this.toaster.error(msg);
                 this.errorMessage.set(msg);
             }

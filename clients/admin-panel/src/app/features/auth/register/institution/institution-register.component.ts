@@ -16,6 +16,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { environment } from '../../../../../environments/environment';
 import { ConfigurationService } from '../../../../core/services/settings/configuration.service';
 import { DistrictOption, LocationService, ProvinceOption } from '../../../../core/services/location.service';
+import { getRegistrationErrorMessage } from '../registration-error-message';
 
 @Component({
     selector: 'app-institution-register',
@@ -110,7 +111,7 @@ export class InstitutionRegisterComponent implements OnInit {
             },
             error: (err) => {
                 this.isLoading.set(false);
-                const msg = err.error?.message || err.error?.Error || 'Kayıt başarısız oldu. Lütfen yeniden deneyin.';
+                const msg = getRegistrationErrorMessage(err);
                 this.toaster.error(msg);
                 this.errorMessage.set(msg);
             }

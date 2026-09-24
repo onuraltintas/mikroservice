@@ -17,6 +17,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { ConfigurationService } from '../../../../core/services/settings/configuration.service';
+import { getRegistrationErrorMessage } from '../registration-error-message';
 
 @Component({
     selector: 'app-student-register',
@@ -104,7 +105,7 @@ export class StudentRegisterComponent implements OnInit {
             },
             error: (err) => {
                 this.isLoading.set(false);
-                const msg = err.error?.message || err.error?.Error || 'Kayıt başarısız oldu. Lütfen yeniden deneyin.';
+                const msg = getRegistrationErrorMessage(err);
                 this.toaster.error(msg);
                 this.errorMessage.set(msg);
             }
@@ -128,9 +129,7 @@ export class StudentRegisterComponent implements OnInit {
             this.toaster.success('Google hesabınızla devam edildi.');
         } catch (error: any) {
             const errorCode = error.error?.code;
-            const errorMessage = error.error?.message
-                || error.error?.description
-                || 'Google ile kayıt başarısız oldu.';
+            const errorMessage = getRegistrationErrorMessage(error);
 
             if (errorCode === 'Identity.RegistrationDisabled') {
                 this.toaster.info('Yeni kullanıcı kayıtları şu an kapalıdır.');

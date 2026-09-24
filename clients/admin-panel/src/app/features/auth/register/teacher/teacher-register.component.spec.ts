@@ -20,6 +20,6 @@ it('shows the duplicate-account message in a toaster on teacher registration', (
   void component.onSubmit();
   TestBed.inject(HttpTestingController).expectOne(req => req.url.endsWith('/auth/register-teacher'))
     .flush({ code: 'Identity.UserExists', message: 'Bu e-posta adresiyle zaten kayıtlı bir hesap var.' }, { status: 409, statusText: 'Conflict' });
-  expect(toaster.error).toHaveBeenCalledWith('Bu e-posta adresiyle zaten kayıtlı bir hesap var.');
+  expect(toaster.error).toHaveBeenCalledWith('Bu e-posta adresiyle zaten kayıtlı bir hesap var. Giriş yapın veya şifrenizi sıfırlayın.');
   TestBed.inject(HttpTestingController).verify();
 });

@@ -1,7 +1,7 @@
 import { getRegistrationErrorMessage } from './registration-error-message';
 
 describe('getRegistrationErrorMessage', () => {
-  it.each([
+  const cases: Array<[unknown, string]> = [
     [{ status: 409, error: { code: 'Identity.UserExists', message: 'Duplicate user' } }, 'Bu e-posta adresiyle zaten kayıtlı bir hesap var. Giriş yapın veya şifrenizi sıfırlayın.'],
     [{ status: 400, error: { code: 'Identity.RegistrationDisabled' } }, 'Yeni kullanıcı kayıtları şu an kapalı. Lütfen daha sonra tekrar deneyin.'],
     [{ status: 400, error: { code: 'Institution.InvalidLocation' } }, 'Seçtiğiniz il ve ilçe eşleşmiyor. Lütfen konum bilgilerini kontrol edin.'],
@@ -12,7 +12,11 @@ describe('getRegistrationErrorMessage', () => {
     [{ status: 500, error: { message: 'SQL connection failed' } }, 'Kayıt şu anda tamamlanamıyor. Lütfen daha sonra yeniden deneyin.'],
     [{ status: 409, error: { message: 'database constraint violation' } }, 'Kayıt bilgileri mevcut bir kayıtla çakışıyor. Bilgileri kontrol edin.'],
     [{ status: 400, error: { message: 'unrecognized server error' } }, 'Kayıt bilgilerini kontrol edip yeniden deneyin.']
-  ])('returns a friendly message for %o', (error, expected) => {
-    expect(getRegistrationErrorMessage(error)).toBe(expected);
-  });
+  ];
+
+  for (const [index, [error, expected]] of cases.entries()) {
+    it(`returns a friendly message for registration failure ${index + 1}`, () => {
+      expect(getRegistrationErrorMessage(error)).toBe(expected);
+    });
+  }
 });
