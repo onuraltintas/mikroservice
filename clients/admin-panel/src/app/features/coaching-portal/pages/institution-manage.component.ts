@@ -148,6 +148,20 @@ export class InstitutionManageComponent implements OnInit {
     });
   }
 
+  async removeTeacher(userId: string): Promise<void> {
+    if (!confirm('Öğretmenin kurum bağlantısı ve aktif kurum atamaları kaldırılsın mı? Geçmiş kayıtlar silinmez.')) return;
+    await this.save('Öğretmenin kurum bağlantısı kaldırıldı.', async () => {
+      await firstValueFrom(this.institution.removeTeacher(userId));
+    });
+  }
+
+  async removeStudent(userId: string): Promise<void> {
+    if (!confirm('Öğrencinin kurum bağlantısı ve aktif kurum atamaları kaldırılsın mı? Geçmiş kayıtlar silinmez.')) return;
+    await this.save('Öğrencinin kurum bağlantısı kaldırıldı.', async () => {
+      await firstValueFrom(this.institution.removeStudent(userId));
+    });
+  }
+
   async createAssignment(): Promise<void> {
     const institutionId = this.institutionId();
     const studentIds = [...this.selectedStudentIds].filter(id =>
