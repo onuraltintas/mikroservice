@@ -51,8 +51,11 @@ public sealed class CoachingEarlyWarningRepositoryTests
 
         var goal = AcademicGoal.Create(studentId, "Hedef", GoalCategory.ExamPreparation);
         goal.UpdateProgress(40);
+        var institutionGoal = AcademicGoal.Create(studentId, "Kurum hedefi", GoalCategory.ExamPreparation,
+            institutionId: institutionId);
+        institutionGoal.UpdateProgress(60);
 
-        context.AddRange(assignment, otherAssignment, session, goal);
+        context.AddRange(assignment, otherAssignment, session, goal, institutionGoal);
         await context.SaveChangesAsync();
 
         var result = await new CoachingEarlyWarningRepository(context)
@@ -74,8 +77,8 @@ public sealed class CoachingEarlyWarningRepositoryTests
         metrics.RecordedAttendanceCount.Should().Be(1);
         metrics.AttendedSessionCount.Should().Be(1);
         // An unscoped goal cannot be attributed to this institution.
-        metrics.GoalCount.Should().Be(0);
-        metrics.AverageGoalProgress.Should().Be(0);
+        metrics.GoalCount.Should().Be(1);
+        metrics.AverageGoalProgress.Should().Be(60);
         result.Single(item => item.StudentId == otherStudentId)
             .AssignmentCount.Should().Be(0);
     }

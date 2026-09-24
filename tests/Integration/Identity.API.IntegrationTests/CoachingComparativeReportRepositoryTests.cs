@@ -67,8 +67,11 @@ public sealed class CoachingComparativeReportRepositoryTests
 
         var goal = AcademicGoal.Create(studentId, "Hedef", GoalCategory.ExamPreparation);
         goal.UpdateProgress(100);
+        var institutionGoal = AcademicGoal.Create(studentId, "Kurum hedefi", GoalCategory.ExamPreparation,
+            institutionId: institutionId);
+        institutionGoal.UpdateProgress(60);
 
-        context.AddRange(assignment, otherAssignment, exam, otherExam, session, goal);
+        context.AddRange(assignment, otherAssignment, exam, otherExam, session, goal, institutionGoal);
         await context.SaveChangesAsync();
 
         var result = await new CoachingComparativeReportRepository(context)
@@ -94,9 +97,9 @@ public sealed class CoachingComparativeReportRepositoryTests
         result.AttendedSessionCount.Should().Be(1);
         result.AttendancePercentage.Should().Be(100m);
         // Legacy goals have no institution ID; they must not appear in an institution report.
-        result.GoalCount.Should().Be(0);
+        result.GoalCount.Should().Be(1);
         result.CompletedGoalCount.Should().Be(0);
-        result.AverageGoalProgress.Should().Be(0);
+        result.AverageGoalProgress.Should().Be(60);
     }
 
     private static CoachingDbContext CreateContext()
