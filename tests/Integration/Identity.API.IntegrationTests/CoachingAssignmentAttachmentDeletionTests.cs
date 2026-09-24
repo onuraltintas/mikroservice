@@ -8,6 +8,8 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Coaching.Application.Attachments;
+using Coaching.Application.Interfaces;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Identity.API.IntegrationTests;
 
@@ -39,7 +41,9 @@ public sealed class CoachingAssignmentAttachmentDeletionTests
                 new AssignmentRepository(context),
                 new FailingUnitOfWork(),
                 new TeacherAccessPolicy(teacherId),
-                new LocalAssignmentAttachmentStorage(Options.Create(new AssignmentAttachmentOptions { RootPath = root })));
+                new LocalAssignmentAttachmentStorage(Options.Create(new AssignmentAttachmentOptions { RootPath = root })),
+                new RecordingPublisher(),
+                NullLogger<DeleteAssignmentCommandHandler>.Instance);
 
             var act = () => handler.Handle(new DeleteAssignmentCommand(assignment.Id), CancellationToken.None);
 
@@ -53,7 +57,7 @@ public sealed class CoachingAssignmentAttachmentDeletionTests
     }
 
     [Fact]
-    public async Task StorageFailure_DoesNotDeleteAssignmentRecord()
+    public async Task StorageFailure_LeavesCommittedDeletionForOutboxRetry()
     {
         await using var context = new CoachingDbContext(
             new DbContextOptionsBuilder<CoachingDbContext>()
@@ -67,16 +71,20 @@ public sealed class CoachingAssignmentAttachmentDeletionTests
         context.Assignments.Add(assignment);
         await context.SaveChangesAsync();
 
+        var publisher = new RecordingPublisher();
         var handler = new DeleteAssignmentCommandHandler(
             new AssignmentRepository(context),
             new UnitOfWork(context),
             new TeacherAccessPolicy(teacherId),
-            new FailingStorage());
+            new FailingStorage(),
+            publisher,
+            NullLogger<DeleteAssignmentCommandHandler>.Instance);
 
         var act = () => handler.Handle(new DeleteAssignmentCommand(assignment.Id), CancellationToken.None);
 
-        await act.Should().ThrowAsync<IOException>();
-        (await context.Assignments.CountAsync()).Should().Be(1);
+        await act.Should().NotThrowAsync();
+        (await context.Assignments.CountAsync()).Should().Be(0);
+        publisher.Messages.Should().ContainSingle();
     }
 
     [Fact]
@@ -109,11 +117,14 @@ public sealed class CoachingAssignmentAttachmentDeletionTests
             var unrelatedPath = Path.Combine(root, "unrelated.jpg");
             await File.WriteAllBytesAsync(unrelatedPath, [7, 8, 9]);
 
+            var publisher = new RecordingPublisher();
             var handler = new DeleteAssignmentCommandHandler(
                 new AssignmentRepository(context),
                 new UnitOfWork(context),
                 new TeacherAccessPolicy(teacherId),
-                new LocalAssignmentAttachmentStorage(Options.Create(new AssignmentAttachmentOptions { RootPath = root })));
+                new LocalAssignmentAttachmentStorage(Options.Create(new AssignmentAttachmentOptions { RootPath = root })),
+                publisher,
+                NullLogger<DeleteAssignmentCommandHandler>.Instance);
 
             await handler.Handle(new DeleteAssignmentCommand(assignment.Id), CancellationToken.None);
 
@@ -121,6 +132,7 @@ public sealed class CoachingAssignmentAttachmentDeletionTests
             File.Exists(secondPath).Should().BeFalse();
             File.Exists(unrelatedPath).Should().BeTrue();
             (await context.Assignments.CountAsync()).Should().Be(0);
+            publisher.Messages.Should().HaveCount(2);
         }
         finally
         {
@@ -159,5 +171,18 @@ public sealed class CoachingAssignmentAttachmentDeletionTests
         public Task BeginTransactionAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task CommitTransactionAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task RollbackTransactionAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    }
+
+    private sealed class RecordingPublisher : ICoachingEventPublisher
+    {
+        public List<AssignmentAttachmentDeletionRequested> Messages { get; } = [];
+
+        public Task PublishAsync<T>(T message, CancellationToken cancellationToken = default)
+            where T : class
+        {
+            if (message is AssignmentAttachmentDeletionRequested deletion)
+                Messages.Add(deletion);
+            return Task.CompletedTask;
+        }
     }
 }
