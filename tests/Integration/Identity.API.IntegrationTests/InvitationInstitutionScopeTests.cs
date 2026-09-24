@@ -59,6 +59,29 @@ public sealed class InvitationInstitutionScopeTests
         invitation.Status.Should().Be(InvitationStatus.Pending);
     }
 
+    [Fact]
+    public async Task Independent_teacher_invitation_cannot_attach_a_student_from_an_institution()
+    {
+        var institution = Institution.Create("Current", InstitutionType.School);
+        var teacherUser = User.Create(Guid.NewGuid(), "teacher@example.com", "Teacher", "One");
+        var studentUser = User.Create(Guid.NewGuid(), "student@example.com", "Student", "One");
+        var teacher = TeacherProfile.Create(teacherUser.Id, "Teacher", "One", isIndependent: true);
+        var student = StudentProfile.Create(studentUser.Id, "Student", "One", institution.Id);
+        var invitation = Invitation.Create(teacherUser.Id, studentUser.Email,
+            InvitationType.StudentToTeacher, teacherId: teacher.Id);
+        await using var context = new IdentityDbContext(new DbContextOptionsBuilder<IdentityDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        context.AddRange(institution, teacherUser, studentUser, teacher, student, invitation);
+        await context.SaveChangesAsync();
+
+        var result = await CreateHandler(context, studentUser).Handle(
+            new AcceptInvitationCommand(invitation.Id), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        context.TeacherStudentAssignments.Should().BeEmpty();
+        invitation.Status.Should().Be(InvitationStatus.Pending);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
