@@ -18,6 +18,10 @@ operasyonel müdahale gerektirir.
 - İlgili koçluk ekleri test filtresi: 24/24 başarılı. Yerel NuGet güvenlik
   verisi alınamadığı için `NU1900` uyarıları vardı; bu, açık taraması kanıtı
   değildir.
+- Tüm koçluk odaklı entegrasyon testleri taramasında 202 test geçti. Ayrı
+  `CoachingStudentReadRepositoryTests` sınıfındaki 11 test, yerel Windows
+  ortamında Docker named pipe erişimi bulunmadığı için PostgreSQL
+  Testcontainers fixture'ını başlatamadı; bu sınıf hariç 202/202 geçti.
 - Ayrı PostgreSQL, RabbitMQ ve volume kullanan disposable Docker projesinde
   HTTP yükleme, tarama, sahiplik kontrolü, indirme ve silme geçti. Silme
   olayının tüketiciye ulaştığı `InboxState` ile doğrulandı. Proje ve tüm
