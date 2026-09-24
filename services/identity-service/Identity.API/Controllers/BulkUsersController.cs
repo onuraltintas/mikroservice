@@ -235,7 +235,7 @@ public sealed class BulkUsersController : ControllerBase
                     }
                 }
 
-                var assignResult = await _identityService.AssignRoleAsync(userId, roleName, cancellationToken);
+                var assignResult = await _identityService.AssignRoleWithProfileAsync(userId, roleName, cancellationToken);
                 if (assignResult.IsFailure)
                 {
                     errors.Add($"{userId}: {assignResult.Error.Description}");

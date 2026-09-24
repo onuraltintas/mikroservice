@@ -107,6 +107,7 @@ public sealed class AuthenticationSessionIssuerTests
         public Task<Result> DeactivateUserAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> ActivateUserAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> AssignRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<Result> AssignRoleWithProfileAsync(Guid userId, string roleName, CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public Task<Result<ProvisionedUser>> RegisterUserWithPasswordSetupAsync(
             string email,

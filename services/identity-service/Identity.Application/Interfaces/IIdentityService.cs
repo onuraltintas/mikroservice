@@ -37,6 +37,12 @@ public interface IIdentityService
     Task<Result> AssignRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Assigns a role from user administration and ensures its required profile exists.
+    /// Institution roles must be assigned through institution management instead.
+    /// </summary>
+    Task<Result> AssignRoleWithProfileAsync(Guid userId, string roleName, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Creates a user with an unusable internal password and a one-time password setup token.
     /// </summary>
     /// <returns>UserId and the short-lived password setup token.</returns>

@@ -154,6 +154,12 @@ public class LocalIdentityService : IIdentityService
         => Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)) + "Aa1!";
 
     public async Task<Result> AssignRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken)
+        => await AssignRoleCoreAsync(userId, roleName, ensureProfile: false, cancellationToken);
+
+    public async Task<Result> AssignRoleWithProfileAsync(Guid userId, string roleName, CancellationToken cancellationToken)
+        => await AssignRoleCoreAsync(userId, roleName, ensureProfile: true, cancellationToken);
+
+    private async Task<Result> AssignRoleCoreAsync(Guid userId, string roleName, bool ensureProfile, CancellationToken cancellationToken)
     {
         try
         {
@@ -179,6 +185,29 @@ public class LocalIdentityService : IIdentityService
             {
                 _logger.LogWarning("Role {RoleName} not found for role assignment", roleName);
                 return Result.Failure(new Error("Identity.RoleNotFound", $"Role '{roleName}' not found."));
+            }
+
+            if (ensureProfile && role.Name is "InstitutionAdmin" or "InstitutionOwner")
+            {
+                return Result.Failure(new Error(
+                    "Identity.InstitutionRoleRequiresMembership",
+                    "Kurum yetkisi, kurum yönetimi ekranından ilgili kuruma bağlanarak verilmelidir."));
+            }
+
+            if (ensureProfile)
+            {
+                switch (role.Name)
+                {
+                    case "Student" when !await _context.StudentProfiles.AnyAsync(profile => profile.UserId == userId, cancellationToken):
+                        _context.StudentProfiles.Add(StudentProfile.Create(userId, user.FirstName, user.LastName));
+                        break;
+                    case "Teacher" when !await _context.TeacherProfiles.AnyAsync(profile => profile.UserId == userId, cancellationToken):
+                        _context.TeacherProfiles.Add(TeacherProfile.Create(userId, user.FirstName, user.LastName, isIndependent: true));
+                        break;
+                    case "Parent" when !await _context.ParentProfiles.AnyAsync(profile => profile.UserId == userId, cancellationToken):
+                        _context.ParentProfiles.Add(ParentProfile.Create(userId, user.FirstName, user.LastName));
+                        break;
+                }
             }
 
             user.AddRole(new Identity.Domain.Entities.UserRole(userId, role.Id));

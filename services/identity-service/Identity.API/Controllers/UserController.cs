@@ -394,7 +394,7 @@ public class UserController : ControllerBase
     public async Task<IActionResult> AssignRole(Guid id, [FromBody] RoleRequest request, CancellationToken cancellationToken)
     {
         var identityService = HttpContext.RequestServices.GetRequiredService<IIdentityService>();
-        var result = await identityService.AssignRoleAsync(id, request.RoleName, cancellationToken);
+        var result = await identityService.AssignRoleWithProfileAsync(id, request.RoleName, cancellationToken);
         if (result.IsSuccess) return Ok();
         return BadRequest(result.Error);
     }
