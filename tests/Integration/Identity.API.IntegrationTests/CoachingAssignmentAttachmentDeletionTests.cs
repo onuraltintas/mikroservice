@@ -14,6 +14,33 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingAssignmentAttachmentDeletionTests
 {
     [Fact]
+    public async Task StorageFailure_DoesNotDeleteAssignmentRecord()
+    {
+        await using var context = new CoachingDbContext(
+            new DbContextOptionsBuilder<CoachingDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+                .Options);
+        var teacherId = Guid.NewGuid();
+        var assignment = Assignment.Create(teacherId, "Test assignment", DateTime.UtcNow.AddDays(1));
+        assignment.AssignToStudent(Guid.NewGuid());
+        assignment.AssignedStudents.Single().AddSubmissionAttachment(
+            "assignments/test/photo.jpg", "photo.jpg", "image/jpeg", 3, new string('A', 64));
+        context.Assignments.Add(assignment);
+        await context.SaveChangesAsync();
+
+        var handler = new DeleteAssignmentCommandHandler(
+            new AssignmentRepository(context),
+            new UnitOfWork(context),
+            new TeacherAccessPolicy(teacherId),
+            new FailingStorage());
+
+        var act = () => handler.Handle(new DeleteAssignmentCommand(assignment.Id), CancellationToken.None);
+
+        await act.Should().ThrowAsync<IOException>();
+        (await context.Assignments.CountAsync()).Should().Be(1);
+    }
+
+    [Fact]
     public async Task DeletingAssignment_RemovesItsPhysicalAttachment()
     {
         var root = Path.Combine(Path.GetTempPath(), "coaching-delete-" + Guid.NewGuid().ToString("N"));
@@ -77,5 +104,13 @@ public sealed class CoachingAssignmentAttachmentDeletionTests
         public void RequireStudent(Guid id) => throw new NotSupportedException();
         public void RequireTeacherOrStudent(Guid teacher, Guid student) => throw new NotSupportedException();
         public void RequireTeacherOrAssignedStudent(Guid teacher, IEnumerable<Guid> students) => throw new NotSupportedException();
+    }
+
+    private sealed class FailingStorage : IAssignmentAttachmentStorage
+    {
+        public Task<AssignmentAttachmentUploadTicket> CreateUploadTicketAsync(Guid assignmentId, Guid studentId, Guid attachmentId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<StoredAssignmentAttachment> StoreAsync(string storageKey, Stream content, string expectedContentType, long expectedSizeBytes, string expectedSha256, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<Stream> OpenReadAsync(string storageKey, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task DeleteAsync(string storageKey, CancellationToken cancellationToken = default) => throw new IOException("Storage unavailable");
     }
 }
