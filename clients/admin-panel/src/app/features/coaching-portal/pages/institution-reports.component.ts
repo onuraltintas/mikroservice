@@ -69,6 +69,7 @@ export class InstitutionReportsComponent implements OnInit {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   private institutionId: string | null = null;
+  private requestId = 0;
   gradeLevel?: number;
   fromDate = '';
   toDate = '';
@@ -103,28 +104,33 @@ export class InstitutionReportsComponent implements OnInit {
       return;
     }
     const filters = this.filters();
+    const requestId = ++this.requestId;
     this.loading.set(true);
     this.error.set(null);
+    this.comparison.set(null);
+    this.warnings.set(null);
     forkJoin({
       comparison: this.service.getInstitutionComparison(this.institutionId, filters),
       warnings: this.service.getInstitutionEarlyWarnings(this.institutionId, { ...filters, pageNumber: 1, pageSize: 25 })
     }).subscribe({
       next: result => {
+        if (requestId !== this.requestId) return;
         this.comparison.set(result.comparison);
         this.warnings.set(result.warnings);
         this.loading.set(false);
       },
-      error: () => { this.error.set('Kurum raporları yüklenemedi.'); this.loading.set(false); }
+      error: () => { if (requestId === this.requestId) { this.error.set('Kurum raporları yüklenemedi.'); this.loading.set(false); } }
     });
   }
 
   loadWarnings(pageNumber: number): void {
     if (!this.institutionId || pageNumber < 1) return;
+    const requestId = ++this.requestId;
     this.loading.set(true);
     this.error.set(null);
     this.service.getInstitutionEarlyWarnings(this.institutionId, { ...this.filters(), pageNumber, pageSize: 25 }).subscribe({
-      next: report => { this.warnings.set(report); this.loading.set(false); },
-      error: () => { this.error.set('Uyarı listesi yüklenemedi.'); this.loading.set(false); }
+      next: report => { if (requestId === this.requestId) { this.warnings.set(report); this.loading.set(false); } },
+      error: () => { if (requestId === this.requestId) { this.error.set('Uyarı listesi yüklenemedi.'); this.loading.set(false); } }
     });
   }
 
