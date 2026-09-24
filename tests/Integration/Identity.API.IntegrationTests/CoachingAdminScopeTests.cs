@@ -33,9 +33,11 @@ public sealed class CoachingAdminScopeTests
 
         var assignments = await controller.GetStudentAssignments(outsiderId, null!, 1, 25);
         var exams = await controller.GetStudentExams(outsiderId, null!, 1, 25);
+        var sessions = await controller.GetStudentSessions(outsiderId, null!, 1, 25);
 
         assignments.Should().BeOfType<NotFoundResult>();
         exams.Should().BeOfType<NotFoundResult>();
+        sessions.Should().BeOfType<NotFoundResult>();
     }
 
     private sealed class FixedScopeAuthorization(CoachingAdminScope scope) : ICoachingAdminScopeAuthorization

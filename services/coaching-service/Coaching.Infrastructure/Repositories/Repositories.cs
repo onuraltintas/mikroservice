@@ -950,6 +950,27 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
         return new PagedRepositoryResult<CoachingAdminStudentExamDto>(items, totalCount);
     }
 
+    public async Task<PagedRepositoryResult<CoachingAdminStudentSessionDto>> GetStudentSessionsAsync(
+        Guid studentId, Guid? institutionId, int pageNumber, int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.SessionAttendances.AsNoTracking()
+            .Where(item => item.StudentId == studentId
+                && item.Session.Status != Domain.Enums.SessionStatus.Cancelled);
+        if (institutionId.HasValue)
+            query = query.Where(item => item.Session.InstitutionId == institutionId.Value);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query.OrderByDescending(item => item.Session.ScheduledDate)
+            .ThenBy(item => item.SessionId)
+            .Skip((pageNumber - 1) * pageSize).Take(pageSize)
+            .Select(item => new CoachingAdminStudentSessionDto(
+                item.SessionId, item.Session.Title, item.Session.ScheduledDate,
+                item.Session.Status.ToString(), item.AttendanceStatus.ToString()))
+            .ToListAsync(cancellationToken);
+        return new PagedRepositoryResult<CoachingAdminStudentSessionDto>(items, totalCount);
+    }
+
     public async Task<TeacherCoachingAnalyticsDto> GetTeacherAnalyticsAsync(
         Guid teacherId,
         Guid? institutionId,

@@ -16,6 +16,7 @@ describe('CoachingPeopleComponent', () => {
       getStudentDetail: vi.fn(() => of({ studentId: 'student-1', totalAssignments: 1, submittedAssignments: 0, totalExams: 0, totalSessions: 0, totalGoals: 0, attendanceRecordedCount: 0, attendedSessionCount: 0, assignments: [], exams: [] } as CoachingAdminStudentDetail)),
       getStudentAssignments: vi.fn(() => of({ items: [] as { id: string; title: string; status: string }[], pageNumber: 2, pageSize: 10, totalCount: 0, totalPages: 0 })),
       getStudentExams: vi.fn(() => of({ items: [] as { id: string; title: string; score: number; maxScore: number }[], pageNumber: 2, pageSize: 10, totalCount: 0, totalPages: 0 })),
+      getStudentSessions: vi.fn(() => of({ items: [] as { id: string; title: string; scheduledDate: string; status: string; attendanceStatus: string }[], pageNumber: 1, pageSize: 10, totalCount: 0, totalPages: 0 })),
       getGoals: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 0 } as CoachingAdminGoalPage)),
       getTeacherAnalytics: vi.fn(() => of({ teacherId: 'teacher-1', studentIds: [], currentPeriod: { assignments: 1, exams: 0, sessions: 0 }, previousPeriod: { assignments: 0, exams: 0, sessions: 0 }, lowResults: 0, mediumResults: 0, highResults: 0 }))
     };
@@ -178,6 +179,27 @@ describe('CoachingPeopleComponent', () => {
     expect(service.getStudentExams).toHaveBeenCalledWith('student-1', 2, 10);
     expect(fixture.nativeElement.textContent).toContain('Eski ödev');
     expect(fixture.nativeElement.textContent).toContain('Eski sınav');
+  });
+
+  it('shows the selected institution student session history with attendance and paging', () => {
+    const { component, fixture, service } = create('students', 'student-1', 'server', true);
+    service.getStudentSessions.mockReturnValueOnce(of({
+      items: [{ id: 'session-1', title: 'İlk görüşme', scheduledDate: '2026-09-24', status: 'Completed', attendanceStatus: 'Present' }],
+      pageNumber: 1, pageSize: 10, totalCount: 11, totalPages: 2
+    })).mockReturnValueOnce(of({
+      items: [{ id: 'session-2', title: 'Eski görüşme', scheduledDate: '2026-08-24', status: 'Completed', attendanceStatus: 'Absent' }],
+      pageNumber: 2, pageSize: 10, totalCount: 11, totalPages: 2
+    }));
+    component.institutionId = 'own-institution';
+    component.loadDetail('student-1');
+    component.loadMoreStudentSessions();
+    fixture.detectChanges();
+
+    expect(service.getStudentSessions).toHaveBeenNthCalledWith(1, 'student-1', 1, 10);
+    expect(service.getStudentSessions).toHaveBeenNthCalledWith(2, 'student-1', 2, 10);
+    expect(fixture.nativeElement.textContent).toContain('İlk görüşme');
+    expect(fixture.nativeElement.textContent).toContain('Eski görüşme');
+    expect(fixture.nativeElement.textContent).toContain('Absent');
   });
 
   it('ignores stale list responses after the selected institution changes', () => {

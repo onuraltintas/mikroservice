@@ -114,6 +114,34 @@ public sealed class CoachingAdminOverviewTests
     }
 
     [Fact]
+    public async Task StudentSessions_PageThroughOnlyTheSelectedInstitution()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var ownInstitution = Guid.NewGuid();
+        var otherInstitution = Guid.NewGuid();
+        for (var index = 0; index < 12; index++)
+        {
+            var session = CoachingSession.Create(Guid.NewGuid(), $"Own {index}",
+                DateTime.UtcNow.AddDays(index + 1), SessionType.OneOnOne,
+                institutionId: ownInstitution);
+            session.AddStudent(studentId);
+            context.Add(session);
+        }
+        var foreign = CoachingSession.Create(Guid.NewGuid(), "Foreign",
+            DateTime.UtcNow.AddDays(30), SessionType.OneOnOne, institutionId: otherInstitution);
+        foreign.AddStudent(studentId);
+        context.Add(foreign);
+        await context.SaveChangesAsync();
+
+        var page = await new CoachingAdminRepository(context)
+            .GetStudentSessionsAsync(studentId, ownInstitution, 2, 10);
+
+        page.TotalCount.Should().Be(12);
+        page.Items.Should().HaveCount(2).And.OnlyContain(item => item.Title.StartsWith("Own"));
+    }
+
+    [Fact]
     public async Task InstitutionGoalListAndDetail_ExcludeUntaggedStudentGoals()
     {
         await using var context = CreateContext();

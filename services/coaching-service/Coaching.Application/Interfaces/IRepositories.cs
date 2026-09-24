@@ -142,6 +142,10 @@ public interface ICoachingAdminRepository
         Guid studentId, Guid? institutionId, int pageNumber, int pageSize,
         CancellationToken cancellationToken = default);
 
+    Task<PagedRepositoryResult<CoachingAdminStudentSessionDto>> GetStudentSessionsAsync(
+        Guid studentId, Guid? institutionId, int pageNumber, int pageSize,
+        CancellationToken cancellationToken = default);
+
     Task<TeacherCoachingAnalyticsDto> GetTeacherAnalyticsAsync(
         Guid teacherId,
         Guid? institutionId,
@@ -215,6 +219,9 @@ public sealed record CoachingAdminStudentAssignmentDto(
 
 public sealed record CoachingAdminStudentExamDto(
     Guid Id, string Title, decimal Score, decimal MaxScore, DateTime ExamDate);
+
+public sealed record CoachingAdminStudentSessionDto(
+    Guid Id, string Title, DateTime ScheduledDate, string Status, string AttendanceStatus);
 
 public sealed record TeacherCoachingAnalyticsDto(
     Guid TeacherId,

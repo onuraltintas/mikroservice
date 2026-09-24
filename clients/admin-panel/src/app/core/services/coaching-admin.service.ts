@@ -102,6 +102,14 @@ export interface CoachingAdminStudentExamPage {
   totalPages: number;
 }
 
+export interface CoachingAdminStudentSessionPage {
+  items: { id: string; title: string; scheduledDate: string; status: string; attendanceStatus: string }[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
 export interface TeacherCoachingAnalytics {
   teacherId: string;
   currentPeriod: { assignments: number; exams: number; sessions: number };
@@ -502,6 +510,13 @@ export class CoachingAdminService {
   getStudentExams(studentId: string, pageNumber = 1, pageSize = 10) {
     return this.http.get<CoachingAdminStudentExamPage>(
       `${this.url}/students/${encodeURIComponent(studentId)}/exams`,
+      { params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize) }
+    );
+  }
+
+  getStudentSessions(studentId: string, pageNumber = 1, pageSize = 10) {
+    return this.http.get<CoachingAdminStudentSessionPage>(
+      `${this.url}/students/${encodeURIComponent(studentId)}/sessions`,
       { params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize) }
     );
   }

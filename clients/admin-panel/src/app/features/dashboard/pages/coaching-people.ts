@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, Observable } from 'rxjs';
 import {
-  CoachingAdminGoalPage, CoachingAdminReadScope, CoachingAdminService, CoachingAdminStudentDetail, CoachingStudentRosterItem,
+  CoachingAdminGoalPage, CoachingAdminReadScope, CoachingAdminService, CoachingAdminStudentDetail, CoachingAdminStudentSessionPage, CoachingStudentRosterItem,
   CoachingStudentRosterPage, CoachingTeacherRosterItem, CoachingTeacherRosterPage,
   TeacherCoachingAnalytics
 } from '../../../core/services/coaching-admin.service';
@@ -48,6 +48,11 @@ import { InstitutionDto, InstitutionService } from '../../../core/services/insti
                 <div class="grid gap-4 lg:grid-cols-2 text-sm">
                   <div><h3 class="font-semibold">Ödevler</h3>@for (item of studentAssignments(); track item.id) { <p class="mt-2">{{ item.title }} · {{ item.status }} · {{ item.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-gray-500">Ödev yok.</p> } @if (studentAssignments().length < detail.totalAssignments) { <button type="button" class="mt-2 text-indigo-700 underline" [disabled]="assignmentLoading()" (click)="loadMoreStudentAssignments()">Daha fazla ödev</button> } @if (assignmentError()) { <p role="alert" class="mt-2 text-red-700">{{ assignmentError() }}</p> }</div>
                   <div><h3 class="font-semibold">Sınav sonuçları</h3>@for (item of studentExams(); track item.id) { <p class="mt-2">{{ item.title }} · {{ item.score }}/{{ item.maxScore }}</p> } @empty { <p class="mt-2 text-gray-500">Sonuç yok.</p> } @if (studentExams().length < detail.totalExams) { <button type="button" class="mt-2 text-indigo-700 underline" [disabled]="examLoading()" (click)="loadMoreStudentExams()">Daha fazla sınav</button> } @if (examError()) { <p role="alert" class="mt-2 text-red-700">{{ examError() }}</p> }</div>
+                </div>
+                <div class="text-sm"><h3 class="font-semibold">Seanslar</h3>
+                  @for (session of studentSessions(); track session.id) { <p class="mt-2">{{ session.title }} · {{ session.scheduledDate | date:'d MMM y' }} · {{ session.status }} · Katılım: {{ session.attendanceStatus }}</p> } @empty { @if (!sessionLoading() && !sessionError()) { <p class="mt-2 text-gray-500">Seans yok.</p> } }
+                  @if (studentSessions().length < sessionTotalCount()) { <button type="button" class="mt-2 text-indigo-700 underline" [disabled]="sessionLoading()" (click)="loadMoreStudentSessions()">Daha fazla seans</button> }
+                  @if (sessionError()) { <p role="alert" class="mt-2 text-red-700">{{ sessionError() }}</p> }
                 </div>
                 <div class="text-sm"><h3 class="font-semibold">Hedefler</h3>
                   @if (goalLoading()) { <p role="status" class="mt-2">Hedefler yükleniyor…</p> }
@@ -115,6 +120,10 @@ export class CoachingPeopleComponent implements OnInit {
   readonly studentDetail = signal<CoachingAdminStudentDetail | null>(null);
   readonly studentAssignments = signal<CoachingAdminStudentDetail['assignments']>([]);
   readonly studentExams = signal<CoachingAdminStudentDetail['exams']>([]);
+  readonly studentSessions = signal<CoachingAdminStudentSessionPage['items']>([]);
+  readonly sessionTotalCount = signal(0);
+  readonly sessionLoading = signal(false);
+  readonly sessionError = signal<string | null>(null);
   readonly assignmentLoading = signal(false);
   readonly examLoading = signal(false);
   readonly assignmentError = signal<string | null>(null);
@@ -129,6 +138,7 @@ export class CoachingPeopleComponent implements OnInit {
   private requestId = 0;
   private teacherStudentsRequestId = 0;
   private goalsRequestId = 0;
+  private sessionsRequestId = 0;
   institutionId = this.route.snapshot.queryParamMap.get('institutionId') ?? '';
   institutionSearch = '';
   search = '';
@@ -136,6 +146,7 @@ export class CoachingPeopleComponent implements OnInit {
   teacherStudentPage = 1;
   assignmentPage = 1;
   examPage = 1;
+  sessionPage = 0;
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
@@ -172,6 +183,7 @@ export class CoachingPeopleComponent implements OnInit {
     ++this.requestId;
     ++this.teacherStudentsRequestId;
     ++this.goalsRequestId;
+    ++this.sessionsRequestId;
     this.studentPage.set(null);
     this.teacherPage.set(null);
     this.selectedStudent.set(null);
@@ -179,6 +191,10 @@ export class CoachingPeopleComponent implements OnInit {
     this.studentDetail.set(null);
     this.studentAssignments.set([]);
     this.studentExams.set([]);
+    this.studentSessions.set([]);
+    this.sessionTotalCount.set(0);
+    this.sessionLoading.set(false);
+    this.sessionError.set(null);
     this.assignmentLoading.set(false);
     this.examLoading.set(false);
     this.assignmentError.set(null);
@@ -224,10 +240,16 @@ export class CoachingPeopleComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
     ++this.goalsRequestId;
+    ++this.sessionsRequestId;
     this.studentGoals.set(null);
     this.goalError.set(null);
     this.studentAssignments.set([]);
     this.studentExams.set([]);
+    this.studentSessions.set([]);
+    this.sessionTotalCount.set(0);
+    this.sessionLoading.set(false);
+    this.sessionError.set(null);
+    this.sessionPage = 0;
     this.assignmentLoading.set(false);
     this.examLoading.set(false);
     this.assignmentError.set(null);
@@ -248,6 +270,7 @@ export class CoachingPeopleComponent implements OnInit {
           if (!this.selectedStudent()) this.error.set('Öğrenci bu kurumda bulunamadı.');
           this.loading.set(false);
           if (this.selectedStudent()) this.loadStudentGoals(1);
+          if (this.selectedStudent()) this.loadStudentSessions(1);
         },
         error: () => { if (requestId === this.requestId) { this.error.set('Öğrenci ayrıntısı yüklenemedi.'); this.loading.set(false); } }
       });
@@ -281,6 +304,33 @@ export class CoachingPeopleComponent implements OnInit {
 
   openDetail(id: string): void {
     void this.router.navigate([this.portal ? '/coaching-portal/institution' : '/dashboard/coaching', this.kind, id], { queryParams: { institutionId: this.institutionId } });
+  }
+
+  loadMoreStudentSessions(): void {
+    if (this.sessionLoading() || this.studentSessions().length >= this.sessionTotalCount()) return;
+    this.loadStudentSessions(this.sessionPage + 1);
+  }
+
+  private loadStudentSessions(page: number): void {
+    const studentId = this.detailId;
+    if (!studentId || !this.selectedStudent()) return;
+    const requestId = ++this.sessionsRequestId;
+    this.sessionLoading.set(true);
+    this.sessionError.set(null);
+    this.service.getStudentSessions(studentId, page, 10).subscribe({
+      next: result => {
+        if (requestId !== this.sessionsRequestId) return;
+        this.studentSessions.update(items => page === 1 ? result.items : [...items, ...result.items]);
+        this.sessionPage = result.pageNumber;
+        this.sessionTotalCount.set(result.totalCount);
+        this.sessionLoading.set(false);
+      },
+      error: () => {
+        if (requestId !== this.sessionsRequestId) return;
+        this.sessionError.set('Seanslar yüklenemedi.');
+        this.sessionLoading.set(false);
+      }
+    });
   }
 
   loadMoreStudentAssignments(): void {
