@@ -5,6 +5,7 @@ using FluentAssertions;
 using Identity.Application.Interfaces;
 using Identity.Application.Commands.ChangePassword;
 using Identity.Application.Commands.ResetPassword;
+using Identity.Application.Commands.CreateUser;
 using Identity.API.Controllers;
 using Identity.Domain.Entities;
 using Identity.Infrastructure.Persistence;
@@ -13,11 +14,41 @@ using Identity.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.AspNetCore.Mvc;
+using MassTransit;
 
 namespace Identity.API.IntegrationTests;
 
 public sealed class SessionInvalidationTests
 {
+    [Fact]
+    public async Task Admin_creating_parent_user_also_creates_parent_profile()
+    {
+        await using var context = CreateContext();
+        context.Roles.Add(Role.Create("Parent", "Parent"));
+        await context.SaveChangesAsync();
+        var bus = Bus.Factory.CreateUsingInMemory(_ => { });
+        await bus.StartAsync();
+        try
+        {
+            var handler = new CreateUserCommandHandler(
+                CreateService(context), new UserRepository(context),
+                new StudentRepository(context), new TeacherRepository(context),
+                new InstitutionRepository(context), new UnitOfWork(context),
+                bus, new SystemAdminCurrentUser(),
+                NullLogger<CreateUserCommandHandler>.Instance);
+
+            var result = await handler.Handle(new CreateUserCommand(
+                "Parent", "One", "parent@example.test", null, "Parent"), CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            context.ParentProfiles.Should().ContainSingle(profile => profile.UserId == result.Value.UserId);
+        }
+        finally
+        {
+            await bus.StopAsync();
+        }
+    }
+
     [Fact]
     public async Task Failed_bulk_role_assignment_does_not_remove_existing_roles()
     {
