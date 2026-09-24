@@ -34,6 +34,7 @@
         </div>
       </div>
       <p class="text-sm text-slate-500 dark:text-slate-400">Atama: {{ student.assignmentStartDate | date:'d MMM y' }}</p>
+      <a [routerLink]="['/coaching-portal/teacher/students', student.userId]" [queryParams]="{ name: student.fullName }" class="text-sm font-semibold text-indigo-700 underline">Raporu incele</a>
     </div>
   </div>
 

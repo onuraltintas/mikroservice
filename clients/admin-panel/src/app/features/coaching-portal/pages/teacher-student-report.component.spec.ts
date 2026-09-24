@@ -15,7 +15,7 @@ describe('TeacherStudentReportComponent', () => {
       getStudentAssignments: vi.fn(() => of({ items: [{ id: 'assignment-1', title: 'Matematik', status: 'Submitted', dueDate: '2030-01-01' }], pageNumber: 1, pageSize: 25, totalCount: 1, totalPages: 1 })),
       getStudentExamResults: vi.fn(() => of({ items: [{ examId: 'exam-1', examTitle: 'Deneme', score: 80, maxScore: 100, examDate: '2030-01-01' }], pageNumber: 1, pageSize: 25, totalCount: 1, totalPages: 1 })),
       getStudentGoals: vi.fn(() => of({ items: [{ id: 'goal-1', title: 'Hedef', progress: 50 }], pageNumber: 1, pageSize: 25, totalCount: 1, totalPages: 1 })),
-      getStudentSessions: vi.fn(() => of({ items: [{ id: 'session-1', topic: 'Görüşme' }], pageNumber: 1, pageSize: 25, totalCount: 1, totalPages: 1 }))
+      getStudentSessions: vi.fn(() => of({ items: [{ id: 'session-1', subject: 'Görüşme' }], pageNumber: 1, pageSize: 25, totalCount: 1, totalPages: 1 }))
     };
     TestBed.configureTestingModule({
       imports: [TeacherStudentReportComponent],
