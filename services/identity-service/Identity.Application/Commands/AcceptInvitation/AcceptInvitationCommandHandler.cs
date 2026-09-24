@@ -66,6 +66,19 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
             return Result.Failure(new Error("Invitation.NotPending", "Invitation is no longer pending"));
         }
 
+        if (invitation.InstitutionId is { } targetInstitutionId)
+        {
+            var currentInstitutionId = invitation.Type == InvitationType.TeacherToInstitution
+                ? (await _teacherRepository.GetByUserIdAsync(userId, cancellationToken))?.InstitutionId
+                : (await _studentRepository.GetByUserIdAsync(userId, cancellationToken))?.InstitutionId;
+            if (currentInstitutionId.HasValue && currentInstitutionId.Value != targetInstitutionId)
+            {
+                return Result.Failure(new Error(
+                    "Invitation.InstitutionConflict",
+                    "Mevcut kurum bağlantınız kaldırılmadan başka bir kuruma katılamazsınız."));
+            }
+        }
+
         // 5. Accept invitation and perform the assignment
         try
         {
