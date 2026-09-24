@@ -100,6 +100,27 @@ public sealed class CoachingAdminOverviewTests
     }
 
     [Fact]
+    public async Task InstitutionGoalList_CanFilterOneStudentWithoutLeakingAnother()
+    {
+        await using var context = CreateContext();
+        var institutionId = Guid.NewGuid();
+        var firstStudentId = Guid.NewGuid();
+        var secondStudentId = Guid.NewGuid();
+        var first = AcademicGoal.Create(firstStudentId, "First", GoalCategory.ExamPreparation,
+            institutionId: institutionId);
+        var second = AcademicGoal.Create(secondStudentId, "Second", GoalCategory.ExamPreparation,
+            institutionId: institutionId);
+        context.AddRange(first, second);
+        await context.SaveChangesAsync();
+
+        var page = await new CoachingAdminRepository(context).GetGoalsAsync(
+            1, 25, null, null, institutionId: institutionId,
+            scopedStudentIds: [firstStudentId, secondStudentId], studentId: firstStudentId);
+
+        page.Items.Should().ContainSingle(item => item.Id == first.Id);
+    }
+
+    [Fact]
     public async Task TeacherAnalytics_SeparatesPeriodsAndInstitutionResults()
     {
         await using var context = CreateContext();
