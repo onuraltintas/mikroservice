@@ -219,6 +219,8 @@ test('disposable student attachment uses persistent local storage and enforces o
       'ps', '-q', 'coaching-service']);
     const filePath = `/var/lib/eduplatform/attachments/${storageKey}`;
     assert.equal(spawnSync(docker, ['exec', coachingContainer, 'test', '-f', filePath]).status, 0);
+    const consumedBefore = Number(sql(config, coachingDb,
+      `SELECT count(*) FROM coaching."InboxState" WHERE "Consumed" IS NOT NULL;`));
 
     const deletion = await fetch(`http://127.0.0.1:${config.GATEWAY_PORT}/api/assignments/${assignmentId}`, {
       method: 'DELETE', headers: headers(token(config, teacherId, 'Teacher')),
@@ -227,4 +229,7 @@ test('disposable student attachment uses persistent local storage and enforces o
     assert.equal(sql(config, coachingDb, `SELECT count(*) FROM coaching.assignments WHERE id='${assignmentId}';`), '0');
     assert.equal(spawnSync(docker, ['exec', coachingContainer, 'test', '-e', filePath]).status, 1,
       'Deleting an assignment must remove the physical attachment');
+    await eventually(() => Number(sql(config, coachingDb,
+      `SELECT count(*) FROM coaching."InboxState" WHERE "Consumed" IS NOT NULL;`)) > consumedBefore,
+    'Attachment deletion event delivery');
   });
