@@ -134,6 +134,28 @@ public sealed class CoachingWriteIdempotencyTests
     }
 
     [Fact]
+    public async Task CreateGoal_RejectsStudentClaimingAnInstitution()
+    {
+        var repository = new InMemoryGoalRepository();
+        var handler = new CreateGoalCommandHandler(
+            repository,
+            new CountingUnitOfWork(),
+            new AllowTeacherPolicy(),
+            new AllowIdentityAuthorizationClient(),
+            new InMemoryIdempotencyRepository(),
+            new NoopCoachingEventPublisher());
+        var command = new CreateGoalCommand(
+            Guid.NewGuid(), "Forged institution", GoalCategory.ExamPreparation,
+            null, null, null, null, "goal-forged-20260924", InstitutionId: Guid.NewGuid());
+
+        var action = async () => await handler.Handle(command, CancellationToken.None);
+
+        await action.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>()
+            .Where(error => error.Code == "Authorization.Forbidden");
+        repository.Items.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task AddExamResult_IsIdempotentPerKey()
     {
         var exam = Exam.Create(
