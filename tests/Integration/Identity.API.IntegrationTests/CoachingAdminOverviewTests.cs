@@ -37,6 +37,45 @@ public sealed class CoachingAdminOverviewTests
     }
 
     [Fact]
+    public async Task StudentDetail_AggregatesScopedOutcomeRates()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var ownInstitution = Guid.NewGuid();
+        var otherInstitution = Guid.NewGuid();
+
+        var assignment = Assignment.Create(Guid.NewGuid(), "Own", DateTime.UtcNow.AddDays(1),
+            institutionId: ownInstitution);
+        assignment.SetScoring(100);
+        assignment.AssignToStudent(studentId);
+        assignment.SubmitAssignment(studentId, "Done");
+        assignment.GradeAssignment(studentId, 80);
+        var otherAssignment = Assignment.Create(Guid.NewGuid(), "Other", DateTime.UtcNow.AddDays(1),
+            institutionId: otherInstitution);
+        otherAssignment.AssignToStudent(studentId);
+
+        var exam = Exam.Create(Guid.NewGuid(), "Own", ExamType.Mock, DateTime.UtcNow, 100, ownInstitution);
+        exam.AddResult(ExamResult.Create(exam.Id, studentId, 75));
+        var otherExam = Exam.Create(Guid.NewGuid(), "Other", ExamType.Mock, DateTime.UtcNow, 100, otherInstitution);
+        otherExam.AddResult(ExamResult.Create(otherExam.Id, studentId, 10));
+
+        var session = CoachingSession.Create(Guid.NewGuid(), "Own", DateTime.UtcNow.AddDays(1),
+            SessionType.OneOnOne, institutionId: ownInstitution);
+        session.AddStudent(studentId);
+        session.RecordAttendance(studentId, attended: true);
+        context.AddRange(assignment, otherAssignment, exam, otherExam, session);
+        await context.SaveChangesAsync();
+
+        var detail = await new CoachingAdminRepository(context)
+            .GetStudentDetailAsync(studentId, ownInstitution, CancellationToken.None);
+
+        detail.AverageAssignmentPercentage.Should().Be(80);
+        detail.AverageExamPercentage.Should().Be(75);
+        detail.AttendanceRecordedCount.Should().Be(1);
+        detail.AttendedSessionCount.Should().Be(1);
+    }
+
+    [Fact]
     public async Task TeacherAnalytics_SeparatesPeriodsAndInstitutionResults()
     {
         await using var context = CreateContext();
