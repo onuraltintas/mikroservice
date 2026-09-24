@@ -11,6 +11,31 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingEarlyWarningQueryTests
 {
     [Fact]
+    public async Task EarlyWarningQuery_ShouldReturnScopedStudentNamesAndTeacherLabel()
+    {
+        var studentId = Guid.NewGuid();
+        var institutionId = Guid.NewGuid();
+        var identity = new StubReportIdentityClient(new CoachingStudentReportPage(
+            [studentId],
+            1,
+            [new CoachingStudentReportItem(studentId, "Ayşe", "Yılmaz", "ayse@example.test", 8, "Öğretmen A")]));
+        var handler = new GetInstitutionEarlyWarningsQueryHandler(
+            new StubEarlyWarningRepository(),
+            identity,
+            CreatePolicy(Guid.NewGuid(), "SystemAdmin"));
+
+        var result = await handler.Handle(
+            new GetInstitutionEarlyWarningsQuery(institutionId),
+            CancellationToken.None);
+
+        result.Items.Should().ContainSingle().Which.Should().Match<StudentEarlyWarningDto>(item =>
+            item.StudentId == studentId
+            && item.StudentName == "Ayşe Yılmaz"
+            && item.StudentEmail == "ayse@example.test"
+            && item.TeacherName == "Öğretmen A");
+    }
+
+    [Fact]
     public async Task EarlyWarningQuery_ShouldScoreDeterministicSignalsAndKeepStudentScope()
     {
         var institutionId = Guid.NewGuid();
