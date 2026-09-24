@@ -142,7 +142,16 @@ public sealed record SpeedReadingStudentSearch(IReadOnlyCollection<Guid> Student
 public sealed record CoachingStudentReadAuthorization(IReadOnlyCollection<Guid> AllowedStudentUserIds);
 public sealed record CoachingReportStudentPage(
     IReadOnlyCollection<Guid> StudentUserIds,
-    int TotalCount);
+    int TotalCount,
+    IReadOnlyCollection<CoachingReportStudentItem>? Students = null);
+
+public sealed record CoachingReportStudentItem(
+    Guid UserId,
+    string FirstName,
+    string LastName,
+    string Email,
+    int? GradeLevel,
+    string? TeacherName);
 
 public sealed record InstitutionStudentRosterItem(
     Guid UserId,

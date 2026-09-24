@@ -108,12 +108,13 @@ import { InstitutionDto, InstitutionService } from '../../../core/services/insti
             <div class="overflow-x-auto">
               <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700">
                 <thead class="bg-gray-50 text-left text-xs uppercase text-gray-500 dark:bg-gray-900/40 dark:text-gray-400">
-                  <tr><th class="px-4 py-3">Öğrenci</th><th class="px-4 py-3">Risk</th><th class="px-4 py-3">Puan</th><th class="px-4 py-3">Sinyaller</th><th class="px-4 py-3">Ödev</th><th class="px-4 py-3">Katılım</th><th class="px-4 py-3">Hedef</th></tr>
+                  <tr><th class="px-4 py-3">Öğrenci</th><th class="px-4 py-3">Öğretmen</th><th class="px-4 py-3">Risk</th><th class="px-4 py-3">Puan</th><th class="px-4 py-3">Sinyaller</th><th class="px-4 py-3">Ödev</th><th class="px-4 py-3">Katılım</th><th class="px-4 py-3">Hedef</th></tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                   @for (warning of warnings.items; track warning.studentId) {
                     <tr>
-                      <td class="px-4 py-3 font-mono text-xs text-gray-700 dark:text-gray-200">{{ shortStudentId(warning.studentId) }}</td>
+                      <td class="px-4 py-3 text-gray-700 dark:text-gray-200"><span class="font-medium">{{ warning.studentName || 'Ad bilgisi yok' }}</span><span class="block text-xs text-gray-500">{{ warning.studentEmail || 'E-posta bilgisi yok' }}{{ warning.gradeLevel ? ' · ' + warning.gradeLevel + '. sınıf' : '' }}</span></td>
+                      <td class="px-4 py-3">{{ warning.teacherName || 'Atanmamış' }}</td>
                       <td class="px-4 py-3"><span class="rounded-full px-2 py-1 text-xs font-semibold" [class]="riskBadgeClass(warning)">{{ riskLabel(warning) }}</span></td>
                       <td class="px-4 py-3 font-semibold">{{ warning.riskScore }}/100</td>
                       <td class="max-w-xs px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{{ reasonLabels(warning) }}</td>
@@ -122,7 +123,7 @@ import { InstitutionDto, InstitutionService } from '../../../core/services/insti
                       <td class="px-4 py-3">{{ warning.averageGoalProgress }}%</td>
                     </tr>
                   } @empty {
-                    <tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Bu sayfada öğrenci bulunamadı.</td></tr>
+                    <tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">Bu sayfada öğrenci bulunamadı.</td></tr>
                   }
                 </tbody>
               </table>
@@ -246,10 +247,6 @@ export class CoachingOverviewComponent implements OnInit {
 
   formatPercent(value?: number) {
     return value === undefined || value === null ? '—' : `${value.toFixed(2)}%`;
-  }
-
-  shortStudentId(studentId: string) {
-    return studentId.length <= 12 ? studentId : `${studentId.slice(0, 8)}…${studentId.slice(-4)}`;
   }
 
   riskLabel(warning: StudentEarlyWarning) {

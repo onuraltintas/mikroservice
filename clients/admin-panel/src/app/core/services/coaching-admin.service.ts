@@ -55,6 +55,10 @@ export interface InstitutionCoachingComparison {
 
 export interface StudentEarlyWarning {
   studentId: string;
+  studentName?: string | null;
+  studentEmail?: string | null;
+  gradeLevel?: number | null;
+  teacherName?: string | null;
   riskLevel: 'Low' | 'Medium' | 'High' | number;
   riskScore: number;
   reasonCodes: string[];

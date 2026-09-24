@@ -60,7 +60,11 @@ public sealed record StudentEarlyWarningDto(
     decimal? AttendancePercentage,
     int GoalCount,
     int AverageGoalProgress,
-    DateTime? LastActivityAt);
+    DateTime? LastActivityAt,
+    string? StudentName = null,
+    string? StudentEmail = null,
+    int? GradeLevel = null,
+    string? TeacherName = null);
 
 public enum EarlyWarningRiskLevel
 {
@@ -121,9 +125,11 @@ public sealed class GetInstitutionEarlyWarningsQueryHandler(
                 toDate,
                 cancellationToken);
         var metricsByStudent = metrics.ToDictionary(item => item.StudentId);
+        var studentsById = (page.Students ?? Array.Empty<CoachingStudentReportItem>())
+            .ToDictionary(student => student.UserId);
 
         var items = page.StudentUserIds
-            .Select(studentId => metricsByStudent.TryGetValue(studentId, out var studentMetrics)
+            .Select(studentId => (metricsByStudent.TryGetValue(studentId, out var studentMetrics)
                 ? CreateWarning(studentMetrics, toDate)
                 : CreateWarning(
                     new CoachingStudentEarlyWarningMetrics(
@@ -138,7 +144,14 @@ public sealed class GetInstitutionEarlyWarningsQueryHandler(
                         0,
                         0,
                         null),
-                    toDate))
+                    toDate)) with
+            {
+                StudentName = studentsById.TryGetValue(studentId, out var student)
+                    ? $"{student.FirstName} {student.LastName}".Trim() : null,
+                StudentEmail = studentsById.TryGetValue(studentId, out student) ? student.Email : null,
+                GradeLevel = studentsById.TryGetValue(studentId, out student) ? student.GradeLevel : null,
+                TeacherName = studentsById.TryGetValue(studentId, out student) ? student.TeacherName : null
+            })
             .OrderByDescending(item => item.RiskScore)
             .ThenBy(item => item.StudentId)
             .ToArray();

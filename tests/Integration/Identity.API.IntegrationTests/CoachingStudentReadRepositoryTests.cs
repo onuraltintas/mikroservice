@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using Identity.Infrastructure.Persistence;
@@ -536,6 +537,12 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         result.Should().NotBeNull();
         result!.TotalCount.Should().Be(3);
         result.StudentUserIds.Should().Equal(students.Skip(2).Select(student => student.Id));
+        result.Students.Should().ContainSingle().Which.Should().Match<CoachingReportStudentItem>(item =>
+            item.UserId == students[2].Id
+            && item.FirstName == "Paged"
+            && item.LastName == "Student"
+            && item.Email == students[2].Email
+            && item.GradeLevel == 8);
     }
 
     private InstitutionRepository Repository() => new(_dbContext!);

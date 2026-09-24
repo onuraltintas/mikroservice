@@ -23,4 +23,13 @@ public interface ICoachingIdentityReportClient
 
 public sealed record CoachingStudentReportPage(
     IReadOnlyCollection<Guid> StudentUserIds,
-    int TotalCount);
+    int TotalCount,
+    IReadOnlyCollection<CoachingStudentReportItem>? Students = null);
+
+public sealed record CoachingStudentReportItem(
+    Guid UserId,
+    string FirstName,
+    string LastName,
+    string Email,
+    int? GradeLevel,
+    string? TeacherName);

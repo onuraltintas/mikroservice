@@ -1445,14 +1445,40 @@ public class InstitutionRepository : IInstitutionRepository
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
-        var studentUserIds = await query
+        var students = await query
             .OrderBy(profile => profile.UserId)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .Select(profile => profile.UserId)
+            .Select(profile => new
+            {
+                profile.UserId,
+                profile.FirstName,
+                profile.LastName,
+                profile.User.Email,
+                profile.GradeLevel,
+                TeacherName = _context.TeacherStudentAssignments
+                    .Where(assignment => assignment.StudentId == profile.Id
+                        && assignment.InstitutionId == institutionId
+                        && assignment.IsActive
+                        && assignment.Teacher.IsActive
+                        && assignment.Teacher.User.IsActive)
+                    .OrderByDescending(assignment => assignment.StartDate)
+                    .ThenByDescending(assignment => assignment.Id)
+                    .Select(assignment => assignment.Teacher.FirstName + " " + assignment.Teacher.LastName)
+                    .FirstOrDefault()
+            })
             .ToListAsync(cancellationToken);
 
-        return new CoachingReportStudentPage(studentUserIds, totalCount);
+        return new CoachingReportStudentPage(
+            students.Select(student => student.UserId).ToArray(),
+            totalCount,
+            students.Select(student => new CoachingReportStudentItem(
+                student.UserId,
+                student.FirstName,
+                student.LastName,
+                student.Email,
+                student.GradeLevel,
+                student.TeacherName)).ToArray());
     }
 }
 

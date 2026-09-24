@@ -204,7 +204,8 @@ public sealed class InternalCoachingController : ControllerBase
             ? Forbid()
             : Ok(new CoachingReportStudentPageResponse(
                 page.StudentUserIds,
-                page.TotalCount));
+                page.TotalCount,
+                page.Students));
     }
 }
 
@@ -259,4 +260,5 @@ public sealed record CoachingReportStudentPageRequest(
 
 public sealed record CoachingReportStudentPageResponse(
     IReadOnlyCollection<Guid> StudentUserIds,
-    int TotalCount);
+    int TotalCount,
+    IReadOnlyCollection<CoachingReportStudentItem>? Students);

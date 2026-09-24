@@ -413,7 +413,14 @@ public sealed class IdentityAuthorizationClient :
                 ? throw new InvalidOperationException("Identity report student page response was empty.")
                 : new CoachingStudentReportPage(
                     result.StudentUserIds ?? Array.Empty<Guid>(),
-                    result.TotalCount);
+                    result.TotalCount,
+                    result.Students?.Select(student => new CoachingStudentReportItem(
+                        student.UserId,
+                        student.FirstName,
+                        student.LastName,
+                        student.Email,
+                        student.GradeLevel,
+                        student.TeacherName)).ToArray());
         }
         catch (BusinessRuleException)
         {
@@ -433,7 +440,8 @@ public sealed class IdentityAuthorizationClient :
     private sealed record AdminAuthorizationResponse(bool IsGlobal, Guid? InstitutionId);
     private sealed record StudentReadAuthorizationResponse(Guid[]? AllowedStudentUserIds);
     private sealed record ReportStudentResponse(Guid[]? StudentUserIds);
-    private sealed record ReportStudentPageResponse(Guid[]? StudentUserIds, int TotalCount);
+    private sealed record ReportStudentPageResponse(Guid[]? StudentUserIds, int TotalCount, ReportStudentItem[]? Students);
+    private sealed record ReportStudentItem(Guid UserId, string FirstName, string LastName, string Email, int? GradeLevel, string? TeacherName);
     private sealed record RepresentativeAuthorizationResponse(Guid RelationshipId, string PartyRole);
 
     private void EnsureServiceApiKey()
