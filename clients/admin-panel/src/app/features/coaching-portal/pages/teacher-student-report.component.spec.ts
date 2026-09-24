@@ -46,6 +46,14 @@ describe('TeacherStudentReportComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Sahte İsim');
   });
 
+  it('does not show report data if the student is absent from the verified roster', () => {
+    service['getTeacherStudents'].mockReturnValue(of({ items: [], pageNumber: 1, pageSize: 1, totalCount: 0, totalPages: 0 }));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Rapor yüklenemedi');
+    expect(fixture.nativeElement.textContent).not.toContain('Matematik');
+    expect(fixture.nativeElement.textContent).not.toContain('Sahte İsim');
+  });
+
   it('does not expose partial data when access is denied', () => {
     service['getStudentProgress'].mockReturnValue(throwError(() => ({ status: 403 })));
     fixture.detectChanges();
