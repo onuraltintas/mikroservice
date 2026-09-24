@@ -82,7 +82,7 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Resul
                 if (request.InstitutionId.HasValue) teacher.AssignToInstitution(request.InstitutionId.Value);
                 else teacher.RemoveFromInstitution();
             }
-            else if (roles.Any(role => string.Equals(role, "Student", StringComparison.OrdinalIgnoreCase)))
+            if (roles.Any(role => string.Equals(role, "Student", StringComparison.OrdinalIgnoreCase)))
             {
                 var student = await _studentRepository.GetByUserIdAsync(request.UserId, cancellationToken);
                 if (student is null)
