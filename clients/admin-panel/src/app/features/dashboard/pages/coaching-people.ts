@@ -43,7 +43,7 @@ import { InstitutionDto, InstitutionService } from '../../../core/services/insti
             <article class="space-y-4 rounded-xl border bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
               <div><h2 class="text-lg font-semibold">{{ student.firstName }} {{ student.lastName }}</h2><p class="text-sm text-gray-500">{{ student.email }} · {{ student.gradeLevel ? student.gradeLevel + '. sınıf' : 'Sınıf yok' }} · {{ student.teacherName || 'Öğretmen atanmamış' }}</p></div>
               @if (studentDetail(); as detail) {
-                <div class="grid gap-3 sm:grid-cols-4 text-sm"><p>Ödev: {{ detail.submittedAssignments }}/{{ detail.totalAssignments }} teslim</p><p>Sınav sonucu: {{ detail.totalExams }}</p><p>Seans: {{ detail.totalSessions }}</p><p>Hedef: {{ detail.totalGoals }}</p></div>
+                <div class="grid gap-3 sm:grid-cols-4 text-sm"><p>Ödev: {{ detail.submittedAssignments }}/{{ detail.totalAssignments }} teslim</p><p>Sınav sonucu: {{ detail.totalExams }}</p><p>Seans: {{ detail.totalSessions }}</p><p>Hedef: {{ portal ? 'Kurum kapsamında gösterilmiyor' : detail.totalGoals }}</p></div>
                 <div class="grid gap-4 lg:grid-cols-2 text-sm">
                   <div><h3 class="font-semibold">Son ödevler</h3>@for (item of detail.assignments; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.status }} · {{ item.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-gray-500">Ödev yok.</p> }</div>
                   <div><h3 class="font-semibold">Sınav sonuçları</h3>@for (item of detail.exams; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.score }}/{{ item.maxScore }}</p> } @empty { <p class="mt-2 text-gray-500">Sonuç yok.</p> }</div>
@@ -57,10 +57,12 @@ import { InstitutionDto, InstitutionService } from '../../../core/services/insti
               <div><h2 class="text-lg font-semibold">{{ teacher.firstName }} {{ teacher.lastName }}</h2><p class="text-sm text-gray-500">{{ teacher.email }}</p></div>
               @if (teacherAnalytics(); as analytics) {
                 <div class="grid gap-3 sm:grid-cols-3 text-sm"><p>Ödev, son 30 gün: {{ analytics.currentPeriod.assignments }} · önceki dönem: {{ analytics.previousPeriod.assignments }}</p><p>Sınav: {{ analytics.currentPeriod.exams }} · önceki: {{ analytics.previousPeriod.exams }}</p><p>Seans: {{ analytics.currentPeriod.sessions }} · önceki: {{ analytics.previousPeriod.sessions }}</p></div>
+                <div class="grid gap-3 sm:grid-cols-3 text-sm"><p>Ödev teslimi: {{ analytics.submittedAssignmentCount }} / {{ analytics.assignedAssignmentCount }}</p><p>Sınav ortalaması: {{ analytics.averageExamPercentage == null ? 'Veri yok' : (analytics.averageExamPercentage | number:'1.0-1') + '%' }}</p><p>Seans katılımı: {{ analytics.attendedSessionCount }} / {{ analytics.attendanceRecordedCount }}</p></div>
                 <div class="text-sm"><h3 class="font-semibold">Sınav sonuç dağılımı (son 30 gün)</h3><p>Düşük (&lt;%50): {{ analytics.lowResults }} · Orta (%50–79): {{ analytics.mediumResults }} · Yüksek (≥%80): {{ analytics.highResults }}</p></div>
+                <p class="text-xs text-gray-500">Bu oranlar son 30 gündeki kayıtları gösterir; öğretmenin başarısını tek başına ölçmez.</p>
               }
               <div class="text-sm"><h3 class="font-semibold">Atanmış öğrenciler</h3>
-                @for (student of teacherStudents()?.students; track student.userId) { <p class="mt-2">{{ student.firstName }} {{ student.lastName }} · {{ student.email }}</p> } @empty { <p class="mt-2 text-gray-500">Atanmış öğrenci yok.</p> }
+                @for (student of teacherStudents()?.students; track student.userId) { <p class="mt-2">{{ student.firstName }} {{ student.lastName }} · {{ student.email }} <button type="button" class="text-indigo-700 underline" (click)="openStudentDetail(student.userId)">İncele</button></p> } @empty { <p class="mt-2 text-gray-500">Atanmış öğrenci yok.</p> }
                 <div class="mt-3 flex items-center gap-3"><span>Toplam {{ teacherStudents()?.totalCount ?? 0 }}</span><button type="button" class="rounded border px-2 py-1" [disabled]="teacherStudentPage <= 1" (click)="loadTeacherStudents(teacherStudentPage - 1)">Önceki</button><button type="button" class="rounded border px-2 py-1" [disabled]="teacherStudentPage * 25 >= (teacherStudents()?.totalCount ?? 0)" (click)="loadTeacherStudents(teacherStudentPage + 1)">Sonraki</button></div>
               </div>
             </article>
@@ -234,6 +236,10 @@ export class CoachingPeopleComponent implements OnInit {
 
   openDetail(id: string): void {
     void this.router.navigate([this.portal ? '/coaching-portal/institution' : '/dashboard/coaching', this.kind, id], { queryParams: { institutionId: this.institutionId } });
+  }
+
+  openStudentDetail(id: string): void {
+    void this.router.navigate([this.portal ? '/coaching-portal/institution' : '/dashboard/coaching', 'students', id], { queryParams: { institutionId: this.institutionId } });
   }
 
   backToList(): void {
