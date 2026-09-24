@@ -53,7 +53,7 @@ describe('AuthService browser session security', () => {
           }
         },
         { provide: SocialAuthService, useValue: { signOut: vi.fn().mockResolvedValue(undefined) } },
-        { provide: Router, useValue: { navigate: vi.fn().mockResolvedValue(true) } }
+        { provide: Router, useValue: { navigate: vi.fn().mockResolvedValue(true), navigateByUrl: vi.fn().mockResolvedValue(true) } }
       ]
     });
     http = TestBed.inject(HttpTestingController);
@@ -63,6 +63,7 @@ describe('AuthService browser session security', () => {
     http.verify();
     localStorage.clear();
     sessionStorage.clear();
+    window.history.replaceState({}, '', '/');
   });
 
   it('keeps login tokens out of localStorage and sends cookie credentials', async () => {
@@ -88,6 +89,21 @@ describe('AuthService browser session security', () => {
     expect(localStorage.getItem('access_token')).toBeNull();
     expect(localStorage.getItem('refresh_token')).toBeNull();
     expect(localStorage.getItem('expires_at')).toBeNull();
+  });
+
+  it('returns an invited student to the exact invitation URL after login', async () => {
+    window.history.replaceState({}, '', '/auth/login?returnUrl=%2Fcoaching-portal%2Finvitations%3Fid%3Dinvite-1');
+    const service = TestBed.inject(AuthService);
+    http.expectOne(req => req.url.endsWith('/auth/refresh-token')).flush(
+      { error: 'no session' }, { status: 401, statusText: 'Unauthorized' });
+    const loginPromise = service.loginWithPassword('student@example.test', 'Correct-Password-1!', false);
+    http.expectOne(req => req.url.endsWith('/auth/login')).flush({
+      accessToken: createToken('student', 'Student'), tokenType: 'Bearer', expiresInMinutes: 15
+    });
+
+    await loginPromise;
+
+    expect(TestBed.inject(Router).navigateByUrl).toHaveBeenCalledWith('/coaching-portal/invitations?id=invite-1');
   });
 
   it('restores an access token from the HttpOnly refresh cookie on startup', async () => {
@@ -167,12 +183,12 @@ describe('AuthService browser session security', () => {
   });
 });
 
-function createToken(userId: string): string {
+function createToken(userId: string, role = 'SystemAdmin'): string {
   const header = btoa(JSON.stringify({ alg: 'none', typ: 'JWT' }));
   const payload = btoa(JSON.stringify({
     sub: userId,
     email: `${userId}@example.test`,
-    role: ['SystemAdmin'],
+    role: [role],
     permission: []
   }));
   return `${header}.${payload}.signature`;
