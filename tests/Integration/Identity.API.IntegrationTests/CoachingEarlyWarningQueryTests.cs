@@ -14,11 +14,12 @@ public sealed class CoachingEarlyWarningQueryTests
     public async Task EarlyWarningQuery_ShouldReturnScopedStudentNamesAndTeacherLabel()
     {
         var studentId = Guid.NewGuid();
+        var teacherId = Guid.NewGuid();
         var institutionId = Guid.NewGuid();
         var identity = new StubReportIdentityClient(new CoachingStudentReportPage(
             [studentId],
             1,
-            [new CoachingStudentReportItem(studentId, "Ayşe", "Yılmaz", "ayse@example.test", 8, "Öğretmen A")]));
+            [new CoachingStudentReportItem(studentId, "Ayşe", "Yılmaz", "ayse@example.test", 8, "Öğretmen A", teacherId)]));
         var handler = new GetInstitutionEarlyWarningsQueryHandler(
             new StubEarlyWarningRepository(),
             identity,
@@ -32,7 +33,8 @@ public sealed class CoachingEarlyWarningQueryTests
             item.StudentId == studentId
             && item.StudentName == "Ayşe Yılmaz"
             && item.StudentEmail == "ayse@example.test"
-            && item.TeacherName == "Öğretmen A");
+            && item.TeacherName == "Öğretmen A"
+            && item.TeacherUserId == teacherId);
     }
 
     [Fact]
