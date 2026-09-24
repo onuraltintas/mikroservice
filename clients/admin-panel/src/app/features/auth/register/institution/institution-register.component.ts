@@ -11,16 +11,18 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
 
-import { environment } from '../../../../../environments/environment.development';
+import { environment } from '../../../../../environments/environment';
 import { ConfigurationService } from '../../../../core/services/settings/configuration.service';
+import { DistrictOption, LocationService, ProvinceOption } from '../../../../core/services/location.service';
 
 @Component({
     selector: 'app-institution-register',
     standalone: true,
     imports: [
         CommonModule, ReactiveFormsModule, RouterLink,
-        MatCardModule, MatInputModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule
+        MatCardModule, MatInputModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, MatSelectModule
     ],
     templateUrl: './institution-register.component.html'
 })
@@ -30,15 +32,21 @@ export class InstitutionRegisterComponent implements OnInit {
     private router = inject(Router);
     private toaster = inject(ToasterService);
     private configService = inject(ConfigurationService);
+    private locations = inject(LocationService);
     private platformId = inject(PLATFORM_ID);
 
     isLoading = signal(false);
     errorMessage = signal<string | null>(null);
     hidePassword = signal(true);
+    provinces = signal<ProvinceOption[]>([]);
+    districts = signal<DistrictOption[]>([]);
+    institutionTypes = [{ value: 1, label: 'Okul' }, { value: 2, label: 'Dershane' }, { value: 3, label: 'Etüt Merkezi' }, { value: 4, label: 'Online Platform' }];
 
     form = this.fb.group({
         institutionName: ['', Validators.required],
-        taxNumber: ['', Validators.required],
+        institutionType: [1, Validators.required],
+        provinceId: ['', Validators.required],
+        districtId: ['', Validators.required],
         firstName: ['', Validators.required], // Manager First Name
         lastName: ['', Validators.required],  // Manager Last Name
         email: ['', [Validators.required, Validators.email]],
@@ -61,6 +69,20 @@ export class InstitutionRegisterComponent implements OnInit {
                     }
                 }
             });
+        this.locations.getProvinces().subscribe({
+            next: provinces => this.provinces.set(provinces),
+            error: () => this.errorMessage.set('İl seçenekleri yüklenemedi. Lütfen yeniden deneyin.')
+        });
+    }
+
+    onProvinceChange(provinceId: string) {
+        this.form.patchValue({ districtId: '' });
+        this.districts.set([]);
+        if (!provinceId) return;
+        this.locations.getDistricts(provinceId).subscribe({
+            next: districts => this.districts.set(districts),
+            error: () => this.errorMessage.set('İlçe seçenekleri yüklenemedi. Lütfen yeniden deneyin.')
+        });
     }
 
     async onSubmit() {
@@ -71,11 +93,14 @@ export class InstitutionRegisterComponent implements OnInit {
 
         const payload = {
             institutionName: formData.institutionName,
-            taxNumber: formData.taxNumber,
-            managerFirstName: formData.firstName,
-            managerLastName: formData.lastName,
+            institutionType: formData.institutionType,
+            provinceId: formData.provinceId,
+            districtId: formData.districtId,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
             email: formData.email,
-            password: formData.password
+            password: formData.password,
+            phone: null
         };
 
         this.http.post(`${environment.apiUrl}/auth/register-institution`, payload).subscribe({

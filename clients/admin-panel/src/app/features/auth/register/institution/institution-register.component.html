@@ -91,9 +91,24 @@
                                 <mat-error>Kurum adı gereklidir</mat-error>
                             </mat-form-field>
                             <mat-form-field appearance="outline" class="w-full">
-                                <mat-label>Vergi Numarası</mat-label>
-                                <input matInput formControlName="taxNumber" placeholder="10 haneli vergi no">
-                                <mat-error>Vergi no gereklidir</mat-error>
+                                <mat-label>Kurum türü</mat-label>
+                                <mat-select formControlName="institutionType">
+                                    @for (type of institutionTypes; track type.value) { <mat-option [value]="type.value">{{ type.label }}</mat-option> }
+                                </mat-select>
+                            </mat-form-field>
+                            <mat-form-field appearance="outline" class="w-full">
+                                <mat-label>İl</mat-label>
+                                <mat-select formControlName="provinceId" (selectionChange)="onProvinceChange($event.value)">
+                                    @for (province of provinces(); track province.id) { <mat-option [value]="province.id">{{ province.name }}</mat-option> }
+                                </mat-select>
+                                <mat-error>İl seçin</mat-error>
+                            </mat-form-field>
+                            <mat-form-field appearance="outline" class="w-full">
+                                <mat-label>İlçe</mat-label>
+                                <mat-select formControlName="districtId">
+                                    @for (district of districts(); track district.id) { <mat-option [value]="district.id">{{ district.name }}</mat-option> }
+                                </mat-select>
+                                <mat-error>İlçe seçin</mat-error>
                             </mat-form-field>
                         </div>
                     </div>
