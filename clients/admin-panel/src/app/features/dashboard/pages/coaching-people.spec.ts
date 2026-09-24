@@ -95,6 +95,23 @@ describe('CoachingPeopleComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Seans katılımı: 1 / 1');
   });
 
+  it('shows institution-scoped student outcomes without implying goals are zero', () => {
+    const { component, fixture, service } = create('students', 'student-1', 'server', true);
+    service.getStudentDetail.mockReturnValue(of({
+      studentId: 'student-1', totalAssignments: 1, submittedAssignments: 1,
+      totalExams: 1, totalSessions: 1, totalGoals: 0, assignments: [], exams: [],
+      averageAssignmentPercentage: 80, averageExamPercentage: 75,
+      attendanceRecordedCount: 1, attendedSessionCount: 1
+    }));
+    component.institutionId = 'own-institution';
+    component.loadDetail('student-1');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Ödev ortalaması: 80%');
+    expect(fixture.nativeElement.textContent).toContain('Sınav ortalaması: 75%');
+    expect(fixture.nativeElement.textContent).toContain('Katılım: 1 / 1');
+    expect(fixture.nativeElement.textContent).toContain('Hedef: Kurum kapsamında gösterilmiyor');
+  });
+
   it('ignores stale list responses after the selected institution changes', () => {
     const { component, service } = create('students');
     const pending = new Subject<never>();
