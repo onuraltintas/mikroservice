@@ -7,7 +7,7 @@ import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { Subject } from 'rxjs';
 import { vi } from 'vitest';
-import { AuthService, landingRouteForRole } from './auth.service';
+import { AuthService, landingRouteForRole, invitationReturnRoute } from './auth.service';
 
 describe('coaching institution landing route', () => {
   it('opens the shared portal on the coaching domain but retains eduivme management', () => {
@@ -15,6 +15,13 @@ describe('coaching institution landing route', () => {
     expect(landingRouteForRole('InstitutionOwner', 'www.onuraltintas.net')).toBe('/coaching-portal/institution/overview');
     expect(landingRouteForRole('InstitutionAdmin', 'eduivme.com')).toBe('/dashboard');
     expect(landingRouteForRole('Teacher', 'onuraltintas.net')).toBe('/coaching-portal');
+  });
+
+  it('only honors an internal coaching invitation return path', () => {
+    expect(invitationReturnRoute('/coaching-portal/invitations?id=123')).toBe('/coaching-portal/invitations?id=123');
+    expect(invitationReturnRoute('https://evil.example/coaching-portal/invitations')).toBeNull();
+    expect(invitationReturnRoute('//evil.example')).toBeNull();
+    expect(invitationReturnRoute('/dashboard')).toBeNull();
   });
 });
 
