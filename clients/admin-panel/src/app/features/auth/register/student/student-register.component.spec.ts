@@ -20,7 +20,7 @@ describe('StudentRegisterComponent Google registration', () => {
     void component.onSubmit();
     TestBed.inject(HttpTestingController).expectOne(req => req.url.endsWith('/auth/register-student'))
       .flush({ code: 'Identity.UserExists', message: 'Bu e-posta adresiyle zaten kayıtlı bir hesap var.' }, { status: 409, statusText: 'Conflict' });
-    expect(toaster.error).toHaveBeenCalledWith('Bu e-posta adresiyle zaten kayıtlı bir hesap var.');
+    expect(toaster.error).toHaveBeenCalledWith('Bu e-posta adresiyle zaten kayıtlı bir hesap var. Giriş yapın veya şifrenizi sıfırlayın.');
     TestBed.inject(HttpTestingController).verify();
   });
 
@@ -82,6 +82,19 @@ describe('StudentRegisterComponent Google registration', () => {
 
     await vi.waitFor(() => expect(toaster.info).toHaveBeenCalledWith('Yeni kullanıcı kayıtları şu an kapalıdır.'));
     expect(component.errorMessage()).toBe('Kayıt kapalı.');
+  });
+
+  it('does not show technical server errors during Google registration', async () => {
+    const authState = new Subject<{ idToken?: string }>();
+    const authService = {
+      loginWithGoogle: vi.fn().mockRejectedValue({ status: 500, error: { message: 'SQL connection failed' } })
+    };
+    const toaster = { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() };
+    createComponent(authState, authService, toaster);
+
+    authState.next({ idToken: 'google-id-token' });
+
+    await vi.waitFor(() => expect(toaster.error).toHaveBeenCalledWith('Kayıt şu anda tamamlanamıyor. Lütfen daha sonra yeniden deneyin.'));
   });
 
   function createComponent(
