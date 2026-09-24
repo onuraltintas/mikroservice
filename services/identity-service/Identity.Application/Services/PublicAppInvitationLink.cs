@@ -6,8 +6,7 @@ public static class PublicAppInvitationLink
 {
     public static string Create(IConfiguration configuration, Guid invitationId)
     {
-        var baseUrl = configuration["PublicApp:CoachingBaseUrl"]?.TrimEnd('/')
-            ?? configuration["PublicApp:BaseUrl"]?.TrimEnd('/');
+        var baseUrl = configuration["PublicApp:CoachingBaseUrl"]?.TrimEnd('/');
         if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri)
             || (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp))
         {

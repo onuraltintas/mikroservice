@@ -113,6 +113,7 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID must be set}
       - INTERNAL_SERVICE_API_KEY=${INTERNAL_SERVICE_API_KEY:?INTERNAL_SERVICE_API_KEY must be set}
       - PublicApp__BaseUrl=${PUBLIC_APP_BASE_URL:?PUBLIC_APP_BASE_URL must be set}
+      - PublicApp__CoachingBaseUrl=${COACHING_PUBLIC_BASE_URL:-http://localhost:4201}
       - SpeedReadingPublicApp__BaseUrl=${SPEED_READING_PUBLIC_BASE_URL:-http://localhost:4200}
       # One-time production bootstrap. Clear BOOTSTRAP_ADMIN_PASSWORD after
       # the first successful identity-service start.
