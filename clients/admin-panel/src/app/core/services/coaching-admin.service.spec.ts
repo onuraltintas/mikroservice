@@ -4,6 +4,32 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { CoachingAdminService } from './coaching-admin.service';
 
 describe('CoachingAdminService', () => {
+  it('requests tenant-scoped paged rosters and persistent detail endpoints', () => {
+    TestBed.configureTestingModule({
+      providers: [CoachingAdminService, provideHttpClient(), provideHttpClientTesting()]
+    });
+    const service = TestBed.inject(CoachingAdminService);
+    const http = TestBed.inject(HttpTestingController);
+
+    service.getStudentRoster('institution-1', 2, 'Ayşe', 'teacher-1').subscribe();
+    const students = http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/institutions/institution-1/students'));
+    expect(students.request.params.get('pageNumber')).toBe('2');
+    expect(students.request.params.get('search')).toBe('Ayşe');
+    expect(students.request.params.get('teacherUserId')).toBe('teacher-1');
+    students.flush({ students: [], totalCount: 0 });
+
+    service.getTeacherRoster('institution-1', 1, 'Öğretmen').subscribe();
+    const teachers = http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/institutions/institution-1/teachers'));
+    expect(teachers.request.params.get('search')).toBe('Öğretmen');
+    teachers.flush({ teachers: [], totalCount: 0 });
+
+    service.getStudentDetail('student-1').subscribe();
+    http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/students/student-1/detail')).flush({ studentId: 'student-1' });
+    service.getTeacherAnalytics('teacher-1').subscribe();
+    http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/teachers/teacher-1/analytics')).flush({ teacherId: 'teacher-1' });
+    http.verify();
+  });
+
   it('requests teacher metrics from the scoped coaching endpoint', () => {
     TestBed.configureTestingModule({
       providers: [CoachingAdminService, provideHttpClient(), provideHttpClientTesting()]
