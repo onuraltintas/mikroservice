@@ -5,17 +5,43 @@ using FluentAssertions;
 using Identity.Application.Interfaces;
 using Identity.Application.Commands.ChangePassword;
 using Identity.Application.Commands.ResetPassword;
+using Identity.API.Controllers;
 using Identity.Domain.Entities;
 using Identity.Infrastructure.Persistence;
 using Identity.Infrastructure.Repositories;
 using Identity.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.API.IntegrationTests;
 
 public sealed class SessionInvalidationTests
 {
+    [Fact]
+    public async Task Failed_bulk_role_assignment_does_not_remove_existing_roles()
+    {
+        await using var context = CreateContext();
+        var user = User.Create(Guid.NewGuid(), "member@example.test", "Member", "One");
+        var teacherRole = Role.Create("Teacher", "Teacher");
+        var institutionRole = Role.Create("InstitutionAdmin", "Institution admin");
+        user.AddRole(new UserRole(user.Id, teacherRole.Id));
+        context.AddRange(user, teacherRole, institutionRole);
+        await context.SaveChangesAsync();
+        var controller = new BulkUsersController(
+            null!, CreateService(context), new UserRepository(context),
+            NullLogger<BulkUsersController>.Instance);
+
+        var response = await controller.AssignRole(
+            new BulkUsersController.BulkRoleAssignmentRequest(
+                [user.Id], institutionRole.Name, RemoveExistingRoles: true),
+            CancellationToken.None);
+
+        response.Should().BeOfType<BadRequestObjectResult>();
+        context.UserRoles.Should().ContainSingle(assignment =>
+            assignment.UserId == user.Id && assignment.RoleId == teacherRole.Id);
+    }
+
     [Theory]
     [InlineData("Student")]
     [InlineData("Teacher")]
