@@ -28,4 +28,14 @@ describe('CoachingInvitationsService', () => {
     accept.flush(null);
     TestBed.inject(HttpTestingController).verify();
   });
+
+  it('loads only the authenticated sender invitation statuses', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const service = TestBed.inject(CoachingInvitationsService);
+    service.getSentInvitations().subscribe();
+    const request = TestBed.inject(HttpTestingController).expectOne(req => req.url.endsWith('/invitations/sent'));
+    expect(request.request.method).toBe('GET');
+    request.flush([]);
+    TestBed.inject(HttpTestingController).verify();
+  });
 });
