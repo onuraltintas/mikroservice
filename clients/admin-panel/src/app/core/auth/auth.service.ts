@@ -205,7 +205,7 @@ export class AuthService implements OnDestroy {
             { challengeToken, code, recoveryCode },
             { withCredentials: true }));
         this.applySession(response);
-        await this.router.navigate([this.getLandingRoute()]);
+        await this.router.navigateByUrl(this.getLandingRoute());
     }
 
     async refreshSession(): Promise<boolean> {
@@ -304,7 +304,7 @@ export class AuthService implements OnDestroy {
         }
 
         this.applySession(response as AuthSessionResponse);
-        await this.router.navigate([this.getLandingRoute()]);
+        await this.router.navigateByUrl(this.getLandingRoute());
         return {
             authenticated: true,
             requiresMfa: false,

@@ -191,7 +191,7 @@ export class LoginComponent {
     }
 
     async finishMfaEnrollment() {
-        await this.router.navigate([this.authService.getLandingRoute()]);
+        await this.router.navigateByUrl(this.authService.getLandingRoute());
     }
 
     private async beginMfa(challengeToken: string | null, enrollmentRequired: boolean) {
