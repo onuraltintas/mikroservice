@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { vi } from 'vitest';
 import { CoachingAdminService } from '../../../core/services/coaching-admin.service';
 import { CoachingPortalService } from '../../../core/services/coaching-portal.service';
@@ -28,6 +28,32 @@ describe('CoachingOverviewComponent', () => {
 
     expect(portal.getStudentProgress).toHaveBeenCalledWith('student-1');
     expect(component.selectedStudent()?.studentName).toBe('Ayşe Yılmaz');
+    expect(component.studentProgress()?.totalAssignments).toBe(2);
+  });
+
+  it('does not display a late student response after the detail is closed', () => {
+    const progress = new Subject<never>();
+    TestBed.configureTestingModule({
+      imports: [CoachingOverviewComponent],
+      providers: [
+        { provide: CoachingAdminService, useValue: { getOverview: () => of(null) } },
+        { provide: InstitutionService, useValue: { getAll: () => of({ items: [] }) } },
+        { provide: CoachingPortalService, useValue: {
+          getStudentProgress: () => progress.asObservable(),
+          getStudentAssignments: () => of({ items: [] }),
+          getStudentExamResults: () => of({ items: [] }),
+          getStudentGoals: () => of({ items: [] })
+        } }
+      ]
+    });
+    const component = TestBed.createComponent(CoachingOverviewComponent).componentInstance;
+    component.openStudent({ studentId: 'student-1', studentName: 'Ayşe Yılmaz' } as never);
+    component.closeStudent();
+    progress.next({ studentId: 'student-1', totalAssignments: 2 } as never);
+    progress.complete();
+
+    expect(component.selectedStudent()).toBeNull();
+    expect(component.studentProgress()).toBeNull();
   });
 
   it('shows scoped student and teacher names instead of a raw student id', () => {

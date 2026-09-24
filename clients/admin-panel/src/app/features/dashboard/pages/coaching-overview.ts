@@ -1,7 +1,7 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import {
   CoachingAdminOverview,
   CoachingAdminService,
@@ -10,6 +10,13 @@ import {
   StudentEarlyWarning
 } from '../../../core/services/coaching-admin.service';
 import { InstitutionDto, InstitutionService } from '../../../core/services/institution.service';
+import {
+  CoachingPortalService,
+  ExamResult,
+  Goal,
+  StudentAssignment,
+  StudentProgressSummary
+} from '../../../core/services/coaching-portal.service';
 
 @Component({
   selector: 'app-coaching-overview',
@@ -108,7 +115,7 @@ import { InstitutionDto, InstitutionService } from '../../../core/services/insti
             <div class="overflow-x-auto">
               <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700">
                 <thead class="bg-gray-50 text-left text-xs uppercase text-gray-500 dark:bg-gray-900/40 dark:text-gray-400">
-                  <tr><th class="px-4 py-3">Öğrenci</th><th class="px-4 py-3">Öğretmen</th><th class="px-4 py-3">Risk</th><th class="px-4 py-3">Puan</th><th class="px-4 py-3">Sinyaller</th><th class="px-4 py-3">Ödev</th><th class="px-4 py-3">Katılım</th><th class="px-4 py-3">Hedef</th></tr>
+                  <tr><th class="px-4 py-3">Öğrenci</th><th class="px-4 py-3">Öğretmen</th><th class="px-4 py-3">Risk</th><th class="px-4 py-3">Puan</th><th class="px-4 py-3">Sinyaller</th><th class="px-4 py-3">Ödev</th><th class="px-4 py-3">Katılım</th><th class="px-4 py-3">Hedef</th><th class="px-4 py-3">İşlem</th></tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                   @for (warning of warnings.items; track warning.studentId) {
@@ -121,13 +128,35 @@ import { InstitutionDto, InstitutionService } from '../../../core/services/insti
                       <td class="px-4 py-3">{{ warning.submittedAssignmentCount }}/{{ warning.assignmentCount }}</td>
                       <td class="px-4 py-3">{{ formatPercent(warning.attendancePercentage) }}</td>
                       <td class="px-4 py-3">{{ warning.averageGoalProgress }}%</td>
+                      <td class="px-4 py-3"><button type="button" class="text-indigo-700 underline dark:text-indigo-300" (click)="openStudent(warning)">Ayrıntı</button></td>
                     </tr>
                   } @empty {
-                    <tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">Bu sayfada öğrenci bulunamadı.</td></tr>
+                    <tr><td colspan="9" class="px-4 py-8 text-center text-gray-500">Bu sayfada öğrenci bulunamadı.</td></tr>
                   }
                 </tbody>
               </table>
             </div>
+          }
+          @if (selectedStudent(); as student) {
+            <section class="rounded-lg border border-indigo-200 p-4 dark:border-indigo-800" aria-label="Öğrenci koçluk ayrıntısı">
+              <div class="flex items-start justify-between gap-3"><div><h3 class="font-semibold">{{ student.studentName || 'Öğrenci' }}</h3><p class="text-sm text-gray-500">{{ student.studentEmail }} · {{ student.teacherName || 'Öğretmen atanmamış' }}</p></div><button type="button" class="rounded border px-2 py-1 text-sm" (click)="closeStudent()">Kapat</button></div>
+              @if (studentDetailLoading()) { <p class="mt-3 text-sm">Ayrıntılar yükleniyor…</p> }
+              @if (studentDetailError()) { <p class="mt-3 text-sm text-red-700" role="alert">{{ studentDetailError() }}</p> }
+              @if (studentProgress(); as progress) {
+                <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
+                  <p>Ödev: {{ progress.submittedAssignments }}/{{ progress.totalAssignments }} teslim · {{ progress.gradedAssignments }} notlandırıldı</p>
+                  <p>Ödev ortalaması: {{ formatPercent(progress.averageAssignmentPercentage) }}</p>
+                  <p>Sınav: {{ progress.totalExams }} · ortalama {{ formatPercent(progress.averageExamPercentage) }}</p>
+                  <p>Seans: {{ progress.totalSessions }} · katılım {{ formatPercent(progress.attendancePercentage) }}</p>
+                  <p>Hedef: {{ progress.completedGoals }}/{{ progress.totalGoals }} tamamlandı · ilerleme {{ progress.averageGoalProgress }}%</p>
+                </div>
+                <div class="mt-4 grid gap-4 lg:grid-cols-3 text-sm">
+                  <div><h4 class="font-semibold">Son ödevler</h4>@for (assignment of studentAssignments(); track assignment.id) { <p class="mt-2">{{ assignment.title }} · {{ assignment.status }} · {{ assignment.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-gray-500">Ödev yok.</p> }</div>
+                  <div><h4 class="font-semibold">Sınav sonuçları</h4>@for (exam of studentExams(); track exam.examId) { <p class="mt-2">{{ exam.examTitle }} · {{ exam.score }}/{{ exam.maxScore }}</p> } @empty { <p class="mt-2 text-gray-500">Sonuç yok.</p> }</div>
+                  <div><h4 class="font-semibold">Hedefler</h4>@for (goal of studentGoals(); track goal.id) { <p class="mt-2">{{ goal.title }} · {{ goal.progress }}%</p> } @empty { <p class="mt-2 text-gray-500">Hedef yok.</p> }</div>
+                </div>
+              }
+            </section>
           }
         </div>
 
@@ -157,6 +186,7 @@ import { InstitutionDto, InstitutionService } from '../../../core/services/insti
 export class CoachingOverviewComponent implements OnInit {
   private readonly service = inject(CoachingAdminService);
   private readonly institutionService = inject(InstitutionService);
+  private readonly portalService = inject(CoachingPortalService);
   private readonly platformId = inject(PLATFORM_ID);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -168,6 +198,14 @@ export class CoachingOverviewComponent implements OnInit {
   readonly earlyWarnings = signal<InstitutionEarlyWarningReport | null>(null);
   readonly earlyWarningsLoading = signal(false);
   readonly earlyWarningsError = signal<string | null>(null);
+  readonly selectedStudent = signal<StudentEarlyWarning | null>(null);
+  readonly studentProgress = signal<StudentProgressSummary | null>(null);
+  readonly studentAssignments = signal<StudentAssignment[]>([]);
+  readonly studentExams = signal<ExamResult[]>([]);
+  readonly studentGoals = signal<Goal[]>([]);
+  readonly studentDetailLoading = signal(false);
+  readonly studentDetailError = signal<string | null>(null);
+  private studentDetailRequestId = 0;
   readonly grades = Array.from({ length: 12 }, (_, index) => index + 1);
   selectedInstitutionId = '';
   selectedGradeLevel: number | null = null;
@@ -239,6 +277,41 @@ export class CoachingOverviewComponent implements OnInit {
       next: report => this.earlyWarnings.set(report),
       error: () => this.earlyWarningsError.set('Erken uyarı raporu yüklenemedi.')
     });
+  }
+
+  openStudent(student: StudentEarlyWarning) {
+    const requestId = ++this.studentDetailRequestId;
+    this.selectedStudent.set(student);
+    this.studentProgress.set(null);
+    this.studentDetailError.set(null);
+    this.studentDetailLoading.set(true);
+    forkJoin({
+      progress: this.portalService.getStudentProgress(student.studentId),
+      assignments: this.portalService.getStudentAssignments(student.studentId, 1, 10),
+      exams: this.portalService.getStudentExamResults(student.studentId, 1, 10),
+      goals: this.portalService.getStudentGoals(student.studentId, 1, 10)
+    }).subscribe({
+      next: result => {
+        if (requestId !== this.studentDetailRequestId) return;
+        this.studentProgress.set(result.progress);
+        this.studentAssignments.set(result.assignments.items);
+        this.studentExams.set(result.exams.items);
+        this.studentGoals.set(result.goals.items);
+        this.studentDetailLoading.set(false);
+      },
+      error: () => {
+        if (requestId !== this.studentDetailRequestId) return;
+        this.studentDetailError.set('Öğrenci koçluk ayrıntısı yüklenemedi.');
+        this.studentDetailLoading.set(false);
+      }
+    });
+  }
+
+  closeStudent() {
+    ++this.studentDetailRequestId;
+    this.selectedStudent.set(null);
+    this.studentProgress.set(null);
+    this.studentDetailLoading.set(false);
   }
 
   percentage(numerator: number, denominator: number) {
