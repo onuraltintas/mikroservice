@@ -17,6 +17,69 @@ namespace Identity.API.IntegrationTests;
 public sealed class SessionInvalidationTests
 {
     [Theory]
+    [InlineData("Student")]
+    [InlineData("Teacher")]
+    [InlineData("Parent")]
+    public async Task Admin_role_assignment_creates_missing_profile_without_removing_existing_student_profile(string roleName)
+    {
+        await using var context = CreateContext();
+        var user = User.Create(Guid.NewGuid(), "member@example.test", "Member", "One");
+        var role = Role.Create(roleName, roleName);
+        context.AddRange(user, role);
+        if (roleName != "Student")
+            context.StudentProfiles.Add(StudentProfile.Create(user.Id, "Member", "One"));
+        await context.SaveChangesAsync();
+
+        var result = await CreateService(context).AssignRoleWithProfileAsync(
+            user.Id, roleName, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        context.StudentProfiles.Should().ContainSingle(profile => profile.UserId == user.Id);
+        if (roleName == "Teacher")
+            context.TeacherProfiles.Should().ContainSingle(profile => profile.UserId == user.Id);
+        if (roleName == "Parent")
+            context.ParentProfiles.Should().ContainSingle(profile => profile.UserId == user.Id);
+        (await context.UserRoles.CountAsync(assignment => assignment.UserId == user.Id)).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Admin_role_assignment_repairs_profile_without_duplicating_existing_role()
+    {
+        await using var context = CreateContext();
+        var user = User.Create(Guid.NewGuid(), "teacher@example.test", "Teacher", "One");
+        var role = Role.Create("Teacher", "Teacher");
+        user.AddRole(new UserRole(user.Id, role.Id));
+        context.AddRange(user, role);
+        await context.SaveChangesAsync();
+
+        var result = await CreateService(context).AssignRoleWithProfileAsync(
+            user.Id, role.Name, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        context.TeacherProfiles.Should().ContainSingle(profile => profile.UserId == user.Id);
+        context.UserRoles.Should().ContainSingle(assignment => assignment.UserId == user.Id);
+    }
+
+    [Theory]
+    [InlineData("InstitutionAdmin")]
+    [InlineData("InstitutionOwner")]
+    public async Task Admin_role_assignment_requires_institution_management_for_institution_roles(string roleName)
+    {
+        await using var context = CreateContext();
+        var user = User.Create(Guid.NewGuid(), "member@example.test", "Member", "One");
+        var role = Role.Create(roleName, roleName);
+        context.AddRange(user, role);
+        await context.SaveChangesAsync();
+
+        var result = await CreateService(context).AssignRoleWithProfileAsync(
+            user.Id, roleName, CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        context.UserRoles.Should().BeEmpty();
+        context.InstitutionAdmins.Should().BeEmpty();
+    }
+
+    [Theory]
     [InlineData("reset-password")]
     [InlineData("deactivate")]
     [InlineData("assign-role")]
