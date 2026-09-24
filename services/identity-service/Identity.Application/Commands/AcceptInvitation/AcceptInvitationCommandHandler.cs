@@ -138,7 +138,15 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
         var teacher = await _teacherRepository.GetByUserIdAsync(teacherUserId, cancellationToken);
         if (teacher == null)
         {
-            throw new InvalidOperationException("Teacher profile not found");
+            var user = await _userRepository.GetByIdAsync(teacherUserId, cancellationToken);
+            if (user is null || !user.Roles.Any(role =>
+                    role.Role is { IsDeleted: false, Name: "Teacher" }))
+            {
+                throw new InvalidOperationException("Teacher role not found");
+            }
+
+            teacher = TeacherProfile.Create(teacherUserId, user.FirstName, user.LastName);
+            await _teacherRepository.AddAsync(teacher, cancellationToken);
         }
 
         teacher.AssignToInstitution(institutionId);

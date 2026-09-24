@@ -39,6 +39,29 @@ public sealed class InvitationInstitutionScopeTests
     }
 
     [Fact]
+    public async Task Teacher_invitation_does_not_create_profile_for_user_without_teacher_role()
+    {
+        var institution = Institution.Create("New", InstitutionType.School);
+        var user = User.Create(Guid.NewGuid(), "student@example.com", "Student", "One");
+        var student = StudentProfile.Create(user.Id, "Student", "One");
+        var invitation = Invitation.Create(Guid.NewGuid(), user.Email,
+            InvitationType.TeacherToInstitution, institution.Id);
+        await using var context = new IdentityDbContext(new DbContextOptionsBuilder<IdentityDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        context.AddRange(institution, user, student, invitation);
+        await context.SaveChangesAsync();
+
+        var result = await CreateHandler(context, user).Handle(
+            new AcceptInvitationCommand(invitation.Id), CancellationToken.None);
+
+        await context.Entry(invitation).ReloadAsync();
+        result.IsFailure.Should().BeTrue();
+        context.TeacherProfiles.Should().BeEmpty();
+        context.StudentProfiles.Should().ContainSingle(profile => profile.UserId == user.Id);
+        invitation.Status.Should().Be(InvitationStatus.Pending);
+    }
+
+    [Fact]
     public async Task Independent_student_accepts_institution_invitation_with_teacher_assignment()
     {
         var institution = Institution.Create("New", InstitutionType.School);
