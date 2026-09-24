@@ -39,6 +39,54 @@ export interface TeacherCoachingOverview {
   totalSessions: number;
 }
 
+export interface CoachingStudentRosterItem {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  gradeLevel?: number | null;
+  teacherName?: string | null;
+  teacherUserId?: string | null;
+}
+
+export interface CoachingStudentRosterPage {
+  students: CoachingStudentRosterItem[];
+  totalCount: number;
+}
+
+export interface CoachingTeacherRosterItem {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+export interface CoachingTeacherRosterPage {
+  teachers: CoachingTeacherRosterItem[];
+  totalCount: number;
+}
+
+export interface CoachingAdminStudentDetail {
+  studentId: string;
+  totalAssignments: number;
+  submittedAssignments: number;
+  totalExams: number;
+  totalSessions: number;
+  totalGoals: number;
+  assignments: { id: string; title: string; status: string; dueDate: string; score?: number | null }[];
+  exams: { id: string; title: string; score: number; maxScore: number; examDate: string }[];
+}
+
+export interface TeacherCoachingAnalytics {
+  teacherId: string;
+  studentIds: string[];
+  currentPeriod: { assignments: number; exams: number; sessions: number };
+  previousPeriod: { assignments: number; exams: number; sessions: number };
+  lowResults: number;
+  mediumResults: number;
+  highResults: number;
+}
+
 export interface InstitutionCoachingComparison {
   institutionId: string;
   gradeLevel?: number;
@@ -390,6 +438,31 @@ export interface CoachingAdminGoalUpdateRequest {
 export class CoachingAdminService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/coaching-admin`;
+
+  getStudentRoster(institutionId: string, pageNumber = 1, search = '', teacherUserId?: string) {
+    let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', 25);
+    if (search.trim()) params = params.set('search', search.trim());
+    if (teacherUserId) params = params.set('teacherUserId', teacherUserId);
+    return this.http.get<CoachingStudentRosterPage>(
+      `${this.url}/institutions/${encodeURIComponent(institutionId)}/students`, { params });
+  }
+
+  getTeacherRoster(institutionId: string, pageNumber = 1, search = '') {
+    let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', 25);
+    if (search.trim()) params = params.set('search', search.trim());
+    return this.http.get<CoachingTeacherRosterPage>(
+      `${this.url}/institutions/${encodeURIComponent(institutionId)}/teachers`, { params });
+  }
+
+  getStudentDetail(studentId: string) {
+    return this.http.get<CoachingAdminStudentDetail>(
+      `${this.url}/students/${encodeURIComponent(studentId)}/detail`);
+  }
+
+  getTeacherAnalytics(teacherId: string) {
+    return this.http.get<TeacherCoachingAnalytics>(
+      `${this.url}/teachers/${encodeURIComponent(teacherId)}/analytics`);
+  }
 
   getOverview(recentLimit = 10) {
     const params = new HttpParams().set('recentLimit', recentLimit);
