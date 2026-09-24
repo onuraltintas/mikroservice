@@ -2,6 +2,7 @@ using Coaching.Domain.Entities;
 using Coaching.Domain.Enums;
 using Coaching.Infrastructure.Data;
 using Coaching.Infrastructure.Repositories;
+using Coaching.Application.Queries.GetCoachingAdminGoal;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 
@@ -73,6 +74,29 @@ public sealed class CoachingAdminOverviewTests
         detail.AverageExamPercentage.Should().Be(75);
         detail.AttendanceRecordedCount.Should().Be(1);
         detail.AttendedSessionCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task InstitutionGoalListAndDetail_ExcludeUntaggedStudentGoals()
+    {
+        await using var context = CreateContext();
+        var institutionId = Guid.NewGuid();
+        var studentId = Guid.NewGuid();
+        var untagged = AcademicGoal.Create(studentId, "Private", GoalCategory.ExamPreparation);
+        var tagged = AcademicGoal.Create(studentId, "Institution", GoalCategory.ExamPreparation,
+            institutionId: institutionId);
+        context.AddRange(untagged, tagged);
+        await context.SaveChangesAsync();
+
+        var list = await new CoachingAdminRepository(context).GetGoalsAsync(
+            1, 25, null, null, institutionId: institutionId, scopedStudentIds: [studentId]);
+        var handler = new GetCoachingAdminGoalQueryHandler(new AcademicGoalRepository(context));
+        var privateDetail = await handler.Handle(
+            new GetCoachingAdminGoalQuery(untagged.Id, institutionId, true, [studentId]),
+            CancellationToken.None);
+
+        list.Items.Should().ContainSingle(item => item.Id == tagged.Id);
+        privateDetail.Should().BeNull();
     }
 
     [Fact]
@@ -230,6 +254,8 @@ public sealed class CoachingAdminOverviewTests
             institutionId: otherInstitutionId);
         var inScopeGoal = AcademicGoal.Create(inScopeStudentId, "Kurum hedefi", GoalCategory.ExamPreparation);
         var otherGoal = AcademicGoal.Create(otherStudentId, "Diğer kurum hedefi", GoalCategory.ExamPreparation);
+        var taggedGoal = AcademicGoal.Create(inScopeStudentId, "Etiketli kurum hedefi",
+            GoalCategory.ExamPreparation, institutionId: institutionId);
 
         context.AddRange(
             inScopeAssignment,
@@ -239,7 +265,8 @@ public sealed class CoachingAdminOverviewTests
             inScopeSession,
             otherSession,
             inScopeGoal,
-            otherGoal);
+            otherGoal,
+            taggedGoal);
         await context.SaveChangesAsync();
 
         var result = await new CoachingAdminRepository(context)
@@ -252,7 +279,7 @@ public sealed class CoachingAdminOverviewTests
         result.TotalAssignments.Should().Be(1);
         result.TotalExams.Should().Be(1);
         result.TotalSessions.Should().Be(1);
-        result.TotalGoals.Should().Be(0);
+        result.TotalGoals.Should().Be(1);
         result.RecentAssignments.Should().ContainSingle(item => item.InstitutionId == institutionId);
     }
 

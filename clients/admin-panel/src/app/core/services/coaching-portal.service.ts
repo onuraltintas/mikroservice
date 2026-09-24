@@ -257,6 +257,7 @@ export interface TeacherExamUpdateRequest {
 export interface TeacherGoalCreateRequest {
   teacherId: string;
   studentId: string;
+  institutionId?: string | null;
   title: string;
   category: number;
   description?: string | null;

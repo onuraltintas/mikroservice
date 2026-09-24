@@ -54,6 +54,10 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("description");
 
+                    b.Property<Guid?>("InstitutionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institution_id");
+
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_completed");
@@ -112,6 +116,9 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.HasIndex("TargetDate")
                         .HasDatabaseName("ix_academic_goals_target_date");
+
+                    b.HasIndex("InstitutionId", "StudentId")
+                        .HasDatabaseName("ix_academic_goals_institution_student");
 
                     b.ToTable("academic_goals", "coaching");
                 });

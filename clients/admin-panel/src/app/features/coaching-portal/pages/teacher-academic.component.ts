@@ -296,7 +296,11 @@ export class TeacherAcademicComponent implements OnInit {
         targetExamType: this.goalForm.targetExamType ?? null,
         targetSubject: this.goalForm.targetSubject.trim() || null
       })
-      : this.coachingService.createTeacherGoal({ teacherId, studentId: this.goalForm.studentId, ...request }, this.idempotencyKey('goal'));
+      : this.coachingService.createTeacherGoal({
+        teacherId, studentId: this.goalForm.studentId,
+        institutionId: this.students().find(student => student.userId === this.goalForm.studentId)?.institutionId ?? null,
+        ...request
+      }, this.idempotencyKey('goal'));
     operation.pipe(finalize(() => this.isSavingGoal.set(false))).subscribe({
       next: () => {
         this.successMessage.set(goalId ? 'Hedef güncellendi.' : 'Hedef oluşturuldu.');

@@ -39,31 +39,44 @@ public class CreateGoalCommandHandler : IRequestHandler<CreateGoalCommand, Creat
 
     public async Task<CreateGoalResponse> Handle(CreateGoalCommand command, CancellationToken cancellationToken)
     {
+        Guid? institutionId;
         if (command.TeacherId.HasValue)
         {
             _accessPolicy.RequireTeacher(command.TeacherId.Value);
-            await _identityAuthorizationClient.AuthorizeTeacherTargetsAsync(
+            institutionId = await _identityAuthorizationClient.AuthorizeTeacherTargetsAsync(
                 command.TeacherId.Value,
                 new[] { command.StudentId },
-                null,
+                command.InstitutionId,
                 _accessPolicy.IsSystemAdministrator,
                 cancellationToken);
         }
         else
         {
+            if (command.InstitutionId.HasValue)
+            {
+                throw new BusinessRuleException(
+                    "Authorization.Forbidden",
+                    "Kurum hedefi yalnızca doğrulanmış öğretmen-öğrenci atamasıyla oluşturulabilir.");
+            }
             _accessPolicy.RequireStudent(command.StudentId);
+            institutionId = null;
         }
 
         var key = command.IdempotencyKey?.Trim();
         EnsureKey(key);
-        var requestHash = IdempotencyRequestHasher.Create(
+        var hashValues = new List<string?>
+        {
             IdempotencyRequestHasher.Format(command.StudentId),
             command.Title,
             command.Category.ToString(),
             IdempotencyRequestHasher.Format(command.TeacherId),
             command.Description,
             command.TargetDate.HasValue ? IdempotencyRequestHasher.Format(command.TargetDate.Value) : null,
-            IdempotencyRequestHasher.Format(command.TargetScore));
+            IdempotencyRequestHasher.Format(command.TargetScore)
+        };
+        if (command.InstitutionId.HasValue)
+            hashValues.Add(IdempotencyRequestHasher.Format(command.InstitutionId));
+        var requestHash = IdempotencyRequestHasher.Create(hashValues.ToArray());
         var existing = await _idempotencyRepository.GetAsync(IdempotencyScope, key!, cancellationToken);
         if (existing is not null)
         {
@@ -77,7 +90,8 @@ public class CreateGoalCommandHandler : IRequestHandler<CreateGoalCommand, Creat
             command.StudentId,
             command.Title,
             command.Category,
-            command.TeacherId
+            command.TeacherId,
+            institutionId
         );
 
         if (!string.IsNullOrEmpty(command.Description))

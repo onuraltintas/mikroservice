@@ -56,6 +56,26 @@ describe('TeacherAcademicComponent', () => {
     }), expect.any(String));
   });
 
+  it('sends the selected student institution for goal authorization', () => {
+    const service = academicService();
+    TestBed.configureTestingModule({
+      imports: [TeacherAcademicComponent],
+      providers: [
+        { provide: AuthService, useValue: { userProfile: signal({ id: 'teacher-1', role: 'Teacher' }) } },
+        { provide: CoachingPortalService, useValue: service },
+        { provide: ActivatedRoute, useValue: {} }
+      ]
+    });
+    const component = TestBed.createComponent(TeacherAcademicComponent).componentInstance;
+    component.students.set([{ userId: 'student-1', institutionId: 'institution-1', fullName: 'Ada Yılmaz' } as never]);
+    component.goalForm.studentId = 'student-1';
+    component.goalForm.title = 'Matematik hedefi';
+    component.saveGoal();
+    expect(service.createTeacherGoal).toHaveBeenCalledWith(expect.objectContaining({
+      institutionId: 'institution-1', studentId: 'student-1'
+    }), expect.any(String));
+  });
+
   it('adds a result to the selected exam and exposes the correction workflow', () => {
     const service = academicService();
     TestBed.configureTestingModule({

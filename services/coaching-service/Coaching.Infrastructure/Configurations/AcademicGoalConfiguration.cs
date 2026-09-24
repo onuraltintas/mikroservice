@@ -26,6 +26,9 @@ public class AcademicGoalConfiguration : IEntityTypeConfiguration<AcademicGoal>
         builder.Property(x => x.SetByTeacherId)
             .HasColumnName("set_by_teacher_id");
 
+        builder.Property(x => x.InstitutionId)
+            .HasColumnName("institution_id");
+
         builder.Property(x => x.Title)
             .HasColumnName("title")
             .HasMaxLength(200)
@@ -82,6 +85,9 @@ public class AcademicGoalConfiguration : IEntityTypeConfiguration<AcademicGoal>
         // Indexes
         builder.HasIndex(x => x.StudentId)
             .HasDatabaseName("ix_academic_goals_student_id");
+
+        builder.HasIndex(x => new { x.InstitutionId, x.StudentId })
+            .HasDatabaseName("ix_academic_goals_institution_student");
 
         builder.HasIndex(x => x.IsCompleted)
             .HasDatabaseName("ix_academic_goals_is_completed");

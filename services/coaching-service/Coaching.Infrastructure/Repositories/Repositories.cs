@@ -896,8 +896,9 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
             await assignments.CountAsync(item => item.SubmittedAt.HasValue, cancellationToken),
             await exams.CountAsync(cancellationToken),
             await sessions.CountAsync(cancellationToken),
-            institutionId.HasValue ? 0 : await _context.AcademicGoals.AsNoTracking()
-                .CountAsync(item => item.StudentId == studentId, cancellationToken),
+            await _context.AcademicGoals.AsNoTracking()
+                .CountAsync(item => item.StudentId == studentId
+                    && (!institutionId.HasValue || item.InstitutionId == institutionId.Value), cancellationToken),
             assignmentItems,
             examItems,
             gradedAssignments.Count == 0 ? null : Math.Round(gradedAssignments.Average(item => item.Score / item.MaxScore) * 100m, 2),
@@ -1011,7 +1012,7 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
             sessions = sessions.Where(item => item.InstitutionId == institutionId.Value);
             exams = exams.Where(item => item.InstitutionId == institutionId.Value);
 
-            goals = goals.Where(_ => false); // Goals have no institution ID.
+            goals = goals.Where(item => item.InstitutionId == institutionId.Value);
         }
 
         var assignmentIds = assignments.Select(item => item.Id);
@@ -1256,7 +1257,8 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
         {
             query = scopedStudentIds is null
                 ? query.Where(_ => false)
-                : query.Where(goal => scopedStudentIds.Contains(goal.StudentId));
+                : query.Where(goal => goal.InstitutionId == institutionId.Value
+                    && scopedStudentIds.Contains(goal.StudentId));
         }
 
         if (completed.HasValue)

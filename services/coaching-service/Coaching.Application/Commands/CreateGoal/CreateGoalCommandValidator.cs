@@ -9,6 +9,10 @@ public sealed class CreateGoalCommandValidator : AbstractValidator<CreateGoalCom
         RuleFor(command => command.StudentId)
             .NotEmpty();
 
+        RuleFor(command => command.InstitutionId)
+            .NotEmpty()
+            .When(command => command.InstitutionId.HasValue);
+
         RuleFor(command => command.Category)
             .IsInEnum();
 

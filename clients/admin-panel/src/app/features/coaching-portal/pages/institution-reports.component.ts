@@ -36,6 +36,8 @@ import {
             <p>Ortalama ödev başarısı: {{ percentage(report.averageAssignmentPercentage) }}</p>
             <p>Ortalama sınav başarısı: {{ percentage(report.averageExamPercentage) }}</p>
             <p>Seans katılımı: {{ percentage(report.attendancePercentage) }}</p>
+            <p>Kurum hedefleri: {{ report.completedGoalCount }} / {{ report.goalCount }} tamamlandı</p>
+            <p>Hedef ilerlemesi: {{ report.goalCount ? percentage(report.averageGoalProgress) : 'Veri yok' }}</p>
           </div>
         </section>
       }

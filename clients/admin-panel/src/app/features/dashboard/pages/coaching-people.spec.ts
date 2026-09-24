@@ -109,7 +109,8 @@ describe('CoachingPeopleComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Ödev ortalaması: 80%');
     expect(fixture.nativeElement.textContent).toContain('Sınav ortalaması: 75%');
     expect(fixture.nativeElement.textContent).toContain('Katılım: 1 / 1');
-    expect(fixture.nativeElement.textContent).toContain('Hedef: Kurum kapsamında gösterilmiyor');
+    expect(fixture.nativeElement.textContent).toContain('Hedef: 0');
+    expect(fixture.nativeElement.textContent).toContain('Yalnızca bu kuruma bağlanmış hedefler sayılır');
   });
 
   it('ignores stale list responses after the selected institution changes', () => {
