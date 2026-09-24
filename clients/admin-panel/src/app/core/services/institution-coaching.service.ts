@@ -40,6 +40,14 @@ export class InstitutionCoachingService {
     });
   }
 
+  removeTeacher(userId: string) {
+    return this.http.delete<void>(`${this.identityUrl}/teachers/${encodeURIComponent(userId)}`);
+  }
+
+  removeStudent(userId: string) {
+    return this.http.delete<void>(`${this.identityUrl}/students/${encodeURIComponent(userId)}`);
+  }
+
   createAssignment(request: CoachingAdminAssignmentCreateRequest, idempotencyKey: string) {
     return this.http.post<{ assignmentId: string }>(`${this.coachingUrl}/assignments`, request, {
       headers: { 'Idempotency-Key': idempotencyKey }
