@@ -47,15 +47,21 @@ public sealed class CoachingAdminOverviewTests
         current.AssignToStudent(Guid.NewGuid());
         var outside = Assignment.Create(teacherId, "Outside", DateTime.UtcNow.AddDays(1), institutionId: otherInstitution);
         outside.AssignToStudent(Guid.NewGuid());
-        context.AddRange(current, outside);
+        var ownExam = Exam.Create(teacherId, "Own exam", ExamType.Mock, DateTime.UtcNow.AddDays(-1), 100, ownInstitution);
+        ownExam.AddResult(ExamResult.Create(ownExam.Id, Guid.NewGuid(), 40));
+        var outsideExam = Exam.Create(teacherId, "Outside exam", ExamType.Mock, DateTime.UtcNow.AddDays(-1), 100, otherInstitution);
+        outsideExam.AddResult(ExamResult.Create(outsideExam.Id, Guid.NewGuid(), 90));
+        context.AddRange(current, outside, ownExam, outsideExam);
         await context.SaveChangesAsync();
 
         var result = await new CoachingAdminRepository(context)
             .GetTeacherAnalyticsAsync(teacherId, ownInstitution, DateTime.UtcNow.AddDays(-30), DateTime.UtcNow, CancellationToken.None);
 
-        result.StudentIds.Should().ContainSingle();
         result.CurrentPeriod.Assignments.Should().Be(1);
+        result.CurrentPeriod.Exams.Should().Be(1);
         result.PreviousPeriod.Assignments.Should().Be(0);
+        result.LowResults.Should().Be(1);
+        result.HighResults.Should().Be(0);
     }
 
     [Fact]

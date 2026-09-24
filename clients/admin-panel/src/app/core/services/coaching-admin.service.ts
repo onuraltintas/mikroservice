@@ -79,7 +79,6 @@ export interface CoachingAdminStudentDetail {
 
 export interface TeacherCoachingAnalytics {
   teacherId: string;
-  studentIds: string[];
   currentPeriod: { assignments: number; exams: number; sessions: number };
   previousPeriod: { assignments: number; exams: number; sessions: number };
   lowResults: number;

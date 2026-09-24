@@ -122,7 +122,8 @@ public sealed class CoachingAdminController : ControllerBase
     {
         var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
         if (!scope.IsGlobal && scope.InstitutionId != institutionId) return NotFound();
-        if (pageNumber is < 1 or > 1000 || pageSize is < 1 or > 100 || search?.Length > 100)
+        if (pageNumber is < 1 or > 1000 || pageSize is < 1 or > 100
+            || search?.Length > 100 || teacherUserId == Guid.Empty)
             return BadRequest();
         return Ok(await reportClient.GetActiveStudentPageAsync(
             currentUser.UserId!.Value, institutionId, null, pageNumber, pageSize,
@@ -158,12 +159,8 @@ public sealed class CoachingAdminController : ControllerBase
     {
         var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
         var toDate = DateTime.UtcNow;
-        var result = await repository.GetTeacherAnalyticsAsync(
-            teacherId, scope.InstitutionId, toDate.AddDays(-30), toDate, cancellationToken);
-        return Ok(scope.IsGlobal ? result : result with
-        {
-            StudentIds = result.StudentIds.Where(id => scope.StudentIds?.Contains(id) == true).ToArray()
-        });
+        return Ok(await repository.GetTeacherAnalyticsAsync(
+            teacherId, scope.InstitutionId, toDate.AddDays(-30), toDate, cancellationToken));
     }
 
     [HttpGet("assignments/{id:guid}")]

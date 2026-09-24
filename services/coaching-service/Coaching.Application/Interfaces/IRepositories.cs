@@ -205,7 +205,6 @@ public sealed record CoachingAdminStudentExamDto(
 
 public sealed record TeacherCoachingAnalyticsDto(
     Guid TeacherId,
-    IReadOnlyList<Guid> StudentIds,
     TeacherCoachingPeriodDto CurrentPeriod,
     TeacherCoachingPeriodDto PreviousPeriod,
     int LowResults,

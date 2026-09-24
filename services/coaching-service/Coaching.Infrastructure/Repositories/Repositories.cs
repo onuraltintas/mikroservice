@@ -920,18 +920,7 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
             sessions = sessions.Where(item => item.InstitutionId == institutionId.Value);
         }
 
-        var assignmentIds = assignments.Select(item => item.Id);
         var examIds = exams.Select(item => item.Id);
-        var sessionIds = sessions.Select(item => item.Id);
-        var roster = await _context.AssignmentStudents.AsNoTracking()
-            .Where(item => assignmentIds.Contains(item.AssignmentId))
-            .Select(item => item.StudentId).Distinct().ToListAsync(cancellationToken);
-        roster.AddRange(await _context.ExamResults.AsNoTracking()
-            .Where(item => examIds.Contains(item.ExamId))
-            .Select(item => item.StudentId).Distinct().ToListAsync(cancellationToken));
-        roster.AddRange(await _context.SessionAttendances.AsNoTracking()
-            .Where(item => sessionIds.Contains(item.SessionId))
-            .Select(item => item.StudentId).Distinct().ToListAsync(cancellationToken));
 
         var previousFrom = fromDate - (toDate - fromDate);
         async Task<TeacherCoachingPeriodDto> Period(DateTime start, DateTime end) => new(
@@ -947,7 +936,6 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
 
         return new TeacherCoachingAnalyticsDto(
             teacherId,
-            roster.Distinct().OrderBy(id => id).ToArray(),
             await Period(fromDate, toDate),
             await Period(previousFrom, fromDate),
             scores.Count(item => item.Score / item.MaxScore < 0.5m),
