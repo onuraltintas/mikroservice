@@ -3,7 +3,7 @@ import { PLATFORM_ID } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
-import { CoachingAdminGoalPage, CoachingAdminService } from '../../../core/services/coaching-admin.service';
+import { CoachingAdminGoalPage, CoachingAdminService, CoachingAdminStudentDetail } from '../../../core/services/coaching-admin.service';
 import { InstitutionService } from '../../../core/services/institution.service';
 import { CoachingPeopleComponent } from './coaching-people';
 
@@ -13,7 +13,9 @@ describe('CoachingPeopleComponent', () => {
       getReadScope: vi.fn(() => of({ isGlobal: false, institutionId: 'own-institution' })),
       getStudentRoster: vi.fn(() => of({ students: [{ userId: 'student-1', firstName: 'Ayşe', lastName: 'Yılmaz', email: 'a@test' }], totalCount: 1 })),
       getTeacherRoster: vi.fn(() => of({ teachers: [{ userId: 'teacher-1', firstName: 'Ali', lastName: 'Öğretmen', email: 't@test' }], totalCount: 1 })),
-      getStudentDetail: vi.fn(() => of({ studentId: 'student-1', totalAssignments: 1, assignments: [], exams: [] })),
+      getStudentDetail: vi.fn(() => of({ studentId: 'student-1', totalAssignments: 1, submittedAssignments: 0, totalExams: 0, totalSessions: 0, totalGoals: 0, attendanceRecordedCount: 0, attendedSessionCount: 0, assignments: [], exams: [] } as CoachingAdminStudentDetail)),
+      getStudentAssignments: vi.fn(() => of({ items: [] as { id: string; title: string; status: string }[], pageNumber: 2, pageSize: 10, totalCount: 0, totalPages: 0 })),
+      getStudentExams: vi.fn(() => of({ items: [] as { id: string; title: string; score: number; maxScore: number }[], pageNumber: 2, pageSize: 10, totalCount: 0, totalPages: 0 })),
       getGoals: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 0 } as CoachingAdminGoalPage)),
       getTeacherAnalytics: vi.fn(() => of({ teacherId: 'teacher-1', studentIds: [], currentPeriod: { assignments: 1, exams: 0, sessions: 0 }, previousPeriod: { assignments: 0, exams: 0, sessions: 0 }, lowResults: 0, mediumResults: 0, highResults: 0 }))
     };
@@ -153,6 +155,29 @@ describe('CoachingPeopleComponent', () => {
     expect(component.selectedStudent()?.firstName).toBe('Ayşe');
     expect(fixture.nativeElement.textContent).toContain('Ödev:');
     expect(fixture.nativeElement.textContent).toContain('Hedefler yüklenemedi');
+  });
+
+  it('loads older institution assignments and exams after the initial ten records', () => {
+    const { component, fixture, service } = create('students', 'student-1', 'server', true);
+    service.getStudentDetail.mockReturnValue(of({
+      studentId: 'student-1', totalAssignments: 11, submittedAssignments: 0, totalExams: 11,
+      totalSessions: 0, totalGoals: 0, attendanceRecordedCount: 0, attendedSessionCount: 0, assignments: [
+        { id: 'assignment-1', title: 'Yeni ödev', status: 'Assigned', dueDate: '2026-09-24' }
+      ], exams: [{ id: 'exam-1', title: 'Yeni sınav', score: 80, maxScore: 100, examDate: '2026-09-24' }]
+    }));
+    service.getStudentAssignments.mockReturnValue(of({ items: [{ id: 'assignment-2', title: 'Eski ödev', status: 'Assigned' }], pageNumber: 2, pageSize: 10, totalCount: 11, totalPages: 2 }));
+    service.getStudentExams.mockReturnValue(of({ items: [{ id: 'exam-2', title: 'Eski sınav', score: 70, maxScore: 100 }], pageNumber: 2, pageSize: 10, totalCount: 11, totalPages: 2 }));
+    component.institutionId = 'own-institution';
+    component.loadDetail('student-1');
+
+    component.loadMoreStudentAssignments();
+    component.loadMoreStudentExams();
+    fixture.detectChanges();
+
+    expect(service.getStudentAssignments).toHaveBeenCalledWith('student-1', 2, 10);
+    expect(service.getStudentExams).toHaveBeenCalledWith('student-1', 2, 10);
+    expect(fixture.nativeElement.textContent).toContain('Eski ödev');
+    expect(fixture.nativeElement.textContent).toContain('Eski sınav');
   });
 
   it('ignores stale list responses after the selected institution changes', () => {

@@ -116,6 +116,46 @@ public sealed class CoachingAdminController : ControllerBase
         return Ok(await repository.GetStudentDetailAsync(studentId, scope.InstitutionId, cancellationToken));
     }
 
+    [HttpGet("students/{studentId:guid}/assignments")]
+    [ProducesResponseType(typeof(PagedResponse<CoachingAdminStudentAssignmentDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetStudentAssignments(
+        Guid studentId,
+        [FromServices] ICoachingAdminRepository repository,
+        [FromQuery] int pageNumber = CoachingPaging.DefaultPageNumber,
+        [FromQuery] int pageSize = CoachingPaging.DefaultPageSize,
+        CancellationToken cancellationToken = default)
+    {
+        if (pageNumber < 1 || pageNumber > CoachingPaging.MaxPageNumber
+            || pageSize < 1 || pageSize > CoachingPaging.MaxPageSize) return BadRequest();
+        var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+        if (!scope.IsGlobal && scope.StudentIds?.Contains(studentId) != true) return NotFound();
+        var page = await repository.GetStudentAssignmentsAsync(
+            studentId, scope.InstitutionId, pageNumber, pageSize, cancellationToken);
+        return Ok(new PagedResponse<CoachingAdminStudentAssignmentDto>(
+            page.Items, pageNumber, pageSize, page.TotalCount));
+    }
+
+    [HttpGet("students/{studentId:guid}/exams")]
+    [ProducesResponseType(typeof(PagedResponse<CoachingAdminStudentExamDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetStudentExams(
+        Guid studentId,
+        [FromServices] ICoachingAdminRepository repository,
+        [FromQuery] int pageNumber = CoachingPaging.DefaultPageNumber,
+        [FromQuery] int pageSize = CoachingPaging.DefaultPageSize,
+        CancellationToken cancellationToken = default)
+    {
+        if (pageNumber < 1 || pageNumber > CoachingPaging.MaxPageNumber
+            || pageSize < 1 || pageSize > CoachingPaging.MaxPageSize) return BadRequest();
+        var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+        if (!scope.IsGlobal && scope.StudentIds?.Contains(studentId) != true) return NotFound();
+        var page = await repository.GetStudentExamsAsync(
+            studentId, scope.InstitutionId, pageNumber, pageSize, cancellationToken);
+        return Ok(new PagedResponse<CoachingAdminStudentExamDto>(
+            page.Items, pageNumber, pageSize, page.TotalCount));
+    }
+
     [HttpGet("institutions/{institutionId:guid}/students")]
     [ProducesResponseType(typeof(CoachingStudentReportPage), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetStudentRoster(

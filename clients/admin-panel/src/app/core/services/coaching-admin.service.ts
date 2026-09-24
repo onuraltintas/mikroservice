@@ -86,6 +86,22 @@ export interface CoachingAdminStudentDetail {
   attendedSessionCount: number;
 }
 
+export interface CoachingAdminStudentAssignmentPage {
+  items: CoachingAdminStudentDetail['assignments'];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
+export interface CoachingAdminStudentExamPage {
+  items: CoachingAdminStudentDetail['exams'];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
 export interface TeacherCoachingAnalytics {
   teacherId: string;
   currentPeriod: { assignments: number; exams: number; sessions: number };
@@ -474,6 +490,20 @@ export class CoachingAdminService {
   getStudentDetail(studentId: string) {
     return this.http.get<CoachingAdminStudentDetail>(
       `${this.url}/students/${encodeURIComponent(studentId)}/detail`);
+  }
+
+  getStudentAssignments(studentId: string, pageNumber = 1, pageSize = 10) {
+    return this.http.get<CoachingAdminStudentAssignmentPage>(
+      `${this.url}/students/${encodeURIComponent(studentId)}/assignments`,
+      { params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize) }
+    );
+  }
+
+  getStudentExams(studentId: string, pageNumber = 1, pageSize = 10) {
+    return this.http.get<CoachingAdminStudentExamPage>(
+      `${this.url}/students/${encodeURIComponent(studentId)}/exams`,
+      { params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize) }
+    );
   }
 
   getTeacherAnalytics(teacherId: string) {

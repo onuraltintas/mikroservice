@@ -77,6 +77,43 @@ public sealed class CoachingAdminOverviewTests
     }
 
     [Fact]
+    public async Task StudentRecords_PageThroughOnlyTheSelectedInstitution()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var ownInstitution = Guid.NewGuid();
+        var otherInstitution = Guid.NewGuid();
+        for (var index = 0; index < 12; index++)
+        {
+            var dueDate = DateTime.UtcNow.AddDays(index + 1);
+            var assignment = Assignment.Create(Guid.NewGuid(), $"Own {index}", dueDate,
+                institutionId: ownInstitution);
+            assignment.AssignToStudent(studentId);
+            var exam = Exam.Create(Guid.NewGuid(), $"Own {index}", ExamType.Mock, dueDate, 100,
+                ownInstitution);
+            exam.AddResult(ExamResult.Create(exam.Id, studentId, 80));
+            context.AddRange(assignment, exam);
+        }
+        var foreignAssignment = Assignment.Create(Guid.NewGuid(), "Foreign", DateTime.UtcNow.AddDays(30),
+            institutionId: otherInstitution);
+        foreignAssignment.AssignToStudent(studentId);
+        var foreignExam = Exam.Create(Guid.NewGuid(), "Foreign", ExamType.Mock,
+            DateTime.UtcNow.AddDays(30), 100, otherInstitution);
+        foreignExam.AddResult(ExamResult.Create(foreignExam.Id, studentId, 80));
+        context.AddRange(foreignAssignment, foreignExam);
+        await context.SaveChangesAsync();
+
+        var repository = new CoachingAdminRepository(context);
+        var assignments = await repository.GetStudentAssignmentsAsync(studentId, ownInstitution, 2, 10);
+        var exams = await repository.GetStudentExamsAsync(studentId, ownInstitution, 2, 10);
+
+        assignments.TotalCount.Should().Be(12);
+        assignments.Items.Should().HaveCount(2).And.OnlyContain(item => item.Title.StartsWith("Own"));
+        exams.TotalCount.Should().Be(12);
+        exams.Items.Should().HaveCount(2).And.OnlyContain(item => item.Title.StartsWith("Own"));
+    }
+
+    [Fact]
     public async Task InstitutionGoalListAndDetail_ExcludeUntaggedStudentGoals()
     {
         await using var context = CreateContext();

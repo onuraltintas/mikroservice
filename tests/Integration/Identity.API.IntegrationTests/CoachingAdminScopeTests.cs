@@ -24,6 +24,20 @@ public sealed class CoachingAdminScopeTests
         dto.GetType().GetProperty("StudentIds").Should().BeNull();
     }
 
+    [Fact]
+    public async Task InstitutionStudentRecordEndpoints_HideStudentsOutsideTheRoster()
+    {
+        var outsiderId = Guid.NewGuid();
+        var controller = new CoachingAdminController(null!, new FixedScopeAuthorization(
+            new CoachingAdminScope(false, Guid.NewGuid(), [Guid.NewGuid()])));
+
+        var assignments = await controller.GetStudentAssignments(outsiderId, null!, 1, 25);
+        var exams = await controller.GetStudentExams(outsiderId, null!, 1, 25);
+
+        assignments.Should().BeOfType<NotFoundResult>();
+        exams.Should().BeOfType<NotFoundResult>();
+    }
+
     private sealed class FixedScopeAuthorization(CoachingAdminScope scope) : ICoachingAdminScopeAuthorization
     {
         public Task<CoachingAdminScope> RequireReadScopeAsync(CancellationToken cancellationToken) =>

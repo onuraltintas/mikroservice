@@ -46,8 +46,8 @@ import { InstitutionDto, InstitutionService } from '../../../core/services/insti
                 <div class="grid gap-3 sm:grid-cols-4 text-sm"><p>Ödev: {{ detail.submittedAssignments }}/{{ detail.totalAssignments }} teslim</p><p>Sınav sonucu: {{ detail.totalExams }}</p><p>Seans: {{ detail.totalSessions }}</p><p>Hedef: {{ detail.totalGoals }}</p></div>
                 <div class="grid gap-3 sm:grid-cols-3 text-sm"><p>Ödev ortalaması: {{ detail.averageAssignmentPercentage == null ? 'Veri yok' : (detail.averageAssignmentPercentage | number:'1.0-1') + '%' }}</p><p>Sınav ortalaması: {{ detail.averageExamPercentage == null ? 'Veri yok' : (detail.averageExamPercentage | number:'1.0-1') + '%' }}</p><p>Katılım: {{ detail.attendedSessionCount }} / {{ detail.attendanceRecordedCount }}</p></div>
                 <div class="grid gap-4 lg:grid-cols-2 text-sm">
-                  <div><h3 class="font-semibold">Son ödevler</h3>@for (item of detail.assignments; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.status }} · {{ item.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-gray-500">Ödev yok.</p> }</div>
-                  <div><h3 class="font-semibold">Sınav sonuçları</h3>@for (item of detail.exams; track item.id) { <p class="mt-2">{{ item.title }} · {{ item.score }}/{{ item.maxScore }}</p> } @empty { <p class="mt-2 text-gray-500">Sonuç yok.</p> }</div>
+                  <div><h3 class="font-semibold">Ödevler</h3>@for (item of studentAssignments(); track item.id) { <p class="mt-2">{{ item.title }} · {{ item.status }} · {{ item.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-gray-500">Ödev yok.</p> } @if (studentAssignments().length < detail.totalAssignments) { <button type="button" class="mt-2 text-indigo-700 underline" [disabled]="assignmentLoading()" (click)="loadMoreStudentAssignments()">Daha fazla ödev</button> } @if (assignmentError()) { <p role="alert" class="mt-2 text-red-700">{{ assignmentError() }}</p> }</div>
+                  <div><h3 class="font-semibold">Sınav sonuçları</h3>@for (item of studentExams(); track item.id) { <p class="mt-2">{{ item.title }} · {{ item.score }}/{{ item.maxScore }}</p> } @empty { <p class="mt-2 text-gray-500">Sonuç yok.</p> } @if (studentExams().length < detail.totalExams) { <button type="button" class="mt-2 text-indigo-700 underline" [disabled]="examLoading()" (click)="loadMoreStudentExams()">Daha fazla sınav</button> } @if (examError()) { <p role="alert" class="mt-2 text-red-700">{{ examError() }}</p> }</div>
                 </div>
                 <div class="text-sm"><h3 class="font-semibold">Hedefler</h3>
                   @if (goalLoading()) { <p role="status" class="mt-2">Hedefler yükleniyor…</p> }
@@ -113,6 +113,12 @@ export class CoachingPeopleComponent implements OnInit {
   readonly selectedStudent = signal<CoachingStudentRosterItem | null>(null);
   readonly selectedTeacher = signal<CoachingTeacherRosterItem | null>(null);
   readonly studentDetail = signal<CoachingAdminStudentDetail | null>(null);
+  readonly studentAssignments = signal<CoachingAdminStudentDetail['assignments']>([]);
+  readonly studentExams = signal<CoachingAdminStudentDetail['exams']>([]);
+  readonly assignmentLoading = signal(false);
+  readonly examLoading = signal(false);
+  readonly assignmentError = signal<string | null>(null);
+  readonly examError = signal<string | null>(null);
   readonly studentGoals = signal<CoachingAdminGoalPage | null>(null);
   readonly goalLoading = signal(false);
   readonly goalError = signal<string | null>(null);
@@ -128,6 +134,8 @@ export class CoachingPeopleComponent implements OnInit {
   search = '';
   pageNumber = 1;
   teacherStudentPage = 1;
+  assignmentPage = 1;
+  examPage = 1;
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
@@ -169,6 +177,12 @@ export class CoachingPeopleComponent implements OnInit {
     this.selectedStudent.set(null);
     this.selectedTeacher.set(null);
     this.studentDetail.set(null);
+    this.studentAssignments.set([]);
+    this.studentExams.set([]);
+    this.assignmentLoading.set(false);
+    this.examLoading.set(false);
+    this.assignmentError.set(null);
+    this.examError.set(null);
     this.studentGoals.set(null);
     this.goalLoading.set(false);
     this.goalError.set(null);
@@ -212,6 +226,14 @@ export class CoachingPeopleComponent implements OnInit {
     ++this.goalsRequestId;
     this.studentGoals.set(null);
     this.goalError.set(null);
+    this.studentAssignments.set([]);
+    this.studentExams.set([]);
+    this.assignmentLoading.set(false);
+    this.examLoading.set(false);
+    this.assignmentError.set(null);
+    this.examError.set(null);
+    this.assignmentPage = 1;
+    this.examPage = 1;
     if (this.kind === 'students') {
       forkJoin({
         roster: this.service.getStudentRoster(this.institutionId, 1, id),
@@ -221,6 +243,8 @@ export class CoachingPeopleComponent implements OnInit {
           if (requestId !== this.requestId) return;
           this.selectedStudent.set(result.roster.students.find(item => item.userId === id) ?? null);
           this.studentDetail.set(this.selectedStudent() ? result.detail : null);
+          this.studentAssignments.set(this.selectedStudent() ? result.detail.assignments : []);
+          this.studentExams.set(this.selectedStudent() ? result.detail.exams : []);
           if (!this.selectedStudent()) this.error.set('Öğrenci bu kurumda bulunamadı.');
           this.loading.set(false);
           if (this.selectedStudent()) this.loadStudentGoals(1);
@@ -257,6 +281,50 @@ export class CoachingPeopleComponent implements OnInit {
 
   openDetail(id: string): void {
     void this.router.navigate([this.portal ? '/coaching-portal/institution' : '/dashboard/coaching', this.kind, id], { queryParams: { institutionId: this.institutionId } });
+  }
+
+  loadMoreStudentAssignments(): void {
+    const studentId = this.detailId;
+    if (!studentId || !this.selectedStudent() || this.assignmentLoading()
+        || this.studentAssignments().length >= (this.studentDetail()?.totalAssignments ?? 0)) return;
+    const requestId = this.requestId;
+    this.assignmentLoading.set(true);
+    this.assignmentError.set(null);
+    this.service.getStudentAssignments(studentId, this.assignmentPage + 1, 10).subscribe({
+      next: page => {
+        if (requestId !== this.requestId) return;
+        this.studentAssignments.update(items => [...items, ...page.items]);
+        this.assignmentPage = page.pageNumber;
+        this.assignmentLoading.set(false);
+      },
+      error: () => {
+        if (requestId !== this.requestId) return;
+        this.assignmentError.set('Daha eski ödevler yüklenemedi.');
+        this.assignmentLoading.set(false);
+      }
+    });
+  }
+
+  loadMoreStudentExams(): void {
+    const studentId = this.detailId;
+    if (!studentId || !this.selectedStudent() || this.examLoading()
+        || this.studentExams().length >= (this.studentDetail()?.totalExams ?? 0)) return;
+    const requestId = this.requestId;
+    this.examLoading.set(true);
+    this.examError.set(null);
+    this.service.getStudentExams(studentId, this.examPage + 1, 10).subscribe({
+      next: page => {
+        if (requestId !== this.requestId) return;
+        this.studentExams.update(items => [...items, ...page.items]);
+        this.examPage = page.pageNumber;
+        this.examLoading.set(false);
+      },
+      error: () => {
+        if (requestId !== this.requestId) return;
+        this.examError.set('Daha eski sınav sonuçları yüklenemedi.');
+        this.examLoading.set(false);
+      }
+    });
   }
 
   loadStudentGoals(page: number): void {

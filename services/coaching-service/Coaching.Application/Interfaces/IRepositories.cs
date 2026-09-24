@@ -134,6 +134,14 @@ public interface ICoachingAdminRepository
         Guid? institutionId,
         CancellationToken cancellationToken = default);
 
+    Task<PagedRepositoryResult<CoachingAdminStudentAssignmentDto>> GetStudentAssignmentsAsync(
+        Guid studentId, Guid? institutionId, int pageNumber, int pageSize,
+        CancellationToken cancellationToken = default);
+
+    Task<PagedRepositoryResult<CoachingAdminStudentExamDto>> GetStudentExamsAsync(
+        Guid studentId, Guid? institutionId, int pageNumber, int pageSize,
+        CancellationToken cancellationToken = default);
+
     Task<TeacherCoachingAnalyticsDto> GetTeacherAnalyticsAsync(
         Guid teacherId,
         Guid? institutionId,
