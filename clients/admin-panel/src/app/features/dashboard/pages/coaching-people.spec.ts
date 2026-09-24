@@ -8,7 +8,7 @@ import { InstitutionService } from '../../../core/services/institution.service';
 import { CoachingPeopleComponent } from './coaching-people';
 
 describe('CoachingPeopleComponent', () => {
-  function create(kind: 'students' | 'teachers', id?: string, platform = 'server') {
+  function create(kind: 'students' | 'teachers', id?: string, platform = 'server', portal = false) {
     const service = {
       getReadScope: vi.fn(() => of({ isGlobal: false, institutionId: 'own-institution' })),
       getStudentRoster: vi.fn(() => of({ students: [{ userId: 'student-1', firstName: 'Ayşe', lastName: 'Yılmaz', email: 'a@test' }], totalCount: 1 })),
@@ -22,7 +22,7 @@ describe('CoachingPeopleComponent', () => {
         { provide: PLATFORM_ID, useValue: platform },
         { provide: CoachingAdminService, useValue: service },
         { provide: InstitutionService, useValue: { getAll: () => of({ items: [] }) } },
-        { provide: ActivatedRoute, useValue: { snapshot: { data: { kind }, paramMap: { get: () => id }, queryParamMap: { get: () => 'institution-1' } } } },
+        { provide: ActivatedRoute, useValue: { snapshot: { data: { kind, portal }, paramMap: { get: () => id }, queryParamMap: { get: () => 'institution-1' } } } },
         { provide: Router, useValue: { navigate: vi.fn() } }
       ]
     });
@@ -36,6 +36,19 @@ describe('CoachingPeopleComponent', () => {
 
     expect(component.institutionId).toBe('own-institution');
     expect(service.getStudentRoster).toHaveBeenCalledWith('own-institution', 1, '');
+  });
+
+  it('keeps institution detail navigation inside the coaching portal', () => {
+    const { component } = create('students', undefined, 'server', true);
+    const router = TestBed.inject(Router);
+    component.institutionId = 'own-institution';
+
+    component.openDetail('student-1');
+
+    expect(router.navigate).toHaveBeenCalledWith(
+      ['/coaching-portal/institution', 'students', 'student-1'],
+      { queryParams: { institutionId: 'own-institution' } }
+    );
   });
 
   it('searches and pages institution students on the server', () => {
