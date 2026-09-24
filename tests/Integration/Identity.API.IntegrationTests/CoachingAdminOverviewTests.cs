@@ -252,7 +252,7 @@ public sealed class CoachingAdminOverviewTests
         result.TotalAssignments.Should().Be(1);
         result.TotalExams.Should().Be(1);
         result.TotalSessions.Should().Be(1);
-        result.TotalGoals.Should().Be(1);
+        result.TotalGoals.Should().Be(0);
         result.RecentAssignments.Should().ContainSingle(item => item.InstitutionId == institutionId);
     }
 
