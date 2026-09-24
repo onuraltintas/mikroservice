@@ -26,7 +26,8 @@ describe('CoachingPeopleComponent', () => {
         { provide: Router, useValue: { navigate: vi.fn() } }
       ]
     });
-    return { component: TestBed.createComponent(CoachingPeopleComponent).componentInstance, service };
+    const fixture = TestBed.createComponent(CoachingPeopleComponent);
+    return { component: fixture.componentInstance, fixture, service };
   }
 
   it('uses the authenticated institution scope instead of a foreign URL parameter', () => {
@@ -75,6 +76,23 @@ describe('CoachingPeopleComponent', () => {
     component.loadDetail('teacher-1');
     expect(service.getTeacherAnalytics).toHaveBeenCalledWith('teacher-1');
     expect(service.getStudentRoster).toHaveBeenCalledWith('institution-1', 1, '', 'teacher-1');
+  });
+
+  it('shows teacher outcome rates alongside activity counts', () => {
+    const { component, fixture, service } = create('teachers', 'teacher-1');
+    service.getTeacherAnalytics.mockReturnValue(of({
+      teacherId: 'teacher-1', studentIds: [], currentPeriod: { assignments: 1, exams: 1, sessions: 1 },
+      previousPeriod: { assignments: 0, exams: 0, sessions: 0 },
+      lowResults: 0, mediumResults: 0, highResults: 1,
+      assignedAssignmentCount: 2, submittedAssignmentCount: 1,
+      averageExamPercentage: 80, attendanceRecordedCount: 1, attendedSessionCount: 1
+    }));
+    component.institutionId = 'own-institution';
+    component.loadDetail('teacher-1');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Ödev teslimi: 1 / 2');
+    expect(fixture.nativeElement.textContent).toContain('Sınav ortalaması: 80%');
+    expect(fixture.nativeElement.textContent).toContain('Seans katılımı: 1 / 1');
   });
 
   it('ignores stale list responses after the selected institution changes', () => {
