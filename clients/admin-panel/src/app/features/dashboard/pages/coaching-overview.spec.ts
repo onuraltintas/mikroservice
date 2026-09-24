@@ -7,6 +7,25 @@ import { InstitutionService } from '../../../core/services/institution.service';
 import { CoachingOverviewComponent } from './coaching-overview';
 
 describe('CoachingOverviewComponent', () => {
+  it('searches institution names on the server beyond the initial page', () => {
+    const institutions = {
+      getAll: vi.fn(() => of({ items: [{ id: 'institution-9', name: 'Örnek Okul' }] }))
+    };
+    TestBed.configureTestingModule({
+      imports: [CoachingOverviewComponent],
+      providers: [
+        { provide: CoachingAdminService, useValue: { getOverview: () => of(null) } },
+        { provide: InstitutionService, useValue: institutions }
+      ]
+    });
+    const component = TestBed.createComponent(CoachingOverviewComponent).componentInstance;
+    component.institutionSearch = 'Örnek';
+
+    component.loadInstitutions();
+
+    expect(institutions.getAll).toHaveBeenCalledWith(1, 100, 'Örnek', true);
+  });
+
   it('opens tenant-scoped teacher coaching totals from a named roster row', () => {
     const coaching = {
       getOverview: () => of(null),
