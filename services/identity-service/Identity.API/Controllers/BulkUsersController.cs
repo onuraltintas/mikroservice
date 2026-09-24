@@ -204,6 +204,11 @@ public sealed class BulkUsersController : ControllerBase
         }
         roleName = canonicalRole;
 
+        if (roleName is "InstitutionAdmin" or "InstitutionOwner")
+        {
+            return BadRequest(new { Error = new { Code = "BulkUsers.InstitutionRoleRequiresMembership", Description = "Kurum yetkisi, kurum yönetimi ekranından ilgili kuruma bağlanarak verilmelidir." } });
+        }
+
         var errors = new List<string>();
         var succeeded = 0;
         foreach (var userId in userIds)
@@ -221,6 +226,13 @@ public sealed class BulkUsersController : ControllerBase
                     .Where(userRole => userRole.Role is not null)
                     .Select(userRole => userRole.Role.Name)
                     .ToArray();
+                var assignResult = await _identityService.AssignRoleWithProfileAsync(userId, roleName, cancellationToken);
+                if (assignResult.IsFailure)
+                {
+                    errors.Add($"{userId}: {assignResult.Error.Description}");
+                    goto NextUser;
+                }
+
                 if (request.RemoveExistingRoles)
                 {
                     foreach (var existingRole in existingRoles.Where(existingRole =>
@@ -233,13 +245,6 @@ public sealed class BulkUsersController : ControllerBase
                             goto NextUser;
                         }
                     }
-                }
-
-                var assignResult = await _identityService.AssignRoleWithProfileAsync(userId, roleName, cancellationToken);
-                if (assignResult.IsFailure)
-                {
-                    errors.Add($"{userId}: {assignResult.Error.Description}");
-                    goto NextUser;
                 }
 
                 succeeded++;
