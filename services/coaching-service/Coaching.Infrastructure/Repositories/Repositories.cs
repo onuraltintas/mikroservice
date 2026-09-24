@@ -1249,7 +1249,8 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
         string? search,
         CancellationToken cancellationToken = default,
         Guid? institutionId = null,
-        IReadOnlyCollection<Guid>? scopedStudentIds = null)
+        IReadOnlyCollection<Guid>? scopedStudentIds = null,
+        Guid? studentId = null)
     {
         var query = _context.AcademicGoals.AsNoTracking().AsQueryable();
 
@@ -1260,6 +1261,9 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
                 : query.Where(goal => goal.InstitutionId == institutionId.Value
                     && scopedStudentIds.Contains(goal.StudentId));
         }
+
+        if (studentId.HasValue)
+            query = query.Where(goal => goal.StudentId == studentId.Value);
 
         if (completed.HasValue)
             query = query.Where(goal => goal.IsCompleted == completed.Value);

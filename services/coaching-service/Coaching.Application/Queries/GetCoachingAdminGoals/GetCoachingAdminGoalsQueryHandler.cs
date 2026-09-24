@@ -18,7 +18,8 @@ public sealed class GetCoachingAdminGoalsQueryHandler(
             request.Search,
             cancellationToken,
             request.InstitutionId,
-            request.ScopedStudentIds);
+            request.ScopedStudentIds,
+            request.StudentId);
 
         return new PagedResponse<CoachingAdminGoalListDto>(
             page.Items,

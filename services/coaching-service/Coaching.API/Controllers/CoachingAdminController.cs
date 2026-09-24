@@ -899,6 +899,7 @@ public sealed class CoachingAdminController : ControllerBase
         [FromQuery] int pageSize = CoachingPaging.DefaultPageSize,
         [FromQuery] bool? completed = null,
         [FromQuery] string? search = null,
+        [FromQuery] Guid? studentId = null,
         CancellationToken cancellationToken = default)
     {
         var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
@@ -909,7 +910,8 @@ public sealed class CoachingAdminController : ControllerBase
                 completed,
                 search,
                 scope.InstitutionId,
-                scope.StudentIds),
+                scope.StudentIds,
+                studentId),
             cancellationToken);
         return Ok(goals);
     }

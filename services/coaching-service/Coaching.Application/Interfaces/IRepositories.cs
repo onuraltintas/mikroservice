@@ -184,7 +184,8 @@ public interface ICoachingAdminRepository
         string? search,
         CancellationToken cancellationToken = default,
         Guid? institutionId = null,
-        IReadOnlyCollection<Guid>? scopedStudentIds = null);
+        IReadOnlyCollection<Guid>? scopedStudentIds = null,
+        Guid? studentId = null);
 }
 
 public sealed record CoachingAdminStudentDetailDto(

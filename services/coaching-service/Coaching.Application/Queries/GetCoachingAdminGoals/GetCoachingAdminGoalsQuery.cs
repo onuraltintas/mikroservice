@@ -10,7 +10,8 @@ public sealed record GetCoachingAdminGoalsQuery(
     bool? Completed = null,
     string? Search = null,
     Guid? InstitutionId = null,
-    IReadOnlyCollection<Guid>? ScopedStudentIds = null) : IRequest<PagedResponse<CoachingAdminGoalListDto>>;
+    IReadOnlyCollection<Guid>? ScopedStudentIds = null,
+    Guid? StudentId = null) : IRequest<PagedResponse<CoachingAdminGoalListDto>>;
 
 public sealed class GetCoachingAdminGoalsQueryValidator
     : PagedQueryValidator<GetCoachingAdminGoalsQuery>
@@ -21,5 +22,8 @@ public sealed class GetCoachingAdminGoalsQueryValidator
         RuleFor(query => query.Search)
             .MaximumLength(200)
             .When(query => query.Search is not null);
+        RuleFor(query => query.StudentId)
+            .NotEmpty()
+            .When(query => query.StudentId.HasValue);
     }
 }

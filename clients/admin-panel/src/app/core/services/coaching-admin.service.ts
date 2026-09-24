@@ -696,9 +696,10 @@ export class CoachingAdminService {
     return this.http.get<CoachingAdminExamDetail>(`${this.url}/exams/${encodeURIComponent(id)}`);
   }
 
-  getGoals(options: { pageNumber?: number; pageSize?: number; completed?: boolean; search?: string } = {}) {
+  getGoals(options: { pageNumber?: number; pageSize?: number; completed?: boolean; search?: string; studentId?: string } = {}) {
     let params = this.listParams(options);
     if (options.completed !== undefined) params = params.set('completed', options.completed);
+    if (options.studentId) params = params.set('studentId', options.studentId);
     return this.http.get<CoachingAdminGoalPage>(`${this.url}/goals`, { params });
   }
 
