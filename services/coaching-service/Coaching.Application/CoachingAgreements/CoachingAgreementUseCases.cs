@@ -14,7 +14,7 @@ public sealed record PublishCoachingAgreementCommand(
     string Title,
     string DocumentReference,
     string ContentSha256,
-    DateTime EffectiveAt) : IRequest<PublishCoachingAgreementResponse>, IBypassesCoachingAgreementRequirement;
+    DateTime EffectiveAt) : IRequest<PublishCoachingAgreementResponse>;
 
 public sealed record PublishCoachingAgreementResponse(Guid DocumentId);
 
@@ -66,7 +66,7 @@ public sealed class PublishCoachingAgreementHandler(
 }
 
 public sealed record GetCurrentCoachingAgreementQuery(string Locale)
-    : IRequest<CurrentCoachingAgreementResponse?>, IBypassesCoachingAgreementRequirement;
+    : IRequest<CurrentCoachingAgreementResponse?>;
 
 public sealed record CurrentCoachingAgreementResponse(
     Guid DocumentId,
@@ -125,7 +125,7 @@ public sealed class GetCurrentCoachingAgreementHandler(
 }
 
 public sealed record GetCurrentRepresentativeCoachingAgreementQuery(Guid StudentId, string Locale)
-    : IRequest<CurrentRepresentativeCoachingAgreementResponse?>, IBypassesCoachingAgreementRequirement;
+    : IRequest<CurrentRepresentativeCoachingAgreementResponse?>;
 
 public sealed record CurrentRepresentativeCoachingAgreementResponse(
     Guid DocumentId,
@@ -206,7 +206,7 @@ public sealed class GetCurrentRepresentativeCoachingAgreementHandler(
 }
 
 public sealed record AcknowledgeCurrentCoachingAgreementCommand(Guid AgreementDocumentId)
-    : IRequest<CoachingAgreementAcknowledgementResponse>, IBypassesCoachingAgreementRequirement;
+    : IRequest<CoachingAgreementAcknowledgementResponse>;
 
 public sealed class AcknowledgeCurrentCoachingAgreementValidator
     : AbstractValidator<AcknowledgeCurrentCoachingAgreementCommand>
@@ -283,7 +283,7 @@ public sealed class AcknowledgeCurrentCoachingAgreementHandler(
 
 public sealed record AcknowledgeCurrentCoachingAgreementAsRepresentativeCommand(
     Guid AgreementDocumentId,
-    Guid StudentId) : IRequest<CoachingAgreementAcknowledgementResponse>, IBypassesCoachingAgreementRequirement;
+    Guid StudentId) : IRequest<CoachingAgreementAcknowledgementResponse>;
 
 public sealed class AcknowledgeCurrentCoachingAgreementAsRepresentativeValidator
     : AbstractValidator<AcknowledgeCurrentCoachingAgreementAsRepresentativeCommand>
@@ -367,7 +367,7 @@ public sealed class AcknowledgeCurrentCoachingAgreementAsRepresentativeHandler(
 }
 
 public sealed record WithdrawCoachingAgreementAcknowledgementCommand(Guid AcknowledgementId)
-    : IRequest<CoachingAgreementAcknowledgementResponse>, IBypassesCoachingAgreementRequirement;
+    : IRequest<CoachingAgreementAcknowledgementResponse>;
 
 public sealed class WithdrawCoachingAgreementAcknowledgementValidator
     : AbstractValidator<WithdrawCoachingAgreementAcknowledgementCommand>
@@ -420,7 +420,7 @@ public sealed class WithdrawCoachingAgreementAcknowledgementHandler(
 }
 
 public sealed record WithdrawRepresentativeCoachingAgreementAcknowledgementCommand(Guid AcknowledgementId)
-    : IRequest<CoachingAgreementAcknowledgementResponse>, IBypassesCoachingAgreementRequirement;
+    : IRequest<CoachingAgreementAcknowledgementResponse>;
 
 public sealed class WithdrawRepresentativeCoachingAgreementAcknowledgementValidator
     : AbstractValidator<WithdrawRepresentativeCoachingAgreementAcknowledgementCommand>

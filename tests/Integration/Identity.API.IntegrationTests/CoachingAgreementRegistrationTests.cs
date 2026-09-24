@@ -1,5 +1,5 @@
 using Coaching.Application;
-using Coaching.Application.CoachingAgreements;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Identity.API.IntegrationTests;
@@ -14,6 +14,7 @@ public sealed class CoachingAgreementRegistrationTests
         services.AddApplication();
 
         Assert.DoesNotContain(services, service =>
-            service.ImplementationType == typeof(CoachingAgreementRequirementBehavior<,>));
+            service.ServiceType.IsGenericType
+            && service.ServiceType.GetGenericTypeDefinition() == typeof(IPipelineBehavior<,>));
     }
 }
