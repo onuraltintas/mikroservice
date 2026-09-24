@@ -110,7 +110,7 @@ export class InstitutionRegisterComponent implements OnInit {
             },
             error: (err) => {
                 this.isLoading.set(false);
-                const msg = err.error?.Error || 'Kayıt başarısız oldu.';
+                const msg = err.error?.message || err.error?.Error || 'Kayıt başarısız oldu. Lütfen yeniden deneyin.';
                 this.toaster.error(msg);
                 this.errorMessage.set(msg);
             }
