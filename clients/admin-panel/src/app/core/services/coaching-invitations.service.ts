@@ -35,6 +35,12 @@ export class CoachingInvitationsService {
     });
   }
 
+  inviteTeacherStudent(email: string) {
+    return this.http.post<{ invitationId: string }>(`${this.url}/teachers/invite-student`, {
+      studentEmail: email
+    });
+  }
+
   getMyInvitations() {
     return this.http.get<CoachingInvitation[]>(`${this.url}/invitations/my-invitations`);
   }
