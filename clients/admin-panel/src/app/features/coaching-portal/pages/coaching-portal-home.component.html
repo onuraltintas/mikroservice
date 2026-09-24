@@ -11,6 +11,9 @@
     {{ errorMessage() }}
   </div>
 
+  <a *ngIf="!isLoading() && !isStudent() && !isTeacher() && !isParent()" routerLink="/coaching-portal/institution/overview"
+    class="block rounded-2xl border border-indigo-200 bg-indigo-50 p-5 font-semibold text-indigo-800 hover:border-indigo-400 dark:border-indigo-900 dark:bg-indigo-950/30 dark:text-indigo-200">Kurum koçluk paneline git →</a>
+
   <div *ngIf="isLoading()" class="grid gap-4 sm:grid-cols-3" aria-label="Yükleniyor">
     <div *ngFor="let item of [1, 2, 3]" class="h-28 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800"></div>
   </div>

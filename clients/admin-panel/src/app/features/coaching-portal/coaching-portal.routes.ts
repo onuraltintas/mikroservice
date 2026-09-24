@@ -83,6 +83,12 @@ export const COACHING_PORTAL_ROUTES: Routes = [
     loadComponent: () => import('./pages/parent-children.component').then(m => m.ParentChildrenComponent)
   },
   {
+    path: 'institution/manage',
+    canActivate: [coachingRoleGuard],
+    data: { coachingRoles: ['InstitutionAdmin', 'InstitutionOwner'] },
+    loadComponent: () => import('./pages/institution-manage.component').then(m => m.InstitutionManageComponent)
+  },
+  {
     path: 'institution/overview',
     canActivate: [coachingRoleGuard],
     data: { coachingRoles: ['InstitutionAdmin', 'InstitutionOwner'] },

@@ -13,6 +13,8 @@ public static class DependencyInjection
         var assembly = Assembly.GetExecutingAssembly();
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
+        services.AddScoped<CoachingInstitutionDelegation>();
+        services.AddScoped<CoachingInstitutionWriteAuthorization>();
         services.AddScoped<ICoachingAccessPolicy, CoachingAccessPolicy>();
         services.AddScoped<ICoachingAdminScopeAuthorization, CoachingAdminScopeAuthorization>();
         services.AddSingleton(TimeProvider.System);

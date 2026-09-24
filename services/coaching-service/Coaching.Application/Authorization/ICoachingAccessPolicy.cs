@@ -20,10 +20,12 @@ public interface ICoachingAccessPolicy
 public sealed class CoachingAccessPolicy : ICoachingAccessPolicy
 {
     private readonly ICurrentUserService _currentUser;
+    private readonly CoachingInstitutionDelegation? _institutionDelegation;
 
-    public CoachingAccessPolicy(ICurrentUserService currentUser)
+    public CoachingAccessPolicy(ICurrentUserService currentUser, CoachingInstitutionDelegation? institutionDelegation = null)
     {
         _currentUser = currentUser;
+        _institutionDelegation = institutionDelegation;
     }
 
     public bool IsSystemAdministrator => IsSystemAdmin();
@@ -49,6 +51,11 @@ public sealed class CoachingAccessPolicy : ICoachingAccessPolicy
     public void RequireTeacher(Guid teacherId)
     {
         if (IsSystemAdmin())
+        {
+            return;
+        }
+
+        if (IsInstitutionAdministrator && _institutionDelegation?.CanManage(teacherId) == true)
         {
             return;
         }

@@ -56,6 +56,20 @@ public sealed class CoachingAccessPolicyTests
         policy.Invoking(value => value.RequireStudent(Guid.NewGuid())).Should().NotThrow();
     }
 
+    [Fact]
+    public void InstitutionAdmin_ShouldRequireVerifiedSingleTeacherDelegation()
+    {
+        var teacherId = Guid.NewGuid();
+        var delegation = new CoachingInstitutionDelegation();
+        var policy = new CoachingAccessPolicy(
+            new StubCurrentUserService(Guid.NewGuid(), ["InstitutionAdmin"]), delegation);
+
+        policy.Invoking(value => value.RequireTeacher(teacherId)).Should().Throw<BusinessRuleException>();
+        delegation.Grant(teacherId);
+        policy.Invoking(value => value.RequireTeacher(teacherId)).Should().NotThrow();
+        policy.Invoking(value => value.RequireTeacher(Guid.NewGuid())).Should().Throw<BusinessRuleException>();
+    }
+
     private static ICoachingAccessPolicy CreatePolicy(Guid userId, params string[] roles) =>
         new CoachingAccessPolicy(new StubCurrentUserService(userId, roles));
 
