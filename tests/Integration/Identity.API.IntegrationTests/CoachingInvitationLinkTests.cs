@@ -20,4 +20,17 @@ public sealed class CoachingInvitationLinkTests
 
         link.Should().Be($"https://onuraltintas.net/coaching-portal/invitations?id={invitationId}");
     }
+
+    [Fact]
+    public void Missing_coaching_base_url_must_not_fall_back_to_speed_reading()
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["PublicApp:BaseUrl"] = "https://masterhizliokuma.com"
+        }).Build();
+
+        Action create = () => PublicAppInvitationLink.Create(configuration, Guid.NewGuid());
+
+        create.Should().Throw<InvalidOperationException>();
+    }
 }
