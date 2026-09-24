@@ -14,6 +14,45 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingAssignmentAttachmentDeletionTests
 {
     [Fact]
+    public async Task DatabaseFailure_LeavesPhysicalAttachmentAvailableForRetry()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "coaching-delete-db-fail-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            await using var context = new CoachingDbContext(
+                new DbContextOptionsBuilder<CoachingDbContext>()
+                    .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+                    .Options);
+            var teacherId = Guid.NewGuid();
+            var assignment = Assignment.Create(teacherId, "Test assignment", DateTime.UtcNow.AddDays(1));
+            assignment.AssignToStudent(Guid.NewGuid());
+            assignment.AssignedStudents.Single().AddSubmissionAttachment(
+                "assignments/test/photo.jpg", "photo.jpg", "image/jpeg", 3, new string('A', 64));
+            context.Assignments.Add(assignment);
+            await context.SaveChangesAsync();
+            var path = Path.Combine(root, "assignments", "test", "photo.jpg");
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            await File.WriteAllBytesAsync(path, [1, 2, 3]);
+
+            var handler = new DeleteAssignmentCommandHandler(
+                new AssignmentRepository(context),
+                new FailingUnitOfWork(),
+                new TeacherAccessPolicy(teacherId),
+                new LocalAssignmentAttachmentStorage(Options.Create(new AssignmentAttachmentOptions { RootPath = root })));
+
+            var act = () => handler.Handle(new DeleteAssignmentCommand(assignment.Id), CancellationToken.None);
+
+            await act.Should().ThrowAsync<IOException>();
+            File.Exists(path).Should().BeTrue();
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task StorageFailure_DoesNotDeleteAssignmentRecord()
     {
         await using var context = new CoachingDbContext(
@@ -112,5 +151,13 @@ public sealed class CoachingAssignmentAttachmentDeletionTests
         public Task<StoredAssignmentAttachment> StoreAsync(string storageKey, Stream content, string expectedContentType, long expectedSizeBytes, string expectedSha256, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<Stream> OpenReadAsync(string storageKey, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task DeleteAsync(string storageKey, CancellationToken cancellationToken = default) => throw new IOException("Storage unavailable");
+    }
+
+    private sealed class FailingUnitOfWork : Coaching.Application.Interfaces.IUnitOfWork
+    {
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => throw new IOException("Database unavailable");
+        public Task BeginTransactionAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task CommitTransactionAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task RollbackTransactionAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 }
