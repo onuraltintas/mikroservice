@@ -1,4 +1,5 @@
 using Coaching.Application.Interfaces;
+using Coaching.Domain.Entities;
 using Coaching.Domain.Enums;
 using EduPlatform.Shared.Kernel.Exceptions;
 
@@ -33,26 +34,30 @@ public sealed class CoachingInstitutionWriteAuthorization(
         await VerifyTeacherTargetsAsync(scope, teacherId, studentIds, cancellationToken);
     }
 
-    public async Task<bool> AuthorizeAssignmentAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<bool> AuthorizeAssignmentAsync(
+        Guid id, CancellationToken cancellationToken, Guid? studentId = null)
     {
         var scope = await scopeAuthorization.RequireReadScopeAsync(cancellationToken);
         var assignment = await assignments.GetByIdAsync(id, cancellationToken);
-        if (assignment is null || !CoachingInstitutionWriteRules.OwnsResource(scope, assignment.InstitutionId))
+        if (assignment is null || !CoachingInstitutionWriteRules.OwnsResource(scope, assignment.InstitutionId)
+            || studentId.HasValue && !CoachingInstitutionWriteRules.OwnsActiveStudent(scope, studentId.Value))
             return false;
 
         delegation.Grant(assignment.TeacherId);
         return true;
     }
 
-    public async Task<bool> AuthorizeSessionAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<CoachingSession?> AuthorizeSessionAsync(
+        Guid id, CancellationToken cancellationToken, Guid? studentId = null)
     {
         var scope = await scopeAuthorization.RequireReadScopeAsync(cancellationToken);
         var session = await sessions.GetByIdAsync(id, cancellationToken);
-        if (session is null || !CoachingInstitutionWriteRules.OwnsResource(scope, session.InstitutionId))
-            return false;
+        if (session is null || !CoachingInstitutionWriteRules.OwnsResource(scope, session.InstitutionId)
+            || studentId.HasValue && !CoachingInstitutionWriteRules.OwnsActiveStudent(scope, studentId.Value))
+            return null;
 
         delegation.Grant(session.TeacherId);
-        return true;
+        return session;
     }
 
     private async Task VerifyTeacherTargetsAsync(

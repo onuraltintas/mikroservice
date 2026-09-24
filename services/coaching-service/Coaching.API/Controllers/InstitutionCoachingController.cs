@@ -80,7 +80,7 @@ public sealed class InstitutionCoachingController(
         {
             if (id != command.AssignmentId) return BadRequest(new { error = "Assignment ID mismatch" });
             if (command.Score < 0) return BadRequest(new { error = "Score cannot be negative" });
-            if (!await authorization.AuthorizeAssignmentAsync(id, cancellationToken)) return NotFound();
+            if (!await authorization.AuthorizeAssignmentAsync(id, cancellationToken, command.StudentId)) return NotFound();
             return Ok(await mediator.Send(command, cancellationToken));
         });
 
@@ -99,15 +99,20 @@ public sealed class InstitutionCoachingController(
         await ExecuteAsync(async () =>
         {
             if (id != command.SessionId) return BadRequest(new { error = "Session ID mismatch" });
-            if (!await authorization.AuthorizeSessionAsync(id, cancellationToken)) return NotFound();
-            return Ok(await mediator.Send(command, cancellationToken));
+            var session = await authorization.AuthorizeSessionAsync(id, cancellationToken);
+            if (session is null) return NotFound();
+            return Ok(await mediator.Send(command with
+            {
+                TeacherNotes = session.TeacherNotes,
+                TeacherNotesVisibility = session.TeacherNotesVisibility
+            }, cancellationToken));
         });
 
     [HttpDelete("sessions/{id:guid}")]
     public async Task<IActionResult> DeleteSession(Guid id, CancellationToken cancellationToken) =>
         await ExecuteAsync(async () =>
         {
-            if (!await authorization.AuthorizeSessionAsync(id, cancellationToken)) return NotFound();
+            if (await authorization.AuthorizeSessionAsync(id, cancellationToken) is null) return NotFound();
             await mediator.Send(new DeleteSessionCommand(id), cancellationToken);
             return NoContent();
         });
@@ -116,7 +121,7 @@ public sealed class InstitutionCoachingController(
     public async Task<IActionResult> CancelSession(Guid id, CancellationToken cancellationToken) =>
         await ExecuteAsync(async () =>
         {
-            if (!await authorization.AuthorizeSessionAsync(id, cancellationToken)) return NotFound();
+            if (await authorization.AuthorizeSessionAsync(id, cancellationToken) is null) return NotFound();
             await mediator.Send(new CancelSessionCommand(id), cancellationToken);
             return NoContent();
         });
@@ -127,8 +132,13 @@ public sealed class InstitutionCoachingController(
         await ExecuteAsync(async () =>
         {
             if (id != command.SessionId) return BadRequest(new { error = "Session ID mismatch" });
-            if (!await authorization.AuthorizeSessionAsync(id, cancellationToken)) return NotFound();
-            await mediator.Send(command, cancellationToken);
+            var session = await authorization.AuthorizeSessionAsync(id, cancellationToken);
+            if (session is null) return NotFound();
+            var studentId = command.StudentId ?? (session.Attendances.Count == 1
+                ? session.Attendances.First().StudentId : (Guid?)null);
+            if (studentId is null) return BadRequest(new { error = "Student ID is required" });
+            if (await authorization.AuthorizeSessionAsync(id, cancellationToken, studentId) is null) return NotFound();
+            await mediator.Send(command with { StudentId = studentId }, cancellationToken);
             return NoContent();
         });
 

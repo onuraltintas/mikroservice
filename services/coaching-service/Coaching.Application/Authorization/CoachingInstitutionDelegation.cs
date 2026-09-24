@@ -28,4 +28,7 @@ public static class CoachingInstitutionWriteRules
     public static bool OwnsResource(CoachingAdminScope scope, Guid? institutionId) =>
         !scope.IsGlobal && scope.InstitutionId is { } ownId &&
         institutionId is { } resourceId && resourceId != Guid.Empty && ownId == resourceId;
+
+    public static bool OwnsActiveStudent(CoachingAdminScope scope, Guid studentId) =>
+        !scope.IsGlobal && studentId != Guid.Empty && scope.StudentIds?.Contains(studentId) == true;
 }

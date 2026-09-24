@@ -34,6 +34,17 @@ public sealed class CoachingInstitutionDelegationTests
     }
 
     [Fact]
+    public void InstitutionWriteScope_ShouldOnlyAllowCurrentlyActiveOwnStudents()
+    {
+        var studentId = Guid.NewGuid();
+        var scope = new CoachingAdminScope(false, Guid.NewGuid(), [studentId]);
+
+        CoachingInstitutionWriteRules.OwnsActiveStudent(scope, studentId).Should().BeTrue();
+        CoachingInstitutionWriteRules.OwnsActiveStudent(scope, Guid.NewGuid()).Should().BeFalse();
+        CoachingInstitutionWriteRules.OwnsActiveStudent(CoachingAdminScope.Global, studentId).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task NewAssignment_ShouldVerifyOwnInstitutionAndTeacherTargetsBeforeDelegating()
     {
         var institutionId = Guid.NewGuid();
