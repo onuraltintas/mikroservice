@@ -16,7 +16,7 @@ import {
     <section class="space-y-5">
       <a routerLink="/coaching-portal/institution/overview" class="text-sm text-indigo-700 underline">← Kurum özeti</a>
       <h1 class="text-2xl font-bold">Kurum raporları</h1>
-      <p class="text-sm text-slate-600">Yalnızca aktif kurumunuzdaki öğrencilerin koçluk verileri gösterilir.</p>
+      <p class="text-sm text-slate-600">Yalnızca aktif kurumunuzdaki öğrencilerin koçluk verileri gösterilir. Tarih seçilmezse son 30 gün kullanılır.</p>
       <form (ngSubmit)="applyFilters()" class="flex flex-wrap items-end gap-3">
         <label class="text-sm">Başlangıç <input type="date" name="fromDate" [(ngModel)]="fromDate" class="block rounded border p-2" /></label>
         <label class="text-sm">Bitiş <input type="date" name="toDate" [(ngModel)]="toDate" class="block rounded border p-2" /></label>
@@ -88,8 +88,17 @@ export class InstitutionReportsComponent implements OnInit {
 
   applyFilters(): void {
     if (!this.institutionId) return;
+    if (!!this.fromDate !== !!this.toDate) {
+      this.error.set('İki tarihi birlikte girin veya ikisini de boş bırakın.');
+      return;
+    }
     if (this.fromDate && this.toDate && this.fromDate > this.toDate) {
       this.error.set('Başlangıç tarihi bitiş tarihinden sonra olamaz.');
+      return;
+    }
+    if (this.fromDate && this.toDate &&
+      Date.parse(`${this.toDate}T00:00:00.000Z`) + 86_400_000 - Date.parse(`${this.fromDate}T00:00:00.000Z`) > 366 * 86_400_000) {
+      this.error.set('Rapor aralığı en fazla 366 gün olabilir.');
       return;
     }
     const filters = this.filters();

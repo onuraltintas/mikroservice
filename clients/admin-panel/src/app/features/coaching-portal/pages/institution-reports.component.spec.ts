@@ -54,11 +54,13 @@ describe('InstitutionReportsComponent', () => {
     const component = fixture.componentInstance;
     component.fromDate = '2030-01-01';
     component.applyFilters();
+    fixture.detectChanges();
     expect(service.getInstitutionComparison).toHaveBeenCalledTimes(initialCalls);
     expect(fixture.nativeElement.textContent).toContain('İki tarihi birlikte girin');
 
     component.toDate = '2032-01-01';
     component.applyFilters();
+    fixture.detectChanges();
     expect(service.getInstitutionComparison).toHaveBeenCalledTimes(initialCalls);
     expect(fixture.nativeElement.textContent).toContain('en fazla 366 gün');
   });
