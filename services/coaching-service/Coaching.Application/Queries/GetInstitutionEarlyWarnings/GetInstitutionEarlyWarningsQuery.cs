@@ -130,29 +130,23 @@ public sealed class GetInstitutionEarlyWarningsQueryHandler(
             .ToDictionary(student => student.UserId);
 
         var items = page.StudentUserIds
-            .Select(studentId => (metricsByStudent.TryGetValue(studentId, out var studentMetrics)
-                ? CreateWarning(studentMetrics, toDate)
-                : CreateWarning(
-                    new CoachingStudentEarlyWarningMetrics(
-                        studentId,
-                        0,
-                        0,
-                        0,
-                        null,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        null),
-                    toDate)) with
+            .Select(studentId =>
             {
-                StudentName = studentsById.TryGetValue(studentId, out var student)
-                    ? $"{student.FirstName} {student.LastName}".Trim() : null,
-                StudentEmail = studentsById.TryGetValue(studentId, out student) ? student.Email : null,
-                GradeLevel = studentsById.TryGetValue(studentId, out student) ? student.GradeLevel : null,
-                TeacherName = studentsById.TryGetValue(studentId, out student) ? student.TeacherName : null,
-                TeacherUserId = studentsById.TryGetValue(studentId, out student) ? student.TeacherUserId : null
+                studentsById.TryGetValue(studentId, out var student);
+                var warning = metricsByStudent.TryGetValue(studentId, out var studentMetrics)
+                    ? CreateWarning(studentMetrics, toDate)
+                    : CreateWarning(
+                        new CoachingStudentEarlyWarningMetrics(
+                            studentId, 0, 0, 0, null, 0, 0, 0, 0, 0, null),
+                        toDate);
+                return warning with
+                {
+                    StudentName = student is null ? null : $"{student.FirstName} {student.LastName}".Trim(),
+                    StudentEmail = student?.Email,
+                    GradeLevel = student?.GradeLevel,
+                    TeacherName = student?.TeacherName,
+                    TeacherUserId = student?.TeacherUserId
+                };
             })
             .OrderByDescending(item => item.RiskScore)
             .ThenBy(item => item.StudentId)
