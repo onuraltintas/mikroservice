@@ -859,6 +859,39 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
         _context = context;
     }
 
+    public async Task<TeacherCoachingOverviewDto> GetTeacherOverviewAsync(
+        Guid teacherId,
+        Guid? institutionId,
+        CancellationToken cancellationToken = default)
+    {
+        var assignments = _context.Assignments.AsNoTracking()
+            .Where(item => item.TeacherId == teacherId);
+        var exams = _context.Exams.AsNoTracking()
+            .Where(item => item.CreatedByTeacherId == teacherId);
+        var sessions = _context.CoachingSessions.AsNoTracking()
+            .Where(item => item.TeacherId == teacherId);
+        if (institutionId.HasValue)
+        {
+            assignments = assignments.Where(item => item.InstitutionId == institutionId.Value);
+            exams = exams.Where(item => item.InstitutionId == institutionId.Value);
+            sessions = sessions.Where(item => item.InstitutionId == institutionId.Value);
+        }
+
+        var assignmentIds = assignments.Select(item => item.Id);
+        var students = _context.AssignmentStudents.AsNoTracking()
+            .Where(item => assignmentIds.Contains(item.AssignmentId));
+        return new TeacherCoachingOverviewDto(
+            teacherId,
+            await assignments.CountAsync(cancellationToken),
+            await students.CountAsync(cancellationToken),
+            await students.CountAsync(item =>
+                item.Status == Domain.Enums.StudentAssignmentStatus.Submitted
+                || item.Status == Domain.Enums.StudentAssignmentStatus.Graded,
+                cancellationToken),
+            await exams.CountAsync(cancellationToken),
+            await sessions.CountAsync(cancellationToken));
+    }
+
     public async Task<CoachingAdminOverviewDto> GetOverviewAsync(
         int recentLimit,
         CancellationToken cancellationToken = default,

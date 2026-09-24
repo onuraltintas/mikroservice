@@ -1456,7 +1456,7 @@ public class InstitutionRepository : IInstitutionRepository
                 profile.LastName,
                 profile.User.Email,
                 profile.GradeLevel,
-                TeacherName = _context.TeacherStudentAssignments
+                Teacher = _context.TeacherStudentAssignments
                     .Where(assignment => assignment.StudentId == profile.Id
                         && assignment.InstitutionId == institutionId
                         && assignment.IsActive
@@ -1464,7 +1464,11 @@ public class InstitutionRepository : IInstitutionRepository
                         && assignment.Teacher.User.IsActive)
                     .OrderByDescending(assignment => assignment.StartDate)
                     .ThenByDescending(assignment => assignment.Id)
-                    .Select(assignment => assignment.Teacher.FirstName + " " + assignment.Teacher.LastName)
+                    .Select(assignment => new
+                    {
+                        assignment.Teacher.UserId,
+                        Name = assignment.Teacher.FirstName + " " + assignment.Teacher.LastName
+                    })
                     .FirstOrDefault()
             })
             .ToListAsync(cancellationToken);
@@ -1478,7 +1482,8 @@ public class InstitutionRepository : IInstitutionRepository
                 student.LastName,
                 student.Email,
                 student.GradeLevel,
-                student.TeacherName)).ToArray());
+                student.Teacher == null ? null : student.Teacher.Name,
+                student.Teacher == null ? null : student.Teacher.UserId)).ToArray());
     }
 }
 

@@ -420,7 +420,8 @@ public sealed class IdentityAuthorizationClient :
                         student.LastName,
                         student.Email,
                         student.GradeLevel,
-                        student.TeacherName)).ToArray());
+                        student.TeacherName,
+                        student.TeacherUserId)).ToArray());
         }
         catch (BusinessRuleException)
         {
@@ -441,7 +442,7 @@ public sealed class IdentityAuthorizationClient :
     private sealed record StudentReadAuthorizationResponse(Guid[]? AllowedStudentUserIds);
     private sealed record ReportStudentResponse(Guid[]? StudentUserIds);
     private sealed record ReportStudentPageResponse(Guid[]? StudentUserIds, int TotalCount, ReportStudentItem[]? Students);
-    private sealed record ReportStudentItem(Guid UserId, string FirstName, string LastName, string Email, int? GradeLevel, string? TeacherName);
+    private sealed record ReportStudentItem(Guid UserId, string FirstName, string LastName, string Email, int? GradeLevel, string? TeacherName, Guid? TeacherUserId);
     private sealed record RepresentativeAuthorizationResponse(Guid RelationshipId, string PartyRole);
 
     private void EnsureServiceApiKey()

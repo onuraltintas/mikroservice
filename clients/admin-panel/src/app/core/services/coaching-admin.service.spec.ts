@@ -4,6 +4,22 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { CoachingAdminService } from './coaching-admin.service';
 
 describe('CoachingAdminService', () => {
+  it('requests teacher metrics from the scoped coaching endpoint', () => {
+    TestBed.configureTestingModule({
+      providers: [CoachingAdminService, provideHttpClient(), provideHttpClientTesting()]
+    });
+    const service = TestBed.inject(CoachingAdminService);
+    const http = TestBed.inject(HttpTestingController);
+
+    service.getTeacherOverview('teacher/1').subscribe();
+
+    const request = http.expectOne(candidate =>
+      candidate.url.endsWith('/coaching-admin/teachers/teacher%2F1/overview'));
+    expect(request.request.method).toBe('GET');
+    request.flush({ teacherId: 'teacher/1', totalAssignments: 0 });
+    http.verify();
+  });
+
   it('requests bounded assignment pages with optional filters', () => {
     TestBed.configureTestingModule({
       providers: [CoachingAdminService, provideHttpClient(), provideHttpClientTesting()]

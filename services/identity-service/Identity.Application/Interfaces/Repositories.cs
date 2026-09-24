@@ -151,7 +151,8 @@ public sealed record CoachingReportStudentItem(
     string LastName,
     string Email,
     int? GradeLevel,
-    string? TeacherName);
+    string? TeacherName,
+    Guid? TeacherUserId = null);
 
 public sealed record InstitutionStudentRosterItem(
     Guid UserId,

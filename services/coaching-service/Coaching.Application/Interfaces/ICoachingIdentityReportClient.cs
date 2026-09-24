@@ -32,4 +32,5 @@ public sealed record CoachingStudentReportItem(
     string LastName,
     string Email,
     int? GradeLevel,
-    string? TeacherName);
+    string? TeacherName,
+    Guid? TeacherUserId = null);

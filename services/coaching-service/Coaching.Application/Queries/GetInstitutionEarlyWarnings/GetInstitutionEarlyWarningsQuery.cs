@@ -64,7 +64,8 @@ public sealed record StudentEarlyWarningDto(
     string? StudentName = null,
     string? StudentEmail = null,
     int? GradeLevel = null,
-    string? TeacherName = null);
+    string? TeacherName = null,
+    Guid? TeacherUserId = null);
 
 public enum EarlyWarningRiskLevel
 {
@@ -150,7 +151,8 @@ public sealed class GetInstitutionEarlyWarningsQueryHandler(
                     ? $"{student.FirstName} {student.LastName}".Trim() : null,
                 StudentEmail = studentsById.TryGetValue(studentId, out student) ? student.Email : null,
                 GradeLevel = studentsById.TryGetValue(studentId, out student) ? student.GradeLevel : null,
-                TeacherName = studentsById.TryGetValue(studentId, out student) ? student.TeacherName : null
+                TeacherName = studentsById.TryGetValue(studentId, out student) ? student.TeacherName : null,
+                TeacherUserId = studentsById.TryGetValue(studentId, out student) ? student.TeacherUserId : null
             })
             .OrderByDescending(item => item.RiskScore)
             .ThenBy(item => item.StudentId)

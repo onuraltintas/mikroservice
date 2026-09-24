@@ -76,6 +76,20 @@ public sealed class CoachingAdminController : ControllerBase
         return Ok(overview);
     }
 
+    [HttpGet("teachers/{teacherId:guid}/overview")]
+    [ProducesResponseType(typeof(TeacherCoachingOverviewDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<TeacherCoachingOverviewDto>> GetTeacherOverview(
+        Guid teacherId,
+        [FromServices] ICoachingAdminRepository repository,
+        CancellationToken cancellationToken)
+    {
+        var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+        return Ok(await repository.GetTeacherOverviewAsync(
+            teacherId,
+            scope.InstitutionId,
+            cancellationToken));
+    }
+
     [HttpGet("assignments/{id:guid}")]
     [ProducesResponseType(typeof(AssignmentResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

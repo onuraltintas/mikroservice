@@ -129,6 +129,11 @@ public interface IIdempotencyRepository
 
 public interface ICoachingAdminRepository
 {
+    Task<TeacherCoachingOverviewDto> GetTeacherOverviewAsync(
+        Guid teacherId,
+        Guid? institutionId,
+        CancellationToken cancellationToken = default);
+
     Task<CoachingAdminOverviewDto> GetOverviewAsync(
         int recentLimit,
         CancellationToken cancellationToken = default,
@@ -169,6 +174,14 @@ public interface ICoachingAdminRepository
         Guid? institutionId = null,
         IReadOnlyCollection<Guid>? scopedStudentIds = null);
 }
+
+public sealed record TeacherCoachingOverviewDto(
+    Guid TeacherId,
+    int TotalAssignments,
+    int TotalAssignmentStudents,
+    int SubmittedAssignmentStudents,
+    int TotalExams,
+    int TotalSessions);
 
 public sealed record CoachingAdminOverviewDto(
     int TotalAssignments,

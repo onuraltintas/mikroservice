@@ -30,6 +30,15 @@ export interface CoachingAdminOverview {
   recentAssignments: CoachingAdminAssignment[];
 }
 
+export interface TeacherCoachingOverview {
+  teacherId: string;
+  totalAssignments: number;
+  totalAssignmentStudents: number;
+  submittedAssignmentStudents: number;
+  totalExams: number;
+  totalSessions: number;
+}
+
 export interface InstitutionCoachingComparison {
   institutionId: string;
   gradeLevel?: number;
@@ -59,6 +68,7 @@ export interface StudentEarlyWarning {
   studentEmail?: string | null;
   gradeLevel?: number | null;
   teacherName?: string | null;
+  teacherUserId?: string | null;
   riskLevel: 'Low' | 'Medium' | 'High' | number;
   riskScore: number;
   reasonCodes: string[];
@@ -384,6 +394,11 @@ export class CoachingAdminService {
   getOverview(recentLimit = 10) {
     const params = new HttpParams().set('recentLimit', recentLimit);
     return this.http.get<CoachingAdminOverview>(`${this.url}/overview`, { params });
+  }
+
+  getTeacherOverview(teacherId: string) {
+    return this.http.get<TeacherCoachingOverview>(
+      `${this.url}/teachers/${encodeURIComponent(teacherId)}/overview`);
   }
 
   getInstitutionComparison(

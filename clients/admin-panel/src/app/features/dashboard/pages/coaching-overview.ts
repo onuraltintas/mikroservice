@@ -2,12 +2,14 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize, forkJoin } from 'rxjs';
+import { AuthService } from '../../../core/auth/auth.service';
 import {
   CoachingAdminOverview,
   CoachingAdminService,
   InstitutionCoachingComparison,
   InstitutionEarlyWarningReport,
-  StudentEarlyWarning
+  StudentEarlyWarning,
+  TeacherCoachingOverview
 } from '../../../core/services/coaching-admin.service';
 import { InstitutionDto, InstitutionService } from '../../../core/services/institution.service';
 import {
@@ -57,8 +59,11 @@ import {
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Yalnızca Identity tarafından aktif kurum kapsamına alınan öğrenciler aggregate edilir.</p>
           </div>
           <div class="grid gap-4 md:grid-cols-4">
+            <label class="text-sm text-gray-700 dark:text-gray-200">Kurum adıyla ara
+              <span class="mt-1 flex gap-2"><input [(ngModel)]="institutionSearch" (keyup.enter)="loadInstitutions()" maxlength="100" class="w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-900" placeholder="Kurum adı" /><button type="button" class="rounded border px-3 py-2" (click)="loadInstitutions()">Ara</button></span>
+            </label>
             <label class="text-sm text-gray-700 dark:text-gray-200">Kurum
-              <select [(ngModel)]="selectedInstitutionId" class="mt-1 w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-900">
+              <select [(ngModel)]="selectedInstitutionId" (ngModelChange)="onInstitutionChange()" class="mt-1 w-full rounded border px-3 py-2 dark:border-gray-600 dark:bg-gray-900">
                 <option value="">Kurum seçin</option>
                 @for (institution of institutions(); track institution.id) { <option [value]="institution.id">{{ institution.name }}</option> }
               </select>
@@ -121,14 +126,14 @@ import {
                   @for (warning of warnings.items; track warning.studentId) {
                     <tr>
                       <td class="px-4 py-3 text-gray-700 dark:text-gray-200"><span class="font-medium">{{ warning.studentName || 'Ad bilgisi yok' }}</span><span class="block text-xs text-gray-500">{{ warning.studentEmail || 'E-posta bilgisi yok' }}{{ warning.gradeLevel ? ' · ' + warning.gradeLevel + '. sınıf' : '' }}</span></td>
-                      <td class="px-4 py-3">{{ warning.teacherName || 'Atanmamış' }}</td>
+                      <td class="px-4 py-3">@if (warning.teacherUserId) { <button type="button" class="text-indigo-700 underline dark:text-indigo-300" (click)="openTeacher(warning)">{{ warning.teacherName || 'Öğretmen' }}</button> } @else { {{ warning.teacherName || 'Atanmamış' }} }</td>
                       <td class="px-4 py-3"><span class="rounded-full px-2 py-1 text-xs font-semibold" [class]="riskBadgeClass(warning)">{{ riskLabel(warning) }}</span></td>
                       <td class="px-4 py-3 font-semibold">{{ warning.riskScore }}/100</td>
                       <td class="max-w-xs px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{{ reasonLabels(warning) }}</td>
                       <td class="px-4 py-3">{{ warning.submittedAssignmentCount }}/{{ warning.assignmentCount }}</td>
                       <td class="px-4 py-3">{{ formatPercent(warning.attendancePercentage) }}</td>
                       <td class="px-4 py-3">{{ warning.averageGoalProgress }}%</td>
-                      <td class="px-4 py-3"><button type="button" class="text-indigo-700 underline dark:text-indigo-300" (click)="openStudent(warning)">Ayrıntı</button></td>
+                      <td class="px-4 py-3">@if (canViewStudentDetails()) { <button type="button" class="text-indigo-700 underline dark:text-indigo-300" (click)="openStudent(warning)">Ayrıntı</button> }</td>
                     </tr>
                   } @empty {
                     <tr><td colspan="9" class="px-4 py-8 text-center text-gray-500">Bu sayfada öğrenci bulunamadı.</td></tr>
@@ -154,6 +159,21 @@ import {
                   <div><h4 class="font-semibold">Son ödevler</h4>@for (assignment of studentAssignments(); track assignment.id) { <p class="mt-2">{{ assignment.title }} · {{ assignment.status }} · {{ assignment.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-gray-500">Ödev yok.</p> }</div>
                   <div><h4 class="font-semibold">Sınav sonuçları</h4>@for (exam of studentExams(); track exam.examId) { <p class="mt-2">{{ exam.examTitle }} · {{ exam.score }}/{{ exam.maxScore }}</p> } @empty { <p class="mt-2 text-gray-500">Sonuç yok.</p> }</div>
                   <div><h4 class="font-semibold">Hedefler</h4>@for (goal of studentGoals(); track goal.id) { <p class="mt-2">{{ goal.title }} · {{ goal.progress }}%</p> } @empty { <p class="mt-2 text-gray-500">Hedef yok.</p> }</div>
+                </div>
+              }
+            </section>
+          }
+          @if (selectedTeacherName(); as teacherName) {
+            <section class="rounded-lg border border-indigo-200 p-4 dark:border-indigo-800" aria-label="Öğretmen koçluk özeti">
+              <div class="flex items-center justify-between"><h3 class="font-semibold">{{ teacherName }} · Koçluk özeti</h3><button type="button" class="rounded border px-2 py-1 text-sm" (click)="closeTeacher()">Kapat</button></div>
+              @if (teacherOverviewLoading()) { <p class="mt-3 text-sm">Öğretmen verileri yükleniyor…</p> }
+              @if (teacherOverviewError()) { <p class="mt-3 text-sm text-red-700" role="alert">{{ teacherOverviewError() }}</p> }
+              @if (teacherOverview(); as teacher) {
+                <div class="mt-3 grid gap-3 sm:grid-cols-3 text-sm">
+                  <p>Ödev: {{ teacher.totalAssignments }}</p>
+                  <p>Teslim: {{ teacher.submittedAssignmentStudents }}/{{ teacher.totalAssignmentStudents }}</p>
+                  <p>Sınav: {{ teacher.totalExams }}</p>
+                  <p>Seans: {{ teacher.totalSessions }}</p>
                 </div>
               }
             </section>
@@ -187,6 +207,7 @@ export class CoachingOverviewComponent implements OnInit {
   private readonly service = inject(CoachingAdminService);
   private readonly institutionService = inject(InstitutionService);
   private readonly portalService = inject(CoachingPortalService);
+  private readonly authService = inject(AuthService);
   private readonly platformId = inject(PLATFORM_ID);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -195,9 +216,11 @@ export class CoachingOverviewComponent implements OnInit {
   readonly comparison = signal<InstitutionCoachingComparison | null>(null);
   readonly comparisonLoading = signal(false);
   readonly comparisonError = signal<string | null>(null);
+  private comparisonRequestId = 0;
   readonly earlyWarnings = signal<InstitutionEarlyWarningReport | null>(null);
   readonly earlyWarningsLoading = signal(false);
   readonly earlyWarningsError = signal<string | null>(null);
+  private earlyWarningRequestId = 0;
   readonly selectedStudent = signal<StudentEarlyWarning | null>(null);
   readonly studentProgress = signal<StudentProgressSummary | null>(null);
   readonly studentAssignments = signal<StudentAssignment[]>([]);
@@ -206,8 +229,14 @@ export class CoachingOverviewComponent implements OnInit {
   readonly studentDetailLoading = signal(false);
   readonly studentDetailError = signal<string | null>(null);
   private studentDetailRequestId = 0;
+  readonly selectedTeacherName = signal<string | null>(null);
+  readonly teacherOverview = signal<TeacherCoachingOverview | null>(null);
+  readonly teacherOverviewLoading = signal(false);
+  readonly teacherOverviewError = signal<string | null>(null);
+  private teacherRequestId = 0;
   readonly grades = Array.from({ length: 12 }, (_, index) => index + 1);
   selectedInstitutionId = '';
+  institutionSearch = '';
   selectedGradeLevel: number | null = null;
   fromDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   toDate = new Date().toISOString().slice(0, 10);
@@ -229,10 +258,21 @@ export class CoachingOverviewComponent implements OnInit {
   }
 
   loadInstitutions() {
-    this.institutionService.getAll(1, 100, '', true).subscribe({
+    this.institutionService.getAll(1, 100, this.institutionSearch.trim(), true).subscribe({
       next: response => this.institutions.set(response.items ?? []),
       error: () => this.comparisonError.set('Kurum listesi yüklenemedi.')
     });
+  }
+
+  onInstitutionChange() {
+    ++this.comparisonRequestId;
+    ++this.earlyWarningRequestId;
+    this.comparison.set(null);
+    this.earlyWarnings.set(null);
+    this.comparisonLoading.set(false);
+    this.earlyWarningsLoading.set(false);
+    this.closeStudent();
+    this.closeTeacher();
   }
 
   loadComparison() {
@@ -246,13 +286,14 @@ export class CoachingOverviewComponent implements OnInit {
 
     this.comparisonLoading.set(true);
     this.comparisonError.set(null);
+    const requestId = ++this.comparisonRequestId;
     this.service.getInstitutionComparison(this.selectedInstitutionId, {
       gradeLevel: this.selectedGradeLevel ?? undefined,
       fromDate,
       toDate
-    }).pipe(finalize(() => this.comparisonLoading.set(false))).subscribe({
-      next: report => this.comparison.set(report),
-      error: () => this.comparisonError.set('Karşılaştırmalı rapor yüklenemedi.')
+    }).pipe(finalize(() => { if (requestId === this.comparisonRequestId) this.comparisonLoading.set(false); })).subscribe({
+      next: report => { if (requestId === this.comparisonRequestId) this.comparison.set(report); },
+      error: () => { if (requestId === this.comparisonRequestId) this.comparisonError.set('Karşılaştırmalı rapor yüklenemedi.'); }
     });
   }
 
@@ -267,19 +308,21 @@ export class CoachingOverviewComponent implements OnInit {
 
     this.earlyWarningsLoading.set(true);
     this.earlyWarningsError.set(null);
+    const requestId = ++this.earlyWarningRequestId;
     this.service.getInstitutionEarlyWarnings(this.selectedInstitutionId, {
       pageNumber,
       pageSize: 25,
       gradeLevel: this.selectedGradeLevel ?? undefined,
       fromDate,
       toDate
-    }).pipe(finalize(() => this.earlyWarningsLoading.set(false))).subscribe({
-      next: report => this.earlyWarnings.set(report),
-      error: () => this.earlyWarningsError.set('Erken uyarı raporu yüklenemedi.')
+    }).pipe(finalize(() => { if (requestId === this.earlyWarningRequestId) this.earlyWarningsLoading.set(false); })).subscribe({
+      next: report => { if (requestId === this.earlyWarningRequestId) this.earlyWarnings.set(report); },
+      error: () => { if (requestId === this.earlyWarningRequestId) this.earlyWarningsError.set('Erken uyarı raporu yüklenemedi.'); }
     });
   }
 
   openStudent(student: StudentEarlyWarning) {
+    if (!this.canViewStudentDetails()) return;
     const requestId = ++this.studentDetailRequestId;
     this.selectedStudent.set(student);
     this.studentProgress.set(null);
@@ -307,11 +350,43 @@ export class CoachingOverviewComponent implements OnInit {
     });
   }
 
+  canViewStudentDetails() {
+    return this.authService.userProfile()?.roles.includes('SystemAdmin') === true;
+  }
+
   closeStudent() {
     ++this.studentDetailRequestId;
     this.selectedStudent.set(null);
     this.studentProgress.set(null);
     this.studentDetailLoading.set(false);
+  }
+
+  openTeacher(student: StudentEarlyWarning) {
+    if (!student.teacherUserId) return;
+    const requestId = ++this.teacherRequestId;
+    this.selectedTeacherName.set(student.teacherName || 'Öğretmen');
+    this.teacherOverview.set(null);
+    this.teacherOverviewError.set(null);
+    this.teacherOverviewLoading.set(true);
+    this.service.getTeacherOverview(student.teacherUserId).subscribe({
+      next: overview => {
+        if (requestId !== this.teacherRequestId) return;
+        this.teacherOverview.set(overview);
+        this.teacherOverviewLoading.set(false);
+      },
+      error: () => {
+        if (requestId !== this.teacherRequestId) return;
+        this.teacherOverviewError.set('Öğretmen koçluk özeti yüklenemedi.');
+        this.teacherOverviewLoading.set(false);
+      }
+    });
+  }
+
+  closeTeacher() {
+    ++this.teacherRequestId;
+    this.selectedTeacherName.set(null);
+    this.teacherOverview.set(null);
+    this.teacherOverviewLoading.set(false);
   }
 
   percentage(numerator: number, denominator: number) {

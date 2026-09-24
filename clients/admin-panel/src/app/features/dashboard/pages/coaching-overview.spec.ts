@@ -9,6 +9,12 @@ import { InstitutionService } from '../../../core/services/institution.service';
 import { CoachingOverviewComponent } from './coaching-overview';
 
 describe('CoachingOverviewComponent', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [{ provide: AuthService, useValue: { userProfile: signal({ roles: ['SystemAdmin'] }) } }]
+    });
+  });
+
   it('does not open unscoped student detail for an institution administrator', () => {
     const portal = {
       getStudentProgress: vi.fn(() => of({})),
