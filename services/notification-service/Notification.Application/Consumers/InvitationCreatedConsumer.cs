@@ -19,25 +19,7 @@ public class InvitationCreatedConsumer : IConsumer<InvitationCreatedEvent>
     {
         var message = context.Message;
         
-        var subject = "Master Hızlı Okuma daveti";
-        var body = $@"
-            <html>
-            <body>
-                <h1>Master Hızlı Okuma daveti</h1>
-                <p>Merhaba,</p>
-                <p><strong>{message.InviterEmail}</strong> sizi Master Hızlı Okuma çalışma alanına davet etti.</p>
-                
-                {(string.IsNullOrEmpty(message.Message) ? "" : $"<p><em>Message: {message.Message}</em></p>")}
-                
-                <p>
-                    <a href='{message.Link ?? "#"}' style='background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>
-                        Daveti kabul et
-                    </a>
-                </p>
-                <p>Bağlantıyı kopyalayabilirsiniz: {message.Link}</p>
-            </body>
-            </html>
-        ";
+        var (subject, body) = CoachingInvitationEmailTemplate.Render(message);
 
         var messageId = context.MessageId ?? throw new InvalidOperationException("InvitationCreatedEvent.MessageId is required.");
         await _emailDeliveryQueue.QueueAsync(
