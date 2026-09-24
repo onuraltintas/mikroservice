@@ -7,7 +7,16 @@ import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { Subject } from 'rxjs';
 import { vi } from 'vitest';
-import { AuthService } from './auth.service';
+import { AuthService, landingRouteForRole } from './auth.service';
+
+describe('coaching institution landing route', () => {
+  it('opens the shared portal on the coaching domain but retains eduivme management', () => {
+    expect(landingRouteForRole('InstitutionAdmin', 'onuraltintas.net')).toBe('/coaching-portal/institution/overview');
+    expect(landingRouteForRole('InstitutionOwner', 'www.onuraltintas.net')).toBe('/coaching-portal/institution/overview');
+    expect(landingRouteForRole('InstitutionAdmin', 'eduivme.com')).toBe('/dashboard');
+    expect(landingRouteForRole('Teacher', 'onuraltintas.net')).toBe('/coaching-portal');
+  });
+});
 
 describe('AuthService browser session security', () => {
   let http: HttpTestingController;
