@@ -41,6 +41,10 @@ export const COACHING_PORTAL_ROUTES: Routes = [
     loadComponent: () => import('./pages/coaching-notifications.component').then(m => m.CoachingNotificationsComponent)
   },
   {
+    path: 'invitations',
+    loadComponent: () => import('./pages/coaching-invitations.component').then(m => m.CoachingInvitationsComponent)
+  },
+  {
     path: 'assignments/:id',
     canActivate: [coachingRoleGuard],
     data: { coachingRoles: ['Student', 'Teacher', 'Parent'] },

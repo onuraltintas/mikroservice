@@ -27,6 +27,7 @@ describe('CoachingInvitationsComponent', () => {
       accept: vi.fn().mockReturnValue(throwError(() => new Error('failed')))
     };
     const component = createComponent(invitations, ['Teacher']);
+    await component.load();
     await component.accept('invite-1');
 
     expect(component.error()).toContain('kabul edilemedi');
