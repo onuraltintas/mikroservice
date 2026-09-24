@@ -46,12 +46,12 @@ import { InstitutionDto, InstitutionService } from '../../../core/services/insti
                 <div class="grid gap-3 sm:grid-cols-4 text-sm"><p>Ödev: {{ detail.submittedAssignments }}/{{ detail.totalAssignments }} teslim</p><p>Sınav sonucu: {{ detail.totalExams }}</p><p>Seans: {{ detail.totalSessions }}</p><p>Hedef: {{ detail.totalGoals }}</p></div>
                 <div class="grid gap-3 sm:grid-cols-3 text-sm"><p>Ödev ortalaması: {{ detail.averageAssignmentPercentage == null ? 'Veri yok' : (detail.averageAssignmentPercentage | number:'1.0-1') + '%' }}</p><p>Sınav ortalaması: {{ detail.averageExamPercentage == null ? 'Veri yok' : (detail.averageExamPercentage | number:'1.0-1') + '%' }}</p><p>Katılım: {{ detail.attendedSessionCount }} / {{ detail.attendanceRecordedCount }}</p></div>
                 <div class="grid gap-4 lg:grid-cols-2 text-sm">
-                  <div><h3 class="font-semibold">Ödevler</h3>@for (item of studentAssignments(); track item.id) { <p class="mt-2">{{ item.title }} · {{ item.status }} · {{ item.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-gray-500">Ödev yok.</p> } @if (studentAssignments().length < detail.totalAssignments) { <button type="button" class="mt-2 text-indigo-700 underline" [disabled]="assignmentLoading()" (click)="loadMoreStudentAssignments()">Daha fazla ödev</button> } @if (assignmentError()) { <p role="alert" class="mt-2 text-red-700">{{ assignmentError() }}</p> }</div>
-                  <div><h3 class="font-semibold">Sınav sonuçları</h3>@for (item of studentExams(); track item.id) { <p class="mt-2">{{ item.title }} · {{ item.score }}/{{ item.maxScore }}</p> } @empty { <p class="mt-2 text-gray-500">Sonuç yok.</p> } @if (studentExams().length < detail.totalExams) { <button type="button" class="mt-2 text-indigo-700 underline" [disabled]="examLoading()" (click)="loadMoreStudentExams()">Daha fazla sınav</button> } @if (examError()) { <p role="alert" class="mt-2 text-red-700">{{ examError() }}</p> }</div>
+                  <div><h3 class="font-semibold">Ödevler</h3>@for (item of studentAssignments(); track item.id) { <p class="mt-2">{{ item.title }} · {{ item.status }} · {{ item.score ?? 'Not yok' }}</p> } @empty { <p class="mt-2 text-gray-500">Ödev yok.</p> } @if (assignmentPage * 10 < detail.totalAssignments) { <button type="button" class="mt-2 text-indigo-700 underline" [disabled]="assignmentLoading()" (click)="loadMoreStudentAssignments()">Daha fazla ödev</button> } @if (assignmentError()) { <p role="alert" class="mt-2 text-red-700">{{ assignmentError() }}</p> }</div>
+                  <div><h3 class="font-semibold">Sınav sonuçları</h3>@for (item of studentExams(); track item.id) { <p class="mt-2">{{ item.title }} · {{ item.score }}/{{ item.maxScore }}</p> } @empty { <p class="mt-2 text-gray-500">Sonuç yok.</p> } @if (examPage * 10 < detail.totalExams) { <button type="button" class="mt-2 text-indigo-700 underline" [disabled]="examLoading()" (click)="loadMoreStudentExams()">Daha fazla sınav</button> } @if (examError()) { <p role="alert" class="mt-2 text-red-700">{{ examError() }}</p> }</div>
                 </div>
                 <div class="text-sm"><h3 class="font-semibold">Seanslar</h3>
                   @for (session of studentSessions(); track session.id) { <p class="mt-2">{{ session.title }} · {{ session.scheduledDate | date:'d MMM y' }} · {{ session.status }} · Katılım: {{ session.attendanceStatus }}</p> } @empty { @if (!sessionLoading() && !sessionError()) { <p class="mt-2 text-gray-500">Seans yok.</p> } }
-                  @if (studentSessions().length < sessionTotalCount()) { <button type="button" class="mt-2 text-indigo-700 underline" [disabled]="sessionLoading()" (click)="loadMoreStudentSessions()">Daha fazla seans</button> }
+                  @if (sessionPage * 10 < sessionTotalCount()) { <button type="button" class="mt-2 text-indigo-700 underline" [disabled]="sessionLoading()" (click)="loadMoreStudentSessions()">Daha fazla seans</button> }
                   @if (sessionError()) { <p role="alert" class="mt-2 text-red-700">{{ sessionError() }}</p> }
                 </div>
                 <div class="text-sm"><h3 class="font-semibold">Hedefler</h3>
@@ -69,11 +69,16 @@ import { InstitutionDto, InstitutionService } from '../../../core/services/insti
           @if (kind === 'teachers' && selectedTeacher(); as teacher) {
             <article class="space-y-4 rounded-xl border bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
               <div><h2 class="text-lg font-semibold">{{ teacher.firstName }} {{ teacher.lastName }}</h2><p class="text-sm text-gray-500">{{ teacher.email }}</p></div>
+              <label class="block text-sm">Karşılaştırma dönemi
+                <select [(ngModel)]="teacherPeriodDays" (ngModelChange)="loadTeacherPeriod()" class="mt-1 rounded border px-3 py-2 dark:bg-gray-900">
+                  <option [ngValue]="7">7 gün</option><option [ngValue]="30">30 gün</option><option [ngValue]="90">90 gün</option>
+                </select>
+              </label>
               @if (teacherAnalytics(); as analytics) {
-                <div class="grid gap-3 sm:grid-cols-3 text-sm"><p>Ödev, son 30 gün: {{ analytics.currentPeriod.assignments }} · önceki dönem: {{ analytics.previousPeriod.assignments }}</p><p>Sınav: {{ analytics.currentPeriod.exams }} · önceki: {{ analytics.previousPeriod.exams }}</p><p>Seans: {{ analytics.currentPeriod.sessions }} · önceki: {{ analytics.previousPeriod.sessions }}</p></div>
+                <div class="grid gap-3 sm:grid-cols-3 text-sm"><p>Ödev, son {{ teacherPeriodDays }} gün: {{ analytics.currentPeriod.assignments }} · önceki dönem: {{ analytics.previousPeriod.assignments }}</p><p>Sınav: {{ analytics.currentPeriod.exams }} · önceki: {{ analytics.previousPeriod.exams }}</p><p>Seans: {{ analytics.currentPeriod.sessions }} · önceki: {{ analytics.previousPeriod.sessions }}</p></div>
                 <div class="grid gap-3 sm:grid-cols-3 text-sm"><p>Ödev teslimi: {{ analytics.submittedAssignmentCount }} / {{ analytics.assignedAssignmentCount }}</p><p>Sınav ortalaması: {{ analytics.averageExamPercentage == null ? 'Veri yok' : (analytics.averageExamPercentage | number:'1.0-1') + '%' }}</p><p>Seans katılımı: {{ analytics.attendedSessionCount }} / {{ analytics.attendanceRecordedCount }}</p></div>
-                <div class="text-sm"><h3 class="font-semibold">Sınav sonuç dağılımı (son 30 gün)</h3><p>Düşük (&lt;%50): {{ analytics.lowResults }} · Orta (%50–79): {{ analytics.mediumResults }} · Yüksek (≥%80): {{ analytics.highResults }}</p></div>
-                <p class="text-xs text-gray-500">Bu oranlar son 30 gündeki kayıtları gösterir; öğretmenin başarısını tek başına ölçmez.</p>
+                <div class="text-sm"><h3 class="font-semibold">Sınav sonuç dağılımı (son {{ teacherPeriodDays }} gün)</h3><p>Düşük (&lt;%50): {{ analytics.lowResults }} · Orta (%50–79): {{ analytics.mediumResults }} · Yüksek (≥%80): {{ analytics.highResults }}</p></div>
+                <p class="text-xs text-gray-500">Bu oranlar seçili dönemdeki kayıtları gösterir; öğretmenin başarısını tek başına ölçmez.</p>
               }
               <div class="text-sm"><h3 class="font-semibold">Atanmış öğrenciler</h3>
                 @for (student of teacherStudents()?.students; track student.userId) { <p class="mt-2">{{ student.firstName }} {{ student.lastName }} · {{ student.email }} <button type="button" class="text-indigo-700 underline" (click)="openStudentDetail(student.userId)">İncele</button></p> } @empty { <p class="mt-2 text-gray-500">Atanmış öğrenci yok.</p> }
@@ -139,6 +144,7 @@ export class CoachingPeopleComponent implements OnInit {
   private teacherStudentsRequestId = 0;
   private goalsRequestId = 0;
   private sessionsRequestId = 0;
+  private teacherAnalyticsRequestId = 0;
   institutionId = this.route.snapshot.queryParamMap.get('institutionId') ?? '';
   institutionSearch = '';
   search = '';
@@ -147,6 +153,7 @@ export class CoachingPeopleComponent implements OnInit {
   assignmentPage = 1;
   examPage = 1;
   sessionPage = 0;
+  teacherPeriodDays = 30;
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
@@ -184,6 +191,7 @@ export class CoachingPeopleComponent implements OnInit {
     ++this.teacherStudentsRequestId;
     ++this.goalsRequestId;
     ++this.sessionsRequestId;
+    ++this.teacherAnalyticsRequestId;
     this.studentPage.set(null);
     this.teacherPage.set(null);
     this.selectedStudent.set(null);
@@ -241,6 +249,7 @@ export class CoachingPeopleComponent implements OnInit {
     this.error.set(null);
     ++this.goalsRequestId;
     ++this.sessionsRequestId;
+    ++this.teacherAnalyticsRequestId;
     this.studentGoals.set(null);
     this.goalError.set(null);
     this.studentAssignments.set([]);
@@ -277,7 +286,7 @@ export class CoachingPeopleComponent implements OnInit {
     } else {
       forkJoin({
         roster: this.service.getTeacherRoster(this.institutionId, 1, id),
-        analytics: this.service.getTeacherAnalytics(id),
+        analytics: this.service.getTeacherAnalytics(id, this.teacherPeriodDays),
         students: this.service.getStudentRoster(this.institutionId, 1, '', id)
       }).subscribe({
         next: result => {
@@ -306,8 +315,20 @@ export class CoachingPeopleComponent implements OnInit {
     void this.router.navigate([this.portal ? '/coaching-portal/institution' : '/dashboard/coaching', this.kind, id], { queryParams: { institutionId: this.institutionId } });
   }
 
+  loadTeacherPeriod(): void {
+    const teacherId = this.detailId;
+    if (!teacherId || !this.selectedTeacher()) return;
+    const requestId = ++this.teacherAnalyticsRequestId;
+    this.teacherAnalytics.set(null);
+    this.error.set(null);
+    this.service.getTeacherAnalytics(teacherId, this.teacherPeriodDays).subscribe({
+      next: analytics => { if (requestId === this.teacherAnalyticsRequestId) this.teacherAnalytics.set(analytics); },
+      error: () => { if (requestId === this.teacherAnalyticsRequestId) this.error.set('Öğretmen raporu yüklenemedi.'); }
+    });
+  }
+
   loadMoreStudentSessions(): void {
-    if (this.sessionLoading() || this.studentSessions().length >= this.sessionTotalCount()) return;
+    if (this.sessionLoading() || this.sessionPage * 10 >= this.sessionTotalCount()) return;
     this.loadStudentSessions(this.sessionPage + 1);
   }
 
@@ -336,7 +357,7 @@ export class CoachingPeopleComponent implements OnInit {
   loadMoreStudentAssignments(): void {
     const studentId = this.detailId;
     if (!studentId || !this.selectedStudent() || this.assignmentLoading()
-        || this.studentAssignments().length >= (this.studentDetail()?.totalAssignments ?? 0)) return;
+        || this.assignmentPage * 10 >= (this.studentDetail()?.totalAssignments ?? 0)) return;
     const requestId = this.requestId;
     this.assignmentLoading.set(true);
     this.assignmentError.set(null);
@@ -358,7 +379,7 @@ export class CoachingPeopleComponent implements OnInit {
   loadMoreStudentExams(): void {
     const studentId = this.detailId;
     if (!studentId || !this.selectedStudent() || this.examLoading()
-        || this.studentExams().length >= (this.studentDetail()?.totalExams ?? 0)) return;
+        || this.examPage * 10 >= (this.studentDetail()?.totalExams ?? 0)) return;
     const requestId = this.requestId;
     this.examLoading.set(true);
     this.examError.set(null);

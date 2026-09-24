@@ -78,7 +78,7 @@ describe('CoachingPeopleComponent', () => {
     const { component, service } = create('teachers', 'teacher-1');
     component.institutionId = 'institution-1';
     component.loadDetail('teacher-1');
-    expect(service.getTeacherAnalytics).toHaveBeenCalledWith('teacher-1');
+    expect(service.getTeacherAnalytics).toHaveBeenCalledWith('teacher-1', 30);
     expect(service.getStudentRoster).toHaveBeenCalledWith('institution-1', 1, '', 'teacher-1');
   });
 
@@ -97,6 +97,18 @@ describe('CoachingPeopleComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Ödev teslimi: 1 / 2');
     expect(fixture.nativeElement.textContent).toContain('Sınav ortalaması: 80%');
     expect(fixture.nativeElement.textContent).toContain('Seans katılımı: 1 / 1');
+  });
+
+  it('reloads institution teacher analytics for a selected comparison period', () => {
+    const { component, service } = create('teachers', 'teacher-1');
+    component.institutionId = 'own-institution';
+    component.loadDetail('teacher-1');
+    component.teacherPeriodDays = 90;
+
+    component.loadTeacherPeriod();
+
+    expect(service.getTeacherAnalytics).toHaveBeenLastCalledWith('teacher-1', 90);
+    expect(component.teacherAnalytics()?.teacherId).toBe('teacher-1');
   });
 
   it('shows institution-scoped student outcomes without implying goals are zero', () => {

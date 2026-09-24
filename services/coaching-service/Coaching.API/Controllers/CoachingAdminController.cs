@@ -223,12 +223,14 @@ public sealed class CoachingAdminController : ControllerBase
     public async Task<ActionResult<TeacherCoachingAnalyticsDto>> GetTeacherAnalytics(
         Guid teacherId,
         [FromServices] ICoachingAdminRepository repository,
-        CancellationToken cancellationToken)
+        [FromQuery] int periodDays = 30,
+        CancellationToken cancellationToken = default)
     {
+        if (periodDays is not (7 or 30 or 90)) return BadRequest();
         var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
         var toDate = DateTime.UtcNow;
         return Ok(await repository.GetTeacherAnalyticsAsync(
-            teacherId, scope.InstitutionId, toDate.AddDays(-30), toDate, cancellationToken));
+            teacherId, scope.InstitutionId, toDate.AddDays(-periodDays), toDate, cancellationToken));
     }
 
     [HttpGet("assignments/{id:guid}")]

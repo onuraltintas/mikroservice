@@ -40,6 +40,17 @@ public sealed class CoachingAdminScopeTests
         sessions.Should().BeOfType<NotFoundResult>();
     }
 
+    [Fact]
+    public async Task TeacherAnalytics_RejectsUnboundedComparisonPeriod()
+    {
+        var controller = new CoachingAdminController(null!, new FixedScopeAuthorization(
+            new CoachingAdminScope(false, Guid.NewGuid(), [])));
+
+        var result = await controller.GetTeacherAnalytics(Guid.NewGuid(), null!, 365);
+
+        result.Result.Should().BeOfType<BadRequestResult>();
+    }
+
     private sealed class FixedScopeAuthorization(CoachingAdminScope scope) : ICoachingAdminScopeAuthorization
     {
         public Task<CoachingAdminScope> RequireReadScopeAsync(CancellationToken cancellationToken) =>

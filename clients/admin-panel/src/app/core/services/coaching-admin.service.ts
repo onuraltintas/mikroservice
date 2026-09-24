@@ -521,9 +521,10 @@ export class CoachingAdminService {
     );
   }
 
-  getTeacherAnalytics(teacherId: string) {
+  getTeacherAnalytics(teacherId: string, periodDays = 30) {
     return this.http.get<TeacherCoachingAnalytics>(
-      `${this.url}/teachers/${encodeURIComponent(teacherId)}/analytics`);
+      `${this.url}/teachers/${encodeURIComponent(teacherId)}/analytics`,
+      { params: new HttpParams().set('periodDays', periodDays) });
   }
 
   getOverview(recentLimit = 10) {
