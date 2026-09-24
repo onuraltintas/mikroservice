@@ -545,6 +545,57 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
             && item.GradeLevel == 8);
     }
 
+    [Fact]
+    public async Task CoachingReportRosterPage_SearchesAcrossEntireInstitutionBeforePaging()
+    {
+        var institution = Institution.Create("Search Report Institution", InstitutionType.School);
+        var administrator = User.Create(Guid.NewGuid(), "search-report-admin@example.test");
+        AddRole(administrator, "InstitutionAdmin");
+        _dbContext!.Institutions.Add(institution);
+        _dbContext.Users.Add(administrator);
+        _dbContext.InstitutionAdmins.Add(InstitutionAdmin.Create(administrator.Id, institution.Id, InstitutionAdminRole.Admin));
+        foreach (var name in new[] { "Ali", "Ayşe", "Zeynep" })
+        {
+            var student = User.Create(Guid.NewGuid(), $"{name.ToLowerInvariant()}@example.test");
+            AddRole(student, "Student");
+            _dbContext.Users.Add(student);
+            _dbContext.StudentProfiles.Add(StudentProfile.Create(student.Id, name, "Test", institution.Id));
+        }
+        await _dbContext.SaveChangesAsync();
+
+        var page = await Repository().GetCoachingReportStudentPageAsync(
+            administrator.Id, institution.Id, null, 1, 1, CancellationToken.None, search: "Ayşe");
+
+        page!.TotalCount.Should().Be(1);
+        page.Students.Should().ContainSingle().Which.FirstName.Should().Be("Ayşe");
+    }
+
+    [Fact]
+    public async Task CoachingTeacherRosterPage_ExcludesOtherInstitutionAndSupportsSearch()
+    {
+        var own = Institution.Create("Own Teachers", InstitutionType.School);
+        var outside = Institution.Create("Outside Teachers", InstitutionType.School);
+        var administrator = User.Create(Guid.NewGuid(), "teacher-report-admin@example.test");
+        AddRole(administrator, "InstitutionAdmin");
+        _dbContext!.Institutions.AddRange(own, outside);
+        _dbContext.Users.Add(administrator);
+        _dbContext.InstitutionAdmins.Add(InstitutionAdmin.Create(administrator.Id, own.Id, InstitutionAdminRole.Admin));
+        foreach (var (name, institutionId) in new[] { ("Ayşe", own.Id), ("Zeynep", outside.Id) })
+        {
+            var user = User.Create(Guid.NewGuid(), $"{name.ToLowerInvariant()}-teacher@example.test");
+            AddRole(user, "Teacher");
+            _dbContext.Users.Add(user);
+            _dbContext.TeacherProfiles.Add(TeacherProfile.Create(user.Id, name, "Öğretmen", institutionId));
+        }
+        await _dbContext.SaveChangesAsync();
+
+        var page = await Repository().GetCoachingReportTeacherPageAsync(
+            administrator.Id, own.Id, 1, 25, "Ayşe", CancellationToken.None);
+
+        page!.TotalCount.Should().Be(1);
+        page.Teachers.Should().ContainSingle().Which.FirstName.Should().Be("Ayşe");
+    }
+
     private InstitutionRepository Repository() => new(_dbContext!);
 
     private TeacherRepository TeacherRepository() => new(_dbContext!);
