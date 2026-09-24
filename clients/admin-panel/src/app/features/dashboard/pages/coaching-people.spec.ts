@@ -8,8 +8,9 @@ import { InstitutionService } from '../../../core/services/institution.service';
 import { CoachingPeopleComponent } from './coaching-people';
 
 describe('CoachingPeopleComponent', () => {
-  function create(kind: 'students' | 'teachers', id?: string) {
+  function create(kind: 'students' | 'teachers', id?: string, platform = 'server') {
     const service = {
+      getReadScope: vi.fn(() => of({ isGlobal: false, institutionId: 'own-institution' })),
       getStudentRoster: vi.fn(() => of({ students: [{ userId: 'student-1', firstName: 'Ayşe', lastName: 'Yılmaz', email: 'a@test' }], totalCount: 1 })),
       getTeacherRoster: vi.fn(() => of({ teachers: [{ userId: 'teacher-1', firstName: 'Ali', lastName: 'Öğretmen', email: 't@test' }], totalCount: 1 })),
       getStudentDetail: vi.fn(() => of({ studentId: 'student-1', totalAssignments: 1, assignments: [], exams: [] })),
@@ -18,7 +19,7 @@ describe('CoachingPeopleComponent', () => {
     TestBed.configureTestingModule({
       imports: [CoachingPeopleComponent],
       providers: [
-        { provide: PLATFORM_ID, useValue: 'server' },
+        { provide: PLATFORM_ID, useValue: platform },
         { provide: CoachingAdminService, useValue: service },
         { provide: InstitutionService, useValue: { getAll: () => of({ items: [] }) } },
         { provide: ActivatedRoute, useValue: { snapshot: { data: { kind }, paramMap: { get: () => id }, queryParamMap: { get: () => 'institution-1' } } } },
@@ -27,6 +28,15 @@ describe('CoachingPeopleComponent', () => {
     });
     return { component: TestBed.createComponent(CoachingPeopleComponent).componentInstance, service };
   }
+
+  it('uses the authenticated institution scope instead of a foreign URL parameter', () => {
+    const { component, service } = create('students', undefined, 'browser');
+
+    component.ngOnInit();
+
+    expect(component.institutionId).toBe('own-institution');
+    expect(service.getStudentRoster).toHaveBeenCalledWith('own-institution', 1, '');
+  });
 
   it('searches and pages institution students on the server', () => {
     const { component, service } = create('students');

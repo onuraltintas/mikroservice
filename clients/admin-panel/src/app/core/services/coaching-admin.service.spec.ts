@@ -4,6 +4,21 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { CoachingAdminService } from './coaching-admin.service';
 
 describe('CoachingAdminService', () => {
+  it('reads the authenticated coaching admin institution scope', () => {
+    TestBed.configureTestingModule({
+      providers: [CoachingAdminService, provideHttpClient(), provideHttpClientTesting()]
+    });
+    const service = TestBed.inject(CoachingAdminService);
+    const http = TestBed.inject(HttpTestingController);
+
+    service.getReadScope().subscribe();
+
+    const request = http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/scope'));
+    expect(request.request.method).toBe('GET');
+    request.flush({ isGlobal: false, institutionId: 'own-institution' });
+    http.verify();
+  });
+
   it('requests tenant-scoped paged rosters and persistent detail endpoints', () => {
     TestBed.configureTestingModule({
       providers: [CoachingAdminService, provideHttpClient(), provideHttpClientTesting()]
