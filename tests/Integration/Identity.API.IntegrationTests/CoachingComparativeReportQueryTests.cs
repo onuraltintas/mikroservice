@@ -154,8 +154,15 @@ public sealed class CoachingComparativeReportQueryTests
             int? gradeLevel,
             int pageNumber,
             int pageSize,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken,
+            string? search = null,
+            Guid? teacherUserId = null) =>
             Task.FromResult(new CoachingStudentReportPage(studentIds, studentIds.Count));
+
+        public Task<CoachingTeacherReportPage> GetActiveTeacherPageAsync(
+            Guid viewerUserId, Guid institutionId, int pageNumber, int pageSize,
+            string? search, CancellationToken cancellationToken) =>
+            Task.FromResult(new CoachingTeacherReportPage([], 0));
     }
 
     private sealed class StubCurrentUserService(Guid userId, string[] roles) : ICurrentUserService

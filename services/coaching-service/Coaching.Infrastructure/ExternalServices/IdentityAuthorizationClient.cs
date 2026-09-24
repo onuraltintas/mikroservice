@@ -348,7 +348,9 @@ public sealed class IdentityAuthorizationClient :
         int? gradeLevel,
         int pageNumber,
         int pageSize,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? search = null,
+        Guid? teacherUserId = null)
     {
         if (viewerUserId == Guid.Empty || institutionId == Guid.Empty)
         {
@@ -371,6 +373,11 @@ public sealed class IdentityAuthorizationClient :
                 "Rapor sayfalama kapsamı geçersiz.");
         }
 
+        if (search?.Length > 100)
+        {
+            throw new ArgumentOutOfRangeException(nameof(search));
+        }
+
         if (string.IsNullOrWhiteSpace(_serviceApiKey))
         {
             throw new InvalidOperationException("Internal service API key is not configured.");
@@ -382,7 +389,9 @@ public sealed class IdentityAuthorizationClient :
             InstitutionId = institutionId,
             GradeLevel = gradeLevel,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
+            Search = search,
+            TeacherUserId = teacherUserId
         };
         using var request = new HttpRequestMessage(
             HttpMethod.Post,
@@ -437,12 +446,75 @@ public sealed class IdentityAuthorizationClient :
         }
     }
 
+    public async Task<CoachingTeacherReportPage> GetActiveTeacherPageAsync(
+        Guid viewerUserId,
+        Guid institutionId,
+        int pageNumber,
+        int pageSize,
+        string? search,
+        CancellationToken cancellationToken)
+    {
+        if (viewerUserId == Guid.Empty || institutionId == Guid.Empty
+            || pageNumber is < 1 or > 1000 || pageSize is < 1 or > 100
+            || search?.Length > 100)
+        {
+            throw new BusinessRuleException("Authorization.Forbidden", "Rapor kapsamı geçersiz.");
+        }
+
+        EnsureServiceApiKey();
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"{_baseUrl}/api/internal/coaching/report-teacher-page")
+        {
+            Content = JsonContent.Create(new
+            {
+                ViewerUserId = viewerUserId,
+                InstitutionId = institutionId,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                Search = search
+            })
+        };
+        request.Headers.Add(InternalServiceAuthentication.HeaderName, _serviceApiKey);
+
+        try
+        {
+            using var response = await _httpClient.SendAsync(
+                request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            if (response.StatusCode is System.Net.HttpStatusCode.Forbidden or
+                System.Net.HttpStatusCode.Unauthorized)
+            {
+                throw new BusinessRuleException("Authorization.Forbidden", "Kurum raporu kapsamına erişim yetkiniz yok.");
+            }
+
+            response.EnsureSuccessStatusCode();
+            var page = await response.Content.ReadFromJsonAsync<ReportTeacherPageResponse>(
+                cancellationToken: cancellationToken)
+                ?? throw new InvalidOperationException("Identity teacher page response was empty.");
+            return new CoachingTeacherReportPage(
+                page.Teachers.Select(item => new CoachingTeacherReportItem(
+                    item.UserId, item.FirstName, item.LastName, item.Email)).ToArray(),
+                page.TotalCount);
+        }
+        catch (BusinessRuleException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            _logger.LogError(ex, "Identity teacher report failed for institution {InstitutionId}", institutionId);
+            throw new InvalidOperationException("Identity report scope service is unavailable.", ex);
+        }
+    }
+
     private sealed record AuthorizationResponse(Guid? InstitutionId);
     private sealed record AdminAuthorizationResponse(bool IsGlobal, Guid? InstitutionId);
     private sealed record StudentReadAuthorizationResponse(Guid[]? AllowedStudentUserIds);
     private sealed record ReportStudentResponse(Guid[]? StudentUserIds);
     private sealed record ReportStudentPageResponse(Guid[]? StudentUserIds, int TotalCount, ReportStudentItem[]? Students);
     private sealed record ReportStudentItem(Guid UserId, string FirstName, string LastName, string Email, int? GradeLevel, string? TeacherName, Guid? TeacherUserId);
+    private sealed record ReportTeacherPageResponse(ReportTeacherItem[] Teachers, int TotalCount);
+    private sealed record ReportTeacherItem(Guid UserId, string FirstName, string LastName, string Email);
     private sealed record RepresentativeAuthorizationResponse(Guid RelationshipId, string PartyRole);
 
     private void EnsureServiceApiKey()

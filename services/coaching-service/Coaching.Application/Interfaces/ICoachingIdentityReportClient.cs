@@ -18,8 +18,25 @@ public interface ICoachingIdentityReportClient
         int? gradeLevel,
         int pageNumber,
         int pageSize,
+        CancellationToken cancellationToken,
+        string? search = null,
+        Guid? teacherUserId = null);
+
+    Task<CoachingTeacherReportPage> GetActiveTeacherPageAsync(
+        Guid viewerUserId,
+        Guid institutionId,
+        int pageNumber,
+        int pageSize,
+        string? search,
         CancellationToken cancellationToken);
 }
+
+public sealed record CoachingTeacherReportPage(
+    IReadOnlyCollection<CoachingTeacherReportItem> Teachers,
+    int TotalCount);
+
+public sealed record CoachingTeacherReportItem(
+    Guid UserId, string FirstName, string LastName, string Email);
 
 public sealed record CoachingStudentReportPage(
     IReadOnlyCollection<Guid> StudentUserIds,

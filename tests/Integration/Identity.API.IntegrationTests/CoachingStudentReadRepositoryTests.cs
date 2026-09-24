@@ -596,6 +596,33 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         page.Teachers.Should().ContainSingle().Which.FirstName.Should().Be("Ayşe");
     }
 
+    [Fact]
+    public async Task CoachingStudentRosterPage_FiltersAssignedTeacherBeforePaging()
+    {
+        var institution = Institution.Create("Teacher Roster", InstitutionType.School);
+        var administrator = User.Create(Guid.NewGuid(), "teacher-roster-admin@example.test");
+        var teacher = User.Create(Guid.NewGuid(), "teacher-roster@example.test");
+        var student = User.Create(Guid.NewGuid(), "teacher-roster-student@example.test");
+        AddRole(administrator, "InstitutionAdmin");
+        AddRole(teacher, "Teacher");
+        AddRole(student, "Student");
+        var teacherProfile = TeacherProfile.Create(teacher.Id, "Ayşe", "Öğretmen", institution.Id);
+        var studentProfile = StudentProfile.Create(student.Id, "Ali", "Öğrenci", institution.Id);
+        _dbContext!.Institutions.Add(institution);
+        _dbContext.Users.AddRange(administrator, teacher, student);
+        _dbContext.TeacherProfiles.Add(teacherProfile);
+        _dbContext.StudentProfiles.Add(studentProfile);
+        _dbContext.InstitutionAdmins.Add(InstitutionAdmin.Create(administrator.Id, institution.Id, InstitutionAdminRole.Admin));
+        _dbContext.TeacherStudentAssignments.Add(TeacherStudentAssignment.Create(teacherProfile.Id, studentProfile.Id, institution.Id));
+        await _dbContext.SaveChangesAsync();
+
+        var page = await Repository().GetCoachingReportStudentPageAsync(
+            administrator.Id, institution.Id, null, 1, 25, CancellationToken.None,
+            teacherUserId: teacher.Id);
+
+        page!.StudentUserIds.Should().ContainSingle().Which.Should().Be(student.Id);
+    }
+
     private InstitutionRepository Repository() => new(_dbContext!);
 
     private TeacherRepository TeacherRepository() => new(_dbContext!);

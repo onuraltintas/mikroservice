@@ -34,6 +34,7 @@ using EduPlatform.Shared.Security.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using EduPlatform.Shared.Security.Interfaces;
 
 namespace Coaching.API.Controllers;
 
@@ -105,6 +106,47 @@ public sealed class CoachingAdminController : ControllerBase
         }
 
         return Ok(await repository.GetStudentDetailAsync(studentId, scope.InstitutionId, cancellationToken));
+    }
+
+    [HttpGet("institutions/{institutionId:guid}/students")]
+    [ProducesResponseType(typeof(CoachingStudentReportPage), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStudentRoster(
+        Guid institutionId,
+        [FromServices] ICoachingIdentityReportClient reportClient,
+        [FromServices] ICurrentUserService currentUser,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 25,
+        [FromQuery] string? search = null,
+        [FromQuery] Guid? teacherUserId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+        if (!scope.IsGlobal && scope.InstitutionId != institutionId) return NotFound();
+        if (pageNumber is < 1 or > 1000 || pageSize is < 1 or > 100 || search?.Length > 100)
+            return BadRequest();
+        return Ok(await reportClient.GetActiveStudentPageAsync(
+            currentUser.UserId!.Value, institutionId, null, pageNumber, pageSize,
+            cancellationToken, search, teacherUserId));
+    }
+
+    [HttpGet("institutions/{institutionId:guid}/teachers")]
+    [ProducesResponseType(typeof(CoachingTeacherReportPage), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetTeacherRoster(
+        Guid institutionId,
+        [FromServices] ICoachingIdentityReportClient reportClient,
+        [FromServices] ICurrentUserService currentUser,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 25,
+        [FromQuery] string? search = null,
+        CancellationToken cancellationToken = default)
+    {
+        var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+        if (!scope.IsGlobal && scope.InstitutionId != institutionId) return NotFound();
+        if (pageNumber is < 1 or > 1000 || pageSize is < 1 or > 100 || search?.Length > 100)
+            return BadRequest();
+        return Ok(await reportClient.GetActiveTeacherPageAsync(
+            currentUser.UserId!.Value, institutionId, pageNumber, pageSize,
+            search, cancellationToken));
     }
 
     [HttpGet("teachers/{teacherId:guid}/analytics")]

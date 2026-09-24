@@ -187,7 +187,9 @@ public sealed class InternalCoachingController : ControllerBase
             || request.InstitutionId == Guid.Empty
             || request.GradeLevel is < 1 or > 12
             || request.PageNumber is < 1 or > MaxReportPageNumber
-            || request.PageSize is < 1 or > MaxReportPageSize)
+            || request.PageSize is < 1 or > MaxReportPageSize
+            || request.Search?.Length > 100
+            || request.TeacherUserId == Guid.Empty)
         {
             return BadRequest("Report student page scope is invalid.");
         }
@@ -198,7 +200,9 @@ public sealed class InternalCoachingController : ControllerBase
             request.GradeLevel,
             request.PageNumber,
             request.PageSize,
-            cancellationToken);
+            cancellationToken,
+            request.Search,
+            request.TeacherUserId);
 
         return page is null
             ? Forbid()
@@ -206,6 +210,29 @@ public sealed class InternalCoachingController : ControllerBase
                 page.StudentUserIds,
                 page.TotalCount,
                 page.Students));
+    }
+
+    [HttpPost("report-teacher-page")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    [RequestSizeLimit(16_384)]
+    public async Task<IActionResult> GetReportTeacherPage(
+        [FromBody] CoachingReportTeacherPageRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.ViewerUserId == Guid.Empty
+            || request.InstitutionId == Guid.Empty
+            || request.PageNumber is < 1 or > MaxReportPageNumber
+            || request.PageSize is < 1 or > MaxReportPageSize
+            || request.Search?.Length > 100)
+        {
+            return BadRequest("Report teacher page scope is invalid.");
+        }
+
+        var page = await _institutionRepository.GetCoachingReportTeacherPageAsync(
+            request.ViewerUserId, request.InstitutionId, request.PageNumber,
+            request.PageSize, request.Search, cancellationToken);
+        return page is null ? Forbid() : Ok(page);
     }
 }
 
@@ -256,7 +283,16 @@ public sealed record CoachingReportStudentPageRequest(
     Guid InstitutionId,
     int? GradeLevel,
     int PageNumber,
-    int PageSize);
+    int PageSize,
+    string? Search = null,
+    Guid? TeacherUserId = null);
+
+public sealed record CoachingReportTeacherPageRequest(
+    Guid ViewerUserId,
+    Guid InstitutionId,
+    int PageNumber,
+    int PageSize,
+    string? Search = null);
 
 public sealed record CoachingReportStudentPageResponse(
     IReadOnlyCollection<Guid> StudentUserIds,

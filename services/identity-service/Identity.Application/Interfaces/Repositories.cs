@@ -116,6 +116,15 @@ public interface IInstitutionRepository
         int? gradeLevel,
         int pageNumber,
         int pageSize,
+        CancellationToken cancellationToken,
+        string? search = null,
+        Guid? teacherUserId = null);
+    Task<CoachingReportTeacherPage?> GetCoachingReportTeacherPageAsync(
+        Guid viewerUserId,
+        Guid institutionId,
+        int pageNumber,
+        int pageSize,
+        string? search,
         CancellationToken cancellationToken);
     Task<IReadOnlyList<SpeedReadingInstitutionScopeItem>> GetSpeedReadingInstitutionScopeAsync(
         CancellationToken cancellationToken);
@@ -144,6 +153,16 @@ public sealed record CoachingReportStudentPage(
     IReadOnlyCollection<Guid> StudentUserIds,
     int TotalCount,
     IReadOnlyCollection<CoachingReportStudentItem>? Students = null);
+
+public sealed record CoachingReportTeacherPage(
+    IReadOnlyCollection<CoachingReportTeacherItem> Teachers,
+    int TotalCount);
+
+public sealed record CoachingReportTeacherItem(
+    Guid UserId,
+    string FirstName,
+    string LastName,
+    string Email);
 
 public sealed record CoachingReportStudentItem(
     Guid UserId,
