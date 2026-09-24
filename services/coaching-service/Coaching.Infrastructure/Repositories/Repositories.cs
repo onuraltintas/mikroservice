@@ -859,6 +859,102 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
         _context = context;
     }
 
+    public async Task<CoachingAdminStudentDetailDto> GetStudentDetailAsync(
+        Guid studentId,
+        Guid? institutionId,
+        CancellationToken cancellationToken = default)
+    {
+        var assignments = _context.AssignmentStudents.AsNoTracking()
+            .Where(item => item.StudentId == studentId
+                && item.Assignment.Status != Domain.Enums.AssignmentStatus.Cancelled);
+        var exams = _context.ExamResults.AsNoTracking()
+            .Where(item => item.StudentId == studentId);
+        var sessions = _context.SessionAttendances.AsNoTracking()
+            .Where(item => item.StudentId == studentId
+                && item.Session.Status != Domain.Enums.SessionStatus.Cancelled);
+        if (institutionId.HasValue)
+        {
+            assignments = assignments.Where(item => item.Assignment.InstitutionId == institutionId.Value);
+            exams = exams.Where(item => item.Exam.InstitutionId == institutionId.Value);
+            sessions = sessions.Where(item => item.Session.InstitutionId == institutionId.Value);
+        }
+
+        var assignmentItems = await assignments
+            .OrderByDescending(item => item.Assignment.DueDate)
+            .Select(item => new CoachingAdminStudentAssignmentDto(
+                item.AssignmentId, item.Assignment.Title, item.Status.ToString(),
+                item.Assignment.DueDate, item.Score))
+            .Take(10).ToListAsync(cancellationToken);
+        var examItems = await exams
+            .OrderByDescending(item => item.Exam.ExamDate)
+            .Select(item => new CoachingAdminStudentExamDto(
+                item.ExamId, item.Exam.Title, item.Score, item.Exam.MaxScore, item.Exam.ExamDate))
+            .Take(10).ToListAsync(cancellationToken);
+
+        return new CoachingAdminStudentDetailDto(
+            studentId,
+            await assignments.CountAsync(cancellationToken),
+            await assignments.CountAsync(item => item.SubmittedAt.HasValue, cancellationToken),
+            await exams.CountAsync(cancellationToken),
+            await sessions.CountAsync(cancellationToken),
+            institutionId.HasValue ? 0 : await _context.AcademicGoals.AsNoTracking()
+                .CountAsync(item => item.StudentId == studentId, cancellationToken),
+            assignmentItems,
+            examItems);
+    }
+
+    public async Task<TeacherCoachingAnalyticsDto> GetTeacherAnalyticsAsync(
+        Guid teacherId,
+        Guid? institutionId,
+        DateTime fromDate,
+        DateTime toDate,
+        CancellationToken cancellationToken = default)
+    {
+        var assignments = _context.Assignments.AsNoTracking().Where(item => item.TeacherId == teacherId);
+        var exams = _context.Exams.AsNoTracking().Where(item => item.CreatedByTeacherId == teacherId);
+        var sessions = _context.CoachingSessions.AsNoTracking().Where(item => item.TeacherId == teacherId);
+        if (institutionId.HasValue)
+        {
+            assignments = assignments.Where(item => item.InstitutionId == institutionId.Value);
+            exams = exams.Where(item => item.InstitutionId == institutionId.Value);
+            sessions = sessions.Where(item => item.InstitutionId == institutionId.Value);
+        }
+
+        var assignmentIds = assignments.Select(item => item.Id);
+        var examIds = exams.Select(item => item.Id);
+        var sessionIds = sessions.Select(item => item.Id);
+        var roster = await _context.AssignmentStudents.AsNoTracking()
+            .Where(item => assignmentIds.Contains(item.AssignmentId))
+            .Select(item => item.StudentId).Distinct().ToListAsync(cancellationToken);
+        roster.AddRange(await _context.ExamResults.AsNoTracking()
+            .Where(item => examIds.Contains(item.ExamId))
+            .Select(item => item.StudentId).Distinct().ToListAsync(cancellationToken));
+        roster.AddRange(await _context.SessionAttendances.AsNoTracking()
+            .Where(item => sessionIds.Contains(item.SessionId))
+            .Select(item => item.StudentId).Distinct().ToListAsync(cancellationToken));
+
+        var previousFrom = fromDate - (toDate - fromDate);
+        async Task<TeacherCoachingPeriodDto> Period(DateTime start, DateTime end) => new(
+            await assignments.CountAsync(item => item.CreatedAt >= start && item.CreatedAt < end, cancellationToken),
+            await exams.CountAsync(item => item.ExamDate >= start && item.ExamDate < end, cancellationToken),
+            await sessions.CountAsync(item => item.ScheduledDate >= start && item.ScheduledDate < end, cancellationToken));
+
+        var scores = await _context.ExamResults.AsNoTracking()
+            .Where(item => examIds.Contains(item.ExamId) && item.Exam.ExamDate >= fromDate
+                && item.Exam.ExamDate < toDate && item.Exam.MaxScore > 0)
+            .Select(item => new { item.Score, item.Exam.MaxScore })
+            .ToListAsync(cancellationToken);
+
+        return new TeacherCoachingAnalyticsDto(
+            teacherId,
+            roster.Distinct().OrderBy(id => id).ToArray(),
+            await Period(fromDate, toDate),
+            await Period(previousFrom, fromDate),
+            scores.Count(item => item.Score / item.MaxScore < 0.5m),
+            scores.Count(item => item.Score / item.MaxScore >= 0.5m && item.Score / item.MaxScore < 0.8m),
+            scores.Count(item => item.Score / item.MaxScore >= 0.8m));
+    }
+
     public async Task<TeacherCoachingOverviewDto> GetTeacherOverviewAsync(
         Guid teacherId,
         Guid? institutionId,

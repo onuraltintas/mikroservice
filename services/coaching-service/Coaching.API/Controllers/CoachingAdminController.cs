@@ -90,6 +90,40 @@ public sealed class CoachingAdminController : ControllerBase
             cancellationToken));
     }
 
+    [HttpGet("students/{studentId:guid}/detail")]
+    [ProducesResponseType(typeof(CoachingAdminStudentDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<CoachingAdminStudentDetailDto>> GetStudentDetail(
+        Guid studentId,
+        [FromServices] ICoachingAdminRepository repository,
+        CancellationToken cancellationToken)
+    {
+        var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+        if (!scope.IsGlobal && scope.StudentIds?.Contains(studentId) != true)
+        {
+            return NotFound();
+        }
+
+        return Ok(await repository.GetStudentDetailAsync(studentId, scope.InstitutionId, cancellationToken));
+    }
+
+    [HttpGet("teachers/{teacherId:guid}/analytics")]
+    [ProducesResponseType(typeof(TeacherCoachingAnalyticsDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<TeacherCoachingAnalyticsDto>> GetTeacherAnalytics(
+        Guid teacherId,
+        [FromServices] ICoachingAdminRepository repository,
+        CancellationToken cancellationToken)
+    {
+        var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+        var toDate = DateTime.UtcNow;
+        var result = await repository.GetTeacherAnalyticsAsync(
+            teacherId, scope.InstitutionId, toDate.AddDays(-30), toDate, cancellationToken);
+        return Ok(scope.IsGlobal ? result : result with
+        {
+            StudentIds = result.StudentIds.Where(id => scope.StudentIds?.Contains(id) == true).ToArray()
+        });
+    }
+
     [HttpGet("assignments/{id:guid}")]
     [ProducesResponseType(typeof(AssignmentResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

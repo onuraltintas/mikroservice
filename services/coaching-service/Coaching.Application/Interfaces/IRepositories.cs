@@ -129,6 +129,18 @@ public interface IIdempotencyRepository
 
 public interface ICoachingAdminRepository
 {
+    Task<CoachingAdminStudentDetailDto> GetStudentDetailAsync(
+        Guid studentId,
+        Guid? institutionId,
+        CancellationToken cancellationToken = default);
+
+    Task<TeacherCoachingAnalyticsDto> GetTeacherAnalyticsAsync(
+        Guid teacherId,
+        Guid? institutionId,
+        DateTime fromDate,
+        DateTime toDate,
+        CancellationToken cancellationToken = default);
+
     Task<TeacherCoachingOverviewDto> GetTeacherOverviewAsync(
         Guid teacherId,
         Guid? institutionId,
@@ -174,6 +186,33 @@ public interface ICoachingAdminRepository
         Guid? institutionId = null,
         IReadOnlyCollection<Guid>? scopedStudentIds = null);
 }
+
+public sealed record CoachingAdminStudentDetailDto(
+    Guid StudentId,
+    int TotalAssignments,
+    int SubmittedAssignments,
+    int TotalExams,
+    int TotalSessions,
+    int TotalGoals,
+    IReadOnlyList<CoachingAdminStudentAssignmentDto> Assignments,
+    IReadOnlyList<CoachingAdminStudentExamDto> Exams);
+
+public sealed record CoachingAdminStudentAssignmentDto(
+    Guid Id, string Title, string Status, DateTime DueDate, decimal? Score);
+
+public sealed record CoachingAdminStudentExamDto(
+    Guid Id, string Title, decimal Score, decimal MaxScore, DateTime ExamDate);
+
+public sealed record TeacherCoachingAnalyticsDto(
+    Guid TeacherId,
+    IReadOnlyList<Guid> StudentIds,
+    TeacherCoachingPeriodDto CurrentPeriod,
+    TeacherCoachingPeriodDto PreviousPeriod,
+    int LowResults,
+    int MediumResults,
+    int HighResults);
+
+public sealed record TeacherCoachingPeriodDto(int Assignments, int Exams, int Sessions);
 
 public sealed record TeacherCoachingOverviewDto(
     Guid TeacherId,
