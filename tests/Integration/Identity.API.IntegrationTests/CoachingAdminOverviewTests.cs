@@ -10,6 +10,55 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingAdminOverviewTests
 {
     [Fact]
+    public async Task StudentDetail_OnlyReturnsRecordsFromSelectedInstitution()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var ownInstitution = Guid.NewGuid();
+        var otherInstitution = Guid.NewGuid();
+        foreach (var institutionId in new[] { ownInstitution, otherInstitution })
+        {
+            var assignment = Assignment.Create(Guid.NewGuid(), institutionId.ToString(), DateTime.UtcNow.AddDays(1), institutionId: institutionId);
+            assignment.AssignToStudent(studentId);
+            var exam = Exam.Create(Guid.NewGuid(), institutionId.ToString(), ExamType.Mock, DateTime.UtcNow, 100, institutionId);
+            exam.AddResult(ExamResult.Create(exam.Id, studentId, 80));
+            context.AddRange(assignment, exam);
+        }
+        await context.SaveChangesAsync();
+
+        var detail = await new CoachingAdminRepository(context)
+            .GetStudentDetailAsync(studentId, ownInstitution, CancellationToken.None);
+
+        detail.TotalAssignments.Should().Be(1);
+        detail.TotalExams.Should().Be(1);
+        detail.Assignments.Should().ContainSingle(item => item.Title == ownInstitution.ToString());
+        detail.Exams.Should().ContainSingle(item => item.Title == ownInstitution.ToString());
+        detail.TotalGoals.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task TeacherAnalytics_SeparatesPeriodsAndInstitutionResults()
+    {
+        await using var context = CreateContext();
+        var teacherId = Guid.NewGuid();
+        var ownInstitution = Guid.NewGuid();
+        var otherInstitution = Guid.NewGuid();
+        var current = Assignment.Create(teacherId, "Current", DateTime.UtcNow.AddDays(1), institutionId: ownInstitution);
+        current.AssignToStudent(Guid.NewGuid());
+        var outside = Assignment.Create(teacherId, "Outside", DateTime.UtcNow.AddDays(1), institutionId: otherInstitution);
+        outside.AssignToStudent(Guid.NewGuid());
+        context.AddRange(current, outside);
+        await context.SaveChangesAsync();
+
+        var result = await new CoachingAdminRepository(context)
+            .GetTeacherAnalyticsAsync(teacherId, ownInstitution, DateTime.UtcNow.AddDays(-30), DateTime.UtcNow, CancellationToken.None);
+
+        result.StudentIds.Should().ContainSingle();
+        result.CurrentPeriod.Assignments.Should().Be(1);
+        result.PreviousPeriod.Assignments.Should().Be(0);
+    }
+
+    [Fact]
     public async Task TeacherOverview_OnlyCountsSelectedTeacherInsideInstitution()
     {
         await using var context = CreateContext();
