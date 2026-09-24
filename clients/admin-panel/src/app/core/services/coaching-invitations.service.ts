@@ -11,6 +11,15 @@ export interface CoachingInvitation {
   expiresAt: string;
 }
 
+export interface SentCoachingInvitation {
+  id: string;
+  inviteeEmail: string;
+  type: CoachingInvitation['type'];
+  status: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CoachingInvitationsService {
   private readonly http = inject(HttpClient);
@@ -28,6 +37,10 @@ export class CoachingInvitationsService {
 
   getMyInvitations() {
     return this.http.get<CoachingInvitation[]>(`${this.url}/invitations/my-invitations`);
+  }
+
+  getSentInvitations() {
+    return this.http.get<SentCoachingInvitation[]>(`${this.url}/invitations/sent`);
   }
 
   accept(id: string) {
