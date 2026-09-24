@@ -58,12 +58,13 @@ describe('CoachingPeopleComponent', () => {
     const { component, service } = create('students');
     const pending = new Subject<never>();
     service.getStudentRoster.mockReturnValueOnce(pending.asObservable());
+    service.getStudentRoster.mockReturnValueOnce(of({ students: [], totalCount: 0 }));
     component.institutionId = 'old-institution';
     component.loadPage();
     component.institutionId = 'new-institution';
     component.onInstitutionChange();
     pending.next({ students: [{ userId: 'old-student' }], totalCount: 1 } as never);
     pending.complete();
-    expect(component.studentPage()).toBeNull();
+    expect(component.studentPage()?.students).toEqual([]);
   });
 });

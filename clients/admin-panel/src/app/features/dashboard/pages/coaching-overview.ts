@@ -1,6 +1,7 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import {
@@ -23,7 +24,7 @@ import {
 @Component({
   selector: 'app-coaching-overview',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <section class="space-y-6">
       <div class="flex flex-wrap items-center justify-between gap-3">
@@ -36,6 +37,11 @@ import {
           Yenile
         </button>
       </div>
+
+      <nav class="flex flex-wrap gap-2" aria-label="Koçluk kişi yönetimi">
+        <a routerLink="/dashboard/coaching/students" class="rounded border border-indigo-200 px-3 py-2 text-sm text-indigo-700 dark:text-indigo-300">Öğrenciler</a>
+        <a routerLink="/dashboard/coaching/teachers" class="rounded border border-indigo-200 px-3 py-2 text-sm text-indigo-700 dark:text-indigo-300">Öğretmenler</a>
+      </nav>
 
       @if (error()) {
         <div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{{ error() }}</div>

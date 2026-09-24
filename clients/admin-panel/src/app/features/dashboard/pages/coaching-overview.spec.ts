@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { of, Subject } from 'rxjs';
 import { vi } from 'vitest';
+import { provideRouter } from '@angular/router';
 import { CoachingAdminService } from '../../../core/services/coaching-admin.service';
 import { CoachingPortalService } from '../../../core/services/coaching-portal.service';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -11,7 +12,7 @@ import { CoachingOverviewComponent } from './coaching-overview';
 describe('CoachingOverviewComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [{ provide: AuthService, useValue: { userProfile: signal({ roles: ['SystemAdmin'] }) } }]
+      providers: [provideRouter([]), { provide: AuthService, useValue: { userProfile: signal({ roles: ['SystemAdmin'] }) } }]
     });
   });
 

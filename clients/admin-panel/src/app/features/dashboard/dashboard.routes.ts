@@ -143,6 +143,20 @@ export const DASHBOARD_ROUTES: Routes = [
         data: { permission: ADMIN_PERMISSIONS.coachingView },
         loadComponent: () => import('./pages/coaching-operational').then(m => m.CoachingOperationalComponent)
     },
+    ...(['students', 'teachers'] as const).flatMap(kind => [
+        {
+            path: `coaching/${kind}/:id`,
+            canActivate: [permissionGuard],
+            data: { permission: ADMIN_PERMISSIONS.coachingView, kind },
+            loadComponent: () => import('./pages/coaching-people').then(m => m.CoachingPeopleComponent)
+        },
+        {
+            path: `coaching/${kind}`,
+            canActivate: [permissionGuard],
+            data: { permission: ADMIN_PERMISSIONS.coachingView, kind },
+            loadComponent: () => import('./pages/coaching-people').then(m => m.CoachingPeopleComponent)
+        }
+    ]),
     {
         path: 'coaching',
         canActivate: [permissionGuard],
