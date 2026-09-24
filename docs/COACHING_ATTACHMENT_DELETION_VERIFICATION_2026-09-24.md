@@ -15,6 +15,10 @@ operasyonel müdahale gerektirir.
 - `CoachingAssignmentAttachmentDeletionTests`: 3/3 başarılı. Veritabanı
   başarısızlığı dosyayı koruyor; anlık depo hatasında outbox olayı tutuluyor;
   birden çok ek silinirken ilgisiz dosya korunuyor.
+- `CoachingAttachmentDeletionConsumerTests`: 1/1 başarılı. Mesaj tüketicisi
+  istenen depo anahtarını siliyor. Odaklı coverage ölçümünde tüketici satır
+  kapsamı %100; silme işleyicisi async akışının satır kapsamı %96,55 ve dal
+  kapsamı %83,33.
 - İlgili koçluk ekleri test filtresi: 24/24 başarılı. Yerel NuGet güvenlik
   verisi alınamadığı için `NU1900` uyarıları vardı; bu, açık taraması kanıtı
   değildir.
