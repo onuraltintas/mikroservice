@@ -47,4 +47,19 @@ describe('InstitutionReportsComponent', () => {
     expect(service.getInstitutionComparison).toHaveBeenLastCalledWith('own-institution', filters);
     expect(service.getInstitutionEarlyWarnings).toHaveBeenLastCalledWith('own-institution', { ...filters, pageNumber: 1, pageSize: 25 });
   });
+
+  it('rejects incomplete and excessive date ranges before requesting data', () => {
+    fixture.detectChanges();
+    const initialCalls = service.getInstitutionComparison.mock.calls.length;
+    const component = fixture.componentInstance;
+    component.fromDate = '2030-01-01';
+    component.applyFilters();
+    expect(service.getInstitutionComparison).toHaveBeenCalledTimes(initialCalls);
+    expect(fixture.nativeElement.textContent).toContain('İki tarihi birlikte girin');
+
+    component.toDate = '2032-01-01';
+    component.applyFilters();
+    expect(service.getInstitutionComparison).toHaveBeenCalledTimes(initialCalls);
+    expect(fixture.nativeElement.textContent).toContain('en fazla 366 gün');
+  });
 });
