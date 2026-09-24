@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { vi } from 'vitest';
 import { CoachingAdminService } from '../../../core/services/coaching-admin.service';
 import { InstitutionReportsComponent } from './institution-reports.component';
@@ -63,5 +63,23 @@ describe('InstitutionReportsComponent', () => {
     fixture.detectChanges();
     expect(service.getInstitutionComparison).toHaveBeenCalledTimes(initialCalls);
     expect(fixture.nativeElement.textContent).toContain('en fazla 366 gün');
+  });
+
+  it('ignores a stale report after filters change', () => {
+    const oldComparison = new Subject<never>();
+    const oldWarnings = new Subject<never>();
+    service.getInstitutionComparison.mockReturnValueOnce(oldComparison.asObservable());
+    service.getInstitutionEarlyWarnings.mockReturnValueOnce(oldWarnings.asObservable());
+    fixture.detectChanges();
+    fixture.componentInstance.gradeLevel = 8;
+    fixture.componentInstance.applyFilters();
+    expect(fixture.componentInstance.comparison()?.studentCount).toBe(3);
+
+    oldComparison.next({ studentCount: 99 } as never);
+    oldWarnings.next({ items: [] } as never);
+    oldComparison.complete();
+    oldWarnings.complete();
+
+    expect(fixture.componentInstance.comparison()?.studentCount).toBe(3);
   });
 });
