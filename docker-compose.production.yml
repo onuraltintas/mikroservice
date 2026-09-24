@@ -42,6 +42,7 @@ services:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/identity-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     environment:
       ASPNETCORE_ENVIRONMENT: Production
+      PublicApp__CoachingBaseUrl: ${COACHING_PUBLIC_BASE_URL:-https://onuraltintas.net}
       DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
       DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?DATAPROTECTION_CERTIFICATE_PASSWORD must be set}
     depends_on:
