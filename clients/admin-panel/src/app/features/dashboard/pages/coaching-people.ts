@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, Observable } from 'rxjs';
 import {
-  CoachingAdminService, CoachingAdminStudentDetail, CoachingStudentRosterItem,
+  CoachingAdminReadScope, CoachingAdminService, CoachingAdminStudentDetail, CoachingStudentRosterItem,
   CoachingStudentRosterPage, CoachingTeacherRosterItem, CoachingTeacherRosterPage,
   TeacherCoachingAnalytics
 } from '../../../core/services/coaching-admin.service';
@@ -20,6 +20,7 @@ import { InstitutionDto, InstitutionService } from '../../../core/services/insti
         <h1 class="text-2xl font-bold dark:text-white">Koçluk {{ kind === 'students' ? 'Öğrencileri' : 'Öğretmenleri' }}</h1>
         <p class="text-sm text-gray-500">İsim ve hesap bilgileri Identity, sonuçlar yalnızca Koçluk servisinden gelir.</p>
       </div>
+      @if (scope()?.isGlobal) {
       <div class="rounded-xl border bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
         <label class="block text-sm">Kurum ara
           <span class="mt-1 flex gap-2"><input [(ngModel)]="institutionSearch" (keyup.enter)="loadInstitutions()" maxlength="100" class="w-full rounded border px-3 py-2 dark:bg-gray-900" placeholder="Kurum adı" /><button type="button" class="rounded border px-3" (click)="loadInstitutions()">Ara</button></span>
@@ -31,6 +32,7 @@ import { InstitutionDto, InstitutionService } from '../../../core/services/insti
           </select>
         </label>
       </div>
+      } @else if (scope()) { <p class="text-sm text-gray-500">Yalnızca kurumunuzun koçluk verileri gösterilir.</p> }
 
       @if (institutionId) {
         @if (detailId) {
@@ -93,6 +95,7 @@ export class CoachingPeopleComponent implements OnInit {
   readonly kind = this.route.snapshot.data['kind'] as 'students' | 'teachers';
   readonly detailId = this.route.snapshot.paramMap.get('id');
   readonly institutions = signal<InstitutionDto[]>([]);
+  readonly scope = signal<CoachingAdminReadScope | null>(null);
   readonly studentPage = signal<CoachingStudentRosterPage | null>(null);
   readonly teacherPage = signal<CoachingTeacherRosterPage | null>(null);
   readonly selectedStudent = signal<CoachingStudentRosterItem | null>(null);
@@ -112,11 +115,18 @@ export class CoachingPeopleComponent implements OnInit {
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
-    this.loadInstitutions();
-    if (this.institutionId) {
-      if (this.detailId) this.loadDetail(this.detailId);
-      else this.loadPage();
-    }
+    this.service.getReadScope().subscribe({
+      next: scope => {
+        this.scope.set(scope);
+        if (scope.isGlobal) this.loadInstitutions();
+        else this.institutionId = scope.institutionId ?? '';
+        if (this.institutionId) {
+          if (this.detailId) this.loadDetail(this.detailId);
+          else this.loadPage();
+        }
+      },
+      error: () => this.error.set('Koçluk yönetim kapsamı yüklenemedi.')
+    });
   }
 
   loadInstitutions(): void {

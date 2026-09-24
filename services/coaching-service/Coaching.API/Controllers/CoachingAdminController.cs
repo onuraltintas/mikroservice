@@ -77,6 +77,14 @@ public sealed class CoachingAdminController : ControllerBase
         return Ok(overview);
     }
 
+    [HttpGet("scope")]
+    [ProducesResponseType(typeof(CoachingAdminReadScopeDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<CoachingAdminReadScopeDto>> GetScope(CancellationToken cancellationToken)
+    {
+        var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+        return Ok(new CoachingAdminReadScopeDto(scope.IsGlobal, scope.InstitutionId));
+    }
+
     [HttpGet("teachers/{teacherId:guid}/overview")]
     [ProducesResponseType(typeof(TeacherCoachingOverviewDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<TeacherCoachingOverviewDto>> GetTeacherOverview(
@@ -924,3 +932,5 @@ public sealed class CoachingAdminController : ControllerBase
         return goal is null ? NotFound() : Ok(goal);
     }
 }
+
+public sealed record CoachingAdminReadScopeDto(bool IsGlobal, Guid? InstitutionId);

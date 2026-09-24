@@ -30,6 +30,11 @@ export interface CoachingAdminOverview {
   recentAssignments: CoachingAdminAssignment[];
 }
 
+export interface CoachingAdminReadScope {
+  isGlobal: boolean;
+  institutionId?: string | null;
+}
+
 export interface TeacherCoachingOverview {
   teacherId: string;
   totalAssignments: number;
@@ -437,6 +442,10 @@ export interface CoachingAdminGoalUpdateRequest {
 export class CoachingAdminService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/coaching-admin`;
+
+  getReadScope() {
+    return this.http.get<CoachingAdminReadScope>(`${this.url}/scope`);
+  }
 
   getStudentRoster(institutionId: string, pageNumber = 1, search = '', teacherUserId?: string) {
     let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', 25);

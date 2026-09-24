@@ -1,13 +1,35 @@
 using System.Security.Claims;
 using Coaching.Application.Authorization;
 using Coaching.Application.Interfaces;
+using Coaching.API.Controllers;
 using FluentAssertions;
 using EduPlatform.Shared.Security.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.API.IntegrationTests;
 
 public sealed class CoachingAdminScopeTests
 {
+    [Fact]
+    public async Task ScopeEndpoint_DoesNotExposeStudentIdentifiers()
+    {
+        var institutionId = Guid.NewGuid();
+        var controller = new CoachingAdminController(null!, new FixedScopeAuthorization(
+            new CoachingAdminScope(false, institutionId, [Guid.NewGuid()])));
+
+        var result = await controller.GetScope(CancellationToken.None);
+
+        var dto = ((OkObjectResult)result.Result!).Value.Should().BeOfType<CoachingAdminReadScopeDto>().Which;
+        dto.InstitutionId.Should().Be(institutionId);
+        dto.GetType().GetProperty("StudentIds").Should().BeNull();
+    }
+
+    private sealed class FixedScopeAuthorization(CoachingAdminScope scope) : ICoachingAdminScopeAuthorization
+    {
+        public Task<CoachingAdminScope> RequireReadScopeAsync(CancellationToken cancellationToken) =>
+            Task.FromResult(scope);
+    }
+
     [Fact]
     public async Task InstitutionAdministrator_ResolvesTenantScope()
     {
