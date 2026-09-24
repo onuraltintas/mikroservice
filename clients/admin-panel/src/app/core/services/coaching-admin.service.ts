@@ -89,6 +89,11 @@ export interface TeacherCoachingAnalytics {
   lowResults: number;
   mediumResults: number;
   highResults: number;
+  assignedAssignmentCount: number;
+  submittedAssignmentCount: number;
+  averageExamPercentage?: number | null;
+  attendanceRecordedCount: number;
+  attendedSessionCount: number;
 }
 
 export interface InstitutionCoachingComparison {

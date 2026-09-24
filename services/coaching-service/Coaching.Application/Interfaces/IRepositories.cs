@@ -209,7 +209,12 @@ public sealed record TeacherCoachingAnalyticsDto(
     TeacherCoachingPeriodDto PreviousPeriod,
     int LowResults,
     int MediumResults,
-    int HighResults);
+    int HighResults,
+    int AssignedAssignmentCount,
+    int SubmittedAssignmentCount,
+    decimal? AverageExamPercentage,
+    int AttendanceRecordedCount,
+    int AttendedSessionCount);
 
 public sealed record TeacherCoachingPeriodDto(int Assignments, int Exams, int Sessions);
 

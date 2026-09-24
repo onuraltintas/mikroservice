@@ -934,13 +934,27 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
             .Select(item => new { item.Score, item.Exam.MaxScore })
             .ToListAsync(cancellationToken);
 
+        var assignmentStudents = _context.AssignmentStudents.AsNoTracking()
+            .Where(item => assignments.Select(assignment => assignment.Id).Contains(item.AssignmentId)
+                && item.Assignment.CreatedAt >= fromDate && item.Assignment.CreatedAt < toDate);
+        var attendances = _context.SessionAttendances.AsNoTracking()
+            .Where(item => sessions.Select(session => session.Id).Contains(item.SessionId)
+                && item.Session.ScheduledDate >= fromDate && item.Session.ScheduledDate < toDate
+                && item.AttendanceStatus != Domain.Enums.AttendanceStatus.NotRecorded);
+
         return new TeacherCoachingAnalyticsDto(
             teacherId,
             await Period(fromDate, toDate),
             await Period(previousFrom, fromDate),
             scores.Count(item => item.Score / item.MaxScore < 0.5m),
             scores.Count(item => item.Score / item.MaxScore >= 0.5m && item.Score / item.MaxScore < 0.8m),
-            scores.Count(item => item.Score / item.MaxScore >= 0.8m));
+            scores.Count(item => item.Score / item.MaxScore >= 0.8m),
+            await assignmentStudents.CountAsync(cancellationToken),
+            await assignmentStudents.CountAsync(item => item.SubmittedAt.HasValue, cancellationToken),
+            scores.Count == 0 ? null : Math.Round(scores.Average(item => item.Score / item.MaxScore) * 100m, 2),
+            await attendances.CountAsync(cancellationToken),
+            await attendances.CountAsync(item => item.AttendanceStatus == Domain.Enums.AttendanceStatus.Present
+                || item.AttendanceStatus == Domain.Enums.AttendanceStatus.Late, cancellationToken));
     }
 
     public async Task<TeacherCoachingOverviewDto> GetTeacherOverviewAsync(
