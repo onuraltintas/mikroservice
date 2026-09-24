@@ -35,4 +35,16 @@ describe('InstitutionReportsComponent', () => {
     expect(service.getInstitutionComparison).not.toHaveBeenCalled();
     expect(fixture.nativeElement.textContent).toContain('Aktif kurum kapsamı bulunamadı');
   });
+
+  it('applies date and grade filters to both reports and resets warning pagination', () => {
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.gradeLevel = 8;
+    component.fromDate = '2030-01-01';
+    component.toDate = '2030-01-31';
+    component.applyFilters();
+    const filters = { gradeLevel: 8, fromDate: '2030-01-01T00:00:00.000Z', toDate: '2030-02-01T00:00:00.000Z' };
+    expect(service.getInstitutionComparison).toHaveBeenLastCalledWith('own-institution', filters);
+    expect(service.getInstitutionEarlyWarnings).toHaveBeenLastCalledWith('own-institution', { ...filters, pageNumber: 1, pageSize: 25 });
+  });
 });

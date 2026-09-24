@@ -30,6 +30,7 @@ import { CoachingAdminOverview, CoachingAdminService } from '../../../core/servi
           <a routerLink="/coaching-portal/institution/manage" class="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 font-semibold text-indigo-800 hover:border-indigo-400 dark:border-indigo-900 dark:bg-indigo-950/30 dark:text-indigo-200">Atama, ödev ve seansları yönet →</a>
           <a routerLink="/coaching-portal/institution/students" class="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 font-semibold text-indigo-800 hover:border-indigo-400 dark:border-indigo-900 dark:bg-indigo-950/30 dark:text-indigo-200">Öğrencileri incele →</a>
           <a routerLink="/coaching-portal/institution/teachers" class="rounded-2xl border border-slate-200 bg-white p-5 font-semibold hover:border-indigo-400 dark:border-slate-800 dark:bg-slate-900">Öğretmenleri incele →</a>
+          <a routerLink="/coaching-portal/institution/reports" class="rounded-2xl border border-slate-200 bg-white p-5 font-semibold hover:border-indigo-400 dark:border-slate-800 dark:bg-slate-900">Kurum raporları ve uyarılar →</a>
         </div>
       }
     </section>

@@ -100,6 +100,12 @@ export const COACHING_PORTAL_ROUTES: Routes = [
     data: { coachingRoles: ['InstitutionAdmin', 'InstitutionOwner'] },
     loadComponent: () => import('./pages/institution-overview.component').then(m => m.InstitutionOverviewComponent)
   },
+  {
+    path: 'institution/reports',
+    canActivate: [coachingRoleGuard],
+    data: { coachingRoles: ['InstitutionAdmin', 'InstitutionOwner'] },
+    loadComponent: () => import('./pages/institution-reports.component').then(m => m.InstitutionReportsComponent)
+  },
   ...(['students', 'teachers'] as const).flatMap(kind => [
     {
       path: `institution/${kind}/:id`,
