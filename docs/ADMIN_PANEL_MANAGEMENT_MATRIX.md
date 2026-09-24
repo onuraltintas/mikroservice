@@ -48,12 +48,20 @@ route guard'ları yalnızca kullanıcı deneyimi ve erken yönlendirme sağlar.
 | Coaching | Yalnız `Clean` durumundaki fotoğraf attachment'ını yetkili stream olarak indirme | `/api/assignments/{id}/students/{studentId}/attachments/{attachmentId}/content` | Assignment domain policy + aktif attachment |
 | Coaching | Sayfalı seans, sınav ve hedef operasyon listeleri; arama/durum filtreleri | `/api/coaching-admin/sessions`, `/api/coaching-admin/exams`, `/api/coaching-admin/goals` | `SystemAdmin` global; `InstitutionAdmin/InstitutionOwner` kurum kapsamı + `Permissions.Coaching.View` |
 | Coaching | Seans ve sınav ayrıntısı; katılım ve sonuç ölçüm alanları | `/api/coaching-admin/sessions/{id}`, `/api/coaching-admin/exams/{id}` | `SystemAdmin` global veya kurum kapsamı + `Permissions.Coaching.View`; kimlikler yalnız admin operasyonu için |
+| Coaching | Kurum öğrenci incelemesi; kapsamlı sonuç özeti ve sayfalı ödev/sınav/seans/hedef geçmişi | `/api/coaching-admin/students/{id}/detail`, `/api/coaching-admin/students/{id}/{assignments,exams,sessions}`, `/api/coaching-admin/goals?studentId=...` | `SystemAdmin` global; kurum yöneticisi yalnız aktif kurum öğrencisi ve o kurumda oluşan kayıtlar + `Permissions.Coaching.View` |
+| Coaching | Öğretmen incelemesi; 7/30/90 günlük dönem karşılaştırması, sonuç ve katılım oranları, atanmış öğrenci listesi | `/api/coaching-admin/teachers/{id}/analytics?periodDays=...`, `/api/coaching-admin/institutions/{id}/students?teacherUserId=...` | `SystemAdmin` global; kurum yöneticisi yalnız kendi kurumunun kayıtları + `Permissions.Coaching.View` |
 | Coaching | Assignment oluşturma, düzenleme, güvenli öğrenci yeniden atama/iptal/silme/notlandırma; fotoğraf teslimlerinin güvenli yönetimi | `/api/coaching-admin/assignments*` | `SystemAdmin` + `Permissions.Coaching.Manage` + `MfaRequired` |
 | Coaching | Seans oluşturma, düzenleme/yeniden planlama, katılım güncelleme/iptal/silme | `/api/coaching-admin/sessions*` | `SystemAdmin` + `Permissions.Coaching.Manage` + `MfaRequired` |
 | Coaching | Sınav oluşturma, düzenleme, sonuç ekleme/düzeltme/silme | `/api/coaching-admin/exams*` | `SystemAdmin` + `Permissions.Coaching.Manage` + `MfaRequired` |
 | Coaching | Hedef oluşturma, düzenleme/nullable hedef temizleme, ilerleme güncelleme/silme | `/api/coaching-admin/goals*` | `SystemAdmin` + `Permissions.Coaching.Manage` + `MfaRequired` |
 
 ## Coaching admin yönetimi neden explicit command olarak tasarlandı?
+
+Öğretmen portalında rapor adı URL parametresinden değil, Identity'nin aktif
+öğretmen-öğrenci ilişkisinden doğrulanır. Kullanıcının seçimine göre aktif
+atanmış öğretmen öğrencinin tüm koçluk geçmişini görebilir; kurum yöneticisi
+raporları ise yalnız kendi kurumunda oluşan kayıtları içerir. Kurum kimliği
+taşımayan eski/kişisel hedefler kurum raporlarına otomatik bağlanmaz.
 
 Koçluk kayıtları öğrenci notu, geri bildirim, sınav sonucu ve katılım bilgisi
 içerir. Paneldeki yönetim işlemleri genel tablo CRUD'u olarak değil, domain
