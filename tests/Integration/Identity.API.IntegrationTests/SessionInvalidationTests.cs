@@ -33,6 +33,7 @@ public sealed class SessionInvalidationTests
             var handler = new CreateUserCommandHandler(
                 CreateService(context), new UserRepository(context),
                 new StudentRepository(context), new TeacherRepository(context),
+                new ParentRepository(context),
                 new InstitutionRepository(context), new UnitOfWork(context),
                 bus, new SystemAdminCurrentUser(),
                 NullLogger<CreateUserCommandHandler>.Instance);

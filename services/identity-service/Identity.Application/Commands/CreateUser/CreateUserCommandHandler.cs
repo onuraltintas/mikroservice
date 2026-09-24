@@ -17,6 +17,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
     private readonly IUserRepository _userRepository;
     private readonly IStudentRepository _studentRepository;
     private readonly ITeacherRepository _teacherRepository;
+    private readonly IParentRepository _parentRepository;
     private readonly IInstitutionRepository _institutionRepository; 
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
@@ -28,6 +29,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         IUserRepository userRepository,
         IStudentRepository studentRepository,
         ITeacherRepository teacherRepository,
+        IParentRepository parentRepository,
         IInstitutionRepository institutionRepository,
         IUnitOfWork unitOfWork,
         IPublishEndpoint publishEndpoint,
@@ -38,6 +40,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         _userRepository = userRepository;
         _studentRepository = studentRepository;
         _teacherRepository = teacherRepository;
+        _parentRepository = parentRepository;
         _institutionRepository = institutionRepository;
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
@@ -60,6 +63,13 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         UserRoleType? userRole = hasBuiltInRole ? parsedRole : null;
         if (hasBuiltInRole)
             roleName = parsedRole.ToString();
+
+        if (userRole is UserRoleType.InstitutionAdmin or UserRoleType.InstitutionOwner)
+        {
+            return Result.Failure<CreateUserResponse>(new Error(
+                "CreateUser.InstitutionRoleRequiresMembership",
+                "Kurum yetkisi kurum yönetimi ekranından verilmelidir."));
+        }
 
         if (userRole == UserRoleType.SystemAdmin
             && !_currentUserService.Roles.Any(role =>
@@ -102,7 +112,12 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
                 case Identity.Domain.Enums.UserRole.Teacher:
                     var teacher = TeacherProfile.Create(userId, request.FirstName, request.LastName);
                     await _teacherRepository.AddAsync(teacher, cancellationToken);
-                    break; 
+                    break;
+
+                case Identity.Domain.Enums.UserRole.Parent:
+                    var parent = ParentProfile.Create(userId, request.FirstName, request.LastName);
+                    await _parentRepository.AddAsync(parent, cancellationToken);
+                    break;
             }
 
             // 6. Queue the event in the EF bus outbox before the single commit.
