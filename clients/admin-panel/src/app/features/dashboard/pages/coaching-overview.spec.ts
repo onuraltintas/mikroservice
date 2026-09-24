@@ -2,10 +2,34 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { CoachingAdminService } from '../../../core/services/coaching-admin.service';
+import { CoachingPortalService } from '../../../core/services/coaching-portal.service';
 import { InstitutionService } from '../../../core/services/institution.service';
 import { CoachingOverviewComponent } from './coaching-overview';
 
 describe('CoachingOverviewComponent', () => {
+  it('opens authorized coaching progress and results for a named student', () => {
+    const portal = {
+      getStudentProgress: vi.fn(() => of({ studentId: 'student-1', totalAssignments: 2 })),
+      getStudentAssignments: vi.fn(() => of({ items: [] })),
+      getStudentExamResults: vi.fn(() => of({ items: [] })),
+      getStudentGoals: vi.fn(() => of({ items: [] }))
+    };
+    TestBed.configureTestingModule({
+      imports: [CoachingOverviewComponent],
+      providers: [
+        { provide: CoachingAdminService, useValue: { getOverview: () => of(null) } },
+        { provide: InstitutionService, useValue: { getAll: () => of({ items: [] }) } },
+        { provide: CoachingPortalService, useValue: portal }
+      ]
+    });
+    const component = TestBed.createComponent(CoachingOverviewComponent).componentInstance;
+
+    component.openStudent({ studentId: 'student-1', studentName: 'Ayşe Yılmaz' } as never);
+
+    expect(portal.getStudentProgress).toHaveBeenCalledWith('student-1');
+    expect(component.selectedStudent()?.studentName).toBe('Ayşe Yılmaz');
+  });
+
   it('shows scoped student and teacher names instead of a raw student id', () => {
     const service = {
       getOverview: vi.fn(() => of({
