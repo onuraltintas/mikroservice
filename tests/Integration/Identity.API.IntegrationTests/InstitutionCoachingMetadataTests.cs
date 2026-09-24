@@ -40,4 +40,12 @@ public sealed class InstitutionCoachingMetadataTests
     {
         typeof(InstitutionCoachingController).GetMethod(actionName).Should().NotBeNull();
     }
+
+    [Fact]
+    public void InstitutionWrites_MustNotExposeIrreversibleDeleteActions()
+    {
+        typeof(InstitutionCoachingController).GetMethods()
+            .SelectMany(method => method.GetCustomAttributes(typeof(HttpDeleteAttribute), true))
+            .Should().BeEmpty();
+    }
 }

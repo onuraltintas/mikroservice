@@ -2,9 +2,8 @@ using Coaching.Application.Authorization;
 using Coaching.Application.Commands.CancelAssignment;
 using Coaching.Application.Commands.CreateAssignment;
 using Coaching.Application.Commands.CreateSession;
-using Coaching.Application.Commands.UpdateSessionAttendance;
-using Coaching.Application.Commands.DeleteAssignment;
 using Coaching.Application.Commands.DeleteSession;
+using Coaching.Application.Commands.UpdateSessionAttendance;
 using Coaching.Application.Commands.GradeAssignment;
 using Coaching.Application.Commands.UpdateAssignment;
 using Coaching.Application.Commands.UpdateSession;
@@ -84,15 +83,6 @@ public sealed class InstitutionCoachingController(
             return Ok(await mediator.Send(command, cancellationToken));
         });
 
-    [HttpDelete("assignments/{id:guid}")]
-    public async Task<IActionResult> DeleteAssignment(Guid id, CancellationToken cancellationToken) =>
-        await ExecuteAsync(async () =>
-        {
-            if (!await authorization.AuthorizeAssignmentAsync(id, cancellationToken)) return NotFound();
-            await mediator.Send(new DeleteAssignmentCommand(id), cancellationToken);
-            return NoContent();
-        });
-
     [HttpPut("sessions/{id:guid}")]
     public async Task<IActionResult> UpdateSession(
         Guid id, [FromBody] UpdateSessionCommand command, CancellationToken cancellationToken) =>
@@ -106,15 +96,6 @@ public sealed class InstitutionCoachingController(
                 TeacherNotes = session.TeacherNotes,
                 TeacherNotesVisibility = session.TeacherNotesVisibility
             }, cancellationToken));
-        });
-
-    [HttpDelete("sessions/{id:guid}")]
-    public async Task<IActionResult> DeleteSession(Guid id, CancellationToken cancellationToken) =>
-        await ExecuteAsync(async () =>
-        {
-            if (await authorization.AuthorizeSessionAsync(id, cancellationToken) is null) return NotFound();
-            await mediator.Send(new DeleteSessionCommand(id), cancellationToken);
-            return NoContent();
         });
 
     [HttpPost("sessions/{id:guid}/cancel")]
