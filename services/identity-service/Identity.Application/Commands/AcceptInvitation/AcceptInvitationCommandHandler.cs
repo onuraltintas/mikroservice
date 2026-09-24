@@ -79,6 +79,20 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
             }
         }
 
+        if (invitation.Type == InvitationType.StudentToTeacher)
+        {
+            var teacher = invitation.TeacherId is { } teacherId
+                ? await _teacherRepository.GetByIdAsync(teacherId, cancellationToken)
+                : null;
+            var student = await _studentRepository.GetByUserIdAsync(userId, cancellationToken);
+            if (teacher is null || student is null || teacher.InstitutionId != student.InstitutionId)
+            {
+                return Result.Failure(new Error(
+                    "Invitation.InstitutionConflict",
+                    "Öğretmen ve öğrenci aynı kurumda olmalı veya ikisi de bağımsız olmalıdır."));
+            }
+        }
+
         // 5. Accept invitation and perform the assignment
         try
         {
