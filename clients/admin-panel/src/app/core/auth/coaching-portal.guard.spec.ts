@@ -48,5 +48,6 @@ describe('coaching portal route role contract', () => {
     expect(route('institution/students')?.data?.['coachingRoles']).toEqual(['InstitutionAdmin', 'InstitutionOwner']);
     expect(route('institution/teachers')?.data?.['coachingRoles']).toEqual(['InstitutionAdmin', 'InstitutionOwner']);
     expect(route('institution/manage')?.data?.['coachingRoles']).toEqual(['InstitutionAdmin', 'InstitutionOwner']);
+    expect(route('invitations')?.loadComponent).toBeDefined();
   });
 });
