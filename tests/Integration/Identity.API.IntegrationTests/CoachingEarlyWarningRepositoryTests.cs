@@ -73,8 +73,9 @@ public sealed class CoachingEarlyWarningRepositoryTests
         metrics.AverageAssignmentPercentage.Should().Be(80m);
         metrics.RecordedAttendanceCount.Should().Be(1);
         metrics.AttendedSessionCount.Should().Be(1);
-        metrics.GoalCount.Should().Be(1);
-        metrics.AverageGoalProgress.Should().Be(40);
+        // An unscoped goal cannot be attributed to this institution.
+        metrics.GoalCount.Should().Be(0);
+        metrics.AverageGoalProgress.Should().Be(0);
         result.Single(item => item.StudentId == otherStudentId)
             .AssignmentCount.Should().Be(0);
     }

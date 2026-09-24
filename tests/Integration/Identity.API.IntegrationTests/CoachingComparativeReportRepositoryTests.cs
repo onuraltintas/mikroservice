@@ -93,9 +93,10 @@ public sealed class CoachingComparativeReportRepositoryTests
         result.AttendanceRecordedCount.Should().Be(1);
         result.AttendedSessionCount.Should().Be(1);
         result.AttendancePercentage.Should().Be(100m);
-        result.GoalCount.Should().Be(1);
-        result.CompletedGoalCount.Should().Be(1);
-        result.AverageGoalProgress.Should().Be(100);
+        // Legacy goals have no institution ID; they must not appear in an institution report.
+        result.GoalCount.Should().Be(0);
+        result.CompletedGoalCount.Should().Be(0);
+        result.AverageGoalProgress.Should().Be(0);
     }
 
     private static CoachingDbContext CreateContext()
