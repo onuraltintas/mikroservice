@@ -38,6 +38,13 @@ public class HealthCheckTests
         _postgresFixture.ConnectionString.Should().Contain("Host=", "connection string should contain host");
         _postgresFixture.ConnectionString.Should().Contain("Database=", "connection string should contain database");
     }
+}
+
+public class GatewayHealthTests
+{
+    private readonly ITestOutputHelper _output;
+
+    public GatewayHealthTests(ITestOutputHelper output) => _output = output;
 
     [GatewayFact]
     public async Task RunningApiGateway_ShouldBeHealthy()
