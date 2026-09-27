@@ -17,4 +17,16 @@ describe('ReviewService', () => {
     http.match(() => true).forEach(req => req.flush([]));
     http.verify();
   });
+
+  it('loads all review items so completed reviews remain available in history', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const service = TestBed.inject(ReviewService);
+    const http = TestBed.inject(HttpTestingController);
+
+    service.getAllReviews().subscribe(items => expect(items.length).toBe(1));
+
+    http.expectOne(req => req.method === 'GET' && req.url.endsWith('/review/items'))
+      .flush([{ reviewItemId: 'review-1' }]);
+    http.verify();
+  });
 });
