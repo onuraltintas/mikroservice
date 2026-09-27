@@ -3,30 +3,33 @@ import { authGuard } from '../../core/guards/auth.guard';
 import { profileSetupGuard } from '../../core/guards/profile-setup.guard';
 import { assessmentGuard, assessmentCompletedGuard } from '../../core/guards/assessment.guard';
 import { subscriptionGuard } from '../../core/guards/subscription.guard';
+import { staffOnboardingGuard } from '../../core/guards/staff-onboarding.guard';
+import { studentPageGuard } from '../../core/guards/student-page.guard';
 
 export const studentRoutes: Routes = [
   {
     path: '',
+    canActivateChild: [studentPageGuard],
     loadComponent: () => import('./student-layout.component').then(m => m.StudentLayoutComponent),
     children: [
       {
         path: 'profile-setup',
-        canActivate: [authGuard],
+        canActivate: [authGuard, staffOnboardingGuard],
         loadComponent: () => import('./profile-setup/profile-setup.component').then(m => m.ProfileSetupComponent)
       },
       {
         path: 'assessment-intro',
-        canActivate: [authGuard, profileSetupGuard, assessmentCompletedGuard],
+        canActivate: [authGuard, staffOnboardingGuard, profileSetupGuard, assessmentCompletedGuard],
         loadComponent: () => import('./assessment/assessment-intro.component').then(m => m.AssessmentIntroComponent)
       },
       {
         path: 'assessment',
-        canActivate: [authGuard, profileSetupGuard],
+        canActivate: [authGuard, staffOnboardingGuard, profileSetupGuard],
         loadComponent: () => import('./assessment/assessment.component').then(m => m.AssessmentComponent)
       },
       {
         path: 'dashboard',
-        canActivate: [authGuard, profileSetupGuard, subscriptionGuard],
+        canActivate: [authGuard, staffOnboardingGuard, profileSetupGuard, subscriptionGuard],
         loadComponent: () => import('./dashboard/dashboard-new.component').then(m => m.DashboardNewComponent)
       },
       {
@@ -37,9 +40,14 @@ export const studentRoutes: Routes = [
 
       {
         path: 'exercises',
-        canActivate: [authGuard],
+        canActivate: [authGuard, profileSetupGuard, subscriptionGuard],
         data: { role: ['Teacher', 'Editor', 'Admin', 'SystemAdmin', 'Student', 'InstitutionAdmin', 'InstitutionOwner'] },
         loadComponent: () => import('./exercises/exercises-list.component').then(m => m.ExercisesListComponent)
+      },
+      {
+        path: 'reading/activity/:textId',
+        canActivate: [authGuard, profileSetupGuard, subscriptionGuard],
+        loadComponent: () => import('./learning-path/learning-path-reading.component').then(m => m.LearningPathReadingComponent)
       },
       {
         path: 'reading',
@@ -59,7 +67,7 @@ export const studentRoutes: Routes = [
 
       {
         path: 'exercises/universal-player/:exerciseId',
-        canActivate: [authGuard],
+        canActivate: [authGuard, subscriptionGuard],
         loadComponent: () => import('./exercises/universal-player/exercise-player.component').then(m => m.ExercisePlayerComponent)
       },
 
