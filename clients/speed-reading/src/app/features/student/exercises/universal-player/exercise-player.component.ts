@@ -3116,7 +3116,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   private isPreviewSession(): boolean {
     return this.authService.canPreviewExercises()
-      && !(this.reviewItemId && this.authService.hasRole('Student'));
+      && !this.authService.hasRole('Student');
   }
 
   private submitReviewResult(sessionId: string): void {
