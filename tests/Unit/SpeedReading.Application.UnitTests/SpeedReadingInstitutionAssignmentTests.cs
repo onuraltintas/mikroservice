@@ -1,5 +1,8 @@
 using FluentAssertions;
 using SpeedReading.Domain.Assignments;
+using SpeedReading.Application.Assignments;
+using SpeedReading.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace SpeedReading.Application.UnitTests;
 
@@ -14,5 +17,31 @@ public sealed class SpeedReadingInstitutionAssignmentTests
             DateTime.UtcNow.AddDays(7), institutionId: institutionId);
 
         assignment.InstitutionId.Should().Be(institutionId);
+    }
+
+    [Fact]
+    public async Task Institution_list_excludes_assignments_from_other_tenants_and_unscoped_teachers()
+    {
+        var institutionId = Guid.NewGuid();
+        var teacherId = Guid.NewGuid();
+        await using var db = new OwnedSpeedReadingDbContext(
+            new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        db.Assignments.AddRange(
+            Assignment.Create(teacherId, Guid.NewGuid(), null, "Own", null,
+                DateTime.UtcNow.AddDays(7), institutionId: institutionId),
+            Assignment.Create(teacherId, Guid.NewGuid(), null, "Other", null,
+                DateTime.UtcNow.AddDays(7), institutionId: Guid.NewGuid()),
+            Assignment.Create(teacherId, Guid.NewGuid(), null, "Unscoped", null,
+                DateTime.UtcNow.AddDays(7)));
+        await db.SaveChangesAsync();
+        var type = typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
+            "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAssignments")!;
+        var service = (ISpeedReadingAssignments)Activator.CreateInstance(type, db, null)!;
+
+        var page = await service.GetInstitutionAssignmentsAsync(
+            institutionId, 1, 25, null, null, null, null);
+
+        page.Items.Select(item => item.Title).Should().Equal("Own");
     }
 }
