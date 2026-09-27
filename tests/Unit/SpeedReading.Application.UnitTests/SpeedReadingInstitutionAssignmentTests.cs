@@ -44,4 +44,23 @@ public sealed class SpeedReadingInstitutionAssignmentTests
 
         page.Items.Select(item => item.Title).Should().Equal("Own");
     }
+
+    [Fact]
+    public async Task Institution_create_rejects_teacher_without_active_membership()
+    {
+        var institutionId = Guid.NewGuid();
+        var teacherId = Guid.NewGuid();
+        await using var db = new OwnedSpeedReadingDbContext(
+            new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        var type = typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
+            "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAssignments")!;
+        var service = (ISpeedReadingAssignments)Activator.CreateInstance(type, db, null)!;
+
+        var id = await service.CreateForInstitutionAsync(institutionId, teacherId,
+            Guid.NewGuid(), new CreateAssignmentRequest(Guid.NewGuid(), null, [],
+                "Reading", null, DateTime.UtcNow.AddDays(7)), CancellationToken.None);
+
+        id.Should().BeNull();
+    }
 }
