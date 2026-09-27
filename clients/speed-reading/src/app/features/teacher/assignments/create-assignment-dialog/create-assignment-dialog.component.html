@@ -74,6 +74,12 @@
                 <mat-form-field *ngIf="data?.institutionId" appearance="outline" class="w-full">
                     <mat-label>Öğretmen</mat-label>
                     <mat-select formControlName="teacherId" (selectionChange)="onTeacherChange($event.value)">
+                        <div class="student-search-container" (click)="$event.stopPropagation()"
+                            (keydown)="$event.stopPropagation()">
+                            <mat-icon class="search-icon">search</mat-icon>
+                            <input [formControl]="teacherSearchControl" placeholder="Kurum öğretmeni ara..."
+                                class="student-search-input" autocomplete="off" aria-label="Kurum öğretmeni ara">
+                        </div>
                         <mat-option *ngFor="let teacher of teachers" [value]="teacher.id">
                             {{ teacher.firstName }} {{ teacher.lastName }}
                         </mat-option>
@@ -87,7 +93,7 @@
                             <mat-label>Öğrenciler</mat-label>
                             <mat-select formControlName="studentIds" multiple>
                                 <div class="select-actions">
-                                    <button mat-button color="primary" (click)="selectAllStudents()">Tümünü Seç</button>
+                                    <button mat-button color="primary" type="button" (click)="selectAllStudents()">{{ data?.institutionId ? 'Listelenenleri Seç' : 'Tümünü Seç' }}</button>
                                 </div>
 
                                 <!-- Search Input -->
@@ -95,7 +101,7 @@
                                     (keydown)="$event.stopPropagation()">
                                     <mat-icon class="search-icon">search</mat-icon>
                                     <input [formControl]="studentSearchControl" placeholder="Öğrenci ara..."
-                                        class="student-search-input" autocomplete="off">
+                                        class="student-search-input" autocomplete="off" aria-label="Öğrenci ara">
                                 </div>
 
                                 <mat-select-trigger>

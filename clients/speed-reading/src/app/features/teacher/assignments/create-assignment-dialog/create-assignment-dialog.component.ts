@@ -10,7 +10,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule, provideNativeDateAdapter } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
-import { finalize } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, finalize } from 'rxjs/operators';
 
 import { ExerciseService } from '../../../../core/services/exercise.service';
 import { ExerciseTypeService } from '../../../../core/services/exercise-type.service';
@@ -66,6 +66,9 @@ export class CreateAssignmentDialogComponent implements OnInit {
 
   filteredStudents: Student[] = [];
   studentSearchControl = this.fb.control('');
+  teacherSearchControl = this.fb.control('');
+  private studentSearchRequestId = 0;
+  private teacherSearchRequestId = 0;
 
   constructor() {
     this.form = this.fb.group({
@@ -80,16 +83,21 @@ export class CreateAssignmentDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.studentSearchControl.valueChanges.subscribe(val => {
-      const query = (val || '').toLowerCase();
-      this.filteredStudents = this.students.filter(s =>
-        s.firstName.toLowerCase().includes(query) ||
-        s.lastName.toLowerCase().includes(query)
-      );
+    this.studentSearchControl.valueChanges.pipe(debounceTime(300), distinctUntilChanged()).subscribe(val => {
+      if (this.data?.institutionId) this.searchStudents(val || '');
+      else {
+        const query = (val || '').toLowerCase();
+        this.filteredStudents = this.students.filter(s =>
+          s.firstName.toLowerCase().includes(query) ||
+          s.lastName.toLowerCase().includes(query)
+        );
+      }
     });
     if (this.data?.institutionId) {
       this.form.get('teacherId')?.addValidators(Validators.required);
       this.form.get('teacherId')?.updateValueAndValidity();
+      this.teacherSearchControl.valueChanges.pipe(debounceTime(300), distinctUntilChanged())
+        .subscribe(val => this.searchTeachers(val || ''));
     }
     this.loadData();
   }
@@ -116,25 +124,44 @@ export class CreateAssignmentDialogComponent implements OnInit {
     });
 
     if (this.data?.institutionId) {
-      this.teachersService.getTeachersPage(1, 100, undefined, this.data.institutionId, true).subscribe({
-        next: page => this.teachers = page.items,
-        error: () => this.toaster.error('Kurum öğretmenleri yüklenemedi.')
-      });
+      this.searchTeachers('');
     } else this.loadStudents();
   }
 
   onTeacherChange(teacherId: string): void {
-    this.form.patchValue({ studentIds: [] });
+    this.form.patchValue({ teacherId, studentIds: [] });
+    this.studentSearchControl.setValue('', { emitEvent: false });
     this.students = [];
     this.filteredStudents = [];
-    if (this.data?.institutionId && teacherId) {
-      this.studentsService.getInstitutionStudentsPage(
-        1, 100, undefined, undefined, true, teacherId, this.data.institutionId)
-        .subscribe({
-          next: page => this.setStudents(page.items),
-          error: () => this.toaster.error('Öğretmenin öğrencileri yüklenemedi.')
-        });
-    }
+    if (this.data?.institutionId && teacherId) this.searchStudents('');
+  }
+
+  searchTeachers(term: string): void {
+    if (!this.data?.institutionId) return;
+    const requestId = ++this.teacherSearchRequestId;
+    this.teachersService.getTeachersPage(1, 100, term || undefined, this.data.institutionId, true).subscribe({
+      next: page => {
+        if (requestId !== this.teacherSearchRequestId) return;
+        const selected = this.teachers.find(teacher => teacher.id === this.form.value.teacherId);
+        this.teachers = selected && !page.items.some(teacher => teacher.id === selected.id)
+          ? [selected, ...page.items] : page.items;
+      },
+      error: () => this.toaster.error('Kurum öğretmenleri yüklenemedi.')
+    });
+  }
+
+  searchStudents(term: string): void {
+    const teacherId = this.form.value.teacherId;
+    if (!this.data?.institutionId || !teacherId) return;
+    const requestId = ++this.studentSearchRequestId;
+    this.studentsService.getInstitutionStudentsPage(
+      1, 100, term || undefined, undefined, true, teacherId, this.data.institutionId)
+      .subscribe({
+        next: page => {
+          if (requestId === this.studentSearchRequestId) this.setStudents(page.items);
+        },
+        error: () => this.toaster.error('Öğretmenin öğrencileri yüklenemedi.')
+      });
   }
 
   private loadStudents(): void {
@@ -192,7 +219,7 @@ export class CreateAssignmentDialogComponent implements OnInit {
   }
 
   selectAllStudents() {
-    const allIds = this.students.map(s => s.id);
+    const allIds = [...new Set([...(this.form.value.studentIds || []), ...this.filteredStudents.map(s => s.id)])];
     this.form.patchValue({ studentIds: allIds });
   }
 

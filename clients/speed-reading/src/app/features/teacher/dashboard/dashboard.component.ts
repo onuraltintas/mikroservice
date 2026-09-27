@@ -11,6 +11,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { ReportsService } from '../../../core/services/reports.service';
+import { TeacherReportService } from '../../../core/services/teacher-report.service';
 import { TeacherClassOverviewReport, TeacherTimeBasedProgressReport } from '../../../core/models/report.model';
 import { TeachersService } from '../../../core/services/teachers.service';
 import { StudentsService } from '../../../core/services/students.service';
@@ -37,6 +38,7 @@ import { Student } from '../../../core/models/student.model';
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   private reportsService   = inject(ReportsService);
+  private teacherReportService = inject(TeacherReportService);
   private teachersService  = inject(TeachersService);
   private studentsService  = inject(StudentsService);
   private institutionsService = inject(InstitutionsService);
@@ -47,6 +49,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   overview: TeacherClassOverviewReport | null = null;
   progress: TeacherTimeBasedProgressReport | null = null;
   students: Student[] = [];
+  totalStudentCount = 0;
   loading = true;
   errorMessage: string | null = null;
   institutionCode: string | null = null;
@@ -81,22 +84,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.errorMessage = null;
     const tid = this.teacherId;
-    if (!tid) { this.loading = false; return; }
+    const institutionViewer = this.isInstitutionViewer();
+    const institutionId = this.authService.currentUserValue?.institutionId;
+    if (!institutionViewer && !tid) { this.loading = false; return; }
+    if (institutionViewer && !institutionId) {
+      this.errorMessage = 'Kurum bilgisi alınamadı. Lütfen yeniden giriş yapın.';
+      this.loading = false;
+      return;
+    }
 
     const endDate   = new Date();
     const startDate = new Date(endDate.getTime() - 90 * 24 * 60 * 60 * 1000);
 
     forkJoin({
-      overview: this.reportsService.getTeacherClassOverviewReport(tid, startDate, endDate),
-      progress: this.reportsService.getTeacherTimeBasedProgressReport(tid, startDate, endDate),
-      students: this.isInstitutionViewer()
-        ? this.studentsService.getInstitutionStudents()
-        : this.teachersService.getMyStudents(),
+      overview: institutionViewer
+        ? this.reportsService.getInstitutionClassOverviewReport(institutionId!, startDate, endDate)
+        : this.reportsService.getTeacherClassOverviewReport(tid, startDate, endDate),
+      progress: institutionViewer
+        ? this.teacherReportService.getInstitutionTimeBasedProgressReport(institutionId!, startDate, endDate)
+        : this.reportsService.getTeacherTimeBasedProgressReport(tid, startDate, endDate),
+      students: institutionViewer
+        ? this.studentsService.getInstitutionStudentsPage(1, 10)
+        : this.teachersService.getMyStudentsPage(1, 10),
     }).pipe(takeUntil(this.destroy$), finalize(() => this.loading = false))
       .subscribe(({ overview, progress, students }) => {
         this.overview = overview;
         this.progress = progress;
-        this.students = students;
+        this.students = students.items;
+        this.totalStudentCount = students.totalCount;
       }, () => {
         this.errorMessage = 'Panel verileri yüklenemedi. Lütfen tekrar deneyin.';
       });
@@ -110,20 +125,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/teacher/students', studentId]);
   }
 
-  getPerformanceLevel(kdp: number): string {
-    if (kdp >= 300) return 'Mükemmel';
-    if (kdp >= 200) return 'İyi';
-    if (kdp >= 100) return 'Ortalama';
-    return 'Geliştirilmeli';
-  }
-
-  getPerformanceLevelColor(level: string): string {
-    switch (level) {
-      case 'Mükemmel': return 'success';
-      case 'İyi':      return 'primary';
-      case 'Ortalama': return 'warning';
-      default:         return 'danger';
-    }
+  getSchoolGradeLabel(gradeLevel?: number | null): string {
+    return gradeLevel && gradeLevel >= 1 && gradeLevel <= 12
+      ? `${gradeLevel}. sınıf`
+      : 'Sınıf belirtilmedi';
   }
 
   formatDate(dateString: string): string {
@@ -131,7 +136,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   getDistributionPct(count: number): number {
-    const total = this.overview?.totalStudents || 0;
+    const total = (this.overview?.studentsAboveAverage ?? 0)
+      + (this.overview?.studentsAtAverage ?? 0)
+      + (this.overview?.studentsBelowAverage ?? 0);
     return total ? Math.round((count / total) * 100) : 0;
   }
 }

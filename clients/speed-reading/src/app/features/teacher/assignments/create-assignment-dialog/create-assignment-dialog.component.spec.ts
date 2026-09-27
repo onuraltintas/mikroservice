@@ -36,4 +36,31 @@ describe('CreateAssignmentDialogComponent institution scope', () => {
       1, 100, undefined, undefined, true, 'teacher-1', 'institution-1');
     expect(dialog.students.map(student => student.id)).toEqual(['student-1']);
   });
+
+  it('searches institution students on the server instead of limiting search to the first page', () => {
+    const getInstitutionStudentsPage = jasmine.createSpy('getInstitutionStudentsPage').and.returnValue(of({
+      items: [{ id: 'student-101', firstName: 'Deniz', lastName: 'Yılmaz' }]
+    }));
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: MAT_DIALOG_DATA, useValue: { institutionId: 'institution-1' } },
+        { provide: MatDialogRef, useValue: { close: jasmine.createSpy('close') } },
+        { provide: ExerciseService, useValue: {} },
+        { provide: ExerciseTypeService, useValue: {} },
+        { provide: AgeGroupConfigurationService, useValue: {} },
+        { provide: TeachersService, useValue: {} },
+        { provide: StudentsService, useValue: { getInstitutionStudentsPage } },
+        { provide: AssignmentService, useValue: {} },
+        { provide: ToasterService, useValue: {} }
+      ]
+    });
+
+    const dialog = TestBed.runInInjectionContext(() => new CreateAssignmentDialogComponent());
+    dialog.form.patchValue({ teacherId: 'teacher-1' });
+    dialog.searchStudents('Deniz');
+
+    expect(getInstitutionStudentsPage).toHaveBeenCalledWith(
+      1, 100, 'Deniz', undefined, true, 'teacher-1', 'institution-1');
+    expect(dialog.students.map(student => student.id)).toEqual(['student-101']);
+  });
 });
