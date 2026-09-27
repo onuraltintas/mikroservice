@@ -39,5 +39,8 @@ public sealed class OwnedSpeedReadingReviewHistoryTests
         history.Should().ContainSingle();
         history[0].Score.Should().Be(82);
         item.ReviewCount.Should().Be(1);
+
+        var allItems = await review.GetAllAsync(userId, CancellationToken.None);
+        allItems.Should().ContainSingle(summary => summary.ReviewItemId == item.Id);
     }
 }
