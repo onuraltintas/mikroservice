@@ -154,16 +154,23 @@ public class DatabaseCrudTests : IAsyncLifetime
     {
         var userId = Guid.NewGuid();
         var requestedUser = User.Create(userId, "directory-requested@query.edu", "Directory", "Requested");
+        requestedUser.GrantProductAccess(PlatformProduct.SpeedReading, UserProductAccessSource.SelfRegistration,
+            null, DateTimeOffset.UtcNow);
         var otherUser = User.Create(Guid.NewGuid(), "directory-other@query.edu", "Directory", "Other");
-        _dbContext!.Users.AddRange(requestedUser, otherUser);
+        var coachingUser = User.Create(Guid.NewGuid(), "directory-coaching@query.edu", "Coaching", "Only");
+        coachingUser.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.SelfRegistration,
+            null, DateTimeOffset.UtcNow);
+        _dbContext!.Users.AddRange(requestedUser, otherUser, coachingUser);
         await _dbContext.SaveChangesAsync();
         _dbContext.ChangeTracker.Clear();
 
         var repository = new Identity.Infrastructure.Repositories.UserRepository(_dbContext);
 
-        var users = await repository.GetSpeedReadingDirectoryAsync([userId], CancellationToken.None);
+        var users = await repository.GetSpeedReadingDirectoryAsync(
+            [userId, otherUser.Id, coachingUser.Id], CancellationToken.None);
 
         users.Should().ContainSingle(user => user.UserId == userId);
+        users.Should().HaveCount(1);
     }
 
     [Fact]
