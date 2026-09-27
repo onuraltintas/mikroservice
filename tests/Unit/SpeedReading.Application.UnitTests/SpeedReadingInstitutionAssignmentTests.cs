@@ -63,4 +63,26 @@ public sealed class SpeedReadingInstitutionAssignmentTests
 
         id.Should().BeNull();
     }
+
+    [Fact]
+    public async Task Institution_delete_cannot_deactivate_another_tenants_assignment()
+    {
+        var institutionId = Guid.NewGuid();
+        var assignment = Assignment.Create(Guid.NewGuid(), Guid.NewGuid(), null,
+            "Other", null, DateTime.UtcNow.AddDays(7), institutionId: Guid.NewGuid());
+        await using var db = new OwnedSpeedReadingDbContext(
+            new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        db.Assignments.Add(assignment);
+        await db.SaveChangesAsync();
+        var type = typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
+            "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAssignments")!;
+        var service = (ISpeedReadingAssignments)Activator.CreateInstance(type, db, null)!;
+
+        var deleted = await service.DeleteInstitutionAsync(
+            institutionId, assignment.Id, CancellationToken.None);
+
+        deleted.Should().BeFalse();
+        assignment.IsActive.Should().BeTrue();
+    }
 }
